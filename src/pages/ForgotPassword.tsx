@@ -3,9 +3,10 @@ import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { supabase } from "../lib/supabase";
+import { supabase, isSupabaseConfigured } from "../lib/supabase";
 import { Mail, AlertCircle, CheckCircle, Moon, Sun, ArrowLeft } from "lucide-react";
 import { useTheme } from '../hooks/useTheme';
+import { SetupRequired } from '../components/SetupRequired';
 
 const forgotSchema = z.object({
   email: z.string().email("Email inválido"),
@@ -22,6 +23,11 @@ export const ForgotPassword: React.FC = () => {
   const { register, handleSubmit, formState: { errors } } = useForm<ForgotForm>({
     resolver: zodResolver(forgotSchema),
   });
+
+  // Check if Supabase is configured before rendering forgot password form
+  if (!isSupabaseConfigured()) {
+    return <SetupRequired />;
+  }
 
   const onSubmit = async (data: ForgotForm) => {
     setIsLoading(true);

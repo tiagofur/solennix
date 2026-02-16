@@ -4,18 +4,36 @@ import { Database } from '../types/supabase';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Missing Supabase environment variables. Please check your .env configuration.');
-  // Don't throw error to allow UI to render diagnosis page
+/**
+ * Check if Supabase is properly configured with real credentials
+ */
+export const isSupabaseConfigured = (): boolean => {
+  return !!(
+    supabaseUrl && 
+    supabaseAnonKey && 
+    supabaseUrl !== 'https://placeholder.supabase.co' && 
+    supabaseAnonKey !== 'placeholder-key' &&
+    supabaseUrl.includes('.supabase.co')
+  );
+};
+
+if (!isSupabaseConfigured()) {
+  console.error('⚠️ Supabase no está configurado correctamente.');
+  console.error('Por favor, configura las variables de entorno VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY');
+  console.error('Consulta el README.md para más información sobre cómo configurar Supabase.');
 }
 
-export const supabase = createClient<Database>(supabaseUrl || 'https://placeholder.supabase.co', supabaseAnonKey || 'placeholder-key', {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true
+export const supabase = createClient<Database>(
+  supabaseUrl || 'https://placeholder.supabase.co', 
+  supabaseAnonKey || 'placeholder-key', 
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true
+    }
   }
-});
+);
 
 /**
  * Get the current authenticated user's ID

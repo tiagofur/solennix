@@ -3,9 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { supabase } from '../lib/supabase';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { Lock, Mail, User, AlertCircle, Moon, Sun, ArrowLeft } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
+import { SetupRequired } from '../components/SetupRequired';
 
 const registerSchema = z.object({
   name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
@@ -28,6 +29,11 @@ export const Register: React.FC = () => {
   const { register, handleSubmit, formState: { errors } } = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
   });
+
+  // Check if Supabase is configured before rendering register form
+  if (!isSupabaseConfigured()) {
+    return <SetupRequired />;
+  }
 
   const onSubmit = async (data: RegisterForm) => {
     setIsLoading(true);
