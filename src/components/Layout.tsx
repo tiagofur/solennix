@@ -102,7 +102,7 @@ export const Layout: React.FC = () => {
               {theme === 'dark' ? (
                 <>
                   <Sun className="mr-2 h-5 w-5 text-yellow-500" />
-                  <span className="text-gray-700 dark:text-gray-300">Modo Claro</span>
+                  <span className="dark:text-gray-300">Modo Claro</span>
                 </>
               ) : (
                 <>
