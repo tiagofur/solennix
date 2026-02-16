@@ -13,7 +13,7 @@ export const isSupabaseConfigured = (): boolean => {
     supabaseAnonKey && 
     supabaseUrl !== 'https://placeholder.supabase.co' && 
     supabaseAnonKey !== 'placeholder-key' &&
-    supabaseUrl.includes('.supabase.co')
+    supabaseUrl.startsWith('http')
   );
 };
 
