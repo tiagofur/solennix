@@ -18,7 +18,7 @@ export const inventoryService = {
     return data;
   },
 
-  async getById(id: string) {
+  async getById(id: string): Promise<InventoryItem> {
     const userId = await getCurrentUserId();
     const { data, error } = await supabase
       .from('inventory')
@@ -28,10 +28,11 @@ export const inventoryService = {
       .single();
     
     if (error) throw error;
+    if (!data) throw new Error('Ítem de inventario no encontrado');
     return data;
   },
 
-  async create(item: InventoryInsert) {
+  async create(item: InventoryInsert): Promise<InventoryItem> {
     const userId = await getCurrentUserId();
     
     const { data, error } = await supabase
@@ -41,10 +42,11 @@ export const inventoryService = {
       .single();
     
     if (error) throw error;
+    if (!data) throw new Error('Error al crear el ítem de inventario');
     return data;
   },
 
-  async update(id: string, item: InventoryUpdate) {
+  async update(id: string, item: InventoryUpdate): Promise<InventoryItem> {
     const userId = await getCurrentUserId();
     // First verify ownership
     const existing = await this.getById(id);
@@ -54,13 +56,15 @@ export const inventoryService = {
     
     const { data, error } = await supabase
       .from('inventory')
-      .update(item as any)
+      // @ts-ignore - Supabase type inference issue
+      .update(item)
       .eq('id', id)
       .eq('user_id', userId)
       .select()
       .single();
     
     if (error) throw error;
+    if (!data) throw new Error('Error al actualizar el ítem de inventario');
     return data;
   },
 

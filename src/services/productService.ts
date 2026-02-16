@@ -19,7 +19,7 @@ export const productService = {
     return data;
   },
 
-  async getById(id: string) {
+  async getById(id: string): Promise<Product> {
     const userId = await getCurrentUserId();
     const { data, error } = await supabase
       .from('products')
@@ -29,10 +29,11 @@ export const productService = {
       .single();
     
     if (error) throw error;
+    if (!data) throw new Error('Producto no encontrado');
     return data;
   },
 
-  async create(product: ProductInsert) {
+  async create(product: ProductInsert): Promise<Product> {
     const userId = await getCurrentUserId();
     
     const { data, error } = await supabase
@@ -42,10 +43,11 @@ export const productService = {
       .single();
     
     if (error) throw error;
+    if (!data) throw new Error('Error al crear el producto');
     return data;
   },
 
-  async update(id: string, product: ProductUpdate) {
+  async update(id: string, product: ProductUpdate): Promise<Product> {
     const userId = await getCurrentUserId();
     // First verify ownership
     const existing = await this.getById(id);
@@ -55,13 +57,15 @@ export const productService = {
     
     const { data, error } = await supabase
       .from('products')
-      .update(product as any)
+      // @ts-ignore - Supabase type inference issue
+      .update(product)
       .eq('id', id)
       .eq('user_id', userId)
       .select()
       .single();
     
     if (error) throw error;
+    if (!data) throw new Error('Error al actualizar el producto');
     return data;
   },
 

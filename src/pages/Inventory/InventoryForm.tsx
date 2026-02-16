@@ -57,13 +57,16 @@ export const InventoryForm: React.FC = () => {
     try {
       setIsLoading(true);
       const item = await inventoryService.getById(itemId);
+      if (!item) {
+        throw new Error('Item no encontrado');
+      }
       reset({
-        ingredient_name: item?.ingredient_name || "",
-        type: (item?.type as "ingredient" | "equipment") || "ingredient",
-        current_stock: item?.current_stock || 0,
-        minimum_stock: item?.minimum_stock || 0,
-        unit: item?.unit || "",
-        unit_cost: item?.unit_cost || 0,
+        ingredient_name: item.ingredient_name || "",
+        type: (item.type as "ingredient" | "equipment") || "ingredient",
+        current_stock: item.current_stock || 0,
+        minimum_stock: item.minimum_stock || 0,
+        unit: item.unit || "",
+        unit_cost: item.unit_cost || 0,
       });
     } catch (err) {
       console.error("Error loading item:", err);

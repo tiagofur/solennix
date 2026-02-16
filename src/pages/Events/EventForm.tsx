@@ -179,7 +179,7 @@ export const EventForm: React.FC = () => {
           missing.map(async (productId) => {
             const ingredients = await productService.getIngredients(productId);
             const cost =
-              ingredients?.reduce((sum, ing) => {
+              ingredients?.reduce((sum, ing: any) => {
                 const unitCost = ing.inventory?.unit_cost || 0;
                 return sum + ing.quantity_required * unitCost;
               }, 0) || 0;
@@ -238,35 +238,38 @@ export const EventForm: React.FC = () => {
     try {
       setIsLoading(true);
       const event = await eventService.getById(eventId);
+      if (!event) {
+        throw new Error('Evento no encontrado');
+      }
       reset({
-        client_id: event?.client_id || "",
-        event_date: event?.event_date || "",
-        start_time: event?.start_time || "",
-        end_time: event?.end_time || "",
-        service_type: event?.service_type || "",
-        num_people: event?.num_people || 100,
-        status: event?.status || "quoted",
-        discount: event?.discount || 0,
-        requires_invoice: event?.requires_invoice || false,
-        tax_rate: event?.tax_rate || 16,
-        tax_amount: event?.tax_amount || 0,
-        total_amount: event?.total_amount || 0,
-        location: event?.location || "",
-        city: event?.city || "",
+        client_id: event.client_id || "",
+        event_date: event.event_date || "",
+        start_time: event.start_time || "",
+        end_time: event.end_time || "",
+        service_type: event.service_type || "",
+        num_people: event.num_people || 100,
+        status: event.status || "quoted",
+        discount: event.discount || 0,
+        requires_invoice: event.requires_invoice || false,
+        tax_rate: event.tax_rate || 16,
+        tax_amount: event.tax_amount || 0,
+        total_amount: event.total_amount || 0,
+        location: event.location || "",
+        city: event.city || "",
         deposit_percent:
-          event?.deposit_percent ?? (profile?.default_deposit_percent || 50),
+          event.deposit_percent ?? (profile?.default_deposit_percent || 50),
         cancellation_days:
-          event?.cancellation_days ??
+          event.cancellation_days ??
           (profile?.default_cancellation_days || 15),
         refund_percent:
-          event?.refund_percent ?? (profile?.default_refund_percent || 0),
-        notes: event?.notes || "",
+          event.refund_percent ?? (profile?.default_refund_percent || 0),
+        notes: event.notes || "",
       });
       // Load event products
       const eventProducts = await eventService.getProducts(eventId);
       if (eventProducts) {
         setSelectedProducts(
-          eventProducts.map((ep) => ({
+          eventProducts.map((ep: any) => ({
             product_id: ep.product_id,
             quantity: ep.quantity,
             price: ep.unit_price,
@@ -384,6 +387,9 @@ export const EventForm: React.FC = () => {
           ...data,
           user_id: user.id,
         });
+        if (!newEvent) {
+          throw new Error('Error al crear el evento');
+        }
         eventId = newEvent.id;
       }
 

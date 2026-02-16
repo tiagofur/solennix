@@ -18,7 +18,7 @@ export const clientService = {
     return data;
   },
 
-  async getById(id: string) {
+  async getById(id: string): Promise<Client> {
     const userId = await getCurrentUserId();
     const { data, error } = await supabase
       .from('clients')
@@ -28,10 +28,11 @@ export const clientService = {
       .single();
     
     if (error) throw error;
+    if (!data) throw new Error('Cliente no encontrado');
     return data;
   },
 
-  async create(client: ClientInsert) {
+  async create(client: ClientInsert): Promise<Client> {
     const userId = await getCurrentUserId();
     
     const { data, error } = await supabase
@@ -41,10 +42,11 @@ export const clientService = {
       .single();
     
     if (error) throw error;
+    if (!data) throw new Error('Error al crear el cliente');
     return data;
   },
 
-  async update(id: string, client: ClientUpdate) {
+  async update(id: string, client: ClientUpdate): Promise<Client> {
     const userId = await getCurrentUserId();
     // First verify ownership
     const existing = await this.getById(id);
@@ -54,13 +56,15 @@ export const clientService = {
     
     const { data, error } = await supabase
       .from('clients')
-      .update(client as any)
+      // @ts-ignore - Supabase type inference issue
+      .update(client)
       .eq('id', id)
       .eq('user_id', userId)
       .select()
       .single();
     
     if (error) throw error;
+    if (!data) throw new Error('Error al actualizar el cliente');
     return data;
   },
 

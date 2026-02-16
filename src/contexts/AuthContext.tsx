@@ -152,7 +152,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { data: updatedProfile, error } = await supabase
         .from('users')
-        .update(data as any)
+        // @ts-ignore - Supabase type inference issue
+        .update(data)
         .eq('id', user.id)
         .select()
         .single();

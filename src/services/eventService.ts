@@ -52,7 +52,7 @@ export const eventService = {
     return data;
   },
 
-  async getById(id: string) {
+  async getById(id: string): Promise<Event> {
     const userId = await getCurrentUserId();
     const { data, error } = await supabase
       .from('events')
@@ -65,10 +65,11 @@ export const eventService = {
       .single();
     
     if (error) throw error;
-    return data;
+    if (!data) throw new Error('Evento no encontrado');
+    return data as Event;
   },
 
-  async create(event: EventInsert) {
+  async create(event: EventInsert): Promise<Event> {
     const userId = await getCurrentUserId();
     
     const { data, error } = await supabase
@@ -78,10 +79,11 @@ export const eventService = {
       .single();
     
     if (error) throw error;
+    if (!data) throw new Error('Error al crear el evento');
     return data;
   },
 
-  async update(id: string, event: EventUpdate) {
+  async update(id: string, event: EventUpdate): Promise<Event> {
     const userId = await getCurrentUserId();
     // First verify ownership
     const existing = await this.getById(id);
@@ -91,14 +93,16 @@ export const eventService = {
     
     const { data, error } = await supabase
       .from('events')
-      .update(event as any)
+      // @ts-ignore - Supabase type inference issue
+      .update(event)
       .eq('id', id)
       .eq('user_id', userId)
       .select()
       .single();
     
     if (error) throw error;
-    return data;
+    if (!data) throw new Error('Error al actualizar el evento');
+    return data as Event;
   },
 
   async delete(id: string) {
@@ -226,11 +230,12 @@ export const eventService = {
     products: { productId: string; quantity: number; unitPrice: number; discount?: number }[],
     extras: { description: string; cost: number; price: number; exclude_utility?: boolean }[],
   ) {
+    // @ts-ignore - Supabase type inference issue with RPC
     const { error } = await supabase.rpc('update_event_items', {
       p_event_id: eventId,
-      products_json: products as any,
-      extras_json: extras as any,
-    } as any);
+      products_json: products,
+      extras_json: extras,
+    });
 
     if (error) throw error;
   }

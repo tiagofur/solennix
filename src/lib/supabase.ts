@@ -9,7 +9,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
   // Don't throw error to allow UI to render diagnosis page
 }
 
-export const supabase = createClient<Database>(supabaseUrl || '', supabaseAnonKey || '', {
+export const supabase = createClient<Database>(supabaseUrl || 'https://placeholder.supabase.co', supabaseAnonKey || 'placeholder-key', {
   auth: {
     persistSession: true,
     autoRefreshToken: true,

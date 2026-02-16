@@ -44,13 +44,16 @@ export const ClientForm: React.FC = () => {
     try {
       setIsLoading(true);
       const client = await clientService.getById(clientId);
+      if (!client) {
+        throw new Error('Cliente no encontrado');
+      }
       reset({
-        name: client?.name || "",
-        phone: client?.phone || "",
-        email: client?.email || "",
-        address: client?.address || "",
-        city: client?.city || "",
-        notes: client?.notes || "",
+        name: client.name || "",
+        phone: client.phone || "",
+        email: client.email || "",
+        address: client.address || "",
+        city: client.city || "",
+        notes: client.notes || "",
       });
     } catch (err) {
       console.error("Error loading client:", err);

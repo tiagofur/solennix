@@ -63,16 +63,19 @@ export const ProductForm: React.FC = () => {
     try {
       setIsLoading(true);
       const product = await productService.getById(productId);
+      if (!product) {
+        throw new Error('Producto no encontrado');
+      }
       reset({
-        name: product?.name || "",
-        category: product?.category || "",
-        base_price: product?.base_price || 0,
+        name: product.name || "",
+        category: product.category || "",
+        base_price: product.base_price || 0,
       });
 
       // Load recipe ingredients
       const ingredients = await productService.getIngredients(productId);
       if (ingredients) {
-          setRecipeIngredients(ingredients.map(i => ({
+          setRecipeIngredients(ingredients.map((i: any) => ({
               inventory_id: i.inventory_id,
               quantity_required: i.quantity_required,
               unit_cost: i.inventory?.unit_cost || 0,
@@ -141,7 +144,10 @@ export const ProductForm: React.FC = () => {
           ...data,
           user_id: user.id,
         });
-        productId = newProduct?.id;
+        if (!newProduct) {
+          throw new Error('Error al crear el producto');
+        }
+        productId = newProduct.id;
       }
 
       if (productId) {
