@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { Database } from '../types/supabase';
+import { logError } from '../lib/errorHandler';
 
 type UserProfile = Database['public']['Tables']['users']['Row'];
 
@@ -52,7 +53,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .single();
 
       if (error) {
-        console.error('Error fetching profile:', error);
+        logError('Error fetching profile', error);
         // If profile doesn't exist but user is auth'd, we shouldn't block
         // In a real app, we might redirect to a "complete profile" page
         setProfile(null);
@@ -60,7 +61,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setProfile(data);
       }
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      logError('Error fetching profile', error);
       setProfile(null);
     }
   };
@@ -74,7 +75,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error('Error getting session:', error);
+          logError('Error getting session', error);
           throw error;
         }
 
@@ -88,7 +89,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           else setProfile(null);
         }
       } catch (error) {
-        console.error('Error initializing session:', error);
+        logError('Error initializing session', error);
         clearSupabaseAuthTokens();
         if (mounted) {
           setSession(null);
@@ -133,9 +134,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
-      if (error) console.error('Error signing out:', error);
+      if (error) logError('Error signing out', error);
     } catch (error) {
-      console.error('Unexpected error signing out:', error);
+      logError('Unexpected error signing out', error);
     } finally {
       // Always clear local state
       setSession(null);
@@ -151,7 +152,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { data: updatedProfile, error } = await supabase
         .from('users')
-        .update(data)
+        .update(data as any)
         .eq('id', user.id)
         .select()
         .single();
@@ -159,7 +160,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) throw error;
       setProfile(updatedProfile);
     } catch (error) {
-      console.error('Error updating profile:', error);
+      logError('Error updating profile', error);
       throw error;
     }
   };

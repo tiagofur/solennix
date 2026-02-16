@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabase';
+import { supabase, getCurrentUserId } from '../lib/supabase';
 import { Database } from '../types/supabase';
 
 type Product = Database['public']['Tables']['products']['Row'];
@@ -8,9 +8,11 @@ type ProductIngredientInsert = Database['public']['Tables']['product_ingredients
 
 export const productService = {
   async getAll() {
+    const userId = await getCurrentUserId();
     const { data, error } = await supabase
       .from('products')
       .select('*')
+      .eq('user_id', userId)
       .order('name');
     
     if (error) throw error;
@@ -18,10 +20,12 @@ export const productService = {
   },
 
   async getById(id: string) {
+    const userId = await getCurrentUserId();
     const { data, error } = await supabase
       .from('products')
       .select('*')
       .eq('id', id)
+      .eq('user_id', userId)
       .single();
     
     if (error) throw error;
@@ -29,9 +33,11 @@ export const productService = {
   },
 
   async create(product: ProductInsert) {
+    const userId = await getCurrentUserId();
+    
     const { data, error } = await supabase
       .from('products')
-      .insert(product)
+      .insert({ ...product, user_id: userId } as any)
       .select()
       .single();
     
@@ -40,10 +46,18 @@ export const productService = {
   },
 
   async update(id: string, product: ProductUpdate) {
+    const userId = await getCurrentUserId();
+    // First verify ownership
+    const existing = await this.getById(id);
+    if (!existing) {
+      throw new Error('Producto no encontrado');
+    }
+    
     const { data, error } = await supabase
       .from('products')
-      .update(product)
+      .update(product as any)
       .eq('id', id)
+      .eq('user_id', userId)
       .select()
       .single();
     
@@ -52,10 +66,18 @@ export const productService = {
   },
 
   async delete(id: string) {
+    const userId = await getCurrentUserId();
+    // First verify ownership
+    const existing = await this.getById(id);
+    if (!existing) {
+      throw new Error('Producto no encontrado');
+    }
+    
     const { error } = await supabase
       .from('products')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .eq('user_id', userId);
     
     if (error) throw error;
   },
@@ -71,12 +93,19 @@ export const productService = {
     
     const { error } = await supabase
       .from('product_ingredients')
-      .insert(records);
+      .insert(records as any);
       
     if (error) throw error;
   },
 
   async getIngredients(productId: string) {
+    const userId = await getCurrentUserId();
+    // First verify ownership of the product
+    const product = await this.getById(productId);
+    if (!product) {
+      throw new Error('Producto no encontrado');
+    }
+    
     const { data, error } = await supabase
       .from('product_ingredients')
       .select(`

@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabase';
+import { supabase, getCurrentUserId } from '../lib/supabase';
 import { Database } from '../types/supabase';
 
 type InventoryItem = Database['public']['Tables']['inventory']['Row'];
@@ -7,9 +7,11 @@ type InventoryUpdate = Database['public']['Tables']['inventory']['Update'];
 
 export const inventoryService = {
   async getAll() {
+    const userId = await getCurrentUserId();
     const { data, error } = await supabase
       .from('inventory')
       .select('*')
+      .eq('user_id', userId)
       .order('ingredient_name');
     
     if (error) throw error;
@@ -17,10 +19,12 @@ export const inventoryService = {
   },
 
   async getById(id: string) {
+    const userId = await getCurrentUserId();
     const { data, error } = await supabase
       .from('inventory')
       .select('*')
       .eq('id', id)
+      .eq('user_id', userId)
       .single();
     
     if (error) throw error;
@@ -28,9 +32,11 @@ export const inventoryService = {
   },
 
   async create(item: InventoryInsert) {
+    const userId = await getCurrentUserId();
+    
     const { data, error } = await supabase
       .from('inventory')
-      .insert(item)
+      .insert({ ...item, user_id: userId } as any)
       .select()
       .single();
     
@@ -39,10 +45,18 @@ export const inventoryService = {
   },
 
   async update(id: string, item: InventoryUpdate) {
+    const userId = await getCurrentUserId();
+    // First verify ownership
+    const existing = await this.getById(id);
+    if (!existing) {
+      throw new Error('Ítem de inventario no encontrado');
+    }
+    
     const { data, error } = await supabase
       .from('inventory')
-      .update(item)
+      .update(item as any)
       .eq('id', id)
+      .eq('user_id', userId)
       .select()
       .single();
     
@@ -51,10 +65,18 @@ export const inventoryService = {
   },
 
   async delete(id: string) {
+    const userId = await getCurrentUserId();
+    // First verify ownership
+    const existing = await this.getById(id);
+    if (!existing) {
+      throw new Error('Ítem de inventario no encontrado');
+    }
+    
     const { error } = await supabase
       .from('inventory')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .eq('user_id', userId);
     
     if (error) throw error;
   }

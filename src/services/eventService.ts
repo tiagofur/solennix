@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabase';
+import { supabase, getCurrentUserId } from '../lib/supabase';
 import { Database } from '../types/supabase';
 
 type Event = Database['public']['Tables']['events']['Row'];
@@ -8,12 +8,14 @@ type EventProductInsert = Database['public']['Tables']['event_products']['Insert
 
 export const eventService = {
   async getAll() {
+    const userId = await getCurrentUserId();
     const { data, error } = await supabase
       .from('events')
       .select(`
         *,
         clients (name)
       `)
+      .eq('user_id', userId)
       .order('event_date', { ascending: false });
     
     if (error) throw error;
@@ -21,12 +23,14 @@ export const eventService = {
   },
 
   async getByDateRange(start: string, end: string) {
+    const userId = await getCurrentUserId();
     const { data, error } = await supabase
       .from('events')
       .select(`
         *,
         clients (name)
       `)
+      .eq('user_id', userId)
       .gte('event_date', start)
       .lte('event_date', end)
       .order('event_date');
@@ -36,9 +40,11 @@ export const eventService = {
   },
 
   async getByClientId(clientId: string) {
+    const userId = await getCurrentUserId();
     const { data, error } = await supabase
       .from('events')
       .select('*')
+      .eq('user_id', userId)
       .eq('client_id', clientId)
       .order('event_date', { ascending: false });
 
@@ -47,6 +53,7 @@ export const eventService = {
   },
 
   async getById(id: string) {
+    const userId = await getCurrentUserId();
     const { data, error } = await supabase
       .from('events')
       .select(`
@@ -54,6 +61,7 @@ export const eventService = {
         clients (*)
       `)
       .eq('id', id)
+      .eq('user_id', userId)
       .single();
     
     if (error) throw error;
@@ -61,9 +69,11 @@ export const eventService = {
   },
 
   async create(event: EventInsert) {
+    const userId = await getCurrentUserId();
+    
     const { data, error } = await supabase
       .from('events')
-      .insert(event)
+      .insert({ ...event, user_id: userId } as any)
       .select()
       .single();
     
@@ -72,10 +82,18 @@ export const eventService = {
   },
 
   async update(id: string, event: EventUpdate) {
+    const userId = await getCurrentUserId();
+    // First verify ownership
+    const existing = await this.getById(id);
+    if (!existing) {
+      throw new Error('Evento no encontrado');
+    }
+    
     const { data, error } = await supabase
       .from('events')
-      .update(event)
+      .update(event as any)
       .eq('id', id)
+      .eq('user_id', userId)
       .select()
       .single();
     
@@ -84,15 +102,24 @@ export const eventService = {
   },
 
   async delete(id: string) {
+    const userId = await getCurrentUserId();
+    // First verify ownership
+    const existing = await this.getById(id);
+    if (!existing) {
+      throw new Error('Evento no encontrado');
+    }
+    
     const { error } = await supabase
       .from('events')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .eq('user_id', userId);
     
     if (error) throw error;
   },
 
   async getUpcoming(limit: number = 5) {
+    const userId = await getCurrentUserId();
     const today = new Date().toISOString().split('T')[0];
     const { data, error } = await supabase
       .from('events')
@@ -100,6 +127,7 @@ export const eventService = {
         *,
         clients (name)
       `)
+      .eq('user_id', userId)
       .gte('event_date', today)
       .order('event_date', { ascending: true })
       .limit(limit);
@@ -121,7 +149,7 @@ export const eventService = {
     
     const { error } = await supabase
       .from('event_products')
-      .insert(records);
+      .insert(records as any);
       
     if (error) throw error;
   },
@@ -165,7 +193,7 @@ export const eventService = {
 
     const { error } = await supabase
       .from('event_extras')
-      .insert(records);
+      .insert(records as any);
 
     if (error) throw error;
   },
@@ -200,9 +228,9 @@ export const eventService = {
   ) {
     const { error } = await supabase.rpc('update_event_items', {
       p_event_id: eventId,
-      products_json: products,
-      extras_json: extras,
-    });
+      products_json: products as any,
+      extras_json: extras as any,
+    } as any);
 
     if (error) throw error;
   }
