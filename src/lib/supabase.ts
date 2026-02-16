@@ -5,7 +5,7 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Missing Supabase environment variables! URL:', supabaseUrl, 'Key exists:', !!supabaseAnonKey);
+  console.error('Missing Supabase environment variables. Please check your .env configuration.');
   // Don't throw error to allow UI to render diagnosis page
 }
 

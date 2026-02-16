@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
+import { logError } from '../lib/errorHandler';
 import clsx from 'clsx';
 
 export const Layout: React.FC = () => {
@@ -36,7 +37,7 @@ export const Layout: React.FC = () => {
     try {
       await signOut();
     } catch (error) {
-      console.error('Error signing out:', error);
+      logError('Error signing out', error);
       // Force cleanup if Supabase fails
       localStorage.clear();
       window.location.href = '/login';
