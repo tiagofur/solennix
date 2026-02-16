@@ -4,7 +4,7 @@
  * @param error - The error object
  */
 export const logError = (context: string, error: unknown): void => {
-  if (process.env.NODE_ENV === 'development') {
+  if (import.meta.env.DEV) {
     // In development, log full error for debugging
     console.error(`[${context}]`, error);
   } else {

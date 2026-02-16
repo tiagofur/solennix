@@ -6,6 +6,7 @@ import { z } from "zod";
 import { clientService } from "../../services/clientService";
 import { useAuth } from "../../contexts/AuthContext";
 import { ArrowLeft, Save } from "lucide-react";
+import { logError } from "../../lib/errorHandler";
 
 const clientSchema = z.object({
   name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
@@ -38,6 +39,7 @@ export const ClientForm: React.FC = () => {
     if (id) {
       loadClient(id);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const loadClient = async (clientId: string) => {
@@ -56,7 +58,7 @@ export const ClientForm: React.FC = () => {
         notes: client.notes || "",
       });
     } catch (err) {
-      console.error("Error loading client:", err);
+      logError("Error loading client", err);
       setError("Error al cargar el cliente");
     } finally {
       setIsLoading(false);
@@ -84,7 +86,7 @@ export const ClientForm: React.FC = () => {
       }
       navigate("/clients");
     } catch (err: any) {
-      console.error("Error saving client:", err);
+      logError("Error saving client", err);
       setError(err.message || "Error al guardar el cliente");
     } finally {
       setIsLoading(false);
@@ -97,23 +99,23 @@ export const ClientForm: React.FC = () => {
         <div className="flex items-center">
           <button
             onClick={() => navigate("/clients")}
-            className="mr-4 p-2 rounded-full hover:bg-gray-100 text-gray-500"
+            className="mr-4 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             {id ? "Editar Cliente" : "Nuevo Cliente"}
           </h1>
         </div>
       </div>
 
-      <div className="bg-white shadow px-4 py-5 sm:rounded-lg sm:p-6">
+      <div className="bg-white dark:bg-gray-800 shadow px-4 py-5 sm:rounded-lg sm:p-6">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {error && (
-            <div className="bg-red-50 border-l-4 border-red-400 p-4">
+            <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-400 p-4">
               <div className="flex">
                 <div className="ml-3">
-                  <p className="text-sm text-red-700">{error}</p>
+                  <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
                 </div>
               </div>
             </div>
@@ -123,7 +125,7 @@ export const ClientForm: React.FC = () => {
             <div className="sm:col-span-3">
               <label
                 htmlFor="name"
-                className="block text-sm font-medium text-gray-700"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
               >
                 Nombre Completo *
               </label>
@@ -131,10 +133,10 @@ export const ClientForm: React.FC = () => {
                 <input
                   type="text"
                   {...register("name")}
-                  className="shadow-sm focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
+                  className="shadow-sm focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
                 {errors.name && (
-                  <p className="mt-2 text-sm text-red-600">
+                  <p className="mt-2 text-sm text-red-600 dark:text-red-400">
                     {errors.name.message}
                   </p>
                 )}
@@ -144,7 +146,7 @@ export const ClientForm: React.FC = () => {
             <div className="sm:col-span-3">
               <label
                 htmlFor="phone"
-                className="block text-sm font-medium text-gray-700"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
               >
                 Teléfono *
               </label>
@@ -152,10 +154,10 @@ export const ClientForm: React.FC = () => {
                 <input
                   type="text"
                   {...register("phone")}
-                  className="shadow-sm focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
+                  className="shadow-sm focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
                 {errors.phone && (
-                  <p className="mt-2 text-sm text-red-600">
+                  <p className="mt-2 text-sm text-red-600 dark:text-red-400">
                     {errors.phone.message}
                   </p>
                 )}
@@ -165,7 +167,7 @@ export const ClientForm: React.FC = () => {
             <div className="sm:col-span-4">
               <label
                 htmlFor="email"
-                className="block text-sm font-medium text-gray-700"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
               >
                 Email
               </label>
@@ -173,10 +175,10 @@ export const ClientForm: React.FC = () => {
                 <input
                   type="email"
                   {...register("email")}
-                  className="shadow-sm focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
+                  className="shadow-sm focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
                 {errors.email && (
-                  <p className="mt-2 text-sm text-red-600">
+                  <p className="mt-2 text-sm text-red-600 dark:text-red-400">
                     {errors.email.message}
                   </p>
                 )}
@@ -186,7 +188,7 @@ export const ClientForm: React.FC = () => {
             <div className="sm:col-span-6">
               <label
                 htmlFor="address"
-                className="block text-sm font-medium text-gray-700"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
               >
                 Dirección
               </label>
@@ -194,7 +196,7 @@ export const ClientForm: React.FC = () => {
                 <input
                   type="text"
                   {...register("address")}
-                  className="shadow-sm focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
+                  className="shadow-sm focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
               </div>
             </div>
@@ -202,7 +204,7 @@ export const ClientForm: React.FC = () => {
             <div className="sm:col-span-6">
               <label
                 htmlFor="city"
-                className="block text-sm font-medium text-gray-700"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
               >
                 Ciudad
               </label>
@@ -210,7 +212,7 @@ export const ClientForm: React.FC = () => {
                 <input
                   type="text"
                   {...register("city")}
-                  className="shadow-sm focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
+                  className="shadow-sm focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
               </div>
             </div>
@@ -218,7 +220,7 @@ export const ClientForm: React.FC = () => {
             <div className="sm:col-span-6">
               <label
                 htmlFor="notes"
-                className="block text-sm font-medium text-gray-700"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
               >
                 Notas
               </label>
@@ -226,7 +228,7 @@ export const ClientForm: React.FC = () => {
                 <textarea
                   {...register("notes")}
                   rows={3}
-                  className="shadow-sm focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
+                  className="shadow-sm focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
               </div>
             </div>
@@ -236,7 +238,7 @@ export const ClientForm: React.FC = () => {
             <button
               type="button"
               onClick={() => navigate("/clients")}
-              className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-orange mr-3"
+              className="bg-white dark:bg-gray-700 py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-orange mr-3"
             >
               Cancelar
             </button>

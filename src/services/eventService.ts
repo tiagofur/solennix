@@ -93,7 +93,7 @@ export const eventService = {
     
     const { data, error } = await supabase
       .from('events')
-      // @ts-ignore - Supabase type inference issue
+      // @ts-expect-error - Supabase type inference issue
       .update(event)
       .eq('id', id)
       .eq('user_id', userId)
@@ -230,7 +230,7 @@ export const eventService = {
     products: { productId: string; quantity: number; unitPrice: number; discount?: number }[],
     extras: { description: string; cost: number; price: number; exclude_utility?: boolean }[],
   ) {
-    // @ts-ignore - Supabase type inference issue with RPC
+    // @ts-expect-error - Supabase type inference issue with RPC
     const { error } = await supabase.rpc('update_event_items', {
       p_event_id: eventId,
       products_json: products,

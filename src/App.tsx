@@ -19,6 +19,7 @@ import { EventForm } from './pages/Events/EventForm';
 import { EventSummary } from './pages/Events/EventSummary';
 import { Settings } from './pages/Settings';
 import { ForgotPassword } from './pages/ForgotPassword';
+import { NotFound } from './pages/NotFound';
 
 function App() {
   return (
@@ -60,6 +61,7 @@ function App() {
 
           <Route path="/settings" element={<Settings />} />
         </Route>
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </AuthProvider>
   );

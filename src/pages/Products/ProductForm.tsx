@@ -8,6 +8,7 @@ import { inventoryService } from "../../services/inventoryService";
 import { useAuth } from "../../contexts/AuthContext";
 import { ArrowLeft, Save, Plus, Trash2, ChefHat } from "lucide-react";
 import { Database } from "../../types/supabase";
+import { logError } from "../../lib/errorHandler";
 
 type InventoryItem = Database['public']['Tables']['inventory']['Row'];
 
@@ -48,6 +49,7 @@ export const ProductForm: React.FC = () => {
     if (id) {
       loadProduct(id);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const loadDependencies = async () => {
@@ -55,7 +57,7 @@ export const ProductForm: React.FC = () => {
           const items = await inventoryService.getAll();
           setInventoryItems(items);
       } catch (err) {
-          console.error("Error loading inventory:", err);
+          logError("Error loading inventory", err);
       }
   };
 
@@ -84,7 +86,7 @@ export const ProductForm: React.FC = () => {
       }
 
     } catch (err) {
-      console.error("Error loading product:", err);
+      logError("Error loading product", err);
       setError("Error al cargar el producto");
     } finally {
       setIsLoading(false);
@@ -160,7 +162,7 @@ export const ProductForm: React.FC = () => {
 
       navigate("/products");
     } catch (err: any) {
-      console.error("Error saving product:", err);
+      logError("Error saving product", err);
       setError(err.message || "Error al guardar el producto");
     } finally {
       setIsLoading(false);
@@ -173,11 +175,11 @@ export const ProductForm: React.FC = () => {
         <div className="flex items-center">
           <button
             onClick={() => navigate("/products")}
-            className="mr-4 p-2 rounded-full hover:bg-gray-100 text-gray-500"
+            className="mr-4 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             {id ? "Editar Producto" : "Nuevo Producto"}
           </h1>
         </div>
@@ -185,13 +187,13 @@ export const ProductForm: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Formulario Principal */}
-        <div className="lg:col-span-2 bg-white shadow px-4 py-5 sm:rounded-lg sm:p-6">
+        <div className="lg:col-span-2 bg-white dark:bg-gray-800 shadow px-4 py-5 sm:rounded-lg sm:p-6">
             <form id="product-form" onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {error && (
-                <div className="bg-red-50 border-l-4 border-red-400 p-4">
+                <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-400 p-4">
                 <div className="flex">
                     <div className="ml-3">
-                    <p className="text-sm text-red-700">{error}</p>
+                    <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
                     </div>
                 </div>
                 </div>
@@ -201,7 +203,7 @@ export const ProductForm: React.FC = () => {
                 <div className="sm:col-span-4">
                 <label
                     htmlFor="name"
-                    className="block text-sm font-medium text-gray-700"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                 >
                     Nombre del Producto *
                 </label>
@@ -209,11 +211,11 @@ export const ProductForm: React.FC = () => {
                     <input
                     type="text"
                     {...register("name")}
-                    className="shadow-sm focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
+                    className="shadow-sm focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     placeholder="Ej. Churros Clásicos"
                     />
                     {errors.name && (
-                    <p className="mt-2 text-sm text-red-600">
+                    <p className="mt-2 text-sm text-red-600 dark:text-red-400">
                         {errors.name.message}
                     </p>
                     )}
@@ -223,7 +225,7 @@ export const ProductForm: React.FC = () => {
                 <div className="sm:col-span-3">
                 <label
                     htmlFor="category"
-                    className="block text-sm font-medium text-gray-700"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                 >
                     Categoría *
                 </label>
@@ -231,11 +233,11 @@ export const ProductForm: React.FC = () => {
                     <input
                     type="text"
                     {...register("category")}
-                    className="shadow-sm focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
+                    className="shadow-sm focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     placeholder="Ej. Postres"
                     />
                     {errors.category && (
-                    <p className="mt-2 text-sm text-red-600">
+                    <p className="mt-2 text-sm text-red-600 dark:text-red-400">
                         {errors.category.message}
                     </p>
                     )}
@@ -245,7 +247,7 @@ export const ProductForm: React.FC = () => {
                 <div className="sm:col-span-3">
                 <label
                     htmlFor="base_price"
-                    className="block text-sm font-medium text-gray-700"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                 >
                     Precio Base ($) *
                 </label>
@@ -254,10 +256,10 @@ export const ProductForm: React.FC = () => {
                     type="number"
                     step="0.01"
                     {...register("base_price")}
-                    className="shadow-sm focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
+                    className="shadow-sm focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     />
                     {errors.base_price && (
-                    <p className="mt-2 text-sm text-red-600">
+                    <p className="mt-2 text-sm text-red-600 dark:text-red-400">
                         {errors.base_price.message}
                     </p>
                     )}
@@ -268,19 +270,19 @@ export const ProductForm: React.FC = () => {
         </div>
 
         {/* Receta / Ingredientes */}
-        <div className="lg:col-span-1 bg-white shadow px-4 py-5 sm:rounded-lg sm:p-6 flex flex-col">
-            <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4 flex items-center">
+        <div className="lg:col-span-1 bg-white dark:bg-gray-800 shadow px-4 py-5 sm:rounded-lg sm:p-6 flex flex-col">
+            <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white mb-4 flex items-center">
                 <ChefHat className="h-5 w-5 mr-2 text-brand-orange" />
                 Receta (por unidad/persona)
             </h3>
-            <p className="text-xs text-gray-500 mb-4">Define qué ingredientes y qué cantidad se necesitan para 1 unidad de este producto.</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Define qué ingredientes y qué cantidad se necesitan para 1 unidad de este producto.</p>
 
             <div className="flex-1 overflow-y-auto mb-4 space-y-3">
                 {recipeIngredients.map((item, index) => (
-                    <div key={index} className="bg-gray-50 p-3 rounded-md relative group">
+                    <div key={index} className="bg-gray-50 dark:bg-gray-700 p-3 rounded-md relative group">
                         <button 
                             onClick={() => handleRemoveIngredient(index)}
-                            className="absolute top-1 right-1 text-gray-400 hover:text-red-500"
+                            className="absolute top-1 right-1 text-gray-400 hover:text-red-500 dark:hover:text-red-400"
                         >
                             <Trash2 className="h-4 w-4" />
                         </button>
@@ -288,7 +290,7 @@ export const ProductForm: React.FC = () => {
                             <select
                                 value={item.inventory_id}
                                 onChange={(e) => handleIngredientChange(index, 'inventory_id', e.target.value)}
-                                className="block w-full text-sm border-gray-300 rounded-md shadow-sm focus:ring-brand-orange focus:border-brand-orange"
+                                className="block w-full text-sm border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-brand-orange focus:border-brand-orange bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
                             >
                                 <option value="">Seleccionar ingrediente</option>
                                 {inventoryItems.map(i => (
@@ -298,18 +300,18 @@ export const ProductForm: React.FC = () => {
                         </div>
                         <div className="flex gap-2 items-center">
                             <div className="w-1/2">
-                                <label className="text-xs text-gray-500">Cantidad</label>
+                                <label className="text-xs text-gray-500 dark:text-gray-400">Cantidad</label>
                                 <input 
                                     type="number" 
                                     step="0.001"
                                     value={item.quantity_required}
                                     onChange={(e) => handleIngredientChange(index, 'quantity_required', Number(e.target.value))}
-                                    className="block w-full text-sm border-gray-300 rounded-md shadow-sm focus:ring-brand-orange focus:border-brand-orange"
+                                    className="block w-full text-sm border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-brand-orange focus:border-brand-orange bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
                                 />
                             </div>
                             <div className="w-1/2 text-right">
-                                <span className="text-xs text-gray-500 block">Costo Est.</span>
-                                <span className="text-sm font-medium text-gray-700">
+                                <span className="text-xs text-gray-500 dark:text-gray-400 block">Costo Est.</span>
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                                     ${(item.quantity_required * item.unit_cost).toFixed(2)}
                                 </span>
                             </div>
@@ -320,16 +322,16 @@ export const ProductForm: React.FC = () => {
                 <button
                     type="button"
                     onClick={handleAddIngredient}
-                    className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                    className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
                 >
                     <Plus className="h-4 w-4 mr-2" /> Agregar Ingrediente
                 </button>
             </div>
 
-            <div className="border-t pt-4 space-y-2">
+            <div className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-2">
                 <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-500">Costo Total por Unidad</span>
-                    <span className="text-lg font-bold text-gray-900">
+                    <span className="text-sm text-gray-500 dark:text-gray-400">Costo Total por Unidad</span>
+                    <span className="text-lg font-bold text-gray-900 dark:text-white">
                         ${calculateTotalCost().toFixed(2)}
                     </span>
                 </div>

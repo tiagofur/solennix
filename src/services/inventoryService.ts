@@ -6,7 +6,7 @@ type InventoryInsert = Database['public']['Tables']['inventory']['Insert'];
 type InventoryUpdate = Database['public']['Tables']['inventory']['Update'];
 
 export const inventoryService = {
-  async getAll() {
+  async getAll(): Promise<InventoryItem[]> {
     const userId = await getCurrentUserId();
     const { data, error } = await supabase
       .from('inventory')
@@ -15,7 +15,7 @@ export const inventoryService = {
       .order('ingredient_name');
     
     if (error) throw error;
-    return data;
+    return data || [];
   },
 
   async getById(id: string): Promise<InventoryItem> {
@@ -56,7 +56,7 @@ export const inventoryService = {
     
     const { data, error } = await supabase
       .from('inventory')
-      // @ts-ignore - Supabase type inference issue
+      // @ts-expect-error - Supabase type inference issue
       .update(item)
       .eq('id', id)
       .eq('user_id', userId)

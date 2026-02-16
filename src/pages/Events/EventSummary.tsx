@@ -8,10 +8,16 @@ import {
   FileText,
   ShoppingCart,
   FileCheck,
+  Download,
+  DollarSign
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
+import { generateBudgetPDF, generateContractPDF } from "../../lib/pdfGenerator";
+import { logError } from "../../lib/errorHandler";
+import { getEventNetSales, getEventTaxAmount, getEventTotalCharged } from "../../lib/finance";
+import { Payments } from "./components/Payments";
 
-type ViewMode = "summary" | "ingredients" | "contract";
+type ViewMode = "summary" | "ingredients" | "contract" | "payments";
 
 export const EventSummary: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -71,7 +77,7 @@ export const EventSummary: React.FC = () => {
 
       setIngredients(Object.values(aggregatedIngredients));
     } catch (error) {
-      console.error("Error loading summary:", error);
+      logError("Error loading summary", error);
     } finally {
       setLoading(false);
     }
@@ -83,9 +89,10 @@ export const EventSummary: React.FC = () => {
   const totalProductCost = ingredients.reduce((sum, i) => sum + i.cost, 0);
   const totalExtrasCost = extras.reduce((sum, e) => sum + e.cost, 0);
   const totalCost = totalProductCost + totalExtrasCost;
-  const totalRevenue = event.total_amount || 0;
-  const taxAmount = event.tax_amount || 0;
-  const revenueExTax = totalRevenue - taxAmount;
+  const totalCharged = getEventTotalCharged(event);
+  const taxAmount = getEventTaxAmount(event);
+  const netSales = getEventNetSales(event);
+  const revenueExTax = netSales;
   const profit = revenueExTax - totalCost;
   const margin = revenueExTax > 0 ? (profit / revenueExTax) * 100 : 0;
 
@@ -98,34 +105,45 @@ export const EventSummary: React.FC = () => {
     : "";
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto p-8 bg-white shadow-lg my-8 print:shadow-none print:my-0 print:max-w-none print:p-0">
+    <div className="space-y-6 max-w-4xl mx-auto p-8 bg-white dark:bg-gray-800 shadow-lg my-8 print:shadow-none print:my-0 print:max-w-none print:p-0 transition-colors">
       <div className="flex flex-col md:flex-row justify-between items-center gap-4 print:hidden mb-6">
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate(`/events/${id}/edit`)}
-            className="flex items-center text-gray-600 hover:text-gray-900"
+            className="flex items-center text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
           >
             <ArrowLeft className="h-4 w-4 mr-2" /> Volver
           </button>
 
-          <div className="flex bg-gray-100 rounded-lg p-1">
+          <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1 overflow-x-auto max-w-[250px] sm:max-w-none">
             <button
               onClick={() => setViewMode("summary")}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center ${
+              className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center transition-colors whitespace-nowrap ${
                 viewMode === "summary"
-                  ? "bg-white text-brand-orange shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
+                  ? "bg-white dark:bg-gray-600 text-brand-orange shadow-sm"
+                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
               }`}
             >
               <FileText className="h-4 w-4 mr-2" />
               Resumen
             </button>
             <button
+              onClick={() => setViewMode("payments")}
+              className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center transition-colors whitespace-nowrap ${
+                viewMode === "payments"
+                  ? "bg-white dark:bg-gray-600 text-brand-orange shadow-sm"
+                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+              }`}
+            >
+              <DollarSign className="h-4 w-4 mr-2" />
+              Pagos
+            </button>
+            <button
               onClick={() => setViewMode("ingredients")}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center ${
+              className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center transition-colors whitespace-nowrap ${
                 viewMode === "ingredients"
-                  ? "bg-white text-brand-orange shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
+                  ? "bg-white dark:bg-gray-600 text-brand-orange shadow-sm"
+                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
               }`}
             >
               <ShoppingCart className="h-4 w-4 mr-2" />
@@ -133,10 +151,10 @@ export const EventSummary: React.FC = () => {
             </button>
             <button
               onClick={() => setViewMode("contract")}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center ${
+              className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center transition-colors whitespace-nowrap ${
                 viewMode === "contract"
-                  ? "bg-white text-brand-orange shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
+                  ? "bg-white dark:bg-gray-600 text-brand-orange shadow-sm"
+                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
               }`}
             >
               <FileCheck className="h-4 w-4 mr-2" />
@@ -145,27 +163,46 @@ export const EventSummary: React.FC = () => {
           </div>
         </div>
 
-        <button
-          onClick={handlePrint}
-          className="flex items-center px-4 py-2 bg-brand-orange text-white rounded hover:bg-orange-600 shadow-sm"
-        >
-          <Printer className="h-4 w-4 mr-2" />
-          Imprimir{" "}
-          {viewMode === "summary"
-            ? "Resumen"
-            : viewMode === "ingredients"
-              ? "Lista"
-              : "Contrato"}
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => generateBudgetPDF(event, profile, products, extras)}
+            className="flex items-center px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium shadow-sm transition-colors"
+            title="Descargar Presupuesto en PDF"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Presupuesto
+          </button>
+          
+          <button
+            onClick={() => generateContractPDF(event, profile)}
+            className="flex items-center px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium shadow-sm transition-colors"
+            title="Descargar Contrato en PDF"
+          >
+            <FileCheck className="h-4 w-4 mr-2" />
+            Contrato
+          </button>
+
+          <button
+            onClick={handlePrint}
+            className="flex items-center px-4 py-2 bg-brand-orange text-white rounded hover:bg-orange-600 shadow-sm text-sm font-medium transition-colors"
+          >
+            <Printer className="h-4 w-4 mr-2" />
+            Imprimir
+          </button>
+        </div>
       </div>
+
+      {viewMode === "payments" && id && user && (
+        <Payments eventId={id} totalAmount={event.total_amount} userId={user.id} />
+      )}
 
       {viewMode === "summary" && (
         <div className="space-y-8">
-          <div className="border-b pb-6">
-            <h1 className="text-3xl font-bold text-gray-900">
+          <div className="border-b dark:border-gray-700 pb-6">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
               {event.clients?.name} - {event.service_type}
             </h1>
-            <div className="grid grid-cols-2 gap-4 mt-4 text-sm text-gray-600">
+            <div className="grid grid-cols-2 gap-4 mt-4 text-sm text-gray-600 dark:text-gray-300">
               <div>
                 <p>
                   <span className="font-semibold">Fecha:</span>{" "}
@@ -209,19 +246,19 @@ export const EventSummary: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
-              <h2 className="text-lg font-bold mb-4 border-b pb-2">
+              <h2 className="text-lg font-bold mb-4 border-b dark:border-gray-700 pb-2 text-gray-900 dark:text-white">
                 Productos
               </h2>
-              <table className="w-full text-sm">
+              <table className="w-full text-sm text-gray-600 dark:text-gray-300">
                 <thead>
-                  <tr className="text-left text-gray-500">
+                  <tr className="text-left text-gray-500 dark:text-gray-400">
                     <th className="pb-2">Producto</th>
                     <th className="pb-2 text-right">Cant.</th>
                     <th className="pb-2 text-right">Precio Unit.</th>
                     <th className="pb-2 text-right">Total</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y">
+                <tbody className="divide-y dark:divide-gray-700">
                   {products.map((p, i) => (
                     <tr key={i}>
                       <td className="py-2">{p.products?.name}</td>
@@ -239,15 +276,15 @@ export const EventSummary: React.FC = () => {
             </div>
 
             <div>
-              <h2 className="text-lg font-bold mb-4 border-b pb-2">Extras</h2>
-              <table className="w-full text-sm">
+              <h2 className="text-lg font-bold mb-4 border-b dark:border-gray-700 pb-2 text-gray-900 dark:text-white">Extras</h2>
+              <table className="w-full text-sm text-gray-600 dark:text-gray-300">
                 <thead>
-                  <tr className="text-left text-gray-500">
+                  <tr className="text-left text-gray-500 dark:text-gray-400">
                     <th className="pb-2">Descripción</th>
                     <th className="pb-2 text-right">Precio</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y">
+                <tbody className="divide-y dark:divide-gray-700">
                   {extras.map((e, i) => (
                     <tr key={i}>
                       <td className="py-2">{e.description}</td>
@@ -256,7 +293,7 @@ export const EventSummary: React.FC = () => {
                   ))}
                   {extras.length === 0 && (
                     <tr>
-                      <td colSpan={2} className="py-2 text-gray-500 italic">
+                      <td colSpan={2} className="py-2 text-gray-500 dark:text-gray-400 italic">
                         Sin extras
                       </td>
                     </tr>
@@ -266,42 +303,48 @@ export const EventSummary: React.FC = () => {
             </div>
           </div>
 
-          <div className="mt-8 border-t pt-6 print:hidden">
-            <h2 className="text-lg font-bold mb-4">
+          <div className="mt-8 border-t dark:border-gray-700 pt-6 print:hidden">
+            <h2 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">
               Resumen Financiero (Interno)
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-gray-100 p-4 rounded">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 bg-gray-100 dark:bg-gray-700 p-4 rounded">
               <div>
-                <p className="text-xs text-gray-500">
-                  {event.requires_invoice ? "Ingresos Totales (con IVA)" : "Ingresos Totales"}
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Venta (sin IVA)
                 </p>
-                <p className="text-xl font-bold text-gray-900">
-                  ${totalRevenue.toFixed(2)}
+                <p className="text-xl font-bold text-gray-900 dark:text-white">
+                  ${netSales.toFixed(2)}
                 </p>
               </div>
-              {event.requires_invoice && (
-                <div>
-                  <p className="text-xs text-gray-500">IVA</p>
-                  <p className="text-xl font-bold text-gray-900">
-                    ${taxAmount.toFixed(2)}
-                  </p>
-                </div>
-              )}
               <div>
-                <p className="text-xs text-gray-500">Costos Totales</p>
-                <p className="text-xl font-bold text-red-600">
+                <p className="text-xs text-gray-500 dark:text-gray-400">IVA</p>
+                <p className="text-xl font-bold text-gray-900 dark:text-white">
+                  ${taxAmount.toFixed(2)}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Total cobrado {event.requires_invoice ? "(con IVA)" : ""}
+                </p>
+                <p className="text-xl font-bold text-gray-900 dark:text-white">
+                  ${totalCharged.toFixed(2)}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Costos Totales</p>
+                <p className="text-xl font-bold text-red-600 dark:text-red-400">
                   ${totalCost.toFixed(2)}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-gray-500">Utilidad</p>
-                <p className="text-xl font-bold text-green-600">
+                <p className="text-xs text-gray-500 dark:text-gray-400">Utilidad</p>
+                <p className="text-xl font-bold text-green-600 dark:text-green-400">
                   ${profit.toFixed(2)}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-gray-500">Margen</p>
-                <p className="text-xl font-bold text-blue-600">
+                <p className="text-xs text-gray-500 dark:text-gray-400">Margen</p>
+                <p className="text-xl font-bold text-blue-600 dark:text-blue-400">
                   {margin.toFixed(1)}%
                 </p>
               </div>
@@ -312,35 +355,35 @@ export const EventSummary: React.FC = () => {
 
       {viewMode === "ingredients" && (
         <div className="space-y-6">
-          <div className="border-b pb-4">
-            <h1 className="text-2xl font-bold text-gray-900">
+          <div className="border-b dark:border-gray-700 pb-4">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
               Lista de Compras e Ingredientes
             </h1>
-            <p className="text-gray-600 mt-2">
+            <p className="text-gray-600 dark:text-gray-400 mt-2">
               Evento: {event.service_type} -{" "}
               {new Date(event.event_date).toLocaleDateString()}
             </p>
           </div>
 
-          <div className="bg-white rounded">
+          <div className="bg-white dark:bg-gray-800 rounded">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-gray-500 border-b">
+                <tr className="text-left text-gray-500 dark:text-gray-400 border-b dark:border-gray-700">
                   <th className="pb-3 pt-2">Ingrediente</th>
                   <th className="pb-3 pt-2 text-right">Cantidad Necesaria</th>
                   <th className="pb-3 pt-2 text-right">Unidad</th>
                 </tr>
               </thead>
-              <tbody className="divide-y">
+              <tbody className="divide-y dark:divide-gray-700">
                 {ingredients.map((ing, i) => (
                   <tr key={i}>
-                    <td className="py-3 font-medium text-gray-900">
+                    <td className="py-3 font-medium text-gray-900 dark:text-white">
                       {ing.name}
                     </td>
-                    <td className="py-3 text-right text-gray-900 font-bold">
+                    <td className="py-3 text-right text-gray-900 dark:text-white font-bold">
                       {ing.quantity.toFixed(2)}
                     </td>
-                    <td className="py-3 text-right text-gray-500">
+                    <td className="py-3 text-right text-gray-500 dark:text-gray-400">
                       {ing.unit}
                     </td>
                   </tr>
@@ -349,7 +392,7 @@ export const EventSummary: React.FC = () => {
                   <tr>
                     <td
                       colSpan={3}
-                      className="py-4 text-center text-gray-500 italic"
+                      className="py-4 text-center text-gray-500 dark:text-gray-400 italic"
                     >
                       No hay ingredientes calculados para los productos
                       seleccionados.
@@ -363,9 +406,9 @@ export const EventSummary: React.FC = () => {
       )}
 
       {viewMode === "contract" && (
-        <div className="space-y-8 font-serif text-gray-800 leading-relaxed max-w-3xl mx-auto">
+        <div className="space-y-8 font-serif text-gray-800 dark:text-gray-200 leading-relaxed max-w-3xl mx-auto">
           <div className="text-center mb-12">
-            <h1 className="text-2xl font-bold uppercase tracking-widest border-b-2 border-gray-900 pb-2 inline-block">
+            <h1 className="text-2xl font-bold uppercase tracking-widest border-b-2 border-gray-900 dark:border-gray-100 pb-2 inline-block">
               Contrato de Servicios
             </h1>
           </div>
@@ -465,21 +508,21 @@ export const EventSummary: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-2 gap-16 mt-24 pt-12">
-            <div className="text-center border-t border-gray-400 pt-4">
+            <div className="text-center border-t border-gray-400 dark:border-gray-500 pt-4">
               <p className="font-bold">
                 {profile?.business_name || profile?.name || "EL PROVEEDOR"}
               </p>
-              <p className="text-sm text-gray-500 mt-1">Firma</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Firma</p>
             </div>
-            <div className="text-center border-t border-gray-400 pt-4">
+            <div className="text-center border-t border-gray-400 dark:border-gray-500 pt-4">
               <p className="font-bold">{event.clients?.name}</p>
-              <p className="text-sm text-gray-500 mt-1">Firma de EL CLIENTE</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Firma de EL CLIENTE</p>
             </div>
           </div>
         </div>
       )}
 
-      <div className="mt-12 text-center text-xs text-gray-400 print:mt-12">
+      <div className="mt-12 text-center text-xs text-gray-400 dark:text-gray-500 print:mt-12">
         <p>
           Generado por {profile?.business_name || "EventosApp"} -{" "}
           {new Date().toLocaleString()}

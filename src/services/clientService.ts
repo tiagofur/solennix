@@ -56,7 +56,7 @@ export const clientService = {
     
     const { data, error } = await supabase
       .from('clients')
-      // @ts-ignore - Supabase type inference issue
+      // @ts-expect-error - Supabase type inference issue
       .update(client)
       .eq('id', id)
       .eq('user_id', userId)

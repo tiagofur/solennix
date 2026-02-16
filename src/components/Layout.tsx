@@ -38,8 +38,12 @@ export const Layout: React.FC = () => {
       await signOut();
     } catch (error) {
       logError('Error signing out', error);
-      // Force cleanup if Supabase fails
-      localStorage.clear();
+      // Force cleanup of Supabase tokens only
+      Object.keys(localStorage).forEach((key) => {
+        if (key.startsWith('sb-') && key.endsWith('-auth-token')) {
+          localStorage.removeItem(key);
+        }
+      });
       window.location.href = '/login';
     }
   };

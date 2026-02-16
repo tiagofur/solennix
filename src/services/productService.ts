@@ -38,7 +38,8 @@ export const productService = {
     
     const { data, error } = await supabase
       .from('products')
-      .insert({ ...product, user_id: userId } as any)
+      // @ts-expect-error - Supabase type inference issue
+      .insert({ ...product, user_id: userId })
       .select()
       .single();
     
@@ -57,7 +58,7 @@ export const productService = {
     
     const { data, error } = await supabase
       .from('products')
-      // @ts-ignore - Supabase type inference issue
+      // @ts-expect-error - Supabase type inference issue
       .update(product)
       .eq('id', id)
       .eq('user_id', userId)
@@ -97,14 +98,14 @@ export const productService = {
     
     const { error } = await supabase
       .from('product_ingredients')
-      .insert(records as any);
+      // @ts-expect-error - Supabase type inference issue
+      .insert(records);
       
     if (error) throw error;
   },
 
   async getIngredients(productId: string) {
-    const userId = await getCurrentUserId();
-    // First verify ownership of the product
+    // First verify ownership
     const product = await this.getById(productId);
     if (!product) {
       throw new Error('Producto no encontrado');

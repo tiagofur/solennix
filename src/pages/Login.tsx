@@ -115,6 +115,7 @@ export const Login: React.FC = () => {
                   <Mail className="h-5 w-5 text-gray-400 dark:text-gray-500" />
                 </div>
                 <input
+                  id="email"
                   {...register('email')}
                   type="email"
                   className="focus:ring-brand-orange focus:border-brand-orange block w-full pl-10 sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md py-2 border"
@@ -135,6 +136,7 @@ export const Login: React.FC = () => {
                   <Lock className="h-5 w-5 text-gray-400 dark:text-gray-500" />
                 </div>
                 <input
+                  id="password"
                   {...register('password')}
                   type="password"
                   className="focus:ring-brand-orange focus:border-brand-orange block w-full pl-10 sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md py-2 border"
