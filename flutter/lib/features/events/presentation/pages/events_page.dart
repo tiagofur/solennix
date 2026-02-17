@@ -10,6 +10,13 @@ import 'package:eventosapp/core/utils/formatters.dart';
 import 'package:eventosapp/features/events/presentation/providers/events_provider.dart';
 import 'package:eventosapp/features/events/presentation/providers/events_state.dart';
 import 'package:eventosapp/features/events/domain/entities/event_entity.dart';
+import 'package:eventosapp/features/events/domain/entities/event_product_entity.dart';
+import 'package:eventosapp/features/events/domain/entities/event_extra_entity.dart';
+import 'package:eventosapp/features/clients/presentation/providers/clients_provider.dart';
+import 'package:eventosapp/features/clients/presentation/providers/clients_state.dart';
+import 'package:eventosapp/features/clients/domain/entities/client_entity.dart';
+import 'package:eventosapp/features/products/presentation/providers/products_provider.dart';
+import 'package:eventosapp/features/products/domain/entities/product_entity.dart';
 
 class EventsPage extends ConsumerStatefulWidget {
   const EventsPage({super.key});
@@ -280,7 +287,16 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
     final detailAsync = ref.watch(eventDetailProvider);
 
     return Scaffold(
-      appBar: const CustomAppBar(title: 'Detalle del Evento'),
+      appBar: CustomAppBar(
+        title: 'Detalle del Evento',
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit_outlined),
+            onPressed: () => context.push('/events/edit/${widget.eventId}'),
+            tooltip: 'Editar',
+          ),
+        ],
+      ),
       body: detailAsync.when(
         loading: () => const LoadingWidget(message: 'Cargando evento...'),
         error: (error, stack) => app_widgets.ErrorWidget(
@@ -292,16 +308,28 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
           if (event == null) {
             return const Center(child: Text('Evento no encontrado'));
           }
-          return RefreshIndicator(
-            onRefresh: () => ref.read(eventDetailProvider.notifier).loadEventDetail(widget.eventId),
-            child: ListView(
-              padding: const EdgeInsets.all(16),
+          return DefaultTabController(
+            length: 4,
+            child: Column(
               children: [
-                _buildHeader(event),
-                const SizedBox(height: 16),
-                _buildInfoCard(event),
-                const SizedBox(height: 16),
-                _buildPaymentsSection(event),
+                const TabBar(
+                  tabs: [
+                    Tab(text: 'Resumen'),
+                    Tab(text: 'Pagos'),
+                    Tab(text: 'Ingredientes'),
+                    Tab(text: 'Contrato'),
+                  ],
+                ),
+                Expanded(
+                  child: TabBarView(
+                    children: [
+                      _buildSummaryTab(event, state),
+                      _buildPaymentsTab(event),
+                      _buildIngredientsTab(state),
+                      _buildContractTab(event, state),
+                    ],
+                  ),
+                ),
               ],
             ),
           );
@@ -326,9 +354,23 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
                     style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
                   ),
                 ),
-                StatusBadge(
-                  label: _EventCard._statusLabel(event.status),
-                  color: _EventCard._statusColor(event.status),
+                DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: event.status,
+                    items: const [
+                      DropdownMenuItem(value: 'quoted', child: Text('Cotizado')),
+                      DropdownMenuItem(value: 'confirmed', child: Text('Confirmado')),
+                      DropdownMenuItem(value: 'completed', child: Text('Completado')),
+                      DropdownMenuItem(value: 'cancelled', child: Text('Cancelado')),
+                    ],
+                    onChanged: (value) {
+                      if (value == null) return;
+                      ref.read(eventDetailProvider.notifier).updateEvent(
+                        event.id,
+                        {'status': value},
+                      );
+                    },
+                  ),
                 ),
               ],
             ),
@@ -356,6 +398,26 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildSummaryTab(EventEntity event, EventDetailState state) {
+    return RefreshIndicator(
+      onRefresh: () => ref.read(eventDetailProvider.notifier).loadEventDetail(widget.eventId),
+      child: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          _buildHeader(event),
+          const SizedBox(height: 16),
+          _buildInfoCard(event),
+          const SizedBox(height: 16),
+          _buildProductsSection(state.products),
+          const SizedBox(height: 16),
+          _buildExtrasSection(state.extras),
+          const SizedBox(height: 16),
+          _buildFinancialSummary(event, state),
+        ],
       ),
     );
   }
@@ -408,15 +470,158 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
               const Text('Sin pagos registrados')
             else
               ...event.payments.map((payment) {
+                final paymentLabel = payment.method?.isNotEmpty == true
+                    ? payment.method!
+                    : 'Metodo no especificado';
                 return ListTile(
                   contentPadding: EdgeInsets.zero,
                   title: Text(CurrencyFormatter.format(payment.amount)),
-                  subtitle: Text(DateFormatter.format(payment.paymentDate)),
-                  trailing: payment.method == 'deposit'
-                      ? const StatusBadge(label: 'Depósito', color: Colors.blue)
-                      : null,
+                  subtitle: Text('${DateFormatter.format(payment.paymentDate)} · $paymentLabel'),
                 );
               }).toList(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPaymentsTab(EventEntity event) {
+    return RefreshIndicator(
+      onRefresh: () => ref.read(eventDetailProvider.notifier).loadEventDetail(widget.eventId),
+      child: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [_buildPaymentsSection(event)],
+      ),
+    );
+  }
+
+  Widget _buildIngredientsTab(EventDetailState state) {
+    if (state.ingredients.isEmpty) {
+      return const Center(child: Text('No hay ingredientes calculados'));
+    }
+    return ListView.separated(
+      padding: const EdgeInsets.all(16),
+      itemBuilder: (context, index) {
+        final item = state.ingredients[index];
+        return ListTile(
+          title: Text(item.name),
+          subtitle: Text('${item.quantity.toStringAsFixed(2)} ${item.unit}'),
+          trailing: Text(CurrencyFormatter.format(item.cost)),
+        );
+      },
+      separatorBuilder: (_, __) => const Divider(),
+      itemCount: state.ingredients.length,
+    );
+  }
+
+  Widget _buildContractTab(EventEntity event, EventDetailState state) {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        Text(
+          'Contrato de Servicios',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 12),
+        Text('Cliente: ${event.clientName}'),
+        Text('Fecha: ${DateFormatter.format(event.eventDate)}'),
+        Text('Lugar: ${event.location}'),
+        const SizedBox(height: 12),
+        Text('Deposito: ${event.depositPercent}%'),
+        Text('Cancelacion: ${event.cancellationDays} dias'),
+        Text('Reembolso: ${event.refundPercent}%'),
+        const SizedBox(height: 16),
+        Text('Productos:', style: const TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        ...state.products.map((p) => Text('${p.quantity}x ${p.productName}')),
+        const SizedBox(height: 12),
+        Text('Extras:', style: const TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        if (state.extras.isEmpty)
+          const Text('Sin extras')
+        else
+          ...state.extras.map((e) => Text(e.description)),
+      ],
+    );
+  }
+
+  Widget _buildProductsSection(List<EventProductEntity> products) {
+    if (products.isEmpty) {
+      return const Text('Sin productos');
+    }
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Productos', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            ...products.map((p) => Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(child: Text(p.productName)),
+                    Text('${p.quantity} x ${CurrencyFormatter.format(p.unitPrice)}'),
+                  ],
+                )),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildExtrasSection(List<EventExtraEntity> extras) {
+    if (extras.isEmpty) {
+      return const Text('Sin extras');
+    }
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Extras', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            ...extras.map((e) => Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(child: Text(e.description)),
+                    Text(CurrencyFormatter.format(e.price)),
+                  ],
+                )),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFinancialSummary(EventEntity event, EventDetailState state) {
+    final productsTotal = state.products.fold(0.0, (sum, item) => sum + item.lineTotal);
+    final extrasTotal = state.extras.fold(0.0, (sum, item) => sum + item.price);
+    final subtotal = productsTotal + extrasTotal;
+    final discountAmount = subtotal * (event.discount / 100);
+    final discounted = subtotal - discountAmount;
+    final taxAmount = event.requiresInvoice ? discounted * (event.taxRate / 100) : 0.0;
+    final total = discounted + taxAmount;
+
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Resumen financiero', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            _InfoRow(label: 'Subtotal', value: CurrencyFormatter.format(subtotal)),
+            const SizedBox(height: 8),
+            _InfoRow(label: 'Descuento', value: CurrencyFormatter.format(discountAmount)),
+            const SizedBox(height: 8),
+            _InfoRow(label: 'IVA', value: CurrencyFormatter.format(taxAmount)),
+            const SizedBox(height: 8),
+            _InfoRow(label: 'Total', value: CurrencyFormatter.format(total)),
           ],
         ),
       ),
@@ -426,7 +631,8 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
   Future<void> _showAddPaymentDialog(String eventId) async {
     final amountController = TextEditingController();
     final methodController = TextEditingController();
-    bool isDeposit = false;
+    final notesController = TextEditingController();
+    final dateController = TextEditingController(text: DateFormatter.format(DateTime.now(), pattern: 'dd/MM/yyyy'));
 
     await showDialog<void>(
       context: context,
@@ -443,29 +649,60 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
               ),
               const SizedBox(height: 8),
               TextField(
+                controller: dateController,
+                readOnly: true,
+                decoration: const InputDecoration(labelText: 'Fecha de pago'),
+                onTap: () async {
+                  final selected = await showDatePicker(
+                    context: context,
+                    initialDate: DateTime.now(),
+                    firstDate: DateTime(2000),
+                    lastDate: DateTime(2100),
+                  );
+                  if (selected != null) {
+                    dateController.text = DateFormatter.format(selected, pattern: 'dd/MM/yyyy');
+                  }
+                },
+              ),
+              const SizedBox(height: 8),
+              TextField(
                 controller: methodController,
                 decoration: const InputDecoration(labelText: 'Método'),
               ),
               const SizedBox(height: 8),
-              SwitchListTile(
-                value: isDeposit,
-                onChanged: (value) => setState(() => isDeposit = value),
-                title: const Text('Es depósito'),
+              TextField(
+                controller: notesController,
+                maxLines: 2,
+                decoration: const InputDecoration(labelText: 'Notas (opcional)'),
               ),
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancelar')),
+            TextButton(
+              onPressed: () {
+                amountController.dispose();
+                methodController.dispose();
+                notesController.dispose();
+                dateController.dispose();
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancelar'),
+            ),
             ElevatedButton(
               onPressed: () async {
                 final amount = double.tryParse(amountController.text.trim()) ?? 0;
+                final selectedDate = _normalizeDate(dateController.text);
                 await ref.read(eventDetailProvider.notifier).addPayment(eventId, {
                   'event_id': eventId,
                   'amount': amount,
-                  'payment_date': DateTime.now().toIso8601String(),
-                  'payment_method': isDeposit ? 'deposit' : methodController.text.trim(),
-                  'notes': isDeposit ? 'Deposito' : null,
+                  'payment_date': selectedDate,
+                  'payment_method': methodController.text.trim().isEmpty ? null : methodController.text.trim(),
+                  'notes': notesController.text.trim().isEmpty ? null : notesController.text.trim(),
                 });
+                amountController.dispose();
+                methodController.dispose();
+                notesController.dispose();
+                dateController.dispose();
                 if (context.mounted) Navigator.of(context).pop();
               },
               child: const Text('Guardar'),
@@ -474,6 +711,17 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
         );
       },
     );
+  }
+
+  String _normalizeDate(String formatted) {
+    final parts = formatted.split('/');
+    if (parts.length == 3) {
+      final day = parts[0].padLeft(2, '0');
+      final month = parts[1].padLeft(2, '0');
+      final year = parts[2];
+      return '$year-$month-$day';
+    }
+    return DateTime.now().toIso8601String().split('T').first;
   }
 }
 
@@ -495,7 +743,12 @@ class _InfoRow extends StatelessWidget {
 }
 
 class EventFormPage extends ConsumerStatefulWidget {
-  const EventFormPage({super.key});
+  final String? eventId;
+
+  const EventFormPage({
+    this.eventId,
+    super.key,
+  });
 
   @override
   ConsumerState<EventFormPage> createState() => _EventFormPageState();
@@ -503,127 +756,325 @@ class EventFormPage extends ConsumerStatefulWidget {
 
 class _EventFormPageState extends ConsumerState<EventFormPage> {
   final _formKey = GlobalKey<FormState>();
-  final _clientIdController = TextEditingController();
   final _serviceTypeController = TextEditingController();
   final _locationController = TextEditingController();
   final _notesController = TextEditingController();
-  final _totalAmountController = TextEditingController();
-  final _depositAmountController = TextEditingController();
+  final _depositPercentController = TextEditingController();
+  final _numPeopleController = TextEditingController();
+  final _cityController = TextEditingController();
+  final _taxRateController = TextEditingController(text: '16');
+  final _discountController = TextEditingController(text: '0');
+  final _refundController = TextEditingController(text: '0');
+  final _cancellationDaysController = TextEditingController(text: '15');
   DateTime _eventDate = DateTime.now();
   TimeOfDay _startTime = const TimeOfDay(hour: 12, minute: 0);
   TimeOfDay _endTime = const TimeOfDay(hour: 18, minute: 0);
-  String _status = 'pending';
+  String _status = 'quoted';
+  String? _selectedClientId;
+  String? _selectedClientName;
+  bool _clientsLoaded = false;
+  bool _requiresInvoice = false;
+  bool _hasLoadedDetails = false;
+  int _currentStep = 0;
+  bool _isSubmitting = false;
+  bool _isEdit = false;
+
+  final List<Map<String, dynamic>> _selectedProducts = [];
+  final List<Map<String, dynamic>> _extras = [];
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_clientsLoaded) {
+      _clientsLoaded = true;
+      ref.read(clientsProvider.notifier).loadClients();
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _isEdit = widget.eventId != null && widget.eventId!.isNotEmpty;
+    if (_isEdit) {
+      Future.microtask(_loadEvent);
+    }
+  }
 
   @override
   void dispose() {
-    _clientIdController.dispose();
     _serviceTypeController.dispose();
     _locationController.dispose();
     _notesController.dispose();
-    _totalAmountController.dispose();
-    _depositAmountController.dispose();
+    _depositPercentController.dispose();
+    _numPeopleController.dispose();
+    _cityController.dispose();
+    _taxRateController.dispose();
+    _discountController.dispose();
+    _refundController.dispose();
+    _cancellationDaysController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final clientsAsync = ref.watch(clientsProvider);
+
     return Scaffold(
-      appBar: const CustomAppBar(title: 'Nuevo Evento'),
+      appBar: CustomAppBar(title: _isEdit ? 'Editar Evento' : 'Nuevo Evento'),
       body: Form(
         key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            TextFormField(
-              controller: _serviceTypeController,
-              decoration: const InputDecoration(labelText: 'Tipo de servicio'),
-              validator: (value) => value == null || value.isEmpty ? 'Requerido' : null,
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _clientIdController,
-              decoration: const InputDecoration(labelText: 'Cliente (ID)'),
-              validator: (value) => value == null || value.isEmpty ? 'Requerido' : null,
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _locationController,
-              decoration: const InputDecoration(labelText: 'Lugar'),
-              validator: (value) => value == null || value.isEmpty ? 'Requerido' : null,
-            ),
-            const SizedBox(height: 12),
-            Row(
+        child: Stepper(
+          currentStep: _currentStep,
+          onStepContinue: _handleStepContinue,
+          onStepCancel: _handleStepCancel,
+          controlsBuilder: (context, details) {
+            return Row(
               children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _pickDate,
-                    icon: const Icon(Icons.calendar_today),
-                    label: Text(DateFormatter.format(_eventDate)),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _pickStartTime,
-                    icon: const Icon(Icons.schedule),
-                    label: Text(_formatTime(_startTime)),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _pickEndTime,
-                    icon: const Icon(Icons.schedule),
-                    label: Text(_formatTime(_endTime)),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _totalAmountController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: 'Total'),
-                  ),
+                ElevatedButton(
+                  onPressed: _isSubmitting ? null : details.onStepContinue,
+                  child: Text(_currentStep == 3 ? 'Guardar' : 'Siguiente'),
                 ),
                 const SizedBox(width: 12),
-                Expanded(
-                  child: TextFormField(
-                    controller: _depositAmountController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: 'Depósito'),
-                  ),
+                TextButton(
+                  onPressed: details.onStepCancel,
+                  child: Text(_currentStep == 0 ? 'Cancelar' : 'Atrás'),
                 ),
               ],
+            );
+          },
+          steps: [
+            Step(
+              title: const Text('Información'),
+              isActive: _currentStep >= 0,
+              content: _buildInfoStep(clientsAsync),
             ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
-              value: _status,
-              items: const [
-                DropdownMenuItem(value: 'quoted', child: Text('Cotizado')),
-                DropdownMenuItem(value: 'confirmed', child: Text('Confirmado')),
-                DropdownMenuItem(value: 'completed', child: Text('Completado')),
-                DropdownMenuItem(value: 'cancelled', child: Text('Cancelado')),
-              ],
-              onChanged: (value) => setState(() => _status = value ?? 'pending'),
-              decoration: const InputDecoration(labelText: 'Estado'),
+            Step(
+              title: const Text('Productos'),
+              isActive: _currentStep >= 1,
+              content: _buildProductsStep(),
             ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _notesController,
-              maxLines: 3,
-              decoration: const InputDecoration(labelText: 'Notas'),
+            Step(
+              title: const Text('Extras'),
+              isActive: _currentStep >= 2,
+              content: _buildExtrasStep(),
             ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _submit,
-              child: const Text('Guardar'),
+            Step(
+              title: const Text('Finanzas'),
+              isActive: _currentStep >= 3,
+              content: _buildFinancialsStep(),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildInfoStep(AsyncValue<ClientsState> clientsAsync) {
+    return Column(
+      children: [
+        TextFormField(
+          controller: _serviceTypeController,
+          decoration: const InputDecoration(labelText: 'Tipo de servicio'),
+          validator: (value) => value == null || value.isEmpty ? 'Requerido' : null,
+        ),
+        const SizedBox(height: 12),
+        _buildClientPicker(clientsAsync),
+        const SizedBox(height: 12),
+        TextFormField(
+          controller: _locationController,
+          decoration: const InputDecoration(labelText: 'Lugar'),
+          validator: (value) => value == null || value.isEmpty ? 'Requerido' : null,
+        ),
+        const SizedBox(height: 12),
+        TextFormField(
+          controller: _cityController,
+          decoration: const InputDecoration(labelText: 'Ciudad'),
+        ),
+        const SizedBox(height: 12),
+        TextFormField(
+          controller: _numPeopleController,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(labelText: 'Numero de personas'),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: _pickDate,
+                icon: const Icon(Icons.calendar_today),
+                label: Text(DateFormatter.format(_eventDate)),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: _pickStartTime,
+                icon: const Icon(Icons.schedule),
+                label: Text(_formatTime(_startTime)),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: _pickEndTime,
+                icon: const Icon(Icons.schedule),
+                label: Text(_formatTime(_endTime)),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        DropdownButtonFormField<String>(
+          value: _status,
+          items: const [
+            DropdownMenuItem(value: 'quoted', child: Text('Cotizado')),
+            DropdownMenuItem(value: 'confirmed', child: Text('Confirmado')),
+            DropdownMenuItem(value: 'completed', child: Text('Completado')),
+            DropdownMenuItem(value: 'cancelled', child: Text('Cancelado')),
+          ],
+          onChanged: (value) => setState(() => _status = value ?? 'quoted'),
+          decoration: const InputDecoration(labelText: 'Estado'),
+        ),
+        const SizedBox(height: 12),
+        TextFormField(
+          controller: _notesController,
+          maxLines: 3,
+          decoration: const InputDecoration(labelText: 'Notas'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProductsStep() {
+    return Column(
+      children: [
+        ElevatedButton.icon(
+          onPressed: _pickProduct,
+          icon: const Icon(Icons.add),
+          label: const Text('Agregar producto'),
+        ),
+        const SizedBox(height: 12),
+        if (_selectedProducts.isEmpty)
+          const Text('No hay productos agregados')
+        else
+          ..._selectedProducts.map((item) {
+            return Card(
+              child: ListTile(
+                title: Text(item['product_name'] ?? 'Producto'),
+                subtitle: Text('Cantidad: ${item['quantity']} · Precio: ${item['unit_price']}'),
+                trailing: IconButton(
+                  icon: const Icon(Icons.delete_outline),
+                  onPressed: () => setState(() => _selectedProducts.remove(item)),
+                ),
+              ),
+            );
+          }),
+      ],
+    );
+  }
+
+  Widget _buildExtrasStep() {
+    return Column(
+      children: [
+        ElevatedButton.icon(
+          onPressed: _addExtra,
+          icon: const Icon(Icons.add),
+          label: const Text('Agregar extra'),
+        ),
+        const SizedBox(height: 12),
+        if (_extras.isEmpty)
+          const Text('No hay extras agregados')
+        else
+          ..._extras.map((item) {
+            return Card(
+              child: ListTile(
+                title: Text(item['description'] ?? 'Extra'),
+                subtitle: Text('Costo: ${item['cost']} · Precio: ${item['price']}'),
+                trailing: IconButton(
+                  icon: const Icon(Icons.delete_outline),
+                  onPressed: () => setState(() => _extras.remove(item)),
+                ),
+              ),
+            );
+          }),
+      ],
+    );
+  }
+
+  Widget _buildFinancialsStep() {
+    final productsSubtotal = _selectedProducts.fold(0.0, (sum, item) {
+      final quantity = (item['quantity'] as num?)?.toDouble() ?? 0;
+      final unitPrice = (item['unit_price'] as num?)?.toDouble() ?? 0;
+      final discount = (item['discount'] as num?)?.toDouble() ?? 0;
+      return sum + (quantity * (unitPrice - discount));
+    });
+    final extrasSubtotal = _extras.fold(0.0, (sum, item) {
+      final price = (item['price'] as num?)?.toDouble() ?? 0;
+      return sum + price;
+    });
+    final subtotal = productsSubtotal + extrasSubtotal;
+    final discountPercent = double.tryParse(_discountController.text.trim()) ?? 0;
+    final discounted = subtotal * (1 - (discountPercent / 100));
+    final taxRate = double.tryParse(_taxRateController.text.trim()) ?? 0;
+    final taxAmount = _requiresInvoice ? (discounted * (taxRate / 100)) : 0.0;
+    final total = discounted + taxAmount;
+
+    return Column(
+      children: [
+        SwitchListTile(
+          title: const Text('Requiere factura'),
+          value: _requiresInvoice,
+          onChanged: (value) => setState(() => _requiresInvoice = value),
+        ),
+        const SizedBox(height: 12),
+        TextFormField(
+          controller: _taxRateController,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(labelText: 'IVA (%)'),
+        ),
+        const SizedBox(height: 12),
+        TextFormField(
+          controller: _discountController,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(labelText: 'Descuento (%)'),
+        ),
+        const SizedBox(height: 12),
+        TextFormField(
+          controller: _depositPercentController,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(labelText: 'Depósito (%)'),
+        ),
+        const SizedBox(height: 12),
+        TextFormField(
+          controller: _cancellationDaysController,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(labelText: 'Días de cancelación'),
+        ),
+        const SizedBox(height: 12),
+        TextFormField(
+          controller: _refundController,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(labelText: 'Reembolso (%)'),
+        ),
+        const SizedBox(height: 16),
+        _buildSummaryRow('Subtotal', subtotal),
+        _buildSummaryRow('Descuento', subtotal - discounted),
+        _buildSummaryRow('IVA', taxAmount),
+        _buildSummaryRow('Total', total),
+      ],
+    );
+  }
+
+  Widget _buildSummaryRow(String label, double value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label),
+          Text(CurrencyFormatter.format(value)),
+        ],
       ),
     );
   }
@@ -668,36 +1119,528 @@ class _EventFormPageState extends ConsumerState<EventFormPage> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_selectedClientId == null || _selectedClientId!.isEmpty) return;
 
-    final totalAmount = double.tryParse(_totalAmountController.text.trim()) ?? 0;
-    final depositPercent = double.tryParse(_depositAmountController.text.trim()) ?? 0;
-
-    await ref.read(eventsProvider.notifier).createEvent({
-      'client_id': _clientIdController.text.trim(),
-      'event_date': _eventDate.toIso8601String(),
-      'start_time': _formatTime(_startTime),
-      'end_time': _formatTime(_endTime),
-      'service_type': _serviceTypeController.text.trim(),
-      'num_people': 0,
-      'status': _status,
-      'discount': 0,
-      'requires_invoice': false,
-      'tax_rate': 16,
-      'tax_amount': 0,
-      'total_amount': totalAmount,
-      'location': _locationController.text.trim(),
-      'city': null,
-      'deposit_percent': depositPercent,
-      'cancellation_days': 3,
-      'refund_percent': 100,
-      'notes': _notesController.text.trim(),
+    final productsSubtotal = _selectedProducts.fold(0.0, (sum, item) {
+      final quantity = (item['quantity'] as num?)?.toDouble() ?? 0;
+      final unitPrice = (item['unit_price'] as num?)?.toDouble() ?? 0;
+      final discount = (item['discount'] as num?)?.toDouble() ?? 0;
+      return sum + (quantity * (unitPrice - discount));
     });
+    final extrasSubtotal = _extras.fold(0.0, (sum, item) {
+      final price = (item['price'] as num?)?.toDouble() ?? 0;
+      return sum + price;
+    });
+    final subtotal = productsSubtotal + extrasSubtotal;
+    final discountPercent = double.tryParse(_discountController.text.trim()) ?? 0;
+    final discounted = subtotal * (1 - (discountPercent / 100));
+    final taxRate = double.tryParse(_taxRateController.text.trim()) ?? 0;
+    final taxAmount = _requiresInvoice ? (discounted * (taxRate / 100)) : 0.0;
+    final totalAmount = discounted + taxAmount;
 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Evento creado')),
-      );
+    final depositPercent = double.tryParse(_depositPercentController.text.trim()) ?? 0;
+    final numPeople = int.tryParse(_numPeopleController.text.trim()) ?? 0;
+    final cancellationDays = double.tryParse(_cancellationDaysController.text.trim()) ?? 0;
+    final refundPercent = double.tryParse(_refundController.text.trim()) ?? 0;
+
+    setState(() => _isSubmitting = true);
+    try {
+      String? eventId;
+      if (_isEdit && widget.eventId != null) {
+        await ref.read(eventDetailProvider.notifier).updateEvent(widget.eventId!, {
+          'client_id': _selectedClientId,
+          'event_date': DateFormatter.format(_eventDate, pattern: 'yyyy-MM-dd'),
+          'start_time': _formatTime(_startTime),
+          'end_time': _formatTime(_endTime),
+          'service_type': _serviceTypeController.text.trim(),
+          'num_people': numPeople,
+          'status': _status,
+          'discount': discountPercent,
+          'requires_invoice': _requiresInvoice,
+          'tax_rate': taxRate,
+          'tax_amount': taxAmount,
+          'total_amount': totalAmount,
+          'location': _locationController.text.trim(),
+          'city': _cityController.text.trim().isEmpty ? null : _cityController.text.trim(),
+          'deposit_percent': depositPercent,
+          'cancellation_days': cancellationDays,
+          'refund_percent': refundPercent,
+          'notes': _notesController.text.trim(),
+        });
+        eventId = widget.eventId;
+      } else {
+        eventId = await ref.read(eventsProvider.notifier).createEvent({
+          'client_id': _selectedClientId,
+          'event_date': DateFormatter.format(_eventDate, pattern: 'yyyy-MM-dd'),
+          'start_time': _formatTime(_startTime),
+          'end_time': _formatTime(_endTime),
+          'service_type': _serviceTypeController.text.trim(),
+          'num_people': numPeople,
+          'status': _status,
+          'discount': discountPercent,
+          'requires_invoice': _requiresInvoice,
+          'tax_rate': taxRate,
+          'tax_amount': taxAmount,
+          'total_amount': totalAmount,
+          'location': _locationController.text.trim(),
+          'city': _cityController.text.trim().isEmpty ? null : _cityController.text.trim(),
+          'deposit_percent': depositPercent,
+          'cancellation_days': cancellationDays,
+          'refund_percent': refundPercent,
+          'notes': _notesController.text.trim(),
+        });
+      }
+
+      if (eventId != null) {
+        await ref.read(eventDetailProvider.notifier).updateEventItems(
+              eventId,
+              products: _selectedProducts
+                  .map((p) => EventProductEntity(
+                        id: p['id']?.toString() ?? '',
+                        eventId: eventId ?? '',
+                        productId: p['product_id']?.toString() ?? '',
+                        productName: p['product_name']?.toString() ?? 'Producto',
+                        productCategory: p['product_category']?.toString(),
+                        quantity: (p['quantity'] as num?)?.toDouble() ?? 0,
+                        unitPrice: (p['unit_price'] as num?)?.toDouble() ?? 0,
+                        discount: (p['discount'] as num?)?.toDouble() ?? 0,
+                      ))
+                  .toList(),
+              extras: _extras
+                  .map((e) => EventExtraEntity(
+                        id: e['id']?.toString() ?? '',
+                        eventId: eventId ?? '',
+                        description: e['description']?.toString() ?? '',
+                        cost: (e['cost'] as num?)?.toDouble() ?? 0,
+                        price: (e['price'] as num?)?.toDouble() ?? 0,
+                        excludeUtility: e['exclude_utility'] as bool? ?? false,
+                      ))
+                  .toList(),
+            );
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(_isEdit ? 'Evento actualizado' : 'Evento creado')),
+        );
+        context.pop();
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
+  }
+
+  void _handleStepContinue() {
+    if (_currentStep < 3) {
+      setState(() => _currentStep += 1);
+    } else {
+      _submit();
+    }
+  }
+
+  void _handleStepCancel() {
+    if (_currentStep == 0) {
       context.pop();
+    } else {
+      setState(() => _currentStep -= 1);
+    }
+  }
+
+  Future<void> _pickProduct() async {
+    await ref.read(productsProvider.notifier).loadProducts();
+    final products = ref.read(productsProvider).valueOrNull?.products ?? [];
+    if (!mounted) return;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        final searchController = TextEditingController();
+        return StatefulBuilder(builder: (context, setModalState) {
+          final query = searchController.text.trim().toLowerCase();
+          final filtered = products.where((p) {
+            if (query.isEmpty) return true;
+            return p.name.toLowerCase().contains(query) || p.category.toLowerCase().contains(query);
+          }).toList();
+
+          return Padding(
+            padding: EdgeInsets.only(
+              left: 16,
+              right: 16,
+              top: 16,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: searchController,
+                  decoration: const InputDecoration(
+                    labelText: 'Buscar producto',
+                    prefixIcon: Icon(Icons.search),
+                  ),
+                  onChanged: (_) => setModalState(() {}),
+                ),
+                const SizedBox(height: 12),
+                if (filtered.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 24),
+                    child: Text('Sin resultados'),
+                  )
+                else
+                  Flexible(
+                    child: ListView.separated(
+                      shrinkWrap: true,
+                      itemCount: filtered.length,
+                      separatorBuilder: (_, __) => const Divider(height: 1),
+                      itemBuilder: (context, index) {
+                        final product = filtered[index];
+                        return ListTile(
+                          title: Text(product.name),
+                          subtitle: Text(product.category),
+                          trailing: Text(product.formattedPrice),
+                          onTap: () async {
+                            Navigator.pop(context);
+                            await _showProductConfig(product);
+                          },
+                        );
+                      },
+                    ),
+                  ),
+              ],
+            ),
+          );
+        });
+      },
+    );
+  }
+
+  Future<void> _showProductConfig(ProductEntity product) async {
+    final quantityController = TextEditingController(text: '1');
+    final priceController = TextEditingController(text: product.basePrice.toString());
+    final discountController = TextEditingController(text: '0');
+
+    await showDialog<void>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(product.name),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: quantityController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Cantidad'),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: priceController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Precio unitario'),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: discountController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Descuento'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final quantity = double.tryParse(quantityController.text.trim()) ?? 1;
+                final unitPrice = double.tryParse(priceController.text.trim()) ?? product.basePrice;
+                final discount = double.tryParse(discountController.text.trim()) ?? 0;
+                setState(() {
+                  _selectedProducts.add({
+                    'product_id': product.id,
+                    'product_name': product.name,
+                    'product_category': product.category,
+                    'quantity': quantity,
+                    'unit_price': unitPrice,
+                    'discount': discount,
+                  });
+                });
+                Navigator.pop(context);
+              },
+              child: const Text('Agregar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _addExtra() async {
+    final descriptionController = TextEditingController();
+    final costController = TextEditingController(text: '0');
+    final priceController = TextEditingController(text: '0');
+    bool excludeUtility = false;
+
+    await showDialog<void>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Agregar extra'),
+          content: StatefulBuilder(
+            builder: (context, setDialogState) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: descriptionController,
+                    decoration: const InputDecoration(labelText: 'Descripción'),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: costController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(labelText: 'Costo'),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: priceController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(labelText: 'Precio'),
+                  ),
+                  const SizedBox(height: 8),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Excluir utilidad'),
+                    value: excludeUtility,
+                    onChanged: (value) => setDialogState(() => excludeUtility = value),
+                  ),
+                ],
+              );
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  _extras.add({
+                    'description': descriptionController.text.trim(),
+                    'cost': double.tryParse(costController.text.trim()) ?? 0,
+                    'price': double.tryParse(priceController.text.trim()) ?? 0,
+                    'exclude_utility': excludeUtility,
+                  });
+                });
+                Navigator.pop(context);
+              },
+              child: const Text('Agregar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _loadEvent() async {
+    final id = widget.eventId;
+    if (id == null) return;
+    if (_hasLoadedDetails) return;
+    _hasLoadedDetails = true;
+    await ref.read(eventDetailProvider.notifier).loadEventDetail(id);
+    final detail = ref.read(eventDetailProvider).valueOrNull;
+    final event = detail?.event;
+    if (event == null) return;
+
+    setState(() {
+      _serviceTypeController.text = event.serviceType;
+      _locationController.text = event.location;
+      _cityController.text = event.city ?? '';
+      _notesController.text = event.notes ?? '';
+      _depositPercentController.text = event.depositPercent.toString();
+      _numPeopleController.text = event.numPeople.toString();
+      _taxRateController.text = event.taxRate.toString();
+      _discountController.text = event.discount.toString();
+      _refundController.text = event.refundPercent.toString();
+      _cancellationDaysController.text = event.cancellationDays.toString();
+      _requiresInvoice = event.requiresInvoice;
+      _status = event.status;
+      _eventDate = event.eventDate;
+      _startTime = _parseTime(event.startTime);
+      _endTime = _parseTime(event.endTime);
+      _selectedClientId = event.clientId;
+      _selectedClientName = event.clientName;
+
+      _selectedProducts.clear();
+      _extras.clear();
+
+      for (final product in detail?.products ?? []) {
+        _selectedProducts.add({
+          'id': product.id,
+          'product_id': product.productId,
+          'product_name': product.productName,
+          'product_category': product.productCategory,
+          'quantity': product.quantity,
+          'unit_price': product.unitPrice,
+          'discount': product.discount,
+        });
+      }
+      for (final extra in detail?.extras ?? []) {
+        _extras.add({
+          'id': extra.id,
+          'description': extra.description,
+          'cost': extra.cost,
+          'price': extra.price,
+          'exclude_utility': extra.excludeUtility,
+        });
+      }
+    });
+  }
+
+  TimeOfDay _parseTime(String value) {
+    final parts = value.split(':');
+    if (parts.length >= 2) {
+      final hour = int.tryParse(parts[0]) ?? 0;
+      final minute = int.tryParse(parts[1]) ?? 0;
+      return TimeOfDay(hour: hour, minute: minute);
+    }
+    return const TimeOfDay(hour: 0, minute: 0);
+  }
+
+  Widget _buildClientPicker(AsyncValue<ClientsState> clientsAsync) {
+    return clientsAsync.when(
+      loading: () => const LinearProgressIndicator(),
+      error: (error, _) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('No se pudo cargar clientes'),
+          const SizedBox(height: 8),
+          OutlinedButton(
+            onPressed: () => ref.read(clientsProvider.notifier).refresh(),
+            child: const Text('Reintentar'),
+          ),
+        ],
+      ),
+      data: (state) {
+        final clients = (state as ClientsState?)?.clients ?? const <ClientEntity>[];
+        if (clients.isEmpty) {
+          return const Text('No hay clientes disponibles');
+        }
+
+        return TextFormField(
+          readOnly: true,
+          decoration: InputDecoration(
+            labelText: 'Cliente',
+            hintText: 'Selecciona un cliente',
+            suffixIcon: const Icon(Icons.keyboard_arrow_down),
+          ),
+          controller: TextEditingController(text: _selectedClientName ?? ''),
+          onTap: () => _showClientPicker(clients),
+          validator: (_) => _selectedClientId == null || _selectedClientId!.isEmpty ? 'Requerido' : null,
+        );
+      },
+    );
+  }
+
+  Future<void> _showClientPicker(List<ClientEntity> clients) async {
+    final searchController = TextEditingController();
+    final result = await showModalBottomSheet<dynamic>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final query = searchController.text.trim().toLowerCase();
+            final filtered = clients.where((client) {
+              if (query.isEmpty) return true;
+              return client.displayName.toLowerCase().contains(query) ||
+                  client.email.toLowerCase().contains(query);
+            }).toList()
+              ..sort((a, b) => a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase()));
+
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 16,
+                right: 16,
+                top: 16,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.person_add),
+                    title: const Text('Crear cliente'),
+                    onTap: () => Navigator.pop(context, '_create'),
+                  ),
+                  const Divider(height: 1),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: searchController,
+                    decoration: const InputDecoration(
+                      labelText: 'Buscar cliente',
+                      prefixIcon: Icon(Icons.search),
+                    ),
+                    onChanged: (_) => setModalState(() {}),
+                  ),
+                  const SizedBox(height: 12),
+                  if (filtered.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 24),
+                      child: Text('Sin resultados'),
+                    )
+                  else
+                    Flexible(
+                      child: ListView.separated(
+                        shrinkWrap: true,
+                        itemCount: filtered.length,
+                        separatorBuilder: (_, __) => const Divider(height: 1),
+                        itemBuilder: (context, index) {
+                          final client = filtered[index];
+                          return ListTile(
+                            title: Text(client.displayName),
+                            subtitle: Text(client.email),
+                            onTap: () => Navigator.pop(context, client),
+                          );
+                        },
+                      ),
+                    ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+    searchController.dispose();
+
+    if (!mounted) return;
+    if (result == '_create') {
+      await context.push('/clients/new');
+      if (mounted) {
+        await ref.read(clientsProvider.notifier).loadClients();
+        final latestClients = ref.read(clientsProvider).valueOrNull?.clients ?? const <ClientEntity>[];
+        if (latestClients.isNotEmpty) {
+          final latest = latestClients.first;
+          setState(() {
+            _selectedClientId = latest.id;
+            _selectedClientName = latest.displayName;
+          });
+        }
+      }
+      return;
+    }
+
+    if (result is ClientEntity) {
+      setState(() {
+        _selectedClientId = result.id;
+        _selectedClientName = result.displayName;
+      });
     }
   }
 }

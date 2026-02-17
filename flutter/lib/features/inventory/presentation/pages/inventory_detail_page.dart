@@ -33,6 +33,11 @@ class _InventoryDetailPageState extends ConsumerState<InventoryDetailPage> {
         title: 'Detalle de Inventario',
         actions: [
           IconButton(
+            icon: const Icon(Icons.edit_outlined),
+            onPressed: () => context.push('/inventory/edit/${widget.inventoryId}'),
+            tooltip: 'Editar',
+          ),
+          IconButton(
             icon: const Icon(Icons.delete_outline),
             onPressed: () => _confirmDelete(context),
             tooltip: 'Eliminar',

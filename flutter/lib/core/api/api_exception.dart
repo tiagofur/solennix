@@ -25,18 +25,18 @@ class ApiException implements Exception {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
-        message = 'Tiempo de conexión agotado';
+        message = 'Tiempo de conexion agotado';
         break;
       case DioExceptionType.badResponse:
         statusCode = error.response?.statusCode;
         data = error.response?.data;
-        message = _extractErrorMessage(error.response);
+        message = _mapStatusCodeToMessage(statusCode, error.response);
         break;
       case DioExceptionType.cancel:
-        message = 'Petición cancelada';
+        message = 'Peticion cancelada';
         break;
       case DioExceptionType.connectionError:
-        message = 'Error de conexión';
+        message = 'Error de conexion';
         break;
       case DioExceptionType.badCertificate:
         message = 'Error de certificado SSL';
@@ -53,10 +53,38 @@ class ApiException implements Exception {
     );
   }
 
+  static String _mapStatusCodeToMessage(int? statusCode, dynamic response) {
+    final detail = _extractErrorMessage(response);
+    switch (statusCode) {
+      case 400:
+        return 'Solicitud invalida. $detail';
+      case 401:
+        return 'Sesion expirada, inicia sesion de nuevo.';
+      case 403:
+        return 'No tienes permiso para esta accion.';
+      case 404:
+        return 'Recurso no encontrado.';
+      case 409:
+        return 'Conflicto: el recurso ya existe.';
+      case 422:
+        return 'Datos invalidos. $detail';
+      case 429:
+        return 'Demasiadas solicitudes, espera un momento.';
+      default:
+        if (statusCode != null && statusCode >= 500) {
+          return 'Error interno del servidor.';
+        }
+        return detail;
+    }
+  }
+
   static String _extractErrorMessage(dynamic response) {
     if (response?.data is Map<String, dynamic>) {
       final data = response!.data as Map<String, dynamic>;
-      return data['error']?.toString() ?? data['message']?.toString() ?? 'Error en la respuesta del servidor';
+      return data['details']?.toString() ??
+          data['error']?.toString() ??
+          data['message']?.toString() ??
+          'Error en la respuesta del servidor';
     }
     return response?.data?.toString() ?? 'Error en la respuesta del servidor';
   }

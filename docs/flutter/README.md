@@ -10,6 +10,7 @@ Documentación de la aplicación móvil Flutter para EventosApp.
 - [API Endpoints](./03-api-endpoints.md) - Endpoints del backend Go
 - [Modelos de Datos](./04-data-models.md) - Entidades y modelos Dart
 - [Componentes UI](./05-ui-components.md) - Componentes reutilizables
+- [Plan de Implementacion](./06-implementation-plan.md) - Paridad Web <-> Flutter
 - [Roadmap](./ROADMAP.md) - Plan de desarrollo
 
 ### Documentación Relacionada

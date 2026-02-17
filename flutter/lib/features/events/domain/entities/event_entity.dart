@@ -52,7 +52,7 @@ class EventEntity {
   });
 
   bool get isConfirmed => status == 'confirmed';
-  bool get isPending => status == 'pending';
+  bool get isQuoted => status == 'quoted';
   bool get isCompleted => status == 'completed';
   bool get isCancelled => status == 'cancelled';
 

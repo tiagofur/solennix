@@ -3,16 +3,23 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:eventosapp/config/theme.dart';
 import 'package:eventosapp/core/utils/app_router.dart';
 import 'package:eventosapp/core/storage/hive_init.dart';
+import 'package:eventosapp/core/storage/local_storage.dart';
+import 'package:eventosapp/features/settings/presentation/providers/settings_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize Hive
   await HiveInit.init();
+  final localStorage = LocalStorage();
+  await localStorage.init();
 
   runApp(
-    const ProviderScope(
-      child: MyApp(),
+    ProviderScope(
+      overrides: [
+        localStorageProvider.overrideWithValue(localStorage),
+      ],
+      child: const MyApp(),
     ),
   );
 }

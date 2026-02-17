@@ -32,6 +32,10 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => context.push('/inventory/new'),
+        child: const Icon(Icons.add),
+      ),
       body: Column(
         children: [
           _buildFilters(context),

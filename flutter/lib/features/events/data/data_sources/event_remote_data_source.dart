@@ -1,6 +1,8 @@
 import 'package:eventosapp/config/api_config.dart';
 import 'package:eventosapp/core/api/api_client.dart';
 import '../models/event_models.dart';
+import '../models/event_product_model.dart';
+import '../models/event_extra_model.dart';
 
 class EventRemoteDataSource {
   final ApiClient _apiClient;
@@ -70,5 +72,28 @@ class EventRemoteDataSource {
 
   Future<void> deletePayment(String eventId, String paymentId) async {
     await _apiClient.delete('${ApiConfig.payments}/$paymentId');
+  }
+
+  Future<List<EventProductModel>> getEventProducts(String eventId) async {
+    final response = await _apiClient.get('${ApiConfig.events}/$eventId/products');
+    final data = response.data as List<dynamic>;
+    return data.map((e) => EventProductModel.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<List<EventExtraModel>> getEventExtras(String eventId) async {
+    final response = await _apiClient.get('${ApiConfig.events}/$eventId/extras');
+    final data = response.data as List<dynamic>;
+    return data.map((e) => EventExtraModel.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<void> updateEventItems(
+    String eventId, {
+    required List<Map<String, dynamic>> products,
+    required List<Map<String, dynamic>> extras,
+  }) async {
+    await _apiClient.put('${ApiConfig.events}/$eventId/items', data: {
+      'products': products,
+      'extras': extras,
+    });
   }
 }

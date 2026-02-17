@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:eventosapp/shared/widgets/custom_app_bar.dart';
+import 'package:eventosapp/shared/widgets/loading_widget.dart';
+import 'package:eventosapp/shared/widgets/error_widget.dart' as app_widgets;
+import 'package:eventosapp/features/settings/presentation/providers/settings_provider.dart';
+import 'package:eventosapp/features/settings/data/models/user_profile_model.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -53,19 +58,20 @@ class SettingsPage extends StatelessWidget {
   }
 }
 
-class ProfilePage extends StatefulWidget {
+class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
 
   @override
-  State<ProfilePage> createState() => _ProfilePageState();
+  ConsumerState<ProfilePage> createState() => _ProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
+class _ProfilePageState extends ConsumerState<ProfilePage> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _businessController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
+  bool _isInitialized = false;
 
   @override
   void dispose() {
@@ -78,66 +84,102 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    final settingsAsync = ref.watch(settingsProvider);
+
+    if (!_isInitialized && settingsAsync.valueOrNull?.profile != null) {
+      _populateFields(settingsAsync.valueOrNull!.profile!);
+      _isInitialized = true;
+    }
+
     return Scaffold(
       appBar: const CustomAppBar(title: 'Perfil'),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            TextFormField(
-              controller: _nameController,
-              decoration: const InputDecoration(labelText: 'Nombre'),
-              validator: (value) => value == null || value.isEmpty ? 'Requerido' : null,
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _businessController,
-              decoration: const InputDecoration(labelText: 'Empresa'),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _emailController,
-              decoration: const InputDecoration(labelText: 'Email'),
-              keyboardType: TextInputType.emailAddress,
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _phoneController,
-              decoration: const InputDecoration(labelText: 'Teléfono'),
-              keyboardType: TextInputType.phone,
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _saveProfile,
-              child: const Text('Guardar cambios'),
-            ),
-          ],
+      body: settingsAsync.when(
+        loading: () => const LoadingWidget(message: 'Cargando perfil...'),
+        error: (error, stack) => app_widgets.ErrorWidget(
+          message: error.toString(),
+          onRetry: () => ref.read(settingsProvider.notifier).loadProfile(),
+        ),
+        data: (_) => Form(
+          key: _formKey,
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              TextFormField(
+                controller: _nameController,
+                decoration: const InputDecoration(labelText: 'Nombre'),
+                validator: (value) => value == null || value.isEmpty ? 'Requerido' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _businessController,
+                decoration: const InputDecoration(labelText: 'Empresa'),
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _emailController,
+                decoration: const InputDecoration(labelText: 'Email'),
+                keyboardType: TextInputType.emailAddress,
+                enabled: false,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _phoneController,
+                decoration: const InputDecoration(labelText: 'Teléfono'),
+                keyboardType: TextInputType.phone,
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _saveProfile,
+                child: const Text('Guardar cambios'),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  void _saveProfile() {
+  void _populateFields(UserProfileModel profile) {
+    _nameController.text = profile.name;
+    _businessController.text = profile.businessName ?? '';
+    _emailController.text = profile.email;
+  }
+
+  Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Perfil actualizado')),
+    final current = ref.read(settingsProvider).valueOrNull?.profile;
+    if (current == null) return;
+
+    final updated = current.copyWith(
+      name: _nameController.text.trim(),
+      businessName: _businessController.text.trim().isEmpty
+          ? null
+          : _businessController.text.trim(),
     );
+
+    await ref.read(settingsProvider.notifier).saveProfile(updated);
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Perfil actualizado')),
+      );
+    }
   }
 }
 
-class ContractSettingsPage extends StatefulWidget {
+class ContractSettingsPage extends ConsumerStatefulWidget {
   const ContractSettingsPage({super.key});
 
   @override
-  State<ContractSettingsPage> createState() => _ContractSettingsPageState();
+  ConsumerState<ContractSettingsPage> createState() => _ContractSettingsPageState();
 }
 
-class _ContractSettingsPageState extends State<ContractSettingsPage> {
+class _ContractSettingsPageState extends ConsumerState<ContractSettingsPage> {
   final _formKey = GlobalKey<FormState>();
-  final _depositController = TextEditingController(text: '50');
-  final _cancellationDaysController = TextEditingController(text: '7');
-  final _refundController = TextEditingController(text: '50');
+  final _depositController = TextEditingController();
+  final _cancellationDaysController = TextEditingController();
+  final _refundController = TextEditingController();
+  bool _isInitialized = false;
 
   @override
   void dispose() {
@@ -149,63 +191,102 @@ class _ContractSettingsPageState extends State<ContractSettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final settingsAsync = ref.watch(settingsProvider);
+
+    if (!_isInitialized && settingsAsync.valueOrNull?.profile != null) {
+      _populateFields(settingsAsync.valueOrNull!.profile!);
+      _isInitialized = true;
+    }
+
     return Scaffold(
       appBar: const CustomAppBar(title: 'Configuración de Contrato'),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            TextFormField(
-              controller: _depositController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Depósito (%)'),
-              validator: (value) => value == null || value.isEmpty ? 'Requerido' : null,
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _cancellationDaysController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Días de cancelación'),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _refundController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Reembolso (%)'),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _saveContractSettings,
-              child: const Text('Guardar configuración'),
-            ),
-          ],
+      body: settingsAsync.when(
+        loading: () => const LoadingWidget(message: 'Cargando contrato...'),
+        error: (error, stack) => app_widgets.ErrorWidget(
+          message: error.toString(),
+          onRetry: () => ref.read(settingsProvider.notifier).loadProfile(),
+        ),
+        data: (_) => Form(
+          key: _formKey,
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              TextFormField(
+                controller: _depositController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Depósito (%)'),
+                validator: (value) => value == null || value.isEmpty ? 'Requerido' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _cancellationDaysController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Días de cancelación'),
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _refundController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Reembolso (%)'),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _saveContractSettings,
+                child: const Text('Guardar configuración'),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  void _saveContractSettings() {
+  void _populateFields(UserProfileModel profile) {
+    _depositController.text = (profile.defaultDepositPercent ?? 0).toString();
+    _cancellationDaysController.text = (profile.defaultCancellationDays ?? 0).toString();
+    _refundController.text = (profile.defaultRefundPercent ?? 0).toString();
+  }
+
+  Future<void> _saveContractSettings() async {
     if (!_formKey.currentState!.validate()) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Configuración de contrato guardada')),
+    final current = ref.read(settingsProvider).valueOrNull?.profile;
+    if (current == null) return;
+
+    final updated = current.copyWith(
+      defaultDepositPercent: double.tryParse(_depositController.text.trim()),
+      defaultCancellationDays: double.tryParse(_cancellationDaysController.text.trim()),
+      defaultRefundPercent: double.tryParse(_refundController.text.trim()),
     );
+
+    await ref.read(settingsProvider.notifier).saveProfile(updated);
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Configuración de contrato guardada')),
+      );
+    }
   }
 }
 
-class AppSettingsPage extends StatefulWidget {
+class AppSettingsPage extends ConsumerStatefulWidget {
   const AppSettingsPage({super.key});
 
   @override
-  State<AppSettingsPage> createState() => _AppSettingsPageState();
+  ConsumerState<AppSettingsPage> createState() => _AppSettingsPageState();
 }
 
-class _AppSettingsPageState extends State<AppSettingsPage> {
+class _AppSettingsPageState extends ConsumerState<AppSettingsPage> {
   bool _notificationsEnabled = true;
   bool _calendarSyncEnabled = false;
   bool _compactMode = false;
 
   String _currency = 'MXN';
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(_loadPreferences);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -244,16 +325,38 @@ class _AppSettingsPageState extends State<AppSettingsPage> {
           ),
           const SizedBox(height: 20),
           ElevatedButton(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Preferencias guardadas')),
-              );
-            },
+            onPressed: _savePreferences,
             child: const Text('Guardar preferencias'),
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _loadPreferences() async {
+    final data = ref.read(settingsProvider.notifier).loadAppPreferences();
+    if (data == null) return;
+    setState(() {
+      _notificationsEnabled = data['notifications_enabled'] as bool? ?? true;
+      _calendarSyncEnabled = data['calendar_sync_enabled'] as bool? ?? false;
+      _compactMode = data['compact_mode'] as bool? ?? false;
+      _currency = data['currency'] as String? ?? 'MXN';
+    });
+  }
+
+  Future<void> _savePreferences() async {
+    await ref.read(settingsProvider.notifier).saveAppPreferences({
+      'notifications_enabled': _notificationsEnabled,
+      'calendar_sync_enabled': _calendarSyncEnabled,
+      'compact_mode': _compactMode,
+      'currency': _currency,
+    });
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Preferencias guardadas')),
+      );
+    }
   }
 }
 

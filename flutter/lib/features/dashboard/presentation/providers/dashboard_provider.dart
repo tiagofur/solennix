@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dashboard_state.dart';
 import 'package:eventosapp/features/dashboard/domain/repositories/dashboard_repository.dart';
 import 'package:eventosapp/features/dashboard/data/data_sources/dashboard_remote_data_source.dart';
+import 'package:eventosapp/core/api/api_client_provider.dart';
 
 final dashboardProvider = AsyncNotifierProvider<DashboardNotifier, DashboardState>(
   () => DashboardNotifier(),
@@ -14,7 +15,8 @@ final dashboardRepositoryProvider = Provider<DashboardRepository>((ref) {
 
 final dashboardRemoteDataSourceProvider =
     Provider<DashboardRemoteDataSource>((ref) {
-  return DashboardRemoteDataSource();
+  final apiClient = ref.watch(apiClientProvider);
+  return DashboardRemoteDataSource(apiClient: apiClient);
 });
 
 class DashboardNotifier extends AsyncNotifier<DashboardState> {

@@ -1,4 +1,7 @@
 import 'package:eventosapp/features/events/domain/entities/event_entity.dart';
+import 'package:eventosapp/features/events/domain/entities/event_product_entity.dart';
+import 'package:eventosapp/features/events/domain/entities/event_extra_entity.dart';
+import 'package:eventosapp/features/events/domain/entities/event_ingredient_entity.dart';
 
 class EventsState {
   final List<EventEntity> events;
@@ -57,22 +60,34 @@ class EventsState {
 
 class EventDetailState {
   final EventEntity? event;
+  final List<EventProductEntity> products;
+  final List<EventExtraEntity> extras;
+  final List<EventIngredientEntity> ingredients;
   final bool isLoading;
   final String? errorMessage;
 
   const EventDetailState({
     this.event,
+    this.products = const [],
+    this.extras = const [],
+    this.ingredients = const [],
     this.isLoading = false,
     this.errorMessage,
   });
 
   EventDetailState copyWith({
     EventEntity? event,
+    List<EventProductEntity>? products,
+    List<EventExtraEntity>? extras,
+    List<EventIngredientEntity>? ingredients,
     bool? isLoading,
     String? errorMessage,
   }) {
     return EventDetailState(
       event: event ?? this.event,
+      products: products ?? this.products,
+      extras: extras ?? this.extras,
+      ingredients: ingredients ?? this.ingredients,
       isLoading: isLoading ?? this.isLoading,
       errorMessage: errorMessage ?? this.errorMessage,
     );
@@ -81,8 +96,8 @@ class EventDetailState {
   EventDetailState loading() => copyWith(isLoading: true);
   EventDetailState error(String message) => copyWith(errorMessage: message, isLoading: false);
   EventDetailState loaded(EventEntity event) => copyWith(
-    event: event,
-    isLoading: false,
-    errorMessage: null,
-  );
+        event: event,
+        isLoading: false,
+        errorMessage: null,
+      );
 }

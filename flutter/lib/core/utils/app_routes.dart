@@ -5,6 +5,7 @@ class AppRoutes {
   static const String forgotPassword = '/forgot-password';
   static const String dashboard = '/dashboard';
   static const String events = '/events';
+  static const String eventEdit = '/events/edit/:id';
   static const String eventDetail = '/events/:id';
   static const String eventForm = '/events/new';
   static const String calendar = '/calendar';
@@ -15,6 +16,7 @@ class AppRoutes {
   static const String productDetail = '/products/:id';
   static const String productForm = '/products/new';
   static const String inventory = '/inventory';
+  static const String inventoryEdit = '/inventory/edit/:id';
   static const String inventoryDetail = '/inventory/:id';
   static const String inventoryForm = '/inventory/new';
   static const String search = '/search';

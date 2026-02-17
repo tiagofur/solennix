@@ -1,5 +1,7 @@
 import 'package:eventosapp/features/events/data/data_sources/event_remote_data_source.dart';
 import 'package:eventosapp/features/events/data/models/event_models.dart';
+import 'package:eventosapp/features/events/data/models/event_product_model.dart';
+import 'package:eventosapp/features/events/data/models/event_extra_model.dart';
 
 class EventRepository {
   final EventRemoteDataSource _remoteDataSource;
@@ -81,6 +83,38 @@ class EventRepository {
   Future<void> deletePayment(String eventId, String paymentId) async {
     try {
       await _remoteDataSource.deletePayment(eventId, paymentId);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<List<EventProductModel>> getEventProducts(String eventId) async {
+    try {
+      return await _remoteDataSource.getEventProducts(eventId);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<List<EventExtraModel>> getEventExtras(String eventId) async {
+    try {
+      return await _remoteDataSource.getEventExtras(eventId);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> updateEventItems(
+    String eventId, {
+    required List<Map<String, dynamic>> products,
+    required List<Map<String, dynamic>> extras,
+  }) async {
+    try {
+      await _remoteDataSource.updateEventItems(
+        eventId,
+        products: products,
+        extras: extras,
+      );
     } catch (e) {
       rethrow;
     }

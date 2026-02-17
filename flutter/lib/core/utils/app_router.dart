@@ -17,9 +17,36 @@ import 'package:eventosapp/features/inventory/presentation/pages/inventory_detai
 import 'package:eventosapp/features/inventory/presentation/pages/inventory_form_page.dart';
 import 'package:eventosapp/features/search/presentation/pages/search_page.dart';
 import 'package:eventosapp/features/settings/presentation/pages/settings_page.dart';
+import 'package:eventosapp/core/storage/secure_storage.dart';
+import 'package:eventosapp/shared/widgets/not_found_page.dart';
 
 final appRouter = GoRouter(
   initialLocation: AppRoutes.splash,
+  redirect: (context, state) async {
+    final location = state.uri.path;
+    const publicRoutes = {
+      AppRoutes.splash,
+      AppRoutes.login,
+      AppRoutes.register,
+      AppRoutes.forgotPassword,
+    };
+    final isPublic = publicRoutes.contains(location);
+    final token = await SecureStorage.getAccessToken();
+    final isLoggedIn = token != null && token.isNotEmpty;
+
+    if (!isLoggedIn && !isPublic) {
+      return AppRoutes.login;
+    }
+
+    if (isLoggedIn && isPublic) {
+      return AppRoutes.dashboard;
+    }
+
+    return null;
+  },
+  errorBuilder: (context, state) {
+    return NotFoundPage(message: state.error?.toString());
+  },
   routes: [
     GoRoute(
       path: AppRoutes.splash,
@@ -52,17 +79,25 @@ final appRouter = GoRouter(
       builder: (context, state) => const EventsPage(),
     ),
     GoRoute(
-      path: AppRoutes.eventDetail,
-      name: 'event-detail',
+      path: AppRoutes.eventEdit,
+      name: 'event-edit',
       builder: (context, state) {
         final eventId = state.pathParameters['id'] ?? '';
-        return EventDetailPage(eventId: eventId);
+        return EventFormPage(eventId: eventId);
       },
     ),
     GoRoute(
       path: AppRoutes.eventForm,
       name: 'event-form',
       builder: (context, state) => const EventFormPage(),
+    ),
+    GoRoute(
+      path: AppRoutes.eventDetail,
+      name: 'event-detail',
+      builder: (context, state) {
+        final eventId = state.pathParameters['id'] ?? '';
+        return EventDetailPage(eventId: eventId);
+      },
     ),
     GoRoute(
       path: AppRoutes.calendar,
@@ -75,6 +110,11 @@ final appRouter = GoRouter(
       builder: (context, state) => const ClientsPage(),
     ),
     GoRoute(
+      path: AppRoutes.clientForm,
+      name: 'client-form',
+      builder: (context, state) => const ClientFormPage(),
+    ),
+    GoRoute(
       path: AppRoutes.clientDetail,
       name: 'client-detail',
       builder: (context, state) {
@@ -83,14 +123,14 @@ final appRouter = GoRouter(
       },
     ),
     GoRoute(
-      path: AppRoutes.clientForm,
-      name: 'client-form',
-      builder: (context, state) => const ClientFormPage(),
-    ),
-    GoRoute(
       path: AppRoutes.products,
       name: 'products',
       builder: (context, state) => const ProductsPage(),
+    ),
+    GoRoute(
+      path: AppRoutes.productForm,
+      name: 'product-form',
+      builder: (context, state) => const ProductFormPage(),
     ),
     GoRoute(
       path: AppRoutes.productDetail,
@@ -101,14 +141,22 @@ final appRouter = GoRouter(
       },
     ),
     GoRoute(
-      path: AppRoutes.productForm,
-      name: 'product-form',
-      builder: (context, state) => const ProductFormPage(),
-    ),
-    GoRoute(
       path: AppRoutes.inventory,
       name: 'inventory',
       builder: (context, state) => const InventoryPage(),
+    ),
+    GoRoute(
+      path: AppRoutes.inventoryEdit,
+      name: 'inventory-edit',
+      builder: (context, state) {
+        final inventoryId = state.pathParameters['id'] ?? '';
+        return InventoryFormPage(inventoryId: inventoryId);
+      },
+    ),
+    GoRoute(
+      path: AppRoutes.inventoryForm,
+      name: 'inventory-form',
+      builder: (context, state) => const InventoryFormPage(),
     ),
     GoRoute(
       path: AppRoutes.inventoryDetail,
@@ -117,11 +165,6 @@ final appRouter = GoRouter(
         final inventoryId = state.pathParameters['id'] ?? '';
         return InventoryDetailPage(inventoryId: inventoryId);
       },
-    ),
-    GoRoute(
-      path: AppRoutes.inventoryForm,
-      name: 'inventory-form',
-      builder: (context, state) => const InventoryFormPage(),
     ),
     GoRoute(
       path: AppRoutes.search,

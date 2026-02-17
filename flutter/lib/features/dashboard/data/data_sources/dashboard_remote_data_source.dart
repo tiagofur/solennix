@@ -1,65 +1,175 @@
+import 'package:eventosapp/core/api/api_client.dart';
+import 'package:eventosapp/config/api_config.dart';
+
 class DashboardRemoteDataSource {
+  final ApiClient _apiClient;
+
+  DashboardRemoteDataSource({
+    required ApiClient apiClient,
+  }) : _apiClient = apiClient;
+
   Future<Map<String, dynamic>> getDashboardMetrics() async {
-    return await Future.delayed(
-      const Duration(seconds: 1),
-      () => {
-        'total_sales': 150000.0,
-        'total_collected': 125000.0,
-        'pending_collections': 25000.0,
-        'total_vat': 24000.0,
-        'total_events': 48,
-        'upcoming_events': 12,
-        'pending_payments': 8,
-        'low_stock_items': 5,
-        'sales_growth': 15.5,
-        'active_clients': 32,
-        'upcoming_events_list': [
-          {
-            'id': '1',
-            'client_name': 'María García',
-            'event_name': 'Boda de Sofía y Alejandro',
-            'event_date': DateTime.now().add(const Duration(days: 7)).toIso8601String(),
-            'total_amount': 45000.0,
-            'collected_amount': 22500.0,
-            'status': 'confirmed',
-            'location': 'Hacienda Los Pinos'
-          },
-          {
-            'id': '2',
-            'client_name': 'Carlos Rodríguez',
-            'event_name': 'Aniversario Empresa Tech',
-            'event_date': DateTime.now().add(const Duration(days: 14)).toIso8601String(),
-            'total_amount': 25000.0,
-            'collected_amount': 7500.0,
-            'status': 'pending',
-            'location': 'Hotel Centro'
-          },
-        ],
-        'inventory_alerts': [
-          {
-            'id': '1',
-            'item_name': 'Servilletas de tela',
-            'current_stock': 120.0,
-            'min_stock': 200.0,
-            'unit': 'unidades',
-            'events_affected': 3
-          },
-          {
-            'id': '2',
-            'item_name': 'Vinos premium',
-            'current_stock': 15.0,
-            'min_stock': 30.0,
-            'unit': 'botellas',
-            'events_affected': 2
-          },
-        ],
-        'monthly_revenues': [
-          {'month': 'Sep', 'revenue': 42000.0, 'expenses': 28000.0, 'profit': 14000.0},
-          {'month': 'Oct', 'revenue': 45000.0, 'expenses': 30000.0, 'profit': 15000.0},
-          {'month': 'Nov', 'revenue': 48000.0, 'expenses': 32000.0, 'profit': 16000.0},
-          {'month': 'Dic', 'revenue': 50000.0, 'expenses': 33000.0, 'profit': 17000.0},
-        ],
+    final statsResponse = await _apiClient.get('${ApiConfig.dashboard}/stats');
+    final statsData = statsResponse.data as Map<String, dynamic>;
+
+    final upcomingEventsResponse =
+        await _apiClient.get('${ApiConfig.events}/upcoming', queryParameters: {'limit': 5});
+    final upcomingEventsData = (upcomingEventsResponse.data as List<dynamic>)
+        .map((e) => e as Map<String, dynamic>)
+        .toList();
+
+    final inventoryResponse = await _apiClient.get(
+      ApiConfig.inventory,
+      queryParameters: {'low_stock': true},
+    );
+    final inventoryData = (inventoryResponse.data as List<dynamic>)
+        .map((e) => e as Map<String, dynamic>)
+        .toList();
+
+    final paymentsData = await _getPaymentsForLastSixMonths();
+
+    final totalSales = (statsData['net_sales'] as num?)?.toDouble() ?? 0;
+    final totalCollected = (statsData['cash_collected'] as num?)?.toDouble() ?? 0;
+    final totalVAT = (statsData['vat_collected'] as num?)?.toDouble() ?? 0;
+    final totalEvents = (statsData['events_this_month'] as num?)?.toInt() ?? 0;
+    final lowStockItems = (statsData['low_stock_count'] as num?)?.toInt() ?? 0;
+    final salesGrowth = (statsData['sales_growth'] as num?)?.toDouble() ?? 0;
+    final activeClients = (statsData['active_clients'] as num?)?.toInt() ?? 0;
+
+    final upcomingEventsList = upcomingEventsData.map((event) {
+      final client = event['clients'] as Map<String, dynamic>?;
+      final eventDate = event['event_date']?.toString() ?? '';
+      final totalAmount = (event['total_amount'] as num?)?.toDouble() ?? 0;
+      final collectedAmount = _calculateCollectedAmountForEvent(
+        eventId: event['id']?.toString() ?? '',
+        payments: paymentsData,
+      );
+      return {
+        'id': event['id']?.toString() ?? '',
+        'client_name': client?['name']?.toString() ?? 'Cliente',
+        'event_name': event['service_type']?.toString() ?? 'Evento',
+        'event_date': eventDate,
+        'total_amount': totalAmount,
+        'collected_amount': collectedAmount,
+        'status': event['status']?.toString() ?? 'quoted',
+        'location': event['location']?.toString(),
+      };
+    }).toList();
+
+    final inventoryAlerts = inventoryData.map((item) {
+      return {
+        'id': item['id']?.toString() ?? '',
+        'item_name': item['ingredient_name']?.toString() ?? 'Item',
+        'current_stock': (item['current_stock'] as num?)?.toDouble() ?? 0,
+        'min_stock': (item['minimum_stock'] as num?)?.toDouble() ?? 0,
+        'unit': item['unit']?.toString() ?? '',
+        'events_affected': 0,
+      };
+    }).toList();
+
+    final pendingPaymentsCount = upcomingEventsList
+        .where((event) => (event['total_amount'] as double) > (event['collected_amount'] as double))
+        .length;
+
+    return {
+      'total_sales': totalSales,
+      'total_collected': totalCollected,
+      'pending_collections': totalSales - totalCollected,
+      'total_vat': totalVAT,
+      'total_events': totalEvents,
+      'upcoming_events': upcomingEventsList.length,
+      'pending_payments': pendingPaymentsCount,
+      'low_stock_items': lowStockItems,
+      'sales_growth': salesGrowth,
+      'active_clients': activeClients,
+      'upcoming_events_list': upcomingEventsList,
+      'inventory_alerts': inventoryAlerts,
+      'monthly_revenues': paymentsData,
+    };
+  }
+
+  Future<List<Map<String, dynamic>>> _getPaymentsForLastSixMonths() async {
+    final now = DateTime.now();
+    final startMonth = DateTime(now.year, now.month - 5, 1);
+    final endMonth = DateTime(now.year, now.month + 1, 0);
+
+    final paymentsResponse = await _apiClient.get(
+      ApiConfig.payments,
+      queryParameters: {
+        'start': startMonth.toIso8601String().split('T').first,
+        'end': endMonth.toIso8601String().split('T').first,
       },
     );
+
+    final paymentsData = (paymentsResponse.data as List<dynamic>)
+        .map((e) => e as Map<String, dynamic>)
+        .toList();
+
+    final months = _buildMonthBuckets(startMonth, 6);
+    for (final payment in paymentsData) {
+      final dateString = payment['payment_date']?.toString();
+      if (dateString == null) continue;
+      final date = DateTime.tryParse(dateString);
+      if (date == null) continue;
+      final key = '${date.year}-${date.month.toString().padLeft(2, '0')}';
+      if (!months.containsKey(key)) continue;
+      final amount = (payment['amount'] as num?)?.toDouble() ?? 0;
+      months[key] = (months[key] ?? 0) + amount;
+    }
+
+    return _buildMonthlyRevenueList(months);
+  }
+
+  Map<String, double> _buildMonthBuckets(DateTime startMonth, int count) {
+    final buckets = <String, double>{};
+    for (var i = 0; i < count; i++) {
+      final date = DateTime(startMonth.year, startMonth.month + i, 1);
+      final key = '${date.year}-${date.month.toString().padLeft(2, '0')}';
+      buckets[key] = 0;
+    }
+    return buckets;
+  }
+
+  List<Map<String, dynamic>> _buildMonthlyRevenueList(Map<String, double> buckets) {
+    final monthNames = <int, String>{
+      1: 'Ene',
+      2: 'Feb',
+      3: 'Mar',
+      4: 'Abr',
+      5: 'May',
+      6: 'Jun',
+      7: 'Jul',
+      8: 'Ago',
+      9: 'Sep',
+      10: 'Oct',
+      11: 'Nov',
+      12: 'Dic',
+    };
+
+    return buckets.entries.map((entry) {
+      final parts = entry.key.split('-');
+      final month = int.tryParse(parts[1]) ?? 1;
+      final label = monthNames[month] ?? entry.key;
+      final revenue = entry.value;
+      return {
+        'month': label,
+        'revenue': revenue,
+        'expenses': 0.0,
+        'profit': revenue,
+      };
+    }).toList();
+  }
+
+  double _calculateCollectedAmountForEvent({
+    required String eventId,
+    required List<Map<String, dynamic>> payments,
+  }) {
+    if (eventId.isEmpty) return 0;
+    return payments.fold(0.0, (sum, payment) {
+      final paymentEventId = payment['event_id']?.toString() ?? '';
+      if (paymentEventId != eventId) return sum;
+      final amount = (payment['amount'] as num?)?.toDouble() ?? 0;
+      return sum + amount;
+    });
   }
 }
