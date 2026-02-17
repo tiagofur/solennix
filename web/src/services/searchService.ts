@@ -1,4 +1,7 @@
-import { supabase, getCurrentUserId } from '../lib/supabase';
+import { clientService } from './clientService';
+import { productService } from './productService';
+import { inventoryService } from './inventoryService';
+import { eventService } from './eventService'; // Will be refactored next
 import { Database } from '../types/supabase';
 
 type Client = Database['public']['Tables']['clients']['Row'];
@@ -34,12 +37,7 @@ const EMPTY_RESULTS: SearchResults = {
   inventory: [],
 };
 
-const normalizeQuery = (query: string) => query.trim().replace(/\s+/g, ' ');
-
-const buildIlike = (query: string) => {
-  const safe = query.replace(/[%_]/g, '').replace(/,/g, ' ');
-  return `%${safe}%`;
-};
+const normalizeQuery = (query: string) => query.trim().toLowerCase();
 
 const limitResults = <T,>(items: T[], limit: number) => items.slice(0, limit);
 
@@ -76,12 +74,12 @@ const mapInventoryResults = (items: InventoryItem[]): SearchResult[] =>
     href: `/inventory/${item.id}/edit`,
   }));
 
-const mapEventResults = (events: EventWithClient[]): SearchResult[] =>
+const mapEventResults = (events: any[]): SearchResult[] =>
   events.map((event) => ({
     id: event.id,
     type: 'event',
     title: event.service_type,
-    subtitle: event.clients?.name || undefined,
+    subtitle: event.clients?.name || event.client?.name || undefined, // Handle both structures if needed
     meta: event.event_date,
     status: event.status,
     href: `/events/${event.id}/summary`,
@@ -89,74 +87,45 @@ const mapEventResults = (events: EventWithClient[]): SearchResult[] =>
 
 export const searchService = {
   async searchAll(query: string, limit: number = 6): Promise<SearchResults> {
-    const normalized = normalizeQuery(query);
-    if (!normalized) return EMPTY_RESULTS;
+    const term = normalizeQuery(query);
+    if (!term) return EMPTY_RESULTS;
 
-    const userId = await getCurrentUserId();
-    const like = buildIlike(normalized);
-
-    const [clients, products, inventory, eventsByFields] = await Promise.all([
-      supabase
-        .from('clients')
-        .select('id, name, phone, email, city')
-        .eq('user_id', userId)
-        .or(`name.ilike.${like},phone.ilike.${like},email.ilike.${like},city.ilike.${like}`)
-        .order('name')
-        .limit(limit),
-      supabase
-        .from('products')
-        .select('id, name, category, base_price')
-        .eq('user_id', userId)
-        .or(`name.ilike.${like},category.ilike.${like}`)
-        .order('name')
-        .limit(limit),
-      supabase
-        .from('inventory')
-        .select('id, ingredient_name, unit, current_stock, type')
-        .eq('user_id', userId)
-        .or(`ingredient_name.ilike.${like},type.ilike.${like},unit.ilike.${like}`)
-        .order('ingredient_name')
-        .limit(limit),
-      supabase
-        .from('events')
-        .select('id, event_date, service_type, location, city, notes, status, client_id, clients (name)')
-        .eq('user_id', userId)
-        .or(`service_type.ilike.${like},location.ilike.${like},city.ilike.${like},notes.ilike.${like}`)
-        .order('event_date', { ascending: false })
-        .limit(limit),
+    // Fetch all data in parallel
+    const [clients, products, inventory, events] = await Promise.all([
+      clientService.getAll(),
+      productService.getAll(),
+      inventoryService.getAll(),
+      eventService.getAll(),
     ]);
 
-    if (clients.error) throw clients.error;
-    if (products.error) throw products.error;
-    if (inventory.error) throw inventory.error;
-    if (eventsByFields.error) throw eventsByFields.error;
+    // Filter in memory
+    const filteredClients = clients.filter(c => 
+      c.name.toLowerCase().includes(term) || 
+      c.email?.toLowerCase().includes(term) || 
+      c.city?.toLowerCase().includes(term)
+    );
 
-    const clientRows = clients.data || [];
-    const clientIds = clientRows.map((client) => client.id);
+    const filteredProducts = products.filter(p => 
+      p.name.toLowerCase().includes(term) || 
+      p.category.toLowerCase().includes(term)
+    );
 
-    let eventsByClients: EventWithClient[] = [];
-    if (clientIds.length) {
-      const { data, error } = await supabase
-        .from('events')
-        .select('id, event_date, service_type, status, client_id, clients (name)')
-        .eq('user_id', userId)
-        .in('client_id', clientIds)
-        .order('event_date', { ascending: false })
-        .limit(limit);
+    const filteredInventory = inventory.filter(i => 
+      i.ingredient_name.toLowerCase().includes(term)
+    );
 
-      if (error) throw error;
-      eventsByClients = data || [];
-    }
-
-    const eventMap = new Map<string, EventWithClient>();
-    (eventsByFields.data || []).forEach((event) => eventMap.set(event.id, event));
-    eventsByClients.forEach((event) => eventMap.set(event.id, event));
+    const filteredEvents = events.filter((e: any) => 
+      e.service_type.toLowerCase().includes(term) || 
+      e.location?.toLowerCase().includes(term) ||
+      e.clients?.name?.toLowerCase().includes(term) ||
+      e.client?.name?.toLowerCase().includes(term)
+    );
 
     return {
-      clients: limitResults(mapClientResults(clientRows), limit),
-      products: limitResults(mapProductResults(products.data || []), limit),
-      inventory: limitResults(mapInventoryResults(inventory.data || []), limit),
-      events: limitResults(mapEventResults(Array.from(eventMap.values())), limit),
+      clients: limitResults(mapClientResults(filteredClients), limit),
+      products: limitResults(mapProductResults(filteredProducts), limit),
+      inventory: limitResults(mapInventoryResults(filteredInventory), limit),
+      events: limitResults(mapEventResults(filteredEvents), limit),
     };
   },
 };

@@ -227,8 +227,8 @@ export const EventForm: React.FC = () => {
         clientService.getAll(),
         productService.getAll(),
       ]);
-      setClients(clientsData);
-      setProducts(productsData);
+      setClients(clientsData || []);
+      setProducts(productsData || []);
     } catch (err) {
       logError("Error loading dependencies", err);
     }
@@ -295,7 +295,7 @@ export const EventForm: React.FC = () => {
   // --- Handlers ---
 
   const handleAddProduct = () => {
-    if (products.length > 0) {
+    if ((products || []).length > 0) {
       const product = products[0];
       setSelectedProducts([
         ...selectedProducts,

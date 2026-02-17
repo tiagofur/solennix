@@ -3,10 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { api } from '../lib/api';
+import { useAuth } from '../contexts/AuthContext';
 import { Lock, Mail, AlertCircle, Moon, Sun, ArrowLeft } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
-import { SetupRequired } from '../components/SetupRequired';
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -17,6 +17,7 @@ type LoginForm = z.infer<typeof loginSchema>;
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
+  const { checkAuth } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { theme, toggleTheme } = useTheme();
@@ -30,12 +31,20 @@ export const Login: React.FC = () => {
     setError(null);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const res = await api.post<{ tokens: { access_token: string } }>('/auth/login', {
         email: data.email,
         password: data.password,
       });
 
-      if (error) throw error;
+      console.log('Login response:', res);
+      
+      if (!res.tokens || !res.tokens.access_token) {
+        console.error('Invalid response structure:', res);
+        throw new Error('Respuesta del servidor inválida');
+      }
+
+      localStorage.setItem('auth_token', res.tokens.access_token);
+      await checkAuth();
       navigate('/dashboard');
     } catch (err: any) {
       setError(err.message || 'Error al iniciar sesión');
@@ -43,11 +52,6 @@ export const Login: React.FC = () => {
       setIsLoading(false);
     }
   };
-
-  // Check if Supabase is configured after all hooks
-  if (!isSupabaseConfigured()) {
-    return <SetupRequired />;
-  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8 transition-colors">

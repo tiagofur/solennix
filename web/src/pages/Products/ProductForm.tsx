@@ -55,7 +55,7 @@ export const ProductForm: React.FC = () => {
   const loadDependencies = async () => {
       try {
           const items = await inventoryService.getAll();
-          setInventoryItems(items);
+          setInventoryItems(items || []);
       } catch (err) {
           logError("Error loading inventory", err);
       }
@@ -94,15 +94,12 @@ export const ProductForm: React.FC = () => {
   };
 
   const handleAddIngredient = () => {
-      if (inventoryItems.length > 0) {
-          const item = inventoryItems[0];
-          setRecipeIngredients([...recipeIngredients, { 
-              inventory_id: item.id, 
-              quantity_required: 1,
-              unit_cost: item.unit_cost || 0,
-              unit: item.unit
-          }]);
-      }
+      setRecipeIngredients([...recipeIngredients, { 
+          inventory_id: "", 
+          quantity_required: 1,
+          unit_cost: 0,
+          unit: ""
+      }]);
   };
 
   const handleRemoveIngredient = (index: number) => {

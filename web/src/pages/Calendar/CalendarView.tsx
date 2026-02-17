@@ -25,7 +25,7 @@ export const CalendarView: React.FC = () => {
       const start = startOfMonth(date).toISOString();
       const end = endOfMonth(date).toISOString();
       const data = await eventService.getByDateRange(start, end);
-      setEvents(data);
+      setEvents(data || []);
     } catch (error) {
       logError('Error fetching events', error);
     } finally {
@@ -34,7 +34,7 @@ export const CalendarView: React.FC = () => {
   };
 
   const modifiers = {
-    booked: events.map(e => parseISO(e.event_date)),
+    booked: (events || []).map(e => parseISO(e.event_date)),
   };
 
   const modifiersStyles = {
@@ -46,7 +46,7 @@ export const CalendarView: React.FC = () => {
     }
   };
 
-  const selectedEvents = events.filter(e => 
+  const selectedEvents = (events || []).filter(e => 
     selectedDate && isSameDay(parseISO(e.event_date), selectedDate)
   );
 

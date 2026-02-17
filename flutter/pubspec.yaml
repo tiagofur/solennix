@@ -29,13 +29,13 @@ dependencies:
   # UI Components
   fl_chart: ^0.66.0
   syncfusion_flutter_pdf: ^24.1.41
-  intl: ^0.18.1
+  intl: ^0.20.2
   cupertino_icons: ^1.0.6
-  lucide_icons: ^0.277.0
+  flutter_svg: ^2.0.9
 
   # Forms & Validation
-  flutter_form_builder: ^9.1.1
-  form_builder_validators: ^9.1.0
+  # flutter_form_builder: ^9.0.0
+  # form_builder_validators: ^9.0.0
 
   # Utilities
   image_picker: ^1.0.5
@@ -55,6 +55,9 @@ dependencies:
 
   # Routing
   go_router: ^13.0.0
+
+  # Internationalization
+  easy_localization: ^3.0.3
 
 dev_dependencies:
   flutter_test:

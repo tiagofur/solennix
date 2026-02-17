@@ -3,10 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { api } from '../lib/api';
+import { useAuth } from '../contexts/AuthContext';
 import { Lock, Mail, User, AlertCircle, Moon, Sun, ArrowLeft } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
-import { SetupRequired } from '../components/SetupRequired';
 
 const registerSchema = z.object({
   name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
@@ -22,6 +22,7 @@ type RegisterForm = z.infer<typeof registerSchema>;
 
 export const Register: React.FC = () => {
   const navigate = useNavigate();
+  const { checkAuth } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { theme, toggleTheme } = useTheme();
@@ -35,39 +36,21 @@ export const Register: React.FC = () => {
     setError(null);
 
     try {
-      // 1. Sign up user
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      const res = await api.post<{ tokens: { access_token: string } }>('/auth/register', {
+        name: data.name,
         email: data.email,
         password: data.password,
-        options: {
-          data: {
-            full_name: data.name,
-          },
-          emailRedirectTo: window.location.origin, // Redirect back to the current domain
-        },
       });
 
-      if (authError) throw authError;
-
-      if (authData.user) {
-        // User profile is created automatically by database trigger
-        navigate('/dashboard');
-      }
+      localStorage.setItem('auth_token', res.tokens.access_token);
+      await checkAuth();
+      navigate('/dashboard');
     } catch (err: any) {
-      if (err.status === 429) {
-        setError('Demasiados intentos. Por favor, espera unos minutos o intenta iniciar sesión si ya te registraste.');
-      } else {
-        setError(err.message || 'Error al registrarse');
-      }
+      setError(err.message || 'Error al registrarse');
     } finally {
       setIsLoading(false);
     }
   };
-
-  // Check if Supabase is configured after all hooks
-  if (!isSupabaseConfigured()) {
-    return <SetupRequired />;
-  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8 transition-colors">

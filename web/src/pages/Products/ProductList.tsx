@@ -23,7 +23,7 @@ export const ProductList: React.FC = () => {
   const fetchProducts = async () => {
     try {
       const data = await productService.getAll();
-      setProducts(data);
+      setProducts(data || []);
     } catch (error) {
       logError('Error fetching products', error);
     } finally {
@@ -50,7 +50,7 @@ export const ProductList: React.FC = () => {
     }
   };
 
-  const filteredProducts = products.filter(product => 
+  const filteredProducts = (products || []).filter(product => 
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.category.toLowerCase().includes(searchTerm.toLowerCase())
   );

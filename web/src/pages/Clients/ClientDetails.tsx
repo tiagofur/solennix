@@ -32,7 +32,7 @@ export const ClientDetails: React.FC = () => {
         eventService.getByClientId(clientId),
       ]);
       setClient(clientData);
-      setEvents(eventsData);
+      setEvents(eventsData || []);
     } catch (error) {
       logError('Error fetching client details', error);
     } finally {

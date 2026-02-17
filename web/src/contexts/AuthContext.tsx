@@ -1,165 +1,83 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Session, User } from '@supabase/supabase-js';
-import { supabase } from '../lib/supabase';
-import { Database } from '../types/supabase';
+import { api } from '../lib/api';
 import { logError } from '../lib/errorHandler';
 
-type UserProfile = Database['public']['Tables']['users']['Row'];
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  business_name?: string;
+  plan: string;
+  default_deposit_percent?: number;
+  default_cancellation_days?: number;
+  default_refund_percent?: number;
+}
 
 interface AuthContextType {
-  session: Session | null;
   user: User | null;
-  profile: UserProfile | null;
   loading: boolean;
-  signOut: () => Promise<void>;
-  updateProfile: (data: Partial<UserProfile>) => Promise<void>;
+  checkAuth: () => Promise<void>;
+  signOut: () => void;
+  updateProfile: (data: Partial<User>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
-  session: null,
   user: null,
-  profile: null,
   loading: true,
-  signOut: async () => {},
+  checkAuth: async () => {},
+  signOut: () => {},
   updateProfile: async () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const clearSupabaseAuthTokens = () => {
-    try {
-      Object.keys(localStorage).forEach((key) => {
-        if (key.startsWith('sb-') && key.endsWith('-auth-token')) {
-          localStorage.removeItem(key);
-        }
-      });
-    } catch {
+  const checkAuth = async () => {
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      setUser(null);
+      setLoading(false);
       return;
     }
-  };
 
-  const fetchProfile = async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        logError('Error fetching profile', error);
-        // If profile doesn't exist but user is auth'd, we shouldn't block
-        // In a real app, we might redirect to a "complete profile" page
-        setProfile(null);
-      } else {
-        setProfile(data);
-      }
+      const userData = await api.get<User>('/auth/me');
+      setUser(userData);
     } catch (error) {
-      logError('Error fetching profile', error);
-      setProfile(null);
+      console.error('Auth check failed', error);
+      localStorage.removeItem('auth_token');
+      setUser(null);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    let mounted = true;
-
-    // Get initial session
-    const initSession = async () => {
-      try {
-        const { data, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          logError('Error getting session', error);
-          throw error;
-        }
-
-        if (mounted) {
-          const nextSession = data.session ?? null;
-          setSession(nextSession);
-          setUser(nextSession?.user ?? null);
-          setLoading(false);
-
-          if (nextSession?.user) fetchProfile(nextSession.user.id);
-          else setProfile(null);
-        }
-      } catch (error) {
-        logError('Error initializing session', error);
-        clearSupabaseAuthTokens();
-        if (mounted) {
-          setSession(null);
-          setUser(null);
-          setProfile(null);
-          setLoading(false);
-        }
-      }
+    checkAuth();
+    
+    // Listen for 401 logout events from api.ts
+    const handleLogout = () => {
+      setUser(null);
+      localStorage.removeItem('auth_token');
     };
-
-    initSession();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (mounted) {
-        if (event === 'SIGNED_OUT') {
-          setSession(null);
-          setUser(null);
-          setProfile(null);
-          setLoading(false);
-          return;
-        }
-
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-        
-        if (session?.user) {
-          fetchProfile(session.user.id);
-        } else {
-          setProfile(null);
-        }
-      }
-    });
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
+    
+    window.addEventListener('auth:logout', handleLogout);
+    return () => window.removeEventListener('auth:logout', handleLogout);
   }, []);
 
-  const signOut = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) logError('Error signing out', error);
-    } catch (error) {
-      logError('Unexpected error signing out', error);
-    } finally {
-      // Always clear local state
-      setSession(null);
-      setUser(null);
-      setProfile(null);
-      
-      clearSupabaseAuthTokens();
-    }
+  const signOut = () => {
+    localStorage.removeItem('auth_token');
+    setUser(null);
+    window.location.href = '/login';
   };
 
-  const updateProfile = async (data: Partial<UserProfile>) => {
-    if (!user) return;
+  const updateProfile = async (data: Partial<User>) => {
     try {
-      const { data: updatedProfile, error } = await supabase
-        .from('users')
-        // @ts-expect-error - Supabase type inference issue
-        .update(data)
-        .eq('id', user.id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      setProfile(updatedProfile);
+      const updatedUser = await api.put<User>('/users/me', data);
+      setUser(updatedUser);
     } catch (error) {
       logError('Error updating profile', error);
       throw error;
@@ -167,10 +85,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const value = {
-    session,
     user,
-    profile,
     loading,
+    checkAuth,
     signOut,
     updateProfile,
   };

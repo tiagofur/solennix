@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 import { Database } from '../types/supabase';
 
 type Payment = Database['public']['Tables']['payments']['Row'];
@@ -6,70 +6,32 @@ type PaymentInsert = Database['public']['Tables']['payments']['Insert'];
 type PaymentUpdate = Database['public']['Tables']['payments']['Update'];
 
 export const paymentService = {
-  async getByEventId(eventId: string) {
-    const { data, error } = await (supabase as any)
-      .from('payments')
-      .select('*')
-      .eq('event_id', eventId)
-      .order('payment_date', { ascending: false });
-
-    if (error) throw error;
-    return data;
+  async getAll(): Promise<Payment[]> {
+    return api.get<Payment[]>('/payments');
   },
 
-  async getByPaymentDateRange(startDate: string, endDate: string) {
-    const { data, error } = await (supabase as any)
-      .from('payments')
-      .select('*')
-      .gte('payment_date', startDate)
-      .lte('payment_date', endDate)
-      .order('payment_date', { ascending: false });
-
-    if (error) throw error;
-    return data;
+  async getByEventId(eventId: string): Promise<Payment[]> {
+    return api.get<Payment[]>('/payments', { event_id: eventId });
   },
 
-  async getByEventIds(eventIds: string[]) {
-    if (!eventIds.length) return [];
-    const { data, error } = await (supabase as any)
-      .from('payments')
-      .select('*')
-      .in('event_id', eventIds)
-      .order('payment_date', { ascending: false });
-
-    if (error) throw error;
-    return data;
+  async getByPaymentDateRange(startDate: string, endDate: string): Promise<Payment[]> {
+    return api.get<Payment[]>('/payments', { start: startDate, end: endDate });
   },
 
-  async create(payment: PaymentInsert) {
-    const { data, error } = await (supabase as any)
-      .from('payments')
-      .insert(payment)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
+  async getByEventIds(eventIds: string[]): Promise<Payment[]> {
+    if (eventIds.length === 0) return [];
+    return api.get<Payment[]>('/payments', { event_ids: eventIds.join(',') });
   },
 
-  async update(id: string, payment: PaymentUpdate) {
-    const { data, error } = await (supabase as any)
-      .from('payments')
-      .update(payment)
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
+  async create(payment: PaymentInsert): Promise<Payment> {
+    return api.post<Payment>('/payments', payment);
   },
 
-  async delete(id: string) {
-    const { error } = await (supabase as any)
-      .from('payments')
-      .delete()
-      .eq('id', id);
+  async update(id: string, payment: PaymentUpdate): Promise<Payment> {
+    return api.put<Payment>(`/payments/${id}`, payment);
+  },
 
-    if (error) throw error;
+  async delete(id: string): Promise<void> {
+    return api.delete(`/payments/${id}`);
   }
 };

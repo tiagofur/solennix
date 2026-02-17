@@ -1,4 +1,4 @@
-import { supabase, getCurrentUserId } from '../lib/supabase';
+import { api } from '../lib/api';
 import { Database } from '../types/supabase';
 
 type InventoryItem = Database['public']['Tables']['inventory']['Row'];
@@ -7,81 +7,22 @@ type InventoryUpdate = Database['public']['Tables']['inventory']['Update'];
 
 export const inventoryService = {
   async getAll(): Promise<InventoryItem[]> {
-    const userId = await getCurrentUserId();
-    const { data, error } = await supabase
-      .from('inventory')
-      .select('*')
-      .eq('user_id', userId)
-      .order('ingredient_name');
-    
-    if (error) throw error;
-    return data || [];
+    return api.get<InventoryItem[]>('/inventory');
   },
 
   async getById(id: string): Promise<InventoryItem> {
-    const userId = await getCurrentUserId();
-    const { data, error } = await supabase
-      .from('inventory')
-      .select('*')
-      .eq('id', id)
-      .eq('user_id', userId)
-      .single();
-    
-    if (error) throw error;
-    if (!data) throw new Error('Ítem de inventario no encontrado');
-    return data;
+    return api.get<InventoryItem>(`/inventory/${id}`);
   },
 
   async create(item: InventoryInsert): Promise<InventoryItem> {
-    const userId = await getCurrentUserId();
-    
-    const { data, error } = await supabase
-      .from('inventory')
-      .insert({ ...item, user_id: userId } as any)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    if (!data) throw new Error('Error al crear el ítem de inventario');
-    return data;
+    return api.post<InventoryItem>('/inventory', item);
   },
 
   async update(id: string, item: InventoryUpdate): Promise<InventoryItem> {
-    const userId = await getCurrentUserId();
-    // First verify ownership
-    const existing = await this.getById(id);
-    if (!existing) {
-      throw new Error('Ítem de inventario no encontrado');
-    }
-    
-    const { data, error } = await supabase
-      .from('inventory')
-      // @ts-expect-error - Supabase type inference issue
-      .update(item)
-      .eq('id', id)
-      .eq('user_id', userId)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    if (!data) throw new Error('Error al actualizar el ítem de inventario');
-    return data;
+    return api.put<InventoryItem>(`/inventory/${id}`, item);
   },
 
-  async delete(id: string) {
-    const userId = await getCurrentUserId();
-    // First verify ownership
-    const existing = await this.getById(id);
-    if (!existing) {
-      throw new Error('Ítem de inventario no encontrado');
-    }
-    
-    const { error } = await supabase
-      .from('inventory')
-      .delete()
-      .eq('id', id)
-      .eq('user_id', userId);
-    
-    if (error) throw error;
+  async delete(id: string): Promise<void> {
+    return api.delete(`/inventory/${id}`);
   }
 };

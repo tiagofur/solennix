@@ -77,7 +77,7 @@ func (r *EventRepo) GetAll(ctx context.Context, userID uuid.UUID) ([]models.Even
 func (r *EventRepo) GetByDateRange(ctx context.Context, userID uuid.UUID, start, end string) ([]models.Event, error) {
 	query := fmt.Sprintf(`SELECT %s, c.name as client_name
 		FROM events e LEFT JOIN clients c ON e.client_id = c.id
-		WHERE e.user_id = $1 AND e.event_date >= $2 AND e.event_date <= $3
+		WHERE e.user_id = $1 AND e.event_date >= $2::timestamptz::date AND e.event_date <= $3::timestamptz::date
 		ORDER BY e.event_date`, eventSelectFields)
 	rows, err := r.pool.Query(ctx, query, userID, start, end)
 	if err != nil {

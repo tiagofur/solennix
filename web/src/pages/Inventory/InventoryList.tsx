@@ -24,7 +24,7 @@ export const InventoryList: React.FC = () => {
   const fetchInventory = async () => {
     try {
       const data = await inventoryService.getAll();
-      setItems(data);
+      setItems(data || []);
     } catch (error) {
       logError('Error fetching inventory', error);
     } finally {
@@ -32,7 +32,7 @@ export const InventoryList: React.FC = () => {
     }
   };
 
-  const lowStockItems = items.filter(item => item.current_stock <= item.minimum_stock);
+  const lowStockItems = (items || []).filter(item => item.current_stock <= item.minimum_stock);
 
   const requestDelete = (id: string) => {
     setPendingDeleteId(id);
@@ -53,7 +53,7 @@ export const InventoryList: React.FC = () => {
     }
   };
 
-  const filteredItems = items.filter(item => 
+  const filteredItems = (items || []).filter(item => 
     item.ingredient_name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 

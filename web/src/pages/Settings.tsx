@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import {
   User,
@@ -10,7 +10,7 @@ import {
 import { logError } from "../lib/errorHandler";
 
 export const Settings: React.FC = () => {
-  const { profile, updateProfile } = useAuth();
+  const { user: profile, updateProfile } = useAuth();
   const [isEditingBusiness, setIsEditingBusiness] = useState(false);
   const [businessName, setBusinessName] = useState(
     profile?.business_name || "",
@@ -21,6 +21,17 @@ export const Settings: React.FC = () => {
     refund: profile?.default_refund_percent || 0,
   });
   const [isEditingContract, setIsEditingContract] = useState(false);
+
+  useEffect(() => {
+    if (profile) {
+      setBusinessName(profile.business_name || "");
+      setContractSettings({
+        deposit: profile.default_deposit_percent ?? 50,
+        cancellation: profile.default_cancellation_days ?? 15,
+        refund: profile.default_refund_percent ?? 0,
+      });
+    }
+  }, [profile]);
 
 
   const handleUpdateBusinessName = async () => {
@@ -229,10 +240,10 @@ export const Settings: React.FC = () => {
                         onClick={() => {
                           setIsEditingContract(false);
                           setContractSettings({
-                            deposit: profile?.default_deposit_percent || 50,
+                            deposit: profile?.default_deposit_percent ?? 50,
                             cancellation:
-                              profile?.default_cancellation_days || 15,
-                            refund: profile?.default_refund_percent || 0,
+                              profile?.default_cancellation_days ?? 15,
+                            refund: profile?.default_refund_percent ?? 0,
                           });
                         }}
                         className="inline-flex items-center px-3 py-1 border border-gray-300 dark:border-gray-600 text-xs font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"

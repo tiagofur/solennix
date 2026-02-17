@@ -24,7 +24,7 @@ export const ClientList: React.FC = () => {
   const fetchClients = async () => {
     try {
       const data = await clientService.getAll();
-      setClients(data);
+      setClients(data || []);
     } catch (error) {
       logError('Error fetching clients', error);
     } finally {
@@ -51,7 +51,7 @@ export const ClientList: React.FC = () => {
     }
   };
 
-  const filteredClients = clients.filter(client => 
+  const filteredClients = (clients || []).filter(client => 
     client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (client.email && client.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
     client.phone.includes(searchTerm)
