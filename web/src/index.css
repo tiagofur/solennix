@@ -3,7 +3,9 @@
 @tailwind utilities;
 
 :root {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica,
+    Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
   line-height: 1.5;
   font-weight: 400;
 
@@ -11,4 +13,54 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* react-day-picker dark mode overrides */
+/* Weekday names (lu, ma, mi...) - covers both v8 (.rdp-head_cell) and v9 (.rdp-weekday) */
+.dark .rdp-head_cell,
+.dark .rdp-weekday {
+  color: #D1D5DB !important;
+}
+
+.dark .rdp-day:not(.rdp-day_selected):not(.rdp-day_outside) {
+  color: #F3F4F6 !important;
+}
+
+.dark .rdp-day_outside {
+  color: #6B7280 !important;
+  opacity: 0.5;
+}
+
+.dark .rdp-caption_label,
+.dark .rdp-month_caption {
+  color: #F9FAFB !important;
+}
+
+/* Nav arrows - orange in both light and dark */
+.rdp-nav_button,
+.rdp-button_previous,
+.rdp-button_next {
+  color: #FF6B35 !important;
+}
+
+.rdp-nav_button svg,
+.rdp-button_previous svg,
+.rdp-button_next svg {
+  stroke: #FF6B35 !important;
+  fill: #FF6B35 !important;
+  color: #FF6B35 !important;
+}
+
+.rdp-nav_button:hover,
+.rdp-button_previous:hover,
+.rdp-button_next:hover {
+  color: #e55a2b !important;
+  background-color: rgba(255, 107, 53, 0.1) !important;
+}
+
+.rdp-nav_button:hover svg,
+.rdp-button_previous:hover svg,
+.rdp-button_next:hover svg {
+  stroke: #e55a2b !important;
+  fill: #e55a2b !important;
 }

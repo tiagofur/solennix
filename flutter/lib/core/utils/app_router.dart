@@ -115,6 +115,14 @@ final appRouter = GoRouter(
       builder: (context, state) => const ClientFormPage(),
     ),
     GoRoute(
+      path: AppRoutes.clientEdit,
+      name: 'client-edit',
+      builder: (context, state) {
+        final clientId = state.pathParameters['id'] ?? '';
+        return ClientFormPage(clientId: clientId);
+      },
+    ),
+    GoRoute(
       path: AppRoutes.clientDetail,
       name: 'client-detail',
       builder: (context, state) {

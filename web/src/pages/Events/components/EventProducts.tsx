@@ -1,9 +1,13 @@
-import React from 'react';
-import { Database } from '../../../types/supabase';
 import { Plus, Trash2, Users } from 'lucide-react';
 import { useFormContext } from 'react-hook-form';
 
-type Product = Database['public']['Tables']['products']['Row'];
+// Local type to avoid Supabase dependency
+interface Product {
+  id: string;
+  name: string;
+  category: string;
+  base_price: number;
+}
 
 interface SelectedProduct {
   product_id: string;

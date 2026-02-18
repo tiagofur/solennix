@@ -12,6 +12,7 @@ class AppRoutes {
   static const String clients = '/clients';
   static const String clientDetail = '/clients/:id';
   static const String clientForm = '/clients/new';
+  static const String clientEdit = '/clients/:id/edit';
   static const String products = '/products';
   static const String productDetail = '/products/:id';
   static const String productForm = '/products/new';

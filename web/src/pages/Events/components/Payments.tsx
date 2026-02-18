@@ -2,9 +2,10 @@ import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { paymentService } from "../../../services/paymentService";
 import { Database } from "../../../types/supabase";
-import { Plus, Trash2, DollarSign } from "lucide-react";
+import { Plus, Trash2, DollarSign, CheckCircle, AlertCircle, Download } from "lucide-react";
 import { logError } from "../../../lib/errorHandler";
 import { ConfirmDialog } from "../../../components/ConfirmDialog";
+import { generatePaymentReportPDF } from "../../../lib/pdfGenerator";
 
 type Payment = Database["public"]["Tables"]["payments"]["Row"];
 
@@ -12,14 +13,27 @@ interface PaymentsProps {
   eventId: string;
   totalAmount: number;
   userId: string;
+  eventStatus?: string;
+  onStatusChange?: (newStatus: "quoted" | "confirmed" | "completed" | "cancelled") => void;
+  eventData?: any;
+  profile?: any;
 }
 
-export const Payments: React.FC<PaymentsProps> = ({ eventId, totalAmount, userId }) => {
+export const Payments: React.FC<PaymentsProps> = ({ 
+  eventId, 
+  totalAmount, 
+  userId,
+  eventStatus,
+  onStatusChange,
+  eventData,
+  profile
+}) => {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm({
     defaultValues: {
@@ -47,14 +61,27 @@ export const Payments: React.FC<PaymentsProps> = ({ eventId, totalAmount, userId
 
   const onSubmit = async (data: any) => {
     try {
+      const newPaymentAmount = Number(data.amount);
       await paymentService.create({
         event_id: eventId,
         user_id: userId,
-        amount: Number(data.amount),
+        amount: newPaymentAmount,
         payment_date: data.payment_date,
         payment_method: data.payment_method,
         notes: data.notes,
       });
+
+      // Calculate new totals to check for auto-confirmation
+      const currentTotalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
+      const newTotalPaid = currentTotalPaid + newPaymentAmount;
+
+      if (newTotalPaid >= totalAmount && eventStatus === "quoted" && onStatusChange) {
+        onStatusChange("confirmed");
+        setStatusMessage("✅ ¡Pago completo! El evento ha sido marcado como Confirmado.");
+        // Clear message after 5 seconds
+        setTimeout(() => setStatusMessage(null), 5000);
+      }
+
       setIsAdding(false);
       reset();
       loadPayments();
@@ -78,14 +105,49 @@ export const Payments: React.FC<PaymentsProps> = ({ eventId, totalAmount, userId
   const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
   const balance = totalAmount - totalPaid;
   const progress = totalAmount > 0 ? (totalPaid / totalAmount) * 100 : 0;
+  const isFullyPaid = balance <= 0.01; // Small threshold for float precision
 
   return (
     <div className="space-y-6">
+      {statusMessage && (
+        <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-md p-4 flex items-center text-green-800 dark:text-green-200 animate-fade-in">
+          <CheckCircle className="h-5 w-5 mr-2 flex-shrink-0" />
+          <p>{statusMessage}</p>
+        </div>
+      )}
+
+      {isFullyPaid && eventStatus === "quoted" && !statusMessage && (
+        <div className="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-md p-4 flex items-start text-amber-800 dark:text-amber-200">
+          <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="font-medium">El evento está totalmente pagado pero sigue como "Cotizado".</p>
+            <button 
+              onClick={() => onStatusChange && onStatusChange("confirmed")}
+              className="text-sm underline hover:text-amber-900 dark:hover:text-amber-100 mt-1"
+            >
+              Cambiar estado ag "Confirmado"
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border dark:border-gray-700">
-        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
-          <DollarSign className="h-5 w-5 mr-2 text-green-600" />
-          Pagos y Saldo
-        </h2>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center">
+            <DollarSign className="h-5 w-5 mr-2 text-green-600" />
+            Pagos y Saldo
+          </h2>
+          {eventData && (
+            <button
+              onClick={() => generatePaymentReportPDF(eventData, profile || null, payments)}
+              className="flex items-center px-3 py-1.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium shadow-sm transition-colors"
+              title="Descargar Reporte de Pagos"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Reporte de Pagos
+            </button>
+          )}
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-md">
@@ -94,18 +156,24 @@ export const Payments: React.FC<PaymentsProps> = ({ eventId, totalAmount, userId
           </div>
           <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-md">
              <span className="text-sm text-green-600 dark:text-green-400 block">Pagado</span>
-             <span className="text-xl font-bold text-green-700 dark:text-green-300">${totalPaid.toFixed(2)}</span>
+             <span className="text-xl font-bold text-green-700 dark:text-green-300">
+               ${totalPaid.toFixed(2)}
+             </span>
           </div>
-          <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-md">
-             <span className="text-sm text-red-600 dark:text-red-400 block">Saldo Pendiente</span>
-             <span className="text-xl font-bold text-red-700 dark:text-red-300">${balance.toFixed(2)}</span>
+          <div className={`p-4 rounded-md ${balance > 0 ? 'bg-red-50 dark:bg-red-900/20' : 'bg-green-50 dark:bg-green-900/20'}`}>
+             <span className={`text-sm block ${balance > 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
+               {balance > 0 ? 'Saldo Pendiente' : 'Saldo Favor / Completado'}
+             </span>
+             <span className={`text-xl font-bold ${balance > 0 ? 'text-red-700 dark:text-red-300' : 'text-green-700 dark:text-green-300'}`}>
+               ${Math.abs(balance).toFixed(2)}
+             </span>
           </div>
         </div>
 
         {/* Progress Bar */}
         <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mb-6">
           <div 
-            className={`h-2.5 rounded-full ${balance <= 0 ? 'bg-green-600' : 'bg-brand-orange'}`} 
+            className={`h-2.5 rounded-full transition-all duration-500 ${isFullyPaid ? 'bg-green-600' : 'bg-brand-orange'}`} 
             style={{ width: `${Math.min(progress, 100)}%` }}
           ></div>
         </div>

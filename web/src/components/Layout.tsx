@@ -12,7 +12,8 @@ import {
   X,
   Search,
   Moon,
-  Sun
+  Sun,
+  Calculator
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
@@ -20,12 +21,15 @@ import { logError } from '../lib/errorHandler';
 import clsx from 'clsx';
 
 export const Layout: React.FC = () => {
-  const { signOut, profile } = useAuth();
+  const { signOut, user } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
+
+  const firstName = user?.name ? user.name.split(' ')[0] : "Usuario";
+  const avatarInitial = user?.name ? user.name.charAt(0).toUpperCase() : 'U';
 
   useEffect(() => {
     if (location.pathname !== '/search') return;
@@ -36,6 +40,7 @@ export const Layout: React.FC = () => {
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Calendario', href: '/calendar', icon: Calendar },
+    { name: 'Cotización', href: '/events/new', icon: Calculator },
     { name: 'Clientes', href: '/clients', icon: Users },
     { name: 'Productos', href: '/products', icon: Package },
     { name: 'Inventario', href: '/inventory', icon: Boxes },
@@ -135,11 +140,11 @@ export const Layout: React.FC = () => {
             </button>
             <div className="flex items-center mb-4 px-3">
               <div className="h-8 w-8 rounded-full bg-brand-green flex items-center justify-center text-white font-bold">
-                {profile?.name?.charAt(0).toUpperCase() || 'U'}
+                {avatarInitial}
               </div>
               <div className="ml-3">
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{profile?.name || 'Usuario'}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[150px]">{profile?.email || ''}</p>
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{firstName}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[150px]">{user?.email || ''}</p>
               </div>
             </div>
             <button

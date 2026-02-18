@@ -18,14 +18,18 @@ class ClientDetailPage extends ConsumerStatefulWidget {
   ConsumerState<ClientDetailPage> createState() => _ClientDetailPageState();
 }
 
-class _ClientDetailPageState extends ConsumerState<ClientDetailPage> with SingleTickerProviderStateMixin {
+class _ClientDetailPageState extends ConsumerState<ClientDetailPage>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-    Future.microtask(() => ref.read(clientsProvider.notifier).loadClientDetail(widget.clientId));
+    _tabController = TabController(length: 3, vsync: this);
+    Future.microtask(() {
+      ref.read(clientsProvider.notifier).loadClientDetail(widget.clientId);
+      ref.read(clientsProvider.notifier).loadClientPayments(widget.clientId);
+    });
   }
 
   @override
@@ -42,6 +46,13 @@ class _ClientDetailPageState extends ConsumerState<ClientDetailPage> with Single
       appBar: CustomAppBar(
         title: 'Detalle de Cliente',
         actions: [
+          IconButton(
+            icon: const Icon(Icons.add_circle_outline),
+            onPressed: () {
+              context.push('/events/new', extra: {'clientId': widget.clientId});
+            },
+            tooltip: 'Crear evento',
+          ),
           IconButton(
             icon: const Icon(Icons.edit),
             onPressed: () {
@@ -74,7 +85,9 @@ class _ClientDetailPageState extends ConsumerState<ClientDetailPage> with Single
         loading: () => const LoadingWidget(message: 'Cargando cliente...'),
         error: (error, stack) => app_widgets.ErrorWidget(
           message: error.toString(),
-          onRetry: () => ref.read(clientsProvider.notifier).loadClientDetail(widget.clientId),
+          onRetry: () => ref
+              .read(clientsProvider.notifier)
+              .loadClientDetail(widget.clientId),
         ),
         data: (state) {
           final client = state.selectedClient;
@@ -87,7 +100,8 @@ class _ClientDetailPageState extends ConsumerState<ClientDetailPage> with Single
     );
   }
 
-  Widget _buildClientContent(BuildContext context, ClientEntity client, ClientsState state) {
+  Widget _buildClientContent(
+      BuildContext context, ClientEntity client, ClientsState state) {
     return Column(
       children: [
         _buildClientHeader(context, client),
@@ -95,6 +109,7 @@ class _ClientDetailPageState extends ConsumerState<ClientDetailPage> with Single
           controller: _tabController,
           tabs: const [
             Tab(text: 'Información'),
+            Tab(text: 'Eventos'),
             Tab(text: 'Pagos'),
           ],
         ),
@@ -103,6 +118,7 @@ class _ClientDetailPageState extends ConsumerState<ClientDetailPage> with Single
             controller: _tabController,
             children: [
               _buildInfoTab(client),
+              _buildEventsTab(client),
               _buildPaymentsTab(state),
             ],
           ),
@@ -189,9 +205,12 @@ class _ClientDetailPageState extends ConsumerState<ClientDetailPage> with Single
           _buildSectionTitle('Información de Contacto'),
           const SizedBox(height: 16),
           _buildInfoRow(Icons.phone, 'Teléfono', client.formattedPhone),
-          if (client.address != null) _buildInfoRow(Icons.location_on, 'Dirección', client.address!),
-          if (client.city != null) _buildInfoRow(Icons.location_city, 'Ciudad', client.city!),
-          if (client.notes != null) _buildInfoRow(Icons.note, 'Notas', client.notes!),
+          if (client.address != null)
+            _buildInfoRow(Icons.location_on, 'Dirección', client.address!),
+          if (client.city != null)
+            _buildInfoRow(Icons.location_city, 'Ciudad', client.city!),
+          if (client.notes != null)
+            _buildInfoRow(Icons.note, 'Notas', client.notes!),
           const SizedBox(height: 24),
           _buildSectionTitle('Estadísticas'),
           const SizedBox(height: 16),
@@ -199,9 +218,161 @@ class _ClientDetailPageState extends ConsumerState<ClientDetailPage> with Single
           const SizedBox(height: 24),
           _buildSectionTitle('Registro'),
           const SizedBox(height: 16),
-          _buildInfoRow(Icons.calendar_today, 'Creado', client.formattedCreatedAt),
+          _buildInfoRow(
+              Icons.calendar_today, 'Creado', client.formattedCreatedAt),
           _buildInfoRow(Icons.update, 'Actualizado', client.formattedUpdatedAt),
         ],
+      ),
+    );
+  }
+
+  Widget _buildEventsTab(ClientEntity client) {
+    if (client.events.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.event_outlined, size: 64, color: Colors.grey[400]),
+            const SizedBox(height: 16),
+            Text(
+              'No hay eventos registrados',
+              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: () =>
+                  context.push('/events/new', extra: {'clientId': client.id}),
+              icon: const Icon(Icons.add),
+              label: const Text('Crear evento'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: client.events.length,
+      itemBuilder: (context, index) {
+        final event = client.events[index];
+        return _buildEventCard(event);
+      },
+    );
+  }
+
+  Widget _buildEventCard(ClientEvent event) {
+    final statusColor = _getEventStatusColor(event.status);
+    final statusText = _getEventStatusText(event.status);
+    final pending = event.pendingAmount;
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: InkWell(
+        onTap: () => context.push('/events/${event.id}'),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      event.eventName,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: statusColor.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      statusText,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: statusColor,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Icon(Icons.calendar_today, size: 14, color: Colors.grey[600]),
+                  const SizedBox(width: 4),
+                  Text(
+                    event.formattedDate,
+                    style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                  ),
+                  if (event.serviceType != null) ...[
+                    const SizedBox(width: 16),
+                    Icon(Icons.room_service, size: 14, color: Colors.grey[600]),
+                    const SizedBox(width: 4),
+                    Text(
+                      event.serviceType!,
+                      style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                    ),
+                  ],
+                  if (event.numPeople != null) ...[
+                    const SizedBox(width: 16),
+                    Icon(Icons.people, size: 14, color: Colors.grey[600]),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${event.numPeople} pers.',
+                      style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                    ),
+                  ],
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Total',
+                          style:
+                              TextStyle(fontSize: 11, color: Colors.grey[500])),
+                      Text(
+                        event.formattedTotal,
+                        style: const TextStyle(
+                            fontSize: 15, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text('Pendiente',
+                          style:
+                              TextStyle(fontSize: 11, color: Colors.grey[500])),
+                      Text(
+                        '\$${pending.toStringAsFixed(2)}',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color:
+                              pending > 0 ? Colors.red[700] : Colors.green[700],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -294,7 +465,8 @@ class _ClientDetailPageState extends ConsumerState<ClientDetailPage> with Single
     );
   }
 
-  Widget _buildStatCard(IconData icon, String label, String value, Color color) {
+  Widget _buildStatCard(
+      IconData icon, String label, String value, Color color) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -333,7 +505,12 @@ class _ClientDetailPageState extends ConsumerState<ClientDetailPage> with Single
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Evento: ${payment.eventId}'),
+            Text(
+              payment.eventName.isNotEmpty
+                  ? payment.eventName
+                  : 'Evento: ${payment.eventId}',
+              style: const TextStyle(fontWeight: FontWeight.w500),
+            ),
             Text(payment.formattedPaymentDate),
             if (payment.method != null) Text('Método: ${payment.method}'),
             if (payment.notes != null) Text('Notas: ${payment.notes}'),
@@ -378,7 +555,8 @@ class _ClientDetailPageState extends ConsumerState<ClientDetailPage> with Single
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Eliminar Cliente'),
-        content: const Text('¿Estás seguro de que deseas eliminar este cliente?'),
+        content:
+            const Text('¿Estás seguro de que deseas eliminar este cliente?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),

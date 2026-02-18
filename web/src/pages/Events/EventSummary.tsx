@@ -8,15 +8,48 @@ import {
   ShoppingCart,
   FileCheck,
   Download,
-  DollarSign
+  DollarSign,
+  Pencil,
+  ChevronDown,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
-import { generateBudgetPDF, generateContractPDF } from "../../lib/pdfGenerator";
+import { generateBudgetPDF, generateContractPDF, generateShoppingListPDF } from "../../lib/pdfGenerator";
 import { logError } from "../../lib/errorHandler";
 import { getEventNetSales, getEventTaxAmount, getEventTotalCharged } from "../../lib/finance";
 import { Payments } from "./components/Payments";
 
 type ViewMode = "summary" | "ingredients" | "contract" | "payments";
+
+type EventStatus = "quoted" | "confirmed" | "completed" | "cancelled";
+
+const STATUS_CONFIG: Record<EventStatus, { label: string; color: string; bg: string; dot: string }> = {
+  quoted: {
+    label: "Cotizado",
+    color: "text-amber-700 dark:text-amber-300",
+    bg: "bg-amber-100 dark:bg-amber-900/30 border-amber-300 dark:border-amber-700",
+    dot: "bg-amber-500",
+  },
+  confirmed: {
+    label: "Confirmado",
+    color: "text-blue-700 dark:text-blue-300",
+    bg: "bg-blue-100 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700",
+    dot: "bg-blue-500",
+  },
+  completed: {
+    label: "Completado",
+    color: "text-green-700 dark:text-green-300",
+    bg: "bg-green-100 dark:bg-green-900/30 border-green-300 dark:border-green-700",
+    dot: "bg-green-500",
+  },
+  cancelled: {
+    label: "Cancelado",
+    color: "text-red-700 dark:text-red-300",
+    bg: "bg-red-100 dark:bg-red-900/30 border-red-300 dark:border-red-700",
+    dot: "bg-red-500",
+  },
+};
+
+const ALL_STATUSES: EventStatus[] = ["quoted", "confirmed", "completed", "cancelled"];
 
 export const EventSummary: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -28,12 +61,23 @@ export const EventSummary: React.FC = () => {
   const [ingredients, setIngredients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>("summary");
+  const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
 
   useEffect(() => {
     if (id) {
       loadData(id);
     }
   }, [id]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => setStatusDropdownOpen(false);
+    if (statusDropdownOpen) {
+      document.addEventListener("click", handleClickOutside);
+    }
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, [statusDropdownOpen]);
 
   const loadData = async (eventId: string) => {
     try {
@@ -85,6 +129,20 @@ export const EventSummary: React.FC = () => {
     }
   };
 
+  const handleStatusChange = async (newStatus: EventStatus) => {
+    if (!id || !event || newStatus === event.status) return;
+    try {
+      setUpdatingStatus(true);
+      await eventService.update(id, { status: newStatus });
+      setEvent((prev: any) => ({ ...prev, status: newStatus }));
+    } catch (error) {
+      logError("Error updating status", error);
+    } finally {
+      setUpdatingStatus(false);
+      setStatusDropdownOpen(false);
+    }
+  };
+
   if (loading) return <div>Cargando resumen...</div>;
   if (!event) return <div>Evento no encontrado</div>;
 
@@ -101,6 +159,9 @@ export const EventSummary: React.FC = () => {
   const timeRange = event.start_time || event.end_time
     ? `${event.start_time || ""}${event.start_time && event.end_time ? " - " : ""}${event.end_time || ""}`
     : "";
+
+  const currentStatus = (event.status || "quoted") as EventStatus;
+  const statusCfg = STATUS_CONFIG[currentStatus] || STATUS_CONFIG.quoted;
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto p-8 bg-white dark:bg-gray-800 shadow-lg my-8 print:shadow-none print:my-0 print:max-w-none print:p-0 transition-colors">
@@ -162,37 +223,108 @@ export const EventSummary: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {/* Edit Event Button */}
           <button
-            onClick={() => generateBudgetPDF(event, profile, products, extras)}
-            className="flex items-center px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium shadow-sm transition-colors"
-            title="Descargar Presupuesto en PDF"
+            onClick={() => navigate(`/events/${id}/edit`)}
+            className="flex items-center px-3 py-2 bg-brand-orange text-white rounded hover:bg-orange-600 text-sm font-medium shadow-sm transition-colors"
+            title="Editar Evento"
           >
-            <Download className="h-4 w-4 mr-2" />
-            Presupuesto
-          </button>
-          
-          <button
-            onClick={() => generateContractPDF(event, profile)}
-            className="flex items-center px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium shadow-sm transition-colors"
-            title="Descargar Contrato en PDF"
-          >
-            <FileCheck className="h-4 w-4 mr-2" />
-            Contrato
+            <Pencil className="h-4 w-4 mr-2" />
+            Editar
           </button>
 
+          {viewMode === "summary" && (
+            <button
+              onClick={() => generateBudgetPDF(event, profile, products, extras)}
+              className="flex items-center px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium shadow-sm transition-colors"
+              title="Descargar Presupuesto en PDF"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Presupuesto
+            </button>
+          )}
+          
+          {viewMode === "ingredients" && (
+            <button
+              onClick={() => generateShoppingListPDF(event, profile, ingredients)}
+              className="flex items-center px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium shadow-sm transition-colors"
+              title="Descargar Lista de Compras en PDF"
+            >
+              <ShoppingCart className="h-4 w-4 mr-2" />
+              Lista de Compras
+            </button>
+          )}
+
+          {viewMode === "contract" && (
+            <button
+              onClick={() => generateContractPDF(event, profile)}
+              className="flex items-center px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium shadow-sm transition-colors"
+              title="Descargar Contrato en PDF"
+            >
+              <FileCheck className="h-4 w-4 mr-2" />
+              Contrato
+            </button>
+          )}
         </div>
       </div>
 
       {viewMode === "payments" && id && user && (
-        <Payments eventId={id} totalAmount={event.total_amount} userId={user.id} />
+        <Payments
+          eventId={id}
+          totalAmount={event.total_amount}
+          userId={user.id}
+          eventStatus={currentStatus}
+          onStatusChange={handleStatusChange}
+          eventData={event}
+          profile={profile}
+        />
       )}
 
       {viewMode === "summary" && (
         <div className="space-y-8">
           <div className="border-b dark:border-gray-700 pb-6">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              {event.clients?.name} - {event.service_type}
-            </h1>
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                {event.clients?.name} - {event.service_type}
+              </h1>
+
+              {/* Status Badge + Dropdown */}
+              <div className="relative flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                <button
+                  onClick={() => setStatusDropdownOpen((prev) => !prev)}
+                  disabled={updatingStatus}
+                  className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-semibold transition-all ${statusCfg.bg} ${statusCfg.color} ${updatingStatus ? "opacity-60 cursor-not-allowed" : "hover:opacity-80 cursor-pointer"}`}
+                >
+                  <span className={`w-2 h-2 rounded-full flex-shrink-0 ${statusCfg.dot}`} />
+                  {statusCfg.label}
+                  <ChevronDown className={`h-3.5 w-3.5 transition-transform ${statusDropdownOpen ? "rotate-180" : ""}`} />
+                </button>
+
+                {statusDropdownOpen && (
+                  <div className="absolute right-0 mt-1 w-44 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 overflow-hidden">
+                    {ALL_STATUSES.map((s) => {
+                      const cfg = STATUS_CONFIG[s];
+                      return (
+                        <button
+                          key={s}
+                          onClick={() => handleStatusChange(s)}
+                          className={`w-full flex items-center gap-2 px-3 py-2.5 text-sm text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-700 ${
+                            s === currentStatus ? "font-semibold " + cfg.color : "text-gray-700 dark:text-gray-200"
+                          }`}
+                        >
+                          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${cfg.dot}`} />
+                          {cfg.label}
+                          {s === currentStatus && (
+                            <span className="ml-auto text-xs opacity-60">✓</span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-4 mt-4 text-sm text-gray-600 dark:text-gray-300">
               <div>
                 <p>
@@ -216,9 +348,6 @@ export const EventSummary: React.FC = () => {
                 )}
               </div>
               <div className="text-right">
-                <p>
-                  <span className="font-semibold">Estado:</span> {event.status}
-                </p>
                 <p>
                   <span className="font-semibold">Cliente:</span>{" "}
                   {event.clients?.name}

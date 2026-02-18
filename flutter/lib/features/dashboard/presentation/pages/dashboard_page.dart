@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:eventosapp/features/dashboard/presentation/providers/dashboard_provider.dart';
-import 'package:eventosapp/shared/widgets/loading_widget.dart';
 import 'package:eventosapp/shared/widgets/error_widget.dart' as app_widgets;
 import 'package:eventosapp/shared/widgets/refresh_indicator_widget.dart';
 import 'package:eventosapp/shared/widgets/custom_app_bar.dart';
 import 'package:eventosapp/features/dashboard/presentation/widgets/kpi_card.dart';
 import 'package:eventosapp/features/dashboard/presentation/widgets/revenue_chart.dart';
+import 'package:eventosapp/features/dashboard/presentation/widgets/event_status_chart.dart';
 import 'package:eventosapp/features/dashboard/presentation/widgets/upcoming_events_list.dart';
 import 'package:eventosapp/features/dashboard/presentation/widgets/inventory_alerts_list.dart';
 import 'package:eventosapp/features/dashboard/domain/entities/dashboard_entities.dart';
@@ -40,10 +40,13 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
             ? const Center(child: CircularProgressIndicator())
             : dashboardState.hasError
                 ? app_widgets.ErrorWidget(
-                    message: dashboardState.error?.toString() ?? 'Ocurrió un error',
-                    onRetry: () => ref.read(dashboardProvider.notifier).refresh(),
+                    message:
+                        dashboardState.error?.toString() ?? 'Ocurrió un error',
+                    onRetry: () =>
+                        ref.read(dashboardProvider.notifier).refresh(),
                   )
-                : _buildDashboardContent(dashboardState.value ?? const DashboardState()),
+                : _buildDashboardContent(
+                    dashboardState.value ?? const DashboardState()),
       ),
     );
   }
@@ -62,6 +65,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
             _buildKPIsGrid(metrics),
             const SizedBox(height: 16),
             RevenueChart(revenues: state.monthlyRevenues),
+            const SizedBox(height: 16),
+            EventStatusChart(events: state.upcomingEvents),
             const SizedBox(height: 16),
             UpcomingEventsList(events: state.upcomingEvents),
             if (state.inventoryAlerts.isNotEmpty) ...[
@@ -84,8 +89,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
             Text(
               'Bienvenido',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
             const SizedBox(height: 8),
             Text(
@@ -98,7 +103,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
             const SizedBox(height: 16),
             Row(
               children: [
-                Icon(Icons.calendar_today_outlined, size: 20, color: Colors.grey[600]),
+                Icon(Icons.calendar_today_outlined,
+                    size: 20, color: Colors.grey[600]),
                 const SizedBox(width: 8),
                 Text(
                   '${metrics.totalEvents} eventos totales',
@@ -120,6 +126,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   }
 
   Widget _buildKPIsGrid(DashboardKPIMetrics metrics) {
+    // Derive IVA pendiente from existing data (proportional to pending collections)
+    final vatOutstanding = metrics.totalSales > 0
+        ? metrics.totalVAT * (metrics.pendingCollections / metrics.totalSales)
+        : 0.0;
+
     return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -133,7 +144,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
           subtitle: 'Total facturado',
           icon: Icons.attach_money_outlined,
           color: Colors.blue,
-          trend: metrics.salesGrowth > 0 ? '+${metrics.salesGrowth.toStringAsFixed(1)}%' : '${metrics.salesGrowth.toStringAsFixed(1)}%',
+          trend: metrics.salesGrowth > 0
+              ? '+${metrics.salesGrowth.toStringAsFixed(1)}%'
+              : '${metrics.salesGrowth.toStringAsFixed(1)}%',
           isCurrency: true,
         ),
         KPICard(
@@ -153,11 +166,26 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
           isCurrency: true,
         ),
         KPICard(
-          title: 'IVA',
+          title: 'IVA Total',
           value: metrics.totalVAT,
           subtitle: '16% de ventas',
           icon: Icons.receipt_long_outlined,
           color: Colors.purple,
+          isCurrency: true,
+        ),
+        KPICard(
+          title: 'Próximos Eventos',
+          value: metrics.upcomingEvents.toDouble(),
+          subtitle: 'Pendientes de realizar',
+          icon: Icons.calendar_month_outlined,
+          color: const Color(0xFFFF6B35),
+        ),
+        KPICard(
+          title: 'IVA Pendiente',
+          value: vatOutstanding,
+          subtitle: 'Proporcional a cobros pendientes',
+          icon: Icons.warning_amber_outlined,
+          color: Colors.red,
           isCurrency: true,
         ),
       ],

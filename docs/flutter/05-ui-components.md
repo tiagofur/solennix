@@ -2,6 +2,31 @@
 
 Componentes reutilizables de la UI para la app Flutter.
 
+## Estado Real de los Widgets
+
+### Widgets en `shared/widgets/` (existen en el codigo)
+
+| Archivo | Clase(s) | Estado |
+|---|---|---|
+| `custom_app_bar.dart` | `CustomAppBar` | ✅ Implementado |
+| `custom_bottom_nav.dart` | `CustomBottomNav` | ✅ Implementado (5 items) |
+| `loading_widget.dart` | `LoadingWidget` | ✅ Implementado |
+| `error_widget.dart` | `AppErrorWidget` | ✅ Implementado |
+| `status_badge.dart` | `StatusBadge` | ✅ Implementado |
+| `not_found_page.dart` | `NotFoundPage` | ✅ Implementado |
+
+### Widgets documentados aqui pero NO como archivos separados
+
+Los siguientes son componentes que existen **inline** dentro de las pages (no como archivos separados en `shared/`):
+- `EmptyState` — inline en cada page
+- `ConfirmDialog` — se usa `AlertDialog` directamente
+- `SearchField` — inline en `inventory_page.dart`
+- `KPICard` — inline en `dashboard_page.dart`
+- `PrimaryButton` — se usa `ElevatedButton` directamente
+
+---
+
+
 ## 🎨 Paleta de Colores
 
 ```dart

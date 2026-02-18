@@ -70,22 +70,33 @@ Crear la mejor aplicación móvil nativa de gestión de eventos con:
 
 ## 📱 Características Principales
 
-- ✅ **Autenticación segura** con JWT y refresh tokens
-- ✅ **Dashboard con KPIs** y gráficos de ventas
-- ✅ **Calendario interactivo** para gestionar eventos
-- ✅ **Gestión completa de eventos** (CRUD con productos y extras)
-- ✅ **Formulario multi-paso** para crear eventos de forma guiada
-- ✅ **Gestión de clientes** con historial y estadísticas
-- ✅ **Gestión de productos** con recetas e ingredientes
-- ✅ **Gestión de inventario** con alertas de stock bajo
-- ✅ **Sistema de pagos** con seguimiento de abonos
-- ✅ **Generación de PDFs** (presupuestos y contratos)
+### Implementadas
+- ✅ **Autenticación segura** con JWT y refresh tokens (login, registro, forgot password, splash)
+- ✅ **Dashboard con KPIs** — 6 tarjetas, gráfico de barras por estado, eventos próximos
+- ✅ **Calendario interactivo** (`table_calendar`) con eventos del mes resaltados
+- ✅ **Gestión de eventos** — lista, detalle con 4 tabs (resumen, pagos, ingredientes, contrato), formulario multi-paso
+- ✅ **Formulario de eventos multi-paso** — info, productos, extras, finanzas con cálculo de rentabilidad
+- ✅ **Gestión de clientes** — lista, detalle (tab eventos con badge de estado, tab pagos con eventName), crear/editar/eliminar
+- ✅ **Gestión de productos** — lista en grid, detalle, formulario de 5 pasos con receta e ingredientes
+- ✅ **Gestión de inventario** — lista con búsqueda por texto, detalle, crear/editar/eliminar
+- ✅ **Sistema de pagos** — tab completo con resumen, barra de progreso, cards por pago, eliminar pago
+- ✅ **Generación de PDFs** — presupuesto (`generateBudgetPDF`) y contrato (`generateContractPDF`) vía `share_plus`
+- ✅ **Vista de contrato legal** en EventDetailPage con cláusulas completas y botón PDF
+- ✅ **Tab Ingredientes** en EventDetailPage con cálculo por receta de productos
 - ✅ **Búsqueda global** en clientes, eventos y productos
-- ✅ **Configuración de app** y contratos personalizados
-- ✅ **Dark mode** con tema claro/oscuro
-- ✅ **Offline mode** con sincronización automática
-- ✅ **Push notifications** para recordatorios y alertas
-- ✅ **Compartir archivos** directamente desde la app
+- ✅ **Configuración** — perfil, contrato, preferencias de app (UI completa)
+- ✅ **Botón "Crear evento"** desde ClientDetailPage (AppBar + empty state)
+
+### Pendientes / Gaps vs Web
+- ❌ **Settings sin persistencia real** — ProfilePage y ContractSettingsPage no llaman `PUT /api/users/me`; AppSettingsPage no guarda en Hive
+- ❌ **Dashboard con datos mock** — `DashboardRemoteDataSource` puede tener datos hardcoded
+- ❌ **PDF lista de compras** — web genera PDF de ingredientes del evento; Flutter no
+- ❌ **PDF reporte de pagos** — web genera PDF de historial de pagos; Flutter no
+- ❌ **business_name dinámico en contrato** — hardcodeado como `'EventosApp'` en `events_page.dart:591`
+- ❌ **Plan de suscripción en Settings** — web muestra plan actual (basic/premium); Flutter no
+- ❌ **Auto-status a "confirmed" al pagar total** — web lo hace automáticamente; Flutter no
+- ❌ **Offline mode** — no implementado
+- ❌ **Push notifications** — no implementado
 
 ---
 

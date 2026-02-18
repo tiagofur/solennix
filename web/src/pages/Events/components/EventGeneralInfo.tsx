@@ -1,26 +1,52 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useFormContext } from 'react-hook-form';
-import { Database } from '../../../types/supabase';
-import { Users } from 'lucide-react';
+import { Users, UserPlus } from 'lucide-react';
+import { QuickClientModal } from './QuickClientModal';
 
-type Client = Database['public']['Tables']['clients']['Row'];
+// Local type to avoid Supabase dependency
+interface Client {
+  id: string;
+  name: string;
+  phone: string;
+  email?: string | null;
+  address?: string | null;
+  city?: string | null;
+  total_events: number | null;
+  total_spent: number | null;
+}
 
 interface EventGeneralInfoProps {
   clients: Client[];
   clientIdValue?: string;
+  onClientCreated?: (client: Client) => void;
 }
 
-export const EventGeneralInfo: React.FC<EventGeneralInfoProps> = ({ clients, clientIdValue }) => {
+export const EventGeneralInfo: React.FC<EventGeneralInfoProps> = ({ 
+  clients, 
+  clientIdValue,
+  onClientCreated 
+}) => {
   const { register, formState: { errors } } = useFormContext();
+  const [isQuickClientModalOpen, setIsQuickClientModalOpen] = useState(false);
 
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
         {/* Cliente */}
         <div className="sm:col-span-3">
-          <label htmlFor="client_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Cliente *
-          </label>
+          <div className="flex justify-between items-center mb-1">
+            <label htmlFor="client_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Cliente *
+            </label>
+            <button
+              type="button"
+              onClick={() => setIsQuickClientModalOpen(true)}
+              className="inline-flex items-center text-xs font-medium text-brand-orange hover:text-orange-600"
+            >
+              <UserPlus className="h-3 w-3 mr-1" />
+              Nuevo Cliente
+            </button>
+          </div>
           <div className="mt-1">
             <select
               {...register('client_id')}
@@ -59,6 +85,16 @@ export const EventGeneralInfo: React.FC<EventGeneralInfoProps> = ({ clients, cli
             )}
           </div>
         </div>
+
+        {onClientCreated && (
+          <QuickClientModal
+            isOpen={isQuickClientModalOpen}
+            onClose={() => setIsQuickClientModalOpen(false)}
+            onClientCreated={(client) => {
+              onClientCreated(client as any);
+            }}
+          />
+        )}
 
         {/* Fecha */}
         <div className="sm:col-span-3">

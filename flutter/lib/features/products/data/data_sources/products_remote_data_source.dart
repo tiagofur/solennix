@@ -4,7 +4,8 @@ import 'package:eventosapp/core/api/api_client.dart';
 class ProductsRemoteDataSource {
   final ApiClient _apiClient;
 
-  ProductsRemoteDataSource({required ApiClient apiClient}) : _apiClient = apiClient;
+  ProductsRemoteDataSource({required ApiClient apiClient})
+      : _apiClient = apiClient;
 
   Future<Map<String, dynamic>> getProducts({
     String? search,
@@ -41,8 +42,10 @@ class ProductsRemoteDataSource {
     return response.data as Map<String, dynamic>;
   }
 
-  Future<Map<String, dynamic>> updateProduct(String id, Map<String, dynamic> data) async {
-    final response = await _apiClient.put('${ApiConfig.products}/$id', data: data);
+  Future<Map<String, dynamic>> updateProduct(
+      String id, Map<String, dynamic> data) async {
+    final response =
+        await _apiClient.put('${ApiConfig.products}/$id', data: data);
     return response.data as Map<String, dynamic>;
   }
 
@@ -50,4 +53,17 @@ class ProductsRemoteDataSource {
     await _apiClient.delete('${ApiConfig.products}/$id');
   }
 
+  Future<List<dynamic>> getIngredients(String productId) async {
+    final response =
+        await _apiClient.get('${ApiConfig.products}/$productId/ingredients');
+    return response.data as List<dynamic>;
+  }
+
+  Future<void> updateIngredients(
+      String productId, List<Map<String, dynamic>> ingredients) async {
+    await _apiClient.put(
+      '${ApiConfig.products}/$productId/ingredients',
+      data: {'ingredients': ingredients},
+    );
+  }
 }

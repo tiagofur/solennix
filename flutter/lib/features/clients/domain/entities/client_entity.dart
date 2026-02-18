@@ -8,7 +8,7 @@ class ClientEntity {
   final String? address;
   final String? city;
   final String? notes;
-  final List<dynamic> events;
+  final List<ClientEvent> events;
   final double totalSpent;
   final int eventsCount;
   final DateTime createdAt;
@@ -50,7 +50,7 @@ class ClientEntity {
       'address': address,
       'city': city,
       'notes': notes,
-      'events': events,
+      'events': events.map((e) => e.toJson()).toList(),
       'totalSpent': totalSpent,
       'eventsCount': eventsCount,
       'createdAt': createdAt.toIso8601String(),
@@ -66,7 +66,7 @@ class ClientEntity {
     String? address,
     String? city,
     String? notes,
-    List<dynamic>? events,
+    List<ClientEvent>? events,
     double? totalSpent,
     int? eventsCount,
     DateTime? createdAt,
@@ -89,9 +89,49 @@ class ClientEntity {
   }
 }
 
+class ClientEvent {
+  final String id;
+  final String eventName;
+  final String status;
+  final DateTime eventDate;
+  final double totalAmount;
+  final double collectedAmount;
+  final String? serviceType;
+  final int? numPeople;
+
+  const ClientEvent({
+    required this.id,
+    required this.eventName,
+    required this.status,
+    required this.eventDate,
+    required this.totalAmount,
+    required this.collectedAmount,
+    this.serviceType,
+    this.numPeople,
+  });
+
+  double get pendingAmount => totalAmount - collectedAmount;
+  String get formattedDate => DateFormat('dd/MM/yyyy').format(eventDate);
+  String get formattedTotal => '\$${totalAmount.toStringAsFixed(2)}';
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'event_name': eventName,
+      'status': status,
+      'event_date': eventDate.toIso8601String(),
+      'total_amount': totalAmount,
+      'collected_amount': collectedAmount,
+      'service_type': serviceType,
+      'num_people': numPeople,
+    };
+  }
+}
+
 class ClientPayment {
   final String id;
   final String eventId;
+  final String eventName;
   final DateTime paymentDate;
   final double amount;
   final String? method;
@@ -100,18 +140,21 @@ class ClientPayment {
   const ClientPayment({
     required this.id,
     required this.eventId,
+    this.eventName = '',
     required this.paymentDate,
     required this.amount,
     this.method,
     this.notes,
   });
 
-  String get formattedPaymentDate => DateFormat('dd/MM/yyyy HH:mm').format(paymentDate);
+  String get formattedPaymentDate =>
+      DateFormat('dd/MM/yyyy HH:mm').format(paymentDate);
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
       'eventId': eventId,
+      'eventName': eventName,
       'paymentDate': paymentDate.toIso8601String(),
       'amount': amount,
       'method': method,

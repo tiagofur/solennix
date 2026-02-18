@@ -7,7 +7,6 @@ import '../../domain/entities/client_entity.dart';
 import 'package:eventosapp/shared/widgets/custom_app_bar.dart';
 import 'package:eventosapp/shared/widgets/loading_widget.dart';
 import 'package:eventosapp/shared/widgets/error_widget.dart' as app_widgets;
-import 'package:eventosapp/shared/widgets/status_badge.dart';
 
 class ClientsPage extends ConsumerStatefulWidget {
   const ClientsPage({super.key});
@@ -48,7 +47,8 @@ class _ClientsPageState extends ConsumerState<ClientsPage> {
           _buildFilterChips(context),
           Expanded(
             child: clientsAsync.when(
-              loading: () => const LoadingWidget(message: 'Cargando clientes...'),
+              loading: () =>
+                  const LoadingWidget(message: 'Cargando clientes...'),
               error: (error, stack) => app_widgets.ErrorWidget(
                 message: error.toString(),
                 onRetry: () => ref.read(clientsProvider.notifier).refresh(),
@@ -165,7 +165,8 @@ class _ClientsPageState extends ConsumerState<ClientsPage> {
                 children: [
                   CircleAvatar(
                     radius: 24,
-                    backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                    backgroundColor:
+                        Theme.of(context).primaryColor.withOpacity(0.1),
                     child: Text(
                       client.name.substring(0, 1).toUpperCase(),
                       style: TextStyle(
@@ -198,9 +199,10 @@ class _ClientsPageState extends ConsumerState<ClientsPage> {
                       ],
                     ),
                   ),
-                  const StatusBadge(
-                    label: 'Cliente',
-                    color: Colors.blue,
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline, color: Colors.red),
+                    tooltip: 'Eliminar',
+                    onPressed: () => _showDeleteClientDialog(context, client),
                   ),
                 ],
               ),
@@ -239,6 +241,31 @@ class _ClientsPageState extends ConsumerState<ClientsPage> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _showDeleteClientDialog(BuildContext context, ClientEntity client) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Eliminar cliente'),
+        content: Text(
+            '¿Eliminar a "${client.name}"? Esta acción no se puede deshacer.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              ref.read(clientsProvider.notifier).deleteClient(client.id);
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Eliminar'),
+          ),
+        ],
       ),
     );
   }

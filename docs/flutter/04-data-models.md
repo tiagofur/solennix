@@ -2,6 +2,25 @@
 
 Definición completa de los modelos Dart para la app Flutter.
 
+## Estado Real de los Modelos
+
+Los modelos documentados aqui son los que **realmente existen** en el codigo. Algunos difieren del plan original:
+
+| Modelo | Archivo Real | Notas |
+|---|---|---|
+| `ClientEntity` | `features/clients/domain/entities/client_entity.dart` | Incluye `ClientEvent` y `ClientPayment` en el mismo archivo |
+| `ClientEvent` | `features/clients/domain/entities/client_entity.dart` | Clase separada para eventos del cliente |
+| `ClientPayment` | `features/clients/domain/entities/client_entity.dart` | Incluye campo `eventName` (String?) |
+| `EventEntity` | `features/events/domain/entities/event_entity.dart` | OK |
+| `ProductEntity` | `features/products/domain/entities/product_entity.dart` | OK |
+| `RecipeIngredientModel` | `features/products/data/models/product_model.dart` | Clase dentro del mismo archivo que ProductModel |
+| `InventoryEntity` | `features/inventory/domain/entities/inventory_entity.dart` | OK |
+| `TokensModel` | No existe como archivo separado | Los tokens se guardan directamente en SecureStorage |
+| `DashboardStatsEntity` | Puede tener datos mock | Ver Gap 3 en 06-implementation-plan.md |
+| `EventProductEntity` | Puede estar inline en events_page.dart | Verificar si existe como archivo separado |
+| `EventExtraEntity` | Puede estar inline en events_page.dart | Verificar si existe como archivo separado |
+| `PaymentEntity` | Puede estar inline en events_page.dart | Verificar si existe como archivo separado |
+
 ## 📦 Convenciones
 
 - **Entities**: Entidades del dominio (puro Dart, sin dependencias externas)
@@ -9,6 +28,105 @@ Definición completa de los modelos Dart para la app Flutter.
 - **Converters**: Métodos para convertir entre Entity y Model
 
 ---
+
+## Modelos Adicionales (Reales, no en el plan original)
+
+### ClientEvent
+
+```dart
+/// Evento asociado a un cliente (para ClientDetailPage tab Eventos)
+class ClientEvent {
+  final String id;
+  final String serviceType;
+  final DateTime eventDate;
+  final String status;
+  final double totalAmount;
+  final double paidAmount;
+
+  const ClientEvent({
+    required this.id,
+    required this.serviceType,
+    required this.eventDate,
+    required this.status,
+    required this.totalAmount,
+    required this.paidAmount,
+  });
+
+  double get pendingAmount => totalAmount - paidAmount;
+}
+```
+
+### ClientPayment (con eventName)
+
+```dart
+/// Pago asociado a un cliente (para ClientDetailPage tab Pagos)
+class ClientPayment {
+  final String id;
+  final String eventId;
+  final String? eventName;   // <-- campo clave: nombre del evento para mostrar en lugar del UUID
+  final double amount;
+  final DateTime paymentDate;
+  final String paymentMethod;
+  final String? notes;
+
+  const ClientPayment({
+    required this.id,
+    required this.eventId,
+    this.eventName,
+    required this.amount,
+    required this.paymentDate,
+    required this.paymentMethod,
+    this.notes,
+  });
+}
+```
+
+### RecipeIngredientModel
+
+```dart
+/// Ingrediente de receta (dentro de product_model.dart)
+class RecipeIngredientModel {
+  final String inventoryId;
+  final String? ingredientName;
+  final double quantityRequired;
+  final String? unit;
+  final double? unitCost;
+
+  RecipeIngredientModel({
+    required this.inventoryId,
+    this.ingredientName,
+    required this.quantityRequired,
+    this.unit,
+    this.unitCost,
+  });
+
+  factory RecipeIngredientModel.fromJson(Map<String, dynamic> json) {
+    return RecipeIngredientModel(
+      inventoryId: json['inventory_id'] as String,
+      ingredientName: json['ingredient_name'] as String?,
+      quantityRequired: (json['quantity_required'] as num).toDouble(),
+      unit: json['unit'] as String?,
+      unitCost: (json['unit_cost'] as num?)?.toDouble(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'inventory_id': inventoryId,
+      'quantity_required': quantityRequired,
+    };
+  }
+
+  double? get estimatedCost {
+    if (unitCost == null) return null;
+    return quantityRequired * unitCost!;
+  }
+}
+```
+
+---
+
+
 
 ## 🔐 Auth Models
 

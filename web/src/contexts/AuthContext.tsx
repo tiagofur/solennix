@@ -15,6 +15,7 @@ export interface User {
 
 interface AuthContextType {
   user: User | null;
+  profile: User | null;
   loading: boolean;
   checkAuth: () => Promise<void>;
   signOut: () => void;
@@ -23,6 +24,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
+  profile: null,
   loading: true,
   checkAuth: async () => {},
   signOut: () => {},
@@ -86,6 +88,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const value = {
     user,
+    profile: user,
     loading,
     checkAuth,
     signOut,

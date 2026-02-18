@@ -213,3 +213,140 @@ Ambas partes aceptan los términos y condiciones del presente contrato.`;
   
   doc.save(`Contrato_${event.clients?.name || 'Cliente'}.pdf`);
 };
+
+export const generateShoppingListPDF = (
+  event: Event,
+  profile: Profile | null,
+  ingredients: { name: string; quantity: number; unit: string }[]
+) => {
+  const doc = new jsPDF();
+  let currentY = addHeader(doc, profile, 'Lista de Compras');
+
+  // Event Info
+  doc.setFontSize(10);
+  doc.setTextColor(GRAY_COLOR);
+  doc.setFont('helvetica', 'normal');
+  const eventDate = new Date(event.event_date);
+  const userTimezoneOffset = eventDate.getTimezoneOffset() * 60000;
+  const localDate = new Date(eventDate.getTime() + userTimezoneOffset);
+  
+  doc.text(`Evento: ${event.service_type}`, 20, currentY);
+  doc.text(`Fecha: ${format(localDate, "d 'de' MMMM, yyyy", { locale: es })}`, 20, currentY + 5);
+  doc.text(`Personas: ${event.num_people}`, 20, currentY + 10);
+  
+  currentY += 20;
+
+  // Table
+  if (ingredients.length > 0) {
+    autoTable(doc, {
+      startY: currentY,
+      head: [['Ingrediente', 'Cantidad', 'Unidad']],
+      body: ingredients.map(i => [i.name, i.quantity.toFixed(2), i.unit]),
+      headStyles: { fillColor: BRAND_COLOR },
+      styles: { fontSize: 10 },
+      theme: 'grid',
+    });
+  } else {
+    doc.text('No hay ingredientes calculados.', 20, currentY);
+  }
+
+  doc.save(`Compras_${event.service_type}_${format(localDate, 'yyyy-MM-dd')}.pdf`);
+};
+
+export const generatePaymentReportPDF = (
+  event: Event,
+  profile: Profile | null,
+  payments: Database['public']['Tables']['payments']['Row'][]
+) => {
+  const doc = new jsPDF();
+  let currentY = addHeader(doc, profile, 'Reporte de Pagos');
+
+  // Event & Client Info
+  doc.setFontSize(10);
+  doc.setTextColor(GRAY_COLOR);
+  
+  const eventDate = new Date(event.event_date);
+  const userTimezoneOffset = eventDate.getTimezoneOffset() * 60000;
+  const localDate = new Date(eventDate.getTime() + userTimezoneOffset);
+
+  // Left Column
+  doc.text(`Cliente: ${event.clients?.name || 'N/A'}`, 20, currentY);
+  doc.text(`Evento: ${event.service_type}`, 20, currentY + 5);
+  
+  // Right Column
+  const rightColX = doc.internal.pageSize.width / 2 + 10;
+  doc.text(`Fecha: ${format(localDate, "d 'de' MMMM, yyyy", { locale: es })}`, rightColX, currentY);
+  doc.text(`Total del Evento: ${formatCurrency(event.total_amount)}`, rightColX, currentY + 5);
+
+  currentY += 20;
+
+  // Payments Table
+  if (payments.length > 0) {
+    autoTable(doc, {
+      startY: currentY,
+      head: [['Fecha', 'Método', 'Nota', 'Monto']],
+      body: payments.map(p => {
+        // Adjust timezone if needed or just display as YYYY-MM-DD
+        const pDateStr = p.payment_date; 
+        
+        const methodMap: Record<string, string> = {
+          cash: 'Efectivo',
+          transfer: 'Transferencia',
+          card: 'Tarjeta',
+          check: 'Cheque',
+          other: 'Otro'
+        };
+
+        return [
+          pDateStr,
+          methodMap[p.payment_method] || p.payment_method,
+          p.notes || '-',
+          formatCurrency(p.amount)
+        ];
+      }),
+      headStyles: { fillColor: BRAND_COLOR },
+      styles: { fontSize: 10 },
+      theme: 'grid',
+    });
+    
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    currentY = (doc as any).lastAutoTable.finalY + 10;
+  } else {
+    doc.text('No hay pagos registrados.', 20, currentY);
+    currentY += 20;
+  }
+
+  // Summary
+  const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
+  const balance = event.total_amount - totalPaid;
+  
+  const rightMargin = doc.internal.pageSize.width - 20;
+  doc.setFontSize(11);
+  doc.setTextColor(TEXT_COLOR);
+  
+  doc.text(`Total Pagado: ${formatCurrency(totalPaid)}`, rightMargin, currentY, { align: 'right' });
+  currentY += 6;
+  
+  doc.setFont('helvetica', 'bold');
+  if (balance > 0) {
+    doc.setTextColor(180, 0, 0); // Windows red-ish
+    doc.text(`Saldo Pendiente: ${formatCurrency(balance)}`, rightMargin, currentY, { align: 'right' });
+  } else {
+    doc.setTextColor(0, 150, 0); // Green
+    doc.text(`Saldo Favor / Completado: ${formatCurrency(Math.abs(balance))}`, rightMargin, currentY, { align: 'right' });
+  }
+
+  // Footer signature area
+  const pageHeight = doc.internal.pageSize.height;
+  const signY = pageHeight - 40;
+  
+  doc.setDrawColor(GRAY_COLOR);
+  doc.line(70, signY, 140, signY);
+  doc.setFontSize(9);
+  doc.setTextColor(GRAY_COLOR);
+  doc.setFont('helvetica', 'normal');
+  doc.text(profile?.business_name || 'Recibido por', 105, signY + 5, { align: 'center' });
+
+  doc.save(`Recibo_Pagos_${format(localDate, 'yyyy-MM-dd')}.pdf`);
+};
+

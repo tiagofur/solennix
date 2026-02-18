@@ -154,21 +154,44 @@ func (r *EventRepo) GetUpcoming(ctx context.Context, userID uuid.UUID, limit int
 }
 
 func (r *EventRepo) Create(ctx context.Context, e *models.Event) error {
+	// Handle empty strings for time fields
+	var startTime, endTime *string
+	if e.StartTime != nil && *e.StartTime != "" {
+		startTime = e.StartTime
+	}
+	if e.EndTime != nil && *e.EndTime != "" {
+		endTime = e.EndTime
+	}
+
 	query := `INSERT INTO events (user_id, client_id, event_date, start_time, end_time,
 		service_type, num_people, status, discount, requires_invoice,
 		tax_rate, tax_amount, total_amount, location, city,
 		deposit_percent, cancellation_days, refund_percent, notes)
 		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
 		RETURNING id, created_at, updated_at`
-	return r.pool.QueryRow(ctx, query,
-		e.UserID, e.ClientID, e.EventDate, e.StartTime, e.EndTime,
+	err := r.pool.QueryRow(ctx, query,
+		e.UserID, e.ClientID, e.EventDate, startTime, endTime,
 		e.ServiceType, e.NumPeople, e.Status, e.Discount, e.RequiresInvoice,
 		e.TaxRate, e.TaxAmount, e.TotalAmount, e.Location, e.City,
 		e.DepositPercent, e.CancellationDays, e.RefundPercent, e.Notes,
 	).Scan(&e.ID, &e.CreatedAt, &e.UpdatedAt)
+	if err != nil {
+		fmt.Printf("Error creating event: %v\n", err)
+		return err
+	}
+	return nil
 }
 
 func (r *EventRepo) Update(ctx context.Context, e *models.Event) error {
+	// Handle empty strings for time fields
+	var startTime, endTime *string
+	if e.StartTime != nil && *e.StartTime != "" {
+		startTime = e.StartTime
+	}
+	if e.EndTime != nil && *e.EndTime != "" {
+		endTime = e.EndTime
+	}
+
 	query := `UPDATE events SET client_id=$3, event_date=$4, start_time=$5, end_time=$6,
 		service_type=$7, num_people=$8, status=$9, discount=$10, requires_invoice=$11,
 		tax_rate=$12, tax_amount=$13, total_amount=$14, location=$15, city=$16,
@@ -176,7 +199,7 @@ func (r *EventRepo) Update(ctx context.Context, e *models.Event) error {
 		WHERE id=$1 AND user_id=$2
 		RETURNING created_at, updated_at`
 	return r.pool.QueryRow(ctx, query,
-		e.ID, e.UserID, e.ClientID, e.EventDate, e.StartTime, e.EndTime,
+		e.ID, e.UserID, e.ClientID, e.EventDate, startTime, endTime,
 		e.ServiceType, e.NumPeople, e.Status, e.Discount, e.RequiresInvoice,
 		e.TaxRate, e.TaxAmount, e.TotalAmount, e.Location, e.City,
 		e.DepositPercent, e.CancellationDays, e.RefundPercent, e.Notes,

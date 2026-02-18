@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:table_calendar/table_calendar.dart';
+import 'package:eventosapp/config/theme.dart';
 import 'package:eventosapp/shared/widgets/custom_app_bar.dart';
 import 'package:eventosapp/shared/widgets/loading_widget.dart';
 import 'package:eventosapp/shared/widgets/error_widget.dart' as app_widgets;
 import 'package:eventosapp/shared/widgets/status_badge.dart';
 import 'package:eventosapp/core/utils/date_formatter.dart';
 import 'package:eventosapp/core/utils/formatters.dart';
+import 'package:eventosapp/core/utils/pdf_generator.dart';
 import 'package:eventosapp/features/events/presentation/providers/events_provider.dart';
 import 'package:eventosapp/features/events/presentation/providers/events_state.dart';
 import 'package:eventosapp/features/events/domain/entities/event_entity.dart';
@@ -56,7 +59,8 @@ class _EventsPageState extends ConsumerState<EventsPage> {
           _buildFilterChips(),
           Expanded(
             child: eventsAsync.when(
-              loading: () => const LoadingWidget(message: 'Cargando eventos...'),
+              loading: () =>
+                  const LoadingWidget(message: 'Cargando eventos...'),
               error: (error, stack) => app_widgets.ErrorWidget(
                 message: error.toString(),
                 onRetry: () => ref.read(eventsProvider.notifier).refresh(),
@@ -207,7 +211,8 @@ class _EventCard extends StatelessWidget {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
+                  const Icon(Icons.calendar_today,
+                      size: 16, color: Colors.grey),
                   const SizedBox(width: 6),
                   Text(DateFormatter.format(event.eventDate)),
                   const SizedBox(width: 12),
@@ -219,7 +224,8 @@ class _EventCard extends StatelessWidget {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  const Icon(Icons.location_on_outlined, size: 16, color: Colors.grey),
+                  const Icon(Icons.location_on_outlined,
+                      size: 16, color: Colors.grey),
                   const SizedBox(width: 6),
                   Expanded(child: Text(event.location)),
                   const SizedBox(width: 8),
@@ -279,7 +285,8 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => ref.read(eventDetailProvider.notifier).loadEventDetail(widget.eventId));
+    Future.microtask(() =>
+        ref.read(eventDetailProvider.notifier).loadEventDetail(widget.eventId));
   }
 
   @override
@@ -295,13 +302,59 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
             onPressed: () => context.push('/events/edit/${widget.eventId}'),
             tooltip: 'Editar',
           ),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            tooltip: 'Más opciones',
+            onSelected: (value) async {
+              final detail = ref.read(eventDetailProvider).valueOrNull;
+              final event = detail?.event;
+              if (event == null) return;
+              if (value == 'budget') {
+                await generateBudgetPDF(
+                  event: event,
+                  products: detail!.products,
+                  extras: detail.extras,
+                );
+              } else if (value == 'contract') {
+                await generateContractPDF(
+                  event: event,
+                  products: detail!.products,
+                  extras: detail.extras,
+                );
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'budget',
+                child: Row(
+                  children: [
+                    Icon(Icons.request_quote_outlined),
+                    SizedBox(width: 10),
+                    Text('Generar presupuesto'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'contract',
+                child: Row(
+                  children: [
+                    Icon(Icons.description_outlined),
+                    SizedBox(width: 10),
+                    Text('Generar contrato'),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ],
       ),
       body: detailAsync.when(
         loading: () => const LoadingWidget(message: 'Cargando evento...'),
         error: (error, stack) => app_widgets.ErrorWidget(
           message: error.toString(),
-          onRetry: () => ref.read(eventDetailProvider.notifier).loadEventDetail(widget.eventId),
+          onRetry: () => ref
+              .read(eventDetailProvider.notifier)
+              .loadEventDetail(widget.eventId),
         ),
         data: (state) {
           final event = state.event;
@@ -351,17 +404,22 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
                 Expanded(
                   child: Text(
                     event.serviceType,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                    style: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.w700),
                   ),
                 ),
                 DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
                     value: event.status,
                     items: const [
-                      DropdownMenuItem(value: 'quoted', child: Text('Cotizado')),
-                      DropdownMenuItem(value: 'confirmed', child: Text('Confirmado')),
-                      DropdownMenuItem(value: 'completed', child: Text('Completado')),
-                      DropdownMenuItem(value: 'cancelled', child: Text('Cancelado')),
+                      DropdownMenuItem(
+                          value: 'quoted', child: Text('Cotizado')),
+                      DropdownMenuItem(
+                          value: 'confirmed', child: Text('Confirmado')),
+                      DropdownMenuItem(
+                          value: 'completed', child: Text('Completado')),
+                      DropdownMenuItem(
+                          value: 'cancelled', child: Text('Cancelado')),
                     ],
                     onChanged: (value) {
                       if (value == null) return;
@@ -391,7 +449,8 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
             const SizedBox(height: 8),
             Row(
               children: [
-                const Icon(Icons.location_on_outlined, size: 16, color: Colors.grey),
+                const Icon(Icons.location_on_outlined,
+                    size: 16, color: Colors.grey),
                 const SizedBox(width: 6),
                 Expanded(child: Text(event.location)),
               ],
@@ -404,7 +463,9 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
 
   Widget _buildSummaryTab(EventEntity event, EventDetailState state) {
     return RefreshIndicator(
-      onRefresh: () => ref.read(eventDetailProvider.notifier).loadEventDetail(widget.eventId),
+      onRefresh: () => ref
+          .read(eventDetailProvider.notifier)
+          .loadEventDetail(widget.eventId),
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -429,11 +490,17 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            _InfoRow(label: 'Total', value: CurrencyFormatter.format(event.totalAmount)),
+            _InfoRow(
+                label: 'Total',
+                value: CurrencyFormatter.format(event.totalAmount)),
             const SizedBox(height: 8),
-            _InfoRow(label: 'Depósito', value: CurrencyFormatter.format(event.depositAmount)),
+            _InfoRow(
+                label: 'Depósito',
+                value: CurrencyFormatter.format(event.depositAmount)),
             const SizedBox(height: 8),
-            _InfoRow(label: 'Saldo pendiente', value: CurrencyFormatter.format(event.pendingAmount)),
+            _InfoRow(
+                label: 'Saldo pendiente',
+                value: CurrencyFormatter.format(event.pendingAmount)),
             const SizedBox(height: 8),
             _InfoRow(label: 'Notas', value: event.notes ?? 'Sin notas'),
           ],
@@ -443,51 +510,188 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
   }
 
   Widget _buildPaymentsSection(EventEntity event) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
+    final total = event.totalAmount;
+    final collected =
+        event.payments.fold<double>(0, (sum, p) => sum + p.amount);
+    final balance = total - collected;
+    final progress = total > 0 ? (collected / total).clamp(0.0, 1.0) : 0.0;
+    final isFullyPaid = balance <= 0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Summary cards
+        Row(
+          children: [
+            Expanded(
+                child: _buildPaymentSummaryCard(
+                    'Total', total, Colors.grey[700]!)),
+            const SizedBox(width: 10),
+            Expanded(
+                child: _buildPaymentSummaryCard(
+                    'Cobrado', collected, Colors.green[700]!)),
+            const SizedBox(width: 10),
+            Expanded(
+                child: _buildPaymentSummaryCard('Saldo', balance,
+                    isFullyPaid ? Colors.green[700]! : Colors.red[700]!)),
+          ],
+        ),
+        const SizedBox(height: 16),
+        // Progress bar
+        Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Expanded(
-                  child: Text(
-                    'Pagos',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                  ),
+                Text(
+                  'Avance de cobro',
+                  style: TextStyle(fontSize: 13, color: Colors.grey[600]),
                 ),
-                TextButton.icon(
-                  onPressed: () => _showAddPaymentDialog(event.id),
-                  icon: const Icon(Icons.add),
-                  label: const Text('Agregar'),
+                Text(
+                  '${(progress * 100).toStringAsFixed(0)}%',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: isFullyPaid ? Colors.green[700] : AppColors.brand,
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            if (event.payments.isEmpty)
-              const Text('Sin pagos registrados')
-            else
-              ...event.payments.map((payment) {
-                final paymentLabel = payment.method?.isNotEmpty == true
-                    ? payment.method!
-                    : 'Metodo no especificado';
-                return ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(CurrencyFormatter.format(payment.amount)),
-                  subtitle: Text('${DateFormatter.format(payment.paymentDate)} · $paymentLabel'),
-                );
-              }).toList(),
+            const SizedBox(height: 6),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: LinearProgressIndicator(
+                value: progress,
+                minHeight: 10,
+                backgroundColor: Colors.grey[200],
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  isFullyPaid ? Colors.green[600]! : AppColors.brand,
+                ),
+              ),
+            ),
           ],
         ),
+        const SizedBox(height: 20),
+        // Payments list header
+        Row(
+          children: [
+            const Expanded(
+              child: Text(
+                'Historial de pagos',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+              ),
+            ),
+            TextButton.icon(
+              onPressed: () => _showAddPaymentDialog(event.id),
+              icon: const Icon(Icons.add),
+              label: const Text('Agregar'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        if (event.payments.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Text(
+              'Sin pagos registrados',
+              style: TextStyle(color: Colors.grey[500]),
+            ),
+          )
+        else
+          ...event.payments.map((payment) {
+            final paymentLabel = payment.method?.isNotEmpty == true
+                ? payment.method!
+                : 'Método no especificado';
+            return Card(
+              margin: const EdgeInsets.only(bottom: 8),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+              child: ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: Colors.green.withOpacity(0.1),
+                  child:
+                      const Icon(Icons.payments, color: Colors.green, size: 20),
+                ),
+                title: Text(
+                  CurrencyFormatter.format(payment.amount),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                subtitle: Text(
+                  '${DateFormatter.format(payment.paymentDate)} · $paymentLabel'
+                  '${payment.notes?.isNotEmpty == true ? '\n${payment.notes}' : ''}',
+                ),
+                trailing: IconButton(
+                  icon: const Icon(Icons.delete_outline,
+                      color: Colors.red, size: 20),
+                  tooltip: 'Eliminar pago',
+                  onPressed: () => _confirmDeletePayment(event.id, payment.id),
+                ),
+              ),
+            );
+          }).toList(),
+      ],
+    );
+  }
+
+  Widget _buildPaymentSummaryCard(String label, double amount, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withOpacity(0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: TextStyle(fontSize: 11, color: Colors.grey[600])),
+          const SizedBox(height: 4),
+          Text(
+            CurrencyFormatter.format(amount),
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDeletePayment(String eventId, String paymentId) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Eliminar pago'),
+        content: const Text(
+            '¿Eliminar este pago? Esta acción no se puede deshacer.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              ref
+                  .read(eventDetailProvider.notifier)
+                  .deletePayment(eventId, paymentId);
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Eliminar'),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildPaymentsTab(EventEntity event) {
     return RefreshIndicator(
-      onRefresh: () => ref.read(eventDetailProvider.notifier).loadEventDetail(widget.eventId),
+      onRefresh: () => ref
+          .read(eventDetailProvider.notifier)
+          .loadEventDetail(widget.eventId),
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [_buildPaymentsSection(event)],
@@ -515,32 +719,187 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
   }
 
   Widget _buildContractTab(EventEntity event, EventDetailState state) {
+    final today = DateFormatter.format(DateTime.now());
+    final eventDateStr = DateFormatter.format(event.eventDate);
+    final city = (event.city?.isNotEmpty == true) ? event.city! : 'la ciudad';
+    const businessName = 'EventosApp'; // TODO: leer de settings/profile
+
+    final contractBody =
+        '''En $city, a los $today, comparecen por una parte $businessName (en adelante "EL PROVEEDOR"), y por la otra parte ${event.clientName} (en adelante "EL CLIENTE"), quienes convienen en celebrar el presente Contrato de Prestación de Servicios.
+
+PRIMERA: OBJETO.
+EL PROVEEDOR se compromete a prestar los servicios de ${event.serviceType} para el evento que se llevará a cabo el día $eventDateStr.
+
+SEGUNDA: DETALLES DEL EVENTO.
+El evento contará con aproximadamente ${event.numPeople} personas.
+Ubicación: ${event.location.isNotEmpty ? event.location : 'A definir'}.
+Horario: ${event.startTime} - ${event.endTime}.
+
+TERCERA: SERVICIOS CONTRATADOS.
+${state.products.isNotEmpty ? state.products.map((p) => '  • ${p.quantity.toStringAsFixed(0)}x ${p.productName}  —  ${CurrencyFormatter.format(p.lineTotal)}').join('\n') : '  (sin productos)'}${state.extras.isNotEmpty ? '\n\nExtras:\n${state.extras.map((e) => '  • ${e.description}  —  ${CurrencyFormatter.format(e.price)}').join('\n')}' : ''}
+
+CUARTA: COSTO Y FORMA DE PAGO.
+El costo total del servicio es de ${CurrencyFormatter.format(event.totalAmount)}.
+EL CLIENTE realizará un anticipo del ${event.depositPercent.toStringAsFixed(0)}% (${CurrencyFormatter.format(event.depositAmount)}) para reservar la fecha, debiendo liquidar el saldo restante antes del inicio del evento.
+
+QUINTA: CANCELACIONES.
+En caso de cancelación por parte de EL CLIENTE con menos de ${event.cancellationDays.toStringAsFixed(0)} días de anticipación, el anticipo no será reembolsado.${event.refundPercent > 0 ? '\nSi la cancelación se realiza con la debida anticipación, se reembolsará el ${event.refundPercent.toStringAsFixed(0)}% del anticipo entregado.' : ''}
+
+SEXTA: ACEPTACIÓN.
+Ambas partes aceptan los términos y condiciones del presente contrato, firmando de conformidad.''';
+
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        Text(
-          'Contrato de Servicios',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+        // Header
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Contrato de Servicios',
+                style: Theme.of(context)
+                    .textTheme
+                    .titleLarge
+                    ?.copyWith(fontWeight: FontWeight.bold),
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.picture_as_pdf_outlined),
+              tooltip: 'Generar PDF',
+              onPressed: () async {
+                await generateContractPDF(
+                  event: event,
+                  products: state.products,
+                  extras: state.extras,
+                );
+              },
+            ),
+          ],
         ),
-        const SizedBox(height: 12),
-        Text('Cliente: ${event.clientName}'),
-        Text('Fecha: ${DateFormatter.format(event.eventDate)}'),
-        Text('Lugar: ${event.location}'),
-        const SizedBox(height: 12),
-        Text('Deposito: ${event.depositPercent}%'),
-        Text('Cancelacion: ${event.cancellationDays} dias'),
-        Text('Reembolso: ${event.refundPercent}%'),
         const SizedBox(height: 16),
-        Text('Productos:', style: const TextStyle(fontWeight: FontWeight.bold)),
+        // Info rápida
+        Card(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              children: [
+                _InfoRow(label: 'Cliente', value: event.clientName),
+                const SizedBox(height: 6),
+                _InfoRow(label: 'Fecha', value: eventDateStr),
+                const SizedBox(height: 6),
+                _InfoRow(label: 'Lugar', value: event.location),
+                const SizedBox(height: 6),
+                _InfoRow(
+                    label: 'Anticipo',
+                    value:
+                        '${event.depositPercent.toStringAsFixed(0)}% — ${CurrencyFormatter.format(event.depositAmount)}'),
+                const SizedBox(height: 6),
+                _InfoRow(
+                    label: 'Cancelación',
+                    value: '${event.cancellationDays.toStringAsFixed(0)} días'),
+                const SizedBox(height: 6),
+                _InfoRow(
+                    label: 'Reembolso',
+                    value: '${event.refundPercent.toStringAsFixed(0)}%'),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        // Texto legal completo
+        Card(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.article_outlined, size: 18),
+                    const SizedBox(width: 6),
+                    const Text(
+                      'Texto legal',
+                      style:
+                          TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  contractBody,
+                  style: const TextStyle(fontSize: 12.5, height: 1.7),
+                ),
+                const SizedBox(height: 24),
+                // Líneas de firma
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        children: [
+                          Container(height: 1, color: Colors.grey[400]),
+                          const SizedBox(height: 4),
+                          const Text('EL PROVEEDOR',
+                              style: TextStyle(fontSize: 11)),
+                          Text(businessName,
+                              style: const TextStyle(
+                                  fontSize: 11, fontWeight: FontWeight.w600)),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 24),
+                    Expanded(
+                      child: Column(
+                        children: [
+                          Container(height: 1, color: Colors.grey[400]),
+                          const SizedBox(height: 4),
+                          const Text('EL CLIENTE',
+                              style: TextStyle(fontSize: 11)),
+                          Text(event.clientName,
+                              style: const TextStyle(
+                                  fontSize: 11, fontWeight: FontWeight.w600)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 24),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: () async {
+              await generateContractPDF(
+                event: event,
+                products: state.products,
+                extras: state.extras,
+              );
+            },
+            icon: const Icon(Icons.download_outlined),
+            label: const Text('Descargar contrato PDF'),
+          ),
+        ),
         const SizedBox(height: 8),
-        ...state.products.map((p) => Text('${p.quantity}x ${p.productName}')),
-        const SizedBox(height: 12),
-        Text('Extras:', style: const TextStyle(fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
-        if (state.extras.isEmpty)
-          const Text('Sin extras')
-        else
-          ...state.extras.map((e) => Text(e.description)),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: () async {
+              await generateBudgetPDF(
+                event: event,
+                products: state.products,
+                extras: state.extras,
+              );
+            },
+            icon: const Icon(Icons.request_quote_outlined),
+            label: const Text('Descargar presupuesto PDF'),
+          ),
+        ),
       ],
     );
   }
@@ -556,13 +915,15 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Productos', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            const Text('Productos',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
             ...products.map((p) => Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(child: Text(p.productName)),
-                    Text('${p.quantity} x ${CurrencyFormatter.format(p.unitPrice)}'),
+                    Text(
+                        '${p.quantity} x ${CurrencyFormatter.format(p.unitPrice)}'),
                   ],
                 )),
           ],
@@ -582,7 +943,8 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Extras', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            const Text('Extras',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
             ...extras.map((e) => Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -598,12 +960,14 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
   }
 
   Widget _buildFinancialSummary(EventEntity event, EventDetailState state) {
-    final productsTotal = state.products.fold(0.0, (sum, item) => sum + item.lineTotal);
+    final productsTotal =
+        state.products.fold(0.0, (sum, item) => sum + item.lineTotal);
     final extrasTotal = state.extras.fold(0.0, (sum, item) => sum + item.price);
     final subtotal = productsTotal + extrasTotal;
     final discountAmount = subtotal * (event.discount / 100);
     final discounted = subtotal - discountAmount;
-    final taxAmount = event.requiresInvoice ? discounted * (event.taxRate / 100) : 0.0;
+    final taxAmount =
+        event.requiresInvoice ? discounted * (event.taxRate / 100) : 0.0;
     final total = discounted + taxAmount;
 
     return Card(
@@ -613,11 +977,15 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Resumen financiero', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            const Text('Resumen financiero',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
-            _InfoRow(label: 'Subtotal', value: CurrencyFormatter.format(subtotal)),
+            _InfoRow(
+                label: 'Subtotal', value: CurrencyFormatter.format(subtotal)),
             const SizedBox(height: 8),
-            _InfoRow(label: 'Descuento', value: CurrencyFormatter.format(discountAmount)),
+            _InfoRow(
+                label: 'Descuento',
+                value: CurrencyFormatter.format(discountAmount)),
             const SizedBox(height: 8),
             _InfoRow(label: 'IVA', value: CurrencyFormatter.format(taxAmount)),
             const SizedBox(height: 8),
@@ -632,7 +1000,8 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
     final amountController = TextEditingController();
     final methodController = TextEditingController();
     final notesController = TextEditingController();
-    final dateController = TextEditingController(text: DateFormatter.format(DateTime.now(), pattern: 'dd/MM/yyyy'));
+    final dateController = TextEditingController(
+        text: DateFormatter.format(DateTime.now(), pattern: 'dd/MM/yyyy'));
 
     await showDialog<void>(
       context: context,
@@ -660,7 +1029,8 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
                     lastDate: DateTime(2100),
                   );
                   if (selected != null) {
-                    dateController.text = DateFormatter.format(selected, pattern: 'dd/MM/yyyy');
+                    dateController.text =
+                        DateFormatter.format(selected, pattern: 'dd/MM/yyyy');
                   }
                 },
               ),
@@ -673,7 +1043,8 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
               TextField(
                 controller: notesController,
                 maxLines: 2,
-                decoration: const InputDecoration(labelText: 'Notas (opcional)'),
+                decoration:
+                    const InputDecoration(labelText: 'Notas (opcional)'),
               ),
             ],
           ),
@@ -690,14 +1061,21 @@ class _EventDetailPageState extends ConsumerState<EventDetailPage> {
             ),
             ElevatedButton(
               onPressed: () async {
-                final amount = double.tryParse(amountController.text.trim()) ?? 0;
+                final amount =
+                    double.tryParse(amountController.text.trim()) ?? 0;
                 final selectedDate = _normalizeDate(dateController.text);
-                await ref.read(eventDetailProvider.notifier).addPayment(eventId, {
+                await ref
+                    .read(eventDetailProvider.notifier)
+                    .addPayment(eventId, {
                   'event_id': eventId,
                   'amount': amount,
                   'payment_date': selectedDate,
-                  'payment_method': methodController.text.trim().isEmpty ? null : methodController.text.trim(),
-                  'notes': notesController.text.trim().isEmpty ? null : notesController.text.trim(),
+                  'payment_method': methodController.text.trim().isEmpty
+                      ? null
+                      : methodController.text.trim(),
+                  'notes': notesController.text.trim().isEmpty
+                      ? null
+                      : notesController.text.trim(),
                 });
                 amountController.dispose();
                 methodController.dispose();
@@ -875,7 +1253,8 @@ class _EventFormPageState extends ConsumerState<EventFormPage> {
         TextFormField(
           controller: _serviceTypeController,
           decoration: const InputDecoration(labelText: 'Tipo de servicio'),
-          validator: (value) => value == null || value.isEmpty ? 'Requerido' : null,
+          validator: (value) =>
+              value == null || value.isEmpty ? 'Requerido' : null,
         ),
         const SizedBox(height: 12),
         _buildClientPicker(clientsAsync),
@@ -883,7 +1262,8 @@ class _EventFormPageState extends ConsumerState<EventFormPage> {
         TextFormField(
           controller: _locationController,
           decoration: const InputDecoration(labelText: 'Lugar'),
-          validator: (value) => value == null || value.isEmpty ? 'Requerido' : null,
+          validator: (value) =>
+              value == null || value.isEmpty ? 'Requerido' : null,
         ),
         const SizedBox(height: 12),
         TextFormField(
@@ -962,10 +1342,12 @@ class _EventFormPageState extends ConsumerState<EventFormPage> {
             return Card(
               child: ListTile(
                 title: Text(item['product_name'] ?? 'Producto'),
-                subtitle: Text('Cantidad: ${item['quantity']} · Precio: ${item['unit_price']}'),
+                subtitle: Text(
+                    'Cantidad: ${item['quantity']} · Precio: ${item['unit_price']}'),
                 trailing: IconButton(
                   icon: const Icon(Icons.delete_outline),
-                  onPressed: () => setState(() => _selectedProducts.remove(item)),
+                  onPressed: () =>
+                      setState(() => _selectedProducts.remove(item)),
                 ),
               ),
             );
@@ -990,7 +1372,8 @@ class _EventFormPageState extends ConsumerState<EventFormPage> {
             return Card(
               child: ListTile(
                 title: Text(item['description'] ?? 'Extra'),
-                subtitle: Text('Costo: ${item['cost']} · Precio: ${item['price']}'),
+                subtitle:
+                    Text('Costo: ${item['cost']} · Precio: ${item['price']}'),
                 trailing: IconButton(
                   icon: const Icon(Icons.delete_outline),
                   onPressed: () => setState(() => _extras.remove(item)),
@@ -1010,15 +1393,32 @@ class _EventFormPageState extends ConsumerState<EventFormPage> {
       return sum + (quantity * (unitPrice - discount));
     });
     final extrasSubtotal = _extras.fold(0.0, (sum, item) {
+      final excludeUtility = item['exclude_utility'] as bool? ?? false;
+      if (excludeUtility) return sum;
       final price = (item['price'] as num?)?.toDouble() ?? 0;
       return sum + price;
     });
     final subtotal = productsSubtotal + extrasSubtotal;
-    final discountPercent = double.tryParse(_discountController.text.trim()) ?? 0;
+    final discountPercent =
+        double.tryParse(_discountController.text.trim()) ?? 0;
     final discounted = subtotal * (1 - (discountPercent / 100));
     final taxRate = double.tryParse(_taxRateController.text.trim()) ?? 0;
     final taxAmount = _requiresInvoice ? (discounted * (taxRate / 100)) : 0.0;
     final total = discounted + taxAmount;
+
+    // Costos para métricas de rentabilidad
+    final productsCost = _selectedProducts.fold(0.0, (sum, item) {
+      final quantity = (item['quantity'] as num?)?.toDouble() ?? 0;
+      final unitCost = (item['unit_cost'] as num?)?.toDouble() ?? 0;
+      return sum + (quantity * unitCost);
+    });
+    final extrasCost = _extras.fold(0.0, (sum, item) {
+      final cost = (item['cost'] as num?)?.toDouble() ?? 0;
+      return sum + cost;
+    });
+    final totalCost = productsCost + extrasCost;
+    final netProfit = discounted - totalCost;
+    final marginPercent = discounted > 0 ? (netProfit / discounted) * 100 : 0.0;
 
     return Column(
       children: [
@@ -1032,12 +1432,14 @@ class _EventFormPageState extends ConsumerState<EventFormPage> {
           controller: _taxRateController,
           keyboardType: TextInputType.number,
           decoration: const InputDecoration(labelText: 'IVA (%)'),
+          onChanged: (_) => setState(() {}),
         ),
         const SizedBox(height: 12),
         TextFormField(
           controller: _discountController,
           keyboardType: TextInputType.number,
-          decoration: const InputDecoration(labelText: 'Descuento (%)'),
+          decoration: const InputDecoration(labelText: 'Descuento general (%)'),
+          onChanged: (_) => setState(() {}),
         ),
         const SizedBox(height: 12),
         TextFormField(
@@ -1057,12 +1459,147 @@ class _EventFormPageState extends ConsumerState<EventFormPage> {
           keyboardType: TextInputType.number,
           decoration: const InputDecoration(labelText: 'Reembolso (%)'),
         ),
+        const SizedBox(height: 20),
+        // ── Resumen financiero ──
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey.withOpacity(0.2)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Resumen financiero',
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+              ),
+              const SizedBox(height: 12),
+              _buildSummaryRow('Subtotal', subtotal),
+              if (discountPercent > 0)
+                _buildSummaryRow(
+                    'Descuento (${discountPercent.toStringAsFixed(0)}%)',
+                    -(subtotal - discounted),
+                    color: Colors.green),
+              if (_requiresInvoice)
+                _buildSummaryRow(
+                    'IVA (${taxRate.toStringAsFixed(0)}%)', taxAmount),
+              const Divider(height: 20),
+              _buildSummaryRow('Total a cobrar', total,
+                  bold: true, color: AppColors.brand),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+        // ── Métricas de rentabilidad ──
+        if (totalCost > 0) ...[
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: netProfit >= 0
+                  ? Colors.green.withOpacity(0.05)
+                  : Colors.red.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: netProfit >= 0
+                    ? Colors.green.withOpacity(0.3)
+                    : Colors.red.withOpacity(0.3),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      netProfit >= 0 ? Icons.trending_up : Icons.trending_down,
+                      color: netProfit >= 0 ? Colors.green : Colors.red,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 6),
+                    const Text(
+                      'Rentabilidad',
+                      style:
+                          TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                _buildSummaryRow('Costo total', totalCost,
+                    color: Colors.grey[600]),
+                _buildSummaryRow('Utilidad neta', netProfit,
+                    color: netProfit >= 0 ? Colors.green : Colors.red,
+                    bold: true),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Margen',
+                      style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: marginPercent >= 30
+                            ? Colors.green.withOpacity(0.15)
+                            : marginPercent >= 10
+                                ? Colors.orange.withOpacity(0.15)
+                                : Colors.red.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        '${marginPercent.toStringAsFixed(1)}%',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                          color: marginPercent >= 30
+                              ? Colors.green[700]
+                              : marginPercent >= 10
+                                  ? Colors.orange[700]
+                                  : Colors.red[700],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
         const SizedBox(height: 16),
-        _buildSummaryRow('Subtotal', subtotal),
-        _buildSummaryRow('Descuento', subtotal - discounted),
-        _buildSummaryRow('IVA', taxAmount),
-        _buildSummaryRow('Total', total),
       ],
+    );
+  }
+
+  Widget _buildSummaryRow(String label, double value,
+      {Color? color, bool bold = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              color: color ?? Colors.grey[700],
+              fontSize: 13,
+              fontWeight: bold ? FontWeight.w600 : FontWeight.normal,
+            ),
+          ),
+          Text(
+            CurrencyFormatter.format(value.abs()),
+            style: TextStyle(
+              color: color,
+              fontSize: 13,
+              fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1132,22 +1669,27 @@ class _EventFormPageState extends ConsumerState<EventFormPage> {
       return sum + price;
     });
     final subtotal = productsSubtotal + extrasSubtotal;
-    final discountPercent = double.tryParse(_discountController.text.trim()) ?? 0;
+    final discountPercent =
+        double.tryParse(_discountController.text.trim()) ?? 0;
     final discounted = subtotal * (1 - (discountPercent / 100));
     final taxRate = double.tryParse(_taxRateController.text.trim()) ?? 0;
     final taxAmount = _requiresInvoice ? (discounted * (taxRate / 100)) : 0.0;
     final totalAmount = discounted + taxAmount;
 
-    final depositPercent = double.tryParse(_depositPercentController.text.trim()) ?? 0;
+    final depositPercent =
+        double.tryParse(_depositPercentController.text.trim()) ?? 0;
     final numPeople = int.tryParse(_numPeopleController.text.trim()) ?? 0;
-    final cancellationDays = double.tryParse(_cancellationDaysController.text.trim()) ?? 0;
+    final cancellationDays =
+        double.tryParse(_cancellationDaysController.text.trim()) ?? 0;
     final refundPercent = double.tryParse(_refundController.text.trim()) ?? 0;
 
     setState(() => _isSubmitting = true);
     try {
       String? eventId;
       if (_isEdit && widget.eventId != null) {
-        await ref.read(eventDetailProvider.notifier).updateEvent(widget.eventId!, {
+        await ref
+            .read(eventDetailProvider.notifier)
+            .updateEvent(widget.eventId!, {
           'client_id': _selectedClientId,
           'event_date': DateFormatter.format(_eventDate, pattern: 'yyyy-MM-dd'),
           'start_time': _formatTime(_startTime),
@@ -1161,7 +1703,9 @@ class _EventFormPageState extends ConsumerState<EventFormPage> {
           'tax_amount': taxAmount,
           'total_amount': totalAmount,
           'location': _locationController.text.trim(),
-          'city': _cityController.text.trim().isEmpty ? null : _cityController.text.trim(),
+          'city': _cityController.text.trim().isEmpty
+              ? null
+              : _cityController.text.trim(),
           'deposit_percent': depositPercent,
           'cancellation_days': cancellationDays,
           'refund_percent': refundPercent,
@@ -1183,7 +1727,9 @@ class _EventFormPageState extends ConsumerState<EventFormPage> {
           'tax_amount': taxAmount,
           'total_amount': totalAmount,
           'location': _locationController.text.trim(),
-          'city': _cityController.text.trim().isEmpty ? null : _cityController.text.trim(),
+          'city': _cityController.text.trim().isEmpty
+              ? null
+              : _cityController.text.trim(),
           'deposit_percent': depositPercent,
           'cancellation_days': cancellationDays,
           'refund_percent': refundPercent,
@@ -1199,7 +1745,8 @@ class _EventFormPageState extends ConsumerState<EventFormPage> {
                         id: p['id']?.toString() ?? '',
                         eventId: eventId ?? '',
                         productId: p['product_id']?.toString() ?? '',
-                        productName: p['product_name']?.toString() ?? 'Producto',
+                        productName:
+                            p['product_name']?.toString() ?? 'Producto',
                         productCategory: p['product_category']?.toString(),
                         quantity: (p['quantity'] as num?)?.toDouble() ?? 0,
                         unitPrice: (p['unit_price'] as num?)?.toDouble() ?? 0,
@@ -1221,7 +1768,8 @@ class _EventFormPageState extends ConsumerState<EventFormPage> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(_isEdit ? 'Evento actualizado' : 'Evento creado')),
+          SnackBar(
+              content: Text(_isEdit ? 'Evento actualizado' : 'Evento creado')),
         );
         context.pop();
       }
@@ -1262,7 +1810,8 @@ class _EventFormPageState extends ConsumerState<EventFormPage> {
           final query = searchController.text.trim().toLowerCase();
           final filtered = products.where((p) {
             if (query.isEmpty) return true;
-            return p.name.toLowerCase().contains(query) || p.category.toLowerCase().contains(query);
+            return p.name.toLowerCase().contains(query) ||
+                p.category.toLowerCase().contains(query);
           }).toList();
 
           return Padding(
@@ -1319,7 +1868,8 @@ class _EventFormPageState extends ConsumerState<EventFormPage> {
 
   Future<void> _showProductConfig(ProductEntity product) async {
     final quantityController = TextEditingController(text: '1');
-    final priceController = TextEditingController(text: product.basePrice.toString());
+    final priceController =
+        TextEditingController(text: product.basePrice.toString());
     final discountController = TextEditingController(text: '0');
 
     await showDialog<void>(
@@ -1345,7 +1895,8 @@ class _EventFormPageState extends ConsumerState<EventFormPage> {
               TextField(
                 controller: discountController,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Descuento'),
+                decoration:
+                    const InputDecoration(labelText: 'Descuento por unidad'),
               ),
             ],
           ),
@@ -1356,9 +1907,13 @@ class _EventFormPageState extends ConsumerState<EventFormPage> {
             ),
             ElevatedButton(
               onPressed: () {
-                final quantity = double.tryParse(quantityController.text.trim()) ?? 1;
-                final unitPrice = double.tryParse(priceController.text.trim()) ?? product.basePrice;
-                final discount = double.tryParse(discountController.text.trim()) ?? 0;
+                final quantity =
+                    double.tryParse(quantityController.text.trim()) ?? 1;
+                final unitPrice =
+                    double.tryParse(priceController.text.trim()) ??
+                        product.basePrice;
+                final discount =
+                    double.tryParse(discountController.text.trim()) ?? 0;
                 setState(() {
                   _selectedProducts.add({
                     'product_id': product.id,
@@ -1367,6 +1922,7 @@ class _EventFormPageState extends ConsumerState<EventFormPage> {
                     'quantity': quantity,
                     'unit_price': unitPrice,
                     'discount': discount,
+                    'unit_cost': product.recipeCost,
                   });
                 });
                 Navigator.pop(context);
@@ -1416,7 +1972,8 @@ class _EventFormPageState extends ConsumerState<EventFormPage> {
                     contentPadding: EdgeInsets.zero,
                     title: const Text('Excluir utilidad'),
                     value: excludeUtility,
-                    onChanged: (value) => setDialogState(() => excludeUtility = value),
+                    onChanged: (value) =>
+                        setDialogState(() => excludeUtility = value),
                   ),
                 ],
               );
@@ -1527,7 +2084,8 @@ class _EventFormPageState extends ConsumerState<EventFormPage> {
         ],
       ),
       data: (state) {
-        final clients = (state as ClientsState?)?.clients ?? const <ClientEntity>[];
+        final clients =
+            (state as ClientsState?)?.clients ?? const <ClientEntity>[];
         if (clients.isEmpty) {
           return const Text('No hay clientes disponibles');
         }
@@ -1541,7 +2099,10 @@ class _EventFormPageState extends ConsumerState<EventFormPage> {
           ),
           controller: TextEditingController(text: _selectedClientName ?? ''),
           onTap: () => _showClientPicker(clients),
-          validator: (_) => _selectedClientId == null || _selectedClientId!.isEmpty ? 'Requerido' : null,
+          validator: (_) =>
+              _selectedClientId == null || _selectedClientId!.isEmpty
+                  ? 'Requerido'
+                  : null,
         );
       },
     );
@@ -1561,7 +2122,9 @@ class _EventFormPageState extends ConsumerState<EventFormPage> {
               return client.displayName.toLowerCase().contains(query) ||
                   client.email.toLowerCase().contains(query);
             }).toList()
-              ..sort((a, b) => a.displayName.toLowerCase().compareTo(b.displayName.toLowerCase()));
+              ..sort((a, b) => a.displayName
+                  .toLowerCase()
+                  .compareTo(b.displayName.toLowerCase()));
 
             return Padding(
               padding: EdgeInsets.only(
@@ -1624,7 +2187,8 @@ class _EventFormPageState extends ConsumerState<EventFormPage> {
       await context.push('/clients/new');
       if (mounted) {
         await ref.read(clientsProvider.notifier).loadClients();
-        final latestClients = ref.read(clientsProvider).valueOrNull?.clients ?? const <ClientEntity>[];
+        final latestClients = ref.read(clientsProvider).valueOrNull?.clients ??
+            const <ClientEntity>[];
         if (latestClients.isNotEmpty) {
           final latest = latestClients.first;
           setState(() {
@@ -1645,57 +2209,324 @@ class _EventFormPageState extends ConsumerState<EventFormPage> {
   }
 }
 
-class CalendarPage extends ConsumerWidget {
+class CalendarPage extends ConsumerStatefulWidget {
   const CalendarPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CalendarPage> createState() => _CalendarPageState();
+}
+
+class _CalendarPageState extends ConsumerState<CalendarPage> {
+  DateTime _focusedDay = DateTime.now();
+  DateTime? _selectedDay;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedDay = DateTime.now();
+    Future.microtask(() => _loadEventsForMonth(_focusedDay));
+  }
+
+  Future<void> _loadEventsForMonth(DateTime month) async {
+    final start = DateTime(month.year, month.month, 1);
+    final end = DateTime(month.year, month.month + 1, 0);
+    await ref.read(eventsProvider.notifier).loadEvents(
+          startDate: start,
+          endDate: end,
+        );
+  }
+
+  List<EventEntity> _getEventsForDay(
+      List<EventEntity> allEvents, DateTime day) {
+    return allEvents.where((event) {
+      final d = event.eventDate;
+      return d.year == day.year && d.month == day.month && d.day == day.day;
+    }).toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final eventsAsync = ref.watch(eventsProvider);
 
     return Scaffold(
-      appBar: const CustomAppBar(title: 'Calendario'),
+      appBar: CustomAppBar(
+        title: 'Calendario',
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            tooltip: 'Nuevo evento',
+            onPressed: () {
+              final date = _selectedDay ?? DateTime.now();
+              context
+                  .push('/events/new', extra: {'date': date.toIso8601String()});
+            },
+          ),
+        ],
+      ),
       body: eventsAsync.when(
         loading: () => const LoadingWidget(message: 'Cargando eventos...'),
         error: (error, stack) => app_widgets.ErrorWidget(
           message: error.toString(),
-          onRetry: () => ref.read(eventsProvider.notifier).refresh(),
+          onRetry: () => _loadEventsForMonth(_focusedDay),
         ),
-        data: (state) {
-          if (state.events.isEmpty) {
-            return const Center(child: Text('No hay eventos en el calendario'));
-          }
-
-          final grouped = <String, List<EventEntity>>{};
-          for (final event in state.events) {
-            final key = DateFormatter.format(event.eventDate);
-            grouped.putIfAbsent(key, () => []).add(event);
-          }
-
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: grouped.entries.map((entry) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    entry.key,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 8),
-                  ...entry.value.map((event) => ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: Text(event.serviceType),
-                        subtitle: Text(event.clientName),
-                        trailing: Text(event.startTime),
-                        onTap: () => context.push('/events/${event.id}'),
-                      )),
-                  const SizedBox(height: 16),
-                ],
-              );
-            }).toList(),
-          );
-        },
+        data: (state) => _buildCalendarBody(context, state.events),
       ),
     );
+  }
+
+  Widget _buildCalendarBody(BuildContext context, List<EventEntity> allEvents) {
+    final selectedEvents = _selectedDay != null
+        ? _getEventsForDay(allEvents, _selectedDay!)
+        : <EventEntity>[];
+
+    return Column(
+      children: [
+        _buildTableCalendar(allEvents),
+        const Divider(height: 1),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                _selectedDay != null
+                    ? DateFormatter.format(_selectedDay!)
+                    : 'Selecciona un día',
+                style:
+                    const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+              ),
+              Text(
+                '${selectedEvents.length} evento${selectedEvents.length == 1 ? '' : 's'}',
+                style: TextStyle(color: Colors.grey[600], fontSize: 13),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: selectedEvents.isEmpty
+              ? _buildEmptyDay()
+              : _buildEventsList(selectedEvents),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTableCalendar(List<EventEntity> allEvents) {
+    return TableCalendar<EventEntity>(
+      firstDay: DateTime(2020),
+      lastDay: DateTime(2030),
+      focusedDay: _focusedDay,
+      selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+      eventLoader: (day) => _getEventsForDay(allEvents, day),
+      calendarFormat: CalendarFormat.month,
+      availableCalendarFormats: const {CalendarFormat.month: 'Mes'},
+      locale: 'es_ES',
+      startingDayOfWeek: StartingDayOfWeek.monday,
+      headerStyle: const HeaderStyle(
+        titleCentered: true,
+        formatButtonVisible: false,
+      ),
+      calendarStyle: CalendarStyle(
+        markerDecoration: BoxDecoration(
+          color: AppColors.brand,
+          shape: BoxShape.circle,
+        ),
+        selectedDecoration: BoxDecoration(
+          color: AppColors.brand,
+          shape: BoxShape.circle,
+        ),
+        todayDecoration: BoxDecoration(
+          color: AppColors.brandLight.withOpacity(0.4),
+          shape: BoxShape.circle,
+        ),
+        todayTextStyle: const TextStyle(
+          color: AppColors.brand,
+          fontWeight: FontWeight.bold,
+        ),
+        markersMaxCount: 3,
+      ),
+      onDaySelected: (selectedDay, focusedDay) {
+        setState(() {
+          _selectedDay = selectedDay;
+          _focusedDay = focusedDay;
+        });
+      },
+      onPageChanged: (focusedDay) {
+        setState(() {
+          _focusedDay = focusedDay;
+          _selectedDay = null;
+        });
+        _loadEventsForMonth(focusedDay);
+      },
+    );
+  }
+
+  Widget _buildEmptyDay() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.event_available_outlined,
+              size: 48, color: Colors.grey[400]),
+          const SizedBox(height: 12),
+          Text(
+            'Sin eventos este día',
+            style: TextStyle(color: Colors.grey[500], fontSize: 15),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: () {
+              final date = _selectedDay ?? DateTime.now();
+              context
+                  .push('/events/new', extra: {'date': date.toIso8601String()});
+            },
+            icon: const Icon(Icons.add),
+            label: const Text('Crear evento'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEventsList(List<EventEntity> events) {
+    return ListView.separated(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      itemCount: events.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 10),
+      itemBuilder: (context, index) {
+        final event = events[index];
+        return _CalendarEventCard(event: event);
+      },
+    );
+  }
+}
+
+class _CalendarEventCard extends StatelessWidget {
+  final EventEntity event;
+
+  const _CalendarEventCard({required this.event});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () => context.push('/events/${event.id}'),
+      borderRadius: BorderRadius.circular(12),
+      child: Card(
+        margin: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              Container(
+                width: 4,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: _statusColor(event.status),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      event.serviceType,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w600, fontSize: 15),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      event.clientName,
+                      style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(Icons.schedule, size: 13, color: Colors.grey[500]),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${event.startTime} - ${event.endTime}',
+                          style:
+                              TextStyle(color: Colors.grey[500], fontSize: 12),
+                        ),
+                        if (event.location.isNotEmpty) ...[
+                          const SizedBox(width: 10),
+                          Icon(Icons.location_on_outlined,
+                              size: 13, color: Colors.grey[500]),
+                          const SizedBox(width: 2),
+                          Expanded(
+                            child: Text(
+                              event.location,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                  color: Colors.grey[500], fontSize: 12),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: _statusColor(event.status).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      _statusLabel(event.status),
+                      style: TextStyle(
+                        color: _statusColor(event.status),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '${event.numPeople} pers.',
+                    style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  static String _statusLabel(String status) {
+    switch (status) {
+      case 'confirmed':
+        return 'Confirmado';
+      case 'completed':
+        return 'Completado';
+      case 'cancelled':
+        return 'Cancelado';
+      default:
+        return 'Cotizado';
+    }
+  }
+
+  static Color _statusColor(String status) {
+    switch (status) {
+      case 'confirmed':
+        return Colors.blue;
+      case 'completed':
+        return Colors.green;
+      case 'cancelled':
+        return Colors.red;
+      default:
+        return Colors.orange;
+    }
   }
 }

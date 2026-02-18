@@ -9,12 +9,15 @@ class ProductsRepository {
     required ProductsRemoteDataSource remoteDataSource,
   }) : _remoteDataSource = remoteDataSource;
 
-  Future<List<ProductEntity>> getProducts({String? search, String? category, String? status}) async {
+  Future<List<ProductEntity>> getProducts(
+      {String? search, String? category, String? status}) async {
     try {
-      final data = await _remoteDataSource.getProducts(search: search, category: category, status: status);
+      final data = await _remoteDataSource.getProducts(
+          search: search, category: category, status: status);
       final productsList = data['products'] as List<dynamic>;
       return productsList
-          .map((json) => ProductModel.fromJson(json as Map<String, dynamic>).toEntity())
+          .map((json) =>
+              ProductModel.fromJson(json as Map<String, dynamic>).toEntity())
           .toList();
     } catch (e) {
       rethrow;
@@ -39,7 +42,8 @@ class ProductsRepository {
     }
   }
 
-  Future<ProductEntity> updateProduct(String id, Map<String, dynamic> data) async {
+  Future<ProductEntity> updateProduct(
+      String id, Map<String, dynamic> data) async {
     try {
       final updatedData = await _remoteDataSource.updateProduct(id, data);
       return ProductModel.fromJson(updatedData).toEntity();
@@ -56,4 +60,25 @@ class ProductsRepository {
     }
   }
 
+  Future<List<RecipeIngredient>> getIngredients(String productId) async {
+    try {
+      final data = await _remoteDataSource.getIngredients(productId);
+      return data
+          .map((json) =>
+              RecipeIngredientModel.fromJson(json as Map<String, dynamic>)
+                  .toEntity())
+          .toList();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> updateIngredients(
+      String productId, List<Map<String, dynamic>> ingredients) async {
+    try {
+      await _remoteDataSource.updateIngredients(productId, ingredients);
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

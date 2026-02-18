@@ -48,7 +48,8 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
           _buildCategoryFilter(context),
           Expanded(
             child: productsAsync.when(
-              loading: () => const LoadingWidget(message: 'Cargando productos...'),
+              loading: () =>
+                  const LoadingWidget(message: 'Cargando productos...'),
               error: (error, stack) => app_widgets.ErrorWidget(
                 message: error.toString(),
                 onRetry: () => ref.read(productsProvider.notifier).refresh(),
@@ -113,21 +114,26 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
             ),
             const SizedBox(width: 8),
             ...currentState?.categories.map((category) {
-              return Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: FilterChip(
-                  label: Text(category),
-                  selected: currentState?.categoryFilter == category,
-                  onSelected: (selected) {
-                    if (selected) {
-                      ref.read(productsProvider.notifier).filterByCategory(category);
-                    } else {
-                      ref.read(productsProvider.notifier).filterByCategory(null);
-                    }
-                  },
-                ),
-              );
-            }).toList() ?? [],
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: FilterChip(
+                      label: Text(category),
+                      selected: currentState?.categoryFilter == category,
+                      onSelected: (selected) {
+                        if (selected) {
+                          ref
+                              .read(productsProvider.notifier)
+                              .filterByCategory(category);
+                        } else {
+                          ref
+                              .read(productsProvider.notifier)
+                              .filterByCategory(null);
+                        }
+                      },
+                    ),
+                  );
+                }).toList() ??
+                [],
             const SizedBox(width: 8),
             FilterChip(
               label: const Text('Activos'),
@@ -219,6 +225,11 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                  GestureDetector(
+                    onTap: () => _showDeleteProductDialog(context, product),
+                    child: const Icon(Icons.delete_outline,
+                        size: 20, color: Colors.red),
+                  ),
                 ],
               ),
               const SizedBox(height: 8),
@@ -261,7 +272,8 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  Icon(Icons.category_outlined, size: 16, color: Colors.grey[600]),
+                  Icon(Icons.category_outlined,
+                      size: 16, color: Colors.grey[600]),
                   const SizedBox(width: 4),
                   Text(
                     product.category,
@@ -272,6 +284,31 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _showDeleteProductDialog(BuildContext context, ProductEntity product) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Eliminar producto'),
+        content: Text(
+            '¿Eliminar "${product.name}"? Esta acción no se puede deshacer.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              ref.read(productsProvider.notifier).deleteProduct(product.id);
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Eliminar'),
+          ),
+        ],
       ),
     );
   }

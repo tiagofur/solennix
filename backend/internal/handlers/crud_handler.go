@@ -233,25 +233,29 @@ func (h *CRUDHandler) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var event models.Event
-	if err := decodeJSON(r, &event); err != nil {
+	oldClientID := existing.ClientID
+
+	// Decode into existing event to handle partial updates
+	if err := decodeJSON(r, existing); err != nil {
 		writeError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
-	event.ID = id
-	event.UserID = userID
-	if err := h.eventRepo.Update(r.Context(), &event); err != nil {
+	// Ensure ID and UserID are not changed
+	existing.ID = id
+	existing.UserID = userID
+
+	if err := h.eventRepo.Update(r.Context(), existing); err != nil {
 		writeError(w, http.StatusInternalServerError, "Failed to update event")
 		return
 	}
 
 	// Update client stats (old and new client if changed)
-	_ = h.eventRepo.UpdateClientStats(r.Context(), event.ClientID)
-	if existing.ClientID != event.ClientID {
-		_ = h.eventRepo.UpdateClientStats(r.Context(), existing.ClientID)
+	_ = h.eventRepo.UpdateClientStats(r.Context(), existing.ClientID)
+	if oldClientID != existing.ClientID {
+		_ = h.eventRepo.UpdateClientStats(r.Context(), oldClientID)
 	}
 
-	writeJSON(w, http.StatusOK, event)
+	writeJSON(w, http.StatusOK, existing)
 }
 
 func (h *CRUDHandler) DeleteEvent(w http.ResponseWriter, r *http.Request) {

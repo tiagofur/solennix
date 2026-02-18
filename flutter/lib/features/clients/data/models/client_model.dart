@@ -8,6 +8,7 @@ class ClientModel {
   final String? address;
   final String? city;
   final String? notes;
+  final List<ClientEvent> events;
   final double totalSpent;
   final int eventsCount;
   final String createdAt;
@@ -21,6 +22,7 @@ class ClientModel {
     this.address,
     this.city,
     this.notes,
+    this.events = const [],
     this.totalSpent = 0,
     this.eventsCount = 0,
     required this.createdAt,
@@ -28,6 +30,26 @@ class ClientModel {
   });
 
   factory ClientModel.fromJson(Map<String, dynamic> json) {
+    List<ClientEvent> parsedEvents = [];
+    if (json['events'] != null) {
+      parsedEvents = (json['events'] as List<dynamic>).map((e) {
+        final map = e as Map<String, dynamic>;
+        return ClientEvent(
+          id: map['id'] as String,
+          eventName: map['event_name'] as String? ??
+              map['eventName'] as String? ??
+              'Evento',
+          status: map['status'] as String? ?? 'pending',
+          eventDate: DateTime.tryParse(map['event_date'] as String? ?? '') ??
+              DateTime.now(),
+          totalAmount: (map['total_amount'] as num?)?.toDouble() ?? 0,
+          collectedAmount: (map['collected_amount'] as num?)?.toDouble() ?? 0,
+          serviceType: map['service_type'] as String?,
+          numPeople: map['num_people'] as int?,
+        );
+      }).toList();
+    }
+
     return ClientModel(
       id: json['id'] as String,
       name: json['name'] as String,
@@ -36,8 +58,9 @@ class ClientModel {
       address: json['address'] as String?,
       city: json['city'] as String?,
       notes: json['notes'] as String?,
+      events: parsedEvents,
       totalSpent: (json['total_spent'] as num?)?.toDouble() ?? 0,
-      eventsCount: json['total_events'] as int? ?? 0,
+      eventsCount: json['total_events'] as int? ?? parsedEvents.length,
       createdAt: json['created_at'] as String,
       updatedAt: json['updated_at'] as String,
     );
@@ -52,6 +75,7 @@ class ClientModel {
       'address': address,
       'city': city,
       'notes': notes,
+      'events': events.map((e) => e.toJson()).toList(),
       'total_spent': totalSpent,
       'total_events': eventsCount,
       'created_at': createdAt,
@@ -68,6 +92,7 @@ class ClientModel {
       address: address,
       city: city,
       notes: notes,
+      events: events,
       totalSpent: totalSpent,
       eventsCount: eventsCount,
       createdAt: DateTime.parse(createdAt),
@@ -84,6 +109,7 @@ class ClientModel {
       address: entity.address,
       city: entity.city,
       notes: entity.notes,
+      events: entity.events,
       totalSpent: entity.totalSpent,
       eventsCount: entity.eventsCount,
       createdAt: entity.createdAt.toIso8601String(),

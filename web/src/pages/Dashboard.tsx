@@ -35,7 +35,9 @@ type Event = Database["public"]["Tables"]["events"]["Row"] & {
 };
 
 export const Dashboard: React.FC = () => {
-  const { profile } = useAuth();
+  const { user } = useAuth();
+  const firstName = user?.name ? user.name.split(' ')[0] : "Usuario";
+  
   const [eventsThisMonth, setEventsThisMonth] = useState<Event[]>([]);
   const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
   const [netSalesThisMonth, setNetSalesThisMonth] = useState(0);
@@ -173,7 +175,7 @@ export const Dashboard: React.FC = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Hola, {profile?.name || "Usuario"}
+            Hola, {firstName}
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 first-letter:uppercase">
             {format(new Date(), "EEEE, d 'de' MMMM 'de' yyyy", { locale: es })}
@@ -229,10 +231,10 @@ export const Dashboard: React.FC = () => {
       )}
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-6">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-6">
         {/* Ventas netas (devengadas) */}
-        <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg transition-colors">
-          <div className="p-5">
+        <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg transition-colors flex flex-col">
+          <div className="p-5 flex-1">
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="h-10 w-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center text-green-600 dark:text-green-400">
@@ -241,11 +243,11 @@ export const Dashboard: React.FC = () => {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
+                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 leading-tight">
                     Ventas netas (devengadas)
                   </dt>
                   <dd>
-                    <div className="text-lg font-medium text-gray-900 dark:text-white">
+                    <div className="text-lg font-bold text-gray-900 dark:text-white mt-1">
                       {loadingMonth
                         ? "..."
                         : `$${netSalesThisMonth.toLocaleString("es-MX", {
@@ -257,8 +259,8 @@ export const Dashboard: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className="bg-gray-50 dark:bg-gray-700 px-5 py-3 transition-colors">
-            <div className="text-sm">
+          <div className="bg-gray-50 dark:bg-gray-700 px-5 py-3 transition-colors mt-auto">
+            <div className="text-xs">
               <span className="text-gray-500 dark:text-gray-400">
                 Confirmados/Completados
               </span>
@@ -267,8 +269,8 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* Cobrado (cash) */}
-        <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg transition-colors">
-          <div className="p-5">
+        <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg transition-colors flex flex-col">
+          <div className="p-5 flex-1">
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="h-10 w-10 bg-brand-orange/20 rounded-full flex items-center justify-center text-brand-orange">
@@ -277,11 +279,11 @@ export const Dashboard: React.FC = () => {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
+                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 leading-tight">
                     Cobrado (este mes)
                   </dt>
                   <dd>
-                    <div className="text-lg font-medium text-gray-900 dark:text-white">
+                    <div className="text-lg font-bold text-gray-900 dark:text-white mt-1">
                       {loadingMonth
                         ? "..."
                         : `$${cashCollectedThisMonth.toLocaleString("es-MX", {
@@ -293,10 +295,10 @@ export const Dashboard: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className="bg-gray-50 dark:bg-gray-700 px-5 py-3 transition-colors">
-            <div className="text-sm">
-              <span className="text-gray-500 dark:text-gray-400">
-                Aplicado a eventos del mes:{" "}
+          <div className="bg-gray-50 dark:bg-gray-700 px-5 py-3 transition-colors mt-auto">
+            <div className="text-xs text-gray-500 dark:text-gray-400">
+              Aplicado a eventos:{" "}
+              <span className="font-medium">
                 {loadingMonth
                   ? "..."
                   : `$${cashAppliedToThisMonthsEvents.toLocaleString("es-MX", {
@@ -308,8 +310,8 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* IVA cobrado */}
-        <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg transition-colors">
-          <div className="p-5">
+        <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg transition-colors flex flex-col">
+          <div className="p-5 flex-1">
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="h-10 w-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400">
@@ -318,11 +320,11 @@ export const Dashboard: React.FC = () => {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
+                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 leading-tight">
                     IVA cobrado
                   </dt>
                   <dd>
-                    <div className="text-lg font-medium text-gray-900 dark:text-white">
+                    <div className="text-lg font-bold text-gray-900 dark:text-white mt-1">
                       {loadingMonth
                         ? "..."
                         : `$${vatCollectedThisMonth.toLocaleString("es-MX", {
@@ -334,8 +336,8 @@ export const Dashboard: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className="bg-gray-50 dark:bg-gray-700 px-5 py-3 transition-colors">
-            <div className="text-sm">
+          <div className="bg-gray-50 dark:bg-gray-700 px-5 py-3 transition-colors mt-auto">
+            <div className="text-xs">
               <span className="text-gray-500 dark:text-gray-400">
                 Proporcional al % pagado
               </span>
@@ -344,8 +346,8 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* IVA por cobrar */}
-        <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg transition-colors">
-          <div className="p-5">
+        <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg transition-colors flex flex-col">
+          <div className="p-5 flex-1">
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="h-10 w-10 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center text-red-600 dark:text-red-400">
@@ -354,11 +356,11 @@ export const Dashboard: React.FC = () => {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
+                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 leading-tight">
                     IVA por cobrar
                   </dt>
                   <dd>
-                    <div className="text-lg font-medium text-gray-900 dark:text-white">
+                    <div className="text-lg font-bold text-gray-900 dark:text-white mt-1">
                       {loadingMonth
                         ? "..."
                         : `$${vatOutstandingThisMonth.toLocaleString("es-MX", {
@@ -370,8 +372,8 @@ export const Dashboard: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className="bg-gray-50 dark:bg-gray-700 px-5 py-3 transition-colors">
-            <div className="text-sm">
+          <div className="bg-gray-50 dark:bg-gray-700 px-5 py-3 transition-colors mt-auto">
+            <div className="text-xs">
               <Link
                 to="/calendar"
                 className="font-medium text-brand-orange hover:text-orange-600 dark:hover:text-orange-300"
@@ -383,8 +385,8 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* Card Eventos del Mes */}
-        <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg transition-colors">
-          <div className="p-5">
+        <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg transition-colors flex flex-col">
+          <div className="p-5 flex-1">
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="h-10 w-10 bg-brand-orange/20 rounded-full flex items-center justify-center text-brand-orange">
@@ -393,11 +395,11 @@ export const Dashboard: React.FC = () => {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
+                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 leading-tight">
                     Eventos este Mes
                   </dt>
                   <dd>
-                    <div className="text-lg font-medium text-gray-900 dark:text-white">
+                    <div className="text-lg font-bold text-gray-900 dark:text-white mt-1">
                       {loadingMonth ? "..." : eventsThisMonth.length}
                     </div>
                   </dd>
@@ -405,8 +407,8 @@ export const Dashboard: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className="bg-gray-50 dark:bg-gray-700 px-5 py-3 transition-colors">
-            <div className="text-sm">
+          <div className="bg-gray-50 dark:bg-gray-700 px-5 py-3 transition-colors mt-auto">
+            <div className="text-xs">
               <Link
                 to="/calendar"
                 className="font-medium text-brand-orange hover:text-orange-600 dark:hover:text-orange-300"
@@ -418,8 +420,8 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* Card Alertas de Inventario */}
-        <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg transition-colors">
-          <div className="p-5">
+        <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg transition-colors flex flex-col">
+          <div className="p-5 flex-1">
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div
@@ -434,12 +436,12 @@ export const Dashboard: React.FC = () => {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
+                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 leading-tight">
                     Alertas de Stock
                   </dt>
                   <dd>
                     <div
-                      className={`text-lg font-medium ${
+                      className={`text-lg font-bold mt-1 ${
                         lowStockCount > 0
                           ? "text-red-600 dark:text-red-400"
                           : "text-gray-900 dark:text-white"
@@ -456,8 +458,8 @@ export const Dashboard: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className="bg-gray-50 dark:bg-gray-700 px-5 py-3 transition-colors">
-            <div className="text-sm">
+          <div className="bg-gray-50 dark:bg-gray-700 px-5 py-3 transition-colors mt-auto">
+            <div className="text-xs">
               <Link
                 to="/inventory"
                 className="font-medium text-brand-orange hover:text-orange-600 dark:hover:text-orange-300"
@@ -469,13 +471,13 @@ export const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           {/* Chart Section */}
-          <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 transition-colors">
-            <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white mb-4">
+          <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 transition-colors flex flex-col">
+            <h3 className="text-lg leading-6 font-semibold text-gray-900 dark:text-white mb-6">
                 Estado de Eventos (Este Mes)
             </h3>
-            <div className="h-64 w-full">
+            <div className="h-80 w-full mt-auto">
                 {loadingMonth ? (
                      <div className="h-full flex items-center justify-center">
                         <RefreshCw className="h-8 w-8 animate-spin text-gray-300" />
@@ -483,24 +485,30 @@ export const Dashboard: React.FC = () => {
                 ) : chartData.length > 0 ? (
                     <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={chartData}>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" opacity={0.5} />
                             <XAxis 
                                 dataKey="name" 
                                 axisLine={false} 
                                 tickLine={false} 
-                                tick={{ fill: '#6B7280', fontSize: 12 }}
+                                tick={{ fill: '#6B7280', fontSize: 11 }}
                                 dy={10}
                             />
                             <YAxis 
                                 axisLine={false} 
                                 tickLine={false} 
-                                tick={{ fill: '#6B7280', fontSize: 12 }}
+                                tick={{ fill: '#6B7280', fontSize: 11 }}
                             />
                             <Tooltip 
-                                cursor={{ fill: 'transparent' }}
-                                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
+                                cursor={{ fill: 'rgba(0,0,0,0.05)' }}
+                                contentStyle={{ 
+                                    borderRadius: '12px', 
+                                    border: 'none', 
+                                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                                    backgroundColor: 'var(--tw-border-opacity)',
+                                    padding: '12px'
+                                }}
                             />
-                            <Bar dataKey="value" radius={[4, 4, 0, 0]} barSize={40}>
+                            <Bar dataKey="value" radius={[6, 6, 0, 0]} barSize={48}>
                                 {chartData.map((entry, index) => (
                                     <Cell key={`cell-${index}`} fill={entry.color} />
                                 ))}
@@ -509,7 +517,7 @@ export const Dashboard: React.FC = () => {
                     </ResponsiveContainer>
                 ) : (
                     <div className="h-full flex flex-col items-center justify-center text-gray-400">
-                        <Calendar className="h-10 w-10 mb-2 opacity-20" />
+                        <Calendar className="h-12 w-12 mb-3 opacity-20" />
                         <p className="text-sm">No hay datos suficientes para graficar</p>
                     </div>
                 )}
@@ -518,47 +526,50 @@ export const Dashboard: React.FC = () => {
 
           {/* Upcoming Events List */}
           <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 transition-colors">
-            <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white">
+            <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg leading-6 font-semibold text-gray-900 dark:text-white">
                 Próximos Eventos
                 </h3>
-                <Link to="/calendar" className="text-sm text-brand-orange hover:text-orange-600 flex items-center">
+                <Link to="/calendar" className="text-sm font-medium text-brand-orange hover:text-orange-600 flex items-center transition-colors">
                     Ver todos <ArrowRight className="h-4 w-4 ml-1" />
                 </Link>
             </div>
             
             <div className="flow-root">
                 {loadingUpcoming ? (
-                <div className="flex justify-center py-4">
-                    <Clock className="h-6 w-6 animate-spin text-gray-400" />
+                <div className="flex justify-center py-8">
+                    <Clock className="h-8 w-8 animate-spin text-gray-300" />
                 </div>
                 ) : upcomingEvents.length > 0 ? (
-                    <ul className="-my-5 divide-y divide-gray-200 dark:divide-gray-700">
+                    <ul className="-my-5 divide-y divide-gray-100 dark:divide-gray-700">
                         {upcomingEvents.map((event) => (
-                            <li key={event.id} className="py-4">
+                            <li key={event.id} className="py-5">
                                 <div className="flex items-center space-x-4">
                                     <div className="flex-shrink-0">
-                                        <div className="h-10 w-10 rounded-full bg-blue-50 dark:bg-blue-900/20 flex flex-col items-center justify-center text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800">
-                                            <span className="text-xs font-bold uppercase">
+                                        <div className="h-12 w-12 rounded-xl bg-orange-50 dark:bg-brand-orange/10 flex flex-col items-center justify-center text-brand-orange border border-orange-100 dark:border-brand-orange/20">
+                                            <span className="text-[10px] font-bold uppercase tracking-wider">
                                                 {format(parseISO(event.event_date), "MMM", { locale: es })}
                                             </span>
-                                            <span className="text-sm font-bold leading-none">
+                                            <span className="text-lg font-bold leading-none">
                                                 {format(parseISO(event.event_date), "d")}
                                             </span>
                                         </div>
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                        <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
                                             {event.clients?.name}
                                         </p>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                                            {event.service_type} • {event.num_people} pax
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center">
+                                            <span className="inline-block px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 mr-2 uppercase tracking-tight text-[10px] font-bold">
+                                                {event.service_type}
+                                            </span>
+                                            {event.num_people} pax
                                         </p>
                                     </div>
                                     <div>
                                         <Link
                                             to={`/events/${event.id}/summary`}
-                                            className="inline-flex items-center shadow-sm px-2.5 py-0.5 border border-gray-300 dark:border-gray-600 text-xs font-medium rounded-full text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+                                            className="inline-flex items-center px-3 py-1.5 border border-gray-200 dark:border-gray-600 text-xs font-semibold rounded-lg text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-all shadow-sm hover:shadow"
                                         >
                                             Ver
                                         </Link>
@@ -568,9 +579,10 @@ export const Dashboard: React.FC = () => {
                         ))}
                     </ul>
                 ) : (
-                    <div className="text-center py-8">
+                    <div className="text-center py-10">
+                        <Calendar className="h-12 w-12 mx-auto text-gray-300 dark:text-gray-600 mb-3 opacity-50" />
                         <p className="text-gray-500 dark:text-gray-400 text-sm">No hay eventos próximos agendados.</p>
-                        <Link to="/events/new" className="text-brand-orange text-sm font-medium mt-2 inline-block">
+                        <Link to="/events/new" className="text-brand-orange text-sm font-semibold mt-3 inline-block hover:underline">
                             Agendar uno ahora
                         </Link>
                     </div>

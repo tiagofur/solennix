@@ -4,7 +4,8 @@ import '../../data/repositories/inventory_repository.dart';
 import '../../data/data_sources/inventory_remote_data_source.dart';
 import 'package:eventosapp/core/api/api_client_provider.dart';
 
-final inventoryProvider = AsyncNotifierProvider<InventoryNotifier, InventoryState>(
+final inventoryProvider =
+    AsyncNotifierProvider<InventoryNotifier, InventoryState>(
   () => InventoryNotifier(),
 );
 
@@ -24,11 +25,17 @@ class InventoryNotifier extends AsyncNotifier<InventoryState> {
   Future<void> loadInventories({String? type, bool? lowStock}) async {
     state = const AsyncLoading();
     try {
-      final inventories = await _repository.getInventories(type: type, lowStock: lowStock);
+      final inventories =
+          await _repository.getInventories(type: type, lowStock: lowStock);
       state = AsyncData(InventoryState().loaded(inventories));
     } catch (e) {
       state = AsyncError(e, StackTrace.current);
     }
+  }
+
+  Future<void> searchInventories(String query) async {
+    final current = state.valueOrNull ?? const InventoryState();
+    state = AsyncData(current.copyWith(searchQuery: query));
   }
 
   Future<void> filterByType(String? type) async {
@@ -59,7 +66,8 @@ class InventoryNotifier extends AsyncNotifier<InventoryState> {
     try {
       final newInventory = await _repository.createInventory(data);
       final updatedInventories = [...current.inventories, newInventory];
-      state = AsyncData(current.copyWith(inventories: updatedInventories, isCreating: false));
+      state = AsyncData(
+          current.copyWith(inventories: updatedInventories, isCreating: false));
     } catch (e) {
       state = AsyncError(e, StackTrace.current);
     }
@@ -74,7 +82,8 @@ class InventoryNotifier extends AsyncNotifier<InventoryState> {
         return inv.id == id ? updatedInventory : inv;
       }).toList();
 
-      state = AsyncData(current.copyWith(inventories: updatedInventories, isUpdating: false));
+      state = AsyncData(
+          current.copyWith(inventories: updatedInventories, isUpdating: false));
     } catch (e) {
       state = AsyncError(e, StackTrace.current);
     }
@@ -85,8 +94,10 @@ class InventoryNotifier extends AsyncNotifier<InventoryState> {
     state = AsyncData(current.deleting());
     try {
       await _repository.deleteInventory(id);
-      final updatedInventories = current.inventories.where((inv) => inv.id != id).toList();
-      state = AsyncData(current.copyWith(inventories: updatedInventories, isDeleting: false));
+      final updatedInventories =
+          current.inventories.where((inv) => inv.id != id).toList();
+      state = AsyncData(
+          current.copyWith(inventories: updatedInventories, isDeleting: false));
     } catch (e) {
       state = AsyncError(e, StackTrace.current);
     }
@@ -94,7 +105,8 @@ class InventoryNotifier extends AsyncNotifier<InventoryState> {
 
   Future<void> refresh() async {
     final current = state.valueOrNull ?? const InventoryState();
-    await loadInventories(type: current.typeFilter, lowStock: current.lowStockOnly);
+    await loadInventories(
+        type: current.typeFilter, lowStock: current.lowStockOnly);
   }
 
   void clearSelectedInventory() {

@@ -17,6 +17,14 @@ class InventoryPage extends ConsumerStatefulWidget {
 }
 
 class _InventoryPageState extends ConsumerState<InventoryPage> {
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final inventoryAsync = ref.watch(inventoryProvider);
@@ -38,10 +46,12 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
       ),
       body: Column(
         children: [
+          _buildSearchBar(),
           _buildFilters(context),
           Expanded(
             child: inventoryAsync.when(
-              loading: () => const LoadingWidget(message: 'Cargando inventario...'),
+              loading: () =>
+                  const LoadingWidget(message: 'Cargando inventario...'),
               error: (error, stack) => app_widgets.ErrorWidget(
                 message: error.toString(),
                 onRetry: () => ref.read(inventoryProvider.notifier).refresh(),
@@ -54,8 +64,40 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
     );
   }
 
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      child: TextField(
+        controller: _searchController,
+        decoration: InputDecoration(
+          hintText: 'Buscar en inventario...',
+          prefixIcon: const Icon(Icons.search),
+          suffixIcon: _searchController.text.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.clear),
+                  onPressed: () {
+                    _searchController.clear();
+                    ref.read(inventoryProvider.notifier).searchInventories('');
+                  },
+                )
+              : null,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          filled: true,
+          fillColor: Colors.grey[50],
+        ),
+        onChanged: (value) {
+          setState(() {});
+          ref.read(inventoryProvider.notifier).searchInventories(value);
+        },
+      ),
+    );
+  }
+
   Widget _buildFilters(BuildContext context) {
-    final currentState = ref.watch(inventoryProvider).valueOrNull ?? const InventoryState();
+    final currentState =
+        ref.watch(inventoryProvider).valueOrNull ?? const InventoryState();
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -80,7 +122,9 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
                   label: const Text('Ingredientes'),
                   selected: currentState.typeFilter == 'ingredient',
                   onSelected: (selected) {
-                    ref.read(inventoryProvider.notifier).filterByType(selected ? 'ingredient' : null);
+                    ref
+                        .read(inventoryProvider.notifier)
+                        .filterByType(selected ? 'ingredient' : null);
                   },
                 ),
                 const SizedBox(width: 8),
@@ -88,7 +132,9 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
                   label: const Text('Equipo'),
                   selected: currentState.typeFilter == 'equipment',
                   onSelected: (selected) {
-                    ref.read(inventoryProvider.notifier).filterByType(selected ? 'equipment' : null);
+                    ref
+                        .read(inventoryProvider.notifier)
+                        .filterByType(selected ? 'equipment' : null);
                   },
                 ),
               ],
@@ -99,7 +145,8 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
             contentPadding: EdgeInsets.zero,
             title: const Text('Solo stock bajo'),
             value: currentState.lowStockOnly,
-            onChanged: (value) => ref.read(inventoryProvider.notifier).toggleLowStockOnly(value),
+            onChanged: (value) =>
+                ref.read(inventoryProvider.notifier).toggleLowStockOnly(value),
           ),
         ],
       ),
@@ -107,7 +154,8 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
   }
 
   Widget _buildInventoryList(BuildContext context, InventoryState state) {
-    if (state.inventories.isEmpty) {
+    final items = state.filteredInventories;
+    if (items.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -115,7 +163,9 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
             Icon(Icons.inventory_2_outlined, size: 64, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
-              'No hay items de inventario registrados',
+              state.searchQuery.isNotEmpty
+                  ? 'No se encontraron resultados'
+                  : 'No hay items de inventario registrados',
               style: TextStyle(fontSize: 16, color: Colors.grey[600]),
             ),
           ],
@@ -127,16 +177,17 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
       onRefresh: () => ref.read(inventoryProvider.notifier).refresh(),
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
-        itemCount: state.inventories.length,
+        itemCount: items.length,
         itemBuilder: (context, index) {
-          final inventory = state.inventories[index];
+          final inventory = items[index];
           return _buildInventoryCard(context, inventory);
         },
       ),
     );
   }
 
-  Widget _buildInventoryCard(BuildContext context, InventoryItemEntity inventory) {
+  Widget _buildInventoryCard(
+      BuildContext context, InventoryItemEntity inventory) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
@@ -153,8 +204,10 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
                 children: [
                   CircleAvatar(
                     radius: 24,
-                    backgroundColor: _getTypeColor(inventory.type).withOpacity(0.1),
-                    child: Icon(_getTypeIcon(inventory.type), color: _getTypeColor(inventory.type)),
+                    backgroundColor:
+                        _getTypeColor(inventory.type).withOpacity(0.1),
+                    child: Icon(_getTypeIcon(inventory.type),
+                        color: _getTypeColor(inventory.type)),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -184,20 +237,57 @@ class _InventoryPageState extends ConsumerState<InventoryPage> {
                       label: 'Stock bajo',
                       color: Colors.orange,
                     ),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline, color: Colors.red),
+                    tooltip: 'Eliminar',
+                    onPressed: () =>
+                        _showDeleteInventoryDialog(context, inventory),
+                  ),
                 ],
               ),
               const SizedBox(height: 12),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildInfoItem(Icons.inventory_2, inventory.formattedCurrentStock, Colors.blue),
-                  _buildInfoItem(Icons.warning, inventory.formattedMinimumStock, Colors.orange),
-                  _buildInfoItem(Icons.attach_money, inventory.formattedUnitCost, Colors.green),
+                  _buildInfoItem(Icons.inventory_2,
+                      inventory.formattedCurrentStock, Colors.blue),
+                  _buildInfoItem(Icons.warning, inventory.formattedMinimumStock,
+                      Colors.orange),
+                  _buildInfoItem(Icons.attach_money,
+                      inventory.formattedUnitCost, Colors.green),
                 ],
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _showDeleteInventoryDialog(
+      BuildContext context, InventoryItemEntity inventory) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Eliminar item'),
+        content: Text(
+            '¿Eliminar "${inventory.ingredientName}"? Esta acción no se puede deshacer.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              ref
+                  .read(inventoryProvider.notifier)
+                  .deleteInventory(inventory.id);
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Eliminar'),
+          ),
+        ],
       ),
     );
   }

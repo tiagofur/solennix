@@ -13,36 +13,52 @@ import {
   FileText,
   ChevronRight,
   CheckCircle,
+  AlertCircle,
 } from "lucide-react";
-import { Database } from "../../types/supabase";
 import { logError } from "../../lib/errorHandler";
 import { EventGeneralInfo } from "./components/EventGeneralInfo";
 import { EventProducts } from "./components/EventProducts";
 import { EventExtras } from "./components/EventExtras";
 import { EventFinancials } from "./components/EventFinancials";
 
-type Client = Database["public"]["Tables"]["clients"]["Row"];
-type Product = Database["public"]["Tables"]["products"]["Row"];
+// Local types to avoid Supabase dependency
+interface Client {
+  id: string;
+  name: string;
+  phone: string;
+  email?: string | null;
+  address?: string | null;
+  city?: string | null;
+  total_events: number | null;
+  total_spent: number | null;
+}
+
+interface Product {
+  id: string;
+  name: string;
+  category: string;
+  base_price: number;
+}
 
 const eventSchema = z.object({
   client_id: z.string().min(1, "Selecciona un cliente"),
   event_date: z.string().min(1, "Selecciona una fecha"),
-  start_time: z.string().optional(),
-  end_time: z.string().optional(),
+  start_time: z.string().optional().nullable(),
+  end_time: z.string().optional().nullable(),
   service_type: z.string().min(2, "Tipo de servicio requerido"),
   num_people: z.coerce.number().min(1, "Mínimo 1 persona"),
   status: z.enum(["quoted", "confirmed", "completed", "cancelled"]),
-  discount: z.coerce.number().min(0),
-  requires_invoice: z.boolean(),
-  tax_rate: z.coerce.number().min(0).max(100),
-  tax_amount: z.coerce.number().min(0),
-  total_amount: z.coerce.number().min(0),
-  location: z.string().optional(),
-  city: z.string().optional(),
-  deposit_percent: z.coerce.number().min(0).max(100),
-  cancellation_days: z.coerce.number().min(0),
-  refund_percent: z.coerce.number().min(0).max(100),
-  notes: z.string().optional(),
+  discount: z.coerce.number().min(0).default(0),
+  requires_invoice: z.boolean().default(false),
+  tax_rate: z.coerce.number().min(0).max(100).default(16),
+  tax_amount: z.coerce.number().min(0).default(0),
+  total_amount: z.coerce.number().min(0).default(0),
+  location: z.string().optional().nullable(),
+  city: z.string().optional().nullable(),
+  deposit_percent: z.coerce.number().min(0).max(100).default(50),
+  cancellation_days: z.coerce.number().min(0).default(15),
+  refund_percent: z.coerce.number().min(0).max(100).default(0),
+  notes: z.string().optional().nullable(),
 });
 
 type EventFormData = z.infer<typeof eventSchema>;
@@ -58,12 +74,13 @@ export const EventForm: React.FC = () => {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
 
   const [activeStep, setActiveStep] = useState(1);
   const [clients, setClients] = useState<Client[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isStepLoading, setIsStepLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Local state for items
@@ -90,8 +107,7 @@ export const EventForm: React.FC = () => {
     defaultValues: {
       client_id: "",
       service_type: "",
-      event_date:
-        searchParams.get("date") || new Date().toISOString().split("T")[0],
+      event_date: searchParams.get("date") || new Date().toISOString().split("T")[0],
       start_time: "",
       end_time: "",
       status: "quoted",
@@ -103,14 +119,14 @@ export const EventForm: React.FC = () => {
       num_people: 100,
       location: "",
       city: "",
-      deposit_percent: profile?.default_deposit_percent || 50,
-      cancellation_days: profile?.default_cancellation_days || 15,
-      refund_percent: profile?.default_refund_percent || 0,
+      deposit_percent: user?.default_deposit_percent || 50,
+      cancellation_days: user?.default_cancellation_days || 15,
+      refund_percent: user?.default_refund_percent || 0,
       notes: "",
     },
   });
 
-  const { handleSubmit, reset, setValue, control, watch } = methods;
+  const { handleSubmit, reset, setValue, control, formState: { errors, isValid, isSubmitted } } = methods;
 
   const discountValue = useWatch({ control, name: "discount" }) || 0;
   const clientIdValue = useWatch({ control, name: "client_id" });
@@ -119,32 +135,98 @@ export const EventForm: React.FC = () => {
   const requiresInvoiceValue = useWatch({ control, name: "requires_invoice" }) || false;
   const taxRateValue = useWatch({ control, name: "tax_rate" }) || 16;
 
-  const clientIdParam = searchParams.get("clientId");
-
   // --- Effects ---
 
   useEffect(() => {
+    const loadDependencies = async () => {
+      try {
+        const [clientsData, productsData] = await Promise.all([
+          clientService.getAll(),
+          productService.getAll(),
+        ]);
+        setClients(clientsData as any || []);
+        setProducts(productsData as any || []);
+      } catch (err) {
+        logError("Error loading dependencies", err);
+      }
+    };
     loadDependencies();
   }, []);
 
   useEffect(() => {
-    if (clientIdParam) {
+    const clientIdParam = searchParams.get("clientId");
+    if (clientIdParam && clients.length > 0) {
       setValue("client_id", clientIdParam);
     }
-  }, [clientIdParam, clients, setValue]);
+  }, [searchParams, clients, setValue]);
 
   useEffect(() => {
+    const loadEvent = async (eventId: string) => {
+      try {
+        setIsLoading(true);
+        const event = await eventService.getById(eventId);
+        if (!event) throw new Error('Evento no encontrado');
+        
+        reset({
+          client_id: event.client_id || "",
+          event_date: event.event_date || "",
+          start_time: event.start_time || "",
+          end_time: event.end_time || "",
+          service_type: event.service_type || "",
+          num_people: event.num_people || 100,
+          status: (event.status as any) || "quoted",
+          discount: event.discount || 0,
+          requires_invoice: event.requires_invoice || false,
+          tax_rate: event.tax_rate || 16,
+          tax_amount: event.tax_amount || 0,
+          total_amount: event.total_amount || 0,
+          location: event.location || "",
+          city: event.city || "",
+          deposit_percent: event.deposit_percent ?? (user?.default_deposit_percent || 50),
+          cancellation_days: event.cancellation_days ?? (user?.default_cancellation_days || 15),
+          refund_percent: event.refund_percent ?? (user?.default_refund_percent || 0),
+          notes: event.notes || "",
+        });
+
+        const [eventProducts, eventExtras] = await Promise.all([
+          eventService.getProducts(eventId),
+          eventService.getExtras(eventId),
+        ]);
+
+        if (eventProducts) {
+          setSelectedProducts(eventProducts.map((ep: any) => ({
+            product_id: ep.product_id,
+            quantity: ep.quantity,
+            price: ep.unit_price,
+            discount: ep.discount || 0,
+          })));
+        }
+
+        if (eventExtras) {
+          setExtras(eventExtras.map((e: any) => ({
+            description: e.description,
+            cost: e.cost,
+            price: e.price,
+            exclude_utility: e.exclude_utility || false,
+          })));
+        }
+      } catch (err) {
+        logError("Error loading event", err);
+        setError("Error al cargar el evento.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
     if (id) {
       loadEvent(id);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+  }, [id, reset, user]);
 
-  // Recalculate totals
   useEffect(() => {
     const productsSubtotal = selectedProducts.reduce(
       (sum, item) => sum + (item.price - (item.discount || 0)) * item.quantity,
-      0,
+      0
     );
 
     const normalExtrasTotal = extras
@@ -165,8 +247,6 @@ export const EventForm: React.FC = () => {
     setValue("tax_amount", taxAmount);
     setValue("total_amount", total);
 
-    // Fetch costs logic
-    let isActive = true;
     const fetchMissingCosts = async () => {
       const missing = selectedProducts
         .filter((p) => p.product_id && productUnitCosts[p.product_id] === undefined)
@@ -178,16 +258,14 @@ export const EventForm: React.FC = () => {
         const costs = await Promise.all(
           missing.map(async (productId) => {
             const ingredients = await productService.getIngredients(productId);
-            const cost =
-              ingredients?.reduce((sum, ing: any) => {
-                const unitCost = ing.unit_cost ?? ing.inventory?.unit_cost ?? 0;
-                return sum + ing.quantity_required * unitCost;
-              }, 0) || 0;
+            const cost = ingredients?.reduce((sum, ing: any) => {
+              const unitCost = ing.unit_cost ?? 0;
+              return sum + ing.quantity_required * unitCost;
+            }, 0) || 0;
             return { productId, cost };
           }),
         );
 
-        if (!isActive) return;
         setProductUnitCosts((prev) => {
           const next = { ...prev };
           costs.forEach(({ productId, cost }) => {
@@ -201,132 +279,45 @@ export const EventForm: React.FC = () => {
     };
 
     fetchMissingCosts();
-    return () => { isActive = false; };
-  }, [selectedProducts, extras, discountValue, requiresInvoiceValue, taxRateValue, productUnitCosts, setValue]);
+  }, [selectedProducts, extras, discountValue, requiresInvoiceValue, taxRateValue, setValue, productUnitCosts]);
 
-  // Auto-fill address
   useEffect(() => {
-    if (clientIdValue) {
+    if (clientIdValue && !locationValue && !cityValue) {
       const selectedClient = clients.find((c) => c.id === clientIdValue);
       if (selectedClient) {
-        if (!locationValue && selectedClient.address) {
-          setValue("location", selectedClient.address);
-        }
-        if (!cityValue && selectedClient.city) {
-          setValue("city", selectedClient.city);
-        }
+        if (selectedClient.address) setValue("location", selectedClient.address);
+        if (selectedClient.city) setValue("city", selectedClient.city);
       }
     }
   }, [clientIdValue, clients, locationValue, cityValue, setValue]);
 
-  // --- Loaders ---
-
-  const loadDependencies = async () => {
-    try {
-      const [clientsData, productsData] = await Promise.all([
-        clientService.getAll(),
-        productService.getAll(),
-      ]);
-      setClients(clientsData || []);
-      setProducts(productsData || []);
-    } catch (err) {
-      logError("Error loading dependencies", err);
-    }
-  };
-
-  const loadEvent = async (eventId: string) => {
-    try {
-      setIsLoading(true);
-      const event = await eventService.getById(eventId);
-      if (!event) throw new Error('Evento no encontrado');
-      
-      reset({
-        client_id: event.client_id || "",
-        event_date: event.event_date || "",
-        start_time: event.start_time || "",
-        end_time: event.end_time || "",
-        service_type: event.service_type || "",
-        num_people: event.num_people || 100,
-        status: event.status || "quoted",
-        discount: event.discount || 0,
-        requires_invoice: event.requires_invoice || false,
-        tax_rate: event.tax_rate || 16,
-        tax_amount: event.tax_amount || 0,
-        total_amount: event.total_amount || 0,
-        location: event.location || "",
-        city: event.city || "",
-        deposit_percent: event.deposit_percent ?? (profile?.default_deposit_percent || 50),
-        cancellation_days: event.cancellation_days ?? (profile?.default_cancellation_days || 15),
-        refund_percent: event.refund_percent ?? (profile?.default_refund_percent || 0),
-        notes: event.notes || "",
-      });
-
-      const eventProducts = await eventService.getProducts(eventId);
-      if (eventProducts) {
-        setSelectedProducts(
-          eventProducts.map((ep: any) => ({
-            product_id: ep.product_id,
-            quantity: ep.quantity,
-            price: ep.unit_price,
-            discount: (ep as any).discount || 0,
-          })),
-        );
-      }
-
-      const eventExtras = await eventService.getExtras(eventId);
-      if (eventExtras) {
-        setExtras(
-          eventExtras.map((e: any) => ({
-            description: e.description,
-            cost: e.cost,
-            price: e.price,
-            exclude_utility: e.exclude_utility || false,
-          })),
-        );
-      }
-    } catch (err) {
-      logError("Error loading event", err);
-      setError("Error al cargar el evento");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // --- Handlers ---
-
   const handleAddProduct = () => {
-    if ((products || []).length > 0) {
+    if (products.length > 0) {
       const product = products[0];
       setSelectedProducts([
         ...selectedProducts,
-        {
-          product_id: product.id,
-          quantity: 1,
-          price: product.base_price,
-          discount: 0,
-        },
+        { product_id: product.id, quantity: 1, price: product.base_price, discount: 0 },
       ]);
     }
   };
 
   const handleRemoveProduct = (index: number) => {
-    const newProducts = [...selectedProducts];
-    newProducts.splice(index, 1);
-    setSelectedProducts(newProducts);
+    setSelectedProducts(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleProductChange = (index: number, field: any, value: any) => {
-    const newProducts = [...selectedProducts];
-    newProducts[index] = { ...newProducts[index], [field]: value };
-
-    if (field === "product_id") {
-      const product = products.find((p) => p.id === value);
-      if (product) {
-        newProducts[index].price = product.base_price;
-        newProducts[index].discount = 0;
+  const handleProductChange = (index: number, field: string, value: any) => {
+    setSelectedProducts(prev => {
+      const next = [...prev];
+      next[index] = { ...next[index], [field]: value };
+      if (field === "product_id") {
+        const product = products.find(p => p.id === value);
+        if (product) {
+          next[index].price = product.base_price;
+          next[index].discount = 0;
+        }
       }
-    }
-    setSelectedProducts(newProducts);
+      return next;
+    });
   };
 
   const handleAddExtra = () => {
@@ -334,22 +325,26 @@ export const EventForm: React.FC = () => {
   };
 
   const handleRemoveExtra = (index: number) => {
-    const newExtras = [...extras];
-    newExtras.splice(index, 1);
-    setExtras(newExtras);
+    setExtras(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleExtraChange = (index: number, field: any, value: any) => {
-    const newExtras = [...extras];
-    newExtras[index] = { ...newExtras[index], [field]: value };
+  const handleExtraChange = (index: number, field: string, value: any) => {
+    setExtras(prev => {
+      const next = [...prev];
+      next[index] = { ...next[index], [field]: value };
+      if (field === "exclude_utility" && value === true) {
+        next[index].price = next[index].cost;
+      }
+      if (field === "cost" && next[index].exclude_utility) {
+        next[index].price = Number(value);
+      }
+      return next;
+    });
+  };
 
-    if (field === "exclude_utility" && value === true) {
-      newExtras[index].price = newExtras[index].cost;
-    }
-    if (field === "cost" && newExtras[index].exclude_utility) {
-      newExtras[index].price = Number(value);
-    }
-    setExtras(newExtras);
+  const handleClientCreated = (newClient: Client) => {
+    setClients(prev => [...prev, newClient]);
+    setTimeout(() => setValue("client_id", newClient.id, { shouldValidate: true }), 100);
   };
 
   const onSubmit = async (data: EventFormData) => {
@@ -358,7 +353,11 @@ export const EventForm: React.FC = () => {
       return;
     }
 
-    if (!user) return;
+    if (!user) {
+      setError("Usuario no autenticado.");
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
@@ -367,49 +366,57 @@ export const EventForm: React.FC = () => {
         ...data,
         start_time: data.start_time?.trim() ? data.start_time : null,
         end_time: data.end_time?.trim() ? data.end_time : null,
+        user_id: user.id,
       };
 
       let eventId = id;
+
       if (id) {
         await eventService.update(id, payload);
       } else {
-        const newEvent = await eventService.create({ ...payload, user_id: user.id });
-        if (!newEvent) throw new Error('Error al crear el evento');
+        const newEvent = await eventService.create(payload);
+        if (!newEvent || !newEvent.id) throw new Error("Error al crear el evento.");
         eventId = newEvent.id;
       }
 
       if (eventId) {
-        const productsToSave = selectedProducts.map((p) => ({
-          productId: p.product_id,
-          quantity: p.quantity,
-          unitPrice: p.price,
-          discount: p.discount,
-        }));
-        await eventService.updateItems(eventId, productsToSave, extras);
+        await eventService.updateItems(
+          eventId,
+          selectedProducts.map((p) => ({
+            productId: p.product_id,
+            quantity: p.quantity,
+            unitPrice: p.price,
+            discount: p.discount,
+          })),
+          extras,
+        );
       }
-      navigate("/calendar");
+
+      navigate(`/events/${eventId}/summary`);
     } catch (err: any) {
       logError("Error saving event", err);
-      setError(err.message || "Error al guardar el evento");
+      setError(err.message || "Error al guardar el evento. Por favor intenta de nuevo.");
     } finally {
       setIsLoading(false);
     }
   };
 
   const nextStep = async () => {
-    const isValid = await methods.trigger();
-    if (isValid) {
+    if (isStepLoading) return;
+    setIsStepLoading(true);
+    const isValidStep = await methods.trigger();
+    if (isValidStep) {
       setActiveStep((prev) => Math.min(prev + 1, STEPS.length));
     }
+    setIsStepLoading(false);
   };
 
   const prevStep = () => {
-    setActiveStep((prev) => Math.max(prev - 1, 1));
+    setActiveStep(prev => Math.max(prev - 1, 1));
   };
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center">
           <button
@@ -433,12 +440,12 @@ export const EventForm: React.FC = () => {
         )}
       </div>
 
-      {/* Stepper */}
       <nav aria-label="Progress">
         <ol role="list" className="bg-white dark:bg-gray-800 rounded-lg shadow-sm md:flex md:divide-y-0 md:divide-x dark:divide-gray-700 overflow-hidden">
           {STEPS.map((step, stepIdx) => (
             <li key={step.id} className="relative md:flex-1 md:flex">
               <button
+                type="button"
                 onClick={() => {
                   if (activeStep > step.id) setActiveStep(step.id);
                 }}
@@ -470,18 +477,8 @@ export const EventForm: React.FC = () => {
               </button>
               {stepIdx !== STEPS.length - 1 && (
                 <div className="hidden md:block absolute top-0 right-0 h-full w-5" aria-hidden="true">
-                  <svg
-                    className="h-full w-full text-gray-300 dark:text-gray-700"
-                    viewBox="0 0 22 80"
-                    fill="none"
-                    preserveAspectRatio="none"
-                  >
-                    <path
-                      d="M0 -2L20 40L0 82"
-                      vectorEffect="non-scaling-stroke"
-                      stroke="currentcolor"
-                      strokeLinejoin="round"
-                    />
+                  <svg className="h-full w-full text-gray-300 dark:text-gray-700" viewBox="0 0 22 80" fill="none" preserveAspectRatio="none">
+                    <path d="M0 -2L20 40L0 82" vectorEffect="non-scaling-stroke" stroke="currentcolor" strokeLinejoin="round" />
                   </svg>
                 </div>
               )}
@@ -491,8 +488,9 @@ export const EventForm: React.FC = () => {
       </nav>
 
       {error && (
-        <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-400 p-4">
+        <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-400 p-4 rounded-md">
           <div className="flex">
+            <AlertCircle className="h-5 w-5 text-red-500" />
             <div className="ml-3">
               <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
             </div>
@@ -500,16 +498,39 @@ export const EventForm: React.FC = () => {
         </div>
       )}
 
-      {/* Main Content */}
+      {isSubmitted && !isValid && (
+        <div className="bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-400 p-4 rounded-md">
+          <div className="flex">
+            <AlertCircle className="h-5 w-5 text-amber-500" />
+            <div className="ml-3">
+              <p className="text-sm text-amber-700 dark:text-amber-300 font-medium">Hay errores en el formulario. Por favor revisa todos los pasos.</p>
+              <ul className="mt-2 text-xs text-amber-600 dark:text-amber-400 list-disc list-inside">
+                {Object.entries(errors).map(([key, err]) => (
+                  <li key={key}>{key}: {(err as any).message}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
+
       <FormProvider {...methods}>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form 
+          onSubmit={handleSubmit(onSubmit as any)} 
+          className="space-y-6"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && (e.target as HTMLElement).tagName !== "TEXTAREA") {
+              e.preventDefault();
+            }
+          }}
+        >
           <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
             {activeStep === 1 && (
-              <EventGeneralInfo clients={clients} clientIdValue={clientIdValue} />
+              <EventGeneralInfo clients={clients as any} clientIdValue={clientIdValue} onClientCreated={handleClientCreated as any} />
             )}
             {activeStep === 2 && (
               <EventProducts
-                products={products}
+                products={products as any}
                 selectedProducts={selectedProducts}
                 productUnitCosts={productUnitCosts}
                 onAddProduct={handleAddProduct}
@@ -527,22 +548,19 @@ export const EventForm: React.FC = () => {
             )}
             {activeStep === 4 && (
               <EventFinancials
-                selectedProducts={selectedProducts}
+                selectedProducts={selectedProducts as any}
                 extras={extras}
                 productUnitCosts={productUnitCosts}
               />
             )}
           </div>
 
-          {/* Navigation Buttons */}
           <div className="flex justify-between pt-4">
             <button
               type="button"
               onClick={prevStep}
               disabled={activeStep === 1}
-              className={`px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 ${
-                activeStep === 1 ? 'invisible' : ''
-              }`}
+              className={`px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 ${activeStep === 1 ? 'invisible' : ''}`}
             >
               Anterior
             </button>
@@ -551,15 +569,17 @@ export const EventForm: React.FC = () => {
               <button
                 type="button"
                 onClick={nextStep}
-                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-brand-orange hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-orange"
+                disabled={isStepLoading}
+                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-brand-orange hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-orange disabled:opacity-50"
               >
-                Siguiente
+                {isStepLoading ? "Cargando..." : "Siguiente"}
                 <ChevronRight className="ml-2 h-4 w-4" />
               </button>
             ) : (
               <button
-                type="submit"
-                disabled={isLoading}
+                type="button"
+                onClick={handleSubmit(onSubmit)}
+                disabled={isLoading || isStepLoading}
                 className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
               >
                 <Save className="h-5 w-5 mr-2" />
