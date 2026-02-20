@@ -12,6 +12,9 @@ type User struct {
 	PasswordHash            string    `json:"-"` // Never expose in JSON
 	Name                    string    `json:"name"`
 	BusinessName            *string   `json:"business_name,omitempty"`
+	LogoURL                 *string   `json:"logo_url,omitempty"`
+	BrandColor              *string   `json:"brand_color,omitempty"`
+	ShowBusinessNameInPdf   *bool     `json:"show_business_name_in_pdf,omitempty"`
 	DefaultDepositPercent   *float64  `json:"default_deposit_percent,omitempty"`
 	DefaultCancellationDays *float64  `json:"default_cancellation_days,omitempty"`
 	DefaultRefundPercent    *float64  `json:"default_refund_percent,omitempty"`

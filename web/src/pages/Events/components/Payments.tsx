@@ -35,7 +35,7 @@ export const Payments: React.FC<PaymentsProps> = ({
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm({
+  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm({
     defaultValues: {
       amount: 0,
       payment_date: new Date().toISOString().split("T")[0],
@@ -71,13 +71,10 @@ export const Payments: React.FC<PaymentsProps> = ({
         notes: data.notes,
       });
 
-      // Calculate new totals to check for auto-confirmation
-      const currentTotalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
-      const newTotalPaid = currentTotalPaid + newPaymentAmount;
-
-      if (newTotalPaid >= totalAmount && eventStatus === "quoted" && onStatusChange) {
+      // Check for auto-confirmation: if any payment is made and status is quoted
+      if (newPaymentAmount > 0 && eventStatus === "quoted" && onStatusChange) {
         onStatusChange("confirmed");
-        setStatusMessage("✅ ¡Pago completo! El evento ha sido marcado como Confirmado.");
+        setStatusMessage("✅ Pago registrado. El evento ha sido marcado como Confirmado.");
         // Clear message after 5 seconds
         setTimeout(() => setStatusMessage(null), 5000);
       }
@@ -234,28 +231,55 @@ export const Payments: React.FC<PaymentsProps> = ({
         </div>
 
         {!isAdding ? (
-          <button
-            onClick={() => setIsAdding(true)}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-brand-orange bg-orange-100 hover:bg-orange-200 dark:bg-orange-900/30 dark:hover:bg-orange-900/50 focus:outline-none"
-          >
-            <Plus className="h-4 w-4 mr-2" /> Registrar Nuevo Pago
-          </button>
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={() => { reset(); setIsAdding(true); }}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-brand-orange bg-orange-100 hover:bg-orange-200 dark:bg-orange-900/30 dark:hover:bg-orange-900/50 focus:outline-none transition-colors"
+            >
+              <Plus className="h-4 w-4 mr-2" /> Registrar Nuevo Pago
+            </button>
+
+            {balance > 0 && (
+              <button
+                onClick={() => { 
+                  reset(); 
+                  setValue("amount", parseFloat(balance.toFixed(2))); 
+                  setIsAdding(true); 
+                }}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 shadow-sm focus:outline-none transition-colors"
+              >
+                <CheckCircle className="h-4 w-4 mr-2" /> Liquidar Faltante (${balance.toFixed(2)})
+              </button>
+            )}
+          </div>
         ) : (
           <form onSubmit={handleSubmit(onSubmit)} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-md border dark:border-gray-600 space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Monto</label>
-                <div className="mt-1 relative rounded-md shadow-sm">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                    <span className="text-gray-500 sm:text-sm">$</span>
+                <div className="flex gap-2 items-center mt-1">
+                  <div className="relative rounded-md shadow-sm w-full">
+                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                      <span className="text-gray-500 sm:text-sm">$</span>
+                    </div>
+                    <input
+                      type="number"
+                      step="0.01"
+                      {...register("amount", { required: "Monto requerido", min: 0.01 })}
+                      className="block w-full rounded-md border-gray-300 dark:border-gray-600 pl-7 pr-12 focus:border-brand-orange focus:ring-brand-orange sm:text-sm p-2 bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
+                      placeholder="0.00"
+                    />
                   </div>
-                  <input
-                    type="number"
-                    step="0.01"
-                    {...register("amount", { required: "Monto requerido", min: 0.01 })}
-                    className="block w-full rounded-md border-gray-300 dark:border-gray-600 pl-7 pr-12 focus:border-brand-orange focus:ring-brand-orange sm:text-sm p-2 bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
-                    placeholder="0.00"
-                  />
+                  {balance > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setValue("amount", parseFloat(balance.toFixed(2)))}
+                      className="px-2 py-1.5 text-xs bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300 rounded border border-green-200 dark:border-green-800 hover:bg-green-200 dark:hover:bg-green-900/60 whitespace-nowrap"
+                      title="Llenar con el saldo faltante"
+                    >
+                      Max
+                    </button>
+                  )}
                 </div>
                 {errors.amount && <p className="text-xs text-red-500 mt-1">{errors.amount.message as string}</p>}
               </div>

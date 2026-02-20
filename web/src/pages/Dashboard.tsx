@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { logError } from "../lib/errorHandler";
 import { getEventNetSales, getEventTaxAmount, getEventTotalCharged } from "../lib/finance";
+import { PendingEventsModal } from "../components/PendingEventsModal";
 import {
   BarChart,
   Bar,
@@ -590,6 +591,8 @@ export const Dashboard: React.FC = () => {
             </div>
           </div>
       </div>
+
+      <PendingEventsModal />
     </div>
   );
 };

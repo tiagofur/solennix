@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { eventService } from "../../services/eventService";
 import { productService } from "../../services/productService";
+import { paymentService } from "../../services/paymentService";
 import {
   ArrowLeft,
   FileText,
@@ -13,16 +14,27 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
-import { generateBudgetPDF, generateContractPDF, generateShoppingListPDF } from "../../lib/pdfGenerator";
+import {
+  generateBudgetPDF,
+  generateContractPDF,
+  generateShoppingListPDF,
+} from "../../lib/pdfGenerator";
 import { logError } from "../../lib/errorHandler";
-import { getEventNetSales, getEventTaxAmount, getEventTotalCharged } from "../../lib/finance";
+import {
+  getEventNetSales,
+  getEventTaxAmount,
+  getEventTotalCharged,
+} from "../../lib/finance";
 import { Payments } from "./components/Payments";
 
 type ViewMode = "summary" | "ingredients" | "contract" | "payments";
 
 type EventStatus = "quoted" | "confirmed" | "completed" | "cancelled";
 
-const STATUS_CONFIG: Record<EventStatus, { label: string; color: string; bg: string; dot: string }> = {
+const STATUS_CONFIG: Record<
+  EventStatus,
+  { label: string; color: string; bg: string; dot: string }
+> = {
   quoted: {
     label: "Cotizado",
     color: "text-amber-700 dark:text-amber-300",
@@ -49,7 +61,12 @@ const STATUS_CONFIG: Record<EventStatus, { label: string; color: string; bg: str
   },
 };
 
-const ALL_STATUSES: EventStatus[] = ["quoted", "confirmed", "completed", "cancelled"];
+const ALL_STATUSES: EventStatus[] = [
+  "quoted",
+  "confirmed",
+  "completed",
+  "cancelled",
+];
 
 export const EventSummary: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -59,6 +76,7 @@ export const EventSummary: React.FC = () => {
   const [products, setProducts] = useState<any[]>([]);
   const [extras, setExtras] = useState<any[]>([]);
   const [ingredients, setIngredients] = useState<any[]>([]);
+  const [payments, setPayments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>("summary");
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
@@ -82,15 +100,18 @@ export const EventSummary: React.FC = () => {
   const loadData = async (eventId: string) => {
     try {
       setLoading(true);
-      const [eventData, productsData, extrasData] = await Promise.all([
-        eventService.getById(eventId),
-        eventService.getProducts(eventId),
-        eventService.getExtras(eventId),
-      ]);
+      const [eventData, productsData, extrasData, paymentsData] =
+        await Promise.all([
+          eventService.getById(eventId),
+          eventService.getProducts(eventId),
+          eventService.getExtras(eventId),
+          paymentService.getByEventId(eventId),
+        ]);
 
       setEvent(eventData);
       setProducts(productsData || []);
       setExtras(extrasData || []);
+      setPayments(paymentsData || []);
 
       // Calculate aggregated ingredients
       const aggregatedIngredients: any = {};
@@ -100,12 +121,14 @@ export const EventSummary: React.FC = () => {
       });
 
       const productIds = Array.from(productQuantities.keys());
-      const prodIngredients = await productService.getIngredientsForProducts(productIds);
+      const prodIngredients =
+        await productService.getIngredientsForProducts(productIds);
 
       prodIngredients.forEach((ing: any) => {
         const key = ing.inventory_id;
         const quantity = productQuantities.get(ing.product_id) || 0;
-        const ingredientName = ing.ingredient_name || ing.inventory?.ingredient_name;
+        const ingredientName =
+          ing.ingredient_name || ing.inventory?.ingredient_name;
         const unit = ing.unit || ing.inventory?.unit;
         const unitCost = ing.unit_cost ?? ing.inventory?.unit_cost ?? 0;
 
@@ -118,7 +141,8 @@ export const EventSummary: React.FC = () => {
           };
         }
         aggregatedIngredients[key].quantity += ing.quantity_required * quantity;
-        aggregatedIngredients[key].cost += ing.quantity_required * quantity * unitCost;
+        aggregatedIngredients[key].cost +=
+          ing.quantity_required * quantity * unitCost;
       });
 
       setIngredients(Object.values(aggregatedIngredients));
@@ -156,9 +180,13 @@ export const EventSummary: React.FC = () => {
   const profit = revenueExTax - totalCost;
   const margin = revenueExTax > 0 ? (profit / revenueExTax) * 100 : 0;
 
-  const timeRange = event.start_time || event.end_time
-    ? `${event.start_time || ""}${event.start_time && event.end_time ? " - " : ""}${event.end_time || ""}`
-    : "";
+  const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
+  const remainingValue = totalCharged - totalPaid;
+
+  const timeRange =
+    event.start_time || event.end_time
+      ? `${event.start_time || ""}${event.start_time && event.end_time ? " - " : ""}${event.end_time || ""}`
+      : "";
 
   const currentStatus = (event.status || "quoted") as EventStatus;
   const statusCfg = STATUS_CONFIG[currentStatus] || STATUS_CONFIG.quoted;
@@ -235,7 +263,9 @@ export const EventSummary: React.FC = () => {
 
           {viewMode === "summary" && (
             <button
-              onClick={() => generateBudgetPDF(event, profile, products, extras)}
+              onClick={() =>
+                generateBudgetPDF(event, profile, products, extras)
+              }
               className="flex items-center px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium shadow-sm transition-colors"
               title="Descargar Presupuesto en PDF"
             >
@@ -243,10 +273,12 @@ export const EventSummary: React.FC = () => {
               Presupuesto
             </button>
           )}
-          
+
           {viewMode === "ingredients" && (
             <button
-              onClick={() => generateShoppingListPDF(event, profile, ingredients)}
+              onClick={() =>
+                generateShoppingListPDF(event, profile, ingredients)
+              }
               className="flex items-center px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium shadow-sm transition-colors"
               title="Descargar Lista de Compras en PDF"
             >
@@ -257,7 +289,7 @@ export const EventSummary: React.FC = () => {
 
           {viewMode === "contract" && (
             <button
-              onClick={() => generateContractPDF(event, profile)}
+              onClick={() => generateContractPDF(event, profile as any)}
               className="flex items-center px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium shadow-sm transition-colors"
               title="Descargar Contrato en PDF"
             >
@@ -289,15 +321,22 @@ export const EventSummary: React.FC = () => {
               </h1>
 
               {/* Status Badge + Dropdown */}
-              <div className="relative flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+              <div
+                className="relative flex-shrink-0"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <button
                   onClick={() => setStatusDropdownOpen((prev) => !prev)}
                   disabled={updatingStatus}
                   className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-semibold transition-all ${statusCfg.bg} ${statusCfg.color} ${updatingStatus ? "opacity-60 cursor-not-allowed" : "hover:opacity-80 cursor-pointer"}`}
                 >
-                  <span className={`w-2 h-2 rounded-full flex-shrink-0 ${statusCfg.dot}`} />
+                  <span
+                    className={`w-2 h-2 rounded-full flex-shrink-0 ${statusCfg.dot}`}
+                  />
                   {statusCfg.label}
-                  <ChevronDown className={`h-3.5 w-3.5 transition-transform ${statusDropdownOpen ? "rotate-180" : ""}`} />
+                  <ChevronDown
+                    className={`h-3.5 w-3.5 transition-transform ${statusDropdownOpen ? "rotate-180" : ""}`}
+                  />
                 </button>
 
                 {statusDropdownOpen && (
@@ -309,13 +348,19 @@ export const EventSummary: React.FC = () => {
                           key={s}
                           onClick={() => handleStatusChange(s)}
                           className={`w-full flex items-center gap-2 px-3 py-2.5 text-sm text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-700 ${
-                            s === currentStatus ? "font-semibold " + cfg.color : "text-gray-700 dark:text-gray-200"
+                            s === currentStatus
+                              ? "font-semibold " + cfg.color
+                              : "text-gray-700 dark:text-gray-200"
                           }`}
                         >
-                          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${cfg.dot}`} />
+                          <span
+                            className={`w-2 h-2 rounded-full flex-shrink-0 ${cfg.dot}`}
+                          />
                           {cfg.label}
                           {s === currentStatus && (
-                            <span className="ml-auto text-xs opacity-60">✓</span>
+                            <span className="ml-auto text-xs opacity-60">
+                              ✓
+                            </span>
                           )}
                         </button>
                       );
@@ -354,7 +399,9 @@ export const EventSummary: React.FC = () => {
                 </p>
                 <p>
                   <span className="font-semibold">Factura:</span>{" "}
-                  {event.requires_invoice ? `Sí (IVA ${event.tax_rate || 16}%)` : "No"}
+                  {event.requires_invoice
+                    ? `Sí (IVA ${event.tax_rate || 16}%)`
+                    : "No"}
                 </p>
                 <p>
                   <span className="font-semibold">Teléfono:</span>{" "}
@@ -387,7 +434,11 @@ export const EventSummary: React.FC = () => {
                         ${p.unit_price.toFixed(2)}
                       </td>
                       <td className="py-2 text-right">
-                        ${((p.unit_price - ((p as any).discount || 0)) * p.quantity).toFixed(2)}
+                        $
+                        {(
+                          (p.unit_price - ((p as any).discount || 0)) *
+                          p.quantity
+                        ).toFixed(2)}
                       </td>
                     </tr>
                   ))}
@@ -396,7 +447,9 @@ export const EventSummary: React.FC = () => {
             </div>
 
             <div>
-              <h2 className="text-lg font-bold mb-4 border-b dark:border-gray-700 pb-2 text-gray-900 dark:text-white">Extras</h2>
+              <h2 className="text-lg font-bold mb-4 border-b dark:border-gray-700 pb-2 text-gray-900 dark:text-white">
+                Extras
+              </h2>
               <table className="w-full text-sm text-gray-600 dark:text-gray-300">
                 <thead>
                   <tr className="text-left text-gray-500 dark:text-gray-400">
@@ -413,7 +466,10 @@ export const EventSummary: React.FC = () => {
                   ))}
                   {extras.length === 0 && (
                     <tr>
-                      <td colSpan={2} className="py-2 text-gray-500 dark:text-gray-400 italic">
+                      <td
+                        colSpan={2}
+                        className="py-2 text-gray-500 dark:text-gray-400 italic"
+                      >
                         Sin extras
                       </td>
                     </tr>
@@ -451,19 +507,43 @@ export const EventSummary: React.FC = () => {
                 </p>
               </div>
               <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Costos Totales</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Total Pagado
+                </p>
+                <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
+                  ${totalPaid.toFixed(2)}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Faltante por Pagar
+                </p>
+                <p
+                  className={`text-xl font-bold ${remainingValue > 0 ? "text-orange-600 dark:text-orange-400" : "text-gray-900 dark:text-white"}`}
+                >
+                  ${remainingValue.toFixed(2)}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Costos Totales
+                </p>
                 <p className="text-xl font-bold text-red-600 dark:text-red-400">
                   ${totalCost.toFixed(2)}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Utilidad</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Utilidad
+                </p>
                 <p className="text-xl font-bold text-green-600 dark:text-green-400">
                   ${profit.toFixed(2)}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Margen</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Margen
+                </p>
                 <p className="text-xl font-bold text-blue-600 dark:text-blue-400">
                   {margin.toFixed(1)}%
                 </p>
@@ -580,7 +660,9 @@ export const EventSummary: React.FC = () => {
               </li>
               <li>
                 <strong>Factura:</strong>{" "}
-                {event.requires_invoice ? `Sí (IVA ${event.tax_rate || 16}%)` : "No"}
+                {event.requires_invoice
+                  ? `Sí (IVA ${event.tax_rate || 16}%)`
+                  : "No"}
               </li>
             </ul>
 
@@ -632,11 +714,15 @@ export const EventSummary: React.FC = () => {
               <p className="font-bold">
                 {profile?.business_name || profile?.name || "EL PROVEEDOR"}
               </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Firma</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Firma
+              </p>
             </div>
             <div className="text-center border-t border-gray-400 dark:border-gray-500 pt-4">
               <p className="font-bold">{event.clients?.name}</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Firma de EL CLIENTE</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Firma de EL CLIENTE
+              </p>
             </div>
           </div>
         </div>

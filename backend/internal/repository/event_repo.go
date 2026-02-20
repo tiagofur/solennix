@@ -39,25 +39,29 @@ func scanEvent(row pgx.Row) (*models.Event, error) {
 	return e, err
 }
 
-func scanEventWithClient(rows pgx.Rows) (models.Event, error) {
+func scanEventWithClient(row pgx.Row) (models.Event, error) {
 	var e models.Event
 	var clientName *string
-	err := rows.Scan(
+	var clientPhone *string
+	err := row.Scan(
 		&e.ID, &e.UserID, &e.ClientID, &e.EventDate, &e.StartTime, &e.EndTime,
 		&e.ServiceType, &e.NumPeople, &e.Status, &e.Discount, &e.RequiresInvoice,
 		&e.TaxRate, &e.TaxAmount, &e.TotalAmount, &e.Location, &e.City,
 		&e.DepositPercent, &e.CancellationDays, &e.RefundPercent,
 		&e.Notes, &e.CreatedAt, &e.UpdatedAt,
-		&clientName,
+		&clientName, &clientPhone,
 	)
 	if clientName != nil {
 		e.Client = &models.Client{Name: *clientName}
+		if clientPhone != nil {
+			e.Client.Phone = *clientPhone
+		}
 	}
 	return e, err
 }
 
 func (r *EventRepo) GetAll(ctx context.Context, userID uuid.UUID) ([]models.Event, error) {
-	query := fmt.Sprintf(`SELECT %s, c.name as client_name
+	query := fmt.Sprintf(`SELECT %s, c.name as client_name, c.phone as client_phone
 		FROM events e LEFT JOIN clients c ON e.client_id = c.id
 		WHERE e.user_id = $1 ORDER BY e.event_date DESC`, eventSelectFields)
 	rows, err := r.pool.Query(ctx, query, userID)
@@ -78,7 +82,7 @@ func (r *EventRepo) GetAll(ctx context.Context, userID uuid.UUID) ([]models.Even
 }
 
 func (r *EventRepo) GetByDateRange(ctx context.Context, userID uuid.UUID, start, end string) ([]models.Event, error) {
-	query := fmt.Sprintf(`SELECT %s, c.name as client_name
+	query := fmt.Sprintf(`SELECT %s, c.name as client_name, c.phone as client_phone
 		FROM events e LEFT JOIN clients c ON e.client_id = c.id
 		WHERE e.user_id = $1 AND e.event_date >= $2::date AND e.event_date <= $3::date
 		ORDER BY e.event_date`, eventSelectFields)
@@ -127,12 +131,18 @@ func (r *EventRepo) GetByClientID(ctx context.Context, userID, clientID uuid.UUI
 }
 
 func (r *EventRepo) GetByID(ctx context.Context, id, userID uuid.UUID) (*models.Event, error) {
-	query := fmt.Sprintf(`SELECT %s FROM events e WHERE e.id = $1 AND e.user_id = $2`, eventSelectFields)
-	return scanEvent(r.pool.QueryRow(ctx, query, id, userID))
+	query := fmt.Sprintf(`SELECT %s, c.name as client_name, c.phone as client_phone
+		FROM events e LEFT JOIN clients c ON e.client_id = c.id
+		WHERE e.id = $1 AND e.user_id = $2`, eventSelectFields)
+	e, err := scanEventWithClient(r.pool.QueryRow(ctx, query, id, userID))
+	if err != nil {
+		return nil, err
+	}
+	return &e, nil
 }
 
 func (r *EventRepo) GetUpcoming(ctx context.Context, userID uuid.UUID, limit int) ([]models.Event, error) {
-	query := fmt.Sprintf(`SELECT %s, c.name as client_name
+	query := fmt.Sprintf(`SELECT %s, c.name as client_name, c.phone as client_phone
 		FROM events e LEFT JOIN clients c ON e.client_id = c.id
 		WHERE e.user_id = $1 AND e.event_date >= CURRENT_DATE
 		ORDER BY e.event_date ASC LIMIT $2`, eventSelectFields)

@@ -7,6 +7,9 @@ export interface User {
   email: string;
   name: string;
   business_name?: string;
+  logo_url?: string;
+  brand_color?: string;
+  show_business_name_in_pdf?: boolean;
   plan: string;
   default_deposit_percent?: number;
   default_cancellation_days?: number;

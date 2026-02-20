@@ -107,7 +107,7 @@ func TestRepositoryMethodsWithClosedPool(t *testing.T) {
 	if _, err := NewUserRepo(pool).GetByID(ctx, id); err == nil {
 		t.Fatalf("UserRepo.GetByID() expected error with closed pool")
 	}
-	if _, err := NewUserRepo(pool).Update(ctx, id, nil, nil, nil, nil, nil); err == nil {
+	if _, err := NewUserRepo(pool).Update(context.Background(), uuid.New(), nil, nil, nil, nil, nil, nil, nil, nil); err == nil {
 		t.Fatalf("UserRepo.Update() expected error with closed pool")
 	}
 }

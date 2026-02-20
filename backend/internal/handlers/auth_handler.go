@@ -205,6 +205,9 @@ func (h *AuthHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Name                    *string  `json:"name"`
 		BusinessName            *string  `json:"business_name"`
+		LogoURL                 *string  `json:"logo_url"`
+		BrandColor              *string  `json:"brand_color"`
+		ShowBusinessNameInPdf   *bool    `json:"show_business_name_in_pdf"`
 		DefaultDepositPercent   *float64 `json:"default_deposit_percent"`
 		DefaultCancellationDays *float64 `json:"default_cancellation_days"`
 		DefaultRefundPercent    *float64 `json:"default_refund_percent"`
@@ -216,7 +219,7 @@ func (h *AuthHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user, err := h.userRepo.Update(r.Context(), userID,
-		req.Name, req.BusinessName,
+		req.Name, req.BusinessName, req.LogoURL, req.BrandColor, req.ShowBusinessNameInPdf,
 		req.DefaultDepositPercent, req.DefaultCancellationDays, req.DefaultRefundPercent,
 	)
 	if err != nil {

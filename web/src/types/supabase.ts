@@ -131,6 +131,9 @@ export interface Database {
           email: string
           name: string
           business_name: string | null
+          logo_url: string | null
+          brand_color: string | null
+          show_business_name_in_pdf: boolean | null
           default_deposit_percent: number | null
           default_cancellation_days: number | null
           default_refund_percent: number | null
@@ -144,6 +147,9 @@ export interface Database {
           email: string
           name: string
           business_name?: string | null
+          logo_url?: string | null
+          brand_color?: string | null
+          show_business_name_in_pdf?: boolean | null
           default_deposit_percent?: number | null
           default_cancellation_days?: number | null
           default_refund_percent?: number | null
@@ -157,6 +163,9 @@ export interface Database {
           email?: string
           name?: string
           business_name?: string | null
+          logo_url?: string | null
+          brand_color?: string | null
+          show_business_name_in_pdf?: boolean | null
           default_deposit_percent?: number | null
           default_cancellation_days?: number | null
           default_refund_percent?: number | null

@@ -50,12 +50,12 @@ func TestUserRepoIntegration(t *testing.T) {
 	}
 
 	newName := "Updated Name"
-	updated, err := repo.Update(context.Background(), user.ID, &newName, nil, nil, nil, nil)
+	updatedUser, err := repo.Update(context.Background(), user.ID, &newName, nil, nil, nil, nil, nil, nil, nil)
 	if err != nil {
 		t.Fatalf("Update() error = %v", err)
 	}
-	if updated.Name != newName {
-		t.Fatalf("Update() name = %q, want %q", updated.Name, newName)
+	if updatedUser.Name != newName {
+		t.Fatalf("Update() name = %q, want %q", updatedUser.Name, newName)
 	}
 }
 

@@ -6,6 +6,7 @@ import {
   Shield,
   Building,
   FileText,
+  Image as ImageIcon,
 } from "lucide-react";
 import { logError } from "../lib/errorHandler";
 
@@ -21,6 +22,14 @@ export const Settings: React.FC = () => {
     refund: profile?.default_refund_percent || 0,
   });
   const [isEditingContract, setIsEditingContract] = useState(false);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const [isEditingColor, setIsEditingColor] = useState(false);
+  const [brandColor, setBrandColor] = useState(
+    profile?.brand_color || "#FF6B35"
+  );
+  const [showBusinessName, setShowBusinessName] = useState(
+    profile?.show_business_name_in_pdf ?? true
+  );
 
   useEffect(() => {
     if (profile) {
@@ -30,6 +39,8 @@ export const Settings: React.FC = () => {
         cancellation: profile.default_cancellation_days ?? 15,
         refund: profile.default_refund_percent ?? 0,
       });
+      setBrandColor(profile.brand_color || "#FF6B35");
+      setShowBusinessName(profile.show_business_name_in_pdf ?? true);
     }
   }, [profile]);
 
@@ -40,6 +51,50 @@ export const Settings: React.FC = () => {
       setIsEditingBusiness(false);
     } catch (error) {
       logError("Error updating business name", error);
+    }
+  };
+
+  const handleUpdateBrandColor = async () => {
+    try {
+      await updateProfile({ brand_color: brandColor });
+      setIsEditingColor(false);
+    } catch (error) {
+      logError("Error updating brand color", error);
+    }
+  };
+
+  const handleToggleShowBusinessName = async (checked: boolean) => {
+    try {
+      setShowBusinessName(checked);
+      await updateProfile({ show_business_name_in_pdf: checked });
+    } catch (error) {
+      logError("Error updating show business name toggle", error);
+      // Revert local state on error
+      setShowBusinessName(!checked);
+    }
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      alert("El archivo es demasiado grande (máximo 2MB).");
+      return;
+    }
+
+    try {
+      setIsUploadingLogo(true);
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64 = reader.result as string;
+        await updateProfile({ logo_url: base64 });
+        setIsUploadingLogo(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      logError("Error uploading logo", error);
+      setIsUploadingLogo(false);
     }
   };
 
@@ -136,6 +191,111 @@ export const Settings: React.FC = () => {
                       Editar
                     </button>
                   </>
+                )}
+              </dd>
+            </div>
+            <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center">
+                <div
+                  className="h-4 w-4 mr-2 rounded-full border border-gray-300 dark:border-gray-600 shadow-inner"
+                  style={{ backgroundColor: profile?.brand_color || "#FF6B35" }}
+                />
+                Color de Marca para PDFs
+              </dt>
+              <dd className="mt-1 text-sm text-gray-900 dark:text-white sm:mt-0 sm:col-span-2 flex items-center justify-between">
+                {isEditingColor ? (
+                  <div className="flex gap-2 w-full max-w-md items-center">
+                    <input
+                      type="color"
+                      value={brandColor}
+                      onChange={(e) => setBrandColor(e.target.value)}
+                      className="h-8 w-14 p-0 border-0 rounded cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={brandColor}
+                      onChange={(e) => setBrandColor(e.target.value)}
+                      className="w-24 shadow-sm focus:ring-brand-orange focus:border-brand-orange sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md p-1 border uppercase font-mono"
+                    />
+                    <button
+                      onClick={handleUpdateBrandColor}
+                      className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-white bg-green-600 hover:bg-green-700 ml-auto"
+                    >
+                      Guardar
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsEditingColor(false);
+                        setBrandColor(profile?.brand_color || "#FF6B35");
+                      }}
+                      className="inline-flex items-center px-3 py-1 border border-gray-300 dark:border-gray-600 text-xs font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <span className="font-mono uppercase">
+                      {profile?.brand_color || "#FF6B35"}
+                    </span>
+                    <button
+                      onClick={() => {
+                        setIsEditingColor(true);
+                        setBrandColor(profile?.brand_color || "#FF6B35");
+                      }}
+                      className="text-brand-orange hover:text-orange-700 text-xs font-medium"
+                    >
+                      Editar
+                    </button>
+                  </>
+                )}
+              </dd>
+            </div>
+            <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center">
+                <ImageIcon className="h-4 w-4 mr-2" /> Logo para Contratos y PDFs
+              </dt>
+              <dd className="mt-1 text-sm text-gray-900 dark:text-white sm:mt-0 sm:col-span-2">
+                <div className="flex items-center gap-4">
+                  {profile?.logo_url ? (
+                    <div className="relative h-16 w-16 rounded overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                      <img src={profile.logo_url} alt="Logo" className="h-full w-full object-contain" />
+                    </div>
+                  ) : (
+                    <div className="h-16 w-16 rounded border border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-400">
+                      <ImageIcon className="h-6 w-6" />
+                    </div>
+                  )}
+                  <div>
+                    <input
+                      type="file"
+                      accept=".png,.jpg,.jpeg"
+                      onChange={handleLogoUpload}
+                      disabled={isUploadingLogo}
+                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-gray-100 dark:file:bg-gray-700 file:text-gray-700 dark:file:text-gray-200 hover:file:bg-gray-200 dark:hover:file:bg-gray-600 cursor-pointer disabled:opacity-50"
+                    />
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      Formatos: PNG transparente o JPG (Máx. 2MB).
+                    </p>
+                    {isUploadingLogo && (
+                      <p className="mt-1 text-xs text-brand-orange animate-pulse">Subiendo...</p>
+                    )}
+                  </div>
+                </div>
+                
+                {profile?.logo_url && (
+                  <div className="mt-4 flex items-center">
+                    <input
+                      type="checkbox"
+                      id="showBusinessName"
+                      checked={showBusinessName}
+                      onChange={(e) => handleToggleShowBusinessName(e.target.checked)}
+                      className="h-4 w-4 text-brand-orange focus:ring-brand-orange border-gray-300 rounded"
+                    />
+                    <label htmlFor="showBusinessName" className="ml-2 block text-sm text-gray-900 dark:text-gray-300">
+                      Mostrar nombre comercial junto al logo en PDFs
+                    </label>
+                  </div>
                 )}
               </dd>
             </div>

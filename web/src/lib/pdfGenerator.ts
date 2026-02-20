@@ -13,7 +13,7 @@ type ProductItem = Database['public']['Tables']['event_products']['Row'] & {
 };
 type ExtraItem = Database['public']['Tables']['event_extras']['Row'];
 
-const BRAND_COLOR = '#FF6B35'; // Naranja de la marca
+const DEFAULT_BRAND_COLOR = '#FF6B35'; // Naranja de la marca
 const TEXT_COLOR = '#333333';
 const GRAY_COLOR = '#666666';
 
@@ -28,23 +28,62 @@ const formatCurrency = (amount: number) => {
 // Helper para agregar encabezado común
 const addHeader = (doc: jsPDF, profile: Profile | null, title: string): number => {
   const pageWidth = doc.internal.pageSize.width;
+  let startX = 20;
+
+  // Render logo if present
+  if (profile?.logo_url) {
+    try {
+      // jsPDF auto detects format, we reserve a max 30x30 bounding box
+      // To maintain aspect ratio perfectly, we need the original dimensions.
+      // Since jsPDF addImage in FAST mode can stretch if we force width/height, 
+      // we use an HTML Image element to get real dimensions first.
+      
+      const imgProps = doc.getImageProperties(profile.logo_url);
+      const maxWidth = 30;
+      const maxHeight = 30;
+      
+      let width = imgProps.width;
+      let height = imgProps.height;
+      
+      // Scale down if needed while preserving aspect ratio
+      if (width > maxWidth || height > maxHeight) {
+        const ratio = Math.min(maxWidth / width, maxHeight / height);
+        width = width * ratio;
+        height = height * ratio;
+      }
+      
+      // Center vertically in the 30px height header space (y = 10 to 40)
+      const yPos = 10 + (maxHeight - height) / 2;
+      
+      doc.addImage(profile.logo_url, imgProps.fileType, 20, yPos, width, height, undefined, 'FAST');
+      startX = 20 + width + 5; // Shift text to right of logo dynamically
+    } catch (error) {
+      console.error('Error adding logo to PDF', error);
+      // Fallback: don't shift text if logo fails
+    }
+  }
+  
+  const brandColor = profile?.brand_color || DEFAULT_BRAND_COLOR;
+  const showBusinessName = profile?.show_business_name_in_pdf ?? true;
   
   // Business Name
-  doc.setFontSize(20);
-  doc.setTextColor(BRAND_COLOR);
-  doc.text(profile?.business_name || profile?.name || 'EventosApp', 20, 20);
+  if (showBusinessName || !profile?.logo_url) {
+    doc.setFontSize(20);
+    doc.setTextColor(brandColor);
+    doc.text(profile?.business_name || profile?.name || 'EventosApp', startX, 22);
+  }
   
   // Title
   doc.setFontSize(24);
   doc.setTextColor(TEXT_COLOR);
-  doc.text(title.toUpperCase(), pageWidth - 20, 20, { align: 'right' });
+  doc.text(title.toUpperCase(), pageWidth - 20, 22, { align: 'right' });
   
   // Line separator
-  doc.setDrawColor(BRAND_COLOR);
+  doc.setDrawColor(brandColor);
   doc.setLineWidth(1);
-  doc.line(20, 25, pageWidth - 20, 25);
+  doc.line(20, 32, pageWidth - 20, 32);
   
-  return 35; // Returns Y position for next content
+  return 42; // Returns Y position for next content
 };
 
 export const generateBudgetPDF = (
@@ -56,35 +95,43 @@ export const generateBudgetPDF = (
   const doc = new jsPDF();
   let currentY = addHeader(doc, profile, 'Presupuesto');
   
-  // Info del Cliente y Evento
-  doc.setFontSize(10);
-  doc.setTextColor(GRAY_COLOR);
-  
-  // Columna Izquierda (Cliente)
-  doc.setFont('helvetica', 'bold');
-  doc.text('INFORMACIÓN DEL CLIENTE', 20, currentY);
-  doc.setFont('helvetica', 'normal');
-  doc.text(event.clients?.name || 'Cliente no registrado', 20, currentY + 5);
-  if (event.clients?.phone) doc.text(`Tel: ${event.clients.phone}`, 20, currentY + 10);
-  if (event.clients?.email) doc.text(`Email: ${event.clients.email}`, 20, currentY + 15);
-  
-  // Columna Derecha (Evento)
-  const rightColX = doc.internal.pageSize.width / 2 + 10;
-  doc.setFont('helvetica', 'bold');
-  doc.text('DETALLES DEL EVENTO', rightColX, currentY);
-  doc.setFont('helvetica', 'normal');
-  const eventDate = new Date(event.event_date);
-  // Ajuste de zona horaria simple para visualización (evitar desfase por UTC)
-  const userTimezoneOffset = eventDate.getTimezoneOffset() * 60000;
-  const localDate = new Date(eventDate.getTime() + userTimezoneOffset);
+  const brandColor = profile?.brand_color || DEFAULT_BRAND_COLOR;
 
-  doc.text(`Fecha: ${format(localDate, "d 'de' MMMM, yyyy", { locale: es })}`, rightColX, currentY + 5);
-  doc.text(`Tipo: ${event.service_type}`, rightColX, currentY + 10);
-  doc.text(`Personas: ${event.num_people}`, rightColX, currentY + 15);
+  // Header Details
+  const pageWidth = doc.internal.pageSize.width;
+  doc.setFontSize(10);
+  doc.setTextColor(TEXT_COLOR);
+  
+  // Details table simulation
+  doc.setFont(undefined, 'bold');
+  doc.text('Cliente:', 20, currentY);
+  doc.text('Teléfono:', 20, currentY + 7);
+  doc.text('Email:', 20, currentY + 14);
+  
+  doc.setFont(undefined, 'normal');
+  doc.text(event.clients?.name || 'N/A', 40, currentY);
+  doc.text(event.clients?.phone || 'N/A', 40, currentY + 7);
+  doc.text(event.clients?.email || 'N/A', 40, currentY + 14);
+  
+  doc.setFont(undefined, 'bold');
+  doc.text('Fecha:', pageWidth / 2, currentY);
+  doc.text('Horario:', pageWidth / 2, currentY + 7);
+  doc.text('Personas:', pageWidth / 2, currentY + 14);
+  
+  doc.setFont(undefined, 'normal');
+  const eventDate = new Date(event.event_date);
+  doc.text(format(eventDate, "d 'de' MMMM, yyyy", { locale: es }), pageWidth / 2 + 25, currentY);
+  doc.text(`${event.start_time || 'Por definir'} - ${event.end_time || 'Por definir'}`, pageWidth / 2 + 25, currentY + 7);
+  doc.text(event.num_people.toString(), pageWidth / 2 + 25, currentY + 14);
   
   currentY += 25;
 
-  // Tabla de Productos
+  // Products Table
+  doc.setFontSize(14);
+  doc.setTextColor(brandColor);
+  doc.text('Productos y Servicios', 20, currentY);
+  currentY += 7;
+
   const productRows = products.map((p) => [
     p.products?.name || 'Producto',
     p.quantity.toString(),
@@ -105,10 +152,17 @@ export const generateBudgetPDF = (
   if (body.length > 0) {
     autoTable(doc, {
       startY: currentY,
+      margin: { left: 20, right: 20 },
       head: [['Descripción', 'Cant.', 'Precio Unit.', 'Total']],
       body: body,
-      headStyles: { fillColor: BRAND_COLOR },
-      styles: { fontSize: 9 },
+      headStyles: { fillColor: [245, 245, 245], textColor: brandColor },
+      styles: { cellPadding: 2, fontSize: 10 },
+      columnStyles: {
+        0: { halign: 'left' },
+        1: { halign: 'center' },
+        2: { halign: 'right' },
+        3: { halign: 'right' },
+      },
       theme: 'grid',
     });
     
@@ -121,35 +175,39 @@ export const generateBudgetPDF = (
   }
   
   // Totales
-  const pageWidth = doc.internal.pageSize.width;
-  const rightMargin = pageWidth - 20;
+  const summaryX = pageWidth - 20 - 60; // Right aligned, width of 60
+  
+  doc.setDrawColor(GRAY_COLOR);
+  doc.setLineWidth(0.1);
+  doc.line(summaryX, currentY - 5, pageWidth - 20, currentY - 5);
   
   doc.setFontSize(10);
   doc.setTextColor(TEXT_COLOR);
   
-  const totalRevenue = event.total_amount || 0;
-  const taxAmount = event.tax_amount || 0;
-  // Si requiere factura, el total incluye IVA, así que el subtotal es menos el IVA.
-  // Si no requiere, el total es neto.
-  const subtotal = event.requires_invoice ? totalRevenue - taxAmount : totalRevenue;
-
-  doc.text(`Subtotal: ${formatCurrency(subtotal)}`, rightMargin, currentY, { align: 'right' });
+  doc.setFont(undefined, 'normal');
+  doc.text('Subtotal:', summaryX, currentY);
+  doc.text(formatCurrency(event.total_amount + (event.discount || 0)), pageWidth - 20, currentY, { align: 'right' });
   
+  if (event.discount && event.discount > 0) {
+    currentY += 7;
+    doc.setTextColor(brandColor);
+    doc.text('Descuento:', summaryX, currentY);
+    doc.text(`-${formatCurrency(event.discount)}`, pageWidth - 20, currentY, { align: 'right' });
+    doc.setTextColor(TEXT_COLOR);
+  }
+
   if (event.requires_invoice) {
-    currentY += 5;
-    doc.text(`IVA (${event.tax_rate || 16}%): ${formatCurrency(taxAmount)}`, rightMargin, currentY, { align: 'right' });
+    currentY += 7;
+    doc.text(`IVA (${event.tax_rate || 16}%):`, summaryX, currentY);
+    doc.text(formatCurrency(event.tax_amount || 0), pageWidth - 20, currentY, { align: 'right' });
   }
   
   currentY += 7;
+  doc.setFont(undefined, 'bold');
   doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
-  doc.text(`TOTAL: ${formatCurrency(totalRevenue)}`, rightMargin, currentY, { align: 'right' });
-  
-  // Pie de página
-  const pageHeight = doc.internal.pageSize.height;
-  doc.setFontSize(8);
-  doc.setFont('helvetica', 'normal');
   doc.setTextColor(GRAY_COLOR);
+  
+  const pageHeight = doc.internal.pageSize.height;
   doc.text('Este presupuesto tiene una validez de 15 días.', 20, pageHeight - 10);
   
   doc.save(`Presupuesto_${event.clients?.name || 'Cliente'}.pdf`);
@@ -221,6 +279,8 @@ export const generateShoppingListPDF = (
 ) => {
   const doc = new jsPDF();
   let currentY = addHeader(doc, profile, 'Lista de Compras');
+  
+  const brandColor = profile?.brand_color || DEFAULT_BRAND_COLOR;
 
   // Event Info
   doc.setFontSize(10);
@@ -240,9 +300,10 @@ export const generateShoppingListPDF = (
   if (ingredients.length > 0) {
     autoTable(doc, {
       startY: currentY,
+      margin: { left: 20, right: 20 },
       head: [['Ingrediente', 'Cantidad', 'Unidad']],
       body: ingredients.map(i => [i.name, i.quantity.toFixed(2), i.unit]),
-      headStyles: { fillColor: BRAND_COLOR },
+      headStyles: { fillColor: [245, 245, 245], textColor: brandColor },
       styles: { fontSize: 10 },
       theme: 'grid',
     });
@@ -260,6 +321,8 @@ export const generatePaymentReportPDF = (
 ) => {
   const doc = new jsPDF();
   let currentY = addHeader(doc, profile, 'Reporte de Pagos');
+
+  const brandColor = profile?.brand_color || DEFAULT_BRAND_COLOR;
 
   // Event & Client Info
   doc.setFontSize(10);
@@ -284,6 +347,7 @@ export const generatePaymentReportPDF = (
   if (payments.length > 0) {
     autoTable(doc, {
       startY: currentY,
+      margin: { left: 20, right: 20 },
       head: [['Fecha', 'Método', 'Nota', 'Monto']],
       body: payments.map(p => {
         // Adjust timezone if needed or just display as YYYY-MM-DD
@@ -304,8 +368,11 @@ export const generatePaymentReportPDF = (
           formatCurrency(p.amount)
         ];
       }),
-      headStyles: { fillColor: BRAND_COLOR },
-      styles: { fontSize: 10 },
+      headStyles: { fillColor: [245, 245, 245], textColor: brandColor },
+      styles: { cellPadding: 2, fontSize: 10 },
+      columnStyles: {
+        3: { halign: 'right' },
+      },
       theme: 'grid',
     });
     
