@@ -55,7 +55,7 @@ export const EventProducts: React.FC<EventProductsProps> = ({
             <select
               value={item.product_id}
               onChange={(e) => onProductChange(index, 'product_id', e.target.value)}
-              className="block w-full text-sm border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-brand-orange focus:border-brand-orange bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
+              className="block w-full text-sm border-gray-300 dark:border-gray-600 rounded-md shadow-xs focus:ring-brand-orange focus:border-brand-orange bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
             >
               <option value="">Seleccionar producto</option>
               {products.map((p) => (
@@ -69,7 +69,7 @@ export const EventProducts: React.FC<EventProductsProps> = ({
           <div className="flex gap-2 flex-wrap sm:flex-nowrap">
             <div className="w-full sm:w-[20%]">
               <label className="text-xs text-gray-500 dark:text-gray-400 block mb-1">Cant.</label>
-              <div className="flex rounded-md shadow-sm">
+              <div className="flex rounded-md shadow-xs">
                 <input
                   type="number"
                   value={item.quantity}
@@ -93,7 +93,7 @@ export const EventProducts: React.FC<EventProductsProps> = ({
                 type="number"
                 value={item.price}
                 readOnly
-                className="block w-full text-sm border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400 p-2 border cursor-not-allowed"
+                className="block w-full text-sm border-gray-300 dark:border-gray-600 rounded-md shadow-xs bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400 p-2 border cursor-not-allowed"
               />
             </div>
 
@@ -107,7 +107,7 @@ export const EventProducts: React.FC<EventProductsProps> = ({
                   const val = Number(e.target.value);
                   if (val >= 0) onProductChange(index, 'discount', val);
                 }}
-                className="block w-full text-sm border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-brand-orange focus:border-brand-orange p-2 border bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
+                className="block w-full text-sm border-gray-300 dark:border-gray-600 rounded-md shadow-xs focus:ring-brand-orange focus:border-brand-orange p-2 border bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
               />
             </div>
 
@@ -124,7 +124,7 @@ export const EventProducts: React.FC<EventProductsProps> = ({
                     onProductChange(index, 'discount', newDiscount);
                   }
                 }}
-                className="block w-full text-sm border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-brand-orange focus:border-brand-orange p-2 border bg-white dark:bg-gray-600 text-gray-900 dark:text-white font-bold"
+                className="block w-full text-sm border-gray-300 dark:border-gray-600 rounded-md shadow-xs focus:ring-brand-orange focus:border-brand-orange p-2 border bg-white dark:bg-gray-600 text-gray-900 dark:text-white font-bold"
               />
             </div>
           </div>
@@ -140,7 +140,7 @@ export const EventProducts: React.FC<EventProductsProps> = ({
       <button
         type="button"
         onClick={onAddProduct}
-        className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+        className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-xs text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
       >
         <Plus className="h-4 w-4 mr-2" /> Agregar Producto
       </button>

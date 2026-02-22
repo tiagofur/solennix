@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { describe, it, expect, vi, beforeEach, afterAll } from 'vitest';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import { AuthProvider, useAuth } from './AuthContext';
@@ -28,7 +28,10 @@ const TestConsumer = () => {
 
 let capturedAuth: ReturnType<typeof useAuth> | null = null;
 const CaptureAuth = () => {
-  capturedAuth = useAuth();
+  const auth = useAuth();
+  useEffect(() => {
+    capturedAuth = auth;
+  }, [auth]);
   return null;
 };
 

@@ -63,7 +63,7 @@ describe('Dashboard', () => {
       {
         id: 'event-2',
         event_date: '2024-01-25',
-        client: { name: 'Luis' },
+        clients: { name: 'Luis' },
         service_type: 'XV',
         num_people: 80,
       },
@@ -81,7 +81,7 @@ describe('Dashboard', () => {
     renderDashboard();
 
     expect(await screen.findByText(/eventos este mes/i)).toBeInTheDocument();
-    expect(screen.getByText(/1 ítems bajos/i)).toBeInTheDocument();
+    expect(screen.getByText(/Reponer Inventario \(Crítico\)/i)).toBeInTheDocument();
     expect(screen.getByText('Luis')).toBeInTheDocument();
     expect(screen.getByText(/XV/i)).toBeInTheDocument();
   });

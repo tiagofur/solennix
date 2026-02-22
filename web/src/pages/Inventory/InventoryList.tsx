@@ -7,6 +7,10 @@ import clsx from 'clsx';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { logError } from '../../lib/errorHandler';
 import Empty from '../../components/Empty';
+import { useToast } from '../../hooks/useToast';
+import { usePagination } from '../../hooks/usePagination';
+import { Pagination } from '../../components/Pagination';
+import { ArrowUp, ArrowDown } from 'lucide-react';
 
 type InventoryItem = Database['public']['Tables']['inventory']['Row'];
 
@@ -16,6 +20,7 @@ export const InventoryList: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const { addToast } = useToast();
 
   useEffect(() => {
     fetchInventory();
@@ -48,14 +53,37 @@ export const InventoryList: React.FC = () => {
     try {
       await inventoryService.delete(id);
       setItems((prev) => prev.filter((i) => i.id !== id));
+      addToast('Ítem de inventario eliminado correctamente.', 'success');
     } catch (error) {
       logError('Error deleting item', error);
+      addToast('Error al eliminar el ítem de inventario.', 'error');
     }
   };
 
   const filteredItems = (items || []).filter(item => 
     item.ingredient_name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const {
+    currentData: paginatedItems,
+    currentPage,
+    totalPages,
+    totalItems,
+    handlePageChange,
+    handleSort,
+    sortKey,
+    sortOrder
+  } = usePagination({
+    data: filteredItems,
+    itemsPerPage: 10,
+    initialSortKey: 'ingredient_name',
+    initialSortOrder: 'asc'
+  });
+
+  const renderSortIcon = (key: keyof InventoryItem) => {
+    if (sortKey !== key) return null;
+    return sortOrder === 'asc' ? <ArrowUp className="inline h-3 w-3 ml-1" /> : <ArrowDown className="inline h-3 w-3 ml-1" />;
+  };
 
   return (
     <div className="space-y-6">
@@ -75,7 +103,7 @@ export const InventoryList: React.FC = () => {
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Inventario</h1>
         <Link
           to="/inventory/new"
-          className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-brand-orange hover:bg-orange-600 shadow-sm transition-colors"
+          className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-brand-orange hover:bg-orange-600 shadow-xs transition-colors"
         >
           <Plus className="h-5 w-5 mr-2" />
           Nuevo Ingrediente
@@ -85,7 +113,7 @@ export const InventoryList: React.FC = () => {
       {lowStockItems.length > 0 && (
         <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-400 p-4">
           <div className="flex">
-            <div className="flex-shrink-0">
+            <div className="shrink-0">
               <AlertTriangle className="h-5 w-5 text-red-400" />
             </div>
             <div className="ml-3">
@@ -108,14 +136,14 @@ export const InventoryList: React.FC = () => {
         </div>
         <input
           type="text"
-          className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-brand-orange focus:border-brand-orange sm:text-sm transition duration-150 ease-in-out"
+          className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-hidden focus:ring-brand-orange focus:border-brand-orange sm:text-sm transition duration-150 ease-in-out"
           placeholder="Buscar ingrediente..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
 
-      <div className="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg">
+      <div className="bg-white dark:bg-gray-800 shadow-sm overflow-hidden sm:rounded-lg">
         {loading ? (
           <div className="p-4 text-center text-gray-500 dark:text-gray-400">Cargando inventario...</div>
         ) : filteredItems.length === 0 ? (
@@ -126,7 +154,7 @@ export const InventoryList: React.FC = () => {
               !searchTerm ? (
                 <Link
                   to="/inventory/new"
-                  className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-brand-orange hover:bg-orange-600 shadow-sm"
+                  className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-brand-orange hover:bg-orange-600 shadow-xs"
                 >
                   <Plus className="h-5 w-5 mr-2" />
                   Agregar Ingrediente
@@ -139,20 +167,40 @@ export const InventoryList: React.FC = () => {
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    Ítem
+                  <th 
+                    scope="col" 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                    onClick={() => handleSort('ingredient_name')}
+                  >
+                    Ítem {renderSortIcon('ingredient_name')}
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    Tipo
+                  <th 
+                    scope="col" 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                    onClick={() => handleSort('type')}
+                  >
+                    Tipo {renderSortIcon('type')}
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    Stock Actual
+                  <th 
+                    scope="col" 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                    onClick={() => handleSort('current_stock')}
+                  >
+                    Stock Actual {renderSortIcon('current_stock')}
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    Stock Mínimo
+                  <th 
+                    scope="col" 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                    onClick={() => handleSort('minimum_stock')}
+                  >
+                    Stock Mínimo {renderSortIcon('minimum_stock')}
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    Costo Unitario
+                  <th 
+                    scope="col" 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                    onClick={() => handleSort('unit_cost')}
+                  >
+                    Costo Unitario {renderSortIcon('unit_cost')}
                   </th>
                   <th scope="col" className="relative px-6 py-3">
                     <span className="sr-only">Acciones</span>
@@ -160,7 +208,7 @@ export const InventoryList: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {filteredItems.map((item) => {
+                {paginatedItems.map((item) => {
                   const isLowStock = item.current_stock <= item.minimum_stock;
                   return (
                     <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
@@ -216,6 +264,15 @@ export const InventoryList: React.FC = () => {
               </tbody>
             </table>
           </div>
+        )}
+        {!loading && filteredItems.length > 0 && (
+          <Pagination 
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            itemsPerPage={10}
+            onPageChange={handlePageChange}
+          />
         )}
       </div>
     </div>

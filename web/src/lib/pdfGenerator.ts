@@ -7,7 +7,11 @@ import { es } from 'date-fns/locale';
 type Event = Database['public']['Tables']['events']['Row'] & {
   client?: Database['public']['Tables']['clients']['Row'] | null;
 };
-type Profile = Database['public']['Tables']['users']['Row'];
+type Profile = Database['public']['Tables']['users']['Row'] & {
+  stripe_customer_id?: string | null;
+  created_at?: string;
+  updated_at?: string;
+};
 type ProductItem = Database['public']['Tables']['event_products']['Row'] & {
   products: { name: string } | null;
 };
@@ -202,7 +206,7 @@ export const generateBudgetPDF = (
     doc.text(formatCurrency(event.tax_amount || 0), pageWidth - 20, currentY, { align: 'right' });
   }
   
-  currentY += 7;
+
   doc.setFont(undefined, 'bold');
   doc.setFontSize(12);
   doc.setTextColor(GRAY_COLOR);

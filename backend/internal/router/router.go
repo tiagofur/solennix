@@ -9,7 +9,7 @@ import (
 	"github.com/tiagofur/eventosapp-backend/internal/services"
 )
 
-func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler,
+func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, subHandler *handlers.SubscriptionHandler,
 	authService *services.AuthService, corsOrigins []string) http.Handler {
 
 	r := chi.NewRouter()
@@ -38,6 +38,19 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler,
 			r.Group(func(r chi.Router) {
 				r.Use(mw.Auth(authService))
 				r.Get("/me", authHandler.Me)
+			})
+		})
+
+		// Subscriptions
+		r.Route("/subscriptions", func(r chi.Router) {
+			// Webhook is public
+			r.Post("/webhook", subHandler.Webhook)
+
+			// Protected subscription routes
+			r.Group(func(r chi.Router) {
+				r.Use(mw.Auth(authService))
+				r.Post("/checkout-session", subHandler.CreateCheckoutSession)
+				r.Post("/debug-upgrade", subHandler.DebugUpgrade)
 			})
 		})
 

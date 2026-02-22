@@ -20,6 +20,7 @@ type CRUDHandler struct {
 	productRepo   *repository.ProductRepo
 	inventoryRepo *repository.InventoryRepo
 	paymentRepo   *repository.PaymentRepo
+	userRepo      *repository.UserRepo
 }
 
 func NewCRUDHandler(
@@ -28,6 +29,7 @@ func NewCRUDHandler(
 	productRepo *repository.ProductRepo,
 	inventoryRepo *repository.InventoryRepo,
 	paymentRepo *repository.PaymentRepo,
+	userRepo *repository.UserRepo,
 ) *CRUDHandler {
 	return &CRUDHandler{
 		clientRepo:    clientRepo,
@@ -35,6 +37,7 @@ func NewCRUDHandler(
 		productRepo:   productRepo,
 		inventoryRepo: inventoryRepo,
 		paymentRepo:   paymentRepo,
+		userRepo:      userRepo,
 	}
 }
 
@@ -208,6 +211,27 @@ func (h *CRUDHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
+
+	// 1. Check user plan and limits
+	user, err := h.userRepo.GetByID(r.Context(), userID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "Failed to fetch user limits")
+		return
+	}
+
+	if user.Plan == "basic" {
+		count, err := h.eventRepo.CountCurrentMonth(r.Context(), userID)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "Failed to verify event limits")
+			return
+		}
+		if count >= 3 {
+			// Limit reached for basic plan
+			writeError(w, http.StatusForbidden, "Event limits for basic plan reached. Please upgrade to Pro.")
+			return
+		}
+	}
+
 	event.UserID = userID
 	if err := h.eventRepo.Create(r.Context(), &event); err != nil {
 		writeError(w, http.StatusInternalServerError, "Failed to create event")

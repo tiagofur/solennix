@@ -50,7 +50,7 @@ export const EventGeneralInfo: React.FC<EventGeneralInfoProps> = ({
           <div className="mt-1">
             <select
               {...register('client_id')}
-              className="shadow-sm focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             >
               <option value="">Seleccionar cliente</option>
               {clients.map((client) => (
@@ -65,7 +65,7 @@ export const EventGeneralInfo: React.FC<EventGeneralInfoProps> = ({
               </p>
             )}
             {clientIdValue && (
-              <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 p-2 rounded border dark:border-gray-600">
+              <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 p-2 rounded-sm border dark:border-gray-600">
                 {(() => {
                   const selectedClient = clients.find((c) => c.id === clientIdValue);
                   if (selectedClient) {
@@ -105,7 +105,7 @@ export const EventGeneralInfo: React.FC<EventGeneralInfoProps> = ({
             <input
               type="date"
               {...register('event_date')}
-              className="shadow-sm focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             />
             {errors.event_date && (
               <p className="mt-2 text-sm text-red-600 dark:text-red-400">
@@ -125,7 +125,7 @@ export const EventGeneralInfo: React.FC<EventGeneralInfoProps> = ({
               <input
                 type="time"
                 {...register('start_time')}
-                className="shadow-sm focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               />
             </div>
           </div>
@@ -137,7 +137,7 @@ export const EventGeneralInfo: React.FC<EventGeneralInfoProps> = ({
               <input
                 type="time"
                 {...register('end_time')}
-                className="shadow-sm focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               />
             </div>
           </div>
@@ -153,7 +153,7 @@ export const EventGeneralInfo: React.FC<EventGeneralInfoProps> = ({
               type="text"
               {...register('service_type')}
               placeholder="Ej. Barra de Churros"
-              className="shadow-sm focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             />
             {errors.service_type && (
               <p className="mt-2 text-sm text-red-600 dark:text-red-400">
@@ -169,7 +169,7 @@ export const EventGeneralInfo: React.FC<EventGeneralInfoProps> = ({
             Número de Personas *
           </label>
           <div className="mt-1">
-            <div className="relative rounded-md shadow-sm">
+            <div className="relative rounded-md shadow-xs">
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                 <Users className="h-5 w-5 text-gray-400" />
               </div>
@@ -195,7 +195,7 @@ export const EventGeneralInfo: React.FC<EventGeneralInfoProps> = ({
           <div className="mt-1">
             <select
               {...register('status')}
-              className="shadow-sm focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             >
               <option value="quoted">Cotizado</option>
               <option value="confirmed">Confirmado</option>
@@ -215,7 +215,7 @@ export const EventGeneralInfo: React.FC<EventGeneralInfoProps> = ({
               type="text"
               {...register('location')}
               placeholder="Dirección del evento (opcional, por defecto dirección del cliente)"
-              className="shadow-sm focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             />
           </div>
         </div>
@@ -229,7 +229,7 @@ export const EventGeneralInfo: React.FC<EventGeneralInfoProps> = ({
               type="text"
               {...register('city')}
               placeholder="Ciudad del evento (para contrato)"
-              className="shadow-sm focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             />
           </div>
         </div>

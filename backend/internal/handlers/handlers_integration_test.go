@@ -121,6 +121,7 @@ func TestCRUDHandlerIntegration(t *testing.T) {
 		repository.NewProductRepo(pool),
 		repository.NewInventoryRepo(pool),
 		repository.NewPaymentRepo(pool),
+		repository.NewUserRepo(pool),
 	)
 
 	ctxWithUser := func(r *http.Request) *http.Request {

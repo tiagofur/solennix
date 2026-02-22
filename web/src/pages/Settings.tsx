@@ -117,7 +117,7 @@ export const Settings: React.FC = () => {
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Configuración</h1>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg">
+      <div className="bg-white dark:bg-gray-800 shadow-sm overflow-hidden sm:rounded-lg">
         <div className="px-4 py-5 sm:px-6">
           <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white">
             Perfil de Usuario
@@ -157,7 +157,7 @@ export const Settings: React.FC = () => {
                       value={businessName}
                       onChange={(e) => setBusinessName(e.target.value)}
                       placeholder="Ej. Eventos Fantásticos S.A. de C.V."
-                      className="flex-1 shadow-sm focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md p-1 border"
+                      className="flex-1 shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md p-1 border"
                     />
                     <button
                       onClick={handleUpdateBusinessName}
@@ -209,13 +209,13 @@ export const Settings: React.FC = () => {
                       type="color"
                       value={brandColor}
                       onChange={(e) => setBrandColor(e.target.value)}
-                      className="h-8 w-14 p-0 border-0 rounded cursor-pointer"
+                      className="h-8 w-14 p-0 border-0 rounded-sm cursor-pointer"
                     />
                     <input
                       type="text"
                       value={brandColor}
                       onChange={(e) => setBrandColor(e.target.value)}
-                      className="w-24 shadow-sm focus:ring-brand-orange focus:border-brand-orange sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md p-1 border uppercase font-mono"
+                      className="w-24 shadow-xs focus:ring-brand-orange focus:border-brand-orange sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md p-1 border uppercase font-mono"
                     />
                     <button
                       onClick={handleUpdateBrandColor}
@@ -258,11 +258,11 @@ export const Settings: React.FC = () => {
               <dd className="mt-1 text-sm text-gray-900 dark:text-white sm:mt-0 sm:col-span-2">
                 <div className="flex items-center gap-4">
                   {profile?.logo_url ? (
-                    <div className="relative h-16 w-16 rounded overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                    <div className="relative h-16 w-16 rounded-sm overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
                       <img src={profile.logo_url} alt="Logo" className="h-full w-full object-contain" />
                     </div>
                   ) : (
-                    <div className="h-16 w-16 rounded border border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-400">
+                    <div className="h-16 w-16 rounded-sm border border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-400">
                       <ImageIcon className="h-6 w-6" />
                     </div>
                   )}
@@ -290,7 +290,7 @@ export const Settings: React.FC = () => {
                       id="showBusinessName"
                       checked={showBusinessName}
                       onChange={(e) => handleToggleShowBusinessName(e.target.checked)}
-                      className="h-4 w-4 text-brand-orange focus:ring-brand-orange border-gray-300 rounded"
+                      className="h-4 w-4 text-brand-orange focus:ring-brand-orange border-gray-300 rounded-sm"
                     />
                     <label htmlFor="showBusinessName" className="ml-2 block text-sm text-gray-900 dark:text-gray-300">
                       Mostrar nombre comercial junto al logo en PDFs
@@ -354,7 +354,7 @@ export const Settings: React.FC = () => {
                             deposit: Number(e.target.value),
                           })
                         }
-                        className="mt-1 shadow-sm focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md p-1 border"
+                        className="mt-1 shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md p-1 border"
                       />
                     </div>
                     <div>
@@ -370,7 +370,7 @@ export const Settings: React.FC = () => {
                             cancellation: Number(e.target.value),
                           })
                         }
-                        className="mt-1 shadow-sm focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md p-1 border"
+                        className="mt-1 shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md p-1 border"
                       />
                     </div>
                     <div>
@@ -386,7 +386,7 @@ export const Settings: React.FC = () => {
                             refund: Number(e.target.value),
                           })
                         }
-                        className="mt-1 shadow-sm focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md p-1 border"
+                        className="mt-1 shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md p-1 border"
                       />
                     </div>
                     <div className="flex gap-2 pt-2">

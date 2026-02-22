@@ -126,7 +126,7 @@ export const SearchPage: React.FC = () => {
       </div>
 
       {results.client.length > 0 && (
-        <section className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden mt-6">
+        <section className="bg-white dark:bg-gray-800 rounded-lg shadow-xs border border-gray-200 dark:border-gray-700 overflow-hidden mt-6">
           <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex items-center justify-between">
             <h2 className="font-semibold text-gray-900 dark:text-white flex items-center">
               <Users className="h-4 w-4 mr-2 text-blue-500" />
@@ -168,7 +168,7 @@ export const SearchPage: React.FC = () => {
               <Link
                 key={event.id}
                 to={event.href}
-                className="group rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 shadow-sm hover:shadow-md transition"
+                className="group rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 shadow-xs hover:shadow-md transition"
               >
                 <p className="text-sm font-semibold text-gray-900 dark:text-white group-hover:text-brand-orange">
                   {event.title}
@@ -195,7 +195,7 @@ export const SearchPage: React.FC = () => {
               <Link
                 key={product.id}
                 to={product.href}
-                className="group rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 shadow-sm hover:shadow-md transition"
+                className="group rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 shadow-xs hover:shadow-md transition"
               >
                 <p className="text-sm font-semibold text-gray-900 dark:text-white group-hover:text-brand-orange">
                   {product.title}
@@ -220,7 +220,7 @@ export const SearchPage: React.FC = () => {
               <Link
                 key={item.id}
                 to={item.href}
-                className="group rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 shadow-sm hover:shadow-md transition"
+                className="group rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 shadow-xs hover:shadow-md transition"
               >
                 <p className="text-sm font-semibold text-gray-900 dark:text-white group-hover:text-brand-orange">
                   {item.title}

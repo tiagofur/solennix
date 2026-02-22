@@ -31,8 +31,9 @@ func TestAPIIntegrationCoreFlows(t *testing.T) {
 		repository.NewProductRepo(pool),
 		repository.NewInventoryRepo(pool),
 		repository.NewPaymentRepo(pool),
+		userRepo,
 	)
-	h := New(authHandler, crudHandler, authService, []string{"http://localhost:5173"})
+	h := New(authHandler, crudHandler, &handlers.SubscriptionHandler{}, authService, []string{"http://localhost:5173"})
 
 	registerBody := map[string]interface{}{
 		"email":    "router.integration@test.dev",
@@ -176,8 +177,9 @@ func TestAPIContractMatrixAuthenticatedValidationErrors(t *testing.T) {
 		repository.NewProductRepo(pool),
 		repository.NewInventoryRepo(pool),
 		repository.NewPaymentRepo(pool),
+		userRepo,
 	)
-	h := New(authHandler, crudHandler, authService, []string{"http://localhost:5173"})
+	h := New(authHandler, crudHandler, &handlers.SubscriptionHandler{}, authService, []string{"http://localhost:5173"})
 
 	status, body := performJSONRequest(t, h, http.MethodPost, "/api/auth/register", "", map[string]interface{}{
 		"email":    "router.contracts@test.dev",
@@ -296,8 +298,9 @@ func TestAPIContractMatrixSuccessShapes(t *testing.T) {
 		repository.NewProductRepo(pool),
 		repository.NewInventoryRepo(pool),
 		repository.NewPaymentRepo(pool),
+		userRepo,
 	)
-	h := New(authHandler, crudHandler, authService, []string{"http://localhost:5173"})
+	h := New(authHandler, crudHandler, &handlers.SubscriptionHandler{}, authService, []string{"http://localhost:5173"})
 
 	status, body := performJSONRequest(t, h, http.MethodPost, "/api/auth/register", "", map[string]interface{}{
 		"email":    "router.success.contracts@test.dev",
@@ -600,8 +603,9 @@ func TestGoldenContractsV1(t *testing.T) {
 		repository.NewProductRepo(pool),
 		repository.NewInventoryRepo(pool),
 		repository.NewPaymentRepo(pool),
+		userRepo,
 	)
-	h := New(authHandler, crudHandler, authService, []string{"http://localhost:5173"})
+	h := New(authHandler, crudHandler, &handlers.SubscriptionHandler{}, authService, []string{"http://localhost:5173"})
 
 	responses := map[string]observedResponse{}
 

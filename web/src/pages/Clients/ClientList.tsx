@@ -6,6 +6,10 @@ import { Plus, Search, Edit, Trash2, Phone, Mail } from 'lucide-react';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { logError } from '../../lib/errorHandler';
 import Empty from '../../components/Empty';
+import { useToast } from '../../hooks/useToast';
+import { usePagination } from '../../hooks/usePagination';
+import { Pagination } from '../../components/Pagination';
+import { ArrowUp, ArrowDown } from 'lucide-react';
 
 type Client = Database['public']['Tables']['clients']['Row'];
 
@@ -16,6 +20,7 @@ export const ClientList: React.FC = () => {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { addToast } = useToast();
 
   useEffect(() => {
     fetchClients();
@@ -46,8 +51,10 @@ export const ClientList: React.FC = () => {
     try {
       await clientService.delete(id);
       setClients((prev) => prev.filter((c) => c.id !== id));
+      addToast('Cliente eliminado correctamente.', 'success');
     } catch (error) {
       logError('Error deleting client', error);
+      addToast('Error al eliminar el cliente.', 'error');
     }
   };
 
@@ -56,6 +63,27 @@ export const ClientList: React.FC = () => {
     (client.email && client.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
     client.phone.includes(searchTerm)
   );
+
+  const {
+    currentData: paginatedClients,
+    currentPage,
+    totalPages,
+    totalItems,
+    handlePageChange,
+    handleSort,
+    sortKey,
+    sortOrder
+  } = usePagination({
+    data: filteredClients,
+    itemsPerPage: 8,
+    initialSortKey: 'name',
+    initialSortOrder: 'asc'
+  });
+
+  const renderSortIcon = (key: keyof Client) => {
+    if (sortKey !== key) return null;
+    return sortOrder === 'asc' ? <ArrowUp className="inline h-3 w-3 ml-1" /> : <ArrowDown className="inline h-3 w-3 ml-1" />;
+  };
 
   return (
     <div className="space-y-6">
@@ -75,7 +103,7 @@ export const ClientList: React.FC = () => {
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Clientes</h1>
         <Link
           to="/clients/new"
-          className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-brand-orange hover:bg-orange-600 shadow-sm transition-colors"
+          className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-brand-orange hover:bg-orange-600 shadow-xs transition-colors"
         >
           <Plus className="h-5 w-5 mr-2" />
           Nuevo Cliente
@@ -88,14 +116,14 @@ export const ClientList: React.FC = () => {
         </div>
         <input
           type="text"
-          className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-brand-orange focus:border-brand-orange sm:text-sm transition duration-150 ease-in-out"
+          className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-hidden focus:ring-brand-orange focus:border-brand-orange sm:text-sm transition duration-150 ease-in-out"
           placeholder="Buscar clientes..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
 
-      <div className="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg">
+      <div className="bg-white dark:bg-gray-800 shadow-sm overflow-hidden sm:rounded-lg">
         {loading ? (
           <div className="p-4 text-center text-gray-500 dark:text-gray-400">Cargando clientes...</div>
         ) : filteredClients.length === 0 ? (
@@ -106,7 +134,7 @@ export const ClientList: React.FC = () => {
               !searchTerm ? (
                 <Link
                   to="/clients/new"
-                  className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-brand-orange hover:bg-orange-600 shadow-sm"
+                  className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-brand-orange hover:bg-orange-600 shadow-xs"
                 >
                   <Plus className="h-5 w-5 mr-2" />
                   Agregar Cliente
@@ -119,17 +147,29 @@ export const ClientList: React.FC = () => {
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    Cliente
+                  <th 
+                    scope="col" 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                    onClick={() => handleSort('name')}
+                  >
+                    Cliente {renderSortIcon('name')}
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Contacto
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    Eventos
+                  <th 
+                    scope="col" 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                    onClick={() => handleSort('total_events')}
+                  >
+                    Eventos {renderSortIcon('total_events')}
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    Total Gastado
+                  <th 
+                    scope="col" 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                    onClick={() => handleSort('total_spent')}
+                  >
+                    Total Gastado {renderSortIcon('total_spent')}
                   </th>
                   <th scope="col" className="relative px-6 py-3">
                     <span className="sr-only">Acciones</span>
@@ -137,7 +177,7 @@ export const ClientList: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {filteredClients.map((client) => (
+                {paginatedClients.map((client) => (
                   <tr
                     key={client.id}
                     className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
@@ -201,6 +241,15 @@ export const ClientList: React.FC = () => {
               </tbody>
             </table>
           </div>
+        )}
+        {!loading && filteredClients.length > 0 && (
+          <Pagination 
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            itemsPerPage={8}
+            onPageChange={handlePageChange}
+          />
         )}
       </div>
     </div>

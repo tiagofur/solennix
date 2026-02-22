@@ -19,6 +19,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../hooks/useTheme';
 import { logError } from '../lib/errorHandler';
 import clsx from 'clsx';
+import { ToastContainer } from './ToastContainer';
 
 export const Layout: React.FC = () => {
   const { signOut, user } = useAuth();
@@ -71,7 +72,7 @@ export const Layout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex transition-colors">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex transition-colors relative">
       {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
         <div 
@@ -160,11 +161,11 @@ export const Layout: React.FC = () => {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="bg-white dark:bg-gray-800 shadow-sm lg:hidden">
+        <header className="bg-white dark:bg-gray-800 shadow-xs lg:hidden">
           <div className="flex items-center justify-between h-16 px-4">
             <button
               onClick={() => setIsSidebarOpen(true)}
-              className="text-gray-500 dark:text-gray-400 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand-orange"
+              className="text-gray-500 dark:text-gray-400 focus:outline-hidden focus:ring-2 focus:ring-inset focus:ring-brand-orange"
             >
               <Menu className="h-6 w-6" />
             </button>
@@ -192,7 +193,7 @@ export const Layout: React.FC = () => {
                 value={searchValue}
                 onChange={(event) => setSearchValue(event.target.value)}
                 placeholder="Buscar clientes, eventos, productos o inventario"
-                className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 py-2 pl-9 pr-3 text-sm text-gray-900 dark:text-gray-100 shadow-sm focus:border-brand-orange focus:ring-brand-orange"
+                className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 py-2 pl-9 pr-3 text-sm text-gray-900 dark:text-gray-100 shadow-xs focus:border-brand-orange focus:ring-brand-orange"
                 aria-label="Busqueda global"
               />
             </div>
@@ -200,6 +201,7 @@ export const Layout: React.FC = () => {
           <Outlet />
         </main>
       </div>
+      <ToastContainer />
     </div>
   );
 };

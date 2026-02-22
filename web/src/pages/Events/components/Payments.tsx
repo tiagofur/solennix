@@ -6,6 +6,7 @@ import { Plus, Trash2, DollarSign, CheckCircle, AlertCircle, Download } from "lu
 import { logError } from "../../../lib/errorHandler";
 import { ConfirmDialog } from "../../../components/ConfirmDialog";
 import { generatePaymentReportPDF } from "../../../lib/pdfGenerator";
+import { useToast } from "../../../hooks/useToast";
 
 type Payment = Database["public"]["Tables"]["payments"]["Row"];
 
@@ -34,6 +35,7 @@ export const Payments: React.FC<PaymentsProps> = ({
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const { addToast } = useToast();
 
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm({
     defaultValues: {
@@ -91,11 +93,13 @@ export const Payments: React.FC<PaymentsProps> = ({
     if (!deleteId) return;
     try {
       await paymentService.delete(deleteId);
+      addToast('Pago eliminado correctamente.', 'success');
       setConfirmOpen(false);
       setDeleteId(null);
       loadPayments();
     } catch (err) {
       logError("Error deleting payment", err);
+      addToast('Error al eliminar el pago.', 'error');
     }
   };
 
@@ -108,14 +112,14 @@ export const Payments: React.FC<PaymentsProps> = ({
     <div className="space-y-6">
       {statusMessage && (
         <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-md p-4 flex items-center text-green-800 dark:text-green-200 animate-fade-in">
-          <CheckCircle className="h-5 w-5 mr-2 flex-shrink-0" />
+          <CheckCircle className="h-5 w-5 mr-2 shrink-0" />
           <p>{statusMessage}</p>
         </div>
       )}
 
       {isFullyPaid && eventStatus === "quoted" && !statusMessage && (
         <div className="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-md p-4 flex items-start text-amber-800 dark:text-amber-200">
-          <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
+          <AlertCircle className="h-5 w-5 mr-2 shrink-0 mt-0.5" />
           <div>
             <p className="font-medium">El evento está totalmente pagado pero sigue como "Cotizado".</p>
             <button 
@@ -128,7 +132,7 @@ export const Payments: React.FC<PaymentsProps> = ({
         </div>
       )}
 
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border dark:border-gray-700">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xs p-6 border dark:border-gray-700">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
           <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center">
             <DollarSign className="h-5 w-5 mr-2 text-green-600" />
@@ -137,7 +141,7 @@ export const Payments: React.FC<PaymentsProps> = ({
           {eventData && (
             <button
               onClick={() => generatePaymentReportPDF(eventData, profile || null, payments)}
-              className="flex items-center px-3 py-1.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium shadow-sm transition-colors"
+              className="flex items-center px-3 py-1.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-sm hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium shadow-xs transition-colors"
               title="Descargar Reporte de Pagos"
             >
               <Download className="h-4 w-4 mr-2" />
@@ -176,7 +180,7 @@ export const Payments: React.FC<PaymentsProps> = ({
         </div>
 
         {/* Payment List */}
-        <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg mb-4">
+        <div className="overflow-hidden shadow-sm ring-1 ring-black ring-opacity-5 md:rounded-lg mb-4">
           <table className="min-w-full divide-y divide-gray-300 dark:divide-gray-600">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
@@ -234,7 +238,7 @@ export const Payments: React.FC<PaymentsProps> = ({
           <div className="flex flex-wrap gap-3">
             <button
               onClick={() => { reset(); setIsAdding(true); }}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-brand-orange bg-orange-100 hover:bg-orange-200 dark:bg-orange-900/30 dark:hover:bg-orange-900/50 focus:outline-none transition-colors"
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-brand-orange bg-orange-100 hover:bg-orange-200 dark:bg-orange-900/30 dark:hover:bg-orange-900/50 focus:outline-hidden transition-colors"
             >
               <Plus className="h-4 w-4 mr-2" /> Registrar Nuevo Pago
             </button>
@@ -246,7 +250,7 @@ export const Payments: React.FC<PaymentsProps> = ({
                   setValue("amount", parseFloat(balance.toFixed(2))); 
                   setIsAdding(true); 
                 }}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 shadow-sm focus:outline-none transition-colors"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 shadow-xs focus:outline-hidden transition-colors"
               >
                 <CheckCircle className="h-4 w-4 mr-2" /> Liquidar Faltante (${balance.toFixed(2)})
               </button>
@@ -258,7 +262,7 @@ export const Payments: React.FC<PaymentsProps> = ({
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Monto</label>
                 <div className="flex gap-2 items-center mt-1">
-                  <div className="relative rounded-md shadow-sm w-full">
+                  <div className="relative rounded-md shadow-xs w-full">
                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                       <span className="text-gray-500 sm:text-sm">$</span>
                     </div>
@@ -274,7 +278,7 @@ export const Payments: React.FC<PaymentsProps> = ({
                     <button
                       type="button"
                       onClick={() => setValue("amount", parseFloat(balance.toFixed(2)))}
-                      className="px-2 py-1.5 text-xs bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300 rounded border border-green-200 dark:border-green-800 hover:bg-green-200 dark:hover:bg-green-900/60 whitespace-nowrap"
+                      className="px-2 py-1.5 text-xs bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300 rounded-sm border border-green-200 dark:border-green-800 hover:bg-green-200 dark:hover:bg-green-900/60 whitespace-nowrap"
                       title="Llenar con el saldo faltante"
                     >
                       Max
@@ -289,7 +293,7 @@ export const Payments: React.FC<PaymentsProps> = ({
                 <input
                   type="date"
                   {...register("payment_date", { required: true })}
-                  className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-brand-orange focus:ring-brand-orange sm:text-sm p-2 bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
+                  className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-xs focus:border-brand-orange focus:ring-brand-orange sm:text-sm p-2 bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
                 />
               </div>
 
@@ -297,7 +301,7 @@ export const Payments: React.FC<PaymentsProps> = ({
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Método</label>
                 <select
                   {...register("payment_method")}
-                  className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-brand-orange focus:ring-brand-orange sm:text-sm p-2 bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
+                  className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-xs focus:border-brand-orange focus:ring-brand-orange sm:text-sm p-2 bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
                 >
                   <option value="cash">Efectivo</option>
                   <option value="transfer">Transferencia</option>
@@ -312,7 +316,7 @@ export const Payments: React.FC<PaymentsProps> = ({
                 <input
                   type="text"
                   {...register("notes")}
-                  className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-brand-orange focus:ring-brand-orange sm:text-sm p-2 bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
+                  className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-xs focus:border-brand-orange focus:ring-brand-orange sm:text-sm p-2 bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
                   placeholder="Referencia, folio, etc."
                 />
               </div>
@@ -322,13 +326,13 @@ export const Payments: React.FC<PaymentsProps> = ({
               <button
                 type="button"
                 onClick={() => setIsAdding(false)}
-                className="inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none"
+                className="inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 shadow-xs hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-hidden"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
-                className="inline-flex justify-center rounded-md border border-transparent bg-brand-orange px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-brand-orange focus:ring-offset-2"
+                className="inline-flex justify-center rounded-md border border-transparent bg-brand-orange px-4 py-2 text-sm font-medium text-white shadow-xs hover:bg-orange-600 focus:outline-hidden focus:ring-2 focus:ring-brand-orange focus:ring-offset-2"
               >
                 Guardar Pago
               </button>

@@ -20,6 +20,8 @@ import { EventGeneralInfo } from "./components/EventGeneralInfo";
 import { EventProducts } from "./components/EventProducts";
 import { EventExtras } from "./components/EventExtras";
 import { EventFinancials } from "./components/EventFinancials";
+import { usePlanLimits } from "../../hooks/usePlanLimits";
+import { UpgradeBanner } from "../../components/UpgradeBanner";
 
 // Local types to avoid Supabase dependency
 interface Client {
@@ -82,6 +84,9 @@ export const EventForm: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isStepLoading, setIsStepLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Plan Limits
+  const { canCreateEvent, isBasicPlan, eventsThisMonth, limit, loading: limitsLoading } = usePlanLimits();
 
   // Local state for items
   const [selectedProducts, setSelectedProducts] = useState<
@@ -415,6 +420,32 @@ export const EventForm: React.FC = () => {
     setActiveStep(prev => Math.max(prev - 1, 1));
   };
 
+  if (isLoading || limitsLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-orange"></div>
+      </div>
+    );
+  }
+
+  // If creating new event and limit is reached
+  if (!id && !canCreateEvent) {
+      return (
+          <div className="max-w-4xl mx-auto py-8 px-4">
+              <button
+                  onClick={() => navigate(-1)}
+                  className="mb-6 flex items-center text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+              >
+                  <ArrowLeft className="h-4 w-4 mr-1" />
+                  Regresar
+              </button>
+              <div className="flex justify-center mt-12">
+                  <UpgradeBanner type="limit-reached" currentUsage={eventsThisMonth} limit={limit} />
+              </div>
+          </div>
+      );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -432,7 +463,7 @@ export const EventForm: React.FC = () => {
         {id && (
           <button
             onClick={() => navigate(`/events/${id}/summary`)}
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-xs text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             <FileText className="-ml-1 mr-2 h-5 w-5" />
             Ver Resumen
@@ -441,7 +472,7 @@ export const EventForm: React.FC = () => {
       </div>
 
       <nav aria-label="Progress">
-        <ol role="list" className="bg-white dark:bg-gray-800 rounded-lg shadow-sm md:flex md:divide-y-0 md:divide-x dark:divide-gray-700 overflow-hidden">
+        <ol role="list" className="bg-white dark:bg-gray-800 rounded-lg shadow-xs md:flex md:divide-y-0 md:divide-x dark:divide-gray-700 overflow-hidden">
           {STEPS.map((step, stepIdx) => (
             <li key={step.id} className="relative md:flex-1 md:flex">
               <button
@@ -454,7 +485,7 @@ export const EventForm: React.FC = () => {
               >
                 <span className="px-6 py-4 flex items-center text-sm font-medium">
                   <span
-                    className={`flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full border-2 ${
+                    className={`shrink-0 w-10 h-10 flex items-center justify-center rounded-full border-2 ${
                       activeStep > step.id
                         ? "bg-brand-orange border-brand-orange"
                         : activeStep === step.id
@@ -524,7 +555,7 @@ export const EventForm: React.FC = () => {
             }
           }}
         >
-          <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+          <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6">
             {activeStep === 1 && (
               <EventGeneralInfo clients={clients as any} clientIdValue={clientIdValue} onClientCreated={handleClientCreated as any} />
             )}
@@ -560,7 +591,7 @@ export const EventForm: React.FC = () => {
               type="button"
               onClick={prevStep}
               disabled={activeStep === 1}
-              className={`px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 ${activeStep === 1 ? 'invisible' : ''}`}
+              className={`px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-xs text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 ${activeStep === 1 ? 'invisible' : ''}`}
             >
               Anterior
             </button>
@@ -570,7 +601,7 @@ export const EventForm: React.FC = () => {
                 type="button"
                 onClick={nextStep}
                 disabled={isStepLoading}
-                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-brand-orange hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-orange disabled:opacity-50"
+                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-xs text-sm font-medium rounded-md text-white bg-brand-orange hover:bg-orange-600 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-brand-orange disabled:opacity-50"
               >
                 {isStepLoading ? "Cargando..." : "Siguiente"}
                 <ChevronRight className="ml-2 h-4 w-4" />
@@ -580,7 +611,7 @@ export const EventForm: React.FC = () => {
                 type="button"
                 onClick={handleSubmit(onSubmit)}
                 disabled={isLoading || isStepLoading}
-                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
+                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-xs text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
               >
                 <Save className="h-5 w-5 mr-2" />
                 {isLoading ? "Guardando..." : "Guardar Evento"}

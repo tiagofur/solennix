@@ -3,10 +3,12 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { clientService } from '../../services/clientService';
 import { eventService } from '../../services/eventService';
 import { Database } from '../../types/supabase';
-import { ArrowLeft, Edit, Calendar, DollarSign, MapPin, Phone, Mail, FileText, Clock } from 'lucide-react';
+import { ArrowLeft, Edit, Calendar, DollarSign, MapPin, Phone, Mail, FileText, Clock, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { logError } from '../../lib/errorHandler';
+import { useToast } from '../../hooks/useToast';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
 
 type Client = Database['public']['Tables']['clients']['Row'];
 type Event = Database['public']['Tables']['events']['Row'];
@@ -17,6 +19,8 @@ export const ClientDetails: React.FC = () => {
   const [client, setClient] = useState<Client | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const { addToast } = useToast();
 
   useEffect(() => {
     if (id) {
@@ -40,6 +44,20 @@ export const ClientDetails: React.FC = () => {
     }
   };
 
+  const handleDeleteClient = async () => {
+    if (!id) return;
+    try {
+      await clientService.delete(id);
+      addToast("Cliente eliminado correctamente.", "success");
+      navigate("/clients");
+    } catch (error) {
+      logError("Error deleting client", error);
+      addToast("Error al eliminar el cliente.", "error");
+    } finally {
+      setConfirmDeleteOpen(false);
+    }
+  };
+
   if (loading) {
     return <div className="text-center p-8 text-gray-900 dark:text-white">Cargando detalles...</div>;
   }
@@ -60,16 +78,25 @@ export const ClientDetails: React.FC = () => {
           </button>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{client.name}</h1>
         </div>
-        <Link
-          to={`/clients/${client.id}/edit`}
-          className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
-        >
-          <Edit className="h-5 w-5 mr-2" />
-          Editar
-        </Link>
+        <div className="flex items-center space-x-2">
+          <Link
+            to={`/clients/${client.id}/edit`}
+            className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-xs text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+          >
+            <Edit className="h-5 w-5 mr-2" />
+            Editar
+          </Link>
+          <button
+            onClick={() => setConfirmDeleteOpen(true)}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 shadow-xs"
+          >
+            <Trash2 className="h-5 w-5 mr-2" />
+            Eliminar
+          </button>
+        </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg">
+      <div className="bg-white dark:bg-gray-800 shadow-sm overflow-hidden sm:rounded-lg">
         <div className="px-4 py-5 sm:px-6">
           <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white">
             Información del Cliente
@@ -118,7 +145,7 @@ export const ClientDetails: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg">
+      <div className="bg-white dark:bg-gray-800 shadow-sm overflow-hidden sm:rounded-lg">
         <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
           <div>
             <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white">
@@ -154,7 +181,7 @@ export const ClientDetails: React.FC = () => {
                         <p className="text-sm font-medium text-brand-orange truncate">
                           {event.service_type}
                         </p>
-                        <div className="ml-2 flex-shrink-0 flex">
+                        <div className="ml-2 shrink-0 flex">
                           <p
                             className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                               event.status === "confirmed"
@@ -179,7 +206,7 @@ export const ClientDetails: React.FC = () => {
                       <div className="mt-2 sm:flex sm:justify-between">
                         <div className="sm:flex">
                           <p className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                            <Calendar className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400 dark:text-gray-500" />
+                            <Calendar className="shrink-0 mr-1.5 h-5 w-5 text-gray-400 dark:text-gray-500" />
                             {format(
                               new Date(event.event_date),
                               "d 'de' MMMM, yyyy",
@@ -187,12 +214,12 @@ export const ClientDetails: React.FC = () => {
                             )}
                           </p>
                           <p className="mt-2 flex items-center text-sm text-gray-500 dark:text-gray-400 sm:mt-0 sm:ml-6">
-                            <Clock className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400 dark:text-gray-500" />
+                            <Clock className="shrink-0 mr-1.5 h-5 w-5 text-gray-400 dark:text-gray-500" />
                             {event.num_people} personas
                           </p>
                         </div>
                         <div className="mt-2 flex items-center text-sm text-gray-500 dark:text-gray-400 sm:mt-0">
-                          <DollarSign className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400 dark:text-gray-500" />
+                          <DollarSign className="shrink-0 mr-1.5 h-5 w-5 text-gray-400 dark:text-gray-500" />
                           {event.total_amount.toFixed(2)}
                         </div>
                       </div>
@@ -204,6 +231,15 @@ export const ClientDetails: React.FC = () => {
           )}
         </div>
       </div>
+      <ConfirmDialog
+        open={confirmDeleteOpen}
+        title="Eliminar Cliente"
+        description="¿Estás seguro de que deseas eliminar este cliente? Esta acción no se puede deshacer y se perderán todos los datos asociados (aunque los eventos existentes se mantendrán, ya no estarán vinculados a este cliente)."
+        confirmText="Eliminar permanentemente"
+        cancelText="Cancelar"
+        onConfirm={handleDeleteClient}
+        onCancel={() => setConfirmDeleteOpen(false)}
+      />
     </div>
   );
 };

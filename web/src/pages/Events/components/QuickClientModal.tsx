@@ -87,7 +87,7 @@ export const QuickClientModal: React.FC<QuickClientModalProps> = ({
               </h3>
               <button
                 onClick={onClose}
-                className="text-gray-400 hover:text-gray-500 focus:outline-none"
+                className="text-gray-400 hover:text-gray-500 focus:outline-hidden"
               >
                 <X className="h-6 w-6" />
               </button>
@@ -112,7 +112,7 @@ export const QuickClientModal: React.FC<QuickClientModalProps> = ({
                   <input
                     type="text"
                     {...register("name")}
-                    className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-brand-orange focus:border-brand-orange sm:text-sm"
+                    className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-xs py-2 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-hidden focus:ring-brand-orange focus:border-brand-orange sm:text-sm"
                   />
                   {errors.name && (
                     <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.name.message}</p>
@@ -126,7 +126,7 @@ export const QuickClientModal: React.FC<QuickClientModalProps> = ({
                   <input
                     type="text"
                     {...register("phone")}
-                    className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-brand-orange focus:border-brand-orange sm:text-sm"
+                    className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-xs py-2 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-hidden focus:ring-brand-orange focus:border-brand-orange sm:text-sm"
                   />
                   {errors.phone && (
                     <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.phone.message}</p>
@@ -140,7 +140,7 @@ export const QuickClientModal: React.FC<QuickClientModalProps> = ({
                   <input
                     type="email"
                     {...register("email")}
-                    className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-brand-orange focus:border-brand-orange sm:text-sm"
+                    className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-xs py-2 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-hidden focus:ring-brand-orange focus:border-brand-orange sm:text-sm"
                   />
                   {errors.email && (
                     <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email.message}</p>
@@ -155,7 +155,7 @@ export const QuickClientModal: React.FC<QuickClientModalProps> = ({
               type="button"
               onClick={handleSubmit(onSubmit)}
               disabled={isLoading}
-              className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-brand-orange text-base font-medium text-white hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-orange sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50"
+              className="w-full inline-flex justify-center rounded-md border border-transparent shadow-xs px-4 py-2 bg-brand-orange text-base font-medium text-white hover:bg-orange-600 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-brand-orange sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50"
             >
               {isLoading ? (
                 <>
@@ -172,7 +172,7 @@ export const QuickClientModal: React.FC<QuickClientModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-orange sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+              className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-xs px-4 py-2 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-brand-orange sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
             >
               Cancelar
             </button>

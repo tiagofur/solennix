@@ -75,7 +75,8 @@ describe('EventSummary', () => {
     (eventService.getExtras as any).mockResolvedValue([
       { description: 'Transporte', price: 50, cost: 20 },
     ]);
-    (eventService.getPayments as any).mockResolvedValue([]);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (eventService as any).getPayments = vi.fn().mockResolvedValue([]);
     (productService.getIngredientsForProducts as any).mockResolvedValue([
       { product_id: 'p1', inventory_id: 'i1', quantity_required: 1, ingredient_name: 'Harina', unit: 'kg', unit_cost: 2 },
     ]);

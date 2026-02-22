@@ -184,7 +184,7 @@ export const ProductForm: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Formulario Principal */}
-        <div className="lg:col-span-2 bg-white dark:bg-gray-800 shadow px-4 py-5 sm:rounded-lg sm:p-6">
+        <div className="lg:col-span-2 bg-white dark:bg-gray-800 shadow-sm px-4 py-5 sm:rounded-lg sm:p-6">
             <form id="product-form" onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {error && (
                 <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-400 p-4">
@@ -208,7 +208,7 @@ export const ProductForm: React.FC = () => {
                     <input
                     type="text"
                     {...register("name")}
-                    className="shadow-sm focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    className="shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     placeholder="Ej. Churros Clásicos"
                     />
                     {errors.name && (
@@ -230,7 +230,7 @@ export const ProductForm: React.FC = () => {
                     <input
                     type="text"
                     {...register("category")}
-                    className="shadow-sm focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    className="shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     placeholder="Ej. Postres"
                     />
                     {errors.category && (
@@ -253,7 +253,7 @@ export const ProductForm: React.FC = () => {
                     type="number"
                     step="0.01"
                     {...register("base_price")}
-                    className="shadow-sm focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    className="shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     />
                     {errors.base_price && (
                     <p className="mt-2 text-sm text-red-600 dark:text-red-400">
@@ -267,7 +267,7 @@ export const ProductForm: React.FC = () => {
         </div>
 
         {/* Receta / Ingredientes */}
-        <div className="lg:col-span-1 bg-white dark:bg-gray-800 shadow px-4 py-5 sm:rounded-lg sm:p-6 flex flex-col">
+        <div className="lg:col-span-1 bg-white dark:bg-gray-800 shadow-sm px-4 py-5 sm:rounded-lg sm:p-6 flex flex-col">
             <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white mb-4 flex items-center">
                 <ChefHat className="h-5 w-5 mr-2 text-brand-orange" />
                 Receta (por unidad/persona)
@@ -287,7 +287,7 @@ export const ProductForm: React.FC = () => {
                             <select
                                 value={item.inventory_id}
                                 onChange={(e) => handleIngredientChange(index, 'inventory_id', e.target.value)}
-                                className="block w-full text-sm border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-brand-orange focus:border-brand-orange bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
+                                className="block w-full text-sm border-gray-300 dark:border-gray-600 rounded-md shadow-xs focus:ring-brand-orange focus:border-brand-orange bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
                             >
                                 <option value="">Seleccionar ingrediente</option>
                                 {inventoryItems.map(i => (
@@ -303,7 +303,7 @@ export const ProductForm: React.FC = () => {
                                     step="0.001"
                                     value={item.quantity_required}
                                     onChange={(e) => handleIngredientChange(index, 'quantity_required', Number(e.target.value))}
-                                    className="block w-full text-sm border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-brand-orange focus:border-brand-orange bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
+                                    className="block w-full text-sm border-gray-300 dark:border-gray-600 rounded-md shadow-xs focus:ring-brand-orange focus:border-brand-orange bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
                                 />
                             </div>
                             <div className="w-1/2 text-right">
@@ -319,7 +319,7 @@ export const ProductForm: React.FC = () => {
                 <button
                     type="button"
                     onClick={handleAddIngredient}
-                    className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+                    className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-xs text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
                 >
                     <Plus className="h-4 w-4 mr-2" /> Agregar Ingrediente
                 </button>
@@ -339,7 +339,7 @@ export const ProductForm: React.FC = () => {
                     type="submit"
                     form="product-form"
                     disabled={isLoading}
-                    className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-brand-orange hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-orange disabled:opacity-50"
+                    className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-xs text-sm font-medium text-white bg-brand-orange hover:bg-orange-600 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-brand-orange disabled:opacity-50"
                 >
                     <Save className="h-5 w-5 mr-2" />
                     {isLoading ? "Guardando..." : "Guardar Producto"}

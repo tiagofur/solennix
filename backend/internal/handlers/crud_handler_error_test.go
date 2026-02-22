@@ -26,6 +26,7 @@ func TestCRUDHandlerErrorBranchesWithClosedPool(t *testing.T) {
 		repository.NewProductRepo(pool),
 		repository.NewInventoryRepo(pool),
 		repository.NewPaymentRepo(pool),
+		repository.NewUserRepo(pool),
 	)
 	userID := uuid.New()
 	id := uuid.New().String()
@@ -49,15 +50,15 @@ func TestCRUDHandlerErrorBranchesWithClosedPool(t *testing.T) {
 		{"UpdateEventRepoError", withURLParam(withUser(httptest.NewRequest(http.MethodPut, "/api/events/"+id, strings.NewReader(`{"client_id":"`+id+`","event_date":"2026-01-01","service_type":"x","num_people":10,"status":"quoted","tax_rate":16,"tax_amount":1,"total_amount":10}`))), "id", id), (*CRUDHandler).UpdateEvent, http.StatusNotFound},
 		{"DeleteEventRepoError", withURLParam(withUser(httptest.NewRequest(http.MethodDelete, "/api/events/"+id, nil)), "id", id), (*CRUDHandler).DeleteEvent, http.StatusNotFound},
 		{"CreateEventRepoError", withUser(httptest.NewRequest(http.MethodPost, "/api/events", strings.NewReader(`{"client_id":"`+id+`","event_date":"2026-01-01","service_type":"x","num_people":10,"status":"quoted","tax_rate":16,"tax_amount":1,"total_amount":10}`))), (*CRUDHandler).CreateEvent, http.StatusInternalServerError},
-		{"GetEventProductsRepoError", withURLParam(withUser(httptest.NewRequest(http.MethodGet, "/api/events/"+id+"/products", nil)), "id", id), (*CRUDHandler).GetEventProducts, http.StatusInternalServerError},
-		{"GetEventExtrasRepoError", withURLParam(withUser(httptest.NewRequest(http.MethodGet, "/api/events/"+id+"/extras", nil)), "id", id), (*CRUDHandler).GetEventExtras, http.StatusInternalServerError},
-		{"UpdateEventItemsRepoError", withURLParam(withUser(httptest.NewRequest(http.MethodPut, "/api/events/"+id+"/items", strings.NewReader(`{"products":[],"extras":[]}`))), "id", id), (*CRUDHandler).UpdateEventItems, http.StatusInternalServerError},
+		{"GetEventProductsRepoError", withURLParam(withUser(httptest.NewRequest(http.MethodGet, "/api/events/"+id+"/products", nil)), "id", id), (*CRUDHandler).GetEventProducts, http.StatusNotFound},
+		{"GetEventExtrasRepoError", withURLParam(withUser(httptest.NewRequest(http.MethodGet, "/api/events/"+id+"/extras", nil)), "id", id), (*CRUDHandler).GetEventExtras, http.StatusNotFound},
+		{"UpdateEventItemsRepoError", withURLParam(withUser(httptest.NewRequest(http.MethodPut, "/api/events/"+id+"/items", strings.NewReader(`{"products":[],"extras":[]}`))), "id", id), (*CRUDHandler).UpdateEventItems, http.StatusNotFound},
 		{"ListProductsRepoError", withUser(httptest.NewRequest(http.MethodGet, "/api/products", nil)), (*CRUDHandler).ListProducts, http.StatusInternalServerError},
 		{"CreateProductRepoError", withUser(httptest.NewRequest(http.MethodPost, "/api/products", strings.NewReader(`{"name":"P","category":"c","base_price":1}`))), (*CRUDHandler).CreateProduct, http.StatusInternalServerError},
 		{"UpdateProductRepoError", withURLParam(withUser(httptest.NewRequest(http.MethodPut, "/api/products/"+id, strings.NewReader(`{"name":"P","category":"c","base_price":1}`))), "id", id), (*CRUDHandler).UpdateProduct, http.StatusInternalServerError},
 		{"DeleteProductRepoError", withURLParam(withUser(httptest.NewRequest(http.MethodDelete, "/api/products/"+id, nil)), "id", id), (*CRUDHandler).DeleteProduct, http.StatusNotFound},
-		{"GetProductIngredientsRepoError", withURLParam(withUser(httptest.NewRequest(http.MethodGet, "/api/products/"+id+"/ingredients", nil)), "id", id), (*CRUDHandler).GetProductIngredients, http.StatusInternalServerError},
-		{"UpdateProductIngredientsRepoError", withURLParam(withUser(httptest.NewRequest(http.MethodPut, "/api/products/"+id+"/ingredients", strings.NewReader(`{"ingredients":[]}`))), "id", id), (*CRUDHandler).UpdateProductIngredients, http.StatusInternalServerError},
+		{"GetProductIngredientsRepoError", withURLParam(withUser(httptest.NewRequest(http.MethodGet, "/api/products/"+id+"/ingredients", nil)), "id", id), (*CRUDHandler).GetProductIngredients, http.StatusNotFound},
+		{"UpdateProductIngredientsRepoError", withURLParam(withUser(httptest.NewRequest(http.MethodPut, "/api/products/"+id+"/ingredients", strings.NewReader(`{"ingredients":[]}`))), "id", id), (*CRUDHandler).UpdateProductIngredients, http.StatusNotFound},
 		{"ListInventoryRepoError", withUser(httptest.NewRequest(http.MethodGet, "/api/inventory", nil)), (*CRUDHandler).ListInventory, http.StatusInternalServerError},
 		{"CreateInventoryRepoError", withUser(httptest.NewRequest(http.MethodPost, "/api/inventory", strings.NewReader(`{"ingredient_name":"i","current_stock":1,"minimum_stock":1,"unit":"kg","type":"ingredient"}`))), (*CRUDHandler).CreateInventoryItem, http.StatusInternalServerError},
 		{"UpdateInventoryRepoError", withURLParam(withUser(httptest.NewRequest(http.MethodPut, "/api/inventory/"+id, strings.NewReader(`{"ingredient_name":"i","current_stock":1,"minimum_stock":1,"unit":"kg","type":"ingredient"}`))), "id", id), (*CRUDHandler).UpdateInventoryItem, http.StatusInternalServerError},

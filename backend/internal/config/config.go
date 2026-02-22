@@ -26,6 +26,10 @@ type Config struct {
 	SMTPPassword string
 	SMTPFrom     string
 	FrontendURL  string
+
+	StripeSecretKey     string
+	StripeWebhookSecret string
+	StripeProPriceID    string
 }
 
 func Load() (*Config, error) {
@@ -33,15 +37,18 @@ func Load() (*Config, error) {
 	_ = godotenv.Load()
 
 	cfg := &Config{
-		Port:        getEnv("PORT", "8080"),
-		Environment: getEnv("ENVIRONMENT", "development"),
-		DatabaseURL: os.Getenv("DATABASE_URL"),
-		JWTSecret:   os.Getenv("JWT_SECRET"),
-		SMTPHost:    getEnv("SMTP_HOST", ""),
-		SMTPUser:    getEnv("SMTP_USER", ""),
-		SMTPPassword: getEnv("SMTP_PASSWORD", ""),
-		SMTPFrom:    getEnv("SMTP_FROM", "noreply@eventosapp.com"),
-		FrontendURL: getEnv("FRONTEND_URL", "http://localhost:5173"),
+		Port:                getEnv("PORT", "8080"),
+		Environment:         getEnv("ENVIRONMENT", "development"),
+		DatabaseURL:         os.Getenv("DATABASE_URL"),
+		JWTSecret:           os.Getenv("JWT_SECRET"),
+		SMTPHost:            getEnv("SMTP_HOST", ""),
+		SMTPUser:            getEnv("SMTP_USER", ""),
+		SMTPPassword:        getEnv("SMTP_PASSWORD", ""),
+		SMTPFrom:            getEnv("SMTP_FROM", "noreply@eventosapp.com"),
+		FrontendURL:         getEnv("FRONTEND_URL", "http://localhost:5173"),
+		StripeSecretKey:     os.Getenv("STRIPE_SECRET_KEY"),
+		StripeWebhookSecret: os.Getenv("STRIPE_WEBHOOK_SECRET"),
+		StripeProPriceID:    os.Getenv("STRIPE_PRO_PRICE_ID"),
 	}
 
 	if cfg.DatabaseURL == "" {

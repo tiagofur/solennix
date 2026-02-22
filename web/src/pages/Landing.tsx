@@ -248,7 +248,7 @@ export const Landing: React.FC = () => {
               <Link to="/login" className="hidden sm:inline-flex text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-brand-orange dark:hover:text-brand-orange transition-colors">
                 Iniciar Sesión
               </Link>
-              <Link to="/register" className="bg-brand-orange hover:bg-orange-600 text-white text-sm px-4 py-2 rounded-lg font-medium shadow-sm hover:shadow-md transition-all">
+              <Link to="/register" className="bg-brand-orange hover:bg-orange-600 text-white text-sm px-4 py-2 rounded-lg font-medium shadow-xs hover:shadow-md transition-all">
                 Comenzar Gratis
               </Link>
               <button
@@ -274,7 +274,7 @@ export const Landing: React.FC = () => {
       </header>
 
       {/* ── HERO ── */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-orange-50 via-white to-amber-50 dark:from-gray-900 dark:via-gray-950 dark:to-gray-900 pt-20 pb-32">
+      <section className="relative overflow-hidden bg-linear-to-br from-orange-50 via-white to-amber-50 dark:from-gray-900 dark:via-gray-950 dark:to-gray-900 pt-20 pb-32">
         {/* Background decoration */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute -top-40 -right-40 w-96 h-96 bg-brand-orange/10 rounded-full blur-3xl" />
@@ -396,7 +396,7 @@ export const Landing: React.FC = () => {
             {steps.map((step, index) => (
               <div key={step.number} className="relative text-center">
                 {index < steps.length - 1 && (
-                  <div className="hidden lg:block absolute top-8 left-1/2 w-full h-0.5 bg-gradient-to-r from-brand-orange/40 to-transparent" />
+                  <div className="hidden lg:block absolute top-8 left-1/2 w-full h-0.5 bg-linear-to-r from-brand-orange/40 to-transparent" />
                 )}
                 <div className="relative inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-brand-orange text-white font-extrabold text-xl mb-5 shadow-lg shadow-orange-200 dark:shadow-orange-900/30">
                   {step.number}
@@ -434,7 +434,7 @@ export const Landing: React.FC = () => {
                 </div>
                 <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed mb-6">"{t.text}"</p>
                 <div className="flex items-center gap-3">
-                  <div className={`${t.avatarColor} w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0`}>
+                  <div className={`${t.avatarColor} w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0`}>
                     {t.avatar}
                   </div>
                   <div>
@@ -498,7 +498,7 @@ export const Landing: React.FC = () => {
                 <ul className="space-y-3 mb-8">
                   {plan.features.map((feature) => (
                     <li key={feature} className="flex items-center gap-2 text-sm">
-                      <CheckCircle className={`h-4 w-4 flex-shrink-0 ${plan.highlighted ? 'text-white' : 'text-brand-green'}`} />
+                      <CheckCircle className={`h-4 w-4 shrink-0 ${plan.highlighted ? 'text-white' : 'text-brand-green'}`} />
                       <span className={plan.highlighted ? 'text-orange-50' : 'text-gray-700 dark:text-gray-300'}>{feature}</span>
                     </li>
                   ))}
@@ -543,7 +543,7 @@ export const Landing: React.FC = () => {
                 >
                   <span className="font-semibold text-gray-900 dark:text-white text-sm">{faq.question}</span>
                   <ChevronDown
-                    className={`h-4 w-4 text-gray-500 flex-shrink-0 ml-4 transition-transform ${openFaq === index ? 'rotate-180' : ''}`}
+                    className={`h-4 w-4 text-gray-500 shrink-0 ml-4 transition-transform ${openFaq === index ? 'rotate-180' : ''}`}
                   />
                 </button>
                 {openFaq === index && (
@@ -558,7 +558,7 @@ export const Landing: React.FC = () => {
       </section>
 
       {/* ── CTA FINAL ── */}
-      <section className="py-24 bg-gradient-to-br from-brand-orange to-orange-600">
+      <section className="py-24 bg-linear-to-br from-brand-orange to-orange-600">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-4xl sm:text-5xl font-extrabold text-white mb-6">
             ¿Listo para profesionalizar tu negocio?

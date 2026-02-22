@@ -59,7 +59,7 @@ export const SetupRequired: React.FC = () => {
                 <p className="font-medium">Ejecuta el esquema de base de datos</p>
                 <p className="text-sm mt-1">
                   En el SQL Editor de Supabase, ejecuta el archivo:<br />
-                  <code className="bg-gray-200 dark:bg-gray-600 px-2 py-1 rounded text-xs">
+                  <code className="bg-gray-200 dark:bg-gray-600 px-2 py-1 rounded-sm text-xs">
                     supabase/migrations/20260215000001_consolidated_schema.sql
                   </code>
                 </p>
@@ -72,7 +72,7 @@ export const SetupRequired: React.FC = () => {
                 <p className="font-medium">Configura las variables de entorno</p>
                 <div className="mt-2">
                   <p className="text-sm font-medium mb-2">Para desarrollo local:</p>
-                  <div className="bg-gray-800 dark:bg-gray-900 rounded p-3 text-sm font-mono text-white overflow-x-auto">
+                  <div className="bg-gray-800 dark:bg-gray-900 rounded-sm p-3 text-sm font-mono text-white overflow-x-auto">
                     <p className="text-gray-400"># Crea un archivo .env en la raíz del proyecto</p>
                     <p>VITE_SUPABASE_URL=tu_project_url</p>
                     <p>VITE_SUPABASE_ANON_KEY=tu_anon_key</p>

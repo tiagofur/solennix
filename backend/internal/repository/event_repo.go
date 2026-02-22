@@ -164,6 +164,19 @@ func (r *EventRepo) GetUpcoming(ctx context.Context, userID uuid.UUID, limit int
 	return events, nil
 }
 
+func (r *EventRepo) CountCurrentMonth(ctx context.Context, userID uuid.UUID) (int, error) {
+	query := `SELECT count(*) FROM events 
+		WHERE user_id = $1 
+		AND date_trunc('month', event_date) = date_trunc('month', CURRENT_DATE)`
+	
+	var count int
+	err := r.pool.QueryRow(ctx, query, userID).Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
 func (r *EventRepo) Create(ctx context.Context, e *models.Event) error {
 	// Handle empty strings for time fields
 	var startTime, endTime *string

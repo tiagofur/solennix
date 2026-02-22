@@ -6,6 +6,10 @@ import { Plus, Search, Edit, Trash2 } from 'lucide-react';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { logError } from '../../lib/errorHandler';
 import Empty from '../../components/Empty';
+import { useToast } from '../../hooks/useToast';
+import { usePagination } from '../../hooks/usePagination';
+import { Pagination } from '../../components/Pagination';
+import { ArrowUp, ArrowDown } from 'lucide-react';
 
 type Product = Database['public']['Tables']['products']['Row'];
 
@@ -15,6 +19,7 @@ export const ProductList: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const { addToast } = useToast();
 
   useEffect(() => {
     fetchProducts();
@@ -45,8 +50,10 @@ export const ProductList: React.FC = () => {
     try {
       await productService.delete(id);
       setProducts((prev) => prev.filter((p) => p.id !== id));
+      addToast('Producto eliminado correctamente.', 'success');
     } catch (error) {
       logError('Error deleting product', error);
+      addToast('Error al eliminar el producto.', 'error');
     }
   };
 
@@ -54,6 +61,27 @@ export const ProductList: React.FC = () => {
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.category.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const {
+    currentData: paginatedProducts,
+    currentPage,
+    totalPages,
+    totalItems,
+    handlePageChange,
+    handleSort,
+    sortKey,
+    sortOrder
+  } = usePagination({
+    data: filteredProducts,
+    itemsPerPage: 10,
+    initialSortKey: 'name',
+    initialSortOrder: 'asc'
+  });
+
+  const renderSortIcon = (key: keyof Product) => {
+    if (sortKey !== key) return null;
+    return sortOrder === 'asc' ? <ArrowUp className="inline h-3 w-3 ml-1" /> : <ArrowDown className="inline h-3 w-3 ml-1" />;
+  };
 
   return (
     <div className="space-y-6">
@@ -73,7 +101,7 @@ export const ProductList: React.FC = () => {
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Productos</h1>
         <Link
           to="/products/new"
-          className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-brand-orange hover:bg-orange-600 shadow-sm transition-colors"
+          className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-brand-orange hover:bg-orange-600 shadow-xs transition-colors"
         >
           <Plus className="h-5 w-5 mr-2" />
           Nuevo Producto
@@ -86,14 +114,14 @@ export const ProductList: React.FC = () => {
         </div>
         <input
           type="text"
-          className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-brand-orange focus:border-brand-orange sm:text-sm transition duration-150 ease-in-out"
+          className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-hidden focus:ring-brand-orange focus:border-brand-orange sm:text-sm transition duration-150 ease-in-out"
           placeholder="Buscar producto..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
 
-      <div className="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg">
+      <div className="bg-white dark:bg-gray-800 shadow-sm overflow-hidden sm:rounded-lg">
         {loading ? (
           <div className="p-4 text-center text-gray-500 dark:text-gray-400">Cargando productos...</div>
         ) : filteredProducts.length === 0 ? (
@@ -104,7 +132,7 @@ export const ProductList: React.FC = () => {
               !searchTerm ? (
                 <Link
                   to="/products/new"
-                  className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-brand-orange hover:bg-orange-600 shadow-sm"
+                  className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-brand-orange hover:bg-orange-600 shadow-xs"
                 >
                   <Plus className="h-5 w-5 mr-2" />
                   Agregar Producto
@@ -117,14 +145,26 @@ export const ProductList: React.FC = () => {
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    Producto
+                  <th 
+                    scope="col" 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                    onClick={() => handleSort('name')}
+                  >
+                    Producto {renderSortIcon('name')}
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    Categoría
+                  <th 
+                    scope="col" 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                    onClick={() => handleSort('category')}
+                  >
+                    Categoría {renderSortIcon('category')}
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                    Precio Base
+                  <th 
+                    scope="col" 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                    onClick={() => handleSort('base_price')}
+                  >
+                    Precio Base {renderSortIcon('base_price')}
                   </th>
                   <th scope="col" className="relative px-6 py-3">
                     <span className="sr-only">Acciones</span>
@@ -132,7 +172,7 @@ export const ProductList: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {filteredProducts.map((product) => (
+                {paginatedProducts.map((product) => (
                   <tr key={product.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900 dark:text-white">{product.name}</div>
@@ -163,6 +203,15 @@ export const ProductList: React.FC = () => {
               </tbody>
             </table>
           </div>
+        )}
+        {!loading && filteredProducts.length > 0 && (
+          <Pagination 
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            itemsPerPage={10}
+            onPageChange={handlePageChange}
+          />
         )}
       </div>
     </div>

@@ -6,7 +6,7 @@ describe('Empty', () => {
   it('renders default title and description', () => {
     render(<Empty />);
     expect(screen.getByText('Sin resultados')).toBeInTheDocument();
-    expect(screen.getByText('No hay información para mostrar.')).toBeInTheDocument();
+    expect(screen.getByText('No hay información para mostrar en este momento.')).toBeInTheDocument();
   });
 
   it('renders custom content', () => {

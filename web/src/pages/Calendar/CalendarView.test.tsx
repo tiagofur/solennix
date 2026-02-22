@@ -124,7 +124,7 @@ describe('CalendarView', () => {
     fireEvent.click(screen.getByText('Clear'));
 
     await waitFor(() => {
-      expect(screen.getByRole('link', { name: /Nuevo Evento/i }).getAttribute('href')).toContain('date=');
+      expect(screen.getByRole('link', { name: /Nuevo Evento/i }).getAttribute('href')).toEqual('/events/new');
     });
   });
 

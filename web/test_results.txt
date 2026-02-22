@@ -372,14 +372,14 @@ Ignored nodes: comments, script, style
           [33mclass[39m=[32m"flex space-x-2"[39m
         [36m>[39m
           [36m<a[39m
-            [33mclass[39m=[32m"hidden sm:inline-flex items-center justify-center px-3 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-brand-orange hover:bg-orange-600 transition-colors"[39m
+            [33mclass[39m=[32m"hidden sm:inline-flex items-center justify-center px-3 py-2 border border-transparent rounded-md shadow-xs text-sm font-medium text-white bg-brand-orange hover:bg-orange-600 transition-colors"[39m
             [33mdata-discover[39m=[32m"true"[39m
             [33mhref[39m=[32m"/events/new"[39m
           [36m>[39m
             [0m+ Evento[0m
           [36m</a>[39m
           [36m<a[39m
-            [33mclass[39m=[32m"hidden sm:inline-flex items-center justify-center px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"[39m
+            [33mclass[39m=[32m"hidden sm:inline-flex items-center justify-center px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-xs text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"[39m
             [33mdata-discover[39m=[32m"true"[39m
             [33mhref[39m=[32m"/clients/new"[39m
           [36m>[39m
@@ -422,7 +422,7 @@ Ignored nodes: comments, script, style
         [33mclass[39m=[32m"grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-6"[39m
       [36m>[39m
         [36m<div[39m
-          [33mclass[39m=[32m"bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg transition-colors flex flex-col"[39m
+          [33mclass[39m=[32m"bg-white dark:bg-gray-800 overflow-hidden shadow-sm rounded-lg transition-colors flex flex-col"[39m
         [36m>[39m
           [36m<div[39m
             [33mclass[39m=[32m"p-5 flex-1"[39m
@@ -431,7 +431,7 @@ Ignored nodes: comments, script, style
               [33mclass[39m=[32m"flex items-center"[39m
             [36m>[39m
               [36m<div[39m
-                [33mclass[39m=[32m"flex-shrink-0"[39m
+                [33mclass[39m=[32m"shrink-0"[39m
               [36m>[39m
                 [36m<div[39m
                   [33mclass[39m=[32m"h-10 w-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center text-green-600 dark:text-green-400"[39m
@@ -496,7 +496,7 @@ Ignored nodes: comments, script, style
           [36m</div>[39m
         [36m</div>[39m
         [36m<div[39m
-          [33mclass[39m=[32m"bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg transition-colors flex flex-col"[39m
+          [33mclass[39m=[32m"bg-white dark:bg-gray-800 overflow-hidden shadow-sm rounded-lg transition-colors flex flex-col"[39m
         [36m>[39m
           [36m<div[39m
             [33mclass...
@@ -532,7 +532,7 @@ Ignored nodes: comments, script, style
           [0mCalendario de Eventos[0m
         [36m</h1>[39m
         [36m<a[39m
-          [33mclass[39m=[32m"inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-brand-orange hover:bg-orange-600 shadow-sm transition-colors"[39m
+          [33mclass[39m=[32m"inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-brand-orange hover:bg-orange-600 shadow-xs transition-colors"[39m
           [33mdata-discover[39m=[32m"true"[39m
           [33mhref[39m=[32m"/events/new?date=2024-01-02"[39m
         [36m>[39m
@@ -563,7 +563,7 @@ Ignored nodes: comments, script, style
         [33mclass[39m=[32m"grid grid-cols-1 xl:grid-cols-5 gap-8"[39m
       [36m>[39m
         [36m<div[39m
-          [33mclass[39m=[32m"bg-white dark:bg-gray-800 shadow-sm rounded-xl p-4 sm:p-8 xl:col-span-3 border border-gray-100 dark:border-gray-700 transition-colors"[39m
+          [33mclass[39m=[32m"bg-white dark:bg-gray-800 shadow-xs rounded-xl p-4 sm:p-8 xl:col-span-3 border border-gray-100 dark:border-gray-700 transition-colors"[39m
         [36m>[39m
           [36m<div>[39m
             [36m<button>[39m
@@ -578,7 +578,7 @@ Ignored nodes: comments, script, style
           [36m</div>[39m
         [36m</div>[39m
         [36m<div[39m
-          [33mclass[39m=[32m"bg-white dark:bg-gray-800 shadow-sm rounded-xl p-6 xl:col-span-2 border border-gray-100 dark:border-gray-700 flex flex-col transition-colors"[39m
+          [33mclass[39m=[32m"bg-white dark:bg-gray-800 shadow-xs rounded-xl p-6 xl:col-span-2 border border-gray-100 dark:border-gray-700 flex flex-col transition-colors"[39m
         [36m>[39m
           [36m<div[39m
             [33mclass[39m=[32m"flex items-center justify-between mb-6"[39m
@@ -604,7 +604,7 @@ Ignored nodes: comments, script, style
               [33mclass[39m=[32m"grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-4"[39m
             [36m>[39m
               [36m<div[39m
-                [33mclass[39m=[32m"group border border-gray-100 dark:border-gray-700 rounded-xl p-4 hover:border-brand-orange dark:hover:border-brand-orange bg-gray-50/50 dark:bg-gray-900/30 hover:bg-white dark:hover:bg-gray-800 cursor-pointer transition-all shadow-sm hover:shadow-md flex flex-col h-full"[39m
+                [33mclass[39m=[32m"group border border-gray-100 dark:border-gray-700 rounded-xl p-4 hover:border-brand-orange dark:hover:border-brand-orange bg-gray-50/50 dark:bg-gray-900/30 hover:bg-white dark:hover:bg-gray-800 cursor-pointer transition-all shadow-xs hover:shadow-md flex flex-col h-full"[39m
               [36m>[39m
                 [36m<div[39m
                   [33mclass[39m=[32m"flex justify-between items-start mb-3"[39m
@@ -783,7 +783,7 @@ Ignored nodes: comments, script, style
             [0mCalendario de Eventos[0m
           [36m</h1>[39m
           [36m<a[39m
-            [33mclass[39m=[32m"inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-brand-orange hover:bg-orange-600 shadow-sm transition-colors"[39m
+            [33mclass[39m=[32m"inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-brand-orange hover:bg-orange-600 shadow-xs transition-colors"[39m
             [33mdata-discover[39m=[32m"true"[39m
             [33mhref[39m=[32m"/events/new?date=2024-01-02"[39m
           [36m>[39m
@@ -814,7 +814,7 @@ Ignored nodes: comments, script, style
           [33mclass[39m=[32m"grid grid-cols-1 xl:grid-cols-5 gap-8"[39m
         [36m>[39m
           [36m<div[39m
-            [33mclass[39m=[32m"bg-white dark:bg-gray-800 shadow-sm rounded-xl p-4 sm:p-8 xl:col-span-3 border border-gray-100 dark:border-gray-700 transition-colors"[39m
+            [33mclass[39m=[32m"bg-white dark:bg-gray-800 shadow-xs rounded-xl p-4 sm:p-8 xl:col-span-3 border border-gray-100 dark:border-gray-700 transition-colors"[39m
           [36m>[39m
             [36m<div>[39m
               [36m<button>[39m
@@ -829,7 +829,7 @@ Ignored nodes: comments, script, style
             [36m</div>[39m
           [36m</div>[39m
           [36m<div[39m
-            [33mclass[39m=[32m"bg-white dark:bg-gray-800 shadow-sm rounded-xl p-6 xl:col-span-2 border border-gray-100 dark:border-gray-700 flex flex-col transition-colors"[39m
+            [33mclass[39m=[32m"bg-white dark:bg-gray-800 shadow-xs rounded-xl p-6 xl:col-span-2 border border-gray-100 dark:border-gray-700 flex flex-col transition-colors"[39m
           [36m>[39m
             [36m<div[39m
               [33mclass[39m=[32m"flex items-center justify-between mb-6"[39m
@@ -855,7 +855,7 @@ Ignored nodes: comments, script, style
                 [33mclass[39m=[32m"grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-4"[39m
               [36m>[39m
                 [36m<div[39m
-                  [33mclass[39m=[32m"group border border-gray-100 dark:border-gray-700 rounded-xl p-4 hover:border-brand-orange dark:hover:border-brand-orange bg-gray-50/50 dark:bg-gray-900/30 hover:bg-white dark:hover:bg-gray-800 cursor-pointer transition-all shadow-sm hover:shadow-md flex flex-col h-full"[39m
+                  [33mclass[39m=[32m"group border border-gray-100 dark:border-gray-700 rounded-xl p-4 hover:border-brand-orange dark:hover:border-brand-orange bg-gray-50/50 dark:bg-gray-900/30 hover:bg-white dark:hover:bg-gray-800 cursor-pointer transition-all shadow-xs hover:shadow-md flex flex-col h-full"[39m
                 [36m>[39m
                   [36m<div[39m
                     [33mclass[39m=[32m"flex justify-between items-start mb-3"[39m
@@ -1046,7 +1046,7 @@ Ignored nodes: comments, script, style
           [0mCalendario de Eventos[0m
         [36m</h1>[39m
         [36m<a[39m
-          [33mclass[39m=[32m"inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-brand-orange hover:bg-orange-600 shadow-sm transition-colors"[39m
+          [33mclass[39m=[32m"inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-brand-orange hover:bg-orange-600 shadow-xs transition-colors"[39m
           [33mdata-discover[39m=[32m"true"[39m
           [33mhref[39m=[32m"/events/new?date=2024-01-02"[39m
         [36m>[39m
@@ -1077,7 +1077,7 @@ Ignored nodes: comments, script, style
         [33mclass[39m=[32m"grid grid-cols-1 xl:grid-cols-5 gap-8"[39m
       [36m>[39m
         [36m<div[39m
-          [33mclass[39m=[32m"bg-white dark:bg-gray-800 shadow-sm rounded-xl p-4 sm:p-8 xl:col-span-3 border border-gray-100 dark:border-gray-700 transition-colors"[39m
+          [33mclass[39m=[32m"bg-white dark:bg-gray-800 shadow-xs rounded-xl p-4 sm:p-8 xl:col-span-3 border border-gray-100 dark:border-gray-700 transition-colors"[39m
         [36m>[39m
           [36m<div>[39m
             [36m<button>[39m
@@ -1092,7 +1092,7 @@ Ignored nodes: comments, script, style
           [36m</div>[39m
         [36m</div>[39m
         [36m<div[39m
-          [33mclass[39m=[32m"bg-white dark:bg-gray-800 shadow-sm rounded-xl p-6 xl:col-span-2 border border-gray-100 dark:border-gray-700 flex flex-col transition-colors"[39m
+          [33mclass[39m=[32m"bg-white dark:bg-gray-800 shadow-xs rounded-xl p-6 xl:col-span-2 border border-gray-100 dark:border-gray-700 flex flex-col transition-colors"[39m
         [36m>[39m
           [36m<div[39m
             [33mclass[39m=[32m"flex items-center justify-between mb-6"[39m
@@ -1118,7 +1118,7 @@ Ignored nodes: comments, script, style
               [33mclass[39m=[32m"grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-4"[39m
             [36m>[39m
               [36m<div[39m
-                [33mclass[39m=[32m"group border border-gray-100 dark:border-gray-700 rounded-xl p-4 hover:border-brand-orange dark:hover:border-brand-orange bg-gray-50/50 dark:bg-gray-900/30 hover:bg-white dark:hover:bg-gray-800 cursor-pointer transition-all shadow-sm hover:shadow-md flex flex-col h-full"[39m
+                [33mclass[39m=[32m"group border border-gray-100 dark:border-gray-700 rounded-xl p-4 hover:border-brand-orange dark:hover:border-brand-orange bg-gray-50/50 dark:bg-gray-900/30 hover:bg-white dark:hover:bg-gray-800 cursor-pointer transition-all shadow-xs hover:shadow-md flex flex-col h-full"[39m
               [36m>[39m
                 [36m<div[39m
                   [33mclass[39m=[32m"flex justify-between items-start mb-3"[39m
@@ -1297,7 +1297,7 @@ Ignored nodes: comments, script, style
             [0mCalendario de Eventos[0m
           [36m</h1>[39m
           [36m<a[39m
-            [33mclass[39m=[32m"inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-brand-orange hover:bg-orange-600 shadow-sm transition-colors"[39m
+            [33mclass[39m=[32m"inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-brand-orange hover:bg-orange-600 shadow-xs transition-colors"[39m
             [33mdata-discover[39m=[32m"true"[39m
             [33mhref[39m=[32m"/events/new?date=2024-01-02"[39m
           [36m>[39m
@@ -1328,7 +1328,7 @@ Ignored nodes: comments, script, style
           [33mclass[39m=[32m"grid grid-cols-1 xl:grid-cols-5 gap-8"[39m
         [36m>[39m
           [36m<div[39m
-            [33mclass[39m=[32m"bg-white dark:bg-gray-800 shadow-sm rounded-xl p-4 sm:p-8 xl:col-span-3 border border-gray-100 dark:border-gray-700 transition-colors"[39m
+            [33mclass[39m=[32m"bg-white dark:bg-gray-800 shadow-xs rounded-xl p-4 sm:p-8 xl:col-span-3 border border-gray-100 dark:border-gray-700 transition-colors"[39m
           [36m>[39m
             [36m<div>[39m
               [36m<button>[39m
@@ -1343,7 +1343,7 @@ Ignored nodes: comments, script, style
             [36m</div>[39m
           [36m</div>[39m
           [36m<div[39m
-            [33mclass[39m=[32m"bg-white dark:bg-gray-800 shadow-sm rounded-xl p-6 xl:col-span-2 border border-gray-100 dark:border-gray-700 flex flex-col transition-colors"[39m
+            [33mclass[39m=[32m"bg-white dark:bg-gray-800 shadow-xs rounded-xl p-6 xl:col-span-2 border border-gray-100 dark:border-gray-700 flex flex-col transition-colors"[39m
           [36m>[39m
             [36m<div[39m
               [33mclass[39m=[32m"flex items-center justify-between mb-6"[39m
@@ -1369,7 +1369,7 @@ Ignored nodes: comments, script, style
                 [33mclass[39m=[32m"grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-4"[39m
               [36m>[39m
                 [36m<div[39m
-                  [33mclass[39m=[32m"group border border-gray-100 dark:border-gray-700 rounded-xl p-4 hover:border-brand-orange dark:hover:border-brand-orange bg-gray-50/50 dark:bg-gray-900/30 hover:bg-white dark:hover:bg-gray-800 cursor-pointer transition-all shadow-sm hover:shadow-md flex flex-col h-full"[39m
+                  [33mclass[39m=[32m"group border border-gray-100 dark:border-gray-700 rounded-xl p-4 hover:border-brand-orange dark:hover:border-brand-orange bg-gray-50/50 dark:bg-gray-900/30 hover:bg-white dark:hover:bg-gray-800 cursor-pointer transition-all shadow-xs hover:shadow-md flex flex-col h-full"[39m
                 [36m>[39m
                   [36m<div[39m
                     [33mclass[39m=[32m"flex justify-between items-start mb-3"[39m

@@ -90,3 +90,15 @@ func (r *UserRepo) Update(ctx context.Context, id uuid.UUID, name, businessName,
 	}
 	return user, nil
 }
+
+// UpdatePlanAndStripeID updates the user's plan and optionally their Stripe Customer ID
+func (r *UserRepo) UpdatePlanAndStripeID(ctx context.Context, id uuid.UUID, plan string, stripeCustomerID *string) error {
+	query := `
+		UPDATE users SET
+			plan = $2,
+			stripe_customer_id = COALESCE($3, stripe_customer_id),
+			updated_at = NOW()
+		WHERE id = $1`
+	_, err := r.pool.Exec(ctx, query, id, plan, stripeCustomerID)
+	return err
+}

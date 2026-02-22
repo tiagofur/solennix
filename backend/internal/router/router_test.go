@@ -14,7 +14,7 @@ import (
 
 func TestNewRouter(t *testing.T) {
 	authService := services.NewAuthService("test-secret", 1)
-	h := New(&handlers.AuthHandler{}, &handlers.CRUDHandler{}, authService, []string{"http://allowed.com"})
+	h := New(&handlers.AuthHandler{}, &handlers.CRUDHandler{}, &handlers.SubscriptionHandler{}, authService, []string{"http://allowed.com"})
 
 	t.Run("GivenHealthEndpoint_WhenRequest_ThenReturnsOK", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/health", nil)
@@ -51,7 +51,7 @@ func TestNewRouter(t *testing.T) {
 
 func TestProtectedRoutesRequireValidBearerToken(t *testing.T) {
 	authService := services.NewAuthService("test-secret", 1)
-	h := New(&handlers.AuthHandler{}, &handlers.CRUDHandler{}, authService, []string{"http://allowed.com"})
+	h := New(&handlers.AuthHandler{}, &handlers.CRUDHandler{}, &handlers.SubscriptionHandler{}, authService, []string{"http://allowed.com"})
 
 	protectedRequests := []struct {
 		name   string
@@ -106,7 +106,7 @@ func TestProtectedRoutesRequireValidBearerToken(t *testing.T) {
 
 func TestRouterErrorContractMatrix(t *testing.T) {
 	authService := services.NewAuthService("test-secret", 1)
-	h := New(&handlers.AuthHandler{}, &handlers.CRUDHandler{}, authService, []string{"http://allowed.com"})
+	h := New(&handlers.AuthHandler{}, &handlers.CRUDHandler{}, &handlers.SubscriptionHandler{}, authService, []string{"http://allowed.com"})
 
 	cases := []struct {
 		name       string

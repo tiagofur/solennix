@@ -19,6 +19,7 @@ import { CalendarView } from './pages/Calendar/CalendarView';
 import { EventForm } from './pages/Events/EventForm';
 import { EventSummary } from './pages/Events/EventSummary';
 import { Settings } from './pages/Settings';
+import { Pricing } from './pages/Pricing';
 import { ForgotPassword } from './pages/ForgotPassword';
 import { NotFound } from './pages/NotFound';
 
@@ -62,6 +63,7 @@ function App() {
           <Route path="/inventory/:id/edit" element={<InventoryForm />} />
 
           <Route path="/settings" element={<Settings />} />
+          <Route path="/pricing" element={<Pricing />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>

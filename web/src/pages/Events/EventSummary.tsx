@@ -12,7 +12,10 @@ import {
   DollarSign,
   Pencil,
   ChevronDown,
+  Trash2,
 } from "lucide-react";
+import { useToast } from "../../hooks/useToast";
+import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { useAuth } from "../../contexts/AuthContext";
 import {
   generateBudgetPDF,
@@ -81,6 +84,8 @@ export const EventSummary: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>("summary");
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const { addToast } = useToast();
 
   useEffect(() => {
     if (id) {
@@ -159,11 +164,27 @@ export const EventSummary: React.FC = () => {
       setUpdatingStatus(true);
       await eventService.update(id, { status: newStatus });
       setEvent((prev: any) => ({ ...prev, status: newStatus }));
+      addToast(`Estado actualizado a ${STATUS_CONFIG[newStatus].label}`, "success");
     } catch (error) {
       logError("Error updating status", error);
+      addToast("Error al actualizar el estado.", "error");
     } finally {
       setUpdatingStatus(false);
       setStatusDropdownOpen(false);
+    }
+  };
+
+  const handleDeleteEvent = async () => {
+    if (!id) return;
+    try {
+      await eventService.delete(id);
+      addToast("Evento eliminado correctamente.", "success");
+      navigate("/dashboard");
+    } catch (error) {
+      logError("Error deleting event", error);
+      addToast("Error al eliminar el evento.", "error");
+    } finally {
+      setConfirmDeleteOpen(false);
     }
   };
 
@@ -207,7 +228,7 @@ export const EventSummary: React.FC = () => {
               onClick={() => setViewMode("summary")}
               className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center transition-colors whitespace-nowrap ${
                 viewMode === "summary"
-                  ? "bg-white dark:bg-gray-600 text-brand-orange shadow-sm"
+                  ? "bg-white dark:bg-gray-600 text-brand-orange shadow-xs"
                   : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
               }`}
             >
@@ -218,7 +239,7 @@ export const EventSummary: React.FC = () => {
               onClick={() => setViewMode("payments")}
               className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center transition-colors whitespace-nowrap ${
                 viewMode === "payments"
-                  ? "bg-white dark:bg-gray-600 text-brand-orange shadow-sm"
+                  ? "bg-white dark:bg-gray-600 text-brand-orange shadow-xs"
                   : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
               }`}
             >
@@ -229,7 +250,7 @@ export const EventSummary: React.FC = () => {
               onClick={() => setViewMode("ingredients")}
               className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center transition-colors whitespace-nowrap ${
                 viewMode === "ingredients"
-                  ? "bg-white dark:bg-gray-600 text-brand-orange shadow-sm"
+                  ? "bg-white dark:bg-gray-600 text-brand-orange shadow-xs"
                   : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
               }`}
             >
@@ -240,7 +261,7 @@ export const EventSummary: React.FC = () => {
               onClick={() => setViewMode("contract")}
               className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center transition-colors whitespace-nowrap ${
                 viewMode === "contract"
-                  ? "bg-white dark:bg-gray-600 text-brand-orange shadow-sm"
+                  ? "bg-white dark:bg-gray-600 text-brand-orange shadow-xs"
                   : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
               }`}
             >
@@ -254,19 +275,29 @@ export const EventSummary: React.FC = () => {
           {/* Edit Event Button */}
           <button
             onClick={() => navigate(`/events/${id}/edit`)}
-            className="flex items-center px-3 py-2 bg-brand-orange text-white rounded hover:bg-orange-600 text-sm font-medium shadow-sm transition-colors"
+            className="flex items-center px-3 py-2 bg-brand-orange text-white rounded-sm hover:bg-orange-600 text-sm font-medium shadow-xs transition-colors"
             title="Editar Evento"
           >
             <Pencil className="h-4 w-4 mr-2" />
             Editar
           </button>
 
+          <button
+            onClick={() => setConfirmDeleteOpen(true)}
+            className="flex items-center px-3 py-2 bg-red-600 text-white rounded-sm hover:bg-red-700 text-sm font-medium shadow-xs transition-colors"
+            title="Eliminar Evento"
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Eliminar
+          </button>
+
           {viewMode === "summary" && (
             <button
               onClick={() =>
-                generateBudgetPDF(event, profile, products, extras)
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                generateBudgetPDF(event, profile as any, products, extras)
               }
-              className="flex items-center px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium shadow-sm transition-colors"
+              className="flex items-center px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-sm hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium shadow-xs transition-colors"
               title="Descargar Presupuesto en PDF"
             >
               <Download className="h-4 w-4 mr-2" />
@@ -277,9 +308,10 @@ export const EventSummary: React.FC = () => {
           {viewMode === "ingredients" && (
             <button
               onClick={() =>
-                generateShoppingListPDF(event, profile, ingredients)
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                generateShoppingListPDF(event, profile as any, ingredients)
               }
-              className="flex items-center px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium shadow-sm transition-colors"
+              className="flex items-center px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-sm hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium shadow-xs transition-colors"
               title="Descargar Lista de Compras en PDF"
             >
               <ShoppingCart className="h-4 w-4 mr-2" />
@@ -290,7 +322,7 @@ export const EventSummary: React.FC = () => {
           {viewMode === "contract" && (
             <button
               onClick={() => generateContractPDF(event, profile as any)}
-              className="flex items-center px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium shadow-sm transition-colors"
+              className="flex items-center px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-sm hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium shadow-xs transition-colors"
               title="Descargar Contrato en PDF"
             >
               <FileCheck className="h-4 w-4 mr-2" />
@@ -322,7 +354,7 @@ export const EventSummary: React.FC = () => {
 
               {/* Status Badge + Dropdown */}
               <div
-                className="relative flex-shrink-0"
+                className="relative shrink-0"
                 onClick={(e) => e.stopPropagation()}
               >
                 <button
@@ -331,7 +363,7 @@ export const EventSummary: React.FC = () => {
                   className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-semibold transition-all ${statusCfg.bg} ${statusCfg.color} ${updatingStatus ? "opacity-60 cursor-not-allowed" : "hover:opacity-80 cursor-pointer"}`}
                 >
                   <span
-                    className={`w-2 h-2 rounded-full flex-shrink-0 ${statusCfg.dot}`}
+                    className={`w-2 h-2 rounded-full shrink-0 ${statusCfg.dot}`}
                   />
                   {statusCfg.label}
                   <ChevronDown
@@ -354,7 +386,7 @@ export const EventSummary: React.FC = () => {
                           }`}
                         >
                           <span
-                            className={`w-2 h-2 rounded-full flex-shrink-0 ${cfg.dot}`}
+                            className={`w-2 h-2 rounded-full shrink-0 ${cfg.dot}`}
                           />
                           {cfg.label}
                           {s === currentStatus && (
@@ -483,7 +515,7 @@ export const EventSummary: React.FC = () => {
             <h2 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">
               Resumen Financiero (Interno)
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 bg-gray-100 dark:bg-gray-700 p-4 rounded">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 bg-gray-100 dark:bg-gray-700 p-4 rounded-sm">
               <div>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   Venta (sin IVA)
@@ -565,7 +597,7 @@ export const EventSummary: React.FC = () => {
             </p>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded">
+          <div className="bg-white dark:bg-gray-800 rounded-sm">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-gray-500 dark:text-gray-400 border-b dark:border-gray-700">
@@ -734,6 +766,15 @@ export const EventSummary: React.FC = () => {
           {new Date().toLocaleString()}
         </p>
       </div>
+      <ConfirmDialog
+        open={confirmDeleteOpen}
+        title="Eliminar Evento"
+        description="¿Estás seguro de que deseas eliminar este evento? Esta acción no se puede deshacer y se perderán todos los datos asociados."
+        confirmText="Eliminar permanentemente"
+        cancelText="Cancelar"
+        onConfirm={handleDeleteEvent}
+        onCancel={() => setConfirmDeleteOpen(false)}
+      />
     </div>
   );
 };
