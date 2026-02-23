@@ -43,14 +43,18 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 
 		// Subscriptions
 		r.Route("/subscriptions", func(r chi.Router) {
-			// Webhook is public
-			r.Post("/webhook", subHandler.Webhook)
+			// Public webhook endpoints (no auth — verified by signature)
+			r.Post("/webhook/stripe", subHandler.StripeWebhook)
+			r.Post("/webhook/revenuecat", subHandler.RevenueCatWebhook)
 
 			// Protected subscription routes
 			r.Group(func(r chi.Router) {
 				r.Use(mw.Auth(authService))
+				r.Get("/status", subHandler.GetSubscriptionStatus)
 				r.Post("/checkout-session", subHandler.CreateCheckoutSession)
+				r.Post("/portal-session", subHandler.CreatePortalSession)
 				r.Post("/debug-upgrade", subHandler.DebugUpgrade)
+				r.Post("/debug-downgrade", subHandler.DebugDowngrade)
 			})
 		})
 

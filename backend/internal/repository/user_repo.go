@@ -102,3 +102,21 @@ func (r *UserRepo) UpdatePlanAndStripeID(ctx context.Context, id uuid.UUID, plan
 	_, err := r.pool.Exec(ctx, query, id, plan, stripeCustomerID)
 	return err
 }
+
+// UpdatePlanByStripeCustomerID downgrades/upgrades a user by their Stripe Customer ID.
+// Used when Stripe webhooks reference a customer but not a user ID.
+func (r *UserRepo) UpdatePlanByStripeCustomerID(ctx context.Context, stripeCustomerID string, plan string) error {
+	query := `
+		UPDATE users SET
+			plan = $2,
+			updated_at = NOW()
+		WHERE stripe_customer_id = $1`
+	tag, err := r.pool.Exec(ctx, query, stripeCustomerID, plan)
+	if err != nil {
+		return fmt.Errorf("failed to update plan by stripe customer id: %w", err)
+	}
+	if tag.RowsAffected() == 0 {
+		return fmt.Errorf("no user found with stripe_customer_id: %s", stripeCustomerID)
+	}
+	return nil
+}

@@ -139,11 +139,15 @@ type Payment struct {
 	CreatedAt     time.Time `json:"created_at"`
 }
 
+// Subscription represents a SaaS subscription from any provider (Stripe/Apple/Google).
 type Subscription struct {
 	ID                   uuid.UUID  `json:"id"`
 	UserID               uuid.UUID  `json:"user_id"`
-	StripeSubscriptionID string     `json:"stripe_subscription_id"`
-	Status               string     `json:"status"`
+	Provider             string     `json:"provider"` // 'stripe' | 'apple' | 'google'
+	ProviderSubID        *string    `json:"provider_subscription_id,omitempty"`
+	RevenueCatAppUserID  *string    `json:"revenuecat_app_user_id,omitempty"`
+	Plan                 string     `json:"plan"`   // 'basic' | 'pro'
+	Status               string     `json:"status"` // 'active' | 'past_due' | 'canceled' | 'trialing'
 	CurrentPeriodStart   *time.Time `json:"current_period_start,omitempty"`
 	CurrentPeriodEnd     *time.Time `json:"current_period_end,omitempty"`
 	CreatedAt            time.Time  `json:"created_at"`
