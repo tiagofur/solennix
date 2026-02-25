@@ -67,18 +67,15 @@ describe('productService', () => {
   it('getIngredientsForProducts returns empty for none', async () => {
     const result = await productService.getIngredientsForProducts([]);
     expect(result).toEqual([]);
-    expect(api.get).not.toHaveBeenCalled();
+    expect(api.post).not.toHaveBeenCalled();
   });
 
-  it('getIngredientsForProducts flattens results', async () => {
-    (api.get as any)
-      .mockResolvedValueOnce([{ inventory_id: 'i1' }])
-      .mockResolvedValueOnce([{ inventory_id: 'i2' }]);
+  it('getIngredientsForProducts calls batch endpoint', async () => {
+    (api.post as any).mockResolvedValueOnce([{ inventory_id: 'i1' }, { inventory_id: 'i2' }]);
 
     const result = await productService.getIngredientsForProducts(['p1', 'p2']);
 
-    expect(api.get).toHaveBeenNthCalledWith(1, '/products/p1/ingredients');
-    expect(api.get).toHaveBeenNthCalledWith(2, '/products/p2/ingredients');
+    expect(api.post).toHaveBeenCalledWith('/products/ingredients/batch', { product_ids: ['p1', 'p2'] });
     expect(result).toEqual([{ inventory_id: 'i1' }, { inventory_id: 'i2' }]);
   });
 

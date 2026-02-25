@@ -36,10 +36,7 @@ export const Login: React.FC = () => {
         password: data.password,
       });
 
-      console.log('Login response:', res);
-      
       if (!res.tokens || !res.tokens.access_token) {
-        console.error('Invalid response structure:', res);
         throw new Error('Respuesta del servidor inválida');
       }
 
@@ -98,13 +95,13 @@ export const Login: React.FC = () => {
         <div className="bg-white dark:bg-gray-800 py-8 px-4 shadow-sm sm:rounded-lg sm:px-10">
           <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
             {error && (
-              <div className="bg-red-50 border-l-4 border-red-400 p-4">
+              <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-400 dark:border-red-800 p-4">
                 <div className="flex">
                   <div className="shrink-0">
                     <AlertCircle className="h-5 w-5 text-red-400" />
                   </div>
                   <div className="ml-3">
-                    <p className="text-sm text-red-700">{error}</p>
+                    <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
                   </div>
                 </div>
               </div>

@@ -4,7 +4,7 @@ import 'react-day-picker/dist/style.css';
 import { eventService } from '../../services/eventService';
 import { Link, useNavigate } from 'react-router-dom';
 import { Plus, Calendar, Users, Clock, MapPin, Phone, DollarSign as DollarIcon, List as ListIcon, CalendarDays, Search, Filter } from 'lucide-react';
-import { format, startOfMonth, endOfMonth, parseISO, isSameDay } from 'date-fns';
+import { format, startOfMonth, endOfMonth, addMonths, subMonths, parseISO, isSameDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { logError } from '../../lib/errorHandler';
 import { usePagination } from '../../hooks/usePagination';
@@ -40,10 +40,9 @@ export const CalendarView: React.FC = () => {
   const fetchAllEvents = async () => {
     try {
       setLoading(true);
-      // Fetches a wider range to show history in list view (e.g. past year to next year)
-      // For MVP we just use the date range around current year to prevent massive DB load
-      const start = format(new Date(new Date().getFullYear() - 1, 0, 1), 'yyyy-MM-dd');
-      const end = format(new Date(new Date().getFullYear() + 1, 11, 31), 'yyyy-MM-dd');
+      const now = new Date();
+      const start = format(startOfMonth(subMonths(now, 6)), 'yyyy-MM-dd');
+      const end = format(endOfMonth(addMonths(now, 6)), 'yyyy-MM-dd');
       const data = await eventService.getByDateRange(start, end);
       setEvents(data || []);
     } catch (error) {

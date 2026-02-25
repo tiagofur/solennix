@@ -125,6 +125,7 @@ export const Dashboard: React.FC = () => {
       })
       .catch((err) => {
         logError("Error loading month events", err);
+        setError("Error al cargar los datos del mes. Intenta recargar.");
       })
       .finally(() => setLoadingMonth(false));
 

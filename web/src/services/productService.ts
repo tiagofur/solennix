@@ -43,18 +43,8 @@ export const productService = {
   },
 
   async getIngredientsForProducts(productIds: string[]) {
-    // Backend Implementation Gap: accessing ingredients for MULTIPLE products in one call?
-    // My backend `crud_handler` does NOT have `GetIngredientsForProducts` (bulk).
-    // It only has `GetProductIngredients` (single).
-    // I can simulate it using Promise.all or just fail gracefully.
-    // Given functionality, this is used for "Shopping List" maybe?
-    // I'll implement with Promise.all for now.
     if (productIds.length === 0) return [];
-    
-    // Warning: N+1 problem on client side
-    const promises = productIds.map(id => this.getIngredients(id));
-    const results = await Promise.all(promises);
-    return results.flat();
+    return api.post<any[]>('/products/ingredients/batch', { product_ids: productIds });
   },
 
   async updateIngredients(productId: string, ingredients: { inventoryId: string, quantityRequired: number }[]) {

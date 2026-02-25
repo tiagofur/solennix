@@ -2,6 +2,7 @@ package router
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/tiagofur/eventosapp-backend/internal/handlers"
@@ -27,8 +28,9 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 	// API routes
 	r.Route("/api", func(r chi.Router) {
 
-		// Auth routes (public)
+		// Auth routes (public) — rate limited to prevent brute-force attacks
 		r.Route("/auth", func(r chi.Router) {
+			r.Use(mw.RateLimit(10, 1*time.Minute))
 			r.Post("/register", authHandler.Register)
 			r.Post("/login", authHandler.Login)
 			r.Post("/refresh", authHandler.RefreshToken)
@@ -91,6 +93,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 			r.Route("/products", func(r chi.Router) {
 				r.Get("/", crudHandler.ListProducts)
 				r.Post("/", crudHandler.CreateProduct)
+				r.Post("/ingredients/batch", crudHandler.GetBatchProductIngredients)
 				r.Get("/{id}", crudHandler.GetProduct)
 				r.Put("/{id}", crudHandler.UpdateProduct)
 				r.Delete("/{id}", crudHandler.DeleteProduct)

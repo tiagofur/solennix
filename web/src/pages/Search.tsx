@@ -52,7 +52,7 @@ export const SearchPage: React.FC = () => {
       } catch (err) {
         logError('Error running global search', err);
         if (isMounted) {
-          setError('No pudimos completar la busqueda. Intenta de nuevo.');
+          setError('No pudimos completar la búsqueda. Intenta de nuevo.');
         }
       } finally {
         if (isMounted) setLoading(false);
@@ -78,8 +78,8 @@ export const SearchPage: React.FC = () => {
   if (!query) {
     return (
       <Empty
-        title="Busca en toda tu operacion"
-        description="Escribe un termino en la barra superior para encontrar clientes, eventos, productos e inventario."
+        title="Busca en toda tu operación"
+        description="Escribe un término en la barra superior para encontrar clientes, eventos, productos e inventario."
       />
     );
   }
@@ -121,7 +121,7 @@ export const SearchPage: React.FC = () => {
         </div>
         <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
           <SearchIcon className="h-4 w-4 mr-2" />
-          Busqueda global
+          Búsqueda global
         </div>
       </div>
 

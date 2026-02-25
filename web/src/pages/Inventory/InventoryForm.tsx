@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { useForm, Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { inventoryService } from "../../services/inventoryService";
@@ -43,7 +43,7 @@ export const InventoryForm: React.FC = () => {
     reset,
     formState: { errors },
   } = useForm<InventoryFormData>({
-    resolver: zodResolver(inventorySchema) as any,
+    resolver: zodResolver(inventorySchema) as Resolver<InventoryFormData>,
     defaultValues: {
       type: "ingredient",
       current_stock: 0,

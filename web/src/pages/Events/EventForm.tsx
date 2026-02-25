@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { useForm, FormProvider, useWatch } from "react-hook-form";
+import { useForm, FormProvider, useWatch, Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { eventService } from "../../services/eventService";
@@ -108,7 +108,7 @@ export const EventForm: React.FC = () => {
   }>({});
 
   const methods = useForm<EventFormData>({
-    resolver: zodResolver(eventSchema) as any,
+    resolver: zodResolver(eventSchema) as Resolver<EventFormData>,
     defaultValues: {
       client_id: "",
       service_type: "",
@@ -243,11 +243,11 @@ export const EventForm: React.FC = () => {
       .reduce((sum, item) => sum + item.price, 0);
 
     const discountableBase = productsSubtotal + normalExtrasTotal;
-    const discountedBase = discountableBase * (1 - discountValue / 100);
+    const discountedBase = Math.round(discountableBase * (1 - discountValue / 100) * 100) / 100;
 
-    const baseTotal = discountedBase + passThroughExtrasTotal;
-    const taxAmount = requiresInvoiceValue ? baseTotal * (taxRateValue / 100) : 0;
-    const total = baseTotal + taxAmount;
+    const baseTotal = Math.round((discountedBase + passThroughExtrasTotal) * 100) / 100;
+    const taxAmount = requiresInvoiceValue ? Math.round(baseTotal * (taxRateValue / 100) * 100) / 100 : 0;
+    const total = Math.round((baseTotal + taxAmount) * 100) / 100;
 
     setValue("tax_amount", taxAmount);
     setValue("total_amount", total);
@@ -349,7 +349,10 @@ export const EventForm: React.FC = () => {
 
   const handleClientCreated = (newClient: Client) => {
     setClients(prev => [...prev, newClient]);
-    setTimeout(() => setValue("client_id", newClient.id, { shouldValidate: true }), 100);
+    // Use queueMicrotask to set value after React state update flushes
+    queueMicrotask(() => {
+      setValue("client_id", newClient.id, { shouldValidate: true });
+    });
   };
 
   const onSubmit = async (data: EventFormData) => {
