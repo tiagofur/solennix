@@ -13,6 +13,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/tiagofur/eventosapp-backend/internal/config"
 	"github.com/tiagofur/eventosapp-backend/internal/database"
 	"github.com/tiagofur/eventosapp-backend/internal/middleware"
 	"github.com/tiagofur/eventosapp-backend/internal/models"
@@ -27,7 +28,17 @@ func TestAuthHandlerIntegration(t *testing.T) {
 
 	authService := services.NewAuthService("test-secret", 24)
 	userRepo := repository.NewUserRepo(pool)
-	h := NewAuthHandler(userRepo, authService)
+	// Create test config for email service
+	testCfg := &config.Config{
+		SMTPHost:     "localhost",
+		SMTPPort:     1025,
+		SMTPUser:     "test",
+		SMTPPassword: "test",
+		SMTPFrom:     "test@test.com",
+		FrontendURL:  "http://localhost:5173",
+	}
+	emailService := services.NewEmailService(testCfg)
+	h := NewAuthHandler(userRepo, authService, emailService)
 
 	status, body := performHandlerJSONRequest(t, http.MethodPost, "/api/auth/register", map[string]interface{}{
 		"email":    "handlers.auth@test.dev",

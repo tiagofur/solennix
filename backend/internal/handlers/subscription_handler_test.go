@@ -180,12 +180,7 @@ func TestSubscriptionHandler_DebugUpgrade(t *testing.T) {
 		}
 
 		userID := uuid.New()
-		user := &models.User{
-			ID:   userID,
-			Plan: "basic",
-		}
 
-		mockRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
 		mockRepo.On("UpdatePlanAndStripeID", mock.Anything, userID, "pro", (*string)(nil)).Return(nil)
 
 		handler := NewSubscriptionHandler(mockRepo, cfg)
@@ -237,12 +232,7 @@ func TestSubscriptionHandler_DebugDowngrade(t *testing.T) {
 		}
 
 		userID := uuid.New()
-		user := &models.User{
-			ID:   userID,
-			Plan: "pro",
-		}
 
-		mockRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
 		mockRepo.On("UpdatePlanAndStripeID", mock.Anything, userID, "basic", (*string)(nil)).Return(nil)
 
 		handler := NewSubscriptionHandler(mockRepo, cfg)

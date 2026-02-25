@@ -232,6 +232,12 @@ func (h *CRUDHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Validate business rules
+	if err := ValidateEvent(&event); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
 	// 1. Check user plan and limits
 	user, err := h.userRepo.GetByID(r.Context(), userID)
 	if err != nil {
@@ -289,6 +295,12 @@ func (h *CRUDHandler) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 	// Ensure ID and UserID are not changed
 	existing.ID = id
 	existing.UserID = userID
+
+	// Validate business rules
+	if err := ValidateEvent(existing); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
 
 	if err := h.eventRepo.Update(r.Context(), existing); err != nil {
 		writeError(w, http.StatusInternalServerError, "Failed to update event")
@@ -393,6 +405,22 @@ func (h *CRUDHandler) UpdateEventItems(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Validate all products
+	for i, product := range req.Products {
+		if err := ValidateEventProduct(&product); err != nil {
+			writeError(w, http.StatusBadRequest, fmt.Sprintf("products[%d]: %s", i, err.Error()))
+			return
+		}
+	}
+
+	// Validate all extras
+	for i, extra := range req.Extras {
+		if err := ValidateEventExtra(&extra); err != nil {
+			writeError(w, http.StatusBadRequest, fmt.Sprintf("extras[%d]: %s", i, err.Error()))
+			return
+		}
+	}
+
 	if err := h.eventRepo.UpdateEventItems(r.Context(), eventID, req.Products, req.Extras); err != nil {
 		writeError(w, http.StatusInternalServerError, "Failed to update event items")
 		return
@@ -436,6 +464,13 @@ func (h *CRUDHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
+
+	// Validate business rules
+	if err := ValidateProduct(&product); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
 	// Check limits
 	user, err := h.userRepo.GetByID(r.Context(), userID)
 	if err != nil {
@@ -480,6 +515,13 @@ func (h *CRUDHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
+
+	// Validate business rules
+	if err := ValidateProduct(&product); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
 	product.ID = id
 	product.UserID = userID
 	if err := h.productRepo.Update(r.Context(), &product); err != nil {
@@ -542,6 +584,15 @@ func (h *CRUDHandler) UpdateProductIngredients(w http.ResponseWriter, r *http.Re
 		writeError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
+
+	// Validate all ingredients
+	for i, ingredient := range req.Ingredients {
+		if err := ValidateProductIngredient(&ingredient); err != nil {
+			writeError(w, http.StatusBadRequest, fmt.Sprintf("ingredients[%d]: %s", i, err.Error()))
+			return
+		}
+	}
+
 	if err := h.productRepo.UpdateIngredients(r.Context(), id, req.Ingredients); err != nil {
 		writeError(w, http.StatusInternalServerError, "Failed to update ingredients")
 		return
@@ -622,6 +673,13 @@ func (h *CRUDHandler) CreateInventoryItem(w http.ResponseWriter, r *http.Request
 		writeError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
+
+	// Validate business rules
+	if err := ValidateInventoryItem(&item); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
 	// Check limits
 	user, err := h.userRepo.GetByID(r.Context(), userID)
 	if err != nil {
@@ -666,6 +724,13 @@ func (h *CRUDHandler) UpdateInventoryItem(w http.ResponseWriter, r *http.Request
 		writeError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
+
+	// Validate business rules
+	if err := ValidateInventoryItem(&item); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
 	item.ID = id
 	item.UserID = userID
 	if err := h.inventoryRepo.Update(r.Context(), &item); err != nil {
@@ -764,6 +829,13 @@ func (h *CRUDHandler) CreatePayment(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
+
+	// Validate business rules
+	if err := ValidatePayment(&payment); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
 	payment.UserID = userID
 	if err := h.paymentRepo.Create(r.Context(), &payment); err != nil {
 		writeError(w, http.StatusInternalServerError, "Failed to create payment")
@@ -784,6 +856,13 @@ func (h *CRUDHandler) UpdatePayment(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
+
+	// Validate business rules
+	if err := ValidatePayment(&payment); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
 	payment.ID = id
 	if err := h.paymentRepo.Update(r.Context(), userID, &payment); err != nil {
 		writeError(w, http.StatusInternalServerError, "Failed to update payment")

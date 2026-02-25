@@ -15,17 +15,16 @@ import (
 	"github.com/stripe/stripe-go/v81/webhook"
 	"github.com/tiagofur/eventosapp-backend/internal/config"
 	"github.com/tiagofur/eventosapp-backend/internal/middleware"
-	"github.com/tiagofur/eventosapp-backend/internal/repository"
 )
 
 // SubscriptionHandler handles SaaS subscription flows for both
 // web (Stripe) and mobile (Apple/Google via RevenueCat).
 type SubscriptionHandler struct {
-	userRepo *repository.UserRepo
+	userRepo UserRepository
 	cfg      *config.Config
 }
 
-func NewSubscriptionHandler(userRepo *repository.UserRepo, cfg *config.Config) *SubscriptionHandler {
+func NewSubscriptionHandler(userRepo UserRepository, cfg *config.Config) *SubscriptionHandler {
 	stripe.Key = cfg.StripeSecretKey
 	return &SubscriptionHandler{
 		userRepo: userRepo,
