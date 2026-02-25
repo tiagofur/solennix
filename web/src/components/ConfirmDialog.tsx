@@ -42,13 +42,14 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
       <div
         role="dialog"
         aria-modal="true"
-        aria-label={title}
+        aria-labelledby="dialog-title"
+        aria-describedby={description ? "dialog-description" : undefined}
         className="relative w-full max-w-md rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-xl p-6"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{title}</h2>
+        <h2 id="dialog-title" className="text-lg font-semibold text-gray-900 dark:text-white">{title}</h2>
         {description ? (
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">{description}</p>
+          <p id="dialog-description" className="mt-2 text-sm text-gray-600 dark:text-gray-300">{description}</p>
         ) : null}
         <div className="mt-6 flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
           <button

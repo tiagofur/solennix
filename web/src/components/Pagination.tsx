@@ -40,16 +40,20 @@ export const Pagination: React.FC<PaginationProps> = ({
     <div className="flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 sm:px-6">
       <div className="flex flex-1 justify-between sm:hidden">
         <button
+          type="button"
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
           className={`relative inline-flex items-center rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+          aria-label="Ir a la página anterior"
         >
           Anterior
         </button>
         <button
+          type="button"
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
           className={`relative ml-3 inline-flex items-center rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''}`}
+          aria-label="Ir a la página siguiente"
         >
           Siguiente
         </button>
@@ -65,32 +69,39 @@ export const Pagination: React.FC<PaginationProps> = ({
         <div>
           <nav className="isolate inline-flex -space-x-px rounded-md shadow-xs" aria-label="Pagination">
             <button
+              type="button"
               onClick={() => onPageChange(currentPage - 1)}
               disabled={currentPage === 1}
               className={`relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 focus:z-20 focus:outline-offset-0 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+              aria-label="Ir a la página anterior"
             >
               <span className="sr-only">Anterior</span>
               <ChevronLeft className="h-5 w-5" aria-hidden="true" />
             </button>
-            
+
             {pages.map(page => (
               <button
                 key={page}
+                type="button"
                 onClick={() => onPageChange(page)}
+                aria-label={`Ir a la página ${page}`}
+                aria-current={currentPage === page ? 'page' : undefined}
                 className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold focus:z-20 focus:outline-offset-0 ${
-                  currentPage === page 
-                    ? 'z-10 bg-brand-orange text-white focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-orange' 
+                  currentPage === page
+                    ? 'z-10 bg-brand-orange text-white focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-orange'
                     : 'text-gray-900 dark:text-white ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                 }`}
               >
                 {page}
               </button>
             ))}
-            
+
             <button
+              type="button"
               onClick={() => onPageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
               className={`relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 focus:z-20 focus:outline-offset-0 ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''}`}
+              aria-label="Ir a la página siguiente"
             >
               <span className="sr-only">Siguiente</span>
               <ChevronRight className="h-5 w-5" aria-hidden="true" />

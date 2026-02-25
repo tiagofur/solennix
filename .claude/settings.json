@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add docs/auditoria-mvp-feb-2026.md)",
+      "Bash(git add backend/internal/services/email_service.go backend/internal/services/auth_service.go backend/internal/handlers/auth_handler.go backend/internal/repository/user_repo.go backend/internal/router/router.go)",
+      "Bash(git add web/src/services/subscriptionService.test.ts backend/internal/handlers/subscription_handler_test.go)",
+      "Bash(git push origin main)",
+      "Bash(git add CHANGELOG.md docs/deployment/quickstart-feb-2026.md)",
+      "Bash(git add backend/internal/middleware/security.go backend/internal/router/router.go)",
+      "Bash(git add -A)",
+      "Bash(git restore --staged .claude/ .github/copilot-instructions.md AGENTS.md CLAUDE.md)",
+      "Read(//c/Users/tfurt/source/**)",
+      "Bash(grep -A5 \"type Event struct\" models/*.go)",
+      "Bash(npm run check)",
+      "Bash(npx tsc --noEmit)",
+      "Bash(npx eslint src/pages/Events/EventSummary.tsx --fix)",
+      "Bash(npm run test:e2e -- --list)",
+      "Bash(npm install)",
+      "Bash(npm install --legacy-peer-deps)",
+      "Bash(npx playwright install chromium)",
+      "Bash(npm run test:e2e -- tests/e2e/payments.spec.ts)",
+      "Bash(npm install --save-dev react-is --legacy-peer-deps)",
+      "Bash(npm run test:e2e -- tests/e2e/payments.spec.ts --workers=1)",
+      "Bash(docker-compose up db -d)",
+      "Bash(docker start eventosapp-db)",
+      "Bash(npm run test:e2e -- tests/e2e/payments.spec.ts tests/e2e/pdf.spec.ts tests/e2e/upgrade.spec.ts --workers=1)",
+      "Bash(npx playwright test tests/e2e/payments.spec.ts --workers=1 --reporter=line)",
+      "Bash(npx playwright test tests/e2e/payments.spec.ts tests/e2e/pdf.spec.ts tests/e2e/upgrade.spec.ts --workers=1 --reporter=list)",
+      "Bash(npx playwright test tests/e2e/upgrade.spec.ts --workers=1 --reporter=list)",
+      "Bash(npx playwright test \"tests/e2e/upgrade.spec.ts:14\" --workers=1 --reporter=line)",
+      "Bash(npx playwright test \"tests/e2e/upgrade.spec.ts:14\" --workers=1 --trace=on)"
+    ]
+  }
+}

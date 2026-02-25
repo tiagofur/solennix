@@ -79,22 +79,34 @@ export const QuickClientModal: React.FC<QuickClientModalProps> = ({
 
         <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-        <div className="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+        <div
+          className="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="quick-client-modal-title"
+          aria-describedby="quick-client-modal-description"
+        >
           <div className="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white">
+              <h3 id="quick-client-modal-title" className="text-lg leading-6 font-medium text-gray-900 dark:text-white">
                 Nuevo Cliente Rápido
               </h3>
               <button
+                type="button"
                 onClick={onClose}
                 className="text-gray-400 hover:text-gray-500 focus:outline-hidden"
+                aria-label="Cerrar modal"
               >
-                <X className="h-6 w-6" />
+                <X className="h-6 w-6" aria-hidden="true" />
               </button>
             </div>
 
+            <p id="quick-client-modal-description" className="sr-only">
+              Formulario para crear un nuevo cliente rápidamente con nombre, teléfono y email opcional
+            </p>
+
             {error && (
-              <div className="mb-4 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-400 p-4">
+              <div className="mb-4 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-400 p-4" role="alert">
                 <div className="flex">
                   <div className="ml-3">
                     <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
@@ -103,47 +115,58 @@ export const QuickClientModal: React.FC<QuickClientModalProps> = ({
               </div>
             )}
 
-            <div id="quick-client-form-container">
+            <div>
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label htmlFor="quick-client-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Nombre Completo *
                   </label>
                   <input
+                    id="quick-client-name"
                     type="text"
                     {...register("name")}
                     className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-xs py-2 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-hidden focus:ring-brand-orange focus:border-brand-orange sm:text-sm"
+                    aria-required="true"
+                    aria-invalid={errors.name ? "true" : "false"}
+                    aria-describedby={errors.name ? "quick-client-name-error" : undefined}
                   />
                   {errors.name && (
-                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.name.message}</p>
+                    <p id="quick-client-name-error" className="mt-1 text-sm text-red-600 dark:text-red-400" role="alert">{errors.name.message}</p>
                   )}
                 </div>
 
                 <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label htmlFor="quick-client-phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Teléfono *
                   </label>
                   <input
+                    id="quick-client-phone"
                     type="text"
                     {...register("phone")}
                     className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-xs py-2 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-hidden focus:ring-brand-orange focus:border-brand-orange sm:text-sm"
+                    aria-required="true"
+                    aria-invalid={errors.phone ? "true" : "false"}
+                    aria-describedby={errors.phone ? "quick-client-phone-error" : undefined}
                   />
                   {errors.phone && (
-                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.phone.message}</p>
+                    <p id="quick-client-phone-error" className="mt-1 text-sm text-red-600 dark:text-red-400" role="alert">{errors.phone.message}</p>
                   )}
                 </div>
 
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label htmlFor="quick-client-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Email
                   </label>
                   <input
+                    id="quick-client-email"
                     type="email"
                     {...register("email")}
                     className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-xs py-2 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-hidden focus:ring-brand-orange focus:border-brand-orange sm:text-sm"
+                    aria-invalid={errors.email ? "true" : "false"}
+                    aria-describedby={errors.email ? "quick-client-email-error" : undefined}
                   />
                   {errors.email && (
-                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email.message}</p>
+                    <p id="quick-client-email-error" className="mt-1 text-sm text-red-600 dark:text-red-400" role="alert">{errors.email.message}</p>
                   )}
                 </div>
               </div>
@@ -156,15 +179,16 @@ export const QuickClientModal: React.FC<QuickClientModalProps> = ({
               onClick={handleSubmit(onSubmit)}
               disabled={isLoading}
               className="w-full inline-flex justify-center rounded-md border border-transparent shadow-xs px-4 py-2 bg-brand-orange text-base font-medium text-white hover:bg-orange-600 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-brand-orange sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50"
+              aria-label={isLoading ? "Guardando cliente..." : "Guardar cliente"}
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4" />
+                  <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4" aria-hidden="true" />
                   Guardando...
                 </>
               ) : (
                 <>
-                  <Save className="-ml-1 mr-2 h-4 w-4" />
+                  <Save className="-ml-1 mr-2 h-4 w-4" aria-hidden="true" />
                   Guardar
                 </>
               )}

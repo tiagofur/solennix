@@ -18,6 +18,7 @@ import { InventoryForm } from './pages/Inventory/InventoryForm';
 import { CalendarView } from './pages/Calendar/CalendarView';
 import { EventForm } from './pages/Events/EventForm';
 import { EventSummary } from './pages/Events/EventSummary';
+// import EventPaymentSuccess from './pages/Events/EventPaymentSuccess'; // HIDDEN: Requires per-user Stripe config
 import { Settings } from './pages/Settings';
 import { Pricing } from './pages/Pricing';
 import { ForgotPassword } from './pages/ForgotPassword';
@@ -45,7 +46,9 @@ function App() {
           <Route path="/events/new" element={<EventForm />} />
           <Route path="/events/:id/edit" element={<EventForm />} />
           <Route path="/events/:id/summary" element={<EventSummary />} />
-          
+          {/* <Route path="/events/:id/payment-success" element={<EventPaymentSuccess />} /> */}
+          {/* HIDDEN: Event payment via Stripe requires per-user Stripe configuration */}
+
           {/* Rutas de Clientes */}
           <Route path="/clients" element={<ClientList />} />
           <Route path="/clients/new" element={<ClientForm />} />
@@ -63,8 +66,12 @@ function App() {
           <Route path="/inventory/:id/edit" element={<InventoryForm />} />
 
           <Route path="/settings" element={<Settings />} />
-          <Route path="/pricing" element={<Pricing />} />
         </Route>
+        <Route path="/pricing" element={
+          <ProtectedRoute>
+            <Pricing />
+          </ProtectedRoute>
+        } />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AuthProvider>

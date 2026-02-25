@@ -11,7 +11,7 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
   webServer: {
-    command: 'pnpm dev -- --host',
+    command: 'npm run dev -- --host',
     url: 'http://localhost:5173',
     reuseExistingServer: true,
     timeout: 120_000,

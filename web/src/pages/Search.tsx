@@ -86,8 +86,9 @@ export const SearchPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12 text-gray-500 dark:text-gray-300">
-        <Loader2 className="h-5 w-5 animate-spin mr-2" />
+      <div className="flex items-center justify-center py-12 text-gray-500 dark:text-gray-300" role="status" aria-live="polite">
+        <Loader2 className="h-5 w-5 animate-spin mr-2" aria-hidden="true" />
+        <span className="sr-only">Buscando resultados...</span>
         Buscando resultados...
       </div>
     );
@@ -95,7 +96,7 @@ export const SearchPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 text-sm text-red-700 dark:text-red-200">
+      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 text-sm text-red-700 dark:text-red-200" role="alert">
         {error}
       </div>
     );
@@ -120,7 +121,7 @@ export const SearchPage: React.FC = () => {
           </p>
         </div>
         <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-          <SearchIcon className="h-4 w-4 mr-2" />
+          <SearchIcon className="h-4 w-4 mr-2" aria-hidden="true" />
           Búsqueda global
         </div>
       </div>
@@ -129,7 +130,7 @@ export const SearchPage: React.FC = () => {
         <section className="bg-white dark:bg-gray-800 rounded-lg shadow-xs border border-gray-200 dark:border-gray-700 overflow-hidden mt-6">
           <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex items-center justify-between">
             <h2 className="font-semibold text-gray-900 dark:text-white flex items-center">
-              <Users className="h-4 w-4 mr-2 text-blue-500" />
+              <Users className="h-4 w-4 mr-2 text-blue-500" aria-hidden="true" />
               Clientes ({results.client.length})
             </h2>
           </div>
@@ -151,7 +152,7 @@ export const SearchPage: React.FC = () => {
                         </p>
                       )}
                     </div>
-                    <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-brand-orange transition-colors" />
+                    <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-brand-orange transition-colors" aria-hidden="true" />
                   </div>
                 </Link>
               </li>
@@ -176,7 +177,7 @@ export const SearchPage: React.FC = () => {
                 {event.subtitle && (
                   <p className="text-xs text-gray-500 dark:text-gray-400">{event.subtitle}</p>
                 )}
-                <p className="text-xs text-gray-400 dark:text-gray-500">
+                <p className="text-xs text-gray-400 dark:text-gray-400">
                   {event.meta ? formatEventDate(event.meta) : ''}
                   {event.meta && event.status ? ' - ' : ''}
                   {event.status ? STATUS_LABELS[event.status] : ''}
@@ -204,7 +205,7 @@ export const SearchPage: React.FC = () => {
                   <p className="text-xs text-gray-500 dark:text-gray-400">{product.subtitle}</p>
                 )}
                 {product.meta && (
-                  <p className="text-xs text-gray-400 dark:text-gray-500">{product.meta}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-400">{product.meta}</p>
                 )}
               </Link>
             ))}
@@ -229,7 +230,7 @@ export const SearchPage: React.FC = () => {
                   <p className="text-xs text-gray-500 dark:text-gray-400">{item.subtitle}</p>
                 )}
                 {item.meta && (
-                  <p className="text-xs text-gray-400 dark:text-gray-500">{item.meta}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-400">{item.meta}</p>
                 )}
               </Link>
             ))}

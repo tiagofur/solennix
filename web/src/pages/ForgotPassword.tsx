@@ -38,9 +38,9 @@ export function ForgotPassword() {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8 transition-colors">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
-          <div className="bg-white dark:bg-gray-800 py-8 px-4 shadow-sm sm:rounded-lg sm:px-10 text-center">
-            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 dark:bg-green-900/30 mb-4">
-              <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
+          <div className="bg-white dark:bg-gray-800 py-8 px-4 shadow-sm sm:rounded-lg sm:px-10 text-center" role="status" aria-live="polite">
+            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 dark:bg-green-900/30 mb-4" aria-hidden="true">
+              <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" aria-hidden="true" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">¡Correo enviado!</h2>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
@@ -50,7 +50,7 @@ export function ForgotPassword() {
               to="/login"
               className="inline-flex items-center text-sm font-medium text-brand-orange hover:text-orange-500"
             >
-              <ArrowLeft className="h-4 w-4 mr-2" />
+              <ArrowLeft className="h-4 w-4 mr-2" aria-hidden="true" />
               Volver al inicio de sesión
             </Link>
           </div>
@@ -77,7 +77,7 @@ export function ForgotPassword() {
         <div className="bg-white dark:bg-gray-800 py-8 px-4 shadow-sm sm:rounded-lg sm:px-10">
           <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
             {error && (
-              <div className="rounded-md bg-red-50 dark:bg-red-900/20 p-4">
+              <div className="rounded-md bg-red-50 dark:bg-red-900/20 p-4" role="alert">
                 <div className="flex">
                   <div className="ml-3">
                     <h3 className="text-sm font-medium text-red-800 dark:text-red-300">{error}</h3>
@@ -92,17 +92,21 @@ export function ForgotPassword() {
               </label>
               <div className="mt-1 relative rounded-md shadow-xs">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400 dark:text-gray-500" />
+                  <Mail className="h-5 w-5 text-gray-400 dark:text-gray-400" aria-hidden="true" />
                 </div>
                 <input
+                  id="email"
                   {...register('email')}
                   type="email"
                   className="focus:ring-brand-orange focus:border-brand-orange block w-full pl-10 sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md py-2 border"
                   placeholder="tu@ejemplo.com"
+                  aria-required="true"
+                  aria-invalid={errors.email ? "true" : "false"}
+                  aria-describedby={errors.email ? "email-error" : undefined}
                 />
               </div>
               {errors.email && (
-                <p className="mt-2 text-sm text-red-600">{errors.email.message}</p>
+                <p id="email-error" className="mt-2 text-sm text-red-600" role="alert">{errors.email.message}</p>
               )}
             </div>
 
@@ -111,10 +115,11 @@ export function ForgotPassword() {
                 type="submit"
                 disabled={isSubmitting}
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-xs text-sm font-medium text-white bg-brand-orange hover:bg-orange-600 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-brand-orange disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                aria-label={isSubmitting ? "Enviando instrucciones..." : "Enviar instrucciones de recuperación"}
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4" />
+                    <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4" aria-hidden="true" />
                     Enviando...
                   </>
                 ) : (

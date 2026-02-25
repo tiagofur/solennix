@@ -160,3 +160,40 @@ func (r *ProductRepo) UpdateIngredients(ctx context.Context, productID uuid.UUID
 
 	return tx.Commit(ctx)
 }
+
+// Search performs a full-text search on products for the given user
+func (r *ProductRepo) Search(ctx context.Context, userID uuid.UUID, query string) ([]models.Product, error) {
+	searchPattern := "%" + query + "%"
+	sqlQuery := `SELECT id, user_id, name, category, base_price, recipe, is_active, created_at, updated_at
+		FROM products
+		WHERE user_id = $1
+		AND (
+			name ILIKE $2 OR
+			category ILIKE $2
+		)
+		ORDER BY created_at DESC
+		LIMIT 10`
+
+	rows, err := r.pool.Query(ctx, sqlQuery, userID, searchPattern)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var products []models.Product
+	for rows.Next() {
+		var p models.Product
+		if err := rows.Scan(&p.ID, &p.UserID, &p.Name, &p.Category, &p.BasePrice,
+			&p.Recipe, &p.IsActive, &p.CreatedAt, &p.UpdatedAt); err != nil {
+			return nil, err
+		}
+		products = append(products, p)
+	}
+
+	if products == nil {
+		products = []models.Product{}
+	}
+
+	return products, nil
+}
+

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { eventService } from "../../services/eventService";
 import { productService } from "../../services/productService";
 import { paymentService } from "../../services/paymentService";
+import { eventPaymentService } from "../../services/eventPaymentService";
 import {
   ArrowLeft,
   FileText,
@@ -13,6 +14,7 @@ import {
   Pencil,
   ChevronDown,
   Trash2,
+  CreditCard,
 } from "lucide-react";
 import { useToast } from "../../hooks/useToast";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
@@ -21,6 +23,7 @@ import {
   generateBudgetPDF,
   generateContractPDF,
   generateShoppingListPDF,
+  generateInvoicePDF,
 } from "../../lib/pdfGenerator";
 import { logError } from "../../lib/errorHandler";
 import { getEventTotalCharged, getEventTaxAmount, getEventNetSales } from "../../lib/finance";
@@ -82,6 +85,7 @@ export const EventSummary: React.FC = () => {
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [creatingCheckout, setCreatingCheckout] = useState(false);
   const { addToast } = useToast();
   const { isBasicPlan } = usePlanLimits();
 
@@ -186,8 +190,35 @@ export const EventSummary: React.FC = () => {
     }
   };
 
-  if (loading) return <div>Cargando resumen...</div>;
-  if (!event) return <div>Evento no encontrado</div>;
+  const handlePayNow = async () => {
+    if (!id) return;
+    setCreatingCheckout(true);
+    try {
+      const { url } = await eventPaymentService.createCheckoutSession(id);
+      window.location.href = url; // Redirect to Stripe
+    } catch (error) {
+      logError(error, 'Failed to create checkout session');
+      addToast('Error al crear sesión de pago', 'error');
+      setCreatingCheckout(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64" role="status" aria-live="polite">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-orange" aria-hidden="true"></div>
+        <span className="sr-only">Cargando resumen del evento...</span>
+      </div>
+    );
+  }
+
+  if (!event) {
+    return (
+      <div className="flex justify-center items-center h-64" role="alert">
+        <p className="text-gray-600 dark:text-gray-400">Evento no encontrado</p>
+      </div>
+    );
+  }
 
   const totalProductCost = ingredients.reduce((sum, i) => sum + i.cost, 0);
   const totalExtrasCost = extras.reduce((sum, e) => sum + e.cost, 0);
@@ -215,55 +246,69 @@ export const EventSummary: React.FC = () => {
       <div className="flex flex-col md:flex-row justify-between items-center gap-4 print:hidden mb-6">
         <div className="flex items-center gap-4">
           <button
+            type="button"
             onClick={() => navigate(-1)}
             className="flex items-center text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+            aria-label="Volver a la página anterior"
           >
-            <ArrowLeft className="h-4 w-4 mr-2" /> Volver
+            <ArrowLeft className="h-4 w-4 mr-2" aria-hidden="true" /> Volver
           </button>
 
-          <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1 overflow-x-auto max-w-[250px] sm:max-w-none">
+          <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1 overflow-x-auto max-w-[250px] sm:max-w-none" role="group" aria-label="Modos de visualización del evento">
             <button
+              type="button"
               onClick={() => setViewMode("summary")}
               className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center transition-colors whitespace-nowrap ${
                 viewMode === "summary"
                   ? "bg-white dark:bg-gray-600 text-brand-orange shadow-xs"
                   : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
               }`}
+              aria-pressed={viewMode === "summary"}
+              aria-label="Ver resumen del evento"
             >
-              <FileText className="h-4 w-4 mr-2" />
+              <FileText className="h-4 w-4 mr-2" aria-hidden="true" />
               Resumen
             </button>
             <button
+              type="button"
               onClick={() => setViewMode("payments")}
               className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center transition-colors whitespace-nowrap ${
                 viewMode === "payments"
                   ? "bg-white dark:bg-gray-600 text-brand-orange shadow-xs"
                   : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
               }`}
+              aria-pressed={viewMode === "payments"}
+              aria-label="Ver pagos del evento"
             >
-              <DollarSign className="h-4 w-4 mr-2" />
+              <DollarSign className="h-4 w-4 mr-2" aria-hidden="true" />
               Pagos
             </button>
             <button
+              type="button"
               onClick={() => setViewMode("ingredients")}
               className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center transition-colors whitespace-nowrap ${
                 viewMode === "ingredients"
                   ? "bg-white dark:bg-gray-600 text-brand-orange shadow-xs"
                   : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
               }`}
+              aria-pressed={viewMode === "ingredients"}
+              aria-label="Ver lista de compras e ingredientes"
             >
-              <ShoppingCart className="h-4 w-4 mr-2" />
+              <ShoppingCart className="h-4 w-4 mr-2" aria-hidden="true" />
               Compras
             </button>
             <button
+              type="button"
               onClick={() => setViewMode("contract")}
               className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center transition-colors whitespace-nowrap ${
                 viewMode === "contract"
                   ? "bg-white dark:bg-gray-600 text-brand-orange shadow-xs"
                   : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
               }`}
+              aria-pressed={viewMode === "contract"}
+              aria-label="Ver contrato del evento"
             >
-              <FileCheck className="h-4 w-4 mr-2" />
+              <FileCheck className="h-4 w-4 mr-2" aria-hidden="true" />
               Contrato
             </button>
           </div>
@@ -272,42 +317,79 @@ export const EventSummary: React.FC = () => {
         <div className="flex flex-wrap items-center gap-2">
           {/* Edit Event Button */}
           <button
+            type="button"
             onClick={() => navigate(`/events/${id}/edit`)}
             className="flex items-center px-3 py-2 bg-brand-orange text-white rounded-sm hover:bg-orange-600 text-sm font-medium shadow-xs transition-colors"
-            title="Editar Evento"
+            aria-label="Editar este evento"
           >
-            <Pencil className="h-4 w-4 mr-2" />
+            <Pencil className="h-4 w-4 mr-2" aria-hidden="true" />
             Editar
           </button>
 
+          {/* Pay Now Button - HIDDEN: Requires per-user Stripe configuration
+          {event?.status !== 'cancelled' && event?.status !== 'completed' && (
+            <button
+              type="button"
+              onClick={handlePayNow}
+              disabled={creatingCheckout}
+              className="flex items-center px-3 py-2 bg-green-600 text-white rounded-sm hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium shadow-xs transition-colors"
+              aria-label="Pagar evento en línea"
+            >
+              <CreditCard className="h-4 w-4 mr-2" aria-hidden="true" />
+              {creatingCheckout ? 'Procesando...' : 'Pagar Ahora'}
+            </button>
+          )}
+          */}
+
           <button
+            type="button"
             onClick={() => setConfirmDeleteOpen(true)}
             className="flex items-center px-3 py-2 bg-red-600 text-white rounded-sm hover:bg-red-700 text-sm font-medium shadow-xs transition-colors"
-            title="Eliminar Evento"
+            aria-label="Eliminar este evento"
           >
-            <Trash2 className="h-4 w-4 mr-2" />
+            <Trash2 className="h-4 w-4 mr-2" aria-hidden="true" />
             Eliminar
           </button>
 
           {viewMode === "summary" && (
-            <button
-              onClick={() => {
-                if (isBasicPlan) {
-                  addToast("La generación de PDFs es exclusiva del plan Pro.", "error");
-                  return;
-                }
-                generateBudgetPDF(event, profile as any, products, extras)
-              }}
-              className="flex items-center px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-sm hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium shadow-xs transition-colors"
-              title="Descargar Presupuesto en PDF"
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Presupuesto
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={() => {
+                  if (isBasicPlan) {
+                    addToast("La generación de PDFs es exclusiva del plan Pro.", "error");
+                    return;
+                  }
+                  generateBudgetPDF(event, profile as any, products, extras)
+                }}
+                className="flex items-center px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-sm hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium shadow-xs transition-colors"
+                aria-label="Descargar presupuesto del evento en PDF"
+              >
+                <Download className="h-4 w-4 mr-2" aria-hidden="true" />
+                Presupuesto
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  if (isBasicPlan) {
+                    addToast("La generación de PDFs es exclusiva del plan Pro.", "error");
+                    return;
+                  }
+                  generateInvoicePDF(event, profile as any, products, extras)
+                }}
+                className="flex items-center px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-sm hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium shadow-xs transition-colors"
+                aria-label="Generar factura del evento en PDF"
+              >
+                <FileText className="h-4 w-4 mr-2" aria-hidden="true" />
+                Generar Factura
+              </button>
+            </>
           )}
 
           {viewMode === "ingredients" && (
             <button
+              type="button"
               onClick={() => {
                 if (isBasicPlan) {
                   addToast("La generación de PDFs es exclusiva del plan Pro.", "error");
@@ -316,15 +398,16 @@ export const EventSummary: React.FC = () => {
                 generateShoppingListPDF(event, profile as any, ingredients)
               }}
               className="flex items-center px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-sm hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium shadow-xs transition-colors"
-              title="Descargar Lista de Compras en PDF"
+              aria-label="Descargar lista de compras en PDF"
             >
-              <ShoppingCart className="h-4 w-4 mr-2" />
+              <ShoppingCart className="h-4 w-4 mr-2" aria-hidden="true" />
               Lista de Compras
             </button>
           )}
 
           {viewMode === "contract" && (
             <button
+              type="button"
               onClick={() => {
                 if (isBasicPlan) {
                   addToast("La generación de PDFs es exclusiva del plan Pro.", "error");
@@ -333,9 +416,9 @@ export const EventSummary: React.FC = () => {
                 generateContractPDF(event, profile as any)
               }}
               className="flex items-center px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-sm hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium shadow-xs transition-colors"
-              title="Descargar Contrato en PDF"
+              aria-label="Descargar contrato del evento en PDF"
             >
-              <FileCheck className="h-4 w-4 mr-2" />
+              <FileCheck className="h-4 w-4 mr-2" aria-hidden="true" />
               Contrato
             </button>
           )}
@@ -368,39 +451,50 @@ export const EventSummary: React.FC = () => {
                 onClick={(e) => e.stopPropagation()}
               >
                 <button
+                  type="button"
                   onClick={() => setStatusDropdownOpen((prev) => !prev)}
                   disabled={updatingStatus}
                   className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-semibold transition-all ${statusCfg.bg} ${statusCfg.color} ${updatingStatus ? "opacity-60 cursor-not-allowed" : "hover:opacity-80 cursor-pointer"}`}
+                  aria-label={`Estado del evento: ${statusCfg.label}. Click para cambiar`}
+                  aria-expanded={statusDropdownOpen}
+                  aria-haspopup="menu"
                 >
                   <span
                     className={`w-2 h-2 rounded-full shrink-0 ${statusCfg.dot}`}
+                    aria-hidden="true"
                   />
                   {statusCfg.label}
                   <ChevronDown
                     className={`h-3.5 w-3.5 transition-transform ${statusDropdownOpen ? "rotate-180" : ""}`}
+                    aria-hidden="true"
                   />
                 </button>
 
                 {statusDropdownOpen && (
-                  <div className="absolute right-0 mt-1 w-44 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 overflow-hidden">
+                  <div className="absolute right-0 mt-1 w-44 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 overflow-hidden" role="menu" aria-label="Cambiar estado del evento">
                     {ALL_STATUSES.map((s) => {
                       const cfg = STATUS_CONFIG[s];
                       return (
                         <button
                           key={s}
+                          type="button"
                           onClick={() => handleStatusChange(s)}
                           className={`w-full flex items-center gap-2 px-3 py-2.5 text-sm text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-700 ${
                             s === currentStatus
                               ? "font-semibold " + cfg.color
                               : "text-gray-700 dark:text-gray-200"
                           }`}
+                          role="menuitem"
+                          aria-label={`Cambiar estado a ${cfg.label}`}
+                          aria-current={s === currentStatus ? "true" : undefined}
                         >
                           <span
                             className={`w-2 h-2 rounded-full shrink-0 ${cfg.dot}`}
+                            aria-hidden="true"
                           />
                           {cfg.label}
                           {s === currentStatus && (
-                            <span className="ml-auto text-xs opacity-60">
+                            <span className="ml-auto text-xs opacity-60" aria-hidden="true">
                               ✓
                             </span>
                           )}
@@ -458,7 +552,8 @@ export const EventSummary: React.FC = () => {
               <h2 className="text-lg font-bold mb-4 border-b dark:border-gray-700 pb-2 text-gray-900 dark:text-white">
                 Productos
               </h2>
-              <table className="w-full text-sm text-gray-600 dark:text-gray-300">
+              <table className="w-full text-sm text-gray-600 dark:text-gray-300" aria-label="Productos incluidos en el evento">
+                <caption className="sr-only">Lista de productos del evento con cantidades y precios</caption>
                 <thead>
                   <tr className="text-left text-gray-500 dark:text-gray-400">
                     <th className="pb-2">Producto</th>
@@ -492,7 +587,8 @@ export const EventSummary: React.FC = () => {
               <h2 className="text-lg font-bold mb-4 border-b dark:border-gray-700 pb-2 text-gray-900 dark:text-white">
                 Extras
               </h2>
-              <table className="w-full text-sm text-gray-600 dark:text-gray-300">
+              <table className="w-full text-sm text-gray-600 dark:text-gray-300" aria-label="Extras adicionales del evento">
+                <caption className="sr-only">Lista de servicios o productos extra incluidos en el evento</caption>
                 <thead>
                   <tr className="text-left text-gray-500 dark:text-gray-400">
                     <th className="pb-2">Descripción</th>
@@ -608,7 +704,8 @@ export const EventSummary: React.FC = () => {
           </div>
 
           <div className="bg-white dark:bg-gray-800 rounded-sm">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm" aria-label="Ingredientes necesarios para el evento">
+              <caption className="sr-only">Lista de ingredientes con cantidades necesarias para el evento</caption>
               <thead>
                 <tr className="text-left text-gray-500 dark:text-gray-400 border-b dark:border-gray-700">
                   <th className="pb-3 pt-2">Ingrediente</th>
@@ -770,7 +867,7 @@ export const EventSummary: React.FC = () => {
         </div>
       )}
 
-      <div className="mt-12 text-center text-xs text-gray-400 dark:text-gray-500 print:mt-12">
+      <div className="mt-12 text-center text-xs text-gray-400 dark:text-gray-400 print:mt-12">
         <p>
           Generado por {profile?.business_name || "EventosApp"} -{" "}
           {new Date().toLocaleString()}

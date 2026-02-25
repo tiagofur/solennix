@@ -82,7 +82,12 @@ export const InventoryList: React.FC = () => {
 
   const renderSortIcon = (key: keyof InventoryItem) => {
     if (sortKey !== key) return null;
-    return sortOrder === 'asc' ? <ArrowUp className="inline h-3 w-3 ml-1" /> : <ArrowDown className="inline h-3 w-3 ml-1" />;
+    return sortOrder === 'asc' ? <ArrowUp className="inline h-3 w-3 ml-1" aria-hidden="true" /> : <ArrowDown className="inline h-3 w-3 ml-1" aria-hidden="true" />;
+  };
+
+  const getSortAriaSort = (key: keyof InventoryItem): "ascending" | "descending" | "none" => {
+    if (sortKey !== key) return "none";
+    return sortOrder === 'asc' ? "ascending" : "descending";
   };
 
   return (
@@ -105,16 +110,16 @@ export const InventoryList: React.FC = () => {
           to="/inventory/new"
           className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-brand-orange hover:bg-orange-600 shadow-xs transition-colors"
         >
-          <Plus className="h-5 w-5 mr-2" />
+          <Plus className="h-5 w-5 mr-2" aria-hidden="true" />
           Nuevo Ingrediente
         </Link>
       </div>
 
       {lowStockItems.length > 0 && (
-        <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-400 p-4">
+        <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-400 p-4" role="alert">
           <div className="flex">
             <div className="shrink-0">
-              <AlertTriangle className="h-5 w-5 text-red-400" />
+              <AlertTriangle className="h-5 w-5 text-red-400" aria-hidden="true" />
             </div>
             <div className="ml-3">
               <h3 className="text-sm font-medium text-red-800 dark:text-red-300">
@@ -131,21 +136,24 @@ export const InventoryList: React.FC = () => {
       )}
 
       <div className="relative max-w-md">
+        <label htmlFor="inventory-search" className="sr-only">Buscar ingredientes</label>
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <Search className="h-5 w-5 text-gray-400" />
+          <Search className="h-5 w-5 text-gray-400" aria-hidden="true" />
         </div>
         <input
-          type="text"
+          id="inventory-search"
+          type="search"
           className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-hidden focus:ring-brand-orange focus:border-brand-orange sm:text-sm transition duration-150 ease-in-out"
           placeholder="Buscar ingrediente..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
+          aria-label="Buscar ingredientes por nombre"
         />
       </div>
 
       <div className="bg-white dark:bg-gray-800 shadow-sm overflow-hidden sm:rounded-lg">
         {loading ? (
-          <div className="p-4 text-center text-gray-500 dark:text-gray-400">Cargando inventario...</div>
+          <div className="p-4 text-center text-gray-500 dark:text-gray-400" role="status" aria-live="polite">Cargando inventario...</div>
         ) : filteredItems.length === 0 ? (
           <Empty 
             title="No se encontraron ingredientes" 
@@ -156,7 +164,7 @@ export const InventoryList: React.FC = () => {
                   to="/inventory/new"
                   className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-brand-orange hover:bg-orange-600 shadow-xs"
                 >
-                  <Plus className="h-5 w-5 mr-2" />
+                  <Plus className="h-5 w-5 mr-2" aria-hidden="true" />
                   Agregar Ingrediente
                 </Link>
               ) : undefined
@@ -164,41 +172,49 @@ export const InventoryList: React.FC = () => {
           />
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700" aria-label="Tabla de inventario">
+              <caption className="sr-only">
+                Lista de inventario con {totalItems} resultados. Mostrando página {currentPage} de {totalPages}.
+              </caption>
               <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
-                  <th 
-                    scope="col" 
+                  <th
+                    scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                     onClick={() => handleSort('ingredient_name')}
+                    aria-sort={getSortAriaSort('ingredient_name')}
                   >
                     Ítem {renderSortIcon('ingredient_name')}
                   </th>
-                  <th 
-                    scope="col" 
+                  <th
+                    scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                     onClick={() => handleSort('type')}
+                    aria-sort={getSortAriaSort('type')}
                   >
                     Tipo {renderSortIcon('type')}
                   </th>
-                  <th 
-                    scope="col" 
+                  <th
+                    scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                     onClick={() => handleSort('current_stock')}
+                    aria-sort={getSortAriaSort('current_stock')}
                   >
                     Stock Actual {renderSortIcon('current_stock')}
                   </th>
-                  <th 
-                    scope="col" 
+                  <th
+                    scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                     onClick={() => handleSort('minimum_stock')}
+                    aria-sort={getSortAriaSort('minimum_stock')}
                   >
                     Stock Mínimo {renderSortIcon('minimum_stock')}
                   </th>
-                  <th 
-                    scope="col" 
+                  <th
+                    scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                     onClick={() => handleSort('unit_cost')}
+                    aria-sort={getSortAriaSort('unit_cost')}
                   >
                     Costo Unitario {renderSortIcon('unit_cost')}
                   </th>
@@ -235,7 +251,7 @@ export const InventoryList: React.FC = () => {
                             {item.current_stock}
                           </span>
                           {isLowStock && (
-                            <AlertTriangle className="h-4 w-4 text-red-500 ml-2" />
+                            <AlertTriangle className="h-4 w-4 text-red-500 ml-2" aria-hidden="true" />
                           )}
                         </div>
                       </td>
@@ -247,14 +263,20 @@ export const InventoryList: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex justify-end space-x-2">
-                          <Link to={`/inventory/${item.id}/edit`} className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300">
-                            <Edit className="h-5 w-5" />
+                          <Link
+                            to={`/inventory/${item.id}/edit`}
+                            className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
+                            aria-label={`Editar ${item.ingredient_name}`}
+                          >
+                            <Edit className="h-5 w-5" aria-hidden="true" />
                           </Link>
-                          <button 
+                          <button
+                            type="button"
                             onClick={() => requestDelete(item.id)}
                             className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                            aria-label={`Eliminar ${item.ingredient_name}`}
                           >
-                            <Trash2 className="h-5 w-5" />
+                            <Trash2 className="h-5 w-5" aria-hidden="true" />
                           </button>
                         </div>
                       </td>

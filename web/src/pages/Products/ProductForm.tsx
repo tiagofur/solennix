@@ -28,7 +28,7 @@ export const ProductForm: React.FC = () => {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   const { canCreateCatalogItem, catalogCount, catalogLimit, loading: limitsLoading } = usePlanLimits();
 
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
@@ -98,8 +98,8 @@ export const ProductForm: React.FC = () => {
   };
 
   const handleAddIngredient = () => {
-      setRecipeIngredients([...recipeIngredients, { 
-          inventory_id: "", 
+      setRecipeIngredients([...recipeIngredients, {
+          inventory_id: "",
           quantity_required: 1,
           unit_cost: 0,
           unit: ""
@@ -115,7 +115,7 @@ export const ProductForm: React.FC = () => {
   const handleIngredientChange = (index: number, field: 'inventory_id' | 'quantity_required', value: any) => {
       const newIngredients = [...recipeIngredients];
       newIngredients[index] = { ...newIngredients[index], [field]: value };
-      
+
       if (field === 'inventory_id') {
           const item = inventoryItems.find(i => i.id === value);
           if (item) {
@@ -123,7 +123,7 @@ export const ProductForm: React.FC = () => {
               newIngredients[index].unit = item.unit;
           }
       }
-      
+
       setRecipeIngredients(newIngredients);
   };
 
@@ -172,8 +172,9 @@ export const ProductForm: React.FC = () => {
 
   if (limitsLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-orange"></div>
+      <div className="flex justify-center items-center h-64" role="status" aria-live="polite">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-orange" aria-hidden="true"></div>
+        <span className="sr-only">Cargando límites de plan...</span>
       </div>
     );
   }
@@ -182,10 +183,12 @@ export const ProductForm: React.FC = () => {
     return (
       <div className="max-w-4xl mx-auto py-8 px-4">
         <button
+          type="button"
           onClick={() => navigate(-1)}
           className="mb-6 flex items-center text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+          aria-label="Regresar a la página anterior"
         >
-          <ArrowLeft className="h-4 w-4 mr-1" />
+          <ArrowLeft className="h-4 w-4 mr-1" aria-hidden="true" />
           Regresar
         </button>
         <div className="flex justify-center mt-12">
@@ -200,10 +203,12 @@ export const ProductForm: React.FC = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center">
           <button
+            type="button"
             onClick={() => navigate("/products")}
             className="mr-4 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
+            aria-label="Volver a la lista de productos"
           >
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="h-5 w-5" aria-hidden="true" />
           </button>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             {id ? "Editar Producto" : "Nuevo Producto"}
@@ -216,7 +221,7 @@ export const ProductForm: React.FC = () => {
         <div className="lg:col-span-2 bg-white dark:bg-gray-800 shadow-sm px-4 py-5 sm:rounded-lg sm:p-6">
             <form id="product-form" onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {error && (
-                <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-400 p-4">
+                <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-400 p-4" role="alert">
                 <div className="flex">
                     <div className="ml-3">
                     <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
@@ -235,13 +240,17 @@ export const ProductForm: React.FC = () => {
                 </label>
                 <div className="mt-1">
                     <input
+                    id="name"
                     type="text"
                     {...register("name")}
                     className="shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     placeholder="Ej. Churros Clásicos"
+                    aria-required="true"
+                    aria-invalid={errors.name ? "true" : "false"}
+                    aria-describedby={errors.name ? "name-error" : undefined}
                     />
                     {errors.name && (
-                    <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+                    <p id="name-error" className="mt-2 text-sm text-red-600 dark:text-red-400" role="alert">
                         {errors.name.message}
                     </p>
                     )}
@@ -257,13 +266,17 @@ export const ProductForm: React.FC = () => {
                 </label>
                 <div className="mt-1">
                     <input
+                    id="category"
                     type="text"
                     {...register("category")}
                     className="shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     placeholder="Ej. Postres"
+                    aria-required="true"
+                    aria-invalid={errors.category ? "true" : "false"}
+                    aria-describedby={errors.category ? "category-error" : undefined}
                     />
                     {errors.category && (
-                    <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+                    <p id="category-error" className="mt-2 text-sm text-red-600 dark:text-red-400" role="alert">
                         {errors.category.message}
                     </p>
                     )}
@@ -279,13 +292,17 @@ export const ProductForm: React.FC = () => {
                 </label>
                 <div className="mt-1">
                     <input
+                    id="base_price"
                     type="number"
                     step="0.01"
                     {...register("base_price")}
                     className="shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    aria-required="true"
+                    aria-invalid={errors.base_price ? "true" : "false"}
+                    aria-describedby={errors.base_price ? "base_price-error" : undefined}
                     />
                     {errors.base_price && (
-                    <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+                    <p id="base_price-error" className="mt-2 text-sm text-red-600 dark:text-red-400" role="alert">
                         {errors.base_price.message}
                     </p>
                     )}
@@ -298,7 +315,7 @@ export const ProductForm: React.FC = () => {
         {/* Receta / Ingredientes */}
         <div className="lg:col-span-1 bg-white dark:bg-gray-800 shadow-sm px-4 py-5 sm:rounded-lg sm:p-6 flex flex-col">
             <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white mb-4 flex items-center">
-                <ChefHat className="h-5 w-5 mr-2 text-brand-orange" />
+                <ChefHat className="h-5 w-5 mr-2 text-brand-orange" aria-hidden="true" />
                 Receta (por unidad/persona)
             </h3>
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Define qué ingredientes y qué cantidad se necesitan para 1 unidad de este producto.</p>
@@ -306,17 +323,22 @@ export const ProductForm: React.FC = () => {
             <div className="flex-1 overflow-y-auto mb-4 space-y-3">
                 {recipeIngredients.map((item, index) => (
                     <div key={index} className="bg-gray-50 dark:bg-gray-700 p-3 rounded-md relative group">
-                        <button 
+                        <button
+                            type="button"
                             onClick={() => handleRemoveIngredient(index)}
                             className="absolute top-1 right-1 text-gray-400 hover:text-red-500 dark:hover:text-red-400"
+                            aria-label={`Eliminar ingrediente ${index + 1}`}
                         >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="h-4 w-4" aria-hidden="true" />
                         </button>
                         <div className="mb-2 pr-6">
+                            <label htmlFor={`ingredient-select-${index}`} className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Ingrediente</label>
                             <select
+                                id={`ingredient-select-${index}`}
                                 value={item.inventory_id}
                                 onChange={(e) => handleIngredientChange(index, 'inventory_id', e.target.value)}
                                 className="block w-full text-sm border-gray-300 dark:border-gray-600 rounded-md shadow-xs focus:ring-brand-orange focus:border-brand-orange bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
+                                aria-label={`Seleccionar ingrediente ${index + 1}`}
                             >
                                 <option value="">Seleccionar ingrediente</option>
                                 {inventoryItems.map(i => (
@@ -326,13 +348,15 @@ export const ProductForm: React.FC = () => {
                         </div>
                         <div className="flex gap-2 items-center">
                             <div className="w-1/2">
-                                <label className="text-xs text-gray-500 dark:text-gray-400">Cantidad</label>
-                                <input 
-                                    type="number" 
+                                <label htmlFor={`quantity-${index}`} className="text-xs text-gray-500 dark:text-gray-400">Cantidad</label>
+                                <input
+                                    id={`quantity-${index}`}
+                                    type="number"
                                     step="0.001"
                                     value={item.quantity_required}
                                     onChange={(e) => handleIngredientChange(index, 'quantity_required', Number(e.target.value))}
                                     className="block w-full text-sm border-gray-300 dark:border-gray-600 rounded-md shadow-xs focus:ring-brand-orange focus:border-brand-orange bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
+                                    aria-label={`Cantidad de ingrediente ${index + 1}`}
                                 />
                             </div>
                             <div className="w-1/2 text-right">
@@ -344,13 +368,14 @@ export const ProductForm: React.FC = () => {
                         </div>
                     </div>
                 ))}
-                
+
                 <button
                     type="button"
                     onClick={handleAddIngredient}
                     className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-xs text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+                    aria-label="Agregar un ingrediente adicional a la receta"
                 >
-                    <Plus className="h-4 w-4 mr-2" /> Agregar Ingrediente
+                    <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> Agregar Ingrediente
                 </button>
             </div>
 
@@ -369,8 +394,9 @@ export const ProductForm: React.FC = () => {
                     form="product-form"
                     disabled={isLoading}
                     className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-xs text-sm font-medium text-white bg-brand-orange hover:bg-orange-600 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-brand-orange disabled:opacity-50"
+                    aria-label={isLoading ? "Guardando producto..." : "Guardar producto"}
                 >
-                    <Save className="h-5 w-5 mr-2" />
+                    <Save className="h-5 w-5 mr-2" aria-hidden="true" />
                     {isLoading ? "Guardando..." : "Guardar Producto"}
                 </button>
             </div>

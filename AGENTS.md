@@ -14,12 +14,11 @@ EventosApp es una aplicación SaaS para organizadores de eventos (catering, banq
 
 ### Stack Tecnológico
 
-- **Frontend Web**: React 18 + TypeScript + Vite + Tailwind CSS
-- **Backend**: Supabase (Auth + PostgreSQL + RLS)
-- **Frontend Mobile**: Flutter 3.24+ + Riverpod
-- **State Management**: Zustand (web), Riverpod (mobile)
-- **Testing**: Playwright (E2E web)
-- **Despliegue**: Vercel (web), Docker Compose (backend)
+- **Frontend Web**: React 19 + TypeScript + Vite + Tailwind CSS
+- **Backend**: Go 1.25 + Chi router + PostgreSQL + pgx
+- **State Management**: Zustand (web), React Hook Form + Zod (forms)
+- **Testing**: Vitest + Testing Library (unit), Playwright (E2E)
+- **Despliegue**: Docker Compose, Vercel-ready (web)
 
 ---
 

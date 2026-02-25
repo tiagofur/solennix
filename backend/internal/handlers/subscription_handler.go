@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"crypto/subtle"
 	"encoding/json"
 	"io"
@@ -15,20 +16,42 @@ import (
 	"github.com/stripe/stripe-go/v81/webhook"
 	"github.com/tiagofur/eventosapp-backend/internal/config"
 	"github.com/tiagofur/eventosapp-backend/internal/middleware"
+	"github.com/tiagofur/eventosapp-backend/internal/models"
 )
+
+// EventRepository defines methods for event data access
+type EventRepository interface {
+	GetByID(ctx context.Context, id, userID uuid.UUID) (*models.Event, error)
+	Update(ctx context.Context, e *models.Event) error
+}
+
+// PaymentRepository defines methods for payment data access
+type PaymentRepository interface {
+	Create(ctx context.Context, p *models.Payment) error
+}
 
 // SubscriptionHandler handles SaaS subscription flows for both
 // web (Stripe) and mobile (Apple/Google via RevenueCat).
+// Also handles event payment webhooks.
 type SubscriptionHandler struct {
-	userRepo UserRepository
-	cfg      *config.Config
+	userRepo    UserRepository
+	eventRepo   EventRepository
+	paymentRepo PaymentRepository
+	cfg         *config.Config
 }
 
-func NewSubscriptionHandler(userRepo UserRepository, cfg *config.Config) *SubscriptionHandler {
+func NewSubscriptionHandler(
+	userRepo UserRepository,
+	eventRepo EventRepository,
+	paymentRepo PaymentRepository,
+	cfg *config.Config,
+) *SubscriptionHandler {
 	stripe.Key = cfg.StripeSecretKey
 	return &SubscriptionHandler{
-		userRepo: userRepo,
-		cfg:      cfg,
+		userRepo:    userRepo,
+		eventRepo:   eventRepo,
+		paymentRepo: paymentRepo,
+		cfg:         cfg,
 	}
 }
 
@@ -163,7 +186,15 @@ func (h *SubscriptionHandler) StripeWebhook(w http.ResponseWriter, r *http.Reque
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		if s.ClientReferenceID != "" {
+
+		// Check if this is an event payment or subscription
+		paymentType := s.Metadata["type"]
+
+		if paymentType == "event_payment" {
+			// Handle event payment
+			h.handleEventPayment(r.Context(), &s)
+		} else if s.ClientReferenceID != "" {
+			// Handle subscription (existing logic)
 			userID, err := uuid.Parse(s.ClientReferenceID)
 			if err != nil {
 				slog.Error("Invalid user ID in checkout session", "id", s.ClientReferenceID)
@@ -357,4 +388,72 @@ func (h *SubscriptionHandler) GetSubscriptionStatus(w http.ResponseWriter, r *ht
 		Plan:             user.Plan,
 		HasStripeAccount: user.StripeCustomerID != nil && *user.StripeCustomerID != "",
 	})
+}
+
+// handleEventPayment processes a completed event payment from Stripe webhook
+func (h *SubscriptionHandler) handleEventPayment(ctx context.Context, session *stripe.CheckoutSession) {
+	eventIDStr := session.Metadata["event_id"]
+	userIDStr := session.Metadata["user_id"]
+
+	if eventIDStr == "" || userIDStr == "" {
+		slog.Error("Event payment webhook missing metadata", "session_id", session.ID)
+		return
+	}
+
+	eventID, err := uuid.Parse(eventIDStr)
+	if err != nil {
+		slog.Error("Invalid event ID in webhook metadata", "event_id", eventIDStr, "error", err)
+		return
+	}
+
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		slog.Error("Invalid user ID in webhook metadata", "user_id", userIDStr, "error", err)
+		return
+	}
+
+	// Get event details
+	event, err := h.eventRepo.GetByID(ctx, eventID, userID)
+	if err != nil {
+		slog.Error("Failed to get event for payment webhook", "event_id", eventID, "error", err)
+		return
+	}
+
+	// Create payment record
+	amountPaid := float64(session.AmountTotal) / 100.0
+	paymentDate := time.Now().Format("2006-01-02")
+
+	payment := &models.Payment{
+		EventID:       eventID,
+		UserID:        userID,
+		Amount:        amountPaid,
+		PaymentDate:   paymentDate,
+		PaymentMethod: "stripe",
+		Notes:         stringPtr("Pago online vía Stripe - Session: " + session.ID),
+	}
+
+	if err := h.paymentRepo.Create(ctx, payment); err != nil {
+		slog.Error("Failed to create payment record from webhook", "event_id", eventID, "error", err)
+		return
+	}
+
+	// Update event status to confirmed if it was quoted
+	if event.Status == "quoted" {
+		event.Status = "confirmed"
+		if err := h.eventRepo.Update(ctx, event); err != nil {
+			slog.Error("Failed to update event status after payment", "event_id", eventID, "error", err)
+		}
+	}
+
+	slog.Info("Event payment processed successfully",
+		"event_id", eventID,
+		"amount", amountPaid,
+		"session_id", session.ID,
+		"customer_email", session.CustomerDetails.Email,
+	)
+}
+
+// stringPtr is a helper to create a pointer to a string
+func stringPtr(s string) *string {
+	return &s
 }

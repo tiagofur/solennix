@@ -39,23 +39,26 @@ export const EventProducts: React.FC<EventProductsProps> = ({
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-medium text-gray-900 dark:text-white">Selección de Productos</h3>
-      
+
       {selectedProducts.map((item, index) => (
         <div key={index} className="bg-gray-50 dark:bg-gray-700 p-3 rounded-md relative group">
           <button
             type="button"
             onClick={() => onRemoveProduct(index)}
             className="absolute top-1 right-1 text-gray-400 hover:text-red-500 dark:hover:text-red-400"
+            aria-label={`Eliminar producto ${index + 1}`}
           >
-            <Trash2 className="h-4 w-4" />
+            <Trash2 className="h-4 w-4" aria-hidden="true" />
           </button>
-          
+
           <div className="mb-2 pr-6">
-            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Producto</label>
+            <label htmlFor={`product-select-${index}`} className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Producto</label>
             <select
+              id={`product-select-${index}`}
               value={item.product_id}
               onChange={(e) => onProductChange(index, 'product_id', e.target.value)}
               className="block w-full text-sm border-gray-300 dark:border-gray-600 rounded-md shadow-xs focus:ring-brand-orange focus:border-brand-orange bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
+              aria-label={`Seleccionar producto ${index + 1}`}
             >
               <option value="">Seleccionar producto</option>
               {products.map((p) => (
@@ -68,38 +71,43 @@ export const EventProducts: React.FC<EventProductsProps> = ({
 
           <div className="flex gap-2 flex-wrap sm:flex-nowrap">
             <div className="w-full sm:w-[20%]">
-              <label className="text-xs text-gray-500 dark:text-gray-400 block mb-1">Cant.</label>
+              <label htmlFor={`quantity-${index}`} className="text-xs text-gray-500 dark:text-gray-400 block mb-1">Cant.</label>
               <div className="flex rounded-md shadow-xs">
                 <input
+                  id={`quantity-${index}`}
                   type="number"
                   value={item.quantity}
                   onChange={(e) => onProductChange(index, 'quantity', Number(e.target.value))}
                   className="flex-1 min-w-0 block w-full px-2 py-2 rounded-none rounded-l-md text-sm border-gray-300 dark:border-gray-600 focus:ring-brand-orange focus:border-brand-orange border bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
+                  aria-label={`Cantidad de producto ${index + 1}`}
                 />
                 <button
                   type="button"
                   onClick={() => onProductChange(index, 'quantity', Number(numPeople || 1))}
-                  title="Igualar a personas"
                   className="inline-flex items-center px-2 rounded-r-md border border-l-0 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 sm:text-sm hover:bg-gray-100 dark:hover:bg-gray-600"
+                  aria-label="Igualar cantidad a número de personas"
                 >
-                  <Users className="h-3 w-3" />
+                  <Users className="h-3 w-3" aria-hidden="true" />
                 </button>
               </div>
             </div>
 
             <div className="w-1/2 sm:w-[25%]">
-              <label className="text-xs text-gray-500 dark:text-gray-400 block mb-1">Precio Unit.</label>
+              <label htmlFor={`price-${index}`} className="text-xs text-gray-500 dark:text-gray-400 block mb-1">Precio Unit.</label>
               <input
+                id={`price-${index}`}
                 type="number"
                 value={item.price}
                 readOnly
                 className="block w-full text-sm border-gray-300 dark:border-gray-600 rounded-md shadow-xs bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400 p-2 border cursor-not-allowed"
+                aria-label={`Precio unitario de producto ${index + 1} (solo lectura)`}
               />
             </div>
 
             <div className="w-1/2 sm:w-[20%]">
-              <label className="text-xs text-gray-500 dark:text-gray-400 block mb-1">Desc. Unit.</label>
+              <label htmlFor={`discount-${index}`} className="text-xs text-gray-500 dark:text-gray-400 block mb-1">Desc. Unit.</label>
               <input
+                id={`discount-${index}`}
                 type="number"
                 min="0"
                 max={item.price}
@@ -109,12 +117,14 @@ export const EventProducts: React.FC<EventProductsProps> = ({
                   if (val >= 0 && val <= item.price) onProductChange(index, 'discount', val);
                 }}
                 className="block w-full text-sm border-gray-300 dark:border-gray-600 rounded-md shadow-xs focus:ring-brand-orange focus:border-brand-orange p-2 border bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
+                aria-label={`Descuento unitario de producto ${index + 1}`}
               />
             </div>
 
             <div className="w-full sm:w-[35%]">
-              <label className="text-xs text-gray-500 dark:text-gray-400 block mb-1">Total</label>
+              <label htmlFor={`total-${index}`} className="text-xs text-gray-500 dark:text-gray-400 block mb-1">Total</label>
               <input
+                id={`total-${index}`}
                 type="number"
                 value={((item.price - (item.discount || 0)) * item.quantity).toFixed(2)}
                 onChange={(e) => {
@@ -126,12 +136,13 @@ export const EventProducts: React.FC<EventProductsProps> = ({
                   }
                 }}
                 className="block w-full text-sm border-gray-300 dark:border-gray-600 rounded-md shadow-xs focus:ring-brand-orange focus:border-brand-orange p-2 border bg-white dark:bg-gray-600 text-gray-900 dark:text-white font-bold"
+                aria-label={`Total de producto ${index + 1}`}
               />
             </div>
           </div>
 
           {item.product_id && productUnitCosts[item.product_id] !== undefined && (
-            <div className="mt-2 text-xs text-gray-400 dark:text-gray-500">
+            <div className="mt-2 text-xs text-gray-400 dark:text-gray-400">
               Costo est. unitario: ${productUnitCosts[item.product_id].toFixed(2)}
             </div>
           )}
@@ -142,8 +153,9 @@ export const EventProducts: React.FC<EventProductsProps> = ({
         type="button"
         onClick={onAddProduct}
         className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-xs text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+        aria-label="Agregar un producto adicional"
       >
-        <Plus className="h-4 w-4 mr-2" /> Agregar Producto
+        <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> Agregar Producto
       </button>
 
       <div className="mt-4 text-right">

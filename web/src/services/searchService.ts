@@ -1,7 +1,4 @@
-import { clientService } from './clientService';
-import { productService } from './productService';
-import { inventoryService } from './inventoryService';
-import { eventService } from './eventService'; // Will be refactored next
+import { api } from '../lib/api';
 import { Database } from '../types/supabase';
 
 type Client = Database['public']['Tables']['clients']['Row'];
@@ -88,41 +85,20 @@ export const searchService = {
     const term = normalizeQuery(query);
     if (!term) return EMPTY_RESULTS;
 
-    // Fetch all data in parallel
-    const [clients, products, inventory, events] = await Promise.all([
-      clientService.getAll(),
-      productService.getAll(),
-      inventoryService.getAll(),
-      eventService.getAll(),
-    ]);
+    // Call server-side search endpoint
+    const response = await api.get<{
+      clients: Client[];
+      products: Product[];
+      inventory: InventoryItem[];
+      events: any[];
+    }>(`/search?q=${encodeURIComponent(term)}`);
 
-    // Filter in memory
-    const filteredClients = clients.filter(c => 
-      c.name.toLowerCase().includes(term) || 
-      c.email?.toLowerCase().includes(term) || 
-      c.city?.toLowerCase().includes(term)
-    );
-
-    const filteredProducts = products.filter(p => 
-      p.name.toLowerCase().includes(term) || 
-      p.category.toLowerCase().includes(term)
-    );
-
-    const filteredInventory = inventory.filter(i => 
-      i.ingredient_name.toLowerCase().includes(term)
-    );
-
-    const filteredEvents = events.filter((e: any) => 
-      e.service_type.toLowerCase().includes(term) || 
-      e.location?.toLowerCase().includes(term) ||
-      e.client?.name?.toLowerCase().includes(term)
-    );
-
+    // Backend already limits to 10 per category, but we apply client limit
     return {
-      client: limitResults(mapClientResults(filteredClients), limit),
-      product: limitResults(mapProductResults(filteredProducts), limit),
-      inventory: limitResults(mapInventoryResults(filteredInventory), limit),
-      event: limitResults(mapEventResults(filteredEvents), limit),
+      client: limitResults(mapClientResults(response.clients || []), limit),
+      product: limitResults(mapProductResults(response.products || []), limit),
+      inventory: limitResults(mapInventoryResults(response.inventory || []), limit),
+      event: limitResults(mapEventResults(response.events || []), limit),
     };
   },
 };

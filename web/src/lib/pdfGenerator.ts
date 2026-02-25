@@ -421,3 +421,226 @@ export const generatePaymentReportPDF = (
   doc.save(`Recibo_Pagos_${format(localDate, 'yyyy-MM-dd')}.pdf`);
 };
 
+export const generateInvoicePDF = (
+  event: Event,
+  profile: Profile | null,
+  products: ProductItem[],
+  extras: ExtraItem[]
+) => {
+  const doc = new jsPDF();
+  let currentY = addHeader(doc, profile, 'Factura');
+
+  const brandColor = profile?.brand_color || DEFAULT_BRAND_COLOR;
+  const pageWidth = doc.internal.pageSize.width;
+
+  // Invoice Number and Date
+  doc.setFontSize(10);
+  doc.setTextColor(TEXT_COLOR);
+
+  const invoiceNumber = `INV-${event.id?.slice(0, 8).toUpperCase() || Date.now()}`;
+  const invoiceDate = format(new Date(), "d 'de' MMMM, yyyy", { locale: es });
+
+  doc.setFont(undefined, 'bold');
+  doc.text('No. Factura:', pageWidth - 80, currentY);
+  doc.text('Fecha Emisión:', pageWidth - 80, currentY + 7);
+
+  doc.setFont(undefined, 'normal');
+  doc.text(invoiceNumber, pageWidth - 20, currentY, { align: 'right' });
+  doc.text(invoiceDate, pageWidth - 20, currentY + 7, { align: 'right' });
+
+  currentY += 20;
+
+  // Provider Info (Emisor)
+  doc.setFontSize(12);
+  doc.setTextColor(brandColor);
+  doc.setFont(undefined, 'bold');
+  doc.text('DATOS DEL EMISOR', 20, currentY);
+
+  currentY += 7;
+  doc.setFontSize(10);
+  doc.setTextColor(TEXT_COLOR);
+  doc.setFont(undefined, 'normal');
+
+  doc.text(`Razón Social: ${profile?.business_name || profile?.name || 'N/A'}`, 20, currentY);
+  currentY += 6;
+
+  if (profile?.email) {
+    doc.text(`Email: ${profile.email}`, 20, currentY);
+    currentY += 6;
+  }
+
+  // RFC placeholder (could be added to profile in the future)
+  doc.text('RFC: [Pendiente de configurar en ajustes]', 20, currentY);
+  currentY += 6;
+
+  doc.text('Régimen Fiscal: [Pendiente de configurar en ajustes]', 20, currentY);
+  currentY += 10;
+
+  // Client Info (Receptor)
+  doc.setFontSize(12);
+  doc.setTextColor(brandColor);
+  doc.setFont(undefined, 'bold');
+  doc.text('DATOS DEL RECEPTOR', 20, currentY);
+
+  currentY += 7;
+  doc.setFontSize(10);
+  doc.setTextColor(TEXT_COLOR);
+  doc.setFont(undefined, 'normal');
+
+  doc.text(`Cliente: ${event.client?.name || 'N/A'}`, 20, currentY);
+  currentY += 6;
+
+  if (event.client?.phone) {
+    doc.text(`Teléfono: ${event.client.phone}`, 20, currentY);
+    currentY += 6;
+  }
+
+  if (event.client?.email) {
+    doc.text(`Email: ${event.client.email}`, 20, currentY);
+    currentY += 6;
+  }
+
+  if (event.client?.address) {
+    doc.text(`Dirección: ${event.client.address}`, 20, currentY);
+    currentY += 6;
+  }
+
+  currentY += 10;
+
+  // Event Details
+  doc.setFontSize(12);
+  doc.setTextColor(brandColor);
+  doc.setFont(undefined, 'bold');
+  doc.text('DETALLES DEL EVENTO', 20, currentY);
+
+  currentY += 7;
+  doc.setFontSize(10);
+  doc.setTextColor(TEXT_COLOR);
+  doc.setFont(undefined, 'normal');
+
+  const eventDate = new Date(event.event_date);
+  doc.text(`Fecha del Evento: ${format(eventDate, "d 'de' MMMM, yyyy", { locale: es })}`, 20, currentY);
+  currentY += 6;
+  doc.text(`Servicio: ${event.service_type}`, 20, currentY);
+  currentY += 6;
+  doc.text(`Personas: ${event.num_people}`, 20, currentY);
+  currentY += 6;
+
+  if (event.location) {
+    doc.text(`Ubicación: ${event.location}`, 20, currentY);
+    currentY += 6;
+  }
+
+  currentY += 10;
+
+  // Products/Services Table
+  doc.setFontSize(14);
+  doc.setTextColor(brandColor);
+  doc.setFont(undefined, 'bold');
+  doc.text('CONCEPTOS', 20, currentY);
+  currentY += 7;
+
+  const productRows = products.map((p) => [
+    p.products?.name || 'Producto',
+    p.quantity.toString(),
+    formatCurrency(p.unit_price),
+    p.discount ? formatCurrency(p.discount) : '$0.00',
+    formatCurrency((p.unit_price - (p.discount || 0)) * p.quantity)
+  ]);
+
+  const extraRows = extras.map((e) => [
+    e.description,
+    "1",
+    formatCurrency(e.price),
+    '$0.00',
+    formatCurrency(e.price)
+  ]);
+
+  const body = [...productRows, ...extraRows];
+
+  if (body.length > 0) {
+    autoTable(doc, {
+      startY: currentY,
+      margin: { left: 20, right: 20 },
+      head: [['Descripción', 'Cant.', 'Precio Unit.', 'Desc.', 'Subtotal']],
+      body: body,
+      headStyles: { fillColor: [245, 245, 245], textColor: brandColor },
+      styles: { cellPadding: 2, fontSize: 9 },
+      columnStyles: {
+        0: { halign: 'left', cellWidth: 70 },
+        1: { halign: 'center', cellWidth: 20 },
+        2: { halign: 'right', cellWidth: 30 },
+        3: { halign: 'right', cellWidth: 25 },
+        4: { halign: 'right', cellWidth: 30 },
+      },
+      theme: 'grid',
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    currentY = (doc as any).lastAutoTable.finalY + 10;
+  } else {
+    currentY += 10;
+    doc.text('No hay conceptos registrados.', 20, currentY);
+    currentY += 10;
+  }
+
+  // Totals Summary
+  const summaryX = pageWidth - 20 - 70;
+
+  doc.setDrawColor(GRAY_COLOR);
+  doc.setLineWidth(0.1);
+  doc.line(summaryX, currentY - 5, pageWidth - 20, currentY - 5);
+
+  doc.setFontSize(10);
+  doc.setTextColor(TEXT_COLOR);
+  doc.setFont(undefined, 'normal');
+
+  // Subtotal before tax
+  const subtotalBeforeTax = event.total_amount - (event.tax_amount || 0);
+  doc.text('Subtotal:', summaryX, currentY);
+  doc.text(formatCurrency(subtotalBeforeTax), pageWidth - 20, currentY, { align: 'right' });
+
+  currentY += 7;
+
+  if (event.discount && event.discount > 0) {
+    doc.setTextColor(brandColor);
+    doc.text('Descuento:', summaryX, currentY);
+    doc.text(`-${formatCurrency(event.discount)}`, pageWidth - 20, currentY, { align: 'right' });
+    currentY += 7;
+    doc.setTextColor(TEXT_COLOR);
+  }
+
+  // Tax (IVA)
+  if (event.requires_invoice || event.tax_amount) {
+    doc.text(`IVA (${event.tax_rate || 16}%):`, summaryX, currentY);
+    doc.text(formatCurrency(event.tax_amount || 0), pageWidth - 20, currentY, { align: 'right' });
+    currentY += 7;
+  }
+
+  // Total
+  doc.setFont(undefined, 'bold');
+  doc.setFontSize(12);
+  doc.setTextColor(brandColor);
+  currentY += 2;
+  doc.text('TOTAL:', summaryX, currentY);
+  doc.text(formatCurrency(event.total_amount), pageWidth - 20, currentY, { align: 'right' });
+
+  currentY += 10;
+
+  // Payment Method
+  doc.setFont(undefined, 'normal');
+  doc.setFontSize(10);
+  doc.setTextColor(TEXT_COLOR);
+  doc.text('Forma de Pago: Pendiente de liquidar', summaryX, currentY);
+
+  // Footer
+  const pageHeight = doc.internal.pageSize.height;
+  doc.setFontSize(8);
+  doc.setTextColor(GRAY_COLOR);
+  doc.setFont(undefined, 'italic');
+  doc.text('Este documento es una factura simplificada. Para factura fiscal completa, solicitar con RFC y datos fiscales.', pageWidth / 2, pageHeight - 15, { align: 'center' });
+  doc.text(`Generado el ${invoiceDate}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
+
+  doc.save(`Factura_${invoiceNumber}_${event.client?.name || 'Cliente'}.pdf`);
+};
+

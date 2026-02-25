@@ -425,8 +425,9 @@ export const EventForm: React.FC = () => {
 
   if (isLoading || limitsLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="flex justify-center items-center h-64" role="status" aria-live="polite">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-orange"></div>
+        <span className="sr-only">Cargando formulario de evento...</span>
       </div>
     );
   }
@@ -436,10 +437,11 @@ export const EventForm: React.FC = () => {
       return (
           <div className="max-w-4xl mx-auto py-8 px-4">
               <button
+                  type="button"
                   onClick={() => navigate(-1)}
                   className="mb-6 flex items-center text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
               >
-                  <ArrowLeft className="h-4 w-4 mr-1" />
+                  <ArrowLeft className="h-4 w-4 mr-1" aria-hidden="true" />
                   Regresar
               </button>
               <div className="flex justify-center mt-12">
@@ -454,10 +456,12 @@ export const EventForm: React.FC = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center">
           <button
+            type="button"
             onClick={() => navigate("/calendar")}
             className="mr-4 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
+            aria-label="Volver al calendario"
           >
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="h-5 w-5" aria-hidden="true" />
           </button>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             {id ? "Editar Evento" : "Nuevo Evento"}
@@ -465,16 +469,17 @@ export const EventForm: React.FC = () => {
         </div>
         {id && (
           <button
+            type="button"
             onClick={() => navigate(`/events/${id}/summary`)}
             className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-xs text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
-            <FileText className="-ml-1 mr-2 h-5 w-5" />
+            <FileText className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
             Ver Resumen
           </button>
         )}
       </div>
 
-      <nav aria-label="Progress">
+      <nav aria-label="Progreso del formulario de evento">
         <ol role="list" className="bg-white dark:bg-gray-800 rounded-lg shadow-xs md:flex md:divide-y-0 md:divide-x dark:divide-gray-700 overflow-hidden">
           {STEPS.map((step, stepIdx) => (
             <li key={step.id} className="relative md:flex-1 md:flex">
@@ -497,7 +502,7 @@ export const EventForm: React.FC = () => {
                     }`}
                   >
                     {activeStep > step.id ? (
-                      <CheckCircle className="w-6 h-6 text-white" />
+                      <CheckCircle className="w-6 h-6 text-white" aria-hidden="true" />
                     ) : (
                       <span>{step.id}</span>
                     )}
@@ -522,9 +527,9 @@ export const EventForm: React.FC = () => {
       </nav>
 
       {error && (
-        <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-400 p-4 rounded-md">
+        <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-400 p-4 rounded-md" role="alert">
           <div className="flex">
-            <AlertCircle className="h-5 w-5 text-red-500" />
+            <AlertCircle className="h-5 w-5 text-red-500" aria-hidden="true" />
             <div className="ml-3">
               <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
             </div>
@@ -533,9 +538,9 @@ export const EventForm: React.FC = () => {
       )}
 
       {isSubmitted && !isValid && (
-        <div className="bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-400 p-4 rounded-md">
+        <div className="bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-400 p-4 rounded-md" role="alert">
           <div className="flex">
-            <AlertCircle className="h-5 w-5 text-amber-500" />
+            <AlertCircle className="h-5 w-5 text-amber-500" aria-hidden="true" />
             <div className="ml-3">
               <p className="text-sm text-amber-700 dark:text-amber-300 font-medium">Hay errores en el formulario. Por favor revisa todos los pasos.</p>
               <ul className="mt-2 text-xs text-amber-600 dark:text-amber-400 list-disc list-inside">
@@ -595,6 +600,7 @@ export const EventForm: React.FC = () => {
               onClick={prevStep}
               disabled={activeStep === 1}
               className={`px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-xs text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 ${activeStep === 1 ? 'invisible' : ''}`}
+              aria-label="Volver al paso anterior del formulario"
             >
               Anterior
             </button>
@@ -605,9 +611,10 @@ export const EventForm: React.FC = () => {
                 onClick={nextStep}
                 disabled={isStepLoading}
                 className="inline-flex justify-center py-2 px-4 border border-transparent shadow-xs text-sm font-medium rounded-md text-white bg-brand-orange hover:bg-orange-600 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-brand-orange disabled:opacity-50"
+                aria-label="Ir al siguiente paso del formulario"
               >
                 {isStepLoading ? "Cargando..." : "Siguiente"}
-                <ChevronRight className="ml-2 h-4 w-4" />
+                <ChevronRight className="ml-2 h-4 w-4" aria-hidden="true" />
               </button>
             ) : (
               <button
@@ -616,7 +623,7 @@ export const EventForm: React.FC = () => {
                 disabled={isLoading || isStepLoading}
                 className="inline-flex justify-center py-2 px-4 border border-transparent shadow-xs text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
               >
-                <Save className="h-5 w-5 mr-2" />
+                <Save className="h-5 w-5 mr-2" aria-hidden="true" />
                 {isLoading ? "Guardando..." : "Guardar Evento"}
               </button>
             )}

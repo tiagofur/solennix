@@ -61,14 +61,23 @@ export const ClientDetails: React.FC = () => {
   };
 
   if (loading) {
-    return <div className="text-center p-8 text-gray-900 dark:text-white">Cargando detalles...</div>;
+    return (
+      <div className="text-center p-8 text-gray-900 dark:text-white" role="status" aria-live="polite">
+        Cargando detalles...
+      </div>
+    );
   }
 
   if (error) {
     return (
       <div className="text-center p-8">
-        <p className="text-red-600 dark:text-red-400">{error}</p>
-        <button onClick={() => navigate('/clients')} className="mt-4 text-brand-orange hover:underline">
+        <p className="text-red-600 dark:text-red-400" role="alert">{error}</p>
+        <button
+          type="button"
+          onClick={() => navigate('/clients')}
+          className="mt-4 text-brand-orange hover:underline"
+          aria-label="Volver a la lista de clientes"
+        >
           Volver a clientes
         </button>
       </div>
@@ -84,10 +93,12 @@ export const ClientDetails: React.FC = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center">
           <button
+            type="button"
             onClick={() => navigate('/clients')}
             className="mr-4 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
+            aria-label="Volver a la lista de clientes"
           >
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="h-5 w-5" aria-hidden="true" />
           </button>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{client.name}</h1>
         </div>
@@ -95,15 +106,18 @@ export const ClientDetails: React.FC = () => {
           <Link
             to={`/clients/${client.id}/edit`}
             className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-xs text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+            aria-label="Editar información del cliente"
           >
-            <Edit className="h-5 w-5 mr-2" />
+            <Edit className="h-5 w-5 mr-2" aria-hidden="true" />
             Editar
           </Link>
           <button
+            type="button"
             onClick={() => setConfirmDeleteOpen(true)}
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 shadow-xs"
+            aria-label="Eliminar cliente permanentemente"
           >
-            <Trash2 className="h-5 w-5 mr-2" />
+            <Trash2 className="h-5 w-5 mr-2" aria-hidden="true" />
             Eliminar
           </button>
         </div>
@@ -122,25 +136,25 @@ export const ClientDetails: React.FC = () => {
           <dl className="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2">
             <div className="sm:col-span-1">
               <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center">
-                <Phone className="h-4 w-4 mr-2" /> Teléfono
+                <Phone className="h-4 w-4 mr-2" aria-hidden="true" /> Teléfono
               </dt>
               <dd className="mt-1 text-sm text-gray-900 dark:text-white">{client.phone}</dd>
             </div>
             <div className="sm:col-span-1">
               <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center">
-                <Mail className="h-4 w-4 mr-2" /> Email
+                <Mail className="h-4 w-4 mr-2" aria-hidden="true" /> Email
               </dt>
               <dd className="mt-1 text-sm text-gray-900 dark:text-white">{client.email || 'No registrado'}</dd>
             </div>
             <div className="sm:col-span-1">
               <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center">
-                <MapPin className="h-4 w-4 mr-2" /> Dirección
+                <MapPin className="h-4 w-4 mr-2" aria-hidden="true" /> Dirección
               </dt>
               <dd className="mt-1 text-sm text-gray-900 dark:text-white">{client.address || 'No registrada'}</dd>
             </div>
             <div className="sm:col-span-1">
               <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center">
-                <DollarSign className="h-4 w-4 mr-2" /> Total Gastado
+                <DollarSign className="h-4 w-4 mr-2" aria-hidden="true" /> Total Gastado
               </dt>
               <dd className="mt-1 text-sm text-gray-900 dark:text-white font-semibold">
                 ${(client.total_spent ?? 0).toFixed(2)}
@@ -148,7 +162,7 @@ export const ClientDetails: React.FC = () => {
             </div>
             <div className="sm:col-span-2">
               <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center">
-                <FileText className="h-4 w-4 mr-2" /> Notas
+                <FileText className="h-4 w-4 mr-2" aria-hidden="true" /> Notas
               </dt>
               <dd className="mt-1 text-sm text-gray-900 dark:text-white">
                 {client.notes || 'Sin notas adicionales.'}
@@ -178,7 +192,7 @@ export const ClientDetails: React.FC = () => {
         <div className="border-t border-gray-200 dark:border-gray-700">
           {events.length === 0 ? (
             <div className="px-4 py-5 sm:p-6 text-center text-gray-500 dark:text-gray-400">
-              <Calendar className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" />
+              <Calendar className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-400" aria-hidden="true" />
               <p className="mt-2">No hay eventos registrados para este cliente.</p>
             </div>
           ) : (
@@ -219,7 +233,7 @@ export const ClientDetails: React.FC = () => {
                       <div className="mt-2 sm:flex sm:justify-between">
                         <div className="sm:flex">
                           <p className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                            <Calendar className="shrink-0 mr-1.5 h-5 w-5 text-gray-400 dark:text-gray-500" />
+                            <Calendar className="shrink-0 mr-1.5 h-5 w-5 text-gray-400 dark:text-gray-400" aria-hidden="true" />
                             {format(
                               new Date(event.event_date),
                               "d 'de' MMMM, yyyy",
@@ -227,12 +241,12 @@ export const ClientDetails: React.FC = () => {
                             )}
                           </p>
                           <p className="mt-2 flex items-center text-sm text-gray-500 dark:text-gray-400 sm:mt-0 sm:ml-6">
-                            <Clock className="shrink-0 mr-1.5 h-5 w-5 text-gray-400 dark:text-gray-500" />
+                            <Clock className="shrink-0 mr-1.5 h-5 w-5 text-gray-400 dark:text-gray-400" aria-hidden="true" />
                             {event.num_people} personas
                           </p>
                         </div>
                         <div className="mt-2 flex items-center text-sm text-gray-500 dark:text-gray-400 sm:mt-0">
-                          <DollarSign className="shrink-0 mr-1.5 h-5 w-5 text-gray-400 dark:text-gray-500" />
+                          <DollarSign className="shrink-0 mr-1.5 h-5 w-5 text-gray-400 dark:text-gray-400" aria-hidden="true" />
                           {(event.total_amount ?? 0).toFixed(2)}
                         </div>
                       </div>

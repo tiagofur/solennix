@@ -40,26 +40,29 @@ export const EventFinancials: React.FC<EventFinancialsProps> = ({
         <div>
           <div className="space-y-4">
             <div className="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-xs border dark:border-gray-600">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="requires_invoice" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Facturación
               </label>
               <div className="flex items-center gap-3">
                 <input
+                  id="requires_invoice"
                   type="checkbox"
                   {...register('requires_invoice')}
                   className="h-4 w-4 text-brand-orange border-gray-300 dark:border-gray-600 rounded-sm focus:ring-brand-orange bg-white dark:bg-gray-600"
+                  aria-describedby="requires_invoice-description"
                 />
-                <span className="text-sm text-gray-700 dark:text-gray-300">
+                <span id="requires_invoice-description" className="text-sm text-gray-700 dark:text-gray-300">
                   Requiere factura (IVA {taxRateValue}%)
                 </span>
               </div>
             </div>
 
             <div className="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-xs border dark:border-gray-600">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="discount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Descuento General (%)
               </label>
               <input
+                id="discount"
                 type="number"
                 min="0"
                 max="100"
@@ -68,13 +71,14 @@ export const EventFinancials: React.FC<EventFinancialsProps> = ({
                 className="block w-full text-sm border-gray-300 dark:border-gray-600 rounded-md shadow-xs focus:ring-brand-orange focus:border-brand-orange p-2 bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
               />
             </div>
-            
+
             <div className="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-xs border dark:border-gray-600">
               <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Condiciones de Pago</h4>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs text-gray-500 dark:text-gray-400">Anticipo (%)</label>
+                  <label htmlFor="deposit_percent" className="block text-xs text-gray-500 dark:text-gray-400">Anticipo (%)</label>
                   <input
+                    id="deposit_percent"
                     type="number"
                     {...register('deposit_percent')}
                     max="100"
@@ -83,8 +87,9 @@ export const EventFinancials: React.FC<EventFinancialsProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-500 dark:text-gray-400">Días Cancelación</label>
+                  <label htmlFor="cancellation_days" className="block text-xs text-gray-500 dark:text-gray-400">Días Cancelación</label>
                   <input
+                    id="cancellation_days"
                     type="number"
                     {...register('cancellation_days')}
                     min="0"
@@ -92,8 +97,9 @@ export const EventFinancials: React.FC<EventFinancialsProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-500 dark:text-gray-400">Reembolso (%)</label>
+                  <label htmlFor="refund_percent" className="block text-xs text-gray-500 dark:text-gray-400">Reembolso (%)</label>
                   <input
+                    id="refund_percent"
                     type="number"
                     {...register('refund_percent')}
                     max="100"
@@ -103,12 +109,13 @@ export const EventFinancials: React.FC<EventFinancialsProps> = ({
                 </div>
               </div>
             </div>
-            
+
              <div className="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-xs border dark:border-gray-600">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="event-notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Notas
               </label>
               <textarea
+                id="event-notes"
                 {...register('notes')}
                 rows={3}
                 className="shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
@@ -119,7 +126,7 @@ export const EventFinancials: React.FC<EventFinancialsProps> = ({
 
         <div className="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg shadow-inner">
           <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Resumen de Costos</h4>
-          
+
           <div className="space-y-3 text-sm">
             <div className="flex justify-between text-gray-600 dark:text-gray-300">
               <span>Subtotal Productos:</span>
@@ -129,7 +136,7 @@ export const EventFinancials: React.FC<EventFinancialsProps> = ({
               <span>Subtotal Extras:</span>
               <span>${extras.reduce((sum, item) => sum + item.price, 0).toFixed(2)}</span>
             </div>
-            
+
             {discountValue > 0 && (
               <div className="flex justify-between text-green-600 dark:text-green-400 font-medium">
                 <span>Descuento ({discountValue}%):</span>
@@ -143,14 +150,14 @@ export const EventFinancials: React.FC<EventFinancialsProps> = ({
                 </span>
               </div>
             )}
-            
+
             {requiresInvoiceValue && (
               <div className="flex justify-between text-gray-600 dark:text-gray-300">
                 <span>IVA ({taxRateValue}%):</span>
                 <span>${taxAmountValue.toFixed(2)}</span>
               </div>
             )}
-            
+
             <div className="border-t border-gray-300 dark:border-gray-600 pt-3 flex justify-between text-xl font-bold text-gray-900 dark:text-white">
               <span>Total:</span>
               <span className="text-brand-orange">${totalAmountValue.toFixed(2)}</span>
@@ -161,13 +168,13 @@ export const EventFinancials: React.FC<EventFinancialsProps> = ({
             <h5 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
               Métricas de Rentabilidad (Interno)
             </h5>
-            
+
             <div className="grid grid-cols-2 gap-y-2 text-sm">
               <div className="text-gray-500 dark:text-gray-400">Costo Total:</div>
               <div className="text-right font-medium text-gray-900 dark:text-white">
                 ${(selectedProducts.reduce((sum, p) => sum + (productUnitCosts[p.product_id] || 0) * p.quantity, 0) + extras.reduce((sum, e) => sum + e.cost, 0)).toFixed(2)}
               </div>
-              
+
               <div className="text-gray-500 dark:text-gray-400">Utilidad Neta:</div>
               <div className="text-right font-bold text-green-600 dark:text-green-400">
                  ${(
@@ -182,7 +189,7 @@ export const EventFinancials: React.FC<EventFinancialsProps> = ({
                       extras.reduce((sum, e) => sum + e.cost, 0))
                   ).toFixed(2)}
               </div>
-              
+
               <div className="text-gray-500 dark:text-gray-400">Margen:</div>
               <div className="text-right font-bold text-blue-600 dark:text-blue-400">
                  {(() => {

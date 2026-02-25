@@ -89,3 +89,43 @@ func (r *ClientRepo) Delete(ctx context.Context, id, userID uuid.UUID) error {
 	}
 	return nil
 }
+
+// Search performs a full-text search on clients for the given user
+func (r *ClientRepo) Search(ctx context.Context, userID uuid.UUID, query string) ([]models.Client, error) {
+	searchPattern := "%" + query + "%"
+	sqlQuery := `SELECT id, user_id, name, phone, email, address, city, notes,
+		total_events, total_spent, created_at, updated_at
+		FROM clients
+		WHERE user_id = $1
+		AND (
+			name ILIKE $2 OR
+			email ILIKE $2 OR
+			phone ILIKE $2 OR
+			city ILIKE $2
+		)
+		ORDER BY created_at DESC
+		LIMIT 10`
+
+	rows, err := r.pool.Query(ctx, sqlQuery, userID, searchPattern)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var clients []models.Client
+	for rows.Next() {
+		var c models.Client
+		if err := rows.Scan(&c.ID, &c.UserID, &c.Name, &c.Phone, &c.Email,
+			&c.Address, &c.City, &c.Notes, &c.TotalEvents, &c.TotalSpent,
+			&c.CreatedAt, &c.UpdatedAt); err != nil {
+			return nil, err
+		}
+		clients = append(clients, c)
+	}
+
+	if clients == nil {
+		clients = []models.Client{}
+	}
+
+	return clients, nil
+}

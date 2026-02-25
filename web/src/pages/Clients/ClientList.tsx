@@ -58,7 +58,7 @@ export const ClientList: React.FC = () => {
     }
   };
 
-  const filteredClients = (clients || []).filter(client => 
+  const filteredClients = (clients || []).filter(client =>
     client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (client.email && client.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
     client.phone.includes(searchTerm)
@@ -82,7 +82,12 @@ export const ClientList: React.FC = () => {
 
   const renderSortIcon = (key: keyof Client) => {
     if (sortKey !== key) return null;
-    return sortOrder === 'asc' ? <ArrowUp className="inline h-3 w-3 ml-1" /> : <ArrowDown className="inline h-3 w-3 ml-1" />;
+    return sortOrder === 'asc' ? <ArrowUp className="inline h-3 w-3 ml-1" aria-hidden="true" /> : <ArrowDown className="inline h-3 w-3 ml-1" aria-hidden="true" />;
+  };
+
+  const getSortAriaSort = (key: keyof Client): "ascending" | "descending" | "none" => {
+    if (sortKey !== key) return "none";
+    return sortOrder === 'asc' ? "ascending" : "descending";
   };
 
   return (
@@ -105,30 +110,33 @@ export const ClientList: React.FC = () => {
           to="/clients/new"
           className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-brand-orange hover:bg-orange-600 shadow-xs transition-colors"
         >
-          <Plus className="h-5 w-5 mr-2" />
+          <Plus className="h-5 w-5 mr-2" aria-hidden="true" />
           Nuevo Cliente
         </Link>
       </div>
 
       <div className="relative max-w-md">
+        <label htmlFor="client-search" className="sr-only">Buscar clientes</label>
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <Search className="h-5 w-5 text-gray-400" />
+          <Search className="h-5 w-5 text-gray-400" aria-hidden="true" />
         </div>
         <input
-          type="text"
+          id="client-search"
+          type="search"
           className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-hidden focus:ring-brand-orange focus:border-brand-orange sm:text-sm transition duration-150 ease-in-out"
           placeholder="Buscar clientes..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
+          aria-label="Buscar clientes por nombre, email o teléfono"
         />
       </div>
 
       <div className="bg-white dark:bg-gray-800 shadow-sm overflow-hidden sm:rounded-lg">
         {loading ? (
-          <div className="p-4 text-center text-gray-500 dark:text-gray-400">Cargando clientes...</div>
+          <div className="p-4 text-center text-gray-500 dark:text-gray-400" role="status" aria-live="polite">Cargando clientes...</div>
         ) : filteredClients.length === 0 ? (
-          <Empty 
-            title="No se encontraron clientes" 
+          <Empty
+            title="No se encontraron clientes"
             description={searchTerm ? "Intenta ajustar los términos de búsqueda." : "Comienza agregando tu primer cliente."}
             action={
               !searchTerm ? (
@@ -136,7 +144,7 @@ export const ClientList: React.FC = () => {
                   to="/clients/new"
                   className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-brand-orange hover:bg-orange-600 shadow-xs"
                 >
-                  <Plus className="h-5 w-5 mr-2" />
+                  <Plus className="h-5 w-5 mr-2" aria-hidden="true" />
                   Agregar Cliente
                 </Link>
               ) : undefined
@@ -144,30 +152,36 @@ export const ClientList: React.FC = () => {
           />
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700" aria-label="Tabla de clientes">
+              <caption className="sr-only">
+                Lista de clientes con {totalItems} resultados. Mostrando página {currentPage} de {totalPages}.
+              </caption>
               <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
-                  <th 
-                    scope="col" 
+                  <th
+                    scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                     onClick={() => handleSort('name')}
+                    aria-sort={getSortAriaSort('name')}
                   >
                     Cliente {renderSortIcon('name')}
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Contacto
                   </th>
-                  <th 
-                    scope="col" 
+                  <th
+                    scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                     onClick={() => handleSort('total_events')}
+                    aria-sort={getSortAriaSort('total_events')}
                   >
                     Eventos {renderSortIcon('total_events')}
                   </th>
-                  <th 
-                    scope="col" 
+                  <th
+                    scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                     onClick={() => handleSort('total_spent')}
+                    aria-sort={getSortAriaSort('total_spent')}
                   >
                     Total Gastado {renderSortIcon('total_spent')}
                   </th>
@@ -185,7 +199,7 @@ export const ClientList: React.FC = () => {
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="h-10 w-10 rounded-full bg-brand-green/10 dark:bg-brand-green/20 flex items-center justify-center text-brand-green dark:text-green-400 font-bold">
+                        <div className="h-10 w-10 rounded-full bg-brand-green/10 dark:bg-brand-green/20 flex items-center justify-center text-brand-green dark:text-green-400 font-bold" aria-hidden="true">
                           {client.name.charAt(0).toUpperCase()}
                         </div>
                         <div className="ml-4">
@@ -196,12 +210,12 @@ export const ClientList: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900 dark:text-white flex items-center">
-                        <Phone className="h-4 w-4 mr-1 text-gray-400" />
+                        <Phone className="h-4 w-4 mr-1 text-gray-400" aria-hidden="true" />
                         {client.phone}
                       </div>
                       {client.email && (
                         <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center mt-1">
-                          <Mail className="h-4 w-4 mr-1 text-gray-400" />
+                          <Mail className="h-4 w-4 mr-1 text-gray-400" aria-hidden="true" />
                           {client.email}
                         </div>
                       )}
@@ -219,20 +233,21 @@ export const ClientList: React.FC = () => {
                         <Link
                           to={`/clients/${client.id}/edit`}
                           className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
-                          title="Editar"
                           onClick={(e) => e.stopPropagation()}
+                          aria-label={`Editar cliente ${client.name}`}
                         >
-                          <Edit className="h-5 w-5" />
+                          <Edit className="h-5 w-5" aria-hidden="true" />
                         </Link>
                         <button
+                          type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             requestDelete(client.id);
                           }}
                           className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                          title="Eliminar"
+                          aria-label={`Eliminar cliente ${client.name}`}
                         >
-                          <Trash2 className="h-5 w-5" />
+                          <Trash2 className="h-5 w-5" aria-hidden="true" />
                         </button>
                       </div>
                     </td>
@@ -243,7 +258,7 @@ export const ClientList: React.FC = () => {
           </div>
         )}
         {!loading && filteredClients.length > 0 && (
-          <Pagination 
+          <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
             totalItems={totalItems}

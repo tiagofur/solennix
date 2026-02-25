@@ -209,8 +209,8 @@ export const Landing: React.FC = () => {
           <nav className="flex justify-between items-center h-16">
             {/* Logo */}
             <div className="flex items-center space-x-2">
-              <div className="bg-brand-orange p-1.5 rounded-lg">
-                <Calendar className="h-5 w-5 text-white" />
+              <div className="bg-brand-orange p-1.5 rounded-lg" aria-hidden="true">
+                <Calendar className="h-5 w-5 text-white" aria-hidden="true" />
               </div>
               <span className="text-xl font-bold text-gray-900 dark:text-white">Eventos</span>
               <span className="hidden sm:inline-block text-xs font-medium bg-brand-orange/10 text-brand-orange px-2 py-0.5 rounded-full">Pro</span>
@@ -227,11 +227,12 @@ export const Landing: React.FC = () => {
             {/* Right actions */}
             <div className="flex items-center space-x-3">
               <button
+                type="button"
                 onClick={toggleTheme}
                 className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                aria-label="Toggle theme"
+                aria-label={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
               >
-                {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                {theme === 'dark' ? <Sun className="h-4 w-4" aria-hidden="true" /> : <Moon className="h-4 w-4" aria-hidden="true" />}
               </button>
               <Link to="/login" className="hidden sm:inline-flex text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-brand-orange dark:hover:text-brand-orange transition-colors">
                 Iniciar Sesión
@@ -240,10 +241,13 @@ export const Landing: React.FC = () => {
                 Comenzar Gratis
               </Link>
               <button
+                type="button"
                 className="md:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                aria-label={mobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
+                aria-expanded={mobileMenuOpen}
               >
-                {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                {mobileMenuOpen ? <X className="h-5 w-5" aria-hidden="true" /> : <Menu className="h-5 w-5" aria-hidden="true" />}
               </button>
             </div>
           </nav>
@@ -271,7 +275,7 @@ export const Landing: React.FC = () => {
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center space-x-2 bg-brand-orange/10 dark:bg-brand-orange/20 text-brand-orange text-sm font-medium px-4 py-1.5 rounded-full mb-8">
-            <Zap className="h-3.5 w-3.5" />
+            <Zap className="h-3.5 w-3.5" aria-hidden="true" />
             <span>La plataforma #1 para organizadores de eventos en México</span>
           </div>
 
@@ -289,9 +293,10 @@ export const Landing: React.FC = () => {
             <Link
               to="/register"
               className="inline-flex items-center justify-center gap-2 bg-brand-orange hover:bg-orange-600 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
+              aria-label="Comenzar gratis - Registrarse ahora"
             >
               Comenzar Gratis
-              <ArrowRight className="h-5 w-5" />
+              <ArrowRight className="h-5 w-5" aria-hidden="true" />
             </Link>
             <Link
               to="/login"
@@ -304,15 +309,15 @@ export const Landing: React.FC = () => {
           {/* Trust badges */}
           <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-500 dark:text-gray-400">
             <div className="flex items-center gap-1.5">
-              <CheckCircle className="h-4 w-4 text-brand-green" />
+              <CheckCircle className="h-4 w-4 text-brand-green" aria-hidden="true" />
               <span>Sin tarjeta de crédito</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <CheckCircle className="h-4 w-4 text-brand-green" />
+              <CheckCircle className="h-4 w-4 text-brand-green" aria-hidden="true" />
               <span>Configuración en 2 minutos</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <CheckCircle className="h-4 w-4 text-brand-green" />
+              <CheckCircle className="h-4 w-4 text-brand-green" aria-hidden="true" />
               <span>Cancela cuando quieras</span>
             </div>
           </div>
@@ -355,7 +360,7 @@ export const Landing: React.FC = () => {
                 className="group p-6 rounded-2xl border border-gray-100 dark:border-gray-800 hover:border-brand-orange/30 dark:hover:border-brand-orange/30 hover:shadow-xl transition-all duration-300 bg-white dark:bg-gray-900"
               >
                 <div className={`${feature.bg} w-12 h-12 rounded-xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform`}>
-                  <feature.icon className={`h-6 w-6 ${feature.color}`} />
+                  <feature.icon className={`h-6 w-6 ${feature.color}`} aria-hidden="true" />
                 </div>
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{feature.title}</h3>
                 <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">{feature.description}</p>
@@ -415,9 +420,9 @@ export const Landing: React.FC = () => {
           <div className="grid md:grid-cols-3 gap-8">
             {testimonials.map((t) => (
               <div key={t.name} className="bg-gray-50 dark:bg-gray-900 rounded-2xl p-6 border border-gray-100 dark:border-gray-800">
-                <div className="flex items-center gap-1 mb-4">
+                <div className="flex items-center gap-1 mb-4" role="img" aria-label={`${t.rating} estrellas de 5`}>
                   {Array.from({ length: t.rating }).map((_, i) => (
-                    <Star key={i} className="h-4 w-4 text-yellow-400 fill-yellow-400" />
+                    <Star key={i} className="h-4 w-4 text-yellow-400 fill-yellow-400" aria-hidden="true" />
                   ))}
                 </div>
                 <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed mb-6">"{t.text}"</p>
@@ -428,7 +433,7 @@ export const Landing: React.FC = () => {
                   <div>
                     <div className="font-semibold text-gray-900 dark:text-white text-sm">{t.name}</div>
                     <div className="text-gray-500 dark:text-gray-400 text-xs flex items-center gap-1">
-                      <MapPin className="h-3 w-3" />
+                      <MapPin className="h-3 w-3" aria-hidden="true" />
                       {t.role} · {t.location}
                     </div>
                   </div>
@@ -496,7 +501,7 @@ export const Landing: React.FC = () => {
                 <ul className="space-y-3 mb-8">
                   {plan.features.map((feature) => (
                     <li key={feature} className="flex items-center gap-2 text-sm">
-                      <CheckCircle className={`h-4 w-4 shrink-0 ${plan.highlighted ? 'text-white' : 'text-brand-green'}`} />
+                      <CheckCircle className={`h-4 w-4 shrink-0 ${plan.highlighted ? 'text-white' : 'text-brand-green'}`} aria-hidden="true" />
                       <span className={plan.highlighted ? 'text-orange-50' : 'text-gray-700 dark:text-gray-300'}>{feature}</span>
                     </li>
                   ))}
@@ -536,12 +541,16 @@ export const Landing: React.FC = () => {
                 className="border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden"
               >
                 <button
+                  type="button"
                   className="w-full flex items-center justify-between p-5 text-left bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                   onClick={() => setOpenFaq(openFaq === index ? null : index)}
+                  aria-expanded={openFaq === index}
+                  aria-label={`${faq.question} - ${openFaq === index ? 'Cerrar' : 'Abrir'} respuesta`}
                 >
                   <span className="font-semibold text-gray-900 dark:text-white text-sm">{faq.question}</span>
                   <ChevronDown
                     className={`h-4 w-4 text-gray-500 shrink-0 ml-4 transition-transform ${openFaq === index ? 'rotate-180' : ''}`}
+                    aria-hidden="true"
                   />
                 </button>
                 {openFaq === index && (
@@ -568,9 +577,10 @@ export const Landing: React.FC = () => {
             <Link
               to="/register"
               className="inline-flex items-center justify-center gap-2 bg-white text-brand-orange hover:bg-orange-50 px-8 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
+              aria-label="Comenzar gratis ahora - Registrarse"
             >
               Comenzar Gratis Ahora
-              <ArrowRight className="h-5 w-5" />
+              <ArrowRight className="h-5 w-5" aria-hidden="true" />
             </Link>
             <Link
               to="/login"
@@ -589,8 +599,8 @@ export const Landing: React.FC = () => {
           <div className="grid md:grid-cols-4 gap-8 mb-10">
             <div className="md:col-span-2">
               <div className="flex items-center space-x-2 mb-4">
-                <div className="bg-brand-orange p-1.5 rounded-lg">
-                  <Calendar className="h-5 w-5 text-white" />
+                <div className="bg-brand-orange p-1.5 rounded-lg" aria-hidden="true">
+                  <Calendar className="h-5 w-5 text-white" aria-hidden="true" />
                 </div>
                 <span className="text-xl font-bold text-white">Eventos</span>
               </div>
@@ -619,7 +629,7 @@ export const Landing: React.FC = () => {
           <div className="border-t border-gray-800 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
             <p className="text-sm">© 2026 Eventos. Todos los derechos reservados.</p>
             <div className="flex items-center gap-2 text-sm">
-              <Shield className="h-4 w-4 text-brand-green" />
+              <Shield className="h-4 w-4 text-brand-green" aria-hidden="true" />
               <span>Datos protegidos con encriptación de extremo a extremo</span>
             </div>
           </div>

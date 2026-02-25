@@ -20,9 +20,9 @@ interface PaymentsProps {
   profile?: any;
 }
 
-export const Payments: React.FC<PaymentsProps> = ({ 
-  eventId, 
-  totalAmount, 
+export const Payments: React.FC<PaymentsProps> = ({
+  eventId,
+  totalAmount,
   userId,
   eventStatus,
   onStatusChange,
@@ -112,20 +112,22 @@ export const Payments: React.FC<PaymentsProps> = ({
   return (
     <div className="space-y-6">
       {statusMessage && (
-        <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-md p-4 flex items-center text-green-800 dark:text-green-200 animate-fade-in">
-          <CheckCircle className="h-5 w-5 mr-2 shrink-0" />
+        <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-md p-4 flex items-center text-green-800 dark:text-green-200 animate-fade-in" role="status" aria-live="polite">
+          <CheckCircle className="h-5 w-5 mr-2 shrink-0" aria-hidden="true" />
           <p>{statusMessage}</p>
         </div>
       )}
 
       {isFullyPaid && eventStatus === "quoted" && !statusMessage && (
-        <div className="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-md p-4 flex items-start text-amber-800 dark:text-amber-200">
-          <AlertCircle className="h-5 w-5 mr-2 shrink-0 mt-0.5" />
+        <div className="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-md p-4 flex items-start text-amber-800 dark:text-amber-200" role="alert">
+          <AlertCircle className="h-5 w-5 mr-2 shrink-0 mt-0.5" aria-hidden="true" />
           <div>
             <p className="font-medium">El evento está totalmente pagado pero sigue como "Cotizado".</p>
-            <button 
+            <button
+              type="button"
               onClick={() => onStatusChange && onStatusChange("confirmed")}
               className="text-sm underline hover:text-amber-900 dark:hover:text-amber-100 mt-1"
+              aria-label="Cambiar estado del evento a Confirmado"
             >
               Cambiar estado a "Confirmado"
             </button>
@@ -136,16 +138,17 @@ export const Payments: React.FC<PaymentsProps> = ({
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xs p-6 border dark:border-gray-700">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
           <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center">
-            <DollarSign className="h-5 w-5 mr-2 text-green-600" />
+            <DollarSign className="h-5 w-5 mr-2 text-green-600" aria-hidden="true" />
             Pagos y Saldo
           </h2>
           {eventData && (
             <button
+              type="button"
               onClick={() => generatePaymentReportPDF(eventData, profile || null, payments)}
               className="flex items-center px-3 py-1.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-sm hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium shadow-xs transition-colors"
-              title="Descargar Reporte de Pagos"
+              aria-label="Descargar reporte de pagos en PDF"
             >
-              <Download className="h-4 w-4 mr-2" />
+              <Download className="h-4 w-4 mr-2" aria-hidden="true" />
               Reporte de Pagos
             </button>
           )}
@@ -174,15 +177,21 @@ export const Payments: React.FC<PaymentsProps> = ({
 
         {/* Progress Bar */}
         <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mb-6">
-          <div 
-            className={`h-2.5 rounded-full transition-all duration-500 ${isFullyPaid ? 'bg-green-600' : 'bg-brand-orange'}`} 
+          <div
+            className={`h-2.5 rounded-full transition-all duration-500 ${isFullyPaid ? 'bg-green-600' : 'bg-brand-orange'}`}
             style={{ width: `${Math.min(progress, 100)}%` }}
+            role="progressbar"
+            aria-valuenow={Math.min(progress, 100)}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label={`Progreso de pagos: ${Math.min(progress, 100).toFixed(1)}% completado`}
           ></div>
         </div>
 
         {/* Payment List */}
         <div className="overflow-hidden shadow-sm ring-1 ring-black ring-opacity-5 md:rounded-lg mb-4">
-          <table className="min-w-full divide-y divide-gray-300 dark:divide-gray-600">
+          <table className="min-w-full divide-y divide-gray-300 dark:divide-gray-600" aria-label="Lista de pagos registrados">
+            <caption className="sr-only">Historial de pagos del evento con fecha, método, nota y monto</caption>
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
                 <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-white sm:pl-6">Fecha</th>
@@ -201,8 +210,8 @@ export const Payments: React.FC<PaymentsProps> = ({
                     {new Date(payment.payment_date).toLocaleDateString()}
                   </td>
                   <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400">
-                    {payment.payment_method === 'cash' ? 'Efectivo' : 
-                     payment.payment_method === 'transfer' ? 'Transferencia' : 
+                    {payment.payment_method === 'cash' ? 'Efectivo' :
+                     payment.payment_method === 'transfer' ? 'Transferencia' :
                      payment.payment_method === 'card' ? 'Tarjeta' : payment.payment_method}
                   </td>
                   <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400">
@@ -213,13 +222,15 @@ export const Payments: React.FC<PaymentsProps> = ({
                   </td>
                   <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                     <button
+                      type="button"
                       onClick={() => {
                         setDeleteId(payment.id);
                         setConfirmOpen(true);
                       }}
                       className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                      aria-label={`Eliminar pago de $${payment.amount.toFixed(2)} del ${new Date(payment.payment_date).toLocaleDateString()}`}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-4 w-4" aria-hidden="true" />
                     </button>
                   </td>
                 </tr>
@@ -238,22 +249,26 @@ export const Payments: React.FC<PaymentsProps> = ({
         {!isAdding ? (
           <div className="flex flex-wrap gap-3">
             <button
+              type="button"
               onClick={() => { reset(); setIsAdding(true); }}
               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-brand-orange bg-orange-100 hover:bg-orange-200 dark:bg-orange-900/30 dark:hover:bg-orange-900/50 focus:outline-hidden transition-colors"
+              aria-label="Abrir formulario para registrar un nuevo pago"
             >
-              <Plus className="h-4 w-4 mr-2" /> Registrar Nuevo Pago
+              <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> Registrar Nuevo Pago
             </button>
 
             {balance > 0 && (
               <button
-                onClick={() => { 
-                  reset(); 
-                  setValue("amount", parseFloat(balance.toFixed(2))); 
-                  setIsAdding(true); 
+                type="button"
+                onClick={() => {
+                  reset();
+                  setValue("amount", parseFloat(balance.toFixed(2)));
+                  setIsAdding(true);
                 }}
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 shadow-xs focus:outline-hidden transition-colors"
+                aria-label={`Liquidar saldo faltante de $${balance.toFixed(2)}`}
               >
-                <CheckCircle className="h-4 w-4 mr-2" /> Liquidar Faltante (${balance.toFixed(2)})
+                <CheckCircle className="h-4 w-4 mr-2" aria-hidden="true" /> Liquidar Faltante (${balance.toFixed(2)})
               </button>
             )}
           </div>
@@ -261,18 +276,22 @@ export const Payments: React.FC<PaymentsProps> = ({
           <form onSubmit={handleSubmit(onSubmit)} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-md border dark:border-gray-600 space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Monto</label>
+                <label htmlFor="payment-amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Monto *</label>
                 <div className="flex gap-2 items-center mt-1">
                   <div className="relative rounded-md shadow-xs w-full">
                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                       <span className="text-gray-500 sm:text-sm">$</span>
                     </div>
                     <input
+                      id="payment-amount"
                       type="number"
                       step="0.01"
                       {...register("amount", { required: "Monto requerido", min: 0.01 })}
                       className="block w-full rounded-md border-gray-300 dark:border-gray-600 pl-7 pr-12 focus:border-brand-orange focus:ring-brand-orange sm:text-sm p-2 bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
                       placeholder="0.00"
+                      aria-required="true"
+                      aria-invalid={errors.amount ? "true" : "false"}
+                      aria-describedby={errors.amount ? "payment-amount-error" : undefined}
                     />
                   </div>
                   {balance > 0 && (
@@ -280,29 +299,33 @@ export const Payments: React.FC<PaymentsProps> = ({
                       type="button"
                       onClick={() => setValue("amount", parseFloat(balance.toFixed(2)))}
                       className="px-2 py-1.5 text-xs bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300 rounded-sm border border-green-200 dark:border-green-800 hover:bg-green-200 dark:hover:bg-green-900/60 whitespace-nowrap"
-                      title="Llenar con el saldo faltante"
+                      aria-label="Llenar con el saldo faltante completo"
                     >
                       Max
                     </button>
                   )}
                 </div>
-                {errors.amount && <p className="text-xs text-red-500 mt-1">{errors.amount.message as string}</p>}
+                {errors.amount && <p id="payment-amount-error" className="text-xs text-red-500 mt-1" role="alert">{errors.amount.message as string}</p>}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Fecha</label>
+                <label htmlFor="payment-date" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Fecha *</label>
                 <input
+                  id="payment-date"
                   type="date"
                   {...register("payment_date", { required: true })}
                   className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-xs focus:border-brand-orange focus:ring-brand-orange sm:text-sm p-2 bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
+                  aria-required="true"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Método</label>
+                <label htmlFor="payment-method" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Método *</label>
                 <select
+                  id="payment-method"
                   {...register("payment_method")}
                   className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-xs focus:border-brand-orange focus:ring-brand-orange sm:text-sm p-2 bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
+                  aria-required="true"
                 >
                   <option value="cash">Efectivo</option>
                   <option value="transfer">Transferencia</option>
@@ -313,8 +336,9 @@ export const Payments: React.FC<PaymentsProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Nota (Opcional)</label>
+                <label htmlFor="payment-notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Nota (Opcional)</label>
                 <input
+                  id="payment-notes"
                   type="text"
                   {...register("notes")}
                   className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-xs focus:border-brand-orange focus:ring-brand-orange sm:text-sm p-2 bg-white dark:bg-gray-600 text-gray-900 dark:text-white"

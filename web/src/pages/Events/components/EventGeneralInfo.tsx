@@ -21,10 +21,10 @@ interface EventGeneralInfoProps {
   onClientCreated?: (client: Client) => void;
 }
 
-export const EventGeneralInfo: React.FC<EventGeneralInfoProps> = ({ 
-  clients, 
+export const EventGeneralInfo: React.FC<EventGeneralInfoProps> = ({
+  clients,
   clientIdValue,
-  onClientCreated 
+  onClientCreated
 }) => {
   const { register, formState: { errors } } = useFormContext();
   const [isQuickClientModalOpen, setIsQuickClientModalOpen] = useState(false);
@@ -42,15 +42,20 @@ export const EventGeneralInfo: React.FC<EventGeneralInfoProps> = ({
               type="button"
               onClick={() => setIsQuickClientModalOpen(true)}
               className="inline-flex items-center text-xs font-medium text-brand-orange hover:text-orange-600"
+              aria-label="Crear nuevo cliente rápidamente"
             >
-              <UserPlus className="h-3 w-3 mr-1" />
+              <UserPlus className="h-3 w-3 mr-1" aria-hidden="true" />
               Nuevo Cliente
             </button>
           </div>
           <div className="mt-1">
             <select
+              id="client_id"
               {...register('client_id')}
               className="shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              aria-required="true"
+              aria-invalid={errors.client_id ? "true" : "false"}
+              aria-describedby={errors.client_id ? "client_id-error" : undefined}
             >
               <option value="">Seleccionar cliente</option>
               {clients.map((client) => (
@@ -60,7 +65,7 @@ export const EventGeneralInfo: React.FC<EventGeneralInfoProps> = ({
               ))}
             </select>
             {errors.client_id && (
-              <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+              <p id="client_id-error" className="mt-2 text-sm text-red-600 dark:text-red-400" role="alert">
                 {errors.client_id.message as string}
               </p>
             )}
@@ -103,12 +108,16 @@ export const EventGeneralInfo: React.FC<EventGeneralInfoProps> = ({
           </label>
           <div className="mt-1">
             <input
+              id="event_date"
               type="date"
               {...register('event_date')}
               className="shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              aria-required="true"
+              aria-invalid={errors.event_date ? "true" : "false"}
+              aria-describedby={errors.event_date ? "event_date-error" : undefined}
             />
             {errors.event_date && (
-              <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+              <p id="event_date-error" className="mt-2 text-sm text-red-600 dark:text-red-400" role="alert">
                 {errors.event_date.message as string}
               </p>
             )}
@@ -123,6 +132,7 @@ export const EventGeneralInfo: React.FC<EventGeneralInfoProps> = ({
             </label>
             <div className="mt-1">
               <input
+                id="start_time"
                 type="time"
                 {...register('start_time')}
                 className="shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
@@ -135,6 +145,7 @@ export const EventGeneralInfo: React.FC<EventGeneralInfoProps> = ({
             </label>
             <div className="mt-1">
               <input
+                id="end_time"
                 type="time"
                 {...register('end_time')}
                 className="shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
@@ -150,13 +161,17 @@ export const EventGeneralInfo: React.FC<EventGeneralInfoProps> = ({
           </label>
           <div className="mt-1">
             <input
+              id="service_type"
               type="text"
               {...register('service_type')}
               placeholder="Ej. Barra de Churros"
               className="shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              aria-required="true"
+              aria-invalid={errors.service_type ? "true" : "false"}
+              aria-describedby={errors.service_type ? "service_type-error" : undefined}
             />
             {errors.service_type && (
-              <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+              <p id="service_type-error" className="mt-2 text-sm text-red-600 dark:text-red-400" role="alert">
                 {errors.service_type.message as string}
               </p>
             )}
@@ -171,16 +186,20 @@ export const EventGeneralInfo: React.FC<EventGeneralInfoProps> = ({
           <div className="mt-1">
             <div className="relative rounded-md shadow-xs">
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <Users className="h-5 w-5 text-gray-400" />
+                <Users className="h-5 w-5 text-gray-400" aria-hidden="true" />
               </div>
               <input
+                id="num_people"
                 type="number"
                 {...register('num_people')}
                 className="block w-full rounded-md border-gray-300 dark:border-gray-600 pl-10 focus:border-brand-orange focus:ring-brand-orange sm:text-sm p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                aria-required="true"
+                aria-invalid={errors.num_people ? "true" : "false"}
+                aria-describedby={errors.num_people ? "num_people-error" : undefined}
               />
             </div>
             {errors.num_people && (
-              <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+              <p id="num_people-error" className="mt-2 text-sm text-red-600 dark:text-red-400" role="alert">
                 {errors.num_people.message as string}
               </p>
             )}
@@ -194,8 +213,10 @@ export const EventGeneralInfo: React.FC<EventGeneralInfoProps> = ({
           </label>
           <div className="mt-1">
             <select
+              id="status"
               {...register('status')}
               className="shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              aria-required="true"
             >
               <option value="quoted">Cotizado</option>
               <option value="confirmed">Confirmado</option>
@@ -212,6 +233,7 @@ export const EventGeneralInfo: React.FC<EventGeneralInfoProps> = ({
           </label>
           <div className="mt-1">
             <input
+              id="location"
               type="text"
               {...register('location')}
               placeholder="Dirección del evento (opcional, por defecto dirección del cliente)"
@@ -226,6 +248,7 @@ export const EventGeneralInfo: React.FC<EventGeneralInfoProps> = ({
           </label>
           <div className="mt-1">
             <input
+              id="city"
               type="text"
               {...register('city')}
               placeholder="Ciudad del evento (para contrato)"

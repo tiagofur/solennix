@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc -l *.md)",
+      "Bash(git add backend/internal/handlers/auth_handler.go backend/internal/middleware/auth.go backend/internal/router/router.go web/src/contexts/AuthContext.tsx web/src/lib/api.ts docs/migration-httponly-cookies.md)"
+    ]
+  }
+}

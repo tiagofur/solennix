@@ -68,18 +68,18 @@ export const PendingEventsModal: React.FC = () => {
   if (!isOpen || loading || pendingEvents.length === 0) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
+    <div className="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="modal-title">
       <div className="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
-        <div 
-          className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" 
-          aria-hidden="true" 
-          onClick={() => setIsOpen(false)} 
+        <div
+          className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+          aria-hidden="true"
+          onClick={() => setIsOpen(false)}
         />
-        
+
         <div className="relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-800 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl">
           <div className="bg-white dark:bg-gray-800 px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
             <div className="sm:flex sm:items-start">
-              <div className="mx-auto flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-orange/20 sm:mx-0 sm:h-10 sm:w-10">
+              <div className="mx-auto flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-orange/20 sm:mx-0 sm:h-10 sm:w-10" aria-hidden="true">
                 <AlertCircle className="h-6 w-6 text-brand-orange" aria-hidden="true" />
               </div>
               <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
@@ -87,8 +87,13 @@ export const PendingEventsModal: React.FC = () => {
                   <h3 className="text-xl font-semibold leading-6 text-gray-900 dark:text-white" id="modal-title">
                     Eventos Pendientes de Cierre
                   </h3>
-                  <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-gray-500 transition-colors">
-                    <X className="h-5 w-5" />
+                  <button
+                    type="button"
+                    onClick={() => setIsOpen(false)}
+                    className="text-gray-400 hover:text-gray-500 transition-colors"
+                    aria-label="Cerrar modal"
+                  >
+                    <X className="h-5 w-5" aria-hidden="true" />
                   </button>
                 </div>
                 <div className="mt-2">
@@ -107,18 +112,22 @@ export const PendingEventsModal: React.FC = () => {
                         </div>
                         <div className="flex gap-2 w-full sm:w-auto mt-2 sm:mt-0">
                           <button
+                            type="button"
                             onClick={() => handleUpdateStatus(event.id, 'completed')}
                             disabled={updatingId === event.id}
                             className="flex-1 sm:flex-none inline-flex items-center justify-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-sm text-white bg-green-600 hover:bg-green-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors disabled:opacity-50"
+                            aria-label={`Marcar evento como completado: ${event.client?.name || 'Sin Cliente'} - ${event.service_type}`}
                           >
-                            <CheckCircle className="h-4 w-4 mr-1.5" /> Completar
+                            <CheckCircle className="h-4 w-4 mr-1.5" aria-hidden="true" /> Completar
                           </button>
                           <button
+                            type="button"
                             onClick={() => handleUpdateStatus(event.id, 'cancelled')}
                             disabled={updatingId === event.id}
                             className="flex-1 sm:flex-none inline-flex items-center justify-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-sm text-white bg-red-600 hover:bg-red-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors disabled:opacity-50"
+                            aria-label={`Marcar evento como cancelado: ${event.client?.name || 'Sin Cliente'} - ${event.service_type}`}
                           >
-                            <XCircle className="h-4 w-4 mr-1.5" /> Cancelar
+                            <XCircle className="h-4 w-4 mr-1.5" aria-hidden="true" /> Cancelar
                           </button>
                         </div>
                       </div>

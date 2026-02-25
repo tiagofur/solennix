@@ -341,3 +341,53 @@ func (r *EventRepo) UpdateEventItems(ctx context.Context, eventID uuid.UUID,
 
 	return tx.Commit(ctx)
 }
+
+// Search performs a full-text search on events for the given user
+func (r *EventRepo) Search(ctx context.Context, userID uuid.UUID, query string) ([]models.Event, error) {
+	searchPattern := "%" + query + "%"
+	sqlQuery := `SELECT e.id, e.user_id, e.client_id, e.event_date, e.service_type, e.num_people,
+		e.start_time, e.end_time, e.location, e.status, e.discount, e.tax_rate, e.tax_amount, e.total_amount,
+		e.deposit_percent, e.cancellation_days, e.refund_percent, e.created_at, e.updated_at,
+		c.name as client_name
+		FROM events e
+		LEFT JOIN clients c ON e.client_id = c.id
+		WHERE e.user_id = $1
+		AND (
+			e.service_type ILIKE $2 OR
+			e.location ILIKE $2 OR
+			c.name ILIKE $2
+		)
+		ORDER BY e.event_date DESC
+		LIMIT 10`
+
+	rows, err := r.pool.Query(ctx, sqlQuery, userID, searchPattern)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var events []models.Event
+	for rows.Next() {
+		var e models.Event
+		var clientName *string
+		if err := rows.Scan(&e.ID, &e.UserID, &e.ClientID, &e.EventDate, &e.ServiceType, &e.NumPeople,
+			&e.StartTime, &e.EndTime, &e.Location, &e.Status, &e.Discount, &e.TaxRate, &e.TaxAmount, &e.TotalAmount,
+			&e.DepositPercent, &e.CancellationDays, &e.RefundPercent, &e.CreatedAt, &e.UpdatedAt,
+			&clientName); err != nil {
+			return nil, err
+		}
+		if clientName != nil {
+			e.Client = &models.Client{
+				Name: *clientName,
+			}
+		}
+		events = append(events, e)
+	}
+
+	if events == nil {
+		events = []models.Event{}
+	}
+
+	return events, nil
+}
+

@@ -1,6 +1,30 @@
-# CLAUDE.md — EventosApp
+# CLAUDE.md
 
-This file provides context for AI assistants (Claude Code, Copilot, etc.) working on EventosApp.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+---
+
+## 📑 Table of Contents
+
+**PART I — EventosApp Project Context**
+- [Project Overview](#project-overview)
+- [Repository Layout](#repository-layout)
+- [Tech Stack](#tech-stack)
+- [Build, Lint, and Test Commands](#build-lint-and-test-commands)
+- [Architecture](#architecture)
+- [CI Pipeline](#ci-pipeline)
+- [Code Conventions](#code-conventions)
+- [Testing Conventions](#testing-conventions)
+- [Environment Variables](#environment-variables)
+- [Security Notes](#security-notes)
+- [Common Tasks](#common-tasks-for-ai-assistants)
+
+**PART II — Development Workflow**
+- [Spec-Driven Development (SDD) Orchestrator](#spec-driven-development-sdd-orchestrator)
+
+---
+
+# PART I — EventosApp Project Context
 
 ## Project Overview
 
@@ -25,21 +49,23 @@ eventosapp/
 
 ## Tech Stack
 
-| Layer       | Technology                                                             |
-|-------------|------------------------------------------------------------------------|
-| Frontend    | React 19, TypeScript ~5.9, Vite 7, Tailwind CSS 4, React Router 7     |
-| State       | Zustand (global), React Hook Form + Zod (forms)                       |
-| Backend     | Go 1.25, Chi v5 router, pgx v5 (PostgreSQL driver)                    |
-| Database    | PostgreSQL 15 with file-based migrations                               |
-| Auth        | JWT (golang-jwt), bcrypt, stored in localStorage as `auth_token`       |
-| Payments    | Stripe (web), RevenueCat (mobile webhooks)                             |
-| Testing     | Vitest + Testing Library (unit), Playwright (E2E), Go `testing` (API)  |
-| Styling     | Tailwind CSS, Lucide React icons, clsx + tailwind-merge                |
-| PDF         | jspdf + jspdf-autotable, @react-pdf/renderer                          |
-| CI          | GitHub Actions (type-check, lint, unit tests, coverage, E2E)           |
-| Deploy      | Docker Compose (self-hosted), Vercel-ready (web)                       |
+| Layer    | Technology                                                            |
+| -------- | --------------------------------------------------------------------- |
+| Frontend | React 19, TypeScript ~5.9, Vite 7, Tailwind CSS 4, React Router 7     |
+| State    | Zustand (global), React Hook Form + Zod (forms)                       |
+| Backend  | Go 1.25, Chi v5 router, pgx v5 (PostgreSQL driver)                    |
+| Database | PostgreSQL 15 with file-based migrations                              |
+| Auth     | JWT (golang-jwt), bcrypt, stored in localStorage as `auth_token`      |
+| Payments | Stripe (web), RevenueCat (mobile webhooks)                            |
+| Testing  | Vitest + Testing Library (unit), Playwright (E2E), Go `testing` (API) |
+| Styling  | Tailwind CSS, Lucide React icons, clsx + tailwind-merge               |
+| PDF      | jspdf + jspdf-autotable, @react-pdf/renderer                          |
+| CI       | GitHub Actions (type-check, lint, unit tests, coverage, E2E)          |
+| Deploy   | Docker Compose (self-hosted), Vercel-ready (web)                      |
 
 ## Build, Lint, and Test Commands
+
+> **Note:** The project officially uses **npm** (as per CI pipeline). Both `package-lock.json` and `pnpm-lock.yaml` exist, but all commands below use `npm`. You can substitute `npm` with `pnpm` if preferred, but npm is the canonical choice.
 
 ### Web (`web/`)
 
@@ -150,6 +176,7 @@ src/
 ```
 
 **Key patterns:**
+
 - All HTTP requests go through `lib/api.ts` (singleton `ApiClient`). Never use raw `fetch` in pages/components.
 - Services in `services/` wrap `api.ts` calls for each domain. Follow the existing `clientService.ts` pattern.
 - Auth token is stored as `auth_token` in localStorage. On 401, `api.ts` dispatches `auth:logout` event, caught by `AuthContext`.
@@ -163,7 +190,7 @@ src/
 internal/
 ├── config/       # Environment configuration (Config struct, loads from .env / env vars)
 ├── database/     # PostgreSQL connection pool, migration runner
-│   └── migrations/   # Numbered SQL migrations (001-013, up/down pairs)
+│   └── migrations/   # Numbered SQL migrations (001-014, up/down pairs)
 ├── handlers/     # HTTP handlers (AuthHandler, CRUDHandler, SubscriptionHandler)
 ├── middleware/   # CORS, JWT auth, request logging
 ├── models/       # Go structs for all domain entities
@@ -173,6 +200,7 @@ internal/
 ```
 
 **Key patterns:**
+
 - All API routes are under `/api`. See `router/router.go` for the full route tree.
 - Public routes: `/api/auth/*`, `/api/subscriptions/webhook/*`
 - Protected routes require JWT via `middleware.Auth`: `/api/clients`, `/api/events`, `/api/products`, `/api/inventory`, `/api/payments`, `/api/users/me`, `/api/subscriptions/status|checkout|portal`
@@ -182,35 +210,36 @@ internal/
 
 ### API Route Reference
 
-| Method | Path                           | Handler                    | Auth |
-|--------|--------------------------------|----------------------------|------|
-| POST   | `/api/auth/register`           | AuthHandler.Register       | No   |
-| POST   | `/api/auth/login`              | AuthHandler.Login          | No   |
-| POST   | `/api/auth/refresh`            | AuthHandler.RefreshToken   | No   |
-| POST   | `/api/auth/forgot-password`    | AuthHandler.ForgotPassword | No   |
-| GET    | `/api/auth/me`                 | AuthHandler.Me             | Yes  |
-| PUT    | `/api/users/me`                | AuthHandler.UpdateProfile  | Yes  |
-| CRUD   | `/api/clients[/{id}]`          | CRUDHandler.*Client*       | Yes  |
-| CRUD   | `/api/events[/{id}]`           | CRUDHandler.*Event*        | Yes  |
-| GET    | `/api/events/upcoming`         | CRUDHandler.GetUpcoming    | Yes  |
-| GET/PUT| `/api/events/{id}/products`    | CRUDHandler.*EventProducts*| Yes  |
-| GET/PUT| `/api/events/{id}/extras`      | CRUDHandler.*EventExtras*  | Yes  |
-| PUT    | `/api/events/{id}/items`       | CRUDHandler.UpdateEventItems| Yes |
-| CRUD   | `/api/products[/{id}]`         | CRUDHandler.*Product*      | Yes  |
-| GET/PUT| `/api/products/{id}/ingredients`| CRUDHandler.*Ingredients* | Yes  |
-| CRUD   | `/api/inventory[/{id}]`        | CRUDHandler.*Inventory*    | Yes  |
-| CRUD   | `/api/payments[/{id}]`         | CRUDHandler.*Payment*      | Yes  |
-| GET    | `/api/subscriptions/status`    | SubHandler.GetStatus       | Yes  |
-| POST   | `/api/subscriptions/checkout-session` | SubHandler.CreateCheckout | Yes |
-| POST   | `/api/subscriptions/portal-session`   | SubHandler.CreatePortal   | Yes |
-| POST   | `/api/subscriptions/webhook/stripe`   | SubHandler.StripeWebhook  | No* |
-| POST   | `/api/subscriptions/webhook/revenuecat` | SubHandler.RevenueCat   | No* |
+| Method  | Path                                    | Handler                      | Auth |
+| ------- | --------------------------------------- | ---------------------------- | ---- |
+| POST    | `/api/auth/register`                    | AuthHandler.Register         | No   |
+| POST    | `/api/auth/login`                       | AuthHandler.Login            | No   |
+| POST    | `/api/auth/refresh`                     | AuthHandler.RefreshToken     | No   |
+| POST    | `/api/auth/forgot-password`             | AuthHandler.ForgotPassword   | No   |
+| GET     | `/api/auth/me`                          | AuthHandler.Me               | Yes  |
+| PUT     | `/api/users/me`                         | AuthHandler.UpdateProfile    | Yes  |
+| CRUD    | `/api/clients[/{id}]`                   | CRUDHandler.*Client*         | Yes  |
+| CRUD    | `/api/events[/{id}]`                    | CRUDHandler.*Event*          | Yes  |
+| GET     | `/api/events/upcoming`                  | CRUDHandler.GetUpcoming      | Yes  |
+| GET/PUT | `/api/events/{id}/products`             | CRUDHandler.*EventProducts*  | Yes  |
+| GET/PUT | `/api/events/{id}/extras`               | CRUDHandler.*EventExtras*    | Yes  |
+| PUT     | `/api/events/{id}/items`                | CRUDHandler.UpdateEventItems | Yes  |
+| CRUD    | `/api/products[/{id}]`                  | CRUDHandler.*Product*        | Yes  |
+| GET/PUT | `/api/products/{id}/ingredients`        | CRUDHandler.*Ingredients*    | Yes  |
+| CRUD    | `/api/inventory[/{id}]`                 | CRUDHandler.*Inventory*      | Yes  |
+| CRUD    | `/api/payments[/{id}]`                  | CRUDHandler.*Payment*        | Yes  |
+| GET     | `/api/subscriptions/status`             | SubHandler.GetStatus         | Yes  |
+| POST    | `/api/subscriptions/checkout-session`   | SubHandler.CreateCheckout    | Yes  |
+| POST    | `/api/subscriptions/portal-session`     | SubHandler.CreatePortal      | Yes  |
+| POST    | `/api/subscriptions/webhook/stripe`     | SubHandler.StripeWebhook     | No*  |
+| POST    | `/api/subscriptions/webhook/revenuecat` | SubHandler.RevenueCat        | No*  |
 
 *Webhooks are verified by provider signature, not JWT.
 
 ### Data Model
 
 Core entities (all scoped to a `user_id`):
+
 - **User** — email, password, name, business branding, subscription plan (`basic`/`pro`)
 - **Client** — name, phone, email, address, city, notes, aggregates (total_events, total_spent)
 - **Event** — date, time range, service_type, num_people, status (`quoted`/`confirmed`/`completed`/`cancelled`), financial fields (discount, tax_rate, tax_amount, total_amount), contract terms (deposit_percent, cancellation_days, refund_percent)
@@ -219,6 +248,7 @@ Core entities (all scoped to a `user_id`):
 - **Payment** — event_id, amount, payment_date, payment_method, notes
 
 Junction tables:
+
 - **EventProduct** — links events to products with quantity, unit_price, discount
 - **EventExtra** — ad-hoc line items on events (description, cost, price, exclude_utility)
 - **ProductIngredient** — links products to inventory items with quantity_required
@@ -234,6 +264,7 @@ GitHub Actions workflow (`.github/workflows/test.yml`) runs on pushes/PRs to `ma
 ## Code Conventions
 
 ### TypeScript / React
+
 - Use TypeScript for all new code. The project uses `strict: false` in tsconfig but type your code properly.
 - Use `@/*` import alias for `src/` imports (e.g., `import { api } from '@/lib/api'`).
 - Component files: `PascalCase.tsx`. Utility files: `camelCase.ts`.
@@ -243,6 +274,7 @@ GitHub Actions workflow (`.github/workflows/test.yml`) runs on pushes/PRs to `ma
 - State management: Zustand for app-wide state, React context for auth/theme.
 
 ### Go
+
 - Follow standard Go conventions (`gofmt`, `golint`).
 - Package names: lowercase, no underscores.
 - Repository pattern: each domain has its own `*_repo.go` file.
@@ -250,13 +282,16 @@ GitHub Actions workflow (`.github/workflows/test.yml`) runs on pushes/PRs to `ma
 - All errors are handled explicitly — no panics in handlers.
 
 ### API Contract (Frontend ↔ Backend)
+
 - Frontend objects use camelCase, backend JSON uses snake_case.
 - When sending nested arrays to the API (event items, product ingredients), map to snake_case keys:
   - `productId` → `product_id`, `unitPrice` → `unit_price`, `inventoryId` → `inventory_id`, etc.
 - Auth token: `Authorization: Bearer <token>` header, token stored as `auth_token` in localStorage.
 
 ### Commits
+
 Follow [Conventional Commits](https://www.conventionalcommits.org/):
+
 ```
 feat(scope): add new feature
 fix(scope): correct bug description
@@ -267,6 +302,7 @@ chore(scope): maintenance tasks
 ```
 
 ### Branching
+
 ```
 main
 ├── feature/feature-name
@@ -278,6 +314,7 @@ main
 ## Testing Conventions
 
 ### Unit Tests (Vitest)
+
 - Co-located with source: `Component.test.tsx` next to `Component.tsx`.
 - Setup file: `web/tests/setup.ts` — configures MSW (Mock Service Worker), localStorage mock, matchMedia mock.
 - Mock API handlers: `web/tests/mocks/handlers.ts` with MSW.
@@ -286,11 +323,13 @@ main
 - Use `@testing-library/react` for component tests, `@testing-library/user-event` for interactions.
 
 ### E2E Tests (Playwright)
+
 - Located in `web/tests/e2e/`.
 - Config: `web/playwright.config.ts` — runs against `http://localhost:5173`, Chromium only.
-- Web server command: `pnpm dev -- --host`.
+- Web server command: `npm run dev -- --host` (playwright.config.ts may use pnpm but npm works).
 
 ### Backend Tests (Go)
+
 - Standard Go test files (`*_test.go`) co-located with source.
 - Integration tests: `*_integration_test.go` files.
 - Run with `go test ./...` from `backend/`.
@@ -298,10 +337,12 @@ main
 ## Environment Variables
 
 ### Backend (required)
+
 - `DATABASE_URL` — PostgreSQL connection string (required)
 - `JWT_SECRET` — secret for JWT signing (required)
 
 ### Backend (optional)
+
 - `PORT` — server port (default: `8080`)
 - `ENVIRONMENT` — `development` or `production`
 - `CORS_ALLOWED_ORIGINS` — comma-separated origins (default: `http://localhost:5173`)
@@ -312,6 +353,7 @@ main
 - `REVENUECAT_WEBHOOK_SECRET`
 
 ### Web
+
 - `VITE_API_URL` — backend API base URL (default: `http://localhost:8080/api`)
 
 ## Security Notes
@@ -326,6 +368,7 @@ main
 ## Common Tasks for AI Assistants
 
 ### Adding a new web page
+
 1. Create type definitions in `types/supabase.ts` (if new DB table).
 2. Create service in `services/xxxService.ts` using `api.ts`.
 3. Create page component(s) in `pages/Xxx/`.
@@ -333,6 +376,7 @@ main
 5. Write co-located tests (`Xxx.test.tsx`).
 
 ### Adding a new backend endpoint
+
 1. Add model to `models/models.go` (if new entity).
 2. Add repository methods in `repository/xxx_repo.go`.
 3. Add handler method to appropriate handler in `handlers/`.
@@ -341,12 +385,159 @@ main
 6. Write tests (`*_test.go`).
 
 ### Adding a new database migration
+
 1. Create `NNN_description.up.sql` and `NNN_description.down.sql` in `backend/internal/database/migrations/`.
-2. Use the next sequential number (currently at 013).
+2. Use the next sequential number (currently at 014).
 3. Migrations run automatically on startup via `database/migrate.go`.
 
 ### Running the full test suite before a PR
+
 ```bash
 cd web && npm run check && npm run lint && npm run test:run
 cd ../backend && go test ./...
 ```
+
+---
+
+# PART II — Development Workflow
+
+## Spec-Driven Development (SDD) Orchestrator
+
+You are the ORCHESTRATOR for Spec-Driven Development. You coordinate the SDD workflow by launching specialized sub-agents via the Task tool. Your job is to STAY LIGHTWEIGHT — delegate all heavy work to sub-agents and only track state and user decisions.
+
+### Operating Mode
+
+- **Delegate-only**: You NEVER execute phase work inline.
+- If work requires analysis, design, planning, implementation, verification, or migration, ALWAYS launch a sub-agent.
+- The lead agent only coordinates, tracks DAG state, and synthesizes results.
+
+### Artifact Store Policy
+
+- `artifact_store.mode`: `engram | openspec | none` (default: `auto`)
+- Recommended backend: `engram` — https://github.com/gentleman-programming/engram
+- `auto` resolution:
+  1. If user explicitly requested file artifacts, use `openspec`
+  2. Else if Engram is available, use `engram`
+  3. Else use `none`
+- `openspec` is NEVER chosen automatically — only when the user explicitly asks for project files.
+- In `none`, do not write any project files. Return results inline only.
+
+### SDD Triggers
+
+- User says: "sdd init", "iniciar sdd", "initialize specs"
+- User says: "sdd new <name>", "nuevo cambio", "new change", "sdd explore"
+- User says: "sdd ff <name>", "fast forward", "sdd continue"
+- User says: "sdd apply", "implementar", "implement"
+- User says: "sdd verify", "verificar"
+- User says: "sdd archive", "archivar"
+- User describes a feature/change and you detect it needs planning
+
+### SDD Commands
+
+| Command                       | Action                                      |
+| ----------------------------- | ------------------------------------------- |
+| `/sdd:init`                   | Bootstrap openspec/ in current project      |
+| `/sdd:explore <topic>`        | Think through an idea (no files created)    |
+| `/sdd:new <change-name>`      | Start a new change (creates proposal)       |
+| `/sdd:continue [change-name]` | Create next artifact in dependency chain    |
+| `/sdd:ff [change-name]`       | Fast-forward: create all planning artifacts |
+| `/sdd:apply [change-name]`    | Implement tasks                             |
+| `/sdd:verify [change-name]`   | Validate implementation                     |
+| `/sdd:archive [change-name]`  | Sync specs + archive                        |
+
+### Command → Skill Mapping
+
+| Command         | Skill to Invoke                                   | Skill Path                              |
+| --------------- | ------------------------------------------------- | --------------------------------------- |
+| `/sdd:init`     | sdd-init                                          | `~/.claude/skills/sdd-init/SKILL.md`    |
+| `/sdd:explore`  | sdd-explore                                       | `~/.claude/skills/sdd-explore/SKILL.md` |
+| `/sdd:new`      | sdd-explore → sdd-propose                         | `~/.claude/skills/sdd-propose/SKILL.md` |
+| `/sdd:continue` | Next needed from: sdd-spec, sdd-design, sdd-tasks | Check dependency graph below            |
+| `/sdd:ff`       | sdd-propose → sdd-spec → sdd-design → sdd-tasks   | All four in sequence                    |
+| `/sdd:apply`    | sdd-apply                                         | `~/.claude/skills/sdd-apply/SKILL.md`   |
+| `/sdd:verify`   | sdd-verify                                        | `~/.claude/skills/sdd-verify/SKILL.md`  |
+| `/sdd:archive`  | sdd-archive                                       | `~/.claude/skills/sdd-archive/SKILL.md` |
+
+### Available Skills
+
+- `sdd-init/SKILL.md` — Bootstrap project
+- `sdd-explore/SKILL.md` — Investigate codebase
+- `sdd-propose/SKILL.md` — Create proposal
+- `sdd-spec/SKILL.md` — Write specifications
+- `sdd-design/SKILL.md` — Technical design
+- `sdd-tasks/SKILL.md` — Task breakdown
+- `sdd-apply/SKILL.md` — Implement code
+- `sdd-verify/SKILL.md` — Validate implementation
+- `sdd-archive/SKILL.md` — Archive change
+
+### Orchestrator Rules
+
+1. You NEVER read source code directly — sub-agents do that
+2. You NEVER write implementation code — sdd-apply does that
+3. You NEVER write specs/proposals/design — sub-agents do that
+4. You ONLY: track state, present summaries to user, ask for approval, launch sub-agents
+5. Between sub-agent calls, ALWAYS show the user what was done and ask to proceed
+6. Keep your context MINIMAL — pass file paths to sub-agents, not file contents
+7. NEVER run phase work inline as the lead. Always delegate.
+
+### Sub-Agent Launching Pattern
+
+When launching a sub-agent via Task tool:
+
+```
+Task(
+  description: '{phase} for {change-name}',
+  subagent_type: 'general',
+  prompt: 'You are an SDD sub-agent. Read the skill file at ~/.claude/skills/sdd-{phase}/SKILL.md FIRST, then follow its instructions exactly.
+
+  CONTEXT:
+  - Project: {project path}
+  - Change: {change-name}
+  - Artifact store mode: {auto|engram|openspec|none}
+  - Config: {path to openspec/config.yaml}
+  - Previous artifacts: {list of paths to read}
+
+  TASK:
+  {specific task description}
+
+  Return structured output with: status, executive_summary, detailed_report(optional), artifacts, next_recommended, risks.'
+)
+```
+
+### Dependency Graph
+
+```
+proposal → specs ──→ tasks → apply → verify → archive
+              ↕
+           design
+```
+
+- specs and design can be created in parallel (both depend only on proposal)
+- tasks depends on BOTH specs and design
+- verify is optional but recommended before archive
+
+### State Tracking
+
+After each sub-agent completes, track:
+
+- Change name
+- Which artifacts exist (proposal ✓, specs ✓, design ✗, tasks ✗)
+- Which tasks are complete (if in apply phase)
+- Any issues or blockers reported
+
+### Fast-Forward (/sdd:ff)
+
+Launch sub-agents in sequence: sdd-propose → sdd-spec → sdd-design → sdd-tasks.
+Show user a summary after ALL are done, not between each one.
+
+### Apply Strategy
+
+For large task lists, batch tasks to sub-agents (e.g., "implement Phase 1, tasks 1.1-1.3").
+Do NOT send all tasks at once — break into manageable batches.
+After each batch, show progress to user and ask to continue.
+
+### When to Suggest SDD
+
+If the user describes something substantial (new feature, refactor, multi-file change), suggest SDD:
+"This sounds like a good candidate for SDD. Want me to start with /sdd:new {suggested-name}?"
+Do NOT force SDD on small tasks (single file edits, quick fixes, questions).

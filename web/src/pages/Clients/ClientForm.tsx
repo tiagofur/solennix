@@ -99,8 +99,9 @@ export const ClientForm: React.FC = () => {
 
   if (limitsLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-orange"></div>
+      <div className="flex justify-center items-center h-64" role="status" aria-live="polite">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-orange" aria-hidden="true"></div>
+        <span className="sr-only">Cargando límites de plan...</span>
       </div>
     );
   }
@@ -109,10 +110,12 @@ export const ClientForm: React.FC = () => {
     return (
       <div className="max-w-4xl mx-auto py-8 px-4">
         <button
+          type="button"
           onClick={() => navigate(-1)}
           className="mb-6 flex items-center text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+          aria-label="Regresar a la página anterior"
         >
-          <ArrowLeft className="h-4 w-4 mr-1" />
+          <ArrowLeft className="h-4 w-4 mr-1" aria-hidden="true" />
           Regresar
         </button>
         <div className="flex justify-center mt-12">
@@ -127,10 +130,12 @@ export const ClientForm: React.FC = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center">
           <button
+            type="button"
             onClick={() => navigate("/clients")}
             className="mr-4 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
+            aria-label="Volver a la lista de clientes"
           >
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="h-5 w-5" aria-hidden="true" />
           </button>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             {id ? "Editar Cliente" : "Nuevo Cliente"}
@@ -141,7 +146,7 @@ export const ClientForm: React.FC = () => {
       <div className="bg-white dark:bg-gray-800 shadow-sm px-4 py-5 sm:rounded-lg sm:p-6">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-400 p-4">
+            <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-400 p-4" role="alert">
               <div className="flex">
                 <div className="ml-3">
                   <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
@@ -160,12 +165,16 @@ export const ClientForm: React.FC = () => {
               </label>
               <div className="mt-1">
                 <input
+                  id="name"
                   type="text"
                   {...register("name")}
                   className="shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  aria-required="true"
+                  aria-invalid={errors.name ? "true" : "false"}
+                  aria-describedby={errors.name ? "name-error" : undefined}
                 />
                 {errors.name && (
-                  <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+                  <p id="name-error" className="mt-2 text-sm text-red-600 dark:text-red-400" role="alert">
                     {errors.name.message}
                   </p>
                 )}
@@ -181,12 +190,16 @@ export const ClientForm: React.FC = () => {
               </label>
               <div className="mt-1">
                 <input
+                  id="phone"
                   type="text"
                   {...register("phone")}
                   className="shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  aria-required="true"
+                  aria-invalid={errors.phone ? "true" : "false"}
+                  aria-describedby={errors.phone ? "phone-error" : undefined}
                 />
                 {errors.phone && (
-                  <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+                  <p id="phone-error" className="mt-2 text-sm text-red-600 dark:text-red-400" role="alert">
                     {errors.phone.message}
                   </p>
                 )}
@@ -202,12 +215,15 @@ export const ClientForm: React.FC = () => {
               </label>
               <div className="mt-1">
                 <input
+                  id="email"
                   type="email"
                   {...register("email")}
                   className="shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  aria-invalid={errors.email ? "true" : "false"}
+                  aria-describedby={errors.email ? "email-error" : undefined}
                 />
                 {errors.email && (
-                  <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+                  <p id="email-error" className="mt-2 text-sm text-red-600 dark:text-red-400" role="alert">
                     {errors.email.message}
                   </p>
                 )}
@@ -223,6 +239,7 @@ export const ClientForm: React.FC = () => {
               </label>
               <div className="mt-1">
                 <input
+                  id="address"
                   type="text"
                   {...register("address")}
                   className="shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
@@ -239,6 +256,7 @@ export const ClientForm: React.FC = () => {
               </label>
               <div className="mt-1">
                 <input
+                  id="city"
                   type="text"
                   {...register("city")}
                   className="shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
@@ -255,6 +273,7 @@ export const ClientForm: React.FC = () => {
               </label>
               <div className="mt-1">
                 <textarea
+                  id="notes"
                   {...register("notes")}
                   rows={3}
                   className="shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
@@ -275,8 +294,9 @@ export const ClientForm: React.FC = () => {
               type="submit"
               disabled={isLoading}
               className="inline-flex justify-center py-2 px-4 border border-transparent shadow-xs text-sm font-medium rounded-md text-white bg-brand-orange hover:bg-orange-600 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-brand-orange disabled:opacity-50"
+              aria-label={isLoading ? "Guardando cliente..." : "Guardar cliente"}
             >
-              <Save className="h-5 w-5 mr-2" />
+              <Save className="h-5 w-5 mr-2" aria-hidden="true" />
               {isLoading ? "Guardando..." : "Guardar"}
             </button>
           </div>

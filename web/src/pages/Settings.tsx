@@ -165,7 +165,7 @@ export const Settings: React.FC = () => {
           <dl className="sm:divide-y sm:divide-gray-200 dark:sm:divide-gray-700">
             <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
               <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center">
-                <User className="h-4 w-4 mr-2" /> Nombre
+                <User className="h-4 w-4 mr-2" aria-hidden="true" /> Nombre
               </dt>
               <dd className="mt-1 text-sm text-gray-900 dark:text-white sm:mt-0 sm:col-span-2">
                 {profile?.name}
@@ -173,7 +173,7 @@ export const Settings: React.FC = () => {
             </div>
             <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
               <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center">
-                <Shield className="h-4 w-4 mr-2" /> Email
+                <Shield className="h-4 w-4 mr-2" aria-hidden="true" /> Email
               </dt>
               <dd className="mt-1 text-sm text-gray-900 dark:text-white sm:mt-0 sm:col-span-2">
                 {profile?.email}
@@ -181,31 +181,37 @@ export const Settings: React.FC = () => {
             </div>
             <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
               <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center">
-                <Building className="h-4 w-4 mr-2" /> Nombre Comercial (Razón
+                <Building className="h-4 w-4 mr-2" aria-hidden="true" /> Nombre Comercial (Razón
                 Social)
               </dt>
               <dd className="mt-1 text-sm text-gray-900 dark:text-white sm:mt-0 sm:col-span-2 flex items-center justify-between">
                 {isEditingBusiness ? (
                   <div className="flex gap-2 w-full max-w-md">
                     <input
+                      id="business-name"
                       type="text"
                       value={businessName}
                       onChange={(e) => setBusinessName(e.target.value)}
                       placeholder="Ej. Eventos Fantásticos S.A. de C.V."
                       className="flex-1 shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md p-1 border"
+                      aria-label="Nombre comercial o razón social"
                     />
                     <button
+                      type="button"
                       onClick={handleUpdateBusinessName}
                       className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
+                      aria-label="Guardar nombre comercial"
                     >
                       Guardar
                     </button>
                     <button
+                      type="button"
                       onClick={() => {
                         setIsEditingBusiness(false);
                         setBusinessName(profile?.business_name || "");
                       }}
                       className="inline-flex items-center px-3 py-1 border border-gray-300 dark:border-gray-600 text-xs font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+                      aria-label="Cancelar edición de nombre comercial"
                     >
                       Cancelar
                     </button>
@@ -217,11 +223,13 @@ export const Settings: React.FC = () => {
                         "No configurado (se usará tu nombre)"}
                     </span>
                     <button
+                      type="button"
                       onClick={() => {
                         setIsEditingBusiness(true);
                         setBusinessName(profile?.business_name || "");
                       }}
                       className="text-brand-orange hover:text-orange-700 text-xs font-medium"
+                      aria-label="Editar nombre comercial"
                     >
                       Editar
                     </button>
@@ -241,29 +249,37 @@ export const Settings: React.FC = () => {
                 {isEditingColor ? (
                   <div className="flex gap-2 w-full max-w-md items-center">
                     <input
+                      id="brand-color-picker"
                       type="color"
                       value={brandColor}
                       onChange={(e) => setBrandColor(e.target.value)}
                       className="h-8 w-14 p-0 border-0 rounded-sm cursor-pointer"
+                      aria-label="Selector de color de marca"
                     />
                     <input
+                      id="brand-color-hex"
                       type="text"
                       value={brandColor}
                       onChange={(e) => setBrandColor(e.target.value)}
                       className="w-24 shadow-xs focus:ring-brand-orange focus:border-brand-orange sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md p-1 border uppercase font-mono"
+                      aria-label="Código hexadecimal del color"
                     />
                     <button
+                      type="button"
                       onClick={handleUpdateBrandColor}
                       className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-white bg-green-600 hover:bg-green-700 ml-auto"
+                      aria-label="Guardar color de marca"
                     >
                       Guardar
                     </button>
                     <button
+                      type="button"
                       onClick={() => {
                         setIsEditingColor(false);
                         setBrandColor(profile?.brand_color || "#FF6B35");
                       }}
                       className="inline-flex items-center px-3 py-1 border border-gray-300 dark:border-gray-600 text-xs font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+                      aria-label="Cancelar edición de color"
                     >
                       Cancelar
                     </button>
@@ -274,11 +290,13 @@ export const Settings: React.FC = () => {
                       {profile?.brand_color || "#FF6B35"}
                     </span>
                     <button
+                      type="button"
                       onClick={() => {
                         setIsEditingColor(true);
                         setBrandColor(profile?.brand_color || "#FF6B35");
                       }}
                       className="text-brand-orange hover:text-orange-700 text-xs font-medium"
+                      aria-label="Editar color de marca"
                     >
                       Editar
                     </button>
@@ -288,32 +306,34 @@ export const Settings: React.FC = () => {
             </div>
             <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
               <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center">
-                <ImageIcon className="h-4 w-4 mr-2" /> Logo para Contratos y PDFs
+                <ImageIcon className="h-4 w-4 mr-2" aria-hidden="true" /> Logo para Contratos y PDFs
               </dt>
               <dd className="mt-1 text-sm text-gray-900 dark:text-white sm:mt-0 sm:col-span-2">
                 <div className="flex items-center gap-4">
                   {profile?.logo_url ? (
                     <div className="relative h-16 w-16 rounded-sm overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-                      <img src={profile.logo_url} alt="Logo" className="h-full w-full object-contain" />
+                      <img src={profile.logo_url} alt="Logo de la empresa" className="h-full w-full object-contain" />
                     </div>
                   ) : (
-                    <div className="h-16 w-16 rounded-sm border border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-400">
-                      <ImageIcon className="h-6 w-6" />
+                    <div className="h-16 w-16 rounded-sm border border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-400" aria-hidden="true">
+                      <ImageIcon className="h-6 w-6" aria-hidden="true" />
                     </div>
                   )}
                   <div>
                     <input
+                      id="logo-upload"
                       type="file"
                       accept=".png,.jpg,.jpeg"
                       onChange={handleLogoUpload}
                       disabled={isUploadingLogo}
                       className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-gray-100 dark:file:bg-gray-700 file:text-gray-700 dark:file:text-gray-200 hover:file:bg-gray-200 dark:hover:file:bg-gray-600 cursor-pointer disabled:opacity-50"
+                      aria-label="Subir logo de la empresa (PNG o JPG, máximo 2MB)"
                     />
                     <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                       Formatos: PNG transparente o JPG (Máx. 2MB).
                     </p>
                     {isUploadingLogo && (
-                      <p className="mt-1 text-xs text-brand-orange animate-pulse">Subiendo...</p>
+                      <p className="mt-1 text-xs text-brand-orange animate-pulse" role="status" aria-live="polite">Subiendo...</p>
                     )}
                   </div>
                 </div>
@@ -336,7 +356,7 @@ export const Settings: React.FC = () => {
             </div>
             <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
               <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center">
-                <CreditCard className="h-4 w-4 mr-2" /> Plan Actual
+                <CreditCard className="h-4 w-4 mr-2" aria-hidden="true" /> Plan Actual
               </dt>
               <dd className="mt-1 text-sm text-gray-900 dark:text-white sm:mt-0 sm:col-span-2">
                 <div className="flex flex-col gap-3">
@@ -349,7 +369,7 @@ export const Settings: React.FC = () => {
                           : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
                       }`}
                     >
-                      <CheckCircle className="h-3 w-3" />
+                      <CheckCircle className="h-3 w-3" aria-hidden="true" />
                       {profile?.plan === "pro" || profile?.plan === "premium" ? "Pro / Premium" : "Básico"}
                     </span>
                   </div>
@@ -369,19 +389,21 @@ export const Settings: React.FC = () => {
                         Tienes acceso completo a todas las funciones Pro. Puedes gestionar tu suscripción, cambiar tu método de pago o cancelar cuando quieras.
                       </p>
                       {portalError && (
-                        <p className="text-xs text-red-600 dark:text-red-400 mb-2">{portalError}</p>
+                        <p className="text-xs text-red-600 dark:text-red-400 mb-2" role="alert">{portalError}</p>
                       )}
                       <button
+                        type="button"
                         id="btn-manage-subscription"
                         onClick={handleManageSubscription}
                         disabled={isPortalLoading}
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md text-white bg-green-600 hover:bg-green-700 disabled:opacity-60 transition-colors"
+                        aria-label={isPortalLoading ? "Abriendo portal de gestión de suscripción..." : "Abrir portal de gestión de suscripción"}
                       >
                         {isPortalLoading ? (
                           "Abriendo portal..."
                         ) : (
                           <>
-                            <ExternalLink className="h-3 w-3" />
+                            <ExternalLink className="h-3 w-3" aria-hidden="true" />
                             Gestionar suscripción
                           </>
                         )}
@@ -394,9 +416,11 @@ export const Settings: React.FC = () => {
                     <div className="flex gap-2 flex-wrap mt-1">
                       {(profile?.plan === "pro" || profile?.plan === "premium") && (
                         <button
+                          type="button"
                           onClick={handleDebugDowngrade}
                           disabled={isDebugLoading}
                           className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded border border-orange-300 text-orange-700 bg-orange-50 hover:bg-orange-100 dark:border-orange-700 dark:text-orange-300 dark:bg-orange-900/20"
+                          aria-label="Degradar plan a básico (solo desarrollo)"
                         >
                           [Dev] Degradar a Básico
                         </button>
@@ -405,8 +429,9 @@ export const Settings: React.FC = () => {
                         <a
                           href="/pricing"
                           className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded border border-brand-orange text-brand-orange hover:bg-orange-50"
+                          aria-label="Ver planes de suscripción disponibles"
                         >
-                          <Zap className="h-3 w-3" />
+                          <Zap className="h-3 w-3" aria-hidden="true" />
                           Ver planes
                         </a>
                       )}
@@ -430,16 +455,17 @@ export const Settings: React.FC = () => {
           <dl className="sm:divide-y sm:divide-gray-200 dark:sm:divide-gray-700">
             <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
               <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center">
-                <FileText className="h-4 w-4 mr-2" /> Valores Predeterminados
+                <FileText className="h-4 w-4 mr-2" aria-hidden="true" /> Valores Predeterminados
               </dt>
               <dd className="mt-1 text-sm text-gray-900 dark:text-white sm:mt-0 sm:col-span-2">
                 {isEditingContract ? (
                   <div className="space-y-4 max-w-md">
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
+                      <label htmlFor="contract-deposit" className="block text-xs font-medium text-gray-700 dark:text-gray-300">
                         Anticipo (%)
                       </label>
                       <input
+                        id="contract-deposit"
                         type="number"
                         value={contractSettings.deposit}
                         onChange={(e) =>
@@ -452,10 +478,11 @@ export const Settings: React.FC = () => {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
+                      <label htmlFor="contract-cancellation" className="block text-xs font-medium text-gray-700 dark:text-gray-300">
                         Días para Cancelación
                       </label>
                       <input
+                        id="contract-cancellation"
                         type="number"
                         value={contractSettings.cancellation}
                         onChange={(e) =>
@@ -468,10 +495,11 @@ export const Settings: React.FC = () => {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 dark:text-gray-300">
+                      <label htmlFor="contract-refund" className="block text-xs font-medium text-gray-700 dark:text-gray-300">
                         Reembolso Anticipo (%)
                       </label>
                       <input
+                        id="contract-refund"
                         type="number"
                         value={contractSettings.refund}
                         onChange={(e) =>
@@ -485,12 +513,15 @@ export const Settings: React.FC = () => {
                     </div>
                     <div className="flex gap-2 pt-2">
                       <button
+                        type="button"
                         onClick={handleUpdateContractSettings}
                         className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
+                        aria-label="Guardar configuración de contratos"
                       >
                         Guardar
                       </button>
                       <button
+                        type="button"
                         onClick={() => {
                           setIsEditingContract(false);
                           setContractSettings({
@@ -501,6 +532,7 @@ export const Settings: React.FC = () => {
                           });
                         }}
                         className="inline-flex items-center px-3 py-1 border border-gray-300 dark:border-gray-600 text-xs font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+                        aria-label="Cancelar edición de contratos"
                       >
                         Cancelar
                       </button>
@@ -529,6 +561,7 @@ export const Settings: React.FC = () => {
                       </p>
                     </div>
                     <button
+                      type="button"
                       onClick={() => {
                         setIsEditingContract(true);
                         setContractSettings({
@@ -539,6 +572,7 @@ export const Settings: React.FC = () => {
                         });
                       }}
                       className="text-brand-orange hover:text-orange-700 text-xs font-medium"
+                      aria-label="Editar configuración de contratos"
                     >
                       Editar
                     </button>

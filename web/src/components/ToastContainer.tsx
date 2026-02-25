@@ -4,9 +4,9 @@ import { CheckCircle, AlertCircle, Info, X } from 'lucide-react';
 import clsx from 'clsx';
 
 const TOAST_ICONS: Record<ToastType, React.ReactNode> = {
-  success: <CheckCircle className="h-5 w-5 text-green-500" />,
-  error: <AlertCircle className="h-5 w-5 text-red-500" />,
-  info: <Info className="h-5 w-5 text-blue-500" />,
+  success: <CheckCircle className="h-5 w-5 text-green-500" aria-hidden="true" />,
+  error: <AlertCircle className="h-5 w-5 text-red-500" aria-hidden="true" />,
+  info: <Info className="h-5 w-5 text-blue-500" aria-hidden="true" />,
 };
 
 const TOAST_STYLES: Record<ToastType, string> = {
@@ -19,10 +19,11 @@ export const ToastContainer: React.FC = () => {
   const { toasts, removeToast } = useToast();
 
   return (
-    <div className="fixed bottom-4 right-4 z-100 flex flex-col gap-2 pointer-events-none">
+    <div className="fixed bottom-4 right-4 z-100 flex flex-col gap-2 pointer-events-none" aria-live="polite" aria-atomic="false">
       {toasts.map((toast) => (
         <div
           key={toast.id}
+          role={toast.type === 'error' ? 'alert' : 'status'}
           className={clsx(
             'pointer-events-auto flex items-center p-4 rounded-lg border shadow-lg transition-all animate-fade-in-up min-w-[300px]',
             TOAST_STYLES[toast.type]
@@ -33,11 +34,13 @@ export const ToastContainer: React.FC = () => {
             {toast.message}
           </div>
           <button
+            type="button"
             onClick={() => removeToast(toast.id)}
-            className="ml-auto -mx-1.5 -my-1.5 p-1.5 inline-flex items-center justify-center h-8 w-8 rounded-md text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-400 focus:outline-hidden"
+            className="ml-auto -mx-1.5 -my-1.5 p-1.5 inline-flex items-center justify-center h-8 w-8 rounded-md text-gray-400 hover:text-gray-500 dark:text-gray-400 dark:hover:text-gray-400 focus:outline-hidden"
+            aria-label="Cerrar notificación"
           >
             <span className="sr-only">Cerrar</span>
-            <X className="h-4 w-4" />
+            <X className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
       ))}

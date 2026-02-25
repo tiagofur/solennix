@@ -6,8 +6,8 @@ export const SetupRequired: React.FC = () => {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
       <div className="max-w-2xl w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
         <div className="flex items-center justify-center mb-6">
-          <div className="bg-yellow-100 dark:bg-yellow-900 rounded-full p-3">
-            <AlertTriangle className="h-12 w-12 text-yellow-600 dark:text-yellow-400" />
+          <div className="bg-yellow-100 dark:bg-yellow-900 rounded-full p-3" aria-hidden="true">
+            <AlertTriangle className="h-12 w-12 text-yellow-600 dark:text-yellow-400" aria-hidden="true" />
           </div>
         </div>
         
@@ -21,22 +21,23 @@ export const SetupRequired: React.FC = () => {
 
         <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-6 mb-6">
           <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white flex items-center">
-            <FileText className="h-5 w-5 mr-2" />
+            <FileText className="h-5 w-5 mr-2" aria-hidden="true" />
             Pasos para configurar:
           </h2>
-          
+
           <ol className="space-y-4 text-gray-700 dark:text-gray-300">
             <li className="flex">
               <span className="font-bold mr-2">1.</span>
               <div>
                 <p className="font-medium">Crea un proyecto en Supabase</p>
-                <a 
-                  href="https://supabase.com/dashboard" 
-                  target="_blank" 
+                <a
+                  href="https://supabase.com/dashboard"
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="text-brand-orange hover:underline inline-flex items-center mt-1"
+                  aria-label="Abrir Supabase Dashboard en una nueva pestaña"
                 >
-                  Ir a Supabase Dashboard <ExternalLink className="h-4 w-4 ml-1" />
+                  Ir a Supabase Dashboard <ExternalLink className="h-4 w-4 ml-1" aria-hidden="true" />
                 </a>
               </div>
             </li>

@@ -11,7 +11,7 @@ import (
 )
 
 func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, subHandler *handlers.SubscriptionHandler,
-	authService *services.AuthService, corsOrigins []string) http.Handler {
+	searchHandler *handlers.SearchHandler, eventPaymentHandler *handlers.EventPaymentHandler, authService *services.AuthService, corsOrigins []string) http.Handler {
 
 	r := chi.NewRouter()
 
@@ -90,6 +90,9 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 				r.Get("/{id}/products", crudHandler.GetEventProducts)
 				r.Get("/{id}/extras", crudHandler.GetEventExtras)
 				r.Put("/{id}/items", crudHandler.UpdateEventItems)
+				// Event payment routes
+				r.Post("/{id}/checkout-session", eventPaymentHandler.CreateEventCheckoutSession)
+				r.Get("/{id}/payment-session", eventPaymentHandler.HandleEventPaymentSuccess)
 			})
 
 			// Products
@@ -120,6 +123,9 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 				r.Put("/{id}", crudHandler.UpdatePayment)
 				r.Delete("/{id}", crudHandler.DeletePayment)
 			})
+
+			// Search
+			r.Get("/search", searchHandler.SearchAll)
 		})
 	})
 

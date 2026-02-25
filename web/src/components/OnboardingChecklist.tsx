@@ -78,7 +78,7 @@ export const OnboardingChecklist: React.FC = () => {
       id: 'client',
       title: 'Añade tu primer cliente',
       description: 'Registra los datos básicos para poder cotizarle.',
-      icon: <Users className="h-5 w-5" />,
+      icon: <Users className="h-5 w-5" aria-hidden="true" />,
       href: '/clients/new',
       isCompleted: hasClient,
     },
@@ -86,7 +86,7 @@ export const OnboardingChecklist: React.FC = () => {
       id: 'product',
       title: 'Crea tu primer producto',
       description: 'Añade servicios o productos a tu catálogo de cotización.',
-      icon: <Package className="h-5 w-5" />,
+      icon: <Package className="h-5 w-5" aria-hidden="true" />,
       href: '/products/new',
       isCompleted: hasProduct,
     },
@@ -94,7 +94,7 @@ export const OnboardingChecklist: React.FC = () => {
       id: 'event',
       title: 'Agenda un evento',
       description: 'Usa a tu cliente y tus productos para crear tu primera reserva.',
-      icon: <CalendarPlus className="h-5 w-5" />,
+      icon: <CalendarPlus className="h-5 w-5" aria-hidden="true" />,
       href: '/events/new',
       isCompleted: hasEvent,
     },
@@ -115,12 +115,14 @@ export const OnboardingChecklist: React.FC = () => {
               Completa estos {steps.length} pasos sencillos para configurar tu cuenta.
             </p>
           </div>
-          <button 
+          <button
+            type="button"
             onClick={handleDismiss}
             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
             title="Ocultar para siempre"
+            aria-label="Ocultar lista de verificación para siempre"
           >
-            <X className="h-5 w-5" />
+            <X className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
 
@@ -130,9 +132,14 @@ export const OnboardingChecklist: React.FC = () => {
             <span>{progress}% Completado</span>
           </div>
           <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 overflow-hidden">
-            <div 
-              className="bg-brand-orange h-2.5 rounded-full transition-all duration-1000 ease-out" 
+            <div
+              className="bg-brand-orange h-2.5 rounded-full transition-all duration-1000 ease-out"
               style={{ width: `${progress}%` }}
+              role="progressbar"
+              aria-valuenow={progress}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label={`Progreso de configuración inicial: ${progress}% completado`}
             ></div>
           </div>
         </div>
@@ -155,22 +162,22 @@ export const OnboardingChecklist: React.FC = () => {
                   {step.icon}
                 </div>
                 {step.isCompleted ? (
-                   <CheckCircle2 className="h-6 w-6 text-green-500" />
+                   <CheckCircle2 className="h-6 w-6 text-green-500" aria-hidden="true" />
                 ) : (
-                   <Circle className="h-6 w-6 text-gray-300 dark:text-gray-600 group-hover:text-brand-orange/50 transition-colors" />
+                   <Circle className="h-6 w-6 text-gray-300 dark:text-gray-500 group-hover:text-brand-orange/50 transition-colors" aria-hidden="true" />
                 )}
               </div>
-              
+
               <h3 className={`font-semibold text-sm mb-1 ${step.isCompleted ? 'text-gray-600 dark:text-gray-300' : 'text-gray-900 dark:text-white'}`}>
                 {step.title}
               </h3>
               <p className="text-xs text-gray-500 dark:text-gray-400 grow mb-3">
                 {step.description}
               </p>
-              
+
               {!step.isCompleted && (
                  <div className="mt-auto text-xs font-semibold text-brand-orange flex items-center opacity-0 group-hover:opacity-100 transition-opacity -translate-x-2 group-hover:translate-x-0 duration-300">
-                    Comenzar <ChevronRight className="h-3 w-3 ml-0.5" />
+                    Comenzar <ChevronRight className="h-3 w-3 ml-0.5" aria-hidden="true" />
                  </div>
               )}
             </Link>

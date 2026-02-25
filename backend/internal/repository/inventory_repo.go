@@ -87,3 +87,42 @@ func (r *InventoryRepo) Delete(ctx context.Context, id, userID uuid.UUID) error 
 	}
 	return nil
 }
+
+// Search performs a full-text search on inventory items for the given user
+func (r *InventoryRepo) Search(ctx context.Context, userID uuid.UUID, query string) ([]models.InventoryItem, error) {
+	searchPattern := "%" + query + "%"
+	sqlQuery := `SELECT id, user_id, ingredient_name, current_stock, minimum_stock, unit, unit_cost, type, last_updated
+		FROM inventory
+		WHERE user_id = $1
+		AND (
+			ingredient_name ILIKE $2 OR
+			unit ILIKE $2 OR
+			type ILIKE $2
+		)
+		ORDER BY last_updated DESC
+		LIMIT 10`
+
+	rows, err := r.pool.Query(ctx, sqlQuery, userID, searchPattern)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var items []models.InventoryItem
+	for rows.Next() {
+		var item models.InventoryItem
+		if err := rows.Scan(&item.ID, &item.UserID, &item.IngredientName, &item.CurrentStock,
+			&item.MinimumStock, &item.Unit, &item.UnitCost, &item.Type,
+			&item.LastUpdated); err != nil {
+			return nil, err
+		}
+		items = append(items, item)
+	}
+
+	if items == nil {
+		items = []models.InventoryItem{}
+	}
+
+	return items, nil
+}
+

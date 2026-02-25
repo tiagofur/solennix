@@ -17,13 +17,13 @@ export default function Empty({
   showImage = true,
 }: EmptyProps) {
   return (
-    <div className={cn('flex flex-col items-center justify-center px-4 py-20 text-center animate-fade-in', className)}>
+    <div className={cn('flex flex-col items-center justify-center px-4 py-20 text-center animate-fade-in', className)} role="status">
       {showImage && (
         <div className="relative mb-8 group">
-          <div className="absolute inset-0 bg-brand-orange/20 blur-3xl rounded-full scale-150 opacity-10 group-hover:opacity-20 transition-opacity" />
-          <img 
-            src="/assets/empty-state.png" 
-            alt="Vío" 
+          <div className="absolute inset-0 bg-brand-orange/20 blur-3xl rounded-full scale-150 opacity-10 group-hover:opacity-20 transition-opacity" aria-hidden="true" />
+          <img
+            src="/assets/empty-state.png"
+            alt="Ilustración de estado vacío - No hay información disponible"
             className="w-48 h-48 object-contain drop-shadow-2xl relative z-10 hover:scale-105 transition-transform duration-500"
           />
         </div>
