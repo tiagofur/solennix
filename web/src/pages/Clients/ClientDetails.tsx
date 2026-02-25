@@ -19,6 +19,7 @@ export const ClientDetails: React.FC = () => {
   const [client, setClient] = useState<Client | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const { addToast } = useToast();
 
@@ -37,8 +38,9 @@ export const ClientDetails: React.FC = () => {
       ]);
       setClient(clientData);
       setEvents(eventsData || []);
-    } catch (error) {
-      logError('Error fetching client details', error);
+    } catch (err) {
+      logError('Error fetching client details', err);
+      setError('Error al cargar los datos del cliente.');
     } finally {
       setLoading(false);
     }
@@ -60,6 +62,17 @@ export const ClientDetails: React.FC = () => {
 
   if (loading) {
     return <div className="text-center p-8 text-gray-900 dark:text-white">Cargando detalles...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="text-center p-8">
+        <p className="text-red-600 dark:text-red-400">{error}</p>
+        <button onClick={() => navigate('/clients')} className="mt-4 text-brand-orange hover:underline">
+          Volver a clientes
+        </button>
+      </div>
+    );
   }
 
   if (!client) {
@@ -130,7 +143,7 @@ export const ClientDetails: React.FC = () => {
                 <DollarSign className="h-4 w-4 mr-2" /> Total Gastado
               </dt>
               <dd className="mt-1 text-sm text-gray-900 dark:text-white font-semibold">
-                ${client.total_spent.toFixed(2)}
+                ${(client.total_spent ?? 0).toFixed(2)}
               </dd>
             </div>
             <div className="sm:col-span-2">
@@ -220,7 +233,7 @@ export const ClientDetails: React.FC = () => {
                         </div>
                         <div className="mt-2 flex items-center text-sm text-gray-500 dark:text-gray-400 sm:mt-0">
                           <DollarSign className="shrink-0 mr-1.5 h-5 w-5 text-gray-400 dark:text-gray-500" />
-                          {event.total_amount.toFixed(2)}
+                          {(event.total_amount ?? 0).toFixed(2)}
                         </div>
                       </div>
                     </div>

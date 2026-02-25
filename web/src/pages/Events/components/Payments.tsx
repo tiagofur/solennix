@@ -86,6 +86,7 @@ export const Payments: React.FC<PaymentsProps> = ({
       loadPayments();
     } catch (err) {
       logError("Error creating payment", err);
+      addToast("Error al registrar el pago.", "error");
     }
   };
 
@@ -126,7 +127,7 @@ export const Payments: React.FC<PaymentsProps> = ({
               onClick={() => onStatusChange && onStatusChange("confirmed")}
               className="text-sm underline hover:text-amber-900 dark:hover:text-amber-100 mt-1"
             >
-              Cambiar estado ag "Confirmado"
+              Cambiar estado a "Confirmado"
             </button>
           </div>
         </div>

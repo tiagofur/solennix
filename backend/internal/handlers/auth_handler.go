@@ -113,7 +113,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	// Find user
 	user, err := h.userRepo.GetByEmail(r.Context(), req.Email)
-	if err != nil {
+	if err != nil || user == nil {
 		writeError(w, http.StatusUnauthorized, "Invalid email or password")
 		return
 	}

@@ -102,10 +102,11 @@ export const EventProducts: React.FC<EventProductsProps> = ({
               <input
                 type="number"
                 min="0"
+                max={item.price}
                 value={item.discount || 0}
                 onChange={(e) => {
                   const val = Number(e.target.value);
-                  if (val >= 0) onProductChange(index, 'discount', val);
+                  if (val >= 0 && val <= item.price) onProductChange(index, 'discount', val);
                 }}
                 className="block w-full text-sm border-gray-300 dark:border-gray-600 rounded-md shadow-xs focus:ring-brand-orange focus:border-brand-orange p-2 border bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
               />

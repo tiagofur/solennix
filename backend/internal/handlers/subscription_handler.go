@@ -228,13 +228,16 @@ type revenueCatEvent struct {
 
 func (h *SubscriptionHandler) RevenueCatWebhook(w http.ResponseWriter, r *http.Request) {
 	// RevenueCat sends the webhook secret as the Authorization header
+	if h.cfg.RevenueCatWebhookSecret == "" {
+		slog.Error("RevenueCat webhook secret not configured")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	authHeader := r.Header.Get("Authorization")
-	if h.cfg.RevenueCatWebhookSecret != "" {
-		if subtle.ConstantTimeCompare([]byte(authHeader), []byte(h.cfg.RevenueCatWebhookSecret)) == 0 {
-			slog.Warn("Invalid RevenueCat webhook authorization")
-			w.WriteHeader(http.StatusUnauthorized)
-			return
-		}
+	if subtle.ConstantTimeCompare([]byte(authHeader), []byte(h.cfg.RevenueCatWebhookSecret)) == 0 {
+		slog.Warn("Invalid RevenueCat webhook authorization")
+		w.WriteHeader(http.StatusUnauthorized)
+		return
 	}
 
 	const MaxBodyBytes = int64(65536)

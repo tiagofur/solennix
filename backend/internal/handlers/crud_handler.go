@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
@@ -257,7 +258,9 @@ func (h *CRUDHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Update client stats
-	_ = h.eventRepo.UpdateClientStats(r.Context(), event.ClientID)
+	if err := h.eventRepo.UpdateClientStats(r.Context(), event.ClientID); err != nil {
+		slog.Warn("Failed to update client stats", "client_id", event.ClientID, "error", err)
+	}
 	writeJSON(w, http.StatusCreated, event)
 }
 
@@ -293,9 +296,13 @@ func (h *CRUDHandler) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Update client stats (old and new client if changed)
-	_ = h.eventRepo.UpdateClientStats(r.Context(), existing.ClientID)
+	if err := h.eventRepo.UpdateClientStats(r.Context(), existing.ClientID); err != nil {
+		slog.Warn("Failed to update client stats", "client_id", existing.ClientID, "error", err)
+	}
 	if oldClientID != existing.ClientID {
-		_ = h.eventRepo.UpdateClientStats(r.Context(), oldClientID)
+		if err := h.eventRepo.UpdateClientStats(r.Context(), oldClientID); err != nil {
+			slog.Warn("Failed to update client stats", "client_id", oldClientID, "error", err)
+		}
 	}
 
 	writeJSON(w, http.StatusOK, existing)
@@ -318,7 +325,9 @@ func (h *CRUDHandler) DeleteEvent(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "Event not found")
 		return
 	}
-	_ = h.eventRepo.UpdateClientStats(r.Context(), event.ClientID)
+	if err := h.eventRepo.UpdateClientStats(r.Context(), event.ClientID); err != nil {
+		slog.Warn("Failed to update client stats", "client_id", event.ClientID, "error", err)
+	}
 	w.WriteHeader(http.StatusNoContent)
 }
 
