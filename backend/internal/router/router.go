@@ -36,6 +36,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 			r.Post("/logout", authHandler.Logout) // Clear httpOnly cookie
 			r.Post("/refresh", authHandler.RefreshToken)
 			r.Post("/forgot-password", authHandler.ForgotPassword)
+			r.Post("/reset-password", authHandler.ResetPassword) // Reset password with token
 
 			// Protected auth routes
 			r.Group(func(r chi.Router) {

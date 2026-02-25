@@ -120,3 +120,20 @@ func (r *UserRepo) UpdatePlanByStripeCustomerID(ctx context.Context, stripeCusto
 	}
 	return nil
 }
+
+// UpdatePassword updates a user's password hash
+func (r *UserRepo) UpdatePassword(ctx context.Context, userID uuid.UUID, passwordHash string) error {
+	query := `
+		UPDATE users SET
+			password_hash = $2,
+			updated_at = NOW()
+		WHERE id = $1`
+	tag, err := r.pool.Exec(ctx, query, userID, passwordHash)
+	if err != nil {
+		return fmt.Errorf("failed to update password: %w", err)
+	}
+	if tag.RowsAffected() == 0 {
+		return fmt.Errorf("user not found")
+	}
+	return nil
+}

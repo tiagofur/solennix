@@ -91,6 +91,31 @@ func (s *AuthService) GenerateTokenPair(userID uuid.UUID, email string) (*TokenP
 	}, nil
 }
 
+// GenerateResetToken creates a short-lived token (1 hour) for password reset
+func (s *AuthService) GenerateResetToken(userID uuid.UUID, email string) (string, error) {
+	now := time.Now()
+	expiresAt := now.Add(1 * time.Hour) // Reset tokens expire in 1 hour
+
+	claims := TokenClaims{
+		UserID: userID,
+		Email:  email,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expiresAt),
+			IssuedAt:  jwt.NewNumericDate(now),
+			Issuer:    "eventosapp-backend",
+			Subject:   "password-reset", // Identify as reset token
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString(s.jwtSecret)
+	if err != nil {
+		return "", fmt.Errorf("failed to sign reset token: %w", err)
+	}
+
+	return tokenString, nil
+}
+
 // ValidateToken parses and validates a JWT token, returning its claims.
 func (s *AuthService) ValidateToken(tokenString string) (*TokenClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &TokenClaims{}, func(token *jwt.Token) (interface{}, error) {
@@ -107,6 +132,21 @@ func (s *AuthService) ValidateToken(tokenString string) (*TokenClaims, error) {
 	claims, ok := token.Claims.(*TokenClaims)
 	if !ok || !token.Valid {
 		return nil, fmt.Errorf("invalid token claims")
+	}
+
+	return claims, nil
+}
+
+// ValidateResetToken validates a password reset token specifically
+func (s *AuthService) ValidateResetToken(tokenString string) (*TokenClaims, error) {
+	claims, err := s.ValidateToken(tokenString)
+	if err != nil {
+		return nil, err
+	}
+
+	// Verify it's a reset token
+	if claims.Subject != "password-reset" {
+		return nil, fmt.Errorf("token is not a password reset token")
 	}
 
 	return claims, nil

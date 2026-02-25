@@ -11,14 +11,16 @@ import (
 )
 
 type AuthHandler struct {
-	userRepo    *repository.UserRepo
-	authService *services.AuthService
+	userRepo     *repository.UserRepo
+	authService  *services.AuthService
+	emailService *services.EmailService
 }
 
-func NewAuthHandler(userRepo *repository.UserRepo, authService *services.AuthService) *AuthHandler {
+func NewAuthHandler(userRepo *repository.UserRepo, authService *services.AuthService, emailService *services.EmailService) *AuthHandler {
 	return &AuthHandler{
-		userRepo:    userRepo,
-		authService: authService,
+		userRepo:     userRepo,
+		authService:  authService,
+		emailService: emailService,
 	}
 }
 
@@ -242,15 +244,89 @@ func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Always respond success (don't reveal if email exists)
-	// In production, send an email with a password reset link
-	_, err := h.userRepo.GetByEmail(r.Context(), req.Email)
-	if err == nil {
-		// TODO: Send password reset email via SMTP
-		slog.Info("Password reset requested", "email", req.Email)
+	user, err := h.userRepo.GetByEmail(r.Context(), req.Email)
+	if err == nil && user != nil {
+		// Generate password reset token (expires in 1 hour)
+		token, err := h.authService.GenerateResetToken(user.ID, user.Email)
+		if err != nil {
+			slog.Error("Failed to generate reset token", "error", err)
+			writeJSON(w, http.StatusOK, map[string]string{
+				"message": "If the email exists, a password reset link has been sent",
+			})
+			return
+		}
+
+		// Send password reset email
+		if err := h.emailService.SendPasswordReset(user.Email, token, user.Name); err != nil {
+			slog.Error("Failed to send password reset email", "error", err, "email", user.Email)
+			// Still return success to user (security: don't reveal if email exists)
+		} else {
+			slog.Info("Password reset email sent", "email", user.Email)
+		}
 	}
 
 	writeJSON(w, http.StatusOK, map[string]string{
 		"message": "If the email exists, a password reset link has been sent",
+	})
+}
+
+type resetPasswordRequest struct {
+	Token       string `json:"token"`
+	NewPassword string `json:"new_password"`
+}
+
+// ResetPassword handles POST /api/auth/reset-password
+func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
+	var req resetPasswordRequest
+	if err := decodeJSON(r, &req); err != nil {
+		writeError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	// Validate token and password
+	if req.Token == "" || req.NewPassword == "" {
+		writeError(w, http.StatusBadRequest, "Token and new password are required")
+		return
+	}
+
+	if len(req.NewPassword) < 6 {
+		writeError(w, http.StatusBadRequest, "Password must be at least 6 characters")
+		return
+	}
+
+	// Validate reset token (must be valid and have subject="password-reset")
+	claims, err := h.authService.ValidateResetToken(req.Token)
+	if err != nil {
+		writeError(w, http.StatusUnauthorized, "Invalid or expired reset token")
+		return
+	}
+
+	// Get user from token claims
+	user, err := h.userRepo.GetByID(r.Context(), claims.UserID)
+	if err != nil || user == nil {
+		writeError(w, http.StatusNotFound, "User not found")
+		return
+	}
+
+	// Hash new password
+	hash, err := h.authService.HashPassword(req.NewPassword)
+	if err != nil {
+		slog.Error("Failed to hash password", "error", err)
+		writeError(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+
+	// Update password in database
+	if err := h.userRepo.UpdatePassword(r.Context(), user.ID, hash); err != nil {
+		slog.Error("Failed to update user password", "error", err)
+		writeError(w, http.StatusInternalServerError, "Failed to update password")
+		return
+	}
+
+	slog.Info("Password reset successful", "user_id", user.ID)
+
+	writeJSON(w, http.StatusOK, map[string]string{
+		"message": "Password reset successfully",
 	})
 }
 
