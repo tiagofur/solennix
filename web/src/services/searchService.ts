@@ -1,10 +1,5 @@
 import { api } from '../lib/api';
-import { Database } from '../types/supabase';
-
-type Client = Database['public']['Tables']['clients']['Row'];
-type Event = Database['public']['Tables']['events']['Row'];
-type Product = Database['public']['Tables']['products']['Row'];
-type InventoryItem = Database['public']['Tables']['inventory']['Row'];
+import { Client, Event, Product, InventoryItem } from '../types/entities';
 
 type SearchEntity = 'client' | 'event' | 'product' | 'inventory';
 

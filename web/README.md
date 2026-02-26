@@ -1,68 +1,76 @@
-# Eventos — Setup
+# Eventos Web — Setup
 
-## Supabase
+## Backend Setup
 
-1) Crea un proyecto en Supabase (https://supabase.com/dashboard).
-2) Copia el Project URL y el anon key desde Settings > API.
-3) Crea un archivo .env (puedes duplicar .env.example) y agrega:
+Asegúrate de que el backend Go está ejecutándose en `http://localhost:8080` o configura `VITE_API_URL` en el `.env`.
+
+## Local Setup
+
+1. Instala dependencias:
 
    ```
-   VITE_SUPABASE_URL=https://tu-proyecto.supabase.co
-   VITE_SUPABASE_ANON_KEY=tu-anon-key
+   npm install
    ```
 
-4) En el SQL Editor de Supabase, ejecuta el esquema consolidado:
-   - supabase/migrations/20260215000001_consolidated_schema.sql
-   Nota: los archivos legacy de migración ya no son necesarios y pueden eliminarse.
-5) En Auth > URL Configuration, configura:
-   - Site URL = tu dominio (local o Vercel)
-   - Redirect URLs = agrega tu dominio y http://localhost:5173
+2. Crea un archivo `.env` basado en `.env.example`:
 
-## Vercel
+   ```
+   VITE_API_URL=http://localhost:8080/api
+   ```
 
-1) Importa el repo en Vercel.
-2) Configura variables de entorno:
-   - VITE_SUPABASE_URL
-   - VITE_SUPABASE_ANON_KEY
-3) Build command: pnpm build
-4) Output directory: dist
+3. Inicia el servidor de desarrollo:
 
-## Dev local
+   ```
+   npm run dev
+   ```
 
-1) pnpm install
-2) pnpm dev
+   La aplicación estará disponible en `http://localhost:5173`
+
+## Vercel Deployment
+
+1. Importa el repo en Vercel.
+2. Configura variables de entorno en Vercel:
+   - `VITE_API_URL` = tu URL del backend (ej: `https://api.tudominio.com/api`)
+3. Build command: `npm run build`
+4. Output directory: `dist`
+
+## Dev Commands
+
+- `npm run dev` — Servidor de desarrollo
+- `npm run build` — Build para producción
+- `npm run lint` — Ejecutar linter
+- `npm run check` — Type-check TypeScript
+- `npm run test:run` — Ejecutar tests unitarios
+- `npm run test:e2e` — Ejecutar tests E2E
+- `npm run test:coverage` — Coverage de tests
 
 ## Troubleshooting
 
 ### Error "Failed to fetch" al hacer login
 
-Este error ocurre cuando la aplicación no puede conectarse a Supabase. Posibles causas:
+Posibles causas:
 
-1. **Variables de entorno faltantes o incorrectas:**
-   - Verifica que el archivo .env existe en la raíz del proyecto
-   - Verifica que las variables VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY están configuradas correctamente
-   - Reinicia el servidor de desarrollo después de crear/modificar el .env
+1. **Backend no está ejecutándose:**
+   - Verifica que el backend Go está en `http://localhost:8080`
+   - Ejecuta: `cd ../backend && go run ./cmd/server`
 
-2. **Variables de entorno perdidas en Vercel:**
-   - Ve a tu proyecto en Vercel Dashboard
-   - Navega a Settings > Environment Variables
-   - Verifica que VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY están configuradas
-   - Si no existen o están vacías, agrégalas y redeploy el proyecto
+2. **Variable VITE_API_URL incorrecta:**
+   - Verifica el archivo `.env` tiene la URL correcta
+   - Reinicia el servidor de desarrollo: `npm run dev`
 
-3. **Credenciales de Supabase inválidas:**
-   - Verifica que las credenciales corresponden a un proyecto activo en Supabase
-   - Puedes encontrar las credenciales correctas en tu proyecto de Supabase: Settings > API
-
-Si ves una página de "Configuración Requerida" al intentar hacer login, significa que las variables de entorno no están configuradas. Sigue los pasos en la sección Supabase arriba para configurarlas.
+3. **CORS issue:**
+   - Verifica que `CORS_ALLOWED_ORIGINS` en el backend incluye `http://localhost:5173` (local) o tu dominio (producción)
 
 ## IVA (Facturación)
 
 - Si el evento requiere factura, el IVA se calcula automáticamente y se suma al total.
+
 - La tasa por defecto es 16% (se puede ajustar en el campo `tax_rate` si se requiere en el futuro).
 
 ## Futuro (Multi-usuario por negocio)
 
 Propuesta para habilitar equipos:
+
 - Crear tabla `organizations` y `organization_members` con roles.
 - Reemplazar `user_id` por `organization_id` en clientes, eventos, productos e inventario.
 - Ajustar políticas RLS para permisos por organización.

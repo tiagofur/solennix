@@ -1,22 +1,22 @@
-import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { clientService } from '../../services/clientService';
-import { Database } from '../../types/supabase';
-import { Plus, Search, Edit, Trash2, Phone, Mail } from 'lucide-react';
-import { ConfirmDialog } from '../../components/ConfirmDialog';
-import { logError } from '../../lib/errorHandler';
-import Empty from '../../components/Empty';
-import { useToast } from '../../hooks/useToast';
-import { usePagination } from '../../hooks/usePagination';
-import { Pagination } from '../../components/Pagination';
-import { ArrowUp, ArrowDown } from 'lucide-react';
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { clientService } from "../../services/clientService";
+import { Client } from "../../types/entities";
+import { Plus, Search, Edit, Trash2, Phone, Mail } from "lucide-react";
+import { ConfirmDialog } from "../../components/ConfirmDialog";
+import { logError } from "../../lib/errorHandler";
+import Empty from "../../components/Empty";
+import { useToast } from "../../hooks/useToast";
+import { usePagination } from "../../hooks/usePagination";
+import { Pagination } from "../../components/Pagination";
+import { ArrowUp, ArrowDown } from "lucide-react";
 
-type Client = Database['public']['Tables']['clients']['Row'];
+type Client = Database["public"]["Tables"]["clients"]["Row"];
 
 export const ClientList: React.FC = () => {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -31,7 +31,7 @@ export const ClientList: React.FC = () => {
       const data = await clientService.getAll();
       setClients(data || []);
     } catch (error) {
-      logError('Error fetching clients', error);
+      logError("Error fetching clients", error);
     } finally {
       setLoading(false);
     }
@@ -51,17 +51,19 @@ export const ClientList: React.FC = () => {
     try {
       await clientService.delete(id);
       setClients((prev) => prev.filter((c) => c.id !== id));
-      addToast('Cliente eliminado correctamente.', 'success');
+      addToast("Cliente eliminado correctamente.", "success");
     } catch (error) {
-      logError('Error deleting client', error);
-      addToast('Error al eliminar el cliente.', 'error');
+      logError("Error deleting client", error);
+      addToast("Error al eliminar el cliente.", "error");
     }
   };
 
-  const filteredClients = (clients || []).filter(client =>
-    client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (client.email && client.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    client.phone.includes(searchTerm)
+  const filteredClients = (clients || []).filter(
+    (client) =>
+      client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (client.email &&
+        client.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      client.phone.includes(searchTerm),
   );
 
   const {
@@ -72,22 +74,28 @@ export const ClientList: React.FC = () => {
     handlePageChange,
     handleSort,
     sortKey,
-    sortOrder
+    sortOrder,
   } = usePagination({
     data: filteredClients,
     itemsPerPage: 8,
-    initialSortKey: 'name',
-    initialSortOrder: 'asc'
+    initialSortKey: "name",
+    initialSortOrder: "asc",
   });
 
   const renderSortIcon = (key: keyof Client) => {
     if (sortKey !== key) return null;
-    return sortOrder === 'asc' ? <ArrowUp className="inline h-3 w-3 ml-1" aria-hidden="true" /> : <ArrowDown className="inline h-3 w-3 ml-1" aria-hidden="true" />;
+    return sortOrder === "asc" ? (
+      <ArrowUp className="inline h-3 w-3 ml-1" aria-hidden="true" />
+    ) : (
+      <ArrowDown className="inline h-3 w-3 ml-1" aria-hidden="true" />
+    );
   };
 
-  const getSortAriaSort = (key: keyof Client): "ascending" | "descending" | "none" => {
+  const getSortAriaSort = (
+    key: keyof Client,
+  ): "ascending" | "descending" | "none" => {
     if (sortKey !== key) return "none";
-    return sortOrder === 'asc' ? "ascending" : "descending";
+    return sortOrder === "asc" ? "ascending" : "descending";
   };
 
   return (
@@ -105,7 +113,9 @@ export const ClientList: React.FC = () => {
         }}
       />
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Clientes</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          Clientes
+        </h1>
         <Link
           to="/clients/new"
           className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-brand-orange hover:bg-orange-600 shadow-xs transition-colors"
@@ -116,7 +126,9 @@ export const ClientList: React.FC = () => {
       </div>
 
       <div className="relative max-w-md">
-        <label htmlFor="client-search" className="sr-only">Buscar clientes</label>
+        <label htmlFor="client-search" className="sr-only">
+          Buscar clientes
+        </label>
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
           <Search className="h-5 w-5 text-gray-400" aria-hidden="true" />
         </div>
@@ -133,11 +145,21 @@ export const ClientList: React.FC = () => {
 
       <div className="bg-white dark:bg-gray-800 shadow-sm overflow-hidden sm:rounded-lg">
         {loading ? (
-          <div className="p-4 text-center text-gray-500 dark:text-gray-400" role="status" aria-live="polite">Cargando clientes...</div>
+          <div
+            className="p-4 text-center text-gray-500 dark:text-gray-400"
+            role="status"
+            aria-live="polite"
+          >
+            Cargando clientes...
+          </div>
         ) : filteredClients.length === 0 ? (
           <Empty
             title="No se encontraron clientes"
-            description={searchTerm ? "Intenta ajustar los términos de búsqueda." : "Comienza agregando tu primer cliente."}
+            description={
+              searchTerm
+                ? "Intenta ajustar los términos de búsqueda."
+                : "Comienza agregando tu primer cliente."
+            }
             action={
               !searchTerm ? (
                 <Link
@@ -152,38 +174,45 @@ export const ClientList: React.FC = () => {
           />
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700" aria-label="Tabla de clientes">
+            <table
+              className="min-w-full divide-y divide-gray-200 dark:divide-gray-700"
+              aria-label="Tabla de clientes"
+            >
               <caption className="sr-only">
-                Lista de clientes con {totalItems} resultados. Mostrando página {currentPage} de {totalPages}.
+                Lista de clientes con {totalItems} resultados. Mostrando página{" "}
+                {currentPage} de {totalPages}.
               </caption>
               <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
                   <th
                     scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
-                    onClick={() => handleSort('name')}
-                    aria-sort={getSortAriaSort('name')}
+                    onClick={() => handleSort("name")}
+                    aria-sort={getSortAriaSort("name")}
                   >
-                    Cliente {renderSortIcon('name')}
+                    Cliente {renderSortIcon("name")}
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                  >
                     Contacto
                   </th>
                   <th
                     scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
-                    onClick={() => handleSort('total_events')}
-                    aria-sort={getSortAriaSort('total_events')}
+                    onClick={() => handleSort("total_events")}
+                    aria-sort={getSortAriaSort("total_events")}
                   >
-                    Eventos {renderSortIcon('total_events')}
+                    Eventos {renderSortIcon("total_events")}
                   </th>
                   <th
                     scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
-                    onClick={() => handleSort('total_spent')}
-                    aria-sort={getSortAriaSort('total_spent')}
+                    onClick={() => handleSort("total_spent")}
+                    aria-sort={getSortAriaSort("total_spent")}
                   >
-                    Total Gastado {renderSortIcon('total_spent')}
+                    Total Gastado {renderSortIcon("total_spent")}
                   </th>
                   <th scope="col" className="relative px-6 py-3">
                     <span className="sr-only">Acciones</span>
@@ -199,23 +228,36 @@ export const ClientList: React.FC = () => {
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="h-10 w-10 rounded-full bg-brand-green/10 dark:bg-brand-green/20 flex items-center justify-center text-brand-green dark:text-green-400 font-bold" aria-hidden="true">
+                        <div
+                          className="h-10 w-10 rounded-full bg-brand-green/10 dark:bg-brand-green/20 flex items-center justify-center text-brand-green dark:text-green-400 font-bold"
+                          aria-hidden="true"
+                        >
                           {client.name.charAt(0).toUpperCase()}
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900 dark:text-white">{client.name}</div>
-                          <div className="text-sm text-gray-500 dark:text-gray-400 truncate max-w-[200px]">{client.address}</div>
+                          <div className="text-sm font-medium text-gray-900 dark:text-white">
+                            {client.name}
+                          </div>
+                          <div className="text-sm text-gray-500 dark:text-gray-400 truncate max-w-[200px]">
+                            {client.address}
+                          </div>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900 dark:text-white flex items-center">
-                        <Phone className="h-4 w-4 mr-1 text-gray-400" aria-hidden="true" />
+                        <Phone
+                          className="h-4 w-4 mr-1 text-gray-400"
+                          aria-hidden="true"
+                        />
                         {client.phone}
                       </div>
                       {client.email && (
                         <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center mt-1">
-                          <Mail className="h-4 w-4 mr-1 text-gray-400" aria-hidden="true" />
+                          <Mail
+                            className="h-4 w-4 mr-1 text-gray-400"
+                            aria-hidden="true"
+                          />
                           {client.email}
                         </div>
                       )}

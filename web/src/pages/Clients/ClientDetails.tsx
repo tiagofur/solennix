@@ -1,17 +1,28 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { clientService } from '../../services/clientService';
-import { eventService } from '../../services/eventService';
-import { Database } from '../../types/supabase';
-import { ArrowLeft, Edit, Calendar, DollarSign, MapPin, Phone, Mail, FileText, Clock, Trash2 } from 'lucide-react';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
-import { logError } from '../../lib/errorHandler';
-import { useToast } from '../../hooks/useToast';
-import { ConfirmDialog } from '../../components/ConfirmDialog';
+import React, { useEffect, useState } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { clientService } from "../../services/clientService";
+import { eventService } from "../../services/eventService";
+import { Client, Event } from "../../types/entities";
+import {
+  ArrowLeft,
+  Edit,
+  Calendar,
+  DollarSign,
+  MapPin,
+  Phone,
+  Mail,
+  FileText,
+  Clock,
+  Trash2,
+} from "lucide-react";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
+import { logError } from "../../lib/errorHandler";
+import { useToast } from "../../hooks/useToast";
+import { ConfirmDialog } from "../../components/ConfirmDialog";
 
-type Client = Database['public']['Tables']['clients']['Row'];
-type Event = Database['public']['Tables']['events']['Row'];
+type Client = Database["public"]["Tables"]["clients"]["Row"];
+type Event = Database["public"]["Tables"]["events"]["Row"];
 
 export const ClientDetails: React.FC = () => {
   const { id } = useParams();
@@ -39,8 +50,8 @@ export const ClientDetails: React.FC = () => {
       setClient(clientData);
       setEvents(eventsData || []);
     } catch (err) {
-      logError('Error fetching client details', err);
-      setError('Error al cargar los datos del cliente.');
+      logError("Error fetching client details", err);
+      setError("Error al cargar los datos del cliente.");
     } finally {
       setLoading(false);
     }
@@ -62,7 +73,11 @@ export const ClientDetails: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="text-center p-8 text-gray-900 dark:text-white" role="status" aria-live="polite">
+      <div
+        className="text-center p-8 text-gray-900 dark:text-white"
+        role="status"
+        aria-live="polite"
+      >
         Cargando detalles...
       </div>
     );
@@ -71,10 +86,12 @@ export const ClientDetails: React.FC = () => {
   if (error) {
     return (
       <div className="text-center p-8">
-        <p className="text-red-600 dark:text-red-400" role="alert">{error}</p>
+        <p className="text-red-600 dark:text-red-400" role="alert">
+          {error}
+        </p>
         <button
           type="button"
-          onClick={() => navigate('/clients')}
+          onClick={() => navigate("/clients")}
           className="mt-4 text-brand-orange hover:underline"
           aria-label="Volver a la lista de clientes"
         >
@@ -85,7 +102,11 @@ export const ClientDetails: React.FC = () => {
   }
 
   if (!client) {
-    return <div className="text-center p-8 text-gray-900 dark:text-white">Cliente no encontrado</div>;
+    return (
+      <div className="text-center p-8 text-gray-900 dark:text-white">
+        Cliente no encontrado
+      </div>
+    );
   }
 
   return (
@@ -94,13 +115,15 @@ export const ClientDetails: React.FC = () => {
         <div className="flex items-center">
           <button
             type="button"
-            onClick={() => navigate('/clients')}
+            onClick={() => navigate("/clients")}
             className="mr-4 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
             aria-label="Volver a la lista de clientes"
           >
             <ArrowLeft className="h-5 w-5" aria-hidden="true" />
           </button>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{client.name}</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            {client.name}
+          </h1>
         </div>
         <div className="flex items-center space-x-2">
           <Link
@@ -138,23 +161,30 @@ export const ClientDetails: React.FC = () => {
               <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center">
                 <Phone className="h-4 w-4 mr-2" aria-hidden="true" /> Teléfono
               </dt>
-              <dd className="mt-1 text-sm text-gray-900 dark:text-white">{client.phone}</dd>
+              <dd className="mt-1 text-sm text-gray-900 dark:text-white">
+                {client.phone}
+              </dd>
             </div>
             <div className="sm:col-span-1">
               <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center">
                 <Mail className="h-4 w-4 mr-2" aria-hidden="true" /> Email
               </dt>
-              <dd className="mt-1 text-sm text-gray-900 dark:text-white">{client.email || 'No registrado'}</dd>
+              <dd className="mt-1 text-sm text-gray-900 dark:text-white">
+                {client.email || "No registrado"}
+              </dd>
             </div>
             <div className="sm:col-span-1">
               <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center">
                 <MapPin className="h-4 w-4 mr-2" aria-hidden="true" /> Dirección
               </dt>
-              <dd className="mt-1 text-sm text-gray-900 dark:text-white">{client.address || 'No registrada'}</dd>
+              <dd className="mt-1 text-sm text-gray-900 dark:text-white">
+                {client.address || "No registrada"}
+              </dd>
             </div>
             <div className="sm:col-span-1">
               <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center">
-                <DollarSign className="h-4 w-4 mr-2" aria-hidden="true" /> Total Gastado
+                <DollarSign className="h-4 w-4 mr-2" aria-hidden="true" /> Total
+                Gastado
               </dt>
               <dd className="mt-1 text-sm text-gray-900 dark:text-white font-semibold">
                 ${(client.total_spent ?? 0).toFixed(2)}
@@ -165,7 +195,7 @@ export const ClientDetails: React.FC = () => {
                 <FileText className="h-4 w-4 mr-2" aria-hidden="true" /> Notas
               </dt>
               <dd className="mt-1 text-sm text-gray-900 dark:text-white">
-                {client.notes || 'Sin notas adicionales.'}
+                {client.notes || "Sin notas adicionales."}
               </dd>
             </div>
           </dl>
@@ -192,8 +222,13 @@ export const ClientDetails: React.FC = () => {
         <div className="border-t border-gray-200 dark:border-gray-700">
           {events.length === 0 ? (
             <div className="px-4 py-5 sm:p-6 text-center text-gray-500 dark:text-gray-400">
-              <Calendar className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-400" aria-hidden="true" />
-              <p className="mt-2">No hay eventos registrados para este cliente.</p>
+              <Calendar
+                className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-400"
+                aria-hidden="true"
+              />
+              <p className="mt-2">
+                No hay eventos registrados para este cliente.
+              </p>
             </div>
           ) : (
             <ul className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -214,26 +249,29 @@ export const ClientDetails: React.FC = () => {
                               event.status === "confirmed"
                                 ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
                                 : event.status === "completed"
-                                ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                                : event.status === "cancelled"
-                                ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                                : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                                  ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                                  : event.status === "cancelled"
+                                    ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                                    : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
                             }`}
                           >
                             {event.status === "quoted"
                               ? "Cotizado"
                               : event.status === "confirmed"
-                              ? "Confirmado"
-                              : event.status === "completed"
-                              ? "Completado"
-                              : "Cancelado"}
+                                ? "Confirmado"
+                                : event.status === "completed"
+                                  ? "Completado"
+                                  : "Cancelado"}
                           </p>
                         </div>
                       </div>
                       <div className="mt-2 sm:flex sm:justify-between">
                         <div className="sm:flex">
                           <p className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                            <Calendar className="shrink-0 mr-1.5 h-5 w-5 text-gray-400 dark:text-gray-400" aria-hidden="true" />
+                            <Calendar
+                              className="shrink-0 mr-1.5 h-5 w-5 text-gray-400 dark:text-gray-400"
+                              aria-hidden="true"
+                            />
                             {format(
                               new Date(event.event_date),
                               "d 'de' MMMM, yyyy",
@@ -241,12 +279,18 @@ export const ClientDetails: React.FC = () => {
                             )}
                           </p>
                           <p className="mt-2 flex items-center text-sm text-gray-500 dark:text-gray-400 sm:mt-0 sm:ml-6">
-                            <Clock className="shrink-0 mr-1.5 h-5 w-5 text-gray-400 dark:text-gray-400" aria-hidden="true" />
+                            <Clock
+                              className="shrink-0 mr-1.5 h-5 w-5 text-gray-400 dark:text-gray-400"
+                              aria-hidden="true"
+                            />
                             {event.num_people} personas
                           </p>
                         </div>
                         <div className="mt-2 flex items-center text-sm text-gray-500 dark:text-gray-400 sm:mt-0">
-                          <DollarSign className="shrink-0 mr-1.5 h-5 w-5 text-gray-400 dark:text-gray-400" aria-hidden="true" />
+                          <DollarSign
+                            className="shrink-0 mr-1.5 h-5 w-5 text-gray-400 dark:text-gray-400"
+                            aria-hidden="true"
+                          />
                           {(event.total_amount ?? 0).toFixed(2)}
                         </div>
                       </div>

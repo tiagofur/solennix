@@ -1,9 +1,5 @@
 import { api } from '../lib/api';
-import { Database } from '../types/supabase';
-
-type Payment = Database['public']['Tables']['payments']['Row'];
-type PaymentInsert = Database['public']['Tables']['payments']['Insert'];
-type PaymentUpdate = Database['public']['Tables']['payments']['Update'];
+import { Payment, PaymentInsert, PaymentUpdate } from '../types/entities';
 
 export const paymentService = {
     async getAll(): Promise<Payment[]> {

@@ -14,9 +14,7 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:e2e:install": "playwright install",
-    "migrations:list": "node -e \"const fs=require('fs'); const files=fs.readdirSync('supabase/migrations').filter(f=>f.endsWith('.sql')).sort(); files.forEach(f=>console.log(f));\"",
-    "migrations:bundle": "node -e \"const fs=require('fs'); const path=require('path'); const dir='supabase/migrations'; const files=fs.readdirSync(dir).filter(f=>f.endsWith('.sql')).sort(); for (const f of files){ console.log('\\n-- '+f+'\\n'); console.log(fs.readFileSync(path.join(dir,f),'utf8')); }\""
+    "test:e2e:install": "playwright install"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

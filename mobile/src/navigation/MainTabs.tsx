@@ -13,20 +13,24 @@ import {
   Package,
   Settings,
 } from "lucide-react-native";
+import { useTheme } from "../hooks/useTheme";
 import { colors } from "../theme/colors";
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 export default function MainTabs() {
+  const { isDark } = useTheme();
+  const palette = isDark ? colors.dark : colors.light;
+
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.light.tabBar.active,
-        tabBarInactiveTintColor: colors.light.tabBar.inactive,
+        tabBarActiveTintColor: palette.tabBar.active,
+        tabBarInactiveTintColor: palette.tabBar.inactive,
         tabBarStyle: {
-          backgroundColor: colors.light.tabBar.background,
-          borderTopColor: colors.light.tabBarBorder,
+          backgroundColor: palette.tabBar.background,
+          borderTopColor: palette.tabBarBorder,
         },
       }}
     >

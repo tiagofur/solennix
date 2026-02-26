@@ -2,41 +2,64 @@ import React, { useState } from "react";
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  Alert,
+  ScrollView,
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { User, Mail, Lock } from "lucide-react-native";
 import { AuthStackParamList } from "../../types/navigation";
 import { useAuth } from "../../contexts/AuthContext";
+import { FormInput } from "../../components/shared";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
+
+const registerSchema = z
+  .object({
+    name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
+    email: z.string().email("Email inválido"),
+    password: z
+      .string()
+      .min(6, "La contraseña debe tener al menos 6 caracteres"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Las contraseñas no coinciden",
+    path: ["confirmPassword"],
+  });
+
+type RegisterFormData = z.infer<typeof registerSchema>;
 
 type Props = NativeStackScreenProps<AuthStackParamList, "Register">;
 
 export default function RegisterScreen({ navigation }: Props) {
   const { signUp } = useAuth();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const handleRegister = async () => {
-    if (!name.trim() || !email.trim() || !password.trim()) {
-      Alert.alert("Error", "Todos los campos son obligatorios");
-      return;
-    }
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: { name: "", email: "", password: "", confirmPassword: "" },
+  });
 
+  const onSubmit = async (data: RegisterFormData) => {
     setLoading(true);
+    setError(null);
     try {
-      await signUp(name.trim(), email.trim(), password);
-    } catch (error: any) {
-      Alert.alert("Error", error?.message || "No se pudo crear la cuenta");
+      await signUp(data.name, data.email, data.password);
+    } catch (err: any) {
+      setError(err?.message || "Error al registrarse");
     } finally {
       setLoading(false);
     }
@@ -47,44 +70,99 @@ export default function RegisterScreen({ navigation }: Props) {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <View style={styles.inner}>
+      <ScrollView
+        contentContainerStyle={styles.inner}
+        keyboardShouldPersistTaps="handled"
+      >
         <Text style={styles.title}>Crear Cuenta</Text>
         <Text style={styles.subtitle}>Regístrate para empezar</Text>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Nombre"
-          value={name}
-          onChangeText={setName}
-          textContentType="name"
-          autoComplete="name"
+        {error && (
+          <View style={styles.errorBanner}>
+            <Text style={styles.errorBannerText}>{error}</Text>
+          </View>
+        )}
+
+        <Controller
+          control={control}
+          name="name"
+          render={({ field: { onChange, onBlur, value } }) => (
+            <FormInput
+              label="Nombre"
+              placeholder="Tu nombre"
+              value={value}
+              onChangeText={onChange}
+              onBlur={onBlur}
+              error={errors.name?.message}
+              textContentType="name"
+              autoComplete="name"
+              icon={<User color={colors.light.textTertiary} size={20} />}
+            />
+          )}
         />
 
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-          keyboardType="email-address"
-          textContentType="emailAddress"
-          autoComplete="email"
+        <Controller
+          control={control}
+          name="email"
+          render={({ field: { onChange, onBlur, value } }) => (
+            <FormInput
+              label="Email"
+              placeholder="tu@email.com"
+              value={value}
+              onChangeText={onChange}
+              onBlur={onBlur}
+              error={errors.email?.message}
+              autoCapitalize="none"
+              keyboardType="email-address"
+              textContentType="emailAddress"
+              autoComplete="email"
+              icon={<Mail color={colors.light.textTertiary} size={20} />}
+            />
+          )}
         />
 
-        <TextInput
-          style={styles.input}
-          placeholder="Contraseña"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          textContentType="newPassword"
-          autoComplete="password-new"
+        <Controller
+          control={control}
+          name="password"
+          render={({ field: { onChange, onBlur, value } }) => (
+            <FormInput
+              label="Contraseña"
+              placeholder="••••••••"
+              value={value}
+              onChangeText={onChange}
+              onBlur={onBlur}
+              error={errors.password?.message}
+              secureTextEntry
+              textContentType="newPassword"
+              autoComplete="password-new"
+              icon={<Lock color={colors.light.textTertiary} size={20} />}
+            />
+          )}
+        />
+
+        <Controller
+          control={control}
+          name="confirmPassword"
+          render={({ field: { onChange, onBlur, value } }) => (
+            <FormInput
+              label="Confirmar Contraseña"
+              placeholder="••••••••"
+              value={value}
+              onChangeText={onChange}
+              onBlur={onBlur}
+              error={errors.confirmPassword?.message}
+              secureTextEntry
+              textContentType="newPassword"
+              icon={<Lock color={colors.light.textTertiary} size={20} />}
+            />
+          )}
         />
 
         <TouchableOpacity
           style={[styles.button, loading && styles.buttonDisabled]}
-          onPress={handleRegister}
+          onPress={handleSubmit(onSubmit)}
           disabled={loading}
+          activeOpacity={0.8}
         >
           {loading ? (
             <ActivityIndicator color="#fff" />
@@ -93,10 +171,15 @@ export default function RegisterScreen({ navigation }: Props) {
           )}
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => navigation.navigate("Login")}>
-          <Text style={styles.link}>¿Ya tienes cuenta? Inicia sesión</Text>
+        <TouchableOpacity
+          onPress={() => navigation.navigate("Login")}
+          style={styles.linkContainer}
+        >
+          <Text style={styles.linkSecondary}>
+            ¿Ya tienes cuenta? <Text style={styles.link}>Inicia sesión</Text>
+          </Text>
         </TouchableOpacity>
-      </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -107,15 +190,16 @@ const styles = StyleSheet.create({
     backgroundColor: colors.light.background,
   },
   inner: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: "center",
     paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.xxl,
   },
   title: {
     ...typography.h1,
     textAlign: "center",
     color: colors.light.primary,
-    marginBottom: spacing.xs,
+    marginBottom: spacing.xxs,
   },
   subtitle: {
     ...typography.body,
@@ -123,22 +207,24 @@ const styles = StyleSheet.create({
     color: colors.light.textSecondary,
     marginBottom: spacing.xxl,
   },
-  input: {
-    ...typography.body,
-    backgroundColor: colors.light.surface,
-    borderWidth: 1,
-    borderColor: colors.light.border,
-    borderRadius: spacing.borderRadius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+  errorBanner: {
+    backgroundColor: "#fef2f2",
+    borderLeftWidth: 4,
+    borderLeftColor: colors.light.error,
+    borderRadius: spacing.borderRadius.sm,
+    padding: spacing.sm + 4,
     marginBottom: spacing.md,
+  },
+  errorBannerText: {
+    ...typography.bodySmall,
+    color: colors.light.error,
   },
   button: {
     backgroundColor: colors.light.primary,
     borderRadius: spacing.borderRadius.md,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.md - 2,
     alignItems: "center",
-    marginBottom: spacing.md,
+    marginTop: spacing.sm,
   },
   buttonDisabled: {
     opacity: 0.6,
@@ -147,10 +233,16 @@ const styles = StyleSheet.create({
     ...typography.button,
     color: "#ffffff",
   },
+  linkContainer: {
+    paddingVertical: spacing.sm,
+    alignItems: "center",
+  },
   link: {
     ...typography.body,
     color: colors.light.primary,
-    textAlign: "center",
-    marginTop: spacing.sm,
+  },
+  linkSecondary: {
+    ...typography.body,
+    color: colors.light.textSecondary,
   },
 });

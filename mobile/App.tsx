@@ -5,6 +5,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AuthProvider } from "./src/contexts/AuthContext";
 import RootNavigator from "./src/navigation/RootNavigator";
+import { ToastContainer } from "./src/components/shared";
 
 export default function App() {
   return (
@@ -12,6 +13,7 @@ export default function App() {
       <SafeAreaProvider>
         <AuthProvider>
           <RootNavigator />
+          <ToastContainer />
           <StatusBar style="auto" />
         </AuthProvider>
       </SafeAreaProvider>

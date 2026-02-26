@@ -1,6 +1,6 @@
-import { Database } from '../types/supabase'
+import { Event } from '../types/entities'
 
-type EventRow = Database['public']['Tables']['events']['Row']
+type EventRow = Event
 
 export const getEventTaxAmount = (event: Pick<EventRow, 'requires_invoice' | 'tax_amount'>) => {
   if (!event.requires_invoice) return 0

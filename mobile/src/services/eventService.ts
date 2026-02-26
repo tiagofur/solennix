@@ -1,9 +1,5 @@
 import { api } from '../lib/api';
-import { Database } from '../types/supabase';
-
-type Event = Database['public']['Tables']['events']['Row'];
-type EventInsert = Database['public']['Tables']['events']['Insert'];
-type EventUpdate = Database['public']['Tables']['events']['Update'];
+import { Event, EventInsert, EventUpdate } from '../types/entities';
 
 // Helper for type safety on joined data
 type EventWithClient = Event & { clients?: { name: string } | null };

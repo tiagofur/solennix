@@ -2,40 +2,55 @@ import React, { useState } from "react";
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  Alert,
+  ScrollView,
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Mail, Lock } from "lucide-react-native";
 import { AuthStackParamList } from "../../types/navigation";
 import { useAuth } from "../../contexts/AuthContext";
+import { FormInput } from "../../components/shared";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
+
+const loginSchema = z.object({
+  email: z.string().email("Email inválido"),
+  password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
+});
+
+type LoginFormData = z.infer<typeof loginSchema>;
 
 type Props = NativeStackScreenProps<AuthStackParamList, "Login">;
 
 export default function LoginScreen({ navigation }: Props) {
   const { signIn } = useAuth();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async () => {
-    if (!email.trim() || !password.trim()) {
-      Alert.alert("Error", "Por favor ingresa email y contraseña");
-      return;
-    }
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: "", password: "" },
+  });
 
+  const onSubmit = async (data: LoginFormData) => {
     setLoading(true);
+    setError(null);
     try {
-      await signIn(email.trim(), password);
-    } catch (error: any) {
-      Alert.alert("Error", error?.message || "Credenciales inválidas");
+      await signIn(data.email, data.password);
+    } catch (err: any) {
+      setError(err?.message || "Error al iniciar sesión");
     } finally {
       setLoading(false);
     }
@@ -46,35 +61,63 @@ export default function LoginScreen({ navigation }: Props) {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <View style={styles.inner}>
+      <ScrollView
+        contentContainerStyle={styles.inner}
+        keyboardShouldPersistTaps="handled"
+      >
         <Text style={styles.title}>EventosApp</Text>
         <Text style={styles.subtitle}>Inicia sesión en tu cuenta</Text>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-          keyboardType="email-address"
-          textContentType="emailAddress"
-          autoComplete="email"
+        {error && (
+          <View style={styles.errorBanner}>
+            <Text style={styles.errorBannerText}>{error}</Text>
+          </View>
+        )}
+
+        <Controller
+          control={control}
+          name="email"
+          render={({ field: { onChange, onBlur, value } }) => (
+            <FormInput
+              label="Email"
+              placeholder="tu@email.com"
+              value={value}
+              onChangeText={onChange}
+              onBlur={onBlur}
+              error={errors.email?.message}
+              autoCapitalize="none"
+              keyboardType="email-address"
+              textContentType="emailAddress"
+              autoComplete="email"
+              icon={<Mail color={colors.light.textTertiary} size={20} />}
+            />
+          )}
         />
 
-        <TextInput
-          style={styles.input}
-          placeholder="Contraseña"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          textContentType="password"
-          autoComplete="password"
+        <Controller
+          control={control}
+          name="password"
+          render={({ field: { onChange, onBlur, value } }) => (
+            <FormInput
+              label="Contraseña"
+              placeholder="••••••••"
+              value={value}
+              onChangeText={onChange}
+              onBlur={onBlur}
+              error={errors.password?.message}
+              secureTextEntry
+              textContentType="password"
+              autoComplete="password"
+              icon={<Lock color={colors.light.textTertiary} size={20} />}
+            />
+          )}
         />
 
         <TouchableOpacity
           style={[styles.button, loading && styles.buttonDisabled]}
-          onPress={handleLogin}
+          onPress={handleSubmit(onSubmit)}
           disabled={loading}
+          activeOpacity={0.8}
         >
           {loading ? (
             <ActivityIndicator color="#fff" />
@@ -83,14 +126,22 @@ export default function LoginScreen({ navigation }: Props) {
           )}
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => navigation.navigate("ForgotPassword")}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate("ForgotPassword")}
+          style={styles.linkContainer}
+        >
           <Text style={styles.link}>¿Olvidaste tu contraseña?</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => navigation.navigate("Register")}>
-          <Text style={styles.link}>¿No tienes cuenta? Regístrate</Text>
+        <TouchableOpacity
+          onPress={() => navigation.navigate("Register")}
+          style={styles.linkContainer}
+        >
+          <Text style={styles.linkSecondary}>
+            ¿No tienes cuenta? <Text style={styles.link}>Regístrate</Text>
+          </Text>
         </TouchableOpacity>
-      </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -101,15 +152,16 @@ const styles = StyleSheet.create({
     backgroundColor: colors.light.background,
   },
   inner: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: "center",
     paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.xxl,
   },
   title: {
     ...typography.h1,
     textAlign: "center",
     color: colors.light.primary,
-    marginBottom: spacing.xs,
+    marginBottom: spacing.xxs,
   },
   subtitle: {
     ...typography.body,
@@ -117,22 +169,24 @@ const styles = StyleSheet.create({
     color: colors.light.textSecondary,
     marginBottom: spacing.xxl,
   },
-  input: {
-    ...typography.body,
-    backgroundColor: colors.light.surface,
-    borderWidth: 1,
-    borderColor: colors.light.border,
-    borderRadius: spacing.borderRadius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+  errorBanner: {
+    backgroundColor: "#fef2f2",
+    borderLeftWidth: 4,
+    borderLeftColor: colors.light.error,
+    borderRadius: spacing.borderRadius.sm,
+    padding: spacing.sm + 4,
     marginBottom: spacing.md,
+  },
+  errorBannerText: {
+    ...typography.bodySmall,
+    color: colors.light.error,
   },
   button: {
     backgroundColor: colors.light.primary,
     borderRadius: spacing.borderRadius.md,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.md - 2,
     alignItems: "center",
-    marginBottom: spacing.md,
+    marginTop: spacing.sm,
   },
   buttonDisabled: {
     opacity: 0.6,
@@ -141,10 +195,16 @@ const styles = StyleSheet.create({
     ...typography.button,
     color: "#ffffff",
   },
+  linkContainer: {
+    paddingVertical: spacing.sm,
+    alignItems: "center",
+  },
   link: {
     ...typography.body,
     color: colors.light.primary,
-    textAlign: "center",
-    marginTop: spacing.sm,
+  },
+  linkSecondary: {
+    ...typography.body,
+    color: colors.light.textSecondary,
   },
 });

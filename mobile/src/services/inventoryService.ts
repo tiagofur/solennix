@@ -1,9 +1,5 @@
 import { api } from '../lib/api';
-import { Database } from '../types/supabase';
-
-type InventoryItem = Database['public']['Tables']['inventory']['Row'];
-type InventoryInsert = Database['public']['Tables']['inventory']['Insert'];
-type InventoryUpdate = Database['public']['Tables']['inventory']['Update'];
+import { InventoryItem, InventoryItemInsert, InventoryItemUpdate } from '../types/entities';
 
 export const inventoryService = {
     async getAll(): Promise<InventoryItem[]> {

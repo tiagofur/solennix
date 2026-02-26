@@ -1,9 +1,5 @@
 import { api } from '../lib/api';
-import { Database } from '../types/supabase';
-
-type Client = Database['public']['Tables']['clients']['Row'];
-type ClientInsert = Database['public']['Tables']['clients']['Insert'];
-type ClientUpdate = Database['public']['Tables']['clients']['Update'];
+import { Client, ClientInsert, ClientUpdate } from '../types/entities';
 
 export const clientService = {
   async getAll(): Promise<Client[]> {

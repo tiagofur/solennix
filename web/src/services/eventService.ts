@@ -1,9 +1,5 @@
 import { api } from '../lib/api';
-import { Database } from '../types/supabase';
-
-type Event = Database['public']['Tables']['events']['Row'];
-type EventInsert = Database['public']['Tables']['events']['Insert'];
-type EventUpdate = Database['public']['Tables']['events']['Update'];
+import { Event, EventInsert, EventUpdate } from '../types/entities';
 
 // Helper for type safety on joined data
 type EventWithClient = Event & { clients?: { name: string } | null };
@@ -42,7 +38,7 @@ export const eventService = {
   },
 
   // Products & Extras Management
-  
+
   async getProducts(eventId: string) {
     return api.get<any[]>(`/events/${eventId}/products`);
   },
@@ -80,52 +76,52 @@ export const eventService = {
 
   // Compatibility methods for legacy calls (if any individual update is used)
   async addProducts(eventId: string, products: { productId: string, quantity: number, unitPrice: number, discount?: number }[]) {
-     // Fetch existing, append, update? 
-     // Or just fail. Given typical usage, updateItems is preferred.
-     // For safety, let's implement via get+update pattern if critical, but for now I'll assume updateItems is the main path.
-     // Actually, let's just log a warning or throw "Not Implemented" if it's not used.
-     // To be safe, I'll implement it by fetching existing products first.
-     const existing = await this.getProducts(eventId);
-     const existingMapped = existing.map((p: any) => ({
-        productId: p.product_id,
-        quantity: p.quantity,
-        unitPrice: p.unit_price,
-        discount: p.discount
-     }));
-     // Append new
-     const merged = [...existingMapped, ...products];
-     const extras = await this.getExtras(eventId); // Need extras to not lose them
-     const extrasMapped = extras.map((e: any) => ({
-        description: e.description,
-        cost: e.cost,
-        price: e.price,
-        exclude_utility: e.exclude_utility
-     }));
+    // Fetch existing, append, update? 
+    // Or just fail. Given typical usage, updateItems is preferred.
+    // For safety, let's implement via get+update pattern if critical, but for now I'll assume updateItems is the main path.
+    // Actually, let's just log a warning or throw "Not Implemented" if it's not used.
+    // To be safe, I'll implement it by fetching existing products first.
+    const existing = await this.getProducts(eventId);
+    const existingMapped = existing.map((p: any) => ({
+      productId: p.product_id,
+      quantity: p.quantity,
+      unitPrice: p.unit_price,
+      discount: p.discount
+    }));
+    // Append new
+    const merged = [...existingMapped, ...products];
+    const extras = await this.getExtras(eventId); // Need extras to not lose them
+    const extrasMapped = extras.map((e: any) => ({
+      description: e.description,
+      cost: e.cost,
+      price: e.price,
+      exclude_utility: e.exclude_utility
+    }));
 
-     return this.updateItems(eventId, merged, extrasMapped);
+    return this.updateItems(eventId, merged, extrasMapped);
   },
 
   async updateProducts(eventId: string, products: { productId: string, quantity: number, unitPrice: number, discount?: number }[]) {
-     // Just update products, keep extras
-     const extras = await this.getExtras(eventId);
-     const extrasMapped = extras.map((e: any) => ({
-        description: e.description,
-        cost: e.cost,
-        price: e.price,
-        exclude_utility: e.exclude_utility
-     }));
-     return this.updateItems(eventId, products, extrasMapped);
+    // Just update products, keep extras
+    const extras = await this.getExtras(eventId);
+    const extrasMapped = extras.map((e: any) => ({
+      description: e.description,
+      cost: e.cost,
+      price: e.price,
+      exclude_utility: e.exclude_utility
+    }));
+    return this.updateItems(eventId, products, extrasMapped);
   },
 
   async updateExtras(eventId: string, extras: { description: string, cost: number, price: number, exclude_utility?: boolean }[]) {
-     // Just update extras, keep products
-     const products = await this.getProducts(eventId);
-     const productsMapped = products.map((p: any) => ({
-        productId: p.product_id,
-        quantity: p.quantity,
-        unitPrice: p.unit_price,
-        discount: p.discount
-     }));
-     return this.updateItems(eventId, productsMapped, extras);
+    // Just update extras, keep products
+    const products = await this.getProducts(eventId);
+    const productsMapped = products.map((p: any) => ({
+      productId: p.product_id,
+      quantity: p.quantity,
+      unitPrice: p.unit_price,
+      discount: p.discount
+    }));
+    return this.updateItems(eventId, productsMapped, extras);
   }
 };

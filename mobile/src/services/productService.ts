@@ -1,9 +1,5 @@
 import { api } from '../lib/api';
-import { Database } from '../types/supabase';
-
-type Product = Database['public']['Tables']['products']['Row'];
-type ProductInsert = Database['public']['Tables']['products']['Insert'];
-type ProductUpdate = Database['public']['Tables']['products']['Update'];
+import { Product, ProductInsert, ProductUpdate } from '../types/entities';
 
 export const productService = {
     async getAll(): Promise<Product[]> {
