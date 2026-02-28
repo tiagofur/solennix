@@ -18,7 +18,7 @@ describe('EventProducts', () => {
     const onRemoveProduct = vi.fn();
     const onProductChange = vi.fn();
 
-    const { container } = renderWithForm(
+    renderWithForm(
       <EventProducts
         products={[
           { id: 'p1', name: 'Churros' } as any,
@@ -36,17 +36,17 @@ describe('EventProducts', () => {
 
     expect(screen.getByText('$180.00')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /Agregar Producto/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Agregar un producto adicional/i }));
     expect(onAddProduct).toHaveBeenCalled();
 
     const productSelect = screen.getByRole('combobox');
     fireEvent.change(productSelect, { target: { value: 'p2' } });
     expect(onProductChange).toHaveBeenCalledWith(0, 'product_id', 'p2');
 
-    fireEvent.click(screen.getByTitle('Igualar a personas'));
+    fireEvent.click(screen.getByRole('button', { name: /Igualar cantidad a número de personas/i }));
     expect(onProductChange).toHaveBeenCalledWith(0, 'quantity', 50);
 
-    fireEvent.click(container.querySelectorAll('button')[0]);
+    fireEvent.click(screen.getByRole('button', { name: /Eliminar producto 1/i }));
     expect(onRemoveProduct).toHaveBeenCalledWith(0);
   });
 

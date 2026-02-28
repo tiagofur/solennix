@@ -40,11 +40,8 @@ func TestLoad(t *testing.T) {
 		t.Setenv("DATABASE_URL", "postgres://user:pass@localhost:5432/db")
 		t.Setenv("JWT_SECRET", "secret")
 		t.Setenv("JWT_EXPIRY_HOURS", "12")
-		t.Setenv("SMTP_HOST", "smtp.test.dev")
-		t.Setenv("SMTP_PORT", "2525")
-		t.Setenv("SMTP_USER", "user")
-		t.Setenv("SMTP_PASSWORD", "pass")
-		t.Setenv("SMTP_FROM", "noreply@test.dev")
+		t.Setenv("RESEND_API_KEY", "re_test_123")
+		t.Setenv("RESEND_FROM_EMAIL", "Test <noreply@test.dev>")
 		t.Setenv("FRONTEND_URL", "http://localhost:3000")
 		t.Setenv("CORS_ALLOWED_ORIGINS", "http://a.com,http://b.com")
 
@@ -56,8 +53,11 @@ func TestLoad(t *testing.T) {
 		if cfg.Port != "9090" || cfg.Environment != "test" {
 			t.Fatalf("Load() returned unexpected Port/Environment")
 		}
-		if cfg.JWTExpiryHours != 12 || cfg.SMTPPort != 2525 {
-			t.Fatalf("Load() returned unexpected numeric values")
+		if cfg.JWTExpiryHours != 12 {
+			t.Fatalf("Load() returned unexpected JWTExpiryHours")
+		}
+		if cfg.ResendAPIKey != "re_test_123" {
+			t.Fatalf("Load() returned unexpected ResendAPIKey")
 		}
 		if len(cfg.CORSAllowedOrigins) != 2 {
 			t.Fatalf("CORSAllowedOrigins len = %d, want 2", len(cfg.CORSAllowedOrigins))

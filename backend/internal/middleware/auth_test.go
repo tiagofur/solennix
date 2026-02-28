@@ -29,13 +29,13 @@ func TestAuthMiddleware(t *testing.T) {
 		{
 			name:           "GivenNoHeader_WhenRequest_ThenUnauthorized",
 			wantStatusCode: http.StatusUnauthorized,
-			wantBody:       "Authorization header required",
+			wantBody:       "Authentication required",
 		},
 		{
 			name:           "GivenInvalidFormat_WhenRequest_ThenUnauthorized",
 			authHeader:     "Token abc",
 			wantStatusCode: http.StatusUnauthorized,
-			wantBody:       "Invalid authorization format",
+			wantBody:       "Authentication required",
 		},
 		{
 			name:           "GivenInvalidToken_WhenRequest_ThenUnauthorized",

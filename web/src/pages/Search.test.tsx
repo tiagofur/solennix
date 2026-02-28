@@ -37,7 +37,7 @@ describe('SearchPage', () => {
         <SearchPage />
       </MemoryRouter>
     );
-    expect(screen.getByText(/Busca en toda tu operacion/i)).toBeInTheDocument();
+    expect(screen.getByText(/Busca en toda tu operación/i)).toBeInTheDocument();
   });
 
   it('renders results when search returns data', async () => {
@@ -79,8 +79,30 @@ describe('SearchPage', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText(/No pudimos completar la busqueda/i)).toBeInTheDocument();
+      expect(screen.getByText(/No pudimos completar la búsqueda/i)).toBeInTheDocument();
     });
     expect(logError).toHaveBeenCalled();
+  });
+
+  it('falls back to raw value when event date is invalid', async () => {
+    mockSearchParams = new URLSearchParams('?q=evento');
+    (searchService.searchAll as any).mockResolvedValue({
+      client: [],
+      event: [{ id: '10', title: 'Evento Raro', href: '/events/10', meta: 'not-a-date', status: 'confirmed' }],
+      product: [],
+      inventory: [],
+    });
+
+    render(
+      <MemoryRouter>
+        <SearchPage />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Evento Raro')).toBeInTheDocument();
+    });
+    // The invalid date should fall back to the raw string 'not-a-date'
+    expect(screen.getByText(/not-a-date/)).toBeInTheDocument();
   });
 });

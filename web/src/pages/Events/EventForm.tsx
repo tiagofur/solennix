@@ -86,7 +86,7 @@ export const EventForm: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   // Plan Limits
-  const { canCreateEvent, isBasicPlan, eventsThisMonth, limit, loading: limitsLoading } = usePlanLimits();
+  const { canCreateEvent, eventsThisMonth, limit, loading: limitsLoading } = usePlanLimits();
 
   // Local state for items
   const [selectedProducts, setSelectedProducts] = useState<

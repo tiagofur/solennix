@@ -21,31 +21,32 @@ import {
   Bell,
 } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
+import { Logo } from '../components/Logo';
 
 const features = [
   {
     icon: Calendar,
-    color: 'text-brand-orange',
-    bg: 'bg-orange-50 dark:bg-orange-900/20',
+    color: 'text-primary',
+    bg: 'bg-primary/10 dark:bg-primary/20',
     title: 'Calendario Inteligente',
     description:
-      'Visualiza todos tus eventos en un calendario interactivo. Arrastra, suelta y reorganiza con facilidad. Vista diaria, semanal y mensual.',
+      'Visualiza todos tus eventos en un calendario interactivo. Arrastra, suelta y reorganiza con facilidad.',
   },
   {
     icon: Users,
-    color: 'text-brand-green',
-    bg: 'bg-green-50 dark:bg-green-900/20',
+    color: 'text-success',
+    bg: 'bg-success/10 dark:bg-success/20',
     title: 'Gestión de Clientes',
     description:
-      'CRM integrado para mantener el historial completo de cada cliente: contratos, pagos, comunicaciones y eventos anteriores.',
+      'CRM integrado para mantener el historial completo de cada cliente: contratos, pagos y más.',
   },
   {
     icon: Package,
-    color: 'text-purple-500',
-    bg: 'bg-purple-50 dark:bg-purple-900/20',
+    color: 'text-indigo-500',
+    bg: 'bg-indigo-50 dark:bg-indigo-900/20',
     title: 'Control de Inventario',
     description:
-      'Administra equipos, decoraciones y recursos. Evita dobles reservas y asegura disponibilidad para cada evento.',
+      'Administra equipos y recursos. Evita dobles reservas y asegura disponibilidad.',
   },
   {
     icon: BarChart3,
@@ -53,7 +54,7 @@ const features = [
     bg: 'bg-blue-50 dark:bg-blue-900/20',
     title: 'Reportes y Análisis',
     description:
-      'Dashboards en tiempo real con métricas de ingresos, eventos por mes, clientes recurrentes y tendencias de crecimiento.',
+      'Dashboards en tiempo real con métricas de ingresos, eventos y tendencias.',
   },
   {
     icon: DollarSign,
@@ -61,15 +62,15 @@ const features = [
     bg: 'bg-emerald-50 dark:bg-emerald-900/20',
     title: 'Cotizaciones y Pagos',
     description:
-      'Genera cotizaciones profesionales en segundos. Registra anticipos, pagos parciales y saldos pendientes automáticamente.',
+      'Genera cotizaciones profesionales. Registra anticipos y pagos automáticamente.',
   },
   {
     icon: Bell,
     color: 'text-rose-500',
     bg: 'bg-rose-50 dark:bg-rose-900/20',
-    title: 'Recordatorios Automáticos',
+    title: 'Recordatorios',
     description:
-      'Notificaciones automáticas para ti y tus clientes: confirmaciones de evento, recordatorios de pago y seguimiento post-evento.',
+      'Notificaciones automáticas: confirmaciones, recordatorios de pago y seguimiento.',
   },
 ];
 
@@ -173,6 +174,7 @@ const plans = [
     cta: 'Comenzar Ahora',
     href: '/register',
     highlighted: true,
+    ctaClass: 'premium-gradient text-white dark:text-white',
   },
 ];
 
@@ -204,54 +206,35 @@ export const Landing: React.FC = () => {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950 transition-colors">
       {/* ── NAVBAR ── */}
-      <header className="sticky top-0 z-50 bg-white/80 dark:bg-gray-950/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800">
+      <header className="sticky top-0 z-50 bg-white/80 dark:bg-bg/80 backdrop-blur-md border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex justify-between items-center h-16">
-            {/* Logo */}
-            <div className="flex items-center space-x-2">
-              <div className="bg-brand-orange p-1.5 rounded-lg" aria-hidden="true">
-                <Calendar className="h-5 w-5 text-white" aria-hidden="true" />
-              </div>
-              <span className="text-xl font-bold text-gray-900 dark:text-white">Eventos</span>
-              <span className="hidden sm:inline-block text-xs font-medium bg-brand-orange/10 text-brand-orange px-2 py-0.5 rounded-full">Pro</span>
+          <nav className="flex justify-between items-center h-20">
+            <Logo size={40} />
+
+            <div className="hidden md:flex items-center space-x-10">
+              <a href="#features" className="text-[15px] font-medium text-text-secondary hover:text-primary transition-colors">Características</a>
+              <a href="#how-it-works" className="text-[15px] font-medium text-text-secondary hover:text-primary transition-colors">Cómo funciona</a>
+              <a href="#pricing" className="text-[15px] font-medium text-text-secondary hover:text-primary transition-colors">Precios</a>
             </div>
 
-            {/* Desktop nav */}
-            <div className="hidden md:flex items-center space-x-8">
-              <a href="#features" className="text-sm text-gray-600 dark:text-gray-400 hover:text-brand-orange dark:hover:text-brand-orange transition-colors">Características</a>
-              <a href="#how-it-works" className="text-sm text-gray-600 dark:text-gray-400 hover:text-brand-orange dark:hover:text-brand-orange transition-colors">Cómo funciona</a>
-              <a href="#pricing" className="text-sm text-gray-600 dark:text-gray-400 hover:text-brand-orange dark:hover:text-brand-orange transition-colors">Precios</a>
-              <a href="#faq" className="text-sm text-gray-600 dark:text-gray-400 hover:text-brand-orange dark:hover:text-brand-orange transition-colors">FAQ</a>
-            </div>
-
-            {/* Right actions */}
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-4">
               <button
                 type="button"
                 onClick={toggleTheme}
-                className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                aria-label={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+                className="p-2.5 rounded-xl text-text-secondary hover:bg-surface-alt transition-colors border border-transparent hover:border-border"
               >
-                {theme === 'dark' ? <Sun className="h-4 w-4" aria-hidden="true" /> : <Moon className="h-4 w-4" aria-hidden="true" />}
+                {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
               </button>
-              <Link to="/login" className="hidden sm:inline-flex text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-brand-orange dark:hover:text-brand-orange transition-colors">
-                Iniciar Sesión
+              <Link to="/login" className="hidden sm:inline-flex text-[15px] font-semibold text-text hover:text-primary transition-colors">
+                Ingresar
               </Link>
-              <Link to="/register" className="bg-brand-orange hover:bg-orange-600 text-white text-sm px-4 py-2 rounded-lg font-medium shadow-xs hover:shadow-md transition-all">
-                Comenzar Gratis
+              <Link to="/register" className="premium-gradient text-white text-[15px] px-6 py-3 rounded-xl font-bold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all hover:scale-[1.02]">
+                Probar Gratis
               </Link>
-              <button
-                type="button"
-                className="md:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                aria-label={mobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
-                aria-expanded={mobileMenuOpen}
-              >
-                {mobileMenuOpen ? <X className="h-5 w-5" aria-hidden="true" /> : <Menu className="h-5 w-5" aria-hidden="true" />}
-              </button>
             </div>
           </nav>
         </div>
+      </header>
 
         {/* Mobile menu */}
         {mobileMenuOpen && (
@@ -263,61 +246,58 @@ export const Landing: React.FC = () => {
             <Link to="/login" className="block text-sm text-gray-700 dark:text-gray-300 py-2">Iniciar Sesión</Link>
           </div>
         )}
-      </header>
 
       {/* ── HERO ── */}
-      <section className="relative overflow-hidden bg-linear-to-br from-orange-50 via-white to-amber-50 dark:from-gray-900 dark:via-gray-950 dark:to-gray-900 pt-20 pb-32">
-        {/* Background decoration */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-40 -right-40 w-96 h-96 bg-brand-orange/10 rounded-full blur-3xl" />
-          <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-orange-300/10 rounded-full blur-3xl" />
+      <section className="relative overflow-hidden pt-28 pb-40">
+        {/* Background mesh */}
+        <div className="absolute inset-0 z-[-1] opacity-30 dark:opacity-20 pointer-events-none">
+          <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-primary/20 blur-[120px]" />
+          <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-blue-500/10 blur-[120px]" />
         </div>
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center space-x-2 bg-brand-orange/10 dark:bg-brand-orange/20 text-brand-orange text-sm font-medium px-4 py-1.5 rounded-full mb-8">
-            <Zap className="h-3.5 w-3.5" aria-hidden="true" />
-            <span>La plataforma #1 para organizadores de eventos en México</span>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="inline-flex items-center space-x-2 bg-primary/10 text-primary text-[13px] font-bold px-5 py-2 rounded-full mb-10 tracking-wide uppercase">
+            <Zap className="h-4 w-4" />
+            <span>Plataforma #1 para Organizadores en México</span>
           </div>
 
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-gray-900 dark:text-white mb-6 leading-tight">
-            Gestiona tus eventos
+          <h1 className="text-6xl sm:text-7xl lg:text-8xl font-black text-text mb-8 leading-[1.05] tracking-tight">
+            Gestiona eventos
             <br />
-            <span className="text-brand-orange">de manera profesional</span>
+            <span className="text-transparent bg-clip-text premium-gradient animate-gradient">profesionales</span>
           </h1>
 
-          <p className="text-xl text-gray-600 dark:text-gray-400 mb-10 max-w-2xl mx-auto leading-relaxed">
-            La plataforma todo-en-uno para organizar eventos, gestionar clientes, controlar inventario y maximizar tus ingresos. Diseñada para organizadores como tú.
+          <p className="text-xl sm:text-2xl text-text-secondary mb-12 max-w-3xl mx-auto leading-relaxed">
+            Organiza, gestiona y escala tu negocio con la plataforma diseñada específicamente para la industria de eventos.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+          <div className="flex flex-col sm:flex-row gap-5 justify-center mb-20">
             <Link
               to="/register"
-              className="inline-flex items-center justify-center gap-2 bg-brand-orange hover:bg-orange-600 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
-              aria-label="Comenzar gratis - Registrarse ahora"
+              className="premium-gradient text-white px-10 py-5 rounded-2xl font-black text-xl shadow-2xl shadow-primary/30 hover:shadow-primary/50 transition-all hover:scale-[1.05] flex items-center gap-3"
             >
-              Comenzar Gratis
-              <ArrowRight className="h-5 w-5" aria-hidden="true" />
+              Empezar Gratis Ahora
+              <ArrowRight className="h-6 w-6" />
             </Link>
             <Link
               to="/login"
-              className="inline-flex items-center justify-center gap-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white px-8 py-4 rounded-xl font-bold text-lg shadow-md hover:shadow-lg transition-all border border-gray-200 dark:border-gray-700"
+              className="bg-card glass-card text-text px-10 py-5 rounded-2xl font-bold text-xl transition-all hover:bg-surface border border-border flex items-center"
             >
               Ya tengo cuenta
             </Link>
           </div>
 
-          {/* Trust badges */}
-          <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-500 dark:text-gray-400">
-            <div className="flex items-center gap-1.5">
-              <CheckCircle className="h-4 w-4 text-brand-green" aria-hidden="true" />
+          <div className="flex flex-wrap items-center justify-center gap-10 text-[15px] font-semibold text-text-secondary opacity-80">
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-success" />
               <span>Sin tarjeta de crédito</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <CheckCircle className="h-4 w-4 text-brand-green" aria-hidden="true" />
-              <span>Configuración en 2 minutos</span>
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-success" />
+              <span>Instala en 2 minutos</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <CheckCircle className="h-4 w-4 text-brand-green" aria-hidden="true" />
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-success" />
               <span>Cancela cuando quieras</span>
             </div>
           </div>
@@ -371,31 +351,33 @@ export const Landing: React.FC = () => {
       </section>
 
       {/* ── HOW IT WORKS ── */}
-      <section id="how-it-works" className="py-24 bg-gray-50 dark:bg-gray-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center space-x-2 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-sm font-medium px-4 py-1.5 rounded-full mb-4">
+      <section id="how-it-works" className="py-32 bg-surface-grouped relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+          <div className="text-center mb-20">
+            <div className="inline-flex items-center space-x-2 bg-primary/10 text-primary text-[13px] font-bold px-5 py-2 rounded-full mb-6 uppercase tracking-wider">
               <span>🚀 Cómo funciona</span>
             </div>
-            <h2 className="text-4xl font-extrabold text-gray-900 dark:text-white mb-4">
+            <h2 className="text-4xl sm:text-5xl font-black text-text mb-6 tracking-tight">
               Empieza en minutos, no en días
             </h2>
-            <p className="text-lg text-gray-600 dark:text-gray-400 max-w-xl mx-auto">
-              Sin instalaciones complicadas. Sin capacitación extensa. Comienza a gestionar eventos desde el primer día.
+            <p className="text-xl text-text-secondary max-w-2xl mx-auto leading-relaxed">
+              Diseñamos la plataforma para que sea intuitiva y potente desde el primer segundo.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12">
             {steps.map((step, index) => (
-              <div key={step.number} className="relative text-center">
+              <div key={step.number} className="relative group">
                 {index < steps.length - 1 && (
-                  <div className="hidden lg:block absolute top-8 left-1/2 w-full h-0.5 bg-linear-to-r from-brand-orange/40 to-transparent" />
+                  <div className="hidden lg:block absolute top-[44px] left-[calc(50%+40px)] w-[calc(100%-80px)] h-1 bg-border/40 rounded-full" />
                 )}
-                <div className="relative inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-brand-orange text-white font-extrabold text-xl mb-5 shadow-lg shadow-orange-200 dark:shadow-orange-900/30">
-                  {step.number}
+                <div className="relative text-center">
+                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-[28px] premium-gradient text-white font-black text-2xl mb-8 shadow-xl shadow-primary/25 transform group-hover:scale-110 transition-transform">
+                    {step.number}
+                  </div>
+                  <h3 className="text-xl font-bold text-text mb-4 tracking-tight">{step.title}</h3>
+                  <p className="text-text-secondary text-[15px] leading-relaxed">{step.description}</p>
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{step.title}</h3>
-                <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">{step.description}</p>
               </div>
             ))}
           </div>
@@ -445,73 +427,83 @@ export const Landing: React.FC = () => {
       </section>
 
       {/* ── PRICING ── */}
-      <section id="pricing" className="py-24 bg-gray-50 dark:bg-gray-900">
+      <section id="pricing" className="py-32 bg-surface-grouped relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center space-x-2 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-sm font-medium px-4 py-1.5 rounded-full mb-4">
+          <div className="text-center mb-20">
+            <div className="inline-flex items-center space-x-2 bg-primary/10 text-primary text-[13px] font-bold px-5 py-2 rounded-full mb-6 uppercase tracking-wider">
               <span>💰 Precios</span>
             </div>
-            <h2 className="text-4xl font-extrabold text-gray-900 dark:text-white mb-4">
-              Planes para cada etapa de tu negocio
+            <h2 className="text-4xl sm:text-5xl font-black text-text mb-6 tracking-tight">
+              Planes para cada etapa
             </h2>
-            <p className="text-lg text-gray-600 dark:text-gray-400">
-            Comienza gratis y activa el plan Pro cuando lo necesites. Precio de lanzamiento por tiempo limitado.
-          </p>
+            <p className="text-xl text-text-secondary max-w-2xl mx-auto">
+              Comienza gratis y activa el plan Pro cuando lo necesites.
+            </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 items-start max-w-3xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-10 items-stretch max-w-4xl mx-auto">
             {plans.map((plan) => (
               <div
                 key={plan.name}
-                className={`rounded-2xl p-8 border-2 transition-all ${
+                className={`relative rounded-3xl p-10 flex flex-col transition-all duration-300 border-2 ${
                   plan.highlighted
-                    ? 'border-brand-orange bg-brand-orange shadow-2xl shadow-orange-200 dark:shadow-orange-900/30 text-white scale-105'
-                    : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900'
+                    ? 'border-primary bg-card dark:bg-card shadow-2xl shadow-primary/10 dark:shadow-primary/5 scale-[1.02] z-10'
+                    : 'border-border bg-card shadow-sm hover:shadow-md'
                 }`}
               >
-                {plan.highlighted && plan.promo && (
-                  <div className="inline-flex items-center bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full mb-3">
-                    {plan.promo}
-                  </div>
-                )}
                 {plan.highlighted && (
-                  <div className="inline-flex items-center bg-yellow-400/20 text-yellow-200 text-xs font-bold px-3 py-1 rounded-full mb-4 ml-2">
-                    ⭐ Más popular
+                  <div className="absolute -top-5 left-1/2 -translate-x-1/2 flex gap-2">
+                    <span className="bg-primary text-white text-[11px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg shadow-primary/30">
+                      Más popular
+                    </span>
+                    {plan.promo && (
+                      <span className="bg-success text-white text-[11px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg shadow-success/30">
+                        {plan.promo}
+                      </span>
+                    )}
                   </div>
                 )}
-                <h3 className={`text-xl font-bold mb-1 ${plan.highlighted ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
-                  {plan.name}
-                </h3>
-                <p className={`text-sm mb-4 ${plan.highlighted ? 'text-orange-100' : 'text-gray-500 dark:text-gray-400'}`}>
-                  {plan.description}
-                </p>
-                <div className="flex items-baseline gap-2 mb-6">
+                
+                <div className="mb-8">
+                  <h3 className="text-2xl font-black text-text mb-2 tracking-tight">
+                    {plan.name}
+                  </h3>
+                  <p className="text-text-secondary text-[15px] leading-relaxed">
+                    {plan.description}
+                  </p>
+                </div>
+
+                <div className="flex items-baseline gap-2 mb-10">
                   {plan.originalPrice && (
-                    <span className={`text-lg line-through opacity-60 ${plan.highlighted ? 'text-orange-200' : 'text-gray-400'}`}>
+                    <span className="text-xl line-through text-text-tertiary font-medium">
                       {plan.originalPrice}
                     </span>
                   )}
-                  <span className={`text-4xl font-extrabold ${plan.highlighted ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
+                  <span className="text-5xl font-black text-text tracking-tight">
                     {plan.price}
                   </span>
-                  <span className={`text-sm ${plan.highlighted ? 'text-orange-100' : 'text-gray-500 dark:text-gray-400'}`}>
+                  <span className="text-text-secondary font-medium uppercase text-xs tracking-widest">
                     {plan.period}
                   </span>
                 </div>
-                <ul className="space-y-3 mb-8">
+
+                <ul className="space-y-4 mb-10 flex-grow">
                   {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-center gap-2 text-sm">
-                      <CheckCircle className={`h-4 w-4 shrink-0 ${plan.highlighted ? 'text-white' : 'text-brand-green'}`} aria-hidden="true" />
-                      <span className={plan.highlighted ? 'text-orange-50' : 'text-gray-700 dark:text-gray-300'}>{feature}</span>
+                    <li key={feature} className="flex items-center gap-3 text-sm">
+                      <div className={`p-1 rounded-full ${plan.highlighted ? 'bg-primary/10 text-primary' : 'bg-success/10 text-success'}`}>
+                        <CheckCircle className="h-4 w-4 shrink-0" />
+                      </div>
+                      <span className="text-text font-medium">{feature}</span>
                     </li>
                   ))}
                 </ul>
+
                 <Link
                   to={plan.href}
-                  className={`block text-center py-3 px-6 rounded-xl font-bold text-sm transition-all ${
+                  className={`block text-center py-5 px-8 rounded-2xl font-black text-lg transition-all ${
                     plan.highlighted
-                      ? 'bg-white text-brand-orange hover:bg-orange-50'
-                      : 'bg-brand-orange hover:bg-orange-600 text-white'
+                      ? 'premium-gradient text-white shadow-xl shadow-primary/20 hover:shadow-primary/30 hover:scale-[1.02]'
+                      : 'bg-surface-alt text-text hover:bg-border transition-colors border border-border'
                   }`}
                 >
                   {plan.cta}
@@ -565,31 +557,53 @@ export const Landing: React.FC = () => {
       </section>
 
       {/* ── CTA FINAL ── */}
-      <section className="py-24 bg-linear-to-br from-brand-orange to-orange-600">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-4xl sm:text-5xl font-extrabold text-white mb-6">
-            ¿Listo para profesionalizar tu negocio?
-          </h2>
-          <p className="text-xl text-orange-100 mb-10 max-w-2xl mx-auto">
-            Únete a más de 500 organizadores que ya gestionan sus eventos con Eventos. Comienza gratis hoy.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              to="/register"
-              className="inline-flex items-center justify-center gap-2 bg-white text-brand-orange hover:bg-orange-50 px-8 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
-              aria-label="Comenzar gratis ahora - Registrarse"
-            >
-              Comenzar Gratis Ahora
-              <ArrowRight className="h-5 w-5" aria-hidden="true" />
-            </Link>
-            <Link
-              to="/login"
-              className="inline-flex items-center justify-center gap-2 border-2 border-white/40 hover:border-white text-white px-8 py-4 rounded-xl font-bold text-lg transition-all"
-            >
-              Ya tengo cuenta
-            </Link>
+      <section className="py-24 bg-white dark:bg-gray-950">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="relative overflow-hidden premium-gradient rounded-[3rem] p-12 sm:p-20 text-center premium-shadow">
+            {/* Background decorative elements */}
+            <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.2),transparent_50%)]" />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 blur-3xl rounded-full -mr-20 -mt-20" />
+            
+            <div className="relative z-10 max-w-4xl mx-auto">
+              <h2 className="text-4xl sm:text-7xl font-black text-white mb-8 tracking-tight leading-[1.1]">
+                ¿Listo para escalar <br />tu negocio?
+              </h2>
+              <p className="text-xl sm:text-2xl text-white/90 mb-12 max-w-2xl mx-auto leading-relaxed font-medium">
+                Únete a la nueva generación de organizadores que ya profesionalizaron su operación.
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+                <Link
+                  to="/register"
+                  className="bg-white text-primary px-12 py-6 rounded-2xl font-black text-2xl shadow-xl hover:shadow-2xl transition-all hover:scale-[1.05] flex items-center justify-center gap-3 w-full sm:w-auto"
+                >
+                  Comenzar Gratis
+                  <ArrowRight className="h-7 w-7" />
+                </Link>
+                <Link
+                  to="/login"
+                  className="bg-white/10 backdrop-blur-md border-2 border-white/30 text-white px-12 py-6 rounded-2xl font-black text-2xl hover:bg-white/20 transition-all flex items-center justify-center w-full sm:w-auto"
+                >
+                  Ya tengo cuenta
+                </Link>
+              </div>
+              
+              <div className="mt-12 flex flex-wrap justify-center gap-x-8 gap-y-4 text-white/80 text-sm font-bold uppercase tracking-wider">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-white" />
+                  <span>Sin tarjeta de crédito</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-white" />
+                  <span>Cancela cuando quieras</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-white" />
+                  <span>Soporte en español</span>
+                </div>
+              </div>
+            </div>
           </div>
-          <p className="mt-6 text-orange-200 text-sm">Sin tarjeta de crédito · Cancela cuando quieras</p>
         </div>
       </section>
 
@@ -598,12 +612,7 @@ export const Landing: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8 mb-10">
             <div className="md:col-span-2">
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="bg-brand-orange p-1.5 rounded-lg" aria-hidden="true">
-                  <Calendar className="h-5 w-5 text-white" aria-hidden="true" />
-                </div>
-                <span className="text-xl font-bold text-white">Eventos</span>
-              </div>
+              <Logo size={40} className="mb-4" />
               <p className="text-sm leading-relaxed max-w-xs">
                 La plataforma todo-en-uno para organizadores de eventos profesionales en México y Latinoamérica.
               </p>

@@ -3,7 +3,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import { eventService } from "../../services/eventService";
 import { productService } from "../../services/productService";
 import { paymentService } from "../../services/paymentService";
-import { eventPaymentService } from "../../services/eventPaymentService";
 import {
   ArrowLeft,
   FileText,
@@ -14,7 +13,7 @@ import {
   Pencil,
   ChevronDown,
   Trash2,
-  CreditCard,
+  MoreVertical,
 } from "lucide-react";
 import { useToast } from "../../hooks/useToast";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
@@ -24,6 +23,7 @@ import {
   generateContractPDF,
   generateShoppingListPDF,
   generateInvoicePDF,
+  generatePaymentReportPDF,
 } from "../../lib/pdfGenerator";
 import { logError } from "../../lib/errorHandler";
 import { getEventTotalCharged, getEventTaxAmount, getEventNetSales } from "../../lib/finance";
@@ -83,9 +83,9 @@ export const EventSummary: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>("summary");
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
+  const [actionsDropdownOpen, setActionsDropdownOpen] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
-  const [creatingCheckout, setCreatingCheckout] = useState(false);
   const { addToast } = useToast();
   const { isBasicPlan } = usePlanLimits();
 
@@ -95,14 +95,17 @@ export const EventSummary: React.FC = () => {
     }
   }, [id]);
 
-  // Close dropdown when clicking outside
+  // Close dropdowns when clicking outside
   useEffect(() => {
-    const handleClickOutside = () => setStatusDropdownOpen(false);
-    if (statusDropdownOpen) {
+    const handleClickOutside = () => {
+      setStatusDropdownOpen(false);
+      setActionsDropdownOpen(false);
+    };
+    if (statusDropdownOpen || actionsDropdownOpen) {
       document.addEventListener("click", handleClickOutside);
     }
     return () => document.removeEventListener("click", handleClickOutside);
-  }, [statusDropdownOpen]);
+  }, [statusDropdownOpen, actionsDropdownOpen]);
 
   const loadData = async (eventId: string) => {
     try {
@@ -190,18 +193,7 @@ export const EventSummary: React.FC = () => {
     }
   };
 
-  const handlePayNow = async () => {
-    if (!id) return;
-    setCreatingCheckout(true);
-    try {
-      const { url } = await eventPaymentService.createCheckoutSession(id);
-      window.location.href = url; // Redirect to Stripe
-    } catch (error) {
-      logError(error, 'Failed to create checkout session');
-      addToast('Error al crear sesión de pago', 'error');
-      setCreatingCheckout(false);
-    }
-  };
+  // handlePayNow removed — Pay Now button is hidden (requires per-user Stripe config)
 
   if (loading) {
     return (
@@ -315,113 +307,131 @@ export const EventSummary: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          {/* Edit Event Button */}
+          {/* Edit Event Button - Primary */}
           <button
             type="button"
             onClick={() => navigate(`/events/${id}/edit`)}
-            className="flex items-center px-3 py-2 bg-brand-orange text-white rounded-sm hover:bg-orange-600 text-sm font-medium shadow-xs transition-colors"
+            className="flex items-center px-4 py-2 bg-primary text-white rounded-md hover:opacity-90 text-sm font-semibold shadow-sm transition-all"
             aria-label="Editar este evento"
           >
             <Pencil className="h-4 w-4 mr-2" aria-hidden="true" />
             Editar
           </button>
 
-          {/* Pay Now Button - HIDDEN: Requires per-user Stripe configuration
-          {event?.status !== 'cancelled' && event?.status !== 'completed' && (
+          {/* Secondary Actions Dropdown */}
+          <div className="relative" onClick={(e) => e.stopPropagation()}>
             <button
               type="button"
-              onClick={handlePayNow}
-              disabled={creatingCheckout}
-              className="flex items-center px-3 py-2 bg-green-600 text-white rounded-sm hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium shadow-xs transition-colors"
-              aria-label="Pagar evento en línea"
+              onClick={() => setActionsDropdownOpen(!actionsDropdownOpen)}
+              className="flex items-center px-3 py-2 bg-white dark:bg-surface-grouped border border-border rounded-md hover:bg-surface-alt dark:hover:bg-surface text-text-secondary text-sm font-medium shadow-sm transition-colors"
+              aria-label="Más acciones"
+              aria-expanded={actionsDropdownOpen}
+              aria-haspopup="menu"
             >
-              <CreditCard className="h-4 w-4 mr-2" aria-hidden="true" />
-              {creatingCheckout ? 'Procesando...' : 'Pagar Ahora'}
+              <MoreVertical className="h-4 w-4 mr-2" aria-hidden="true" />
+              Acciones
+              <ChevronDown className={`ml-2 h-3.5 w-3.5 transition-transform ${actionsDropdownOpen ? "rotate-180" : ""}`} />
             </button>
-          )}
-          */}
 
-          <button
-            type="button"
-            onClick={() => setConfirmDeleteOpen(true)}
-            className="flex items-center px-3 py-2 bg-red-600 text-white rounded-sm hover:bg-red-700 text-sm font-medium shadow-xs transition-colors"
-            aria-label="Eliminar este evento"
-          >
-            <Trash2 className="h-4 w-4 mr-2" aria-hidden="true" />
-            Eliminar
-          </button>
-
-          {viewMode === "summary" && (
-            <>
-              <button
-                type="button"
-                onClick={() => {
-                  if (isBasicPlan) {
-                    addToast("La generación de PDFs es exclusiva del plan Pro.", "error");
-                    return;
-                  }
-                  generateBudgetPDF(event, profile as any, products, extras)
-                }}
-                className="flex items-center px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-sm hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium shadow-xs transition-colors"
-                aria-label="Descargar presupuesto del evento en PDF"
-              >
-                <Download className="h-4 w-4 mr-2" aria-hidden="true" />
-                Presupuesto
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  if (isBasicPlan) {
-                    addToast("La generación de PDFs es exclusiva del plan Pro.", "error");
-                    return;
-                  }
-                  generateInvoicePDF(event, profile as any, products, extras)
-                }}
-                className="flex items-center px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-sm hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium shadow-xs transition-colors"
-                aria-label="Generar factura del evento en PDF"
-              >
-                <FileText className="h-4 w-4 mr-2" aria-hidden="true" />
-                Generar Factura
-              </button>
-            </>
-          )}
-
-          {viewMode === "ingredients" && (
-            <button
-              type="button"
-              onClick={() => {
-                if (isBasicPlan) {
-                  addToast("La generación de PDFs es exclusiva del plan Pro.", "error");
-                  return;
-                }
-                generateShoppingListPDF(event, profile as any, ingredients)
-              }}
-              className="flex items-center px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-sm hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium shadow-xs transition-colors"
-              aria-label="Descargar lista de compras en PDF"
-            >
-              <ShoppingCart className="h-4 w-4 mr-2" aria-hidden="true" />
-              Lista de Compras
-            </button>
-          )}
-
-          {viewMode === "contract" && (
-            <button
-              type="button"
-              onClick={() => {
-                if (isBasicPlan) {
-                  addToast("La generación de PDFs es exclusiva del plan Pro.", "error");
-                  return;
-                }
-                generateContractPDF(event, profile as any)
-              }}
-              className="flex items-center px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-sm hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium shadow-xs transition-colors"
-              aria-label="Descargar contrato del evento en PDF"
-            >
-              <FileCheck className="h-4 w-4 mr-2" aria-hidden="true" />
-              Contrato
-            </button>
-          )}
+            {actionsDropdownOpen && (
+              <div className="absolute right-0 mt-1 w-56 bg-white dark:bg-surface-grouped border border-border rounded-lg shadow-lg z-50 overflow-hidden py-1" role="menu">
+                <p className="px-4 py-2 text-xs font-semibold text-text-tertiary uppercase tracking-wider border-b border-border mb-1">
+                  Exportar PDF
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isBasicPlan) {
+                      addToast("La generación de PDFs es exclusiva del plan Pro.", "error");
+                      return;
+                    }
+                    generateBudgetPDF(event, profile as any, products, extras);
+                    setActionsDropdownOpen(false);
+                  }}
+                  className="w-full flex items-center px-4 py-2 text-sm text-text hover:bg-surface-alt dark:hover:bg-surface transition-colors"
+                  role="menuitem"
+                >
+                  <Download className="h-4 w-4 mr-3 text-text-secondary" />
+                  Presupuesto
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isBasicPlan) {
+                      addToast("La generación de PDFs es exclusiva del plan Pro.", "error");
+                      return;
+                    }
+                    generateInvoicePDF(event, profile as any, products, extras);
+                    setActionsDropdownOpen(false);
+                  }}
+                  className="w-full flex items-center px-4 py-2 text-sm text-text hover:bg-surface-alt dark:hover:bg-surface transition-colors"
+                  role="menuitem"
+                >
+                  <FileText className="h-4 w-4 mr-3 text-text-secondary" />
+                  Generar Factura
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isBasicPlan) {
+                      addToast("La generación de PDFs es exclusiva del plan Pro.", "error");
+                      return;
+                    }
+                    generateShoppingListPDF(event, profile as any, ingredients);
+                    setActionsDropdownOpen(false);
+                  }}
+                  className="w-full flex items-center px-4 py-2 text-sm text-text hover:bg-surface-alt dark:hover:bg-surface transition-colors"
+                  role="menuitem"
+                >
+                  <ShoppingCart className="h-4 w-4 mr-3 text-text-secondary" />
+                  Lista de Compras
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isBasicPlan) {
+                      addToast("La generación de PDFs es exclusiva del plan Pro.", "error");
+                      return;
+                    }
+                    generateContractPDF(event, profile as any);
+                    setActionsDropdownOpen(false);
+                  }}
+                  className="w-full flex items-center px-4 py-2 text-sm text-text hover:bg-surface-alt dark:hover:bg-surface transition-colors"
+                  role="menuitem"
+                >
+                  <FileCheck className="h-4 w-4 mr-3 text-text-secondary" />
+                  Contrato
+                </button>
+                {viewMode === "payments" && payments.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      generatePaymentReportPDF(event, profile as any, payments);
+                      setActionsDropdownOpen(false);
+                    }}
+                    className="w-full flex items-center px-4 py-2 text-sm text-text hover:bg-surface-alt dark:hover:bg-surface transition-colors"
+                    role="menuitem"
+                  >
+                    <Download className="h-4 w-4 mr-3 text-text-secondary" />
+                    Reporte de Pagos
+                  </button>
+                )}
+                <div className="my-1 border-t border-border"></div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setConfirmDeleteOpen(true);
+                    setActionsDropdownOpen(false);
+                  }}
+                  className="w-full flex items-center px-4 py-2 text-sm text-error hover:bg-error/10 transition-colors"
+                  role="menuitem"
+                >
+                  <Trash2 className="h-4 w-4 mr-3" />
+                  Eliminar Evento
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

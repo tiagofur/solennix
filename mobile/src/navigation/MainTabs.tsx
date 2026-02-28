@@ -1,22 +1,27 @@
 import React from "react";
+import { View, StyleSheet, TouchableOpacity } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { MainTabParamList } from "../types/navigation";
 import HomeStack from "./HomeStack";
 import CalendarStack from "./CalendarStack";
 import ClientStack from "./ClientStack";
-import CatalogStack from "./CatalogStack";
-import ProfileStack from "./ProfileStack";
 import {
   Home,
   CalendarDays,
   Users,
-  Package,
-  Settings,
+  Plus,
+  Menu,
 } from "lucide-react-native";
 import { useTheme } from "../hooks/useTheme";
 import { colors } from "../theme/colors";
+import { DrawerActions, useNavigation } from "@react-navigation/native";
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
+
+// Placeholder component — never rendered (tab press is intercepted)
+function EmptyScreen() {
+  return null;
+}
 
 export default function MainTabs() {
   const { isDark } = useTheme();
@@ -30,7 +35,12 @@ export default function MainTabs() {
         tabBarInactiveTintColor: palette.tabBar.inactive,
         tabBarStyle: {
           backgroundColor: palette.tabBar.background,
-          borderTopColor: palette.tabBarBorder,
+          borderTopWidth: 0,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: -1 },
+          shadowOpacity: 0.04,
+          shadowRadius: 4,
+          elevation: 4,
         },
       }}
     >
@@ -53,6 +63,38 @@ export default function MainTabs() {
         }}
       />
       <Tab.Screen
+        name="NewEventPlaceholder"
+        component={EmptyScreen}
+        options={{
+          tabBarLabel: "",
+          tabBarIcon: () => (
+            <View style={styles.fabContainer}>
+              <View style={[styles.fab, { backgroundColor: palette.primary }]}>
+                <Plus color="#fff" size={28} />
+              </View>
+            </View>
+          ),
+          tabBarButton: (props) => (
+            <TouchableOpacity
+              onPress={props.onPress}
+              activeOpacity={0.8}
+              style={styles.fabTouchable}
+            >
+              {props.children}
+            </TouchableOpacity>
+          ),
+        }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            e.preventDefault();
+            (navigation as any).navigate("HomeTab", {
+              screen: "EventForm",
+              params: {},
+            });
+          },
+        })}
+      />
+      <Tab.Screen
         name="ClientTab"
         component={ClientStack}
         options={{
@@ -61,25 +103,45 @@ export default function MainTabs() {
         }}
       />
       <Tab.Screen
-        name="CatalogTab"
-        component={CatalogStack}
+        name="DrawerToggle"
+        component={EmptyScreen}
         options={{
-          tabBarLabel: "Catálogo",
-          tabBarIcon: ({ color, size }) => (
-            <Package color={color} size={size} />
-          ),
+          tabBarLabel: "Menú",
+          tabBarIcon: ({ color, size }) => <Menu color={color} size={size} />,
         }}
-      />
-      <Tab.Screen
-        name="ProfileTab"
-        component={ProfileStack}
-        options={{
-          tabBarLabel: "Más",
-          tabBarIcon: ({ color, size }) => (
-            <Settings color={color} size={size} />
-          ),
-        }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            e.preventDefault();
+            navigation.dispatch(DrawerActions.openDrawer());
+          },
+        })}
       />
     </Tab.Navigator>
   );
 }
+
+const styles = StyleSheet.create({
+  fabContainer: {
+    position: "absolute",
+    top: -14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  fab: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 8,
+  },
+  fabTouchable: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+});

@@ -14,6 +14,32 @@ vi.mock('../services/paymentService');
 vi.mock('../contexts/AuthContext');
 vi.mock('../lib/errorHandler');
 
+// Capture Tooltip formatter props so we can exercise them in tests
+const capturedTooltipFormatters: Array<(value: number) => unknown> = [];
+
+vi.mock('recharts', async () => {
+  const actual = await vi.importActual<any>('recharts');
+  const passthrough = (name: string) => ({ children, ...rest }: any) => {
+    return <div data-testid={name} {...rest}>{children}</div>;
+  };
+  return {
+    ...actual,
+    ResponsiveContainer: ({ children }: any) => <div data-testid="responsive-container">{children}</div>,
+    BarChart: ({ children }: any) => <div data-testid="bar-chart">{children}</div>,
+    Bar: passthrough('bar'),
+    XAxis: passthrough('xaxis'),
+    YAxis: passthrough('yaxis'),
+    CartesianGrid: passthrough('cartesian-grid'),
+    Cell: passthrough('cell'),
+    Tooltip: (props: any) => {
+      if (props.formatter) {
+        capturedTooltipFormatters.push(props.formatter);
+      }
+      return <div data-testid="tooltip" />;
+    },
+  };
+});
+
 const renderDashboard = () =>
   render(
     <BrowserRouter>
@@ -24,6 +50,7 @@ const renderDashboard = () =>
 describe('Dashboard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    capturedTooltipFormatters.length = 0;
     (useAuth as any).mockReturnValue({ profile: { name: 'Test User' } });
     (eventService.getByDateRange as any).mockResolvedValue([]);
     (eventService.getUpcoming as any).mockResolvedValue([]);
@@ -119,7 +146,7 @@ describe('Dashboard', () => {
   it('retries when refresh is clicked', async () => {
     renderDashboard();
 
-    const refresh = screen.getByTitle('Recargar datos');
+    const refresh = screen.getByRole('button', { name: /Recargar datos del dashboard/i });
     fireEvent.click(refresh);
 
     await waitFor(() => {
@@ -127,5 +154,22 @@ describe('Dashboard', () => {
       expect(eventService.getUpcoming).toHaveBeenCalledTimes(2);
       expect(inventoryService.getAll).toHaveBeenCalledTimes(2);
     });
+  });
+
+  it('exercises the financial chart Tooltip formatter callback', async () => {
+    capturedTooltipFormatters.length = 0;
+
+    renderDashboard();
+
+    await waitFor(() => {
+      expect(screen.getByText(/Comparativa Financiera/i)).toBeInTheDocument();
+    });
+
+    // The mock Tooltip captures the formatter prop during render.
+    // Exercise the captured formatter to cover line 598.
+    expect(capturedTooltipFormatters.length).toBeGreaterThan(0);
+    const formatter = capturedTooltipFormatters[0];
+    const result = formatter(1500);
+    expect(result).toEqual(['$1,500', 'Monto']);
   });
 });

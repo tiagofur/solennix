@@ -34,8 +34,8 @@ import {
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
+import { shadows } from "../../theme/shadows";
 
-type Client = Database["public"]["Tables"]["clients"]["Row"];
 type Props = NativeStackScreenProps<ClientStackParamList, "ClientList">;
 
 export default function ClientListScreen({ navigation }: Props) {
@@ -146,7 +146,7 @@ export default function ClientListScreen({ navigation }: Props) {
             styles.avatar,
             {
               backgroundColor:
-                avatarColors[item.name.charCodeAt(0) % avatarColors.length],
+                colors.light.avatarColors[item.name.charCodeAt(0) % colors.light.avatarColors.length],
             },
           ]}
         >
@@ -159,13 +159,13 @@ export default function ClientListScreen({ navigation }: Props) {
           <View style={styles.cardRow}>
             {item.phone ? (
               <View style={styles.infoChip}>
-                <Phone color={colors.light.textMuted} size={12} />
+                <Phone color={colors.light.textTertiary} size={12} />
                 <Text style={styles.infoText}>{item.phone}</Text>
               </View>
             ) : null}
             {item.email ? (
               <View style={styles.infoChip}>
-                <Mail color={colors.light.textMuted} size={12} />
+                <Mail color={colors.light.textTertiary} size={12} />
                 <Text style={styles.infoText} numberOfLines={1}>
                   {item.email}
                 </Text>
@@ -182,21 +182,21 @@ export default function ClientListScreen({ navigation }: Props) {
             </Text>
           </View>
         </View>
-        <ChevronRight color={colors.light.textMuted} size={20} />
+        <ChevronRight color={colors.light.textTertiary} size={20} />
       </TouchableOpacity>
     ),
     [navigation],
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <SafeAreaView style={styles.container} edges={[]}>
       <View style={styles.searchContainer}>
         <View style={styles.searchBox}>
-          <Search color={colors.light.textMuted} size={18} />
+          <Search color={colors.light.textTertiary} size={18} />
           <TextInput
             style={styles.searchInput}
             placeholder="Buscar clientes..."
-            placeholderTextColor={colors.light.textMuted}
+            placeholderTextColor={colors.light.textTertiary}
             value={search}
             onChangeText={setSearch}
             autoCorrect={false}
@@ -236,7 +236,7 @@ export default function ClientListScreen({ navigation }: Props) {
             />
           ) : (
             <EmptyState
-              icon={<Users color={colors.light.textMuted} size={48} />}
+              icon={<Users color={colors.light.textTertiary} size={48} />}
               title="Sin clientes"
               description="Agrega tu primer cliente para empezar."
               actionLabel="Nuevo Cliente"
@@ -268,21 +268,10 @@ export default function ClientListScreen({ navigation }: Props) {
   );
 }
 
-const avatarColors = [
-  "#3b82f6",
-  "#ef4444",
-  "#10b981",
-  "#f59e0b",
-  "#8b5cf6",
-  "#ec4899",
-  "#14b8a6",
-  "#f97316",
-];
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.light.background,
+    backgroundColor: colors.light.surfaceGrouped,
   },
   searchContainer: {
     paddingHorizontal: spacing.lg,
@@ -293,11 +282,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: colors.light.surface,
-    borderRadius: spacing.borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.light.border,
+    borderRadius: spacing.borderRadius.md,
     paddingHorizontal: spacing.md,
-    height: 44,
+    height: 38,
     gap: spacing.sm,
   },
   searchInput: {
@@ -319,8 +306,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: colors.light.card,
     borderRadius: spacing.borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.light.border,
+    ...shadows.sm,
     padding: spacing.md,
     marginBottom: spacing.sm,
     gap: spacing.md,
@@ -333,7 +319,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   avatarText: {
-    color: "#fff",
+    color: colors.light.textInverse,
     fontWeight: "700",
     fontSize: 16,
   },
@@ -342,9 +328,9 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   cardName: {
-    ...typography.label,
-    color: colors.light.text,
+    ...typography.headline,
     fontSize: 15,
+    color: colors.light.text,
   },
   cardRow: {
     flexDirection: "row",
@@ -358,32 +344,28 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   infoText: {
-    ...typography.caption,
+    ...typography.caption1,
     color: colors.light.textSecondary,
     maxWidth: 130,
   },
   statText: {
-    ...typography.caption,
-    color: colors.light.textMuted,
+    ...typography.caption1,
+    color: colors.light.textTertiary,
   },
   dotSep: {
-    ...typography.caption,
-    color: colors.light.textMuted,
+    ...typography.caption1,
+    color: colors.light.textTertiary,
   },
   fab: {
     position: "absolute",
     bottom: spacing.xl,
-    right: spacing.xl,
+    right: spacing.lg,
     width: 56,
     height: 56,
     borderRadius: 28,
     backgroundColor: colors.light.primary,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 6,
+    ...shadows.fab,
   },
 });

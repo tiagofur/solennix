@@ -95,7 +95,6 @@ export const handlers = [
   http.post(`${API_BASE}/clients`, async ({ request }) => {
     const body = await request.json();
     const created = {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ...(body as any),
       id: 'client-new',
       total_events: 0,

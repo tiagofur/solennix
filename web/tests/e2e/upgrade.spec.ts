@@ -5,10 +5,7 @@ test.describe('Subscription Upgrade Flow', () => {
   test.beforeEach(async ({ page }) => {
     await setupTestUser(page);
 
-    if (await isSetupRequired(page)) {
-      test.skip('Backend not configured');
-      return;
-    }
+    test.skip(await isSetupRequired(page), 'Backend not configured');
   });
 
   test('view pricing page from dashboard', async ({ page }) => {
@@ -109,11 +106,11 @@ test.describe('Subscription Upgrade Flow', () => {
           await expect(modal).toBeVisible();
         } else {
           // May need Stripe configuration in test environment
-          test.skip('Stripe checkout not configured in test environment');
+          test.skip(true, 'Stripe checkout not configured in test environment');
         }
       }
     } else {
-      test.skip('Upgrade button not found - may require Stripe configuration');
+      test.skip(true, 'Upgrade button not found - may require Stripe configuration');
     }
   });
 
@@ -161,10 +158,10 @@ test.describe('Subscription Upgrade Flow', () => {
       if (currentUrl.includes('stripe.com') || currentUrl.includes('billing')) {
         expect(currentUrl).toMatch(/stripe|billing/i);
       } else {
-        test.skip('Billing portal not configured');
+        test.skip(true, 'Billing portal not configured');
       }
     } else {
-      test.skip('Billing portal link not found - may require Pro subscription');
+      test.skip(true, 'Billing portal link not found - may require Pro subscription');
     }
   });
 
@@ -176,10 +173,7 @@ test.describe('Subscription Upgrade Flow', () => {
     const proBadge = page.getByText(/pro|premium/i).first();
     const isProUser = await proBadge.isVisible({ timeout: 2000 }).catch(() => false);
 
-    if (!isProUser) {
-      test.skip('User is not on Pro plan - cannot test Pro features');
-      return;
-    }
+    test.skip(!isProUser, 'User is not on Pro plan - cannot test Pro features');
 
     // Verify Pro features are accessible
 

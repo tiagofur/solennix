@@ -170,7 +170,6 @@ export const generateBudgetPDF = (
       theme: 'grid',
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     currentY = (doc as any).lastAutoTable.finalY + 10;
   } else {
     currentY += 10;
@@ -319,7 +318,7 @@ export const generateShoppingListPDF = (
 };
 
 export const generatePaymentReportPDF = (
-  event: Event,
+  event: EventWithClient,
   profile: UserProfile | null,
   payments: Payment[]
 ) => {
@@ -380,7 +379,6 @@ export const generatePaymentReportPDF = (
       theme: 'grid',
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     currentY = (doc as any).lastAutoTable.finalY + 10;
   } else {
     doc.text('No hay pagos registrados.', 20, currentY);
@@ -576,7 +574,6 @@ export const generateInvoicePDF = (
       theme: 'grid',
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     currentY = (doc as any).lastAutoTable.finalY + 10;
   } else {
     currentY += 10;

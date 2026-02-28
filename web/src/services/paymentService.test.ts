@@ -57,4 +57,10 @@ describe('paymentService', () => {
     await paymentService.delete('1');
     expect(api.delete).toHaveBeenCalledWith('/payments/1');
   });
+
+  it('getByEventIds returns empty array for empty input', async () => {
+    const result = await paymentService.getByEventIds([]);
+    expect(result).toEqual([]);
+    expect(api.get).not.toHaveBeenCalled();
+  });
 });

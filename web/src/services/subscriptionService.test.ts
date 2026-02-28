@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { subscriptionService } from './subscriptionService';
-import { server } from '../tests/mocks/server';
+import { server } from '../../tests/mocks/server';
 import { http, HttpResponse } from 'msw';
 
 const API_BASE = 'http://localhost:8080/api';
@@ -258,7 +258,7 @@ describe('subscriptionService', () => {
       let receivedCredentials = false;
 
       server.use(
-        http.post(`${API_BASE}/subscriptions/checkout-session`, ({ request }) => {
+        http.post(`${API_BASE}/subscriptions/checkout-session`, () => {
           // Verify credentials: 'include' is set (cookies sent)
           // Note: In test environment, we can't directly check credentials mode
           // but we can verify the request was made correctly

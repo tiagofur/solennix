@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
+import { shadows } from "../../theme/shadows";
 
 interface KPICardProps {
   icon: React.ReactNode;
@@ -68,8 +69,7 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.light.card,
     borderRadius: spacing.borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.light.border,
+    ...shadows.sm,
     overflow: "hidden",
     width: 170,
     marginRight: spacing.sm,
@@ -91,12 +91,11 @@ const styles = StyleSheet.create({
     marginLeft: spacing.sm,
   },
   title: {
-    ...typography.caption,
+    ...typography.caption1,
     color: colors.light.textSecondary,
-    lineHeight: 14,
   },
   value: {
-    ...typography.h3,
+    ...typography.headline,
     color: colors.light.text,
     marginTop: 2,
   },
@@ -105,10 +104,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs + 2,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.light.border,
+    borderTopColor: colors.light.separator,
   },
   footerText: {
-    ...typography.caption,
+    ...typography.caption1,
     color: colors.light.textMuted,
   },
 });

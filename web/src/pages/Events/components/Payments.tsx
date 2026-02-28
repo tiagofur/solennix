@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { paymentService } from "../../../services/paymentService";
-import { Database } from "../../../types/supabase";
+import { Payment } from "../../../types/entities";
 import { Plus, Trash2, DollarSign, CheckCircle, AlertCircle, Download } from "lucide-react";
 import { logError } from "../../../lib/errorHandler";
 import { ConfirmDialog } from "../../../components/ConfirmDialog";
 import { generatePaymentReportPDF } from "../../../lib/pdfGenerator";
 import { useToast } from "../../../hooks/useToast";
-
-type Payment = Database["public"]["Tables"]["payments"]["Row"];
 
 interface PaymentsProps {
   eventId: string;
@@ -30,7 +28,7 @@ export const Payments: React.FC<PaymentsProps> = ({
   profile
 }) => {
   const [payments, setPayments] = useState<Payment[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -48,6 +46,7 @@ export const Payments: React.FC<PaymentsProps> = ({
 
   useEffect(() => {
     loadPayments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eventId]);
 
   const loadPayments = async () => {
@@ -141,17 +140,12 @@ export const Payments: React.FC<PaymentsProps> = ({
             <DollarSign className="h-5 w-5 mr-2 text-green-600" aria-hidden="true" />
             Pagos y Saldo
           </h2>
-          {eventData && (
-            <button
-              type="button"
-              onClick={() => generatePaymentReportPDF(eventData, profile || null, payments)}
-              className="flex items-center px-3 py-1.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-sm hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium shadow-xs transition-colors"
-              aria-label="Descargar reporte de pagos en PDF"
-            >
-              <Download className="h-4 w-4 mr-2" aria-hidden="true" />
-              Reporte de Pagos
-            </button>
-          )}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center">
+            <DollarSign className="h-5 w-5 mr-2 text-green-600" aria-hidden="true" />
+            Pagos y Saldo
+          </h2>
+        </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">

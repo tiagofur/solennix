@@ -38,12 +38,12 @@ describe('Login', () => {
     renderLogin();
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/contraseña/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /ingresar/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /iniciar sesión/i })).toBeInTheDocument();
   });
 
   it('shows validation errors', async () => {
     renderLogin();
-    fireEvent.click(screen.getByRole('button', { name: /ingresar/i }));
+    fireEvent.click(screen.getByRole('button', { name: /iniciar sesión/i }));
     await waitFor(() => {
       expect(screen.getByText(/email inválido/i)).toBeInTheDocument();
     });
@@ -55,7 +55,7 @@ describe('Login', () => {
 
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'test@example.com' } });
     fireEvent.change(screen.getByLabelText(/contraseña/i), { target: { value: 'password' } });
-    fireEvent.click(screen.getByRole('button', { name: /ingresar/i }));
+    fireEvent.click(screen.getByRole('button', { name: /iniciar sesión/i }));
 
     await waitFor(() => {
       expect(api.post).toHaveBeenCalledWith('/auth/login', {
@@ -71,7 +71,7 @@ describe('Login', () => {
 
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'test@example.com' } });
     fireEvent.change(screen.getByLabelText(/contraseña/i), { target: { value: 'password' } });
-    fireEvent.click(screen.getByRole('button', { name: /ingresar/i }));
+    fireEvent.click(screen.getByRole('button', { name: /iniciar sesión/i }));
 
     await waitFor(() => {
       expect(screen.getByText(/Respuesta del servidor inválida/i)).toBeInTheDocument();
@@ -83,7 +83,7 @@ describe('Login', () => {
     (useTheme as any).mockReturnValue({ theme: 'light', toggleTheme });
 
     renderLogin();
-    fireEvent.click(screen.getByLabelText('Toggle theme'));
+    fireEvent.click(screen.getByLabelText('Cambiar a modo oscuro'));
     expect(toggleTheme).toHaveBeenCalled();
   });
 
@@ -91,6 +91,6 @@ describe('Login', () => {
     (useTheme as any).mockReturnValue({ theme: 'dark', toggleTheme: vi.fn() });
 
     renderLogin();
-    expect(screen.getByLabelText('Toggle theme')).toBeInTheDocument();
+    expect(screen.getByLabelText('Cambiar a modo claro')).toBeInTheDocument();
   });
 });

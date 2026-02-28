@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { act } from '@testing-library/react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { EventForm } from './EventForm';
 import { eventService } from '../../services/eventService';
 import { clientService } from '../../services/clientService';
@@ -52,10 +53,12 @@ const watchMock = vi.fn();
 
 const controlMock = {};
 const handleSubmitMock = (fn: any) => () => fn(mockFormData);
-const setValueMockFn = (name: string, value: any) => {
-  setValueMock(name, value);
-  watchValues[name] = value;
+const setValueMockFn = (...args: any[]) => {
+  setValueMock(...args);
+  watchValues[args[0]] = args[1];
 };
+
+let mockFormState = { errors: {}, isValid: true, isSubmitted: false };
 
 vi.mock('react-hook-form', async () => {
   const actual = await vi.importActual<any>('react-hook-form');
@@ -68,7 +71,7 @@ vi.mock('react-hook-form', async () => {
       control: controlMock,
       watch: watchMock,
       trigger: mockTrigger,
-      formState: { errors: {}, isValid: true, isSubmitted: false },
+      formState: mockFormState,
     }),
     useWatch: ({ name }: any) => watchValues[name] ?? 0,
   };
@@ -84,8 +87,24 @@ vi.mock('../../contexts/AuthContext', () => ({
   }),
 }));
 
+let mockPlanLimits = {
+  canCreateEvent: true,
+  eventsThisMonth: 0,
+  limit: 3,
+  loading: false,
+};
+
+vi.mock('../../hooks/usePlanLimits', () => ({
+  usePlanLimits: () => mockPlanLimits,
+}));
+
+let mockClientCreatedCallback: ((client: any) => void) | null = null;
+
 vi.mock('./components/EventGeneralInfo', () => ({
-  EventGeneralInfo: () => <div>EVENT_GENERAL</div>,
+  EventGeneralInfo: (props: any) => {
+    mockClientCreatedCallback = props.onClientCreated;
+    return <div>EVENT_GENERAL</div>;
+  },
 }));
 
 vi.mock('./components/EventProducts', () => ({
@@ -110,7 +129,7 @@ vi.mock('./components/EventProducts', () => ({
       props.onProductChange(0, 'quantity', 2);
       props.onProductChange(0, 'discount', 5);
       productsInvoked = true;
-    }, [props.selectedProducts.length]);
+    }, [props.selectedProducts.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
     return <div>EVENT_PRODUCTS</div>;
   },
@@ -127,7 +146,7 @@ vi.mock('./components/EventExtras', () => ({
       props.onExtraChange(0, 'description', 'Transporte');
       props.onExtraChange(0, 'exclude_utility', true);
       props.onExtraChange(0, 'cost', 50);
-    }, [props.extras?.length]);
+    }, [props.extras?.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
     return <div>EVENT_EXTRAS</div>;
   },
@@ -188,6 +207,14 @@ describe('EventForm', () => {
     productsInvoked = false;
     triggerFetchCosts = () => {};
     setValueMock = vi.fn();
+    mockFormState = { errors: {}, isValid: true, isSubmitted: false };
+    mockPlanLimits = {
+      canCreateEvent: true,
+      eventsThisMonth: 0,
+      limit: 3,
+      loading: false,
+    };
+    mockClientCreatedCallback = null;
     (clientService.getAll as any).mockResolvedValue([]);
     (productService.getAll as any).mockResolvedValue([]);
   });
@@ -472,5 +499,324 @@ describe('EventForm', () => {
         ]
       );
     });
+  });
+
+  // ---------- NEW TESTS FOR COVERAGE ----------
+
+  it('navigates to /calendar when clicking the back arrow button (line 460)', async () => {
+    render(<EventForm />);
+
+    const backButton = screen.getByRole('button', { name: /Volver al calendario/i });
+    fireEvent.click(backButton);
+
+    expect(mockNavigate).toHaveBeenCalledWith('/calendar');
+  });
+
+  it('navigates to event summary when clicking Ver Resumen button (line 473)', async () => {
+    mockParams = { id: 'event-1' };
+    (eventService.getById as any).mockResolvedValue({ id: 'event-1' });
+    (eventService.getProducts as any).mockResolvedValue([]);
+    (eventService.getExtras as any).mockResolvedValue([]);
+
+    render(<EventForm />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Editar Evento')).toBeInTheDocument();
+    });
+
+    const summaryButton = screen.getByRole('button', { name: /Ver Resumen/i });
+    fireEvent.click(summaryButton);
+
+    expect(mockNavigate).toHaveBeenCalledWith('/events/event-1/summary');
+  });
+
+  it('does not show Ver Resumen button when creating a new event', async () => {
+    mockParams = {};
+
+    render(<EventForm />);
+
+    expect(screen.getByText('Nuevo Evento')).toBeInTheDocument();
+    expect(screen.queryByText('Ver Resumen')).not.toBeInTheDocument();
+  });
+
+  it('navigates back to a completed step when clicking on its step button (lines 488-489)', async () => {
+    render(<EventForm />);
+
+    // Advance from step 1 to step 2
+    fireEvent.click(screen.getByRole('button', { name: /Siguiente/i }));
+    await waitFor(() => {
+      expect(screen.getByText('EVENT_PRODUCTS')).toBeInTheDocument();
+    });
+
+    // Advance from step 2 to step 3
+    fireEvent.click(screen.getByRole('button', { name: /Siguiente/i }));
+    await waitFor(() => {
+      expect(screen.getByText('EVENT_EXTRAS')).toBeInTheDocument();
+    });
+
+    // Now click on step 1 button ("Informacion General") to navigate back
+    const stepButtons = screen.getAllByRole('button').filter(
+      (btn) => btn.textContent?.includes('Información General')
+    );
+    expect(stepButtons.length).toBeGreaterThan(0);
+    fireEvent.click(stepButtons[0]);
+
+    await waitFor(() => {
+      expect(screen.getByText('EVENT_GENERAL')).toBeInTheDocument();
+    });
+  });
+
+  it('does not navigate to a future step when clicking on its step button', async () => {
+    render(<EventForm />);
+
+    // We are on step 1. Clicking step 3 should not navigate forward.
+    const stepButtons = screen.getAllByRole('button').filter(
+      (btn) => btn.textContent?.includes('Extras')
+    );
+    expect(stepButtons.length).toBeGreaterThan(0);
+    fireEvent.click(stepButtons[0]);
+
+    // Should still be on step 1
+    expect(screen.getByText('EVENT_GENERAL')).toBeInTheDocument();
+    expect(screen.queryByText('EVENT_EXTRAS')).not.toBeInTheDocument();
+  });
+
+  it('navigates back to previous step with the Anterior button (line 600)', async () => {
+    render(<EventForm />);
+
+    // Advance to step 2
+    fireEvent.click(screen.getByRole('button', { name: /Siguiente/i }));
+    await waitFor(() => {
+      expect(screen.getByText('EVENT_PRODUCTS')).toBeInTheDocument();
+    });
+
+    // Click "Anterior" to go back to step 1
+    const prevButton = screen.getByRole('button', { name: /Volver al paso anterior/i });
+    fireEvent.click(prevButton);
+
+    await waitFor(() => {
+      expect(screen.getByText('EVENT_GENERAL')).toBeInTheDocument();
+    });
+  });
+
+  it('shows UpgradeBanner when creating and canCreateEvent is false', async () => {
+    mockPlanLimits = {
+      canCreateEvent: false,
+      eventsThisMonth: 3,
+      limit: 3,
+      loading: false,
+    };
+    mockParams = {};
+
+    render(<MemoryRouter><EventForm /></MemoryRouter>);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Límite de Eventos Alcanzado/i)).toBeInTheDocument();
+    });
+
+    // Regresar button should navigate back
+    const backBtn = screen.getByText('Regresar');
+    fireEvent.click(backBtn);
+    expect(mockNavigate).toHaveBeenCalledWith(-1);
+  });
+
+  it('shows loading spinner when plan limits are loading', async () => {
+    mockPlanLimits = {
+      canCreateEvent: true,
+      eventsThisMonth: 0,
+      limit: 3,
+      loading: true,
+    };
+
+    render(<EventForm />);
+
+    expect(screen.getByRole('status')).toBeInTheDocument();
+    expect(screen.getByText('Cargando formulario de evento...')).toBeInTheDocument();
+  });
+
+  it('prevents Enter key from submitting the form (line 561)', async () => {
+    const { container } = render(<EventForm />);
+
+    const form = container.querySelector('form')!;
+
+    // Create a real KeyboardEvent, dispatch from an INPUT to test the onKeyDown handler
+    const input = form.querySelector('input') || form;
+    const keyEvent = new KeyboardEvent('keydown', {
+      key: 'Enter',
+      bubbles: true,
+      cancelable: true,
+    });
+    const preventDefaultSpy = vi.spyOn(keyEvent, 'preventDefault');
+
+    input.dispatchEvent(keyEvent);
+
+    // The form's onKeyDown should call preventDefault for Enter on non-textarea elements
+    expect(preventDefaultSpy).toHaveBeenCalled();
+  });
+
+  it('allows Enter key in TEXTAREA elements', async () => {
+    const { container } = render(<EventForm />);
+
+    const form = container.querySelector('form')!;
+
+    // For TEXTAREA, Enter should not be prevented
+    const keyEvent = new KeyboardEvent('keydown', {
+      key: 'Enter',
+      bubbles: true,
+    });
+    Object.defineProperty(keyEvent, 'target', {
+      value: { tagName: 'TEXTAREA' },
+    });
+    const preventDefaultSpy = vi.spyOn(keyEvent, 'preventDefault');
+
+    form.dispatchEvent(keyEvent);
+
+    expect(preventDefaultSpy).not.toHaveBeenCalled();
+  });
+
+  it('shows step titles in the navigation bar', async () => {
+    render(<EventForm />);
+
+    expect(screen.getByText('Información General')).toBeInTheDocument();
+    expect(screen.getByText('Productos')).toBeInTheDocument();
+    expect(screen.getByText('Extras')).toBeInTheDocument();
+    expect(screen.getByText('Finanzas y Contrato')).toBeInTheDocument();
+  });
+
+  it('updates event when id is present on save', async () => {
+    mockParams = { id: 'event-1' };
+    (eventService.getById as any).mockResolvedValue({
+      id: 'event-1',
+      client_id: 'client-1',
+      event_date: '2024-01-02',
+      service_type: 'Boda',
+      num_people: 100,
+      status: 'quoted',
+    });
+    (eventService.getProducts as any).mockResolvedValue([]);
+    (eventService.getExtras as any).mockResolvedValue([]);
+    (eventService.update as any).mockResolvedValue({});
+    (eventService.updateItems as any).mockResolvedValue({});
+
+    render(<EventForm />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Editar Evento')).toBeInTheDocument();
+    });
+
+    // Advance through all steps
+    fireEvent.click(screen.getByRole('button', { name: /Siguiente/i }));
+    await waitFor(() => {
+      expect(screen.getByText('EVENT_PRODUCTS')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /Siguiente/i }));
+    await waitFor(() => {
+      expect(screen.getByText('EVENT_EXTRAS')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /Siguiente/i }));
+    await waitFor(() => {
+      expect(screen.getByText('EVENT_FINANCIALS')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /Guardar Evento/i }));
+
+    await waitFor(() => {
+      expect(eventService.update).toHaveBeenCalledWith('event-1', expect.objectContaining({
+        client_id: 'client-1',
+        user_id: 'user-1',
+      }));
+      expect(eventService.updateItems).toHaveBeenCalledWith('event-1', [], []);
+    });
+
+    expect(mockNavigate).toHaveBeenCalledWith('/events/event-1/summary');
+  });
+
+  it('handles save error gracefully', async () => {
+    (eventService.create as any).mockRejectedValue(new Error('Save failed'));
+
+    render(<EventForm />);
+
+    // Advance to final step
+    fireEvent.click(screen.getByRole('button', { name: /Siguiente/i }));
+    await waitFor(() => {
+      expect(screen.getByText('EVENT_PRODUCTS')).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Siguiente/i }));
+    await waitFor(() => {
+      expect(screen.getByText('EVENT_EXTRAS')).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Siguiente/i }));
+    await waitFor(() => {
+      expect(screen.getByText('EVENT_FINANCIALS')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /Guardar Evento/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Save failed')).toBeInTheDocument();
+    });
+    expect(logError).toHaveBeenCalledWith('Error saving event', expect.any(Error));
+  });
+
+  it('handles the handleClientCreated callback (line 350-356)', async () => {
+    (clientService.getAll as any).mockResolvedValue([]);
+
+    render(<EventForm />);
+
+    await waitFor(() => {
+      expect(screen.getByText('EVENT_GENERAL')).toBeInTheDocument();
+    });
+
+    // The EventGeneralInfo mock captures the onClientCreated callback
+    expect(mockClientCreatedCallback).toBeTruthy();
+
+    // Call the callback with a new client
+    await act(async () => {
+      mockClientCreatedCallback!({ id: 'client-new', name: 'New Client' });
+    });
+
+    // The setValue should be called with the new client id after queueMicrotask
+    await waitFor(() => {
+      expect(setValueMock).toHaveBeenCalledWith('client_id', 'client-new', { shouldValidate: true });
+    });
+  });
+
+  it('does not allow going to previous step when on step 1', async () => {
+    render(<EventForm />);
+
+    // The "Anterior" button should be invisible on step 1
+    const prevButton = screen.getByRole('button', { name: /Volver al paso anterior/i });
+    // The button has the 'invisible' class when on step 1
+    expect(prevButton.className).toContain('invisible');
+  });
+
+  it('allows editing in canCreateEvent=false mode when editing existing event', async () => {
+    mockPlanLimits = {
+      canCreateEvent: false,
+      eventsThisMonth: 3,
+      limit: 3,
+      loading: false,
+    };
+    mockParams = { id: 'event-1' };
+    (eventService.getById as any).mockResolvedValue({
+      id: 'event-1',
+      client_id: 'client-1',
+      event_date: '2024-01-02',
+      service_type: 'Boda',
+      num_people: 100,
+      status: 'quoted',
+    });
+    (eventService.getProducts as any).mockResolvedValue([]);
+    (eventService.getExtras as any).mockResolvedValue([]);
+
+    render(<EventForm />);
+
+    // Should show the edit form, not the upgrade banner
+    await waitFor(() => {
+      expect(screen.getByText('Editar Evento')).toBeInTheDocument();
+    });
+    expect(screen.queryByText(/Límite de Eventos Alcanzado/i)).not.toBeInTheDocument();
   });
 });

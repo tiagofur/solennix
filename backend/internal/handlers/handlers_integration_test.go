@@ -30,12 +30,9 @@ func TestAuthHandlerIntegration(t *testing.T) {
 	userRepo := repository.NewUserRepo(pool)
 	// Create test config for email service
 	testCfg := &config.Config{
-		SMTPHost:     "localhost",
-		SMTPPort:     1025,
-		SMTPUser:     "test",
-		SMTPPassword: "test",
-		SMTPFrom:     "test@test.com",
-		FrontendURL:  "http://localhost:5173",
+		ResendAPIKey:    "",
+		ResendFromEmail: "Test <test@test.com>",
+		FrontendURL:     "http://localhost:5173",
 	}
 	emailService := services.NewEmailService(testCfg)
 	h := NewAuthHandler(userRepo, authService, emailService)

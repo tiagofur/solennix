@@ -23,7 +23,7 @@ export default function EmptyState({
   return (
     <View style={styles.container}>
       <View style={styles.iconContainer}>
-        {icon || <Inbox color={colors.light.textMuted} size={48} />}
+        {icon || <Inbox color={colors.light.textTertiary} size={48} />}
       </View>
       <Text style={styles.title}>{title}</Text>
       {description && <Text style={styles.description}>{description}</Text>}
@@ -46,10 +46,10 @@ const styles = StyleSheet.create({
   },
   iconContainer: {
     marginBottom: spacing.lg,
-    opacity: 0.6,
+    opacity: 0.5,
   },
   title: {
-    ...typography.h3,
+    ...typography.title3,
     color: colors.light.text,
     textAlign: "center",
     marginBottom: spacing.xs,
@@ -63,11 +63,13 @@ const styles = StyleSheet.create({
   button: {
     backgroundColor: colors.light.primary,
     borderRadius: spacing.borderRadius.md,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.sm + 4,
     paddingHorizontal: spacing.xl,
+    minHeight: 50,
+    justifyContent: "center",
   },
   buttonText: {
-    ...typography.button,
-    color: "#ffffff",
+    ...typography.headline,
+    color: colors.light.textInverse,
   },
 });

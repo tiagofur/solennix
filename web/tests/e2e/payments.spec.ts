@@ -5,10 +5,7 @@ test.describe('Payments Flow', () => {
   test.beforeEach(async ({ page }) => {
     await setupTestUser(page);
 
-    if (await isSetupRequired(page)) {
-      test.skip('Backend not configured');
-      return;
-    }
+    test.skip(await isSetupRequired(page), 'Backend not configured');
   });
 
   test('navigate to payments page', async ({ page }) => {
@@ -24,7 +21,7 @@ test.describe('Payments Flow', () => {
       await expect(page).toHaveURL(/.*payments/);
       await expect(page.getByRole('heading', { name: /pagos|payments/i })).toBeVisible();
     } else {
-      test.skip('Payments feature not available in UI');
+      test.skip(true, 'Payments feature not available in UI');
     }
   });
 
@@ -35,10 +32,7 @@ test.describe('Payments Flow', () => {
     const firstEvent = page.locator('[href^="/events/"]').first();
     const hasEvents = await firstEvent.isVisible({ timeout: 3000 }).catch(() => false);
 
-    if (!hasEvents) {
-      test.skip('No events available to add payment');
-      return;
-    }
+    test.skip(!hasEvents, 'No events available to add payment');
 
     await firstEvent.click();
 
@@ -76,7 +70,7 @@ test.describe('Payments Flow', () => {
       // Verify payment was added
       await expect(page.getByText(/pago registrado|payment recorded/i)).toBeVisible({ timeout: 5000 });
     } else {
-      test.skip('Add payment button not found - feature may not be implemented');
+      test.skip(true, 'Add payment button not found - feature may not be implemented');
     }
   });
 
@@ -86,10 +80,7 @@ test.describe('Payments Flow', () => {
     const firstEvent = page.locator('[href^="/events/"]').first();
     const hasEvents = await firstEvent.isVisible({ timeout: 3000 }).catch(() => false);
 
-    if (!hasEvents) {
-      test.skip('No events available');
-      return;
-    }
+    test.skip(!hasEvents, 'No events available');
 
     await firstEvent.click();
 
@@ -117,10 +108,7 @@ test.describe('Payments Flow', () => {
     const firstEvent = page.locator('[href^="/events/"]').first();
     const hasEvents = await firstEvent.isVisible({ timeout: 3000 }).catch(() => false);
 
-    if (!hasEvents) {
-      test.skip('No events available');
-      return;
-    }
+    test.skip(!hasEvents, 'No events available');
 
     await firstEvent.click();
 
@@ -140,7 +128,7 @@ test.describe('Payments Flow', () => {
         await expect(page.getByText(/eliminado|deleted/i)).toBeVisible({ timeout: 5000 });
       }
     } else {
-      test.skip('Delete payment functionality not found');
+      test.skip(true, 'Delete payment functionality not found');
     }
   });
 
@@ -150,10 +138,7 @@ test.describe('Payments Flow', () => {
     const firstEvent = page.locator('[href^="/events/"]').first();
     const hasEvents = await firstEvent.isVisible({ timeout: 3000 }).catch(() => false);
 
-    if (!hasEvents) {
-      test.skip('No events available');
-      return;
-    }
+    test.skip(!hasEvents, 'No events available');
 
     await firstEvent.click();
 
@@ -172,7 +157,7 @@ test.describe('Payments Flow', () => {
       // Just verify the display is working (actual calculation tested in unit tests)
       expect(hasFinancialInfo).toBe(true);
     } else {
-      test.skip('Financial summary not found in UI');
+      test.skip(true, 'Financial summary not found in UI');
     }
   });
 });

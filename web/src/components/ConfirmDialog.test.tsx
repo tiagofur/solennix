@@ -48,4 +48,32 @@ describe('ConfirmDialog', () => {
     fireEvent.keyDown(window, { key: 'Escape' });
     expect(onCancel).toHaveBeenCalledTimes(2);
   });
+
+  it('does not call onCancel for non-Escape key presses', () => {
+    const onCancel = vi.fn();
+    render(<ConfirmDialog {...defaultProps} onCancel={onCancel} />);
+
+    fireEvent.keyDown(window, { key: 'Enter' });
+    fireEvent.keyDown(window, { key: 'a' });
+    fireEvent.keyDown(window, { key: 'Tab' });
+    expect(onCancel).not.toHaveBeenCalled();
+  });
+
+  it('renders without description and omits aria-describedby', () => {
+    render(<ConfirmDialog {...defaultProps} description={undefined} />);
+
+    const dialog = screen.getByRole('dialog');
+    expect(dialog).not.toHaveAttribute('aria-describedby');
+    expect(screen.getByText('Test Title')).toBeInTheDocument();
+    expect(screen.queryByText('Test Description')).not.toBeInTheDocument();
+  });
+
+  it('does not stop inner dialog click from propagating up', () => {
+    const onCancel = vi.fn();
+    render(<ConfirmDialog {...defaultProps} onCancel={onCancel} />);
+
+    // Clicking inside the dialog content should not trigger onCancel
+    fireEvent.click(screen.getByRole('dialog'));
+    expect(onCancel).not.toHaveBeenCalled();
+  });
 });

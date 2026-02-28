@@ -8,13 +8,13 @@ export type AuthStackParamList = {
     Login: undefined;
     Register: undefined;
     ForgotPassword: undefined;
+    ResetPassword: { token: string };
 };
 
 // Home stack (Dashboard tab)
 export type HomeStackParamList = {
     Dashboard: undefined;
-    Search: undefined;
-    EventForm: { id?: string };
+    EventForm: { id?: string; clientId?: string };
     EventDetail: { id: string };
 };
 
@@ -22,7 +22,13 @@ export type HomeStackParamList = {
 export type CalendarStackParamList = {
     CalendarView: undefined;
     EventDetail: { id: string };
-    EventForm: { id?: string };
+    EventForm: { id?: string; clientId?: string };
+};
+
+// Events stack (used in Home tab)
+export type EventsStackParamList = {
+    EventForm: { id?: string; clientId?: string };
+    EventDetail: { id: string };
 };
 
 // Client stack
@@ -32,28 +38,45 @@ export type ClientStackParamList = {
     ClientDetail: { id: string };
 };
 
-// Catalog stack (Products + Inventory)
-export type CatalogStackParamList = {
+// Product stack (drawer screen)
+export type ProductStackParamList = {
     ProductList: undefined;
     ProductForm: { id?: string };
     ProductDetail: { id: string };
+};
+
+// Inventory stack (drawer screen)
+export type InventoryStackParamList = {
     InventoryList: undefined;
     InventoryForm: { id?: string };
 };
 
-// Profile / More stack
-export type ProfileStackParamList = {
+// Settings stack (drawer screen)
+export type SettingsStackParamList = {
     Settings: undefined;
+    EditProfile: undefined;
+    BusinessSettings: undefined;
+    ContractDefaults: undefined;
     Pricing: undefined;
+    About: undefined;
 };
 
 // Bottom tab navigator
 export type MainTabParamList = {
     HomeTab: undefined;
     CalendarTab: undefined;
+    NewEventPlaceholder: undefined;
     ClientTab: undefined;
-    CatalogTab: undefined;
-    ProfileTab: undefined;
+    DrawerToggle: undefined;
+};
+
+// Drawer navigator
+export type DrawerParamList = {
+    TabsScreen: undefined;
+    ProductStack: undefined;
+    InventoryStack: undefined;
+    SearchScreen: undefined;
+    SettingsStack: undefined;
 };
 
 // Root navigator

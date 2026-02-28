@@ -41,6 +41,9 @@ func (r *InventoryRepo) GetAll(ctx context.Context, userID uuid.UUID) ([]models.
 		}
 		items = append(items, i)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating inventory: %w", err)
+	}
 	return items, nil
 }
 
@@ -117,6 +120,9 @@ func (r *InventoryRepo) Search(ctx context.Context, userID uuid.UUID, query stri
 			return nil, err
 		}
 		items = append(items, item)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating inventory search: %w", err)
 	}
 
 	if items == nil {

@@ -79,6 +79,9 @@ func (r *EventRepo) GetAll(ctx context.Context, userID uuid.UUID) ([]models.Even
 		}
 		events = append(events, e)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating events: %w", err)
+	}
 	return events, nil
 }
 
@@ -100,6 +103,9 @@ func (r *EventRepo) GetByDateRange(ctx context.Context, userID uuid.UUID, start,
 			return nil, err
 		}
 		events = append(events, e)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating events by date range: %w", err)
 	}
 	return events, nil
 }
@@ -127,6 +133,9 @@ func (r *EventRepo) GetByClientID(ctx context.Context, userID, clientID uuid.UUI
 			return nil, err
 		}
 		events = append(events, e)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating events by client: %w", err)
 	}
 	return events, nil
 }
@@ -160,6 +169,9 @@ func (r *EventRepo) GetUpcoming(ctx context.Context, userID uuid.UUID, limit int
 			return nil, err
 		}
 		events = append(events, e)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating upcoming events: %w", err)
 	}
 	return events, nil
 }
@@ -274,6 +286,9 @@ func (r *EventRepo) GetProducts(ctx context.Context, eventID uuid.UUID) ([]model
 		}
 		products = append(products, ep)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating event products: %w", err)
+	}
 	return products, nil
 }
 
@@ -294,6 +309,9 @@ func (r *EventRepo) GetExtras(ctx context.Context, eventID uuid.UUID) ([]models.
 			return nil, err
 		}
 		extras = append(extras, ee)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating event extras: %w", err)
 	}
 	return extras, nil
 }
@@ -382,6 +400,9 @@ func (r *EventRepo) Search(ctx context.Context, userID uuid.UUID, query string) 
 			}
 		}
 		events = append(events, e)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating event search: %w", err)
 	}
 
 	if events == nil {

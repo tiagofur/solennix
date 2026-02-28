@@ -12,6 +12,7 @@ import { useToast, ToastType } from "../../hooks/useToast";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
+import { shadows } from "../../theme/shadows";
 
 const { width } = Dimensions.get("window");
 
@@ -24,7 +25,7 @@ const ICON_MAP: Record<ToastType, React.ReactNode> = {
 const BG_MAP: Record<ToastType, string> = {
   success: colors.light.success,
   error: colors.light.error,
-  info: colors.light.primary,
+  info: colors.light.info,
 };
 
 function ToastItem({
@@ -112,11 +113,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm + 4,
     marginBottom: spacing.sm,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
+    ...shadows.md,
   },
   message: {
     ...typography.body,

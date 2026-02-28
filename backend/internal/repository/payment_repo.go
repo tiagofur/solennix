@@ -93,5 +93,8 @@ func (r *PaymentRepo) queryPayments(ctx context.Context, query string, args ...i
 		}
 		payments = append(payments, p)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating payments: %w", err)
+	}
 	return payments, nil
 }

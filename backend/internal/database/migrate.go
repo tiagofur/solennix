@@ -45,6 +45,9 @@ func Migrate(pool *pgxpool.Pool) error {
 		}
 		applied[version] = true
 	}
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("error iterating migrations: %w", err)
+	}
 
 	// Read migration files
 	entries, err := fs.ReadDir(migrationsFS, "migrations")
@@ -81,12 +84,16 @@ func Migrate(pool *pgxpool.Pool) error {
 		}
 
 		if _, err := tx.Exec(ctx, string(content)); err != nil {
-			_ = tx.Rollback(ctx)
+			if rbErr := tx.Rollback(ctx); rbErr != nil {
+				slog.Error("Failed to rollback migration", "version", version, "rollback_error", rbErr)
+			}
 			return fmt.Errorf("failed to apply migration %s: %w", filename, err)
 		}
 
 		if _, err := tx.Exec(ctx, "INSERT INTO schema_migrations (version) VALUES ($1)", version); err != nil {
-			_ = tx.Rollback(ctx)
+			if rbErr := tx.Rollback(ctx); rbErr != nil {
+				slog.Error("Failed to rollback migration record", "version", version, "rollback_error", rbErr)
+			}
 			return fmt.Errorf("failed to record migration %s: %w", filename, err)
 		}
 

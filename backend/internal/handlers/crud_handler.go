@@ -613,8 +613,12 @@ func (h *CRUDHandler) GetBatchProductIngredients(w http.ResponseWriter, r *http.
 		writeJSON(w, http.StatusOK, []models.ProductIngredient{})
 		return
 	}
+	if len(req.ProductIDs) > 100 {
+		writeError(w, http.StatusBadRequest, "Too many product IDs (max 100)")
+		return
+	}
 
-	// Parse and verify ownership of all product IDs
+	// Parse all product IDs
 	var productUUIDs []uuid.UUID
 	for _, idStr := range req.ProductIDs {
 		id, err := uuid.Parse(idStr)
@@ -622,11 +626,13 @@ func (h *CRUDHandler) GetBatchProductIngredients(w http.ResponseWriter, r *http.
 			writeError(w, http.StatusBadRequest, "Invalid product ID: "+idStr)
 			return
 		}
-		if _, err := h.productRepo.GetByID(r.Context(), id, userID); err != nil {
-			writeError(w, http.StatusNotFound, "Product not found: "+idStr)
-			return
-		}
 		productUUIDs = append(productUUIDs, id)
+	}
+
+	// Verify ownership of all products in a single query
+	if err := h.productRepo.VerifyOwnership(r.Context(), productUUIDs, userID); err != nil {
+		writeError(w, http.StatusNotFound, "One or more products not found")
+		return
 	}
 
 	ingredients, err := h.productRepo.GetIngredientsForProducts(r.Context(), productUUIDs)

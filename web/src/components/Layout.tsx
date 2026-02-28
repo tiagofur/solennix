@@ -20,6 +20,7 @@ import { useTheme } from '../hooks/useTheme';
 import { logError } from '../lib/errorHandler';
 import clsx from 'clsx';
 import { ToastContainer } from './ToastContainer';
+import { Logo } from './Logo';
 
 export const Layout: React.FC = () => {
   const { signOut, user } = useAuth();
@@ -72,7 +73,7 @@ export const Layout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex transition-colors relative">
+    <div className="h-screen bg-surface-grouped dark:bg-bg flex transition-colors relative overflow-hidden">
       {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
         <div
@@ -92,21 +93,21 @@ export const Layout: React.FC = () => {
       {/* Sidebar */}
       <aside
         className={clsx(
-          "fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 shadow-lg transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:inset-0",
+          "fixed inset-y-0 left-0 z-50 w-64 bg-card dark:bg-surface-grouped shadow-md transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:inset-0 border-r border-border",
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
         aria-label="Menú de navegación principal"
       >
         <div className="flex flex-col h-full">
-          <div className="flex items-center justify-between h-16 px-6 border-b dark:border-gray-700">
-            <span className="text-2xl font-bold text-brand-orange">EventosApp</span>
+          <div className="flex items-center justify-between h-16 px-6 border-b border-border">
+            <Logo size={28} />
             <button
               type="button"
               className="lg:hidden"
               onClick={() => setIsSidebarOpen(false)}
               aria-label="Cerrar menú"
             >
-              <X className="h-6 w-6 text-gray-500 dark:text-gray-400" aria-hidden="true" />
+              <X className="h-6 w-6 text-text-secondary" aria-hidden="true" />
             </button>
           </div>
 
@@ -122,8 +123,8 @@ export const Layout: React.FC = () => {
                     className={clsx(
                       "flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors",
                       isActive
-                        ? "bg-brand-orange/10 text-brand-orange"
-                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        ? "bg-primary/10 text-primary"
+                        : "text-text-secondary hover:bg-surface-alt dark:hover:bg-surface"
                     )}
                     onClick={() => setIsSidebarOpen(false)}
                   >
@@ -135,38 +136,38 @@ export const Layout: React.FC = () => {
             </nav>
           </div>
 
-          <div className="border-t dark:border-gray-700 p-4">
+          <div className="border-t border-border p-4">
             <button
               type="button"
               onClick={toggleTheme}
-              className="w-full mb-4 flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              className="w-full mb-4 flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md bg-surface-alt hover:bg-surface transition-colors border border-border"
               aria-label={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
             >
               {theme === 'dark' ? (
                 <>
-                  <Sun className="mr-2 h-5 w-5 text-yellow-500" aria-hidden="true" />
-                  <span className="dark:text-gray-300">Modo Claro</span>
+                  <Sun className="mr-2 h-5 w-5 text-warning" aria-hidden="true" />
+                  <span className="text-text-secondary">Modo Claro</span>
                 </>
               ) : (
                 <>
-                  <Moon className="mr-2 h-5 w-5 text-gray-700" aria-hidden="true" />
-                  <span className="text-gray-700">Modo Oscuro</span>
+                  <Moon className="mr-2 h-5 w-5 text-text" aria-hidden="true" />
+                  <span className="text-text">Modo Oscuro</span>
                 </>
               )}
             </button>
             <div className="flex items-center mb-4 px-3" role="group" aria-label="Información del usuario">
-              <div className="h-8 w-8 rounded-full bg-brand-green flex items-center justify-center text-white font-bold" aria-hidden="true">
+              <div className="h-8 w-8 rounded-full bg-success flex items-center justify-center text-white font-bold" aria-hidden="true">
                 {avatarInitial}
               </div>
               <div className="ml-3">
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{firstName}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[150px]">{user?.email || ''}</p>
+                <p className="text-sm font-medium text-text">{firstName}</p>
+                <p className="text-xs text-text-secondary truncate max-w-[150px]">{user?.email || ''}</p>
               </div>
             </div>
             <button
               type="button"
               onClick={handleSignOut}
-              className="w-full flex items-center px-3 py-2 text-sm font-medium text-red-600 dark:text-red-400 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+              className="w-full flex items-center px-3 py-2 text-sm font-medium text-error rounded-md hover:bg-error/10 transition-colors"
               aria-label="Cerrar sesión"
             >
               <LogOut className="mr-3 h-5 w-5" aria-hidden="true" />
@@ -178,27 +179,27 @@ export const Layout: React.FC = () => {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="bg-white dark:bg-gray-800 shadow-xs lg:hidden">
+        <header className="bg-card dark:bg-surface-grouped shadow-xs lg:hidden border-b border-border">
           <div className="flex items-center justify-between h-16 px-4">
             <button
               type="button"
               onClick={() => setIsSidebarOpen(true)}
-              className="text-gray-500 dark:text-gray-400 focus:outline-hidden focus:ring-2 focus:ring-inset focus:ring-brand-orange"
+              className="text-text-secondary focus:outline-hidden focus:ring-2 focus:ring-inset focus:ring-primary"
               aria-label="Abrir menú de navegación"
             >
               <Menu className="h-6 w-6" aria-hidden="true" />
             </button>
-            <span className="text-xl font-bold text-brand-orange">EventosApp</span>
+            <Logo size={24} className="scale-90" />
             <button
               type="button"
               onClick={toggleTheme}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              className="p-2 rounded-lg hover:bg-surface-alt transition-colors"
               aria-label={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
             >
               {theme === 'dark' ? (
-                <Sun className="h-5 w-5 text-yellow-500" aria-hidden="true" />
+                <Sun className="h-5 w-5 text-warning" aria-hidden="true" />
               ) : (
-                <Moon className="h-5 w-5 text-gray-700" aria-hidden="true" />
+                <Moon className="h-5 w-5 text-text" aria-hidden="true" />
               )}
             </button>
           </div>
@@ -213,7 +214,7 @@ export const Layout: React.FC = () => {
                 value={searchValue}
                 onChange={(event) => setSearchValue(event.target.value)}
                 placeholder="Buscar clientes, eventos, productos o inventario"
-                className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 py-2 pl-9 pr-3 text-sm text-gray-900 dark:text-gray-100 shadow-xs focus:border-brand-orange focus:ring-brand-orange"
+                className="w-full rounded-md border border-border bg-card py-2 pl-9 pr-3 text-sm text-text shadow-sm focus:border-primary focus:ring-primary transition-all"
                 aria-label="Búsqueda global"
               />
             </div>

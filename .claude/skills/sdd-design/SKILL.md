@@ -153,3 +153,248 @@ Ready for tasks (sdd-tasks).
 - Apply any `rules.design` from `openspec/config.yaml`
 - If you have open questions that BLOCK the design, say so clearly — don't guess
 - Return a structured envelope with: `status`, `executive_summary`, `detailed_report` (optional), `artifacts`, `next_recommended`, and `risks`
+
+## Mobile Design System Guidelines
+
+This section defines the visual design language for the EventosApp React Native mobile app. Follow these guidelines when designing any mobile feature or screen. The goal is an **elegant, modern, clean, not-boring, native iPhone-feel** design.
+
+### Design Philosophy
+
+1. **Content first, chrome second.** The data is the hero. UI elements should frame content, not compete with it.
+2. **Quiet confidence.** Prefer subtle visual cues (soft shadows, weight contrast, spatial hierarchy) over loud decoration (heavy borders, gradients, bright fills).
+3. **Native feeling.** The app should feel like it belongs on iOS. Follow platform conventions for navigation, gestures, and visual weight. On Android, the same styles work well as a clean "Material You"-adjacent aesthetic.
+4. **Strategic color.** The brand orange (`#ff6b35`) is an accent, not a wash. Most of the UI should be neutral. Color draws the eye to what matters: CTAs, status, and KPIs.
+5. **Breathing room.** Generous whitespace is not wasted space — it is what makes the design feel premium.
+
+### Color System
+
+**Brand colors (use sparingly — accents only):**
+
+| Token          | Value     | Usage                                                                 |
+|----------------|-----------|-----------------------------------------------------------------------|
+| `primary`      | `#ff6b35` | CTAs, FAB, active tab, active chips, links. Never as large bg fill.   |
+| `primaryLight`  | `#fff7ed` | Tinted backgrounds for selected states or subtle highlights (max 1-2 per screen). |
+| `primaryDark`  | `#e55a2b` | Pressed state for primary buttons only.                                |
+
+**Neutral palette (backbone of the UI):**
+
+| Token            | Value                    | Usage                                                 |
+|------------------|--------------------------|-------------------------------------------------------|
+| `background`     | `#ffffff`                | Screen background (Pattern A).                         |
+| `surfaceGrouped` | `#f2f2f7`                | iOS-style grouped background behind card groups (Pattern B — default for authenticated screens). |
+| `card`           | `#ffffff`                | Card/section fill on top of `surfaceGrouped`.           |
+| `surface`        | `#f9fafb`                | Input fields, search bars, inactive chips.              |
+| `text`           | `#1c1c1e`                | Primary text (iOS system label equivalent).             |
+| `textSecondary`  | `#8e8e93`                | Secondary labels, metadata.                             |
+| `textTertiary`   | `#aeaeb2`                | Placeholder text, muted icons.                          |
+| `separator`      | `rgba(60, 60, 67, 0.29)` | Hairline dividers (`StyleSheet.hairlineWidth`).          |
+
+**Semantic colors (status and feedback):**
+
+| Token     | Value     | iOS Equivalent     |
+|-----------|-----------|--------------------|
+| `success` | `#34c759` | System Green       |
+| `warning` | `#ff9500` | System Orange      |
+| `error`   | `#ff3b30` | System Red         |
+| `info`    | `#007aff` | System Blue        |
+
+**Event status colors (centralized pairs):**
+
+| Status      | Text Color | Background Color |
+|-------------|------------|------------------|
+| `quoted`    | `#ff9500`  | `#fff8f0`        |
+| `confirmed` | `#007aff`  | `#eef4ff`        |
+| `completed` | `#34c759`  | `#eefbf0`        |
+| `cancelled` | `#ff3b30`  | `#fff0f0`        |
+
+**Rules:**
+- Never use the brand orange for informational badges or status indicators — use the semantic palette.
+- Hardcoded hex values in screen files are prohibited. All colors must come from theme tokens.
+- Dark mode follows the same structure with inverted neutrals and slightly boosted accent brightness.
+
+### Typography
+
+All fonts use the system font (SF Pro on iOS, Roboto on Android). No custom fonts.
+
+| Token          | Size | Weight        | Line Height | Use Case                                  |
+|----------------|------|---------------|-------------|-------------------------------------------|
+| `largeTitle`   | 34   | Bold (700)    | 41          | Screen titles (Dashboard greeting)        |
+| `title1`       | 28   | Bold (700)    | 34          | Section headings in scrollable pages      |
+| `title2`       | 22   | Bold (700)    | 28          | Card titles, modal titles                 |
+| `title3`       | 20   | Semibold (600)| 25          | Subsection headings                       |
+| `headline`     | 17   | Semibold (600)| 22          | List item primary text, form section title|
+| `body`         | 17   | Regular (400) | 22          | Standard body text, input values          |
+| `callout`      | 16   | Regular (400) | 21          | Secondary body text                       |
+| `subheadline`  | 15   | Regular (400) | 20          | Metadata rows, descriptions               |
+| `footnote`     | 13   | Regular (400) | 18          | Timestamps, tertiary info                 |
+| `caption1`     | 12   | Regular (400) | 16          | Badges, chip text                         |
+| `caption2`     | 11   | Regular (400) | 13          | Micro-labels (uppercase tags)             |
+
+**Rules:**
+- Create hierarchy through weight and size, not through color alone.
+- Limit each screen to 3-4 typography levels maximum.
+- Use `letterSpacing: 0.5` and `textTransform: 'uppercase'` only for `caption2` micro-labels.
+
+### Spacing & Layout
+
+**Base unit:** 4px. All spacing values must be multiples of 4.
+
+| Token  | Value | Use Case                              |
+|--------|-------|---------------------------------------|
+| `xxs`  | 2     | Tight internal padding (badge inner)  |
+| `xs`   | 4     | Inline icon gaps                      |
+| `sm`   | 8     | Between closely related elements      |
+| `md`   | 16    | Card internal padding, standard gaps  |
+| `lg`   | 20    | Screen horizontal margin (consistent) |
+| `xl`   | 24    | Between sections                      |
+| `xxl`  | 32    | Large vertical separation             |
+| `xxxl` | 48    | Screen top/bottom inset               |
+
+**Border radii:**
+
+| Token  | Value | Use Case                          |
+|--------|-------|-----------------------------------|
+| `sm`   | 6     | Small badges, tags                |
+| `md`   | 10    | Buttons, inputs, search bars      |
+| `lg`   | 14    | Cards, sections, dialogs          |
+| `xl`   | 20    | Large feature cards, pricing cards|
+| `full` | 9999  | Avatars, pill buttons, circular   |
+
+**Layout rules:**
+- Screen horizontal padding: always `lg` (20px). No exceptions.
+- Cards on grouped backgrounds: full-bleed within the padding.
+- Section spacing (between card groups): `xl` (24px).
+- FlatList item gap: `sm` (8px) between cards, or use grouped layout with hairline separators.
+
+### Card & Container Styling
+
+**Primary card (most cards):**
+```
+backgroundColor: theme.card
+borderRadius: borderRadius.lg (14)
+shadowColor: '#000'
+shadowOffset: { width: 0, height: 1 }
+shadowOpacity: 0.04
+shadowRadius: 3
+elevation: 1
+```
+No border. The subtle shadow creates depth without heaviness.
+
+**Elevated card (featured/hero content, pricing):**
+```
+backgroundColor: theme.card
+borderRadius: borderRadius.lg (14)
+shadowColor: '#000'
+shadowOffset: { width: 0, height: 2 }
+shadowOpacity: 0.08
+shadowRadius: 8
+elevation: 3
+```
+
+**Grouped section (iOS grouped table — Settings, detail screens):**
+```
+backgroundColor: theme.card
+borderRadius: borderRadius.lg (14)
+overflow: 'hidden'
+```
+Rows inside use `StyleSheet.hairlineWidth` bottom separator. No individual row borders. No shadow needed on `surfaceGrouped` background.
+
+**Rules:**
+- Remove all `borderWidth: 1 / borderColor` from cards. Replace with subtle shadow.
+- Exception: Bordered containers acceptable for inline form groups (date picker, multi-field group).
+- Dialogs/modals use the elevated shadow.
+- FABs keep their shadow but soften to `shadowOpacity: 0.15`.
+
+### Shadow Presets
+
+Define as reusable presets in `mobile/src/theme/shadows.ts`:
+
+```typescript
+export const shadows = {
+  none: {},
+  sm: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  md: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  lg: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 6,
+  },
+  fab: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+} as const;
+```
+
+### Component Styling Rules
+
+**Primary button:** Background `primary`, text white `headline` weight, height 50px, radius `md` (10), no border/shadow. Pressed: `primaryDark` or opacity 0.85. Full-width within card padding.
+
+**Secondary button:** Background `surface`, text `text` color `headline` weight, same dimensions, border 1px `separator`.
+
+**Destructive button:** Background `#fff0f0`, text `error` color, same dimensions.
+
+**Text/link button:** No background, text `primary` color `body` weight, padding vertical `sm`.
+
+**Inputs:** Background `surface`, no border at rest, 1px `separator` border on focus, height 48px, radius `md` (10). Label above: `footnote` weight 500, `textSecondary`, optional uppercase. Padding horizontal `md` (16).
+
+**Search bar:** Background `surface` or `surfaceGrouped` (depends on screen bg), radius `md` (10), height 36-40px (compact iOS-style), no border. Icon: magnifying glass in `textTertiary`. Placeholder: `textTertiary`.
+
+**List items (grouped sections):** Full-width rows within a card. Padding `md` vertical/horizontal. Separator: `StyleSheet.hairlineWidth`, color `separator`, inset left by icon width + gap (iOS convention). Chevron: `textTertiary`, size 16-18. No individual card wrapping per item.
+
+**Badges/chips:** Radius `full` for status pills, `sm` for category tags. Tight padding (4px h, 2px v). Semantic tinted background. Text: semantic darker shade, `caption1` size, weight 600. No border.
+
+**Avatars:** Circle (radius `full`), 40-48px. Initials: white text, `headline` weight. Background: muted, lower-saturation colors.
+
+**FAB:** 56px circle, background `primary`, shadow preset `fab`, position bottom 24 right 20. Icon: white, 24px.
+
+**Tab bar:** Background white with very subtle top shadow (no border-top). Active: `primary` icon + label. Inactive: `textTertiary`.
+
+### Screen Background Patterns
+
+**Pattern A — Flat white (auth screens, simple forms):**
+- Background: `background` (white). Content directly on white.
+
+**Pattern B — Grouped (dashboard, lists, details, settings):**
+- Background: `surfaceGrouped` (`#f2f2f7`). Content in white cards floating on gray.
+- This is the default for most authenticated screens.
+
+### What to AVOID
+
+- Heavy 1px gray borders on cards — replace with subtle shadows.
+- Using `primary` orange as section background or large fill — accents only (max 1-2 elements per screen).
+- Multiple competing accent colors on the same screen.
+- Gradient backgrounds or gradient fills on buttons.
+- Background transparency/blur effects.
+- Dense layouts with tight spacing — err on more whitespace.
+- Inconsistent horizontal padding across screens.
+- Raw hex color values in screen/component files — always use theme tokens.
+
+### What Creates the "iPhone Feel"
+
+- SF Pro system font with iOS-standard type sizes (17pt body, 34pt large title).
+- The `surfaceGrouped` (`#f2f2f7`) background with white cards — the signature iOS visual pattern.
+- Hairline separators (`StyleSheet.hairlineWidth`) instead of 1px borders.
+- Subtle, near-invisible shadows (opacity 0.04-0.08) instead of borders for card elevation.
+- Generous whitespace (20px screen margins, 16px card padding, 24px between sections).
+- Consistent border radii (14px for cards, 10px for buttons/inputs).
+- Restrained use of color — most of the screen is grayscale, with color as punctuation.
+- Native-feeling animations (spring-based, matching iOS curve).
+- Safe area handling on all screens.

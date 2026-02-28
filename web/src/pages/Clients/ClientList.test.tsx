@@ -135,7 +135,7 @@ describe('ClientList', () => {
       expect(screen.getByText('Ana Perez')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByTitle('Eliminar'));
+    fireEvent.click(screen.getByRole('button', { name: /Eliminar cliente Ana Perez/i }));
     const dialog = screen.getByRole('dialog', { name: 'Eliminar cliente' });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Eliminar' }));
 
@@ -176,7 +176,7 @@ describe('ClientList', () => {
       expect(screen.getByText('Ana Perez')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByTitle('Eliminar'));
+    fireEvent.click(screen.getByRole('button', { name: /Eliminar cliente Ana Perez/i }));
     const dialog = screen.getByRole('dialog', { name: 'Eliminar cliente' });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Eliminar' }));
 
@@ -205,7 +205,7 @@ describe('ClientList', () => {
       expect(screen.getByText('Ana Perez')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByTitle('Eliminar'));
+    fireEvent.click(screen.getByRole('button', { name: /Eliminar cliente Ana Perez/i }));
     const dialog = screen.getByRole('dialog', { name: 'Eliminar cliente' });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Cancelar' }));
 
@@ -231,7 +231,137 @@ describe('ClientList', () => {
       expect(screen.getByText('Ana Perez')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByTitle('Editar'));
+    fireEvent.click(screen.getByRole('link', { name: /Editar cliente Ana Perez/i }));
     expect(mockNavigate).not.toHaveBeenCalledWith('/clients/1');
+  });
+
+  it('shows empty state with search description when search has no results', async () => {
+    (clientService.getAll as any).mockResolvedValue([
+      {
+        id: '1',
+        name: 'Ana Perez',
+        phone: '5551112222',
+        email: 'ana@example.com',
+        address: 'Calle 1',
+        total_events: 2,
+        total_spent: 1200,
+      },
+    ]);
+
+    renderList();
+
+    await waitFor(() => {
+      expect(screen.getByText('Ana Perez')).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByPlaceholderText('Buscar clientes...'), {
+      target: { value: 'zzzznonexistent' },
+    });
+
+    expect(screen.getByText('No se encontraron clientes')).toBeInTheDocument();
+    expect(screen.getByText('Intenta ajustar los términos de búsqueda.')).toBeInTheDocument();
+    // Should NOT show the "Agregar Cliente" action button when searching
+    expect(screen.queryByText('Agregar Cliente')).not.toBeInTheDocument();
+  });
+
+  it('sorts by total_events column and shows sort icons', async () => {
+    (clientService.getAll as any).mockResolvedValue([
+      {
+        id: '1',
+        name: 'Ana Perez',
+        phone: '5551112222',
+        email: 'ana@example.com',
+        address: 'Calle 1',
+        total_events: 5,
+        total_spent: 1200,
+      },
+      {
+        id: '2',
+        name: 'Juan Lopez',
+        phone: '5553334444',
+        email: 'juan@example.com',
+        address: 'Calle 2',
+        total_events: 1,
+        total_spent: 400,
+      },
+    ]);
+
+    renderList();
+
+    await waitFor(() => {
+      expect(screen.getByText('Ana Perez')).toBeInTheDocument();
+    });
+
+    const eventosHeader = screen.getByText('Eventos').closest('th')!;
+
+    // Click Eventos header to sort ascending
+    fireEvent.click(eventosHeader);
+    expect(eventosHeader.getAttribute('aria-sort')).toBe('ascending');
+
+    // Click again to toggle to descending
+    fireEvent.click(eventosHeader);
+    expect(eventosHeader.getAttribute('aria-sort')).toBe('descending');
+  });
+
+  it('sorts by total_spent column', async () => {
+    (clientService.getAll as any).mockResolvedValue([
+      {
+        id: '1',
+        name: 'Ana Perez',
+        phone: '5551112222',
+        email: 'ana@example.com',
+        address: 'Calle 1',
+        total_events: 2,
+        total_spent: 1200,
+      },
+      {
+        id: '2',
+        name: 'Juan Lopez',
+        phone: '5553334444',
+        email: 'juan@example.com',
+        address: 'Calle 2',
+        total_events: 1,
+        total_spent: 400,
+      },
+    ]);
+
+    renderList();
+
+    await waitFor(() => {
+      expect(screen.getByText('Ana Perez')).toBeInTheDocument();
+    });
+
+    const totalHeader = screen.getByText('Total Gastado').closest('th')!;
+
+    fireEvent.click(totalHeader);
+    expect(totalHeader.getAttribute('aria-sort')).toBe('ascending');
+
+    fireEvent.click(totalHeader);
+    expect(totalHeader.getAttribute('aria-sort')).toBe('descending');
+  });
+
+  it('renders client without email', async () => {
+    (clientService.getAll as any).mockResolvedValue([
+      {
+        id: '1',
+        name: 'Ana Perez',
+        phone: '5551112222',
+        email: null,
+        address: 'Calle 1',
+        total_events: 2,
+        total_spent: 1200,
+      },
+    ]);
+
+    renderList();
+
+    await waitFor(() => {
+      expect(screen.getByText('Ana Perez')).toBeInTheDocument();
+    });
+
+    // Email should not be rendered
+    expect(screen.queryByText('ana@example.com')).not.toBeInTheDocument();
+    // Phone should still be rendered
+    expect(screen.getByText('5551112222')).toBeInTheDocument();
   });
 });

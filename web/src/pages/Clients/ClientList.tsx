@@ -11,8 +11,6 @@ import { usePagination } from "../../hooks/usePagination";
 import { Pagination } from "../../components/Pagination";
 import { ArrowUp, ArrowDown } from "lucide-react";
 
-type Client = Database["public"]["Tables"]["clients"]["Row"];
-
 export const ClientList: React.FC = () => {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);

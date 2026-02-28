@@ -7,6 +7,7 @@ import { api } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import { Lock, Mail, User, AlertCircle, Moon, Sun, ArrowLeft } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
+import { Logo } from '../components/Logo';
 
 const registerSchema = z.object({
   name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
@@ -79,6 +80,7 @@ export const Register: React.FC = () => {
         </button>
       </div>
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <Logo className="justify-center mb-6" size={48} />
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
           Crear Cuenta
         </h2>

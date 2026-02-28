@@ -43,7 +43,7 @@ func TestNewRouter(t *testing.T) {
 		if rr.Code != http.StatusUnauthorized {
 			t.Fatalf("status = %d, want %d", rr.Code, http.StatusUnauthorized)
 		}
-		if !strings.Contains(rr.Body.String(), "Authorization header required") {
+		if !strings.Contains(rr.Body.String(), "Authentication required") {
 			t.Fatalf("body = %q, expected auth error", rr.Body.String())
 		}
 	})
@@ -77,8 +77,8 @@ func TestProtectedRoutesRequireValidBearerToken(t *testing.T) {
 		authHeader string
 		wantBody   string
 	}{
-		{"NoHeader", "", "Authorization header required"},
-		{"InvalidFormat", "Token abc", "Invalid authorization format"},
+		{"NoHeader", "", "Authentication required"},
+		{"InvalidFormat", "Token abc", "Authentication required"},
 		{"InvalidToken", "Bearer invalid-token", "Invalid or expired token"},
 	}
 
@@ -154,7 +154,7 @@ func TestRouterErrorContractMatrix(t *testing.T) {
 			method:     http.MethodGet,
 			path:       "/api/clients",
 			wantStatus: http.StatusUnauthorized,
-			wantError:  "Authorization header required",
+			wantError:  "Authentication required",
 		},
 		{
 			name:       "ProtectedInvalidBearerFormat",
@@ -162,7 +162,7 @@ func TestRouterErrorContractMatrix(t *testing.T) {
 			path:       "/api/users/me",
 			authHeader: "Token abc",
 			wantStatus: http.StatusUnauthorized,
-			wantError:  "Invalid authorization format. Use: Bearer <token>",
+			wantError:  "Authentication required",
 		},
 		{
 			name:       "ProtectedInvalidToken",

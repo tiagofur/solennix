@@ -1,0 +1,174 @@
+import React, { useCallback, useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Save } from "lucide-react-native";
+import { SettingsStackParamList } from "../../types/navigation";
+import { useAuth } from "../../contexts/AuthContext";
+import { useToast } from "../../hooks/useToast";
+import { logError } from "../../lib/errorHandler";
+import { FormInput } from "../../components/shared";
+import { colors } from "../../theme/colors";
+import { spacing } from "../../theme/spacing";
+import { typography } from "../../theme/typography";
+
+const profileSchema = z.object({
+  name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
+});
+
+type ProfileFormData = z.infer<typeof profileSchema>;
+
+type Props = NativeStackScreenProps<SettingsStackParamList, "EditProfile">;
+
+export default function EditProfileScreen({ navigation }: Props) {
+  const { user, updateProfile } = useAuth();
+  const addToast = useToast((s) => s.addToast);
+  const [submitting, setSubmitting] = useState(false);
+
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<ProfileFormData>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: { name: "" },
+  });
+
+  useEffect(() => {
+    if (user) {
+      reset({ name: user.name || "" });
+    }
+  }, [user, reset]);
+
+  const onSubmit = useCallback(
+    async (data: ProfileFormData) => {
+      setSubmitting(true);
+      try {
+        await updateProfile({ name: data.name });
+        addToast("Perfil actualizado", "success");
+        navigation.goBack();
+      } catch (err) {
+        logError("Error updating profile", err);
+        addToast("Error al actualizar perfil", "error");
+      } finally {
+        setSubmitting(false);
+      }
+    },
+    [updateProfile, addToast, navigation],
+  );
+
+  return (
+    <SafeAreaView style={styles.container} edges={["bottom"]}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        keyboardVerticalOffset={100}
+      >
+        <ScrollView
+          contentContainerStyle={styles.form}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <Text style={styles.sectionTitle}>Información Personal</Text>
+
+          <Controller
+            control={control}
+            name="name"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <FormInput
+                label="Nombre *"
+                placeholder="Tu nombre"
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                error={errors.name?.message}
+                autoCapitalize="words"
+                returnKeyType="done"
+              />
+            )}
+          />
+
+          <FormInput
+            label="Email"
+            value={user?.email || ""}
+            editable={false}
+            style={styles.readonlyInput}
+          />
+        </ScrollView>
+
+        <View style={styles.footer}>
+          <TouchableOpacity
+            style={[styles.saveButton, submitting && styles.saveButtonDisabled]}
+            activeOpacity={0.8}
+            onPress={handleSubmit(onSubmit)}
+            disabled={submitting}
+          >
+            {submitting ? (
+              <ActivityIndicator color="#fff" size="small" />
+            ) : (
+              <>
+                <Save color="#fff" size={20} />
+                <Text style={styles.saveText}>Guardar Cambios</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.light.background,
+  },
+  form: {
+    padding: spacing.lg,
+    gap: spacing.sm,
+  },
+  sectionTitle: {
+    ...typography.headline,
+    color: colors.light.text,
+    marginBottom: spacing.sm,
+  },
+  readonlyInput: {
+    color: colors.light.textTertiary,
+  },
+  footer: {
+    padding: spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: colors.light.border,
+    backgroundColor: colors.light.background,
+  },
+  saveButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.light.primary,
+    borderRadius: spacing.borderRadius.lg,
+    paddingVertical: spacing.md,
+    gap: spacing.sm,
+  },
+  saveButtonDisabled: {
+    opacity: 0.6,
+  },
+  saveText: {
+    ...typography.button,
+    color: "#ffffff",
+    fontSize: 16,
+  },
+});

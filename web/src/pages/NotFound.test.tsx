@@ -11,7 +11,7 @@ describe('NotFound', () => {
       </MemoryRouter>
     );
     expect(screen.getByText('Página no encontrada')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /ir al inicio/i })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /ir al dashboard/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /ir a la página de inicio/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /ir al panel de control/i })).toBeInTheDocument();
   });
 });

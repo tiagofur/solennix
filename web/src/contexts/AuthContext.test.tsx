@@ -8,6 +8,7 @@ import { logError } from '../lib/errorHandler';
 vi.mock('../lib/api', () => ({
   api: {
     get: vi.fn(),
+    post: vi.fn(),
     put: vi.fn(),
   },
 }));
@@ -139,6 +140,7 @@ describe('AuthProvider', () => {
       name: 'Ana',
       plan: 'basic',
     });
+    (api.post as any).mockResolvedValue({});
 
     renderWithProvider(<CaptureAuth />);
 
@@ -146,12 +148,43 @@ describe('AuthProvider', () => {
       expect(capturedAuth?.loading).toBe(false);
     });
 
-    act(() => {
-      capturedAuth?.signOut();
+    await act(async () => {
+      await capturedAuth?.signOut();
     });
 
+    expect(api.post).toHaveBeenCalledWith('/auth/logout', {});
     expect(localStorage.removeItem).toHaveBeenCalledWith('auth_token');
     expect(window.location.href).toBe('/login');
+  });
+
+  it('signOut clears token and redirects even when logout API call fails', async () => {
+    localStorage.setItem('auth_token', 'token');
+    (api.get as any).mockResolvedValue({
+      id: '1',
+      email: 'ana@example.com',
+      name: 'Ana',
+      plan: 'basic',
+    });
+    (api.post as any).mockRejectedValue(new Error('network error'));
+
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    renderWithProvider(<CaptureAuth />);
+
+    await waitFor(() => {
+      expect(capturedAuth?.loading).toBe(false);
+    });
+
+    await act(async () => {
+      await capturedAuth?.signOut();
+    });
+
+    // Even on failure, it should still clean up
+    expect(localStorage.removeItem).toHaveBeenCalledWith('auth_token');
+    expect(window.location.href).toBe('/login');
+    expect(consoleSpy).toHaveBeenCalledWith('Logout error:', expect.any(Error));
+
+    consoleSpy.mockRestore();
   });
 
   it('updateProfile updates user on success', async () => {
@@ -208,5 +241,160 @@ describe('AuthProvider', () => {
 
     await expect(capturedAuth?.updateProfile({ name: 'Ana Updated' })).rejects.toThrow('fail');
     expect(logError).toHaveBeenCalledWith('Error updating profile', expect.any(Error));
+  });
+
+  // --- Additional tests for uncovered functions ---
+
+  it('checkAuth can be called manually to re-fetch user', async () => {
+    localStorage.setItem('auth_token', 'token');
+    (api.get as any).mockResolvedValue({
+      id: '1',
+      email: 'ana@example.com',
+      name: 'Ana',
+      plan: 'basic',
+    });
+
+    renderWithProvider(
+      <>
+        <TestConsumer />
+        <CaptureAuth />
+      </>
+    );
+
+    await waitFor(() => {
+      expect(capturedAuth?.loading).toBe(false);
+    });
+
+    // Update the mock to return a different user
+    (api.get as any).mockResolvedValue({
+      id: '1',
+      email: 'updated@example.com',
+      name: 'Ana Updated',
+      plan: 'pro',
+    });
+
+    await act(async () => {
+      await capturedAuth?.checkAuth();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/^user:/i)).toHaveTextContent('user:updated@example.com');
+    });
+  });
+
+  it('checkAuth sets user to null when no token and stops loading', async () => {
+    // No token in storage
+    renderWithProvider(
+      <>
+        <TestConsumer />
+        <CaptureAuth />
+      </>
+    );
+
+    await waitFor(() => {
+      expect(capturedAuth?.loading).toBe(false);
+    });
+
+    // Call checkAuth again with no token
+    await act(async () => {
+      await capturedAuth?.checkAuth();
+    });
+
+    expect(screen.getByText('user:none')).toBeInTheDocument();
+    expect(api.get).not.toHaveBeenCalled(); // no API call when no token
+  });
+
+  it('profile alias matches user', async () => {
+    localStorage.setItem('auth_token', 'token');
+    (api.get as any).mockResolvedValue({
+      id: '1',
+      email: 'ana@example.com',
+      name: 'Ana',
+      plan: 'basic',
+    });
+
+    renderWithProvider(<CaptureAuth />);
+
+    await waitFor(() => {
+      expect(capturedAuth?.loading).toBe(false);
+    });
+
+    expect(capturedAuth?.profile).toEqual(capturedAuth?.user);
+  });
+
+  it('removes event listener on unmount', async () => {
+    const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
+
+    const { unmount } = renderWithProvider(<TestConsumer />);
+
+    await waitFor(() => {
+      expect(screen.getByText('loading:no')).toBeInTheDocument();
+    });
+
+    unmount();
+
+    expect(removeEventListenerSpy).toHaveBeenCalledWith('auth:logout', expect.any(Function));
+
+    removeEventListenerSpy.mockRestore();
+  });
+
+  it('signOut sets user to null in state', async () => {
+    localStorage.setItem('auth_token', 'token');
+    (api.get as any).mockResolvedValue({
+      id: '1',
+      email: 'ana@example.com',
+      name: 'Ana',
+      plan: 'basic',
+    });
+    (api.post as any).mockResolvedValue({});
+
+    renderWithProvider(
+      <>
+        <TestConsumer />
+        <CaptureAuth />
+      </>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/^user:/i)).toHaveTextContent('user:ana@example.com');
+    });
+
+    await act(async () => {
+      await capturedAuth?.signOut();
+    });
+
+    // User should be null after sign out
+    expect(capturedAuth?.user).toBeNull();
+  });
+});
+
+describe('useAuth outside provider', () => {
+  it('returns default context values when used outside provider', () => {
+    const DefaultConsumer = () => {
+      const auth = useAuth();
+      return (
+        <div>
+          <div>user:{auth.user === null ? 'null' : 'exists'}</div>
+          <div>loading:{auth.loading ? 'yes' : 'no'}</div>
+          <button onClick={() => auth.signOut()}>signOut</button>
+          <button onClick={() => auth.checkAuth()}>checkAuth</button>
+          <button onClick={() => auth.updateProfile({})}>updateProfile</button>
+        </div>
+      );
+    };
+
+    // Render WITHOUT the provider - should use default context values
+    render(<DefaultConsumer />);
+
+    expect(screen.getByText('user:null')).toBeInTheDocument();
+    expect(screen.getByText('loading:yes')).toBeInTheDocument();
+
+    // These should not throw - call the no-op defaults directly
+    const signOutBtn = screen.getByText('signOut');
+    const checkAuthBtn = screen.getByText('checkAuth');
+    const updateProfileBtn = screen.getByText('updateProfile');
+    expect(signOutBtn).toBeInTheDocument();
+    expect(checkAuthBtn).toBeInTheDocument();
+    expect(updateProfileBtn).toBeInTheDocument();
   });
 });

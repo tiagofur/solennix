@@ -11,11 +11,11 @@ export const inventoryService = {
         return api.get<InventoryItem>(`/inventory/${id}`);
     },
 
-    async create(item: InventoryInsert): Promise<InventoryItem> {
+    async create(item: InventoryItemInsert): Promise<InventoryItem> {
         return api.post<InventoryItem>('/inventory', item);
     },
 
-    async update(id: string, item: InventoryUpdate): Promise<InventoryItem> {
+    async update(id: string, item: InventoryItemUpdate): Promise<InventoryItem> {
         return api.put<InventoryItem>(`/inventory/${id}`, item);
     },
 

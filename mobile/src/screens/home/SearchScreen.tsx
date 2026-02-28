@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { useNavigation } from "@react-navigation/native";
 import {
   Search,
   X,
@@ -19,7 +19,6 @@ import {
   Warehouse,
   ChevronRight,
 } from "lucide-react-native";
-import { HomeStackParamList } from "../../types/navigation";
 import {
   searchService,
   SearchResult,
@@ -31,7 +30,6 @@ import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
 
-type Props = NativeStackScreenProps<HomeStackParamList, "Search">;
 
 type SectionData = {
   key: string;
@@ -62,7 +60,8 @@ const sectionConfig: Record<
   },
 };
 
-export default function SearchScreen({ navigation }: Props) {
+export default function SearchScreen() {
+  const navigation = useNavigation<any>();
   const inputRef = useRef<TextInput>(null);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResults | null>(null);
@@ -122,24 +121,25 @@ export default function SearchScreen({ navigation }: Props) {
       // Navigate based on type
       switch (item.type) {
         case "client":
-          // Go to ClientTab > ClientDetail
-          (navigation as any).navigate("ClientTab", {
-            screen: "ClientDetail",
-            params: { id: item.id },
+          (navigation as any).navigate("TabsScreen", {
+            screen: "ClientTab",
+            params: { screen: "ClientDetail", params: { id: item.id } },
           });
           break;
         case "event":
-          navigation.navigate("EventDetail", { id: item.id });
+          (navigation as any).navigate("TabsScreen", {
+            screen: "HomeTab",
+            params: { screen: "EventDetail", params: { id: item.id } },
+          });
           break;
         case "product":
-          // Go to CatalogTab > ProductForm
-          (navigation as any).navigate("CatalogTab", {
+          (navigation as any).navigate("ProductStack", {
             screen: "ProductForm",
             params: { id: item.id },
           });
           break;
         case "inventory":
-          (navigation as any).navigate("CatalogTab", {
+          (navigation as any).navigate("InventoryStack", {
             screen: "InventoryForm",
             params: { id: item.id },
           });
@@ -189,7 +189,7 @@ export default function SearchScreen({ navigation }: Props) {
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <SafeAreaView style={styles.container} edges={[]}>
       {/* Search bar */}
       <View style={styles.searchContainer}>
         <View style={styles.searchBox}>

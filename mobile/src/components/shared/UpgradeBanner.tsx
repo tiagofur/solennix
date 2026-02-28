@@ -4,6 +4,7 @@ import { Zap } from "lucide-react-native";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
+import { shadows } from "../../theme/shadows";
 
 interface UpgradeBannerProps {
   type: "limit-reached" | "upsell";
@@ -46,7 +47,7 @@ export default function UpgradeBanner({
           <Text
             style={[
               styles.title,
-              isLimitReached ? styles.limitTitle : styles.upsellTitle,
+              { color: isLimitReached ? colors.light.warning : colors.light.info },
             ]}
           >
             {title}
@@ -74,15 +75,13 @@ const styles = StyleSheet.create({
   container: {
     borderRadius: spacing.borderRadius.lg,
     padding: spacing.md,
-    borderWidth: 1,
+    ...shadows.sm,
   },
   limitReached: {
-    backgroundColor: "#fffbeb",
-    borderColor: "#fbbf24",
+    backgroundColor: colors.light.warningBg,
   },
   upsell: {
-    backgroundColor: "#eff6ff",
-    borderColor: "#93c5fd",
+    backgroundColor: colors.light.infoBg,
   },
   content: {
     gap: spacing.xs,
@@ -93,16 +92,11 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   title: {
-    ...typography.label,
-  },
-  limitTitle: {
-    color: "#92400e",
-  },
-  upsellTitle: {
-    color: "#1e40af",
+    ...typography.headline,
+    fontSize: 14,
   },
   description: {
-    ...typography.bodySmall,
+    ...typography.subheadline,
     color: colors.light.textSecondary,
   },
   button: {
@@ -113,13 +107,14 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   limitButton: {
-    backgroundColor: "#f59e0b",
+    backgroundColor: colors.light.warning,
   },
   upsellButton: {
     backgroundColor: colors.light.primary,
   },
   buttonText: {
-    ...typography.label,
-    color: "#ffffff",
+    ...typography.headline,
+    fontSize: 14,
+    color: colors.light.textInverse,
   },
 });

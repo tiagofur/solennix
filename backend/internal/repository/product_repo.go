@@ -41,6 +41,9 @@ func (r *ProductRepo) GetAll(ctx context.Context, userID uuid.UUID) ([]models.Pr
 		}
 		products = append(products, p)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating products: %w", err)
+	}
 	return products, nil
 }
 
@@ -108,6 +111,9 @@ func (r *ProductRepo) GetIngredients(ctx context.Context, productID uuid.UUID) (
 		}
 		ingredients = append(ingredients, pi)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating ingredients: %w", err)
+	}
 	return ingredients, nil
 }
 
@@ -134,6 +140,9 @@ func (r *ProductRepo) GetIngredientsForProducts(ctx context.Context, productIDs 
 		}
 		ingredients = append(ingredients, pi)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating batch ingredients: %w", err)
+	}
 	return ingredients, nil
 }
 
@@ -159,6 +168,22 @@ func (r *ProductRepo) UpdateIngredients(ctx context.Context, productID uuid.UUID
 	}
 
 	return tx.Commit(ctx)
+}
+
+// VerifyOwnership checks that all product IDs belong to the given user. Returns an error if any don't.
+func (r *ProductRepo) VerifyOwnership(ctx context.Context, productIDs []uuid.UUID, userID uuid.UUID) error {
+	if len(productIDs) == 0 {
+		return nil
+	}
+	query := `SELECT COUNT(*) FROM products WHERE id = ANY($1) AND user_id = $2`
+	var count int
+	if err := r.pool.QueryRow(ctx, query, productIDs, userID).Scan(&count); err != nil {
+		return fmt.Errorf("failed to verify product ownership: %w", err)
+	}
+	if count != len(productIDs) {
+		return fmt.Errorf("one or more products not found")
+	}
+	return nil
 }
 
 // Search performs a full-text search on products for the given user
@@ -188,6 +213,9 @@ func (r *ProductRepo) Search(ctx context.Context, userID uuid.UUID, query string
 			return nil, err
 		}
 		products = append(products, p)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating product search: %w", err)
 	}
 
 	if products == nil {

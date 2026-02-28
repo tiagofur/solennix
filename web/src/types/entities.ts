@@ -46,8 +46,16 @@ export interface Client {
     updated_at: string
 }
 
-export type ClientInsert = Omit<Client, 'id' | 'created_at' | 'updated_at'>
-export type ClientUpdate = Partial<ClientInsert>
+export type ClientInsert =
+    Omit<Client, 'id' | 'created_at' | 'updated_at' | 'email' | 'address' | 'city' | 'notes' | 'total_events' | 'total_spent'> & {
+        email?: string | null
+        address?: string | null
+        city?: string | null
+        notes?: string | null
+        total_events?: number | null
+        total_spent?: number | null
+    }
+export type ClientUpdate = Partial<Omit<Client, 'id' | 'created_at' | 'updated_at'>>
 
 // ===== Event =====
 export interface Event {
@@ -75,8 +83,18 @@ export interface Event {
     updated_at: string
 }
 
-export type EventInsert = Omit<Event, 'id' | 'created_at' | 'updated_at'>
-export type EventUpdate = Partial<EventInsert>
+export type EventInsert =
+    Omit<Event, 'id' | 'created_at' | 'updated_at' | 'start_time' | 'end_time' | 'location' | 'city' | 'deposit_percent' | 'cancellation_days' | 'refund_percent' | 'notes'> & {
+        start_time?: string | null
+        end_time?: string | null
+        location?: string | null
+        city?: string | null
+        deposit_percent?: number | null
+        cancellation_days?: number | null
+        refund_percent?: number | null
+        notes?: string | null
+    }
+export type EventUpdate = Partial<Omit<Event, 'id' | 'created_at' | 'updated_at'>>
 
 // ===== Product =====
 export interface Product {
@@ -91,8 +109,12 @@ export interface Product {
     updated_at: string
 }
 
-export type ProductInsert = Omit<Product, 'id' | 'created_at' | 'updated_at'>
-export type ProductUpdate = Partial<ProductInsert>
+export type ProductInsert =
+    Omit<Product, 'id' | 'created_at' | 'updated_at' | 'recipe' | 'is_active'> & {
+        recipe?: Json | null
+        is_active?: boolean
+    }
+export type ProductUpdate = Partial<Omit<Product, 'id' | 'created_at' | 'updated_at'>>
 
 // ===== Inventory Item =====
 export interface InventoryItem {

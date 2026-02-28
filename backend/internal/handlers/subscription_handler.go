@@ -160,21 +160,21 @@ func (h *SubscriptionHandler) StripeWebhook(w http.ResponseWriter, r *http.Reque
 	r.Body = http.MaxBytesReader(w, r.Body, MaxBodyBytes)
 	payload, err := io.ReadAll(r.Body)
 	if err != nil {
-		w.WriteHeader(http.StatusServiceUnavailable)
+		writeError(w, http.StatusServiceUnavailable, "Request body too large")
 		return
 	}
 
 	endpointSecret := h.cfg.StripeWebhookSecret
 	if endpointSecret == "" {
 		slog.Error("Stripe webhook secret not configured")
-		w.WriteHeader(http.StatusInternalServerError)
+		writeError(w, http.StatusInternalServerError, "Webhook not configured")
 		return
 	}
 
 	event, err := webhook.ConstructEvent(payload, r.Header.Get("Stripe-Signature"), endpointSecret)
 	if err != nil {
 		slog.Error("Failed to verify Stripe webhook signature", "error", err)
-		w.WriteHeader(http.StatusBadRequest)
+		writeError(w, http.StatusBadRequest, "Invalid signature")
 		return
 	}
 
@@ -183,7 +183,7 @@ func (h *SubscriptionHandler) StripeWebhook(w http.ResponseWriter, r *http.Reque
 		var s stripe.CheckoutSession
 		if err := json.Unmarshal(event.Data.Raw, &s); err != nil {
 			slog.Error("Error parsing checkout.session.completed JSON", "error", err)
-			w.WriteHeader(http.StatusBadRequest)
+			writeError(w, http.StatusBadRequest, "Invalid event data")
 			return
 		}
 
@@ -214,7 +214,7 @@ func (h *SubscriptionHandler) StripeWebhook(w http.ResponseWriter, r *http.Reque
 	case "customer.subscription.updated":
 		var sub stripe.Subscription
 		if err := json.Unmarshal(event.Data.Raw, &sub); err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+			writeError(w, http.StatusBadRequest, "Invalid subscription data")
 			return
 		}
 		// sync status (e.g. past_due, active)
@@ -223,7 +223,7 @@ func (h *SubscriptionHandler) StripeWebhook(w http.ResponseWriter, r *http.Reque
 	case "customer.subscription.deleted":
 		var sub stripe.Subscription
 		if err := json.Unmarshal(event.Data.Raw, &sub); err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+			writeError(w, http.StatusBadRequest, "Invalid subscription data")
 			return
 		}
 		// Downgrade user to basic plan when subscription is cancelled
@@ -260,13 +260,13 @@ func (h *SubscriptionHandler) RevenueCatWebhook(w http.ResponseWriter, r *http.R
 	// RevenueCat sends the webhook secret as the Authorization header
 	if h.cfg.RevenueCatWebhookSecret == "" {
 		slog.Error("RevenueCat webhook secret not configured")
-		w.WriteHeader(http.StatusInternalServerError)
+		writeError(w, http.StatusInternalServerError, "Webhook not configured")
 		return
 	}
 	authHeader := r.Header.Get("Authorization")
 	if subtle.ConstantTimeCompare([]byte(authHeader), []byte(h.cfg.RevenueCatWebhookSecret)) == 0 {
 		slog.Warn("Invalid RevenueCat webhook authorization")
-		w.WriteHeader(http.StatusUnauthorized)
+		writeError(w, http.StatusUnauthorized, "Invalid authorization")
 		return
 	}
 
@@ -274,14 +274,14 @@ func (h *SubscriptionHandler) RevenueCatWebhook(w http.ResponseWriter, r *http.R
 	r.Body = http.MaxBytesReader(w, r.Body, MaxBodyBytes)
 	payload, err := io.ReadAll(r.Body)
 	if err != nil {
-		w.WriteHeader(http.StatusServiceUnavailable)
+		writeError(w, http.StatusServiceUnavailable, "Request body too large")
 		return
 	}
 
 	var rcEvent revenueCatEvent
 	if err := json.Unmarshal(payload, &rcEvent); err != nil {
 		slog.Error("Failed to parse RevenueCat webhook payload", "error", err)
-		w.WriteHeader(http.StatusBadRequest)
+		writeError(w, http.StatusBadRequest, "Invalid payload")
 		return
 	}
 

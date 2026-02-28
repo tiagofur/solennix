@@ -3,12 +3,16 @@ package handlers
 import (
 	"log/slog"
 	"net/http"
+	"regexp"
+	"strings"
 
 	"github.com/tiagofur/eventosapp-backend/internal/middleware"
 	"github.com/tiagofur/eventosapp-backend/internal/models"
 	"github.com/tiagofur/eventosapp-backend/internal/repository"
 	"github.com/tiagofur/eventosapp-backend/internal/services"
 )
+
+var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
 
 type AuthHandler struct {
 	userRepo     *repository.UserRepo
@@ -47,8 +51,21 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	req.Email = strings.TrimSpace(req.Email)
+	req.Name = strings.TrimSpace(req.Name)
+
 	if req.Email == "" || req.Password == "" || req.Name == "" {
 		writeError(w, http.StatusBadRequest, "Email, password, and name are required")
+		return
+	}
+
+	if !emailRegex.MatchString(req.Email) || len(req.Email) > 255 {
+		writeError(w, http.StatusBadRequest, "Invalid email format")
+		return
+	}
+
+	if len(req.Name) > 255 {
+		writeError(w, http.StatusBadRequest, "Name must not exceed 255 characters")
 		return
 	}
 
@@ -120,6 +137,8 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
+
+	req.Email = strings.TrimSpace(req.Email)
 
 	if req.Email == "" || req.Password == "" {
 		writeError(w, http.StatusBadRequest, "Email and password are required")

@@ -88,8 +88,21 @@ export const api = new ApiClient();
 /**
  * Helper to store the auth token after login/register.
  */
-export async function setAuthToken(token: string): Promise<void> {
-    await SecureStore.setItemAsync(TOKEN_KEY, token);
+export async function setAuthToken(token: unknown): Promise<void> {
+    if (!token) {
+        console.warn("setAuthToken called with empty token");
+        return;
+    }
+    const tokenString = String(token);
+    if (!tokenString || tokenString === 'undefined' || tokenString === 'null') {
+        console.warn("setAuthToken called with invalid token:", tokenString);
+        return;
+    }
+    try {
+        await SecureStore.setItemAsync(TOKEN_KEY, tokenString);
+    } catch (error) {
+        console.error("Error saving auth token:", error);
+    }
 }
 
 /**

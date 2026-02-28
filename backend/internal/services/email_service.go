@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"html/template"
 	"log/slog"
-	"net/smtp"
 
+	"github.com/resend/resend-go/v3"
 	"github.com/tiagofur/eventosapp-backend/internal/config"
 )
 
@@ -139,33 +139,21 @@ func (s *EmailService) generatePasswordResetHTML(userName, resetLink string) str
 }
 
 func (s *EmailService) sendEmail(to, subject, htmlBody string) error {
-	// Validate SMTP config
-	if s.cfg.SMTPHost == "" || s.cfg.SMTPUser == "" {
-		slog.Warn("SMTP not configured, email not sent", "to", to)
-		return fmt.Errorf("SMTP not configured")
+	if s.cfg.ResendAPIKey == "" {
+		slog.Warn("Resend not configured, email not sent", "to", to)
+		return fmt.Errorf("Resend not configured")
 	}
 
-	// Setup authentication
-	auth := smtp.PlainAuth("", s.cfg.SMTPUser, s.cfg.SMTPPassword, s.cfg.SMTPHost)
+	client := resend.NewClient(s.cfg.ResendAPIKey)
 
-	// Build email message
-	msg := []byte(fmt.Sprintf(
-		"From: %s\r\n"+
-			"To: %s\r\n"+
-			"Subject: %s\r\n"+
-			"MIME-Version: 1.0\r\n"+
-			"Content-Type: text/html; charset=UTF-8\r\n"+
-			"\r\n"+
-			"%s",
-		s.cfg.SMTPFrom,
-		to,
-		subject,
-		htmlBody,
-	))
+	params := &resend.SendEmailRequest{
+		From:    s.cfg.ResendFromEmail,
+		To:      []string{to},
+		Subject: subject,
+		Html:    htmlBody,
+	}
 
-	// Send email
-	addr := fmt.Sprintf("%s:%d", s.cfg.SMTPHost, s.cfg.SMTPPort)
-	err := smtp.SendMail(addr, auth, s.cfg.SMTPFrom, []string{to}, msg)
+	_, err := client.Emails.Send(params)
 	if err != nil {
 		slog.Error("Failed to send email", "error", err, "to", to)
 		return fmt.Errorf("failed to send email: %w", err)

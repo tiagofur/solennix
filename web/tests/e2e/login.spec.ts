@@ -1,15 +1,15 @@
 import { test, expect } from '@playwright/test';
-import { isSetupRequired, login, register } from './helpers';
+import { isSetupRequired, register } from './helpers';
 
 test.describe('Authentication Flow', () => {
   test('login page loads correctly', async ({ page }) => {
     await page.goto('/login');
 
-    if (await isSetupRequired(page)) {
+    const setupRequired = await isSetupRequired(page);
+    if (setupRequired) {
       await expect(page.getByText('Configuración Requerida')).toBeVisible();
-      test.skip('Backend not configured - skipping auth tests');
-      return;
     }
+    test.skip(setupRequired, 'Backend not configured - skipping auth tests');
 
     // Verify login form elements
     await expect(page.getByRole('heading', { name: /iniciar sesión/i })).toBeVisible();
@@ -26,10 +26,7 @@ test.describe('Authentication Flow', () => {
 
     const success = await register(page, testEmail, testPassword, testName);
 
-    if (!success) {
-      test.skip('Backend not configured');
-      return;
-    }
+    test.skip(!success, 'Backend not configured');
 
     // Should redirect to dashboard after registration
     await expect(page).toHaveURL(/.*dashboard/);
@@ -39,10 +36,7 @@ test.describe('Authentication Flow', () => {
   test('login with invalid credentials shows error', async ({ page }) => {
     await page.goto('/login');
 
-    if (await isSetupRequired(page)) {
-      test.skip('Backend not configured');
-      return;
-    }
+    test.skip(await isSetupRequired(page), 'Backend not configured');
 
     await page.getByLabel('Email').fill('invalid@example.com');
     await page.getByLabel('Contraseña').fill('wrongpassword');
@@ -58,10 +52,7 @@ test.describe('Authentication Flow', () => {
     const testEmail = `test-${Date.now()}@playwright.test`;
     const success = await register(page, testEmail, 'TestPass123!', 'Test User');
 
-    if (!success) {
-      test.skip('Backend not configured');
-      return;
-    }
+    test.skip(!success, 'Backend not configured');
 
     // Should be on dashboard
     await expect(page).toHaveURL(/.*dashboard/);

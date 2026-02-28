@@ -1,14 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { searchService } from './searchService';
-import { clientService } from './clientService';
-import { productService } from './productService';
-import { inventoryService } from './inventoryService';
-import { eventService } from './eventService';
+import { api } from '../lib/api';
 
-vi.mock('./clientService');
-vi.mock('./productService');
-vi.mock('./inventoryService');
-vi.mock('./eventService');
+vi.mock('../lib/api', () => ({
+  api: {
+    get: vi.fn(),
+  },
+}));
 
 describe('searchService', () => {
   beforeEach(() => {
@@ -18,36 +16,36 @@ describe('searchService', () => {
   it('returns empty results for empty query', async () => {
     const result = await searchService.searchAll('');
     expect(result).toEqual({ client: [], event: [], product: [], inventory: [] });
+    expect(api.get).not.toHaveBeenCalled();
   });
 
   it('filters clients by name', async () => {
-    (clientService.getAll as any).mockResolvedValue([
-      { id: '1', name: 'Juan', email: 'juan@test.com', city: 'CDMX', phone: '123' },
-    ]);
-    (productService.getAll as any).mockResolvedValue([]);
-    (inventoryService.getAll as any).mockResolvedValue([]);
-    (eventService.getAll as any).mockResolvedValue([]);
+    (api.get as any).mockResolvedValue({
+      clients: [
+        { id: '1', name: 'Juan', email: 'juan@test.com', city: 'CDMX', phone: '123' },
+      ],
+      products: [],
+      inventory: [],
+      events: [],
+    });
 
     const result = await searchService.searchAll('juan');
+    expect(api.get).toHaveBeenCalledWith('/search?q=juan');
     expect(result.client).toHaveLength(1);
     expect(result.client[0].title).toBe('Juan');
   });
 
   it('maps and filters across entities', async () => {
-    (clientService.getAll as any).mockResolvedValue([
-      { id: '1', name: 'Maria', email: 'maria@test.com', city: 'GDL', phone: '555' },
-      { id: '2', name: 'Luis', email: 'luis@test.com', city: 'MTY', phone: '' },
-    ]);
-    (productService.getAll as any).mockResolvedValue([
-      { id: 'p1', name: 'Churros', category: 'Postre', base_price: 25 },
-    ]);
-    (inventoryService.getAll as any).mockResolvedValue([
-      { id: 'i1', ingredient_name: 'Harina', type: 'ingredient', unit: 'kg', current_stock: 10 },
-      { id: 'i2', ingredient_name: 'Horno', type: 'equipment', unit: 'pieza', current_stock: 1 },
-    ]);
-    (eventService.getAll as any).mockResolvedValue([
-      { id: 'e1', service_type: 'Boda', event_date: '2024-01-02', status: 'confirmed', client: { name: 'Maria' } },
-    ]);
+    (api.get as any).mockResolvedValue({
+      clients: [
+        { id: '1', name: 'Maria', email: 'maria@test.com', city: 'GDL', phone: '555' },
+      ],
+      products: [],
+      inventory: [],
+      events: [
+        { id: 'e1', service_type: 'Boda', event_date: '2024-01-02', status: 'confirmed', client: { name: 'Maria' } },
+      ],
+    });
 
     const result = await searchService.searchAll('ma', 1);
 
@@ -60,16 +58,14 @@ describe('searchService', () => {
   });
 
   it('handles events with client shape and inventory equipment', async () => {
-    (clientService.getAll as any).mockResolvedValue([]);
-    (productService.getAll as any).mockResolvedValue([
-      { id: 'p1', name: 'Tacos', category: 'Comida', base_price: 0 },
-    ]);
-    (inventoryService.getAll as any).mockResolvedValue([
-      { id: 'i2', ingredient_name: 'Horno', type: 'equipment', unit: 'pieza', current_stock: 1 },
-    ]);
-    (eventService.getAll as any).mockResolvedValue([
-      { id: 'e2', service_type: 'XV', event_date: '2024-02-10', status: 'quoted', client: { name: 'Ana' } },
-    ]);
+    (api.get as any).mockResolvedValue({
+      clients: [],
+      products: [],
+      inventory: [
+        { id: 'i2', ingredient_name: 'Horno', type: 'equipment', unit: 'pieza', current_stock: 1 },
+      ],
+      events: [],
+    });
 
     const result = await searchService.searchAll('ho');
 
@@ -79,16 +75,102 @@ describe('searchService', () => {
   });
 
   it('maps product meta only when base price exists', async () => {
-    (clientService.getAll as any).mockResolvedValue([]);
-    (productService.getAll as any).mockResolvedValue([
-      { id: 'p1', name: 'Tacos', category: 'Comida', base_price: 0 },
-    ]);
-    (inventoryService.getAll as any).mockResolvedValue([]);
-    (eventService.getAll as any).mockResolvedValue([]);
+    (api.get as any).mockResolvedValue({
+      clients: [],
+      products: [
+        { id: 'p1', name: 'Tacos', category: 'Comida', base_price: 0 },
+      ],
+      inventory: [],
+      events: [],
+    });
 
     const result = await searchService.searchAll('tacos');
 
     expect(result.product).toHaveLength(1);
     expect(result.product[0].meta).toBeUndefined();
+  });
+
+  it('maps product with base_price and without category', async () => {
+    (api.get as any).mockResolvedValue({
+      clients: [],
+      products: [
+        { id: 'p2', name: 'Sushi', category: '', base_price: 150.5 },
+      ],
+      inventory: [],
+      events: [],
+    });
+
+    const result = await searchService.searchAll('sushi');
+
+    expect(result.product).toHaveLength(1);
+    expect(result.product[0].meta).toBe('$150.50');
+    expect(result.product[0].subtitle).toBeUndefined();
+  });
+
+  it('maps client without city', async () => {
+    (api.get as any).mockResolvedValue({
+      clients: [
+        { id: 'c1', name: 'Ana', email: '', phone: '555', city: '' },
+      ],
+      products: [],
+      inventory: [],
+      events: [],
+    });
+
+    const result = await searchService.searchAll('ana');
+
+    expect(result.client).toHaveLength(1);
+    expect(result.client[0].meta).toBeUndefined();
+  });
+
+  it('maps inventory item with ingredient type', async () => {
+    (api.get as any).mockResolvedValue({
+      clients: [],
+      products: [],
+      inventory: [
+        { id: 'i1', ingredient_name: 'Harina', type: 'ingredient', unit: 'kg', current_stock: 10 },
+      ],
+      events: [],
+    });
+
+    const result = await searchService.searchAll('harina');
+
+    expect(result.inventory).toHaveLength(1);
+    expect(result.inventory[0].subtitle).toBe('Ingrediente - kg');
+    expect(result.inventory[0].meta).toBe('Stock: 10 kg');
+  });
+
+  it('maps event without client', async () => {
+    (api.get as any).mockResolvedValue({
+      clients: [],
+      products: [],
+      inventory: [],
+      events: [
+        { id: 'e2', service_type: 'Cumple', event_date: '2024-05-01', status: 'quoted', client: null },
+      ],
+    });
+
+    const result = await searchService.searchAll('cumple');
+
+    expect(result.event).toHaveLength(1);
+    expect(result.event[0].subtitle).toBeUndefined();
+    expect(result.event[0].status).toBe('quoted');
+  });
+
+  it('handles response with missing/undefined arrays', async () => {
+    (api.get as any).mockResolvedValue({});
+
+    const result = await searchService.searchAll('test');
+
+    expect(result.client).toEqual([]);
+    expect(result.product).toEqual([]);
+    expect(result.inventory).toEqual([]);
+    expect(result.event).toEqual([]);
+  });
+
+  it('returns empty results for whitespace-only query', async () => {
+    const result = await searchService.searchAll('   ');
+    expect(result).toEqual({ client: [], event: [], product: [], inventory: [] });
+    expect(api.get).not.toHaveBeenCalled();
   });
 });

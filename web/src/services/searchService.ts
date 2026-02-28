@@ -1,5 +1,5 @@
 import { api } from '../lib/api';
-import { Client, Event, Product, InventoryItem } from '../types/entities';
+import { Client, Product, InventoryItem } from '../types/entities';
 
 type SearchEntity = 'client' | 'event' | 'product' | 'inventory';
 

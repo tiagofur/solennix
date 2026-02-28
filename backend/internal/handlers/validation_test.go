@@ -9,7 +9,7 @@ import (
 
 // Helper functions
 func float64Ptr(f float64) *float64 { return &f }
-func stringPtr(s string) *string    { return &s }
+func testStringPtr(s string) *string { return &s }
 func boolPtr(b bool) *bool          { return &b }
 
 func TestValidateEvent(t *testing.T) {

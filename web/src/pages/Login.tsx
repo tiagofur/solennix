@@ -7,6 +7,7 @@ import { api } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import { Lock, Mail, AlertCircle, Moon, Sun, ArrowLeft } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
+import { Logo } from '../components/Logo';
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -77,6 +78,7 @@ export const Login: React.FC = () => {
         </button>
       </div>
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <Logo className="justify-center mb-6" size={48} />
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
           Iniciar Sesión
         </h2>

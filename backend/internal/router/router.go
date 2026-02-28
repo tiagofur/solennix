@@ -16,6 +16,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 	r := chi.NewRouter()
 
 	// Global middleware
+	r.Use(mw.Recovery) // Panic recovery — must be first
 	r.Use(mw.CORS(corsOrigins))
 	r.Use(mw.SecurityHeaders) // Security headers (X-Frame-Options, CSP, HSTS, etc.)
 	r.Use(mw.Logger)
@@ -23,6 +24,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 	// Health check
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"status":"ok"}`))
 	})
 
@@ -124,8 +126,11 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 				r.Delete("/{id}", crudHandler.DeletePayment)
 			})
 
-			// Search
-			r.Get("/search", searchHandler.SearchAll)
+			// Search — rate limited to prevent abuse
+			r.Group(func(r chi.Router) {
+				r.Use(mw.RateLimit(30, 1*time.Minute))
+				r.Get("/search", searchHandler.SearchAll)
+			})
 		})
 	})
 

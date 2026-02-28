@@ -1,6 +1,92 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
 @custom-variant dark (&:is(.dark *));
+
+@theme {
+  /* Brand */
+  --color-primary: #ff6b35;
+  --color-primary-dark: #e55a2b;
+  --color-primary-light: #fff7ed;
+  
+  /* Legacy Brand Aliases (for backward compatibility) */
+  --color-brand-orange: var(--color-primary);
+  --color-brand-green: var(--color-success);
+
+  /* Basic Colors (Light) */
+  --color-bg: #ffffff;
+  --color-surface-grouped: #f2f2f7;
+  --color-surface: #f9fafb;
+  --color-surface-alt: #f3f4f6;
+  --color-card: #ffffff;
+
+  /* Text (Light) */
+  --color-text: #1c1c1e;
+  --color-text-secondary: #8e8e93;
+  --color-text-tertiary: #aeaeb2;
+
+  /* Borders (Light) */
+  --color-border: #e5e7eb;
+  --color-border-strong: #d1d5db;
+  --color-separator: rgba(60, 60, 67, 0.29);
+
+  /* Semantic (Light) */
+  --color-success: #34c759;
+  --color-warning: #ff9500;
+  --color-error: #ff3b30;
+  --color-info: #007aff;
+
+  /* Border Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+}
+
+@variant dark (&:is(.dark *));
+
+@layer base {
+  :root {
+    --color-bg: #ffffff;
+    --color-surface-grouped: #f2f2f7;
+    --color-surface: #f9fafb;
+    --color-surface-alt: #f3f4f6;
+    --color-card: #ffffff;
+
+    --color-text: #1c1c1e;
+    --color-text-secondary: #8e8e93;
+    --color-text-tertiary: #aeaeb2;
+
+    --color-border: #e5e7eb;
+    --color-border-strong: #d1d5db;
+    --color-separator: rgba(60, 60, 67, 0.29);
+
+    --color-success: #34c759;
+    --color-warning: #ff9500;
+    --color-error: #ff3b30;
+    --color-info: #007aff;
+  }
+
+  .dark {
+    --color-bg: #000000;
+    --color-surface-grouped: #1c1c1e;
+    --color-surface: #2c2c2e;
+    --color-surface-alt: #3a3a3c;
+    --color-card: #1c1c1e;
+
+    --color-text: #f5f5f7;
+    --color-text-secondary: #8e8e93;
+    --color-text-tertiary: #636366;
+
+    --color-border: #38383a;
+    --color-border-strong: #48484a;
+    --color-separator: rgba(84, 84, 88, 0.65);
+
+    --color-success: #30d158;
+    --color-warning: #ff9f0a;
+    --color-error: #ff453a;
+    --color-info: #0a84ff;
+  }
+}
 
 @utility container {
   margin-inline: auto;
@@ -13,27 +99,18 @@
   }
 }
 
-@theme {
-  --color-brand-orange: #ff6b35;
-  --color-brand-green: #4caf50;
-  --color-brand-gray: #f5f5f5;
-}
-
-/*
-  The default border color has changed to `currentcolor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
-
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
-*/
 @layer base {
   *,
   ::after,
   ::before,
   ::backdrop,
   ::file-selector-button {
-    border-color: var(--color-gray-200, currentcolor);
+    border-color: var(--color-border, currentcolor);
+  }
+
+  body {
+    background-color: var(--color-surface-grouped);
+    color: var(--color-text);
   }
 }
 
@@ -51,51 +128,72 @@
 }
 
 /* react-day-picker dark mode overrides */
-/* Weekday names (lu, ma, mi...) - covers both v8 (.rdp-head_cell) and v9 (.rdp-weekday) */
 .dark .rdp-head_cell,
 .dark .rdp-weekday {
-  color: #D1D5DB !important;
+  color: var(--color-text-secondary) !important;
 }
 
 .dark .rdp-day:not(.rdp-day_selected):not(.rdp-day_outside) {
-  color: #F3F4F6 !important;
+  color: var(--color-text) !important;
 }
 
 .dark .rdp-day_outside {
-  color: #6B7280 !important;
+  color: var(--color-text-secondary) !important;
   opacity: 0.5;
 }
 
 .dark .rdp-caption_label,
 .dark .rdp-month_caption {
-  color: #F9FAFB !important;
+  color: var(--color-text) !important;
 }
 
-/* Nav arrows - orange in both light and dark */
+/* Nav arrows - use primary brand color */
 .rdp-nav_button,
 .rdp-button_previous,
 .rdp-button_next {
-  color: #FF6B35 !important;
+  color: var(--color-primary) !important;
 }
 
 .rdp-nav_button svg,
 .rdp-button_previous svg,
 .rdp-button_next svg {
-  stroke: #FF6B35 !important;
-  fill: #FF6B35 !important;
-  color: #FF6B35 !important;
+  stroke: var(--color-primary) !important;
+  fill: var(--color-primary) !important;
+  color: var(--color-primary) !important;
 }
 
 .rdp-nav_button:hover,
 .rdp-button_previous:hover,
 .rdp-button_next:hover {
-  color: #e55a2b !important;
-  background-color: rgba(255, 107, 53, 0.1) !important;
+  color: var(--color-primary-dark) !important;
+  background-color: color-mix(
+    in srgb,
+    var(--color-primary),
+    transparent 90%
+  ) !important;
 }
 
-.rdp-nav_button:hover svg,
-.rdp-button_previous:hover svg,
-.rdp-button_next:hover svg {
-  stroke: #e55a2b !important;
-  fill: #e55a2b !important;
+@utility premium-gradient {
+  background: linear-gradient(135deg, var(--color-primary) 0%, #ff8c42 100%);
+  background-size: 200% 200%;
+}
+
+@utility animate-gradient {
+  animation: gradient 8s ease infinite;
+}
+
+@keyframes gradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@utility glass-card {
+  background: color-mix(in srgb, var(--color-card), transparent 20%);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--color-border);
+}
+
+@utility premium-shadow {
+  box-shadow: 0 25px 50px -12px rgba(255, 107, 53, 0.25);
 }

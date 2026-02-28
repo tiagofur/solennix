@@ -6,10 +6,7 @@ test.describe('Events Management Flow', () => {
     // Setup test user and login
     await setupTestUser(page);
 
-    if (await isSetupRequired(page)) {
-      test.skip('Backend not configured');
-      return;
-    }
+    test.skip(await isSetupRequired(page), 'Backend not configured');
   });
 
   test('create new event with client', async ({ page }) => {
@@ -57,10 +54,7 @@ test.describe('Events Management Flow', () => {
     const firstEvent = page.locator('[href^="/events/"]').first();
     const hasEvents = await firstEvent.isVisible({ timeout: 3000 }).catch(() => false);
 
-    if (!hasEvents) {
-      test.skip('No events available - run create event test first');
-      return;
-    }
+    test.skip(!hasEvents, 'No events available - run create event test first');
 
     await firstEvent.click();
 
@@ -98,10 +92,7 @@ test.describe('Events Management Flow', () => {
     const firstEvent = page.locator('[href^="/events/"]').first();
     const hasEvents = await firstEvent.isVisible({ timeout: 3000 }).catch(() => false);
 
-    if (!hasEvents) {
-      test.skip('No events available');
-      return;
-    }
+    test.skip(!hasEvents, 'No events available');
 
     await firstEvent.click();
 

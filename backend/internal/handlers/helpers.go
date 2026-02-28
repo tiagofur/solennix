@@ -20,8 +20,10 @@ func writeError(w http.ResponseWriter, status int, message string) {
 	writeJSON(w, status, map[string]string{"error": message})
 }
 
-// Decode JSON body into struct
+// Decode JSON body into struct with a 1MB size limit to prevent DoS
 func decodeJSON(r *http.Request, dst interface{}) error {
+	const maxBodySize = 1 << 20 // 1 MB
+	r.Body = http.MaxBytesReader(nil, r.Body, maxBodySize)
 	defer r.Body.Close()
 	return json.NewDecoder(r.Body).Decode(dst)
 }

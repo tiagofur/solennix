@@ -77,7 +77,7 @@ func TestSubscriptionHandler_CreateCheckoutSession(t *testing.T) {
 			StripeProPriceID: "",
 		}
 
-		handler := NewSubscriptionHandler(mockRepo, cfg)
+		handler := NewSubscriptionHandler(mockRepo, nil, nil, cfg)
 
 		req := httptest.NewRequest("POST", "/api/subscriptions/checkout-session", nil)
 		w := httptest.NewRecorder()
@@ -103,7 +103,7 @@ func TestSubscriptionHandler_CreateCheckoutSession(t *testing.T) {
 		userID := uuid.New()
 		mockRepo.On("GetByID", mock.Anything, userID).Return(nil, assert.AnError)
 
-		handler := NewSubscriptionHandler(mockRepo, cfg)
+		handler := NewSubscriptionHandler(mockRepo, nil, nil, cfg)
 
 		req := httptest.NewRequest("POST", "/api/subscriptions/checkout-session", nil)
 		w := httptest.NewRecorder()
@@ -126,7 +126,7 @@ func TestSubscriptionHandler_CreatePortalSession(t *testing.T) {
 			StripeSecretKey: "", // Not configured
 		}
 
-		handler := NewSubscriptionHandler(mockRepo, cfg)
+		handler := NewSubscriptionHandler(mockRepo, nil, nil, cfg)
 
 		req := httptest.NewRequest("POST", "/api/subscriptions/portal-session", nil)
 		w := httptest.NewRecorder()
@@ -156,7 +156,7 @@ func TestSubscriptionHandler_CreatePortalSession(t *testing.T) {
 		}
 		mockRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
 
-		handler := NewSubscriptionHandler(mockRepo, cfg)
+		handler := NewSubscriptionHandler(mockRepo, nil, nil, cfg)
 
 		req := httptest.NewRequest("POST", "/api/subscriptions/portal-session", nil)
 		w := httptest.NewRecorder()
@@ -183,7 +183,7 @@ func TestSubscriptionHandler_DebugUpgrade(t *testing.T) {
 
 		mockRepo.On("UpdatePlanAndStripeID", mock.Anything, userID, "pro", (*string)(nil)).Return(nil)
 
-		handler := NewSubscriptionHandler(mockRepo, cfg)
+		handler := NewSubscriptionHandler(mockRepo, nil, nil, cfg)
 
 		req := httptest.NewRequest("POST", "/api/subscriptions/debug-upgrade", nil)
 		w := httptest.NewRecorder()
@@ -208,7 +208,7 @@ func TestSubscriptionHandler_DebugUpgrade(t *testing.T) {
 			Environment: "production",
 		}
 
-		handler := NewSubscriptionHandler(mockRepo, cfg)
+		handler := NewSubscriptionHandler(mockRepo, nil, nil, cfg)
 
 		req := httptest.NewRequest("POST", "/api/subscriptions/debug-upgrade", nil)
 		w := httptest.NewRecorder()
@@ -235,7 +235,7 @@ func TestSubscriptionHandler_DebugDowngrade(t *testing.T) {
 
 		mockRepo.On("UpdatePlanAndStripeID", mock.Anything, userID, "basic", (*string)(nil)).Return(nil)
 
-		handler := NewSubscriptionHandler(mockRepo, cfg)
+		handler := NewSubscriptionHandler(mockRepo, nil, nil, cfg)
 
 		req := httptest.NewRequest("POST", "/api/subscriptions/debug-downgrade", nil)
 		w := httptest.NewRecorder()
@@ -270,7 +270,7 @@ func TestSubscriptionHandler_GetSubscriptionStatus(t *testing.T) {
 
 		mockRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
 
-		handler := NewSubscriptionHandler(mockRepo, cfg)
+		handler := NewSubscriptionHandler(mockRepo, nil, nil, cfg)
 
 		req := httptest.NewRequest("GET", "/api/subscriptions/status", nil)
 		w := httptest.NewRecorder()
@@ -303,7 +303,7 @@ func TestSubscriptionHandler_GetSubscriptionStatus(t *testing.T) {
 
 		mockRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
 
-		handler := NewSubscriptionHandler(mockRepo, cfg)
+		handler := NewSubscriptionHandler(mockRepo, nil, nil, cfg)
 
 		req := httptest.NewRequest("GET", "/api/subscriptions/status", nil)
 		w := httptest.NewRecorder()
@@ -331,7 +331,7 @@ func TestSubscriptionHandler_RevenueCatWebhook(t *testing.T) {
 			RevenueCatWebhookSecret: "rc_secret_123",
 		}
 
-		handler := NewSubscriptionHandler(mockRepo, cfg)
+		handler := NewSubscriptionHandler(mockRepo, nil, nil, cfg)
 
 		req := httptest.NewRequest("POST", "/api/subscriptions/webhook/revenuecat", bytes.NewReader([]byte("{}")))
 		// No Authorization header
@@ -348,7 +348,7 @@ func TestSubscriptionHandler_RevenueCatWebhook(t *testing.T) {
 			RevenueCatWebhookSecret: "rc_secret_123",
 		}
 
-		handler := NewSubscriptionHandler(mockRepo, cfg)
+		handler := NewSubscriptionHandler(mockRepo, nil, nil, cfg)
 
 		req := httptest.NewRequest("POST", "/api/subscriptions/webhook/revenuecat", bytes.NewReader([]byte("{}")))
 		req.Header.Set("Authorization", "wrong_secret")
@@ -365,7 +365,7 @@ func TestSubscriptionHandler_RevenueCatWebhook(t *testing.T) {
 			RevenueCatWebhookSecret: "rc_secret_123",
 		}
 
-		handler := NewSubscriptionHandler(mockRepo, cfg)
+		handler := NewSubscriptionHandler(mockRepo, nil, nil, cfg)
 
 		// Valid RevenueCat payload (minimal)
 		payload := `{

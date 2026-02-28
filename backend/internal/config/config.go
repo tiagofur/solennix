@@ -20,12 +20,9 @@ type Config struct {
 
 	CORSAllowedOrigins []string
 
-	SMTPHost     string
-	SMTPPort     int
-	SMTPUser     string
-	SMTPPassword string
-	SMTPFrom     string
-	FrontendURL  string
+	ResendAPIKey    string
+	ResendFromEmail string
+	FrontendURL     string
 
 	StripeSecretKey         string
 	StripeWebhookSecret     string
@@ -43,10 +40,8 @@ func Load() (*Config, error) {
 		Environment:             getEnv("ENVIRONMENT", "development"),
 		DatabaseURL:             os.Getenv("DATABASE_URL"),
 		JWTSecret:               os.Getenv("JWT_SECRET"),
-		SMTPHost:                getEnv("SMTP_HOST", ""),
-		SMTPUser:                getEnv("SMTP_USER", ""),
-		SMTPPassword:            getEnv("SMTP_PASSWORD", ""),
-		SMTPFrom:                getEnv("SMTP_FROM", "noreply@eventosapp.com"),
+		ResendAPIKey:            os.Getenv("RESEND_API_KEY"),
+		ResendFromEmail:         getEnv("RESEND_FROM_EMAIL", "EventosApp <noreply@eventosapp.com>"),
 		FrontendURL:             getEnv("FRONTEND_URL", "http://localhost:5173"),
 		StripeSecretKey:         os.Getenv("STRIPE_SECRET_KEY"),
 		StripeWebhookSecret:     os.Getenv("STRIPE_WEBHOOK_SECRET"),
@@ -68,12 +63,6 @@ func Load() (*Config, error) {
 		return nil, fmt.Errorf("JWT_EXPIRY_HOURS must be a number: %w", err)
 	}
 	cfg.JWTExpiryHours = jwtExpiry
-
-	smtpPort, err := strconv.Atoi(getEnv("SMTP_PORT", "587"))
-	if err != nil {
-		return nil, fmt.Errorf("SMTP_PORT must be a number: %w", err)
-	}
-	cfg.SMTPPort = smtpPort
 
 	origins := getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:5173")
 	cfg.CORSAllowedOrigins = strings.Split(origins, ",")

@@ -41,4 +41,29 @@ describe('errorHandler', () => {
   it('getErrorMessage returns default for unknown', () => {
     expect(getErrorMessage(undefined)).toBe('Ocurrió un error');
   });
+
+  it('logError logs sanitized message in production for Error instance', () => {
+    const originalDev = import.meta.env.DEV;
+    import.meta.env.DEV = false;
+
+    const error = new Error('Production error');
+    logError('ProdTest', error);
+    expect(consoleErrorSpy).toHaveBeenCalledWith('[ProdTest] Error:', 'Production error');
+
+    import.meta.env.DEV = originalDev;
+  });
+
+  it('logError logs Unknown error in production for non-Error', () => {
+    const originalDev = import.meta.env.DEV;
+    import.meta.env.DEV = false;
+
+    logError('ProdTest', 42);
+    expect(consoleErrorSpy).toHaveBeenCalledWith('[ProdTest] Error:', 'Unknown error');
+
+    import.meta.env.DEV = originalDev;
+  });
+
+  it('getErrorMessage returns custom default message', () => {
+    expect(getErrorMessage(null, 'Custom fallback')).toBe('Custom fallback');
+  });
 });

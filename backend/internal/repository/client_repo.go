@@ -43,6 +43,9 @@ func (r *ClientRepo) GetAll(ctx context.Context, userID uuid.UUID) ([]models.Cli
 		}
 		clients = append(clients, c)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating clients: %w", err)
+	}
 	return clients, nil
 }
 
@@ -121,6 +124,9 @@ func (r *ClientRepo) Search(ctx context.Context, userID uuid.UUID, query string)
 			return nil, err
 		}
 		clients = append(clients, c)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating client search: %w", err)
 	}
 
 	if clients == nil {

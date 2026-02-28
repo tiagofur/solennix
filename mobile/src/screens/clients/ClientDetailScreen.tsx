@@ -22,6 +22,7 @@ import {
   StickyNote,
   ChevronRight,
   DollarSign,
+  Plus,
 } from "lucide-react-native";
 import { ClientStackParamList } from "../../types/navigation";
 import { Client, Event } from "../../types/entities";
@@ -37,16 +38,15 @@ import {
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
+import { shadows } from "../../theme/shadows";
 
-type Client = Database["public"]["Tables"]["clients"]["Row"];
-type Event = Database["public"]["Tables"]["events"]["Row"];
 type Props = NativeStackScreenProps<ClientStackParamList, "ClientDetail">;
 
 const statusColors: Record<string, { bg: string; text: string }> = {
-  quoted: { bg: "#fef9c3", text: "#a16207" },
-  confirmed: { bg: "#dbeafe", text: "#1d4ed8" },
-  completed: { bg: "#dcfce7", text: "#15803d" },
-  cancelled: { bg: "#fef2f2", text: "#b91c1c" },
+  quoted: { bg: colors.light.statusQuotedBg, text: colors.light.statusQuoted },
+  confirmed: { bg: colors.light.statusConfirmedBg, text: colors.light.statusConfirmed },
+  completed: { bg: colors.light.statusCompletedBg, text: colors.light.statusCompleted },
+  cancelled: { bg: colors.light.statusCancelledBg, text: colors.light.statusCancelled },
 };
 const statusLabels: Record<string, string> = {
   quoted: "Cotizado",
@@ -182,8 +182,8 @@ export default function ClientDetailScreen({ navigation, route }: Props) {
           <Text style={styles.sectionTitle}>Información de Contacto</Text>
 
           <TouchableOpacity style={styles.infoRow} onPress={handleCall}>
-            <View style={[styles.infoIcon, { backgroundColor: "#dcfce7" }]}>
-              <Phone color="#16a34a" size={16} />
+            <View style={[styles.infoIcon, { backgroundColor: colors.light.successBg }]}>
+              <Phone color={colors.light.success} size={16} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.infoLabel}>Teléfono</Text>
@@ -193,8 +193,8 @@ export default function ClientDetailScreen({ navigation, route }: Props) {
 
           {client.email && (
             <TouchableOpacity style={styles.infoRow} onPress={handleEmail}>
-              <View style={[styles.infoIcon, { backgroundColor: "#dbeafe" }]}>
-                <Mail color="#2563eb" size={16} />
+              <View style={[styles.infoIcon, { backgroundColor: colors.light.infoBg }]}>
+                <Mail color={colors.light.info} size={16} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.infoLabel}>Email</Text>
@@ -205,8 +205,8 @@ export default function ClientDetailScreen({ navigation, route }: Props) {
 
           {client.address && (
             <View style={styles.infoRow}>
-              <View style={[styles.infoIcon, { backgroundColor: "#fef3c7" }]}>
-                <MapPin color="#d97706" size={16} />
+              <View style={[styles.infoIcon, { backgroundColor: colors.light.warningBg }]}>
+                <MapPin color={colors.light.warning} size={16} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.infoLabel}>Dirección</Text>
@@ -233,6 +233,20 @@ export default function ClientDetailScreen({ navigation, route }: Props) {
 
         {/* Action Buttons */}
         <View style={styles.actions}>
+          <TouchableOpacity
+            style={[styles.actionBtn, styles.primaryActionBtn]}
+            onPress={() => {
+              (navigation as any).navigate("HomeTab", {
+                screen: "EventForm",
+                params: { clientId: id },
+              });
+            }}
+          >
+            <Plus color="#fff" size={18} />
+            <Text style={styles.primaryActionText}>
+              Crear Evento
+            </Text>
+          </TouchableOpacity>
           <TouchableOpacity
             style={styles.actionBtn}
             onPress={() => navigation.navigate("ClientForm", { id })}
@@ -272,8 +286,6 @@ export default function ClientDetailScreen({ navigation, route }: Props) {
                   style={styles.eventCard}
                   activeOpacity={0.7}
                   onPress={() => {
-                    // Navigate to event detail — in the Home stack
-                    // We use the parent tab navigator to switch to HomeTab
                     (navigation as any).navigate("HomeTab", {
                       screen: "EventDetail",
                       params: { id: event.id },
@@ -291,7 +303,7 @@ export default function ClientDetailScreen({ navigation, route }: Props) {
                     </Text>
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.eventType}>{event.service_type}</Text>
+                    <Text style={styles.eventTypeText}>{event.service_type}</Text>
                     <View
                       style={{
                         flexDirection: "row",
@@ -319,7 +331,7 @@ export default function ClientDetailScreen({ navigation, route }: Props) {
                   <Text style={styles.eventTotal}>
                     {formatCurrency(event.total_amount)}
                   </Text>
-                  <ChevronRight color={colors.light.textMuted} size={16} />
+                  <ChevronRight color={colors.light.textTertiary} size={16} />
                 </TouchableOpacity>
               );
             })
@@ -344,7 +356,7 @@ export default function ClientDetailScreen({ navigation, route }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.light.background,
+    backgroundColor: colors.light.surfaceGrouped,
   },
   content: {
     paddingHorizontal: spacing.lg,
@@ -355,10 +367,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: colors.light.card,
     borderRadius: spacing.borderRadius.xl,
-    borderWidth: 1,
-    borderColor: colors.light.border,
+    ...shadows.md,
     padding: spacing.xl,
-    marginTop: spacing.md,
+    marginTop: spacing.sm,
     marginBottom: spacing.md,
   },
   avatarLarge: {
@@ -371,12 +382,12 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   avatarLargeText: {
-    color: "#fff",
+    color: colors.light.textInverse,
     fontWeight: "700",
     fontSize: 28,
   },
   clientName: {
-    ...typography.h2,
+    ...typography.title2,
     color: colors.light.text,
     marginBottom: spacing.md,
   },
@@ -390,30 +401,28 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   statValue: {
-    ...typography.label,
+    ...typography.headline,
     color: colors.light.text,
-    fontSize: 16,
   },
   statLabel: {
-    ...typography.caption,
-    color: colors.light.textMuted,
+    ...typography.caption1,
+    color: colors.light.textTertiary,
   },
   statDivider: {
-    width: 1,
+    width: StyleSheet.hairlineWidth,
     height: 32,
-    backgroundColor: colors.light.border,
+    backgroundColor: colors.light.separator,
   },
   // Section
   section: {
     backgroundColor: colors.light.card,
     borderRadius: spacing.borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.light.border,
+    ...shadows.sm,
     padding: spacing.md,
     marginBottom: spacing.md,
   },
   sectionTitle: {
-    ...typography.h3,
+    ...typography.headline,
     color: colors.light.text,
     marginBottom: spacing.sm,
   },
@@ -424,7 +433,7 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     paddingVertical: spacing.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.light.border,
+    borderBottomColor: colors.light.separator,
   },
   infoIcon: {
     width: 36,
@@ -434,8 +443,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   infoLabel: {
-    ...typography.caption,
-    color: colors.light.textMuted,
+    ...typography.caption1,
+    color: colors.light.textTertiary,
   },
   infoValue: {
     ...typography.body,
@@ -444,7 +453,7 @@ const styles = StyleSheet.create({
   // Actions
   actions: {
     flexDirection: "row",
-    gap: spacing.md,
+    gap: spacing.sm,
     marginBottom: spacing.md,
   },
   actionBtn: {
@@ -453,23 +462,29 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: spacing.xs,
-    paddingVertical: spacing.sm + 2,
+    paddingVertical: spacing.sm + 4,
     backgroundColor: colors.light.card,
-    borderRadius: spacing.borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.light.border,
+    borderRadius: spacing.borderRadius.md,
+    ...shadows.sm,
+  },
+  primaryActionBtn: {
+    backgroundColor: colors.light.primary,
+  },
+  primaryActionText: {
+    ...typography.headline,
+    fontSize: 14,
+    color: colors.light.textInverse,
   },
   deleteBtn: {
-    borderColor: "#fecaca",
-    backgroundColor: "#fef2f2",
+    backgroundColor: colors.light.errorBg,
   },
   actionText: {
-    ...typography.button,
+    ...typography.headline,
     fontSize: 14,
   },
   emptyText: {
     ...typography.body,
-    color: colors.light.textMuted,
+    color: colors.light.textTertiary,
     fontStyle: "italic",
     textAlign: "center",
     paddingVertical: spacing.lg,
@@ -480,38 +495,36 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: spacing.sm + 2,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.light.border,
+    borderBottomColor: colors.light.separator,
     gap: spacing.sm,
   },
   eventDateBox: {
     width: 40,
     height: 40,
     borderRadius: spacing.borderRadius.md,
-    backgroundColor: "#fff7ed",
+    backgroundColor: colors.light.primaryLight,
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#fed7aa",
   },
   eventMonth: {
     fontSize: 8,
     fontWeight: "700",
-    color: "#ea580c",
+    color: colors.light.primary,
     letterSpacing: 0.3,
   },
   eventDay: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#ea580c",
+    color: colors.light.primary,
     lineHeight: 17,
   },
-  eventType: {
-    ...typography.label,
-    color: colors.light.text,
+  eventTypeText: {
+    ...typography.headline,
     fontSize: 13,
+    color: colors.light.text,
   },
   eventPax: {
-    ...typography.caption,
+    ...typography.caption1,
     color: colors.light.textSecondary,
   },
   statusBadge: {
@@ -524,8 +537,8 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   eventTotal: {
-    ...typography.label,
-    color: colors.light.text,
+    ...typography.headline,
     fontSize: 13,
+    color: colors.light.text,
   },
 });

@@ -21,9 +21,6 @@ import { logError } from "../../lib/errorHandler";
 import { useToast } from "../../hooks/useToast";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 
-type Client = Database["public"]["Tables"]["clients"]["Row"];
-type Event = Database["public"]["Tables"]["events"]["Row"];
-
 export const ClientDetails: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();

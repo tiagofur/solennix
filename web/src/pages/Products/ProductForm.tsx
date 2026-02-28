@@ -7,12 +7,10 @@ import { productService } from "../../services/productService";
 import { inventoryService } from "../../services/inventoryService";
 import { useAuth } from "../../contexts/AuthContext";
 import { ArrowLeft, Save, Plus, Trash2, ChefHat } from "lucide-react";
-import { Database } from "../../types/supabase";
+import { InventoryItem } from "../../types/entities";
 import { logError } from "../../lib/errorHandler";
 import { usePlanLimits } from "../../hooks/usePlanLimits";
 import { UpgradeBanner } from "../../components/UpgradeBanner";
-
-type InventoryItem = Database['public']['Tables']['inventory']['Row'];
 
 const productSchema = z.object({
   name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),

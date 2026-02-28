@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 import {
   NavigationContainer,
   DefaultTheme,
@@ -6,26 +6,41 @@ import {
   Theme,
 } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { ActivityIndicator, View } from "react-native";
+import * as SplashScreen from "expo-splash-screen";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../hooks/useTheme";
 import { RootStackParamList } from "../types/navigation";
 import { colors } from "../theme/colors";
 import AuthStack from "./AuthStack";
-import MainTabs from "./MainTabs";
+import DrawerNavigator from "./DrawerNavigator";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
+
+const linking = {
+  prefixes: ["eventosapp://"],
+  config: {
+    screens: {
+      Auth: {
+        screens: {
+          ResetPassword: "reset-password",
+        },
+      },
+    },
+  },
+};
 
 export default function RootNavigator() {
   const { user, loading } = useAuth();
   const { isDark, loaded } = useTheme();
 
+  const onLayoutReady = useCallback(() => {
+    if (!loading && loaded) {
+      SplashScreen.hideAsync();
+    }
+  }, [loading, loaded]);
+
   if (loading || !loaded) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" />
-      </View>
-    );
+    return null;
   }
 
   const palette = isDark ? colors.dark : colors.light;
@@ -44,10 +59,10 @@ export default function RootNavigator() {
   };
 
   return (
-    <NavigationContainer theme={navTheme}>
+    <NavigationContainer theme={navTheme} linking={linking} onReady={onLayoutReady}>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {user ? (
-          <Stack.Screen name="Main" component={MainTabs} />
+          <Stack.Screen name="Main" component={DrawerNavigator} />
         ) : (
           <Stack.Screen name="Auth" component={AuthStack} />
         )}

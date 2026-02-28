@@ -12,8 +12,6 @@ import { usePagination } from "../../hooks/usePagination";
 import { Pagination } from "../../components/Pagination";
 import { ArrowUp, ArrowDown } from "lucide-react";
 
-type InventoryItem = Database["public"]["Tables"]["inventory"]["Row"];
-
 export const InventoryList: React.FC = () => {
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);

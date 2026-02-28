@@ -3,6 +3,7 @@ import { Modal, View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
+import { shadows } from "../../theme/shadows";
 
 interface ConfirmDialogProps {
   visible: boolean;
@@ -59,25 +60,21 @@ export default function ConfirmDialog({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: "rgba(0,0,0,0.4)",
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: spacing.xl,
   },
   dialog: {
-    backgroundColor: colors.light.background,
-    borderRadius: spacing.borderRadius.xl,
+    backgroundColor: colors.light.card,
+    borderRadius: spacing.borderRadius.lg,
     padding: spacing.xl,
     width: "100%",
     maxWidth: 340,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
+    ...shadows.lg,
   },
   title: {
-    ...typography.h3,
+    ...typography.title3,
     color: colors.light.text,
     marginBottom: spacing.xs,
   },
@@ -92,17 +89,17 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   cancelButton: {
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.sm + 2,
     paddingHorizontal: spacing.md,
     borderRadius: spacing.borderRadius.md,
-    backgroundColor: colors.light.surfaceAlt,
+    backgroundColor: colors.light.surface,
   },
   cancelText: {
-    ...typography.button,
+    ...typography.headline,
     color: colors.light.textSecondary,
   },
   confirmButton: {
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.sm + 2,
     paddingHorizontal: spacing.md,
     borderRadius: spacing.borderRadius.md,
     backgroundColor: colors.light.primary,
@@ -111,7 +108,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.light.error,
   },
   confirmText: {
-    ...typography.button,
-    color: "#ffffff",
+    ...typography.headline,
+    color: colors.light.textInverse,
   },
 });

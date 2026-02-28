@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { api, setAuthToken, getAuthToken, clearAuthToken } from "../lib/api";
 import { logError } from "../lib/errorHandler";
+import { revenueCatService } from "../services/revenueCatService";
 
 export interface User {
   id: string;
@@ -57,6 +58,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       const userData = await api.get<User>("/auth/me");
       setUser(userData);
+      revenueCatService.initialize(userData.id);
     } catch (error) {
       console.error("Auth check failed", error);
       await clearAuthToken();
@@ -86,6 +88,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     );
     await setAuthToken(response.token);
     setUser(response.user);
+    revenueCatService.initialize(response.user.id);
   };
 
   const signUp = async (name: string, email: string, password: string) => {
@@ -99,6 +102,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     );
     await setAuthToken(response.token);
     setUser(response.user);
+    revenueCatService.initialize(response.user.id);
   };
 
   const signOut = async () => {

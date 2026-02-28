@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   TextInput as RNTextInput,
   View,
@@ -14,29 +14,43 @@ interface FormInputProps extends RNTextInputProps {
   label: string;
   error?: string;
   icon?: React.ReactNode;
+  prefix?: string;
 }
 
 const FormInput = React.forwardRef<RNTextInput, FormInputProps>(
-  ({ label, error, icon, style, ...props }, ref) => {
+  ({ label, error, icon, prefix, style, onFocus, onBlur, ...props }, ref) => {
+    const [focused, setFocused] = useState(false);
+
     return (
       <View style={styles.container}>
         <Text style={styles.label}>{label}</Text>
         <View
           style={[
             styles.inputWrapper,
+            focused && styles.inputFocused,
             error ? styles.inputError : undefined,
             icon ? styles.withIcon : undefined,
           ]}
         >
           {icon && <View style={styles.icon}>{icon}</View>}
+          {prefix && <Text style={styles.prefix}>{prefix}</Text>}
           <RNTextInput
             ref={ref}
             style={[
               styles.input,
               icon ? styles.inputWithIcon : undefined,
+              prefix ? styles.inputWithPrefix : undefined,
               style,
             ]}
             placeholderTextColor={colors.light.textTertiary}
+            onFocus={(e) => {
+              setFocused(true);
+              onFocus?.(e);
+            }}
+            onBlur={(e) => {
+              setFocused(false);
+              onBlur?.(e);
+            }}
             {...props}
           />
         </View>
@@ -54,8 +68,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   label: {
-    ...typography.label,
-    color: colors.light.text,
+    ...typography.footnote,
+    fontWeight: "500",
+    color: colors.light.textSecondary,
     marginBottom: spacing.xs,
   },
   inputWrapper: {
@@ -63,8 +78,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: colors.light.surface,
     borderWidth: 1,
-    borderColor: colors.light.border,
+    borderColor: "transparent",
     borderRadius: spacing.borderRadius.md,
+    minHeight: 48,
+  },
+  inputFocused: {
+    borderColor: colors.light.separator,
   },
   inputError: {
     borderColor: colors.light.error,
@@ -83,8 +102,16 @@ const styles = StyleSheet.create({
   inputWithIcon: {
     paddingLeft: spacing.sm,
   },
+  inputWithPrefix: {
+    paddingLeft: spacing.xs,
+  },
+  prefix: {
+    ...typography.body,
+    color: colors.light.textSecondary,
+    paddingLeft: spacing.md,
+  },
   errorText: {
-    ...typography.caption,
+    ...typography.caption1,
     color: colors.light.error,
     marginTop: spacing.xxs,
   },

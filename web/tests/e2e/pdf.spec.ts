@@ -5,10 +5,7 @@ test.describe('PDF Generation Flow', () => {
   test.beforeEach(async ({ page }) => {
     await setupTestUser(page);
 
-    if (await isSetupRequired(page)) {
-      test.skip('Backend not configured');
-      return;
-    }
+    test.skip(await isSetupRequired(page), 'Backend not configured');
   });
 
   test('generate invoice PDF from event', async ({ page }) => {
@@ -17,10 +14,7 @@ test.describe('PDF Generation Flow', () => {
     const firstEvent = page.locator('[href^="/events/"]').first();
     const hasEvents = await firstEvent.isVisible({ timeout: 3000 }).catch(() => false);
 
-    if (!hasEvents) {
-      test.skip('No events available to generate PDF');
-      return;
-    }
+    test.skip(!hasEvents, 'No events available to generate PDF');
 
     await firstEvent.click();
 
@@ -45,7 +39,7 @@ test.describe('PDF Generation Flow', () => {
       const filename = download.suggestedFilename();
       expect(filename).toMatch(/factura|invoice/i);
     } else {
-      test.skip('Generate invoice button not found');
+      test.skip(true, 'Generate invoice button not found');
     }
   });
 
@@ -55,10 +49,7 @@ test.describe('PDF Generation Flow', () => {
     const firstEvent = page.locator('[href^="/events/"]').first();
     const hasEvents = await firstEvent.isVisible({ timeout: 3000 }).catch(() => false);
 
-    if (!hasEvents) {
-      test.skip('No events available');
-      return;
-    }
+    test.skip(!hasEvents, 'No events available');
 
     await firstEvent.click();
 
@@ -77,7 +68,7 @@ test.describe('PDF Generation Flow', () => {
       expect(download.suggestedFilename()).toMatch(/\.pdf$/i);
       expect(download.suggestedFilename()).toMatch(/cotizacion|quotation|quote/i);
     } else {
-      test.skip('Generate quotation button not found');
+      test.skip(true, 'Generate quotation button not found');
     }
   });
 
@@ -87,10 +78,7 @@ test.describe('PDF Generation Flow', () => {
     const firstEvent = page.locator('[href^="/events/"]').first();
     const hasEvents = await firstEvent.isVisible({ timeout: 3000 }).catch(() => false);
 
-    if (!hasEvents) {
-      test.skip('No events available');
-      return;
-    }
+    test.skip(!hasEvents, 'No events available');
 
     await firstEvent.click();
 
@@ -109,7 +97,7 @@ test.describe('PDF Generation Flow', () => {
       expect(download.suggestedFilename()).toMatch(/\.pdf$/i);
       expect(download.suggestedFilename()).toMatch(/contrato|contract/i);
     } else {
-      test.skip('Generate contract button not found');
+      test.skip(true, 'Generate contract button not found');
     }
   });
 
@@ -167,10 +155,7 @@ test.describe('PDF Generation Flow', () => {
     const firstEvent = page.locator('[href^="/events/"]').first();
     const hasEvents = await firstEvent.isVisible({ timeout: 3000 }).catch(() => false);
 
-    if (!hasEvents) {
-      test.skip('No events available');
-      return;
-    }
+    test.skip(!hasEvents, 'No events available');
 
     await firstEvent.click();
 

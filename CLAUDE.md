@@ -347,7 +347,8 @@ main
 - `ENVIRONMENT` — `development` or `production`
 - `CORS_ALLOWED_ORIGINS` — comma-separated origins (default: `http://localhost:5173`)
 - `JWT_EXPIRY_HOURS` — token expiry (default: `24`)
-- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM` — email configuration
+- `RESEND_API_KEY` — Resend API key for transactional emails (password reset)
+- `RESEND_FROM_EMAIL` — sender address (default: `EventosApp <noreply@eventosapp.com>`)
 - `FRONTEND_URL` — for password reset links (default: `http://localhost:5173`)
 - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRO_PRICE_ID`, `STRIPE_PORTAL_CONFIG_ID`
 - `REVENUECAT_WEBHOOK_SECRET`

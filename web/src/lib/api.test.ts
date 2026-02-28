@@ -68,4 +68,62 @@ describe('api', () => {
 
     await expect(api.post('/clients', { name: 'Ana' })).rejects.toThrow('bad request');
   });
+
+  it('put sends correct method and body', async () => {
+    (globalThis.fetch as any).mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: vi.fn().mockResolvedValue({ id: '1', name: 'Updated' }),
+    });
+
+    const result = await api.put('/clients/1', { name: 'Updated' });
+
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      'http://localhost:8080/api/clients/1',
+      expect.objectContaining({
+        method: 'PUT',
+        body: JSON.stringify({ name: 'Updated' }),
+      })
+    );
+    expect(result).toEqual({ id: '1', name: 'Updated' });
+  });
+
+  it('omits Authorization header when no token', async () => {
+    (window.localStorage.getItem as any).mockReturnValue(null);
+    (globalThis.fetch as any).mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: vi.fn().mockResolvedValue({ ok: true }),
+    });
+
+    await api.get('/public');
+
+    const callArgs = (globalThis.fetch as any).mock.calls[0];
+    expect(callArgs[1].headers).not.toHaveProperty('Authorization');
+  });
+
+  it('falls back to status message when error JSON parsing fails', async () => {
+    (globalThis.fetch as any).mockResolvedValue({
+      ok: false,
+      status: 500,
+      json: vi.fn().mockRejectedValue(new Error('parse fail')),
+    });
+
+    await expect(api.get('/broken')).rejects.toThrow('Request failed with status 500');
+  });
+
+  it('get works without params', async () => {
+    (globalThis.fetch as any).mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: vi.fn().mockResolvedValue([]),
+    });
+
+    await api.get('/clients');
+
+    expect(globalThis.fetch).toHaveBeenCalledWith(
+      'http://localhost:8080/api/clients',
+      expect.objectContaining({ method: 'GET' })
+    );
+  });
 });

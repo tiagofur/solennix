@@ -22,6 +22,7 @@ import { EventSummary } from './pages/Events/EventSummary';
 import { Settings } from './pages/Settings';
 import { Pricing } from './pages/Pricing';
 import { ForgotPassword } from './pages/ForgotPassword';
+import { ResetPassword } from './pages/ResetPassword';
 import { NotFound } from './pages/NotFound';
 
 function App() {
@@ -31,6 +32,7 @@ function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/register" element={<Register />} />
         
         <Route element={

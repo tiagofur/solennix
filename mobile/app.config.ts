@@ -1,0 +1,39 @@
+import { ExpoConfig, ConfigContext } from "expo/config";
+
+export default ({ config }: ConfigContext): ExpoConfig => ({
+  ...config,
+  name: "EventosApp",
+  slug: "eventosapp",
+  version: "1.0.0",
+  orientation: "portrait",
+  icon: "./assets/icon.png",
+  userInterfaceStyle: "automatic",
+  scheme: "eventosapp",
+  splash: {
+    image: "./assets/splash-icon.png",
+    resizeMode: "contain",
+    backgroundColor: "#ffffff",
+  },
+  ios: {
+    supportsTablet: true,
+    bundleIdentifier: "com.creapolis.eventosapp",
+  },
+  android: {
+    adaptiveIcon: {
+      backgroundColor: "#E6F4FE",
+      foregroundImage: "./assets/android-icon-foreground.png",
+      backgroundImage: "./assets/android-icon-background.png",
+      monochromeImage: "./assets/android-icon-monochrome.png",
+    },
+    package: "com.creapolis.eventosapp",
+  },
+  web: {
+    favicon: "./assets/favicon.png",
+  },
+  plugins: [
+    "expo-secure-store",
+    "expo-sharing",
+    "@react-native-community/datetimepicker",
+    "react-native-purchases",
+  ],
+});

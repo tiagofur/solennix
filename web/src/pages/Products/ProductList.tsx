@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { productService } from '../../services/productService';
-import { Database } from '../../types/supabase';
+import { Product } from '../../types/entities';
 import { Plus, Search, Edit, Trash2 } from 'lucide-react';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { logError } from '../../lib/errorHandler';
@@ -10,8 +10,6 @@ import { useToast } from '../../hooks/useToast';
 import { usePagination } from '../../hooks/usePagination';
 import { Pagination } from '../../components/Pagination';
 import { ArrowUp, ArrowDown } from 'lucide-react';
-
-type Product = Database['public']['Tables']['products']['Row'];
 
 export const ProductList: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);

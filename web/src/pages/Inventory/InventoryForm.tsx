@@ -15,9 +15,11 @@ const inventorySchema = z.object({
     .string()
     .min(2, "El nombre debe tener al menos 2 caracteres"),
   type: z.enum(["ingredient", "equipment"]),
-  current_stock: z.coerce.number().min(0, "El stock no puede ser negativo"),
+  current_stock: z.coerce
+    .number({ invalid_type_error: "Debe ser un número (ej: 10, 5.5)" })
+    .min(0, "El stock no puede ser negativo"),
   minimum_stock: z.coerce
-    .number()
+    .number({ invalid_type_error: "Debe ser un número (ej: 5, 2.5)" })
     .min(0, "El stock mínimo no puede ser negativo"),
   unit: z.string().min(1, "La unidad es requerida"),
   unit_cost: z.coerce

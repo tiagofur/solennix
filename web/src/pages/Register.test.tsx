@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { Register } from './Register';
@@ -6,13 +6,14 @@ import { api } from '../lib/api';
 
 const mockCheckAuth = vi.fn();
 const mockNavigate = vi.fn();
+const mockThemeState = { theme: 'light' as string, toggleTheme: vi.fn() };
 
 vi.mock('../contexts/AuthContext', () => ({
   useAuth: () => ({ checkAuth: mockCheckAuth }),
 }));
 
 vi.mock('../hooks/useTheme', () => ({
-  useTheme: () => ({ theme: 'light', toggleTheme: vi.fn() }),
+  useTheme: () => mockThemeState,
 }));
 
 vi.mock('react-router-dom', async () => {
@@ -37,8 +38,8 @@ describe('Register', () => {
         <Register />
       </MemoryRouter>
     );
-    expect(screen.getByText('Crear Cuenta')).toBeInTheDocument();
-    expect(screen.getByLabelText(/nombre completo/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /crear cuenta/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/^nombre$/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/^email$/i)).toBeInTheDocument();
   });
 
@@ -48,7 +49,7 @@ describe('Register', () => {
         <Register />
       </MemoryRouter>
     );
-    fireEvent.click(screen.getByRole('button', { name: /registrarse/i }));
+    fireEvent.click(screen.getByRole('button', { name: /crear cuenta/i }));
     await waitFor(() => {
       expect(screen.getByText(/El nombre debe tener al menos 2 caracteres/i)).toBeInTheDocument();
       expect(screen.getByText(/Email inválido/i)).toBeInTheDocument();
@@ -63,7 +64,7 @@ describe('Register', () => {
       </MemoryRouter>
     );
 
-    fireEvent.change(screen.getByLabelText(/nombre completo/i), {
+    fireEvent.change(screen.getByLabelText(/^nombre$/i), {
       target: { value: 'Ana Perez' },
     });
     fireEvent.change(screen.getByLabelText(/^email$/i), {
@@ -75,7 +76,7 @@ describe('Register', () => {
     fireEvent.change(screen.getByLabelText(/confirmar contraseña/i), {
       target: { value: 'password' },
     });
-    fireEvent.click(screen.getByRole('button', { name: /registrarse/i }));
+    fireEvent.click(screen.getByRole('button', { name: /crear cuenta/i }));
 
     await waitFor(() => {
       expect(api.post).toHaveBeenCalledWith('/auth/register', {
@@ -97,7 +98,7 @@ describe('Register', () => {
       </MemoryRouter>
     );
 
-    fireEvent.change(screen.getByLabelText(/nombre completo/i), {
+    fireEvent.change(screen.getByLabelText(/^nombre$/i), {
       target: { value: 'Ana Perez' },
     });
     fireEvent.change(screen.getByLabelText(/^email$/i), {
@@ -109,10 +110,126 @@ describe('Register', () => {
     fireEvent.change(screen.getByLabelText(/confirmar contraseña/i), {
       target: { value: 'password' },
     });
-    fireEvent.click(screen.getByRole('button', { name: /registrarse/i }));
+    fireEvent.click(screen.getByRole('button', { name: /crear cuenta/i }));
 
     await waitFor(() => {
       expect(screen.getByText('Fallo')).toBeInTheDocument();
     });
+  });
+
+  it('shows fallback error message when err.message is empty', async () => {
+    (api.post as any).mockRejectedValue({ message: '' });
+    render(
+      <MemoryRouter>
+        <Register />
+      </MemoryRouter>
+    );
+
+    fireEvent.change(screen.getByLabelText(/^nombre$/i), {
+      target: { value: 'Ana Perez' },
+    });
+    fireEvent.change(screen.getByLabelText(/^email$/i), {
+      target: { value: 'ana@example.com' },
+    });
+    fireEvent.change(screen.getByLabelText(/^contraseña$/i), {
+      target: { value: 'password' },
+    });
+    fireEvent.change(screen.getByLabelText(/confirmar contraseña/i), {
+      target: { value: 'password' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /crear cuenta/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Error al registrarse')).toBeInTheDocument();
+    });
+  });
+
+  it('shows confirmPassword validation error when passwords do not match', async () => {
+    render(
+      <MemoryRouter>
+        <Register />
+      </MemoryRouter>
+    );
+
+    fireEvent.change(screen.getByLabelText(/^nombre$/i), {
+      target: { value: 'Ana Perez' },
+    });
+    fireEvent.change(screen.getByLabelText(/^email$/i), {
+      target: { value: 'ana@example.com' },
+    });
+    fireEvent.change(screen.getByLabelText(/^contraseña$/i), {
+      target: { value: 'password' },
+    });
+    fireEvent.change(screen.getByLabelText(/confirmar contraseña/i), {
+      target: { value: 'different' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /crear cuenta/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Las contraseñas no coinciden')).toBeInTheDocument();
+    });
+
+    const confirmInput = screen.getByLabelText(/confirmar contraseña/i);
+    expect(confirmInput).toHaveAttribute('aria-invalid', 'true');
+    expect(confirmInput).toHaveAttribute('aria-describedby', 'confirmPassword-error');
+  });
+
+  it('shows loading state on submit button during registration', async () => {
+    let resolvePost: (value: any) => void;
+    (api.post as any).mockImplementation(
+      () => new Promise((resolve) => { resolvePost = resolve; })
+    );
+
+    render(
+      <MemoryRouter>
+        <Register />
+      </MemoryRouter>
+    );
+
+    fireEvent.change(screen.getByLabelText(/^nombre$/i), {
+      target: { value: 'Ana Perez' },
+    });
+    fireEvent.change(screen.getByLabelText(/^email$/i), {
+      target: { value: 'ana@example.com' },
+    });
+    fireEvent.change(screen.getByLabelText(/^contraseña$/i), {
+      target: { value: 'password' },
+    });
+    fireEvent.change(screen.getByLabelText(/confirmar contraseña/i), {
+      target: { value: 'password' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /crear cuenta/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Registrando...')).toBeInTheDocument();
+    });
+    const submitBtn = screen.getByRole('button', { name: /registrando/i });
+    expect(submitBtn).toBeDisabled();
+
+    resolvePost!({ tokens: { access_token: 'token' } });
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
+    });
+  });
+});
+
+describe('Register (dark theme)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockThemeState.theme = 'dark';
+  });
+
+  afterEach(() => {
+    mockThemeState.theme = 'light';
+  });
+
+  it('renders sun icon in dark mode', () => {
+    render(
+      <MemoryRouter>
+        <Register />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByRole('button', { name: /cambiar a modo claro/i })).toBeInTheDocument();
   });
 });
