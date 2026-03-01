@@ -3,6 +3,7 @@ import { ActivityIndicator, View, StyleSheet, Text } from "react-native";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
+import { useTheme } from "../../hooks/useTheme";
 
 interface LoadingSpinnerProps {
   message?: string;
@@ -15,9 +16,13 @@ export default function LoadingSpinner({
   size = "large",
   fullScreen = true,
 }: LoadingSpinnerProps) {
+  const { isDark } = useTheme();
+  const palette = isDark ? colors.dark : colors.light;
+  const styles = getStyles(palette);
+
   const content = (
     <>
-      <ActivityIndicator size={size} color={colors.light.primary} />
+      <ActivityIndicator size={size} color={palette.primary} />
       {message && <Text style={styles.message}>{message}</Text>}
     </>
   );
@@ -29,12 +34,12 @@ export default function LoadingSpinner({
   return <View style={styles.inline}>{content}</View>;
 }
 
-const styles = StyleSheet.create({
+const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   fullScreen: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: colors.light.background,
+    backgroundColor: palette.background,
   },
   inline: {
     paddingVertical: spacing.xl,
@@ -42,7 +47,7 @@ const styles = StyleSheet.create({
   },
   message: {
     ...typography.body,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
     marginTop: spacing.sm,
   },
 });

@@ -35,6 +35,7 @@ import {
   SkeletonList,
   SwipeableRow,
 } from "../../components/shared";
+import { useTheme } from "../../hooks/useTheme";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
@@ -46,6 +47,9 @@ export default function ClientListScreen({ navigation }: Props) {
   const { canCreateClient, isBasicPlan, clientsCount, clientLimit } =
     usePlanLimits();
   const addToast = useToast((s) => s.addToast);
+  const { isDark } = useTheme();
+  const palette = isDark ? colors.dark : colors.light;
+  const styles = getStyles(palette);
 
   const [clients, setClients] = useState<Client[]>([]);
   const [filteredClients, setFilteredClients] = useState<Client[]>([]);
@@ -157,13 +161,13 @@ export default function ClientListScreen({ navigation }: Props) {
           <View style={styles.cardRow}>
             {item.phone ? (
               <View style={styles.infoChip}>
-                <Phone color={colors.light.textTertiary} size={12} />
+                <Phone color={palette.textTertiary} size={12} />
                 <Text style={styles.infoText}>{item.phone}</Text>
               </View>
             ) : null}
             {item.email ? (
               <View style={styles.infoChip}>
-                <Mail color={colors.light.textTertiary} size={12} />
+                <Mail color={palette.textTertiary} size={12} />
                 <Text style={styles.infoText} numberOfLines={1}>
                   {item.email}
                 </Text>
@@ -180,7 +184,7 @@ export default function ClientListScreen({ navigation }: Props) {
             </Text>
           </View>
         </View>
-        <ChevronRight color={colors.light.textTertiary} size={20} />
+        <ChevronRight color={palette.textTertiary} size={20} />
       </TouchableOpacity>
       </SwipeableRow>
       </Animated.View>
@@ -200,11 +204,11 @@ export default function ClientListScreen({ navigation }: Props) {
     <SafeAreaView style={styles.container} edges={[]}>
       <View style={styles.searchContainer}>
         <View style={styles.searchBox}>
-          <Search color={colors.light.textTertiary} size={18} />
+          <Search color={palette.textTertiary} size={18} />
           <TextInput
             style={styles.searchInput}
             placeholder="Buscar clientes..."
-            placeholderTextColor={colors.light.textTertiary}
+            placeholderTextColor={palette.textTertiary}
             value={search}
             onChangeText={setSearch}
             autoCorrect={false}
@@ -244,7 +248,7 @@ export default function ClientListScreen({ navigation }: Props) {
             />
           ) : (
             <EmptyState
-              icon={<Users color={colors.light.textTertiary} size={48} />}
+              icon={<Users color={palette.textTertiary} size={48} />}
               title="Sin clientes"
               description="Agrega tu primer cliente para empezar."
               actionLabel="Nuevo Cliente"
@@ -276,10 +280,10 @@ export default function ClientListScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.light.surfaceGrouped,
+    backgroundColor: palette.surfaceGrouped,
   },
   searchContainer: {
     paddingHorizontal: spacing.lg,
@@ -289,7 +293,7 @@ const styles = StyleSheet.create({
   searchBox: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.light.surface,
+    backgroundColor: palette.surface,
     borderRadius: spacing.borderRadius.md,
     paddingHorizontal: spacing.md,
     height: 38,
@@ -298,7 +302,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     ...typography.body,
-    color: colors.light.text,
+    color: palette.text,
     padding: 0,
   },
   listContent: {
@@ -312,7 +316,7 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.light.card,
+    backgroundColor: palette.card,
     borderRadius: spacing.borderRadius.lg,
     ...shadows.sm,
     padding: spacing.md,
@@ -327,7 +331,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   avatarText: {
-    color: colors.light.textInverse,
+    color: palette.textInverse,
     fontWeight: "700",
     fontSize: 16,
   },
@@ -338,7 +342,7 @@ const styles = StyleSheet.create({
   cardName: {
     ...typography.headline,
     fontSize: 15,
-    color: colors.light.text,
+    color: palette.text,
   },
   cardRow: {
     flexDirection: "row",
@@ -353,16 +357,16 @@ const styles = StyleSheet.create({
   },
   infoText: {
     ...typography.caption1,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
     maxWidth: 130,
   },
   statText: {
     ...typography.caption1,
-    color: colors.light.textTertiary,
+    color: palette.textTertiary,
   },
   dotSep: {
     ...typography.caption1,
-    color: colors.light.textTertiary,
+    color: palette.textTertiary,
   },
   fab: {
     position: "absolute",
@@ -371,7 +375,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: colors.light.primary,
+    backgroundColor: palette.primary,
     justifyContent: "center",
     alignItems: "center",
     ...shadows.fab,

@@ -10,6 +10,7 @@ import { Platform } from "react-native";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
+import { useTheme } from "../../hooks/useTheme";
 
 interface SegmentedControlProps {
   segments: string[];
@@ -24,6 +25,9 @@ export function SegmentedControl({
 }: SegmentedControlProps) {
   const indicatorX = useSharedValue(0);
   const segmentWidth = useSharedValue(0);
+  const { isDark } = useTheme();
+  const palette = isDark ? colors.dark : colors.light;
+  const styles = getStyles(palette);
 
   const handleLayout = useCallback(
     (event: LayoutChangeEvent) => {
@@ -81,10 +85,10 @@ export function SegmentedControl({
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   container: {
     flexDirection: "row",
-    backgroundColor: colors.light.surface,
+    backgroundColor: palette.surface,
     borderRadius: spacing.borderRadius.md,
     padding: 2,
     position: "relative",
@@ -93,7 +97,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 2,
     bottom: 2,
-    backgroundColor: colors.light.card,
+    backgroundColor: palette.card,
     borderRadius: spacing.borderRadius.md - 1,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
@@ -110,10 +114,10 @@ const styles = StyleSheet.create({
   segmentText: {
     ...typography.caption,
     fontWeight: "500",
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
   },
   segmentTextActive: {
-    color: colors.light.text,
+    color: palette.text,
     fontWeight: "600",
   },
 });

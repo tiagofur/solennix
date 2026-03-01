@@ -12,6 +12,7 @@ import Constants from "expo-constants";
 import { ChevronLeft, Code2, Heart, Globe, Mail, FileText, Shield } from "lucide-react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { SettingsStackParamList } from "../../types/navigation";
+import { useTheme } from "../../hooks/useTheme";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
@@ -22,6 +23,10 @@ type Props = NativeStackScreenProps<SettingsStackParamList, "About">;
 const APP_VERSION = Constants.expoConfig?.version ?? "1.0.0";
 
 export default function AboutScreen({ navigation }: Props) {
+  const { isDark } = useTheme();
+  const palette = isDark ? colors.dark : colors.light;
+  const styles = getStyles(palette);
+
   const openURL = (url: string) => {
     Linking.openURL(url);
   };
@@ -33,12 +38,12 @@ export default function AboutScreen({ navigation }: Props) {
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <ChevronLeft color={colors.light.text} size={24} />
+          <ChevronLeft color={palette.text} size={24} />
         </TouchableOpacity>
 
         <View style={styles.logoContainer}>
           <View style={styles.logo}>
-            <Code2 color={colors.light.primary} size={64} />
+            <Code2 color={palette.primary} size={64} />
           </View>
           <Text style={styles.appName}>EventosApp</Text>
           <Text style={styles.version}>Versi&#xF3;n {APP_VERSION}</Text>
@@ -54,7 +59,7 @@ export default function AboutScreen({ navigation }: Props) {
             style={styles.infoRow}
             onPress={() => openURL("https://www.creapolis.dev")}
           >
-            <Globe color={colors.light.primary} size={20} />
+            <Globe color={palette.primary} size={20} />
             <Text style={styles.linkText}>www.creapolis.dev</Text>
           </TouchableOpacity>
 
@@ -62,7 +67,7 @@ export default function AboutScreen({ navigation }: Props) {
             style={styles.infoRow}
             onPress={() => openURL("mailto:hola@creapolis.dev")}
           >
-            <Mail color={colors.light.primary} size={20} />
+            <Mail color={palette.primary} size={20} />
             <Text style={styles.linkText}>hola@creapolis.dev</Text>
           </TouchableOpacity>
         </View>
@@ -74,7 +79,7 @@ export default function AboutScreen({ navigation }: Props) {
             style={styles.infoRow}
             onPress={() => openURL("https://www.creapolis.dev/terms")}
           >
-            <FileText color={colors.light.primary} size={20} />
+            <FileText color={palette.primary} size={20} />
             <Text style={styles.linkText}>T&#xE9;rminos y Condiciones</Text>
           </TouchableOpacity>
 
@@ -82,7 +87,7 @@ export default function AboutScreen({ navigation }: Props) {
             style={styles.infoRow}
             onPress={() => openURL("https://www.creapolis.dev/privacy")}
           >
-            <Shield color={colors.light.primary} size={20} />
+            <Shield color={palette.primary} size={20} />
             <Text style={styles.linkText}>Pol&#xED;tica de Privacidad</Text>
           </TouchableOpacity>
         </View>
@@ -99,7 +104,7 @@ export default function AboutScreen({ navigation }: Props) {
         <View style={styles.footer}>
           <View style={styles.footerContent}>
             <Text style={styles.footerText}>
-              Hecho con <Heart color={colors.light.error} size={14} fill={colors.light.error} /> por el equipo de Creapolis.Dev
+              Hecho con <Heart color={palette.error} size={14} fill={palette.error} /> por el equipo de Creapolis.Dev
             </Text>
           </View>
         </View>
@@ -108,10 +113,10 @@ export default function AboutScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.light.surfaceGrouped,
+    backgroundColor: palette.surfaceGrouped,
   },
   content: {
     paddingHorizontal: spacing.lg,
@@ -132,7 +137,7 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: colors.light.primaryLight,
+    backgroundColor: palette.primaryLight,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: spacing.md,
@@ -140,16 +145,16 @@ const styles = StyleSheet.create({
   },
   appName: {
     ...typography.title1,
-    color: colors.light.text,
+    color: palette.text,
     fontWeight: "700",
     marginBottom: spacing.xs,
   },
   version: {
     ...typography.body,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
   },
   card: {
-    backgroundColor: colors.light.card,
+    backgroundColor: palette.card,
     borderRadius: spacing.borderRadius.lg,
     padding: spacing.lg,
     marginBottom: spacing.md,
@@ -157,19 +162,19 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...typography.label,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
     textTransform: "uppercase",
     letterSpacing: 0.5,
     marginBottom: spacing.sm,
   },
   developer: {
     ...typography.h2,
-    color: colors.light.text,
+    color: palette.text,
     fontWeight: "700",
   },
   divider: {
     height: 1,
-    backgroundColor: colors.light.separator,
+    backgroundColor: palette.separator,
     marginVertical: spacing.md,
   },
   infoRow: {
@@ -181,11 +186,11 @@ const styles = StyleSheet.create({
   },
   linkText: {
     ...typography.body,
-    color: colors.light.primary,
+    color: palette.primary,
   },
   description: {
     ...typography.body,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
     lineHeight: 24,
   },
   footer: {
@@ -196,7 +201,7 @@ const styles = StyleSheet.create({
   },
   footerText: {
     ...typography.caption,
-    color: colors.light.textMuted,
+    color: palette.textMuted,
     textAlign: "center",
   },
 });

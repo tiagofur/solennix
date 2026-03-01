@@ -22,6 +22,7 @@ import { useToast } from "../../hooks/useToast";
 import { useAuth } from "../../contexts/AuthContext";
 import { logError } from "../../lib/errorHandler";
 import { LoadingSpinner, FormInput, AppBottomSheet } from "../../components/shared";
+import { useTheme } from "../../hooks/useTheme";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
@@ -50,6 +51,9 @@ export default function InventoryFormScreen({ navigation, route }: Props) {
   const isEditing = !!id;
   const addToast = useToast((s) => s.addToast);
   const { user } = useAuth();
+  const { isDark } = useTheme();
+  const palette = isDark ? colors.dark : colors.light;
+  const styles = getStyles(palette);
 
   const [loading, setLoading] = useState(isEditing);
   const [saving, setSaving] = useState(false);
@@ -216,7 +220,7 @@ export default function InventoryFormScreen({ navigation, route }: Props) {
               >
                 {watch("unit") || "Seleccionar unidad..."}
               </Text>
-              <ChevronDown color={colors.light.textTertiary} size={18} />
+              <ChevronDown color={palette.textTertiary} size={18} />
             </TouchableOpacity>
             {errors.unit && (
               <Text style={styles.unitPickerError}>{errors.unit.message}</Text>
@@ -298,10 +302,10 @@ export default function InventoryFormScreen({ navigation, route }: Props) {
           activeOpacity={0.8}
         >
           {saving ? (
-            <ActivityIndicator color={colors.light.textInverse} />
+            <ActivityIndicator color={palette.textInverse} />
           ) : (
             <>
-              <Save color={colors.light.textInverse} size={20} />
+              <Save color={palette.textInverse} size={20} />
               <Text style={styles.saveButtonText}>
                 {isEditing ? "Actualizar" : "Crear Item"}
               </Text>
@@ -353,17 +357,17 @@ export default function InventoryFormScreen({ navigation, route }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.light.background,
+    backgroundColor: palette.background,
   },
   content: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xxl,
   },
   section: {
-    backgroundColor: colors.light.card,
+    backgroundColor: palette.card,
     borderRadius: spacing.borderRadius.lg,
     ...shadows.sm,
     padding: spacing.md,
@@ -371,7 +375,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...typography.h3,
-    color: colors.light.text,
+    color: palette.text,
     marginBottom: spacing.sm,
   },
   typeSelector: {
@@ -379,7 +383,7 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     ...typography.caption,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
     marginBottom: spacing.xs,
   },
   typeButtons: {
@@ -390,37 +394,37 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: spacing.sm,
     borderRadius: spacing.borderRadius.md,
-    backgroundColor: colors.light.surface,
+    backgroundColor: palette.surface,
     alignItems: "center",
   },
   typeButtonActive: {
-    backgroundColor: colors.light.primary,
+    backgroundColor: palette.primary,
   },
   typeButtonText: {
     ...typography.bodySmall,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
     fontWeight: "600",
   },
   typeButtonTextActive: {
-    color: colors.light.textInverse,
+    color: palette.textInverse,
   },
   helpText: {
     ...typography.caption,
-    color: colors.light.textTertiary,
+    color: palette.textTertiary,
     marginTop: spacing.xs,
   },
   footer: {
     padding: spacing.lg,
-    backgroundColor: colors.light.background,
+    backgroundColor: palette.background,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.light.separator,
+    borderTopColor: palette.separator,
   },
   saveButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: spacing.sm,
-    backgroundColor: colors.light.primary,
+    backgroundColor: palette.primary,
     borderRadius: spacing.borderRadius.md,
     paddingVertical: spacing.md,
   },
@@ -429,31 +433,31 @@ const styles = StyleSheet.create({
   },
   saveButtonText: {
     ...typography.button,
-    color: colors.light.textInverse,
+    color: palette.textInverse,
   },
   unitPickerButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: colors.light.surface,
+    backgroundColor: palette.surface,
     borderRadius: spacing.borderRadius.md,
     padding: spacing.md,
     borderWidth: 1,
-    borderColor: colors.light.border,
+    borderColor: palette.border,
   },
   unitPickerButtonError: {
-    borderColor: colors.light.error,
+    borderColor: palette.error,
   },
   unitPickerText: {
     ...typography.body,
-    color: colors.light.text,
+    color: palette.text,
   },
   unitPickerPlaceholder: {
-    color: colors.light.textMuted,
+    color: palette.textMuted,
   },
   unitPickerError: {
     ...typography.caption,
-    color: colors.light.error,
+    color: palette.error,
     marginTop: 2,
   },
   unitSheetHeader: {
@@ -463,11 +467,11 @@ const styles = StyleSheet.create({
   },
   unitSheetTitle: {
     ...typography.h3,
-    color: colors.light.text,
+    color: palette.text,
   },
   unitGroupLabel: {
     ...typography.caption,
-    color: colors.light.textTertiary,
+    color: palette.textTertiary,
     fontWeight: "600",
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
@@ -485,20 +489,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: spacing.borderRadius.md,
-    backgroundColor: colors.light.surface,
+    backgroundColor: palette.surface,
     borderWidth: 1,
-    borderColor: colors.light.border,
+    borderColor: palette.border,
   },
   unitChipActive: {
-    backgroundColor: colors.light.primary,
-    borderColor: colors.light.primary,
+    backgroundColor: palette.primary,
+    borderColor: palette.primary,
   },
   unitChipText: {
     ...typography.body,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
   },
   unitChipTextActive: {
-    color: colors.light.textInverse,
+    color: palette.textInverse,
     fontWeight: "600",
   },
 });

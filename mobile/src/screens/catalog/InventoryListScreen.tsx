@@ -25,6 +25,7 @@ import { inventoryService } from "../../services/inventoryService";
 import { useToast } from "../../hooks/useToast";
 import { logError } from "../../lib/errorHandler";
 import { EmptyState, SkeletonList, SwipeableRow, SegmentedControl } from "../../components/shared";
+import { useTheme } from "../../hooks/useTheme";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
@@ -34,6 +35,9 @@ type Props = NativeStackScreenProps<InventoryStackParamList, "InventoryList">;
 
 export default function InventoryListScreen({ navigation }: Props) {
   const addToast = useToast((s) => s.addToast);
+  const { isDark } = useTheme();
+  const palette = isDark ? colors.dark : colors.light;
+  const styles = getStyles(palette);
 
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [filteredItems, setFilteredItems] = useState<InventoryItem[]>([]);
@@ -117,7 +121,7 @@ export default function InventoryListScreen({ navigation }: Props) {
         >
           <View style={[styles.iconBox, isLowStock && styles.iconBoxLow]}>
             <Package
-              color={isLowStock ? colors.light.error : colors.light.primary}
+              color={isLowStock ? palette.error : palette.primary}
               size={22}
             />
           </View>
@@ -139,7 +143,7 @@ export default function InventoryListScreen({ navigation }: Props) {
             </Text>
             {isLowStock && (
               <View style={styles.lowStockBadge}>
-                <AlertTriangle color={colors.light.error} size={10} />
+                <AlertTriangle color={palette.error} size={10} />
                 <Text style={styles.lowStockText}>Mín: {item.minimum_stock}</Text>
               </View>
             )}
@@ -164,11 +168,11 @@ export default function InventoryListScreen({ navigation }: Props) {
     <SafeAreaView style={styles.container} edges={[]}>
       <View style={styles.searchContainer}>
         <View style={styles.searchBox}>
-          <Search color={colors.light.textTertiary} size={18} />
+          <Search color={palette.textTertiary} size={18} />
           <TextInput
             style={styles.searchInput}
             placeholder="Buscar inventario..."
-            placeholderTextColor={colors.light.textTertiary}
+            placeholderTextColor={palette.textTertiary}
             value={search}
             onChangeText={setSearch}
             autoCorrect={false}
@@ -190,7 +194,7 @@ export default function InventoryListScreen({ navigation }: Props) {
           onPress={() => setShowLowStockOnly(!showLowStockOnly)}
           activeOpacity={0.8}
         >
-          <AlertTriangle color={colors.light.error} size={18} />
+          <AlertTriangle color={palette.error} size={18} />
           <Text style={styles.alertText}>
             {lowStockCount} {' '}
             {lowStockCount === 1 ? 'ítem con stock bajo' : 'ítems con stock bajo'}
@@ -221,7 +225,7 @@ export default function InventoryListScreen({ navigation }: Props) {
             />
           ) : (
             <EmptyState
-              icon={<Package color={colors.light.textTertiary} size={48} />}
+              icon={<Package color={palette.textTertiary} size={48} />}
               title="Sin inventario"
               description="Agrega tu primer ingrediente o equipo."
               actionLabel="Nuevo Item"
@@ -236,16 +240,16 @@ export default function InventoryListScreen({ navigation }: Props) {
         activeOpacity={0.8}
         onPress={() => navigation.navigate("InventoryForm", {})}
       >
-        <Plus color={colors.light.textInverse} size={28} />
+        <Plus color={palette.textInverse} size={28} />
       </TouchableOpacity>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.light.surfaceGrouped,
+    backgroundColor: palette.surfaceGrouped,
   },
   searchContainer: {
     paddingHorizontal: spacing.lg,
@@ -255,7 +259,7 @@ const styles = StyleSheet.create({
   searchBox: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.light.surface,
+    backgroundColor: palette.surface,
     borderRadius: spacing.borderRadius.md,
     paddingHorizontal: spacing.md,
     height: 38,
@@ -264,7 +268,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     ...typography.body,
-    color: colors.light.text,
+    color: palette.text,
     padding: 0,
   },
   segmentContainer: {
@@ -274,7 +278,7 @@ const styles = StyleSheet.create({
   alertBanner: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.light.errorBg,
+    backgroundColor: palette.errorBg,
     marginHorizontal: spacing.lg,
     marginBottom: spacing.sm,
     padding: spacing.md,
@@ -284,13 +288,13 @@ const styles = StyleSheet.create({
   },
   alertText: {
     ...typography.bodySmall,
-    color: colors.light.error,
+    color: palette.error,
     flex: 1,
     fontWeight: "600",
   },
   alertAction: {
     ...typography.caption,
-    color: colors.light.primary,
+    color: palette.primary,
     fontWeight: "700",
   },
   listContent: {
@@ -304,7 +308,7 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.light.card,
+    backgroundColor: palette.card,
     borderRadius: spacing.borderRadius.lg,
     ...shadows.sm,
     padding: spacing.md,
@@ -312,18 +316,18 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   cardLowStock: {
-    backgroundColor: colors.light.errorBg,
+    backgroundColor: palette.errorBg,
   },
   iconBox: {
     width: 44,
     height: 44,
     borderRadius: spacing.borderRadius.lg,
-    backgroundColor: colors.light.primaryLight,
+    backgroundColor: palette.primaryLight,
     justifyContent: "center",
     alignItems: "center",
   },
   iconBoxLow: {
-    backgroundColor: colors.light.errorBg,
+    backgroundColor: palette.errorBg,
   },
   cardBody: {
     flex: 1,
@@ -332,7 +336,7 @@ const styles = StyleSheet.create({
   cardName: {
     ...typography.subheadline,
     fontWeight: "500",
-    color: colors.light.text,
+    color: palette.text,
   },
   cardRow: {
     flexDirection: "row",
@@ -340,17 +344,17 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   typeBadge: {
-    backgroundColor: colors.light.surface,
+    backgroundColor: palette.surface,
     paddingHorizontal: spacing.xs + 2,
     paddingVertical: 1,
     borderRadius: spacing.borderRadius.sm,
   },
   typeBadgeEquip: {
-    backgroundColor: colors.light.infoBg,
+    backgroundColor: palette.infoBg,
   },
   typeText: {
     ...typography.caption,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
     fontWeight: "600",
     textTransform: "uppercase",
     fontSize: 9,
@@ -361,11 +365,11 @@ const styles = StyleSheet.create({
   },
   stockValue: {
     ...typography.label,
-    color: colors.light.text,
+    color: palette.text,
     fontSize: 14,
   },
   stockValueLow: {
-    color: colors.light.error,
+    color: palette.error,
   },
   lowStockBadge: {
     flexDirection: "row",
@@ -375,7 +379,7 @@ const styles = StyleSheet.create({
   },
   lowStockText: {
     ...typography.caption,
-    color: colors.light.error,
+    color: palette.error,
     fontSize: 10,
   },
   fab: {
@@ -385,7 +389,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: colors.light.primary,
+    backgroundColor: palette.primary,
     justifyContent: "center",
     alignItems: "center",
     ...shadows.fab,

@@ -40,6 +40,7 @@ import { logError } from "../../lib/errorHandler";
 import { KPICard, UpgradeBanner, EmptyState } from "../../components/shared";
 import OnboardingChecklist from "../../components/OnboardingChecklist";
 import PendingEventsModal from "../../components/PendingEventsModal";
+import { useTheme } from "../../hooks/useTheme";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
@@ -56,6 +57,9 @@ export default function DashboardScreen({ navigation }: Props) {
   const { isBasicPlan, canCreateEvent, eventsThisMonth, limit } =
     usePlanLimits();
   const firstName = user?.name ? user.name.split(" ")[0] : "Usuario";
+  const { isDark } = useTheme();
+  const palette = isDark ? colors.dark : colors.light;
+  const styles = getStyles(palette);
 
   const [eventsThisMonthList, setEventsThisMonthList] = useState<EventWithClient[]>([]);
   const [upcomingEvents, setUpcomingEvents] = useState<EventWithClient[]>([]);
@@ -164,17 +168,17 @@ export default function DashboardScreen({ navigation }: Props) {
   const statusData = useMemo(() => {
     if (!eventsThisMonthList.length) return [];
     const buckets = [
-      { status: "quoted", label: "Cotizado", count: 0, color: colors.light.statusQuoted },
-      { status: "confirmed", label: "Confirmado", count: 0, color: colors.light.statusConfirmed },
-      { status: "completed", label: "Completado", count: 0, color: colors.light.statusCompleted },
-      { status: "cancelled", label: "Cancelado", count: 0, color: colors.light.statusCancelled },
+      { status: "quoted", label: "Cotizado", count: 0, color: palette.statusQuoted },
+      { status: "confirmed", label: "Confirmado", count: 0, color: palette.statusConfirmed },
+      { status: "completed", label: "Completado", count: 0, color: palette.statusCompleted },
+      { status: "cancelled", label: "Cancelado", count: 0, color: palette.statusCancelled },
     ];
     eventsThisMonthList.forEach((e) => {
       const b = buckets.find((s) => s.status === e.status);
       if (b) b.count += 1;
     });
     return buckets.filter((b) => b.count > 0);
-  }, [eventsThisMonthList]);
+  }, [eventsThisMonthList, palette]);
 
   const maxStatusCount = Math.max(...statusData.map((d) => d.count), 1);
 
@@ -201,7 +205,7 @@ export default function DashboardScreen({ navigation }: Props) {
             style={styles.searchButton}
             onPress={() => (navigation as any).navigate("SearchScreen")}
           >
-            <Search color={colors.light.textSecondary} size={22} />
+            <Search color={palette.textSecondary} size={22} />
           </TouchableOpacity>
         </View>
 
@@ -212,7 +216,7 @@ export default function DashboardScreen({ navigation }: Props) {
             onPress={() => navigation.navigate("EventForm", {})}
             activeOpacity={0.7}
           >
-            <Plus color={colors.light.primary} size={16} />
+            <Plus color={palette.primary} size={16} />
             <Text style={styles.quickActionText}>Evento</Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -220,7 +224,7 @@ export default function DashboardScreen({ navigation }: Props) {
             onPress={() => (navigation as any).navigate("ClientTab")}
             activeOpacity={0.7}
           >
-            <UserPlus color={colors.light.primary} size={16} />
+            <UserPlus color={palette.primary} size={16} />
             <Text style={styles.quickActionText}>Cliente</Text>
           </TouchableOpacity>
         </View>
@@ -255,30 +259,30 @@ export default function DashboardScreen({ navigation }: Props) {
           style={{ marginBottom: spacing.lg }}
         >
           <KPICard
-            icon={<DollarSign color={colors.light.kpiGreen} size={20} />}
-            iconBgColor={colors.light.kpiGreenBg}
+            icon={<DollarSign color={palette.kpiGreen} size={20} />}
+            iconBgColor={palette.kpiGreenBg}
             title="Ventas netas"
             value={formatCurrency(netSalesThisMonth)}
             loading={loading}
             footer="Confirmados/Completados"
           />
           <KPICard
-            icon={<DollarSign color={colors.light.kpiOrange} size={20} />}
-            iconBgColor={colors.light.kpiOrangeBg}
+            icon={<DollarSign color={palette.kpiOrange} size={20} />}
+            iconBgColor={palette.kpiOrangeBg}
             title="Cobrado (mes)"
             value={formatCurrency(cashCollectedThisMonth)}
             loading={loading}
           />
           <KPICard
-            icon={<FileCheck color={colors.light.kpiBlue} size={20} />}
-            iconBgColor={colors.light.kpiBlueBg}
+            icon={<FileCheck color={palette.kpiBlue} size={20} />}
+            iconBgColor={palette.kpiBlueBg}
             title="IVA por cobrar"
             value={formatCurrency(vatOutstandingThisMonth)}
             loading={loading}
           />
           <KPICard
-            icon={<Calendar color={colors.light.kpiOrange} size={20} />}
-            iconBgColor={colors.light.kpiOrangeBg}
+            icon={<Calendar color={palette.kpiOrange} size={20} />}
+            iconBgColor={palette.kpiOrangeBg}
             title="Eventos del mes"
             value={String(loading ? "..." : eventsThisMonthList.length)}
             loading={loading}
@@ -286,11 +290,11 @@ export default function DashboardScreen({ navigation }: Props) {
           <KPICard
             icon={
               <Package
-                color={lowStockCount > 0 ? colors.light.error : colors.light.kpiGreen}
+                color={lowStockCount > 0 ? palette.error : palette.kpiGreen}
                 size={20}
               />
             }
-            iconBgColor={lowStockCount > 0 ? colors.light.errorBg : colors.light.kpiGreenBg}
+            iconBgColor={lowStockCount > 0 ? palette.errorBg : palette.kpiGreenBg}
             title="Alertas Stock"
             value={
               loading
@@ -300,7 +304,7 @@ export default function DashboardScreen({ navigation }: Props) {
                   : "Todo OK"
             }
             loading={loading}
-            valueColor={lowStockCount > 0 ? colors.light.error : undefined}
+            valueColor={lowStockCount > 0 ? palette.error : undefined}
           />
         </ScrollView>
 
@@ -343,7 +347,7 @@ export default function DashboardScreen({ navigation }: Props) {
                   gap: spacing.xs,
                 }}
               >
-                <AlertTriangle color={colors.light.error} size={18} />
+                <AlertTriangle color={palette.error} size={18} />
                 <Text style={styles.sectionTitle}>Reponer Inventario</Text>
               </View>
             </View>
@@ -406,7 +410,7 @@ export default function DashboardScreen({ navigation }: Props) {
                     <Text style={styles.eventPax}>{event.num_people} pax</Text>
                   </View>
                 </View>
-                <ChevronRight color={colors.light.textTertiary} size={20} />
+                <ChevronRight color={palette.textTertiary} size={20} />
               </TouchableOpacity>
             ))
           ) : (
@@ -423,10 +427,10 @@ export default function DashboardScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.light.surfaceGrouped,
+    backgroundColor: palette.surfaceGrouped,
   },
   content: {
     paddingHorizontal: spacing.lg,
@@ -440,11 +444,11 @@ const styles = StyleSheet.create({
   },
   greeting: {
     ...typography.largeTitle,
-    color: colors.light.text,
+    color: palette.text,
   },
   date: {
     ...typography.subheadline,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
     marginTop: 2,
     textTransform: "capitalize",
   },
@@ -452,7 +456,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: colors.light.card,
+    backgroundColor: palette.card,
     justifyContent: "center",
     alignItems: "center",
     ...shadows.sm,
@@ -466,7 +470,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.xs,
-    backgroundColor: colors.light.card,
+    backgroundColor: palette.card,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: spacing.borderRadius.full,
@@ -474,14 +478,14 @@ const styles = StyleSheet.create({
   },
   quickActionText: {
     ...typography.subheadline,
-    color: colors.light.primary,
+    color: palette.primary,
     fontWeight: "600",
   },
   kpiRow: {
     paddingRight: spacing.lg,
   },
   section: {
-    backgroundColor: colors.light.card,
+    backgroundColor: palette.card,
     borderRadius: spacing.borderRadius.lg,
     ...shadows.sm,
     padding: spacing.md,
@@ -495,11 +499,11 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...typography.headline,
-    color: colors.light.text,
+    color: palette.text,
   },
   placeholder: {
     ...typography.body,
-    color: colors.light.textTertiary,
+    color: palette.textTertiary,
     fontStyle: "italic",
     textAlign: "center",
     paddingVertical: spacing.lg,
@@ -516,13 +520,13 @@ const styles = StyleSheet.create({
   },
   chartLabel: {
     ...typography.caption1,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
     width: 80,
   },
   barBg: {
     flex: 1,
     height: 16,
-    backgroundColor: colors.light.surfaceGrouped,
+    backgroundColor: palette.surfaceGrouped,
     borderRadius: spacing.borderRadius.sm,
     overflow: "hidden",
   },
@@ -533,7 +537,7 @@ const styles = StyleSheet.create({
   chartValue: {
     ...typography.headline,
     fontSize: 14,
-    color: colors.light.text,
+    color: palette.text,
     width: 24,
     textAlign: "right",
   },
@@ -543,28 +547,28 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: spacing.xs + 2,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.light.separator,
+    borderBottomColor: palette.separator,
     gap: spacing.sm,
   },
   stockName: {
     ...typography.subheadline,
-    color: colors.light.text,
+    color: palette.text,
     flex: 1,
   },
   stockBadge: {
-    backgroundColor: colors.light.errorBg,
+    backgroundColor: palette.errorBg,
     paddingHorizontal: spacing.xs + 2,
     paddingVertical: 2,
     borderRadius: spacing.borderRadius.full,
   },
   stockBadgeText: {
     ...typography.caption1,
-    color: colors.light.error,
+    color: palette.error,
     fontWeight: "700",
   },
   stockMin: {
     ...typography.caption1,
-    color: colors.light.textTertiary,
+    color: palette.textTertiary,
     width: 60,
     textAlign: "right",
   },
@@ -574,27 +578,27 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: spacing.sm + 2,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.light.separator,
+    borderBottomColor: palette.separator,
     gap: spacing.sm,
   },
   eventDateBox: {
     width: 48,
     height: 48,
     borderRadius: spacing.borderRadius.md,
-    backgroundColor: colors.light.primaryLight,
+    backgroundColor: palette.primaryLight,
     justifyContent: "center",
     alignItems: "center",
   },
   eventMonth: {
     fontSize: 9,
     fontWeight: "700",
-    color: colors.light.primary,
+    color: palette.primary,
     letterSpacing: 0.5,
   },
   eventDay: {
     fontSize: 18,
     fontWeight: "700",
-    color: colors.light.primary,
+    color: palette.primary,
     lineHeight: 20,
   },
   eventInfo: {
@@ -603,12 +607,12 @@ const styles = StyleSheet.create({
   eventClient: {
     ...typography.headline,
     fontSize: 15,
-    color: colors.light.text,
+    color: palette.text,
   },
   eventType: {
     ...typography.caption2,
-    color: colors.light.textSecondary,
-    backgroundColor: colors.light.surfaceGrouped,
+    color: palette.textSecondary,
+    backgroundColor: palette.surfaceGrouped,
     paddingHorizontal: 4,
     paddingVertical: 1,
     borderRadius: spacing.borderRadius.sm,
@@ -619,6 +623,6 @@ const styles = StyleSheet.create({
   },
   eventPax: {
     ...typography.caption1,
-    color: colors.light.textTertiary,
+    color: palette.textTertiary,
   },
 });

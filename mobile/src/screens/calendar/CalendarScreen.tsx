@@ -27,6 +27,7 @@ import { CalendarStackParamList } from "../../types/navigation";
 import { Event } from "../../types/entities";
 import { eventService } from "../../services/eventService";
 import { useToast } from "../../hooks/useToast";
+import { useTheme } from "../../hooks/useTheme";
 import { logError } from "../../lib/errorHandler";
 import { EmptyState } from "../../components/shared";
 import { colors } from "../../theme/colors";
@@ -36,12 +37,12 @@ import { shadows } from "../../theme/shadows";
 
 type Props = NativeStackScreenProps<CalendarStackParamList, "CalendarView">;
 
-const statusColors: Record<string, string> = {
-  quoted: colors.light.statusQuoted,
-  confirmed: colors.light.statusConfirmed,
-  completed: colors.light.statusCompleted,
-  cancelled: colors.light.statusCancelled,
-};
+const getStatusColors = (palette: typeof colors.light): Record<string, string> => ({
+  quoted: palette.statusQuoted,
+  confirmed: palette.statusConfirmed,
+  completed: palette.statusCompleted,
+  cancelled: palette.statusCancelled,
+});
 
 export default function CalendarScreen({ navigation }: Props) {
   const addToast = useToast((s) => s.addToast);
@@ -50,6 +51,10 @@ export default function CalendarScreen({ navigation }: Props) {
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const { isDark } = useTheme();
+  const palette = isDark ? colors.dark : colors.light;
+  const styles = getStyles(palette);
+  const statusColors = getStatusColors(palette);
 
   const loadEvents = useCallback(async () => {
     try {
@@ -101,13 +106,13 @@ export default function CalendarScreen({ navigation }: Props) {
     <SafeAreaView style={styles.container} edges={[]}>
       <View style={styles.header}>
         <TouchableOpacity onPress={handlePrevMonth} style={styles.navButton}>
-          <ChevronLeft color={colors.light.textTertiary} size={24} />
+          <ChevronLeft color={palette.textTertiary} size={24} />
         </TouchableOpacity>
         <Text style={styles.monthTitle}>
           {format(currentDate, "MMMM yyyy", { locale: es }).toUpperCase()}
         </Text>
         <TouchableOpacity onPress={handleNextMonth} style={styles.navButton}>
-          <ChevronRight color={colors.light.textTertiary} size={24} />
+          <ChevronRight color={palette.textTertiary} size={24} />
         </TouchableOpacity>
       </View>
 
@@ -156,7 +161,7 @@ export default function CalendarScreen({ navigation }: Props) {
                       key={i}
                       style={[
                         styles.eventDot,
-                        { backgroundColor: statusColors[e.status] || colors.light.textTertiary },
+                        { backgroundColor: statusColors[e.status] || palette.textTertiary },
                       ]}
                     />
                   ))}
@@ -176,7 +181,7 @@ export default function CalendarScreen({ navigation }: Props) {
 
         {selectedDateEvents.length === 0 ? (
           <View style={styles.emptyDay}>
-            <CalendarIcon color={colors.light.textTertiary} size={32} />
+            <CalendarIcon color={palette.textTertiary} size={32} />
             <Text style={styles.emptyDayText}>
               No hay eventos programados
             </Text>
@@ -191,7 +196,7 @@ export default function CalendarScreen({ navigation }: Props) {
                   })
                 }
               >
-                <Plus color={colors.light.textInverse} size={16} />
+                <Plus color={palette.textInverse} size={16} />
                 <Text style={styles.createEventText}>Crear Evento</Text>
               </TouchableOpacity>
             )}
@@ -213,7 +218,7 @@ export default function CalendarScreen({ navigation }: Props) {
                 <View
                   style={[
                     styles.eventDotFull,
-                    { backgroundColor: statusColors[event.status] || colors.light.textTertiary },
+                    { backgroundColor: statusColors[event.status] || palette.textTertiary },
                   ]}
                 />
                 <View style={styles.eventInfo}>
@@ -241,10 +246,10 @@ export default function CalendarScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.light.surfaceGrouped,
+    backgroundColor: palette.surfaceGrouped,
   },
   header: {
     flexDirection: "row",
@@ -258,14 +263,14 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.light.card,
+    backgroundColor: palette.card,
     justifyContent: "center",
     alignItems: "center",
     ...shadows.sm,
   },
   monthTitle: {
     ...typography.headline,
-    color: colors.light.text,
+    color: palette.text,
   },
   weekDays: {
     flexDirection: "row",
@@ -279,7 +284,7 @@ const styles = StyleSheet.create({
   },
   weekDayText: {
     ...typography.caption1,
-    color: colors.light.textTertiary,
+    color: palette.textTertiary,
     fontWeight: "600",
   },
   calendar: {
@@ -295,25 +300,25 @@ const styles = StyleSheet.create({
     padding: 2,
   },
   dayCellSelected: {
-    backgroundColor: colors.light.primary,
+    backgroundColor: palette.primary,
     borderRadius: spacing.borderRadius.full,
   },
   dayCellToday: {
-    backgroundColor: colors.light.primaryLight,
+    backgroundColor: palette.primaryLight,
     borderRadius: spacing.borderRadius.full,
     borderWidth: 2,
-    borderColor: colors.light.primary,
+    borderColor: palette.primary,
   },
   dayText: {
     ...typography.body,
-    color: colors.light.text,
+    color: palette.text,
   },
   dayTextSelected: {
-    color: colors.light.textInverse,
+    color: palette.textInverse,
     fontWeight: "700",
   },
   dayTextToday: {
-    color: colors.light.primary,
+    color: palette.primary,
     fontWeight: "700",
   },
   eventDots: {
@@ -328,7 +333,7 @@ const styles = StyleSheet.create({
   },
   eventsList: {
     flex: 1,
-    backgroundColor: colors.light.card,
+    backgroundColor: palette.card,
     marginTop: spacing.md,
     borderTopLeftRadius: spacing.borderRadius.xl,
     borderTopRightRadius: spacing.borderRadius.xl,
@@ -337,7 +342,7 @@ const styles = StyleSheet.create({
   },
   eventsTitle: {
     ...typography.headline,
-    color: colors.light.text,
+    color: palette.text,
     marginBottom: spacing.md,
     textTransform: "capitalize",
   },
@@ -348,13 +353,13 @@ const styles = StyleSheet.create({
   },
   emptyDayText: {
     ...typography.body,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
   },
   createEventButton: {
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.xs,
-    backgroundColor: colors.light.primary,
+    backgroundColor: palette.primary,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: spacing.borderRadius.full,
@@ -362,13 +367,13 @@ const styles = StyleSheet.create({
   },
   createEventText: {
     ...typography.subheadline,
-    color: colors.light.textInverse,
+    color: palette.textInverse,
     fontWeight: "600",
   },
   eventCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.light.card,
+    backgroundColor: palette.card,
     borderRadius: spacing.borderRadius.lg,
     padding: spacing.md,
     marginBottom: spacing.sm,
@@ -386,15 +391,15 @@ const styles = StyleSheet.create({
   eventName: {
     ...typography.subheadline,
     fontWeight: "600",
-    color: colors.light.text,
+    color: palette.text,
   },
   eventDetail: {
     ...typography.caption1,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
   },
   eventStatus: {
     ...typography.caption1,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
     fontWeight: "600",
   },
 });

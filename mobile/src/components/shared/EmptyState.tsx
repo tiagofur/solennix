@@ -4,6 +4,7 @@ import { Inbox } from "lucide-react-native";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
+import { useTheme } from "../../hooks/useTheme";
 
 interface EmptyStateProps {
   icon?: React.ReactNode;
@@ -20,10 +21,14 @@ export default function EmptyState({
   actionLabel,
   onAction,
 }: EmptyStateProps) {
+  const { isDark } = useTheme();
+  const palette = isDark ? colors.dark : colors.light;
+  const styles = getStyles(palette);
+
   return (
     <View style={styles.container}>
       <View style={styles.iconContainer}>
-        {icon || <Inbox color={colors.light.textTertiary} size={48} />}
+        {icon || <Inbox color={palette.textTertiary} size={48} />}
       </View>
       <Text style={styles.title}>{title}</Text>
       {description && <Text style={styles.description}>{description}</Text>}
@@ -36,7 +41,7 @@ export default function EmptyState({
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "center",
@@ -50,18 +55,18 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.title3,
-    color: colors.light.text,
+    color: palette.text,
     textAlign: "center",
     marginBottom: spacing.xs,
   },
   description: {
     ...typography.body,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
     textAlign: "center",
     marginBottom: spacing.lg,
   },
   button: {
-    backgroundColor: colors.light.primary,
+    backgroundColor: palette.primary,
     borderRadius: spacing.borderRadius.md,
     paddingVertical: spacing.sm + 4,
     paddingHorizontal: spacing.xl,
@@ -70,6 +75,6 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     ...typography.headline,
-    color: colors.light.textInverse,
+    color: palette.textInverse,
   },
 });

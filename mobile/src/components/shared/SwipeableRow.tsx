@@ -12,6 +12,7 @@ import { Edit2, Trash2 } from "lucide-react-native";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
+import { useTheme } from "../../hooks/useTheme";
 
 interface SwipeAction {
   label: string;
@@ -35,6 +36,9 @@ export function SwipeableRow({
   rightActions,
 }: SwipeableRowProps) {
   const swipeableRef = useRef<Swipeable>(null);
+  const { isDark } = useTheme();
+  const palette = isDark ? colors.dark : colors.light;
+  const styles = getStyles(palette);
 
   const close = useCallback(() => {
     swipeableRef.current?.close();
@@ -60,7 +64,7 @@ export function SwipeableRow({
           label: "Editar",
           icon: "edit",
           color: "#fff",
-          backgroundColor: colors.light.primary,
+          backgroundColor: palette.primary,
           onPress: onEdit,
         });
       }
@@ -69,7 +73,7 @@ export function SwipeableRow({
           label: "Eliminar",
           icon: "delete",
           color: "#fff",
-          backgroundColor: colors.light.error,
+          backgroundColor: palette.error,
           onPress: onDelete,
         });
       }
@@ -98,7 +102,7 @@ export function SwipeableRow({
         ))}
       </View>
     );
-  }, [rightActions, onEdit, onDelete, handleAction]);
+  }, [rightActions, onEdit, onDelete, handleAction, palette, styles]);
 
   return (
     <Swipeable
@@ -113,7 +117,7 @@ export function SwipeableRow({
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   actionsContainer: {
     flexDirection: "row",
     alignItems: "stretch",

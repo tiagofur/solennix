@@ -29,6 +29,7 @@ import { uploadService } from "../../services/uploadService";
 import { useToast } from "../../hooks/useToast";
 import { logError } from "../../lib/errorHandler";
 import { EmptyState, ConfirmDialog, SkeletonList, SwipeableRow } from "../../components/shared";
+import { useTheme } from "../../hooks/useTheme";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
@@ -38,6 +39,9 @@ type Props = NativeStackScreenProps<ProductStackParamList, "ProductList">;
 
 export default function ProductListScreen({ navigation }: Props) {
   const addToast = useToast((s) => s.addToast);
+  const { isDark } = useTheme();
+  const palette = isDark ? colors.dark : colors.light;
+  const styles = getStyles(palette);
 
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
@@ -137,7 +141,7 @@ export default function ProductListScreen({ navigation }: Props) {
           />
         ) : (
           <View style={styles.iconBox}>
-            <Package color={colors.light.primary} size={22} />
+            <Package color={palette.primary} size={22} />
           </View>
         )}
         <View style={styles.cardBody}>
@@ -158,7 +162,7 @@ export default function ProductListScreen({ navigation }: Props) {
         <View style={styles.priceBox}>
           <Text style={styles.priceText}>{formatCurrency(item.base_price)}</Text>
         </View>
-        <ChevronRight color={colors.light.textTertiary} size={20} />
+        <ChevronRight color={palette.textTertiary} size={20} />
       </TouchableOpacity>
       </SwipeableRow>
       </Animated.View>
@@ -181,17 +185,17 @@ export default function ProductListScreen({ navigation }: Props) {
           <TextInput
             style={styles.searchInput}
             placeholder="Buscar productos..."
-            placeholderTextColor={colors.light.textTertiary}
+            placeholderTextColor={palette.textTertiary}
             value={search}
             onChangeText={setSearch}
             autoCorrect={false}
           />
           {search.length > 0 ? (
             <TouchableOpacity onPress={() => setSearch("")}>
-              <X color={colors.light.textTertiary} size={18} />
+              <X color={palette.textTertiary} size={18} />
             </TouchableOpacity>
           ) : (
-            <Search color={colors.light.textTertiary} size={18} />
+            <Search color={palette.textTertiary} size={18} />
           )}
         </View>
       </View>
@@ -249,7 +253,7 @@ export default function ProductListScreen({ navigation }: Props) {
             />
           ) : (
             <EmptyState
-              icon={<Package color={colors.light.textTertiary} size={48} />}
+              icon={<Package color={palette.textTertiary} size={48} />}
               title="Sin productos"
               description="Agrega tu primer producto al catálogo."
               actionLabel="Nuevo Producto"
@@ -264,7 +268,7 @@ export default function ProductListScreen({ navigation }: Props) {
         activeOpacity={0.8}
         onPress={() => navigation.navigate("ProductForm", {})}
       >
-        <Plus color={colors.light.textInverse} size={28} />
+        <Plus color={palette.textInverse} size={28} />
       </TouchableOpacity>
 
       <ConfirmDialog
@@ -281,10 +285,10 @@ export default function ProductListScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.light.surfaceGrouped,
+    backgroundColor: palette.surfaceGrouped,
   },
   flatList: {
     flexGrow: 1,
@@ -297,7 +301,7 @@ const styles = StyleSheet.create({
   searchBox: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.light.surface,
+    backgroundColor: palette.surface,
     borderRadius: spacing.borderRadius.md,
     paddingHorizontal: spacing.md,
     height: 38,
@@ -306,7 +310,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     ...typography.body,
-    color: colors.light.text,
+    color: palette.text,
     padding: 0,
   },
   categoriesWrapper: {
@@ -321,7 +325,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: 6,
     borderRadius: 16,
-    backgroundColor: colors.light.card,
+    backgroundColor: palette.card,
     ...shadows.sm,
     marginRight: spacing.xs,
     height: 32,
@@ -331,13 +335,13 @@ const styles = StyleSheet.create({
   categoryChipText: {
     fontSize: 12,
     fontWeight: "600",
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
   },
   categoryChipActive: {
-    backgroundColor: colors.light.primary,
+    backgroundColor: palette.primary,
   },
   categoryChipTextActive: {
-    color: colors.light.textInverse,
+    color: palette.textInverse,
   },
   listContent: {
     paddingHorizontal: spacing.lg,
@@ -351,7 +355,7 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.light.card,
+    backgroundColor: palette.card,
     borderRadius: spacing.borderRadius.lg,
     ...shadows.sm,
     padding: spacing.md,
@@ -362,13 +366,13 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: spacing.borderRadius.lg,
-    backgroundColor: colors.light.surface,
+    backgroundColor: palette.surface,
   },
   iconBox: {
     width: 44,
     height: 44,
     borderRadius: spacing.borderRadius.lg,
-    backgroundColor: colors.light.primaryLight,
+    backgroundColor: palette.primaryLight,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -379,7 +383,7 @@ const styles = StyleSheet.create({
   cardName: {
     ...typography.subheadline,
     fontWeight: "500",
-    color: colors.light.text,
+    color: palette.text,
   },
   cardRow: {
     flexDirection: "row",
@@ -387,7 +391,7 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   categoryBadge: {
-    backgroundColor: colors.light.surface,
+    backgroundColor: palette.surface,
     paddingHorizontal: spacing.xs,
     paddingVertical: 1,
     borderRadius: 2,
@@ -395,20 +399,20 @@ const styles = StyleSheet.create({
   categoryText: {
     fontSize: 9,
     fontWeight: "600",
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
     textTransform: "uppercase",
     letterSpacing: 0.3,
     lineHeight: 10,
   },
   inactiveBadge: {
-    backgroundColor: colors.light.errorBg,
+    backgroundColor: palette.errorBg,
     paddingHorizontal: spacing.xs + 2,
     paddingVertical: 1,
     borderRadius: spacing.borderRadius.sm,
   },
   inactiveText: {
     ...typography.caption,
-    color: colors.light.error,
+    color: palette.error,
     fontWeight: "600",
     fontSize: 9,
   },
@@ -417,7 +421,7 @@ const styles = StyleSheet.create({
   },
   priceText: {
     ...typography.label,
-    color: colors.light.text,
+    color: palette.text,
     fontSize: 14,
   },
   fab: {
@@ -427,7 +431,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: colors.light.primary,
+    backgroundColor: palette.primary,
     justifyContent: "center",
     alignItems: "center",
     ...shadows.fab,

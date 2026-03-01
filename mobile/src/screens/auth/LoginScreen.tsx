@@ -16,6 +16,7 @@ import { z } from "zod";
 import { Mail, Lock } from "lucide-react-native";
 import { AuthStackParamList } from "../../types/navigation";
 import { useAuth } from "../../contexts/AuthContext";
+import { useTheme } from "../../hooks/useTheme";
 import { FormInput } from "../../components/shared";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
@@ -34,6 +35,9 @@ export default function LoginScreen({ navigation }: Props) {
   const { signIn } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const { isDark } = useTheme();
+  const palette = isDark ? colors.dark : colors.light;
+  const styles = getStyles(palette);
 
   const {
     control,
@@ -89,7 +93,7 @@ export default function LoginScreen({ navigation }: Props) {
               keyboardType="email-address"
               textContentType="emailAddress"
               autoComplete="email"
-              icon={<Mail color={colors.light.textTertiary} size={20} />}
+              icon={<Mail color={palette.textTertiary} size={20} />}
             />
           )}
         />
@@ -108,7 +112,7 @@ export default function LoginScreen({ navigation }: Props) {
               secureTextEntry
               textContentType="password"
               autoComplete="password"
-              icon={<Lock color={colors.light.textTertiary} size={20} />}
+              icon={<Lock color={palette.textTertiary} size={20} />}
             />
           )}
         />
@@ -146,10 +150,10 @@ export default function LoginScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.light.background,
+    backgroundColor: palette.background,
   },
   inner: {
     flexGrow: 1,
@@ -160,29 +164,29 @@ const styles = StyleSheet.create({
   title: {
     ...typography.h1,
     textAlign: "center",
-    color: colors.light.primary,
+    color: palette.primary,
     marginBottom: spacing.xxs,
   },
   subtitle: {
     ...typography.body,
     textAlign: "center",
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
     marginBottom: spacing.xxl,
   },
   errorBanner: {
     backgroundColor: "#fef2f2",
     borderLeftWidth: 4,
-    borderLeftColor: colors.light.error,
+    borderLeftColor: palette.error,
     borderRadius: spacing.borderRadius.sm,
     padding: spacing.sm + 4,
     marginBottom: spacing.md,
   },
   errorBannerText: {
     ...typography.bodySmall,
-    color: colors.light.error,
+    color: palette.error,
   },
   button: {
-    backgroundColor: colors.light.primary,
+    backgroundColor: palette.primary,
     borderRadius: spacing.borderRadius.md,
     paddingVertical: spacing.md - 2,
     alignItems: "center",
@@ -201,10 +205,10 @@ const styles = StyleSheet.create({
   },
   link: {
     ...typography.body,
-    color: colors.light.primary,
+    color: palette.primary,
   },
   linkSecondary: {
     ...typography.body,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
   },
 });

@@ -23,6 +23,7 @@ import { colors } from "../theme/colors";
 import { spacing } from "../theme/spacing";
 import { typography } from "../theme/typography";
 import { shadows } from "../theme/shadows";
+import { useTheme } from "../hooks/useTheme";
 
 type EventWithClient = Event & {
   client?: { name: string } | null;
@@ -32,6 +33,9 @@ export default function PendingEventsModal() {
   const [pendingEvents, setPendingEvents] = useState<EventWithClient[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const { isDark } = useTheme();
+  const palette = isDark ? colors.dark : colors.light;
+  const styles = getStyles(palette);
 
   useEffect(() => {
     const fetchPendingEvents = async () => {
@@ -93,7 +97,7 @@ export default function PendingEventsModal() {
         <View style={styles.container}>
           <View style={styles.header}>
             <View style={styles.headerIcon}>
-              <AlertCircle color={colors.light.primary} size={24} />
+              <AlertCircle color={palette.primary} size={24} />
             </View>
             <View style={styles.headerInfo}>
               <Text style={styles.title}>Eventos Pendientes de Cierre</Text>
@@ -106,7 +110,7 @@ export default function PendingEventsModal() {
               onPress={() => setIsOpen(false)}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
-              <X color={colors.light.textMuted} size={22} />
+              <X color={palette.textMuted} size={22} />
             </TouchableOpacity>
           </View>
 
@@ -165,7 +169,7 @@ export default function PendingEventsModal() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
@@ -174,7 +178,7 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
   },
   container: {
-    backgroundColor: colors.light.card,
+    backgroundColor: palette.card,
     borderRadius: spacing.borderRadius.xl,
     padding: spacing.lg,
     width: "100%",
@@ -192,7 +196,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.light.primaryLight,
+    backgroundColor: palette.primaryLight,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -201,18 +205,18 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.headline,
-    color: colors.light.text,
+    color: palette.text,
   },
   subtitle: {
     ...typography.caption1,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
     marginTop: spacing.xxs,
   },
   list: {
     maxHeight: 300,
   },
   eventCard: {
-    backgroundColor: colors.light.surface,
+    backgroundColor: palette.surface,
     borderRadius: spacing.borderRadius.md,
     padding: spacing.md,
     marginBottom: spacing.sm,
@@ -222,12 +226,12 @@ const styles = StyleSheet.create({
   },
   eventName: {
     ...typography.subheadline,
-    color: colors.light.text,
+    color: palette.text,
     fontWeight: "600",
   },
   eventDate: {
     ...typography.caption1,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
     marginTop: 2,
   },
   eventActions: {
@@ -240,7 +244,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: spacing.xs,
-    backgroundColor: colors.light.success,
+    backgroundColor: palette.success,
     borderRadius: spacing.borderRadius.sm,
     paddingVertical: spacing.sm,
   },
@@ -255,7 +259,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: spacing.xs,
-    backgroundColor: colors.light.error,
+    backgroundColor: palette.error,
     borderRadius: spacing.borderRadius.sm,
     paddingVertical: spacing.sm,
   },
@@ -269,10 +273,10 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     marginTop: spacing.sm,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.light.separator,
+    borderTopColor: palette.separator,
   },
   closeBtnText: {
     ...typography.body,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
   },
 });

@@ -4,6 +4,7 @@ import { AppBottomSheet } from "./AppBottomSheet";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
+import { useTheme } from "../../hooks/useTheme";
 
 interface ConfirmDialogProps {
   visible: boolean;
@@ -26,6 +27,10 @@ export default function ConfirmDialog({
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
+  const { isDark } = useTheme();
+  const palette = isDark ? colors.dark : colors.light;
+  const styles = getStyles(palette);
+
   return (
     <AppBottomSheet visible={visible} onClose={onCancel}>
       <View style={styles.content}>
@@ -55,45 +60,45 @@ export default function ConfirmDialog({
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   content: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.sm,
   },
   title: {
     ...typography.title3,
-    color: colors.light.text,
+    color: palette.text,
     textAlign: "center",
     marginBottom: spacing.xs,
   },
   description: {
     ...typography.body,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
     textAlign: "center",
     marginBottom: spacing.lg,
   },
   confirmButton: {
-    backgroundColor: colors.light.primary,
+    backgroundColor: palette.primary,
     borderRadius: spacing.borderRadius.lg,
     paddingVertical: spacing.md + 2,
     alignItems: "center",
     marginBottom: spacing.sm,
   },
   destructiveButton: {
-    backgroundColor: colors.light.error,
+    backgroundColor: palette.error,
   },
   confirmText: {
     ...typography.headline,
-    color: colors.light.textInverse,
+    color: palette.textInverse,
   },
   cancelButton: {
-    backgroundColor: colors.light.surface,
+    backgroundColor: palette.surface,
     borderRadius: spacing.borderRadius.lg,
     paddingVertical: spacing.md + 2,
     alignItems: "center",
   },
   cancelText: {
     ...typography.headline,
-    color: colors.light.primary,
+    color: palette.primary,
   },
 });

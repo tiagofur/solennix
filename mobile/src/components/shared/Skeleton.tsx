@@ -9,6 +9,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
+import { useTheme } from "../../hooks/useTheme";
 
 interface SkeletonProps {
   width?: number | string;
@@ -19,6 +20,8 @@ interface SkeletonProps {
 
 function SkeletonBase({ width, height = 16, borderRadius = 8, style }: SkeletonProps) {
   const shimmer = useSharedValue(0);
+  const { isDark } = useTheme();
+  const palette = isDark ? colors.dark : colors.light;
 
   useEffect(() => {
     shimmer.value = withRepeat(
@@ -39,7 +42,7 @@ function SkeletonBase({ width, height = 16, borderRadius = 8, style }: SkeletonP
           width: width as any,
           height,
           borderRadius,
-          backgroundColor: colors.light.border,
+          backgroundColor: palette.border,
         },
         animatedStyle,
         style,
@@ -62,6 +65,10 @@ interface SkeletonCardProps {
 }
 
 export function SkeletonCard({ lines = 2, showAvatar = false }: SkeletonCardProps) {
+  const { isDark } = useTheme();
+  const palette = isDark ? colors.dark : colors.light;
+  const skeletonStyles = getSkeletonStyles(palette);
+
   return (
     <View style={skeletonStyles.card}>
       <View style={skeletonStyles.cardRow}>
@@ -83,6 +90,10 @@ export function SkeletonCard({ lines = 2, showAvatar = false }: SkeletonCardProp
 }
 
 export function SkeletonList({ count = 5, showAvatar = false }: { count?: number; showAvatar?: boolean }) {
+  const { isDark } = useTheme();
+  const palette = isDark ? colors.dark : colors.light;
+  const skeletonStyles = getSkeletonStyles(palette);
+
   return (
     <View style={skeletonStyles.list}>
       {Array.from({ length: count }).map((_, i) => (
@@ -92,9 +103,9 @@ export function SkeletonList({ count = 5, showAvatar = false }: { count?: number
   );
 }
 
-const skeletonStyles = StyleSheet.create({
+const getSkeletonStyles = (palette: typeof colors.light) => StyleSheet.create({
   card: {
-    backgroundColor: colors.light.card,
+    backgroundColor: palette.card,
     borderRadius: spacing.borderRadius.lg,
     padding: spacing.md,
     marginBottom: spacing.sm,

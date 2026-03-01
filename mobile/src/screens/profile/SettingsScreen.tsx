@@ -27,6 +27,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { revenueCatService } from "../../services/revenueCatService";
 import { useToast } from "../../hooks/useToast";
 import { ConfirmDialog } from "../../components/shared";
+import { useTheme } from "../../hooks/useTheme";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
@@ -51,6 +52,9 @@ function SettingsRow({
   trailing,
   disabled,
 }: SettingsRowProps) {
+  const { isDark } = useTheme();
+  const palette = isDark ? colors.dark : colors.light;
+  const styles = getStyles(palette);
   return (
     <TouchableOpacity
       style={styles.row}
@@ -85,6 +89,9 @@ export default function SettingsScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<SettingsStackParamList>>();
   const { addToast } = useToast();
+  const { isDark } = useTheme();
+  const palette = isDark ? colors.dark : colors.light;
+  const styles = getStyles(palette);
   const [showLogout, setShowLogout] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [restoring, setRestoring] = useState(false);
@@ -121,7 +128,7 @@ export default function SettingsScreen() {
     }
   };
 
-  const chevron = <ChevronRight color={colors.light.textTertiary} size={18} />;
+  const chevron = <ChevronRight color={palette.textTertiary} size={18} />;
 
   const planLabel = planIsPro ? "Pro" : "Básico";
 
@@ -136,7 +143,7 @@ export default function SettingsScreen() {
             <Image source={{ uri: user.logo_url }} style={styles.avatar} />
           ) : (
             <View style={styles.avatarPlaceholder}>
-              <User color={colors.light.primary} size={28} />
+              <User color={palette.primary} size={28} />
             </View>
           )}
           <View style={styles.userInfo}>
@@ -149,13 +156,13 @@ export default function SettingsScreen() {
         <Text style={styles.sectionTitle}>Perfil</Text>
         <View style={styles.section}>
           <SettingsRow
-            icon={<User color={colors.light.textTertiary} size={20} />}
+            icon={<User color={palette.textTertiary} size={20} />}
             label="Editar Perfil"
             onPress={() => navigation.navigate("EditProfile")}
             trailing={chevron}
           />
           <SettingsRow
-            icon={<CreditCard color={colors.light.textTertiary} size={20} />}
+            icon={<CreditCard color={palette.textTertiary} size={20} />}
             label="Planes y Precios"
             onPress={() => navigation.navigate("Pricing")}
             trailing={
@@ -175,7 +182,7 @@ export default function SettingsScreen() {
                     {planLabel}
                   </Text>
                 </View>
-                <ChevronRight color={colors.light.textTertiary} size={18} />
+                <ChevronRight color={palette.textTertiary} size={18} />
               </View>
             }
           />
@@ -185,13 +192,13 @@ export default function SettingsScreen() {
         <Text style={styles.sectionTitle}>Negocio</Text>
         <View style={styles.section}>
           <SettingsRow
-            icon={<Building color={colors.light.textTertiary} size={20} />}
+            icon={<Building color={palette.textTertiary} size={20} />}
             label="Configuración del Negocio"
             onPress={() => navigation.navigate("BusinessSettings")}
             trailing={chevron}
           />
           <SettingsRow
-            icon={<FileText color={colors.light.textTertiary} size={20} />}
+            icon={<FileText color={palette.textTertiary} size={20} />}
             label="Valores de Contrato"
             onPress={() => navigation.navigate("ContractDefaults")}
             trailing={chevron}
@@ -202,7 +209,7 @@ export default function SettingsScreen() {
         <Text style={styles.sectionTitle}>Otro</Text>
         <View style={styles.section}>
           <SettingsRow
-            icon={<Bell color={colors.light.textTertiary} size={20} />}
+            icon={<Bell color={palette.textTertiary} size={20} />}
             label="Notificaciones"
             disabled
             trailing={
@@ -210,7 +217,7 @@ export default function SettingsScreen() {
             }
           />
           <SettingsRow
-            icon={<Info color={colors.light.textTertiary} size={20} />}
+            icon={<Info color={palette.textTertiary} size={20} />}
             label="Acerca de"
             onPress={() => navigation.navigate("About")}
             trailing={chevron}
@@ -225,11 +232,11 @@ export default function SettingsScreen() {
               icon={
                 restoring ? (
                   <ActivityIndicator
-                    color={colors.light.textTertiary}
+                    color={palette.textTertiary}
                     size={20}
                   />
                 ) : (
-                  <RefreshCw color={colors.light.textTertiary} size={20} />
+                  <RefreshCw color={palette.textTertiary} size={20} />
                 )
               }
               label="Restaurar Compras"
@@ -240,9 +247,9 @@ export default function SettingsScreen() {
           <SettingsRow
             icon={
               loggingOut ? (
-                <ActivityIndicator color={colors.light.error} size={20} />
+                <ActivityIndicator color={palette.error} size={20} />
               ) : (
-                <LogOut color={colors.light.error} size={20} />
+                <LogOut color={palette.error} size={20} />
               )
             }
             label="Cerrar Sesión"
@@ -265,10 +272,10 @@ export default function SettingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.light.surfaceGrouped,
+    backgroundColor: palette.surfaceGrouped,
   },
   content: {
     paddingHorizontal: spacing.lg,
@@ -276,14 +283,14 @@ const styles = StyleSheet.create({
   },
   header: {
     ...typography.title1,
-    color: colors.light.text,
+    color: palette.text,
     marginTop: spacing.sm,
     marginBottom: spacing.md,
   },
   card: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.light.card,
+    backgroundColor: palette.card,
     borderRadius: spacing.borderRadius.lg,
     padding: spacing.md,
     marginBottom: spacing.lg,
@@ -293,13 +300,13 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: colors.light.surface,
+    backgroundColor: palette.surface,
   },
   avatarPlaceholder: {
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: colors.light.primaryLight,
+    backgroundColor: palette.primaryLight,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -309,23 +316,23 @@ const styles = StyleSheet.create({
   },
   userName: {
     ...typography.headline,
-    color: colors.light.text,
+    color: palette.text,
   },
   userEmail: {
     ...typography.bodySmall,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
     marginTop: 2,
   },
   sectionTitle: {
     ...typography.footnote,
-    color: colors.light.textTertiary,
+    color: palette.textTertiary,
     textTransform: "uppercase",
     letterSpacing: 0.8,
     marginBottom: spacing.xs,
     marginTop: spacing.sm,
   },
   section: {
-    backgroundColor: colors.light.card,
+    backgroundColor: palette.card,
     borderRadius: spacing.borderRadius.lg,
     marginBottom: spacing.md,
     overflow: "hidden",
@@ -338,7 +345,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.md,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.light.separator,
+    borderBottomColor: palette.separator,
   },
   rowLeft: {
     flexDirection: "row",
@@ -347,18 +354,18 @@ const styles = StyleSheet.create({
   },
   rowLabel: {
     ...typography.body,
-    color: colors.light.text,
+    color: palette.text,
   },
   rowSubtitle: {
     ...typography.caption1,
-    color: colors.light.textTertiary,
+    color: palette.textTertiary,
     marginTop: 2,
   },
   destructiveText: {
-    color: colors.light.error,
+    color: palette.error,
   },
   disabledText: {
-    color: colors.light.textTertiary,
+    color: palette.textTertiary,
   },
   rowTrailingGroup: {
     flexDirection: "row",
@@ -366,24 +373,24 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   planBadge: {
-    backgroundColor: colors.light.surfaceAlt,
+    backgroundColor: palette.surfaceAlt,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xxs,
     borderRadius: spacing.borderRadius.sm,
   },
   planBadgePro: {
-    backgroundColor: colors.light.successBg,
+    backgroundColor: palette.successBg,
   },
   planBadgeText: {
     ...typography.caption1,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
     fontWeight: "600",
   },
   planBadgeTextPro: {
-    color: colors.light.success,
+    color: palette.success,
   },
   comingSoonText: {
     ...typography.caption1,
-    color: colors.light.textTertiary,
+    color: palette.textTertiary,
   },
 });

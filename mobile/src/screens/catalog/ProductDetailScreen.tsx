@@ -23,6 +23,7 @@ import { uploadService } from "../../services/uploadService";
 import { useToast } from "../../hooks/useToast";
 import { logError } from "../../lib/errorHandler";
 import { LoadingSpinner, ConfirmDialog, EmptyState } from "../../components/shared";
+import { useTheme } from "../../hooks/useTheme";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
@@ -33,6 +34,9 @@ type Props = NativeStackScreenProps<ProductStackParamList, "ProductDetail">;
 export default function ProductDetailScreen({ navigation, route }: Props) {
   const { id } = route.params;
   const addToast = useToast((s) => s.addToast);
+  const { isDark } = useTheme();
+  const palette = isDark ? colors.dark : colors.light;
+  const styles = getStyles(palette);
 
   const [product, setProduct] = useState<Product | null>(null);
   const [ingredients, setIngredients] = useState<any[]>([]);
@@ -111,7 +115,7 @@ export default function ProductDetailScreen({ navigation, route }: Props) {
             />
           ) : (
             <View style={styles.iconBox}>
-              <Package color={colors.light.primary} size={32} />
+              <Package color={palette.primary} size={32} />
             </View>
           )}
           <Text style={styles.productName}>{product.name}</Text>
@@ -135,7 +139,7 @@ export default function ProductDetailScreen({ navigation, route }: Props) {
 
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Estado</Text>
-            <Text style={[styles.infoValue, { color: product.is_active ? colors.light.success : colors.light.error }]}>
+            <Text style={[styles.infoValue, { color: product.is_active ? palette.success : palette.error }]}>
               {product.is_active ? "Activo" : "Inactivo"}
             </Text>
           </View>
@@ -188,8 +192,8 @@ export default function ProductDetailScreen({ navigation, route }: Props) {
             style={styles.actionBtn}
             onPress={() => navigation.navigate("ProductForm", { id })}
           >
-            <Edit2 color={colors.light.primary} size={18} />
-            <Text style={[styles.actionText, { color: colors.light.primary }]}>
+            <Edit2 color={palette.primary} size={18} />
+            <Text style={[styles.actionText, { color: palette.primary }]}>
               Editar
             </Text>
           </TouchableOpacity>
@@ -197,8 +201,8 @@ export default function ProductDetailScreen({ navigation, route }: Props) {
             style={[styles.actionBtn, styles.deleteBtn]}
             onPress={() => setShowDelete(true)}
           >
-            <Trash2 color={colors.light.error} size={18} />
-            <Text style={[styles.actionText, { color: colors.light.error }]}>
+            <Trash2 color={palette.error} size={18} />
+            <Text style={[styles.actionText, { color: palette.error }]}>
               Eliminar
             </Text>
           </TouchableOpacity>
@@ -219,10 +223,10 @@ export default function ProductDetailScreen({ navigation, route }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.light.surfaceGrouped,
+    backgroundColor: palette.surfaceGrouped,
   },
   content: {
     paddingHorizontal: spacing.lg,
@@ -230,7 +234,7 @@ const styles = StyleSheet.create({
   },
   headerCard: {
     alignItems: "center",
-    backgroundColor: colors.light.card,
+    backgroundColor: palette.card,
     borderRadius: spacing.borderRadius.xl,
     ...shadows.sm,
     padding: spacing.xl,
@@ -241,33 +245,33 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 180,
     borderRadius: spacing.borderRadius.lg,
-    backgroundColor: colors.light.surface,
+    backgroundColor: palette.surface,
     marginBottom: spacing.md,
   },
   iconBox: {
     width: 64,
     height: 64,
     borderRadius: spacing.borderRadius.xl,
-    backgroundColor: colors.light.primaryLight,
+    backgroundColor: palette.primaryLight,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: spacing.md,
   },
   productName: {
     ...typography.h2,
-    color: colors.light.text,
+    color: palette.text,
     textAlign: "center",
     marginBottom: spacing.sm,
   },
   categoryBadge: {
-    backgroundColor: colors.light.surface,
+    backgroundColor: palette.surface,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
     borderRadius: spacing.borderRadius.full,
   },
   categoryText: {
     ...typography.caption,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
     fontWeight: "700",
     textTransform: "uppercase",
     fontSize: 11,
@@ -275,18 +279,18 @@ const styles = StyleSheet.create({
   },
   inactiveBadge: {
     marginTop: spacing.sm,
-    backgroundColor: colors.light.errorBg,
+    backgroundColor: palette.errorBg,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
     borderRadius: spacing.borderRadius.full,
   },
   inactiveText: {
     ...typography.caption,
-    color: colors.light.error,
+    color: palette.error,
     fontWeight: "600",
   },
   section: {
-    backgroundColor: colors.light.card,
+    backgroundColor: palette.card,
     borderRadius: spacing.borderRadius.lg,
     ...shadows.sm,
     padding: spacing.md,
@@ -294,7 +298,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...typography.h3,
-    color: colors.light.text,
+    color: palette.text,
     marginBottom: spacing.sm,
   },
   infoRow: {
@@ -303,19 +307,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: spacing.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.light.separator,
+    borderBottomColor: palette.separator,
   },
   infoLabel: {
     ...typography.body,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
   },
   infoValue: {
     ...typography.label,
-    color: colors.light.text,
+    color: palette.text,
   },
   emptyText: {
     ...typography.body,
-    color: colors.light.textTertiary,
+    color: palette.textTertiary,
     fontStyle: "italic",
     textAlign: "center",
     paddingVertical: spacing.md,
@@ -326,22 +330,22 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: spacing.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.light.separator,
+    borderBottomColor: palette.separator,
   },
   ingredientInfo: {
     flex: 1,
   },
   ingredientName: {
     ...typography.label,
-    color: colors.light.text,
+    color: palette.text,
   },
   ingredientUnit: {
     ...typography.caption,
-    color: colors.light.textTertiary,
+    color: palette.textTertiary,
   },
   ingredientCost: {
     ...typography.label,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
   },
   totalRow: {
     flexDirection: "row",
@@ -352,11 +356,11 @@ const styles = StyleSheet.create({
   },
   totalLabel: {
     ...typography.label,
-    color: colors.light.text,
+    color: palette.text,
   },
   totalValue: {
     ...typography.h3,
-    color: colors.light.primary,
+    color: palette.primary,
   },
   actions: {
     flexDirection: "row",
@@ -370,12 +374,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: spacing.xs,
     paddingVertical: spacing.sm + 2,
-    backgroundColor: colors.light.card,
+    backgroundColor: palette.card,
     borderRadius: spacing.borderRadius.lg,
     ...shadows.sm,
   },
   deleteBtn: {
-    backgroundColor: colors.light.errorBg,
+    backgroundColor: palette.errorBg,
   },
   actionText: {
     ...typography.button,

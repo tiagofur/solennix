@@ -41,6 +41,7 @@ import { usePlanLimits } from "../../hooks/usePlanLimits";
 import { useAuth } from "../../contexts/AuthContext";
 import { logError } from "../../lib/errorHandler";
 import { useStoreReview } from "../../hooks/useStoreReview";
+import { useTheme } from "../../hooks/useTheme";
 import { LoadingSpinner, UpgradeBanner, AppBottomSheet, Avatar } from "../../components/shared";
 import { uploadService } from "../../services/uploadService";
 import { colors } from "../../theme/colors";
@@ -88,6 +89,9 @@ export default function EventFormScreen({ navigation, route }: Props) {
   const { user } = useAuth();
   const { canCreateEvent, isBasicPlan, eventsThisMonth, limit } = usePlanLimits();
   const { trackEventCreated } = useStoreReview();
+  const { isDark } = useTheme();
+  const palette = isDark ? colors.dark : colors.light;
+  const styles = getStyles(palette);
 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(isEditing);
@@ -420,7 +424,7 @@ export default function EventFormScreen({ navigation, route }: Props) {
                 ]}
               >
                 {step > s.id ? (
-                  <Check color={colors.light.textInverse} size={14} />
+                  <Check color={palette.textInverse} size={14} />
                 ) : (
                   <Text
                     style={[
@@ -570,7 +574,7 @@ export default function EventFormScreen({ navigation, route }: Props) {
                 style={styles.addButton}
                 onPress={() => setShowProductPicker(true)}
               >
-                <Plus color={colors.light.primary} size={18} />
+                <Plus color={palette.primary} size={18} />
                 <Text style={styles.addButtonText}>Agregar</Text>
               </TouchableOpacity>
             </View>
@@ -607,7 +611,7 @@ export default function EventFormScreen({ navigation, route }: Props) {
                     </TouchableOpacity>
                   </View>
                   <TouchableOpacity onPress={() => handleRemoveProduct(index)}>
-                    <Trash2 color={colors.light.error} size={18} />
+                    <Trash2 color={palette.error} size={18} />
                   </TouchableOpacity>
                 </View>
               ))
@@ -627,7 +631,7 @@ export default function EventFormScreen({ navigation, route }: Props) {
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Extras</Text>
               <TouchableOpacity style={styles.addButton} onPress={handleAddExtra}>
-                <Plus color={colors.light.primary} size={18} />
+                <Plus color={palette.primary} size={18} />
                 <Text style={styles.addButtonText}>Agregar</Text>
               </TouchableOpacity>
             </View>
@@ -665,7 +669,7 @@ export default function EventFormScreen({ navigation, route }: Props) {
                       />
                     </View>
                     <TouchableOpacity onPress={() => handleRemoveExtra(index)}>
-                      <Trash2 color={colors.light.error} size={18} />
+                      <Trash2 color={palette.error} size={18} />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -732,7 +736,7 @@ export default function EventFormScreen({ navigation, route }: Props) {
               {formData.discount > 0 && (
                 <View style={styles.totalLine}>
                   <Text style={styles.totalLineLabel}>Descuento</Text>
-                  <Text style={[styles.totalLineValue, { color: colors.light.error }]}>
+                  <Text style={[styles.totalLineValue, { color: palette.error }]}>
                     -{formatCurrency(totals.discountAmount)}
                   </Text>
                 </View>
@@ -745,9 +749,9 @@ export default function EventFormScreen({ navigation, route }: Props) {
                 <Text style={styles.totalLineLabelBold}>Total</Text>
                 <Text style={styles.totalLineValueBold}>{formatCurrency(totals.total)}</Text>
               </View>
-              <View style={[styles.totalLine, { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.light.separator, paddingTop: spacing.sm }]}>
+              <View style={[styles.totalLine, { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: palette.separator, paddingTop: spacing.sm }]}>
                 <Text style={styles.totalLineLabel}>Anticipo ({formData.deposit_percent}%)</Text>
-                <Text style={[styles.totalLineValue, { color: colors.light.primary }]}>
+                <Text style={[styles.totalLineValue, { color: palette.primary }]}>
                   {formatCurrency(totals.deposit)}
                 </Text>
               </View>
@@ -762,7 +766,7 @@ export default function EventFormScreen({ navigation, route }: Props) {
           onPress={handlePrev}
           disabled={step === 1}
         >
-          <ChevronLeft color={step === 1 ? colors.light.textMuted : colors.light.primary} size={20} />
+          <ChevronLeft color={step === 1 ? palette.textMuted : palette.primary} size={20} />
         </TouchableOpacity>
         
         <TouchableOpacity
@@ -771,18 +775,18 @@ export default function EventFormScreen({ navigation, route }: Props) {
           disabled={saving}
         >
           {saving ? (
-            <ActivityIndicator color={colors.light.textInverse} />
+            <ActivityIndicator color={palette.textInverse} />
           ) : (
             <>
               {step === 4 ? (
                 <>
-                  <Save color={colors.light.textInverse} size={18} />
+                  <Save color={palette.textInverse} size={18} />
                   <Text style={styles.saveButtonText}>Guardar</Text>
                 </>
               ) : (
                 <>
                   <Text style={styles.nextButtonText}>Siguiente</Text>
-                  <ChevronRight color={colors.light.textInverse} size={20} />
+                  <ChevronRight color={palette.textInverse} size={20} />
                 </>
               )}
             </>
@@ -800,11 +804,11 @@ export default function EventFormScreen({ navigation, route }: Props) {
         <View style={styles.sheetHeader}>
           <Text style={styles.sheetTitle}>Seleccionar Cliente</Text>
           <View style={styles.searchBox}>
-            <Search color={colors.light.textMuted} size={16} />
+            <Search color={palette.textMuted} size={16} />
             <TextInput
               style={styles.searchInput}
               placeholder="Buscar cliente..."
-              placeholderTextColor={colors.light.textMuted}
+              placeholderTextColor={palette.textMuted}
               value={clientSearch}
               onChangeText={setClientSearch}
               autoCapitalize="none"
@@ -833,7 +837,7 @@ export default function EventFormScreen({ navigation, route }: Props) {
               )}
             </View>
             {formData.client_id === client.id && (
-              <Check color={colors.light.primary} size={18} />
+              <Check color={palette.primary} size={18} />
             )}
           </TouchableOpacity>
         ))}
@@ -849,11 +853,11 @@ export default function EventFormScreen({ navigation, route }: Props) {
         <View style={styles.sheetHeader}>
           <Text style={styles.sheetTitle}>Agregar Producto</Text>
           <View style={styles.searchBox}>
-            <Search color={colors.light.textMuted} size={16} />
+            <Search color={palette.textMuted} size={16} />
             <TextInput
               style={styles.searchInput}
               placeholder="Buscar producto..."
-              placeholderTextColor={colors.light.textMuted}
+              placeholderTextColor={palette.textMuted}
               value={productSearch}
               onChangeText={setProductSearch}
               autoCapitalize="none"
@@ -878,7 +882,7 @@ export default function EventFormScreen({ navigation, route }: Props) {
               />
             ) : (
               <View style={styles.sheetProductIcon}>
-                <Package color={colors.light.primary} size={18} />
+                <Package color={palette.primary} size={18} />
               </View>
             )}
             <View style={{ flex: 1 }}>
@@ -893,19 +897,19 @@ export default function EventFormScreen({ navigation, route }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.light.background,
+    backgroundColor: palette.background,
   },
   stepIndicator: {
     flexDirection: "row",
     alignItems: "flex-start",
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-    backgroundColor: colors.light.card,
+    backgroundColor: palette.card,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.light.separator,
+    borderBottomColor: palette.separator,
   },
   stepItem: {
     alignItems: "center",
@@ -920,44 +924,44 @@ const styles = StyleSheet.create({
     borderRadius: 1,
   },
   stepLineComplete: {
-    backgroundColor: colors.light.success,
+    backgroundColor: palette.success,
   },
   stepLinePending: {
-    backgroundColor: colors.light.border,
+    backgroundColor: palette.border,
   },
   stepCircle: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: colors.light.surface,
+    backgroundColor: palette.surface,
     borderWidth: 2,
-    borderColor: colors.light.border,
+    borderColor: palette.border,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 4,
   },
   stepCircleActive: {
-    borderColor: colors.light.primary,
-    backgroundColor: colors.light.primary,
+    borderColor: palette.primary,
+    backgroundColor: palette.primary,
   },
   stepCircleComplete: {
-    backgroundColor: colors.light.success,
-    borderColor: colors.light.success,
+    backgroundColor: palette.success,
+    borderColor: palette.success,
   },
   stepNumber: {
     ...typography.caption,
     fontWeight: "700",
-    color: colors.light.textMuted,
+    color: palette.textMuted,
   },
   stepNumberActive: {
-    color: colors.light.textInverse,
+    color: palette.textInverse,
   },
   stepTitle: {
     ...typography.caption,
-    color: colors.light.textMuted,
+    color: palette.textMuted,
   },
   stepTitleActive: {
-    color: colors.light.primary,
+    color: palette.primary,
     fontWeight: "600",
   },
   content: {
@@ -965,7 +969,7 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xxl,
   },
   section: {
-    backgroundColor: colors.light.card,
+    backgroundColor: palette.card,
     borderRadius: spacing.borderRadius.lg,
     padding: spacing.md,
     marginTop: spacing.md,
@@ -979,36 +983,36 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...typography.h3,
-    color: colors.light.text,
+    color: palette.text,
     marginBottom: spacing.sm,
   },
   selector: {
-    backgroundColor: colors.light.surface,
+    backgroundColor: palette.surface,
     borderRadius: spacing.borderRadius.md,
     padding: spacing.md,
     marginBottom: spacing.sm,
   },
   selectorLabel: {
     ...typography.caption,
-    color: colors.light.textMuted,
+    color: palette.textMuted,
     marginBottom: 2,
   },
   selectorValue: {
     ...typography.body,
-    color: colors.light.text,
+    color: palette.text,
   },
   inputLabel: {
     ...typography.caption,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
     marginBottom: spacing.xs,
     marginTop: spacing.sm,
   },
   input: {
-    backgroundColor: colors.light.surface,
+    backgroundColor: palette.surface,
     borderRadius: spacing.borderRadius.md,
     padding: spacing.md,
     ...typography.body,
-    color: colors.light.text,
+    color: palette.text,
   },
   textArea: {
     minHeight: 80,
@@ -1031,17 +1035,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs + 2,
     borderRadius: spacing.borderRadius.md,
-    backgroundColor: colors.light.surface,
+    backgroundColor: palette.surface,
   },
   statusButtonActive: {
-    backgroundColor: colors.light.primary,
+    backgroundColor: palette.primary,
   },
   statusButtonText: {
     ...typography.caption,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
   },
   statusButtonTextActive: {
-    color: colors.light.textInverse,
+    color: palette.textInverse,
   },
   addButton: {
     flexDirection: "row",
@@ -1049,17 +1053,17 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
-    backgroundColor: colors.light.primaryLight,
+    backgroundColor: palette.primaryLight,
     borderRadius: spacing.borderRadius.md,
   },
   addButtonText: {
     ...typography.caption,
-    color: colors.light.primary,
+    color: palette.primary,
     fontWeight: "600",
   },
   emptyText: {
     ...typography.body,
-    color: colors.light.textMuted,
+    color: palette.textMuted,
     fontStyle: "italic",
     textAlign: "center",
     paddingVertical: spacing.lg,
@@ -1069,7 +1073,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: spacing.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.light.separator,
+    borderBottomColor: palette.separator,
     gap: spacing.sm,
   },
   productInfo: {
@@ -1077,11 +1081,11 @@ const styles = StyleSheet.create({
   },
   productName: {
     ...typography.label,
-    color: colors.light.text,
+    color: palette.text,
   },
   productPrice: {
     ...typography.caption,
-    color: colors.light.textMuted,
+    color: palette.textMuted,
   },
   productQuantity: {
     flexDirection: "row",
@@ -1092,20 +1096,20 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: colors.light.surface,
+    backgroundColor: palette.surface,
     textAlign: "center",
     lineHeight: 26,
     fontSize: 18,
-    color: colors.light.text,
+    color: palette.text,
   },
   quantityInput: {
     width: 40,
     height: 28,
     borderRadius: spacing.borderRadius.sm,
-    backgroundColor: colors.light.surface,
+    backgroundColor: palette.surface,
     textAlign: "center",
     ...typography.bodySmall,
-    color: colors.light.text,
+    color: palette.text,
   },
   totalRow: {
     flexDirection: "row",
@@ -1113,28 +1117,28 @@ const styles = StyleSheet.create({
     paddingTop: spacing.md,
     marginTop: spacing.sm,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.light.separator,
+    borderTopColor: palette.separator,
   },
   totalLabel: {
     ...typography.label,
-    color: colors.light.text,
+    color: palette.text,
   },
   totalValue: {
     ...typography.label,
-    color: colors.light.text,
+    color: palette.text,
   },
   extraCard: {
-    backgroundColor: colors.light.surface,
+    backgroundColor: palette.surface,
     borderRadius: spacing.borderRadius.md,
     padding: spacing.sm,
     marginBottom: spacing.sm,
   },
   extraInput: {
-    backgroundColor: colors.light.background,
+    backgroundColor: palette.background,
     borderRadius: spacing.borderRadius.sm,
     padding: spacing.sm,
     ...typography.bodySmall,
-    color: colors.light.text,
+    color: palette.text,
     marginBottom: spacing.sm,
   },
   extraRow: {
@@ -1147,18 +1151,18 @@ const styles = StyleSheet.create({
   },
   extraLabel: {
     ...typography.caption,
-    color: colors.light.textMuted,
+    color: palette.textMuted,
     marginBottom: 2,
   },
   extraPriceInput: {
-    backgroundColor: colors.light.background,
+    backgroundColor: palette.background,
     borderRadius: spacing.borderRadius.sm,
     padding: spacing.xs,
     ...typography.bodySmall,
-    color: colors.light.text,
+    color: palette.text,
   },
   totalsCard: {
-    backgroundColor: colors.light.surface,
+    backgroundColor: palette.surface,
     borderRadius: spacing.borderRadius.lg,
     padding: spacing.md,
     marginTop: spacing.md,
@@ -1170,40 +1174,40 @@ const styles = StyleSheet.create({
   },
   totalLineBold: {
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.light.separator,
+    borderTopColor: palette.separator,
     marginTop: spacing.xs,
     paddingTop: spacing.sm,
   },
   totalLineLabel: {
     ...typography.body,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
   },
   totalLineValue: {
     ...typography.label,
-    color: colors.light.text,
+    color: palette.text,
   },
   totalLineLabelBold: {
     ...typography.h3,
-    color: colors.light.text,
+    color: palette.text,
   },
   totalLineValueBold: {
     ...typography.h3,
-    color: colors.light.primary,
+    color: palette.primary,
   },
   footer: {
     flexDirection: "row",
     alignItems: "center",
     padding: spacing.lg,
-    backgroundColor: colors.light.card,
+    backgroundColor: palette.card,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.light.separator,
+    borderTopColor: palette.separator,
     gap: spacing.sm,
   },
   navButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: colors.light.surface,
+    backgroundColor: palette.surface,
     justifyContent: "center",
     alignItems: "center",
     ...shadows.sm,
@@ -1217,7 +1221,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: spacing.xs,
-    backgroundColor: colors.light.primary,
+    backgroundColor: palette.primary,
     borderRadius: spacing.borderRadius.md,
     paddingVertical: spacing.md,
     ...shadows.md,
@@ -1227,11 +1231,11 @@ const styles = StyleSheet.create({
   },
   saveButtonText: {
     ...typography.button,
-    color: colors.light.textInverse,
+    color: palette.textInverse,
   },
   nextButtonText: {
     ...typography.button,
-    color: colors.light.textInverse,
+    color: palette.textInverse,
   },
   sheetHeader: {
     paddingHorizontal: spacing.lg,
@@ -1240,13 +1244,13 @@ const styles = StyleSheet.create({
   },
   sheetTitle: {
     ...typography.h3,
-    color: colors.light.text,
+    color: palette.text,
     marginBottom: spacing.sm,
   },
   searchBox: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.light.surface,
+    backgroundColor: palette.surface,
     borderRadius: spacing.borderRadius.md,
     paddingHorizontal: spacing.md,
     gap: spacing.sm,
@@ -1254,7 +1258,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     ...typography.body,
-    color: colors.light.text,
+    color: palette.text,
     paddingVertical: spacing.sm,
   },
   sheetItem: {
@@ -1264,22 +1268,22 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm + 2,
     paddingHorizontal: spacing.lg,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.light.separator,
+    borderBottomColor: palette.separator,
   },
   sheetItemActive: {
-    backgroundColor: colors.light.primaryLight,
+    backgroundColor: palette.primaryLight,
   },
   sheetItemText: {
     ...typography.body,
-    color: colors.light.text,
+    color: palette.text,
   },
   sheetItemSubtext: {
     ...typography.caption,
-    color: colors.light.textMuted,
+    color: palette.textMuted,
   },
   sheetItemPrice: {
     ...typography.label,
-    color: colors.light.primary,
+    color: palette.primary,
   },
   sheetProductImage: {
     width: 36,
@@ -1290,7 +1294,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: colors.light.primaryLight,
+    backgroundColor: palette.primaryLight,
     justifyContent: "center",
     alignItems: "center",
   },

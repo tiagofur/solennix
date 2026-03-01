@@ -6,6 +6,7 @@ import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
 import { uploadService } from '../../services/uploadService';
+import { useTheme } from '../../hooks/useTheme';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const THUMB_SIZE = 80;
@@ -21,6 +22,9 @@ const blurhash = 'L6PZfSi_.AyE_3t7t7R**0o#DgR4';
 
 export function PhotoGallery({ photos, onAdd, onRemove, editable = false }: PhotoGalleryProps) {
     const [fullscreenIndex, setFullscreenIndex] = useState<number | null>(null);
+    const { isDark } = useTheme();
+    const palette = isDark ? colors.dark : colors.light;
+    const styles = getStyles(palette);
 
     return (
         <View style={styles.container}>
@@ -55,7 +59,7 @@ export function PhotoGallery({ photos, onAdd, onRemove, editable = false }: Phot
                 })}
                 {editable && onAdd && (
                     <TouchableOpacity style={styles.addButton} onPress={onAdd} activeOpacity={0.7}>
-                        <Plus color={colors.light.primary} size={24} />
+                        <Plus color={palette.primary} size={24} />
                         <Text style={styles.addText}>Agregar</Text>
                     </TouchableOpacity>
                 )}
@@ -84,7 +88,7 @@ export function PhotoGallery({ photos, onAdd, onRemove, editable = false }: Phot
     );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (palette: typeof colors.light) => StyleSheet.create({
     container: {},
     scrollRow: {
         flexDirection: 'row',
@@ -98,7 +102,7 @@ const styles = StyleSheet.create({
         width: THUMB_SIZE,
         height: THUMB_SIZE,
         borderRadius: spacing.borderRadius.md,
-        backgroundColor: colors.light.surface,
+        backgroundColor: palette.surface,
     },
     removeButton: {
         position: 'absolute',
@@ -107,7 +111,7 @@ const styles = StyleSheet.create({
         width: 22,
         height: 22,
         borderRadius: 11,
-        backgroundColor: colors.light.error,
+        backgroundColor: palette.error,
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -116,7 +120,7 @@ const styles = StyleSheet.create({
         height: THUMB_SIZE,
         borderRadius: spacing.borderRadius.md,
         borderWidth: 2,
-        borderColor: colors.light.primary,
+        borderColor: palette.primary,
         borderStyle: 'dashed',
         justifyContent: 'center',
         alignItems: 'center',
@@ -124,7 +128,7 @@ const styles = StyleSheet.create({
     },
     addText: {
         ...typography.caption1,
-        color: colors.light.primary,
+        color: palette.primary,
         fontWeight: '600',
         fontSize: 10,
     },

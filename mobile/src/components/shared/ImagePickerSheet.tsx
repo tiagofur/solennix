@@ -4,6 +4,7 @@ import { Camera, ImageIcon, X } from 'lucide-react-native';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
+import { useTheme } from '../../hooks/useTheme';
 
 interface ImagePickerSheetProps {
     onCamera: () => void;
@@ -14,31 +15,35 @@ interface ImagePickerSheetProps {
 }
 
 export function ImagePickerSheet({ onCamera, onGallery, onRemove, onCancel, hasImage }: ImagePickerSheetProps) {
+    const { isDark } = useTheme();
+    const palette = isDark ? colors.dark : colors.light;
+    const styles = getStyles(palette);
+
     return (
         <View style={styles.container}>
             <View style={styles.handle} />
             <Text style={styles.title}>Seleccionar Foto</Text>
 
             <TouchableOpacity style={styles.option} onPress={onCamera} activeOpacity={0.7}>
-                <View style={[styles.iconContainer, { backgroundColor: colors.light.primaryLight }]}>
-                    <Camera color={colors.light.primary} size={22} />
+                <View style={[styles.iconContainer, { backgroundColor: palette.primaryLight }]}>
+                    <Camera color={palette.primary} size={22} />
                 </View>
                 <Text style={styles.optionText}>Tomar Foto</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.option} onPress={onGallery} activeOpacity={0.7}>
-                <View style={[styles.iconContainer, { backgroundColor: colors.light.infoBg }]}>
-                    <ImageIcon color={colors.light.info} size={22} />
+                <View style={[styles.iconContainer, { backgroundColor: palette.infoBg }]}>
+                    <ImageIcon color={palette.info} size={22} />
                 </View>
                 <Text style={styles.optionText}>Elegir de Galería</Text>
             </TouchableOpacity>
 
             {hasImage && onRemove && (
                 <TouchableOpacity style={styles.option} onPress={onRemove} activeOpacity={0.7}>
-                    <View style={[styles.iconContainer, { backgroundColor: colors.light.errorBg }]}>
-                        <X color={colors.light.error} size={22} />
+                    <View style={[styles.iconContainer, { backgroundColor: palette.errorBg }]}>
+                        <X color={palette.error} size={22} />
                     </View>
-                    <Text style={[styles.optionText, { color: colors.light.error }]}>Eliminar Foto</Text>
+                    <Text style={[styles.optionText, { color: palette.error }]}>Eliminar Foto</Text>
                 </TouchableOpacity>
             )}
 
@@ -49,7 +54,7 @@ export function ImagePickerSheet({ onCamera, onGallery, onRemove, onCancel, hasI
     );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (palette: typeof colors.light) => StyleSheet.create({
     container: {
         padding: spacing.lg,
         paddingBottom: spacing.xxxl,
@@ -58,13 +63,13 @@ const styles = StyleSheet.create({
         width: 36,
         height: 5,
         borderRadius: 2.5,
-        backgroundColor: colors.light.border,
+        backgroundColor: palette.border,
         alignSelf: 'center',
         marginBottom: spacing.md,
     },
     title: {
         ...typography.headline,
-        color: colors.light.text,
+        color: palette.text,
         textAlign: 'center',
         marginBottom: spacing.lg,
     },
@@ -74,7 +79,7 @@ const styles = StyleSheet.create({
         gap: spacing.md,
         paddingVertical: spacing.md,
         borderBottomWidth: StyleSheet.hairlineWidth,
-        borderBottomColor: colors.light.separator,
+        borderBottomColor: palette.separator,
     },
     iconContainer: {
         width: 44,
@@ -85,18 +90,18 @@ const styles = StyleSheet.create({
     },
     optionText: {
         ...typography.body,
-        color: colors.light.text,
+        color: palette.text,
         fontWeight: '500',
     },
     cancelButton: {
         marginTop: spacing.lg,
         paddingVertical: spacing.md,
         borderRadius: spacing.borderRadius.md,
-        backgroundColor: colors.light.surface,
+        backgroundColor: palette.surface,
         alignItems: 'center',
     },
     cancelText: {
         ...typography.headline,
-        color: colors.light.textSecondary,
+        color: palette.textSecondary,
     },
 });

@@ -5,6 +5,7 @@ import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
 import { shadows } from "../../theme/shadows";
+import { useTheme } from "../../hooks/useTheme";
 
 interface UpgradeBannerProps {
   type: "limit-reached" | "upsell";
@@ -21,6 +22,10 @@ export default function UpgradeBanner({
   limit,
   onUpgrade,
 }: UpgradeBannerProps) {
+  const { isDark } = useTheme();
+  const palette = isDark ? colors.dark : colors.light;
+  const styles = getStyles(palette);
+
   const isLimitReached = type === "limit-reached";
 
   const title = isLimitReached
@@ -41,13 +46,13 @@ export default function UpgradeBanner({
       <View style={styles.content}>
         <View style={styles.iconRow}>
           <Zap
-            color={isLimitReached ? colors.light.warning : colors.light.primary}
+            color={isLimitReached ? palette.warning : palette.primary}
             size={20}
           />
           <Text
             style={[
               styles.title,
-              { color: isLimitReached ? colors.light.warning : colors.light.info },
+              { color: isLimitReached ? palette.warning : palette.info },
             ]}
           >
             {title}
@@ -71,17 +76,17 @@ export default function UpgradeBanner({
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   container: {
     borderRadius: spacing.borderRadius.lg,
     padding: spacing.md,
     ...shadows.sm,
   },
   limitReached: {
-    backgroundColor: colors.light.warningBg,
+    backgroundColor: palette.warningBg,
   },
   upsell: {
-    backgroundColor: colors.light.infoBg,
+    backgroundColor: palette.infoBg,
   },
   content: {
     gap: spacing.xs,
@@ -97,7 +102,7 @@ const styles = StyleSheet.create({
   },
   description: {
     ...typography.subheadline,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
   },
   button: {
     alignSelf: "flex-start",
@@ -107,14 +112,14 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   limitButton: {
-    backgroundColor: colors.light.warning,
+    backgroundColor: palette.warning,
   },
   upsellButton: {
-    backgroundColor: colors.light.primary,
+    backgroundColor: palette.primary,
   },
   buttonText: {
     ...typography.headline,
     fontSize: 14,
-    color: colors.light.textInverse,
+    color: palette.textInverse,
   },
 });

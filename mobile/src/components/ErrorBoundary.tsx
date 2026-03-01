@@ -9,16 +9,18 @@ import { AlertTriangle, RotateCcw } from "lucide-react-native";
 import { colors } from "../theme/colors";
 import { spacing } from "../theme/spacing";
 import { typography } from "../theme/typography";
+import { useTheme } from "../hooks/useTheme";
 
 interface Props {
   children: ReactNode;
+  palette: typeof colors.light;
 }
 
 interface State {
   hasError: boolean;
 }
 
-export default class ErrorBoundary extends Component<Props, State> {
+class ErrorBoundaryInner extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = { hasError: false };
@@ -40,15 +42,18 @@ export default class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
+      const { palette } = this.props;
+      const styles = getStyles(palette);
+
       return (
         <View style={styles.container}>
-          <AlertTriangle color={colors.light.error} size={64} />
+          <AlertTriangle color={palette.error} size={64} />
           <Text style={styles.title}>Algo sali&#xF3; mal</Text>
           <Text style={styles.description}>
             Ocurri&#xF3; un error inesperado. Por favor, intenta de nuevo.
           </Text>
           <TouchableOpacity style={styles.button} onPress={this.handleRetry}>
-            <RotateCcw color={colors.light.textInverse} size={18} />
+            <RotateCcw color={palette.textInverse} size={18} />
             <Text style={styles.buttonText}>Reintentar</Text>
           </TouchableOpacity>
         </View>
@@ -59,23 +64,34 @@ export default class ErrorBoundary extends Component<Props, State> {
   }
 }
 
-const styles = StyleSheet.create({
+export default function ErrorBoundary({ children }: { children: ReactNode }) {
+  const { isDark } = useTheme();
+  const palette = isDark ? colors.dark : colors.light;
+
+  return (
+    <ErrorBoundaryInner palette={palette}>
+      {children}
+    </ErrorBoundaryInner>
+  );
+}
+
+const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     padding: spacing.xl,
-    backgroundColor: colors.light.background,
+    backgroundColor: palette.background,
   },
   title: {
     ...typography.title1,
-    color: colors.light.text,
+    color: palette.text,
     marginTop: spacing.lg,
     marginBottom: spacing.sm,
   },
   description: {
     ...typography.body,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
     textAlign: "center",
     marginBottom: spacing.xl,
   },
@@ -83,13 +99,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
-    backgroundColor: colors.light.primary,
+    backgroundColor: palette.primary,
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.md,
     borderRadius: spacing.borderRadius.lg,
   },
   buttonText: {
     ...typography.button,
-    color: colors.light.textInverse,
+    color: palette.textInverse,
   },
 });

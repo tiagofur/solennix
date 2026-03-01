@@ -16,6 +16,7 @@ import { z } from "zod";
 import { Mail, CheckCircle } from "lucide-react-native";
 import { AuthStackParamList } from "../../types/navigation";
 import { api } from "../../lib/api";
+import { useTheme } from "../../hooks/useTheme";
 import { FormInput } from "../../components/shared";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
@@ -33,6 +34,9 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const { isDark } = useTheme();
+  const palette = isDark ? colors.dark : colors.light;
+  const styles = getStyles(palette);
 
   const {
     control,
@@ -59,7 +63,7 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
   if (sent) {
     return (
       <View style={[styles.container, styles.centeredContent]}>
-        <CheckCircle color={colors.light.success} size={56} />
+        <CheckCircle color={palette.success} size={56} />
         <Text style={styles.successTitle}>Correo Enviado</Text>
         <Text style={styles.successText}>
           Revisa tu bandeja de entrada para restablecer tu contraseña.
@@ -109,7 +113,7 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
               keyboardType="email-address"
               textContentType="emailAddress"
               autoComplete="email"
-              icon={<Mail color={colors.light.textTertiary} size={20} />}
+              icon={<Mail color={palette.textTertiary} size={20} />}
             />
           )}
         />
@@ -138,10 +142,10 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.light.background,
+    backgroundColor: palette.background,
   },
   centeredContent: {
     justifyContent: "center",
@@ -157,29 +161,29 @@ const styles = StyleSheet.create({
   title: {
     ...typography.h1,
     textAlign: "center",
-    color: colors.light.primary,
+    color: palette.primary,
     marginBottom: spacing.xxs,
   },
   subtitle: {
     ...typography.body,
     textAlign: "center",
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
     marginBottom: spacing.xxl,
   },
   errorBanner: {
     backgroundColor: "#fef2f2",
     borderLeftWidth: 4,
-    borderLeftColor: colors.light.error,
+    borderLeftColor: palette.error,
     borderRadius: spacing.borderRadius.sm,
     padding: spacing.sm + 4,
     marginBottom: spacing.md,
   },
   errorBannerText: {
     ...typography.bodySmall,
-    color: colors.light.error,
+    color: palette.error,
   },
   button: {
-    backgroundColor: colors.light.primary,
+    backgroundColor: palette.primary,
     borderRadius: spacing.borderRadius.md,
     paddingVertical: spacing.md - 2,
     alignItems: "center",
@@ -199,17 +203,17 @@ const styles = StyleSheet.create({
   },
   link: {
     ...typography.body,
-    color: colors.light.primary,
+    color: palette.primary,
   },
   successTitle: {
     ...typography.h2,
-    color: colors.light.text,
+    color: palette.text,
     marginTop: spacing.lg,
     marginBottom: spacing.sm,
   },
   successText: {
     ...typography.body,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
     textAlign: "center",
     marginBottom: spacing.xl,
   },

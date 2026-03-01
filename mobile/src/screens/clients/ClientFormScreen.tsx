@@ -23,6 +23,7 @@ import { useToast } from "../../hooks/useToast";
 import { useImagePicker } from "../../hooks/useImagePicker";
 import { logError } from "../../lib/errorHandler";
 import { FormInput, LoadingSpinner, Avatar } from "../../components/shared";
+import { useTheme } from "../../hooks/useTheme";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
@@ -44,6 +45,9 @@ export default function ClientFormScreen({ navigation, route }: Props) {
   const editId = route.params?.id;
   const isEdit = !!editId;
   const addToast = useToast((s) => s.addToast);
+  const { isDark } = useTheme();
+  const palette = isDark ? colors.dark : colors.light;
+  const styles = getStyles(palette);
 
   const [loadingData, setLoadingData] = useState(isEdit);
   const [submitting, setSubmitting] = useState(false);
@@ -340,10 +344,10 @@ export default function ClientFormScreen({ navigation, route }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.light.background,
+    backgroundColor: palette.background,
   },
   form: {
     padding: spacing.lg,
@@ -363,28 +367,28 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: colors.light.primary,
+    backgroundColor: palette.primary,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 2,
-    borderColor: colors.light.background,
+    borderColor: palette.background,
   },
   avatarHint: {
     ...typography.caption,
-    color: colors.light.textTertiary,
+    color: palette.textTertiary,
     marginTop: spacing.xs,
   },
   footer: {
     padding: spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: colors.light.border,
-    backgroundColor: colors.light.background,
+    borderTopColor: palette.border,
+    backgroundColor: palette.background,
   },
   saveButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: colors.light.primary,
+    backgroundColor: palette.primary,
     borderRadius: spacing.borderRadius.lg,
     paddingVertical: spacing.md,
     gap: spacing.sm,

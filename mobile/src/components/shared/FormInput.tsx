@@ -9,6 +9,7 @@ import {
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
+import { useTheme } from "../../hooks/useTheme";
 
 interface FormInputProps extends RNTextInputProps {
   label: string;
@@ -20,6 +21,9 @@ interface FormInputProps extends RNTextInputProps {
 const FormInput = React.forwardRef<RNTextInput, FormInputProps>(
   ({ label, error, icon, prefix, style, onFocus, onBlur, ...props }, ref) => {
     const [focused, setFocused] = useState(false);
+    const { isDark } = useTheme();
+    const palette = isDark ? colors.dark : colors.light;
+    const styles = getStyles(palette);
 
     return (
       <View style={styles.container}>
@@ -42,7 +46,7 @@ const FormInput = React.forwardRef<RNTextInput, FormInputProps>(
               prefix ? styles.inputWithPrefix : undefined,
               style,
             ]}
-            placeholderTextColor={colors.light.textTertiary}
+            placeholderTextColor={palette.textTertiary}
             onFocus={(e) => {
               setFocused(true);
               onFocus?.(e);
@@ -63,30 +67,30 @@ const FormInput = React.forwardRef<RNTextInput, FormInputProps>(
 FormInput.displayName = "FormInput";
 export default FormInput;
 
-const styles = StyleSheet.create({
+const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   container: {
     marginBottom: spacing.md,
   },
   label: {
     ...typography.footnote,
     fontWeight: "500",
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
     marginBottom: spacing.xs,
   },
   inputWrapper: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.light.surface,
+    backgroundColor: palette.surface,
     borderWidth: 1,
     borderColor: "transparent",
     borderRadius: spacing.borderRadius.md,
     minHeight: 48,
   },
   inputFocused: {
-    borderColor: colors.light.separator,
+    borderColor: palette.separator,
   },
   inputError: {
-    borderColor: colors.light.error,
+    borderColor: palette.error,
   },
   withIcon: {},
   icon: {
@@ -97,7 +101,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm + 2,
-    color: colors.light.text,
+    color: palette.text,
   },
   inputWithIcon: {
     paddingLeft: spacing.sm,
@@ -107,12 +111,12 @@ const styles = StyleSheet.create({
   },
   prefix: {
     ...typography.body,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
     paddingLeft: spacing.md,
   },
   errorText: {
     ...typography.caption1,
-    color: colors.light.error,
+    color: palette.error,
     marginTop: spacing.xxs,
   },
 });

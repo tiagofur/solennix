@@ -36,6 +36,7 @@ import {
   EmptyState,
   Avatar,
 } from "../../components/shared";
+import { useTheme } from "../../hooks/useTheme";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
@@ -43,12 +44,6 @@ import { shadows } from "../../theme/shadows";
 
 type Props = NativeStackScreenProps<ClientStackParamList, "ClientDetail">;
 
-const statusColors: Record<string, { bg: string; text: string }> = {
-  quoted: { bg: colors.light.statusQuotedBg, text: colors.light.statusQuoted },
-  confirmed: { bg: colors.light.statusConfirmedBg, text: colors.light.statusConfirmed },
-  completed: { bg: colors.light.statusCompletedBg, text: colors.light.statusCompleted },
-  cancelled: { bg: colors.light.statusCancelledBg, text: colors.light.statusCancelled },
-};
 const statusLabels: Record<string, string> = {
   quoted: "Cotizado",
   confirmed: "Confirmado",
@@ -59,6 +54,16 @@ const statusLabels: Record<string, string> = {
 export default function ClientDetailScreen({ navigation, route }: Props) {
   const { id } = route.params;
   const addToast = useToast((s) => s.addToast);
+  const { isDark } = useTheme();
+  const palette = isDark ? colors.dark : colors.light;
+  const styles = getStyles(palette);
+
+  const statusColors: Record<string, { bg: string; text: string }> = {
+    quoted: { bg: palette.statusQuotedBg, text: palette.statusQuoted },
+    confirmed: { bg: palette.statusConfirmedBg, text: palette.statusConfirmed },
+    completed: { bg: palette.statusCompletedBg, text: palette.statusCompleted },
+    cancelled: { bg: palette.statusCancelledBg, text: palette.statusCancelled },
+  };
 
   const [client, setClient] = useState<Client | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
@@ -161,13 +166,13 @@ export default function ClientDetailScreen({ navigation, route }: Props) {
           {/* Stats Row */}
           <View style={styles.statsRow}>
             <View style={styles.statBox}>
-              <Calendar color={colors.light.primary} size={16} />
+              <Calendar color={palette.primary} size={16} />
               <Text style={styles.statValue}>{client.total_events ?? 0}</Text>
               <Text style={styles.statLabel}>Eventos</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statBox}>
-              <DollarSign color={colors.light.success} size={16} />
+              <DollarSign color={palette.success} size={16} />
               <Text style={styles.statValue}>
                 {formatCurrency(client.total_spent)}
               </Text>
@@ -181,8 +186,8 @@ export default function ClientDetailScreen({ navigation, route }: Props) {
           <Text style={styles.sectionTitle}>Información de Contacto</Text>
 
           <TouchableOpacity style={styles.infoRow} onPress={handleCall}>
-            <View style={[styles.infoIcon, { backgroundColor: colors.light.successBg }]}>
-              <Phone color={colors.light.success} size={16} />
+            <View style={[styles.infoIcon, { backgroundColor: palette.successBg }]}>
+              <Phone color={palette.success} size={16} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.infoLabel}>Teléfono</Text>
@@ -192,8 +197,8 @@ export default function ClientDetailScreen({ navigation, route }: Props) {
 
           {client.email && (
             <TouchableOpacity style={styles.infoRow} onPress={handleEmail}>
-              <View style={[styles.infoIcon, { backgroundColor: colors.light.infoBg }]}>
-                <Mail color={colors.light.info} size={16} />
+              <View style={[styles.infoIcon, { backgroundColor: palette.infoBg }]}>
+                <Mail color={palette.info} size={16} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.infoLabel}>Email</Text>
@@ -204,8 +209,8 @@ export default function ClientDetailScreen({ navigation, route }: Props) {
 
           {client.address && (
             <View style={styles.infoRow}>
-              <View style={[styles.infoIcon, { backgroundColor: colors.light.warningBg }]}>
-                <MapPin color={colors.light.warning} size={16} />
+              <View style={[styles.infoIcon, { backgroundColor: palette.warningBg }]}>
+                <MapPin color={palette.warning} size={16} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.infoLabel}>Dirección</Text>
@@ -250,8 +255,8 @@ export default function ClientDetailScreen({ navigation, route }: Props) {
             style={styles.actionBtn}
             onPress={() => navigation.navigate("ClientForm", { id })}
           >
-            <Edit2 color={colors.light.primary} size={18} />
-            <Text style={[styles.actionText, { color: colors.light.primary }]}>
+            <Edit2 color={palette.primary} size={18} />
+            <Text style={[styles.actionText, { color: palette.primary }]}>
               Editar
             </Text>
           </TouchableOpacity>
@@ -259,8 +264,8 @@ export default function ClientDetailScreen({ navigation, route }: Props) {
             style={[styles.actionBtn, styles.deleteBtn]}
             onPress={() => setShowDelete(true)}
           >
-            <Trash2 color={colors.light.error} size={18} />
-            <Text style={[styles.actionText, { color: colors.light.error }]}>
+            <Trash2 color={palette.error} size={18} />
+            <Text style={[styles.actionText, { color: palette.error }]}>
               Eliminar
             </Text>
           </TouchableOpacity>
@@ -330,7 +335,7 @@ export default function ClientDetailScreen({ navigation, route }: Props) {
                   <Text style={styles.eventTotal}>
                     {formatCurrency(event.total_amount)}
                   </Text>
-                  <ChevronRight color={colors.light.textTertiary} size={16} />
+                  <ChevronRight color={palette.textTertiary} size={16} />
                 </TouchableOpacity>
               );
             })
@@ -352,10 +357,10 @@ export default function ClientDetailScreen({ navigation, route }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.light.surfaceGrouped,
+    backgroundColor: palette.surfaceGrouped,
   },
   content: {
     paddingHorizontal: spacing.lg,
@@ -364,7 +369,7 @@ const styles = StyleSheet.create({
   // Header card
   headerCard: {
     alignItems: "center",
-    backgroundColor: colors.light.card,
+    backgroundColor: palette.card,
     borderRadius: spacing.borderRadius.xl,
     ...shadows.md,
     padding: spacing.xl,
@@ -375,19 +380,19 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: colors.light.primary,
+    backgroundColor: palette.primary,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: spacing.sm,
   },
   avatarLargeText: {
-    color: colors.light.textInverse,
+    color: palette.textInverse,
     fontWeight: "700",
     fontSize: 28,
   },
   clientName: {
     ...typography.title2,
-    color: colors.light.text,
+    color: palette.text,
     marginBottom: spacing.md,
   },
   statsRow: {
@@ -401,20 +406,20 @@ const styles = StyleSheet.create({
   },
   statValue: {
     ...typography.headline,
-    color: colors.light.text,
+    color: palette.text,
   },
   statLabel: {
     ...typography.caption1,
-    color: colors.light.textTertiary,
+    color: palette.textTertiary,
   },
   statDivider: {
     width: StyleSheet.hairlineWidth,
     height: 32,
-    backgroundColor: colors.light.separator,
+    backgroundColor: palette.separator,
   },
   // Section
   section: {
-    backgroundColor: colors.light.card,
+    backgroundColor: palette.card,
     borderRadius: spacing.borderRadius.lg,
     ...shadows.sm,
     padding: spacing.md,
@@ -422,7 +427,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...typography.headline,
-    color: colors.light.text,
+    color: palette.text,
     marginBottom: spacing.sm,
   },
   // Info rows
@@ -432,7 +437,7 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     paddingVertical: spacing.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.light.separator,
+    borderBottomColor: palette.separator,
   },
   infoIcon: {
     width: 36,
@@ -443,11 +448,11 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     ...typography.caption1,
-    color: colors.light.textTertiary,
+    color: palette.textTertiary,
   },
   infoValue: {
     ...typography.body,
-    color: colors.light.text,
+    color: palette.text,
   },
   // Actions
   actions: {
@@ -462,20 +467,20 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: spacing.xs,
     paddingVertical: spacing.sm + 4,
-    backgroundColor: colors.light.card,
+    backgroundColor: palette.card,
     borderRadius: spacing.borderRadius.md,
     ...shadows.sm,
   },
   primaryActionBtn: {
-    backgroundColor: colors.light.primary,
+    backgroundColor: palette.primary,
   },
   primaryActionText: {
     ...typography.headline,
     fontSize: 14,
-    color: colors.light.textInverse,
+    color: palette.textInverse,
   },
   deleteBtn: {
-    backgroundColor: colors.light.errorBg,
+    backgroundColor: palette.errorBg,
   },
   actionText: {
     ...typography.headline,
@@ -483,7 +488,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     ...typography.body,
-    color: colors.light.textTertiary,
+    color: palette.textTertiary,
     fontStyle: "italic",
     textAlign: "center",
     paddingVertical: spacing.lg,
@@ -494,37 +499,37 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: spacing.sm + 2,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.light.separator,
+    borderBottomColor: palette.separator,
     gap: spacing.sm,
   },
   eventDateBox: {
     width: 40,
     height: 40,
     borderRadius: spacing.borderRadius.md,
-    backgroundColor: colors.light.primaryLight,
+    backgroundColor: palette.primaryLight,
     justifyContent: "center",
     alignItems: "center",
   },
   eventMonth: {
     fontSize: 8,
     fontWeight: "700",
-    color: colors.light.primary,
+    color: palette.primary,
     letterSpacing: 0.3,
   },
   eventDay: {
     fontSize: 15,
     fontWeight: "700",
-    color: colors.light.primary,
+    color: palette.primary,
     lineHeight: 17,
   },
   eventTypeText: {
     ...typography.headline,
     fontSize: 13,
-    color: colors.light.text,
+    color: palette.text,
   },
   eventPax: {
     ...typography.caption1,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
   },
   statusBadge: {
     paddingHorizontal: 6,
@@ -538,6 +543,6 @@ const styles = StyleSheet.create({
   eventTotal: {
     ...typography.headline,
     fontSize: 13,
-    color: colors.light.text,
+    color: palette.text,
   },
 });

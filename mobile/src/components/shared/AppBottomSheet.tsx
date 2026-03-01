@@ -3,6 +3,7 @@ import { StyleSheet } from 'react-native';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetView, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
+import { useTheme } from '../../hooks/useTheme';
 
 interface AppBottomSheetProps {
     visible: boolean;
@@ -22,6 +23,9 @@ export function AppBottomSheet({
     scrollable = false,
 }: AppBottomSheetProps) {
     const bottomSheetRef = useRef<BottomSheet>(null);
+    const { isDark } = useTheme();
+    const palette = isDark ? colors.dark : colors.light;
+    const styles = getStyles(palette);
 
     const snapPoints = useMemo(
         () => customSnapPoints || ['25%', '50%'],
@@ -91,14 +95,14 @@ export function AppBottomSheet({
     );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (palette: typeof colors.light) => StyleSheet.create({
     background: {
-        backgroundColor: colors.light.card,
+        backgroundColor: palette.card,
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
     },
     handle: {
-        backgroundColor: colors.light.border,
+        backgroundColor: palette.border,
         width: 36,
         height: 5,
         borderRadius: 2.5,

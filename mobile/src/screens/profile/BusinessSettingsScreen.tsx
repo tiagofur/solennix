@@ -21,6 +21,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useToast } from "../../hooks/useToast";
 import { logError } from "../../lib/errorHandler";
 import { FormInput } from "../../components/shared";
+import { useTheme } from "../../hooks/useTheme";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
@@ -44,6 +45,9 @@ type Props = NativeStackScreenProps<SettingsStackParamList, "BusinessSettings">;
 export default function BusinessSettingsScreen({ navigation }: Props) {
   const { user, updateProfile } = useAuth();
   const addToast = useToast((s) => s.addToast);
+  const { isDark } = useTheme();
+  const palette = isDark ? colors.dark : colors.light;
+  const styles = getStyles(palette);
 
   const [businessName, setBusinessName] = useState(user?.business_name || "");
   const [brandColor, setBrandColor] = useState(user?.brand_color || "#FF6B35");
@@ -198,7 +202,7 @@ export default function BusinessSettingsScreen({ navigation }: Props) {
                     onPress={handlePickImage}
                     activeOpacity={0.7}
                   >
-                    <Camera color={colors.light.primary} size={18} />
+                    <Camera color={palette.primary} size={18} />
                     <Text style={styles.logoButtonText}>Cambiar</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
@@ -206,8 +210,8 @@ export default function BusinessSettingsScreen({ navigation }: Props) {
                     onPress={handleRemoveLogo}
                     activeOpacity={0.7}
                   >
-                    <Trash2 color={colors.light.error} size={18} />
-                    <Text style={[styles.logoButtonText, { color: colors.light.error }]}>
+                    <Trash2 color={palette.error} size={18} />
+                    <Text style={[styles.logoButtonText, { color: palette.error }]}>
                       Eliminar
                     </Text>
                   </TouchableOpacity>
@@ -219,7 +223,7 @@ export default function BusinessSettingsScreen({ navigation }: Props) {
                 onPress={handlePickImage}
                 activeOpacity={0.7}
               >
-                <Camera color={colors.light.textTertiary} size={32} />
+                <Camera color={palette.textTertiary} size={32} />
                 <Text style={styles.logoPlaceholderText}>Subir Logo</Text>
               </TouchableOpacity>
             )}
@@ -233,8 +237,8 @@ export default function BusinessSettingsScreen({ navigation }: Props) {
                   value={showBusinessName}
                   onValueChange={setShowBusinessName}
                   trackColor={{
-                    false: colors.light.surfaceAlt,
-                    true: colors.light.primary,
+                    false: palette.surfaceAlt,
+                    true: palette.primary,
                   }}
                 />
               </View>
@@ -264,29 +268,29 @@ export default function BusinessSettingsScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.light.surfaceGrouped,
+    backgroundColor: palette.surfaceGrouped,
   },
   form: {
     padding: spacing.lg,
     gap: spacing.md,
   },
   section: {
-    backgroundColor: colors.light.card,
+    backgroundColor: palette.card,
     borderRadius: spacing.borderRadius.lg,
     padding: spacing.md,
     ...shadows.sm,
   },
   sectionTitle: {
     ...typography.headline,
-    color: colors.light.text,
+    color: palette.text,
     marginBottom: spacing.xs,
   },
   sectionDescription: {
     ...typography.caption1,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
     marginBottom: spacing.md,
   },
   // Color picker
@@ -301,7 +305,7 @@ const styles = StyleSheet.create({
     borderRadius: spacing.borderRadius.md,
     marginTop: 22,
     borderWidth: 2,
-    borderColor: colors.light.separator,
+    borderColor: palette.separator,
   },
   swatchContainer: {
     flexDirection: "row",
@@ -317,7 +321,7 @@ const styles = StyleSheet.create({
     borderColor: "transparent",
   },
   swatchSelected: {
-    borderColor: colors.light.text,
+    borderColor: palette.text,
     borderWidth: 3,
   },
   // Logo
@@ -329,7 +333,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: spacing.borderRadius.lg,
-    backgroundColor: colors.light.surface,
+    backgroundColor: palette.surface,
   },
   logoActions: {
     flexDirection: "row",
@@ -342,14 +346,14 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
     borderRadius: spacing.borderRadius.md,
-    backgroundColor: colors.light.surface,
+    backgroundColor: palette.surface,
   },
   logoDeleteButton: {
-    backgroundColor: colors.light.errorBg,
+    backgroundColor: palette.errorBg,
   },
   logoButtonText: {
     ...typography.subheadline,
-    color: colors.light.primary,
+    color: palette.primary,
     fontWeight: "500",
   },
   logoPlaceholder: {
@@ -358,13 +362,13 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xl,
     borderWidth: 2,
     borderStyle: "dashed",
-    borderColor: colors.light.separator,
+    borderColor: palette.separator,
     borderRadius: spacing.borderRadius.lg,
     gap: spacing.sm,
   },
   logoPlaceholderText: {
     ...typography.subheadline,
-    color: colors.light.textTertiary,
+    color: palette.textTertiary,
   },
   // Toggle
   toggleRow: {
@@ -374,11 +378,11 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     paddingTop: spacing.md,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.light.separator,
+    borderTopColor: palette.separator,
   },
   toggleLabel: {
     ...typography.subheadline,
-    color: colors.light.text,
+    color: palette.text,
     flex: 1,
     marginRight: spacing.sm,
   },
@@ -386,14 +390,14 @@ const styles = StyleSheet.create({
   footer: {
     padding: spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: colors.light.border,
-    backgroundColor: colors.light.background,
+    borderTopColor: palette.border,
+    backgroundColor: palette.background,
   },
   saveButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: colors.light.primary,
+    backgroundColor: palette.primary,
     borderRadius: spacing.borderRadius.lg,
     paddingVertical: spacing.md,
     gap: spacing.sm,

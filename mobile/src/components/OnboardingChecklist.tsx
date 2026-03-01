@@ -16,6 +16,7 @@ import { colors } from "../theme/colors";
 import { spacing } from "../theme/spacing";
 import { typography } from "../theme/typography";
 import { shadows } from "../theme/shadows";
+import { useTheme } from "../hooks/useTheme";
 
 interface OnboardingChecklistProps {
   onNavigate: (target: "ClientForm" | "ProductForm" | "EventForm") => void;
@@ -47,6 +48,9 @@ export default function OnboardingChecklist({ onNavigate }: OnboardingChecklistP
   const [completed, setCompleted] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [dismissed, setDismissed] = useState(false);
+  const { isDark } = useTheme();
+  const palette = isDark ? colors.dark : colors.light;
+  const styles = getStyles(palette);
 
   const storageKey = `hideOnboarding_${user?.id || "unknown"}`;
 
@@ -112,7 +116,7 @@ export default function OnboardingChecklist({ onNavigate }: OnboardingChecklistP
           </Text>
         </View>
         <TouchableOpacity onPress={handleDismiss} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-          <X color={colors.light.textTertiary} size={20} />
+          <X color={palette.textTertiary} size={20} />
         </TouchableOpacity>
       </View>
 
@@ -135,7 +139,7 @@ export default function OnboardingChecklist({ onNavigate }: OnboardingChecklistP
           >
             <View style={[styles.stepIcon, isDone && styles.stepIconDone]}>
               {isDone ? (
-                <CheckCircle color={colors.light.success} size={20} />
+                <CheckCircle color={palette.success} size={20} />
               ) : (
                 <View style={styles.stepIconEmpty} />
               )}
@@ -146,7 +150,7 @@ export default function OnboardingChecklist({ onNavigate }: OnboardingChecklistP
               </Text>
               <Text style={styles.stepDescription}>{step.description}</Text>
             </View>
-            {!isDone && <ChevronRight color={colors.light.textTertiary} size={18} />}
+            {!isDone && <ChevronRight color={palette.textTertiary} size={18} />}
           </TouchableOpacity>
         );
       })}
@@ -154,9 +158,9 @@ export default function OnboardingChecklist({ onNavigate }: OnboardingChecklistP
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   container: {
-    backgroundColor: colors.light.card,
+    backgroundColor: palette.card,
     borderRadius: spacing.borderRadius.lg,
     padding: spacing.md,
     marginBottom: spacing.md,
@@ -170,28 +174,28 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.headline,
-    color: colors.light.text,
+    color: palette.text,
   },
   subtitle: {
     ...typography.caption1,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
     marginTop: 2,
   },
   progressTrack: {
     height: 6,
-    backgroundColor: colors.light.surfaceAlt,
+    backgroundColor: palette.surfaceAlt,
     borderRadius: 3,
     overflow: "hidden",
     marginBottom: spacing.xxs,
   },
   progressFill: {
     height: "100%",
-    backgroundColor: colors.light.success,
+    backgroundColor: palette.success,
     borderRadius: 3,
   },
   progressLabel: {
     ...typography.caption1,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
     marginBottom: spacing.sm,
   },
   stepRow: {
@@ -199,7 +203,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: spacing.sm,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.light.separator,
+    borderTopColor: palette.separator,
     gap: spacing.sm,
   },
   stepIcon: {
@@ -214,23 +218,23 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: colors.light.separator,
+    borderColor: palette.separator,
   },
   stepInfo: {
     flex: 1,
   },
   stepTitle: {
     ...typography.subheadline,
-    color: colors.light.text,
+    color: palette.text,
     fontWeight: "500",
   },
   stepTitleDone: {
-    color: colors.light.textTertiary,
+    color: palette.textTertiary,
     textDecorationLine: "line-through",
   },
   stepDescription: {
     ...typography.caption1,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
     marginTop: 1,
   },
 });

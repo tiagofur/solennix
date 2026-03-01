@@ -51,6 +51,7 @@ import {
 } from "../../lib/pdfGenerator";
 import { LoadingSpinner, ConfirmDialog, EmptyState, AppBottomSheet } from "../../components/shared";
 import { useStoreReview } from "../../hooks/useStoreReview";
+import { useTheme } from "../../hooks/useTheme";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
@@ -58,11 +59,11 @@ import { shadows } from "../../theme/shadows";
 
 type Props = NativeStackScreenProps<EventsStackParamList, "EventDetail">;
 
-const STATUS_OPTIONS = [
-  { key: "quoted", label: "Cotizado", color: colors.light.statusQuoted, bg: colors.light.statusQuotedBg, text: colors.light.statusQuoted },
-  { key: "confirmed", label: "Confirmado", color: colors.light.statusConfirmed, bg: colors.light.statusConfirmedBg, text: colors.light.statusConfirmed },
-  { key: "completed", label: "Completado", color: colors.light.statusCompleted, bg: colors.light.statusCompletedBg, text: colors.light.statusCompleted },
-  { key: "cancelled", label: "Cancelado", color: colors.light.statusCancelled, bg: colors.light.statusCancelledBg, text: colors.light.statusCancelled },
+const getStatusOptions = (palette: typeof colors.light) => [
+  { key: "quoted", label: "Cotizado", color: palette.statusQuoted, bg: palette.statusQuotedBg, text: palette.statusQuoted },
+  { key: "confirmed", label: "Confirmado", color: palette.statusConfirmed, bg: palette.statusConfirmedBg, text: palette.statusConfirmed },
+  { key: "completed", label: "Completado", color: palette.statusCompleted, bg: palette.statusCompletedBg, text: palette.statusCompleted },
+  { key: "cancelled", label: "Cancelado", color: palette.statusCancelled, bg: palette.statusCancelledBg, text: palette.statusCancelled },
 ];
 
 const statusLabels: Record<string, string> = {
@@ -78,6 +79,10 @@ export default function EventDetailScreen({ navigation, route }: Props) {
   const { user } = useAuth();
   const { isBasicPlan } = usePlanLimits();
   const { trackPdfShared } = useStoreReview();
+  const { isDark } = useTheme();
+  const palette = isDark ? colors.dark : colors.light;
+  const styles = getStyles(palette);
+  const STATUS_OPTIONS = getStatusOptions(palette);
 
   const [event, setEvent] = useState<Event | null>(null);
   const [client, setClient] = useState<any>(null);
@@ -388,7 +393,7 @@ export default function EventDetailScreen({ navigation, route }: Props) {
           <Text style={styles.sectionTitle}>Detalles</Text>
           
           <View style={styles.infoRow}>
-            <Calendar color={colors.light.textMuted} size={18} />
+            <Calendar color={palette.textMuted} size={18} />
             <Text style={styles.infoText}>
               {format(parseISO(event.event_date), "EEEE d 'de' MMMM 'de' yyyy", { locale: es })}
             </Text>
@@ -396,7 +401,7 @@ export default function EventDetailScreen({ navigation, route }: Props) {
           
           {event.start_time && (
             <View style={styles.infoRow}>
-              <Clock color={colors.light.textMuted} size={18} />
+              <Clock color={palette.textMuted} size={18} />
               <Text style={styles.infoText}>
                 {event.start_time} - {event.end_time || "Por definir"}
               </Text>
@@ -404,13 +409,13 @@ export default function EventDetailScreen({ navigation, route }: Props) {
           )}
           
           <View style={styles.infoRow}>
-            <Users color={colors.light.textMuted} size={18} />
+            <Users color={palette.textMuted} size={18} />
             <Text style={styles.infoText}>{event.num_people} personas</Text>
           </View>
           
           {event.location && (
             <View style={styles.infoRow}>
-              <MapPin color={colors.light.textMuted} size={18} />
+              <MapPin color={palette.textMuted} size={18} />
               <Text style={styles.infoText}>
                 {event.location}{event.city ? `, ${event.city}` : ""}
               </Text>
@@ -466,7 +471,7 @@ export default function EventDetailScreen({ navigation, route }: Props) {
             {event.discount > 0 && (
               <View style={styles.totalLine}>
                 <Text style={styles.totalLabel}>Descuento</Text>
-                <Text style={[styles.totalValue, { color: colors.light.error }]}>
+                <Text style={[styles.totalValue, { color: palette.error }]}>
                   -{formatCurrency(event.discount)}
                 </Text>
               </View>
@@ -492,15 +497,15 @@ export default function EventDetailScreen({ navigation, route }: Props) {
                   {formatCurrency(event.total_amount)}
                 </Text>
               </View>
-              <View style={[styles.paymentSummaryCard, { backgroundColor: colors.light.successBg }]}>
+              <View style={[styles.paymentSummaryCard, { backgroundColor: palette.successBg }]}>
                 <Text style={styles.paymentSummaryLabel}>Pagado</Text>
-                <Text style={[styles.paymentSummaryValue, { color: colors.light.success }]}>
+                <Text style={[styles.paymentSummaryValue, { color: palette.success }]}>
                   {formatCurrency(totalPaid)}
                 </Text>
               </View>
-              <View style={[styles.paymentSummaryCard, { backgroundColor: remaining > 0 ? colors.light.errorBg : colors.light.successBg }]}>
+              <View style={[styles.paymentSummaryCard, { backgroundColor: remaining > 0 ? palette.errorBg : palette.successBg }]}>
                 <Text style={styles.paymentSummaryLabel}>Saldo</Text>
-                <Text style={[styles.paymentSummaryValue, { color: remaining > 0 ? colors.light.error : colors.light.success }]}>
+                <Text style={[styles.paymentSummaryValue, { color: remaining > 0 ? palette.error : palette.success }]}>
                   {formatCurrency(Math.abs(remaining))}
                 </Text>
               </View>
@@ -514,7 +519,7 @@ export default function EventDetailScreen({ navigation, route }: Props) {
                     styles.progressFill,
                     {
                       width: `${progress}%`,
-                      backgroundColor: isFullyPaid ? colors.light.success : colors.light.primary,
+                      backgroundColor: isFullyPaid ? palette.success : palette.primary,
                     },
                   ]}
                 />
@@ -528,7 +533,7 @@ export default function EventDetailScreen({ navigation, route }: Props) {
                 {payments.map((p: any, index: number) => (
                   <View key={index} style={styles.paymentRow}>
                     <View style={styles.paymentInfo}>
-                      <CreditCard color={colors.light.textMuted} size={14} />
+                      <CreditCard color={palette.textMuted} size={14} />
                       <View>
                         <Text style={styles.paymentDate}>
                           {format(parseISO(p.payment_date), "d MMM", { locale: es })}
@@ -550,7 +555,7 @@ export default function EventDetailScreen({ navigation, route }: Props) {
                         onPress={() => setDeletePaymentId(p.id)}
                         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                       >
-                        <Trash2 color={colors.light.error} size={14} />
+                        <Trash2 color={palette.error} size={14} />
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -572,7 +577,7 @@ export default function EventDetailScreen({ navigation, route }: Props) {
             style={[styles.actionBtn, styles.primaryActionBtn]}
             onPress={() => setShowPaymentModal(true)}
           >
-            <Plus color={colors.light.textInverse} size={18} />
+            <Plus color={palette.textInverse} size={18} />
             <Text style={styles.primaryActionText}>
               Registrar Pago
             </Text>
@@ -595,8 +600,8 @@ export default function EventDetailScreen({ navigation, route }: Props) {
             style={styles.actionBtn}
             onPress={() => setShowActionsMenu(true)}
           >
-            <Download color={colors.light.primary} size={18} />
-            <Text style={[styles.actionText, { color: colors.light.primary }]}>
+            <Download color={palette.primary} size={18} />
+            <Text style={[styles.actionText, { color: palette.primary }]}>
               Generar
             </Text>
           </TouchableOpacity>
@@ -604,8 +609,8 @@ export default function EventDetailScreen({ navigation, route }: Props) {
             style={styles.actionBtn}
             onPress={() => navigation.navigate("EventForm", { id })}
           >
-            <Edit2 color={colors.light.primary} size={18} />
-            <Text style={[styles.actionText, { color: colors.light.primary }]}>
+            <Edit2 color={palette.primary} size={18} />
+            <Text style={[styles.actionText, { color: palette.primary }]}>
               Editar
             </Text>
           </TouchableOpacity>
@@ -613,8 +618,8 @@ export default function EventDetailScreen({ navigation, route }: Props) {
             style={[styles.actionBtn, styles.deleteBtn]}
             onPress={() => setShowDelete(true)}
           >
-            <Trash2 color={colors.light.error} size={18} />
-            <Text style={[styles.actionText, { color: colors.light.error }]}>
+            <Trash2 color={palette.error} size={18} />
+            <Text style={[styles.actionText, { color: palette.error }]}>
               Eliminar
             </Text>
           </TouchableOpacity>
@@ -640,7 +645,7 @@ export default function EventDetailScreen({ navigation, route }: Props) {
               <View style={[styles.statusDot, { backgroundColor: status.color }]} />
               <Text style={[styles.modalOptionText, { flex: 1 }]}>{status.label}</Text>
               {event.status === status.key && (
-                <Check color={colors.light.primary} size={18} />
+                <Check color={palette.primary} size={18} />
               )}
             </TouchableOpacity>
           ))}
@@ -660,7 +665,7 @@ export default function EventDetailScreen({ navigation, route }: Props) {
             value={paymentAmount}
             onChangeText={setPaymentAmount}
             placeholder="0.00"
-            placeholderTextColor={colors.light.textTertiary}
+            placeholderTextColor={palette.textTertiary}
             keyboardType="decimal-pad"
           />
 
@@ -691,7 +696,7 @@ export default function EventDetailScreen({ navigation, route }: Props) {
             value={paymentNotes}
             onChangeText={setPaymentNotes}
             placeholder="Referencia, folio, etc."
-            placeholderTextColor={colors.light.textTertiary}
+            placeholderTextColor={palette.textTertiary}
             multiline
             numberOfLines={2}
           />
@@ -708,7 +713,7 @@ export default function EventDetailScreen({ navigation, route }: Props) {
             activeOpacity={0.7}
           >
             {savingPayment ? (
-              <ActivityIndicator color={colors.light.textInverse} />
+              <ActivityIndicator color={palette.textInverse} />
             ) : (
               <Text style={styles.modalSaveButtonText}>Registrar Pago</Text>
             )}
@@ -725,13 +730,13 @@ export default function EventDetailScreen({ navigation, route }: Props) {
 
           {generatingPdf ? (
             <View style={styles.menuLoadingContainer}>
-              <ActivityIndicator color={colors.light.primary} size="large" />
+              <ActivityIndicator color={palette.primary} size="large" />
               <Text style={styles.menuLoadingText}>Generando PDF...</Text>
             </View>
           ) : (
             <>
               <TouchableOpacity style={styles.menuOption} onPress={handleGenerateQuote} activeOpacity={0.7}>
-                <FileText color={colors.light.primary} size={24} />
+                <FileText color={palette.primary} size={24} />
                 <View style={styles.menuOptionInfo}>
                   <Text style={styles.menuOptionTitle}>Cotización</Text>
                   <Text style={styles.menuOptionDesc}>Genera PDF de la cotización</Text>
@@ -739,7 +744,7 @@ export default function EventDetailScreen({ navigation, route }: Props) {
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.menuOption} onPress={handleGenerateContract} activeOpacity={0.7}>
-                <FileCheck color={colors.light.primary} size={24} />
+                <FileCheck color={palette.primary} size={24} />
                 <View style={styles.menuOptionInfo}>
                   <Text style={styles.menuOptionTitle}>Contrato</Text>
                   <Text style={styles.menuOptionDesc}>Genera PDF del contrato</Text>
@@ -747,7 +752,7 @@ export default function EventDetailScreen({ navigation, route }: Props) {
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.menuOption} onPress={handleGenerateShoppingList} activeOpacity={0.7}>
-                <ShoppingCart color={colors.light.primary} size={24} />
+                <ShoppingCart color={palette.primary} size={24} />
                 <View style={styles.menuOptionInfo}>
                   <Text style={styles.menuOptionTitle}>Lista de Compras</Text>
                   <Text style={styles.menuOptionDesc}>Genera lista de ingredientes</Text>
@@ -755,7 +760,7 @@ export default function EventDetailScreen({ navigation, route }: Props) {
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.menuOption} onPress={handleGeneratePaymentReport} activeOpacity={0.7}>
-                <DollarSign color={colors.light.primary} size={24} />
+                <DollarSign color={palette.primary} size={24} />
                 <View style={styles.menuOptionInfo}>
                   <Text style={styles.menuOptionTitle}>Reporte de Pagos</Text>
                   <Text style={styles.menuOptionDesc}>Resumen de pagos realizados</Text>
@@ -763,7 +768,7 @@ export default function EventDetailScreen({ navigation, route }: Props) {
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.menuOption} onPress={handleGenerateInvoice} activeOpacity={0.7}>
-                <Receipt color={colors.light.primary} size={24} />
+                <Receipt color={palette.primary} size={24} />
                 <View style={styles.menuOptionInfo}>
                   <Text style={styles.menuOptionTitle}>Factura</Text>
                   <Text style={styles.menuOptionDesc}>Genera factura simplificada</Text>
@@ -799,10 +804,10 @@ export default function EventDetailScreen({ navigation, route }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.light.surfaceGrouped,
+    backgroundColor: palette.surfaceGrouped,
   },
   content: {
     paddingHorizontal: spacing.lg,
@@ -811,7 +816,7 @@ const styles = StyleSheet.create({
   headerCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.light.card,
+    backgroundColor: palette.card,
     borderRadius: spacing.borderRadius.xl,
     padding: spacing.lg,
     marginTop: spacing.sm,
@@ -822,20 +827,20 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: spacing.borderRadius.lg,
-    backgroundColor: colors.light.primaryLight,
+    backgroundColor: palette.primaryLight,
     justifyContent: "center",
     alignItems: "center",
   },
   dateMonth: {
     fontSize: 10,
     fontWeight: "700",
-    color: colors.light.primary,
+    color: palette.primary,
     letterSpacing: 0.5,
   },
   dateDay: {
     fontSize: 22,
     fontWeight: "700",
-    color: colors.light.primary,
+    color: palette.primary,
     lineHeight: 24,
   },
   headerInfo: {
@@ -843,11 +848,11 @@ const styles = StyleSheet.create({
   },
   eventType: {
     ...typography.h3,
-    color: colors.light.text,
+    color: palette.text,
   },
   clientName: {
     ...typography.body,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
     marginBottom: spacing.xs,
   },
   statusText: {
@@ -855,7 +860,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   section: {
-    backgroundColor: colors.light.card,
+    backgroundColor: palette.card,
     borderRadius: spacing.borderRadius.lg,
     padding: spacing.md,
     marginTop: spacing.md,
@@ -863,7 +868,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...typography.h3,
-    color: colors.light.text,
+    color: palette.text,
     marginBottom: spacing.sm,
   },
   infoRow: {
@@ -874,7 +879,7 @@ const styles = StyleSheet.create({
   },
   infoText: {
     ...typography.body,
-    color: colors.light.text,
+    color: palette.text,
     flex: 1,
   },
   itemRow: {
@@ -883,25 +888,25 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: spacing.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.light.separator,
+    borderBottomColor: palette.separator,
   },
   itemInfo: {
     flex: 1,
   },
   itemName: {
     ...typography.label,
-    color: colors.light.text,
+    color: palette.text,
   },
   itemDetail: {
     ...typography.caption,
-    color: colors.light.textMuted,
+    color: palette.textMuted,
   },
   itemTotal: {
     ...typography.label,
-    color: colors.light.text,
+    color: palette.text,
   },
   totalCard: {
-    backgroundColor: colors.light.surface,
+    backgroundColor: palette.surface,
     borderRadius: spacing.borderRadius.lg,
     padding: spacing.md,
     marginBottom: spacing.md,
@@ -913,34 +918,34 @@ const styles = StyleSheet.create({
   },
   totalLineBold: {
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.light.separator,
+    borderTopColor: palette.separator,
     marginTop: spacing.xs,
     paddingTop: spacing.sm,
   },
   totalLabel: {
     ...typography.body,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
   },
   totalValue: {
     ...typography.label,
-    color: colors.light.text,
+    color: palette.text,
   },
   totalLabelBold: {
     ...typography.h3,
-    color: colors.light.text,
+    color: palette.text,
   },
   totalValueBold: {
     ...typography.h3,
-    color: colors.light.primary,
+    color: palette.primary,
   },
   paymentCard: {
-    backgroundColor: colors.light.surface,
+    backgroundColor: palette.surface,
     borderRadius: spacing.borderRadius.lg,
     padding: spacing.md,
   },
   paymentTitle: {
     ...typography.label,
-    color: colors.light.text,
+    color: palette.text,
     marginBottom: spacing.sm,
   },
   paymentSummary: {
@@ -950,19 +955,19 @@ const styles = StyleSheet.create({
   },
   paymentSummaryCard: {
     flex: 1,
-    backgroundColor: colors.light.surfaceAlt,
+    backgroundColor: palette.surfaceAlt,
     borderRadius: spacing.borderRadius.md,
     padding: spacing.sm,
     alignItems: "center",
   },
   paymentSummaryLabel: {
     ...typography.caption1,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
     marginBottom: 2,
   },
   paymentSummaryValue: {
     ...typography.headline,
-    color: colors.light.text,
+    color: palette.text,
     fontSize: 14,
   },
   progressContainer: {
@@ -970,7 +975,7 @@ const styles = StyleSheet.create({
   },
   progressTrack: {
     height: 8,
-    backgroundColor: colors.light.surfaceAlt,
+    backgroundColor: palette.surfaceAlt,
     borderRadius: 4,
     overflow: "hidden",
   },
@@ -980,7 +985,7 @@ const styles = StyleSheet.create({
   },
   progressText: {
     ...typography.caption1,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
     marginTop: spacing.xxs,
     textAlign: "right",
   },
@@ -988,7 +993,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     paddingTop: spacing.sm,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.light.separator,
+    borderTopColor: palette.separator,
   },
   paymentRow: {
     flexDirection: "row",
@@ -996,7 +1001,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: spacing.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.light.separator,
+    borderBottomColor: palette.separator,
   },
   paymentInfo: {
     flexDirection: "row",
@@ -1006,11 +1011,11 @@ const styles = StyleSheet.create({
   },
   paymentDate: {
     ...typography.caption,
-    color: colors.light.textMuted,
+    color: palette.textMuted,
   },
   paymentNoteText: {
     ...typography.caption1,
-    color: colors.light.textTertiary,
+    color: palette.textTertiary,
     marginTop: 2,
   },
   paymentRowRight: {
@@ -1020,14 +1025,14 @@ const styles = StyleSheet.create({
   },
   paymentAmount: {
     ...typography.label,
-    color: colors.light.success,
+    color: palette.success,
   },
   payRemainingBtn: {
-    backgroundColor: colors.light.success,
+    backgroundColor: palette.success,
   },
   notesText: {
     ...typography.body,
-    color: colors.light.text,
+    color: palette.text,
   },
   actions: {
     flexDirection: "row",
@@ -1041,20 +1046,20 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: spacing.xs,
     paddingVertical: spacing.sm + 2,
-    backgroundColor: colors.light.card,
+    backgroundColor: palette.card,
     borderRadius: spacing.borderRadius.lg,
     ...shadows.sm,
   },
   primaryActionBtn: {
-    backgroundColor: colors.light.primary,
+    backgroundColor: palette.primary,
   },
   primaryActionText: {
     ...typography.button,
     fontSize: 14,
-    color: colors.light.textInverse,
+    color: palette.textInverse,
   },
   deleteBtn: {
-    backgroundColor: colors.light.errorBg,
+    backgroundColor: palette.errorBg,
   },
   actionText: {
     ...typography.button,
@@ -1080,7 +1085,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     ...typography.h3,
-    color: colors.light.text,
+    color: palette.text,
     marginBottom: spacing.md,
   },
   modalOption: {
@@ -1093,23 +1098,23 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   modalOptionActive: {
-    backgroundColor: colors.light.surface,
+    backgroundColor: palette.surface,
   },
   modalOptionText: {
     ...typography.body,
-    color: colors.light.text,
+    color: palette.text,
   },
   inputLabel: {
     ...typography.caption,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
     marginBottom: spacing.xs,
   },
   modalInput: {
-    backgroundColor: colors.light.surface,
+    backgroundColor: palette.surface,
     borderRadius: spacing.borderRadius.md,
     padding: spacing.md,
     ...typography.body,
-    color: colors.light.text,
+    color: palette.text,
     marginBottom: spacing.md,
   },
   methodButtons: {
@@ -1122,17 +1127,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
     borderRadius: spacing.borderRadius.md,
-    backgroundColor: colors.light.surface,
+    backgroundColor: palette.surface,
   },
   methodButtonActive: {
-    backgroundColor: colors.light.primary,
+    backgroundColor: palette.primary,
   },
   methodButtonText: {
     ...typography.caption,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
   },
   methodButtonTextActive: {
-    color: colors.light.textInverse,
+    color: palette.textInverse,
   },
   modalTotal: {
     flexDirection: "row",
@@ -1140,19 +1145,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: spacing.md,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.light.separator,
+    borderTopColor: palette.separator,
     marginBottom: spacing.md,
   },
   modalTotalLabel: {
     ...typography.label,
-    color: colors.light.text,
+    color: palette.text,
   },
   modalTotalValue: {
     ...typography.h3,
-    color: colors.light.error,
+    color: palette.error,
   },
   modalSaveButton: {
-    backgroundColor: colors.light.primary,
+    backgroundColor: palette.primary,
     borderRadius: spacing.borderRadius.md,
     paddingVertical: spacing.md,
     alignItems: "center",
@@ -1162,7 +1167,7 @@ const styles = StyleSheet.create({
   },
   modalSaveButtonText: {
     ...typography.button,
-    color: colors.light.textInverse,
+    color: palette.textInverse,
   },
   menuOption: {
     flexDirection: "row",
@@ -1171,7 +1176,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.md,
     borderRadius: spacing.borderRadius.md,
-    backgroundColor: colors.light.surface,
+    backgroundColor: palette.surface,
     marginBottom: spacing.sm,
   },
   menuOptionInfo: {
@@ -1179,11 +1184,11 @@ const styles = StyleSheet.create({
   },
   menuOptionTitle: {
     ...typography.label,
-    color: colors.light.text,
+    color: palette.text,
   },
   menuOptionDesc: {
     ...typography.caption,
-    color: colors.light.textMuted,
+    color: palette.textMuted,
   },
   menuLoadingContainer: {
     alignItems: "center",
@@ -1192,6 +1197,6 @@ const styles = StyleSheet.create({
   },
   menuLoadingText: {
     ...typography.body,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
   },
 });

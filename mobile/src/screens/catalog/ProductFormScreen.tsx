@@ -27,6 +27,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useImagePicker } from "../../hooks/useImagePicker";
 import { logError } from "../../lib/errorHandler";
 import { LoadingSpinner, FormInput, AppBottomSheet } from "../../components/shared";
+import { useTheme } from "../../hooks/useTheme";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
@@ -47,6 +48,9 @@ export default function ProductFormScreen({ navigation, route }: Props) {
   const isEditing = !!id;
   const addToast = useToast((s) => s.addToast);
   const { user } = useAuth();
+  const { isDark } = useTheme();
+  const palette = isDark ? colors.dark : colors.light;
+  const styles = getStyles(palette);
 
   const [loading, setLoading] = useState(isEditing);
   const [saving, setSaving] = useState(false);
@@ -261,7 +265,7 @@ export default function ProductFormScreen({ navigation, route }: Props) {
               />
             ) : (
               <View style={styles.imagePlaceholder}>
-                <Camera color={colors.light.textTertiary} size={32} />
+                <Camera color={palette.textTertiary} size={32} />
                 <Text style={styles.imagePlaceholderText}>Agregar foto</Text>
               </View>
             )}
@@ -308,7 +312,7 @@ export default function ProductFormScreen({ navigation, route }: Props) {
                   >
                     {value || "Seleccionar categoría..."}
                   </Text>
-                  <ChevronDown color={colors.light.textTertiary} size={18} />
+                  <ChevronDown color={palette.textTertiary} size={18} />
                 </TouchableOpacity>
                 {errors.category && (
                   <Text style={styles.pickerError}>{errors.category.message}</Text>
@@ -344,8 +348,8 @@ export default function ProductFormScreen({ navigation, route }: Props) {
             <Switch
               value={isActive}
               onValueChange={setIsActive}
-              trackColor={{ false: colors.light.border, true: colors.light.primaryLight }}
-              thumbColor={isActive ? colors.light.primary : colors.light.textTertiary}
+              trackColor={{ false: palette.border, true: palette.primaryLight }}
+              thumbColor={isActive ? palette.primary : palette.textTertiary}
             />
           </View>
         </View>
@@ -357,7 +361,7 @@ export default function ProductFormScreen({ navigation, route }: Props) {
               style={styles.addIngredientBtn}
               onPress={handleAddIngredient}
             >
-              <Plus color={colors.light.primary} size={18} />
+              <Plus color={palette.primary} size={18} />
               <Text style={styles.addIngredientText}>Agregar</Text>
             </TouchableOpacity>
           </View>
@@ -427,7 +431,7 @@ export default function ProductFormScreen({ navigation, route }: Props) {
                   style={styles.removeBtn}
                   onPress={() => handleRemoveIngredient(index)}
                 >
-                  <Trash2 color={colors.light.error} size={18} />
+                  <Trash2 color={palette.error} size={18} />
                 </TouchableOpacity>
               </View>
             ))
@@ -443,10 +447,10 @@ export default function ProductFormScreen({ navigation, route }: Props) {
           activeOpacity={0.8}
         >
           {saving ? (
-            <ActivityIndicator color={colors.light.textInverse} />
+            <ActivityIndicator color={palette.textInverse} />
           ) : (
             <>
-              <Save color={colors.light.textInverse} size={20} />
+              <Save color={palette.textInverse} size={20} />
               <Text style={styles.saveButtonText}>
                 {isEditing ? "Actualizar" : "Crear Producto"}
               </Text>
@@ -475,7 +479,7 @@ export default function ProductFormScreen({ navigation, route }: Props) {
           >
             <Text style={styles.categorySheetItemText}>{cat}</Text>
             {watch("category") === cat && (
-              <Check color={colors.light.primary} size={18} />
+              <Check color={palette.primary} size={18} />
             )}
           </TouchableOpacity>
         ))}
@@ -483,7 +487,7 @@ export default function ProductFormScreen({ navigation, route }: Props) {
           <TextInput
             style={styles.categoryCustomInput}
             placeholder="Nueva categoría..."
-            placeholderTextColor={colors.light.textMuted}
+            placeholderTextColor={palette.textMuted}
             value={customCategory}
             onChangeText={setCustomCategory}
             autoCapitalize="words"
@@ -502,7 +506,7 @@ export default function ProductFormScreen({ navigation, route }: Props) {
             }}
             disabled={!customCategory.trim()}
           >
-            <Plus color={colors.light.textInverse} size={16} />
+            <Plus color={palette.textInverse} size={16} />
           </TouchableOpacity>
         </View>
       </AppBottomSheet>
@@ -510,10 +514,10 @@ export default function ProductFormScreen({ navigation, route }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.light.background,
+    backgroundColor: palette.background,
   },
   content: {
     paddingHorizontal: spacing.lg,
@@ -538,19 +542,19 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: colors.light.surface,
+    backgroundColor: palette.surface,
     borderRadius: spacing.borderRadius.lg,
     borderWidth: 2,
-    borderColor: colors.light.border,
+    borderColor: palette.border,
     borderStyle: "dashed",
     gap: spacing.xs,
   },
   imagePlaceholderText: {
     ...typography.caption,
-    color: colors.light.textTertiary,
+    color: palette.textTertiary,
   },
   section: {
-    backgroundColor: colors.light.card,
+    backgroundColor: palette.card,
     borderRadius: spacing.borderRadius.lg,
     ...shadows.sm,
     padding: spacing.md,
@@ -564,7 +568,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...typography.h3,
-    color: colors.light.text,
+    color: palette.text,
     marginBottom: spacing.sm,
   },
   switchRow: {
@@ -573,16 +577,16 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: spacing.sm,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.light.separator,
+    borderTopColor: palette.separator,
     marginTop: spacing.sm,
   },
   switchLabel: {
     ...typography.label,
-    color: colors.light.text,
+    color: palette.text,
   },
   switchDescription: {
     ...typography.caption,
-    color: colors.light.textTertiary,
+    color: palette.textTertiary,
   },
   addIngredientBtn: {
     flexDirection: "row",
@@ -591,16 +595,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     borderRadius: spacing.borderRadius.md,
-    backgroundColor: colors.light.primaryLight,
+    backgroundColor: palette.primaryLight,
   },
   addIngredientText: {
     ...typography.caption,
-    color: colors.light.primary,
+    color: palette.primary,
     fontWeight: "600",
   },
   emptyText: {
     ...typography.body,
-    color: colors.light.textTertiary,
+    color: palette.textTertiary,
     fontStyle: "italic",
     textAlign: "center",
     paddingVertical: spacing.md,
@@ -610,7 +614,7 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
     paddingVertical: spacing.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.light.separator,
+    borderBottomColor: palette.separator,
     gap: spacing.sm,
   },
   ingredientSelect: {
@@ -618,7 +622,7 @@ const styles = StyleSheet.create({
   },
   selectLabel: {
     ...typography.caption,
-    color: colors.light.textTertiary,
+    color: palette.textTertiary,
     marginBottom: 2,
   },
   ingredientScroll: {
@@ -629,21 +633,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     borderRadius: spacing.borderRadius.md,
-    backgroundColor: colors.light.surface,
+    backgroundColor: palette.surface,
     borderWidth: 1,
-    borderColor: colors.light.border,
+    borderColor: palette.border,
     maxWidth: 120,
   },
   ingredientChipActive: {
-    backgroundColor: colors.light.primary,
-    borderColor: colors.light.primary,
+    backgroundColor: palette.primary,
+    borderColor: palette.primary,
   },
   ingredientChipText: {
     ...typography.caption,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
   },
   ingredientChipTextActive: {
-    color: colors.light.textInverse,
+    color: palette.textInverse,
   },
   quantityInput: {
     flex: 1,
@@ -655,32 +659,32 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 36,
     borderWidth: 1,
-    borderColor: colors.light.border,
+    borderColor: palette.border,
     borderRadius: spacing.borderRadius.sm,
     paddingHorizontal: spacing.sm,
     ...typography.body,
-    color: colors.light.text,
-    backgroundColor: colors.light.surface,
+    color: palette.text,
+    backgroundColor: palette.surface,
   },
   unitText: {
     ...typography.caption,
-    color: colors.light.textTertiary,
+    color: palette.textTertiary,
   },
   removeBtn: {
     padding: spacing.xs,
   },
   footer: {
     padding: spacing.lg,
-    backgroundColor: colors.light.background,
+    backgroundColor: palette.background,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.light.separator,
+    borderTopColor: palette.separator,
   },
   saveButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: spacing.sm,
-    backgroundColor: colors.light.primary,
+    backgroundColor: palette.primary,
     borderRadius: spacing.borderRadius.md,
     paddingVertical: spacing.md,
   },
@@ -689,11 +693,11 @@ const styles = StyleSheet.create({
   },
   saveButtonText: {
     ...typography.button,
-    color: colors.light.textInverse,
+    color: palette.textInverse,
   },
   pickerLabel: {
     ...typography.caption,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
     marginBottom: spacing.xs,
     marginTop: spacing.sm,
   },
@@ -701,25 +705,25 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: colors.light.surface,
+    backgroundColor: palette.surface,
     borderRadius: spacing.borderRadius.md,
     padding: spacing.md,
     borderWidth: 1,
-    borderColor: colors.light.border,
+    borderColor: palette.border,
   },
   pickerButtonError: {
-    borderColor: colors.light.error,
+    borderColor: palette.error,
   },
   pickerButtonText: {
     ...typography.body,
-    color: colors.light.text,
+    color: palette.text,
   },
   pickerButtonPlaceholder: {
-    color: colors.light.textMuted,
+    color: palette.textMuted,
   },
   pickerError: {
     ...typography.caption,
-    color: colors.light.error,
+    color: palette.error,
     marginTop: 2,
   },
   categorySheetHeader: {
@@ -729,7 +733,7 @@ const styles = StyleSheet.create({
   },
   categorySheetTitle: {
     ...typography.h3,
-    color: colors.light.text,
+    color: palette.text,
   },
   categorySheetItem: {
     flexDirection: "row",
@@ -738,11 +742,11 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm + 2,
     paddingHorizontal: spacing.lg,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.light.separator,
+    borderBottomColor: palette.separator,
   },
   categorySheetItemText: {
     ...typography.body,
-    color: colors.light.text,
+    color: palette.text,
   },
   categoryCustomRow: {
     flexDirection: "row",
@@ -753,18 +757,18 @@ const styles = StyleSheet.create({
   },
   categoryCustomInput: {
     flex: 1,
-    backgroundColor: colors.light.surface,
+    backgroundColor: palette.surface,
     borderRadius: spacing.borderRadius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     ...typography.body,
-    color: colors.light.text,
+    color: palette.text,
   },
   categoryCustomBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: colors.light.primary,
+    backgroundColor: palette.primary,
     justifyContent: "center",
     alignItems: "center",
   },

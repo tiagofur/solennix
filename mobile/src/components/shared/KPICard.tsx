@@ -4,6 +4,7 @@ import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
 import { shadows } from "../../theme/shadows";
+import { useTheme } from "../../hooks/useTheme";
 
 interface KPICardProps {
   icon: React.ReactNode;
@@ -26,6 +27,10 @@ export default function KPICard({
   onPress,
   valueColor,
 }: KPICardProps) {
+  const { isDark } = useTheme();
+  const palette = isDark ? colors.dark : colors.light;
+  const styles = getStyles(palette);
+
   const content = (
     <View style={styles.card}>
       <View style={styles.row}>
@@ -65,9 +70,9 @@ export default function KPICard({
   return content;
 }
 
-const styles = StyleSheet.create({
+const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   card: {
-    backgroundColor: colors.light.card,
+    backgroundColor: palette.card,
     borderRadius: spacing.borderRadius.lg,
     ...shadows.sm,
     overflow: "hidden",
@@ -92,22 +97,22 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.caption1,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
   },
   value: {
     ...typography.headline,
-    color: colors.light.text,
+    color: palette.text,
     marginTop: 2,
   },
   footer: {
-    backgroundColor: colors.light.surface,
+    backgroundColor: palette.surface,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs + 2,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.light.separator,
+    borderTopColor: palette.separator,
   },
   footerText: {
     ...typography.caption1,
-    color: colors.light.textMuted,
+    color: palette.textMuted,
   },
 });

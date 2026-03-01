@@ -15,6 +15,7 @@ import {
   OfferingInfo,
 } from "../../services/revenueCatService";
 import { useToast } from "../../hooks/useToast";
+import { useTheme } from "../../hooks/useTheme";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
@@ -40,6 +41,9 @@ const featuresPro = [
 export default function PricingScreen() {
   const { user, checkAuth } = useAuth();
   const { addToast } = useToast();
+  const { isDark } = useTheme();
+  const palette = isDark ? colors.dark : colors.light;
+  const styles = getStyles(palette);
   const [offerings, setOfferings] = useState<OfferingInfo[]>([]);
   const [purchasing, setPurchasing] = useState(false);
   const [restoring, setRestoring] = useState(false);
@@ -139,7 +143,7 @@ export default function PricingScreen() {
             <View style={styles.featuresList}>
               {featuresFree.map((feature, index) => (
                 <View key={index} style={styles.featureRow}>
-                  <Check color={colors.light.success} size={18} />
+                  <Check color={palette.success} size={18} />
                   <Text style={styles.featureText}>{feature}</Text>
                 </View>
               ))}
@@ -149,14 +153,14 @@ export default function PricingScreen() {
           {/* Pro Plan */}
           <View style={[styles.planCard, styles.planCardPro]}>
             <View style={[styles.planBadge, styles.planBadgePro]}>
-              <Zap color={colors.light.text} size={12} />
+              <Zap color={palette.text} size={12} />
               <Text style={styles.planBadgeTextPro}>Más Popular</Text>
             </View>
             <Text style={[styles.planName, styles.planNamePro]}>Premium</Text>
             <View style={styles.planPrice}>
               {loadingOfferings ? (
                 <ActivityIndicator
-                  color={colors.light.textInverse}
+                  color={palette.textInverse}
                   size="small"
                 />
               ) : (
@@ -177,7 +181,7 @@ export default function PricingScreen() {
             <View style={styles.featuresList}>
               {featuresPro.map((feature, index) => (
                 <View key={index} style={styles.featureRow}>
-                  <Check color={colors.light.textInverse} size={18} />
+                  <Check color={palette.textInverse} size={18} />
                   <Text style={[styles.featureText, styles.featureTextPro]}>
                     {feature}
                   </Text>
@@ -187,7 +191,7 @@ export default function PricingScreen() {
 
             {isPremium ? (
               <View style={styles.currentPlanBadge}>
-                <Star color={colors.light.warning} size={16} />
+                <Star color={palette.warning} size={16} />
                 <Text style={styles.currentPlanText}>
                   Ya tienes Premium
                 </Text>
@@ -200,7 +204,7 @@ export default function PricingScreen() {
                 activeOpacity={0.8}
               >
                 {purchasing ? (
-                  <ActivityIndicator color={colors.light.text} />
+                  <ActivityIndicator color={palette.text} />
                 ) : (
                   <Text style={styles.upgradeButtonText}>
                     Actualizar a Premium
@@ -221,12 +225,12 @@ export default function PricingScreen() {
           >
             {restoring ? (
               <ActivityIndicator
-                color={colors.light.textTertiary}
+                color={palette.textTertiary}
                 size="small"
               />
             ) : (
               <>
-                <RefreshCw color={colors.light.textTertiary} size={14} />
+                <RefreshCw color={palette.textTertiary} size={14} />
                 <Text style={styles.restoreButtonText}>
                   Restaurar Compras
                 </Text>
@@ -289,10 +293,10 @@ export default function PricingScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.light.surfaceGrouped,
+    backgroundColor: palette.surfaceGrouped,
   },
   content: {
     paddingHorizontal: spacing.lg,
@@ -304,12 +308,12 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.title1,
-    color: colors.light.text,
+    color: palette.text,
     textAlign: "center",
   },
   subtitle: {
     ...typography.body,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
     textAlign: "center",
     marginTop: spacing.xs,
   },
@@ -317,21 +321,21 @@ const styles = StyleSheet.create({
     gap: spacing.lg,
   },
   planCard: {
-    backgroundColor: colors.light.card,
+    backgroundColor: palette.card,
     borderRadius: spacing.borderRadius.xl,
     padding: spacing.lg,
     position: "relative",
     ...shadows.sm,
   },
   planCardPro: {
-    backgroundColor: colors.light.primary,
+    backgroundColor: palette.primary,
     ...shadows.md,
   },
   planBadge: {
     position: "absolute",
     top: -12,
     left: spacing.lg,
-    backgroundColor: colors.light.card,
+    backgroundColor: palette.card,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
     borderRadius: spacing.borderRadius.full,
@@ -341,25 +345,25 @@ const styles = StyleSheet.create({
     ...shadows.sm,
   },
   planBadgePro: {
-    backgroundColor: colors.light.warning,
+    backgroundColor: palette.warning,
   },
   planBadgeText: {
     ...typography.caption1,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
     fontWeight: "600",
   },
   planBadgeTextPro: {
     ...typography.caption1,
-    color: colors.light.text,
+    color: palette.text,
     fontWeight: "600",
   },
   planName: {
     ...typography.title2,
-    color: colors.light.text,
+    color: palette.text,
     marginTop: spacing.sm,
   },
   planNamePro: {
-    color: colors.light.textInverse,
+    color: palette.textInverse,
   },
   planPrice: {
     flexDirection: "row",
@@ -368,27 +372,27 @@ const styles = StyleSheet.create({
   },
   priceAmount: {
     ...typography.title1,
-    color: colors.light.text,
+    color: palette.text,
   },
   priceAmountPro: {
-    color: colors.light.textInverse,
+    color: palette.textInverse,
   },
   pricePeriod: {
     ...typography.body,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
     marginLeft: spacing.xs,
   },
   pricePeriodPro: {
-    color: colors.light.textInverse,
+    color: palette.textInverse,
     opacity: 0.8,
   },
   planDescription: {
     ...typography.body,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
     marginTop: spacing.xs,
   },
   planDescriptionPro: {
-    color: colors.light.textInverse,
+    color: palette.textInverse,
     opacity: 0.8,
   },
   featuresList: {
@@ -402,14 +406,14 @@ const styles = StyleSheet.create({
   },
   featureText: {
     ...typography.body,
-    color: colors.light.text,
+    color: palette.text,
     flex: 1,
   },
   featureTextPro: {
-    color: colors.light.textInverse,
+    color: palette.textInverse,
   },
   upgradeButton: {
-    backgroundColor: colors.light.warning,
+    backgroundColor: palette.warning,
     borderRadius: spacing.borderRadius.lg,
     paddingVertical: spacing.md,
     alignItems: "center",
@@ -417,21 +421,21 @@ const styles = StyleSheet.create({
   },
   upgradeButtonText: {
     ...typography.button,
-    color: colors.light.text,
+    color: palette.text,
   },
   currentPlanBadge: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: spacing.xs,
-    backgroundColor: colors.light.primaryLight,
+    backgroundColor: palette.primaryLight,
     borderRadius: spacing.borderRadius.lg,
     paddingVertical: spacing.md,
     marginTop: spacing.lg,
   },
   currentPlanText: {
     ...typography.button,
-    color: colors.light.textInverse,
+    color: palette.textInverse,
   },
   restoreButton: {
     flexDirection: "row",
@@ -442,7 +446,7 @@ const styles = StyleSheet.create({
   },
   restoreButtonText: {
     ...typography.subheadline,
-    color: colors.light.textTertiary,
+    color: palette.textTertiary,
   },
   debugButton: {
     alignItems: "center",
@@ -450,14 +454,14 @@ const styles = StyleSheet.create({
   },
   debugButtonText: {
     ...typography.caption1,
-    color: colors.light.textTertiary,
+    color: palette.textTertiary,
   },
   faq: {
     marginTop: spacing.xl,
   },
   faqTitle: {
     ...typography.headline,
-    color: colors.light.text,
+    color: palette.text,
     marginBottom: spacing.md,
   },
   faqItem: {
@@ -466,11 +470,11 @@ const styles = StyleSheet.create({
   faqQuestion: {
     ...typography.subheadline,
     fontWeight: "600",
-    color: colors.light.text,
+    color: palette.text,
   },
   faqAnswer: {
     ...typography.body,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
     marginTop: spacing.xs,
   },
 });

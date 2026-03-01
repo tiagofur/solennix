@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
 import { colors } from '../../theme/colors';
 import { uploadService } from '../../services/uploadService';
+import { useTheme } from '../../hooks/useTheme';
 
 interface AvatarProps {
     name: string;
@@ -15,6 +16,9 @@ const blurhash = 'L6PZfSi_.AyE_3t7t7R**0o#DgR4';
 export function Avatar({ name, photoUrl, size = 44 }: AvatarProps) {
     const fullUrl = uploadService.getFullUrl(photoUrl);
     const borderRadius = size / 2;
+    const { isDark } = useTheme();
+    const palette = isDark ? colors.dark : colors.light;
+    const styles = getStyles(palette);
 
     const getInitials = (n: string) => {
         const parts = n.trim().split(/\s+/);
@@ -34,7 +38,7 @@ export function Avatar({ name, photoUrl, size = 44 }: AvatarProps) {
         );
     }
 
-    const bgColor = colors.light.avatarColors[name.charCodeAt(0) % colors.light.avatarColors.length];
+    const bgColor = palette.avatarColors[name.charCodeAt(0) % palette.avatarColors.length];
     const fontSize = size * 0.38;
 
     return (
@@ -44,16 +48,16 @@ export function Avatar({ name, photoUrl, size = 44 }: AvatarProps) {
     );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (palette: typeof colors.light) => StyleSheet.create({
     image: {
-        backgroundColor: colors.light.surface,
+        backgroundColor: palette.surface,
     },
     initialsContainer: {
         justifyContent: 'center',
         alignItems: 'center',
     },
     initialsText: {
-        color: colors.light.textInverse,
+        color: palette.textInverse,
         fontWeight: '700',
     },
 });

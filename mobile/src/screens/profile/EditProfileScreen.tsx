@@ -20,6 +20,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useToast } from "../../hooks/useToast";
 import { logError } from "../../lib/errorHandler";
 import { FormInput } from "../../components/shared";
+import { useTheme } from "../../hooks/useTheme";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
@@ -35,6 +36,9 @@ type Props = NativeStackScreenProps<SettingsStackParamList, "EditProfile">;
 export default function EditProfileScreen({ navigation }: Props) {
   const { user, updateProfile } = useAuth();
   const addToast = useToast((s) => s.addToast);
+  const { isDark } = useTheme();
+  const palette = isDark ? colors.dark : colors.light;
+  const styles = getStyles(palette);
   const [submitting, setSubmitting] = useState(false);
 
   const {
@@ -131,10 +135,10 @@ export default function EditProfileScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.light.background,
+    backgroundColor: palette.background,
   },
   form: {
     padding: spacing.lg,
@@ -142,23 +146,23 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...typography.headline,
-    color: colors.light.text,
+    color: palette.text,
     marginBottom: spacing.sm,
   },
   readonlyInput: {
-    color: colors.light.textTertiary,
+    color: palette.textTertiary,
   },
   footer: {
     padding: spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: colors.light.border,
-    backgroundColor: colors.light.background,
+    borderTopColor: palette.border,
+    backgroundColor: palette.background,
   },
   saveButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: colors.light.primary,
+    backgroundColor: palette.primary,
     borderRadius: spacing.borderRadius.lg,
     paddingVertical: spacing.md,
     gap: spacing.sm,

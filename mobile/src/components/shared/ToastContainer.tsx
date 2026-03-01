@@ -13,6 +13,7 @@ import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
 import { shadows } from "../../theme/shadows";
+import { useTheme } from "../../hooks/useTheme";
 
 const { width } = Dimensions.get("window");
 
@@ -22,25 +23,28 @@ const ICON_MAP: Record<ToastType, React.ReactNode> = {
   info: <Info color="#ffffff" size={20} />,
 };
 
-const BG_MAP: Record<ToastType, string> = {
-  success: colors.light.success,
-  error: colors.light.error,
-  info: colors.light.info,
-};
-
 function ToastItem({
   id,
   message,
   type,
   onDismiss,
+  palette,
 }: {
   id: string;
   message: string;
   type: ToastType;
   onDismiss: (id: string) => void;
+  palette: typeof colors.light;
 }) {
   const translateY = useRef(new Animated.Value(-80)).current;
   const opacity = useRef(new Animated.Value(0)).current;
+  const styles = getStyles(palette);
+
+  const BG_MAP: Record<ToastType, string> = {
+    success: palette.success,
+    error: palette.error,
+    info: palette.info,
+  };
 
   useEffect(() => {
     Animated.parallel([
@@ -78,6 +82,9 @@ function ToastItem({
 
 export default function ToastContainer() {
   const { toasts, removeToast } = useToast();
+  const { isDark } = useTheme();
+  const palette = isDark ? colors.dark : colors.light;
+  const styles = getStyles(palette);
 
   if (toasts.length === 0) return null;
 
@@ -90,13 +97,14 @@ export default function ToastContainer() {
           message={toast.message}
           type={toast.type}
           onDismiss={removeToast}
+          palette={palette}
         />
       ))}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   container: {
     position: "absolute",
     bottom: spacing.xxxl,

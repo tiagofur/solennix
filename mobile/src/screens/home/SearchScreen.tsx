@@ -25,6 +25,7 @@ import {
   SearchResults,
 } from "../../services/searchService";
 import { logError } from "../../lib/errorHandler";
+import { useTheme } from "../../hooks/useTheme";
 import { EmptyState } from "../../components/shared";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
@@ -68,6 +69,9 @@ export default function SearchScreen() {
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { isDark } = useTheme();
+  const palette = isDark ? colors.dark : colors.light;
+  const styles = getStyles(palette);
 
   // Auto-focus
   useEffect(() => {
@@ -109,7 +113,7 @@ export default function SearchScreen() {
         .map((key) => ({
           key,
           title: sectionConfig[key].title,
-          icon: sectionConfig[key].icon(colors.light.primary),
+          icon: sectionConfig[key].icon(palette.primary),
           data: results[key],
         }))
     : [];
@@ -171,7 +175,7 @@ export default function SearchScreen() {
             {item.meta}
           </Text>
         ) : null}
-        <ChevronRight color={colors.light.textMuted} size={16} />
+        <ChevronRight color={palette.textMuted} size={16} />
       </TouchableOpacity>
     ),
     [handleResultPress],
@@ -193,12 +197,12 @@ export default function SearchScreen() {
       {/* Search bar */}
       <View style={styles.searchContainer}>
         <View style={styles.searchBox}>
-          <Search color={colors.light.textMuted} size={18} />
+          <Search color={palette.textMuted} size={18} />
           <TextInput
             ref={inputRef}
             style={styles.searchInput}
             placeholder="Buscar clientes, eventos, productos..."
-            placeholderTextColor={colors.light.textMuted}
+            placeholderTextColor={palette.textMuted}
             value={query}
             onChangeText={setQuery}
             autoCorrect={false}
@@ -206,7 +210,7 @@ export default function SearchScreen() {
           />
           {query.length > 0 && (
             <TouchableOpacity onPress={() => setQuery("")}>
-              <X color={colors.light.textMuted} size={18} />
+              <X color={palette.textMuted} size={18} />
             </TouchableOpacity>
           )}
         </View>
@@ -215,7 +219,7 @@ export default function SearchScreen() {
       {/* Loading */}
       {loading && (
         <View style={styles.loadingRow}>
-          <ActivityIndicator size="small" color={colors.light.primary} />
+          <ActivityIndicator size="small" color={palette.primary} />
           <Text style={styles.loadingText}>Buscando...</Text>
         </View>
       )}
@@ -236,7 +240,7 @@ export default function SearchScreen() {
       {/* No results */}
       {!loading && searched && totalResults === 0 && (
         <EmptyState
-          icon={<Search color={colors.light.textMuted} size={48} />}
+          icon={<Search color={palette.textMuted} size={48} />}
           title="Sin resultados"
           description={`No se encontró nada para "${query}"`}
         />
@@ -245,7 +249,7 @@ export default function SearchScreen() {
       {/* Initial state */}
       {!loading && !searched && (
         <View style={styles.emptyHint}>
-          <Search color={colors.light.textMuted} size={40} />
+          <Search color={palette.textMuted} size={40} />
           <Text style={styles.hintText}>
             Busca clientes, eventos, productos o inventario
           </Text>
@@ -255,10 +259,10 @@ export default function SearchScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.light.background,
+    backgroundColor: palette.background,
   },
   searchContainer: {
     paddingHorizontal: spacing.lg,
@@ -268,10 +272,10 @@ const styles = StyleSheet.create({
   searchBox: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.light.surface,
+    backgroundColor: palette.surface,
     borderRadius: spacing.borderRadius.lg,
     borderWidth: 1,
-    borderColor: colors.light.border,
+    borderColor: palette.border,
     paddingHorizontal: spacing.md,
     height: 44,
     gap: spacing.sm,
@@ -279,7 +283,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     ...typography.body,
-    color: colors.light.text,
+    color: palette.text,
     padding: 0,
   },
   loadingRow: {
@@ -291,7 +295,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     ...typography.bodySmall,
-    color: colors.light.textMuted,
+    color: palette.textMuted,
   },
   listContent: {
     paddingHorizontal: spacing.lg,
@@ -303,41 +307,41 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
     paddingTop: spacing.md,
     paddingBottom: spacing.xs,
-    backgroundColor: colors.light.background,
+    backgroundColor: palette.background,
   },
   sectionTitle: {
     ...typography.label,
-    color: colors.light.text,
+    color: palette.text,
     fontSize: 14,
   },
   sectionCount: {
     ...typography.caption,
-    color: colors.light.textMuted,
+    color: palette.textMuted,
   },
   resultRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.light.card,
+    backgroundColor: palette.card,
     borderRadius: spacing.borderRadius.md,
     borderWidth: 1,
-    borderColor: colors.light.border,
+    borderColor: palette.border,
     padding: spacing.md,
     marginBottom: spacing.xs,
     gap: spacing.sm,
   },
   resultTitle: {
     ...typography.label,
-    color: colors.light.text,
+    color: palette.text,
     fontSize: 14,
   },
   resultSubtitle: {
     ...typography.caption,
-    color: colors.light.textSecondary,
+    color: palette.textSecondary,
     marginTop: 1,
   },
   resultMeta: {
     ...typography.caption,
-    color: colors.light.textMuted,
+    color: palette.textMuted,
     maxWidth: 90,
     textAlign: "right",
   },
@@ -350,7 +354,7 @@ const styles = StyleSheet.create({
   },
   hintText: {
     ...typography.body,
-    color: colors.light.textMuted,
+    color: palette.textMuted,
     textAlign: "center",
     paddingHorizontal: spacing.xxl,
   },
