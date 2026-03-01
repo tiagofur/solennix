@@ -41,7 +41,7 @@ export const EventProducts: React.FC<EventProductsProps> = ({
       <h3 className="text-lg font-medium text-gray-900 dark:text-white">Selección de Productos</h3>
 
       {selectedProducts.map((item, index) => (
-        <div key={index} className="bg-gray-50 dark:bg-gray-700 p-3 rounded-md relative group">
+        <div key={index} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-xl relative group border border-gray-100 dark:border-gray-600 shadow-xs">
           <button
             type="button"
             onClick={() => onRemoveProduct(index)}
@@ -57,7 +57,7 @@ export const EventProducts: React.FC<EventProductsProps> = ({
               id={`product-select-${index}`}
               value={item.product_id}
               onChange={(e) => onProductChange(index, 'product_id', e.target.value)}
-              className="block w-full text-sm border-gray-300 dark:border-gray-600 rounded-md shadow-xs focus:ring-brand-orange focus:border-brand-orange bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
+              className="block w-full text-sm border-gray-300 dark:border-gray-600 rounded-xl shadow-xs transition-shadow focus:ring-2 focus:ring-brand-orange/20 bg-white dark:bg-gray-600 text-gray-900 dark:text-white p-2 border"
               aria-label={`Seleccionar producto ${index + 1}`}
             >
               <option value="">Seleccionar producto</option>
@@ -78,13 +78,13 @@ export const EventProducts: React.FC<EventProductsProps> = ({
                   type="number"
                   value={item.quantity}
                   onChange={(e) => onProductChange(index, 'quantity', Number(e.target.value))}
-                  className="flex-1 min-w-0 block w-full px-2 py-2 rounded-none rounded-l-md text-sm border-gray-300 dark:border-gray-600 focus:ring-brand-orange focus:border-brand-orange border bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
+                  className="flex-1 min-w-0 block w-full px-2 py-2 rounded-none rounded-l-xl text-sm border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-brand-orange/20 border bg-white dark:bg-gray-600 text-gray-900 dark:text-white transition-shadow"
                   aria-label={`Cantidad de producto ${index + 1}`}
                 />
                 <button
                   type="button"
                   onClick={() => onProductChange(index, 'quantity', Number(numPeople || 1))}
-                  className="inline-flex items-center px-2 rounded-r-md border border-l-0 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 sm:text-sm hover:bg-gray-100 dark:hover:bg-gray-600"
+                  className="inline-flex items-center px-2 rounded-r-xl border border-l-0 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 sm:text-sm hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                   aria-label="Igualar cantidad a número de personas"
                 >
                   <Users className="h-3 w-3" aria-hidden="true" />
@@ -99,7 +99,7 @@ export const EventProducts: React.FC<EventProductsProps> = ({
                 type="number"
                 value={item.price}
                 readOnly
-                className="block w-full text-sm border-gray-300 dark:border-gray-600 rounded-md shadow-xs bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400 p-2 border cursor-not-allowed"
+                className="block w-full text-sm border-gray-300 dark:border-gray-600 rounded-xl shadow-xs bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400 p-2 border cursor-not-allowed opacity-80"
                 aria-label={`Precio unitario de producto ${index + 1} (solo lectura)`}
               />
             </div>
@@ -152,7 +152,7 @@ export const EventProducts: React.FC<EventProductsProps> = ({
       <button
         type="button"
         onClick={onAddProduct}
-        className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-xs text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+        className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-xs text-sm font-medium rounded-xl text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
         aria-label="Agregar un producto adicional"
       >
         <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> Agregar Producto

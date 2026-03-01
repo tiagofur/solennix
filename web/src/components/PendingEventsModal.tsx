@@ -83,7 +83,7 @@ export const PendingEventsModal: React.FC = () => {
           onClick={() => setIsOpen(false)}
         />
 
-        <div className="relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-800 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl">
+        <div className="relative transform overflow-hidden rounded-3xl bg-white dark:bg-gray-800 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl border border-border">
           <div className="bg-white dark:bg-gray-800 px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
             <div className="sm:flex sm:items-start">
               <div
@@ -123,7 +123,7 @@ export const PendingEventsModal: React.FC = () => {
                     {pendingEvents.map((event) => (
                       <div
                         key={event.id}
-                        className="border dark:border-gray-700 rounded-lg p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-gray-50 dark:bg-gray-900/50"
+                        className="border border-border rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-surface-alt/50"
                       >
                         <div>
                           <p className="font-semibold text-gray-900 dark:text-white truncate max-w-xs">
@@ -145,7 +145,7 @@ export const PendingEventsModal: React.FC = () => {
                               handleUpdateStatus(event.id, "completed")
                             }
                             disabled={updatingId === event.id}
-                            className="flex-1 sm:flex-none inline-flex items-center justify-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-sm text-white bg-green-600 hover:bg-green-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors disabled:opacity-50"
+                            className="flex-1 sm:flex-none inline-flex items-center justify-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-xl text-white bg-green-600 hover:bg-green-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors disabled:opacity-50"
                             aria-label={`Marcar evento como completado: ${event.client?.name || "Sin Cliente"} - ${event.service_type}`}
                           >
                             <CheckCircle
@@ -160,7 +160,7 @@ export const PendingEventsModal: React.FC = () => {
                               handleUpdateStatus(event.id, "cancelled")
                             }
                             disabled={updatingId === event.id}
-                            className="flex-1 sm:flex-none inline-flex items-center justify-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-sm text-white bg-red-600 hover:bg-red-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors disabled:opacity-50"
+                            className="flex-1 sm:flex-none inline-flex items-center justify-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-xl text-white bg-red-600 hover:bg-red-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors disabled:opacity-50"
                             aria-label={`Marcar evento como cancelado: ${event.client?.name || "Sin Cliente"} - ${event.service_type}`}
                           >
                             <XCircle

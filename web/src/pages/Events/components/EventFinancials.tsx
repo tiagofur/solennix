@@ -39,7 +39,7 @@ export const EventFinancials: React.FC<EventFinancialsProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <div className="space-y-4">
-            <div className="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-xs border dark:border-gray-600">
+            <div className="bg-white dark:bg-gray-700 p-4 rounded-xl shadow-xs border border-gray-100 dark:border-gray-600">
               <label htmlFor="requires_invoice" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Facturación
               </label>
@@ -57,7 +57,7 @@ export const EventFinancials: React.FC<EventFinancialsProps> = ({
               </div>
             </div>
 
-            <div className="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-xs border dark:border-gray-600">
+            <div className="bg-white dark:bg-gray-700 p-4 rounded-xl shadow-xs border border-gray-100 dark:border-gray-600">
               <label htmlFor="discount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Descuento General (%)
               </label>
@@ -68,11 +68,11 @@ export const EventFinancials: React.FC<EventFinancialsProps> = ({
                 max="100"
                 step="0.01"
                 {...register('discount')}
-                className="block w-full text-sm border-gray-300 dark:border-gray-600 rounded-md shadow-xs focus:ring-brand-orange focus:border-brand-orange p-2 bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
+                className="mt-1 block w-full text-sm border-gray-300 dark:border-gray-600 rounded-xl shadow-xs transition-shadow focus:ring-2 focus:ring-brand-orange/20 p-2 bg-white dark:bg-gray-600 text-gray-900 dark:text-white border"
               />
             </div>
 
-            <div className="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-xs border dark:border-gray-600">
+            <div className="bg-white dark:bg-gray-700 p-4 rounded-xl shadow-xs border border-gray-100 dark:border-gray-600">
               <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Condiciones de Pago</h4>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -83,7 +83,7 @@ export const EventFinancials: React.FC<EventFinancialsProps> = ({
                     {...register('deposit_percent')}
                     max="100"
                     min="0"
-                    className="mt-1 block w-full text-sm border-gray-300 dark:border-gray-600 rounded-md shadow-xs focus:ring-brand-orange focus:border-brand-orange p-2 bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
+                    className="mt-1 block w-full text-sm border-gray-300 dark:border-gray-600 rounded-xl shadow-xs transition-shadow focus:ring-2 focus:ring-brand-orange/20 p-2 bg-white dark:bg-gray-600 text-gray-900 dark:text-white border"
                   />
                 </div>
                 <div>
@@ -93,7 +93,7 @@ export const EventFinancials: React.FC<EventFinancialsProps> = ({
                     type="number"
                     {...register('cancellation_days')}
                     min="0"
-                    className="mt-1 block w-full text-sm border-gray-300 dark:border-gray-600 rounded-md shadow-xs focus:ring-brand-orange focus:border-brand-orange p-2 bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
+                    className="mt-1 block w-full text-sm border-gray-300 dark:border-gray-600 rounded-xl shadow-xs transition-shadow focus:ring-2 focus:ring-brand-orange/20 p-2 bg-white dark:bg-gray-600 text-gray-900 dark:text-white border"
                   />
                 </div>
                 <div>
@@ -104,13 +104,13 @@ export const EventFinancials: React.FC<EventFinancialsProps> = ({
                     {...register('refund_percent')}
                     max="100"
                     min="0"
-                    className="mt-1 block w-full text-sm border-gray-300 dark:border-gray-600 rounded-md shadow-xs focus:ring-brand-orange focus:border-brand-orange p-2 bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
+                    className="mt-1 block w-full text-sm border-gray-300 dark:border-gray-600 rounded-xl shadow-xs transition-shadow focus:ring-2 focus:ring-brand-orange/20 p-2 bg-white dark:bg-gray-600 text-gray-900 dark:text-white border"
                   />
                 </div>
               </div>
             </div>
 
-             <div className="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-xs border dark:border-gray-600">
+             <div className="bg-white dark:bg-gray-700 p-4 rounded-xl shadow-xs border border-gray-100 dark:border-gray-600">
               <label htmlFor="event-notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Notas
               </label>
@@ -118,13 +118,13 @@ export const EventFinancials: React.FC<EventFinancialsProps> = ({
                 id="event-notes"
                 {...register('notes')}
                 rows={3}
-                className="shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
+                className="shadow-xs transition-shadow focus:ring-2 focus:ring-brand-orange/20 block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-xl p-2 border bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
               />
             </div>
           </div>
         </div>
 
-        <div className="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg shadow-inner">
+        <div className="bg-gray-50 dark:bg-gray-800 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700">
           <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Resumen de Costos</h4>
 
           <div className="space-y-3 text-sm">

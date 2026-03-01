@@ -52,7 +52,7 @@ export const EventGeneralInfo: React.FC<EventGeneralInfoProps> = ({
             <select
               id="client_id"
               {...register('client_id')}
-              className="shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="shadow-xs rounded-xl p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-shadow focus:ring-2 focus:ring-brand-orange/20"
               aria-required="true"
               aria-invalid={errors.client_id ? "true" : "false"}
               aria-describedby={errors.client_id ? "client_id-error" : undefined}
@@ -70,7 +70,7 @@ export const EventGeneralInfo: React.FC<EventGeneralInfoProps> = ({
               </p>
             )}
             {clientIdValue && (
-              <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 p-2 rounded-sm border dark:border-gray-600">
+              <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 p-3 rounded-xl border border-gray-100 dark:border-gray-600 shadow-xs">
                 {(() => {
                   const selectedClient = clients.find((c) => c.id === clientIdValue);
                   if (selectedClient) {
@@ -111,7 +111,7 @@ export const EventGeneralInfo: React.FC<EventGeneralInfoProps> = ({
               id="event_date"
               type="date"
               {...register('event_date')}
-              className="shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="shadow-xs rounded-xl p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-shadow focus:ring-2 focus:ring-brand-orange/20"
               aria-required="true"
               aria-invalid={errors.event_date ? "true" : "false"}
               aria-describedby={errors.event_date ? "event_date-error" : undefined}
@@ -135,7 +135,7 @@ export const EventGeneralInfo: React.FC<EventGeneralInfoProps> = ({
                 id="start_time"
                 type="time"
                 {...register('start_time')}
-                className="shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="shadow-xs rounded-xl p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-shadow focus:ring-2 focus:ring-brand-orange/20"
               />
             </div>
           </div>
@@ -148,7 +148,7 @@ export const EventGeneralInfo: React.FC<EventGeneralInfoProps> = ({
                 id="end_time"
                 type="time"
                 {...register('end_time')}
-                className="shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="shadow-xs rounded-xl p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-shadow focus:ring-2 focus:ring-brand-orange/20"
               />
             </div>
           </div>
@@ -165,7 +165,7 @@ export const EventGeneralInfo: React.FC<EventGeneralInfoProps> = ({
               type="text"
               {...register('service_type')}
               placeholder="Ej. Barra de Churros"
-              className="shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="shadow-xs rounded-xl p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-shadow focus:ring-2 focus:ring-brand-orange/20"
               aria-required="true"
               aria-invalid={errors.service_type ? "true" : "false"}
               aria-describedby={errors.service_type ? "service_type-error" : undefined}
@@ -184,7 +184,7 @@ export const EventGeneralInfo: React.FC<EventGeneralInfoProps> = ({
             Número de Personas *
           </label>
           <div className="mt-1">
-            <div className="relative rounded-md shadow-xs">
+            <div className="relative rounded-xl shadow-xs">
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                 <Users className="h-5 w-5 text-gray-400" aria-hidden="true" />
               </div>
@@ -192,7 +192,7 @@ export const EventGeneralInfo: React.FC<EventGeneralInfoProps> = ({
                 id="num_people"
                 type="number"
                 {...register('num_people')}
-                className="block w-full rounded-md border-gray-300 dark:border-gray-600 pl-10 focus:border-brand-orange focus:ring-brand-orange sm:text-sm p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="block w-full rounded-xl border-gray-300 dark:border-gray-600 pl-10 focus:border-brand-orange focus:ring-brand-orange sm:text-sm p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-shadow focus:ring-2 focus:ring-brand-orange/20"
                 aria-required="true"
                 aria-invalid={errors.num_people ? "true" : "false"}
                 aria-describedby={errors.num_people ? "num_people-error" : undefined}
@@ -215,7 +215,7 @@ export const EventGeneralInfo: React.FC<EventGeneralInfoProps> = ({
             <select
               id="status"
               {...register('status')}
-              className="shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="shadow-xs rounded-xl p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-shadow focus:ring-2 focus:ring-brand-orange/20"
               aria-required="true"
             >
               <option value="quoted">Cotizado</option>
@@ -237,7 +237,7 @@ export const EventGeneralInfo: React.FC<EventGeneralInfoProps> = ({
               type="text"
               {...register('location')}
               placeholder="Dirección del evento (opcional, por defecto dirección del cliente)"
-              className="shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="shadow-xs rounded-xl p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-shadow focus:ring-2 focus:ring-brand-orange/20"
             />
           </div>
         </div>
@@ -252,7 +252,7 @@ export const EventGeneralInfo: React.FC<EventGeneralInfoProps> = ({
               type="text"
               {...register('city')}
               placeholder="Ciudad del evento (para contrato)"
-              className="shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="shadow-xs rounded-xl p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-shadow focus:ring-2 focus:ring-brand-orange/20"
             />
           </div>
         </div>

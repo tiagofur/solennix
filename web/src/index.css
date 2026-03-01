@@ -46,15 +46,15 @@
 
 @layer base {
   :root {
-    --color-bg: #ffffff;
-    --color-surface-grouped: #f2f2f7;
-    --color-surface: #f9fafb;
-    --color-surface-alt: #f3f4f6;
-    --color-card: #ffffff;
+    --color-bg: #f3f4f6; /* Gray 100 outer backdrop */
+    --color-surface-grouped: #ffffff; /* Main content panel */
+    --color-surface: #f9fafb; /* Inner areas */
+    --color-surface-alt: #f3f4f6; /* Hover/Alt states */
+    --color-card: #ffffff; /* Cards */
 
-    --color-text: #1c1c1e;
-    --color-text-secondary: #8e8e93;
-    --color-text-tertiary: #aeaeb2;
+    --color-text: #111827;
+    --color-text-secondary: #6b7280;
+    --color-text-tertiary: #9ca3af;
 
     --color-border: #e5e7eb;
     --color-border-strong: #d1d5db;
@@ -64,27 +64,29 @@
     --color-warning: #ff9500;
     --color-error: #ff3b30;
     --color-info: #007aff;
+    color-scheme: light;
   }
 
   .dark {
-    --color-bg: #000000;
-    --color-surface-grouped: #1c1c1e;
-    --color-surface: #2c2c2e;
-    --color-surface-alt: #3a3a3c;
-    --color-card: #1c1c1e;
+    --color-bg: #000000; /* Pure black outer backdrop */
+    --color-surface-grouped: #09090b; /* Main content panel */
+    --color-surface: #121212; /* Inner areas */
+    --color-surface-alt: #1c1c1e; /* Cards/Hover */
+    --color-card: #121212; /* Default card */
 
     --color-text: #f5f5f7;
-    --color-text-secondary: #8e8e93;
-    --color-text-tertiary: #636366;
+    --color-text-secondary: #a1a1aa;
+    --color-text-tertiary: #71717a;
 
-    --color-border: #38383a;
-    --color-border-strong: #48484a;
+    --color-border: #27272a; /* Subtle border */
+    --color-border-strong: #3f3f46;
     --color-separator: rgba(84, 84, 88, 0.65);
 
     --color-success: #30d158;
     --color-warning: #ff9f0a;
     --color-error: #ff453a;
     --color-info: #0a84ff;
+    color-scheme: dark;
   }
 }
 
@@ -196,4 +198,48 @@
 
 @utility premium-shadow {
   box-shadow: 0 25px 50px -12px rgba(255, 107, 53, 0.25);
+}
+
+/* ── SCROLLBAR STYLING ── */
+@layer base {
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #d1d5db; /* Gray 300 */
+    border-radius: 20px;
+    border: 3px solid transparent;
+    background-clip: padding-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af; /* Gray 400 */
+    background-clip: padding-box;
+  }
+
+  .dark ::-webkit-scrollbar-thumb {
+    background: #3f3f46; /* Zinc 700 */
+    background-clip: padding-box;
+  }
+
+  .dark ::-webkit-scrollbar-thumb:hover {
+    background: #52525b; /* Zinc 600 */
+    background-clip: padding-box;
+  }
+
+  /* Firefox */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #d1d5db transparent;
+  }
+
+  .dark * {
+    scrollbar-color: #3f3f46 transparent;
+  }
 }

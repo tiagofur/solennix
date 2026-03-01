@@ -308,7 +308,7 @@ export const Dashboard: React.FC = () => {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-6">
         {/* Ventas netas (devengadas) */}
-        <div className="bg-card shadow-sm hover:shadow-md border border-border rounded-md transition-all duration-300 flex flex-col group hover:-translate-y-0.5">
+        <div className="bg-card shadow-sm hover:shadow-md border border-border rounded-3xl transition-all duration-300 flex flex-col group hover:-translate-y-0.5 overflow-hidden">
           <div className="p-5 flex-1">
             <div className="flex items-center">
               <div className="shrink-0">
@@ -347,7 +347,7 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* Cobrado (cash) */}
-        <div className="bg-card shadow-sm hover:shadow-md border border-border rounded-md transition-all duration-300 flex flex-col group hover:-translate-y-0.5">
+        <div className="bg-card shadow-sm hover:shadow-md border border-border rounded-3xl transition-all duration-300 flex flex-col group hover:-translate-y-0.5 overflow-hidden">
           <div className="p-5 flex-1">
             <div className="flex items-center">
               <div className="shrink-0">
@@ -391,7 +391,7 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* IVA cobrado */}
-        <div className="bg-card shadow-sm hover:shadow-md border border-border rounded-md transition-all duration-300 flex flex-col group hover:-translate-y-0.5">
+        <div className="bg-card shadow-sm hover:shadow-md border border-border rounded-3xl transition-all duration-300 flex flex-col group hover:-translate-y-0.5 overflow-hidden">
           <div className="p-5 flex-1">
             <div className="flex items-center">
               <div className="shrink-0">
@@ -430,7 +430,7 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* IVA por cobrar */}
-        <div className="bg-card shadow-sm hover:shadow-md border border-border rounded-md transition-all duration-300 flex flex-col group hover:-translate-y-0.5">
+        <div className="bg-card shadow-sm hover:shadow-md border border-border rounded-3xl transition-all duration-300 flex flex-col group hover:-translate-y-0.5 overflow-hidden">
           <div className="p-5 flex-1">
             <div className="flex items-center">
               <div className="shrink-0">
@@ -472,7 +472,7 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* Card Eventos del Mes */}
-        <div className="bg-card shadow-sm hover:shadow-md border border-border rounded-md transition-all duration-300 flex flex-col group hover:-translate-y-0.5">
+        <div className="bg-card shadow-sm hover:shadow-md border border-border rounded-3xl transition-all duration-300 flex flex-col group hover:-translate-y-0.5 overflow-hidden">
           <div className="p-5 flex-1">
             <div className="flex items-center">
               <div className="shrink-0">
@@ -510,7 +510,7 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* Card Alertas de Inventario */}
-        <div className="bg-card shadow-sm hover:shadow-md border border-border rounded-md transition-all duration-300 flex flex-col group hover:-translate-y-0.5">
+        <div className="bg-card shadow-sm hover:shadow-md border border-border rounded-3xl transition-all duration-300 flex flex-col group hover:-translate-y-0.5 overflow-hidden">
           <div className="p-5 flex-1">
             <div className="flex items-center">
               <div className="shrink-0">
@@ -564,7 +564,7 @@ export const Dashboard: React.FC = () => {
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Financial Comparison Chart */}
-        <div className="bg-card shadow-sm rounded-md p-6 transition-colors flex flex-col border border-border">
+        <div className="bg-card shadow-sm border border-border rounded-3xl p-6 transition-colors flex flex-col">
           <h3 className="text-lg leading-6 font-semibold text-text mb-6">
             Comparativa Financiera (Este Mes)
           </h3>
@@ -616,7 +616,7 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* Event Status Bar Chart */}
-        <div className="bg-card shadow-sm rounded-md p-6 transition-colors flex flex-col border border-border">
+        <div className="bg-card shadow-sm border border-border rounded-3xl p-6 transition-colors flex flex-col">
           <h3 className="text-lg leading-6 font-semibold text-text mb-6">
             Estado de Eventos (Este Mes)
           </h3>
@@ -692,9 +692,9 @@ export const Dashboard: React.FC = () => {
 
         {/* Low Stock Items Section */}
         {lowStockItems.length > 0 && (
-          <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6 transition-colors lg:col-span-2">
+          <div className="bg-card shadow-sm border border-border rounded-3xl p-6 transition-colors lg:col-span-2 overflow-hidden">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+              <h3 className="text-lg font-semibold text-text flex items-center">
                 <AlertTriangle
                   className="h-5 w-5 mr-2 text-red-500"
                   aria-hidden="true"
@@ -717,9 +717,9 @@ export const Dashboard: React.FC = () => {
                   Ítems de inventario con stock crítico. {lowStockItems.length}{" "}
                   ítems mostrados.
                 </caption>
-                <thead className="bg-gray-50 dark:bg-gray-900/50">
+                <thead className="bg-surface-alt">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
                       Ítem
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -733,21 +733,21 @@ export const Dashboard: React.FC = () => {
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                <tbody className="bg-card divide-y divide-border">
                   {lowStockItems.map((item) => (
                     <tr
                       key={item.id}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                      className="hover:bg-surface-alt transition-colors"
                     >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-text">
                         {item.ingredient_name}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <span className="px-2 py-1 bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 rounded-full font-bold">
+                        <span className="px-2 py-1 bg-error/10 text-error rounded-full font-bold">
                           {item.current_stock} {item.unit}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
                         {item.minimum_stock} {item.unit}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
@@ -767,9 +767,9 @@ export const Dashboard: React.FC = () => {
         )}
 
         {/* Upcoming Events List */}
-        <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6 transition-colors">
+        <div className="bg-card shadow-sm border border-border rounded-3xl p-6 transition-colors overflow-hidden">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg leading-6 font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-lg leading-6 font-semibold text-text">
               Próximos Eventos
             </h3>
             <Link
@@ -795,7 +795,7 @@ export const Dashboard: React.FC = () => {
                 <span className="sr-only">Cargando próximos eventos...</span>
               </div>
             ) : upcomingEvents.length > 0 ? (
-              <ul className="-my-5 divide-y divide-gray-100 dark:divide-gray-700">
+              <ul className="-my-5 divide-y divide-border">
                 {upcomingEvents.map((event) => (
                   <li key={event.id} className="py-5">
                     <div className="flex items-center space-x-4">
@@ -837,10 +837,10 @@ export const Dashboard: React.FC = () => {
             ) : (
               <div className="text-center py-10">
                 <Calendar
-                  className="h-12 w-12 mx-auto text-gray-300 dark:text-gray-500 mb-3 opacity-50"
+                  className="h-12 w-12 mx-auto text-text-tertiary mb-3 opacity-50"
                   aria-hidden="true"
                 />
-                <p className="text-gray-500 dark:text-gray-400 text-sm">
+                <p className="text-text-secondary text-sm">
                   No hay eventos próximos agendados.
                 </p>
                 <Link

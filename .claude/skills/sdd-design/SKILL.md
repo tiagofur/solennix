@@ -16,6 +16,7 @@ You are a sub-agent responsible for TECHNICAL DESIGN. You take the proposal and 
 ## What You Receive
 
 From the orchestrator:
+
 - Change name
 - The `proposal.md` content
 - The delta specs from `specs/` in the change folder (if specs were created first; if running in parallel with sdd-spec, derive requirements from the proposal)
@@ -25,10 +26,12 @@ From the orchestrator:
 ## Execution and Persistence Contract
 
 From the orchestrator:
+
 - `artifact_store.mode`: `auto | engram | openspec | none`
 - `detail_level`: `concise | standard | deep`
 
 Rules:
+
 - If mode resolves to `none`, do not create or modify project files; return result only.
 - If mode resolves to `engram`, persist design output as Engram artifact(s) and return references.
 - If mode resolves to `openspec`, use the file paths defined in this skill.
@@ -38,6 +41,7 @@ Rules:
 ### Step 1: Read the Codebase
 
 Before designing, read the actual code that will be affected:
+
 - Entry points and module structure
 - Existing patterns and conventions
 - Dependencies and interfaces
@@ -89,10 +93,10 @@ Use ASCII diagrams when helpful.}
 
 ## File Changes
 
-| File | Action | Description |
-|------|--------|-------------|
-| `path/to/new-file.ext` | Create | {What this file does} |
-| `path/to/existing.ext` | Modify | {What changes and why} |
+| File                   | Action | Description              |
+| ---------------------- | ------ | ------------------------ |
+| `path/to/new-file.ext` | Create | {What this file does}    |
+| `path/to/existing.ext` | Modify | {What changes and why}   |
 | `path/to/old-file.ext` | Delete | {Why it's being removed} |
 
 ## Interfaces / Contracts
@@ -102,11 +106,11 @@ Use code blocks with the project's language.}
 
 ## Testing Strategy
 
-| Layer | What to Test | Approach |
-|-------|-------------|----------|
-| Unit | {What} | {How} |
-| Integration | {What} | {How} |
-| E2E | {What} | {How} |
+| Layer       | What to Test | Approach |
+| ----------- | ------------ | -------- |
+| Unit        | {What}       | {How}    |
+| Integration | {What}       | {How}    |
+| E2E         | {What}       | {How}    |
 
 ## Migration / Rollout
 
@@ -130,15 +134,18 @@ Return to the orchestrator:
 **Location**: openspec/changes/{change-name}/design.md
 
 ### Summary
+
 - **Approach**: {one-line technical approach}
 - **Key Decisions**: {N decisions documented}
 - **Files Affected**: {N new, M modified, K deleted}
 - **Testing Strategy**: {unit/integration/e2e coverage planned}
 
 ### Open Questions
+
 {List any unresolved questions, or "None"}
 
 ### Next Step
+
 Ready for tasks (sdd-tasks).
 ```
 
@@ -170,44 +177,45 @@ This section defines the visual design language for the EventosApp React Native 
 
 **Brand colors (use sparingly — accents only):**
 
-| Token          | Value     | Usage                                                                 |
-|----------------|-----------|-----------------------------------------------------------------------|
-| `primary`      | `#ff6b35` | CTAs, FAB, active tab, active chips, links. Never as large bg fill.   |
-| `primaryLight`  | `#fff7ed` | Tinted backgrounds for selected states or subtle highlights (max 1-2 per screen). |
-| `primaryDark`  | `#e55a2b` | Pressed state for primary buttons only.                                |
+| Token          | Value     | Usage                                                                             |
+| -------------- | --------- | --------------------------------------------------------------------------------- |
+| `primary`      | `#ff6b35` | CTAs, FAB, active tab, active chips, links. Never as large bg fill.               |
+| `primaryLight` | `#fff7ed` | Tinted backgrounds for selected states or subtle highlights (max 1-2 per screen). |
+| `primaryDark`  | `#e55a2b` | Pressed state for primary buttons only.                                           |
 
 **Neutral palette (backbone of the UI):**
 
-| Token            | Value                    | Usage                                                 |
-|------------------|--------------------------|-------------------------------------------------------|
-| `background`     | `#ffffff`                | Screen background (Pattern A).                         |
+| Token            | Value                    | Usage                                                                                            |
+| ---------------- | ------------------------ | ------------------------------------------------------------------------------------------------ |
+| `background`     | `#ffffff`                | Screen background (Pattern A).                                                                   |
 | `surfaceGrouped` | `#f2f2f7`                | iOS-style grouped background behind card groups (Pattern B — default for authenticated screens). |
-| `card`           | `#ffffff`                | Card/section fill on top of `surfaceGrouped`.           |
-| `surface`        | `#f9fafb`                | Input fields, search bars, inactive chips.              |
-| `text`           | `#1c1c1e`                | Primary text (iOS system label equivalent).             |
-| `textSecondary`  | `#8e8e93`                | Secondary labels, metadata.                             |
-| `textTertiary`   | `#aeaeb2`                | Placeholder text, muted icons.                          |
-| `separator`      | `rgba(60, 60, 67, 0.29)` | Hairline dividers (`StyleSheet.hairlineWidth`).          |
+| `card`           | `#ffffff`                | Card/section fill on top of `surfaceGrouped`.                                                    |
+| `surface`        | `#f9fafb`                | Input fields, search bars, inactive chips.                                                       |
+| `text`           | `#1c1c1e`                | Primary text (iOS system label equivalent).                                                      |
+| `textSecondary`  | `#8e8e93`                | Secondary labels, metadata.                                                                      |
+| `textTertiary`   | `#aeaeb2`                | Placeholder text, muted icons.                                                                   |
+| `separator`      | `rgba(60, 60, 67, 0.29)` | Hairline dividers (`StyleSheet.hairlineWidth`).                                                  |
 
 **Semantic colors (status and feedback):**
 
-| Token     | Value     | iOS Equivalent     |
-|-----------|-----------|--------------------|
-| `success` | `#34c759` | System Green       |
-| `warning` | `#ff9500` | System Orange      |
-| `error`   | `#ff3b30` | System Red         |
-| `info`    | `#007aff` | System Blue        |
+| Token     | Value     | iOS Equivalent |
+| --------- | --------- | -------------- |
+| `success` | `#34c759` | System Green   |
+| `warning` | `#ff9500` | System Orange  |
+| `error`   | `#ff3b30` | System Red     |
+| `info`    | `#007aff` | System Blue    |
 
 **Event status colors (centralized pairs):**
 
 | Status      | Text Color | Background Color |
-|-------------|------------|------------------|
+| ----------- | ---------- | ---------------- |
 | `quoted`    | `#ff9500`  | `#fff8f0`        |
 | `confirmed` | `#007aff`  | `#eef4ff`        |
 | `completed` | `#34c759`  | `#eefbf0`        |
 | `cancelled` | `#ff3b30`  | `#fff0f0`        |
 
 **Rules:**
+
 - Never use the brand orange for informational badges or status indicators — use the semantic palette.
 - Hardcoded hex values in screen files are prohibited. All colors must come from theme tokens.
 - Dark mode follows the same structure with inverted neutrals and slightly boosted accent brightness.
@@ -216,21 +224,22 @@ This section defines the visual design language for the EventosApp React Native 
 
 All fonts use the system font (SF Pro on iOS, Roboto on Android). No custom fonts.
 
-| Token          | Size | Weight        | Line Height | Use Case                                  |
-|----------------|------|---------------|-------------|-------------------------------------------|
-| `largeTitle`   | 34   | Bold (700)    | 41          | Screen titles (Dashboard greeting)        |
-| `title1`       | 28   | Bold (700)    | 34          | Section headings in scrollable pages      |
-| `title2`       | 22   | Bold (700)    | 28          | Card titles, modal titles                 |
-| `title3`       | 20   | Semibold (600)| 25          | Subsection headings                       |
-| `headline`     | 17   | Semibold (600)| 22          | List item primary text, form section title|
-| `body`         | 17   | Regular (400) | 22          | Standard body text, input values          |
-| `callout`      | 16   | Regular (400) | 21          | Secondary body text                       |
-| `subheadline`  | 15   | Regular (400) | 20          | Metadata rows, descriptions               |
-| `footnote`     | 13   | Regular (400) | 18          | Timestamps, tertiary info                 |
-| `caption1`     | 12   | Regular (400) | 16          | Badges, chip text                         |
-| `caption2`     | 11   | Regular (400) | 13          | Micro-labels (uppercase tags)             |
+| Token         | Size | Weight         | Line Height | Use Case                                   |
+| ------------- | ---- | -------------- | ----------- | ------------------------------------------ |
+| `largeTitle`  | 34   | Bold (700)     | 41          | Screen titles (Dashboard greeting)         |
+| `title1`      | 28   | Bold (700)     | 34          | Section headings in scrollable pages       |
+| `title2`      | 22   | Bold (700)     | 28          | Card titles, modal titles                  |
+| `title3`      | 20   | Semibold (600) | 25          | Subsection headings                        |
+| `headline`    | 17   | Semibold (600) | 22          | List item primary text, form section title |
+| `body`        | 17   | Regular (400)  | 22          | Standard body text, input values           |
+| `callout`     | 16   | Regular (400)  | 21          | Secondary body text                        |
+| `subheadline` | 15   | Regular (400)  | 20          | Metadata rows, descriptions                |
+| `footnote`    | 13   | Regular (400)  | 18          | Timestamps, tertiary info                  |
+| `caption1`    | 12   | Regular (400)  | 16          | Badges, chip text                          |
+| `caption2`    | 11   | Regular (400)  | 13          | Micro-labels (uppercase tags)              |
 
 **Rules:**
+
 - Create hierarchy through weight and size, not through color alone.
 - Limit each screen to 3-4 typography levels maximum.
 - Use `letterSpacing: 0.5` and `textTransform: 'uppercase'` only for `caption2` micro-labels.
@@ -240,7 +249,7 @@ All fonts use the system font (SF Pro on iOS, Roboto on Android). No custom font
 **Base unit:** 4px. All spacing values must be multiples of 4.
 
 | Token  | Value | Use Case                              |
-|--------|-------|---------------------------------------|
+| ------ | ----- | ------------------------------------- |
 | `xxs`  | 2     | Tight internal padding (badge inner)  |
 | `xs`   | 4     | Inline icon gaps                      |
 | `sm`   | 8     | Between closely related elements      |
@@ -252,15 +261,17 @@ All fonts use the system font (SF Pro on iOS, Roboto on Android). No custom font
 
 **Border radii:**
 
-| Token  | Value | Use Case                          |
-|--------|-------|-----------------------------------|
-| `sm`   | 6     | Small badges, tags                |
-| `md`   | 10    | Buttons, inputs, search bars      |
-| `lg`   | 14    | Cards, sections, dialogs          |
-| `xl`   | 20    | Large feature cards, pricing cards|
-| `full` | 9999  | Avatars, pill buttons, circular   |
+| Token  | Value | Use Case                        |
+| ------ | ----- | ------------------------------- |
+| `sm`   | 6     | Small badges, tags              |
+| `md`   | 10    | Small UI elements               |
+| `lg`   | 14    | Default elements                |
+| `xl`   | 20    | Buttons, inputs, search bars    |
+| `3xl`  | 24    | Cards, main sections, dialogs   |
+| `full` | 9999  | Avatars, pill buttons, circular |
 
 **Layout rules:**
+
 - Screen horizontal padding: always `lg` (20px). No exceptions.
 - Cards on grouped backgrounds: full-bleed within the padding.
 - Section spacing (between card groups): `xl` (24px).
@@ -269,37 +280,29 @@ All fonts use the system font (SF Pro on iOS, Roboto on Android). No custom font
 ### Card & Container Styling
 
 **Primary card (most cards):**
-```
-backgroundColor: theme.card
-borderRadius: borderRadius.lg (14)
-shadowColor: '#000'
-shadowOffset: { width: 0, height: 1 }
-shadowOpacity: 0.04
-shadowRadius: 3
-elevation: 1
-```
-No border. The subtle shadow creates depth without heaviness.
 
-**Elevated card (featured/hero content, pricing):**
 ```
 backgroundColor: theme.card
-borderRadius: borderRadius.lg (14)
-shadowColor: '#000'
-shadowOffset: { width: 0, height: 2 }
-shadowOpacity: 0.08
-shadowRadius: 8
-elevation: 3
+borderRadius: borderRadius['3xl'] (24)
+border: 1px solid theme.border
+shadowColor: 'transparent'
 ```
 
-**Grouped section (iOS grouped table — Settings, detail screens):**
+The "Layered Panel" aesthetic uses `rounded-3xl` cards on a `surfaceGrouped` background for a clean, premium depth.
+
+**Grouped section (Settings, detail screens):**
+
 ```
 backgroundColor: theme.card
-borderRadius: borderRadius.lg (14)
+borderRadius: borderRadius['3xl'] (24)
 overflow: 'hidden'
+border: 1px solid theme.border
 ```
-Rows inside use `StyleSheet.hairlineWidth` bottom separator. No individual row borders. No shadow needed on `surfaceGrouped` background.
+
+Rows inside use `StyleSheet.hairlineWidth` or subtle dividers. No shadow needed on `surfaceGrouped` background.
 
 **Rules:**
+
 - Remove all `borderWidth: 1 / borderColor` from cards. Replace with subtle shadow.
 - Exception: Bordered containers acceptable for inline form groups (date picker, multi-field group).
 - Dialogs/modals use the elevated shadow.
@@ -313,28 +316,28 @@ Define as reusable presets in `mobile/src/theme/shadows.ts`:
 export const shadows = {
   none: {},
   sm: {
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
     shadowRadius: 3,
     elevation: 1,
   },
   md: {
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 3,
   },
   lg: {
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.12,
     shadowRadius: 16,
     elevation: 6,
   },
   fab: {
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 12,
@@ -345,17 +348,11 @@ export const shadows = {
 
 ### Component Styling Rules
 
-**Primary button:** Background `primary`, text white `headline` weight, height 50px, radius `md` (10), no border/shadow. Pressed: `primaryDark` or opacity 0.85. Full-width within card padding.
+**Primary button:** Background `primary`, text white `headline` weight, height 50px, radius `xl` (20), no border. Pressed: `primaryDark` or opacity 0.85. Full-width within card padding.
 
-**Secondary button:** Background `surface`, text `text` color `headline` weight, same dimensions, border 1px `separator`.
+**Inputs:** Background `surface`, 1px `border` border, height 48px, radius `xl` (20). Label above: `footnote` weight 500, `textSecondary`. Padding horizontal `md` (16).
 
-**Destructive button:** Background `#fff0f0`, text `error` color, same dimensions.
-
-**Text/link button:** No background, text `primary` color `body` weight, padding vertical `sm`.
-
-**Inputs:** Background `surface`, no border at rest, 1px `separator` border on focus, height 48px, radius `md` (10). Label above: `footnote` weight 500, `textSecondary`, optional uppercase. Padding horizontal `md` (16).
-
-**Search bar:** Background `surface` or `surfaceGrouped` (depends on screen bg), radius `md` (10), height 36-40px (compact iOS-style), no border. Icon: magnifying glass in `textTertiary`. Placeholder: `textTertiary`.
+**Search bar:** Background `surface-alt`, radius `xl` (20), height 40-44px, border 1px `border`. Icon: magnifying glass in `textTertiary`.
 
 **List items (grouped sections):** Full-width rows within a card. Padding `md` vertical/horizontal. Separator: `StyleSheet.hairlineWidth`, color `separator`, inset left by icon width + gap (iOS convention). Chevron: `textTertiary`, size 16-18. No individual card wrapping per item.
 
@@ -370,9 +367,11 @@ export const shadows = {
 ### Screen Background Patterns
 
 **Pattern A — Flat white (auth screens, simple forms):**
+
 - Background: `background` (white). Content directly on white.
 
 **Pattern B — Grouped (dashboard, lists, details, settings):**
+
 - Background: `surfaceGrouped` (`#f2f2f7`). Content in white cards floating on gray.
 - This is the default for most authenticated screens.
 
@@ -390,11 +389,11 @@ export const shadows = {
 ### What Creates the "iPhone Feel"
 
 - SF Pro system font with iOS-standard type sizes (17pt body, 34pt large title).
-- The `surfaceGrouped` (`#f2f2f7`) background with white cards — the signature iOS visual pattern.
-- Hairline separators (`StyleSheet.hairlineWidth`) instead of 1px borders.
-- Subtle, near-invisible shadows (opacity 0.04-0.08) instead of borders for card elevation.
-- Generous whitespace (20px screen margins, 16px card padding, 24px between sections).
-- Consistent border radii (14px for cards, 10px for buttons/inputs).
-- Restrained use of color — most of the screen is grayscale, with color as punctuation.
-- Native-feeling animations (spring-based, matching iOS curve).
+- The `surfaceGrouped` (`#f2f2f7`) background with white `rounded-3xl` cards — the "Layered Panel" signature visual pattern.
+- Hairline separators or subtle gray borders instead of heavy black borders.
+- Generous whitespace (20px screen margins, 20-24px card padding).
+- Consistent border radii (24px for cards, 20px for buttons/inputs).
+- Restrained use of color — color as punctuation.
+- Native-feeling animations.
 - Safe area handling on all screens.
+- **Themed Scrollbars:** Adaptive scrollbars (dark/light) that harmonize with the background.

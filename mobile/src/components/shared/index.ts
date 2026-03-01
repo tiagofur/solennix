@@ -5,3 +5,7 @@ export { default as ConfirmDialog } from './ConfirmDialog';
 export { default as FormInput } from './FormInput';
 export { default as KPICard } from './KPICard';
 export { default as UpgradeBanner } from './UpgradeBanner';
+export { Avatar } from './Avatar';
+export { ImagePickerSheet } from './ImagePickerSheet';
+export { PhotoGallery } from './PhotoGallery';
+export { AppBottomSheet } from './AppBottomSheet';

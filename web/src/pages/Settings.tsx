@@ -154,10 +154,10 @@ export const Settings: React.FC = () => {
       {/* ── HEADER ── */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-black text-gray-900 dark:text-white tracking-tight">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             Configuración
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1 font-medium">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             Personaliza tu experiencia y gestiona tu negocio.
           </p>
         </div>
@@ -175,10 +175,10 @@ export const Settings: React.FC = () => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${
                 activeTab === tab.id
-                  ? "bg-primary text-white shadow-lg shadow-primary/20 scale-[1.02]"
-                  : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  ? "bg-surface-alt dark:bg-gray-700 text-primary"
+                  : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
               }`}
             >
               <tab.icon className="h-5 w-5" />
@@ -190,9 +190,9 @@ export const Settings: React.FC = () => {
         {/* ── CONTENT AREA ── */}
         <div className="flex-1 space-y-6">
           {activeTab === "profile" && (
-            <div className="glass-card rounded-3xl p-6 sm:p-8 premium-shadow space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+            <div className="bg-card shadow-sm rounded-3xl p-6 sm:p-8 space-y-8 border border-border">
               <div>
-                <h3 className="text-xl font-black text-gray-900 dark:text-white mb-1">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
                   Perfil de Usuario
                 </h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -220,9 +220,9 @@ export const Settings: React.FC = () => {
           )}
 
           {activeTab === "business" && (
-            <div className="glass-card rounded-3xl p-6 sm:p-8 premium-shadow space-y-10 animate-in fade-in slide-in-from-right-4 duration-500">
+            <div className="bg-white dark:bg-gray-800 shadow-sm rounded-3xl p-6 sm:p-8 space-y-8 border border-gray-200 dark:border-gray-700">
               <div>
-                <h3 className="text-xl font-black text-gray-900 dark:text-white mb-1">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
                   Identidad de Negocio
                 </h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -245,7 +245,7 @@ export const Settings: React.FC = () => {
                     <div className="flex gap-2">
                       <button
                         onClick={handleUpdateBusinessName}
-                        className="bg-primary text-white font-bold px-6 py-3 rounded-xl hover:scale-105 transition-all shadow-lg shadow-primary/20"
+                        className="bg-primary text-white font-medium px-4 py-2 rounded-md hover:bg-orange-600 transition-colors shadow-sm"
                       >
                         Guardar
                       </button>
@@ -322,17 +322,17 @@ export const Settings: React.FC = () => {
           )}
 
           {activeTab === "subscription" && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
-              <div className="premium-gradient rounded-[2.5rem] p-8 sm:p-12 text-white premium-shadow relative overflow-hidden">
+            <div className="space-y-6">
+              <div className="bg-white dark:bg-gray-800 shadow-sm rounded-3xl p-6 sm:p-8 border border-gray-200 dark:border-gray-700 relative overflow-hidden">
                 <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
                   <div className="space-y-4">
-                    <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest">
+                    <div className="inline-flex items-center gap-2 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300">
                       Plan Actual
                     </div>
-                    <h2 className="text-4xl sm:text-6xl font-black tracking-tight capitalize">
+                    <h2 className="text-4xl font-bold tracking-tight capitalize text-gray-900 dark:text-white">
                       {profile?.plan || "Básico"}
                     </h2>
-                    <p className="text-white/80 font-medium text-lg max-w-md leading-relaxed">
+                    <p className="text-gray-500 dark:text-gray-400 font-medium text-sm max-w-md">
                       {profile?.plan === "pro" 
                         ? "Disfrutas de acceso ilimitado a todas nuestras herramientas profesionales."
                         : "Potencia tu negocio con el plan Pro: eventos ilimitados, gestión de inventario y más."}
@@ -343,7 +343,7 @@ export const Settings: React.FC = () => {
                     {profile?.plan !== "pro" && (
                       <Link
                         to="/pricing"
-                        className="bg-white text-primary px-8 py-4 rounded-2xl font-black text-xl shadow-xl hover:scale-105 transition-all text-center"
+                        className="bg-primary text-white px-6 py-3 rounded-md font-medium text-center shadow-sm hover:bg-orange-600 transition-colors"
                       >
                         Subir a Pro
                       </Link>
@@ -351,21 +351,19 @@ export const Settings: React.FC = () => {
                     <button
                       onClick={handleManageSubscription}
                       disabled={isPortalLoading}
-                      className="bg-white/10 backdrop-blur-md border border-white/30 text-white px-8 py-4 rounded-2xl font-black text-xl hover:bg-white/20 transition-all flex items-center justify-center gap-2"
+                      className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-6 py-3 rounded-md font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center justify-center gap-2"
                     >
                       {isPortalLoading ? "Cargando..." : (
-                        <>Gestionar <ExternalLink className="h-5 w-5" /></>
+                        <>Gestionar <ExternalLink className="h-4 w-4" /></>
                       )}
                     </button>
                   </div>
                 </div>
-                {/* Decorative blob */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 blur-3xl rounded-full -mr-20 -mt-20 z-0" />
               </div>
 
               {/* Limits / Usage section (Simulated for now based on plans) */}
-              <div className="glass-card rounded-[2rem] p-8 premium-shadow">
-                <h3 className="text-xl font-black mb-6">Uso de este mes</h3>
+              <div className="bg-white dark:bg-gray-800 shadow-sm rounded-3xl p-6 sm:p-8 border border-gray-200 dark:border-gray-700">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6">Uso de este mes</h3>
                 <div className="grid sm:grid-cols-2 gap-8">
                   <div className="space-y-3">
                     <div className="flex justify-between text-sm font-bold">
@@ -391,9 +389,9 @@ export const Settings: React.FC = () => {
           )}
 
           {activeTab === "contracts" && (
-            <div className="glass-card rounded-3xl p-6 sm:p-8 premium-shadow space-y-10 animate-in fade-in slide-in-from-right-4 duration-500">
+            <div className="bg-white dark:bg-gray-800 shadow-sm rounded-3xl p-6 sm:p-8 space-y-8 border border-gray-200 dark:border-gray-700">
               <div>
-                <h3 className="text-xl font-black text-gray-900 dark:text-white mb-1">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
                   Valores Predeterminados
                 </h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -444,7 +442,7 @@ export const Settings: React.FC = () => {
                 <div className="flex justify-end">
                   <button
                     onClick={handleUpdateContractSettings}
-                    className="bg-primary text-white font-black px-10 py-4 rounded-2xl shadow-xl hover:scale-105 transition-all text-lg"
+                    className="bg-primary text-white font-medium px-6 py-3 rounded-md shadow-sm hover:bg-orange-600 transition-colors"
                   >
                     Guardar Cambios
                   </button>

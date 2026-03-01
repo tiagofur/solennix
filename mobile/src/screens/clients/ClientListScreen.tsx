@@ -30,6 +30,7 @@ import {
   EmptyState,
   ConfirmDialog,
   UpgradeBanner,
+  Avatar,
 } from "../../components/shared";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
@@ -141,17 +142,7 @@ export default function ClientListScreen({ navigation }: Props) {
         onPress={() => navigation.navigate("ClientDetail", { id: item.id })}
         onLongPress={() => setDeleteTarget(item)}
       >
-        <View
-          style={[
-            styles.avatar,
-            {
-              backgroundColor:
-                colors.light.avatarColors[item.name.charCodeAt(0) % colors.light.avatarColors.length],
-            },
-          ]}
-        >
-          <Text style={styles.avatarText}>{getInitials(item.name)}</Text>
-        </View>
+        <Avatar name={item.name} photoUrl={item.photo_url} size={44} />
         <View style={styles.cardBody}>
           <Text style={styles.cardName} numberOfLines={1}>
             {item.name}

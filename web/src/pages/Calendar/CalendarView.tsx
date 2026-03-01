@@ -192,7 +192,7 @@ export const CalendarView: React.FC = () => {
       {viewMode === "calendar" ? (
         <div className="grid grid-cols-1 xl:grid-cols-5 gap-8 fade-in">
           {/* Calendar Card */}
-          <div className="bg-white dark:bg-gray-800 shadow-xs rounded-xl p-4 sm:p-8 xl:col-span-3 border border-gray-100 dark:border-gray-700 transition-colors">
+          <div className="bg-white dark:bg-gray-800 shadow-xs rounded-3xl p-4 sm:p-8 xl:col-span-3 border border-gray-100 dark:border-gray-700 transition-colors">
             <style>{`
             .rdp {
                 --rdp-cell-size: 45px;
@@ -267,7 +267,7 @@ export const CalendarView: React.FC = () => {
           </div>
 
           {/* Events List Card */}
-          <div className="bg-white dark:bg-gray-800 shadow-xs rounded-xl p-6 xl:col-span-2 border border-gray-100 dark:border-gray-700 flex flex-col transition-colors">
+          <div className="bg-white dark:bg-gray-800 shadow-xs rounded-3xl p-6 xl:col-span-2 border border-gray-100 dark:border-gray-700 flex flex-col transition-colors">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-bold text-gray-900 dark:text-white">
                 Eventos del{" "}
@@ -316,7 +316,7 @@ export const CalendarView: React.FC = () => {
                       key={event.id}
                       role="button"
                       tabIndex={0}
-                      className="group border border-gray-100 dark:border-gray-700 rounded-xl p-4 hover:border-brand-orange dark:hover:border-brand-orange bg-gray-50/50 dark:bg-gray-900/30 hover:bg-white dark:hover:bg-gray-800 cursor-pointer transition-all shadow-xs hover:shadow-md flex flex-col h-full"
+                      className="group border border-gray-100 dark:border-gray-700 rounded-2xl p-4 hover:border-brand-orange dark:hover:border-brand-orange bg-gray-50/50 dark:bg-gray-900/30 hover:bg-white dark:hover:bg-gray-800 cursor-pointer transition-all shadow-xs hover:shadow-md flex flex-col h-full"
                       onClick={() => navigate(`/events/${event.id}/summary`)}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" || e.key === " ") {

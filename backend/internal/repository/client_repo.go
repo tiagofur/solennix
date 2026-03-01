@@ -24,7 +24,7 @@ func (r *ClientRepo) CountByUserID(ctx context.Context, userID uuid.UUID) (int, 
 }
 
 func (r *ClientRepo) GetAll(ctx context.Context, userID uuid.UUID) ([]models.Client, error) {
-	query := `SELECT id, user_id, name, phone, email, address, city, notes,
+	query := `SELECT id, user_id, name, phone, email, address, city, notes, photo_url,
 		total_events, total_spent, created_at, updated_at
 		FROM clients WHERE user_id = $1 ORDER BY name`
 	rows, err := r.pool.Query(ctx, query, userID)
@@ -37,7 +37,7 @@ func (r *ClientRepo) GetAll(ctx context.Context, userID uuid.UUID) ([]models.Cli
 	for rows.Next() {
 		var c models.Client
 		if err := rows.Scan(&c.ID, &c.UserID, &c.Name, &c.Phone, &c.Email,
-			&c.Address, &c.City, &c.Notes, &c.TotalEvents, &c.TotalSpent,
+			&c.Address, &c.City, &c.Notes, &c.PhotoURL, &c.TotalEvents, &c.TotalSpent,
 			&c.CreatedAt, &c.UpdatedAt); err != nil {
 			return nil, err
 		}
@@ -51,12 +51,12 @@ func (r *ClientRepo) GetAll(ctx context.Context, userID uuid.UUID) ([]models.Cli
 
 func (r *ClientRepo) GetByID(ctx context.Context, id, userID uuid.UUID) (*models.Client, error) {
 	c := &models.Client{}
-	query := `SELECT id, user_id, name, phone, email, address, city, notes,
+	query := `SELECT id, user_id, name, phone, email, address, city, notes, photo_url,
 		total_events, total_spent, created_at, updated_at
 		FROM clients WHERE id = $1 AND user_id = $2`
 	err := r.pool.QueryRow(ctx, query, id, userID).Scan(
 		&c.ID, &c.UserID, &c.Name, &c.Phone, &c.Email,
-		&c.Address, &c.City, &c.Notes, &c.TotalEvents, &c.TotalSpent,
+		&c.Address, &c.City, &c.Notes, &c.PhotoURL, &c.TotalEvents, &c.TotalSpent,
 		&c.CreatedAt, &c.UpdatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("client not found: %w", err)
@@ -65,20 +65,20 @@ func (r *ClientRepo) GetByID(ctx context.Context, id, userID uuid.UUID) (*models
 }
 
 func (r *ClientRepo) Create(ctx context.Context, c *models.Client) error {
-	query := `INSERT INTO clients (user_id, name, phone, email, address, city, notes)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+	query := `INSERT INTO clients (user_id, name, phone, email, address, city, notes, photo_url)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 		RETURNING id, total_events, total_spent, created_at, updated_at`
 	return r.pool.QueryRow(ctx, query,
-		c.UserID, c.Name, c.Phone, c.Email, c.Address, c.City, c.Notes,
+		c.UserID, c.Name, c.Phone, c.Email, c.Address, c.City, c.Notes, c.PhotoURL,
 	).Scan(&c.ID, &c.TotalEvents, &c.TotalSpent, &c.CreatedAt, &c.UpdatedAt)
 }
 
 func (r *ClientRepo) Update(ctx context.Context, c *models.Client) error {
-	query := `UPDATE clients SET name=$3, phone=$4, email=$5, address=$6, city=$7, notes=$8, updated_at=NOW()
+	query := `UPDATE clients SET name=$3, phone=$4, email=$5, address=$6, city=$7, notes=$8, photo_url=$9, updated_at=NOW()
 		WHERE id=$1 AND user_id=$2
 		RETURNING total_events, total_spent, created_at, updated_at`
 	return r.pool.QueryRow(ctx, query,
-		c.ID, c.UserID, c.Name, c.Phone, c.Email, c.Address, c.City, c.Notes,
+		c.ID, c.UserID, c.Name, c.Phone, c.Email, c.Address, c.City, c.Notes, c.PhotoURL,
 	).Scan(&c.TotalEvents, &c.TotalSpent, &c.CreatedAt, &c.UpdatedAt)
 }
 
@@ -96,7 +96,7 @@ func (r *ClientRepo) Delete(ctx context.Context, id, userID uuid.UUID) error {
 // Search performs a full-text search on clients for the given user
 func (r *ClientRepo) Search(ctx context.Context, userID uuid.UUID, query string) ([]models.Client, error) {
 	searchPattern := "%" + query + "%"
-	sqlQuery := `SELECT id, user_id, name, phone, email, address, city, notes,
+	sqlQuery := `SELECT id, user_id, name, phone, email, address, city, notes, photo_url,
 		total_events, total_spent, created_at, updated_at
 		FROM clients
 		WHERE user_id = $1
@@ -119,7 +119,7 @@ func (r *ClientRepo) Search(ctx context.Context, userID uuid.UUID, query string)
 	for rows.Next() {
 		var c models.Client
 		if err := rows.Scan(&c.ID, &c.UserID, &c.Name, &c.Phone, &c.Email,
-			&c.Address, &c.City, &c.Notes, &c.TotalEvents, &c.TotalSpent,
+			&c.Address, &c.City, &c.Notes, &c.PhotoURL, &c.TotalEvents, &c.TotalSpent,
 			&c.CreatedAt, &c.UpdatedAt); err != nil {
 			return nil, err
 		}

@@ -33,6 +33,7 @@ type Client struct {
 	Address     *string   `json:"address,omitempty"`
 	City        *string   `json:"city,omitempty"`
 	Notes       *string   `json:"notes,omitempty"`
+	PhotoURL    *string   `json:"photo_url,omitempty"`
 	TotalEvents int       `json:"total_events"`
 	TotalSpent  float64   `json:"total_spent"`
 	CreatedAt   time.Time `json:"created_at"`
@@ -60,6 +61,7 @@ type Event struct {
 	CancellationDays *float64  `json:"cancellation_days,omitempty"`
 	RefundPercent    *float64  `json:"refund_percent,omitempty"`
 	Notes            *string   `json:"notes,omitempty"`
+	Photos           *string   `json:"photos,omitempty"` // JSONB stored as string (array of URLs)
 	CreatedAt        time.Time `json:"created_at"`
 	UpdatedAt        time.Time `json:"updated_at"`
 
@@ -73,7 +75,8 @@ type Product struct {
 	Name      string    `json:"name"`
 	Category  string    `json:"category"`
 	BasePrice float64   `json:"base_price"`
-	Recipe    *string   `json:"recipe,omitempty"` // JSONB stored as string
+	Recipe    *string   `json:"recipe,omitempty"`    // JSONB stored as string
+	ImageURL  *string   `json:"image_url,omitempty"` // Product image URL
 	IsActive  bool      `json:"is_active"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`

@@ -216,7 +216,7 @@ export const ProductForm: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Formulario Principal */}
-        <div className="lg:col-span-2 bg-white dark:bg-gray-800 shadow-sm px-4 py-5 sm:rounded-lg sm:p-6">
+        <div className="lg:col-span-2 bg-white dark:bg-gray-800 shadow-xs border border-gray-100 dark:border-gray-700 px-4 py-5 rounded-3xl sm:p-6">
             <form id="product-form" onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {error && (
                 <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-400 p-4" role="alert">
@@ -241,7 +241,7 @@ export const ProductForm: React.FC = () => {
                     id="name"
                     type="text"
                     {...register("name")}
-                    className="shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    className="rounded-xl shadow-xs bg-white dark:bg-gray-600 text-gray-900 dark:text-white transition-shadow focus:ring-2 focus:ring-brand-orange/20"
                     placeholder="Ej. Churros Clásicos"
                     aria-required="true"
                     aria-invalid={errors.name ? "true" : "false"}
@@ -267,7 +267,7 @@ export const ProductForm: React.FC = () => {
                     id="category"
                     type="text"
                     {...register("category")}
-                    className="shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    className="rounded-xl shadow-xs bg-white dark:bg-gray-600 text-gray-900 dark:text-white transition-shadow focus:ring-2 focus:ring-brand-orange/20"
                     placeholder="Ej. Postres"
                     aria-required="true"
                     aria-invalid={errors.category ? "true" : "false"}
@@ -294,7 +294,7 @@ export const ProductForm: React.FC = () => {
                     type="number"
                     step="0.01"
                     {...register("base_price")}
-                    className="shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    className="rounded-xl shadow-xs bg-white dark:bg-gray-600 text-gray-900 dark:text-white transition-shadow focus:ring-2 focus:ring-brand-orange/20"
                     aria-required="true"
                     aria-invalid={errors.base_price ? "true" : "false"}
                     aria-describedby={errors.base_price ? "base_price-error" : undefined}
@@ -311,7 +311,7 @@ export const ProductForm: React.FC = () => {
         </div>
 
         {/* Receta / Ingredientes */}
-        <div className="lg:col-span-1 bg-white dark:bg-gray-800 shadow-sm px-4 py-5 sm:rounded-lg sm:p-6 flex flex-col">
+        <div className="lg:col-span-1 bg-white dark:bg-gray-800 shadow-xs border border-gray-100 dark:border-gray-700 px-4 py-5 rounded-3xl sm:p-6 flex flex-col">
             <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white mb-4 flex items-center">
                 <ChefHat className="h-5 w-5 mr-2 text-brand-orange" aria-hidden="true" />
                 Receta (por unidad/persona)
@@ -320,7 +320,7 @@ export const ProductForm: React.FC = () => {
 
             <div className="flex-1 overflow-y-auto mb-4 space-y-3">
                 {recipeIngredients.map((item, index) => (
-                    <div key={index} className="bg-gray-50 dark:bg-gray-700 p-3 rounded-md relative group">
+                    <div key={index} className="bg-gray-50 dark:bg-gray-700 p-3 rounded-xl relative group border border-gray-100 dark:border-gray-600">
                         <button
                             type="button"
                             onClick={() => handleRemoveIngredient(index)}
@@ -335,7 +335,7 @@ export const ProductForm: React.FC = () => {
                                 id={`ingredient-select-${index}`}
                                 value={item.inventory_id}
                                 onChange={(e) => handleIngredientChange(index, 'inventory_id', e.target.value)}
-                                className="block w-full text-sm border-gray-300 dark:border-gray-600 rounded-md shadow-xs focus:ring-brand-orange focus:border-brand-orange bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
+                                className="block w-full text-sm border-gray-300 dark:border-gray-600 rounded-xl shadow-xs focus:ring-brand-orange focus:border-brand-orange bg-white dark:bg-gray-600 text-gray-900 dark:text-white transition-shadow focus:ring-2 focus:ring-brand-orange/20"
                                 aria-label={`Seleccionar ingrediente ${index + 1}`}
                             >
                                 <option value="">Seleccionar ingrediente</option>
@@ -353,7 +353,7 @@ export const ProductForm: React.FC = () => {
                                     step="0.001"
                                     value={item.quantity_required}
                                     onChange={(e) => handleIngredientChange(index, 'quantity_required', Number(e.target.value))}
-                                    className="block w-full text-sm border-gray-300 dark:border-gray-600 rounded-md shadow-xs focus:ring-brand-orange focus:border-brand-orange bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
+                                    className="block w-full text-sm border-gray-300 dark:border-gray-600 rounded-xl shadow-xs focus:ring-brand-orange focus:border-brand-orange bg-white dark:bg-gray-600 text-gray-900 dark:text-white transition-shadow focus:ring-2 focus:ring-brand-orange/20"
                                     aria-label={`Cantidad de ingrediente ${index + 1}`}
                                 />
                             </div>
@@ -370,7 +370,7 @@ export const ProductForm: React.FC = () => {
                 <button
                     type="button"
                     onClick={handleAddIngredient}
-                    className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-xs text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+                    className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-xs text-sm font-medium rounded-xl text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
                     aria-label="Agregar un ingrediente adicional a la receta"
                 >
                     <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> Agregar Ingrediente
@@ -391,7 +391,7 @@ export const ProductForm: React.FC = () => {
                     type="submit"
                     form="product-form"
                     disabled={isLoading}
-                    className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-xs text-sm font-medium text-white bg-brand-orange hover:bg-orange-600 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-brand-orange disabled:opacity-50"
+                    className="w-full flex justify-center py-2 px-4 border border-transparent rounded-xl shadow-xs text-sm font-medium text-white bg-brand-orange hover:bg-orange-600 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-brand-orange disabled:opacity-50 transition-colors"
                     aria-label={isLoading ? "Guardando producto..." : "Guardar producto"}
                 >
                     <Save className="h-5 w-5 mr-2" aria-hidden="true" />

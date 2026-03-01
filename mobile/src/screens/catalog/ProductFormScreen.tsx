@@ -15,13 +15,16 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ArrowLeft, Save, Plus, Trash2, Package } from "lucide-react-native";
+import { Image } from "expo-image";
+import { ArrowLeft, Save, Plus, Trash2, Package, Camera } from "lucide-react-native";
 import { ProductStackParamList } from "../../types/navigation";
 import { Product, InventoryItem, ProductIngredient } from "../../types/entities";
 import { productService } from "../../services/productService";
 import { inventoryService } from "../../services/inventoryService";
+import { uploadService } from "../../services/uploadService";
 import { useToast } from "../../hooks/useToast";
 import { useAuth } from "../../contexts/AuthContext";
+import { useImagePicker } from "../../hooks/useImagePicker";
 import { logError } from "../../lib/errorHandler";
 import { LoadingSpinner, FormInput } from "../../components/shared";
 import { colors } from "../../theme/colors";
@@ -47,6 +50,9 @@ export default function ProductFormScreen({ navigation, route }: Props) {
 
   const [loading, setLoading] = useState(isEditing);
   const [saving, setSaving] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [localImageUri, setLocalImageUri] = useState<string | null>(null);
+  const { pickFromCamera, pickFromGallery } = useImagePicker();
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
   const [ingredients, setIngredients] = useState<{
     inventory_id: string;
@@ -86,6 +92,7 @@ export default function ProductFormScreen({ navigation, route }: Props) {
           base_price: product.base_price || 0,
         });
         setIsActive(product.is_active);
+        if (product.image_url) setImageUrl(product.image_url);
 
         const prodIngredients = await productService.getIngredients(id);
         if (prodIngredients) {
@@ -142,6 +149,18 @@ export default function ProductFormScreen({ navigation, route }: Props) {
 
     setSaving(true);
     try {
+      // Upload image if a new local image was selected
+      let finalImageUrl = imageUrl;
+      if (localImageUri) {
+        try {
+          const uploadResult = await uploadService.uploadImage(localImageUri);
+          finalImageUrl = uploadResult.url;
+        } catch (uploadErr) {
+          logError("Error uploading image", uploadErr);
+          addToast("Error al subir imagen", "error");
+        }
+      }
+
       const validIngredients = ingredients.filter((i) => i.inventory_id);
 
       if (isEditing) {
@@ -149,6 +168,7 @@ export default function ProductFormScreen({ navigation, route }: Props) {
           name: data.name,
           category: data.category,
           base_price: data.base_price,
+          image_url: finalImageUrl,
           is_active: isActive,
         });
         await productService.updateIngredients(
@@ -165,6 +185,7 @@ export default function ProductFormScreen({ navigation, route }: Props) {
           name: data.name,
           category: data.category,
           base_price: data.base_price,
+          image_url: finalImageUrl,
           is_active: true,
           recipe: null,
         });
@@ -197,6 +218,40 @@ export default function ProductFormScreen({ navigation, route }: Props) {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
+        {/* Product Image */}
+        <View style={styles.imageSection}>
+          <TouchableOpacity
+            style={styles.imagePickerBtn}
+            activeOpacity={0.7}
+            onPress={async () => {
+              const result = await pickFromGallery();
+              if (result?.[0]) {
+                setLocalImageUri(result[0].uri);
+              }
+            }}
+            onLongPress={async () => {
+              const result = await pickFromCamera();
+              if (result?.[0]) {
+                setLocalImageUri(result[0].uri);
+              }
+            }}
+          >
+            {localImageUri || imageUrl ? (
+              <Image
+                source={{ uri: localImageUri || uploadService.getFullUrl(imageUrl) || '' }}
+                style={styles.productImage}
+                contentFit="cover"
+                transition={200}
+              />
+            ) : (
+              <View style={styles.imagePlaceholder}>
+                <Camera color={colors.light.textTertiary} size={32} />
+                <Text style={styles.imagePlaceholderText}>Agregar foto</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
+
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Información del Producto</Text>
 
@@ -379,6 +434,36 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xxl,
+  },
+  imageSection: {
+    alignItems: "center",
+    marginTop: spacing.md,
+    marginBottom: spacing.xs,
+  },
+  imagePickerBtn: {
+    width: "100%",
+    aspectRatio: 16 / 9,
+    borderRadius: spacing.borderRadius.lg,
+    overflow: "hidden",
+  },
+  productImage: {
+    width: "100%",
+    height: "100%",
+  },
+  imagePlaceholder: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: colors.light.surface,
+    borderRadius: spacing.borderRadius.lg,
+    borderWidth: 2,
+    borderColor: colors.light.border,
+    borderStyle: "dashed",
+    gap: spacing.xs,
+  },
+  imagePlaceholderText: {
+    ...typography.caption,
+    color: colors.light.textTertiary,
   },
   section: {
     backgroundColor: colors.light.card,

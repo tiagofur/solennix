@@ -101,24 +101,24 @@ export const OnboardingChecklist: React.FC = () => {
   ];
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xs border border-brand-orange/20 overflow-hidden mb-6 relative animate-fade-in-up">
+    <div className="bg-card rounded-3xl shadow-sm border border-brand-orange/30 overflow-hidden mb-6 relative animate-fade-in-up">
       {/* Decorative background element */}
       <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-brand-orange/10 rounded-full blur-3xl pointer-events-none"></div>
       
       <div className="p-6 relative z-10">
         <div className="flex justify-between items-start mb-6">
           <div>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center">
+            <h2 className="text-xl font-bold text-text flex items-center">
               Comienza a usar el sistema 🚀
             </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-sm text-text-secondary mt-1">
               Completa estos {steps.length} pasos sencillos para configurar tu cuenta.
             </p>
           </div>
           <button
             type="button"
             onClick={handleDismiss}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
+            className="text-text-tertiary hover:text-text-secondary transition-colors p-1 rounded-md hover:bg-surface-alt"
             title="Ocultar para siempre"
             aria-label="Ocultar lista de verificación para siempre"
           >
@@ -127,11 +127,11 @@ export const OnboardingChecklist: React.FC = () => {
         </div>
 
         <div className="mb-6">
-          <div className="flex justify-between text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
+          <div className="flex justify-between text-xs font-medium text-text-secondary mb-2">
             <span>Progreso</span>
             <span>{progress}% Completado</span>
           </div>
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 overflow-hidden">
+          <div className="w-full bg-surface-alt rounded-full h-2.5 overflow-hidden">
             <div
               className="bg-brand-orange h-2.5 rounded-full transition-all duration-1000 ease-out"
               style={{ width: `${progress}%` }}
@@ -150,10 +150,10 @@ export const OnboardingChecklist: React.FC = () => {
               key={step.id} 
               to={step.href}
               className={`
-                relative flex flex-col p-4 rounded-lg border transition-all duration-300 group
+                relative flex flex-col p-4 rounded-xl border transition-all duration-300 group
                 ${step.isCompleted 
-                  ? 'bg-gray-50 border-gray-200 dark:bg-gray-800/50 dark:border-gray-700 opacity-75' 
-                  : 'bg-white border-brand-orange/30 hover:border-brand-orange/60 hover:shadow-md dark:bg-gray-800'
+                  ? 'bg-surface-alt border-border opacity-75' 
+                  : 'bg-card border-brand-orange/30 hover:border-brand-orange/60 hover:shadow-md'
                 }
               `}
             >
@@ -168,10 +168,10 @@ export const OnboardingChecklist: React.FC = () => {
                 )}
               </div>
 
-              <h3 className={`font-semibold text-sm mb-1 ${step.isCompleted ? 'text-gray-600 dark:text-gray-300' : 'text-gray-900 dark:text-white'}`}>
+              <h3 className={`font-semibold text-sm mb-1 ${step.isCompleted ? 'text-text-secondary' : 'text-text'}`}>
                 {step.title}
               </h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400 grow mb-3">
+              <p className="text-xs text-text-secondary grow mb-3">
                 {step.description}
               </p>
 

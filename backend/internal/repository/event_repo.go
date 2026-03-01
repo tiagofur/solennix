@@ -26,7 +26,7 @@ const eventSelectFields = `e.id, e.user_id, e.client_id,
 	e.service_type, e.num_people, e.status, e.discount, e.requires_invoice,
 	e.tax_rate, e.tax_amount, e.total_amount, e.location, e.city,
 	e.deposit_percent, e.cancellation_days, e.refund_percent,
-	e.notes, e.created_at, e.updated_at`
+	e.notes, e.photos, e.created_at, e.updated_at`
 
 func scanEvent(row pgx.Row) (*models.Event, error) {
 	e := &models.Event{}
@@ -35,7 +35,7 @@ func scanEvent(row pgx.Row) (*models.Event, error) {
 		&e.ServiceType, &e.NumPeople, &e.Status, &e.Discount, &e.RequiresInvoice,
 		&e.TaxRate, &e.TaxAmount, &e.TotalAmount, &e.Location, &e.City,
 		&e.DepositPercent, &e.CancellationDays, &e.RefundPercent,
-		&e.Notes, &e.CreatedAt, &e.UpdatedAt,
+		&e.Notes, &e.Photos, &e.CreatedAt, &e.UpdatedAt,
 	)
 	return e, err
 }
@@ -49,7 +49,7 @@ func scanEventWithClient(row pgx.Row) (models.Event, error) {
 		&e.ServiceType, &e.NumPeople, &e.Status, &e.Discount, &e.RequiresInvoice,
 		&e.TaxRate, &e.TaxAmount, &e.TotalAmount, &e.Location, &e.City,
 		&e.DepositPercent, &e.CancellationDays, &e.RefundPercent,
-		&e.Notes, &e.CreatedAt, &e.UpdatedAt,
+		&e.Notes, &e.Photos, &e.CreatedAt, &e.UpdatedAt,
 		&clientName, &clientPhone,
 	)
 	if clientName != nil {
@@ -127,7 +127,7 @@ func (r *EventRepo) GetByClientID(ctx context.Context, userID, clientID uuid.UUI
 			&e.ServiceType, &e.NumPeople, &e.Status, &e.Discount, &e.RequiresInvoice,
 			&e.TaxRate, &e.TaxAmount, &e.TotalAmount, &e.Location, &e.City,
 			&e.DepositPercent, &e.CancellationDays, &e.RefundPercent,
-			&e.Notes, &e.CreatedAt, &e.UpdatedAt,
+			&e.Notes, &e.Photos, &e.CreatedAt, &e.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err
@@ -202,14 +202,14 @@ func (r *EventRepo) Create(ctx context.Context, e *models.Event) error {
 	query := `INSERT INTO events (user_id, client_id, event_date, start_time, end_time,
 		service_type, num_people, status, discount, requires_invoice,
 		tax_rate, tax_amount, total_amount, location, city,
-		deposit_percent, cancellation_days, refund_percent, notes)
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
+		deposit_percent, cancellation_days, refund_percent, notes, photos)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)
 		RETURNING id, created_at, updated_at`
 	err := r.pool.QueryRow(ctx, query,
 		e.UserID, e.ClientID, e.EventDate, startTime, endTime,
 		e.ServiceType, e.NumPeople, e.Status, e.Discount, e.RequiresInvoice,
 		e.TaxRate, e.TaxAmount, e.TotalAmount, e.Location, e.City,
-		e.DepositPercent, e.CancellationDays, e.RefundPercent, e.Notes,
+		e.DepositPercent, e.CancellationDays, e.RefundPercent, e.Notes, e.Photos,
 	).Scan(&e.ID, &e.CreatedAt, &e.UpdatedAt)
 	if err != nil {
 		slog.Error("Error creating event", "error", err)
@@ -231,14 +231,14 @@ func (r *EventRepo) Update(ctx context.Context, e *models.Event) error {
 	query := `UPDATE events SET client_id=$3, event_date=$4, start_time=$5, end_time=$6,
 		service_type=$7, num_people=$8, status=$9, discount=$10, requires_invoice=$11,
 		tax_rate=$12, tax_amount=$13, total_amount=$14, location=$15, city=$16,
-		deposit_percent=$17, cancellation_days=$18, refund_percent=$19, notes=$20, updated_at=NOW()
+		deposit_percent=$17, cancellation_days=$18, refund_percent=$19, notes=$20, photos=$21, updated_at=NOW()
 		WHERE id=$1 AND user_id=$2
 		RETURNING created_at, updated_at`
 	return r.pool.QueryRow(ctx, query,
 		e.ID, e.UserID, e.ClientID, e.EventDate, startTime, endTime,
 		e.ServiceType, e.NumPeople, e.Status, e.Discount, e.RequiresInvoice,
 		e.TaxRate, e.TaxAmount, e.TotalAmount, e.Location, e.City,
-		e.DepositPercent, e.CancellationDays, e.RefundPercent, e.Notes,
+		e.DepositPercent, e.CancellationDays, e.RefundPercent, e.Notes, e.Photos,
 	).Scan(&e.CreatedAt, &e.UpdatedAt)
 }
 

@@ -29,6 +29,8 @@ type Config struct {
 	StripeProPriceID        string
 	StripePortalConfigID    string // Billing Portal configuration ID (optional)
 	RevenueCatWebhookSecret string // RevenueCat v2 webhook authorization header secret
+
+	UploadDir string // Directory for uploaded files (default: "./uploads")
 }
 
 func Load() (*Config, error) {
@@ -48,6 +50,7 @@ func Load() (*Config, error) {
 		StripeProPriceID:        os.Getenv("STRIPE_PRO_PRICE_ID"),
 		StripePortalConfigID:    os.Getenv("STRIPE_PORTAL_CONFIG_ID"),
 		RevenueCatWebhookSecret: os.Getenv("REVENUECAT_WEBHOOK_SECRET"),
+		UploadDir:               getEnv("UPLOAD_DIR", "./uploads"),
 	}
 
 	if cfg.DatabaseURL == "" {

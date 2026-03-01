@@ -11,7 +11,8 @@ import (
 )
 
 func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, subHandler *handlers.SubscriptionHandler,
-	searchHandler *handlers.SearchHandler, eventPaymentHandler *handlers.EventPaymentHandler, authService *services.AuthService, corsOrigins []string) http.Handler {
+	searchHandler *handlers.SearchHandler, eventPaymentHandler *handlers.EventPaymentHandler, uploadHandler *handlers.UploadHandler,
+	authService *services.AuthService, corsOrigins []string, uploadDir string) http.Handler {
 
 	r := chi.NewRouter()
 
@@ -65,9 +66,19 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 			})
 		})
 
+		// Serve uploaded files (public — images are accessible by URL)
+		fileServer := http.StripPrefix("/api/uploads/", http.FileServer(http.Dir(uploadDir)))
+		r.Get("/uploads/*", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Cache-Control", "public, max-age=31536000")
+			fileServer.ServeHTTP(w, r)
+		})
+
 		// Protected routes
 		r.Group(func(r chi.Router) {
 			r.Use(mw.Auth(authService))
+
+			// Uploads (authenticated)
+			r.Post("/uploads/image", uploadHandler.UploadImage)
 
 			// Users
 			r.Put("/users/me", authHandler.UpdateProfile)

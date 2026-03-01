@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useFocusEffect } from "@react-navigation/native";
+import { Image } from "expo-image";
 import {
   Search,
   Plus,
@@ -23,6 +24,7 @@ import {
 import { ProductStackParamList } from "../../types/navigation";
 import { Product } from "../../types/entities";
 import { productService } from "../../services/productService";
+import { uploadService } from "../../services/uploadService";
 import { useToast } from "../../hooks/useToast";
 import { logError } from "../../lib/errorHandler";
 import { EmptyState, ConfirmDialog } from "../../components/shared";
@@ -121,9 +123,18 @@ export default function ProductListScreen({ navigation }: Props) {
         onPress={() => navigation.navigate("ProductDetail", { id: item.id })}
         onLongPress={() => setDeleteTarget(item)}
       >
-        <View style={styles.iconBox}>
-          <Package color={colors.light.primary} size={22} />
-        </View>
+        {item.image_url ? (
+          <Image
+            source={{ uri: uploadService.getFullUrl(item.image_url) || '' }}
+            style={styles.productThumb}
+            contentFit="cover"
+            transition={200}
+          />
+        ) : (
+          <View style={styles.iconBox}>
+            <Package color={colors.light.primary} size={22} />
+          </View>
+        )}
         <View style={styles.cardBody}>
           <Text style={styles.cardName} numberOfLines={1}>
             {item.name}
@@ -331,6 +342,12 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     marginBottom: spacing.sm,
     gap: spacing.md,
+  },
+  productThumb: {
+    width: 44,
+    height: 44,
+    borderRadius: spacing.borderRadius.lg,
+    backgroundColor: colors.light.surface,
   },
   iconBox: {
     width: 44,

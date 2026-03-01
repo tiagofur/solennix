@@ -34,6 +34,7 @@ import {
   LoadingSpinner,
   ConfirmDialog,
   EmptyState,
+  Avatar,
 } from "../../components/shared";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
@@ -152,10 +153,8 @@ export default function ClientDetailScreen({ navigation, route }: Props) {
       >
         {/* Client Header Card */}
         <View style={styles.headerCard}>
-          <View style={styles.avatarLarge}>
-            <Text style={styles.avatarLargeText}>
-              {getInitials(client.name)}
-            </Text>
+          <View style={{ marginBottom: spacing.sm }}>
+            <Avatar name={client.name} photoUrl={client.photo_url} size={72} />
           </View>
           <Text style={styles.clientName}>{client.name}</Text>
 

@@ -471,7 +471,7 @@ export const EventForm: React.FC = () => {
           <button
             type="button"
             onClick={() => navigate(`/events/${id}/summary`)}
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-xs text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="inline-flex items-center px-4 py-2 border border-transparent rounded-xl shadow-xs text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
           >
             <FileText className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
             Ver Resumen
@@ -480,7 +480,7 @@ export const EventForm: React.FC = () => {
       </div>
 
       <nav aria-label="Progreso del formulario de evento">
-        <ol role="list" className="bg-white dark:bg-gray-800 rounded-lg shadow-xs md:flex md:divide-y-0 md:divide-x dark:divide-gray-700 overflow-hidden">
+        <ol role="list" className="bg-white dark:bg-gray-800 rounded-3xl shadow-xs md:flex md:divide-y-0 md:divide-x dark:divide-gray-700 overflow-hidden border border-gray-100 dark:border-gray-700">
           {STEPS.map((step, stepIdx) => (
             <li key={step.id} className="relative md:flex-1 md:flex">
               <button
@@ -563,7 +563,7 @@ export const EventForm: React.FC = () => {
             }
           }}
         >
-          <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6">
+          <div className="bg-white dark:bg-gray-800 shadow-xs border border-gray-100 dark:border-gray-700 p-6 rounded-3xl">
             {activeStep === 1 && (
               <EventGeneralInfo clients={clients as any} clientIdValue={clientIdValue} onClientCreated={handleClientCreated as any} />
             )}
@@ -599,7 +599,7 @@ export const EventForm: React.FC = () => {
               type="button"
               onClick={prevStep}
               disabled={activeStep === 1}
-              className={`px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-xs text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 ${activeStep === 1 ? 'invisible' : ''}`}
+              className={`px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl shadow-xs text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors ${activeStep === 1 ? 'invisible' : ''}`}
               aria-label="Volver al paso anterior del formulario"
             >
               Anterior
@@ -610,7 +610,7 @@ export const EventForm: React.FC = () => {
                 type="button"
                 onClick={nextStep}
                 disabled={isStepLoading}
-                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-xs text-sm font-medium rounded-md text-white bg-brand-orange hover:bg-orange-600 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-brand-orange disabled:opacity-50"
+                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-xs text-sm font-medium rounded-xl text-white bg-brand-orange hover:bg-orange-600 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-brand-orange disabled:opacity-50 transition-colors"
                 aria-label="Ir al siguiente paso del formulario"
               >
                 {isStepLoading ? "Cargando..." : "Siguiente"}
@@ -621,7 +621,7 @@ export const EventForm: React.FC = () => {
                 type="button"
                 onClick={handleSubmit(onSubmit)}
                 disabled={isLoading || isStepLoading}
-                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-xs text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
+                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-xs text-sm font-medium rounded-xl text-white bg-green-600 hover:bg-green-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 transition-colors"
               >
                 <Save className="h-5 w-5 mr-2" aria-hidden="true" />
                 {isLoading ? "Guardando..." : "Guardar Evento"}

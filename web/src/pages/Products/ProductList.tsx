@@ -104,7 +104,7 @@ export const ProductList: React.FC = () => {
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Productos</h1>
         <Link
           to="/products/new"
-          className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-brand-orange hover:bg-orange-600 shadow-xs transition-colors"
+          className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-xl text-white bg-brand-orange hover:bg-orange-600 shadow-xs transition-colors"
         >
           <Plus className="h-5 w-5 mr-2" aria-hidden="true" />
           Nuevo Producto
@@ -119,7 +119,7 @@ export const ProductList: React.FC = () => {
         <input
           id="product-search"
           type="search"
-          className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-hidden focus:ring-brand-orange focus:border-brand-orange sm:text-sm transition duration-150 ease-in-out"
+          className="block w-full pl-10 pr-3 py-2 border border-border rounded-xl leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-hidden focus:ring-brand-orange focus:border-brand-orange sm:text-sm transition duration-150 ease-in-out"
           placeholder="Buscar producto..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -127,7 +127,7 @@ export const ProductList: React.FC = () => {
         />
       </div>
 
-      <div className="bg-white dark:bg-gray-800 shadow-sm overflow-hidden sm:rounded-lg">
+      <div className="bg-card shadow-sm overflow-hidden rounded-3xl border border-border">
         {loading ? (
           <div className="p-4 text-center text-gray-500 dark:text-gray-400" role="status" aria-live="polite">Cargando productos...</div>
         ) : filteredProducts.length === 0 ? (

@@ -125,7 +125,7 @@ export const ClientDetails: React.FC = () => {
         <div className="flex items-center space-x-2">
           <Link
             to={`/clients/${client.id}/edit`}
-            className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-xs text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+            className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl shadow-xs text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
             aria-label="Editar información del cliente"
           >
             <Edit className="h-5 w-5 mr-2" aria-hidden="true" />
@@ -134,7 +134,7 @@ export const ClientDetails: React.FC = () => {
           <button
             type="button"
             onClick={() => setConfirmDeleteOpen(true)}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 shadow-xs"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-xl text-white bg-red-600 hover:bg-red-700 shadow-xs transition-colors"
             aria-label="Eliminar cliente permanentemente"
           >
             <Trash2 className="h-5 w-5 mr-2" aria-hidden="true" />
@@ -143,7 +143,7 @@ export const ClientDetails: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 shadow-sm overflow-hidden sm:rounded-lg">
+      <div className="bg-white dark:bg-gray-800 shadow-xs overflow-hidden rounded-3xl border border-gray-100 dark:border-gray-700">
         <div className="px-4 py-5 sm:px-6">
           <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white">
             Información del Cliente
@@ -199,7 +199,7 @@ export const ClientDetails: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 shadow-sm overflow-hidden sm:rounded-lg">
+      <div className="bg-white dark:bg-gray-800 shadow-xs overflow-hidden rounded-3xl border border-gray-100 dark:border-gray-700">
         <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
           <div>
             <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white">
@@ -211,7 +211,7 @@ export const ClientDetails: React.FC = () => {
           </div>
           <Link
             to={`/events/new?clientId=${client.id}`}
-            className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-brand-orange hover:bg-orange-600"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-xl text-white bg-brand-orange hover:bg-orange-600 shadow-xs transition-colors"
           >
             Nuevo Evento
           </Link>

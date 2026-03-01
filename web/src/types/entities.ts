@@ -40,6 +40,7 @@ export interface Client {
     address: string | null
     city: string | null
     notes: string | null
+    photo_url: string | null
     total_events: number | null
     total_spent: number | null
     created_at: string
@@ -79,6 +80,7 @@ export interface Event {
     cancellation_days: number | null
     refund_percent: number | null
     notes: string | null
+    photos: string | null
     created_at: string
     updated_at: string
 }
@@ -104,6 +106,7 @@ export interface Product {
     category: string
     base_price: number
     recipe: Json | null
+    image_url: string | null
     is_active: boolean
     created_at: string
     updated_at: string

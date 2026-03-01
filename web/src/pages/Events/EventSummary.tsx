@@ -234,7 +234,7 @@ export const EventSummary: React.FC = () => {
   const statusCfg = STATUS_CONFIG[currentStatus] || STATUS_CONFIG.quoted;
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto p-8 bg-white dark:bg-gray-800 shadow-lg my-8 print:shadow-none print:my-0 print:max-w-none print:p-0 transition-colors">
+    <div className="space-y-6 max-w-4xl mx-auto p-8 bg-white dark:bg-gray-800 shadow-xs border border-gray-100 dark:border-gray-700 rounded-3xl my-8 print:shadow-none print:my-0 print:max-w-none print:p-0 transition-colors">
       <div className="flex flex-col md:flex-row justify-between items-center gap-4 print:hidden mb-6">
         <div className="flex items-center gap-4">
           <button
@@ -246,11 +246,11 @@ export const EventSummary: React.FC = () => {
             <ArrowLeft className="h-4 w-4 mr-2" aria-hidden="true" /> Volver
           </button>
 
-          <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1 overflow-x-auto max-w-[250px] sm:max-w-none" role="group" aria-label="Modos de visualización del evento">
+          <div className="flex bg-gray-100 dark:bg-gray-700 rounded-xl p-1 overflow-x-auto max-w-[250px] sm:max-w-none" role="group" aria-label="Modos de visualización del evento">
             <button
               type="button"
               onClick={() => setViewMode("summary")}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center transition-colors whitespace-nowrap ${
+              className={`px-3 py-1.5 rounded-xl text-sm font-medium flex items-center transition-colors whitespace-nowrap ${
                 viewMode === "summary"
                   ? "bg-white dark:bg-gray-600 text-brand-orange shadow-xs"
                   : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
@@ -264,7 +264,7 @@ export const EventSummary: React.FC = () => {
             <button
               type="button"
               onClick={() => setViewMode("payments")}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center transition-colors whitespace-nowrap ${
+              className={`px-3 py-1.5 rounded-xl text-sm font-medium flex items-center transition-colors whitespace-nowrap ${
                 viewMode === "payments"
                   ? "bg-white dark:bg-gray-600 text-brand-orange shadow-xs"
                   : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
@@ -278,7 +278,7 @@ export const EventSummary: React.FC = () => {
             <button
               type="button"
               onClick={() => setViewMode("ingredients")}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center transition-colors whitespace-nowrap ${
+              className={`px-3 py-1.5 rounded-xl text-sm font-medium flex items-center transition-colors whitespace-nowrap ${
                 viewMode === "ingredients"
                   ? "bg-white dark:bg-gray-600 text-brand-orange shadow-xs"
                   : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
@@ -292,7 +292,7 @@ export const EventSummary: React.FC = () => {
             <button
               type="button"
               onClick={() => setViewMode("contract")}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center transition-colors whitespace-nowrap ${
+              className={`px-3 py-1.5 rounded-xl text-sm font-medium flex items-center transition-colors whitespace-nowrap ${
                 viewMode === "contract"
                   ? "bg-white dark:bg-gray-600 text-brand-orange shadow-xs"
                   : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
@@ -311,7 +311,7 @@ export const EventSummary: React.FC = () => {
           <button
             type="button"
             onClick={() => navigate(`/events/${id}/edit`)}
-            className="flex items-center px-4 py-2 bg-primary text-white rounded-md hover:opacity-90 text-sm font-semibold shadow-sm transition-all"
+            className="flex items-center px-4 py-2 bg-brand-orange text-white rounded-xl hover:bg-brand-orange/90 text-sm font-semibold shadow-xs transition-all"
             aria-label="Editar este evento"
           >
             <Pencil className="h-4 w-4 mr-2" aria-hidden="true" />
@@ -323,7 +323,7 @@ export const EventSummary: React.FC = () => {
             <button
               type="button"
               onClick={() => setActionsDropdownOpen(!actionsDropdownOpen)}
-              className="flex items-center px-3 py-2 bg-white dark:bg-surface-grouped border border-border rounded-md hover:bg-surface-alt dark:hover:bg-surface text-text-secondary text-sm font-medium shadow-sm transition-colors"
+              className="flex items-center px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium shadow-xs transition-colors"
               aria-label="Más acciones"
               aria-expanded={actionsDropdownOpen}
               aria-haspopup="menu"
@@ -334,7 +334,7 @@ export const EventSummary: React.FC = () => {
             </button>
 
             {actionsDropdownOpen && (
-              <div className="absolute right-0 mt-1 w-56 bg-white dark:bg-surface-grouped border border-border rounded-lg shadow-lg z-50 overflow-hidden py-1" role="menu">
+              <div className="absolute right-0 mt-1 w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-50 overflow-hidden py-1" role="menu">
                 <p className="px-4 py-2 text-xs font-semibold text-text-tertiary uppercase tracking-wider border-b border-border mb-1">
                   Exportar PDF
                 </p>
@@ -631,7 +631,7 @@ export const EventSummary: React.FC = () => {
             <h2 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">
               Resumen Financiero (Interno)
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 bg-gray-100 dark:bg-gray-700 p-4 rounded-sm">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 bg-gray-50 dark:bg-gray-700/50 p-6 rounded-xl border border-gray-100 dark:border-gray-700">
               <div>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   Venta (sin IVA)
@@ -713,7 +713,7 @@ export const EventSummary: React.FC = () => {
             </p>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-sm">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
             <table className="w-full text-sm" aria-label="Ingredientes necesarios para el evento">
               <caption className="sr-only">Lista de ingredientes con cantidades necesarias para el evento</caption>
               <thead>

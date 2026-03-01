@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { Image } from "expo-image";
 import {
   Edit2,
   Trash2,
@@ -18,6 +19,7 @@ import {
 import { ProductStackParamList } from "../../types/navigation";
 import { Product, InventoryItem } from "../../types/entities";
 import { productService } from "../../services/productService";
+import { uploadService } from "../../services/uploadService";
 import { useToast } from "../../hooks/useToast";
 import { logError } from "../../lib/errorHandler";
 import { LoadingSpinner, ConfirmDialog, EmptyState } from "../../components/shared";
@@ -100,9 +102,18 @@ export default function ProductDetailScreen({ navigation, route }: Props) {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.headerCard}>
-          <View style={styles.iconBox}>
-            <Package color={colors.light.primary} size={32} />
-          </View>
+          {product.image_url ? (
+            <Image
+              source={{ uri: uploadService.getFullUrl(product.image_url) || '' }}
+              style={styles.heroImage}
+              contentFit="cover"
+              transition={300}
+            />
+          ) : (
+            <View style={styles.iconBox}>
+              <Package color={colors.light.primary} size={32} />
+            </View>
+          )}
           <Text style={styles.productName}>{product.name}</Text>
           <View style={styles.categoryBadge}>
             <Text style={styles.categoryText}>{product.category}</Text>
@@ -224,6 +235,13 @@ const styles = StyleSheet.create({
     ...shadows.sm,
     padding: spacing.xl,
     marginTop: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  heroImage: {
+    width: "100%",
+    height: 180,
+    borderRadius: spacing.borderRadius.lg,
+    backgroundColor: colors.light.surface,
     marginBottom: spacing.md,
   },
   iconBox: {

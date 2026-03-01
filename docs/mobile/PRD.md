@@ -87,22 +87,23 @@ EventosApp es un SaaS para organizadores de eventos (catering, banquetes, fiesta
 
 ## 5. Adaptaciones UX para Mobile
 
-| Patrón Web                     | Patrón Mobile                                                 |
-| ------------------------------ | ------------------------------------------------------------- |
-| Sidebar navigation             | Bottom tab bar (5 tabs)                                       |
-| Tables con columnas sorteables | FlatList con cards, sort via dropdown/chip                    |
-| Pagination (botones de página) | Infinite scroll con `onEndReached`                            |
-| Modal dialogs                  | Bottom sheets (`@gorhom/bottom-sheet`)                        |
-| Multi-step form (wizard)       | Stack screens o horizontal pager                              |
-| Date picker input              | Native date picker (`@react-native-community/datetimepicker`) |
-| Select dropdowns               | Bottom sheet picker                                           |
-| Hover states                   | Press/hold states con `Pressable`                             |
-| PDF download button            | Share sheet nativo (`expo-sharing`)                           |
-| Toast notifications            | Toast posicionado en bottom                                   |
-| Search bar en header           | Search bar colapsable en navigation header                    |
-| Dark/light toggle              | Seguir tema del sistema + toggle manual                       |
-| Confirmar delete con modal     | Swipe-to-delete + ConfirmDialog                               |
-| Charts (recharts)              | `victory-native` o `react-native-chart-kit`                   |
+| Patrón Web                     | Patrón Mobile                                                   |
+| ------------------------------ | --------------------------------------------------------------- |
+| Sidebar navigation             | Bottom tab bar (5 tabs)                                         |
+| Tables con columnas sorteables | FlatList con cards `rounded-3xl`, sort via dropdown/chip        |
+| Pagination (botones de página) | Infinite scroll con `onEndReached`                              |
+| Modal dialogs                  | Bottom sheets (`@gorhom/bottom-sheet`) `rounded-3xl`            |
+| Multi-step form (wizard)       | Stack screens o horizontal pager                                |
+| Date picker input              | Native date picker (`@react-native-community/datetimepicker`)   |
+| Select dropdowns               | Bottom sheet picker                                             |
+| Hover states                   | Press/hold states con `Pressable`                               |
+| PDF download button            | Share sheet nativo (`expo-sharing`)                             |
+| Toast notifications            | Toast posicionado en bottom                                     |
+| Search bar en header           | Search bar colapsable en navigation header                      |
+| Dark/light toggle              | Seguir tema del sistema + toggle manual + themed scrollbar      |
+| Confirmar delete con modal     | Swipe-to-delete + ConfirmDialog                                 |
+| Charts (recharts)              | `victory-native` o `react-native-chart-kit`                     |
+| Estética General               | **Layered Panel**: `bg-surface-grouped` con cards `rounded-3xl` |
 
 ---
 

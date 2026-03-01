@@ -160,7 +160,7 @@ export const InventoryForm: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 shadow-sm px-4 py-5 sm:rounded-lg sm:p-6">
+      <div className="bg-white dark:bg-gray-800 shadow-xs border border-gray-100 dark:border-gray-700 px-4 py-5 rounded-3xl sm:p-6">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {error && (
             <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-400 p-4" role="alert">
@@ -185,7 +185,7 @@ export const InventoryForm: React.FC = () => {
                   id="ingredient_name"
                   type="text"
                   {...register("ingredient_name")}
-                  className="shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="shadow-xs rounded-xl p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-shadow focus:ring-2 focus:ring-brand-orange/20"
                   aria-required="true"
                   aria-invalid={errors.ingredient_name ? "true" : "false"}
                   aria-describedby={errors.ingredient_name ? "ingredient_name-error" : undefined}
@@ -209,7 +209,7 @@ export const InventoryForm: React.FC = () => {
                 <select
                   id="type"
                   {...register("type")}
-                  className="shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="shadow-xs rounded-xl p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-shadow focus:ring-2 focus:ring-brand-orange/20"
                   aria-required="true"
                   aria-invalid={errors.type ? "true" : "false"}
                   aria-describedby={errors.type ? "type-error" : undefined}
@@ -239,7 +239,7 @@ export const InventoryForm: React.FC = () => {
                   id="unit"
                   type="text"
                   {...register("unit")}
-                  className="shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="shadow-xs rounded-xl p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-shadow focus:ring-2 focus:ring-brand-orange/20"
                   aria-required="true"
                   aria-invalid={errors.unit ? "true" : "false"}
                   aria-describedby={errors.unit ? "unit-error" : undefined}
@@ -265,7 +265,7 @@ export const InventoryForm: React.FC = () => {
                   type="number"
                   step="0.01"
                   {...register("current_stock")}
-                  className="shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="shadow-xs rounded-xl p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-shadow focus:ring-2 focus:ring-brand-orange/20"
                   aria-required="true"
                   aria-invalid={errors.current_stock ? "true" : "false"}
                   aria-describedby={errors.current_stock ? "current_stock-error" : undefined}
@@ -291,7 +291,7 @@ export const InventoryForm: React.FC = () => {
                   type="number"
                   step="0.01"
                   {...register("minimum_stock")}
-                  className="shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="shadow-xs rounded-xl p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-shadow focus:ring-2 focus:ring-brand-orange/20"
                   aria-required="true"
                   aria-invalid={errors.minimum_stock ? "true" : "false"}
                   aria-describedby={errors.minimum_stock ? "minimum_stock-error" : undefined}
@@ -317,7 +317,7 @@ export const InventoryForm: React.FC = () => {
                   type="number"
                   step="0.01"
                   {...register("unit_cost")}
-                  className="shadow-xs focus:ring-brand-orange focus:border-brand-orange block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="shadow-xs rounded-xl p-2 border bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-shadow focus:ring-2 focus:ring-brand-orange/20"
                   aria-invalid={errors.unit_cost ? "true" : "false"}
                   aria-describedby={errors.unit_cost ? "unit_cost-error" : undefined}
                 />
@@ -334,14 +334,14 @@ export const InventoryForm: React.FC = () => {
             <button
               type="button"
               onClick={() => navigate("/inventory")}
-              className="bg-white dark:bg-gray-700 py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-xs text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-brand-orange mr-3"
+              className="bg-white dark:bg-gray-700 py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-xl shadow-xs text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-brand-orange mr-3 transition-colors"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="inline-flex justify-center py-2 px-4 border border-transparent shadow-xs text-sm font-medium rounded-md text-white bg-brand-orange hover:bg-orange-600 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-brand-orange disabled:opacity-50"
+              className="inline-flex justify-center py-2 px-4 border border-transparent shadow-xs text-sm font-medium rounded-xl text-white bg-brand-orange hover:bg-orange-600 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-brand-orange disabled:opacity-50 transition-colors"
               aria-label={isLoading ? "Guardando ingrediente..." : "Guardar ingrediente"}
             >
               <Save className="h-5 w-5 mr-2" aria-hidden="true" />

@@ -26,7 +26,7 @@ export const EventExtras: React.FC<EventExtrasProps> = ({
       <h3 className="text-lg font-medium text-gray-900 dark:text-white">Extras (Transporte, Personal, etc.)</h3>
 
       {extras.map((item, index) => (
-        <div key={index} className="bg-gray-50 dark:bg-gray-700 p-3 rounded-md relative group mb-3">
+        <div key={index} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-xl relative group mb-3 border border-gray-100 dark:border-gray-600 shadow-xs">
           <button
             type="button"
             onClick={() => onRemoveExtra(index)}
@@ -44,7 +44,7 @@ export const EventExtras: React.FC<EventExtrasProps> = ({
               placeholder="Descripción"
               value={item.description}
               onChange={(e) => onExtraChange(index, 'description', e.target.value)}
-              className="block w-full text-sm border-gray-300 dark:border-gray-600 rounded-md shadow-xs focus:ring-brand-orange focus:border-brand-orange bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
+              className="block w-full text-sm border-gray-300 dark:border-gray-600 rounded-xl shadow-xs transition-shadow focus:ring-2 focus:ring-brand-orange/20 bg-white dark:bg-gray-600 text-gray-900 dark:text-white p-2 border"
               aria-label={`Descripción del extra ${index + 1}`}
             />
           </div>
@@ -71,7 +71,7 @@ export const EventExtras: React.FC<EventExtrasProps> = ({
                 type="number"
                 value={item.cost}
                 onChange={(e) => onExtraChange(index, 'cost', Number(e.target.value))}
-                className="block w-full text-sm border-gray-300 dark:border-gray-600 rounded-md shadow-xs focus:ring-brand-orange focus:border-brand-orange bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
+                className="block w-full text-sm border-gray-300 dark:border-gray-600 rounded-xl shadow-xs transition-shadow focus:ring-2 focus:ring-brand-orange/20 bg-white dark:bg-gray-600 text-gray-900 dark:text-white p-2 border"
                 aria-label={`Costo del extra ${index + 1}`}
               />
             </div>
@@ -83,7 +83,7 @@ export const EventExtras: React.FC<EventExtrasProps> = ({
                 value={item.price}
                 disabled={item.exclude_utility}
                 onChange={(e) => onExtraChange(index, 'price', Number(e.target.value))}
-                className={`block w-full text-sm border-gray-300 dark:border-gray-600 rounded-md shadow-xs focus:ring-brand-orange focus:border-brand-orange bg-white dark:bg-gray-600 text-gray-900 dark:text-white ${
+                className={`block w-full text-sm border-gray-300 dark:border-gray-600 rounded-xl shadow-xs transition-shadow focus:ring-2 focus:ring-brand-orange/20 bg-white dark:bg-gray-600 text-gray-900 dark:text-white p-2 border ${
                   item.exclude_utility ? 'bg-gray-100 dark:bg-gray-700' : ''
                 }`}
                 aria-label={`Precio de cobro del extra ${index + 1}`}
@@ -96,7 +96,7 @@ export const EventExtras: React.FC<EventExtrasProps> = ({
       <button
         type="button"
         onClick={onAddExtra}
-        className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-xs text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+        className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-xs text-sm font-medium rounded-xl text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
         aria-label="Agregar un extra adicional"
       >
         <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> Agregar Extra

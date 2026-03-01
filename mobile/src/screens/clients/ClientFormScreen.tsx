@@ -15,12 +15,14 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Save } from "lucide-react-native";
+import { Save, Camera } from "lucide-react-native";
 import { ClientStackParamList } from "../../types/navigation";
 import { clientService } from "../../services/clientService";
+import { uploadService } from "../../services/uploadService";
 import { useToast } from "../../hooks/useToast";
+import { useImagePicker } from "../../hooks/useImagePicker";
 import { logError } from "../../lib/errorHandler";
-import { FormInput, LoadingSpinner } from "../../components/shared";
+import { FormInput, LoadingSpinner, Avatar } from "../../components/shared";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
@@ -45,6 +47,9 @@ export default function ClientFormScreen({ navigation, route }: Props) {
 
   const [loadingData, setLoadingData] = useState(isEdit);
   const [submitting, setSubmitting] = useState(false);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [localPhotoUri, setLocalPhotoUri] = useState<string | null>(null);
+  const { pickFromCamera, pickFromGallery } = useImagePicker();
 
   const phoneRef = useRef<RNTextInput>(null);
   const emailRef = useRef<RNTextInput>(null);
@@ -83,6 +88,7 @@ export default function ClientFormScreen({ navigation, route }: Props) {
           city: client.city || "",
           notes: client.notes || "",
         });
+        if (client.photo_url) setPhotoUrl(client.photo_url);
       } catch (err) {
         logError("Error loading client for edit", err);
         addToast("Error al cargar datos del cliente", "error");
@@ -97,6 +103,17 @@ export default function ClientFormScreen({ navigation, route }: Props) {
     async (data: ClientFormData) => {
       setSubmitting(true);
       try {
+        // Upload photo if new local photo was selected
+        let finalPhotoUrl = photoUrl;
+        if (localPhotoUri) {
+          try {
+            const uploadResult = await uploadService.uploadImage(localPhotoUri);
+            finalPhotoUrl = uploadResult.url;
+          } catch (uploadErr) {
+            logError("Error uploading photo", uploadErr);
+          }
+        }
+
         const payload = {
           name: data.name,
           phone: data.phone,
@@ -104,6 +121,7 @@ export default function ClientFormScreen({ navigation, route }: Props) {
           address: data.address || null,
           city: data.city || null,
           notes: data.notes || null,
+          photo_url: finalPhotoUrl,
         };
 
         if (isEdit && editId) {
@@ -149,6 +167,34 @@ export default function ClientFormScreen({ navigation, route }: Props) {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
+          {/* Avatar Photo */}
+          <View style={styles.avatarSection}>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={async () => {
+                const result = await pickFromGallery();
+                if (result?.[0]) setLocalPhotoUri(result[0].uri);
+              }}
+            >
+              {localPhotoUri || photoUrl ? (
+                <View style={styles.avatarContainer}>
+                  <Avatar name={control._formValues.name || "?"} photoUrl={localPhotoUri || photoUrl} size={80} />
+                  <View style={styles.cameraOverlay}>
+                    <Camera color="#fff" size={16} />
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.avatarContainer}>
+                  <Avatar name={control._formValues.name || "?"} size={80} />
+                  <View style={styles.cameraOverlay}>
+                    <Camera color="#fff" size={16} />
+                  </View>
+                </View>
+              )}
+            </TouchableOpacity>
+            <Text style={styles.avatarHint}>Toca para agregar foto</Text>
+          </View>
+
           {/* Name */}
           <Controller
             control={control}
@@ -302,6 +348,31 @@ const styles = StyleSheet.create({
   form: {
     padding: spacing.lg,
     gap: spacing.sm,
+  },
+  avatarSection: {
+    alignItems: "center",
+    paddingVertical: spacing.md,
+  },
+  avatarContainer: {
+    position: "relative",
+  },
+  cameraOverlay: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.light.primary,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: colors.light.background,
+  },
+  avatarHint: {
+    ...typography.caption,
+    color: colors.light.textTertiary,
+    marginTop: spacing.xs,
   },
   footer: {
     padding: spacing.lg,
