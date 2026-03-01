@@ -1,17 +1,13 @@
 .git
 .env
 .env.production
-node_modules/
-dist/
 tmp/
 uploads/
 .DS_Store
 *.exe
-main
 repocov
 svccov
 dbcov
 handlerscov
 coverage.out
 coverage
-c
