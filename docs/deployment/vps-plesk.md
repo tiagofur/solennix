@@ -1,55 +1,120 @@
-# Guía de Despliegue en VPS (Plesk)
+# 🚀 Guía de Despliegue en VPS (Plesk / Docker)
 
-Esta guía detalla cómo desplegar **EventosApp** en un VPS utilizando Docker y la integración de Docker en Plesk.
+Tutorial paso a paso para desplegar **EventosApp** (backend Go + frontend Vite/React + PostgreSQL) en un VPS utilizando Docker Compose y Plesk para SSL/Reverse Proxy.
 
-## 1. Preparación de Variables de Entorno
+---
 
-No utilizaremos archivos `.env` en el servidor por seguridad. En su lugar, configuraremos las variables directamente en la interfaz de Plesk para el contenedor de **Backend**.
+## 1. Requisitos Previos (API Keys)
 
-### Variables Críticas (Backend)
+Antes de desplegar, asegúrate de tener todas las siguientes credenciales:
 
-- `DATABASE_URL`: `postgres://user:password@db:5432/eventosapp`
-- `JWT_SECRET`: Una cadena aleatoria larga.
-- `STRIPE_SECRET_KEY`: Tu clave secreta definitiva (`sk_live_...`).
-- `STRIPE_WEBHOOK_SECRET`: El secreto del webhook de Stripe (lo obtienes al configurar el endpoint en Stripe).
-- `STRIPE_PRO_PRICE_ID`: El ID del precio definitivo en Stripe.
-- `CORS_ALLOWED_ORIGINS`: La URL de tu aplicación (ej: `https://app.tu-dominio.com`).
+### 1.1 — Stripe (Pagos Web)
 
-## 2. Configuración en Plesk con Docker
+1. Ve a [dashboard.stripe.com/apikeys](https://dashboard.stripe.com/apikeys) (Asegúrate de estar en modo **Live**)
+2. Copia la **Secret Key** (comienza con `sk_live_...`)
+3. Crea un producto en [Stripe Products](https://dashboard.stripe.com/products) ("Plan Pro") y copia su **Price ID** (`price_...`)
+4. Configura el portal en [stripe.com/.../billing/portal](https://dashboard.stripe.com/settings/billing/portal). Copia el **Configuration ID** (`bpc_...`)
+5. Configura el **Webhook** apuntando a `https://api.tu-dominio.com/api/subscriptions/webhook/stripe`. Escucha eventos como `checkout.session.completed`, `customer.subscription.updated/deleted`. Copia el **Signing Secret** (`whsec_...`)
 
-1. **Subir el código**: Sube todo el repositorio a tu VPS (vía Git o FTP).
-2. **Extensión Docker**: Asegúrate de tener activa la extensión "Docker" en Plesk.
-3. **Docker Compose**:
-   - Plesk permite ejecutar Docker Compose. Sube el archivo `docker-compose.yml` que se encuentra en la raíz.
-   - Ejecuta `docker-compose up -d --build` desde la terminal del VPS o mediante la interfaz si tu versión de Plesk lo soporta.
+### 1.2 — RevenueCat (Compras Móviles)
 
-## 3. Configuración del Frontend (Build Time)
+1. Ve a [app.revenuecat.com](https://app.revenuecat.com) (Project Settings > Webhooks)
+2. Crea un webhook hacia `https://api.tu-dominio.com/api/subscriptions/webhook/revenuecat`
+3. Como **Authorization Header**, define un _secreto fuerte_ (ej: `Bearer tu-secreto-revenuecat-super-seguro`).
 
-Debido a que React es una SPA, la URL del backend se inyecta en el momento de la "compilación" del contenedor.
+### 1.3 — Resend (Email para Reset de Password)
 
-- En el `docker-compose.yml`, localiza la sección `frontend -> build -> args`.
-- Cambia `VITE_API_URL` por la URL real de tu API (ej: `https://api.tu-dominio.com/api`).
+1. Crea cuenta en [resend.com](https://resend.com)
+2. Verifica tu dominio en [resend.com/domains](https://resend.com/domains)
+3. Crea una API Key en [resend.com/api-keys](https://resend.com/api-keys) (`re_...`)
 
-## 4. Reverse Proxy y SSL (Plesk)
+### 1.4 — JWT Secret
 
-Una vez que los contenedores estén corriendo:
+Genera un secreto seguro (min 32 caracteres) ejecutando localmente:
+`openssl rand -hex 32`
 
-1. Crea dos dominios/subdominios en Plesk:
-   - `app.tu-dominio.com` (Para el Frontend)
-   - `api.tu-dominio.com` (Para el Backend)
-2. Activa **Let's Encrypt** (SSL) para ambos.
-3. Configura el **Proxy Inverso** en cada dominio:
-   - Para el **Frontend**: Apunta al puerto `80` del contenedor `eventosapp-frontend`.
-   - Para el **Backend**: Apunta al puerto `8080` del contenedor `eventosapp-backend`.
+---
 
-## 5. Stripe Live (Definitivo)
+## 2. Preparación del `.env` de Producción
 
-1. Ve a tu panel de Stripe y desactiva el "Test Mode".
-2. Obtén las claves de producción.
-3. Configura el Webhook en Stripe apuntando a `https://api.tu-dominio.com/api/webhooks/stripe`.
-4. Copia el `Signing Secret` del webhook y ponlo en la variable `STRIPE_WEBHOOK_SECRET` en Plesk.
+En tu VPS (dentro de la carpeta `/opt/eventosapp` o similar), crea tu archivo `.env`:
+
+```env
+# ─── Seguridad ─────────────────────────────────────────────────────────
+JWT_SECRET=TU_SECRET_DE_32_CHARS_AQUI
+
+# ─── URLs ───────────────────────────────────────────────────────────
+CORS_ALLOWED_ORIGINS=https://app.tu-dominio.com
+FRONTEND_URL=https://app.tu-dominio.com
+
+# ─── Resend (Email) ───────────────────────────────────────────────────
+RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+RESEND_FROM_EMAIL=EventosApp <noreply@tu-dominio.com>
+
+# ─── Stripe (Pagos Web) ──────────────────────────────────────────────
+STRIPE_SECRET_KEY=sk_live_xxxxxxxxxxxxxxxxxxxx
+STRIPE_WEBHOOK_SECRET=whsec_xxxxxxxxxxxxxxxxxxxx
+STRIPE_PRO_PRICE_ID=price_xxxxxxxxxxxxxxxxxxxx
+STRIPE_PORTAL_CONFIG_ID=bpc_xxxxxxxxxxxxxxxxxxxx
+
+# ─── RevenueCat (Compras In-App) ─────────────────────────────────────
+REVENUECAT_WEBHOOK_SECRET=tu-secreto-revenuecat-super-seguro
+```
+
+> [!WARNING]
+> Protege este archivo (`chmod 600 .env`). Nunca lo subas a tu repositorio Git.
+
+---
+
+## 3. Ajustes en `docker-compose.yml`
+
+Asegúrate de ajustar el archivo `docker-compose.yml` base:
+
+1. **Credenciales DB**: Cambia `eventosapp_user` y `eventosapp_password` en la sección `db` y en la variable `DATABASE_URL` del backend.
+2. **Build de Frontend**: Cambia el argumento `VITE_API_URL` por tu dominio real de API:
+   ```yaml
+   frontend:
+     build:
+       args:
+         - VITE_API_URL=https://api.tu-dominio.com/api
+   ```
+3. **Puerto de Frontend**: El frontend por defecto expone el puerto `:80`. Para evitar colisiones con tu Nginx del host/Plesk, exponlo en el puerto `:3000` (`3000:80`).
+
+---
+
+## 4. Levantar la Aplicación (Docker)
+
+Sube tu código al VPS (vía git o ftp) e inicia Docker:
+
+```bash
+cd /opt/eventosapp
+
+# Iniciar backend, frontend y db
+docker compose up -d --build
+
+# Revisar logs
+docker compose logs -f
+```
+
+---
+
+## 5. Configurar Reverse Proxy y SSL en Plesk
+
+Una vez que los contenedores estén corriendo (`docker compose ps`):
+
+1. **Añade los subdominios** en tu panel de Plesk:
+   - `app.tu-dominio.com` (Frontend)
+   - `api.tu-dominio.com` (Backend)
+
+2. **Generar Certificados SSL**:
+   - Para ambos subdominios, ve a _Certificados SSL/TLS_ y emite certificados con **Let's Encrypt**.
+
+3. **Configurar Reglas de Proxy en Docker (Plesk)**:
+   - Ve a la gestión de Apache/Nginx (o Reglas de Proxy en Plesk).
+   - Para `app.tu-dominio.com`, desvía el tráfico hacia `http://localhost:3000` (el puerto de tu contenedor frontend).
+   - Para `api.tu-dominio.com`, desvía el tráfico hacia `http://localhost:8080` (el puerto de tu contenedor backend).
 
 ---
 
 > [!IMPORTANT]
-> Recuerda que cualquier cambio en las variables de entorno dentro de Plesk requiere reiniciar el contenedor correspondiente para que surtan efecto.
+> Recuerda que si modificas las variables de entorno en tu `.env` o en la consola de Plesk, **debes reiniciar los contenedores** implicados (`docker compose restart backend`) para que la configuración surta efecto.

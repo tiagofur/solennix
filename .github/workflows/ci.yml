@@ -1,4 +1,4 @@
-name: Testing Pipeline
+name: CI Pipeline
 
 on:
   push:
@@ -7,7 +7,37 @@ on:
     branches: [main, develop]
 
 jobs:
-  test:
+  backend:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25.x"
+          cache-dependency-path: ./backend/go.sum
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Run Go tests
+        run: go test -v -coverprofile=coverage.out ./...
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./backend/coverage.out
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  frontend:
+    name: Frontend Tests
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -19,8 +49,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'npm'
+          node-version: "18"
+          cache: "npm"
           cache-dependency-path: ./web/package-lock.json
 
       - name: Install dependencies
@@ -32,19 +62,21 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Run unit tests
-        run: npm run test:run
-
-      - name: Run tests with coverage
-        run: npm run test:coverage
+      - name: Run unit tests with coverage
+        run: npm run test:coverage || npm run test:run
 
       - name: Upload coverage reports
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           directory: ./web/coverage
           fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
 
-  e2e:
+      - name: Build frontend
+        run: npm run build
+
+  frontend-e2e:
+    name: Frontend E2E Tests
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -56,8 +88,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'npm'
+          node-version: "18"
+          cache: "npm"
           cache-dependency-path: ./web/package-lock.json
 
       - name: Install dependencies
@@ -80,4 +112,4 @@ jobs:
         with:
           name: playwright-report
           path: ./web/playwright-report/
-          retention-days: 30
+          retention-days: 7

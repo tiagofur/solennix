@@ -32,7 +32,7 @@ services:
       context: ./web
       dockerfile: Dockerfile
       args:
-        - VITE_API_URL=https://api.tu-dominio.com/api # Cambiar por tu URL de backend real
+        - VITE_API_URL=https://api-eventos.creapolis.dev/api
     container_name: eventosapp-frontend
     restart: always
     ports:
