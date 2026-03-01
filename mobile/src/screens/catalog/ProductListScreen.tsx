@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import Animated, { FadeInDown } from "react-native-reanimated";
 import {
   View,
   Text,
@@ -27,7 +28,7 @@ import { productService } from "../../services/productService";
 import { uploadService } from "../../services/uploadService";
 import { useToast } from "../../hooks/useToast";
 import { logError } from "../../lib/errorHandler";
-import { EmptyState, ConfirmDialog } from "../../components/shared";
+import { EmptyState, ConfirmDialog, SkeletonList } from "../../components/shared";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
@@ -116,7 +117,8 @@ export default function ProductListScreen({ navigation }: Props) {
     `$${n.toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
 
   const renderProduct = useCallback(
-    ({ item }: { item: Product }) => (
+    ({ item, index }: { item: Product; index: number }) => (
+      <Animated.View entering={FadeInDown.delay(Math.min(index, 10) * 50).springify()}>
       <TouchableOpacity
         style={styles.card}
         activeOpacity={0.7}
@@ -155,9 +157,18 @@ export default function ProductListScreen({ navigation }: Props) {
         </View>
         <ChevronRight color={colors.light.textTertiary} size={20} />
       </TouchableOpacity>
+      </Animated.View>
     ),
     [navigation],
   );
+
+  if (loading && products.length === 0) {
+    return (
+      <SafeAreaView style={styles.container} edges={[]}>
+        <SkeletonList count={6} />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={[]}>

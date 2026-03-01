@@ -1,5 +1,6 @@
 import React from "react";
-import { View, StyleSheet, TouchableOpacity } from "react-native";
+import { View, StyleSheet, TouchableOpacity, Platform } from "react-native";
+import * as Haptics from "expo-haptics";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { MainTabParamList } from "../types/navigation";
 import HomeStack from "./HomeStack";
@@ -29,6 +30,13 @@ export default function MainTabs() {
 
   return (
     <Tab.Navigator
+      screenListeners={{
+        tabPress: () => {
+          if (Platform.OS === "ios") {
+            Haptics.selectionAsync();
+          }
+        },
+      }}
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: palette.tabBar.active,
@@ -87,6 +95,9 @@ export default function MainTabs() {
         listeners={({ navigation }) => ({
           tabPress: (e) => {
             e.preventDefault();
+            if (Platform.OS === "ios") {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            }
             (navigation as any).navigate("HomeTab", {
               screen: "EventForm",
               params: {},
@@ -112,6 +123,9 @@ export default function MainTabs() {
         listeners={({ navigation }) => ({
           tabPress: (e) => {
             e.preventDefault();
+            if (Platform.OS === "ios") {
+              Haptics.selectionAsync();
+            }
             navigation.dispatch(DrawerActions.openDrawer());
           },
         })}

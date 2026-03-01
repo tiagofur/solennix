@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -28,7 +28,9 @@ import {
   Package,
   Plus,
   Trash2,
+  Search,
 } from "lucide-react-native";
+import { Image } from "expo-image";
 import { EventsStackParamList } from "../../types/navigation";
 import { Event, Client, Product } from "../../types/entities";
 import { eventService } from "../../services/eventService";
@@ -39,7 +41,8 @@ import { usePlanLimits } from "../../hooks/usePlanLimits";
 import { useAuth } from "../../contexts/AuthContext";
 import { logError } from "../../lib/errorHandler";
 import { useStoreReview } from "../../hooks/useStoreReview";
-import { LoadingSpinner, UpgradeBanner } from "../../components/shared";
+import { LoadingSpinner, UpgradeBanner, AppBottomSheet, Avatar } from "../../components/shared";
+import { uploadService } from "../../services/uploadService";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
@@ -98,6 +101,20 @@ export default function EventFormScreen({ navigation, route }: Props) {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showClientPicker, setShowClientPicker] = useState(false);
   const [showProductPicker, setShowProductPicker] = useState(false);
+  const [clientSearch, setClientSearch] = useState("");
+  const [productSearch, setProductSearch] = useState("");
+
+  const filteredClients = useMemo(() => {
+    if (!clientSearch) return clients;
+    const lower = clientSearch.toLowerCase();
+    return clients.filter(c => c.name.toLowerCase().includes(lower));
+  }, [clients, clientSearch]);
+
+  const filteredProducts = useMemo(() => {
+    if (!productSearch) return products;
+    const lower = productSearch.toLowerCase();
+    return products.filter(p => p.name.toLowerCase().includes(lower));
+  }, [products, productSearch]);
 
   const [formData, setFormData] = useState({
     client_id: clientId || "",
@@ -339,6 +356,7 @@ export default function EventFormScreen({ navigation, route }: Props) {
         cancellation_days: formData.cancellation_days,
         refund_percent: formData.refund_percent,
         notes: formData.notes || null,
+        photos: null,
       };
 
       let eventId = id;
@@ -758,62 +776,105 @@ export default function EventFormScreen({ navigation, route }: Props) {
         </TouchableOpacity>
       </View>
 
-      {showClientPicker && (
-        <View style={styles.pickerOverlay}>
-          <View style={styles.pickerContainer}>
-            <Text style={styles.pickerTitle}>Seleccionar Cliente</Text>
-            <ScrollView style={styles.pickerList}>
-              {clients.map((client) => (
-                <TouchableOpacity
-                  key={client.id}
-                  style={[
-                    styles.pickerItem,
-                    formData.client_id === client.id && styles.pickerItemActive,
-                  ]}
-                  onPress={() => {
-                    setFormData({ ...formData, client_id: client.id });
-                    setShowClientPicker(false);
-                  }}
-                >
-                  <Text style={styles.pickerItemText}>{client.name}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-            <TouchableOpacity
-              style={styles.pickerClose}
-              onPress={() => setShowClientPicker(false)}
-            >
-              <Text style={styles.pickerCloseText}>Cancelar</Text>
-            </TouchableOpacity>
+      <AppBottomSheet
+        visible={showClientPicker}
+        onClose={() => { setShowClientPicker(false); setClientSearch(""); }}
+        enableDynamicSizing={false}
+        snapPoints={['60%']}
+        scrollable
+      >
+        <View style={styles.sheetHeader}>
+          <Text style={styles.sheetTitle}>Seleccionar Cliente</Text>
+          <View style={styles.searchBox}>
+            <Search color={colors.light.textMuted} size={16} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Buscar cliente..."
+              placeholderTextColor={colors.light.textMuted}
+              value={clientSearch}
+              onChangeText={setClientSearch}
+              autoCapitalize="none"
+            />
           </View>
         </View>
-      )}
+        {filteredClients.map((client) => (
+          <TouchableOpacity
+            key={client.id}
+            style={[
+              styles.sheetItem,
+              formData.client_id === client.id && styles.sheetItemActive,
+            ]}
+            onPress={() => {
+              setFormData({ ...formData, client_id: client.id });
+              setShowClientPicker(false);
+              setClientSearch("");
+            }}
+            activeOpacity={0.7}
+          >
+            <Avatar name={client.name} photoUrl={client.photo_url} size={36} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.sheetItemText}>{client.name}</Text>
+              {client.phone && (
+                <Text style={styles.sheetItemSubtext}>{client.phone}</Text>
+              )}
+            </View>
+            {formData.client_id === client.id && (
+              <Check color={colors.light.primary} size={18} />
+            )}
+          </TouchableOpacity>
+        ))}
+      </AppBottomSheet>
 
-      {showProductPicker && (
-        <View style={styles.pickerOverlay}>
-          <View style={styles.pickerContainer}>
-            <Text style={styles.pickerTitle}>Agregar Producto</Text>
-            <ScrollView style={styles.pickerList}>
-              {products.map((product) => (
-                <TouchableOpacity
-                  key={product.id}
-                  style={styles.pickerItem}
-                  onPress={() => handleAddProduct(product)}
-                >
-                  <Text style={styles.pickerItemText}>{product.name}</Text>
-                  <Text style={styles.pickerItemPrice}>{formatCurrency(product.base_price)}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-            <TouchableOpacity
-              style={styles.pickerClose}
-              onPress={() => setShowProductPicker(false)}
-            >
-              <Text style={styles.pickerCloseText}>Cancelar</Text>
-            </TouchableOpacity>
+      <AppBottomSheet
+        visible={showProductPicker}
+        onClose={() => { setShowProductPicker(false); setProductSearch(""); }}
+        enableDynamicSizing={false}
+        snapPoints={['60%']}
+        scrollable
+      >
+        <View style={styles.sheetHeader}>
+          <Text style={styles.sheetTitle}>Agregar Producto</Text>
+          <View style={styles.searchBox}>
+            <Search color={colors.light.textMuted} size={16} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Buscar producto..."
+              placeholderTextColor={colors.light.textMuted}
+              value={productSearch}
+              onChangeText={setProductSearch}
+              autoCapitalize="none"
+            />
           </View>
         </View>
-      )}
+        {filteredProducts.map((product) => (
+          <TouchableOpacity
+            key={product.id}
+            style={styles.sheetItem}
+            onPress={() => {
+              handleAddProduct(product);
+              setProductSearch("");
+            }}
+            activeOpacity={0.7}
+          >
+            {product.image_url ? (
+              <Image
+                source={{ uri: uploadService.getFullUrl(product.image_url) ?? undefined }}
+                style={styles.sheetProductImage}
+                contentFit="cover"
+              />
+            ) : (
+              <View style={styles.sheetProductIcon}>
+                <Package color={colors.light.primary} size={18} />
+              </View>
+            )}
+            <View style={{ flex: 1 }}>
+              <Text style={styles.sheetItemText}>{product.name}</Text>
+              <Text style={styles.sheetItemSubtext}>{product.category}</Text>
+            </View>
+            <Text style={styles.sheetItemPrice}>{formatCurrency(product.base_price)}</Text>
+          </TouchableOpacity>
+        ))}
+      </AppBottomSheet>
     </SafeAreaView>
   );
 }
@@ -1144,59 +1205,65 @@ const styles = StyleSheet.create({
     ...typography.button,
     color: colors.light.textInverse,
   },
-  pickerOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "flex-end",
+  sheetHeader: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.md,
   },
-  pickerContainer: {
-    backgroundColor: colors.light.card,
-    borderTopLeftRadius: spacing.borderRadius.xl,
-    borderTopRightRadius: spacing.borderRadius.xl,
-    padding: spacing.lg,
-    maxHeight: "70%",
-    ...shadows.lg,
-  },
-  pickerTitle: {
+  sheetTitle: {
     ...typography.h3,
     color: colors.light.text,
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
-  pickerList: {
-    maxHeight: 300,
-  },
-  pickerItem: {
+  searchBox: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: spacing.md,
+    backgroundColor: colors.light.surface,
+    borderRadius: spacing.borderRadius.md,
+    paddingHorizontal: spacing.md,
+    gap: spacing.sm,
+  },
+  searchInput: {
+    flex: 1,
+    ...typography.body,
+    color: colors.light.text,
+    paddingVertical: spacing.sm,
+  },
+  sheetItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    paddingVertical: spacing.sm + 2,
+    paddingHorizontal: spacing.lg,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.light.separator,
   },
-  pickerItemActive: {
+  sheetItemActive: {
     backgroundColor: colors.light.primaryLight,
-    marginHorizontal: -spacing.md,
-    paddingHorizontal: spacing.md,
   },
-  pickerItemText: {
+  sheetItemText: {
     ...typography.body,
     color: colors.light.text,
   },
-  pickerItemPrice: {
+  sheetItemSubtext: {
     ...typography.caption,
     color: colors.light.textMuted,
   },
-  pickerClose: {
-    alignItems: "center",
-    paddingVertical: spacing.md,
-    marginTop: spacing.md,
-  },
-  pickerCloseText: {
-    ...typography.body,
+  sheetItemPrice: {
+    ...typography.label,
     color: colors.light.primary,
+  },
+  sheetProductImage: {
+    width: 36,
+    height: 36,
+    borderRadius: spacing.borderRadius.md,
+  },
+  sheetProductIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.light.primaryLight,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

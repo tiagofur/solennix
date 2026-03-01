@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import Animated, { FadeInDown } from "react-native-reanimated";
 import {
   View,
   Text,
@@ -31,6 +32,7 @@ import {
   ConfirmDialog,
   UpgradeBanner,
   Avatar,
+  SkeletonList,
 } from "../../components/shared";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
@@ -134,8 +136,17 @@ export default function ClientListScreen({ navigation }: Props) {
       ? `$${n.toLocaleString("es-MX", { minimumFractionDigits: 0 })}`
       : "$0";
 
+  if (loading && clients.length === 0) {
+    return (
+      <SafeAreaView style={styles.container} edges={[]}>
+        <SkeletonList count={6} showAvatar />
+      </SafeAreaView>
+    );
+  }
+
   const renderClient = useCallback(
-    ({ item }: { item: Client }) => (
+    ({ item, index }: { item: Client; index: number }) => (
+      <Animated.View entering={FadeInDown.delay(Math.min(index, 10) * 50).springify()}>
       <TouchableOpacity
         style={styles.card}
         activeOpacity={0.7}
@@ -175,6 +186,7 @@ export default function ClientListScreen({ navigation }: Props) {
         </View>
         <ChevronRight color={colors.light.textTertiary} size={20} />
       </TouchableOpacity>
+      </Animated.View>
     ),
     [navigation],
   );

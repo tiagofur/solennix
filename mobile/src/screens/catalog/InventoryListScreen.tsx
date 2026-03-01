@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import Animated, { FadeInDown } from "react-native-reanimated";
 import {
   View,
   Text,
@@ -23,7 +24,7 @@ import { InventoryItem } from "../../types/entities";
 import { inventoryService } from "../../services/inventoryService";
 import { useToast } from "../../hooks/useToast";
 import { logError } from "../../lib/errorHandler";
-import { EmptyState } from "../../components/shared";
+import { EmptyState, SkeletonList } from "../../components/shared";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
@@ -94,11 +95,20 @@ export default function InventoryListScreen({ navigation }: Props) {
     item => item.current_stock <= item.minimum_stock
   ).length;
 
+  if (loading && items.length === 0) {
+    return (
+      <SafeAreaView style={styles.container} edges={[]}>
+        <SkeletonList count={6} />
+      </SafeAreaView>
+    );
+  }
+
   const renderItem = useCallback(
-    ({ item }: { item: InventoryItem }) => {
+    ({ item, index }: { item: InventoryItem; index: number }) => {
       const isLowStock = item.current_stock <= item.minimum_stock;
 
       return (
+        <Animated.View entering={FadeInDown.delay(Math.min(index, 10) * 50).springify()}>
         <TouchableOpacity
           style={[styles.card, isLowStock && styles.cardLowStock]}
           activeOpacity={0.7}
@@ -134,6 +144,7 @@ export default function InventoryListScreen({ navigation }: Props) {
             )}
           </View>
         </TouchableOpacity>
+        </Animated.View>
       );
     },
     [navigation],

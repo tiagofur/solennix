@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useRef, useEffect } from 'react';
-import { View, StyleSheet, TouchableWithoutFeedback } from 'react-native';
-import BottomSheet, { BottomSheetBackdrop, BottomSheetView } from '@gorhom/bottom-sheet';
+import { StyleSheet } from 'react-native';
+import BottomSheet, { BottomSheetBackdrop, BottomSheetView, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { colors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 
@@ -10,6 +10,7 @@ interface AppBottomSheetProps {
     snapPoints?: (string | number)[];
     children: React.ReactNode;
     enableDynamicSizing?: boolean;
+    scrollable?: boolean;
 }
 
 export function AppBottomSheet({
@@ -18,6 +19,7 @@ export function AppBottomSheet({
     snapPoints: customSnapPoints,
     children,
     enableDynamicSizing = true,
+    scrollable = false,
 }: AppBottomSheetProps) {
     const bottomSheetRef = useRef<BottomSheet>(null);
 
@@ -69,10 +71,22 @@ export function AppBottomSheet({
             backdropComponent={renderBackdrop}
             handleIndicatorStyle={styles.handle}
             backgroundStyle={styles.background}
+            keyboardBehavior="interactive"
+            keyboardBlurBehavior="restore"
+            android_keyboardInputMode="adjustResize"
         >
-            <BottomSheetView style={styles.contentContainer}>
-                {children}
-            </BottomSheetView>
+            {scrollable ? (
+                <BottomSheetScrollView
+                    contentContainerStyle={styles.scrollContent}
+                    showsVerticalScrollIndicator={false}
+                >
+                    {children}
+                </BottomSheetScrollView>
+            ) : (
+                <BottomSheetView style={styles.contentContainer}>
+                    {children}
+                </BottomSheetView>
+            )}
         </BottomSheet>
     );
 }
@@ -90,6 +104,9 @@ const styles = StyleSheet.create({
         borderRadius: 2.5,
     },
     contentContainer: {
+        paddingBottom: spacing.xxxl,
+    },
+    scrollContent: {
         paddingBottom: spacing.xxxl,
     },
 });

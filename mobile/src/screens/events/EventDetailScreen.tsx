@@ -8,7 +8,6 @@ import {
   RefreshControl,
   TextInput,
   ActivityIndicator,
-  Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -31,7 +30,7 @@ import {
   Download,
   ChevronDown,
   Plus,
-  X,
+  Check,
 } from "lucide-react-native";
 import { EventsStackParamList } from "../../types/navigation";
 import { Event } from "../../types/entities";
@@ -50,7 +49,7 @@ import {
   generatePaymentReportPDF,
   generateInvoicePDF,
 } from "../../lib/pdfGenerator";
-import { LoadingSpinner, ConfirmDialog, EmptyState } from "../../components/shared";
+import { LoadingSpinner, ConfirmDialog, EmptyState, AppBottomSheet } from "../../components/shared";
 import { useStoreReview } from "../../hooks/useStoreReview";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
@@ -622,190 +621,158 @@ export default function EventDetailScreen({ navigation, route }: Props) {
         </View>
       </ScrollView>
 
-      <Modal
+      <AppBottomSheet
         visible={showStatusModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowStatusModal(false)}
+        onClose={() => setShowStatusModal(false)}
       >
-        <TouchableOpacity 
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setShowStatusModal(false)}
-        >
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Cambiar Estado</Text>
-            {STATUS_OPTIONS.map((status) => (
+        <View style={styles.sheetContent}>
+          <Text style={styles.modalTitle}>Cambiar Estado</Text>
+          {STATUS_OPTIONS.map((status) => (
+            <TouchableOpacity
+              key={status.key}
+              style={[
+                styles.modalOption,
+                event.status === status.key && styles.modalOptionActive,
+              ]}
+              onPress={() => handleStatusChange(status.key)}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.statusDot, { backgroundColor: status.color }]} />
+              <Text style={[styles.modalOptionText, { flex: 1 }]}>{status.label}</Text>
+              {event.status === status.key && (
+                <Check color={colors.light.primary} size={18} />
+              )}
+            </TouchableOpacity>
+          ))}
+        </View>
+      </AppBottomSheet>
+
+      <AppBottomSheet
+        visible={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+      >
+        <View style={styles.sheetContent}>
+          <Text style={styles.modalTitle}>Registrar Pago</Text>
+
+          <Text style={styles.inputLabel}>Monto</Text>
+          <TextInput
+            style={styles.modalInput}
+            value={paymentAmount}
+            onChangeText={setPaymentAmount}
+            placeholder="0.00"
+            placeholderTextColor={colors.light.textTertiary}
+            keyboardType="decimal-pad"
+          />
+
+          <Text style={styles.inputLabel}>Método de Pago</Text>
+          <View style={styles.methodButtons}>
+            {["efectivo", "transferencia", "tarjeta", "cheque"].map((method) => (
               <TouchableOpacity
-                key={status.key}
+                key={method}
                 style={[
-                  styles.modalOption,
-                  event.status === status.key && styles.modalOptionActive,
+                  styles.methodButton,
+                  paymentMethod === method && styles.methodButtonActive,
                 ]}
-                onPress={() => handleStatusChange(status.key)}
+                onPress={() => setPaymentMethod(method)}
               >
-                <View style={[styles.statusDot, { backgroundColor: status.color }]} />
-                <Text style={styles.modalOptionText}>{status.label}</Text>
+                <Text style={[
+                  styles.methodButtonText,
+                  paymentMethod === method && styles.methodButtonTextActive,
+                ]}>
+                  {method.charAt(0).toUpperCase() + method.slice(1)}
+                </Text>
               </TouchableOpacity>
             ))}
-            <TouchableOpacity
-              style={styles.modalClose}
-              onPress={() => setShowStatusModal(false)}
-            >
-              <Text style={styles.modalCloseText}>Cancelar</Text>
-            </TouchableOpacity>
           </View>
-        </TouchableOpacity>
-      </Modal>
 
-      <Modal
-        visible={showPaymentModal}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowPaymentModal(false)}
-      >
-        <TouchableOpacity 
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setShowPaymentModal(false)}
-        >
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Registrar Pago</Text>
-              <TouchableOpacity onPress={() => setShowPaymentModal(false)}>
-                <X color={colors.light.textMuted} size={24} />
-              </TouchableOpacity>
-            </View>
-            
-            <Text style={styles.inputLabel}>Monto</Text>
-            <TextInput
-              style={styles.modalInput}
-              value={paymentAmount}
-              onChangeText={setPaymentAmount}
-              placeholder="0.00"
-              keyboardType="decimal-pad"
-            />
+          <Text style={styles.inputLabel}>Notas / Referencia</Text>
+          <TextInput
+            style={[styles.modalInput, { minHeight: 60, textAlignVertical: "top" }]}
+            value={paymentNotes}
+            onChangeText={setPaymentNotes}
+            placeholder="Referencia, folio, etc."
+            placeholderTextColor={colors.light.textTertiary}
+            multiline
+            numberOfLines={2}
+          />
 
-            <Text style={styles.inputLabel}>Método de Pago</Text>
-            <View style={styles.methodButtons}>
-              {["efectivo", "transferencia", "tarjeta", "cheque"].map((method) => (
-                <TouchableOpacity
-                  key={method}
-                  style={[
-                    styles.methodButton,
-                    paymentMethod === method && styles.methodButtonActive,
-                  ]}
-                  onPress={() => setPaymentMethod(method)}
-                >
-                  <Text style={[
-                    styles.methodButtonText,
-                    paymentMethod === method && styles.methodButtonTextActive,
-                  ]}>
-                    {method.charAt(0).toUpperCase() + method.slice(1)}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            <Text style={styles.inputLabel}>Notas / Referencia</Text>
-            <TextInput
-              style={[styles.modalInput, { minHeight: 60, textAlignVertical: "top" }]}
-              value={paymentNotes}
-              onChangeText={setPaymentNotes}
-              placeholder="Referencia, folio, etc."
-              placeholderTextColor={colors.light.textTertiary}
-              multiline
-              numberOfLines={2}
-            />
-
-            <View style={styles.modalTotal}>
-              <Text style={styles.modalTotalLabel}>Restante:</Text>
-              <Text style={styles.modalTotalValue}>{formatCurrency(remaining)}</Text>
-            </View>
-
-            <TouchableOpacity
-              style={[styles.modalSaveButton, savingPayment && styles.modalSaveButtonDisabled]}
-              onPress={handleAddPayment}
-              disabled={savingPayment}
-            >
-              <Text style={styles.modalSaveButtonText}>Registrar Pago</Text>
-            </TouchableOpacity>
+          <View style={styles.modalTotal}>
+            <Text style={styles.modalTotalLabel}>Restante:</Text>
+            <Text style={styles.modalTotalValue}>{formatCurrency(remaining)}</Text>
           </View>
-        </TouchableOpacity>
-      </Modal>
 
-      <Modal
-        visible={showActionsMenu}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowActionsMenu(false)}
-      >
-        <TouchableOpacity 
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setShowActionsMenu(false)}
-        >
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Generar Documentos</Text>
-
-            {generatingPdf ? (
-              <View style={styles.menuLoadingContainer}>
-                <ActivityIndicator color={colors.light.primary} size="large" />
-                <Text style={styles.menuLoadingText}>Generando PDF...</Text>
-              </View>
+          <TouchableOpacity
+            style={[styles.modalSaveButton, savingPayment && styles.modalSaveButtonDisabled]}
+            onPress={handleAddPayment}
+            disabled={savingPayment}
+            activeOpacity={0.7}
+          >
+            {savingPayment ? (
+              <ActivityIndicator color={colors.light.textInverse} />
             ) : (
-              <>
-                <TouchableOpacity style={styles.menuOption} onPress={handleGenerateQuote}>
-                  <FileText color={colors.light.primary} size={24} />
-                  <View style={styles.menuOptionInfo}>
-                    <Text style={styles.menuOptionTitle}>Cotización</Text>
-                    <Text style={styles.menuOptionDesc}>Genera PDF de la cotización</Text>
-                  </View>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.menuOption} onPress={handleGenerateContract}>
-                  <FileCheck color={colors.light.primary} size={24} />
-                  <View style={styles.menuOptionInfo}>
-                    <Text style={styles.menuOptionTitle}>Contrato</Text>
-                    <Text style={styles.menuOptionDesc}>Genera PDF del contrato</Text>
-                  </View>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.menuOption} onPress={handleGenerateShoppingList}>
-                  <ShoppingCart color={colors.light.primary} size={24} />
-                  <View style={styles.menuOptionInfo}>
-                    <Text style={styles.menuOptionTitle}>Lista de Compras</Text>
-                    <Text style={styles.menuOptionDesc}>Genera lista de ingredientes</Text>
-                  </View>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.menuOption} onPress={handleGeneratePaymentReport}>
-                  <DollarSign color={colors.light.primary} size={24} />
-                  <View style={styles.menuOptionInfo}>
-                    <Text style={styles.menuOptionTitle}>Reporte de Pagos</Text>
-                    <Text style={styles.menuOptionDesc}>Resumen de pagos realizados</Text>
-                  </View>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.menuOption} onPress={handleGenerateInvoice}>
-                  <Receipt color={colors.light.primary} size={24} />
-                  <View style={styles.menuOptionInfo}>
-                    <Text style={styles.menuOptionTitle}>Factura</Text>
-                    <Text style={styles.menuOptionDesc}>Genera factura simplificada</Text>
-                  </View>
-                </TouchableOpacity>
-              </>
+              <Text style={styles.modalSaveButtonText}>Registrar Pago</Text>
             )}
+          </TouchableOpacity>
+        </View>
+      </AppBottomSheet>
 
-            <TouchableOpacity
-              style={styles.modalClose}
-              onPress={() => setShowActionsMenu(false)}
-            >
-              <Text style={styles.modalCloseText}>Cancelar</Text>
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
-      </Modal>
+      <AppBottomSheet
+        visible={showActionsMenu}
+        onClose={() => setShowActionsMenu(false)}
+      >
+        <View style={styles.sheetContent}>
+          <Text style={styles.modalTitle}>Generar Documentos</Text>
+
+          {generatingPdf ? (
+            <View style={styles.menuLoadingContainer}>
+              <ActivityIndicator color={colors.light.primary} size="large" />
+              <Text style={styles.menuLoadingText}>Generando PDF...</Text>
+            </View>
+          ) : (
+            <>
+              <TouchableOpacity style={styles.menuOption} onPress={handleGenerateQuote} activeOpacity={0.7}>
+                <FileText color={colors.light.primary} size={24} />
+                <View style={styles.menuOptionInfo}>
+                  <Text style={styles.menuOptionTitle}>Cotización</Text>
+                  <Text style={styles.menuOptionDesc}>Genera PDF de la cotización</Text>
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.menuOption} onPress={handleGenerateContract} activeOpacity={0.7}>
+                <FileCheck color={colors.light.primary} size={24} />
+                <View style={styles.menuOptionInfo}>
+                  <Text style={styles.menuOptionTitle}>Contrato</Text>
+                  <Text style={styles.menuOptionDesc}>Genera PDF del contrato</Text>
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.menuOption} onPress={handleGenerateShoppingList} activeOpacity={0.7}>
+                <ShoppingCart color={colors.light.primary} size={24} />
+                <View style={styles.menuOptionInfo}>
+                  <Text style={styles.menuOptionTitle}>Lista de Compras</Text>
+                  <Text style={styles.menuOptionDesc}>Genera lista de ingredientes</Text>
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.menuOption} onPress={handleGeneratePaymentReport} activeOpacity={0.7}>
+                <DollarSign color={colors.light.primary} size={24} />
+                <View style={styles.menuOptionInfo}>
+                  <Text style={styles.menuOptionTitle}>Reporte de Pagos</Text>
+                  <Text style={styles.menuOptionDesc}>Resumen de pagos realizados</Text>
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.menuOption} onPress={handleGenerateInvoice} activeOpacity={0.7}>
+                <Receipt color={colors.light.primary} size={24} />
+                <View style={styles.menuOptionInfo}>
+                  <Text style={styles.menuOptionTitle}>Factura</Text>
+                  <Text style={styles.menuOptionDesc}>Genera factura simplificada</Text>
+                </View>
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
+      </AppBottomSheet>
 
       <ConfirmDialog
         visible={!!deletePaymentId}
@@ -1107,26 +1074,9 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
   },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: spacing.lg,
-  },
-  modalContent: {
-    backgroundColor: colors.light.card,
-    borderRadius: spacing.borderRadius.xl,
-    padding: spacing.lg,
-    width: "100%",
-    maxWidth: 400,
-    ...shadows.lg,
-  },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: spacing.md,
+  sheetContent: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
   },
   modalTitle: {
     ...typography.h3,
@@ -1148,15 +1098,6 @@ const styles = StyleSheet.create({
   modalOptionText: {
     ...typography.body,
     color: colors.light.text,
-  },
-  modalClose: {
-    alignItems: "center",
-    paddingVertical: spacing.md,
-    marginTop: spacing.sm,
-  },
-  modalCloseText: {
-    ...typography.body,
-    color: colors.light.primary,
   },
   inputLabel: {
     ...typography.caption,

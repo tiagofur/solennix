@@ -1,9 +1,9 @@
 import React from "react";
-import { Modal, View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { AppBottomSheet } from "./AppBottomSheet";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
-import { shadows } from "../../theme/shadows";
 
 interface ConfirmDialogProps {
   visible: boolean;
@@ -27,82 +27,57 @@ export default function ConfirmDialog({
   onCancel,
 }: ConfirmDialogProps) {
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={onCancel}
-    >
-      <View style={styles.overlay}>
-        <View style={styles.dialog}>
-          <Text style={styles.title}>{title}</Text>
-          {description && <Text style={styles.description}>{description}</Text>}
-          <View style={styles.actions}>
-            <TouchableOpacity style={styles.cancelButton} onPress={onCancel}>
-              <Text style={styles.cancelText}>{cancelLabel}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.confirmButton,
-                destructive && styles.destructiveButton,
-              ]}
-              onPress={onConfirm}
-            >
-              <Text style={styles.confirmText}>{confirmLabel}</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+    <AppBottomSheet visible={visible} onClose={onCancel}>
+      <View style={styles.content}>
+        <Text style={styles.title}>{title}</Text>
+        {description && <Text style={styles.description}>{description}</Text>}
+
+        <TouchableOpacity
+          style={[
+            styles.confirmButton,
+            destructive && styles.destructiveButton,
+          ]}
+          onPress={onConfirm}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.confirmText}>{confirmLabel}</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.cancelButton}
+          onPress={onCancel}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.cancelText}>{cancelLabel}</Text>
+        </TouchableOpacity>
       </View>
-    </Modal>
+    </AppBottomSheet>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: spacing.xl,
-  },
-  dialog: {
-    backgroundColor: colors.light.card,
-    borderRadius: spacing.borderRadius.lg,
-    padding: spacing.xl,
-    width: "100%",
-    maxWidth: 340,
-    ...shadows.lg,
+  content: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
   },
   title: {
     ...typography.title3,
     color: colors.light.text,
+    textAlign: "center",
     marginBottom: spacing.xs,
   },
   description: {
     ...typography.body,
     color: colors.light.textSecondary,
+    textAlign: "center",
     marginBottom: spacing.lg,
   },
-  actions: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    gap: spacing.sm,
-  },
-  cancelButton: {
-    paddingVertical: spacing.sm + 2,
-    paddingHorizontal: spacing.md,
-    borderRadius: spacing.borderRadius.md,
-    backgroundColor: colors.light.surface,
-  },
-  cancelText: {
-    ...typography.headline,
-    color: colors.light.textSecondary,
-  },
   confirmButton: {
-    paddingVertical: spacing.sm + 2,
-    paddingHorizontal: spacing.md,
-    borderRadius: spacing.borderRadius.md,
     backgroundColor: colors.light.primary,
+    borderRadius: spacing.borderRadius.lg,
+    paddingVertical: spacing.md + 2,
+    alignItems: "center",
+    marginBottom: spacing.sm,
   },
   destructiveButton: {
     backgroundColor: colors.light.error,
@@ -110,5 +85,15 @@ const styles = StyleSheet.create({
   confirmText: {
     ...typography.headline,
     color: colors.light.textInverse,
+  },
+  cancelButton: {
+    backgroundColor: colors.light.surface,
+    borderRadius: spacing.borderRadius.lg,
+    paddingVertical: spacing.md + 2,
+    alignItems: "center",
+  },
+  cancelText: {
+    ...typography.headline,
+    color: colors.light.primary,
   },
 });

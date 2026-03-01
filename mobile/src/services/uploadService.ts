@@ -20,7 +20,7 @@ export const uploadService = {
             localUri,
             {
                 httpMethod: 'POST',
-                uploadType: FileSystem.FileSystemUploadType.MULTIPART,
+                uploadType: (FileSystem as any).FileSystemUploadType?.MULTIPART ?? 1,
                 fieldName: 'file',
                 headers: {
                     Authorization: `Bearer ${token}`,
