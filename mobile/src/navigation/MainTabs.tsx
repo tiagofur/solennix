@@ -88,7 +88,7 @@ export default function MainTabs() {
           tabBarIcon: () => (
             <View style={styles.fabContainer}>
               <View style={[styles.fab, { backgroundColor: palette.primary }]}>
-                <Plus color="#fff" size={28} />
+                <Plus color={palette.textInverse} size={28} />
               </View>
             </View>
           ),

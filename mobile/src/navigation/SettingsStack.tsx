@@ -18,7 +18,7 @@ export default function SettingsStack() {
     <Stack.Navigator
       screenOptions={{
         headerShown: true,
-        headerBackTitle: "Atrás",
+        headerBackTitleVisible: false,
       }}
     >
       <Stack.Screen

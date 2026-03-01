@@ -10,6 +10,7 @@ import ErrorBoundary from "./src/components/ErrorBoundary";
 import { ToastContainer } from "./src/components/shared";
 import { setupGlobalErrorHandlers } from "./src/lib/errorHandler";
 import { initSentry, wrapWithSentry } from "./src/lib/sentry";
+import { ThemeProvider } from "./src/hooks/useTheme";
 
 SplashScreen.preventAutoHideAsync();
 initSentry();
@@ -20,17 +21,19 @@ function App() {
   }, []);
 
   return (
-    <ErrorBoundary>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <SafeAreaProvider>
-          <AuthProvider>
-            <RootNavigator />
-            <ToastContainer />
-            <StatusBar style="auto" />
-          </AuthProvider>
-        </SafeAreaProvider>
-      </GestureHandlerRootView>
-    </ErrorBoundary>
+    <ThemeProvider>
+      <ErrorBoundary>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <SafeAreaProvider>
+            <AuthProvider>
+              <RootNavigator />
+              <ToastContainer />
+              <StatusBar style="auto" />
+            </AuthProvider>
+          </SafeAreaProvider>
+        </GestureHandlerRootView>
+      </ErrorBoundary>
+    </ThemeProvider>
   );
 }
 

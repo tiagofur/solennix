@@ -17,12 +17,6 @@ import { useTheme } from "../../hooks/useTheme";
 
 const { width } = Dimensions.get("window");
 
-const ICON_MAP: Record<ToastType, React.ReactNode> = {
-  success: <CheckCircle color="#ffffff" size={20} />,
-  error: <AlertCircle color="#ffffff" size={20} />,
-  info: <Info color="#ffffff" size={20} />,
-};
-
 function ToastItem({
   id,
   message,
@@ -39,6 +33,13 @@ function ToastItem({
   const translateY = useRef(new Animated.Value(-80)).current;
   const opacity = useRef(new Animated.Value(0)).current;
   const styles = getStyles(palette);
+
+  const iconColor = palette.textInverse;
+  const ICON_MAP: Record<ToastType, React.ReactNode> = {
+    success: <CheckCircle color={iconColor} size={20} />,
+    error: <AlertCircle color={iconColor} size={20} />,
+    info: <Info color={iconColor} size={20} />,
+  };
 
   const BG_MAP: Record<ToastType, string> = {
     success: palette.success,
@@ -74,7 +75,7 @@ function ToastItem({
         {message}
       </Text>
       <TouchableOpacity onPress={() => onDismiss(id)} hitSlop={8}>
-        <X color="#ffffff" size={18} />
+        <X color={palette.textInverse} size={18} />
       </TouchableOpacity>
     </Animated.View>
   );
@@ -125,7 +126,7 @@ const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   },
   message: {
     ...typography.body,
-    color: "#ffffff",
+    color: palette.textInverse,
     flex: 1,
     marginHorizontal: spacing.sm,
   },

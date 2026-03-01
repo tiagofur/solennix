@@ -63,7 +63,7 @@ export function SwipeableRow({
         actions.push({
           label: "Editar",
           icon: "edit",
-          color: "#fff",
+          color: palette.textInverse,
           backgroundColor: palette.primary,
           onPress: onEdit,
         });
@@ -72,7 +72,7 @@ export function SwipeableRow({
         actions.push({
           label: "Eliminar",
           icon: "delete",
-          color: "#fff",
+          color: palette.textInverse,
           backgroundColor: palette.error,
           onPress: onDelete,
         });

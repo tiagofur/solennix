@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, createContext, useContext } from 'react';
 import { useColorScheme } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 
@@ -6,12 +6,21 @@ type Theme = 'light' | 'dark' | 'system';
 
 const THEME_KEY = 'app_theme';
 
-export function useTheme() {
+interface ThemeContextValue {
+    theme: 'light' | 'dark';
+    preference: Theme;
+    isDark: boolean;
+    toggleTheme: () => void;
+    loaded: boolean;
+}
+
+const ThemeContext = createContext<ThemeContextValue | null>(null);
+
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const systemScheme = useColorScheme();
     const [preference, setPreference] = useState<Theme>('system');
     const [loaded, setLoaded] = useState(false);
 
-    // Load saved preference on mount
     useEffect(() => {
         SecureStore.getItemAsync(THEME_KEY).then((saved) => {
             if (saved === 'light' || saved === 'dark' || saved === 'system') {
@@ -31,11 +40,21 @@ export function useTheme() {
         SecureStore.setItemAsync(THEME_KEY, next);
     }, [resolvedTheme]);
 
-    return {
-        theme: resolvedTheme,
-        preference,
-        toggleTheme,
-        isDark: resolvedTheme === 'dark',
-        loaded,
-    };
+    return (
+        <ThemeContext.Provider value={{
+            theme: resolvedTheme,
+            preference,
+            isDark: resolvedTheme === 'dark',
+            toggleTheme,
+            loaded,
+        }}>
+            {children}
+        </ThemeContext.Provider>
+    );
+}
+
+export function useTheme() {
+    const ctx = useContext(ThemeContext);
+    if (!ctx) throw new Error('useTheme must be used within ThemeProvider');
+    return ctx;
 }

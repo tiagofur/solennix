@@ -102,7 +102,7 @@ export default function CustomDrawerContent(props: DrawerContentComponentProps) 
         {/* User header */}
         <View style={[styles.header, { borderBottomColor: palette.separator }]}>
           <View style={[styles.avatar, { backgroundColor: palette.primary }]}>
-            <Text style={styles.avatarText}>{initial}</Text>
+            <Text style={[styles.avatarText, { color: palette.textInverse }]}>{initial}</Text>
           </View>
           <View style={styles.headerInfo}>
             <Text style={[styles.userName, { color: palette.text }]} numberOfLines={1}>
@@ -229,7 +229,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   avatarText: {
-    color: "#fff",
     fontSize: 20,
     fontWeight: "700",
   },

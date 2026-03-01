@@ -78,7 +78,7 @@ export const colors = {
 
         // Neutral palette
         background: '#000000',
-        surfaceGrouped: '#1c1c1e',
+        surfaceGrouped: '#000000',
         surface: '#2c2c2e',
         surfaceAlt: '#3a3a3c',
         card: '#1c1c1e',

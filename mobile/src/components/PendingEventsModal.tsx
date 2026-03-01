@@ -136,10 +136,10 @@ export default function PendingEventsModal() {
                     disabled={updatingId === event.id}
                   >
                     {updatingId === event.id ? (
-                      <ActivityIndicator color="#fff" size="small" />
+                      <ActivityIndicator color={palette.textInverse} size="small" />
                     ) : (
                       <>
-                        <CheckCircle color="#fff" size={16} />
+                        <CheckCircle color={palette.textInverse} size={16} />
                         <Text style={styles.completeBtnText}>Completar</Text>
                       </>
                     )}
@@ -149,7 +149,7 @@ export default function PendingEventsModal() {
                     onPress={() => handleUpdateStatus(event.id, "cancelled")}
                     disabled={updatingId === event.id}
                   >
-                    <XCircle color="#fff" size={16} />
+                    <XCircle color={palette.textInverse} size={16} />
                     <Text style={styles.cancelBtnText}>Cancelar</Text>
                   </TouchableOpacity>
                 </View>
@@ -250,7 +250,7 @@ const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   },
   completeBtnText: {
     ...typography.caption1,
-    color: "#fff",
+    color: palette.textInverse,
     fontWeight: "600",
   },
   cancelBtn: {
@@ -265,7 +265,7 @@ const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   },
   cancelBtnText: {
     ...typography.caption1,
-    color: "#fff",
+    color: palette.textInverse,
     fontWeight: "600",
   },
   closeBtn: {
