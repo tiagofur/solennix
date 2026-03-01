@@ -1,6 +1,7 @@
 import React from "react";
 import { View, StyleSheet, TouchableOpacity, Platform } from "react-native";
 import * as Haptics from "expo-haptics";
+import { BlurView } from "expo-blur";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { MainTabParamList } from "../types/navigation";
 import HomeStack from "./HomeStack";
@@ -42,14 +43,18 @@ export default function MainTabs() {
         tabBarActiveTintColor: palette.tabBar.active,
         tabBarInactiveTintColor: palette.tabBar.inactive,
         tabBarStyle: {
-          backgroundColor: palette.tabBar.background,
+          position: "absolute",
           borderTopWidth: 0,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: -1 },
-          shadowOpacity: 0.04,
-          shadowRadius: 4,
-          elevation: 4,
+          backgroundColor: "transparent",
+          elevation: 0,
         },
+        tabBarBackground: () => (
+          <BlurView
+            intensity={80}
+            tint={isDark ? "dark" : "light"}
+            style={StyleSheet.absoluteFill}
+          />
+        ),
       }}
     >
       <Tab.Screen

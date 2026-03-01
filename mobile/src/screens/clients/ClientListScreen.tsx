@@ -33,6 +33,7 @@ import {
   UpgradeBanner,
   Avatar,
   SkeletonList,
+  SwipeableRow,
 } from "../../components/shared";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
@@ -147,11 +148,14 @@ export default function ClientListScreen({ navigation }: Props) {
   const renderClient = useCallback(
     ({ item, index }: { item: Client; index: number }) => (
       <Animated.View entering={FadeInDown.delay(Math.min(index, 10) * 50).springify()}>
+      <SwipeableRow
+        onEdit={() => navigation.navigate("ClientForm", { id: item.id })}
+        onDelete={() => setDeleteTarget(item)}
+      >
       <TouchableOpacity
         style={styles.card}
         activeOpacity={0.7}
         onPress={() => navigation.navigate("ClientDetail", { id: item.id })}
-        onLongPress={() => setDeleteTarget(item)}
       >
         <Avatar name={item.name} photoUrl={item.photo_url} size={44} />
         <View style={styles.cardBody}>
@@ -186,6 +190,7 @@ export default function ClientListScreen({ navigation }: Props) {
         </View>
         <ChevronRight color={colors.light.textTertiary} size={20} />
       </TouchableOpacity>
+      </SwipeableRow>
       </Animated.View>
     ),
     [navigation],

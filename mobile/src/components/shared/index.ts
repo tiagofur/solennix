@@ -11,3 +11,5 @@ export { PhotoGallery } from './PhotoGallery';
 export { AppBottomSheet } from './AppBottomSheet';
 export { SkeletonLine, SkeletonCircle, SkeletonCard, SkeletonList } from './Skeleton';
 export { AnimatedPressable } from './AnimatedPressable';
+export { SwipeableRow } from './SwipeableRow';
+export { SegmentedControl } from './SegmentedControl';

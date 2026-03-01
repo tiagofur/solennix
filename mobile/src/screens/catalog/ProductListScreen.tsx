@@ -28,7 +28,7 @@ import { productService } from "../../services/productService";
 import { uploadService } from "../../services/uploadService";
 import { useToast } from "../../hooks/useToast";
 import { logError } from "../../lib/errorHandler";
-import { EmptyState, ConfirmDialog, SkeletonList } from "../../components/shared";
+import { EmptyState, ConfirmDialog, SkeletonList, SwipeableRow } from "../../components/shared";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
@@ -119,11 +119,14 @@ export default function ProductListScreen({ navigation }: Props) {
   const renderProduct = useCallback(
     ({ item, index }: { item: Product; index: number }) => (
       <Animated.View entering={FadeInDown.delay(Math.min(index, 10) * 50).springify()}>
+      <SwipeableRow
+        onEdit={() => navigation.navigate("ProductForm", { id: item.id })}
+        onDelete={() => setDeleteTarget(item)}
+      >
       <TouchableOpacity
         style={styles.card}
         activeOpacity={0.7}
         onPress={() => navigation.navigate("ProductDetail", { id: item.id })}
-        onLongPress={() => setDeleteTarget(item)}
       >
         {item.image_url ? (
           <Image
@@ -157,6 +160,7 @@ export default function ProductListScreen({ navigation }: Props) {
         </View>
         <ChevronRight color={colors.light.textTertiary} size={20} />
       </TouchableOpacity>
+      </SwipeableRow>
       </Animated.View>
     ),
     [navigation],

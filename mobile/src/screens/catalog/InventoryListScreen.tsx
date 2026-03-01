@@ -24,7 +24,7 @@ import { InventoryItem } from "../../types/entities";
 import { inventoryService } from "../../services/inventoryService";
 import { useToast } from "../../hooks/useToast";
 import { logError } from "../../lib/errorHandler";
-import { EmptyState, SkeletonList } from "../../components/shared";
+import { EmptyState, SkeletonList, SwipeableRow, SegmentedControl } from "../../components/shared";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
@@ -41,6 +41,8 @@ export default function InventoryListScreen({ navigation }: Props) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showLowStockOnly, setShowLowStockOnly] = useState(false);
+  const [typeFilterIndex, setTypeFilterIndex] = useState(0);
+  const typeSegments = ["Todos", "Ingredientes", "Equipo"];
 
   const loadItems = useCallback(async () => {
     try {
@@ -71,19 +73,23 @@ export default function InventoryListScreen({ navigation }: Props) {
       filtered = filtered.filter(item => item.current_stock <= item.minimum_stock);
     }
 
-    if (!search.trim()) {
-      setFilteredItems(filtered);
-    } else {
+    if (typeFilterIndex === 1) {
+      filtered = filtered.filter(item => item.type === 'ingredient');
+    } else if (typeFilterIndex === 2) {
+      filtered = filtered.filter(item => item.type === 'equipment');
+    }
+
+    if (search.trim()) {
       const q = search.toLowerCase();
-      setFilteredItems(
-        filtered.filter(
-          (item) =>
-            item.ingredient_name.toLowerCase().includes(q) ||
-            item.type.toLowerCase().includes(q)
-        )
+      filtered = filtered.filter(
+        (item) =>
+          item.ingredient_name.toLowerCase().includes(q) ||
+          item.type.toLowerCase().includes(q)
       );
     }
-  }, [search, items, showLowStockOnly]);
+
+    setFilteredItems(filtered);
+  }, [search, items, showLowStockOnly, typeFilterIndex]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -109,6 +115,9 @@ export default function InventoryListScreen({ navigation }: Props) {
 
       return (
         <Animated.View entering={FadeInDown.delay(Math.min(index, 10) * 50).springify()}>
+        <SwipeableRow
+          onEdit={() => navigation.navigate("InventoryForm", { id: item.id })}
+        >
         <TouchableOpacity
           style={[styles.card, isLowStock && styles.cardLowStock]}
           activeOpacity={0.7}
@@ -144,6 +153,7 @@ export default function InventoryListScreen({ navigation }: Props) {
             )}
           </View>
         </TouchableOpacity>
+        </SwipeableRow>
         </Animated.View>
       );
     },
@@ -164,6 +174,14 @@ export default function InventoryListScreen({ navigation }: Props) {
             autoCorrect={false}
           />
         </View>
+      </View>
+
+      <View style={styles.segmentContainer}>
+        <SegmentedControl
+          segments={typeSegments}
+          selectedIndex={typeFilterIndex}
+          onChange={setTypeFilterIndex}
+        />
       </View>
 
       {lowStockCount > 0 && (
@@ -248,6 +266,10 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: colors.light.text,
     padding: 0,
+  },
+  segmentContainer: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.sm,
   },
   alertBanner: {
     flexDirection: "row",
