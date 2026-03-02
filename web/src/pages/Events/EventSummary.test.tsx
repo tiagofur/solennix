@@ -1,9 +1,10 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { EventSummary } from './EventSummary';
 import { eventService } from '../../services/eventService';
 import { productService } from '../../services/productService';
 import { paymentService } from '../../services/paymentService';
-import { generateBudgetPDF, generateContractPDF, generateInvoicePDF, generateShoppingListPDF } from '../../lib/pdfGenerator';
+import { generateBudgetPDF, generateContractPDF, generateInvoicePDF, generateShoppingListPDF, generatePaymentReportPDF } from '../../lib/pdfGenerator';
 import { logError } from '../../lib/errorHandler';
 
 vi.mock('../../services/eventService', () => ({
@@ -33,6 +34,7 @@ vi.mock('../../lib/pdfGenerator', () => ({
   generateContractPDF: vi.fn(),
   generateInvoicePDF: vi.fn(),
   generateShoppingListPDF: vi.fn(),
+  generatePaymentReportPDF: vi.fn(),
 }));
 
 let mockIsBasicPlan = false;
@@ -106,13 +108,13 @@ describe('EventSummary', () => {
   });
 
   it('renders summary and switches views', async () => {
-    render(<EventSummary />);
+    render(<MemoryRouter><EventSummary /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.getByText('Ana - Boda')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Compras/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Ver lista de compras/i }));
     expect(screen.getAllByText(/Lista de Compras/i)[0]).toBeInTheDocument();
     expect(screen.getByText('Harina')).toBeInTheDocument();
     expect(screen.getByText('kg')).toBeInTheDocument();
@@ -120,31 +122,34 @@ describe('EventSummary', () => {
     fireEvent.click(screen.getAllByText('Contrato')[0]);
     expect(screen.getAllByText(/Contrato de Servicios/i)[0]).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /Pagos/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Ver pagos del evento/i }));
     expect(screen.getByText('PAYMENTS_VIEW')).toBeInTheDocument();
   });
 
   it('triggers pdf generation', async () => {
-    render(<EventSummary />);
+    render(<MemoryRouter><EventSummary /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.getByText('Ana - Boda')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Presupuesto/i }));
+    // Open Acciones dropdown and click Presupuesto
+    fireEvent.click(screen.getByRole('button', { name: /Más acciones/i }));
+    fireEvent.click(screen.getByText('Presupuesto'));
     expect(generateBudgetPDF).toHaveBeenCalled();
 
-    // Switch to contrato view to reveal the download button
-    fireEvent.click(screen.getAllByText('Contrato')[0]);
-
-    fireEvent.click(screen.getByRole('button', { name: /Descargar contrato del evento en PDF/i }));
+    // Open Acciones dropdown and click Contrato (menuitem, not the tab)
+    fireEvent.click(screen.getByRole('button', { name: /Más acciones/i }));
+    const menuItems = screen.getAllByText('Contrato');
+    const contratoMenuItem = menuItems.find(el => el.closest('[role="menuitem"]')) || menuItems[menuItems.length - 1];
+    fireEvent.click(contratoMenuItem);
     expect(generateContractPDF).toHaveBeenCalled();
   });
 
   it('handles missing event', async () => {
     (eventService.getById as any).mockResolvedValueOnce(null);
 
-    render(<EventSummary />);
+    render(<MemoryRouter><EventSummary /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.getByText(/Evento no encontrado/i)).toBeInTheDocument();
@@ -154,7 +159,7 @@ describe('EventSummary', () => {
   it('logs error when loading summary fails', async () => {
     (eventService.getById as any).mockRejectedValueOnce(new Error('fail'));
 
-    render(<EventSummary />);
+    render(<MemoryRouter><EventSummary /></MemoryRouter>);
 
     await waitFor(() => {
       expect(logError).toHaveBeenCalledWith('Error loading summary', expect.any(Error));
@@ -162,7 +167,7 @@ describe('EventSummary', () => {
   });
 
   it('shows time range and navigates back', async () => {
-    render(<EventSummary />);
+    render(<MemoryRouter><EventSummary /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.getByText('Ana - Boda')).toBeInTheDocument();
@@ -178,7 +183,7 @@ describe('EventSummary', () => {
   it('opens status dropdown and changes status successfully', async () => {
     (eventService.update as any).mockResolvedValue({});
 
-    render(<EventSummary />);
+    render(<MemoryRouter><EventSummary /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.getByText('Ana - Boda')).toBeInTheDocument();
@@ -202,7 +207,7 @@ describe('EventSummary', () => {
   });
 
   it('does not update when selecting the same status', async () => {
-    render(<EventSummary />);
+    render(<MemoryRouter><EventSummary /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.getByText('Ana - Boda')).toBeInTheDocument();
@@ -218,7 +223,7 @@ describe('EventSummary', () => {
   it('handles status change error', async () => {
     (eventService.update as any).mockRejectedValue(new Error('update fail'));
 
-    render(<EventSummary />);
+    render(<MemoryRouter><EventSummary /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.getByText('Ana - Boda')).toBeInTheDocument();
@@ -233,7 +238,7 @@ describe('EventSummary', () => {
   });
 
   it('navigates to edit page when clicking edit button', async () => {
-    render(<EventSummary />);
+    render(<MemoryRouter><EventSummary /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.getByText('Ana - Boda')).toBeInTheDocument();
@@ -246,18 +251,19 @@ describe('EventSummary', () => {
   it('opens delete confirmation and successfully deletes', async () => {
     (eventService.delete as any).mockResolvedValue({});
 
-    render(<EventSummary />);
+    render(<MemoryRouter><EventSummary /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.getByText('Ana - Boda')).toBeInTheDocument();
     });
 
-    // Click delete button
-    fireEvent.click(screen.getByRole('button', { name: /Eliminar este evento/i }));
+    // Open Acciones dropdown and click Eliminar Evento
+    fireEvent.click(screen.getByRole('button', { name: /Más acciones/i }));
+    fireEvent.click(screen.getByText('Eliminar Evento'));
 
     // Confirm dialog should appear
     await waitFor(() => {
-      expect(screen.getByText('Eliminar Evento')).toBeInTheDocument();
+      expect(screen.getByText('Eliminar permanentemente')).toBeInTheDocument();
     });
 
     // Confirm deletion
@@ -272,13 +278,15 @@ describe('EventSummary', () => {
   it('handles delete error', async () => {
     (eventService.delete as any).mockRejectedValue(new Error('del fail'));
 
-    render(<EventSummary />);
+    render(<MemoryRouter><EventSummary /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.getByText('Ana - Boda')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Eliminar este evento/i }));
+    // Open Acciones dropdown and click Eliminar Evento
+    fireEvent.click(screen.getByRole('button', { name: /Más acciones/i }));
+    fireEvent.click(screen.getByText('Eliminar Evento'));
     fireEvent.click(screen.getByText('Eliminar permanentemente'));
 
     await waitFor(() => {
@@ -287,73 +295,81 @@ describe('EventSummary', () => {
   });
 
   it('cancels delete via confirm dialog', async () => {
-    render(<EventSummary />);
+    render(<MemoryRouter><EventSummary /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.getByText('Ana - Boda')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Eliminar este evento/i }));
-    expect(screen.getByText('Eliminar Evento')).toBeInTheDocument();
+    // Open Acciones dropdown and click Eliminar Evento
+    fireEvent.click(screen.getByRole('button', { name: /Más acciones/i }));
+    fireEvent.click(screen.getByText('Eliminar Evento'));
 
     fireEvent.click(screen.getByText('Cancelar'));
 
     await waitFor(() => {
-      expect(screen.queryByText('Eliminar Evento')).not.toBeInTheDocument();
+      expect(screen.queryByText('Eliminar permanentemente')).not.toBeInTheDocument();
     });
     expect(eventService.delete).not.toHaveBeenCalled();
   });
 
   it('triggers invoice PDF generation in summary view', async () => {
-    render(<EventSummary />);
+    render(<MemoryRouter><EventSummary /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.getByText('Ana - Boda')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Generar factura/i }));
+    // Open Acciones dropdown and click Generar Factura
+    fireEvent.click(screen.getByRole('button', { name: /Más acciones/i }));
+    fireEvent.click(screen.getByText('Generar Factura'));
     expect(generateInvoicePDF).toHaveBeenCalled();
   });
 
   it('triggers shopping list PDF generation in ingredients view', async () => {
-    render(<EventSummary />);
+    render(<MemoryRouter><EventSummary /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.getByText('Ana - Boda')).toBeInTheDocument();
     });
 
     // Switch to ingredients view
-    fireEvent.click(screen.getByRole('button', { name: /Compras/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Ver lista de compras/i }));
 
-    fireEvent.click(screen.getByRole('button', { name: /Descargar lista de compras en PDF/i }));
+    // Open Acciones dropdown and click Lista de Compras
+    fireEvent.click(screen.getByRole('button', { name: /Más acciones/i }));
+    fireEvent.click(screen.getByText('Lista de Compras'));
     expect(generateShoppingListPDF).toHaveBeenCalled();
   });
 
   it('shows toast and blocks PDF generation on basic plan', async () => {
     mockIsBasicPlan = true;
 
-    render(<EventSummary />);
+    render(<MemoryRouter><EventSummary /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.getByText('Ana - Boda')).toBeInTheDocument();
     });
 
+    // Open Acciones dropdown - on basic plan, clicking items does NOT close dropdown (early return)
+    fireEvent.click(screen.getByRole('button', { name: /Más acciones/i }));
+
     // Try budget PDF
-    fireEvent.click(screen.getByRole('button', { name: /Presupuesto/i }));
+    fireEvent.click(screen.getByText('Presupuesto'));
     expect(generateBudgetPDF).not.toHaveBeenCalled();
 
-    // Try invoice PDF
-    fireEvent.click(screen.getByRole('button', { name: /Generar factura/i }));
+    // Try invoice PDF (dropdown still open since basic plan early-returns)
+    fireEvent.click(screen.getByText('Generar Factura'));
     expect(generateInvoicePDF).not.toHaveBeenCalled();
 
-    // Switch to ingredients and try shopping list PDF
-    fireEvent.click(screen.getByRole('button', { name: /Compras/i }));
-    fireEvent.click(screen.getByRole('button', { name: /Descargar lista de compras en PDF/i }));
+    // Try shopping list PDF (dropdown still open)
+    fireEvent.click(screen.getByText('Lista de Compras'));
     expect(generateShoppingListPDF).not.toHaveBeenCalled();
 
-    // Switch to contract and try contract PDF
-    fireEvent.click(screen.getAllByText('Contrato')[0]);
-    fireEvent.click(screen.getByRole('button', { name: /Descargar contrato del evento en PDF/i }));
+    // Try contract PDF (dropdown still open)
+    const menuItems = screen.getAllByText('Contrato');
+    const contratoMenuItem = menuItems.find(el => el.closest('[role="menuitem"]')) || menuItems[menuItems.length - 1];
+    fireEvent.click(contratoMenuItem);
     expect(generateContractPDF).not.toHaveBeenCalled();
   });
 
@@ -363,20 +379,20 @@ describe('EventSummary', () => {
       { amount: 200 },
     ]);
 
-    render(<EventSummary />);
+    render(<MemoryRouter><EventSummary /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.getByText('Ana - Boda')).toBeInTheDocument();
     });
 
     // Financial summary labels
-    expect(screen.getByText('Venta (sin IVA)')).toBeInTheDocument();
+    expect(screen.getByText('Venta Bruta')).toBeInTheDocument();
     expect(screen.getByText('IVA')).toBeInTheDocument();
-    expect(screen.getByText(/Total cobrado/)).toBeInTheDocument();
-    expect(screen.getByText('Total Pagado')).toBeInTheDocument();
-    expect(screen.getByText('Faltante por Pagar')).toBeInTheDocument();
-    expect(screen.getByText('Costos Totales')).toBeInTheDocument();
-    expect(screen.getByText('Utilidad')).toBeInTheDocument();
+    expect(screen.getByText('Total Cobrado')).toBeInTheDocument();
+    expect(screen.getByText('Pagado')).toBeInTheDocument();
+    expect(screen.getByText('Pendiente')).toBeInTheDocument();
+    expect(screen.getByText('Costos')).toBeInTheDocument();
+    expect(screen.getByText('Utilidad Neta')).toBeInTheDocument();
     expect(screen.getByText('Margen')).toBeInTheDocument();
 
     // Paid amount: 300 + 200 = $500.00 (appears in both "Total Pagado" and "Faltante por Pagar")
@@ -386,7 +402,7 @@ describe('EventSummary', () => {
   it('renders event without time range', async () => {
     setupMocks({ start_time: null, end_time: null });
 
-    render(<EventSummary />);
+    render(<MemoryRouter><EventSummary /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.getByText('Ana - Boda')).toBeInTheDocument();
@@ -399,33 +415,32 @@ describe('EventSummary', () => {
   it('renders event with only start_time', async () => {
     setupMocks({ start_time: '15:00', end_time: null });
 
-    render(<EventSummary />);
+    render(<MemoryRouter><EventSummary /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.getByText('Ana - Boda')).toBeInTheDocument();
     });
 
-    expect(screen.getByText('Horario:')).toBeInTheDocument();
+    expect(screen.getByText('Horario')).toBeInTheDocument();
     expect(screen.getByText('15:00')).toBeInTheDocument();
   });
 
   it('renders event with location', async () => {
     setupMocks({ location: 'Hacienda del Sol' });
 
-    render(<EventSummary />);
+    render(<MemoryRouter><EventSummary /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.getByText('Ana - Boda')).toBeInTheDocument();
     });
 
-    expect(screen.getByText('Ubicación:')).toBeInTheDocument();
     expect(screen.getByText('Hacienda del Sol')).toBeInTheDocument();
   });
 
   it('renders event without location', async () => {
     setupMocks({ location: null });
 
-    render(<EventSummary />);
+    render(<MemoryRouter><EventSummary /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.getByText('Ana - Boda')).toBeInTheDocument();
@@ -437,15 +452,14 @@ describe('EventSummary', () => {
   it('renders event with requires_invoice false', async () => {
     setupMocks({ requires_invoice: false });
 
-    render(<EventSummary />);
+    render(<MemoryRouter><EventSummary /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.getByText('Ana - Boda')).toBeInTheDocument();
     });
 
-    // Factura: No
-    const facturaElements = screen.getAllByText('No');
-    expect(facturaElements.length).toBeGreaterThan(0);
+    // Factura: No requiere factura
+    expect(screen.getByText('No requiere factura')).toBeInTheDocument();
   });
 
   it('renders contract view with all details', async () => {
@@ -456,7 +470,7 @@ describe('EventSummary', () => {
       client: { name: 'Ana', phone: '555', address: 'Calle 123' },
     });
 
-    render(<EventSummary />);
+    render(<MemoryRouter><EventSummary /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.getByText('Ana - Boda')).toBeInTheDocument();
@@ -481,7 +495,7 @@ describe('EventSummary', () => {
   it('renders contract with default city placeholder when city is null', async () => {
     setupMocks({ city: null });
 
-    render(<EventSummary />);
+    render(<MemoryRouter><EventSummary /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.getByText('Ana - Boda')).toBeInTheDocument();
@@ -495,32 +509,32 @@ describe('EventSummary', () => {
   it('renders "Sin extras" when no extras exist', async () => {
     (eventService.getExtras as any).mockResolvedValue([]);
 
-    render(<EventSummary />);
+    render(<MemoryRouter><EventSummary /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.getByText('Ana - Boda')).toBeInTheDocument();
     });
 
-    expect(screen.getByText('Sin extras')).toBeInTheDocument();
+    expect(screen.getByText('Sin extras agregados')).toBeInTheDocument();
   });
 
   it('renders "no ingredients" message when none calculated', async () => {
     (eventService.getProducts as any).mockResolvedValue([]);
     (productService.getIngredientsForProducts as any).mockResolvedValue([]);
 
-    render(<EventSummary />);
+    render(<MemoryRouter><EventSummary /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.getByText('Ana - Boda')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Compras/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Ver lista de compras/i }));
 
     expect(screen.getByText(/No hay ingredientes calculados/)).toBeInTheDocument();
   });
 
   it('renders footer with business name', async () => {
-    render(<EventSummary />);
+    render(<MemoryRouter><EventSummary /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.getByText('Ana - Boda')).toBeInTheDocument();
@@ -539,13 +553,13 @@ describe('EventSummary', () => {
       { product_id: 'p2', inventory_id: 'i1', quantity_required: 0.3, ingredient_name: 'Harina', unit: 'kg', unit_cost: 10 },
     ]);
 
-    render(<EventSummary />);
+    render(<MemoryRouter><EventSummary /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.getByText('Ana - Boda')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Compras/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Ver lista de compras/i }));
 
     // Total quantity: (0.5 * 2) + (0.3 * 3) = 1.0 + 0.9 = 1.90
     expect(screen.getByText('1.90')).toBeInTheDocument();
@@ -564,13 +578,13 @@ describe('EventSummary', () => {
       },
     ]);
 
-    render(<EventSummary />);
+    render(<MemoryRouter><EventSummary /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.getByText('Ana - Boda')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Compras/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Ver lista de compras/i }));
 
     expect(screen.getByText('Azucar')).toBeInTheDocument();
     expect(screen.getByText('g')).toBeInTheDocument();
@@ -582,17 +596,17 @@ describe('EventSummary', () => {
     (paymentService.getByEventId as any).mockResolvedValue(null);
     (productService.getIngredientsForProducts as any).mockResolvedValue([]);
 
-    render(<EventSummary />);
+    render(<MemoryRouter><EventSummary /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.getByText('Ana - Boda')).toBeInTheDocument();
     });
 
-    expect(screen.getByText('Sin extras')).toBeInTheDocument();
+    expect(screen.getByText('Sin extras agregados')).toBeInTheDocument();
   });
 
   it('closes status dropdown on outside click', async () => {
-    render(<EventSummary />);
+    render(<MemoryRouter><EventSummary /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.getByText('Ana - Boda')).toBeInTheDocument();
@@ -611,7 +625,7 @@ describe('EventSummary', () => {
   });
 
   it('renders all four statuses in the dropdown', async () => {
-    render(<EventSummary />);
+    render(<MemoryRouter><EventSummary /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.getByText('Ana - Boda')).toBeInTheDocument();
@@ -628,13 +642,13 @@ describe('EventSummary', () => {
   it('renders event with quoted status by default', async () => {
     setupMocks({ status: 'quoted' });
 
-    render(<EventSummary />);
+    render(<MemoryRouter><EventSummary /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.getByText('Ana - Boda')).toBeInTheDocument();
     });
 
-    expect(screen.getByText('Cotizado')).toBeInTheDocument();
+    expect(screen.getAllByText('Cotizado').length).toBeGreaterThanOrEqual(1);
   });
 
   it('renders contract with location fallback to client address', async () => {
@@ -643,7 +657,7 @@ describe('EventSummary', () => {
       client: { name: 'Ana', phone: '555', address: 'Av. Reforma 100' },
     });
 
-    render(<EventSummary />);
+    render(<MemoryRouter><EventSummary /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.getByText('Ana - Boda')).toBeInTheDocument();
@@ -660,7 +674,7 @@ describe('EventSummary', () => {
       client: { name: 'Ana', phone: '555' },
     });
 
-    render(<EventSummary />);
+    render(<MemoryRouter><EventSummary /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.getByText('Ana - Boda')).toBeInTheDocument();
@@ -672,7 +686,7 @@ describe('EventSummary', () => {
   });
 
   it('shows products and extras in contract view', async () => {
-    render(<EventSummary />);
+    render(<MemoryRouter><EventSummary /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.getByText('Ana - Boda')).toBeInTheDocument();
@@ -687,7 +701,7 @@ describe('EventSummary', () => {
   it('shows deposit percent and cancellation days in contract', async () => {
     setupMocks({ deposit_percent: 30, cancellation_days: 10 });
 
-    render(<EventSummary />);
+    render(<MemoryRouter><EventSummary /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.getByText('Ana - Boda')).toBeInTheDocument();

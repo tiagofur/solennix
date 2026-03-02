@@ -43,7 +43,7 @@ describe('ProductList', () => {
     await waitFor(() => {
       expect(screen.getByText('Churros')).toBeInTheDocument();
     });
-    expect(screen.getByText('Postres')).toBeInTheDocument();
+    expect(screen.getAllByText('Postres').length).toBeGreaterThanOrEqual(1);
   });
 
   it('filters products by search term', async () => {
@@ -92,7 +92,7 @@ describe('ProductList', () => {
       expect(screen.getByText('Churros')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Eliminar producto Churros/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Eliminar Churros/i }));
     const dialog = screen.getByRole('dialog', { name: 'Eliminar producto' });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Eliminar' }));
 
@@ -121,7 +121,7 @@ describe('ProductList', () => {
     });
 
     // Click delete to open confirmation dialog
-    fireEvent.click(screen.getByRole('button', { name: /Eliminar producto Churros/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Eliminar Churros/i }));
     const dialog = screen.getByRole('dialog', { name: 'Eliminar producto' });
     expect(dialog).toBeInTheDocument();
 
@@ -149,7 +149,7 @@ describe('ProductList', () => {
     });
 
     // The name column header is sortable
-    const nameHeader = screen.getByText('Producto', { selector: 'th' });
+    const nameHeader = screen.getByText('Nombre', { selector: 'th' });
 
     // Initial sort is ascending by name, so Arroz should be first
     const rows = screen.getAllByRole('row');
@@ -204,7 +204,7 @@ describe('ProductList', () => {
     });
 
     // Click on "Precio Base" column header
-    const priceHeader = screen.getByText('Precio Base', { selector: 'th' });
+    const priceHeader = screen.getByText('Precio', { selector: 'th' });
     fireEvent.click(priceHeader);
 
     // Ascending by base_price: 50 < 80
@@ -230,7 +230,7 @@ describe('ProductList', () => {
     renderList();
 
     await waitFor(() => {
-      expect(screen.getByText('No se encontraron productos')).toBeInTheDocument();
+      expect(screen.getByText('No hay productos')).toBeInTheDocument();
     });
     expect(screen.getByText('Comienza agregando tu primer producto.')).toBeInTheDocument();
     // The "Agregar Producto" action link should be present
@@ -252,8 +252,8 @@ describe('ProductList', () => {
       target: { value: 'ZZZZZ' },
     });
 
-    expect(screen.getByText('No se encontraron productos')).toBeInTheDocument();
-    expect(screen.getByText('Intenta ajustar los términos de búsqueda.')).toBeInTheDocument();
+    expect(screen.getByText('No hay productos')).toBeInTheDocument();
+    expect(screen.getByText('No se encontraron productos con ese criterio.')).toBeInTheDocument();
     // Should NOT show the "Agregar Producto" action
     expect(screen.queryByText('Agregar Producto')).not.toBeInTheDocument();
   });
@@ -278,7 +278,7 @@ describe('ProductList', () => {
       expect(screen.getByText('Churros')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Eliminar producto Churros/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Eliminar Churros/i }));
     const dialog = screen.getByRole('dialog', { name: 'Eliminar producto' });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Eliminar' }));
 
@@ -295,7 +295,7 @@ describe('ProductList', () => {
     renderList();
 
     await waitFor(() => {
-      expect(screen.getByText('No se encontraron productos')).toBeInTheDocument();
+      expect(screen.getByText('No hay productos')).toBeInTheDocument();
     });
   });
 

@@ -997,7 +997,7 @@ describe('pdfGenerator', () => {
         []
       );
 
-      expect(consoleSpy).toHaveBeenCalledWith('Error adding logo to PDF', expect.any(Error));
+      expect(consoleSpy).toHaveBeenCalledWith('[Error adding logo to PDF]', expect.any(Error));
       expect(doc.save).toHaveBeenCalled(); // PDF still generated
       consoleSpy.mockRestore();
     });

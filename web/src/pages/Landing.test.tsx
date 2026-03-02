@@ -26,7 +26,7 @@ describe('Landing', () => {
 
   it('renders hero and navigation links', () => {
     renderLanding();
-    expect(screen.getByText(/Gestiona tus eventos/i)).toBeInTheDocument();
+    expect(screen.getByText(/Gestiona eventos/i)).toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: /iniciar sesión/i })[0]).toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: /comenzar/i })[0]).toBeInTheDocument();
   });
@@ -129,9 +129,9 @@ describe('Landing', () => {
     await user.click(screen.getByRole('button', { name: /abrir menú/i }));
     expect(screen.getByRole('button', { name: /cerrar menú/i })).toBeInTheDocument();
 
-    // Mobile link is at index 1 (desktop=0, mobile=1, footer=2)
+    // Mobile link is at index 0 (mobile=0, footer=1) — no desktop FAQ link
     const links = screen.getAllByText('FAQ');
-    await user.click(links[1]);
+    await user.click(links[0]);
 
     expect(screen.queryByRole('button', { name: /cerrar menú/i })).not.toBeInTheDocument();
   });
@@ -251,7 +251,7 @@ describe('Landing', () => {
     expect(screen.getByText('Control de Inventario')).toBeInTheDocument();
     expect(screen.getByText('Reportes y Análisis')).toBeInTheDocument();
     expect(screen.getByText('Cotizaciones y Pagos')).toBeInTheDocument();
-    expect(screen.getByText('Recordatorios Automáticos')).toBeInTheDocument();
+    expect(screen.getByText('Recordatorios')).toBeInTheDocument();
   });
 
   it('renders how-it-works steps', () => {

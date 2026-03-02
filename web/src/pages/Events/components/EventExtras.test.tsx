@@ -77,7 +77,7 @@ describe('EventExtras', () => {
 
     const priceInput = screen.getByLabelText(/Precio de cobro del extra 1/i);
     expect(priceInput).toBeDisabled();
-    expect(priceInput.className).toContain('bg-gray-100');
+    expect(priceInput.className).toContain('bg-surface-alt');
   });
 
   it('does not apply disabled state on price input when exclude_utility is false', () => {
@@ -98,7 +98,7 @@ describe('EventExtras', () => {
 
     const priceInput = screen.getByLabelText(/Precio de cobro del extra 1/i);
     expect(priceInput).not.toBeDisabled();
-    expect(priceInput.className).not.toContain('bg-gray-100');
+    expect(priceInput.className).not.toContain('bg-surface-alt');
   });
 
   it('renders multiple extras with mixed exclude_utility values', () => {
@@ -123,7 +123,7 @@ describe('EventExtras', () => {
 
     expect(priceInput1).not.toBeDisabled();
     expect(priceInput2).toBeDisabled();
-    expect(priceInput2.className).toContain('bg-gray-100');
+    expect(priceInput2.className).toContain('bg-surface-alt');
 
     // Subtotal should be 80 + 100 = 180
     expect(screen.getByText('$180.00')).toBeInTheDocument();

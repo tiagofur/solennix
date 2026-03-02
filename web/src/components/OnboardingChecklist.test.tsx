@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { OnboardingChecklist } from './OnboardingChecklist';
+import { logError } from '../lib/errorHandler';
 
 // --- Mocks ---
 
@@ -32,6 +33,10 @@ vi.mock('../services/eventService', () => ({
   eventService: {
     getUpcoming: (...args: any[]) => mockGetUpcoming(...args),
   },
+}));
+
+vi.mock('../lib/errorHandler', () => ({
+  logError: vi.fn(),
 }));
 
 // --- Helpers ---
@@ -272,19 +277,16 @@ describe('OnboardingChecklist', () => {
   // --- Error handling ---
 
   it('hides the checklist and logs error when services fail', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     mockGetAllClients.mockRejectedValue(new Error('Network error'));
     mockGetAllProducts.mockRejectedValue(new Error('Network error'));
     mockGetUpcoming.mockRejectedValue(new Error('Network error'));
 
     const { container } = renderComponent();
     await waitFor(() => {
-      expect(consoleSpy).toHaveBeenCalledWith('Error checking onboarding status', expect.any(Error));
+      expect(logError).toHaveBeenCalledWith('Error checking onboarding status', expect.any(Error));
     });
     // Component should not be visible (isVisible was never set to true)
     expect(container.querySelector('[role="progressbar"]')).not.toBeInTheDocument();
-
-    consoleSpy.mockRestore();
   });
 
   // --- Null responses from services ---

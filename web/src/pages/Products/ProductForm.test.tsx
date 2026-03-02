@@ -129,6 +129,9 @@ describe('ProductForm', () => {
         category: 'Postres',
         base_price: 50,
         user_id: 'user-1',
+        image_url: null,
+        is_active: true,
+        recipe: null,
       });
       expect(productService.updateIngredients).toHaveBeenCalledWith('prod-1', [
         { inventoryId: 'inv-1', quantityRequired: 2 },
@@ -171,6 +174,7 @@ describe('ProductForm', () => {
         name: 'Churros',
         category: 'Postres',
         base_price: 60,
+        image_url: null,
       });
     });
   });

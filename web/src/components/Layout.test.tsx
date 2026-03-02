@@ -75,7 +75,7 @@ describe('Layout', () => {
 
   it('signs out from sidebar action', () => {
     renderLayout();
-    fireEvent.click(screen.getByText('Cerrar Sesión'));
+    fireEvent.click(screen.getByRole('button', { name: /cerrar sesión/i }));
     expect(mockSignOut).toHaveBeenCalled();
   });
 
@@ -97,7 +97,7 @@ describe('Layout', () => {
 
     renderLayout();
 
-    fireEvent.click(screen.getByText('Cerrar Sesión'));
+    fireEvent.click(screen.getByRole('button', { name: /cerrar sesión/i }));
 
     await waitFor(() => {
       expect(logError).toHaveBeenCalledWith('Error signing out', expect.any(Error));
@@ -289,13 +289,13 @@ describe('Layout', () => {
     mockLocation = { pathname: '/clients', search: '' };
     renderLayout();
     const clientLink = screen.getByText('Clientes').closest('a');
-    expect(clientLink).toHaveClass('bg-brand-orange/10');
+    expect(clientLink).toHaveClass('bg-primary');
   });
 
   it('does not highlight inactive nav items', () => {
     mockLocation = { pathname: '/dashboard', search: '' };
     renderLayout();
     const clientLink = screen.getByText('Clientes').closest('a');
-    expect(clientLink).not.toHaveClass('bg-brand-orange/10');
+    expect(clientLink).not.toHaveClass('bg-primary');
   });
 });

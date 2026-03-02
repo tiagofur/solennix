@@ -167,8 +167,6 @@ describe('AuthProvider', () => {
     });
     (api.post as any).mockRejectedValue(new Error('network error'));
 
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
     renderWithProvider(<CaptureAuth />);
 
     await waitFor(() => {
@@ -182,9 +180,7 @@ describe('AuthProvider', () => {
     // Even on failure, it should still clean up
     expect(localStorage.removeItem).toHaveBeenCalledWith('auth_token');
     expect(window.location.href).toBe('/login');
-    expect(consoleSpy).toHaveBeenCalledWith('Logout error:', expect.any(Error));
-
-    consoleSpy.mockRestore();
+    expect(logError).toHaveBeenCalledWith('Logout error', expect.any(Error));
   });
 
   it('updateProfile updates user on success', async () => {
