@@ -50,6 +50,7 @@ import {
   generatePaymentReportPDF,
   generateInvoicePDF,
 } from "../../lib/pdfGenerator";
+import { ContractTemplateError } from "../../lib/contractTemplate";
 import { LoadingSpinner, ConfirmDialog, EmptyState, AppBottomSheet, PhotoGallery } from "../../components/shared";
 import { uploadService } from "../../services/uploadService";
 import { useImagePicker } from "../../hooks/useImagePicker";
@@ -295,10 +296,6 @@ export default function EventDetailScreen({ navigation, route }: Props) {
 
   const handleGenerateQuote = useCallback(async () => {
     setShowActionsMenu(false);
-    if (isBasicPlan) {
-      addToast("La generación de PDFs es exclusiva del plan Pro.", "error");
-      return;
-    }
     try {
       setGeneratingPdf("quote");
       await generateBudgetPDF({ ...event!, client: client as any }, user, products, extras);
@@ -309,32 +306,28 @@ export default function EventDetailScreen({ navigation, route }: Props) {
     } finally {
       setGeneratingPdf(null);
     }
-  }, [event, client, user, products, extras, isBasicPlan, addToast]);
+  }, [event, client, user, products, extras, addToast]);
 
   const handleGenerateContract = useCallback(async () => {
     setShowActionsMenu(false);
-    if (isBasicPlan) {
-      addToast("La generación de PDFs es exclusiva del plan Pro.", "error");
-      return;
-    }
     try {
       setGeneratingPdf("contract");
       await generateContractPDF({ ...event!, client: client as any }, user);
       trackPdfShared();
     } catch (err) {
       logError("Error generating contract PDF", err);
-      addToast("Error al generar contrato", "error");
+      const message =
+        err instanceof ContractTemplateError
+          ? `Faltan datos del contrato: ${err.missingTokens.map((t) => `[${t}]`).join(", ")}`
+          : "Error al generar contrato";
+      addToast(message, "error");
     } finally {
       setGeneratingPdf(null);
     }
-  }, [event, client, user, isBasicPlan, addToast]);
+  }, [event, client, user, addToast]);
 
   const handleGenerateShoppingList = useCallback(async () => {
     setShowActionsMenu(false);
-    if (isBasicPlan) {
-      addToast("La generación de PDFs es exclusiva del plan Pro.", "error");
-      return;
-    }
     try {
       setGeneratingPdf("shopping");
       const productQuantities = new Map<string, number>();
@@ -362,14 +355,10 @@ export default function EventDetailScreen({ navigation, route }: Props) {
     } finally {
       setGeneratingPdf(null);
     }
-  }, [event, products, user, isBasicPlan, addToast]);
+  }, [event, products, user, addToast]);
 
   const handleGeneratePaymentReport = useCallback(async () => {
     setShowActionsMenu(false);
-    if (isBasicPlan) {
-      addToast("La generación de PDFs es exclusiva del plan Pro.", "error");
-      return;
-    }
     try {
       setGeneratingPdf("payments");
       await generatePaymentReportPDF({ ...event!, client: client as any }, user, payments);
@@ -380,14 +369,10 @@ export default function EventDetailScreen({ navigation, route }: Props) {
     } finally {
       setGeneratingPdf(null);
     }
-  }, [event, client, user, payments, isBasicPlan, addToast]);
+  }, [event, client, user, payments, addToast]);
 
   const handleGenerateInvoice = useCallback(async () => {
     setShowActionsMenu(false);
-    if (isBasicPlan) {
-      addToast("La generación de PDFs es exclusiva del plan Pro.", "error");
-      return;
-    }
     try {
       setGeneratingPdf("invoice");
       await generateInvoicePDF({ ...event!, client: client as any }, user, products, extras);
@@ -398,7 +383,7 @@ export default function EventDetailScreen({ navigation, route }: Props) {
     } finally {
       setGeneratingPdf(null);
     }
-  }, [event, client, user, products, extras, isBasicPlan, addToast]);
+  }, [event, client, user, products, extras, addToast]);
 
   const formatCurrency = (n: number) =>
     `$${n.toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;

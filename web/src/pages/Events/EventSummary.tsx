@@ -39,6 +39,7 @@ import { getEventTotalCharged, getEventTaxAmount, getEventNetSales } from "../..
 import { Payments } from "./components/Payments";
 import { usePlanLimits } from "../../hooks/usePlanLimits";
 import clsx from "clsx";
+import { ContractTemplateError, renderContractTemplate } from "../../lib/contractTemplate";
 
 type ViewMode = "summary" | "ingredients" | "contract" | "payments" | "photos";
 
@@ -314,10 +315,21 @@ export const EventSummary: React.FC = () => {
   const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
   const remainingValue = totalCharged - totalPaid;
 
-  const timeRange =
-    event.start_time || event.end_time
-      ? `${event.start_time || ""}${event.start_time && event.end_time ? " - " : ""}${event.end_time || ""}`
-      : "";
+  let contractPreview = "";
+  let contractPreviewMissingTokens: string[] = [];
+
+  try {
+    contractPreview = renderContractTemplate({
+      event,
+      profile: profile as any,
+      template: profile?.contract_template,
+      strict: true,
+    });
+  } catch (error) {
+    if (error instanceof ContractTemplateError) {
+      contractPreviewMissingTokens = error.missingTokens;
+    }
+  }
 
   const currentStatus = (event.status || "quoted") as EventStatus;
   const statusCfg = STATUS_CONFIG[currentStatus] || STATUS_CONFIG.quoted;
@@ -455,10 +467,6 @@ export const EventSummary: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => {
-                    if (isBasicPlan) {
-                      addToast("La generación de PDFs es exclusiva del plan Pro.", "error");
-                      return;
-                    }
                     generateBudgetPDF(event, profile as any, products, extras);
                     setActionsDropdownOpen(false);
                   }}
@@ -471,10 +479,6 @@ export const EventSummary: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => {
-                    if (isBasicPlan) {
-                      addToast("La generación de PDFs es exclusiva del plan Pro.", "error");
-                      return;
-                    }
                     generateInvoicePDF(event, profile as any, products, extras);
                     setActionsDropdownOpen(false);
                   }}
@@ -487,10 +491,6 @@ export const EventSummary: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => {
-                    if (isBasicPlan) {
-                      addToast("La generación de PDFs es exclusiva del plan Pro.", "error");
-                      return;
-                    }
                     generateShoppingListPDF(event, profile as any, ingredients);
                     setActionsDropdownOpen(false);
                   }}
@@ -503,11 +503,16 @@ export const EventSummary: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => {
-                    if (isBasicPlan) {
-                      addToast("La generación de PDFs es exclusiva del plan Pro.", "error");
+                    try {
+                      generateContractPDF(event, profile as any);
+                    } catch (error) {
+                      const message =
+                        error instanceof ContractTemplateError
+                          ? `Faltan datos del contrato: ${error.missingTokens.map((t) => `[${t}]`).join(", ")}`
+                          : "Error al generar contrato.";
+                      addToast(message, "error");
                       return;
                     }
-                    generateContractPDF(event, profile as any);
                     setActionsDropdownOpen(false);
                   }}
                   className="w-full flex items-center px-4 py-2 text-sm text-text hover:bg-surface-alt dark:hover:bg-surface transition-colors"
@@ -958,101 +963,22 @@ export const EventSummary: React.FC = () => {
               <div className="w-24 h-1 bg-brand-orange mx-auto mt-4"></div>
             </div>
 
-          <div className="space-y-4 text-justify">
-            <p>
-              En la ciudad de{" "}
-              <strong>{event.city || "___________________"}</strong>, a los{" "}
-              {new Date().getDate()} días del mes de{" "}
-              {new Date().toLocaleString("es-ES", { month: "long" })} de{" "}
-              {new Date().getFullYear()}, comparecen por una parte{" "}
-              <strong>
-                {profile?.business_name || profile?.name || user?.email}
-              </strong>{" "}
-              (en adelante "EL PROVEEDOR"), y por la otra parte{" "}
-              <strong>{event.client?.name}</strong> (en adelante "EL CLIENTE"),
-              quienes convienen en celebrar el presente Contrato de Prestación
-              de Servicios, sujeto a las siguientes cláusulas:
-            </p>
-
-            <h3 className="font-bold text-lg mt-6">PRIMERA: OBJETO</h3>
-            <p>
-              EL PROVEEDOR se compromete a prestar los servicios de{" "}
-              <strong>{event.service_type}</strong> para el evento que se
-              llevará a cabo el día{" "}
-              <strong>{new Date(event.event_date).toLocaleDateString()}</strong>
-              .
-            </p>
-
-            <h3 className="font-bold text-lg mt-6">
-              SEGUNDA: DETALLES DEL EVENTO
-            </h3>
-            <ul className="list-disc pl-6 space-y-1">
-              <li>
-                <strong>Fecha:</strong>{" "}
-                {new Date(event.event_date).toLocaleDateString()}
-              </li>
-              {timeRange && (
-                <li>
-                  <strong>Horario:</strong> {timeRange}
-                </li>
-              )}
-              <li>
-                <strong>Cantidad de Personas:</strong> {event.num_people}
-              </li>
-              <li>
-                <strong>Ubicación:</strong>{" "}
-                {event.location || event.client?.address || "A definir"}
-              </li>
-              <li>
-                <strong>Factura:</strong>{" "}
-                {event.requires_invoice
-                  ? `Sí (IVA ${event.tax_rate || 16}%)`
-                  : "No"}
-              </li>
-            </ul>
-
-            <h3 className="font-bold text-lg mt-6">
-              TERCERA: PRODUCTOS Y SERVICIOS
-            </h3>
-            <p>El servicio incluye lo siguiente:</p>
-            <ul className="list-disc pl-6 space-y-1">
-              {products.map((p, i) => (
-                <li key={i}>
-                  {p.quantity}x {p.products?.name}
-                </li>
-              ))}
-              {extras.map((e, i) => (
-                <li key={`e-${i}`}>{e.description}</li>
-              ))}
-            </ul>
-
-            <h3 className="font-bold text-lg mt-6">
-              CUARTA: COSTO Y FORMA DE PAGO
-            </h3>
-            <p>
-              El costo total del servicio es de{" "}
-              <strong>${event.total_amount.toFixed(2)}</strong>.
-            </p>
-            <p>
-              EL CLIENTE se compromete a realizar un anticipo del{" "}
-              <strong>{event.deposit_percent ?? 50}%</strong> para reservar la
-              fecha, y liquidar el saldo restante antes del inicio del evento.
-            </p>
-
-            <h3 className="font-bold text-lg mt-6">QUINTA: CANCELACIONES</h3>
-            <p>
-              En caso de cancelación por parte de EL CLIENTE con menos de{" "}
-              <strong>{event.cancellation_days ?? 15}</strong> días de
-              anticipación, el anticipo no será reembolsado.
-            </p>
-            {event.refund_percent > 0 && (
-              <p>
-                Si la cancelación se realiza con la debida anticipación, se
-                reembolsará el <strong>{event.refund_percent}%</strong> del
-                anticipo entregado.
+          {contractPreviewMissingTokens.length > 0 ? (
+            <div className="space-y-4 text-center">
+              <p className="text-red-600 dark:text-red-400 font-semibold">
+                Faltan datos para renderizar el contrato.
               </p>
-            )}
-          </div>
+              <p className="text-sm text-text-secondary">
+                Completa estos campos en el evento o cliente: {contractPreviewMissingTokens.map((token) => `[${token}]`).join(", ")}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4 text-justify whitespace-pre-line">
+              {contractPreview.split(/\n\n+/).map((paragraph, index) => (
+                <p key={index}>{paragraph}</p>
+              ))}
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-16 mt-24 pt-12">
             <div className="text-center border-t border-gray-400 dark:border-gray-500 pt-4">

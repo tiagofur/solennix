@@ -46,12 +46,12 @@ export const Pricing: React.FC = () => {
     'Hasta 20 ítems en catálogo',
     'Gestión básica de clientes',
     'Calendario de eventos',
+    'Generación de PDFs (cotizaciones, contratos y más)',
   ];
 
   const featuresPro = [
     'Eventos ilimitados',
     'Clientes y catálogo ilimitados',
-    'Generación de cotizaciones PDF',
     'Control de pagos e ingresos en múltiples plazos',
     'Reportes y analíticas avanzadas',
     'Soporte prioritario',
