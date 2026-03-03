@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Search as SearchIcon, Users, ChevronRight, Loader2 } from "lucide-react";
+import { Search as SearchIcon, Users, ChevronRight, Loader2, SearchX } from "lucide-react";
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import Empty from '../components/Empty';
@@ -78,6 +78,7 @@ export const SearchPage: React.FC = () => {
   if (!query) {
     return (
       <Empty
+        icon={SearchIcon}
         title="Busca en toda tu operación"
         description="Escribe un término en la barra superior para encontrar clientes, eventos, productos e inventario."
       />
@@ -105,6 +106,7 @@ export const SearchPage: React.FC = () => {
   if (!totalResults) {
     return (
       <Empty
+        icon={SearchX}
         title="Sin resultados"
         description={`No encontramos coincidencias para "${query}".`}
       />

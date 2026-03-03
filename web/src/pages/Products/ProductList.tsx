@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { productService } from '../../services/productService';
 import { Product } from '../../types/entities';
-import { Plus, Search, Edit, Trash2, Package, Download } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Package, Download, UtensilsCrossed } from 'lucide-react';
 import { exportToCsv } from '../../lib/exportCsv';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { logError } from '../../lib/errorHandler';
@@ -160,8 +160,9 @@ export const ProductList: React.FC = () => {
             ]}
           />
         ) : filteredProducts.length === 0 ? (
-          <Empty 
-            title="No hay productos" 
+          <Empty
+            icon={UtensilsCrossed}
+            title="No hay productos"
             description={searchTerm ? "No se encontraron productos con ese criterio." : "Comienza agregando tu primer producto."}
             action={!searchTerm ? (
               <Link

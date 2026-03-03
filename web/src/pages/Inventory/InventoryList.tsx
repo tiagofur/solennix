@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { inventoryService } from "../../services/inventoryService";
 import { InventoryItem } from "../../types/entities";
-import { Plus, Search, Edit, Trash2, AlertTriangle, Download } from "lucide-react";
+import { Plus, Search, Edit, Trash2, AlertTriangle, Download, Package } from "lucide-react";
 import { exportToCsv } from "../../lib/exportCsv";
 import clsx from "clsx";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
@@ -240,6 +240,7 @@ export const InventoryList: React.FC = () => {
           />
         ) : filteredItems.length === 0 ? (
           <Empty
+            icon={Package}
             title="No se encontraron ingredientes"
             description={
               searchTerm

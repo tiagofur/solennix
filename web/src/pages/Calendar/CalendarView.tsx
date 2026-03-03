@@ -518,6 +518,7 @@ export const CalendarView: React.FC = () => {
               </div>
             ) : filteredListEvents.length === 0 ? (
               <Empty
+                icon={CalendarDays}
                 title="No se encontraron eventos"
                 description={
                   searchTerm || statusFilter !== "all"

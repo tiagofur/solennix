@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { clientService } from "../../services/clientService";
 import { Client } from "../../types/entities";
-import { Plus, Search, Edit, Trash2, Phone, Mail, Download } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Phone, Mail, Download, Users } from "lucide-react";
 import { exportToCsv } from "../../lib/exportCsv";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { logError } from "../../lib/errorHandler";
@@ -172,6 +172,7 @@ export const ClientList: React.FC = () => {
           />
         ) : filteredClients.length === 0 ? (
           <Empty
+            icon={Users}
             title="No se encontraron clientes"
             description={
               searchTerm
