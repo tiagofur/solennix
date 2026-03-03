@@ -36,42 +36,96 @@ export const CONTRACT_TEMPLATE_TOKENS = [
 
 type ContractToken = (typeof CONTRACT_TEMPLATE_TOKENS)[number];
 
-export const DEFAULT_CONTRACT_TEMPLATE = `1. El Proveedor es una empresa dedicada a [event_service_type], [provider_business_name], y cuenta con la capacidad para la prestación de dicho servicio.
-2. El Cliente: [client_name] desea contratar los servicios del Proveedor para el evento que se llevará a cabo el [event_date], en [event_location].
+export const CONTRACT_TEMPLATE_PLACEHOLDERS: Array<{ token: ContractToken; label: string }> = [
+  { token: "provider_name", label: "Nombre del proveedor" },
+  { token: "provider_business_name", label: "Nombre comercial del proveedor" },
+  { token: "provider_email", label: "Email del proveedor" },
+  { token: "current_date", label: "Fecha actual" },
+  { token: "event_date", label: "Fecha del evento" },
+  { token: "event_start_time", label: "Hora de inicio" },
+  { token: "event_end_time", label: "Hora de fin" },
+  { token: "event_time_range", label: "Horario del evento" },
+  { token: "event_service_type", label: "Tipo de servicio" },
+  { token: "event_num_people", label: "Número de personas" },
+  { token: "event_location", label: "Lugar del evento" },
+  { token: "event_city", label: "Ciudad del evento" },
+  { token: "event_total_amount", label: "Monto total del evento" },
+  { token: "event_deposit_percent", label: "Porcentaje de anticipo" },
+  { token: "event_refund_percent", label: "Porcentaje de reembolso" },
+  { token: "event_cancellation_days", label: "Días de cancelación" },
+  { token: "client_name", label: "Nombre del cliente" },
+  { token: "client_phone", label: "Teléfono del cliente" },
+  { token: "client_email", label: "Email del cliente" },
+  { token: "client_address", label: "Dirección del cliente" },
+  { token: "client_city", label: "Ciudad del cliente" },
+  { token: "contract_city", label: "Ciudad del contrato" },
+];
+
+const TOKEN_LABEL_BY_TOKEN: Record<ContractToken, string> = Object.fromEntries(
+  CONTRACT_TEMPLATE_PLACEHOLDERS.map(({ token, label }) => [token, label]),
+) as Record<ContractToken, string>;
+
+const normalizePlaceholder = (value: string) =>
+  value
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/_/g, " ")
+    .replace(/\s+/g, " ");
+
+const PLACEHOLDER_TO_TOKEN: Record<string, ContractToken> = (() => {
+  const map: Record<string, ContractToken> = {};
+  CONTRACT_TEMPLATE_TOKENS.forEach((token) => {
+    map[normalizePlaceholder(token)] = token;
+  });
+  CONTRACT_TEMPLATE_PLACEHOLDERS.forEach(({ token, label }) => {
+    map[normalizePlaceholder(label)] = token;
+  });
+  return map;
+})();
+
+const resolvePlaceholderToken = (rawToken: string): ContractToken | undefined =>
+  PLACEHOLDER_TO_TOKEN[normalizePlaceholder(rawToken)];
+
+export const getMaskedPlaceholder = (token: ContractToken) => `[${TOKEN_LABEL_BY_TOKEN[token]}]`;
+
+export const DEFAULT_CONTRACT_TEMPLATE = `1. El Proveedor es una empresa dedicada a [Tipo de servicio], [Nombre comercial del proveedor], y cuenta con la capacidad para la prestación de dicho servicio.
+2. El Cliente: [Nombre del cliente] desea contratar los servicios del Proveedor para el evento que se llevará a cabo el [Fecha del evento], en [Lugar del evento].
 
 Por lo tanto, las partes acuerdan las siguientes cláusulas:
 
 CLÁUSULAS:
 Primera. Objeto del Contrato
-El Proveedor se compromete a prestar los servicios de [event_service_type] para [event_num_people] personas.
+El Proveedor se compromete a prestar los servicios de [Tipo de servicio] para [Número de personas] personas.
 
 Segunda. Horarios de Servicio
-El servicio será prestado en el evento en un horario de [event_time_range].
+El servicio será prestado en el evento en un horario de [Horario del evento].
 
 Tercera. Costo Total
-El costo total del servicio contratado será de [event_total_amount].
+El costo total del servicio contratado será de [Monto total del evento].
 
 Cuarta. Condiciones de Pago
-El Cliente deberá cubrir un anticipo del [event_deposit_percent]% para reservar la fecha. El resto deberá liquidarse antes del inicio del evento.
+El Cliente deberá cubrir un anticipo del [Porcentaje de anticipo]% para reservar la fecha. El resto deberá liquidarse antes del inicio del evento.
 
 Quinta. Condiciones del Servicio
 El Cliente se compromete a facilitar un espacio adecuado para la instalación del equipo necesario, que deberá contar con una superficie plana y conexión de luz.
 
 Sexta. Cancelaciones y Reembolsos
-En caso de cancelación por parte del Cliente con menos de [event_cancellation_days] días de anticipación, no se realizará reembolso del apartado.
-Cuando la cancelación se realice dentro del plazo permitido, se reembolsará el [event_refund_percent]% del apartado.
+En caso de cancelación por parte del Cliente con menos de [Días de cancelación] días de anticipación, no se realizará reembolso del apartado.
+Cuando la cancelación se realice dentro del plazo permitido, se reembolsará el [Porcentaje de reembolso]% del apartado.
 
 Octava. Jurisdicción
-Para cualquier disputa derivada de este contrato, las partes se someten a la jurisdicción de los tribunales competentes de [contract_city].
+Para cualquier disputa derivada de este contrato, las partes se someten a la jurisdicción de los tribunales competentes de [Ciudad del contrato].
 
 Novena. Modificaciones
 Cualquier modificación a este contrato deberá ser acordada por ambas partes por escrito.
 
 Firmas:
-Proveedor: [provider_name]
-Cliente: [client_name]`;
+Proveedor: [Nombre del proveedor]
+Cliente: [Nombre del cliente]`;
 
-const TOKEN_REGEX = /\[([a-z_]+)\]/g;
+const TOKEN_REGEX = /\[([^\[\]]+)\]/g;
 
 export class ContractTemplateError extends Error {
   invalidTokens: string[];
@@ -115,9 +169,9 @@ const getCurrentDateText = (): string => {
 };
 
 export const validateContractTemplate = (template: string) => {
-  const foundTokens = Array.from(template.matchAll(TOKEN_REGEX)).map((match) => match[1]);
+  const foundTokens = Array.from(template.matchAll(TOKEN_REGEX)).map((match) => match[1].trim());
   const invalidTokens = Array.from(
-    new Set(foundTokens.filter((token) => !CONTRACT_TEMPLATE_TOKENS.includes(token as ContractToken))),
+    new Set(foundTokens.filter((token) => !resolvePlaceholderToken(token))),
   );
 
   return {
@@ -177,11 +231,15 @@ export const renderContractTemplate = ({
   const values = buildTokenValues(event, profile);
   const missingTokens = new Set<string>();
 
-  const rendered = sourceTemplate.replace(TOKEN_REGEX, (_, token: string) => {
-    const value = values[token as ContractToken];
+  const rendered = sourceTemplate.replace(TOKEN_REGEX, (_, tokenText: string) => {
+    const token = resolvePlaceholderToken(tokenText.trim());
+    if (!token) {
+      return `[${tokenText}]`;
+    }
+    const value = values[token];
     if (!value) {
       missingTokens.add(token);
-      return `[${token}]`;
+      return `[${tokenText.trim()}]`;
     }
     return value;
   });

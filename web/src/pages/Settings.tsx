@@ -17,7 +17,12 @@ import { logError } from "../lib/errorHandler";
 import { api } from "../lib/api";
 import { subscriptionService } from "../services/subscriptionService";
 import { usePlanLimits } from "../hooks/usePlanLimits";
-import { CONTRACT_TEMPLATE_TOKENS, DEFAULT_CONTRACT_TEMPLATE, validateContractTemplate } from "../lib/contractTemplate";
+import {
+  CONTRACT_TEMPLATE_PLACEHOLDERS,
+  DEFAULT_CONTRACT_TEMPLATE,
+  validateContractTemplate,
+  getMaskedPlaceholder,
+} from "../lib/contractTemplate";
 
 export const Settings: React.FC = () => {
   const { user: profile, updateProfile } = useAuth();
@@ -373,15 +378,15 @@ export const Settings: React.FC = () => {
                     className="w-full bg-surface-alt border border-border rounded-2xl px-4 py-3 font-mono text-sm leading-6 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
                   />
                   <p className="text-xs text-gray-500">
-                    Usa placeholders con formato <strong>[token]</strong>. Si falta un valor al generar, el sistema bloqueará la impresión.
+                    Usa placeholders legibles con formato <strong>[Nombre del cliente]</strong>. También se aceptan los tokens técnicos anteriores.
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    {CONTRACT_TEMPLATE_TOKENS.map((token) => (
+                    {CONTRACT_TEMPLATE_PLACEHOLDERS.map(({ token }) => (
                       <span
                         key={token}
                         className="text-xs font-mono px-2 py-1 rounded-lg bg-surface-alt border border-border text-text-secondary"
                       >
-                        [{token}]
+                        {getMaskedPlaceholder(token)}
                       </span>
                     ))}
                   </div>

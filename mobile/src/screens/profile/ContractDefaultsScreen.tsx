@@ -25,8 +25,9 @@ import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
 import {
-  CONTRACT_TEMPLATE_TOKENS,
+  CONTRACT_TEMPLATE_PLACEHOLDERS,
   DEFAULT_CONTRACT_TEMPLATE,
+  getMaskedPlaceholder,
   validateContractTemplate,
 } from "../../lib/contractTemplate";
 
@@ -205,10 +206,10 @@ export default function ContractDefaultsScreen({ navigation }: Props) {
                   style={styles.templateInput}
                 />
                 <Text style={styles.helperText}>
-                  Usa placeholders en formato [token]. Si falta información al generar PDF, se bloquea la impresión.
+                  Usa placeholders legibles en formato [Nombre del cliente]. También se aceptan tokens técnicos.
                 </Text>
                 <Text style={styles.tokenList}>
-                  {CONTRACT_TEMPLATE_TOKENS.map((token) => `[${token}]`).join("  ")}
+                  {CONTRACT_TEMPLATE_PLACEHOLDERS.map(({ token }) => getMaskedPlaceholder(token)).join("  ")}
                 </Text>
               </View>
             )}
