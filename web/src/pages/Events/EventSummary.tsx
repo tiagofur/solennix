@@ -40,6 +40,7 @@ import { Payments } from "./components/Payments";
 import { usePlanLimits } from "../../hooks/usePlanLimits";
 import clsx from "clsx";
 import { ContractTemplateError, renderContractTemplate } from "../../lib/contractTemplate";
+import { renderFormattedReact } from "../../lib/inlineFormatting";
 
 type ViewMode = "summary" | "ingredients" | "contract" | "payments" | "photos";
 
@@ -975,7 +976,7 @@ export const EventSummary: React.FC = () => {
           ) : (
             <div className="space-y-4 text-justify whitespace-pre-line">
               {contractPreview.split(/\n\n+/).map((paragraph, index) => (
-                <p key={index}>{paragraph}</p>
+                <p key={index}>{renderFormattedReact(paragraph)}</p>
               ))}
             </div>
           )}

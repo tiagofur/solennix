@@ -5,6 +5,7 @@ import { es } from "date-fns/locale";
 import { Event, Client, EventProduct, EventExtra, Payment } from "../types/entities";
 import { User } from "../contexts/AuthContext";
 import { renderContractTemplate } from "./contractTemplate";
+import { renderFormattedHTML } from "./inlineFormatting";
 
 // ── Types ──────────────────────────────────────────────────────────
 
@@ -301,14 +302,18 @@ export const generateContractPDF = async (
     event,
     profile,
     template: profile?.contract_template,
-    strict: true,
+    strict: false,
   });
 
-  const escapedContract = esc(renderedContract).replace(/\n/g, "<br/>");
+  const contractParagraphs = renderedContract
+    .split(/\n\n+/)
+    .filter((p) => p.trim())
+    .map((p) => `<p style="margin:0 0 8px 0;">${renderFormattedHTML(p)}</p>`)
+    .join("\n");
 
   const body = `
     ${buildHeaderHTML(profile, "Contrato de Servicios")}
-    <div style="margin-bottom:16px; white-space: pre-line;">${escapedContract}</div>
+    <div style="margin-bottom:16px;">${contractParagraphs}</div>
 
     <div class="signatures">
       <div class="signature-box">

@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { logError } from './errorHandler';
 import { renderContractTemplate } from './contractTemplate';
+import { parseInlineFormatting, renderFormattedJsPDF } from './inlineFormatting';
 
 type EventWithClient = Event & {
   client?: Client | null;
@@ -221,10 +222,11 @@ export const generateBudgetPDF = (
 
 export const generateContractPDF = (
   event: EventWithClient,
-  profile: UserProfile | null
+  profile: UserProfile | null,
+  contractTemplate?: string
 ) => {
   const doc = new jsPDF();
-  const currentY = addHeader(doc, profile, 'Contrato');
+  let currentY = addHeader(doc, profile, 'Contrato');
 
   doc.setFontSize(10);
   doc.setTextColor(TEXT_COLOR);
@@ -235,24 +237,61 @@ export const generateContractPDF = (
   const text = renderContractTemplate({
     event,
     profile,
-    template: profile?.contract_template,
-    strict: true,
+    template: contractTemplate ?? profile?.contract_template,
+    strict: false,
   });
 
-  const splitText = doc.splitTextToSize(text, 170);
-  doc.text(splitText, 20, currentY + 10);
+  const pageHeight = doc.internal.pageSize.height;
+  const maxWidth = 170;
+  const fontSize = 10;
+
+  currentY += 10;
+
+  // Render contract text paragraph-by-paragraph with inline formatting support
+  const paragraphs = text.split(/\n\n+/);
+  for (const paragraph of paragraphs) {
+    const trimmed = paragraph.trim();
+    if (!trimmed) continue;
+
+    if (currentY > pageHeight - 60) {
+      doc.addPage();
+      currentY = 20;
+    }
+
+    // Check if the paragraph has any inline formatting
+    const segments = parseInlineFormatting(trimmed);
+    const hasFormatting = segments.some(s => s.bold || s.italic || s.underline);
+
+    if (hasFormatting) {
+      currentY = renderFormattedJsPDF(doc, trimmed, 20, currentY, maxWidth, fontSize);
+    } else {
+      const splitText = doc.splitTextToSize(trimmed, maxWidth);
+      doc.text(splitText, 20, currentY);
+      currentY += splitText.length * (fontSize * 0.5);
+    }
+
+    currentY += 2; // paragraph spacing
+  }
 
   // Firmas
-  const pageHeight = doc.internal.pageSize.height;
-  const signY = pageHeight - 40;
-
-  doc.line(20, signY, 80, signY);
-  doc.text('EL PROVEEDOR', 50, signY + 5, { align: 'center' });
-  doc.text(providerName, 50, signY + 10, { align: 'center', maxWidth: 60 });
-
-  doc.line(130, signY, 190, signY);
-  doc.text('EL CLIENTE', 160, signY + 5, { align: 'center' });
-  doc.text(clientName, 160, signY + 10, { align: 'center', maxWidth: 60 });
+  const signY = Math.max(currentY + 20, pageHeight - 40);
+  if (signY > pageHeight - 15) {
+    doc.addPage();
+    const newSignY = 40;
+    doc.line(20, newSignY, 80, newSignY);
+    doc.text('EL PROVEEDOR', 50, newSignY + 5, { align: 'center' });
+    doc.text(providerName, 50, newSignY + 10, { align: 'center', maxWidth: 60 });
+    doc.line(130, newSignY, 190, newSignY);
+    doc.text('EL CLIENTE', 160, newSignY + 5, { align: 'center' });
+    doc.text(clientName, 160, newSignY + 10, { align: 'center', maxWidth: 60 });
+  } else {
+    doc.line(20, signY, 80, signY);
+    doc.text('EL PROVEEDOR', 50, signY + 5, { align: 'center' });
+    doc.text(providerName, 50, signY + 10, { align: 'center', maxWidth: 60 });
+    doc.line(130, signY, 190, signY);
+    doc.text('EL CLIENTE', 160, signY + 5, { align: 'center' });
+    doc.text(clientName, 160, signY + 10, { align: 'center', maxWidth: 60 });
+  }
 
   doc.save(`Contrato_${event.client?.name || 'Cliente'}.pdf`);
 };
