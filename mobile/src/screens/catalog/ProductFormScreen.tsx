@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
-  Alert,
   ActivityIndicator,
   Switch,
 } from "react-native";
@@ -16,9 +15,9 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Image } from "expo-image";
-import { ArrowLeft, Save, Plus, Trash2, Package, Camera, ChevronDown, Check } from "lucide-react-native";
+import { Save, Plus, Trash2, Camera, ChevronDown, Check } from "lucide-react-native";
 import { ProductStackParamList } from "../../types/navigation";
-import { Product, InventoryItem, ProductIngredient } from "../../types/entities";
+import { InventoryItem } from "../../types/entities";
 import { productService } from "../../services/productService";
 import { inventoryService } from "../../services/inventoryService";
 import { uploadService } from "../../services/uploadService";
@@ -62,6 +61,7 @@ export default function ProductFormScreen({ navigation, route }: Props) {
     inventory_id: string;
     quantity_required: number;
     inventory?: InventoryItem;
+    _type: 'ingredient' | 'equipment';
   }[]>([]);
   const [isActive, setIsActive] = useState(true);
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
@@ -121,6 +121,7 @@ export default function ProductFormScreen({ navigation, route }: Props) {
               inventory_id: i.inventory_id,
               quantity_required: i.quantity_required,
               inventory: i.inventory,
+              _type: i.type === 'equipment' ? 'equipment' as const : 'ingredient' as const,
             }))
           );
         }
@@ -136,9 +137,27 @@ export default function ProductFormScreen({ navigation, route }: Props) {
   const handleAddIngredient = () => {
     setIngredients([
       ...ingredients,
-      { inventory_id: "", quantity_required: 1 },
+      { inventory_id: "", quantity_required: 1, _type: 'ingredient' },
     ]);
   };
+
+  const handleAddEquipment = () => {
+    setIngredients([
+      ...ingredients,
+      { inventory_id: "", quantity_required: 1, _type: 'equipment' },
+    ]);
+  };
+
+  const ingredientInventoryItems = inventoryItems.filter(i => i.type === 'ingredient');
+  const equipmentInventoryItems = inventoryItems.filter(i => i.type === 'equipment');
+
+  const ingredientEntries = ingredients
+    .map((item, idx) => ({ item, originalIndex: idx }))
+    .filter(({ item }) => item._type !== 'equipment');
+
+  const equipmentEntries = ingredients
+    .map((item, idx) => ({ item, originalIndex: idx }))
+    .filter(({ item }) => item._type === 'equipment');
 
   const handleRemoveIngredient = (index: number) => {
     setIngredients(ingredients.filter((_, i) => i !== index));
@@ -354,6 +373,7 @@ export default function ProductFormScreen({ navigation, route }: Props) {
           </View>
         </View>
 
+        {/* Receta / Ingredientes */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Receta / Ingredientes</Text>
@@ -365,15 +385,16 @@ export default function ProductFormScreen({ navigation, route }: Props) {
               <Text style={styles.addIngredientText}>Agregar</Text>
             </TouchableOpacity>
           </View>
+          <Text style={styles.sectionDescription}>Solo ingredientes generan costo al producto.</Text>
 
-          {ingredients.length === 0 ? (
+          {ingredientEntries.length === 0 ? (
             <Text style={styles.emptyText}>
               Agrega ingredientes para crear una receta. Esto permitirá calcular
               el costo del producto.
             </Text>
           ) : (
-            ingredients.map((ing, index) => (
-              <View key={index} style={styles.ingredientRow}>
+            ingredientEntries.map(({ item: ing, originalIndex }) => (
+              <View key={originalIndex} style={styles.ingredientRow}>
                 <View style={styles.ingredientSelect}>
                   <Text style={styles.selectLabel}>Ingrediente</Text>
                   <ScrollView
@@ -381,7 +402,7 @@ export default function ProductFormScreen({ navigation, route }: Props) {
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={styles.ingredientScroll}
                   >
-                    {inventoryItems.map((item) => (
+                    {ingredientInventoryItems.map((item) => (
                       <TouchableOpacity
                         key={item.id}
                         style={[
@@ -390,7 +411,7 @@ export default function ProductFormScreen({ navigation, route }: Props) {
                             styles.ingredientChipActive,
                         ]}
                         onPress={() =>
-                          handleIngredientChange(index, "inventory_id", item.id)
+                          handleIngredientChange(originalIndex, "inventory_id", item.id)
                         }
                       >
                         <Text
@@ -415,7 +436,7 @@ export default function ProductFormScreen({ navigation, route }: Props) {
                     value={ing.quantity_required.toString()}
                     onChangeText={(v) =>
                       handleIngredientChange(
-                        index,
+                        originalIndex,
                         "quantity_required",
                         parseFloat(v) || 0
                       )
@@ -429,7 +450,92 @@ export default function ProductFormScreen({ navigation, route }: Props) {
 
                 <TouchableOpacity
                   style={styles.removeBtn}
-                  onPress={() => handleRemoveIngredient(index)}
+                  onPress={() => handleRemoveIngredient(originalIndex)}
+                >
+                  <Trash2 color={palette.error} size={18} />
+                </TouchableOpacity>
+              </View>
+            ))
+          )}
+        </View>
+
+        {/* Maquinaria / Equipo Necesario */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Equipo Necesario</Text>
+            <TouchableOpacity
+              style={styles.addIngredientBtn}
+              onPress={handleAddEquipment}
+            >
+              <Plus color={palette.primary} size={18} />
+              <Text style={styles.addIngredientText}>Agregar</Text>
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.sectionDescription}>Activos reutilizables. No se incluyen en el costo del producto.</Text>
+
+          {equipmentEntries.length === 0 ? (
+            <Text style={styles.emptyText}>
+              No hay equipo asignado a este producto.
+            </Text>
+          ) : (
+            equipmentEntries.map(({ item: ing, originalIndex }) => (
+              <View key={originalIndex} style={styles.ingredientRow}>
+                <View style={styles.ingredientSelect}>
+                  <Text style={styles.selectLabel}>Equipo</Text>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.ingredientScroll}
+                  >
+                    {equipmentInventoryItems.map((item) => (
+                      <TouchableOpacity
+                        key={item.id}
+                        style={[
+                          styles.ingredientChip,
+                          ing.inventory_id === item.id &&
+                            styles.ingredientChipActive,
+                        ]}
+                        onPress={() =>
+                          handleIngredientChange(originalIndex, "inventory_id", item.id)
+                        }
+                      >
+                        <Text
+                          style={[
+                            styles.ingredientChipText,
+                            ing.inventory_id === item.id &&
+                              styles.ingredientChipTextActive,
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {item.ingredient_name}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+
+                <View style={styles.quantityInput}>
+                  <Text style={styles.selectLabel}>Cantidad</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={ing.quantity_required.toString()}
+                    onChangeText={(v) =>
+                      handleIngredientChange(
+                        originalIndex,
+                        "quantity_required",
+                        parseFloat(v) || 0
+                      )
+                    }
+                    keyboardType="decimal-pad"
+                  />
+                  <Text style={styles.unitText}>
+                    {ing.inventory?.unit || "und"}
+                  </Text>
+                </View>
+
+                <TouchableOpacity
+                  style={styles.removeBtn}
+                  onPress={() => handleRemoveIngredient(originalIndex)}
                 >
                   <Trash2 color={palette.error} size={18} />
                 </TouchableOpacity>
@@ -570,6 +676,12 @@ const getStyles = (palette: typeof colors.light) => StyleSheet.create({
     ...typography.h3,
     color: palette.text,
     marginBottom: spacing.sm,
+  },
+  sectionDescription: {
+    ...typography.caption,
+    color: palette.textTertiary,
+    marginBottom: spacing.sm,
+    marginTop: -spacing.xs,
   },
   switchRow: {
     flexDirection: "row",

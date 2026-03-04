@@ -10,6 +10,7 @@ import {
   Tag,
   Trash2,
   ChefHat,
+  Wrench,
   Layers,
 } from "lucide-react";
 import { logError } from "../../lib/errorHandler";
@@ -158,7 +159,8 @@ export const ProductDetails: React.FC = () => {
                 <div>
                   <p className="text-xs text-text-secondary">Receta</p>
                   <p className="text-sm font-medium text-text">
-                    {ingredients.length} ingredientes configurados
+                    {ingredients.filter((i: any) => i.type !== 'equipment').length} ingredientes
+                    {ingredients.filter((i: any) => i.type === 'equipment').length > 0 && `, ${ingredients.filter((i: any) => i.type === 'equipment').length} equipo(s)`}
                   </p>
                 </div>
               </div>
@@ -167,6 +169,7 @@ export const ProductDetails: React.FC = () => {
         </div>
 
         <div className="lg:col-span-2 space-y-6">
+          {/* Receta / Ingredientes */}
           <div className="bg-card rounded-3xl border border-border overflow-hidden shadow-sm">
             <div className="p-6 border-b border-border flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -175,7 +178,7 @@ export const ProductDetails: React.FC = () => {
               </div>
             </div>
 
-            {ingredients.length === 0 ? (
+            {ingredients.filter((i: any) => i.type !== 'equipment').length === 0 ? (
               <div className="p-12 text-center">
                 <Package className="h-12 w-12 text-text-secondary mx-auto mb-4 opacity-20" />
                 <p className="text-text-secondary">Este producto no tiene ingredientes configurados.</p>
@@ -184,20 +187,72 @@ export const ProductDetails: React.FC = () => {
                 </Link>
               </div>
             ) : (
+              <>
+                <table className="min-w-full divide-y divide-border">
+                  <thead className="bg-surface-alt">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Ingrediente</th>
+                      <th className="px-6 py-3 text-right text-xs font-semibold text-text-secondary uppercase tracking-wider">Cantidad</th>
+                      <th className="px-6 py-3 text-right text-xs font-semibold text-text-secondary uppercase tracking-wider">Costo Est.</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {ingredients.filter((i: any) => i.type !== 'equipment').map((ing: any) => (
+                        <tr key={ing.inventory_id} className="hover:bg-surface-alt/50 transition-colors">
+                          <td className="px-6 py-4">
+                            <Link to={`/inventory/${ing.inventory_id}`} className="text-sm font-medium text-text hover:text-brand-orange transition-colors">
+                              {ing.ingredient_name || "Ingrediente desconocido"}
+                            </Link>
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <span className="text-sm text-text font-bold">
+                              {ing.quantity_required} {ing.unit || ""}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <span className="text-sm font-medium text-text">
+                              {ing.unit_cost ? `$${(ing.quantity_required * ing.unit_cost).toFixed(2)}` : "—"}
+                            </span>
+                          </td>
+                        </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <div className="px-6 py-4 border-t border-border flex justify-between items-center">
+                  <span className="text-sm text-text-secondary">Costo Total por Unidad</span>
+                  <span className="text-lg font-bold text-text">
+                    ${ingredients.filter((i: any) => i.type !== 'equipment').reduce((sum: number, ing: any) => sum + (ing.quantity_required * (ing.unit_cost || 0)), 0).toFixed(2)}
+                  </span>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Maquinaria / Equipo Necesario */}
+          {ingredients.filter((i: any) => i.type === 'equipment').length > 0 && (
+            <div className="bg-card rounded-3xl border border-border overflow-hidden shadow-sm">
+              <div className="p-6 border-b border-border flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Wrench className="h-5 w-5 text-blue-500" />
+                  <h2 className="text-lg font-bold text-text">Equipo Necesario</h2>
+                </div>
+                <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                  Sin costo - Reutilizable
+                </span>
+              </div>
               <table className="min-w-full divide-y divide-border">
                 <thead className="bg-surface-alt">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Ingrediente</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Equipo</th>
                     <th className="px-6 py-3 text-right text-xs font-semibold text-text-secondary uppercase tracking-wider">Cantidad</th>
-                    <th className="px-6 py-3 text-right text-xs font-semibold text-text-secondary uppercase tracking-wider">Stock Actual</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {ingredients.map((ing) => (
+                  {ingredients.filter((i: any) => i.type === 'equipment').map((ing: any) => (
                       <tr key={ing.inventory_id} className="hover:bg-surface-alt/50 transition-colors">
                         <td className="px-6 py-4">
                           <Link to={`/inventory/${ing.inventory_id}`} className="text-sm font-medium text-text hover:text-brand-orange transition-colors">
-                            {ing.ingredient_name || "Ingrediente desconocido"}
+                            {ing.ingredient_name || "Equipo desconocido"}
                           </Link>
                         </td>
                         <td className="px-6 py-4 text-right">
@@ -205,17 +260,12 @@ export const ProductDetails: React.FC = () => {
                             {ing.quantity_required} {ing.unit || ""}
                           </span>
                         </td>
-                        <td className="px-6 py-4 text-right">
-                          <span className="text-sm font-medium text-text">
-                            —
-                          </span>
-                        </td>
                       </tr>
                   ))}
                 </tbody>
               </table>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

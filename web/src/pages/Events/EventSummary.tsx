@@ -169,7 +169,8 @@ export const EventSummary: React.FC = () => {
 
   const aggregateProductIngredients = async (productIds: string[], productQuantities: Map<string, number>) => {
     try {
-      const prodIngredients = await productService.getIngredientsForProducts(productIds);
+      const allProdIngredients = await productService.getIngredientsForProducts(productIds);
+      const prodIngredients = allProdIngredients.filter((ing: any) => ing.type !== 'equipment');
 
       const aggregatedIngredients: any = {};
       prodIngredients.forEach((ing: any) => {

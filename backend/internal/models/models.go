@@ -155,6 +155,7 @@ type ProductIngredient struct {
 	IngredientName *string  `json:"ingredient_name,omitempty"`
 	Unit           *string  `json:"unit,omitempty"`
 	UnitCost       *float64 `json:"unit_cost,omitempty"`
+	Type           *string  `json:"type,omitempty"`
 }
 
 type Payment struct {

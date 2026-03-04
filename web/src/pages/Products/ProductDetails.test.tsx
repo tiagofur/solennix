@@ -38,12 +38,14 @@ const sampleIngredients = [
     quantity_required: 2,
     ingredient_name: 'Harina',
     unit: 'kg',
+    type: 'ingredient',
   },
   {
     inventory_id: 'inv-2',
     quantity_required: 5,
     ingredient_name: 'Azúcar',
     unit: 'kg',
+    type: 'ingredient',
   },
 ];
 
@@ -66,7 +68,7 @@ describe('ProductDetails', () => {
     renderDetails();
     await waitFor(() => expect(screen.getByText('Paquete Premium')).toBeInTheDocument());
     expect(screen.getByText('$250.00')).toBeInTheDocument();
-    expect(screen.getByText('2 ingredientes configurados')).toBeInTheDocument();
+    expect(screen.getByText('2 ingredientes')).toBeInTheDocument();
     expect(screen.getByText('Harina')).toBeInTheDocument();
     expect(screen.getByText('Azúcar')).toBeInTheDocument();
   });

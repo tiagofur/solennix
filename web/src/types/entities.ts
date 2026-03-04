@@ -206,6 +206,7 @@ export interface ProductIngredient {
     ingredient_name?: string | null
     unit?: string | null
     unit_cost?: number | null
+    type?: 'ingredient' | 'equipment' | null
 }
 
 export type ProductIngredientInsert = Omit<ProductIngredient, 'id' | 'created_at'>

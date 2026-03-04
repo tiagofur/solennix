@@ -6,7 +6,7 @@ import { z } from "zod";
 import { productService } from "../../services/productService";
 import { inventoryService } from "../../services/inventoryService";
 import { useAuth } from "../../contexts/AuthContext";
-import { ArrowLeft, Save, Plus, Trash2, ChefHat, Camera, X } from "lucide-react";
+import { ArrowLeft, Save, Plus, Trash2, ChefHat, Wrench, Camera, X } from "lucide-react";
 import { InventoryItem } from "../../types/entities";
 import { logError } from "../../lib/errorHandler";
 import { usePlanLimits } from "../../hooks/usePlanLimits";
@@ -34,7 +34,7 @@ export const ProductForm: React.FC = () => {
   const { canCreateCatalogItem, catalogCount, catalogLimit, loading: limitsLoading } = usePlanLimits();
 
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
-  const [recipeIngredients, setRecipeIngredients] = useState<{inventory_id: string, quantity_required: number, unit_cost: number, unit: string}[]>([]);
+  const [recipeIngredients, setRecipeIngredients] = useState<{inventory_id: string, quantity_required: number, unit_cost: number, unit: string, _type: 'ingredient' | 'equipment'}[]>([]);
 
   const {
     register,
@@ -91,7 +91,8 @@ export const ProductForm: React.FC = () => {
               inventory_id: i.inventory_id,
               quantity_required: i.quantity_required,
               unit_cost: i.unit_cost || 0,
-              unit: i.unit || ''
+              unit: i.unit || '',
+              _type: i.type === 'equipment' ? 'equipment' as const : 'ingredient' as const,
           })));
       }
 
@@ -140,7 +141,18 @@ export const ProductForm: React.FC = () => {
           inventory_id: "",
           quantity_required: 1,
           unit_cost: 0,
-          unit: ""
+          unit: "",
+          _type: 'ingredient',
+      }]);
+  };
+
+  const handleAddEquipment = () => {
+      setRecipeIngredients([...recipeIngredients, {
+          inventory_id: "",
+          quantity_required: 1,
+          unit_cost: 0,
+          unit: "",
+          _type: 'equipment',
       }]);
   };
 
@@ -166,8 +178,21 @@ export const ProductForm: React.FC = () => {
   };
 
   const calculateTotalCost = () => {
-      return recipeIngredients.reduce((sum, item) => sum + (item.quantity_required * item.unit_cost), 0);
+      return recipeIngredients
+          .filter(item => item._type !== 'equipment')
+          .reduce((sum, item) => sum + (item.quantity_required * item.unit_cost), 0);
   };
+
+  const ingredientInventoryItems = inventoryItems.filter(i => i.type === 'ingredient');
+  const equipmentInventoryItems = inventoryItems.filter(i => i.type === 'equipment');
+
+  const ingredientEntries = recipeIngredients
+      .map((item, idx) => ({ item, originalIndex: idx }))
+      .filter(({ item }) => item._type !== 'equipment');
+
+  const equipmentEntries = recipeIngredients
+      .map((item, idx) => ({ item, originalIndex: idx }))
+      .filter(({ item }) => item._type === 'equipment');
 
   const onSubmit = async (data: ProductFormData) => {
     if (!user) return;
@@ -394,47 +419,47 @@ export const ProductForm: React.FC = () => {
         <div className="bg-card shadow-sm border border-border px-4 py-8 rounded-3xl sm:p-10 flex flex-col">
             <h3 className="text-lg leading-6 font-medium text-text mb-4 flex items-center">
                 <ChefHat className="h-5 w-5 mr-2 text-brand-orange" aria-hidden="true" />
-                Receta (por unidad/persona)
+                Receta / Ingredientes (por unidad/persona)
             </h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Define qué ingredientes y qué cantidad se necesitan para 1 unidad de este producto.</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Define qué ingredientes y qué cantidad se necesitan para 1 unidad de este producto. Solo ingredientes generan costo.</p>
 
             <div className="flex-1 overflow-y-auto mb-4 space-y-3">
-                {recipeIngredients.map((item, index) => (
-                    <div key={index} className="bg-surface-alt p-4 rounded-xl relative group border border-border">
+                {ingredientEntries.map(({ item, originalIndex }) => (
+                    <div key={originalIndex} className="bg-surface-alt p-4 rounded-xl relative group border border-border">
                         <button
                             type="button"
-                            onClick={() => handleRemoveIngredient(index)}
+                            onClick={() => handleRemoveIngredient(originalIndex)}
                             className="absolute top-1 right-1 text-gray-400 hover:text-red-500 dark:hover:text-red-400"
-                            aria-label={`Eliminar ingrediente ${index + 1}`}
+                            aria-label={`Eliminar ingrediente`}
                         >
                             <Trash2 className="h-4 w-4" aria-hidden="true" />
                         </button>
                         <div className="mb-2 pr-6">
-                            <label htmlFor={`ingredient-select-${index}`} className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Ingrediente</label>
+                            <label htmlFor={`ingredient-select-${originalIndex}`} className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Ingrediente</label>
                             <select
-                                id={`ingredient-select-${index}`}
+                                id={`ingredient-select-${originalIndex}`}
                                 value={item.inventory_id}
-                                onChange={(e) => handleIngredientChange(index, 'inventory_id', e.target.value)}
+                                onChange={(e) => handleIngredientChange(originalIndex, 'inventory_id', e.target.value)}
                                 className="block w-full p-2.5 text-sm border-border rounded-xl shadow-sm bg-card text-text transition-shadow focus:ring-2 focus:ring-brand-orange/20"
-                                aria-label={`Seleccionar ingrediente ${index + 1}`}
+                                aria-label={`Seleccionar ingrediente`}
                             >
                                 <option value="">Seleccionar ingrediente</option>
-                                {inventoryItems.map(i => (
+                                {ingredientInventoryItems.map(i => (
                                     <option key={i.id} value={i.id}>{i.ingredient_name} ({i.unit})</option>
                                 ))}
                             </select>
                         </div>
                         <div className="flex gap-2 items-center">
                             <div className="w-1/2">
-                                <label htmlFor={`quantity-${index}`} className="text-xs text-gray-500 dark:text-gray-400">Cantidad</label>
+                                <label htmlFor={`quantity-${originalIndex}`} className="text-xs text-gray-500 dark:text-gray-400">Cantidad</label>
                                 <input
-                                    id={`quantity-${index}`}
+                                    id={`quantity-${originalIndex}`}
                                     type="number"
                                     step="0.001"
                                     value={item.quantity_required}
-                                    onChange={(e) => handleIngredientChange(index, 'quantity_required', Number(e.target.value))}
+                                    onChange={(e) => handleIngredientChange(originalIndex, 'quantity_required', Number(e.target.value))}
                                     className="block w-full p-2.5 text-sm border-border rounded-xl shadow-sm bg-card text-text transition-shadow focus:ring-2 focus:ring-brand-orange/20"
-                                    aria-label={`Cantidad de ingrediente ${index + 1}`}
+                                    aria-label={`Cantidad de ingrediente`}
                                 />
                             </div>
                             <div className="w-1/2 text-right">
@@ -465,26 +490,94 @@ export const ProductForm: React.FC = () => {
                     </span>
                 </div>
             </div>
+        </div>
 
-            <div className="mt-8 flex justify-end gap-3">
+        {/* Maquinaria / Equipo Necesario */}
+        <div className="bg-card shadow-sm border border-border px-4 py-8 rounded-3xl sm:p-10 flex flex-col">
+            <h3 className="text-lg leading-6 font-medium text-text mb-4 flex items-center">
+                <Wrench className="h-5 w-5 mr-2 text-blue-500" aria-hidden="true" />
+                Maquinaria / Equipo Necesario
+            </h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Equipo y maquinaria necesaria para preparar este producto. No se incluye en el costo (activos reutilizables).</p>
+
+            <div className="flex-1 overflow-y-auto mb-4 space-y-3">
+                {equipmentEntries.map(({ item, originalIndex }) => (
+                    <div key={originalIndex} className="bg-surface-alt p-4 rounded-xl relative group border border-border">
+                        <button
+                            type="button"
+                            onClick={() => handleRemoveIngredient(originalIndex)}
+                            className="absolute top-1 right-1 text-gray-400 hover:text-red-500 dark:hover:text-red-400"
+                            aria-label={`Eliminar equipo`}
+                        >
+                            <Trash2 className="h-4 w-4" aria-hidden="true" />
+                        </button>
+                        <div className="mb-2 pr-6">
+                            <label htmlFor={`equipment-select-${originalIndex}`} className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Equipo</label>
+                            <select
+                                id={`equipment-select-${originalIndex}`}
+                                value={item.inventory_id}
+                                onChange={(e) => handleIngredientChange(originalIndex, 'inventory_id', e.target.value)}
+                                className="block w-full p-2.5 text-sm border-border rounded-xl shadow-sm bg-card text-text transition-shadow focus:ring-2 focus:ring-brand-orange/20"
+                                aria-label={`Seleccionar equipo`}
+                            >
+                                <option value="">Seleccionar equipo</option>
+                                {equipmentInventoryItems.map(i => (
+                                    <option key={i.id} value={i.id}>{i.ingredient_name} ({i.unit})</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="flex gap-2 items-center">
+                            <div className="w-1/2">
+                                <label htmlFor={`eq-quantity-${originalIndex}`} className="text-xs text-gray-500 dark:text-gray-400">Cantidad</label>
+                                <input
+                                    id={`eq-quantity-${originalIndex}`}
+                                    type="number"
+                                    step="1"
+                                    value={item.quantity_required}
+                                    onChange={(e) => handleIngredientChange(originalIndex, 'quantity_required', Number(e.target.value))}
+                                    className="block w-full p-2.5 text-sm border-border rounded-xl shadow-sm bg-card text-text transition-shadow focus:ring-2 focus:ring-brand-orange/20"
+                                    aria-label={`Cantidad de equipo`}
+                                />
+                            </div>
+                            <div className="w-1/2 text-right">
+                                <span className="inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                                    Sin costo - Reutilizable
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+
                 <button
                     type="button"
-                    onClick={() => navigate("/products")}
-                    className="bg-card py-2.5 px-6 border border-border rounded-xl shadow-sm text-sm font-medium text-text-secondary hover:bg-surface-alt transition-colors"
+                    onClick={handleAddEquipment}
+                    className="w-full flex items-center justify-center px-4 py-3 border border-border shadow-sm text-sm font-medium rounded-xl text-text-secondary bg-card hover:bg-surface-alt transition-colors"
+                    aria-label="Agregar equipo necesario"
                 >
-                    Cancelar
-                </button>
-                <button
-                    type="submit"
-                    form="product-form"
-                    disabled={isLoading}
-                    className="inline-flex justify-center py-2.5 px-8 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-brand-orange hover:bg-orange-600 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-brand-orange disabled:opacity-50 transition-colors"
-                    aria-label={isLoading ? "Guardando producto..." : "Guardar producto"}
-                >
-                    <Save className="h-5 w-5 mr-2" aria-hidden="true" />
-                    {isLoading ? "Guardando..." : "Guardar Producto"}
+                    <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> Agregar Equipo
                 </button>
             </div>
+        </div>
+
+        {/* Botones de acción */}
+        <div className="flex justify-end gap-3">
+            <button
+                type="button"
+                onClick={() => navigate("/products")}
+                className="bg-card py-2.5 px-6 border border-border rounded-xl shadow-sm text-sm font-medium text-text-secondary hover:bg-surface-alt transition-colors"
+            >
+                Cancelar
+            </button>
+            <button
+                type="submit"
+                form="product-form"
+                disabled={isLoading}
+                className="inline-flex justify-center py-2.5 px-8 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-brand-orange hover:bg-orange-600 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-brand-orange disabled:opacity-50 transition-colors"
+                aria-label={isLoading ? "Guardando producto..." : "Guardar producto"}
+            >
+                <Save className="h-5 w-5 mr-2" aria-hidden="true" />
+                {isLoading ? "Guardando..." : "Guardar Producto"}
+            </button>
         </div>
       </div>
     </div>

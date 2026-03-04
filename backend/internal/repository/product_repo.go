@@ -93,7 +93,7 @@ func (r *ProductRepo) Delete(ctx context.Context, id, userID uuid.UUID) error {
 
 func (r *ProductRepo) GetIngredients(ctx context.Context, productID uuid.UUID) ([]models.ProductIngredient, error) {
 	query := `SELECT pi.id, pi.product_id, pi.inventory_id, pi.quantity_required, pi.created_at,
-		i.ingredient_name, i.unit, i.unit_cost
+		i.ingredient_name, i.unit, i.unit_cost, i.type
 		FROM product_ingredients pi LEFT JOIN inventory i ON pi.inventory_id = i.id
 		WHERE pi.product_id = $1`
 	rows, err := r.pool.Query(ctx, query, productID)
@@ -106,7 +106,7 @@ func (r *ProductRepo) GetIngredients(ctx context.Context, productID uuid.UUID) (
 	for rows.Next() {
 		var pi models.ProductIngredient
 		if err := rows.Scan(&pi.ID, &pi.ProductID, &pi.InventoryID, &pi.QuantityRequired,
-			&pi.CreatedAt, &pi.IngredientName, &pi.Unit, &pi.UnitCost); err != nil {
+			&pi.CreatedAt, &pi.IngredientName, &pi.Unit, &pi.UnitCost, &pi.Type); err != nil {
 			return nil, err
 		}
 		ingredients = append(ingredients, pi)
@@ -122,7 +122,7 @@ func (r *ProductRepo) GetIngredientsForProducts(ctx context.Context, productIDs 
 		return nil, nil
 	}
 	query := `SELECT pi.id, pi.product_id, pi.inventory_id, pi.quantity_required, pi.created_at,
-		i.ingredient_name, i.unit, i.unit_cost
+		i.ingredient_name, i.unit, i.unit_cost, i.type
 		FROM product_ingredients pi LEFT JOIN inventory i ON pi.inventory_id = i.id
 		WHERE pi.product_id = ANY($1)`
 	rows, err := r.pool.Query(ctx, query, productIDs)
@@ -135,7 +135,7 @@ func (r *ProductRepo) GetIngredientsForProducts(ctx context.Context, productIDs 
 	for rows.Next() {
 		var pi models.ProductIngredient
 		if err := rows.Scan(&pi.ID, &pi.ProductID, &pi.InventoryID, &pi.QuantityRequired,
-			&pi.CreatedAt, &pi.IngredientName, &pi.Unit, &pi.UnitCost); err != nil {
+			&pi.CreatedAt, &pi.IngredientName, &pi.Unit, &pi.UnitCost, &pi.Type); err != nil {
 			return nil, err
 		}
 		ingredients = append(ingredients, pi)

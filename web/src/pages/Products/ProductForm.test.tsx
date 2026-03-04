@@ -71,7 +71,7 @@ describe('ProductForm', () => {
       loading: false,
     };
     (inventoryService.getAll as any).mockResolvedValue([
-      { id: 'inv-1', ingredient_name: 'Harina', unit: 'kg', unit_cost: 2.5 },
+      { id: 'inv-1', ingredient_name: 'Harina', unit: 'kg', unit_cost: 2.5, type: 'ingredient' },
     ]);
   });
 

@@ -292,10 +292,12 @@ export const EventForm: React.FC = () => {
         const costs = await Promise.all(
           missing.map(async (productId) => {
             const ingredients = await productService.getIngredients(productId);
-            const cost = ingredients?.reduce((sum, ing: any) => {
-              const unitCost = ing.unit_cost ?? 0;
-              return sum + ing.quantity_required * unitCost;
-            }, 0) || 0;
+            const cost = ingredients
+              ?.filter((ing: any) => ing.type !== 'equipment')
+              .reduce((sum, ing: any) => {
+                const unitCost = ing.unit_cost ?? 0;
+                return sum + ing.quantity_required * unitCost;
+              }, 0) || 0;
             return { productId, cost };
           }),
         );

@@ -14,10 +14,9 @@ import {
   Edit2,
   Trash2,
   Package,
-  ChevronRight,
 } from "lucide-react-native";
 import { ProductStackParamList } from "../../types/navigation";
-import { Product, InventoryItem } from "../../types/entities";
+import { Product } from "../../types/entities";
 import { productService } from "../../services/productService";
 import { uploadService } from "../../services/uploadService";
 import { useToast } from "../../hooks/useToast";
@@ -145,15 +144,16 @@ export default function ProductDetailScreen({ navigation, route }: Props) {
           </View>
         </View>
 
+        {/* Receta / Ingredientes */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Receta / Ingredientes</Text>
 
-          {ingredients.length === 0 ? (
+          {ingredients.filter((i: any) => i.type !== 'equipment').length === 0 ? (
             <Text style={styles.emptyText}>
               Este producto no tiene ingredientes asignados.
             </Text>
           ) : (
-            ingredients.map((ing: any, index: number) => (
+            ingredients.filter((i: any) => i.type !== 'equipment').map((ing: any, index: number) => (
               <View key={index} style={styles.ingredientRow}>
                 <View style={styles.ingredientInfo}>
                   <Text style={styles.ingredientName}>
@@ -172,12 +172,12 @@ export default function ProductDetailScreen({ navigation, route }: Props) {
             ))
           )}
 
-          {ingredients.length > 0 && (
+          {ingredients.filter((i: any) => i.type !== 'equipment').length > 0 && (
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Costo estimado</Text>
               <Text style={styles.totalValue}>
                 {formatCurrency(
-                  ingredients.reduce((sum, ing: any) => {
+                  ingredients.filter((i: any) => i.type !== 'equipment').reduce((sum: number, ing: any) => {
                     const cost = ing.unit_cost || 0;
                     return sum + ing.quantity_required * cost;
                   }, 0)
@@ -186,6 +186,27 @@ export default function ProductDetailScreen({ navigation, route }: Props) {
             </View>
           )}
         </View>
+
+        {/* Equipo Necesario */}
+        {ingredients.filter((i: any) => i.type === 'equipment').length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Equipo Necesario</Text>
+            <Text style={styles.equipmentBadge}>Sin costo - Activos reutilizables</Text>
+
+            {ingredients.filter((i: any) => i.type === 'equipment').map((ing: any, index: number) => (
+              <View key={index} style={styles.ingredientRow}>
+                <View style={styles.ingredientInfo}>
+                  <Text style={styles.ingredientName}>
+                    {ing.ingredient_name || "Equipo"}
+                  </Text>
+                  <Text style={styles.ingredientUnit}>
+                    {ing.quantity_required} {ing.unit || "und"}
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
 
         <View style={styles.actions}>
           <TouchableOpacity
@@ -346,6 +367,12 @@ const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   ingredientCost: {
     ...typography.label,
     color: palette.textSecondary,
+  },
+  equipmentBadge: {
+    ...typography.caption,
+    color: palette.textTertiary,
+    fontStyle: "italic",
+    marginBottom: spacing.sm,
   },
   totalRow: {
     flexDirection: "row",
