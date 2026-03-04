@@ -1,11 +1,11 @@
 import { jsPDF } from "jspdf";
 import autoTable from 'jspdf-autotable';
-import { Event, Client, User, EventProduct, EventExtra, Payment } from '../types/entities';
+import { Event, Client, User, EventProduct, EventExtra, Payment } from '@/types/entities';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { logError } from './errorHandler';
-import { renderContractTemplate } from './contractTemplate';
-import { parseInlineFormatting, renderFormattedJsPDF } from './inlineFormatting';
+import { logError } from '@/lib/errorHandler';
+import { renderContractTemplate } from '@/lib/contractTemplate';
+import { parseInlineFormatting, renderFormattedJsPDF } from '@/lib/inlineFormatting';
 
 type EventWithClient = Event & {
   client?: Client | null;
@@ -111,22 +111,22 @@ export const generateBudgetPDF = (
   doc.setTextColor(TEXT_COLOR);
 
   // Details table simulation
-  doc.setFont(undefined, 'bold');
+  doc.setFont('helvetica', 'bold');
   doc.text('Cliente:', 20, currentY);
   doc.text('Teléfono:', 20, currentY + 7);
   doc.text('Email:', 20, currentY + 14);
 
-  doc.setFont(undefined, 'normal');
+  doc.setFont('helvetica', 'normal');
   doc.text(event.client?.name || 'N/A', 40, currentY);
   doc.text(event.client?.phone || 'N/A', 40, currentY + 7);
   doc.text(event.client?.email || 'N/A', 40, currentY + 14);
 
-  doc.setFont(undefined, 'bold');
+  doc.setFont('helvetica', 'bold');
   doc.text('Fecha:', pageWidth / 2, currentY);
   doc.text('Horario:', pageWidth / 2, currentY + 7);
   doc.text('Personas:', pageWidth / 2, currentY + 14);
 
-  doc.setFont(undefined, 'normal');
+  doc.setFont('helvetica', 'normal');
   const eventDate = new Date(event.event_date);
   doc.text(format(eventDate, "d 'de' MMMM, yyyy", { locale: es }), pageWidth / 2 + 25, currentY);
   doc.text(`${event.start_time || 'Por definir'} - ${event.end_time || 'Por definir'}`, pageWidth / 2 + 25, currentY + 7);
@@ -191,7 +191,7 @@ export const generateBudgetPDF = (
   doc.setFontSize(10);
   doc.setTextColor(TEXT_COLOR);
 
-  doc.setFont(undefined, 'normal');
+  doc.setFont('helvetica', 'normal');
   doc.text('Subtotal:', summaryX, currentY);
   doc.text(formatCurrency(event.total_amount + (event.discount || 0)), pageWidth - 20, currentY, { align: 'right' });
 
@@ -210,7 +210,7 @@ export const generateBudgetPDF = (
   }
 
 
-  doc.setFont(undefined, 'bold');
+  doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
   doc.setTextColor(GRAY_COLOR);
 
@@ -223,7 +223,8 @@ export const generateBudgetPDF = (
 export const generateContractPDF = (
   event: EventWithClient,
   profile: UserProfile | null,
-  contractTemplate?: string
+  contractTemplate?: string,
+  products?: ProductItem[],
 ) => {
   const doc = new jsPDF();
   let currentY = addHeader(doc, profile, 'Contrato');
@@ -239,6 +240,7 @@ export const generateContractPDF = (
     profile,
     template: contractTemplate ?? profile?.contract_template,
     strict: false,
+    products,
   });
 
   const pageHeight = doc.internal.pageSize.height;
@@ -459,11 +461,11 @@ export const generateInvoicePDF = (
   const invoiceNumber = `INV-${event.id?.slice(0, 8).toUpperCase() || Date.now()}`;
   const invoiceDate = format(new Date(), "d 'de' MMMM, yyyy", { locale: es });
 
-  doc.setFont(undefined, 'bold');
+  doc.setFont('helvetica', 'bold');
   doc.text('No. Factura:', pageWidth - 80, currentY);
   doc.text('Fecha Emisión:', pageWidth - 80, currentY + 7);
 
-  doc.setFont(undefined, 'normal');
+  doc.setFont('helvetica', 'normal');
   doc.text(invoiceNumber, pageWidth - 20, currentY, { align: 'right' });
   doc.text(invoiceDate, pageWidth - 20, currentY + 7, { align: 'right' });
 
@@ -472,13 +474,13 @@ export const generateInvoicePDF = (
   // Provider Info (Emisor)
   doc.setFontSize(12);
   doc.setTextColor(brandColor);
-  doc.setFont(undefined, 'bold');
+  doc.setFont('helvetica', 'bold');
   doc.text('DATOS DEL EMISOR', 20, currentY);
 
   currentY += 7;
   doc.setFontSize(10);
   doc.setTextColor(TEXT_COLOR);
-  doc.setFont(undefined, 'normal');
+  doc.setFont('helvetica', 'normal');
 
   doc.text(`Razón Social: ${profile?.business_name || profile?.name || 'N/A'}`, 20, currentY);
   currentY += 6;
@@ -498,13 +500,13 @@ export const generateInvoicePDF = (
   // Client Info (Receptor)
   doc.setFontSize(12);
   doc.setTextColor(brandColor);
-  doc.setFont(undefined, 'bold');
+  doc.setFont('helvetica', 'bold');
   doc.text('DATOS DEL RECEPTOR', 20, currentY);
 
   currentY += 7;
   doc.setFontSize(10);
   doc.setTextColor(TEXT_COLOR);
-  doc.setFont(undefined, 'normal');
+  doc.setFont('helvetica', 'normal');
 
   doc.text(`Cliente: ${event.client?.name || 'N/A'}`, 20, currentY);
   currentY += 6;
@@ -529,13 +531,13 @@ export const generateInvoicePDF = (
   // Event Details
   doc.setFontSize(12);
   doc.setTextColor(brandColor);
-  doc.setFont(undefined, 'bold');
+  doc.setFont('helvetica', 'bold');
   doc.text('DETALLES DEL EVENTO', 20, currentY);
 
   currentY += 7;
   doc.setFontSize(10);
   doc.setTextColor(TEXT_COLOR);
-  doc.setFont(undefined, 'normal');
+  doc.setFont('helvetica', 'normal');
 
   const eventDate = new Date(event.event_date);
   doc.text(`Fecha del Evento: ${format(eventDate, "d 'de' MMMM, yyyy", { locale: es })}`, 20, currentY);
@@ -555,7 +557,7 @@ export const generateInvoicePDF = (
   // Products/Services Table
   doc.setFontSize(14);
   doc.setTextColor(brandColor);
-  doc.setFont(undefined, 'bold');
+  doc.setFont('helvetica', 'bold');
   doc.text('CONCEPTOS', 20, currentY);
   currentY += 7;
 
@@ -611,7 +613,7 @@ export const generateInvoicePDF = (
 
   doc.setFontSize(10);
   doc.setTextColor(TEXT_COLOR);
-  doc.setFont(undefined, 'normal');
+  doc.setFont('helvetica', 'normal');
 
   // Subtotal before tax
   const subtotalBeforeTax = event.total_amount - (event.tax_amount || 0);
@@ -636,7 +638,7 @@ export const generateInvoicePDF = (
   }
 
   // Total
-  doc.setFont(undefined, 'bold');
+  doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
   doc.setTextColor(brandColor);
   currentY += 2;
@@ -646,7 +648,7 @@ export const generateInvoicePDF = (
   currentY += 10;
 
   // Payment Method
-  doc.setFont(undefined, 'normal');
+  doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
   doc.setTextColor(TEXT_COLOR);
   doc.text('Forma de Pago: Pendiente de liquidar', summaryX, currentY);
@@ -655,7 +657,7 @@ export const generateInvoicePDF = (
   const pageHeight = doc.internal.pageSize.height;
   doc.setFontSize(8);
   doc.setTextColor(GRAY_COLOR);
-  doc.setFont(undefined, 'italic');
+  doc.setFont('helvetica', 'italic');
   doc.text('Este documento es una factura simplificada. Para factura fiscal completa, solicitar con RFC y datos fiscales.', pageWidth / 2, pageHeight - 15, { align: 'center' });
   doc.text(`Generado el ${invoiceDate}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
 

@@ -139,5 +139,43 @@ describe('contractTemplate', () => {
       expect(rendered).toContain('Juan Pérez');
       expect(rendered.length).toBeGreaterThan(100);
     });
+
+    it('renders event_services_list as comma-separated product names', () => {
+      const rendered = renderContractTemplate({
+        event: mockEvent,
+        profile: mockProfile,
+        template: 'Servicios: [Servicios del evento]',
+        strict: false,
+        products: [
+          { products: { name: 'Churros' } },
+          { products: { name: 'Paletas' } },
+          { products: { name: 'Algodón de Azúcar' } },
+        ] as any,
+      });
+      expect(rendered).toBe('Servicios: Churros, Paletas, Algodón de Azúcar');
+    });
+
+    it('renders single product without comma', () => {
+      const rendered = renderContractTemplate({
+        event: mockEvent,
+        profile: mockProfile,
+        template: 'Servicios: [Servicios del evento]',
+        strict: false,
+        products: [
+          { products: { name: 'Churros' } },
+        ] as any,
+      });
+      expect(rendered).toBe('Servicios: Churros');
+    });
+
+    it('leaves services placeholder unresolved when no products are provided', () => {
+      const rendered = renderContractTemplate({
+        event: mockEvent,
+        profile: mockProfile,
+        template: 'Servicios: [Servicios del evento]',
+        strict: false,
+      });
+      expect(rendered).toBe('Servicios: [Servicios del evento]');
+    });
   });
 });

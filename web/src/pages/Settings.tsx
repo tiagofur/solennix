@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   User,
   CreditCard,
@@ -13,16 +13,16 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import clsx from "clsx";
-import { logError } from "../lib/errorHandler";
-import { api } from "../lib/api";
-import { subscriptionService } from "../services/subscriptionService";
-import { usePlanLimits } from "../hooks/usePlanLimits";
+import { logError } from "@/lib/errorHandler";
+import { api } from "@/lib/api";
+import { subscriptionService } from "@/services/subscriptionService";
+import { usePlanLimits } from "@/hooks/usePlanLimits";
+import { useToast } from "@/hooks/useToast";
 import {
-  CONTRACT_TEMPLATE_PLACEHOLDERS,
   DEFAULT_CONTRACT_TEMPLATE,
   validateContractTemplate,
-  getMaskedPlaceholder,
-} from "../lib/contractTemplate";
+} from "@/lib/contractTemplate";
+import { ContractTemplateEditor } from "@/components/ContractTemplateEditor";
 
 export const Settings: React.FC = () => {
   const { user: profile, updateProfile } = useAuth();
@@ -33,6 +33,7 @@ export const Settings: React.FC = () => {
     clientLimit, 
     isBasicPlan 
   } = usePlanLimits();
+  const { addToast } = useToast();
 
   const [isEditingBusiness, setIsEditingBusiness] = useState(false);
   const [businessName, setBusinessName] = useState(
@@ -51,6 +52,7 @@ export const Settings: React.FC = () => {
     profile?.brand_color || "#FF6B35"
   );
   const [isPortalLoading, setIsPortalLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<"profile" | "business" | "subscription" | "contracts">("profile");
 
   useEffect(() => {
     if (profile) {
@@ -88,7 +90,7 @@ export const Settings: React.FC = () => {
     if (!file) return;
 
     if (file.size > 10 * 1024 * 1024) {
-      alert("El archivo es demasiado grande (máximo 10MB).");
+      addToast("El archivo es demasiado grande (máximo 10MB).", "error");
       return;
     }
 
@@ -108,7 +110,7 @@ export const Settings: React.FC = () => {
   const handleUpdateContractSettings = async () => {
     const { invalidTokens } = validateContractTemplate(contractTemplate);
     if (invalidTokens.length > 0) {
-      alert(`La plantilla contiene placeholders no soportados: ${invalidTokens.map((t) => `[${t}]`).join(", ")}`);
+      addToast(`La plantilla contiene placeholders no soportados: ${invalidTokens.map((t) => `[${t}]`).join(", ")}`, "error");
       return;
     }
 
@@ -138,7 +140,7 @@ export const Settings: React.FC = () => {
     }
   };
 
-  const [activeTab, setActiveTab] = useState<"profile" | "business" | "subscription" | "contracts">("profile");
+
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -164,7 +166,7 @@ export const Settings: React.FC = () => {
           ].map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id as typeof activeTab)}
               className={clsx(
                 "px-6 py-2.5 rounded-xl text-sm font-bold flex items-center transition-all whitespace-nowrap",
                 activeTab === tab.id
@@ -367,30 +369,12 @@ export const Settings: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">
-                    Plantilla del Contrato
-                  </label>
-                  <textarea
-                    value={contractTemplate}
-                    onChange={(e) => setContractTemplate(e.target.value)}
-                    rows={16}
-                    className="w-full bg-surface-alt border border-border rounded-2xl px-4 py-3 font-mono text-sm leading-6 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
-                  />
-                  <p className="text-xs text-gray-500">
-                    Usa placeholders legibles con formato <strong>[Nombre del cliente]</strong>. También se aceptan los tokens técnicos anteriores.
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {CONTRACT_TEMPLATE_PLACEHOLDERS.map(({ token }) => (
-                      <span
-                        key={token}
-                        className="text-xs font-mono px-2 py-1 rounded-lg bg-surface-alt border border-border text-text-secondary"
-                      >
-                        {getMaskedPlaceholder(token)}
-                      </span>
-                    ))}
-                  </div>
-                </div>
+                <ContractTemplateEditor
+                  template={contractTemplate}
+                  onChange={setContractTemplate}
+                  onSave={handleUpdateContractSettings}
+                  isBasicPlan={isBasicPlan}
+                />
 
                 <div className="flex justify-end">
                   <button

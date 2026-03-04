@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { eventService } from "../../services/eventService";
-import { productService } from "../../services/productService";
-import { paymentService } from "../../services/paymentService";
-import { eventPaymentService } from "../../services/eventPaymentService";
-import { api } from "../../lib/api";
+import { eventService } from "@/services/eventService";
+import { productService } from "@/services/productService";
+import { paymentService } from "@/services/paymentService";
+import { eventPaymentService } from "@/services/eventPaymentService";
+import { api } from "@/lib/api";
 import {
   ArrowLeft,
   FileText,
@@ -24,23 +24,23 @@ import {
   ImagePlus,
   Wrench,
 } from "lucide-react";
-import { useToast } from "../../hooks/useToast";
-import { ConfirmDialog } from "../../components/ConfirmDialog";
-import { useAuth } from "../../contexts/AuthContext";
+import { useToast } from "@/hooks/useToast";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   generateBudgetPDF,
   generateContractPDF,
   generateShoppingListPDF,
   generateInvoicePDF,
   generatePaymentReportPDF,
-} from "../../lib/pdfGenerator";
-import { logError } from "../../lib/errorHandler";
-import { getEventTotalCharged, getEventTaxAmount, getEventNetSales } from "../../lib/finance";
+} from "@/lib/pdfGenerator";
+import { logError } from "@/lib/errorHandler";
+import { getEventTotalCharged, getEventTaxAmount, getEventNetSales } from "@/lib/finance";
 import { Payments } from "./components/Payments";
-import { usePlanLimits } from "../../hooks/usePlanLimits";
+import { usePlanLimits } from "@/hooks/usePlanLimits";
 import clsx from "clsx";
-import { ContractTemplateError, renderContractTemplate } from "../../lib/contractTemplate";
-import { renderFormattedReact } from "../../lib/inlineFormatting";
+import { ContractTemplateError, renderContractTemplate } from "@/lib/contractTemplate";
+import { renderFormattedReact } from "@/lib/inlineFormatting";
 
 type ViewMode = "summary" | "ingredients" | "contract" | "payments" | "photos";
 
@@ -325,6 +325,7 @@ export const EventSummary: React.FC = () => {
       profile: profile as any,
       template: profile?.contract_template,
       strict: true,
+      products,
     });
   } catch (error) {
     if (error instanceof ContractTemplateError) {
@@ -505,7 +506,7 @@ export const EventSummary: React.FC = () => {
                   type="button"
                   onClick={() => {
                     try {
-                      generateContractPDF(event, profile as any);
+                      generateContractPDF(event, profile as any, undefined, products);
                     } catch (error) {
                       const message =
                         error instanceof ContractTemplateError

@@ -1,12 +1,16 @@
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Client, Event, User } from '../types/entities';
+import { Client, Event, EventProduct, User } from '@/types/entities';
 
 type EventWithClient = Event & {
   client?: Client | null;
 };
 
 type UserProfile = User | null;
+
+type ProductWithName = EventProduct & {
+  products?: { name: string } | null;
+};
 
 export const CONTRACT_TEMPLATE_TOKENS = [
   'provider_name',
@@ -31,6 +35,7 @@ export const CONTRACT_TEMPLATE_TOKENS = [
   'client_address',
   'client_city',
   'contract_city',
+  'event_services_list',
 ] as const;
 
 type ContractToken = (typeof CONTRACT_TEMPLATE_TOKENS)[number];
@@ -58,6 +63,7 @@ export const CONTRACT_TEMPLATE_PLACEHOLDERS: Array<{ token: ContractToken; label
   { token: 'client_address', label: 'Dirección del cliente' },
   { token: 'client_city', label: 'Ciudad del cliente' },
   { token: 'contract_city', label: 'Ciudad del contrato' },
+  { token: 'event_services_list', label: 'Servicios del evento' },
 ];
 
 const TOKEN_LABEL_BY_TOKEN: Record<ContractToken, string> = Object.fromEntries(
@@ -124,7 +130,7 @@ Firmas:
 Proveedor: [Nombre del proveedor]
 Cliente: [Nombre del cliente]`;
 
-const TOKEN_REGEX = /\[([^[\]]+)\]/g;
+export const TOKEN_REGEX = /\[([^[\]]+)\]/g;
 
 export class ContractTemplateError extends Error {
   invalidTokens: string[];
@@ -174,7 +180,7 @@ export const validateContractTemplate = (template: string) => {
   };
 };
 
-const buildTokenValues = (event: EventWithClient, profile: UserProfile): Record<ContractToken, string | undefined> => {
+const buildTokenValues = (event: EventWithClient, profile: UserProfile, products?: ProductWithName[]): Record<ContractToken, string | undefined> => {
   const providerName = asText(profile?.name);
   const providerBusinessName = asText(profile?.business_name) || providerName;
   const eventStart = asText(event.start_time);
@@ -203,6 +209,9 @@ const buildTokenValues = (event: EventWithClient, profile: UserProfile): Record<
     client_address: asText(event.client?.address),
     client_city: asText(event.client?.city),
     contract_city: asText(event.city) || asText(event.client?.city),
+    event_services_list: products && products.length > 0
+      ? products.map(p => p.products?.name || 'Producto').join(', ')
+      : undefined,
   };
 };
 
@@ -211,11 +220,13 @@ export const renderContractTemplate = ({
   profile,
   template,
   strict = true,
+  products,
 }: {
   event: EventWithClient;
   profile: UserProfile;
   template?: string | null;
   strict?: boolean;
+  products?: ProductWithName[];
 }) => {
   const sourceTemplate = asText(template) || DEFAULT_CONTRACT_TEMPLATE;
   const { invalidTokens } = validateContractTemplate(sourceTemplate);
@@ -223,7 +234,7 @@ export const renderContractTemplate = ({
     throw new ContractTemplateError('La plantilla contiene placeholders no soportados.', invalidTokens, []);
   }
 
-  const values = buildTokenValues(event, profile);
+  const values = buildTokenValues(event, profile, products);
   const missingTokens = new Set<string>();
 
   const rendered = sourceTemplate.replace(TOKEN_REGEX, (_, tokenText: string) => {
