@@ -11,6 +11,7 @@ services:
       - ./backend/.env
     environment:
       - DATABASE_URL=postgres://eventosapp_user:eventosapp_password@db:5432/eventosapp?sslmode=disable
+      - BOOTSTRAP_ADMIN_EMAIL=tiagofur@gmail.com
     depends_on:
       db:
         condition: service_healthy

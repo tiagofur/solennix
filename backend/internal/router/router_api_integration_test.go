@@ -33,7 +33,7 @@ func TestAPIIntegrationCoreFlows(t *testing.T) {
 		repository.NewPaymentRepo(pool),
 		userRepo,
 	)
-	h := New(authHandler, crudHandler, &handlers.SubscriptionHandler{}, nil, nil, handlers.NewUploadHandler(t.TempDir()), authService, []string{"http://localhost:5173"}, t.TempDir())
+	h := New(authHandler, crudHandler, &handlers.SubscriptionHandler{}, &handlers.SearchHandler{}, &handlers.EventPaymentHandler{}, handlers.NewUploadHandler(t.TempDir()), &handlers.AdminHandler{}, authService, userRepo, []string{"http://localhost:5173"}, t.TempDir())
 
 	registerBody := map[string]interface{}{
 		"email":    "router.integration@test.dev",
@@ -179,7 +179,7 @@ func TestAPIContractMatrixAuthenticatedValidationErrors(t *testing.T) {
 		repository.NewPaymentRepo(pool),
 		userRepo,
 	)
-	h := New(authHandler, crudHandler, &handlers.SubscriptionHandler{}, nil, nil, handlers.NewUploadHandler(t.TempDir()), authService, []string{"http://localhost:5173"}, t.TempDir())
+	h := New(authHandler, crudHandler, &handlers.SubscriptionHandler{}, &handlers.SearchHandler{}, &handlers.EventPaymentHandler{}, handlers.NewUploadHandler(t.TempDir()), &handlers.AdminHandler{}, authService, userRepo, []string{"http://localhost:5173"}, t.TempDir())
 
 	status, body := performJSONRequest(t, h, http.MethodPost, "/api/auth/register", "", map[string]interface{}{
 		"email":    "router.contracts@test.dev",
@@ -300,7 +300,7 @@ func TestAPIContractMatrixSuccessShapes(t *testing.T) {
 		repository.NewPaymentRepo(pool),
 		userRepo,
 	)
-	h := New(authHandler, crudHandler, &handlers.SubscriptionHandler{}, nil, nil, handlers.NewUploadHandler(t.TempDir()), authService, []string{"http://localhost:5173"}, t.TempDir())
+	h := New(authHandler, crudHandler, &handlers.SubscriptionHandler{}, &handlers.SearchHandler{}, &handlers.EventPaymentHandler{}, handlers.NewUploadHandler(t.TempDir()), &handlers.AdminHandler{}, authService, userRepo, []string{"http://localhost:5173"}, t.TempDir())
 
 	status, body := performJSONRequest(t, h, http.MethodPost, "/api/auth/register", "", map[string]interface{}{
 		"email":    "router.success.contracts@test.dev",
@@ -605,7 +605,7 @@ func TestGoldenContractsV1(t *testing.T) {
 		repository.NewPaymentRepo(pool),
 		userRepo,
 	)
-	h := New(authHandler, crudHandler, &handlers.SubscriptionHandler{}, nil, nil, handlers.NewUploadHandler(t.TempDir()), authService, []string{"http://localhost:5173"}, t.TempDir())
+	h := New(authHandler, crudHandler, &handlers.SubscriptionHandler{}, &handlers.SearchHandler{}, &handlers.EventPaymentHandler{}, handlers.NewUploadHandler(t.TempDir()), &handlers.AdminHandler{}, authService, userRepo, []string{"http://localhost:5173"}, t.TempDir())
 
 	responses := map[string]observedResponse{}
 

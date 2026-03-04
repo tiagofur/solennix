@@ -47,6 +47,15 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Bootstrap admin user if specified
+	if cfg.BootstrapAdminEmail != "" {
+		slog.Info("Bootstrapping admin user", "email", cfg.BootstrapAdminEmail)
+		_, err := pool.Exec(context.Background(), "UPDATE users SET role = 'admin' WHERE email = $1", cfg.BootstrapAdminEmail)
+		if err != nil {
+			slog.Error("Failed to bootstrap admin user", "error", err)
+		}
+	}
+
 	// Initialize services
 	authService := services.NewAuthService(cfg.JWTSecret, cfg.JWTExpiryHours)
 	emailService := services.NewEmailService(cfg)
