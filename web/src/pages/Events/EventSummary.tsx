@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { eventService } from "@/services/eventService";
 import { productService } from "@/services/productService";
@@ -37,7 +37,7 @@ import {
 import { logError } from "@/lib/errorHandler";
 import { getEventTotalCharged, getEventTaxAmount, getEventNetSales } from "@/lib/finance";
 import { Payments } from "./components/Payments";
-import { usePlanLimits } from "@/hooks/usePlanLimits";
+
 import clsx from "clsx";
 import { ContractTemplateError, renderContractTemplate } from "@/lib/contractTemplate";
 import { renderFormattedReact } from "@/lib/inlineFormatting";
@@ -100,31 +100,12 @@ export const EventSummary: React.FC = () => {
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const { addToast } = useToast();
-  const { isBasicPlan } = usePlanLimits();
   const [eventPhotos, setEventPhotos] = useState<string[]>([]);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [lightboxPhoto, setLightboxPhoto] = useState<string | null>(null);
   const photoInputRef = React.useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (id) {
-      loadData(id);
-    }
-  }, [id]);
-
-  // Close dropdowns when clicking outside
-  useEffect(() => {
-    const handleClickOutside = () => {
-      setStatusDropdownOpen(false);
-      setActionsDropdownOpen(false);
-    };
-    if (statusDropdownOpen || actionsDropdownOpen) {
-      document.addEventListener("click", handleClickOutside);
-    }
-    return () => document.removeEventListener("click", handleClickOutside);
-  }, [statusDropdownOpen, actionsDropdownOpen]);
-
-  const loadData = async (eventId: string) => {
+  const loadData = useCallback(async (eventId: string) => {
     try {
       setLoading(true);
       const [eventData, productsData, extrasData, paymentsData, equipmentData] =
@@ -165,7 +146,25 @@ export const EventSummary: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (id) {
+      loadData(id);
+    }
+  }, [id, loadData]);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setStatusDropdownOpen(false);
+      setActionsDropdownOpen(false);
+    };
+    if (statusDropdownOpen || actionsDropdownOpen) {
+      document.addEventListener("click", handleClickOutside);
+    }
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, [statusDropdownOpen, actionsDropdownOpen]);
 
   const aggregateProductIngredients = async (productIds: string[], productQuantities: Map<string, number>) => {
     try {

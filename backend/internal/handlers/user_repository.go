@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/tiagofur/eventosapp-backend/internal/models"
@@ -13,4 +14,12 @@ type UserRepository interface {
 	GetByID(ctx context.Context, id uuid.UUID) (*models.User, error)
 	UpdatePlanAndStripeID(ctx context.Context, id uuid.UUID, plan string, stripeCustomerID *string) error
 	UpdatePlanByStripeCustomerID(ctx context.Context, stripeCustomerID string, plan string) error
+}
+
+// SubscriptionRepository defines the interface for subscription data access.
+type SubscriptionRepository interface {
+	Upsert(ctx context.Context, sub *models.Subscription) error
+	GetByUserID(ctx context.Context, userID uuid.UUID) (*models.Subscription, error)
+	UpdateStatusByProviderSubID(ctx context.Context, providerSubID string, status string, periodStart, periodEnd *time.Time) error
+	UpdateStatusByUserID(ctx context.Context, userID uuid.UUID, status string) error
 }

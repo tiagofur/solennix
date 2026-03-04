@@ -275,6 +275,119 @@ describe('subscriptionService', () => {
     });
   });
 
+  describe('getStatus', () => {
+    it('should return subscription status with active subscription', async () => {
+      server.use(
+        http.get(`${API_BASE}/subscriptions/status`, () => {
+          return HttpResponse.json({
+            plan: 'pro',
+            has_stripe_account: true,
+            subscription: {
+              status: 'active',
+              provider: 'stripe',
+              current_period_end: '2026-04-04T00:00:00Z',
+              cancel_at_period_end: false,
+            },
+          });
+        })
+      );
+
+      const result = await subscriptionService.getStatus();
+
+      expect(result.plan).toBe('pro');
+      expect(result.has_stripe_account).toBe(true);
+      expect(result.subscription).toBeDefined();
+      expect(result.subscription!.status).toBe('active');
+      expect(result.subscription!.provider).toBe('stripe');
+      expect(result.subscription!.current_period_end).toBe('2026-04-04T00:00:00Z');
+      expect(result.subscription!.cancel_at_period_end).toBe(false);
+    });
+
+    it('should return basic plan without subscription details', async () => {
+      server.use(
+        http.get(`${API_BASE}/subscriptions/status`, () => {
+          return HttpResponse.json({
+            plan: 'basic',
+            has_stripe_account: false,
+          });
+        })
+      );
+
+      const result = await subscriptionService.getStatus();
+
+      expect(result.plan).toBe('basic');
+      expect(result.has_stripe_account).toBe(false);
+      expect(result.subscription).toBeUndefined();
+    });
+
+    it('should return subscription with cancel_at_period_end', async () => {
+      server.use(
+        http.get(`${API_BASE}/subscriptions/status`, () => {
+          return HttpResponse.json({
+            plan: 'pro',
+            has_stripe_account: true,
+            subscription: {
+              status: 'active',
+              provider: 'stripe',
+              current_period_end: '2026-04-04T00:00:00Z',
+              cancel_at_period_end: true,
+            },
+          });
+        })
+      );
+
+      const result = await subscriptionService.getStatus();
+
+      expect(result.subscription!.cancel_at_period_end).toBe(true);
+    });
+
+    it('should return subscription with past_due status', async () => {
+      server.use(
+        http.get(`${API_BASE}/subscriptions/status`, () => {
+          return HttpResponse.json({
+            plan: 'pro',
+            has_stripe_account: true,
+            subscription: {
+              status: 'past_due',
+              provider: 'stripe',
+              cancel_at_period_end: false,
+            },
+          });
+        })
+      );
+
+      const result = await subscriptionService.getStatus();
+
+      expect(result.subscription!.status).toBe('past_due');
+    });
+
+    it('should handle server error', async () => {
+      server.use(
+        http.get(`${API_BASE}/subscriptions/status`, () => {
+          return HttpResponse.json(
+            { error: 'Internal server error' },
+            { status: 500 }
+          );
+        })
+      );
+
+      await expect(subscriptionService.getStatus()).rejects.toThrow('Internal server error');
+    });
+
+    it('should handle unauthorized error', async () => {
+      server.use(
+        http.get(`${API_BASE}/subscriptions/status`, () => {
+          return HttpResponse.json(
+            { error: 'Unauthorized' },
+            { status: 401 }
+          );
+        })
+      );
+
+      await expect(subscriptionService.getStatus()).rejects.toThrow();
+    });
+  });
+
   describe('integration scenarios', () => {
     it('should complete full upgrade flow: checkout → webhook → portal', async () => {
       // Step 1: Create checkout session

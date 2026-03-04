@@ -6,7 +6,7 @@ import { paymentService } from "../services/paymentService";
 import { Event, Payment, InventoryItem } from "../types/entities";
 import { startOfMonth, endOfMonth, format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   Calendar,
   DollarSign,
@@ -43,7 +43,8 @@ type DashboardEvent = Event & {
 };
 
 export const Dashboard: React.FC = () => {
-  const { user } = useAuth();
+  const { user, checkAuth } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const firstName = user?.name ? user.name.split(" ")[0] : "Usuario";
 
   const { isBasicPlan, canCreateEvent, eventsThisMonth, limit } =
@@ -172,6 +173,14 @@ export const Dashboard: React.FC = () => {
   useEffect(() => {
     loadDashboardData();
   }, []);
+
+  // Post-checkout plan refresh: when redirected from Stripe with session_id
+  useEffect(() => {
+    if (searchParams.has("session_id")) {
+      checkAuth();
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, checkAuth, setSearchParams]);
 
   // Prepare Chart Data (Weekly aggregation for the current month)
   const chartData = React.useMemo(() => {

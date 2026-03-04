@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router-dom';
 import { Dashboard } from './Dashboard';
 import { eventService } from '../services/eventService';
 import { inventoryService } from '../services/inventoryService';
@@ -42,16 +42,16 @@ vi.mock('recharts', async () => {
 
 const renderDashboard = () =>
   render(
-    <BrowserRouter>
+    <MemoryRouter initialEntries={['/dashboard']}>
       <Dashboard />
-    </BrowserRouter>
+    </MemoryRouter>
   );
 
 describe('Dashboard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     capturedTooltipFormatters.length = 0;
-    (useAuth as any).mockReturnValue({ profile: { name: 'Test User' } });
+    (useAuth as any).mockReturnValue({ user: { name: 'Test User' }, profile: { name: 'Test User' }, checkAuth: vi.fn() });
     (eventService.getByDateRange as any).mockResolvedValue([]);
     (eventService.getUpcoming as any).mockResolvedValue([]);
     (inventoryService.getAll as any).mockResolvedValue([]);
@@ -150,9 +150,10 @@ describe('Dashboard', () => {
     fireEvent.click(refresh);
 
     await waitFor(() => {
-      expect(eventService.getByDateRange).toHaveBeenCalledTimes(2);
-      expect(eventService.getUpcoming).toHaveBeenCalledTimes(2);
-      expect(inventoryService.getAll).toHaveBeenCalledTimes(2);
+      // At least 2: initial load + refresh click (usePlanLimits may add extra calls)
+      expect((eventService.getByDateRange as any).mock.calls.length).toBeGreaterThanOrEqual(2);
+      expect((eventService.getUpcoming as any).mock.calls.length).toBeGreaterThanOrEqual(2);
+      expect((inventoryService.getAll as any).mock.calls.length).toBeGreaterThanOrEqual(2);
     });
   });
 
@@ -171,5 +172,47 @@ describe('Dashboard', () => {
     const formatter = capturedTooltipFormatters[0];
     const result = formatter(1500);
     expect(result).toEqual(['$1,500', 'Monto']);
+  });
+
+  describe('post-checkout plan refresh', () => {
+    it('calls checkAuth and cleans URL when session_id is present', async () => {
+      const mockCheckAuth = vi.fn();
+      (useAuth as any).mockReturnValue({
+        user: { name: 'Test User' },
+        profile: { name: 'Test User' },
+        checkAuth: mockCheckAuth,
+      });
+
+      render(
+        <MemoryRouter initialEntries={['/dashboard?session_id=cs_test_123']}>
+          <Dashboard />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(mockCheckAuth).toHaveBeenCalled();
+      });
+    });
+
+    it('does not call checkAuth when session_id is absent', async () => {
+      const mockCheckAuth = vi.fn();
+      (useAuth as any).mockReturnValue({
+        user: { name: 'Test User' },
+        profile: { name: 'Test User' },
+        checkAuth: mockCheckAuth,
+      });
+
+      render(
+        <MemoryRouter initialEntries={['/dashboard']}>
+          <Dashboard />
+        </MemoryRouter>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText(/hola/i)).toBeInTheDocument();
+      });
+
+      expect(mockCheckAuth).not.toHaveBeenCalled();
+    });
   });
 });

@@ -13,6 +13,7 @@ import (
 	"github.com/stripe/stripe-go/v81"
 	stripeBilling "github.com/stripe/stripe-go/v81/billingportal/session"
 	"github.com/stripe/stripe-go/v81/checkout/session"
+	stripeSub "github.com/stripe/stripe-go/v81/subscription"
 	"github.com/stripe/stripe-go/v81/webhook"
 	"github.com/tiagofur/eventosapp-backend/internal/config"
 	"github.com/tiagofur/eventosapp-backend/internal/middleware"
@@ -35,6 +36,7 @@ type PaymentRepository interface {
 // Also handles event payment webhooks.
 type SubscriptionHandler struct {
 	userRepo    UserRepository
+	subRepo     SubscriptionRepository
 	eventRepo   EventRepository
 	paymentRepo PaymentRepository
 	cfg         *config.Config
@@ -42,6 +44,7 @@ type SubscriptionHandler struct {
 
 func NewSubscriptionHandler(
 	userRepo UserRepository,
+	subRepo SubscriptionRepository,
 	eventRepo EventRepository,
 	paymentRepo PaymentRepository,
 	cfg *config.Config,
@@ -49,6 +52,7 @@ func NewSubscriptionHandler(
 	stripe.Key = cfg.StripeSecretKey
 	return &SubscriptionHandler{
 		userRepo:    userRepo,
+		subRepo:     subRepo,
 		eventRepo:   eventRepo,
 		paymentRepo: paymentRepo,
 		cfg:         cfg,
@@ -191,10 +195,8 @@ func (h *SubscriptionHandler) StripeWebhook(w http.ResponseWriter, r *http.Reque
 		paymentType := s.Metadata["type"]
 
 		if paymentType == "event_payment" {
-			// Handle event payment
 			h.handleEventPayment(r.Context(), &s)
 		} else if s.ClientReferenceID != "" {
-			// Handle subscription (existing logic)
 			userID, err := uuid.Parse(s.ClientReferenceID)
 			if err != nil {
 				slog.Error("Invalid user ID in checkout session", "id", s.ClientReferenceID)
@@ -209,6 +211,27 @@ func (h *SubscriptionHandler) StripeWebhook(w http.ResponseWriter, r *http.Reque
 			} else {
 				slog.Info("User upgraded to pro via Stripe checkout", "user_id", userID)
 			}
+
+			// Upsert subscription record
+			if h.subRepo != nil && s.Subscription != nil {
+				subRecord := &models.Subscription{
+					UserID:        userID,
+					Provider:      "stripe",
+					ProviderSubID: &s.Subscription.ID,
+					Plan:          "pro",
+					Status:        "active",
+				}
+				// Fetch Stripe subscription for period dates
+				if stripeSubData, err := stripeSub.Get(s.Subscription.ID, nil); err == nil {
+					start := time.Unix(stripeSubData.CurrentPeriodStart, 0)
+					end := time.Unix(stripeSubData.CurrentPeriodEnd, 0)
+					subRecord.CurrentPeriodStart = &start
+					subRecord.CurrentPeriodEnd = &end
+				}
+				if err := h.subRepo.Upsert(r.Context(), subRecord); err != nil {
+					slog.Error("Failed to upsert subscription after checkout", "error", err)
+				}
+			}
 		}
 
 	case "customer.subscription.updated":
@@ -217,8 +240,44 @@ func (h *SubscriptionHandler) StripeWebhook(w http.ResponseWriter, r *http.Reque
 			writeError(w, http.StatusBadRequest, "Invalid subscription data")
 			return
 		}
-		// sync status (e.g. past_due, active)
 		slog.Info("Stripe subscription updated", "status", sub.Status, "customer", sub.Customer.ID)
+
+		// Map Stripe status to action
+		switch sub.Status {
+		case stripe.SubscriptionStatusActive:
+			// Keep user on pro, update subscription record
+			if h.subRepo != nil {
+				start := time.Unix(sub.CurrentPeriodStart, 0)
+				end := time.Unix(sub.CurrentPeriodEnd, 0)
+				if err := h.subRepo.UpdateStatusByProviderSubID(r.Context(), sub.ID, "active", &start, &end); err != nil {
+					slog.Error("Failed to update subscription status to active", "error", err)
+				}
+			}
+		case stripe.SubscriptionStatusPastDue:
+			// Grace period: keep on pro, but mark subscription as past_due
+			if h.subRepo != nil {
+				if err := h.subRepo.UpdateStatusByProviderSubID(r.Context(), sub.ID, "past_due", nil, nil); err != nil {
+					slog.Error("Failed to update subscription status to past_due", "error", err)
+				}
+			}
+		case stripe.SubscriptionStatusCanceled:
+			// Keep on pro until period end, mark canceled
+			if h.subRepo != nil {
+				if err := h.subRepo.UpdateStatusByProviderSubID(r.Context(), sub.ID, "canceled", nil, nil); err != nil {
+					slog.Error("Failed to update subscription status to canceled", "error", err)
+				}
+			}
+		case stripe.SubscriptionStatusUnpaid:
+			// Downgrade to basic
+			if err := h.userRepo.UpdatePlanByStripeCustomerID(r.Context(), sub.Customer.ID, "basic"); err != nil {
+				slog.Error("Failed to downgrade user after unpaid subscription", "error", err)
+			}
+			if h.subRepo != nil {
+				if err := h.subRepo.UpdateStatusByProviderSubID(r.Context(), sub.ID, "canceled", nil, nil); err != nil {
+					slog.Error("Failed to update subscription status to canceled (unpaid)", "error", err)
+				}
+			}
+		}
 
 	case "customer.subscription.deleted":
 		var sub stripe.Subscription
@@ -226,11 +285,28 @@ func (h *SubscriptionHandler) StripeWebhook(w http.ResponseWriter, r *http.Reque
 			writeError(w, http.StatusBadRequest, "Invalid subscription data")
 			return
 		}
-		// Downgrade user to basic plan when subscription is cancelled
 		if err := h.userRepo.UpdatePlanByStripeCustomerID(r.Context(), sub.Customer.ID, "basic"); err != nil {
 			slog.Error("Failed to downgrade user after subscription deletion", "error", err)
 		} else {
 			slog.Info("User downgraded to basic after Stripe subscription cancellation", "customer_id", sub.Customer.ID)
+		}
+		if h.subRepo != nil {
+			if err := h.subRepo.UpdateStatusByProviderSubID(r.Context(), sub.ID, "canceled", nil, nil); err != nil {
+				slog.Error("Failed to update subscription record after deletion", "error", err)
+			}
+		}
+
+	case "invoice.payment_failed":
+		var invoice stripe.Invoice
+		if err := json.Unmarshal(event.Data.Raw, &invoice); err != nil {
+			slog.Error("Error parsing invoice.payment_failed JSON", "error", err)
+			break
+		}
+		slog.Warn("Stripe invoice payment failed", "customer", invoice.Customer.ID, "invoice", invoice.ID)
+		if h.subRepo != nil && invoice.Subscription != nil {
+			if err := h.subRepo.UpdateStatusByProviderSubID(r.Context(), invoice.Subscription.ID, "past_due", nil, nil); err != nil {
+				slog.Error("Failed to update subscription status after payment failure", "error", err)
+			}
 		}
 	}
 
@@ -379,15 +455,51 @@ func (h *SubscriptionHandler) GetSubscriptionStatus(w http.ResponseWriter, r *ht
 		return
 	}
 
-	type planStatus struct {
-		Plan             string `json:"plan"`
-		HasStripeAccount bool   `json:"has_stripe_account"`
+	type subscriptionInfo struct {
+		Status             string  `json:"status"`
+		Provider           string  `json:"provider"`
+		CurrentPeriodEnd   *string `json:"current_period_end,omitempty"`
+		CancelAtPeriodEnd  bool    `json:"cancel_at_period_end"`
 	}
 
-	writeJSON(w, http.StatusOK, planStatus{
+	type planStatus struct {
+		Plan             string            `json:"plan"`
+		HasStripeAccount bool              `json:"has_stripe_account"`
+		Subscription     *subscriptionInfo `json:"subscription,omitempty"`
+	}
+
+	resp := planStatus{
 		Plan:             user.Plan,
 		HasStripeAccount: user.StripeCustomerID != nil && *user.StripeCustomerID != "",
-	})
+	}
+
+	// Try to get subscription details from DB
+	if h.subRepo != nil {
+		if sub, err := h.subRepo.GetByUserID(r.Context(), userID); err == nil {
+			info := &subscriptionInfo{
+				Status:   sub.Status,
+				Provider: sub.Provider,
+			}
+			if sub.CurrentPeriodEnd != nil {
+				formatted := sub.CurrentPeriodEnd.Format(time.RFC3339)
+				info.CurrentPeriodEnd = &formatted
+			}
+
+			// Check cancel_at_period_end from Stripe if user has a stripe customer
+			if user.StripeCustomerID != nil && *user.StripeCustomerID != "" && sub.ProviderSubID != nil {
+				if stripeSub, err := stripeSub.Get(*sub.ProviderSubID, nil); err == nil {
+					info.CancelAtPeriodEnd = stripeSub.CancelAtPeriodEnd
+					// Also update period end from live data
+					end := time.Unix(stripeSub.CurrentPeriodEnd, 0).Format(time.RFC3339)
+					info.CurrentPeriodEnd = &end
+				}
+			}
+
+			resp.Subscription = info
+		}
+	}
+
+	writeJSON(w, http.StatusOK, resp)
 }
 
 // handleEventPayment processes a completed event payment from Stripe webhook

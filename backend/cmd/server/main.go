@@ -68,11 +68,12 @@ func main() {
 	inventoryRepo := repository.NewInventoryRepo(pool)
 	paymentRepo := repository.NewPaymentRepo(pool)
 	adminRepo := repository.NewAdminRepo(pool)
+	subscriptionRepo := repository.NewSubscriptionRepo(pool)
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(userRepo, authService, emailService)
 	crudHandler := handlers.NewCRUDHandler(clientRepo, eventRepo, productRepo, inventoryRepo, paymentRepo, userRepo)
-	subHandler := handlers.NewSubscriptionHandler(userRepo, eventRepo, paymentRepo, cfg)
+	subHandler := handlers.NewSubscriptionHandler(userRepo, subscriptionRepo, eventRepo, paymentRepo, cfg)
 	searchHandler := handlers.NewSearchHandler(clientRepo, productRepo, inventoryRepo, eventRepo)
 	eventPaymentHandler := handlers.NewEventPaymentHandler(eventRepo, paymentRepo, cfg)
 	uploadHandler := handlers.NewUploadHandler(cfg.UploadDir)

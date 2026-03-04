@@ -11,11 +11,11 @@ import {
   Info,
   Shield,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import clsx from "clsx";
 import { logError } from "@/lib/errorHandler";
 import { api } from "@/lib/api";
-import { subscriptionService } from "@/services/subscriptionService";
+import { subscriptionService, SubscriptionStatus } from "@/services/subscriptionService";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { useToast } from "@/hooks/useToast";
 import {
@@ -24,8 +24,25 @@ import {
 } from "@/lib/contractTemplate";
 import { ContractTemplateEditor } from "@/components/ContractTemplateEditor";
 
+const formatSubDate = (dateStr?: string) => {
+  if (!dateStr) return null;
+  try {
+    return new Date(dateStr).toLocaleDateString("es-MX", {
+      year: "numeric", month: "long", day: "numeric",
+    });
+  } catch { return null; }
+};
+
+const subStatusLabel: Record<string, { text: string; color: string }> = {
+  active: { text: "Activa", color: "text-green-600 bg-green-50 dark:bg-green-900/20 dark:text-green-400" },
+  past_due: { text: "Pago pendiente", color: "text-yellow-600 bg-yellow-50 dark:bg-yellow-900/20 dark:text-yellow-400" },
+  canceled: { text: "Cancelada", color: "text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400" },
+  trialing: { text: "Periodo de prueba", color: "text-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400" },
+};
+
 export const Settings: React.FC = () => {
   const { user: profile, updateProfile } = useAuth();
+  const [searchParams] = useSearchParams();
   const { 
     eventsThisMonth, 
     limit: eventLimit, 
@@ -52,7 +69,9 @@ export const Settings: React.FC = () => {
     profile?.brand_color || "#FF6B35"
   );
   const [isPortalLoading, setIsPortalLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<"profile" | "business" | "subscription" | "contracts">("profile");
+  const [subStatus, setSubStatus] = useState<SubscriptionStatus | null>(null);
+  const initialTab = searchParams.get("tab") === "subscription" ? "subscription" : "profile";
+  const [activeTab, setActiveTab] = useState<"profile" | "business" | "subscription" | "contracts">(initialTab);
 
   useEffect(() => {
     if (profile) {
@@ -66,6 +85,12 @@ export const Settings: React.FC = () => {
       setBrandColor(profile.brand_color || "#FF6B35");
     }
   }, [profile]);
+
+  useEffect(() => {
+    if (activeTab === "subscription") {
+      subscriptionService.getStatus().then(setSubStatus).catch(() => {});
+    }
+  }, [activeTab]);
 
 
   const handleUpdateBusinessName = async () => {
@@ -400,12 +425,39 @@ export const Settings: React.FC = () => {
                       {profile?.plan || "Básico"}
                     </h2>
                     <p className="text-gray-500 dark:text-gray-400 font-medium text-sm max-w-md">
-                      {profile?.plan === "pro" 
+                      {profile?.plan === "pro"
                         ? "Disfrutas de acceso ilimitado a todas nuestras herramientas profesionales."
                         : "Potencia tu negocio con el plan Pro: eventos ilimitados, gestión de inventario y más."}
                     </p>
+
+                    {/* Subscription details */}
+                    {subStatus?.subscription && (
+                      <div className="flex flex-wrap items-center gap-3 pt-2">
+                        {(() => {
+                          const info = subStatusLabel[subStatus.subscription!.status] || { text: subStatus.subscription!.status, color: "text-gray-600 bg-gray-50" };
+                          return (
+                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${info.color}`}>
+                              {info.text}
+                            </span>
+                          );
+                        })()}
+                        {subStatus.subscription.current_period_end && (
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            {subStatus.subscription.cancel_at_period_end
+                              ? `Se cancela el ${formatSubDate(subStatus.subscription.current_period_end)}`
+                              : `Próxima renovación: ${formatSubDate(subStatus.subscription.current_period_end)}`}
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    {subStatus?.subscription?.cancel_at_period_end && (
+                      <div className="mt-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl text-sm text-yellow-700 dark:text-yellow-300">
+                        Tu suscripción se cancelará al final del periodo actual. Puedes reactivarla desde el portal de pagos.
+                      </div>
+                    )}
                   </div>
-                  
+
                   <div className="flex flex-col gap-3">
                     {profile?.plan !== "pro" && (
                       <Link
@@ -415,20 +467,22 @@ export const Settings: React.FC = () => {
                         Subir a Pro
                       </Link>
                     )}
-                    <button
-                      onClick={handleManageSubscription}
-                      disabled={isPortalLoading}
-                      className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-6 py-3 rounded-md font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center justify-center gap-2"
-                    >
-                      {isPortalLoading ? "Cargando..." : (
-                        <>Gestionar <ExternalLink className="h-4 w-4" /></>
-                      )}
-                    </button>
+                    {(profile?.stripe_customer_id || subStatus?.has_stripe_account) && (
+                      <button
+                        onClick={handleManageSubscription}
+                        disabled={isPortalLoading}
+                        className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-6 py-3 rounded-md font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center justify-center gap-2"
+                      >
+                        {isPortalLoading ? "Cargando..." : (
+                          <>Gestionar <ExternalLink className="h-4 w-4" /></>
+                        )}
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
 
-              {/* Limits / Usage section (Simulated for now based on plans) */}
+              {/* Limits / Usage section */}
               <div className="bg-card shadow-sm rounded-3xl p-6 sm:p-8 border border-border">
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6">Uso de este mes</h3>
                 <div className="grid sm:grid-cols-2 gap-8">
@@ -440,8 +494,8 @@ export const Settings: React.FC = () => {
                       </span>
                     </div>
                     <div className="h-3 bg-surface-alt rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-primary transition-all duration-1000" 
+                      <div
+                        className="h-full bg-primary transition-all duration-1000"
                         style={{ width: isBasicPlan ? `${Math.min((eventsThisMonth / eventLimit) * 100, 100)}%` : '100%' }}
                       />
                     </div>
@@ -454,8 +508,8 @@ export const Settings: React.FC = () => {
                       </span>
                     </div>
                     <div className="h-3 bg-surface-alt rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-brand-green transition-all duration-1000" 
+                      <div
+                        className="h-full bg-brand-green transition-all duration-1000"
                         style={{ width: isBasicPlan ? `${Math.min((clientsCount / clientLimit) * 100, 100)}%` : '100%' }}
                       />
                     </div>
