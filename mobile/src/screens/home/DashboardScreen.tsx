@@ -68,6 +68,8 @@ export default function DashboardScreen({ navigation }: Props) {
   const [cashCollectedThisMonth, setCashCollectedThisMonth] = useState(0);
   const [vatOutstandingThisMonth, setVatOutstandingThisMonth] = useState(0);
   const [lowStockCount, setLowStockCount] = useState(0);
+  const [vatCollectedThisMonth, setVatCollectedThisMonth] = useState(0);
+  const [cashAppliedToThisMonthsEvents, setCashAppliedToThisMonthsEvents] = useState(0);
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -120,11 +122,22 @@ export default function DashboardScreen({ navigation }: Props) {
         paidByEvent[p.event_id] = (paidByEvent[p.event_id] || 0) + Number(p.amount || 0);
       });
 
+      const cashApplied = Object.values(paidByEvent).reduce((sum, v) => sum + v, 0);
+      setCashAppliedToThisMonthsEvents(cashApplied);
+
       const cashInMonth = (paymentsInMonth || []).reduce(
         (sum: number, p: any) => sum + Number(p.amount || 0),
         0,
       );
       setCashCollectedThisMonth(cashInMonth);
+
+      const vatCollected = realized.reduce((sum, event) => {
+        const totalCharged = getEventTotalCharged(event);
+        const paid = paidByEvent[event.id] || 0;
+        const ratio = totalCharged > 0 ? Math.min(paid / totalCharged, 1) : 0;
+        return sum + getEventTaxAmount(event) * ratio;
+      }, 0);
+      setVatCollectedThisMonth(vatCollected);
 
       const vatOutstanding = realized.reduce((sum, event) => {
         const totalCharged = getEventTotalCharged(event);
@@ -181,6 +194,26 @@ export default function DashboardScreen({ navigation }: Props) {
   }, [eventsThisMonthList, palette]);
 
   const maxStatusCount = Math.max(...statusData.map((d) => d.count), 1);
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case "quoted": return "Cotizado";
+      case "confirmed": return "Confirmado";
+      case "completed": return "Completado";
+      case "cancelled": return "Cancelado";
+      default: return status;
+    }
+  };
+
+  const getStatusColors = (status: string) => {
+    switch (status) {
+      case "quoted": return { bg: palette.surfaceGrouped, text: palette.textSecondary };
+      case "confirmed": return { bg: palette.kpiBlueBg, text: palette.kpiBlue };
+      case "completed": return { bg: palette.kpiGreenBg, text: palette.kpiGreen };
+      case "cancelled": return { bg: palette.errorBg, text: palette.error };
+      default: return { bg: palette.surfaceGrouped, text: palette.textSecondary };
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={[]}>
@@ -272,6 +305,14 @@ export default function DashboardScreen({ navigation }: Props) {
             title="Cobrado (mes)"
             value={formatCurrency(cashCollectedThisMonth)}
             loading={loading}
+            footer={`Aplicado a eventos: ${formatCurrency(cashAppliedToThisMonthsEvents)}`}
+          />
+          <KPICard
+            icon={<FileCheck color={palette.kpiBlue} size={20} />}
+            iconBgColor={palette.kpiBlueBg}
+            title="IVA cobrado"
+            value={formatCurrency(vatCollectedThisMonth)}
+            loading={loading}
           />
           <KPICard
             icon={<FileCheck color={palette.kpiBlue} size={20} />}
@@ -336,6 +377,44 @@ export default function DashboardScreen({ navigation }: Props) {
           </View>
         )}
 
+        {/* Financial Comparison */}
+        {!loading && (netSalesThisMonth > 0 || cashCollectedThisMonth > 0 || vatOutstandingThisMonth > 0) && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Resumen Financiero</Text>
+            {(() => {
+              const financialData = [
+                { name: "Ventas Netas", value: netSalesThisMonth, color: palette.kpiGreen },
+                { name: "Cobrado Real", value: cashCollectedThisMonth, color: palette.kpiOrange },
+                { name: "IVA por Cobrar", value: vatOutstandingThisMonth, color: palette.error },
+              ];
+              const maxVal = Math.max(...financialData.map((d) => d.value), 1);
+              return (
+                <View style={styles.chartContainer}>
+                  {financialData.map((d) => (
+                    <View key={d.name} style={styles.chartRow}>
+                      <Text style={[styles.chartLabel, { width: 90 }]} numberOfLines={1}>{d.name}</Text>
+                      <View style={styles.barBg}>
+                        <View
+                          style={[
+                            styles.barFill,
+                            {
+                              backgroundColor: d.color,
+                              width: `${(d.value / maxVal) * 100}%`,
+                            },
+                          ]}
+                        />
+                      </View>
+                      <Text style={[styles.chartValue, { width: 70, fontSize: 11 }]} numberOfLines={1}>
+                        {formatCurrency(d.value)}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              );
+            })()}
+          </View>
+        )}
+
         {/* Low Stock Alerts */}
         {lowStockItems.length > 0 && (
           <View style={styles.section}>
@@ -350,6 +429,9 @@ export default function DashboardScreen({ navigation }: Props) {
                 <AlertTriangle color={palette.error} size={18} />
                 <Text style={styles.sectionTitle}>Reponer Inventario</Text>
               </View>
+              <TouchableOpacity onPress={() => (navigation as any).navigate("InventoryStack")}>
+                <Text style={styles.sectionLink}>Ver inventario</Text>
+              </TouchableOpacity>
             </View>
             {lowStockItems.map((item) => (
               <View key={item.id} style={styles.stockRow}>
@@ -371,6 +453,9 @@ export default function DashboardScreen({ navigation }: Props) {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Próximos Eventos</Text>
+            <TouchableOpacity onPress={() => (navigation as any).navigate("CalendarTab")}>
+              <Text style={styles.sectionLink}>Ver todos</Text>
+            </TouchableOpacity>
           </View>
 
           {loading ? (
@@ -404,10 +489,16 @@ export default function DashboardScreen({ navigation }: Props) {
                       flexDirection: "row",
                       alignItems: "center",
                       gap: spacing.xs,
+                      flexWrap: "wrap",
                     }}
                   >
                     <Text style={styles.eventType}>{event.service_type}</Text>
                     <Text style={styles.eventPax}>{event.num_people} pax</Text>
+                    <View style={[styles.statusBadge, { backgroundColor: getStatusColors(event.status).bg }]}>
+                      <Text style={[styles.statusBadgeText, { color: getStatusColors(event.status).text }]}>
+                        {getStatusLabel(event.status)}
+                      </Text>
+                    </View>
                   </View>
                 </View>
                 <ChevronRight color={palette.textTertiary} size={20} />
@@ -624,5 +715,20 @@ const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   eventPax: {
     ...typography.caption1,
     color: palette.textTertiary,
+  },
+  statusBadge: {
+    paddingHorizontal: spacing.xs + 2,
+    paddingVertical: 2,
+    borderRadius: spacing.borderRadius.full,
+  },
+  statusBadgeText: {
+    ...typography.caption2,
+    fontWeight: "600",
+    fontSize: 10,
+  },
+  sectionLink: {
+    ...typography.subheadline,
+    color: palette.primary,
+    fontWeight: "600",
   },
 });

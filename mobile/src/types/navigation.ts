@@ -48,6 +48,7 @@ export type ProductStackParamList = {
 // Inventory stack (drawer screen)
 export type InventoryStackParamList = {
     InventoryList: undefined;
+    InventoryDetail: { id: string };
     InventoryForm: { id?: string };
 };
 

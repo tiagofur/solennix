@@ -2,6 +2,7 @@ import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { InventoryStackParamList } from "../types/navigation";
 import InventoryListScreen from "../screens/catalog/InventoryListScreen";
+import InventoryDetailsScreen from "../screens/catalog/InventoryDetailsScreen";
 import InventoryFormScreen from "../screens/catalog/InventoryFormScreen";
 import DrawerMenuButton from "../components/navigation/DrawerMenuButton";
 
@@ -22,6 +23,11 @@ export default function InventoryStack() {
           title: "Inventario",
           headerLeft: () => <DrawerMenuButton />,
         }}
+      />
+      <Stack.Screen
+        name="InventoryDetail"
+        component={InventoryDetailsScreen}
+        options={{ title: "Detalle de Ítem" }}
       />
       <Stack.Screen
         name="InventoryForm"

@@ -23,6 +23,7 @@ import {
   ChevronRight,
   DollarSign,
   Plus,
+  TrendingUp,
 } from "lucide-react-native";
 import { ClientStackParamList } from "../../types/navigation";
 import { Client, Event } from "../../types/entities";
@@ -178,6 +179,18 @@ export default function ClientDetailScreen({ navigation, route }: Props) {
               </Text>
               <Text style={styles.statLabel}>Total</Text>
             </View>
+            {(client.total_events ?? 0) > 0 && (client.total_spent ?? 0) > 0 && (
+              <>
+                <View style={styles.statDivider} />
+                <View style={styles.statBox}>
+                  <TrendingUp color={palette.warning} size={16} />
+                  <Text style={styles.statValue}>
+                    {formatCurrency((client.total_spent ?? 0) / (client.total_events ?? 1))}
+                  </Text>
+                  <Text style={styles.statLabel}>Promedio</Text>
+                </View>
+              </>
+            )}
           </View>
         </View>
 

@@ -8,6 +8,9 @@ import {
   TouchableOpacity,
   TextInput,
   RefreshControl,
+  Modal,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -53,6 +56,8 @@ export default function InventoryListScreen({ navigation }: Props) {
   const [showLowStockOnly, setShowLowStockOnly] = useState(false);
   const [sortKey, setSortKey] = useState("ingredient_name");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [adjustingItem, setAdjustingItem] = useState<InventoryItem | null>(null);
+  const [adjustmentValue, setAdjustmentValue] = useState("");
 
   const inventorySortOptions = useMemo(() => [
     { key: "ingredient_name", label: "Nombre" },
@@ -79,6 +84,30 @@ export default function InventoryListScreen({ navigation }: Props) {
       loadItems();
     }, [loadItems]),
   );
+
+  const handleAdjustStock = useCallback(async () => {
+    if (!adjustingItem || !adjustmentValue.trim()) return;
+    const change = parseFloat(adjustmentValue);
+    if (isNaN(change)) {
+      addToast("Ingresa un número válido.", "error");
+      return;
+    }
+    try {
+      const newStock = Math.max(0, adjustingItem.current_stock + change);
+      await inventoryService.update(adjustingItem.id, { current_stock: newStock });
+      setItems((prev) =>
+        prev.map((item) =>
+          item.id === adjustingItem.id ? { ...item, current_stock: newStock } : item,
+        ),
+      );
+      addToast(`Stock de ${adjustingItem.ingredient_name} actualizado.`, "success");
+      setAdjustingItem(null);
+      setAdjustmentValue("");
+    } catch (err) {
+      logError("Error adjusting stock", err);
+      addToast("Error al actualizar el stock.", "error");
+    }
+  }, [adjustingItem, adjustmentValue, addToast]);
 
   const sortedSections = useMemo(() => {
     let filtered = items;
@@ -154,7 +183,7 @@ export default function InventoryListScreen({ navigation }: Props) {
         <TouchableOpacity
           style={[styles.card, isLowStock && styles.cardLowStock]}
           activeOpacity={0.7}
-          onPress={() => navigation.navigate("InventoryForm", { id: item.id })}
+          onPress={() => navigation.navigate("InventoryDetail", { id: item.id })}
         >
           <View style={[styles.iconBox, isLowStock && styles.iconBoxLow]}>
             <Package
@@ -179,6 +208,17 @@ export default function InventoryListScreen({ navigation }: Props) {
               </View>
             )}
           </View>
+          <TouchableOpacity
+            style={styles.adjustBtn}
+            onPress={(e) => {
+              e.stopPropagation?.();
+              setAdjustingItem(item);
+              setAdjustmentValue("");
+            }}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Plus color={palette.primary} size={18} />
+          </TouchableOpacity>
         </TouchableOpacity>
         </SwipeableRow>
         </Animated.View>
@@ -297,6 +337,52 @@ export default function InventoryListScreen({ navigation }: Props) {
       >
         <Plus color={palette.textInverse} size={28} />
       </TouchableOpacity>
+
+      {/* Stock Adjustment Modal */}
+      <Modal
+        visible={!!adjustingItem}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setAdjustingItem(null)}
+      >
+        <View style={styles.modalOverlay}>
+          <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined}>
+            <View style={styles.modalCard}>
+              <Text style={styles.modalTitle}>Ajustar Stock</Text>
+              {adjustingItem && (
+                <Text style={styles.modalSubtitle}>
+                  {adjustingItem.ingredient_name} ({adjustingItem.current_stock} {adjustingItem.unit})
+                </Text>
+              )}
+              <Text style={styles.modalLabel}>Cantidad a sumar/restar</Text>
+              <TextInput
+                style={styles.modalInput}
+                placeholder="Ej: +10 o -5"
+                placeholderTextColor={palette.textTertiary}
+                keyboardType="numbers-and-punctuation"
+                value={adjustmentValue}
+                onChangeText={setAdjustmentValue}
+                autoFocus
+                onSubmitEditing={handleAdjustStock}
+              />
+              <View style={styles.modalActions}>
+                <TouchableOpacity
+                  style={styles.modalCancelBtn}
+                  onPress={() => setAdjustingItem(null)}
+                >
+                  <Text style={styles.modalCancelText}>Cancelar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.modalConfirmBtn}
+                  onPress={handleAdjustStock}
+                >
+                  <Text style={styles.modalConfirmText}>Confirmar</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </KeyboardAvoidingView>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -462,5 +548,85 @@ const getStyles = (palette: typeof colors.light) => StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     ...shadows.fab,
+  },
+  adjustBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: palette.primaryLight,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  // Modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: spacing.lg,
+  },
+  modalCard: {
+    backgroundColor: palette.card,
+    borderRadius: spacing.borderRadius.xl,
+    padding: spacing.lg,
+    width: "100%",
+    ...shadows.lg,
+  },
+  modalTitle: {
+    ...typography.title2,
+    color: palette.text,
+    marginBottom: spacing.xs,
+  },
+  modalSubtitle: {
+    ...typography.body,
+    color: palette.textSecondary,
+    marginBottom: spacing.md,
+  },
+  modalLabel: {
+    ...typography.caption1,
+    color: palette.textSecondary,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginBottom: spacing.xs,
+  },
+  modalInput: {
+    backgroundColor: palette.surfaceGrouped,
+    borderWidth: 1,
+    borderColor: palette.separator,
+    borderRadius: spacing.borderRadius.lg,
+    padding: spacing.md,
+    ...typography.body,
+    color: palette.text,
+    marginBottom: spacing.md,
+  },
+  modalActions: {
+    flexDirection: "row",
+    gap: spacing.sm,
+  },
+  modalCancelBtn: {
+    flex: 1,
+    paddingVertical: spacing.sm + 2,
+    borderRadius: spacing.borderRadius.lg,
+    borderWidth: 1,
+    borderColor: palette.separator,
+    alignItems: "center",
+  },
+  modalCancelText: {
+    ...typography.subheadline,
+    color: palette.textSecondary,
+    fontWeight: "500",
+  },
+  modalConfirmBtn: {
+    flex: 1,
+    paddingVertical: spacing.sm + 2,
+    borderRadius: spacing.borderRadius.lg,
+    backgroundColor: palette.primary,
+    alignItems: "center",
+  },
+  modalConfirmText: {
+    ...typography.subheadline,
+    color: palette.textInverse,
+    fontWeight: "700",
   },
 });
