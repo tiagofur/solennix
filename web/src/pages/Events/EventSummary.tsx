@@ -23,6 +23,7 @@ import {
   X,
   ImagePlus,
   Wrench,
+  ClipboardList,
 } from "lucide-react";
 import { useToast } from "@/hooks/useToast";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
@@ -31,6 +32,7 @@ import {
   generateBudgetPDF,
   generateContractPDF,
   generateShoppingListPDF,
+  generateChecklistPDF,
   generateInvoicePDF,
   generatePaymentReportPDF,
 } from "@/lib/pdfGenerator";
@@ -501,6 +503,40 @@ export const EventSummary: React.FC = () => {
                 >
                   <ShoppingCart className="h-4 w-4 mr-3 text-text-secondary" />
                   Lista de Insumos
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      const productIds = products.map((p: any) => p.product_id).filter(Boolean);
+                      const productQuantities = new Map<string, number>();
+                      products.forEach((p: any) => productQuantities.set(p.product_id, p.quantity || 0));
+                      const allIngredients = productIds.length > 0
+                        ? await productService.getIngredientsForProducts(productIds)
+                        : [];
+                      const aggregated: Record<string, { name: string; quantity: number; unit: string }> = {};
+                      (allIngredients || [])
+                        .filter((ing: any) => ing.type !== 'equipment' && ing.bring_to_event)
+                        .forEach((ing: any) => {
+                          const key = ing.inventory_id;
+                          const qty = productQuantities.get(ing.product_id) || 0;
+                          if (!aggregated[key]) {
+                            aggregated[key] = { name: ing.ingredient_name || 'Insumo', unit: ing.unit || '', quantity: 0 };
+                          }
+                          aggregated[key].quantity += (ing.quantity_required || 0) * qty;
+                        });
+                      generateChecklistPDF(event, profile as any, products, equipment, Object.values(aggregated), extras);
+                    } catch (err) {
+                      logError("Error generating checklist", err);
+                      addToast("Error al generar checklist.", "error");
+                    }
+                    setActionsDropdownOpen(false);
+                  }}
+                  className="w-full flex items-center px-4 py-2 text-sm text-text hover:bg-surface-alt dark:hover:bg-surface transition-colors"
+                  role="menuitem"
+                >
+                  <ClipboardList className="h-4 w-4 mr-3 text-text-secondary" />
+                  Checklist de Carga
                 </button>
                 <button
                   type="button"

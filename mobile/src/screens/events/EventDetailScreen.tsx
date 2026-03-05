@@ -32,6 +32,7 @@ import {
   Plus,
   Check,
   Camera,
+  ClipboardList,
 } from "lucide-react-native";
 import { EventsStackParamList } from "../../types/navigation";
 import { Event } from "../../types/entities";
@@ -47,6 +48,7 @@ import {
   generateBudgetPDF,
   generateContractPDF,
   generateShoppingListPDF,
+  generateChecklistPDF,
   generatePaymentReportPDF,
   generateInvoicePDF,
 } from "../../lib/pdfGenerator";
@@ -358,6 +360,39 @@ export default function EventDetailScreen({ navigation, route }: Props) {
       setGeneratingPdf(null);
     }
   }, [event, products, user, addToast]);
+
+  const handleGenerateChecklist = useCallback(async () => {
+    setShowActionsMenu(false);
+    try {
+      setGeneratingPdf("checklist");
+      const productQuantities = new Map<string, number>();
+      products.forEach((p: any) => {
+        productQuantities.set(p.product_id, p.quantity || 0);
+      });
+      const productIds = Array.from(productQuantities.keys());
+      const prodIngredients = productIds.length > 0
+        ? await productService.getIngredientsForProducts(productIds)
+        : [];
+      const aggregated: Record<string, { name: string; quantity: number; unit: string }> = {};
+      (prodIngredients || [])
+        .filter((ing: any) => ing.type !== 'equipment' && ing.bring_to_event)
+        .forEach((ing: any) => {
+          const key = ing.inventory_id;
+          const qty = productQuantities.get(ing.product_id) || 0;
+          if (!aggregated[key]) {
+            aggregated[key] = { name: ing.ingredient_name || "Insumo", unit: ing.unit || "", quantity: 0 };
+          }
+          aggregated[key].quantity += (ing.quantity_required || 0) * qty;
+        });
+      await generateChecklistPDF(event!, user, products, equipment, Object.values(aggregated), extras);
+      trackPdfShared();
+    } catch (err) {
+      logError("Error generating checklist PDF", err);
+      addToast("Error al generar checklist", "error");
+    } finally {
+      setGeneratingPdf(null);
+    }
+  }, [event, products, equipment, extras, user, addToast]);
 
   const handleGeneratePaymentReport = useCallback(async () => {
     setShowActionsMenu(false);
@@ -840,6 +875,14 @@ export default function EventDetailScreen({ navigation, route }: Props) {
                 <View style={styles.menuOptionInfo}>
                   <Text style={styles.menuOptionTitle}>Lista de Insumos</Text>
                   <Text style={styles.menuOptionDesc}>Genera lista de insumos necesarios</Text>
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.menuOption} onPress={handleGenerateChecklist} activeOpacity={0.7}>
+                <ClipboardList color={palette.primary} size={24} />
+                <View style={styles.menuOptionInfo}>
+                  <Text style={styles.menuOptionTitle}>Checklist de Carga</Text>
+                  <Text style={styles.menuOptionDesc}>Todo lo que llevar al evento</Text>
                 </View>
               </TouchableOpacity>
 

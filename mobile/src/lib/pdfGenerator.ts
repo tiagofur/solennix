@@ -585,3 +585,128 @@ export const generateInvoicePDF = async (
     `Factura_${invoiceNumber}_${clientName}.pdf`,
   );
 };
+
+// ────────────────────────────────────────────────────────────────────
+// CHECKLIST DE CARGA
+// ────────────────────────────────────────────────────────────────────
+
+export const generateChecklistPDF = async (
+  event: EventWithClient,
+  profile: User | null,
+  products: ProductItem[],
+  equipment: { equipment_name?: string; quantity: number; notes?: string | null }[],
+  checklistIngredients: Ingredient[],
+  extras: ExtraItem[],
+): Promise<void> => {
+  const brandColor = profile?.brand_color || DEFAULT_BRAND_COLOR;
+  const eventDateFormatted = formatDateES(event.event_date);
+
+  // Products table
+  const productsRows = products
+    .map(
+      (p) => `<tr>
+        <td style="width:24px;text-align:center;">\u2610</td>
+        <td>${esc(p.products?.name || "Producto")}</td>
+        <td class="text-center">${p.quantity}</td>
+      </tr>`,
+    )
+    .join("");
+
+  // Equipment table
+  const equipmentRows = equipment
+    .map(
+      (eq) => `<tr>
+        <td style="width:24px;text-align:center;">\u2610</td>
+        <td>${esc(eq.equipment_name || "Equipo")}</td>
+        <td class="text-center">${eq.quantity}</td>
+        <td>${esc(eq.notes || "")}</td>
+      </tr>`,
+    )
+    .join("");
+
+  // Ingredients table
+  const ingredientRows = checklistIngredients
+    .map(
+      (i) => `<tr>
+        <td style="width:24px;text-align:center;">\u2610</td>
+        <td>${esc(i.name)}</td>
+        <td class="text-center">${i.quantity.toFixed(2)}</td>
+        <td class="text-center">${esc(i.unit)}</td>
+      </tr>`,
+    )
+    .join("");
+
+  // Extras table
+  const extrasRows = extras
+    .map(
+      (e) => `<tr>
+        <td style="width:24px;text-align:center;">\u2610</td>
+        <td>${esc(e.description)}</td>
+      </tr>`,
+    )
+    .join("");
+
+  const body = `
+    ${buildHeaderHTML(profile, "Checklist de Carga")}
+    <div style="margin-bottom:16px; color:${GRAY_COLOR};">
+      <p>Evento: ${esc(event.service_type)}</p>
+      <p>Fecha: ${eventDateFormatted}</p>
+      ${event.start_time ? `<p>Hora: ${event.start_time.slice(0, 5)}${event.end_time ? " - " + event.end_time.slice(0, 5) : ""}</p>` : ""}
+      ${event.client?.name ? `<p>Cliente: ${esc(event.client.name)}</p>` : ""}
+      ${event.location ? `<p>Lugar: ${esc(event.location)}${event.city ? ", " + esc(event.city) : ""}</p>` : ""}
+    </div>
+
+    ${
+      products.length > 0
+        ? `<h3 style="color:${brandColor};margin:16px 0 4px;">PRODUCTOS</h3>
+           <table>
+             <thead><tr><th style="width:24px;"></th><th>Producto</th><th class="text-center">Cant.</th></tr></thead>
+             <tbody>${productsRows}</tbody>
+           </table>`
+        : ""
+    }
+
+    ${
+      equipment.length > 0
+        ? `<h3 style="color:${brandColor};margin:16px 0 4px;">EQUIPO</h3>
+           <table>
+             <thead><tr><th style="width:24px;"></th><th>Equipo</th><th class="text-center">Cant.</th><th>Notas</th></tr></thead>
+             <tbody>${equipmentRows}</tbody>
+           </table>`
+        : ""
+    }
+
+    ${
+      checklistIngredients.length > 0
+        ? `<h3 style="color:${brandColor};margin:16px 0 4px;">INSUMOS PARA LLEVAR</h3>
+           <table>
+             <thead><tr><th style="width:24px;"></th><th>Insumo</th><th class="text-center">Cant.</th><th class="text-center">Unidad</th></tr></thead>
+             <tbody>${ingredientRows}</tbody>
+           </table>`
+        : ""
+    }
+
+    ${
+      extras.length > 0
+        ? `<h3 style="color:${brandColor};margin:16px 0 4px;">EXTRAS</h3>
+           <table>
+             <thead><tr><th style="width:24px;"></th><th>Descripción</th></tr></thead>
+             <tbody>${extrasRows}</tbody>
+           </table>`
+        : ""
+    }
+
+    <div style="margin-top:24px;color:${GRAY_COLOR};">
+      <p>Notas:</p>
+      <div style="border-bottom:1px solid #ccc;height:20px;margin-bottom:8px;"></div>
+      <div style="border-bottom:1px solid #ccc;height:20px;"></div>
+    </div>
+  `;
+
+  const html = wrapHTML(brandColor, body);
+  const datePart = event.event_date.slice(0, 10);
+  await generateAndSharePDF(
+    html,
+    `Checklist_${event.service_type}_${datePart}.pdf`,
+  );
+};

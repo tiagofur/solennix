@@ -48,12 +48,13 @@ export const productService = {
     return api.post<any[]>('/products/ingredients/batch', { product_ids: productIds });
   },
 
-  async updateIngredients(productId: string, ingredients: { inventoryId: string, quantityRequired: number, capacity?: number | null }[]) {
+  async updateIngredients(productId: string, ingredients: { inventoryId: string, quantityRequired: number, capacity?: number | null, bringToEvent?: boolean }[]) {
     const payload = ingredients.map(i => ({
       product_id: productId,
       inventory_id: i.inventoryId,
       quantity_required: i.quantityRequired,
       capacity: i.capacity ?? null,
+      bring_to_event: i.bringToEvent ?? false,
     }));
     return api.put(`/products/${productId}/ingredients`, { ingredients: payload });
   }

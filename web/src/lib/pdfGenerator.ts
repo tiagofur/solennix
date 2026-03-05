@@ -664,3 +664,133 @@ export const generateInvoicePDF = (
   doc.save(`Factura_${invoiceNumber}_${event.client?.name || 'Cliente'}.pdf`);
 };
 
+// ===== CHECKLIST DE CARGA =====
+export const generateChecklistPDF = (
+  event: EventWithClient,
+  profile: UserProfile | null,
+  products: ProductItem[],
+  equipment: { equipment_name?: string; quantity: number; notes?: string | null }[],
+  checklistIngredients: { name: string; quantity: number; unit: string }[],
+  extras: ExtraItem[]
+) => {
+  const doc = new jsPDF();
+  let currentY = addHeader(doc, profile, 'Checklist de Carga');
+
+  const brandColor = profile?.brand_color || DEFAULT_BRAND_COLOR;
+
+  // Event Info
+  doc.setFontSize(10);
+  doc.setTextColor(GRAY_COLOR);
+  doc.setFont('helvetica', 'normal');
+  const eventDate = new Date(event.event_date);
+  const userTimezoneOffset = eventDate.getTimezoneOffset() * 60000;
+  const localDate = new Date(eventDate.getTime() + userTimezoneOffset);
+
+  doc.text(`Evento: ${event.service_type}`, 20, currentY);
+  doc.text(`Fecha: ${format(localDate, "d 'de' MMMM, yyyy", { locale: es })}`, 20, currentY + 5);
+  if (event.start_time) doc.text(`Hora: ${event.start_time.slice(0, 5)}${event.end_time ? ' - ' + event.end_time.slice(0, 5) : ''}`, 20, currentY + 10);
+  if (event.client?.name) doc.text(`Cliente: ${event.client.name}`, 20, currentY + 15);
+  if (event.location) doc.text(`Lugar: ${event.location}${event.city ? ', ' + event.city : ''}`, 20, currentY + 20);
+
+  currentY += 30;
+
+  const checkboxCol = '     '; // Empty space for checkbox square
+
+  // Section: PRODUCTOS
+  if (products.length > 0) {
+    doc.setFontSize(12);
+    doc.setTextColor(brandColor);
+    doc.setFont('helvetica', 'bold');
+    doc.text('PRODUCTOS', 20, currentY);
+    currentY += 3;
+
+    autoTable(doc, {
+      startY: currentY,
+      margin: { left: 20, right: 20 },
+      head: [['\u2610', 'Producto', 'Cantidad']],
+      body: products.map(p => [checkboxCol, p.products?.name || 'Producto', String(p.quantity)]),
+      headStyles: { fillColor: [245, 245, 245], textColor: brandColor },
+      styles: { fontSize: 10 },
+      columnStyles: { 0: { cellWidth: 12, halign: 'center' } },
+      theme: 'grid',
+    });
+    currentY = (doc as any).lastAutoTable.finalY + 8;
+  }
+
+  // Section: EQUIPO
+  if (equipment.length > 0) {
+    doc.setFontSize(12);
+    doc.setTextColor(brandColor);
+    doc.setFont('helvetica', 'bold');
+    doc.text('EQUIPO', 20, currentY);
+    currentY += 3;
+
+    autoTable(doc, {
+      startY: currentY,
+      margin: { left: 20, right: 20 },
+      head: [['\u2610', 'Equipo', 'Cant.', 'Notas']],
+      body: equipment.map(eq => [checkboxCol, eq.equipment_name || 'Equipo', String(eq.quantity), eq.notes || '']),
+      headStyles: { fillColor: [245, 245, 245], textColor: brandColor },
+      styles: { fontSize: 10 },
+      columnStyles: { 0: { cellWidth: 12, halign: 'center' } },
+      theme: 'grid',
+    });
+    currentY = (doc as any).lastAutoTable.finalY + 8;
+  }
+
+  // Section: INSUMOS PARA LLEVAR
+  if (checklistIngredients.length > 0) {
+    doc.setFontSize(12);
+    doc.setTextColor(brandColor);
+    doc.setFont('helvetica', 'bold');
+    doc.text('INSUMOS PARA LLEVAR', 20, currentY);
+    currentY += 3;
+
+    autoTable(doc, {
+      startY: currentY,
+      margin: { left: 20, right: 20 },
+      head: [['\u2610', 'Insumo', 'Cantidad', 'Unidad']],
+      body: checklistIngredients.map(i => [checkboxCol, i.name, i.quantity.toFixed(2), i.unit]),
+      headStyles: { fillColor: [245, 245, 245], textColor: brandColor },
+      styles: { fontSize: 10 },
+      columnStyles: { 0: { cellWidth: 12, halign: 'center' } },
+      theme: 'grid',
+    });
+    currentY = (doc as any).lastAutoTable.finalY + 8;
+  }
+
+  // Section: EXTRAS
+  const physicalExtras = extras.filter(e => e.description);
+  if (physicalExtras.length > 0) {
+    doc.setFontSize(12);
+    doc.setTextColor(brandColor);
+    doc.setFont('helvetica', 'bold');
+    doc.text('EXTRAS', 20, currentY);
+    currentY += 3;
+
+    autoTable(doc, {
+      startY: currentY,
+      margin: { left: 20, right: 20 },
+      head: [['\u2610', 'Descripción']],
+      body: physicalExtras.map(e => [checkboxCol, e.description]),
+      headStyles: { fillColor: [245, 245, 245], textColor: brandColor },
+      styles: { fontSize: 10 },
+      columnStyles: { 0: { cellWidth: 12, halign: 'center' } },
+      theme: 'grid',
+    });
+    currentY = (doc as any).lastAutoTable.finalY + 8;
+  }
+
+  // Notes area
+  if (currentY < doc.internal.pageSize.height - 40) {
+    doc.setFontSize(10);
+    doc.setTextColor(GRAY_COLOR);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Notas:', 20, currentY + 5);
+    doc.line(20, currentY + 12, doc.internal.pageSize.width - 20, currentY + 12);
+    doc.line(20, currentY + 22, doc.internal.pageSize.width - 20, currentY + 22);
+  }
+
+  doc.save(`Checklist_${event.service_type}_${format(localDate, 'yyyy-MM-dd')}.pdf`);
+};
+
