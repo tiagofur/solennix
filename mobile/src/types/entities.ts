@@ -177,6 +177,8 @@ export interface ProductIngredient {
     product_id: string
     inventory_id: string
     quantity_required: number
+    capacity?: number | null
+    bring_to_event?: boolean
     created_at: string
     // Joined from inventory (flattened by backend)
     ingredient_name?: string | null

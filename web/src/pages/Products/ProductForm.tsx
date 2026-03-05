@@ -34,7 +34,7 @@ export const ProductForm: React.FC = () => {
   const { canCreateCatalogItem, catalogCount, catalogLimit, loading: limitsLoading } = usePlanLimits();
 
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
-  const [recipeIngredients, setRecipeIngredients] = useState<{inventory_id: string, quantity_required: number, capacity: number | null, unit_cost: number, unit: string, _type: 'ingredient' | 'equipment'}[]>([]);
+  const [recipeIngredients, setRecipeIngredients] = useState<{inventory_id: string, quantity_required: number, capacity: number | null, bring_to_event: boolean, unit_cost: number, unit: string, _type: 'ingredient' | 'equipment'}[]>([]);
 
   const {
     register,
@@ -91,6 +91,7 @@ export const ProductForm: React.FC = () => {
               inventory_id: i.inventory_id,
               quantity_required: i.quantity_required,
               capacity: i.capacity ?? null,
+              bring_to_event: i.bring_to_event ?? false,
               unit_cost: i.unit_cost || 0,
               unit: i.unit || '',
               _type: i.type === 'equipment' ? 'equipment' as const : 'ingredient' as const,
@@ -142,6 +143,7 @@ export const ProductForm: React.FC = () => {
           inventory_id: "",
           quantity_required: 1,
           capacity: null,
+          bring_to_event: false,
           unit_cost: 0,
           unit: "",
           _type: 'ingredient',
@@ -153,6 +155,7 @@ export const ProductForm: React.FC = () => {
           inventory_id: "",
           quantity_required: 1,
           capacity: null,
+          bring_to_event: false,
           unit_cost: 0,
           unit: "",
           _type: 'equipment',
@@ -165,7 +168,7 @@ export const ProductForm: React.FC = () => {
       setRecipeIngredients(newIngredients);
   };
 
-  const handleIngredientChange = (index: number, field: 'inventory_id' | 'quantity_required' | 'capacity', value: any) => {
+  const handleIngredientChange = (index: number, field: 'inventory_id' | 'quantity_required' | 'capacity' | 'bring_to_event', value: any) => {
       const newIngredients = [...recipeIngredients];
       newIngredients[index] = { ...newIngredients[index], [field]: value };
 
@@ -227,6 +230,7 @@ export const ProductForm: React.FC = () => {
               inventoryId: i.inventory_id,
               quantityRequired: i.quantity_required,
               capacity: i._type === 'equipment' ? (i.capacity ?? null) : null,
+              bringToEvent: i.bring_to_event,
           }));
           await productService.updateIngredients(productId, ingredientsToSave);
       }
@@ -473,6 +477,15 @@ export const ProductForm: React.FC = () => {
                                 </span>
                             </div>
                         </div>
+                        <label className="flex items-center gap-2 mt-2 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={item.bring_to_event}
+                                onChange={(e) => handleIngredientChange(originalIndex, 'bring_to_event', e.target.checked)}
+                                className="rounded border-border text-primary focus:ring-primary/20 h-4 w-4"
+                            />
+                            <span className="text-xs text-text-secondary">Llevar al evento</span>
+                        </label>
                     </div>
                 ))}
 
