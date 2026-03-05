@@ -4,9 +4,10 @@ interface LogoProps {
   className?: string;
   size?: number;
   showText?: boolean;
+  forceLight?: boolean;
 }
 
-export const Logo: React.FC<LogoProps> = ({ className = '', size = 32, showText = true }) => {
+export const Logo: React.FC<LogoProps> = ({ className = '', size = 32, showText = true, forceLight = false }) => {
   return (
     <div className={`flex items-center gap-3 ${className}`}>
       <img
@@ -18,7 +19,7 @@ export const Logo: React.FC<LogoProps> = ({ className = '', size = 32, showText 
         style={{ width: size, height: size }}
       />
       {showText && (
-        <span className="text-2xl font-bold text-primary">
+        <span className={`text-2xl font-bold ${forceLight ? 'text-white' : 'text-primary'}`}>
           EventosApp
         </span>
       )}

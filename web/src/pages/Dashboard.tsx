@@ -16,6 +16,9 @@ import {
   Package,
   FileCheck,
   ArrowRight,
+  Plus,
+  Users,
+  TrendingUp,
 } from "lucide-react";
 import { logError } from "../lib/errorHandler";
 import {
@@ -42,21 +45,81 @@ type DashboardEvent = Event & {
   clients?: { name: string } | null;
 };
 
+// ── Skeleton loader ──────────────────────────────────────────────
+function SkeletonKpi() {
+  return (
+    <div className="bg-card border border-border rounded-3xl p-5 animate-pulse">
+      <div className="flex items-start gap-4">
+        <div className="w-10 h-10 rounded-xl bg-gray-200 dark:bg-gray-700 shrink-0" />
+        <div className="flex-1 space-y-2 pt-1">
+          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/3" />
+          <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
+          <div className="h-3 bg-gray-100 dark:bg-gray-800 rounded w-3/4" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Status badge ─────────────────────────────────────────────────
+const statusConfig: Record<string, { label: string; classes: string }> = {
+  quoted:    { label: "Cotizado",    classes: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400" },
+  confirmed: { label: "Confirmado",  classes: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400" },
+  completed: { label: "Completado",  classes: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400" },
+  cancelled: { label: "Cancelado",   classes: "bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400" },
+};
+
+function StatusBadge({ status }: { status: string }) {
+  const cfg = statusConfig[status] ?? { label: status, classes: "bg-gray-100 text-gray-500" };
+  return (
+    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${cfg.classes}`}>
+      {cfg.label}
+    </span>
+  );
+}
+
+// ── KPI Card ─────────────────────────────────────────────────────
+interface KpiCardProps {
+  icon: React.ElementType;
+  iconBg: string;
+  iconColor: string;
+  label: string;
+  value: string;
+  sub?: React.ReactNode;
+}
+function KpiCard({ icon: Icon, iconBg, iconColor, label, value, sub }: KpiCardProps) {
+  return (
+    <div className="bg-card shadow-sm hover:shadow-md border border-border rounded-3xl p-5 transition-all duration-300 hover:-translate-y-0.5 flex flex-col gap-4">
+      <div className="flex items-start gap-4">
+        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${iconBg}`}>
+          <Icon className={`h-5 w-5 ${iconColor}`} aria-hidden="true" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <dt className="text-xs font-semibold text-text-secondary uppercase tracking-wider leading-tight mb-1">
+            {label}
+          </dt>
+          <dd className="text-xl font-black text-text tracking-tight">{value}</dd>
+        </div>
+      </div>
+      {sub && <div className="text-xs text-text-secondary border-t border-border pt-3">{sub}</div>}
+    </div>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────
 export const Dashboard: React.FC = () => {
   const { user, checkAuth } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const firstName = user?.name ? user.name.split(" ")[0] : "Usuario";
 
-  const { isBasicPlan, canCreateEvent, eventsThisMonth, limit } =
-    usePlanLimits();
+  const { isBasicPlan, canCreateEvent, eventsThisMonth, limit } = usePlanLimits();
 
   const [eventsThisMonthList, setEventsThisMonthList] = useState<DashboardEvent[]>([]);
   const [upcomingEvents, setUpcomingEvents] = useState<DashboardEvent[]>([]);
   const [lowStockItems, setLowStockItems] = useState<InventoryItem[]>([]);
   const [netSalesThisMonth, setNetSalesThisMonth] = useState(0);
   const [cashCollectedThisMonth, setCashCollectedThisMonth] = useState(0);
-  const [cashAppliedToThisMonthsEvents, setCashAppliedToThisMonthsEvents] =
-    useState(0);
+  const [cashAppliedToThisMonthsEvents, setCashAppliedToThisMonthsEvents] = useState(0);
   const [vatCollectedThisMonth, setVatCollectedThisMonth] = useState(0);
   const [vatOutstandingThisMonth, setVatOutstandingThisMonth] = useState(0);
   const [lowStockCount, setLowStockCount] = useState(0);
@@ -65,6 +128,11 @@ export const Dashboard: React.FC = () => {
   const [loadingUpcoming, setLoadingUpcoming] = useState(true);
   const [loadingInventory, setLoadingInventory] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const isLoading = loadingMonth || loadingUpcoming || loadingInventory;
+
+  const fmt = (n: number) =>
+    `$${n.toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
 
   const loadDashboardData = () => {
     setError(null);
@@ -75,8 +143,6 @@ export const Dashboard: React.FC = () => {
     const today = new Date();
     const start = format(startOfMonth(today), "yyyy-MM-dd");
     const end = format(endOfMonth(today), "yyyy-MM-dd");
-    const startDate = start;
-    const endDate = end;
 
     // 1. Load Month Events
     eventService
@@ -87,33 +153,22 @@ export const Dashboard: React.FC = () => {
         const realized = (data || []).filter(
           (e) => e.status === "confirmed" || e.status === "completed",
         );
-        const netSales = realized.reduce(
-          (sum, event) => sum + getEventNetSales(event),
-          0,
-        );
+        const netSales = realized.reduce((sum, event) => sum + getEventNetSales(event), 0);
         setNetSalesThisMonth(netSales);
 
         const eventIds = realized.map((e) => e.id);
         const payments = await paymentService.getByEventIds(eventIds);
         const paidByEvent: Record<string, number> = {};
         payments.forEach((p: Payment) => {
-          paidByEvent[p.event_id] =
-            (paidByEvent[p.event_id] || 0) + Number(p.amount || 0);
+          paidByEvent[p.event_id] = (paidByEvent[p.event_id] || 0) + Number(p.amount || 0);
         });
 
-        const cashApplied = Object.values(paidByEvent).reduce(
-          (sum, v) => sum + v,
-          0,
-        );
+        const cashApplied = Object.values(paidByEvent).reduce((sum, v) => sum + v, 0);
         setCashAppliedToThisMonthsEvents(cashApplied);
 
-        const paymentsInMonth = await paymentService.getByPaymentDateRange(
-          startDate,
-          endDate,
-        );
+        const paymentsInMonth = await paymentService.getByPaymentDateRange(start, end);
         const cashInMonth = (paymentsInMonth || []).reduce(
-          (sum: number, p: Payment) => sum + Number(p.amount || 0),
-          0,
+          (sum: number, p: Payment) => sum + Number(p.amount || 0), 0,
         );
         setCashCollectedThisMonth(cashInMonth);
 
@@ -143,14 +198,10 @@ export const Dashboard: React.FC = () => {
     // 2. Load Upcoming Events
     eventService
       .getUpcoming(5)
-      .then((data) => {
-        setUpcomingEvents(data || []);
-      })
+      .then((data) => setUpcomingEvents(data || []))
       .catch((err) => {
         logError("Error loading upcoming events", err);
-        setError(
-          "Error de conexión o permisos. Verifica tu sesión o intenta más tarde.",
-        );
+        setError("Error de conexión o permisos. Verifica tu sesión o intenta más tarde.");
       })
       .finally(() => setLoadingUpcoming(false));
 
@@ -158,23 +209,16 @@ export const Dashboard: React.FC = () => {
     inventoryService
       .getAll()
       .then((data) => {
-        const items = (data || []).filter(
-          (item) => item.current_stock <= item.minimum_stock,
-        );
+        const items = (data || []).filter((item) => item.current_stock <= item.minimum_stock);
         setLowStockCount(items.length);
-        setLowStockItems(items.slice(0, 5)); // Just the top 5 alerts
+        setLowStockItems(items.slice(0, 5));
       })
-      .catch((err) => {
-        logError("Error loading inventory", err);
-      })
+      .catch((err) => logError("Error loading inventory", err))
       .finally(() => setLoadingInventory(false));
   };
 
-  useEffect(() => {
-    loadDashboardData();
-  }, []);
+  useEffect(() => { loadDashboardData(); }, []);
 
-  // Post-checkout plan refresh: when redirected from Stripe with session_id
   useEffect(() => {
     if (searchParams.has("session_id")) {
       checkAuth();
@@ -182,124 +226,88 @@ export const Dashboard: React.FC = () => {
     }
   }, [searchParams, checkAuth, setSearchParams]);
 
-  // Prepare Chart Data (Weekly aggregation for the current month)
+  // Chart data
   const chartData = React.useMemo(() => {
     if (!eventsThisMonthList.length) return [];
-
     const statusData = [
-      {
-        status: "quoted" as const,
-        name: "Cotizado",
-        value: 0,
-        color: "#9CA3AF",
-      },
-      {
-        status: "confirmed" as const,
-        name: "Confirmado",
-        value: 0,
-        color: "#3B82F6",
-      },
-      {
-        status: "completed" as const,
-        name: "Completado",
-        value: 0,
-        color: "#10B981",
-      },
-      {
-        status: "cancelled" as const,
-        name: "Cancelado",
-        value: 0,
-        color: "#EF4444",
-      },
+      { status: "quoted" as const,    name: "Cotizado",   value: 0, color: "#9CA3AF" },
+      { status: "confirmed" as const, name: "Confirmado", value: 0, color: "#3B82F6" },
+      { status: "completed" as const, name: "Completado", value: 0, color: "#10B981" },
+      { status: "cancelled" as const, name: "Cancelado",  value: 0, color: "#EF4444" },
     ];
-
     eventsThisMonthList.forEach((event) => {
       const bucket = statusData.find((s) => s.status === event.status);
       if (bucket) bucket.value += 1;
     });
-
     return statusData.filter((d) => d.value > 0);
   }, [eventsThisMonthList]);
 
-  const financialComparisonData = React.useMemo(() => {
-    return [
-      { name: "Ventas Netas", value: netSalesThisMonth, color: "#10B981" },
-      { name: "Cobrado Real", value: cashCollectedThisMonth, color: "#F97316" },
-      {
-        name: "IVA por Cobrar",
-        value: vatOutstandingThisMonth,
-        color: "#EF4444",
-      },
-    ];
-  }, [netSalesThisMonth, cashCollectedThisMonth, vatOutstandingThisMonth]);
+  const financialComparisonData = React.useMemo(() => [
+    { name: "Ventas Netas",    value: netSalesThisMonth,       color: "#10B981" },
+    { name: "Cobrado Real",    value: cashCollectedThisMonth,  color: "#F97316" },
+    { name: "IVA por Cobrar",  value: vatOutstandingThisMonth, color: "#EF4444" },
+  ], [netSalesThisMonth, cashCollectedThisMonth, vatOutstandingThisMonth]);
+
+  const tooltipStyle = {
+    borderRadius: "12px",
+    border: "1px solid var(--color-border)",
+    boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1)",
+    backgroundColor: "var(--color-card)",
+    color: "var(--color-text)",
+    padding: "10px 14px",
+  };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+
+      {/* ── HEADER ── */}
+      <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold text-text">
-            Hola, {firstName}
+          <h1 className="text-2xl font-black text-text tracking-tight">
+            Hola, {firstName} 👋
           </h1>
-          <p className="text-sm text-text-secondary first-letter:uppercase">
+          <p className="text-sm text-text-secondary mt-0.5 first-letter:uppercase">
             {format(new Date(), "EEEE, d 'de' MMMM 'de' yyyy", { locale: es })}
           </p>
         </div>
-        <div className="flex space-x-2">
+        <div className="flex items-center gap-2">
           <Link
             to="/events/new"
-            className="hidden sm:inline-flex items-center justify-center px-4 py-2 rounded-full shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark transition-colors"
+            className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold text-white premium-gradient shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all hover:scale-[1.02]"
             aria-label="Crear nuevo evento"
           >
-            + Evento
+            <Plus className="h-4 w-4" /> Evento
           </Link>
           <Link
             to="/clients/new"
-            className="hidden sm:inline-flex items-center justify-center px-4 py-2 border border-border rounded-full shadow-sm text-sm font-medium text-text bg-card hover:bg-surface-alt transition-colors"
+            className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 border border-border rounded-xl text-sm font-semibold text-text bg-card hover:bg-surface-alt transition-colors"
             aria-label="Crear nuevo cliente"
           >
-            + Cliente
+            <Users className="h-4 w-4" /> Cliente
           </Link>
           <button
             type="button"
             onClick={loadDashboardData}
-            className="p-2 text-text-secondary hover:text-primary transition-colors"
+            className="p-2.5 rounded-xl border border-border bg-card text-text-secondary hover:text-primary hover:bg-surface-alt transition-colors"
             aria-label="Recargar datos del dashboard"
           >
-            <RefreshCw
-              className={`h-5 w-5 ${
-                loadingMonth || loadingUpcoming || loadingInventory
-                  ? "animate-spin"
-                  : ""
-              }`}
-              aria-hidden="true"
-            />
+            <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} aria-hidden="true" />
           </button>
         </div>
       </div>
 
+      {/* ── ERROR ── */}
       {error && (
-        <div
-          className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-400 p-4"
-          role="alert"
-        >
-          <div className="flex justify-between items-center">
-            <div className="flex">
-              <div className="shrink-0">
-                <AlertTriangle
-                  className="h-5 w-5 text-red-400"
-                  aria-hidden="true"
-                />
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-error">
-                  {error}
-                </p>
-              </div>
-            </div>
-            <span className="text-sm font-medium text-error">
-              Intenta recargar los datos.
-            </span>
-          </div>
+        <div className="flex items-start gap-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 rounded-2xl p-4" role="alert">
+          <AlertTriangle className="h-5 w-5 shrink-0 mt-0.5" aria-hidden="true" />
+          <div className="flex-1 text-sm">{error}</div>
+          <button
+            type="button"
+            onClick={loadDashboardData}
+            className="text-xs font-bold underline underline-offset-2 shrink-0"
+          >
+            Recargar
+          </button>
         </div>
       )}
 
@@ -314,307 +322,92 @@ export const Dashboard: React.FC = () => {
         />
       )}
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-6">
-        {/* Ventas netas (devengadas) */}
-        <div className="bg-card shadow-sm hover:shadow-md border border-border rounded-3xl transition-all duration-300 flex flex-col group hover:-translate-y-0.5 overflow-hidden">
-          <div className="p-5 flex-1">
-            <div className="flex items-center">
-              <div className="shrink-0">
-                <div
-                  className="h-10 w-10 bg-success/10 rounded-full flex items-center justify-center text-success"
-                  aria-hidden="true"
-                >
-                  <DollarSign className="h-6 w-6" aria-hidden="true" />
-                </div>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-xs font-medium text-text-secondary uppercase tracking-wider leading-tight">
-                    Ventas netas
-                  </dt>
-                  <dd>
-                    <div className="text-xl font-bold text-text mt-1">
-                      {loadingMonth
-                        ? "..."
-                        : `$${netSalesThisMonth.toLocaleString("es-MX", {
-                            minimumFractionDigits: 2,
-                          })}`}
-                    </div>
-                  </dd>
-                </dl>
-              </div>
-            </div>
-          </div>
-          <div className="bg-surface-alt px-5 py-3 transition-colors mt-auto border-t border-border">
-            <div className="text-xs">
-              <span className="text-text-secondary">
-                Confirmados/Completados
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Cobrado (cash) */}
-        <div className="bg-card shadow-sm hover:shadow-md border border-border rounded-3xl transition-all duration-300 flex flex-col group hover:-translate-y-0.5 overflow-hidden">
-          <div className="p-5 flex-1">
-            <div className="flex items-center">
-              <div className="shrink-0">
-                <div
-                  className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center text-primary"
-                  aria-hidden="true"
-                >
-                  <DollarSign className="h-6 w-6" aria-hidden="true" />
-                </div>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-xs font-medium text-text-secondary uppercase tracking-wider leading-tight">
-                    Cobrado (mes)
-                  </dt>
-                  <dd>
-                    <div className="text-xl font-bold text-text mt-1">
-                      {loadingMonth
-                        ? "..."
-                        : `$${cashCollectedThisMonth.toLocaleString("es-MX", {
-                            minimumFractionDigits: 2,
-                          })}`}
-                    </div>
-                  </dd>
-                </dl>
-              </div>
-            </div>
-          </div>
-          <div className="bg-surface-alt px-5 py-3 transition-colors mt-auto border-t border-border">
-            <div className="text-xs text-text-secondary">
-              Aplicado a eventos:{" "}
-              <span className="font-medium text-text">
-                {loadingMonth
-                  ? "..."
-                  : `$${cashAppliedToThisMonthsEvents.toLocaleString("es-MX", {
-                      minimumFractionDigits: 2,
-                    })}`}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* IVA cobrado */}
-        <div className="bg-card shadow-sm hover:shadow-md border border-border rounded-3xl transition-all duration-300 flex flex-col group hover:-translate-y-0.5 overflow-hidden">
-          <div className="p-5 flex-1">
-            <div className="flex items-center">
-              <div className="shrink-0">
-                <div
-                  className="h-10 w-10 bg-info/10 rounded-full flex items-center justify-center text-info"
-                  aria-hidden="true"
-                >
-                  <FileCheck className="h-6 w-6" aria-hidden="true" />
-                </div>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-xs font-medium text-text-secondary uppercase tracking-wider leading-tight">
-                    IVA cobrado
-                  </dt>
-                  <dd>
-                    <div className="text-xl font-bold text-text mt-1">
-                      {loadingMonth
-                        ? "..."
-                        : `$${vatCollectedThisMonth.toLocaleString("es-MX", {
-                            minimumFractionDigits: 2,
-                          })}`}
-                    </div>
-                  </dd>
-                </dl>
-              </div>
-            </div>
-          </div>
-          <div className="bg-surface-alt px-5 py-3 transition-colors mt-auto border-t border-border">
-            <div className="text-xs">
-              <span className="text-text-secondary">
-                Proporcional al % pagado
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* IVA por cobrar */}
-        <div className="bg-card shadow-sm hover:shadow-md border border-border rounded-3xl transition-all duration-300 flex flex-col group hover:-translate-y-0.5 overflow-hidden">
-          <div className="p-5 flex-1">
-            <div className="flex items-center">
-              <div className="shrink-0">
-                <div
-                  className="h-10 w-10 bg-error/10 rounded-full flex items-center justify-center text-error"
-                  aria-hidden="true"
-                >
-                  <AlertTriangle className="h-6 w-6" aria-hidden="true" />
-                </div>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-xs font-medium text-text-secondary uppercase tracking-wider leading-tight">
-                    IVA pendiente
-                  </dt>
-                  <dd>
-                    <div className="text-xl font-bold text-text mt-1">
-                      {loadingMonth
-                        ? "..."
-                        : `$${vatOutstandingThisMonth.toLocaleString("es-MX", {
-                            minimumFractionDigits: 2,
-                          })}`}
-                    </div>
-                  </dd>
-                </dl>
-              </div>
-            </div>
-          </div>
-          <div className="bg-surface-alt px-5 py-3 transition-colors mt-auto border-t border-border">
-            <div className="text-xs">
-              <Link
-                to="/calendar"
-                className="font-medium text-primary hover:text-primary-dark transition-colors"
-              >
-                Ver eventos del mes
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        {/* Card Eventos del Mes */}
-        <div className="bg-card shadow-sm hover:shadow-md border border-border rounded-3xl transition-all duration-300 flex flex-col group hover:-translate-y-0.5 overflow-hidden">
-          <div className="p-5 flex-1">
-            <div className="flex items-center">
-              <div className="shrink-0">
-                <div
-                  className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center text-primary"
-                  aria-hidden="true"
-                >
-                  <Calendar className="h-6 w-6" aria-hidden="true" />
-                </div>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-xs font-medium text-text-secondary uppercase tracking-wider leading-tight">
-                    Eventos este Mes
-                  </dt>
-                  <dd>
-                    <div className="text-xl font-bold text-text mt-1">
-                      {loadingMonth ? "..." : eventsThisMonthList.length}
-                    </div>
-                  </dd>
-                </dl>
-              </div>
-            </div>
-          </div>
-          <div className="bg-surface-alt px-5 py-3 transition-colors mt-auto border-t border-border">
-            <div className="text-xs">
-              <Link
-                to="/calendar"
-                className="font-medium text-primary hover:text-primary-dark transition-colors"
-              >
-                Ver calendario
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        {/* Card Alertas de Inventario */}
-        <div className="bg-card shadow-sm hover:shadow-md border border-border rounded-3xl transition-all duration-300 flex flex-col group hover:-translate-y-0.5 overflow-hidden">
-          <div className="p-5 flex-1">
-            <div className="flex items-center">
-              <div className="shrink-0">
-                <div
-                  className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                    lowStockCount > 0
-                      ? "bg-error/10 text-error"
-                      : "bg-success/10 text-success"
-                  }`}
-                  aria-hidden="true"
-                >
-                  <Package className="h-6 w-6" aria-hidden="true" />
-                </div>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-xs font-medium text-text-secondary uppercase tracking-wider leading-tight">
-                    Alertas de Stock
-                  </dt>
-                  <dd>
-                    <div
-                      className={`text-xl font-bold mt-1 ${
-                        lowStockCount > 0
-                          ? "text-error"
-                          : "text-text"
-                      }`}
-                    >
-                      {loadingInventory
-                        ? "..."
-                        : lowStockCount > 0
-                          ? `${lowStockCount} ítems bajos`
-                          : "Todo en orden"}
-                    </div>
-                  </dd>
-                </dl>
-              </div>
-            </div>
-          </div>
-          <div className="bg-surface-alt px-5 py-3 transition-colors mt-auto border-t border-border">
-            <div className="text-xs">
-              <Link
-                to="/inventory"
-                className="font-medium text-primary hover:text-primary-dark transition-colors"
-              >
-                Ver inventario
-              </Link>
-            </div>
-          </div>
-        </div>
+      {/* ── KPI CARDS ── */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
+        {loadingMonth ? (
+          Array.from({ length: 6 }).map((_, i) => <SkeletonKpi key={i} />)
+        ) : (
+          <>
+            <KpiCard
+              icon={TrendingUp}
+              iconBg="bg-emerald-100 dark:bg-emerald-900/30"
+              iconColor="text-emerald-600 dark:text-emerald-400"
+              label="Ventas netas"
+              value={fmt(netSalesThisMonth)}
+              sub="Eventos confirmados y completados"
+            />
+            <KpiCard
+              icon={DollarSign}
+              iconBg="bg-primary/10"
+              iconColor="text-primary"
+              label="Cobrado (mes)"
+              value={fmt(cashCollectedThisMonth)}
+              sub={<>Aplicado a eventos: <span className="font-semibold text-text">{fmt(cashAppliedToThisMonthsEvents)}</span></>}
+            />
+            <KpiCard
+              icon={FileCheck}
+              iconBg="bg-blue-100 dark:bg-blue-900/30"
+              iconColor="text-blue-600 dark:text-blue-400"
+              label="IVA cobrado"
+              value={fmt(vatCollectedThisMonth)}
+              sub="Proporcional al % pagado"
+            />
+            <KpiCard
+              icon={AlertTriangle}
+              iconBg="bg-red-100 dark:bg-red-900/30"
+              iconColor="text-red-600 dark:text-red-400"
+              label="IVA pendiente"
+              value={fmt(vatOutstandingThisMonth)}
+              sub={<Link to="/calendar" className="font-semibold text-primary hover:underline">Ver eventos del mes</Link>}
+            />
+            <KpiCard
+              icon={Calendar}
+              iconBg="bg-primary/10"
+              iconColor="text-primary"
+              label="Eventos este mes"
+              value={String(eventsThisMonthList.length)}
+              sub={<Link to="/calendar" className="font-semibold text-primary hover:underline">Ver calendario</Link>}
+            />
+            <KpiCard
+              icon={Package}
+              iconBg={lowStockCount > 0 ? "bg-red-100 dark:bg-red-900/30" : "bg-emerald-100 dark:bg-emerald-900/30"}
+              iconColor={lowStockCount > 0 ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400"}
+              label="Alertas de stock"
+              value={lowStockCount > 0 ? `${lowStockCount} ítems bajos` : "Todo en orden"}
+              sub={<Link to="/inventory" className="font-semibold text-primary hover:underline">Ver inventario</Link>}
+            />
+          </>
+        )}
       </div>
 
+      {/* ── CHARTS ── */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        {/* Financial Comparison Chart */}
-        <div className="bg-card shadow-sm border border-border rounded-3xl p-6 transition-colors flex flex-col">
-          <h3 className="text-lg leading-6 font-semibold text-text mb-6">
-            Comparativa Financiera (Este Mes)
-          </h3>
-          <div
-            className="h-80 w-full mt-auto"
-            role="img"
-            aria-label="Gráfico de barras comparando ventas netas, cobrado real e IVA por cobrar del mes actual"
-          >
+
+        {/* Financial Comparison */}
+        <div className="bg-card shadow-sm border border-border rounded-3xl p-6 flex flex-col">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-base font-bold text-text">Comparativa Financiera</h3>
+            <span className="text-xs text-text-secondary bg-surface-alt px-3 py-1 rounded-full">Este mes</span>
+          </div>
+          <div className="h-72 w-full" role="img" aria-label="Gráfico de barras comparando ventas netas, cobrado real e IVA por cobrar">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={financialComparisonData}
-                layout="vertical"
-                margin={{ left: 40, right: 40 }}
-              >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  horizontal={false}
-                  stroke="var(--color-border)"
-                  opacity={0.5}
-                />
+              <BarChart data={financialComparisonData} layout="vertical" margin={{ left: 20, right: 30 }}>
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--color-border)" opacity={0.5} />
                 <XAxis type="number" hide />
                 <YAxis
                   dataKey="name"
                   type="category"
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: "#6B7280", fontSize: 12 }}
-                  width={100}
+                  tick={{ fill: "var(--color-text-secondary)", fontSize: 12 }}
+                  width={110}
                 />
                 <Tooltip
-                  formatter={(value: number) => [
-                    `$${value.toLocaleString()}`,
-                    "Monto",
-                  ]}
-                  contentStyle={{
-                    borderRadius: "12px",
-                    border: "none",
-                    boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
-                  }}
+                  formatter={(value: number) => [`$${value.toLocaleString("es-MX")}`, "Monto"]}
+                  contentStyle={tooltipStyle}
+                  cursor={{ fill: "var(--color-surface-alt)" }}
                 />
-                <Bar dataKey="value" radius={[0, 6, 6, 0]} barSize={32}>
+                <Bar dataKey="value" radius={[0, 8, 8, 0]} barSize={28}>
                   {financialComparisonData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
@@ -624,147 +417,85 @@ export const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Event Status Bar Chart */}
-        <div className="bg-card shadow-sm border border-border rounded-3xl p-6 transition-colors flex flex-col">
-          <h3 className="text-lg leading-6 font-semibold text-text mb-6">
-            Estado de Eventos (Este Mes)
-          </h3>
-          <div className="h-80 w-full mt-auto">
+        {/* Event Status */}
+        <div className="bg-card shadow-sm border border-border rounded-3xl p-6 flex flex-col">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-base font-bold text-text">Estado de Eventos</h3>
+            <span className="text-xs text-text-secondary bg-surface-alt px-3 py-1 rounded-full">Este mes</span>
+          </div>
+          <div className="h-72 w-full" role="img" aria-label="Gráfico de barras con estados de eventos del mes">
             {loadingMonth ? (
-              <div
-                className="h-full flex items-center justify-center"
-                role="status"
-                aria-live="polite"
-              >
-                <RefreshCw
-                  className="h-8 w-8 animate-spin text-gray-300"
-                  aria-hidden="true"
-                />
-                <span className="sr-only">Cargando datos de eventos...</span>
+              <div className="h-full flex items-center justify-center">
+                <RefreshCw className="h-7 w-7 animate-spin text-border" aria-hidden="true" />
+                <span className="sr-only">Cargando...</span>
               </div>
             ) : chartData.length > 0 ? (
-              <div
-                className="h-full w-full"
-                role="img"
-                aria-label="Gráfico de barras mostrando la distribución de estados de eventos del mes actual"
-              >
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData}>
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      vertical={false}
-                      stroke="var(--color-border)"
-                      opacity={0.5}
-                    />
-                    <XAxis
-                      dataKey="name"
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: "#6B7280", fontSize: 11 }}
-                      dy={10}
-                    />
-                    <YAxis
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: "#6B7280", fontSize: 11 }}
-                    />
-                    <Tooltip
-                      cursor={{ fill: "rgba(0,0,0,0.05)" }}
-                      contentStyle={{
-                        borderRadius: "12px",
-                        border: "none",
-                        boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
-                        backgroundColor: "rgba(255, 255, 255, 0.9)",
-                        padding: "12px",
-                      }}
-                    />
-                    <Bar dataKey="value" radius={[6, 6, 0, 0]} barSize={48}>
-                      {chartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" opacity={0.5} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: "var(--color-text-secondary)", fontSize: 11 }} dy={8} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: "var(--color-text-secondary)", fontSize: 11 }} allowDecimals={false} />
+                  <Tooltip
+                    cursor={{ fill: "var(--color-surface-alt)" }}
+                    contentStyle={tooltipStyle}
+                  />
+                  <Bar dataKey="value" name="Eventos" radius={[6, 6, 0, 0]} barSize={44}>
+                    {chartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
             ) : (
-              <div className="h-full flex flex-col items-center justify-center text-gray-400">
-                <Calendar
-                  className="h-12 w-12 mb-3 opacity-20"
-                  aria-hidden="true"
-                />
-                <p className="text-sm">
-                  No hay datos suficientes para graficar
-                </p>
+              <div className="h-full flex flex-col items-center justify-center gap-3 text-text-tertiary">
+                <Calendar className="h-12 w-12 opacity-20" aria-hidden="true" />
+                <p className="text-sm text-text-secondary">Sin datos para graficar este mes</p>
+                <Link to="/events/new" className="text-xs font-semibold text-primary hover:underline">
+                  Crear primer evento
+                </Link>
               </div>
             )}
           </div>
         </div>
 
-        {/* Low Stock Items Section */}
+        {/* ── LOW STOCK ── */}
         {lowStockItems.length > 0 && (
-          <div className="bg-card shadow-sm border border-border rounded-3xl p-6 transition-colors xl:col-span-2 overflow-hidden">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-text flex items-center">
-                <AlertTriangle
-                  className="h-5 w-5 mr-2 text-red-500"
-                  aria-hidden="true"
-                />
-                Reponer Inventario (Crítico)
+          <div className="bg-card shadow-sm border border-border rounded-3xl p-6 xl:col-span-2 overflow-hidden">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-base font-bold text-text flex items-center gap-2">
+                <span className="w-6 h-6 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center shrink-0">
+                  <AlertTriangle className="h-3.5 w-3.5 text-red-600 dark:text-red-400" aria-hidden="true" />
+                </span>
+                Inventario crítico
               </h3>
-              <Link
-                to="/inventory"
-                className="text-sm text-brand-orange hover:underline font-medium"
-              >
-                Ver todo el inventario
+              <Link to="/inventory" className="text-sm font-semibold text-primary hover:underline flex items-center gap-1">
+                Ver todo <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </div>
             <div className="overflow-x-auto">
-              <table
-                className="min-w-full divide-y divide-gray-200 dark:divide-gray-700"
-                aria-label="Tabla de inventario bajo en stock"
-              >
-                <caption className="sr-only">
-                  Ítems de inventario con stock crítico. {lowStockItems.length}{" "}
-                  ítems mostrados.
-                </caption>
-                <thead className="bg-surface-alt">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
-                      Ítem
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Stock Actual
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Mínimo
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Acción
-                    </th>
+              <table className="min-w-full" aria-label="Inventario con stock crítico">
+                <caption className="sr-only">{lowStockItems.length} ítems con stock crítico</caption>
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="pb-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Ítem</th>
+                    <th className="pb-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Stock actual</th>
+                    <th className="pb-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Mínimo</th>
+                    <th className="pb-3 text-right text-xs font-semibold text-text-secondary uppercase tracking-wider">Acción</th>
                   </tr>
                 </thead>
-                <tbody className="bg-card divide-y divide-border">
+                <tbody className="divide-y divide-border">
                   {lowStockItems.map((item) => (
-                    <tr
-                      key={item.id}
-                      className="hover:bg-surface-alt transition-colors"
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-text">
-                        {item.ingredient_name}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <span className="px-2 py-1 bg-error/10 text-error rounded-full font-bold">
+                    <tr key={item.id} className="hover:bg-surface-alt transition-colors group">
+                      <td className="py-3.5 text-sm font-medium text-text">{item.ingredient_name}</td>
+                      <td className="py-3.5">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-full text-xs font-bold">
+                          <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
                           {item.current_stock} {item.unit}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
-                        {item.minimum_stock} {item.unit}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                        <Link
-                          to="/inventory"
-                          className="text-brand-orange hover:text-orange-600 font-semibold"
-                        >
+                      <td className="py-3.5 text-sm text-text-secondary">{item.minimum_stock} {item.unit}</td>
+                      <td className="py-3.5 text-right">
+                        <Link to="/inventory" className="text-xs font-bold text-primary hover:underline">
                           Gestionar
                         </Link>
                       </td>
@@ -776,92 +507,76 @@ export const Dashboard: React.FC = () => {
           </div>
         )}
 
-        {/* Upcoming Events List */}
-        <div className="bg-card shadow-sm border border-border rounded-3xl p-6 transition-colors xl:col-span-2 overflow-hidden">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg leading-6 font-semibold text-text">
-              Próximos Eventos
-            </h3>
-            <Link
-              to="/calendar"
-              className="text-sm font-medium text-brand-orange hover:text-orange-600 flex items-center transition-colors"
-            >
-              Ver todos{" "}
-              <ArrowRight className="h-4 w-4 ml-1" aria-hidden="true" />
+        {/* ── UPCOMING EVENTS ── */}
+        <div className={`bg-card shadow-sm border border-border rounded-3xl p-6 overflow-hidden ${lowStockItems.length > 0 ? "xl:col-span-2" : "xl:col-span-2"}`}>
+          <div className="flex items-center justify-between mb-5">
+            <h3 className="text-base font-bold text-text">Próximos Eventos</h3>
+            <Link to="/calendar" className="text-sm font-semibold text-primary hover:underline flex items-center gap-1">
+              Ver todos <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
             </Link>
           </div>
 
-          <div className="flow-root">
-            {loadingUpcoming ? (
-              <div
-                className="flex justify-center py-8"
-                role="status"
-                aria-live="polite"
-              >
-                <Clock
-                  className="h-8 w-8 animate-spin text-gray-300"
-                  aria-hidden="true"
-                />
-                <span className="sr-only">Cargando próximos eventos...</span>
-              </div>
-            ) : upcomingEvents.length > 0 ? (
-              <ul className="-my-5 divide-y divide-border">
-                {upcomingEvents.map((event) => (
-                  <li key={event.id} className="py-5">
-                    <div className="flex items-center space-x-4">
-                      <div className="shrink-0">
-                        <div className="h-12 w-12 rounded-md bg-primary/10 flex flex-col items-center justify-center text-primary border border-primary/20">
-                          <span className="text-[10px] font-bold uppercase tracking-wider">
-                            {format(parseISO(event.event_date), "MMM", {
-                              locale: es,
-                            })}
-                          </span>
-                          <span className="text-lg font-bold leading-none">
-                            {format(parseISO(event.event_date), "d")}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-text truncate">
-                          {event.clients?.name}
-                        </p>
-                        <p className="text-xs text-text-secondary mt-1 flex items-center">
-                          <span className="inline-block px-1.5 py-0.5 rounded-sm bg-surface-alt mr-2 uppercase tracking-tight text-[10px] font-bold">
-                            {event.service_type}
-                          </span>
-                          {event.num_people} pax
-                        </p>
-                      </div>
-                      <div>
-                        <Link
-                          to={`/events/${event.id}/summary`}
-                          className="inline-flex items-center px-3 py-1.5 border border-border text-xs font-semibold rounded-md text-text bg-card hover:bg-surface-alt transition-all shadow-sm"
-                        >
-                          Ver
-                        </Link>
+          {loadingUpcoming ? (
+            <div className="space-y-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-4 p-4 rounded-2xl border border-border animate-pulse">
+                  <div className="w-12 h-12 rounded-xl bg-gray-200 dark:bg-gray-700 shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3.5 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
+                    <div className="h-3 bg-gray-100 dark:bg-gray-800 rounded w-1/3" />
+                  </div>
+                  <div className="w-16 h-7 bg-gray-200 dark:bg-gray-700 rounded-xl" />
+                </div>
+              ))}
+            </div>
+          ) : upcomingEvents.length > 0 ? (
+            <ul className="space-y-2">
+              {upcomingEvents.map((event) => (
+                <li key={event.id}>
+                  <div className="flex items-center gap-4 p-4 rounded-2xl border border-transparent hover:border-border hover:bg-surface-alt transition-all">
+                    {/* Date badge */}
+                    <div className="w-12 h-12 rounded-xl bg-primary/10 dark:bg-primary/20 flex flex-col items-center justify-center text-primary border border-primary/20 shrink-0">
+                      <span className="text-[9px] font-black uppercase tracking-wider leading-none">
+                        {format(parseISO(event.event_date), "MMM", { locale: es })}
+                      </span>
+                      <span className="text-xl font-black leading-tight">
+                        {format(parseISO(event.event_date), "d")}
+                      </span>
+                    </div>
+
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-text truncate">{event.clients?.name}</p>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        <StatusBadge status={event.status} />
+                        <span className="text-xs text-text-secondary">
+                          {event.service_type} · {event.num_people} pax
+                        </span>
                       </div>
                     </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <div className="text-center py-10">
-                <Calendar
-                  className="h-12 w-12 mx-auto text-text-tertiary mb-3 opacity-50"
-                  aria-hidden="true"
-                />
-                <p className="text-text-secondary text-sm">
-                  No hay eventos próximos agendados.
-                </p>
-                <Link
-                  to="/events/new"
-                  className="text-primary text-sm font-semibold mt-3 inline-block hover:underline"
-                >
-                  Agendar uno ahora
-                </Link>
+
+                    {/* CTA */}
+                    <Link
+                      to={`/events/${event.id}/summary`}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-card border border-border text-xs font-bold text-text hover:bg-primary hover:text-white hover:border-primary transition-all shrink-0"
+                    >
+                      Ver <ArrowRight className="h-3 w-3" />
+                    </Link>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-12 gap-3">
+              <div className="w-14 h-14 rounded-2xl bg-surface-alt flex items-center justify-center">
+                <Clock className="h-7 w-7 text-text-tertiary opacity-50" aria-hidden="true" />
               </div>
-            )}
-          </div>
+              <p className="text-sm text-text-secondary">No hay eventos próximos agendados</p>
+              <Link to="/events/new" className="text-sm font-bold text-primary hover:underline">
+                Agendar uno ahora →
+              </Link>
+            </div>
+          )}
         </div>
       </div>
 
