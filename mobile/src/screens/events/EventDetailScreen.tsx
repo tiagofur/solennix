@@ -343,7 +343,7 @@ export default function EventDetailScreen({ navigation, route }: Props) {
         const key = ing.inventory_id;
         const qty = productQuantities.get(ing.product_id) || 0;
         if (!aggregated[key]) {
-          aggregated[key] = { name: ing.ingredient_name || "Ingrediente", unit: ing.unit || "", quantity: 0 };
+          aggregated[key] = { name: ing.ingredient_name || "Insumo", unit: ing.unit || "", quantity: 0 };
         }
         aggregated[key].quantity += (ing.quantity_required || 0) * qty;
       });
@@ -351,7 +351,7 @@ export default function EventDetailScreen({ navigation, route }: Props) {
       trackPdfShared();
     } catch (err) {
       logError("Error generating shopping list PDF", err);
-      addToast("Error al generar lista de compras", "error");
+      addToast("Error al generar lista de insumos", "error");
     } finally {
       setGeneratingPdf(null);
     }
@@ -836,8 +836,8 @@ export default function EventDetailScreen({ navigation, route }: Props) {
               <TouchableOpacity style={styles.menuOption} onPress={handleGenerateShoppingList} activeOpacity={0.7}>
                 <ShoppingCart color={palette.primary} size={24} />
                 <View style={styles.menuOptionInfo}>
-                  <Text style={styles.menuOptionTitle}>Lista de Compras</Text>
-                  <Text style={styles.menuOptionDesc}>Genera lista de ingredientes</Text>
+                  <Text style={styles.menuOptionTitle}>Lista de Insumos</Text>
+                  <Text style={styles.menuOptionDesc}>Genera lista de insumos necesarios</Text>
                 </View>
               </TouchableOpacity>
 

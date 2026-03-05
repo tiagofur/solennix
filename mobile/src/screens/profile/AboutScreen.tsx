@@ -98,8 +98,8 @@ export default function AboutScreen({ navigation }: Props) {
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Sobre la app</Text>
           <Text style={styles.description}>
-            EventosApp es una aplicaci&#xF3;n SaaS dise&#xF1;ada para organizadores de eventos,
-            caterers y banquetes. Gestiona clientes, eventos, cat&#xE1;logo de productos,
+            EventosApp es una aplicaci&#xF3;n SaaS dise&#xF1;ada para organizadores de eventos
+            de todo tipo. Gestiona clientes, eventos, cat&#xE1;logo de productos,
             inventario, cotizaciones y pagos en un solo lugar.
           </Text>
         </View>

@@ -391,7 +391,7 @@ export const EventSummary: React.FC = () => {
                   : "text-text-secondary hover:text-text hover:bg-white/50 dark:hover:bg-gray-600/30"
               )}
               aria-pressed={viewMode === "ingredients"}
-              aria-label="Ver lista de compras e ingredientes"
+              aria-label="Ver lista de insumos"
             >
               <ShoppingCart className="h-4 w-4 mr-2" aria-hidden="true" />
               Compras
@@ -500,7 +500,7 @@ export const EventSummary: React.FC = () => {
                   role="menuitem"
                 >
                   <ShoppingCart className="h-4 w-4 mr-3 text-text-secondary" />
-                  Lista de Compras
+                  Lista de Insumos
                 </button>
                 <button
                   type="button"
@@ -881,7 +881,7 @@ export const EventSummary: React.FC = () => {
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="bg-card shadow-sm rounded-3xl p-6 sm:p-8 border border-border">
             <h1 className="text-2xl font-black text-text uppercase tracking-tight mb-2">
-              Lista de Compras e Ingredientes
+              Lista de Insumos
             </h1>
             <p className="text-text-secondary text-sm flex items-center gap-2">
               <ShoppingCart className="h-4 w-4 text-brand-orange" />
@@ -890,11 +890,11 @@ export const EventSummary: React.FC = () => {
           </div>
 
           <div className="bg-card shadow-sm rounded-3xl p-6 sm:p-8 border border-border overflow-hidden">
-            <table className="w-full text-sm" aria-label="Ingredientes necesarios para el evento">
-              <caption className="sr-only">Lista de ingredientes con cantidades necesarias para el evento</caption>
+            <table className="w-full text-sm" aria-label="Insumos necesarios para el evento">
+              <caption className="sr-only">Lista de insumos con cantidades necesarias para el evento</caption>
               <thead>
                 <tr className="text-left text-text-secondary border-b border-border">
-                  <th className="pb-3 pt-2">Ingrediente</th>
+                  <th className="pb-3 pt-2">Insumo</th>
                   <th className="pb-3 pt-2 text-right">Necesario</th>
                   <th className="pb-3 pt-2 text-right">En Stock</th>
                   <th className="pb-3 pt-2 text-right">Acción</th>
@@ -943,7 +943,7 @@ export const EventSummary: React.FC = () => {
                       colSpan={3}
                       className="py-4 text-center text-gray-500 dark:text-gray-400 italic"
                     >
-                      No hay ingredientes calculados para los productos
+                      No hay insumos calculados para los productos
                       seleccionados.
                     </td>
                   </tr>

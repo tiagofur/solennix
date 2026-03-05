@@ -50,7 +50,7 @@ describe('InventoryDetails', () => {
     (inventoryService.getById as any).mockResolvedValue(baseItem);
     renderDetails();
     await waitFor(() => expect(screen.getByText('Harina')).toBeInTheDocument());
-    expect(screen.getByText('Ingrediente Consumible')).toBeInTheDocument();
+    expect(screen.getByText('Insumo Consumible')).toBeInTheDocument();
     expect(screen.getByText('$2.50')).toBeInTheDocument();
     expect(screen.getByText('$250.00')).toBeInTheDocument();
   });

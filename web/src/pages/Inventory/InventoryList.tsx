@@ -303,7 +303,7 @@ export const InventoryList: React.FC = () => {
     <div className="space-y-6">
       <ConfirmDialog
         open={confirmOpen}
-        title="Eliminar ingrediente"
+        title="Eliminar ítem"
         description="Esta acción no se puede deshacer."
         confirmText="Eliminar"
         cancelText="Cancelar"
@@ -326,7 +326,7 @@ export const InventoryList: React.FC = () => {
                 ['Nombre', 'Tipo', 'Stock Actual', 'Stock Mínimo', 'Unidad', 'Costo Unitario'],
                 items.map(i => [
                   i.ingredient_name,
-                  i.type === 'equipment' ? 'Equipo' : 'Ingrediente',
+                  i.type === 'equipment' ? 'Equipo' : 'Insumo',
                   i.current_stock,
                   i.minimum_stock,
                   i.unit,
@@ -442,14 +442,14 @@ export const InventoryList: React.FC = () => {
               <div>
                 <h2 className="text-lg font-semibold text-text">Consumibles</h2>
                 <p className="text-xs text-text-secondary">
-                  {ingredients.length} {ingredients.length === 1 ? "ingrediente" : "ingredientes"}
+                  {ingredients.length} {ingredients.length === 1 ? "insumo" : "insumos"}
                 </p>
               </div>
             </div>
             <div className="bg-card shadow-sm overflow-hidden rounded-3xl border border-border">
               {ingredients.length === 0 ? (
                 <div className="px-6 py-8 text-center text-sm text-text-secondary">
-                  No hay ingredientes{searchTerm ? " que coincidan con la búsqueda" : " registrados"}.
+                  No hay insumos{searchTerm ? " que coincidan con la búsqueda" : " registrados"}.
                 </div>
               ) : (
                 renderTable(ingredients, ingredientSort, handleIngredientSort)

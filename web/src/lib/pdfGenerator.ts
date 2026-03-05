@@ -304,7 +304,7 @@ export const generateShoppingListPDF = (
   ingredients: { name: string; quantity: number; unit: string }[]
 ) => {
   const doc = new jsPDF();
-  let currentY = addHeader(doc, profile, 'Lista de Compras');
+  let currentY = addHeader(doc, profile, 'Lista de Insumos');
 
   const brandColor = profile?.brand_color || DEFAULT_BRAND_COLOR;
 
@@ -327,17 +327,17 @@ export const generateShoppingListPDF = (
     autoTable(doc, {
       startY: currentY,
       margin: { left: 20, right: 20 },
-      head: [['Ingrediente', 'Cantidad', 'Unidad']],
+      head: [['Insumo', 'Cantidad', 'Unidad']],
       body: ingredients.map(i => [i.name, i.quantity.toFixed(2), i.unit]),
       headStyles: { fillColor: [245, 245, 245], textColor: brandColor },
       styles: { fontSize: 10 },
       theme: 'grid',
     });
   } else {
-    doc.text('No hay ingredientes calculados.', 20, currentY);
+    doc.text('No hay insumos calculados.', 20, currentY);
   }
 
-  doc.save(`Compras_${event.service_type}_${format(localDate, 'yyyy-MM-dd')}.pdf`);
+  doc.save(`Insumos_${event.service_type}_${format(localDate, 'yyyy-MM-dd')}.pdf`);
 };
 
 export const generatePaymentReportPDF = (

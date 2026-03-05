@@ -300,7 +300,7 @@ export default function ProductFormScreen({ navigation, route }: Props) {
             render={({ field: { onChange, onBlur, value } }) => (
               <FormInput
                 label="Nombre"
-                placeholder="Ej: Menú Premium"
+                placeholder="Ej: Paquete Premium"
                 value={value}
                 onChangeText={onChange}
                 onBlur={onBlur}
@@ -373,10 +373,10 @@ export default function ProductFormScreen({ navigation, route }: Props) {
           </View>
         </View>
 
-        {/* Receta / Ingredientes */}
+        {/* Composición / Insumos */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Receta / Ingredientes</Text>
+            <Text style={styles.sectionTitle}>Composición / Insumos</Text>
             <TouchableOpacity
               style={styles.addIngredientBtn}
               onPress={handleAddIngredient}
@@ -385,18 +385,18 @@ export default function ProductFormScreen({ navigation, route }: Props) {
               <Text style={styles.addIngredientText}>Agregar</Text>
             </TouchableOpacity>
           </View>
-          <Text style={styles.sectionDescription}>Solo ingredientes generan costo al producto.</Text>
+          <Text style={styles.sectionDescription}>Solo insumos generan costo al producto.</Text>
 
           {ingredientEntries.length === 0 ? (
             <Text style={styles.emptyText}>
-              Agrega ingredientes para crear una receta. Esto permitirá calcular
+              Agrega insumos para definir la composición. Esto permitirá calcular
               el costo del producto.
             </Text>
           ) : (
             ingredientEntries.map(({ item: ing, originalIndex }) => (
               <View key={originalIndex} style={styles.ingredientRow}>
                 <View style={styles.ingredientSelect}>
-                  <Text style={styles.selectLabel}>Ingrediente</Text>
+                  <Text style={styles.selectLabel}>Insumo</Text>
                   <ScrollView
                     horizontal
                     showsHorizontalScrollIndicator={false}

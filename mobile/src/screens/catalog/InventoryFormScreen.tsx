@@ -180,7 +180,7 @@ export default function InventoryFormScreen({ navigation, route }: Props) {
                     itemType === "ingredient" && styles.typeButtonTextActive,
                   ]}
                 >
-                  Ingrediente
+                  Insumo
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -289,7 +289,7 @@ export default function InventoryFormScreen({ navigation, route }: Props) {
           />
 
           <Text style={styles.helpText}>
-            Este costo se usará para calcular el costo de las recetas.
+            Este costo se usará para calcular el costo de los productos.
           </Text>
         </View>
       </ScrollView>

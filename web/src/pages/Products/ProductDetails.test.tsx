@@ -68,7 +68,7 @@ describe('ProductDetails', () => {
     renderDetails();
     await waitFor(() => expect(screen.getByText('Paquete Premium')).toBeInTheDocument());
     expect(screen.getByText('$250.00')).toBeInTheDocument();
-    expect(screen.getByText('2 ingredientes')).toBeInTheDocument();
+    expect(screen.getByText('2 insumos')).toBeInTheDocument();
     expect(screen.getByText('Harina')).toBeInTheDocument();
     expect(screen.getByText('Azúcar')).toBeInTheDocument();
   });
@@ -78,7 +78,7 @@ describe('ProductDetails', () => {
     (productService.getIngredients as any).mockResolvedValue([]);
     renderDetails();
     await waitFor(() => expect(screen.getByText('Paquete Premium')).toBeInTheDocument());
-    expect(screen.getByText(/no tiene ingredientes configurados/i)).toBeInTheDocument();
+    expect(screen.getByText(/no tiene insumos configurados/i)).toBeInTheDocument();
   });
 
   it('shows error state on fetch failure', async () => {
@@ -175,6 +175,6 @@ describe('ProductDetails', () => {
     ]);
     renderDetails();
     await waitFor(() => screen.getByText('Paquete Premium'));
-    expect(screen.getByText('Ingrediente desconocido')).toBeInTheDocument();
+    expect(screen.getByText('Insumo desconocido')).toBeInTheDocument();
   });
 });

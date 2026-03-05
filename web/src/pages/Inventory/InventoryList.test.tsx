@@ -154,7 +154,7 @@ describe('InventoryList', () => {
     });
 
     fireEvent.click(screen.getByRole('button', { name: /Eliminar Harina/i }));
-    const dialog = screen.getByRole('dialog', { name: 'Eliminar ingrediente' });
+    const dialog = screen.getByRole('dialog', { name: 'Eliminar ítem' });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Eliminar' }));
 
     await waitFor(() => {
@@ -198,7 +198,7 @@ describe('InventoryList', () => {
     expect(screen.getByText('$0.00')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /Eliminar Horno/i }));
-    const dialog = screen.getByRole('dialog', { name: 'Eliminar ingrediente' });
+    const dialog = screen.getByRole('dialog', { name: 'Eliminar ítem' });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Eliminar' }));
 
     await waitFor(() => {
@@ -227,10 +227,10 @@ describe('InventoryList', () => {
     });
 
     fireEvent.click(screen.getByRole('button', { name: /Eliminar Harina/i }));
-    const dialog = screen.getByRole('dialog', { name: 'Eliminar ingrediente' });
+    const dialog = screen.getByRole('dialog', { name: 'Eliminar ítem' });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Cancelar' }));
 
-    expect(screen.queryByRole('dialog', { name: 'Eliminar ingrediente' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'Eliminar ítem' })).not.toBeInTheDocument();
   });
 
   it('renders consumibles section with unit label', async () => {
@@ -597,7 +597,7 @@ describe('InventoryList', () => {
     // Equipment section should be visible
     expect(screen.getByText('Equipos')).toBeInTheDocument();
     // Consumibles section should show empty message
-    expect(screen.getByText(/No hay ingredientes/i)).toBeInTheDocument();
+    expect(screen.getByText(/No hay insumos/i)).toBeInTheDocument();
   });
 
   it('sorts equipment section independently from consumibles', async () => {

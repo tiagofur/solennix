@@ -88,8 +88,8 @@ export const InventoryDetails: React.FC = () => {
     <div className="space-y-6">
       <ConfirmDialog
         open={confirmDeleteOpen}
-        title="Eliminar ingrediente"
-        description="¿Estás seguro de que deseas eliminar este ingrediente del inventario? Esta acción no se puede deshacer."
+        title="Eliminar ítem"
+        description="¿Estás seguro de que deseas eliminar este ítem del inventario? Esta acción no se puede deshacer."
         confirmText="Eliminar"
         cancelText="Cancelar"
         onConfirm={handleDeleteItem}
@@ -110,7 +110,7 @@ export const InventoryDetails: React.FC = () => {
               "px-2.5 py-0.5 mt-1 inline-flex text-xs font-semibold rounded-full border",
               item.type === "equipment" ? "bg-purple-500/10 text-purple-500 border-purple-500/20" : "bg-brand-orange/10 text-brand-orange border-brand-orange/20"
             )}>
-              {item.type === "equipment" ? "Activo / Equipo" : "Ingrediente Consumible"}
+              {item.type === "equipment" ? "Activo / Equipo" : "Insumo Consumible"}
             </span>
           </div>
         </div>
@@ -189,7 +189,7 @@ export const InventoryDetails: React.FC = () => {
               <div className="p-4 bg-brand-orange/5 border border-brand-orange/10 rounded-2xl">
                 <h3 className="text-xs font-semibold text-brand-orange uppercase mb-1">Impacto en Producción</h3>
                 <p className="text-sm text-text-secondary">
-                  Este ingrediente se utiliza en todos los productos que requieren {item.ingredient_name}. 
+                  Este ítem se utiliza en los productos que requieren {item.ingredient_name}.
                   Asegúrate de mantener el stock mínimo para evitar retrasos.
                 </p>
               </div>

@@ -425,13 +425,13 @@ describe('pdfGenerator', () => {
 
       expect(autoTableMock).toHaveBeenCalled();
       const callArgs = autoTableMock.mock.calls[0][1];
-      expect(callArgs.head).toEqual([['Ingrediente', 'Cantidad', 'Unidad']]);
+      expect(callArgs.head).toEqual([['Insumo', 'Cantidad', 'Unidad']]);
       expect(callArgs.body).toHaveLength(3);
       expect(callArgs.body[0]).toEqual(['Arroz', '5.00', 'kg']);
       expect(callArgs.body[1]).toEqual(['Pollo', '20.00', 'kg']);
       expect(doc.save).toHaveBeenCalled();
       const saveArg = doc.save.mock.calls[0][0] as string;
-      expect(saveArg).toContain('Compras_Banquete_');
+      expect(saveArg).toContain('Insumos_Banquete_');
     });
 
     it('shows empty message when no ingredients', () => {
@@ -446,7 +446,7 @@ describe('pdfGenerator', () => {
 
       expect(autoTableMock).not.toHaveBeenCalled();
       expect(doc.text).toHaveBeenCalledWith(
-        'No hay ingredientes calculados.',
+        'No hay insumos calculados.',
         20,
         expect.any(Number)
       );

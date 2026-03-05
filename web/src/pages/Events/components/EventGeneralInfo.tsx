@@ -164,7 +164,7 @@ export const EventGeneralInfo: React.FC<EventGeneralInfoProps> = ({
               id="service_type"
               type="text"
               {...register('service_type')}
-              placeholder="Ej. Barra de Churros"
+              placeholder="Ej. Decoración, Banquete, Fotografía"
               className="shadow-xs rounded-xl p-2 border bg-card text-text border-border transition-shadow focus:ring-2 focus:ring-brand-orange/20"
               aria-required="true"
               aria-invalid={errors.service_type ? "true" : "false"}

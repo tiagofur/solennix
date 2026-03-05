@@ -9,7 +9,6 @@ import {
   DollarSign,
   Tag,
   Trash2,
-  ChefHat,
   Wrench,
   Layers,
 } from "lucide-react";
@@ -155,11 +154,11 @@ export const ProductDetails: React.FC = () => {
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <ChefHat className="h-5 w-5 text-brand-orange shrink-0 mt-0.5" />
+                <Layers className="h-5 w-5 text-brand-orange shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-xs text-text-secondary">Receta</p>
+                  <p className="text-xs text-text-secondary">Composición</p>
                   <p className="text-sm font-medium text-text">
-                    {ingredients.filter((i: any) => i.type !== 'equipment').length} ingredientes
+                    {ingredients.filter((i: any) => i.type !== 'equipment').length} insumos
                     {ingredients.filter((i: any) => i.type === 'equipment').length > 0 && `, ${ingredients.filter((i: any) => i.type === 'equipment').length} equipo(s)`}
                   </p>
                 </div>
@@ -169,21 +168,21 @@ export const ProductDetails: React.FC = () => {
         </div>
 
         <div className="lg:col-span-2 space-y-6">
-          {/* Receta / Ingredientes */}
+          {/* Composición / Insumos */}
           <div className="bg-card rounded-3xl border border-border overflow-hidden shadow-sm">
             <div className="p-6 border-b border-border flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Layers className="h-5 w-5 text-brand-orange" />
-                <h2 className="text-lg font-bold text-text">Receta / Ingredientes</h2>
+                <h2 className="text-lg font-bold text-text">Composición / Insumos</h2>
               </div>
             </div>
 
             {ingredients.filter((i: any) => i.type !== 'equipment').length === 0 ? (
               <div className="p-12 text-center">
                 <Package className="h-12 w-12 text-text-secondary mx-auto mb-4 opacity-20" />
-                <p className="text-text-secondary">Este producto no tiene ingredientes configurados.</p>
+                <p className="text-text-secondary">Este producto no tiene insumos configurados.</p>
                 <Link to={`/products/${id}/edit`} className="text-brand-orange hover:underline mt-2 inline-block text-sm">
-                  Configurar receta
+                  Configurar composición
                 </Link>
               </div>
             ) : (
@@ -191,7 +190,7 @@ export const ProductDetails: React.FC = () => {
                 <table className="min-w-full divide-y divide-border">
                   <thead className="bg-surface-alt">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Ingrediente</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Insumo</th>
                       <th className="px-6 py-3 text-right text-xs font-semibold text-text-secondary uppercase tracking-wider">Cantidad</th>
                       <th className="px-6 py-3 text-right text-xs font-semibold text-text-secondary uppercase tracking-wider">Costo Est.</th>
                     </tr>
@@ -201,7 +200,7 @@ export const ProductDetails: React.FC = () => {
                         <tr key={ing.inventory_id} className="hover:bg-surface-alt/50 transition-colors">
                           <td className="px-6 py-4">
                             <Link to={`/inventory/${ing.inventory_id}`} className="text-sm font-medium text-text hover:text-brand-orange transition-colors">
-                              {ing.ingredient_name || "Ingrediente desconocido"}
+                              {ing.ingredient_name || "Insumo desconocido"}
                             </Link>
                           </td>
                           <td className="px-6 py-4 text-right">

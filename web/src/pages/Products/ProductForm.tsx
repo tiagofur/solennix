@@ -6,7 +6,7 @@ import { z } from "zod";
 import { productService } from "../../services/productService";
 import { inventoryService } from "../../services/inventoryService";
 import { useAuth } from "../../contexts/AuthContext";
-import { ArrowLeft, Save, Plus, Trash2, ChefHat, Wrench, Camera, X } from "lucide-react";
+import { ArrowLeft, Save, Plus, Trash2, Layers, Wrench, Camera, X } from "lucide-react";
 import { InventoryItem } from "../../types/entities";
 import { logError } from "../../lib/errorHandler";
 import { usePlanLimits } from "../../hooks/usePlanLimits";
@@ -352,7 +352,7 @@ export const ProductForm: React.FC = () => {
                     type="text"
                     {...register("name")}
                     className="w-full rounded-xl shadow-sm border border-border bg-card text-text p-3 transition-shadow focus:ring-2 focus:ring-brand-orange/20"
-                    placeholder="Ej. Churros Clásicos"
+                    placeholder="Ej. Paquete Premium"
                     aria-required="true"
                     aria-invalid={errors.name ? "true" : "false"}
                     aria-describedby={errors.name ? "name-error" : undefined}
@@ -376,7 +376,7 @@ export const ProductForm: React.FC = () => {
                     type="text"
                     {...register("category")}
                     className="w-full rounded-xl shadow-sm border border-border bg-card text-text p-3 transition-shadow focus:ring-2 focus:ring-brand-orange/20"
-                    placeholder="Ej. Postres"
+                    placeholder="Ej. Servicios"
                     aria-required="true"
                     aria-invalid={errors.category ? "true" : "false"}
                     aria-describedby={errors.category ? "category-error" : undefined}
@@ -415,13 +415,13 @@ export const ProductForm: React.FC = () => {
             </form>
         </div>
 
-        {/* Receta / Ingredientes */}
+        {/* Composición / Insumos */}
         <div className="bg-card shadow-sm border border-border px-4 py-8 rounded-3xl sm:p-10 flex flex-col">
             <h3 className="text-lg leading-6 font-medium text-text mb-4 flex items-center">
-                <ChefHat className="h-5 w-5 mr-2 text-brand-orange" aria-hidden="true" />
-                Receta / Ingredientes (por unidad/persona)
+                <Layers className="h-5 w-5 mr-2 text-brand-orange" aria-hidden="true" />
+                Composición / Insumos (por unidad/persona)
             </h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Define qué ingredientes y qué cantidad se necesitan para 1 unidad de este producto. Solo ingredientes generan costo.</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Define qué insumos y qué cantidad se necesitan para 1 unidad de este producto. Solo insumos generan costo.</p>
 
             <div className="flex-1 overflow-y-auto mb-4 space-y-3">
                 {ingredientEntries.map(({ item, originalIndex }) => (
@@ -430,20 +430,20 @@ export const ProductForm: React.FC = () => {
                             type="button"
                             onClick={() => handleRemoveIngredient(originalIndex)}
                             className="absolute top-1 right-1 text-gray-400 hover:text-red-500 dark:hover:text-red-400"
-                            aria-label={`Eliminar ingrediente`}
+                            aria-label={`Eliminar insumo`}
                         >
                             <Trash2 className="h-4 w-4" aria-hidden="true" />
                         </button>
                         <div className="mb-2 pr-6">
-                            <label htmlFor={`ingredient-select-${originalIndex}`} className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Ingrediente</label>
+                            <label htmlFor={`ingredient-select-${originalIndex}`} className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Insumo</label>
                             <select
                                 id={`ingredient-select-${originalIndex}`}
                                 value={item.inventory_id}
                                 onChange={(e) => handleIngredientChange(originalIndex, 'inventory_id', e.target.value)}
                                 className="block w-full p-2.5 text-sm border-border rounded-xl shadow-sm bg-card text-text transition-shadow focus:ring-2 focus:ring-brand-orange/20"
-                                aria-label={`Seleccionar ingrediente`}
+                                aria-label={`Seleccionar insumo`}
                             >
-                                <option value="">Seleccionar ingrediente</option>
+                                <option value="">Seleccionar insumo</option>
                                 {ingredientInventoryItems.map(i => (
                                     <option key={i.id} value={i.id}>{i.ingredient_name} ({i.unit})</option>
                                 ))}
@@ -451,7 +451,7 @@ export const ProductForm: React.FC = () => {
                         </div>
                         <div className="flex gap-2 items-center">
                             <div className="w-1/2">
-                                <label htmlFor={`quantity-${originalIndex}`} className="text-xs text-gray-500 dark:text-gray-400">Cantidad</label>
+                                <label htmlFor={`quantity-${originalIndex}`} className="text-xs text-gray-500 dark:text-gray-400">Cant.</label>
                                 <input
                                     id={`quantity-${originalIndex}`}
                                     type="number"
@@ -459,7 +459,7 @@ export const ProductForm: React.FC = () => {
                                     value={item.quantity_required}
                                     onChange={(e) => handleIngredientChange(originalIndex, 'quantity_required', Number(e.target.value))}
                                     className="block w-full p-2.5 text-sm border-border rounded-xl shadow-sm bg-card text-text transition-shadow focus:ring-2 focus:ring-brand-orange/20"
-                                    aria-label={`Cantidad de ingrediente`}
+                                    aria-label={`Cantidad de insumo`}
                                 />
                             </div>
                             <div className="w-1/2 text-right">
@@ -476,9 +476,9 @@ export const ProductForm: React.FC = () => {
                     type="button"
                     onClick={handleAddIngredient}
                     className="w-full flex items-center justify-center px-4 py-3 border border-border shadow-sm text-sm font-medium rounded-xl text-text-secondary bg-card hover:bg-surface-alt transition-colors"
-                    aria-label="Agregar un ingrediente adicional a la receta"
+                    aria-label="Agregar un insumo adicional a la composición"
                 >
-                    <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> Agregar Ingrediente
+                    <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> Agregar Insumo
                 </button>
             </div>
 

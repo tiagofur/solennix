@@ -360,16 +360,16 @@ export const generateShoppingListPDF = async (
     ingredients.length > 0
       ? `<table>
           <thead><tr>
-            <th>Ingrediente</th>
+            <th>Insumo</th>
             <th class="text-center">Cantidad</th>
             <th class="text-center">Unidad</th>
           </tr></thead>
           <tbody>${rows}</tbody>
         </table>`
-      : `<p class="empty-msg">No hay ingredientes calculados.</p>`;
+      : `<p class="empty-msg">No hay insumos calculados.</p>`;
 
   const body = `
-    ${buildHeaderHTML(profile, "Lista de Compras")}
+    ${buildHeaderHTML(profile, "Lista de Insumos")}
     <div style="margin-bottom:16px; color:${GRAY_COLOR};">
       <p>Evento: ${esc(event.service_type)}</p>
       <p>Fecha: ${eventDateFormatted}</p>

@@ -267,15 +267,15 @@ export const ContractTemplateEditor: React.FC<ContractTemplateEditorProps> = ({
       } as any,
       profile: {
         name: "Juan Eventos",
-        business_name: "Catering Elegante",
-        email: "info@catering.com",
+        business_name: "Mi Empresa de Eventos",
+        email: "info@mieventos.com",
       } as any,
       template,
       strict: false,
       products: [
-        { products: { name: "Churros" } },
-        { products: { name: "Paletas" } },
-        { products: { name: "Algodón de Azúcar" } },
+        { products: { name: "Paquete Premium" } },
+        { products: { name: "Iluminación" } },
+        { products: { name: "Decoración Floral" } },
       ] as any,
     });
   } catch {

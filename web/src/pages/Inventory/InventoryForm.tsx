@@ -78,7 +78,7 @@ export const InventoryForm: React.FC = () => {
       });
     } catch (err) {
       logError("Error loading item", err);
-      setError("Error al cargar el ingrediente");
+      setError("Error al cargar el ítem");
     } finally {
       setIsLoading(false);
     }
@@ -108,7 +108,7 @@ export const InventoryForm: React.FC = () => {
       navigate("/inventory");
     } catch (err: any) {
       logError("Error saving item", err);
-      setError(err.message || "Error al guardar el ingrediente");
+      setError(err.message || "Error al guardar el ítem");
     } finally {
       setIsLoading(false);
     }
@@ -155,7 +155,7 @@ export const InventoryForm: React.FC = () => {
             <ArrowLeft className="h-5 w-5" aria-hidden="true" />
           </button>
           <h1 className="text-2xl font-bold text-text">
-            {id ? "Editar Ingrediente" : "Nuevo Ingrediente"}
+            {id ? "Editar Ítem" : "Nuevo Ítem"}
           </h1>
         </div>
       </div>
@@ -211,7 +211,7 @@ export const InventoryForm: React.FC = () => {
                 aria-invalid={errors.type ? "true" : "false"}
                 aria-describedby={errors.type ? "type-error" : undefined}
               >
-                <option value="ingredient">Ingrediente (Consumible)</option>
+                <option value="ingredient">Insumo (Consumible)</option>
                 <option value="equipment">
                   Activo / Equipo (Retornable)
                 </option>
@@ -331,10 +331,10 @@ export const InventoryForm: React.FC = () => {
               type="submit"
               disabled={isLoading}
               className="inline-flex justify-center py-2.5 px-8 border border-transparent shadow-sm text-sm font-medium rounded-xl text-white bg-brand-orange hover:bg-orange-600 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-brand-orange disabled:opacity-50 transition-colors"
-              aria-label={isLoading ? "Guardando ingrediente..." : "Guardar ingrediente"}
+              aria-label={isLoading ? "Guardando ítem..." : "Guardar ítem"}
             >
               <Save className="h-5 w-5 mr-2" aria-hidden="true" />
-              {isLoading ? "Guardando..." : "Guardar Ingrediente"}
+              {isLoading ? "Guardando..." : "Guardar Ítem"}
             </button>
           </div>
         </form>

@@ -136,7 +136,7 @@ describe('searchService', () => {
     const result = await searchService.searchAll('harina');
 
     expect(result.inventory).toHaveLength(1);
-    expect(result.inventory[0].subtitle).toBe('Ingrediente - kg');
+    expect(result.inventory[0].subtitle).toBe('Insumo - kg');
     expect(result.inventory[0].meta).toBe('Stock: 10 kg');
   });
 

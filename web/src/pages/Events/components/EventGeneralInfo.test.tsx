@@ -276,7 +276,7 @@ describe('EventGeneralInfo', () => {
       <EventGeneralInfo clients={sampleClients} />
     );
 
-    expect(screen.getByPlaceholderText('Ej. Barra de Churros')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Ej. Decoración, Banquete, Fotografía')).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/Dirección del evento/)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/Ciudad del evento/)).toBeInTheDocument();
   });

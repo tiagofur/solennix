@@ -282,7 +282,7 @@ export default function InventoryListScreen({ navigation }: Props) {
             <EmptyState
               icon={<Package color={palette.textTertiary} size={48} />}
               title="Sin inventario"
-              description="Agrega tu primer ingrediente o equipo."
+              description="Agrega tu primer insumo o equipo."
               actionLabel="Nuevo Item"
               onAction={() => navigation.navigate("InventoryForm", {})}
             />

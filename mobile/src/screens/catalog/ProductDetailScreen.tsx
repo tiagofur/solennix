@@ -144,20 +144,20 @@ export default function ProductDetailScreen({ navigation, route }: Props) {
           </View>
         </View>
 
-        {/* Receta / Ingredientes */}
+        {/* Composición / Insumos */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Receta / Ingredientes</Text>
+          <Text style={styles.sectionTitle}>Composición / Insumos</Text>
 
           {ingredients.filter((i: any) => i.type !== 'equipment').length === 0 ? (
             <Text style={styles.emptyText}>
-              Este producto no tiene ingredientes asignados.
+              Este producto no tiene insumos asignados.
             </Text>
           ) : (
             ingredients.filter((i: any) => i.type !== 'equipment').map((ing: any, index: number) => (
               <View key={index} style={styles.ingredientRow}>
                 <View style={styles.ingredientInfo}>
                   <Text style={styles.ingredientName}>
-                    {ing.ingredient_name || "Ingrediente"}
+                    {ing.ingredient_name || "Insumo"}
                   </Text>
                   <Text style={styles.ingredientUnit}>
                     {ing.quantity_required} {ing.unit || "und"}

@@ -89,8 +89,8 @@ export const About: React.FC = () => {
             Sobre la app
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-            EventosApp es una aplicacion SaaS disenada para organizadores de eventos,
-            caterers y banquetes. Gestiona clientes, eventos, catalogo de productos,
+            EventosApp es una aplicacion SaaS disenada para organizadores de eventos
+            de todo tipo. Gestiona clientes, eventos, catalogo de productos,
             inventario, cotizaciones y pagos en un solo lugar.
           </p>
         </div>

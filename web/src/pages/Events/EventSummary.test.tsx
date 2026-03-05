@@ -127,8 +127,8 @@ describe('EventSummary', () => {
       expect(screen.getByText('Ana - Boda')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Ver lista de compras/i }));
-    expect(screen.getAllByText(/Lista de Compras/i)[0]).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Ver lista de insumos/i }));
+    expect(screen.getAllByText(/Lista de Insumos/i)[0]).toBeInTheDocument();
     expect(screen.getByText('Harina')).toBeInTheDocument();
     expect(screen.getByText('kg')).toBeInTheDocument();
 
@@ -347,11 +347,11 @@ describe('EventSummary', () => {
     });
 
     // Switch to ingredients view
-    fireEvent.click(screen.getByRole('button', { name: /Ver lista de compras/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Ver lista de insumos/i }));
 
-    // Open Acciones dropdown and click Lista de Compras
+    // Open Acciones dropdown and click Lista de Insumos
     fireEvent.click(screen.getByRole('button', { name: /Más acciones/i }));
-    fireEvent.click(screen.getByText('Lista de Compras'));
+    fireEvent.click(screen.getAllByText('Lista de Insumos')[0]);
     expect(generateShoppingListPDF).toHaveBeenCalled();
   });
 
@@ -376,7 +376,7 @@ describe('EventSummary', () => {
 
     // Shopping list PDF
     fireEvent.click(screen.getByRole('button', { name: /Más acciones/i }));
-    fireEvent.click(screen.getByText('Lista de Compras'));
+    fireEvent.click(screen.getByText('Lista de Insumos'));
     expect(generateShoppingListPDF).toHaveBeenCalled();
   });
 
@@ -529,9 +529,9 @@ describe('EventSummary', () => {
       expect(screen.getByText('Ana - Boda')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Ver lista de compras/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Ver lista de insumos/i }));
 
-    expect(screen.getByText(/No hay ingredientes calculados/)).toBeInTheDocument();
+    expect(screen.getByText(/No hay insumos calculados/)).toBeInTheDocument();
   });
 
   it('renders footer with business name', async () => {
@@ -560,7 +560,7 @@ describe('EventSummary', () => {
       expect(screen.getByText('Ana - Boda')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Ver lista de compras/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Ver lista de insumos/i }));
 
     // Total quantity: (0.5 * 2) + (0.3 * 3) = 1.0 + 0.9 = 1.90
     expect(screen.getByText('1.90')).toBeInTheDocument();
@@ -585,7 +585,7 @@ describe('EventSummary', () => {
       expect(screen.getByText('Ana - Boda')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Ver lista de compras/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Ver lista de insumos/i }));
 
     expect(screen.getByText('Azucar')).toBeInTheDocument();
     expect(screen.getByText('g')).toBeInTheDocument();
@@ -1212,7 +1212,7 @@ describe('EventSummary', () => {
       expect(screen.getByText('Ana - Boda')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Ver lista de compras/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Ver lista de insumos/i }));
 
     // Harina needs more (5*2 = 10 required > 2 in stock) → "Comprar" link
     expect(screen.getByText('Comprar')).toBeInTheDocument();

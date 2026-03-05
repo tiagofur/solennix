@@ -635,7 +635,7 @@ export default function EventFormScreen({ navigation, route }: Props) {
               style={styles.input}
               value={formData.service_type}
               onChangeText={(v) => setFormData({ ...formData, service_type: v })}
-              placeholder="Ej: Banquete, Cocktail, Cena"
+              placeholder="Ej: Decoración, Banquete, Fotografía"
             />
 
             <Text style={styles.inputLabel}>Número de Personas</Text>

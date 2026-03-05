@@ -185,7 +185,7 @@ describe('InventoryForm', () => {
     renderForm();
 
     await waitFor(() => {
-      expect(screen.getByText(/Error al cargar el ingrediente/i)).toBeInTheDocument();
+      expect(screen.getByText(/Error al cargar el ítem/i)).toBeInTheDocument();
     });
     expect(logError).toHaveBeenCalledWith('Error loading item', expect.any(Error));
   });
@@ -275,18 +275,18 @@ describe('InventoryForm', () => {
     renderForm();
 
     await waitFor(() => {
-      expect(screen.getByText('Editar Ingrediente')).toBeInTheDocument();
+      expect(screen.getByText('Editar Ítem')).toBeInTheDocument();
     });
     expect(screen.queryByText(/Límite de Catálogo Alcanzado/i)).not.toBeInTheDocument();
   });
 
-  it('renders "Nuevo Ingrediente" heading when creating', () => {
+  it('renders "Nuevo Ítem" heading when creating', () => {
     renderForm();
 
-    expect(screen.getByText('Nuevo Ingrediente')).toBeInTheDocument();
+    expect(screen.getByText('Nuevo Ítem')).toBeInTheDocument();
   });
 
-  it('renders "Editar Ingrediente" heading when editing', async () => {
+  it('renders "Editar Ítem" heading when editing', async () => {
     mockParams = { id: 'inv-1' };
     (inventoryService.getById as any).mockResolvedValue({
       id: 'inv-1',
@@ -301,7 +301,7 @@ describe('InventoryForm', () => {
     renderForm();
 
     await waitFor(() => {
-      expect(screen.getByText('Editar Ingrediente')).toBeInTheDocument();
+      expect(screen.getByText('Editar Ítem')).toBeInTheDocument();
     });
   });
 
@@ -338,7 +338,7 @@ describe('InventoryForm', () => {
 
     expect(options).toHaveLength(2);
     expect(options[0]).toHaveValue('ingredient');
-    expect(options[0]).toHaveTextContent('Ingrediente (Consumible)');
+    expect(options[0]).toHaveTextContent('Insumo (Consumible)');
     expect(options[1]).toHaveValue('equipment');
     expect(options[1]).toHaveTextContent('Activo / Equipo (Retornable)');
   });
@@ -365,7 +365,7 @@ describe('InventoryForm', () => {
       expect(screen.getByText('Guardando...')).toBeInTheDocument();
     });
 
-    const submitBtn = screen.getByRole('button', { name: /Guardando ingrediente/i });
+    const submitBtn = screen.getByRole('button', { name: /Guardando ítem/i });
     expect(submitBtn).toBeDisabled();
 
     resolveCreate!({});
@@ -428,7 +428,7 @@ describe('InventoryForm', () => {
     fireEvent.click(screen.getByRole('button', { name: /guardar/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/Error al guardar el ingrediente/i)).toBeInTheDocument();
+      expect(screen.getByText(/Error al guardar el ítem/i)).toBeInTheDocument();
     });
   });
 
@@ -439,7 +439,7 @@ describe('InventoryForm', () => {
     renderForm();
 
     await waitFor(() => {
-      expect(screen.getByText(/Error al cargar el ingrediente/i)).toBeInTheDocument();
+      expect(screen.getByText(/Error al cargar el ítem/i)).toBeInTheDocument();
     });
     expect(logError).toHaveBeenCalledWith('Error loading item', expect.any(Error));
   });

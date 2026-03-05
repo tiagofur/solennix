@@ -82,7 +82,7 @@ describe('ProductForm', () => {
       expect(inventoryService.getAll).toHaveBeenCalled();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Agregar un ingrediente adicional/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Agregar un insumo adicional/i }));
 
     const select = container.querySelector('select') as HTMLSelectElement;
     fireEvent.change(select, { target: { value: 'inv-1' } });
@@ -115,7 +115,7 @@ describe('ProductForm', () => {
       target: { value: '50' },
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Agregar un ingrediente adicional/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Agregar un insumo adicional/i }));
     const select = container.querySelector('select') as HTMLSelectElement;
     fireEvent.change(select, { target: { value: 'inv-1' } });
     const quantityInput = container.querySelector('input[step="0.001"]') as HTMLInputElement;
@@ -287,11 +287,11 @@ describe('ProductForm', () => {
     });
 
     // Add two ingredients
-    fireEvent.click(screen.getByRole('button', { name: /Agregar un ingrediente adicional/i }));
-    fireEvent.click(screen.getByRole('button', { name: /Agregar un ingrediente adicional/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Agregar un insumo adicional/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Agregar un insumo adicional/i }));
 
     // Should have two ingredient rows
-    const removeButtons = screen.getAllByRole('button', { name: /Eliminar ingrediente/i });
+    const removeButtons = screen.getAllByRole('button', { name: /Eliminar insumo/i });
     expect(removeButtons.length).toBe(2);
 
     // Remove the first ingredient
@@ -299,7 +299,7 @@ describe('ProductForm', () => {
 
     // Now only one should remain
     await waitFor(() => {
-      const remaining = screen.getAllByRole('button', { name: /Eliminar ingrediente/i });
+      const remaining = screen.getAllByRole('button', { name: /Eliminar insumo/i });
       expect(remaining.length).toBe(1);
     });
   });
