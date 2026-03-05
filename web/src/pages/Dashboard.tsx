@@ -6,7 +6,7 @@ import { paymentService } from "../services/paymentService";
 import { Event, Payment, InventoryItem } from "../types/entities";
 import { startOfMonth, endOfMonth, format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   Calendar,
   DollarSign,
@@ -109,6 +109,7 @@ function KpiCard({ icon: Icon, iconBg, iconColor, label, value, sub }: KpiCardPr
 // ────────────────────────────────────────────────────────────────
 export const Dashboard: React.FC = () => {
   const { user, checkAuth } = useAuth();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const firstName = user?.name ? user.name.split(" ")[0] : "Usuario";
 
@@ -209,7 +210,7 @@ export const Dashboard: React.FC = () => {
     inventoryService
       .getAll()
       .then((data) => {
-        const items = (data || []).filter((item) => item.current_stock <= item.minimum_stock);
+        const items = (data || []).filter((item) => item.minimum_stock > 0 && item.current_stock <= item.minimum_stock);
         setLowStockCount(items.length);
         setLowStockItems(items.slice(0, 5));
       })
@@ -460,42 +461,50 @@ export const Dashboard: React.FC = () => {
 
         {/* ── LOW STOCK ── */}
         {lowStockItems.length > 0 && (
-          <div className="bg-card shadow-sm border border-border rounded-3xl p-6 xl:col-span-2 overflow-hidden">
-            <div className="flex items-center justify-between mb-5">
+          <div className="bg-card shadow-sm border border-border rounded-3xl xl:col-span-2 overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border">
               <h3 className="text-base font-bold text-text flex items-center gap-2">
                 <span className="w-6 h-6 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center shrink-0">
                   <AlertTriangle className="h-3.5 w-3.5 text-red-600 dark:text-red-400" aria-hidden="true" />
                 </span>
                 Inventario crítico
+                <span className="ml-1 text-xs font-semibold bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-0.5 rounded-full">
+                  {lowStockItems.length}
+                </span>
               </h3>
               <Link to="/inventory" className="text-sm font-semibold text-primary hover:underline flex items-center gap-1">
                 Ver todo <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </div>
             <div className="overflow-x-auto">
-              <table className="min-w-full" aria-label="Inventario con stock crítico">
+              <table className="min-w-full divide-y divide-border" aria-label="Inventario con stock crítico">
                 <caption className="sr-only">{lowStockItems.length} ítems con stock crítico</caption>
-                <thead>
-                  <tr className="border-b border-border">
-                    <th className="pb-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Ítem</th>
-                    <th className="pb-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Stock actual</th>
-                    <th className="pb-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Mínimo</th>
-                    <th className="pb-3 text-right text-xs font-semibold text-text-secondary uppercase tracking-wider">Acción</th>
+                <thead className="bg-surface-alt">
+                  <tr>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Ítem</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Stock actual</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Mínimo</th>
+                    <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-text-secondary uppercase tracking-wider">Acción</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
+                <tbody className="bg-card divide-y divide-border">
                   {lowStockItems.map((item) => (
-                    <tr key={item.id} className="hover:bg-surface-alt transition-colors group">
-                      <td className="py-3.5 text-sm font-medium text-text">{item.ingredient_name}</td>
-                      <td className="py-3.5">
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-full text-xs font-bold">
+                    <tr key={item.id} className="hover:bg-surface-alt/50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-text">{item.ingredient_name}</div>
+                        <div className="text-xs text-text-secondary">Unidad: {item.unit}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-full text-xs font-bold">
                           <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
                           {item.current_stock} {item.unit}
                         </span>
                       </td>
-                      <td className="py-3.5 text-sm text-text-secondary">{item.minimum_stock} {item.unit}</td>
-                      <td className="py-3.5 text-right">
-                        <Link to="/inventory" className="text-xs font-bold text-primary hover:underline">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
+                        {item.minimum_stock} {item.unit}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                        <Link to="/inventory" className="text-xs font-semibold text-primary hover:text-primary-dark transition-colors">
                           Gestionar
                         </Link>
                       </td>
@@ -508,8 +517,8 @@ export const Dashboard: React.FC = () => {
         )}
 
         {/* ── UPCOMING EVENTS ── */}
-        <div className={`bg-card shadow-sm border border-border rounded-3xl p-6 overflow-hidden ${lowStockItems.length > 0 ? "xl:col-span-2" : "xl:col-span-2"}`}>
-          <div className="flex items-center justify-between mb-5">
+        <div className="bg-card shadow-sm border border-border rounded-3xl xl:col-span-2 overflow-hidden">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-border">
             <h3 className="text-base font-bold text-text">Próximos Eventos</h3>
             <Link to="/calendar" className="text-sm font-semibold text-primary hover:underline flex items-center gap-1">
               Ver todos <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
@@ -517,55 +526,71 @@ export const Dashboard: React.FC = () => {
           </div>
 
           {loadingUpcoming ? (
-            <div className="space-y-3">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-4 p-4 rounded-2xl border border-border animate-pulse">
-                  <div className="w-12 h-12 rounded-xl bg-gray-200 dark:bg-gray-700 shrink-0" />
+            <div className="divide-y divide-border">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-4 px-6 py-4 animate-pulse">
+                  <div className="w-9 h-9 rounded-xl bg-gray-200 dark:bg-gray-700 shrink-0" />
                   <div className="flex-1 space-y-2">
-                    <div className="h-3.5 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
-                    <div className="h-3 bg-gray-100 dark:bg-gray-800 rounded w-1/3" />
+                    <div className="h-3.5 bg-gray-200 dark:bg-gray-700 rounded w-1/3" />
+                    <div className="h-3 bg-gray-100 dark:bg-gray-800 rounded w-1/4" />
                   </div>
-                  <div className="w-16 h-7 bg-gray-200 dark:bg-gray-700 rounded-xl" />
+                  <div className="w-14 h-5 bg-gray-200 dark:bg-gray-700 rounded-full" />
+                  <div className="w-20 h-3 bg-gray-100 dark:bg-gray-800 rounded" />
+                  <div className="w-12 h-7 bg-gray-200 dark:bg-gray-700 rounded-xl" />
                 </div>
               ))}
             </div>
           ) : upcomingEvents.length > 0 ? (
-            <ul className="space-y-2">
-              {upcomingEvents.map((event) => (
-                <li key={event.id}>
-                  <div className="flex items-center gap-4 p-4 rounded-2xl border border-transparent hover:border-border hover:bg-surface-alt transition-all">
-                    {/* Date badge */}
-                    <div className="w-12 h-12 rounded-xl bg-primary/10 dark:bg-primary/20 flex flex-col items-center justify-center text-primary border border-primary/20 shrink-0">
-                      <span className="text-[9px] font-black uppercase tracking-wider leading-none">
-                        {format(parseISO(event.event_date), "MMM", { locale: es })}
-                      </span>
-                      <span className="text-xl font-black leading-tight">
-                        {format(parseISO(event.event_date), "d")}
-                      </span>
-                    </div>
-
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-text truncate">{event.clients?.name}</p>
-                      <div className="flex items-center gap-2 mt-1 flex-wrap">
-                        <StatusBadge status={event.status} />
-                        <span className="text-xs text-text-secondary">
-                          {event.service_type} · {event.num_people} pax
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* CTA */}
-                    <Link
-                      to={`/events/${event.id}/summary`}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-card border border-border text-xs font-bold text-text hover:bg-primary hover:text-white hover:border-primary transition-all shrink-0"
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-border" aria-label="Próximos eventos">
+                <thead className="bg-surface-alt">
+                  <tr>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Fecha</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Cliente</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Estado</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">Servicio / Personas</th>
+                    <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-text-secondary uppercase tracking-wider">
+                      <span className="sr-only">Acción</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-card divide-y divide-border">
+                  {upcomingEvents.map((event) => (
+                    <tr
+                      key={event.id}
+                      className="hover:bg-surface-alt/50 transition-colors cursor-pointer"
+                      onClick={() => navigate(`/events/${event.id}/summary`)}
                     >
-                      Ver <ArrowRight className="h-3 w-3" />
-                    </Link>
-                  </div>
-                </li>
-              ))}
-            </ul>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-semibold text-text">
+                          {format(parseISO(event.event_date), "d MMM yyyy", { locale: es })}
+                        </div>
+                        <div className="text-xs text-text-secondary capitalize">
+                          {format(parseISO(event.event_date), "EEEE", { locale: es })}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-text">
+                        {event.clients?.name ?? "—"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <StatusBadge status={event.status} />
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
+                        {event.service_type} · {event.num_people} pax
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right" onClick={(e) => e.stopPropagation()}>
+                        <Link
+                          to={`/events/${event.id}/summary`}
+                          className="text-xs font-semibold text-primary hover:text-primary-dark transition-colors"
+                        >
+                          Ver
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-12 gap-3">
               <div className="w-14 h-14 rounded-2xl bg-surface-alt flex items-center justify-center">

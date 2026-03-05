@@ -68,7 +68,7 @@ export const InventoryList: React.FC = () => {
   };
 
   const lowStockItems = (items || []).filter(
-    (item) => item.current_stock <= item.minimum_stock,
+    (item) => item.minimum_stock > 0 && item.current_stock <= item.minimum_stock,
   );
 
   const requestDelete = (id: string) => {
@@ -217,7 +217,7 @@ export const InventoryList: React.FC = () => {
         </thead>
         <tbody className="bg-card divide-y divide-border">
           {sectionItems.map((item) => {
-            const isLowStock = item.current_stock <= item.minimum_stock;
+            const isLowStock = item.minimum_stock > 0 && item.current_stock <= item.minimum_stock;
             return (
               <tr
                 key={item.id}
@@ -269,14 +269,14 @@ export const InventoryList: React.FC = () => {
                         setAdjustingItem(item);
                         setAdjustmentValue("");
                       }}
-                      className="text-brand-orange hover:bg-brand-orange/10 p-1.5 rounded-lg transition-colors mr-1"
+                      className="text-primary hover:bg-primary/10 p-1.5 rounded-lg transition-colors mr-1"
                       title="Ajustar Stock"
                     >
                       <Plus className="h-4 w-4" />
                     </button>
                     <Link
                       to={`/inventory/${item.id}/edit`}
-                      className="p-1.5 text-text-secondary hover:text-brand-orange hover:bg-surface-alt rounded-lg transition-colors inline-block"
+                      className="p-1.5 text-text-secondary hover:text-primary hover:bg-surface-alt rounded-lg transition-colors inline-block"
                       aria-label={`Editar ${item.ingredient_name}`}
                     >
                       <Edit className="h-5 w-5" aria-hidden="true" />
@@ -342,7 +342,7 @@ export const InventoryList: React.FC = () => {
           )}
           <Link
             to="/inventory/new"
-            className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-xl text-white bg-brand-orange hover:bg-orange-600 shadow-xs transition-colors"
+            className="inline-flex items-center justify-center px-4 py-2 text-sm font-bold rounded-xl text-white premium-gradient shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all hover:scale-[1.02]"
           >
             <Plus className="h-5 w-5 mr-2" aria-hidden="true" />
             Nuevo Ítem
@@ -352,27 +352,13 @@ export const InventoryList: React.FC = () => {
 
       {lowStockItems.length > 0 && (
         <div
-          className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-400 p-4"
+          className="flex items-start gap-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 rounded-2xl p-4"
           role="alert"
         >
-          <div className="flex">
-            <div className="shrink-0">
-              <AlertTriangle
-                className="h-5 w-5 text-red-400"
-                aria-hidden="true"
-              />
-            </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800 dark:text-red-300">
-                Atención: Stock bajo detectado
-              </h3>
-              <div className="mt-2 text-sm text-red-700 dark:text-red-400">
-                <p>
-                  Hay {lowStockItems.length} ítem(s) por debajo del nivel
-                  mínimo. Revisa la lista para reabastecer.
-                </p>
-              </div>
-            </div>
+          <AlertTriangle className="h-5 w-5 shrink-0 mt-0.5" aria-hidden="true" />
+          <div className="text-sm">
+            <span className="font-bold">Stock bajo detectado:</span>{" "}
+            {lowStockItems.length} ítem{lowStockItems.length !== 1 ? "s" : ""} por debajo del nivel mínimo. Revisa la lista para reabastecer.
           </div>
         </div>
       )}
@@ -387,7 +373,7 @@ export const InventoryList: React.FC = () => {
         <input
           id="inventory-search"
           type="search"
-          className="block w-full pl-10 pr-3 py-2 border border-border rounded-xl leading-5 bg-card text-text placeholder-text-secondary focus:outline-hidden focus:ring-brand-orange focus:border-brand-orange sm:text-sm transition duration-150 ease-in-out"
+          className="block w-full pl-10 pr-3 py-2 border border-border rounded-xl leading-5 bg-card text-text placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary sm:text-sm transition duration-150 ease-in-out"
           placeholder="Buscar en inventario..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -422,7 +408,7 @@ export const InventoryList: React.FC = () => {
               !searchTerm ? (
                 <Link
                   to="/inventory/new"
-                  className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-xl text-white bg-brand-orange hover:bg-orange-600 shadow-xs"
+                  className="inline-flex items-center justify-center px-4 py-2 text-sm font-bold rounded-xl text-white premium-gradient shadow-md shadow-primary/20 hover:shadow-lg transition-all hover:scale-[1.02]"
                 >
                   <Plus className="h-5 w-5 mr-2" aria-hidden="true" />
                   Agregar Ítem
@@ -522,7 +508,7 @@ export const InventoryList: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleAdjustStock}
-                  className="flex-1 py-2.5 rounded-xl bg-brand-orange text-white text-sm font-semibold hover:bg-orange-600 transition-colors shadow-lg shadow-brand-orange/20"
+                  className="flex-1 py-2.5 rounded-xl premium-gradient text-white text-sm font-semibold transition-all shadow-lg shadow-primary/20 hover:shadow-primary/30"
                 >
                   Confirmar
                 </button>

@@ -113,7 +113,7 @@ export const ClientList: React.FC = () => {
         }}
       />
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1 className="text-2xl font-bold text-text">Clientes</h1>
+        <h1 className="text-2xl font-black text-text tracking-tight">Clientes</h1>
         <div className="flex items-center gap-2">
           {clients.length > 0 && (
             <button
@@ -132,7 +132,7 @@ export const ClientList: React.FC = () => {
           )}
           <Link
             to="/clients/new"
-            className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-xl text-white bg-brand-orange hover:bg-orange-600 shadow-sm transition-colors"
+            className="inline-flex items-center justify-center px-4 py-2 text-sm font-bold rounded-xl text-white premium-gradient shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all hover:scale-[1.02]"
           >
             <Plus className="h-5 w-5 mr-2" aria-hidden="true" />
             Nuevo Cliente
@@ -150,7 +150,7 @@ export const ClientList: React.FC = () => {
         <input
           id="client-search"
           type="search"
-          className="block w-full pl-10 pr-3 py-2 border border-border rounded-xl leading-5 bg-card text-text placeholder-text-secondary focus:outline-hidden focus:ring-brand-orange focus:border-brand-orange sm:text-sm transition duration-150 ease-in-out"
+          className="block w-full pl-10 pr-3 py-2 border border-border rounded-xl leading-5 bg-card text-text placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary sm:text-sm transition duration-150 ease-in-out"
           placeholder="Buscar clientes..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -183,7 +183,7 @@ export const ClientList: React.FC = () => {
               !searchTerm ? (
                 <Link
                   to="/clients/new"
-                  className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-xl text-white bg-brand-orange hover:bg-orange-600 shadow-sm"
+                  className="inline-flex items-center justify-center px-4 py-2 text-sm font-bold rounded-xl text-white premium-gradient shadow-md shadow-primary/20 hover:shadow-lg transition-all hover:scale-[1.02]"
                 >
                   <Plus className="h-5 w-5 mr-2" aria-hidden="true" />
                   Agregar Cliente
@@ -255,18 +255,18 @@ export const ClientList: React.FC = () => {
                           />
                         ) : (
                           <div
-                            className="h-10 w-10 rounded-full bg-brand-green/10 dark:bg-brand-green/20 flex items-center justify-center text-brand-green dark:text-green-400 font-bold"
+                            className="h-10 w-10 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary font-bold"
                             aria-hidden="true"
                           >
                             {client.name.charAt(0).toUpperCase()}
                           </div>
                         )}
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-text">
+                          <div className="text-sm font-semibold text-text">
                             {client.name}
                           </div>
-                          <div className="text-text-secondary truncate max-w-[200px]">
-                            {client.address}
+                          <div className="text-xs text-text-secondary truncate max-w-[200px]">
+                            {client.city || client.address || '—'}
                           </div>
                         </div>
                       </div>
@@ -279,7 +279,7 @@ export const ClientList: React.FC = () => {
                         />
                         <a
                           href={`tel:${client.phone}`}
-                          className="text-brand-orange hover:text-orange-600 transition-colors"
+                          className="text-primary hover:text-primary-dark transition-colors"
                           onClick={(e) => e.stopPropagation()}
                           aria-label={`Llamar a ${client.name} al ${client.phone}`}
                         >
@@ -294,7 +294,7 @@ export const ClientList: React.FC = () => {
                           />
                           <a
                             href={`mailto:${client.email}`}
-                            className="text-brand-orange hover:text-orange-600 transition-colors"
+                            className="text-primary hover:text-primary-dark transition-colors"
                             onClick={(e) => e.stopPropagation()}
                             aria-label={`Enviar email a ${client.name} a ${client.email}`}
                           >
@@ -304,22 +304,22 @@ export const ClientList: React.FC = () => {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full bg-brand-green/10 text-brand-green border border-brand-green/20">
-                        {client.total_events} eventos
+                      <span className="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400">
+                        {client.total_events} {client.total_events === 1 ? 'evento' : 'eventos'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
-                      ${client.total_spent.toFixed(2)}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-text">
+                      ${client.total_spent.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex justify-end space-x-2">
                         <Link
                           to={`/clients/${client.id}/edit`}
-                          className="text-text-secondary hover:text-brand-orange transition-colors mr-3 inline-block"
+                          className="p-1.5 text-text-secondary hover:text-primary hover:bg-surface-alt rounded-lg transition-colors inline-block"
                           onClick={(e) => e.stopPropagation()}
                           aria-label={`Editar cliente ${client.name}`}
                         >
-                          <Edit className="h-5 w-5" aria-hidden="true" />
+                          <Edit className="h-4 w-4" aria-hidden="true" />
                         </Link>
                         <button
                           type="button"
@@ -327,10 +327,10 @@ export const ClientList: React.FC = () => {
                             e.stopPropagation();
                             requestDelete(client.id);
                           }}
-                          className="text-text-secondary hover:text-red-500 transition-colors inline-block"
+                          className="p-1.5 text-text-secondary hover:text-error hover:bg-error/10 rounded-lg transition-colors inline-block"
                           aria-label={`Eliminar cliente ${client.name}`}
                         >
-                          <Trash2 className="h-5 w-5" aria-hidden="true" />
+                          <Trash2 className="h-4 w-4" aria-hidden="true" />
                         </button>
                       </div>
                     </td>
