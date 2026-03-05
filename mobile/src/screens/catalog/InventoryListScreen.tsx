@@ -4,7 +4,7 @@ import {
   View,
   Text,
   StyleSheet,
-  FlatList,
+  SectionList,
   TouchableOpacity,
   TextInput,
   RefreshControl,
@@ -17,14 +17,15 @@ import {
   Plus,
   AlertTriangle,
   Package,
-  Edit2,
+  ShoppingCart,
+  Wrench,
 } from "lucide-react-native";
 import { InventoryStackParamList } from "../../types/navigation";
 import { InventoryItem } from "../../types/entities";
 import { inventoryService } from "../../services/inventoryService";
 import { useToast } from "../../hooks/useToast";
 import { logError } from "../../lib/errorHandler";
-import { EmptyState, SkeletonList, SwipeableRow, SegmentedControl, SortSelector } from "../../components/shared";
+import { EmptyState, SkeletonList, SwipeableRow, SortSelector } from "../../components/shared";
 import { useTheme } from "../../hooks/useTheme";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
@@ -33,6 +34,12 @@ import { shadows } from "../../theme/shadows";
 
 type Props = NativeStackScreenProps<InventoryStackParamList, "InventoryList">;
 
+interface InventorySection {
+  title: string;
+  type: "ingredient" | "equipment";
+  data: InventoryItem[];
+}
+
 export default function InventoryListScreen({ navigation }: Props) {
   const addToast = useToast((s) => s.addToast);
   const { isDark } = useTheme();
@@ -40,13 +47,10 @@ export default function InventoryListScreen({ navigation }: Props) {
   const styles = getStyles(palette);
 
   const [items, setItems] = useState<InventoryItem[]>([]);
-  const [filteredItems, setFilteredItems] = useState<InventoryItem[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showLowStockOnly, setShowLowStockOnly] = useState(false);
-  const [typeFilterIndex, setTypeFilterIndex] = useState(0);
-  const typeSegments = ["Todos", "Ingredientes", "Equipo"];
   const [sortKey, setSortKey] = useState("ingredient_name");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
@@ -55,7 +59,6 @@ export default function InventoryListScreen({ navigation }: Props) {
     { key: "current_stock", label: "Stock actual" },
     { key: "minimum_stock", label: "Stock mínimo" },
     { key: "unit_cost", label: "Costo unitario" },
-    { key: "type", label: "Tipo" },
   ], []);
 
   const loadItems = useCallback(async () => {
@@ -77,17 +80,11 @@ export default function InventoryListScreen({ navigation }: Props) {
     }, [loadItems]),
   );
 
-  useEffect(() => {
+  const sortedSections = useMemo(() => {
     let filtered = items;
 
     if (showLowStockOnly) {
       filtered = filtered.filter(item => item.current_stock <= item.minimum_stock);
-    }
-
-    if (typeFilterIndex === 1) {
-      filtered = filtered.filter(item => item.type === 'ingredient');
-    } else if (typeFilterIndex === 2) {
-      filtered = filtered.filter(item => item.type === 'equipment');
     }
 
     if (search.trim()) {
@@ -111,9 +108,6 @@ export default function InventoryListScreen({ navigation }: Props) {
         case "unit_cost":
           cmp = (a.unit_cost ?? 0) - (b.unit_cost ?? 0);
           break;
-        case "type":
-          cmp = a.type.localeCompare(b.type);
-          break;
         case "ingredient_name":
         default:
           cmp = a.ingredient_name.localeCompare(b.ingredient_name);
@@ -122,8 +116,21 @@ export default function InventoryListScreen({ navigation }: Props) {
       return sortOrder === "asc" ? cmp : -cmp;
     });
 
-    setFilteredItems(sorted);
-  }, [search, items, showLowStockOnly, typeFilterIndex, sortKey, sortOrder]);
+    const ingredientItems = sorted.filter(item => item.type === "ingredient");
+    const equipmentItems = sorted.filter(item => item.type === "equipment");
+
+    const sections: InventorySection[] = [];
+    if (ingredientItems.length > 0) {
+      sections.push({ title: "Consumibles", type: "ingredient", data: ingredientItems });
+    }
+    if (equipmentItems.length > 0) {
+      sections.push({ title: "Equipos", type: "equipment", data: equipmentItems });
+    }
+
+    return sections;
+  }, [search, items, showLowStockOnly, sortKey, sortOrder]);
+
+  const totalFilteredItems = sortedSections.reduce((sum, s) => sum + s.data.length, 0);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -159,13 +166,7 @@ export default function InventoryListScreen({ navigation }: Props) {
             <Text style={styles.cardName} numberOfLines={1}>
               {item.ingredient_name}
             </Text>
-            <View style={styles.cardRow}>
-              <View style={[styles.typeBadge, item.type === 'equipment' && styles.typeBadgeEquip]}>
-                <Text style={styles.typeText}>
-                  {item.type === 'equipment' ? 'Equipo' : 'Ingrediente'}
-                </Text>
-              </View>
-            </View>
+            <Text style={styles.cardUnit}>{item.unit}</Text>
           </View>
           <View style={styles.stockInfo}>
             <Text style={[styles.stockValue, isLowStock && styles.stockValueLow]}>
@@ -183,7 +184,29 @@ export default function InventoryListScreen({ navigation }: Props) {
         </Animated.View>
       );
     },
-    [navigation],
+    [navigation, palette, styles],
+  );
+
+  const renderSectionHeader = useCallback(
+    ({ section }: { section: InventorySection }) => {
+      const isEquipment = section.type === "equipment";
+      const Icon = isEquipment ? Wrench : ShoppingCart;
+      const iconColor = isEquipment ? palette.info : palette.primary;
+      const bgColor = isEquipment ? palette.infoBg : palette.primaryLight;
+
+      return (
+        <View style={styles.sectionHeader}>
+          <View style={[styles.sectionIconBox, { backgroundColor: bgColor }]}>
+            <Icon color={iconColor} size={16} />
+          </View>
+          <Text style={styles.sectionTitle}>{section.title}</Text>
+          <View style={styles.sectionCountBadge}>
+            <Text style={styles.sectionCountText}>{section.data.length}</Text>
+          </View>
+        </View>
+      );
+    },
+    [palette, styles],
   );
 
   if (loading && items.length === 0) {
@@ -218,14 +241,6 @@ export default function InventoryListScreen({ navigation }: Props) {
         </View>
       </View>
 
-      <View style={styles.segmentContainer}>
-        <SegmentedControl
-          segments={typeSegments}
-          selectedIndex={typeFilterIndex}
-          onChange={setTypeFilterIndex}
-        />
-      </View>
-
       {lowStockCount > 0 && (
         <TouchableOpacity
           style={styles.alertBanner}
@@ -243,15 +258,17 @@ export default function InventoryListScreen({ navigation }: Props) {
         </TouchableOpacity>
       )}
 
-      <FlatList
-        data={filteredItems}
+      <SectionList
+        sections={sortedSections}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
+        renderSectionHeader={renderSectionHeader}
         contentContainerStyle={
-          filteredItems.length === 0
+          totalFilteredItems === 0
             ? styles.emptyContent
             : styles.listContent
         }
+        stickySectionHeadersEnabled={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
@@ -314,10 +331,6 @@ const getStyles = (palette: typeof colors.light) => StyleSheet.create({
     color: palette.text,
     padding: 0,
   },
-  segmentContainer: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.sm,
-  },
   alertBanner: {
     flexDirection: "row",
     alignItems: "center",
@@ -348,6 +361,37 @@ const getStyles = (palette: typeof colors.light) => StyleSheet.create({
     flex: 1,
     paddingHorizontal: spacing.lg,
   },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: spacing.md,
+    paddingTop: spacing.lg,
+    gap: spacing.sm,
+  },
+  sectionIconBox: {
+    width: 28,
+    height: 28,
+    borderRadius: spacing.borderRadius.md,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  sectionTitle: {
+    ...typography.subheadline,
+    fontWeight: "700",
+    color: palette.text,
+    flex: 1,
+  },
+  sectionCountBadge: {
+    backgroundColor: palette.surface,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: spacing.borderRadius.sm,
+  },
+  sectionCountText: {
+    ...typography.caption,
+    color: palette.textSecondary,
+    fontWeight: "600",
+  },
   card: {
     flexDirection: "row",
     alignItems: "center",
@@ -374,34 +418,16 @@ const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   },
   cardBody: {
     flex: 1,
-    gap: 3,
+    gap: 2,
   },
   cardName: {
     ...typography.subheadline,
     fontWeight: "500",
     color: palette.text,
   },
-  cardRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-  },
-  typeBadge: {
-    backgroundColor: palette.surface,
-    paddingHorizontal: spacing.xs + 2,
-    paddingVertical: 1,
-    borderRadius: spacing.borderRadius.sm,
-  },
-  typeBadgeEquip: {
-    backgroundColor: palette.infoBg,
-  },
-  typeText: {
+  cardUnit: {
     ...typography.caption,
     color: palette.textSecondary,
-    fontWeight: "600",
-    textTransform: "uppercase",
-    fontSize: 9,
-    letterSpacing: 0.3,
   },
   stockInfo: {
     alignItems: "flex-end",

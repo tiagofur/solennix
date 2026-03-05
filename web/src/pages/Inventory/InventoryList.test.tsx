@@ -58,6 +58,25 @@ describe('InventoryList', () => {
     vi.clearAllMocks();
   });
 
+  it('renders items separated into two sections', async () => {
+    (inventoryService.getAll as any).mockResolvedValue(sampleItems);
+
+    renderList();
+
+    await waitFor(() => {
+      expect(screen.getByText('Harina')).toBeInTheDocument();
+    });
+
+    // Verify section headers
+    expect(screen.getByText('Consumibles')).toBeInTheDocument();
+    expect(screen.getByText('Equipos')).toBeInTheDocument();
+
+    // Verify items exist
+    expect(screen.getByText('Harina')).toBeInTheDocument();
+    expect(screen.getByText('Azucar')).toBeInTheDocument();
+    expect(screen.getByText('Horno')).toBeInTheDocument();
+  });
+
   it('renders items and low stock warning', async () => {
     (inventoryService.getAll as any).mockResolvedValue([
       {
@@ -106,7 +125,7 @@ describe('InventoryList', () => {
       expect(screen.getByText('Azucar')).toBeInTheDocument();
     });
 
-    fireEvent.change(screen.getByPlaceholderText('Buscar ingrediente...'), {
+    fireEvent.change(screen.getByPlaceholderText('Buscar en inventario...'), {
       target: { value: 'Harina' },
     });
 
@@ -152,10 +171,10 @@ describe('InventoryList', () => {
     await waitFor(() => {
       expect(logError).toHaveBeenCalledWith('Error fetching inventory', expect.any(Error));
     });
-    expect(screen.getByText(/No se encontraron ingredientes/i)).toBeInTheDocument();
+    expect(screen.getByText(/No se encontraron ítems/i)).toBeInTheDocument();
   });
 
-  it('shows equipment badge and delete error handling', async () => {
+  it('shows equipment section and delete error handling', async () => {
     (inventoryService.getAll as any).mockResolvedValue([
       {
         id: '1',
@@ -175,7 +194,7 @@ describe('InventoryList', () => {
       expect(screen.getByText('Horno')).toBeInTheDocument();
     });
 
-    expect(screen.getByText('Equipo')).toBeInTheDocument();
+    expect(screen.getByText('Equipos')).toBeInTheDocument();
     expect(screen.getByText('$0.00')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /Eliminar Horno/i }));
@@ -214,7 +233,7 @@ describe('InventoryList', () => {
     expect(screen.queryByRole('dialog', { name: 'Eliminar ingrediente' })).not.toBeInTheDocument();
   });
 
-  it('renders ingredient badge and unit label', async () => {
+  it('renders consumibles section with unit label', async () => {
     (inventoryService.getAll as any).mockResolvedValue([
       {
         id: '1',
@@ -233,14 +252,33 @@ describe('InventoryList', () => {
       expect(screen.getByText('Harina')).toBeInTheDocument();
     });
 
-    expect(screen.getByText('Ingrediente')).toBeInTheDocument();
+    expect(screen.getByText('Consumibles')).toBeInTheDocument();
     expect(screen.getByText(/Unidad: kg/i)).toBeInTheDocument();
   });
 
-  // ---------- NEW TESTS FOR COVERAGE: sorting columns ----------
+  // ---------- sorting tests ----------
 
-  it('sorts by minimum_stock column when header is clicked', async () => {
-    (inventoryService.getAll as any).mockResolvedValue(sampleItems);
+  it('sorts consumibles section by minimum_stock column', async () => {
+    (inventoryService.getAll as any).mockResolvedValue([
+      {
+        id: '1',
+        ingredient_name: 'Harina',
+        unit: 'kg',
+        type: 'ingredient',
+        current_stock: 10,
+        minimum_stock: 5,
+        unit_cost: 10,
+      },
+      {
+        id: '2',
+        ingredient_name: 'Azucar',
+        unit: 'kg',
+        type: 'ingredient',
+        current_stock: 2,
+        minimum_stock: 3,
+        unit_cost: 8,
+      },
+    ]);
 
     renderList();
 
@@ -248,21 +286,28 @@ describe('InventoryList', () => {
       expect(screen.getByText('Harina')).toBeInTheDocument();
     });
 
-    // Click "Stock Minimo" column header to sort ascending
     const minStockHeader = screen.getByText('Stock Mínimo');
     fireEvent.click(minStockHeader);
 
-    // Verify that the aria-sort attribute changes
     const minStockTh = minStockHeader.closest('th');
     expect(minStockTh).toHaveAttribute('aria-sort', 'ascending');
 
-    // Click again to sort descending
     fireEvent.click(minStockHeader);
     expect(minStockTh).toHaveAttribute('aria-sort', 'descending');
   });
 
   it('sorts by unit_cost column when header is clicked', async () => {
-    (inventoryService.getAll as any).mockResolvedValue(sampleItems);
+    (inventoryService.getAll as any).mockResolvedValue([
+      {
+        id: '1',
+        ingredient_name: 'Harina',
+        unit: 'kg',
+        type: 'ingredient',
+        current_stock: 10,
+        minimum_stock: 1,
+        unit_cost: 10,
+      },
+    ]);
 
     renderList();
 
@@ -270,36 +315,28 @@ describe('InventoryList', () => {
       expect(screen.getByText('Harina')).toBeInTheDocument();
     });
 
-    // Click "Costo Unitario" column header to sort ascending
     const unitCostHeader = screen.getByText('Costo Unitario');
     fireEvent.click(unitCostHeader);
 
     const unitCostTh = unitCostHeader.closest('th');
     expect(unitCostTh).toHaveAttribute('aria-sort', 'ascending');
 
-    // Click again to toggle to descending
     fireEvent.click(unitCostHeader);
     expect(unitCostTh).toHaveAttribute('aria-sort', 'descending');
   });
 
-  it('sorts by type column when header is clicked', async () => {
-    (inventoryService.getAll as any).mockResolvedValue(sampleItems);
-
-    renderList();
-
-    await waitFor(() => {
-      expect(screen.getByText('Harina')).toBeInTheDocument();
-    });
-
-    const typeHeader = screen.getByText('Tipo');
-    fireEvent.click(typeHeader);
-
-    const typeTh = typeHeader.closest('th');
-    expect(typeTh).toHaveAttribute('aria-sort', 'ascending');
-  });
-
   it('sorts by current_stock column when header is clicked', async () => {
-    (inventoryService.getAll as any).mockResolvedValue(sampleItems);
+    (inventoryService.getAll as any).mockResolvedValue([
+      {
+        id: '1',
+        ingredient_name: 'Harina',
+        unit: 'kg',
+        type: 'ingredient',
+        current_stock: 10,
+        minimum_stock: 1,
+        unit_cost: 10,
+      },
+    ]);
 
     renderList();
 
@@ -315,7 +352,17 @@ describe('InventoryList', () => {
   });
 
   it('sorts by ingredient_name and toggles sort order', async () => {
-    (inventoryService.getAll as any).mockResolvedValue(sampleItems);
+    (inventoryService.getAll as any).mockResolvedValue([
+      {
+        id: '1',
+        ingredient_name: 'Harina',
+        unit: 'kg',
+        type: 'ingredient',
+        current_stock: 10,
+        minimum_stock: 1,
+        unit_cost: 10,
+      },
+    ]);
 
     renderList();
 
@@ -323,32 +370,35 @@ describe('InventoryList', () => {
       expect(screen.getByText('Harina')).toBeInTheDocument();
     });
 
-    // ingredient_name is the initial sort key, so it should already be ascending
     const nameHeader = screen.getByText('Ítem');
     const nameTh = nameHeader.closest('th');
     expect(nameTh).toHaveAttribute('aria-sort', 'ascending');
 
-    // Click to toggle to descending
     fireEvent.click(nameHeader);
     expect(nameTh).toHaveAttribute('aria-sort', 'descending');
 
-    // Click again to toggle back to ascending
     fireEvent.click(nameHeader);
     expect(nameTh).toHaveAttribute('aria-sort', 'ascending');
   });
 
   it('shows "none" aria-sort on columns that are not currently sorted', async () => {
-    (inventoryService.getAll as any).mockResolvedValue(sampleItems);
+    (inventoryService.getAll as any).mockResolvedValue([
+      {
+        id: '1',
+        ingredient_name: 'Harina',
+        unit: 'kg',
+        type: 'ingredient',
+        current_stock: 10,
+        minimum_stock: 1,
+        unit_cost: 10,
+      },
+    ]);
 
     renderList();
 
     await waitFor(() => {
       expect(screen.getByText('Harina')).toBeInTheDocument();
     });
-
-    // Default sort is ingredient_name, so other columns should be "none"
-    const typeHeader = screen.getByText('Tipo');
-    expect(typeHeader.closest('th')).toHaveAttribute('aria-sort', 'none');
 
     const minStockHeader = screen.getByText('Stock Mínimo');
     expect(minStockHeader.closest('th')).toHaveAttribute('aria-sort', 'none');
@@ -384,11 +434,11 @@ describe('InventoryList', () => {
       expect(screen.getByText('Harina')).toBeInTheDocument();
     });
 
-    fireEvent.change(screen.getByPlaceholderText('Buscar ingrediente...'), {
+    fireEvent.change(screen.getByPlaceholderText('Buscar en inventario...'), {
       target: { value: 'ZZZ no existe' },
     });
 
-    expect(screen.getByText(/No se encontraron ingredientes/i)).toBeInTheDocument();
+    expect(screen.getByText(/No se encontraron ítems/i)).toBeInTheDocument();
     expect(screen.getByText(/Intenta ajustar los términos de búsqueda/i)).toBeInTheDocument();
   });
 
@@ -398,12 +448,11 @@ describe('InventoryList', () => {
     renderList();
 
     await waitFor(() => {
-      expect(screen.getByText(/No se encontraron ingredientes/i)).toBeInTheDocument();
+      expect(screen.getByText(/No se encontraron ítems/i)).toBeInTheDocument();
     });
 
-    expect(screen.getByText(/Comienza agregando tu primer ingrediente/i)).toBeInTheDocument();
-    // The empty state should have the "Agregar Ingrediente" link
-    expect(screen.getByText('Agregar Ingrediente')).toBeInTheDocument();
+    expect(screen.getByText(/Comienza agregando tu primer ítem/i)).toBeInTheDocument();
+    expect(screen.getByText('Agregar Ítem')).toBeInTheDocument();
   });
 
   it('does not show low stock warning when all items have sufficient stock', async () => {
@@ -487,11 +536,9 @@ describe('InventoryList', () => {
       expect(screen.getByText('Sal')).toBeInTheDocument();
     });
 
-    // Check "Nuevo Ingrediente" link
-    const newLink = screen.getByRole('link', { name: /Nuevo Ingrediente/i });
+    const newLink = screen.getByRole('link', { name: /Nuevo Ítem/i });
     expect(newLink).toHaveAttribute('href', '/inventory/new');
 
-    // Check edit link
     const editLink = screen.getByRole('link', { name: /Editar Sal/i });
     expect(editLink).toHaveAttribute('href', '/inventory/inv-42/edit');
   });
@@ -524,7 +571,55 @@ describe('InventoryList', () => {
     renderList();
 
     await waitFor(() => {
-      expect(screen.getByText(/No se encontraron ingredientes/i)).toBeInTheDocument();
+      expect(screen.getByText(/No se encontraron ítems/i)).toBeInTheDocument();
     });
+  });
+
+  it('shows empty section message when only one type exists', async () => {
+    (inventoryService.getAll as any).mockResolvedValue([
+      {
+        id: '1',
+        ingredient_name: 'Horno',
+        unit: 'pieza',
+        type: 'equipment',
+        current_stock: 3,
+        minimum_stock: 1,
+        unit_cost: 5000,
+      },
+    ]);
+
+    renderList();
+
+    await waitFor(() => {
+      expect(screen.getByText('Horno')).toBeInTheDocument();
+    });
+
+    // Equipment section should be visible
+    expect(screen.getByText('Equipos')).toBeInTheDocument();
+    // Consumibles section should show empty message
+    expect(screen.getByText(/No hay ingredientes/i)).toBeInTheDocument();
+  });
+
+  it('sorts equipment section independently from consumibles', async () => {
+    (inventoryService.getAll as any).mockResolvedValue(sampleItems);
+
+    renderList();
+
+    await waitFor(() => {
+      expect(screen.getByText('Harina')).toBeInTheDocument();
+    });
+
+    // There should be two tables — get all Stock Actual headers
+    const stockHeaders = screen.getAllByText('Stock Actual');
+    expect(stockHeaders.length).toBe(2);
+
+    // Click the equipment section's Stock Actual header (second one)
+    fireEvent.click(stockHeaders[1]);
+    const equipTh = stockHeaders[1].closest('th');
+    expect(equipTh).toHaveAttribute('aria-sort', 'ascending');
+
+    // The consumibles section's header should still be "none"
+    const ingredientTh = stockHeaders[0].closest('th');
+    expect(ingredientTh).toHaveAttribute('aria-sort', 'none');
   });
 });
