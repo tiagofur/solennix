@@ -104,7 +104,7 @@ export const ProductList: React.FC = () => {
         }}
       />
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1 className="text-2xl font-bold text-text">
+        <h1 className="text-2xl font-black tracking-tight text-text">
           Productos
         </h1>
         <div className="flex items-center gap-2">
@@ -125,7 +125,7 @@ export const ProductList: React.FC = () => {
           )}
           <Link
             to="/products/new"
-            className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-xl text-white bg-brand-orange hover:bg-orange-600 shadow-xs transition-colors"
+            className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-xl text-white premium-gradient shadow-xs transition-opacity hover:opacity-90"
           >
             <Plus className="h-5 w-5 mr-2" aria-hidden="true" />
             Nuevo Producto
@@ -141,7 +141,7 @@ export const ProductList: React.FC = () => {
         <input
           id="product-search"
           type="search"
-          className="block w-full pl-10 pr-3 py-2 border border-border rounded-xl leading-5 bg-card text-text placeholder-text-secondary focus:outline-hidden focus:ring-brand-orange focus:border-brand-orange sm:text-sm transition duration-150 ease-in-out"
+          className="block w-full pl-10 pr-3 py-2 border border-border rounded-xl leading-5 bg-card text-text placeholder-text-secondary focus:outline-hidden focus:ring-2 focus:ring-primary/40 focus:border-primary sm:text-sm transition duration-150 ease-in-out"
           placeholder="Buscar producto..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -167,7 +167,7 @@ export const ProductList: React.FC = () => {
             action={!searchTerm ? (
               <Link
                 to="/products/new"
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-xl text-white bg-brand-orange hover:bg-orange-600"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-xl text-white premium-gradient hover:opacity-90"
               >
                 <Plus className="h-5 w-5 mr-2" />
                 Agregar Producto
@@ -221,22 +221,22 @@ export const ProductList: React.FC = () => {
                           {product.image_url ? (
                             <img className="h-10 w-10 rounded-lg object-cover" src={product.image_url} alt="" />
                           ) : (
-                            <div className="h-10 w-10 rounded-lg bg-surface-alt flex items-center justify-center">
-                              <Package className="h-5 w-5 text-text-secondary" />
+                            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                              <Package className="h-5 w-5 text-primary" />
                             </div>
                           )}
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-text">{product.name}</div>
+                          <div className="text-sm font-semibold text-text">{product.name}</div>
                           <div className="text-sm text-text-secondary">{product.category}</div>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-text">${product.base_price.toFixed(2)}</div>
+                      <div className="text-sm font-medium text-text">${product.base_price.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2.5 py-0.5 inline-flex text-xs font-semibold rounded-full bg-brand-orange/10 text-brand-orange border border-brand-orange/20">
+                      <span className="px-2.5 py-0.5 inline-flex text-xs font-semibold rounded-full bg-primary/10 text-primary border border-primary/20">
                         {product.category}
                       </span>
                     </td>
@@ -247,7 +247,7 @@ export const ProductList: React.FC = () => {
                       <div className="flex justify-end space-x-2">
                         <Link
                           to={`/products/${product.id}/edit`}
-                          className="p-1.5 text-text-secondary hover:text-brand-orange hover:bg-surface-alt rounded-lg transition-colors inline-block"
+                          className="p-1.5 text-text-secondary hover:text-primary hover:bg-surface-alt rounded-lg transition-colors inline-block"
                           aria-label={`Editar ${product.name}`}
                         >
                           <Edit className="h-5 w-5" aria-hidden="true" />

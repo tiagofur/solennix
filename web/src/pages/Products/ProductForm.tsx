@@ -251,7 +251,7 @@ export const ProductForm: React.FC = () => {
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="mb-6 flex items-center text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+          className="mb-6 flex items-center text-sm font-medium text-text-secondary hover:text-text transition-colors"
           aria-label="Regresar a la página anterior"
         >
           <ArrowLeft className="h-4 w-4 mr-1" aria-hidden="true" />
@@ -287,10 +287,10 @@ export const ProductForm: React.FC = () => {
         <div className="bg-card shadow-sm border border-border px-4 py-8 rounded-3xl sm:p-10">
             <form id="product-form" onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {error && (
-                <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-400 p-4" role="alert">
+                <div className="bg-error/10 border-l-4 border-error p-4" role="alert">
                 <div className="flex">
                     <div className="ml-3">
-                    <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+                    <p className="text-sm text-error">{error}</p>
                     </div>
                 </div>
                 </div>
@@ -421,7 +421,7 @@ export const ProductForm: React.FC = () => {
                 <Layers className="h-5 w-5 mr-2 text-brand-orange" aria-hidden="true" />
                 Composición / Insumos (por unidad/persona)
             </h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Define qué insumos y qué cantidad se necesitan para 1 unidad de este producto. Solo insumos generan costo.</p>
+            <p className="text-xs text-text-secondary mb-4">Define qué insumos y qué cantidad se necesitan para 1 unidad de este producto. Solo insumos generan costo.</p>
 
             <div className="flex-1 overflow-y-auto mb-4 space-y-3">
                 {ingredientEntries.map(({ item, originalIndex }) => (
@@ -429,13 +429,13 @@ export const ProductForm: React.FC = () => {
                         <button
                             type="button"
                             onClick={() => handleRemoveIngredient(originalIndex)}
-                            className="absolute top-1 right-1 text-gray-400 hover:text-red-500 dark:hover:text-red-400"
+                            className="absolute top-1 right-1 text-text-secondary hover:text-error transition-colors"
                             aria-label={`Eliminar insumo`}
                         >
                             <Trash2 className="h-4 w-4" aria-hidden="true" />
                         </button>
                         <div className="mb-2 pr-6">
-                            <label htmlFor={`ingredient-select-${originalIndex}`} className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Insumo</label>
+                            <label htmlFor={`ingredient-select-${originalIndex}`} className="block text-xs text-text-secondary mb-1">Insumo</label>
                             <select
                                 id={`ingredient-select-${originalIndex}`}
                                 value={item.inventory_id}
@@ -451,7 +451,7 @@ export const ProductForm: React.FC = () => {
                         </div>
                         <div className="flex gap-2 items-center">
                             <div className="w-1/2">
-                                <label htmlFor={`quantity-${originalIndex}`} className="text-xs text-gray-500 dark:text-gray-400">Cant.</label>
+                                <label htmlFor={`quantity-${originalIndex}`} className="text-xs text-text-secondary">Cant.</label>
                                 <input
                                     id={`quantity-${originalIndex}`}
                                     type="number"
@@ -463,7 +463,7 @@ export const ProductForm: React.FC = () => {
                                 />
                             </div>
                             <div className="w-1/2 text-right">
-                                <span className="text-xs text-gray-500 dark:text-gray-400 block">Costo Est.</span>
+                                <span className="text-xs text-text-secondary block">Costo Est.</span>
                                 <span className="text-sm font-medium text-text">
                                     ${(item.quantity_required * item.unit_cost).toFixed(2)}
                                 </span>
@@ -484,7 +484,7 @@ export const ProductForm: React.FC = () => {
 
             <div className="border-t border-border pt-4 space-y-2">
                 <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-500 dark:text-gray-400">Costo Total por Unidad</span>
+                    <span className="text-sm text-text-secondary">Costo Total por Unidad</span>
                     <span className="text-lg font-bold text-text">
                         ${calculateTotalCost().toFixed(2)}
                     </span>
@@ -498,7 +498,7 @@ export const ProductForm: React.FC = () => {
                 <Wrench className="h-5 w-5 mr-2 text-blue-500" aria-hidden="true" />
                 Maquinaria / Equipo Necesario
             </h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Equipo y maquinaria necesaria para preparar este producto. No se incluye en el costo (activos reutilizables).</p>
+            <p className="text-xs text-text-secondary mb-4">Equipo y maquinaria necesaria para preparar este producto. No se incluye en el costo (activos reutilizables).</p>
 
             <div className="flex-1 overflow-y-auto mb-4 space-y-3">
                 {equipmentEntries.map(({ item, originalIndex }) => (
@@ -506,13 +506,13 @@ export const ProductForm: React.FC = () => {
                         <button
                             type="button"
                             onClick={() => handleRemoveIngredient(originalIndex)}
-                            className="absolute top-1 right-1 text-gray-400 hover:text-red-500 dark:hover:text-red-400"
+                            className="absolute top-1 right-1 text-text-secondary hover:text-error transition-colors"
                             aria-label={`Eliminar equipo`}
                         >
                             <Trash2 className="h-4 w-4" aria-hidden="true" />
                         </button>
                         <div className="mb-2 pr-6">
-                            <label htmlFor={`equipment-select-${originalIndex}`} className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Equipo</label>
+                            <label htmlFor={`equipment-select-${originalIndex}`} className="block text-xs text-text-secondary mb-1">Equipo</label>
                             <select
                                 id={`equipment-select-${originalIndex}`}
                                 value={item.inventory_id}
@@ -528,7 +528,7 @@ export const ProductForm: React.FC = () => {
                         </div>
                         <div className="flex gap-2 items-center">
                             <div className="w-1/2">
-                                <label htmlFor={`eq-quantity-${originalIndex}`} className="text-xs text-gray-500 dark:text-gray-400">Cantidad</label>
+                                <label htmlFor={`eq-quantity-${originalIndex}`} className="text-xs text-text-secondary">Cantidad</label>
                                 <input
                                     id={`eq-quantity-${originalIndex}`}
                                     type="number"
@@ -572,7 +572,7 @@ export const ProductForm: React.FC = () => {
                 type="submit"
                 form="product-form"
                 disabled={isLoading}
-                className="inline-flex justify-center py-2.5 px-8 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-brand-orange hover:bg-orange-600 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-brand-orange disabled:opacity-50 transition-colors"
+                className="inline-flex justify-center py-2.5 px-8 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white premium-gradient hover:opacity-90 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 transition-opacity"
                 aria-label={isLoading ? "Guardando producto..." : "Guardar producto"}
             >
                 <Save className="h-5 w-5 mr-2" aria-hidden="true" />
