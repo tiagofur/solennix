@@ -204,5 +204,10 @@ func ValidateProductIngredient(pi *models.ProductIngredient) error {
 		return ValidationError{Field: "quantity_required", Message: "must be greater than 0"}
 	}
 
+	// Validate capacity (must be positive when set)
+	if pi.Capacity != nil && *pi.Capacity <= 0 {
+		return ValidationError{Field: "capacity", Message: "must be greater than 0 when specified"}
+	}
+
 	return nil
 }

@@ -92,7 +92,7 @@ func (r *ProductRepo) Delete(ctx context.Context, id, userID uuid.UUID) error {
 // -- Ingredients --
 
 func (r *ProductRepo) GetIngredients(ctx context.Context, productID uuid.UUID) ([]models.ProductIngredient, error) {
-	query := `SELECT pi.id, pi.product_id, pi.inventory_id, pi.quantity_required, pi.created_at,
+	query := `SELECT pi.id, pi.product_id, pi.inventory_id, pi.quantity_required, pi.capacity, pi.created_at,
 		i.ingredient_name, i.unit, i.unit_cost, i.type
 		FROM product_ingredients pi LEFT JOIN inventory i ON pi.inventory_id = i.id
 		WHERE pi.product_id = $1`
@@ -105,7 +105,7 @@ func (r *ProductRepo) GetIngredients(ctx context.Context, productID uuid.UUID) (
 	var ingredients []models.ProductIngredient
 	for rows.Next() {
 		var pi models.ProductIngredient
-		if err := rows.Scan(&pi.ID, &pi.ProductID, &pi.InventoryID, &pi.QuantityRequired,
+		if err := rows.Scan(&pi.ID, &pi.ProductID, &pi.InventoryID, &pi.QuantityRequired, &pi.Capacity,
 			&pi.CreatedAt, &pi.IngredientName, &pi.Unit, &pi.UnitCost, &pi.Type); err != nil {
 			return nil, err
 		}
@@ -121,7 +121,7 @@ func (r *ProductRepo) GetIngredientsForProducts(ctx context.Context, productIDs 
 	if len(productIDs) == 0 {
 		return nil, nil
 	}
-	query := `SELECT pi.id, pi.product_id, pi.inventory_id, pi.quantity_required, pi.created_at,
+	query := `SELECT pi.id, pi.product_id, pi.inventory_id, pi.quantity_required, pi.capacity, pi.created_at,
 		i.ingredient_name, i.unit, i.unit_cost, i.type
 		FROM product_ingredients pi LEFT JOIN inventory i ON pi.inventory_id = i.id
 		WHERE pi.product_id = ANY($1)`
@@ -134,7 +134,7 @@ func (r *ProductRepo) GetIngredientsForProducts(ctx context.Context, productIDs 
 	var ingredients []models.ProductIngredient
 	for rows.Next() {
 		var pi models.ProductIngredient
-		if err := rows.Scan(&pi.ID, &pi.ProductID, &pi.InventoryID, &pi.QuantityRequired,
+		if err := rows.Scan(&pi.ID, &pi.ProductID, &pi.InventoryID, &pi.QuantityRequired, &pi.Capacity,
 			&pi.CreatedAt, &pi.IngredientName, &pi.Unit, &pi.UnitCost, &pi.Type); err != nil {
 			return nil, err
 		}
@@ -159,9 +159,9 @@ func (r *ProductRepo) UpdateIngredients(ctx context.Context, productID uuid.UUID
 
 	for _, ing := range ingredients {
 		_, err := tx.Exec(ctx,
-			`INSERT INTO product_ingredients (product_id, inventory_id, quantity_required)
-			VALUES ($1, $2, $3)`,
-			productID, ing.InventoryID, ing.QuantityRequired)
+			`INSERT INTO product_ingredients (product_id, inventory_id, quantity_required, capacity)
+			VALUES ($1, $2, $3, $4)`,
+			productID, ing.InventoryID, ing.QuantityRequired, ing.Capacity)
 		if err != nil {
 			return err
 		}

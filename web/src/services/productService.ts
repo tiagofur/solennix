@@ -48,12 +48,12 @@ export const productService = {
     return api.post<any[]>('/products/ingredients/batch', { product_ids: productIds });
   },
 
-  async updateIngredients(productId: string, ingredients: { inventoryId: string, quantityRequired: number }[]) {
-    // Backend PUT /ingredients replaces all, so this is same as addIngredients logic above if I mapped it correctly.
+  async updateIngredients(productId: string, ingredients: { inventoryId: string, quantityRequired: number, capacity?: number | null }[]) {
     const payload = ingredients.map(i => ({
       product_id: productId,
       inventory_id: i.inventoryId,
-      quantity_required: i.quantityRequired
+      quantity_required: i.quantityRequired,
+      capacity: i.capacity ?? null,
     }));
     return api.put(`/products/${productId}/ingredients`, { ingredients: payload });
   }

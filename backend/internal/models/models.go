@@ -150,7 +150,10 @@ type ProductIngredient struct {
 	ProductID        uuid.UUID `json:"product_id"`
 	InventoryID      uuid.UUID `json:"inventory_id"`
 	QuantityRequired float64   `json:"quantity_required"`
-	CreatedAt        time.Time `json:"created_at"`
+	// Capacity applies only to equipment: how many product units one piece handles.
+	// nil = fixed quantity (use quantity_required as-is); non-nil = ceil(event_qty / capacity).
+	Capacity  *float64  `json:"capacity,omitempty"`
+	CreatedAt time.Time `json:"created_at"`
 
 	// Joined data from inventory
 	IngredientName *string  `json:"ingredient_name,omitempty"`

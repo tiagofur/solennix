@@ -201,6 +201,9 @@ export interface ProductIngredient {
     product_id: string
     inventory_id: string
     quantity_required: number
+    // For equipment only: how many product units one piece can handle.
+    // null = fixed quantity (no scaling); number = ceil(event_qty / capacity) pieces needed.
+    capacity?: number | null
     created_at: string
     // Joined from inventory (flattened by backend)
     ingredient_name?: string | null

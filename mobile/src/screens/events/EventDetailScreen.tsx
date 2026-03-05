@@ -339,14 +339,16 @@ export default function EventDetailScreen({ navigation, route }: Props) {
         ? await productService.getIngredientsForProducts(productIds)
         : [];
       const aggregated: Record<string, { name: string; quantity: number; unit: string }> = {};
-      (prodIngredients || []).forEach((ing: any) => {
-        const key = ing.inventory_id;
-        const qty = productQuantities.get(ing.product_id) || 0;
-        if (!aggregated[key]) {
-          aggregated[key] = { name: ing.ingredient_name || "Insumo", unit: ing.unit || "", quantity: 0 };
-        }
-        aggregated[key].quantity += (ing.quantity_required || 0) * qty;
-      });
+      (prodIngredients || [])
+        .filter((ing: any) => ing.type !== 'equipment')
+        .forEach((ing: any) => {
+          const key = ing.inventory_id;
+          const qty = productQuantities.get(ing.product_id) || 0;
+          if (!aggregated[key]) {
+            aggregated[key] = { name: ing.ingredient_name || "Insumo", unit: ing.unit || "", quantity: 0 };
+          }
+          aggregated[key].quantity += (ing.quantity_required || 0) * qty;
+        });
       await generateShoppingListPDF(event!, user, Object.values(aggregated));
       trackPdfShared();
     } catch (err) {
