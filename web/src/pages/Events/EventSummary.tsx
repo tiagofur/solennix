@@ -696,7 +696,7 @@ export const EventSummary: React.FC = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-8">
               <div className="space-y-1">
                 <p className="text-xs font-bold text-text-tertiary uppercase tracking-wider">Fecha</p>
-                <p className="font-bold text-text">{new Date(event.event_date).toLocaleDateString()}</p>
+                <p className="font-bold text-text">{new Date(event.event_date + "T12:00:00").toLocaleDateString()}</p>
               </div>
               <div className="space-y-1">
                 <p className="text-xs font-bold text-text-tertiary uppercase tracking-wider">Horario</p>
@@ -921,7 +921,7 @@ export const EventSummary: React.FC = () => {
             </h1>
             <p className="text-text-secondary text-sm flex items-center gap-2">
               <ShoppingCart className="h-4 w-4 text-primary" />
-              {event.service_type} • {new Date(event.event_date).toLocaleDateString()}
+              {event.service_type} • {new Date(event.event_date + "T12:00:00").toLocaleDateString()}
             </p>
           </div>
 

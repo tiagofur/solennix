@@ -3,7 +3,7 @@ import { eventService } from "../services/eventService";
 import { Event } from "../types/entities";
 import { logError } from "../lib/errorHandler";
 import { AlertCircle, CheckCircle, XCircle, X } from "lucide-react";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
 type EventWithClient = Event & {
@@ -132,7 +132,7 @@ export const PendingEventsModal: React.FC = () => {
                           </p>
                           <p className="text-sm text-gray-500 dark:text-gray-400">
                             {format(
-                              parseISO(event.event_date),
+                              new Date(event.event_date + "T12:00:00"),
                               "dd 'de' MMMM, yyyy",
                               { locale: es },
                             )}

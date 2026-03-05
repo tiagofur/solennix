@@ -305,7 +305,7 @@ export const ClientDetails: React.FC = () => {
                       onClick={() => navigate(`/events/${event.id}/summary`)}
                     >
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
-                        {format(new Date(event.event_date), "d MMM yyyy", { locale: es })}
+                        {format(new Date(event.event_date + "T12:00:00"), "d MMM yyyy", { locale: es })}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-primary">
                         {event.service_type}

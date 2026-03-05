@@ -127,7 +127,7 @@ export const generateBudgetPDF = (
   doc.text('Personas:', pageWidth / 2, currentY + 14);
 
   doc.setFont('helvetica', 'normal');
-  const eventDate = new Date(event.event_date);
+  const eventDate = new Date(event.event_date + "T12:00:00");
   doc.text(format(eventDate, "d 'de' MMMM, yyyy", { locale: es }), pageWidth / 2 + 25, currentY);
   doc.text(`${event.start_time || 'Por definir'} - ${event.end_time || 'Por definir'}`, pageWidth / 2 + 25, currentY + 7);
   doc.text(event.num_people.toString(), pageWidth / 2 + 25, currentY + 14);
@@ -539,7 +539,7 @@ export const generateInvoicePDF = (
   doc.setTextColor(TEXT_COLOR);
   doc.setFont('helvetica', 'normal');
 
-  const eventDate = new Date(event.event_date);
+  const eventDate = new Date(event.event_date + "T12:00:00");
   doc.text(`Fecha del Evento: ${format(eventDate, "d 'de' MMMM, yyyy", { locale: es })}`, 20, currentY);
   currentY += 6;
   doc.text(`Servicio: ${event.service_type}`, 20, currentY);

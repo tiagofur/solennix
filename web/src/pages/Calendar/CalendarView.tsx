@@ -314,6 +314,7 @@ export const CalendarView: React.FC = () => {
               onMonthChange={setCurrentMonth}
               locale={es}
               modifiers={modifiers}
+              modifiersClassNames={{ booked: "rdp-booked" }}
               className="flex justify-center"
             />
           </div>

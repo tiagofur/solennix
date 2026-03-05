@@ -4,7 +4,7 @@ import { eventService } from "../services/eventService";
 import { inventoryService } from "../services/inventoryService";
 import { paymentService } from "../services/paymentService";
 import { Event, Payment, InventoryItem } from "../types/entities";
-import { startOfMonth, endOfMonth, format, parseISO } from "date-fns";
+import { startOfMonth, endOfMonth, format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
@@ -563,10 +563,10 @@ export const Dashboard: React.FC = () => {
                     >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-semibold text-text">
-                          {format(parseISO(event.event_date), "d MMM yyyy", { locale: es })}
+                          {format(new Date(event.event_date + "T12:00:00"), "d MMM yyyy", { locale: es })}
                         </div>
                         <div className="text-xs text-text-secondary capitalize">
-                          {format(parseISO(event.event_date), "EEEE", { locale: es })}
+                          {format(new Date(event.event_date + "T12:00:00"), "EEEE", { locale: es })}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-text">
