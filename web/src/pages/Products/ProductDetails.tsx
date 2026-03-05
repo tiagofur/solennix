@@ -15,6 +15,7 @@ import {
 import { logError } from "../../lib/errorHandler";
 import { useToast } from "../../hooks/useToast";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
+import { SkeletonCard } from "../../components/Skeleton";
 
 
 export const ProductDetails: React.FC = () => {
@@ -66,9 +67,20 @@ export const ProductDetails: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64 p-8 text-text-secondary">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-orange mr-3"></div>
-        Cargando detalles...
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <div className="h-9 w-9 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse" />
+          <div className="space-y-1">
+            <div className="h-7 w-48 rounded-md bg-gray-200 dark:bg-gray-700 animate-pulse" />
+            <div className="h-5 w-20 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse" />
+          </div>
+        </div>
+        <div className="bg-card rounded-3xl border border-border p-6">
+          <SkeletonCard rows={3} />
+        </div>
+        <div className="bg-card rounded-3xl border border-border p-6">
+          <SkeletonCard rows={4} />
+        </div>
       </div>
     );
   }
@@ -76,10 +88,10 @@ export const ProductDetails: React.FC = () => {
   if (error || !product) {
     return (
       <div className="text-center p-8">
-        <p className="text-red-500">{error || "Producto no encontrado"}</p>
+        <p className="text-error">{error || "Producto no encontrado"}</p>
         <button
           onClick={() => navigate("/products")}
-          className="mt-4 text-brand-orange hover:underline"
+          className="mt-4 text-primary hover:underline"
         >
           Volver a productos
         </button>
@@ -108,8 +120,8 @@ export const ProductDetails: React.FC = () => {
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-text">{product.name}</h1>
-            <span className="px-2.5 py-0.5 mt-1 inline-flex text-xs font-semibold rounded-full bg-brand-orange/10 text-brand-orange border border-brand-orange/20">
+            <h1 className="text-2xl font-black tracking-tight text-text">{product.name}</h1>
+            <span className="px-2.5 py-0.5 mt-1 inline-flex text-xs font-semibold rounded-full bg-primary/10 text-primary border border-primary/20">
               {product.category}
             </span>
           </div>
@@ -135,26 +147,38 @@ export const ProductDetails: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1 space-y-6">
           <div className="bg-card rounded-3xl border border-border p-6 shadow-sm">
+            {product.image_url && (
+              <img
+                src={product.image_url}
+                alt={product.name}
+                className="w-full h-40 object-cover rounded-2xl mb-4"
+              />
+            )}
+            {!product.image_url && (
+              <div className="w-full h-40 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+                <Package className="h-12 w-12 text-primary opacity-40" />
+              </div>
+            )}
             <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-4 border-b border-border pb-2">
               Información General
             </h2>
             <div className="space-y-4">
               <div className="flex items-start gap-3">
-                <Tag className="h-5 w-5 text-brand-orange shrink-0 mt-0.5" />
+                <Tag className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                 <div>
                   <p className="text-xs text-text-secondary">Categoría</p>
                   <p className="text-sm font-medium text-text">{product.category}</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <DollarSign className="h-5 w-5 text-brand-orange shrink-0 mt-0.5" />
+                <DollarSign className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                 <div>
                   <p className="text-xs text-text-secondary">Precio Base</p>
-                  <p className="text-sm font-medium text-text">${product.base_price.toFixed(2)}</p>
+                  <p className="text-sm font-medium text-text">${product.base_price.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <Layers className="h-5 w-5 text-brand-orange shrink-0 mt-0.5" />
+                <Layers className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                 <div>
                   <p className="text-xs text-text-secondary">Composición</p>
                   <p className="text-sm font-medium text-text">
@@ -172,7 +196,7 @@ export const ProductDetails: React.FC = () => {
           <div className="bg-card rounded-3xl border border-border overflow-hidden shadow-sm">
             <div className="p-6 border-b border-border flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Layers className="h-5 w-5 text-brand-orange" />
+                <Layers className="h-5 w-5 text-primary" />
                 <h2 className="text-lg font-bold text-text">Composición / Insumos</h2>
               </div>
             </div>
@@ -181,7 +205,7 @@ export const ProductDetails: React.FC = () => {
               <div className="p-12 text-center">
                 <Package className="h-12 w-12 text-text-secondary mx-auto mb-4 opacity-20" />
                 <p className="text-text-secondary">Este producto no tiene insumos configurados.</p>
-                <Link to={`/products/${id}/edit`} className="text-brand-orange hover:underline mt-2 inline-block text-sm">
+                <Link to={`/products/${id}/edit`} className="text-primary hover:underline mt-2 inline-block text-sm">
                   Configurar composición
                 </Link>
               </div>
@@ -199,7 +223,7 @@ export const ProductDetails: React.FC = () => {
                     {ingredients.filter((i: any) => i.type !== 'equipment').map((ing: any) => (
                         <tr key={ing.inventory_id} className="hover:bg-surface-alt/50 transition-colors">
                           <td className="px-6 py-4">
-                            <Link to={`/inventory/${ing.inventory_id}`} className="text-sm font-medium text-text hover:text-brand-orange transition-colors">
+                            <Link to={`/inventory/${ing.inventory_id}`} className="text-sm font-medium text-text hover:text-primary transition-colors">
                               {ing.ingredient_name || "Insumo desconocido"}
                             </Link>
                           </td>
@@ -210,7 +234,7 @@ export const ProductDetails: React.FC = () => {
                           </td>
                           <td className="px-6 py-4 text-right">
                             <span className="text-sm font-medium text-text">
-                              {ing.unit_cost ? `$${(ing.quantity_required * ing.unit_cost).toFixed(2)}` : "—"}
+                              {ing.unit_cost ? `$${(ing.quantity_required * ing.unit_cost).toLocaleString('es-MX', { minimumFractionDigits: 2 })}` : "—"}
                             </span>
                           </td>
                         </tr>
@@ -220,7 +244,7 @@ export const ProductDetails: React.FC = () => {
                 <div className="px-6 py-4 border-t border-border flex justify-between items-center">
                   <span className="text-sm text-text-secondary">Costo Total por Unidad</span>
                   <span className="text-lg font-bold text-text">
-                    ${ingredients.filter((i: any) => i.type !== 'equipment').reduce((sum: number, ing: any) => sum + (ing.quantity_required * (ing.unit_cost || 0)), 0).toFixed(2)}
+                    ${ingredients.filter((i: any) => i.type !== 'equipment').reduce((sum: number, ing: any) => sum + (ing.quantity_required * (ing.unit_cost || 0)), 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                   </span>
                 </div>
               </>
@@ -250,7 +274,7 @@ export const ProductDetails: React.FC = () => {
                   {ingredients.filter((i: any) => i.type === 'equipment').map((ing: any) => (
                       <tr key={ing.inventory_id} className="hover:bg-surface-alt/50 transition-colors">
                         <td className="px-6 py-4">
-                          <Link to={`/inventory/${ing.inventory_id}`} className="text-sm font-medium text-text hover:text-brand-orange transition-colors">
+                          <Link to={`/inventory/${ing.inventory_id}`} className="text-sm font-medium text-text hover:text-primary transition-colors">
                             {ing.ingredient_name || "Equipo desconocido"}
                           </Link>
                         </td>

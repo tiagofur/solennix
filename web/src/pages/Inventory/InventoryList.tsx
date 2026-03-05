@@ -238,7 +238,7 @@ export const InventoryList: React.FC = () => {
                       className={clsx(
                         "text-sm font-medium",
                         isLowStock
-                          ? "text-red-600 dark:text-red-400 font-bold"
+                          ? "text-error font-bold"
                           : "text-text",
                       )}
                     >
@@ -246,7 +246,7 @@ export const InventoryList: React.FC = () => {
                     </span>
                     {isLowStock && (
                       <AlertTriangle
-                        className="h-4 w-4 text-red-500 ml-2"
+                        className="h-4 w-4 text-error ml-2"
                         aria-hidden="true"
                       />
                     )}
@@ -352,7 +352,7 @@ export const InventoryList: React.FC = () => {
 
       {lowStockItems.length > 0 && (
         <div
-          className="flex items-start gap-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 rounded-2xl p-4"
+          className="flex items-start gap-3 bg-error/5 border border-error/30 text-error rounded-2xl p-4"
           role="alert"
         >
           <AlertTriangle className="h-5 w-5 shrink-0 mt-0.5" aria-hidden="true" />
@@ -422,8 +422,8 @@ export const InventoryList: React.FC = () => {
           {/* Consumibles / Ingredientes Section */}
           <section>
             <div className="flex items-center gap-3 mb-3">
-              <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-brand-orange/10">
-                <ShoppingBasket className="h-5 w-5 text-brand-orange" aria-hidden="true" />
+              <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-primary/10">
+                <ShoppingBasket className="h-5 w-5 text-primary" aria-hidden="true" />
               </div>
               <div>
                 <h2 className="text-lg font-semibold text-text">Consumibles</h2>
@@ -486,7 +486,7 @@ export const InventoryList: React.FC = () => {
                 <input
                   type="number"
                   autoFocus
-                  className="w-full bg-surface-alt border border-border rounded-xl p-3 text-text focus:ring-2 focus:ring-brand-orange/20 outline-none"
+                  className="w-full bg-surface-alt border border-border rounded-xl p-3 text-text focus:ring-2 focus:ring-primary/20 outline-none"
                   placeholder="Ej: +10 o -5"
                   value={adjustmentValue}
                   onChange={(e) => setAdjustmentValue(e.target.value)}
