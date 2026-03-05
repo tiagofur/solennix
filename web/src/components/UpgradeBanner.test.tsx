@@ -59,7 +59,7 @@ describe('UpgradeBanner', () => {
     it('renders upsell heading and description', () => {
       renderBanner({ type: 'upsell' });
 
-      expect(screen.getByText(/Desbloquea el poder de EventosApp/i)).toBeInTheDocument();
+      expect(screen.getByText(/Desbloquea el poder de Solennix/i)).toBeInTheDocument();
       expect(screen.getByText(/Lleva tu control de eventos al siguiente nivel/i)).toBeInTheDocument();
     });
 

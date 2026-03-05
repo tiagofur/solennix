@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/tiagofur/eventosapp-backend/internal/middleware"
-	"github.com/tiagofur/eventosapp-backend/internal/models"
-	"github.com/tiagofur/eventosapp-backend/internal/repository"
+	"github.com/tiagofur/solennix-backend/internal/middleware"
+	"github.com/tiagofur/solennix-backend/internal/models"
+	"github.com/tiagofur/solennix-backend/internal/repository"
 )
 
 type SearchHandler struct {

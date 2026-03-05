@@ -30,7 +30,7 @@ export const Terms: React.FC = () => {
             1. Uso del servicio
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed mb-3">
-            Al usar EventosApp, aceptas estos terminos. EventosApp es una plataforma
+            Al usar Solennix, aceptas estos terminos. Solennix es una plataforma
             SaaS para organizadores de eventos. Te otorgamos una licencia limitada,
             no exclusiva y no transferible para usar el servicio segun tu plan de
             suscripcion activo.
@@ -52,7 +52,7 @@ export const Terms: React.FC = () => {
             2. Suscripcion y pagos
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed mb-3">
-            EventosApp ofrece planes de suscripcion mensual. Los cobros se realizan
+            Solennix ofrece planes de suscripcion mensual. Los cobros se realizan
             a traves de procesadores de pago seguros como Stripe.
           </p>
           <ul className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed space-y-1 list-disc list-inside">
@@ -89,7 +89,7 @@ export const Terms: React.FC = () => {
             4. Propiedad intelectual
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-            EventosApp y su contenido son propiedad de Creapolis.Dev. Los datos que
+            Solennix y su contenido son propiedad de Creapolis.Dev. Los datos que
             introduces en la aplicacion (clientes, eventos, productos) son de tu
             propiedad. Nos otorgas una licencia para almacenarlos y procesarlos
             unicamente con el fin de prestarte el servicio.
@@ -102,7 +102,7 @@ export const Terms: React.FC = () => {
             5. Disponibilidad del servicio
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-            Nos esforzamos por mantener EventosApp disponible 24/7, pero no garantizamos
+            Nos esforzamos por mantener Solennix disponible 24/7, pero no garantizamos
             disponibilidad ininterrumpida. Podemos realizar mantenimientos programados
             con previo aviso. No somos responsables por interrupciones causadas por
             factores externos.
@@ -115,7 +115,7 @@ export const Terms: React.FC = () => {
             6. Limitacion de responsabilidad
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed mb-3">
-            EventosApp se proporciona "tal cual". En la maxima medida permitida por
+            Solennix se proporciona "tal cual". En la maxima medida permitida por
             la ley aplicable:
           </p>
           <ul className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed space-y-1 list-disc list-inside">

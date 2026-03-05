@@ -1,6 +1,6 @@
 # Security & Compliance Notes
 
-This document outlines the security architecture, policies, and compliance guardrails implemented within the EventosApp. The application is designed with a "Security by Design" approach, leveraging industry-standard cloud providers and encryption methods to ensure the integrity and confidentiality of event management data, client information, and financial records.
+This document outlines the security architecture, policies, and compliance guardrails implemented within the Solennix. The application is designed with a "Security by Design" approach, leveraging industry-standard cloud providers and encryption methods to ensure the integrity and confidentiality of event management data, client information, and financial records.
 
 Core security principles applied to the project:
 *   **Least Privilege:** Users and services only have access to the data necessary for their specific roles.

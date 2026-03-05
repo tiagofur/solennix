@@ -1,4 +1,4 @@
-# Copilot Instructions for EventosApp
+# Copilot Instructions for Solennix
 
 ## Build, test, and lint commands
 

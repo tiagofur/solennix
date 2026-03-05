@@ -48,7 +48,7 @@ export default function AboutScreen({ navigation }: Props) {
             style={styles.logo}
             resizeMode="contain"
           />
-          <Text style={styles.appName}>EventosApp</Text>
+          <Text style={styles.appName}>Solennix</Text>
           <Text style={styles.version}>Versi&#xF3;n {APP_VERSION}</Text>
         </View>
 
@@ -98,7 +98,7 @@ export default function AboutScreen({ navigation }: Props) {
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Sobre la app</Text>
           <Text style={styles.description}>
-            EventosApp es una aplicaci&#xF3;n SaaS dise&#xF1;ada para organizadores de eventos
+            Solennix es una aplicaci&#xF3;n SaaS dise&#xF1;ada para organizadores de eventos
             de todo tipo. Gestiona clientes, eventos, cat&#xE1;logo de productos,
             inventario, cotizaciones y pagos en un solo lugar.
           </Text>

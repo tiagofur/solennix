@@ -30,7 +30,7 @@ export const Privacy: React.FC = () => {
             1. Informacion que recopilamos
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-            Recopilamos la informacion que nos proporcionas al registrarte en EventosApp,
+            Recopilamos la informacion que nos proporcionas al registrarte en Solennix,
             incluyendo tu nombre, correo electronico y datos de tu negocio. Tambien
             recopilamos informacion sobre el uso de la aplicacion para mejorar
             nuestros servicios.
@@ -46,7 +46,7 @@ export const Privacy: React.FC = () => {
             Utilizamos tu informacion para:
           </p>
           <ul className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed space-y-1 list-disc list-inside">
-            <li>Proporcionar y mejorar los servicios de EventosApp</li>
+            <li>Proporcionar y mejorar los servicios de Solennix</li>
             <li>Gestionar tu cuenta y suscripcion</li>
             <li>Enviarte comunicaciones sobre el servicio</li>
             <li>Procesar pagos a traves de proveedores seguros</li>

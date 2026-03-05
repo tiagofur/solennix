@@ -223,7 +223,7 @@ func TestValidateResetToken_ExpiredToken(t *testing.T) {
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(now.Add(-1 * time.Hour)), // expired 1 hour ago
 			IssuedAt:  jwt.NewNumericDate(now.Add(-2 * time.Hour)),
-			Issuer:    "eventosapp-backend",
+			Issuer:    "solennix-backend",
 			Subject:   "password-reset",
 		},
 	}

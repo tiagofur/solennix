@@ -1,6 +1,6 @@
 ## Mission
 
-The Documentation Writer agent serves as the bridge between the technical implementation and its users/maintainers. It ensures that the `eventosapp` ecosystem—spanning from Supabase integrations to complex PDF generation and financial logic—is transparent, well-documented, and easy to navigate for new and existing developers.
+The Documentation Writer agent serves as the bridge between the technical implementation and its users/maintainers. It ensures that the `solennix` ecosystem—spanning from Supabase integrations to complex PDF generation and financial logic—is transparent, well-documented, and easy to navigate for new and existing developers.
 
 ## Responsibilities
 

@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/tiagofur/eventosapp-backend/internal/services"
+	"github.com/tiagofur/solennix-backend/internal/services"
 )
 
 type contextKey string

@@ -44,7 +44,7 @@ func Load() (*Config, error) {
 		DatabaseURL:             os.Getenv("DATABASE_URL"),
 		JWTSecret:               os.Getenv("JWT_SECRET"),
 		ResendAPIKey:            os.Getenv("RESEND_API_KEY"),
-		ResendFromEmail:         getEnv("RESEND_FROM_EMAIL", "EventosApp <noreply@eventosapp.com>"),
+		ResendFromEmail:         getEnv("RESEND_FROM_EMAIL", "Solennix <noreply@solennix.com>"),
 		FrontendURL:             getEnv("FRONTEND_URL", "http://localhost:5173"),
 		StripeSecretKey:         os.Getenv("STRIPE_SECRET_KEY"),
 		StripeWebhookSecret:     os.Getenv("STRIPE_WEBHOOK_SECRET"),

@@ -39,7 +39,7 @@ export default function PrivacyPolicyScreen({ navigation }: Props) {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>1. Informaci&#xF3;n que recopilamos</Text>
           <Text style={styles.body}>
-            Recopilamos la informaci&#xF3;n que nos proporcionas al registrarte en EventosApp,
+            Recopilamos la informaci&#xF3;n que nos proporcionas al registrarte en Solennix,
             incluyendo tu nombre, correo electr&#xF3;nico y datos de tu negocio. Tambi&#xE9;n
             recopilamos informaci&#xF3;n sobre el uso de la aplicaci&#xF3;n para mejorar
             nuestros servicios.
@@ -50,7 +50,7 @@ export default function PrivacyPolicyScreen({ navigation }: Props) {
           <Text style={styles.sectionTitle}>2. C&#xF3;mo usamos tu informaci&#xF3;n</Text>
           <Text style={styles.body}>
             Utilizamos tu informaci&#xF3;n para:{"\n\n"}
-            &#x2022; Proporcionar y mejorar los servicios de EventosApp{"\n"}
+            &#x2022; Proporcionar y mejorar los servicios de Solennix{"\n"}
             &#x2022; Gestionar tu cuenta y suscripci&#xF3;n{"\n"}
             &#x2022; Enviarte comunicaciones sobre el servicio{"\n"}
             &#x2022; Procesar pagos a trav&#xE9;s de proveedores seguros{"\n"}

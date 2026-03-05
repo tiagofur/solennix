@@ -11,9 +11,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/tiagofur/eventosapp-backend/internal/handlers"
-	"github.com/tiagofur/eventosapp-backend/internal/repository"
-	"github.com/tiagofur/eventosapp-backend/internal/services"
+	"github.com/tiagofur/solennix-backend/internal/handlers"
+	"github.com/tiagofur/solennix-backend/internal/repository"
+	"github.com/tiagofur/solennix-backend/internal/services"
 )
 
 func TestNewRouter(t *testing.T) {

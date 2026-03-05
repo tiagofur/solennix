@@ -10,12 +10,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/tiagofur/eventosapp-backend/internal/config"
-	"github.com/tiagofur/eventosapp-backend/internal/database"
-	"github.com/tiagofur/eventosapp-backend/internal/handlers"
-	"github.com/tiagofur/eventosapp-backend/internal/repository"
-	"github.com/tiagofur/eventosapp-backend/internal/router"
-	"github.com/tiagofur/eventosapp-backend/internal/services"
+	"github.com/tiagofur/solennix-backend/internal/config"
+	"github.com/tiagofur/solennix-backend/internal/database"
+	"github.com/tiagofur/solennix-backend/internal/handlers"
+	"github.com/tiagofur/solennix-backend/internal/repository"
+	"github.com/tiagofur/solennix-backend/internal/router"
+	"github.com/tiagofur/solennix-backend/internal/services"
 )
 
 func main() {

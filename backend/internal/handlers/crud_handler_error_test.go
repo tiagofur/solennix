@@ -9,12 +9,12 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/tiagofur/eventosapp-backend/internal/middleware"
-	"github.com/tiagofur/eventosapp-backend/internal/repository"
+	"github.com/tiagofur/solennix-backend/internal/middleware"
+	"github.com/tiagofur/solennix-backend/internal/repository"
 )
 
 func TestCRUDHandlerErrorBranchesWithClosedPool(t *testing.T) {
-	pool, err := pgxpool.New(context.Background(), "postgres://eventosapp_user:eventosapp_password@localhost:5433/eventosapp?sslmode=disable")
+	pool, err := pgxpool.New(context.Background(), "postgres://solennix_user:solennix_password@localhost:5433/solennix?sslmode=disable")
 	if err != nil {
 		t.Skipf("pgxpool.New failed: %v", err)
 	}

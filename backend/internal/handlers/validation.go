@@ -3,7 +3,7 @@ package handlers
 import (
 	"fmt"
 
-	"github.com/tiagofur/eventosapp-backend/internal/models"
+	"github.com/tiagofur/solennix-backend/internal/models"
 )
 
 // ValidationError represents a business logic validation error

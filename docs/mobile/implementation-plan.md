@@ -1,4 +1,4 @@
-# Plan de Implementación: EventosApp Mobile
+# Plan de Implementación: Solennix Mobile
 
 > Última actualización: 2026-02-25  
 > Estimación total: **7-9 semanas** (1 desarrollador full-time)
@@ -340,11 +340,11 @@ Editar perfil y branding se refleja en PDFs. Ver plan actual con uso. Flujo de u
   - Flow 3: Crear evento completo (4 steps) → ver resumen
   - Flow 4: Agregar pago → status cambia a confirmed
 - [ ] **Assets**:
-  - App icon (1024×1024) con branding EventosApp
+  - App icon (1024×1024) con branding Solennix
   - Splash screen
   - Adaptive icon (Android)
 - [ ] **app.config.ts**:
-  - Bundle identifier: `com.eventosapp.mobile`
+  - Bundle identifier: `com.solennix.mobile`
   - Version: `1.0.0`
   - Permissions mínimas declaradas
   - Splash screen y icon configurados

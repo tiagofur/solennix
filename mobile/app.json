@@ -1,12 +1,12 @@
 {
   "expo": {
-    "name": "EventosApp",
-    "slug": "eventosapp",
+    "name": "Solennix",
+    "slug": "solennix",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
-    "scheme": "eventosapp",
+    "scheme": "solennix",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.creapolis.eventosapp"
+      "bundleIdentifier": "com.creapolis.solennix"
     },
     "android": {
       "adaptiveIcon": {
@@ -23,7 +23,7 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "package": "com.creapolis.eventosapp"
+      "package": "com.creapolis.solennix"
     },
     "web": {
       "favicon": "./assets/favicon.png"

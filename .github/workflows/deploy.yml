@@ -23,6 +23,6 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT }}
           script: |
-            cd /path/to/eventosapp # Cambia esto a la ruta real de tu App
+            cd /path/to/solennix # Cambia esto a la ruta real de tu App
             git pull origin main
             docker-compose up -d --build

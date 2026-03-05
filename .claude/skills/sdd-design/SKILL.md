@@ -163,7 +163,7 @@ Ready for tasks (sdd-tasks).
 
 ## Mobile Design System Guidelines
 
-This section defines the visual design language for the EventosApp React Native mobile app. Follow these guidelines when designing any mobile feature or screen. The goal is an **elegant, modern, clean, not-boring, native iPhone-feel** design.
+This section defines the visual design language for the Solennix React Native mobile app. Follow these guidelines when designing any mobile feature or screen. The goal is an **elegant, modern, clean, not-boring, native iPhone-feel** design.
 
 ### Design Philosophy
 

@@ -1,6 +1,6 @@
-# Documentación — EventosApp
+# Documentación — Solennix
 
-Bienvenido a la documentación oficial de **EventosApp**. Aquí encontrarás todo lo necesario para entender la arquitectura, operar el sistema y contribuir a su desarrollo.
+Bienvenido a la documentación oficial de **Solennix**. Aquí encontrarás todo lo necesario para entender la arquitectura, operar el sistema y contribuir a su desarrollo.
 
 ## 📂 Estructura de Documentación
 

@@ -3,12 +3,12 @@ version: "3.8"
 services:
   db:
     image: postgres:15-alpine
-    container_name: eventosapp-db
+    container_name: solennix-db
     restart: always
     environment:
-      POSTGRES_USER: eventosapp_user
-      POSTGRES_PASSWORD: eventosapp_password
-      POSTGRES_DB: eventosapp
+      POSTGRES_USER: solennix_user
+      POSTGRES_PASSWORD: solennix_password
+      POSTGRES_DB: solennix
     ports:
       - "5433:5432"
     volumes:

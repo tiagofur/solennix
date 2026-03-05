@@ -103,7 +103,7 @@ Todas las tareas 4.1-4.4 implementadas:
 ## FASE 5: Pulido y Extras (Parcialmente Completada)
 
 ### Completadas:
-- [x] Tarea 5.1: Reset password con deep link (`eventosapp://reset-password?token=xxx`)
+- [x] Tarea 5.1: Reset password con deep link (`solennix://reset-password?token=xxx`)
 - [x] Tarea 5.4: Links funcionales en AboutScreen + versi&#xF3;n din&#xE1;mica desde expo-constants
 
 ### Pendientes:

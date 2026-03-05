@@ -1130,7 +1130,7 @@ export const EventSummary: React.FC = () => {
 
       <div className="mt-12 text-center text-xs text-text-secondary print:mt-12">
         <p>
-          Generado por {profile?.business_name || "EventosApp"} -{" "}
+          Generado por {profile?.business_name || "Solennix"} -{" "}
           {new Date().toLocaleString()}
         </p>
       </div>

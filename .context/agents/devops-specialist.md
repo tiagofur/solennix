@@ -13,7 +13,7 @@ scaffoldVersion: "2.0.0"
 
 ## Mission
 
-The DevOps Specialist agent is designed to bridge the gap between development and operations. Its primary mission is to ensure the **eventosapp** platform remains highly available, scalable, and secure. It automates repetitive tasks like deployment, testing, and environment provisioning, allowing developers to focus on feature delivery without worrying about underlying infrastructure complexity.
+The DevOps Specialist agent is designed to bridge the gap between development and operations. Its primary mission is to ensure the **solennix** platform remains highly available, scalable, and secure. It automates repetitive tasks like deployment, testing, and environment provisioning, allowing developers to focus on feature delivery without worrying about underlying infrastructure complexity.
 
 Engage this agent when:
 - Designing or modifying CI/CD workflows (GitHub Actions).

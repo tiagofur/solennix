@@ -1,6 +1,6 @@
 # Guía de Despliegue
 
-Esta guía cubre el despliegue de la aplicación EventosApp completa (frontend + backend).
+Esta guía cubre el despliegue de la aplicación Solennix completa (frontend + backend).
 
 ## Arquitectura de Despliegue
 
@@ -26,7 +26,7 @@ Despliega toda la aplicación con un solo comando.
 1. **Clonar el repositorio:**
 ```bash
 git clone <repo-url>
-cd eventosapp
+cd solennix
 ```
 
 2. **Configurar variables de entorno:**
@@ -36,7 +36,7 @@ cat > .env << EOF
 # Backend
 PORT=8080
 ENVIRONMENT=production
-DATABASE_URL=postgres://postgres:postgres@db:5432/eventosapp?sslmode=disable
+DATABASE_URL=postgres://postgres:postgres@db:5432/solennix?sslmode=disable
 JWT_SECRET=$(openssl rand -base64 32)
 JWT_EXPIRY_HOURS=24
 CORS_ALLOWED_ORIGINS=https://tu-dominio.com
@@ -56,7 +56,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: eventosapp
+      POSTGRES_DB: solennix
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -71,7 +71,7 @@ services:
       - "8080:8080"
     environment:
       - PORT=8080
-      - DATABASE_URL=postgres://postgres:postgres@db:5432/eventosapp?sslmode=disable
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/solennix?sslmode=disable
       - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRY_HOURS=24
       - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}
@@ -118,9 +118,9 @@ sudo systemctl start postgresql
 
 2. **Crear base de datos:**
 ```bash
-sudo -u postgres psql -c "CREATE DATABASE eventosapp;"
-sudo -u postgres psql -c "CREATE USER eventosapp WITH PASSWORD 'tu-password';"
-sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE eventosapp TO eventosapp;"
+sudo -u postgres psql -c "CREATE DATABASE solennix;"
+sudo -u postgres psql -c "CREATE USER solennix WITH PASSWORD 'tu-password';"
+sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE solennix TO solennix;"
 ```
 
 3. **Compilar y ejecutar backend:**
@@ -130,7 +130,7 @@ go build -o server cmd/server/main.go
 
 # Configurar variables de entorno
 export PORT=8080
-export DATABASE_URL="postgres://eventosapp:tu-password@localhost:5432/eventosapp?sslmode=disable"
+export DATABASE_URL="postgres://solennix:tu-password@localhost:5432/solennix?sslmode=disable"
 export JWT_SECRET="tu-secret-key-muy-seguro"
 
 # Ejecutar
@@ -139,27 +139,27 @@ export JWT_SECRET="tu-secret-key-muy-seguro"
 
 4. **Configurar systemd (opcional):**
 ```bash
-sudo tee /etc/systemd/system/eventosapp.service << EOF
+sudo tee /etc/systemd/system/solennix.service << EOF
 [Unit]
-Description=EventosApp Backend
+Description=Solennix Backend
 After=network.target
 
 [Service]
 Type=simple
 User=www-data
-WorkingDirectory=/var/www/eventosapp/backend
-ExecStart=/var/www/eventosapp/backend/server
+WorkingDirectory=/var/www/solennix/backend
+ExecStart=/var/www/solennix/backend/server
 Restart=on-failure
 Environment=PORT=8080
-Environment=DATABASE_URL=postgres://eventosapp:tu-password@localhost:5432/eventosapp?sslmode=disable
+Environment=DATABASE_URL=postgres://solennix:tu-password@localhost:5432/solennix?sslmode=disable
 Environment=JWT_SECRET=tu-secret-key
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
-sudo systemctl enable eventosapp
-sudo systemctl start eventosapp
+sudo systemctl enable solennix
+sudo systemctl start solennix
 ```
 
 #### Frontend (React)
@@ -173,12 +173,12 @@ npm run build
 
 2. **Servir con Nginx:**
 ```bash
-sudo tee /etc/nginx/sites-available/eventosapp << 'EOF'
+sudo tee /etc/nginx/sites-available/solennix << 'EOF'
 server {
     listen 80;
     server_name tu-dominio.com;
     
-    root /var/www/eventosapp/web/dist;
+    root /var/www/solennix/web/dist;
     index index.html;
     
     location / {
@@ -196,7 +196,7 @@ server {
 }
 EOF
 
-sudo ln -s /etc/nginx/sites-available/eventosapp /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/solennix /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl reload nginx
 ```
@@ -294,16 +294,16 @@ docker-compose logs -f frontend
 
 ```bash
 # Backup diario automatizado
-0 2 * * * postgres pg_dump eventosapp > /backups/eventosapp-$(date +%Y%m%d).sql
+0 2 * * * postgres pg_dump solennix > /backups/solennix-$(date +%Y%m%d).sql
 
 # Backup manual
-pg_dump -U postgres eventosapp > backup.sql
+pg_dump -U postgres solennix > backup.sql
 ```
 
 ### Restaurar Backup
 
 ```bash
-psql -U postgres eventosapp < backup.sql
+psql -U postgres solennix < backup.sql
 ```
 
 ## Monitoreo

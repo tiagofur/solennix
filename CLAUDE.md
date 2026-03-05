@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 📑 Table of Contents
 
-**PART I — EventosApp Project Context**
+**PART I — Solennix Project Context**
 - [Project Overview](#project-overview)
 - [Repository Layout](#repository-layout)
 - [Tech Stack](#tech-stack)
@@ -24,16 +24,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
-# PART I — EventosApp Project Context
+# PART I — Solennix Project Context
 
 ## Project Overview
 
-EventosApp is a SaaS platform for event organizers (catering, banquets, parties). It manages the full event lifecycle: clients, product catalogs with recipes, inventory, quotations with tax (IVA), payments, calendar, and PDF document generation. The project is bilingual — code is in English, UI and docs are primarily in Spanish.
+Solennix is a SaaS platform for event organizers (catering, banquets, parties). It manages the full event lifecycle: clients, product catalogs with recipes, inventory, quotations with tax (IVA), payments, calendar, and PDF document generation. The project is bilingual — code is in English, UI and docs are primarily in Spanish.
 
 ## Repository Layout
 
 ```
-eventosapp/
+solennix/
 ├── web/                  # React SPA (primary frontend)
 ├── mobile/               # React Native / Expo mobile app (iOS & Android)
 ├── backend/              # Go REST API
@@ -294,7 +294,7 @@ src/
 - In-app purchases are managed via RevenueCat (`revenueCatService.ts`) using `react-native-purchases`.
 - PDF generation uses `expo-print` to render HTML and `expo-sharing` to share the resulting PDF.
 - Error monitoring via Sentry (`@sentry/react-native`), configured in `lib/sentry.ts`.
-- Deep linking configured with `eventosapp://` scheme (for password reset flows).
+- Deep linking configured with `solennix://` scheme (for password reset flows).
 
 ### Backend API (`backend/internal/`)
 
@@ -471,7 +471,7 @@ main
 - `CORS_ALLOWED_ORIGINS` — comma-separated origins (default: `http://localhost:5173`)
 - `JWT_EXPIRY_HOURS` — token expiry (default: `24`)
 - `RESEND_API_KEY` — Resend API key for transactional emails (password reset)
-- `RESEND_FROM_EMAIL` — sender address (default: `EventosApp <noreply@eventosapp.com>`)
+- `RESEND_FROM_EMAIL` — sender address (default: `Solennix <noreply@solennix.com>`)
 - `FRONTEND_URL` — for password reset links (default: `http://localhost:5173`)
 - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRO_PRICE_ID`, `STRIPE_PORTAL_CONFIG_ID`
 - `REVENUECAT_WEBHOOK_SECRET`

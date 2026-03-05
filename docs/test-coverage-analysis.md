@@ -1,4 +1,4 @@
-# Test Coverage Analysis — EventosApp
+# Test Coverage Analysis — Solennix
 
 **Date:** 2026-03-02
 **Scope:** Full codebase (web frontend + backend API)
@@ -7,7 +7,7 @@
 
 ## Executive Summary
 
-EventosApp has **solid test foundations** with 51 web test files and 21 backend test files. All services, hooks, and utilities have corresponding tests, and coverage thresholds are strict (95% lines/functions/statements, 90% branches). However, analysis reveals that most tests focus on **happy paths** — error handling, accessibility, and end-to-end journeys are significantly under-tested.
+Solennix has **solid test foundations** with 51 web test files and 21 backend test files. All services, hooks, and utilities have corresponding tests, and coverage thresholds are strict (95% lines/functions/statements, 90% branches). However, analysis reveals that most tests focus on **happy paths** — error handling, accessibility, and end-to-end journeys are significantly under-tested.
 
 ---
 

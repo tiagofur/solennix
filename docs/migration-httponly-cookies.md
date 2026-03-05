@@ -334,10 +334,10 @@ git revert <commit-hash>
 Backend:
 ```bash
 # Login attempts con cookie
-grep "auth_token cookie" /var/log/eventosapp.log
+grep "auth_token cookie" /var/log/solennix.log
 
 # Fallbacks a Authorization header
-grep "Authorization header fallback" /var/log/eventosapp.log
+grep "Authorization header fallback" /var/log/solennix.log
 ```
 
 Frontend (Browser Console):

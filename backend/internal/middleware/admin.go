@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
-	"github.com/tiagofur/eventosapp-backend/internal/models"
+	"github.com/tiagofur/solennix-backend/internal/models"
 )
 
 // AdminUserRepo is the minimal interface needed by AdminOnly middleware.

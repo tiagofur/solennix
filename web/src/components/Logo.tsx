@@ -12,7 +12,7 @@ export const Logo: React.FC<LogoProps> = ({ className = '', size = 32, showText 
     <div className={`flex items-center gap-3 ${className}`}>
       <img
         src="/favicon.svg"
-        alt="EventosApp Logo"
+        alt="Solennix Logo"
         width={size}
         height={size}
         className="shrink-0 shadow-sm"
@@ -20,7 +20,7 @@ export const Logo: React.FC<LogoProps> = ({ className = '', size = 32, showText 
       />
       {showText && (
         <span className={`text-2xl font-bold ${forceLight ? 'text-white' : 'text-primary'}`}>
-          EventosApp
+          Solennix
         </span>
       )}
     </div>

@@ -24,7 +24,7 @@ export const About: React.FC = () => {
           <div className="w-28 h-28 rounded-full bg-orange-50 dark:bg-orange-500/10 flex items-center justify-center mb-4 shadow-lg">
             <Code2 className="h-14 w-14 text-primary" />
           </div>
-          <h1 className="text-3xl font-bold text-text">EventosApp</h1>
+          <h1 className="text-3xl font-bold text-text">Solennix</h1>
           <p className="text-sm text-text-secondary mt-1">
             Version {APP_VERSION}
           </p>
@@ -89,7 +89,7 @@ export const About: React.FC = () => {
             Sobre la app
           </h2>
           <p className="text-sm text-text-secondary leading-relaxed">
-            EventosApp es una aplicacion SaaS disenada para organizadores de eventos
+            Solennix es una aplicacion SaaS disenada para organizadores de eventos
             de todo tipo. Gestiona clientes, eventos, catalogo de productos,
             inventario, cotizaciones y pagos en un solo lugar.
           </p>

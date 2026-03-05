@@ -1,6 +1,6 @@
 # Tooling & Productivity Guide
 
-This guide outlines the scripts, automation, and editor configurations designed to keep developers efficient while working on the EventosApp codebase. By standardizing our environment and leveraging shared automation, we ensure consistent code quality and reduce friction during development.
+This guide outlines the scripts, automation, and editor configurations designed to keep developers efficient while working on the Solennix codebase. By standardizing our environment and leveraging shared automation, we ensure consistent code quality and reduce friction during development.
 
 ## Required Tooling
 

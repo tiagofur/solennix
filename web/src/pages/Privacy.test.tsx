@@ -53,7 +53,7 @@ describe('Privacy', () => {
       renderPrivacy();
 
       expect(screen.getByText('2. Como usamos tu informacion')).toBeInTheDocument();
-      expect(screen.getByText('Proporcionar y mejorar los servicios de EventosApp')).toBeInTheDocument();
+      expect(screen.getByText('Proporcionar y mejorar los servicios de Solennix')).toBeInTheDocument();
       expect(screen.getByText('Gestionar tu cuenta y suscripcion')).toBeInTheDocument();
       expect(screen.getByText('Enviarte comunicaciones sobre el servicio')).toBeInTheDocument();
       expect(screen.getByText('Procesar pagos a traves de proveedores seguros')).toBeInTheDocument();

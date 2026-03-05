@@ -9,8 +9,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
-	"github.com/tiagofur/eventosapp-backend/internal/middleware"
-	"github.com/tiagofur/eventosapp-backend/internal/models"
+	"github.com/tiagofur/solennix-backend/internal/middleware"
+	"github.com/tiagofur/solennix-backend/internal/models"
 )
 
 func TestCRUDHandlerValidationPaths(t *testing.T) {

@@ -1,4 +1,4 @@
-# Arquitectura: EventosApp Mobile
+# Arquitectura: Solennix Mobile
 
 > Última actualización: 2026-02-25
 
@@ -311,7 +311,7 @@ La app mobile se conecta al **mismo backend Go** que la web. No hay cambios en e
 ### Variable de Entorno
 
 ```
-API_URL=https://api.eventosapp.com/api   # producción
+API_URL=https://api.solennix.com/api   # producción
 API_URL=http://192.168.x.x:8080/api      # desarrollo local
 ```
 

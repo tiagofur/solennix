@@ -17,7 +17,7 @@ Esta guía detalla los pasos necesarios para implementar un sistema de suscripci
 ### 1.1 Crear Producto y Precio
 
 1.  Ve al [Dashboard de Stripe](https://dashboard.stripe.com/test/products).
-2.  Crea un producto llamado **"EventosApp Pro"**.
+2.  Crea un producto llamado **"Solennix Pro"**.
 3.  Crea un **Precio**:
     - Tipo: Suscripción / Recurrente.
     - Monto: Ejemplo `$499 MXN`.
@@ -53,7 +53,7 @@ RevenueCat es el "puente" que simplifica las compras en iOS y Android.
 ### 2.2 Entitlements, Offerings y Productos
 
 1.  **Entitlements:** Crea uno llamado `pro`. Representa el "derecho" a usar funciones premium.
-2.  **Products:** Registra los IDs de los productos que creaste en App Store y Play Store (ej. `com.eventosapp.pro_monthly`).
+2.  **Products:** Registra los IDs de los productos que creaste en App Store y Play Store (ej. `com.solennix.pro_monthly`).
     - _Nota: Se recomienda aplicar el 15% de markup aquí para cubrir las comisiones de las tiendas._
 3.  **Offerings:** Crea un offering `default` que contenga tu paquete mensual.
 

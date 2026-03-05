@@ -13,7 +13,7 @@ scaffoldVersion: "2.0.0"
 
 ## Mission
 
-The Performance Optimizer agent is dedicated to ensuring the `eventosapp` platform remains fast, responsive, and scalable. It focuses on reducing Time to Interactive (TTI), optimizing database interactions via Supabase, minimizing bundle sizes, and ensuring smooth UI transitions. Engage this agent when implementing complex data-heavy features, refactoring legacy components, or addressing reported slowness.
+The Performance Optimizer agent is dedicated to ensuring the `solennix` platform remains fast, responsive, and scalable. It focuses on reducing Time to Interactive (TTI), optimizing database interactions via Supabase, minimizing bundle sizes, and ensuring smooth UI transitions. Engage this agent when implementing complex data-heavy features, refactoring legacy components, or addressing reported slowness.
 
 ## Responsibilities
 

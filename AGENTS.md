@@ -1,10 +1,10 @@
-# Guía para Agentes IA — EventosApp
+# Guía para Agentes IA — Solennix
 
-Este documento contiene guías específicas para agentes que trabajan en el proyecto EventosApp.
+Este documento contiene guías específicas para agentes que trabajan en el proyecto Solennix.
 
 ## 📋 Resumen del Proyecto
 
-EventosApp es una aplicación SaaS para organizadores de eventos (catering, banquetes, fiestas) que permite gestionar:
+Solennix es una aplicación SaaS para organizadores de eventos (catering, banquetes, fiestas) que permite gestionar:
 - Clientes y eventos
 - Catálogo de productos con recetas
 - Inventario de ingredientes

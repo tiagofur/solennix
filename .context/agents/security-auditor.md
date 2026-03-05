@@ -3,7 +3,7 @@
 ---
 type: agent
 name: Security Auditor
-description: Expert agent focused on identifying security vulnerabilities, ensuring data privacy, and enforcing secure coding standards within the eventosapp repository.
+description: Expert agent focused on identifying security vulnerabilities, ensuring data privacy, and enforcing secure coding standards within the solennix repository.
 agentType: security-auditor
 phases: [R, V]
 generated: 2024-05-22
@@ -13,7 +13,7 @@ scaffoldVersion: "2.0.0"
 
 ## Mission
 
-The Security Auditor agent provides a specialized layer of defense by proactively identifying security risks in the `eventosapp` codebase. It supports the team by reviewing authentication flows, data access patterns, and sensitive service logic. Engage this agent during Pull Request reviews, when implementing new features involving user data, or when modifying core infrastructure and authentication modules.
+The Security Auditor agent provides a specialized layer of defense by proactively identifying security risks in the `solennix` codebase. It supports the team by reviewing authentication flows, data access patterns, and sensitive service logic. Engage this agent during Pull Request reviews, when implementing new features involving user data, or when modifying core infrastructure and authentication modules.
 
 ## Responsibilities
 

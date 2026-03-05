@@ -5,10 +5,10 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/tiagofur/eventosapp-backend/internal/handlers"
-	mw "github.com/tiagofur/eventosapp-backend/internal/middleware"
-	"github.com/tiagofur/eventosapp-backend/internal/repository"
-	"github.com/tiagofur/eventosapp-backend/internal/services"
+	"github.com/tiagofur/solennix-backend/internal/handlers"
+	mw "github.com/tiagofur/solennix-backend/internal/middleware"
+	"github.com/tiagofur/solennix-backend/internal/repository"
+	"github.com/tiagofur/solennix-backend/internal/services"
 )
 
 func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, subHandler *handlers.SubscriptionHandler,

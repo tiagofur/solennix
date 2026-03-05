@@ -45,7 +45,7 @@ describe('Terms', () => {
 
       expect(screen.getByText('1. Uso del servicio')).toBeInTheDocument();
       expect(
-        screen.getByText(/Al usar EventosApp, aceptas estos terminos/)
+        screen.getByText(/Al usar Solennix, aceptas estos terminos/)
       ).toBeInTheDocument();
       expect(screen.getByText('Proporcionar informacion veraz al registrarte')).toBeInTheDocument();
       expect(screen.getByText('Mantener la confidencialidad de tu cuenta')).toBeInTheDocument();
@@ -58,7 +58,7 @@ describe('Terms', () => {
 
       expect(screen.getByText('2. Suscripcion y pagos')).toBeInTheDocument();
       expect(
-        screen.getByText(/EventosApp ofrece planes de suscripcion mensual/)
+        screen.getByText(/Solennix ofrece planes de suscripcion mensual/)
       ).toBeInTheDocument();
       expect(screen.getByText('El plan Basico es gratuito con funcionalidades limitadas')).toBeInTheDocument();
       expect(screen.getByText('El plan Pro incluye todas las funcionalidades sin restricciones')).toBeInTheDocument();
@@ -84,7 +84,7 @@ describe('Terms', () => {
 
       expect(screen.getByText('4. Propiedad intelectual')).toBeInTheDocument();
       expect(
-        screen.getByText(/EventosApp y su contenido son propiedad de Creapolis\.Dev/)
+        screen.getByText(/Solennix y su contenido son propiedad de Creapolis\.Dev/)
       ).toBeInTheDocument();
     });
 
@@ -93,7 +93,7 @@ describe('Terms', () => {
 
       expect(screen.getByText('5. Disponibilidad del servicio')).toBeInTheDocument();
       expect(
-        screen.getByText(/Nos esforzamos por mantener EventosApp disponible 24\/7/)
+        screen.getByText(/Nos esforzamos por mantener Solennix disponible 24\/7/)
       ).toBeInTheDocument();
     });
 

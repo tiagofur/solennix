@@ -6,10 +6,10 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/tiagofur/eventosapp-backend/internal/middleware"
-	"github.com/tiagofur/eventosapp-backend/internal/models"
-	"github.com/tiagofur/eventosapp-backend/internal/repository"
-	"github.com/tiagofur/eventosapp-backend/internal/services"
+	"github.com/tiagofur/solennix-backend/internal/middleware"
+	"github.com/tiagofur/solennix-backend/internal/models"
+	"github.com/tiagofur/solennix-backend/internal/repository"
+	"github.com/tiagofur/solennix-backend/internal/services"
 )
 
 var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)

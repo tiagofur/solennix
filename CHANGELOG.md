@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to EventosApp will be documented in this file.
+All notable changes to Solennix will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -73,7 +73,7 @@ SMTP_HOST=smtp.sendgrid.net
 SMTP_PORT=587
 SMTP_USER=apikey
 SMTP_PASSWORD=SG.xxxxx
-SMTP_FROM=noreply@eventosapp.com
+SMTP_FROM=noreply@solennix.com
 FRONTEND_URL=https://yourdomain.com
 ```
 
@@ -167,10 +167,10 @@ SMTP_HOST=smtp.sendgrid.net
 SMTP_PORT=587
 SMTP_USER=apikey
 SMTP_PASSWORD=your_sendgrid_api_key
-SMTP_FROM=noreply@eventosapp.com
+SMTP_FROM=noreply@solennix.com
 
 # Frontend URL (Required for reset links)
-FRONTEND_URL=https://app.eventosapp.com
+FRONTEND_URL=https://app.solennix.com
 ```
 
 ### Migration Steps
@@ -317,7 +317,7 @@ SMTP_FROM=dev@localhost
 
 ## 🔗 Links
 
-- [GitHub Repository](https://github.com/tiagofur/eventosapp)
+- [GitHub Repository](https://github.com/tiagofur/solennix)
 - [Full Audit Report](./docs/auditoria-mvp-feb-2026.md)
 - [Cookie Migration Guide](./docs/migration-httponly-cookies.md)
 - [Contributing Guide](./CONTRIBUTING.md)

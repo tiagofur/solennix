@@ -15,9 +15,9 @@ import (
 	"github.com/stripe/stripe-go/v81/checkout/session"
 	stripeSub "github.com/stripe/stripe-go/v81/subscription"
 	"github.com/stripe/stripe-go/v81/webhook"
-	"github.com/tiagofur/eventosapp-backend/internal/config"
-	"github.com/tiagofur/eventosapp-backend/internal/middleware"
-	"github.com/tiagofur/eventosapp-backend/internal/models"
+	"github.com/tiagofur/solennix-backend/internal/config"
+	"github.com/tiagofur/solennix-backend/internal/middleware"
+	"github.com/tiagofur/solennix-backend/internal/models"
 )
 
 // EventRepository defines methods for event data access

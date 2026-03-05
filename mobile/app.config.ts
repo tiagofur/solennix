@@ -2,13 +2,13 @@ import { ExpoConfig, ConfigContext } from "expo/config";
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: "EventosApp",
-  slug: "eventosapp",
+  name: "Solennix",
+  slug: "solennix",
   version: "1.0.0",
   orientation: "portrait",
   icon: "./assets/icon.png",
   userInterfaceStyle: "automatic",
-  scheme: "eventosapp",
+  scheme: "solennix",
   splash: {
     image: "./assets/splash-icon.png",
     resizeMode: "contain",
@@ -16,7 +16,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   ios: {
     supportsTablet: true,
-    bundleIdentifier: "com.creapolis.eventosapp",
+    bundleIdentifier: "com.creapolis.solennix",
     buildNumber: "1",
     privacyManifests: {
       NSPrivacyTracking: false,
@@ -66,7 +66,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       backgroundImage: "./assets/android-icon-background.png",
       monochromeImage: "./assets/android-icon-monochrome.png",
     },
-    package: "com.creapolis.eventosapp",
+    package: "com.creapolis.solennix",
   },
   web: {
     favicon: "./assets/favicon.png",

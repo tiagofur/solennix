@@ -1,4 +1,4 @@
-module github.com/tiagofur/eventosapp-backend
+module github.com/tiagofur/solennix-backend
 
 go 1.24.7
 

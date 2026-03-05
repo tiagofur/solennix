@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/tiagofur/eventosapp-backend/internal/config"
+	"github.com/tiagofur/solennix-backend/internal/config"
 )
 
 func TestNewEmailService(t *testing.T) {

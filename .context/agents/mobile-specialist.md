@@ -13,7 +13,7 @@ scaffoldVersion: "2.0.0"
 
 ## Mission
 
-The Mobile Specialist Agent ensures that the EventosApp provides a seamless, high-performance experience across all mobile devices and tablets. While the codebase is currently a React web application, this agent focuses on responsive design, mobile-first UI components, touch-friendly interactions, and preparing the foundation for potential PWA or native wrapper implementation.
+The Mobile Specialist Agent ensures that the Solennix provides a seamless, high-performance experience across all mobile devices and tablets. While the codebase is currently a React web application, this agent focuses on responsive design, mobile-first UI components, touch-friendly interactions, and preparing the foundation for potential PWA or native wrapper implementation.
 
 ## Responsibilities
 

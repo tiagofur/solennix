@@ -1,6 +1,6 @@
-# Contribuir a EventosApp
+# Contribuir a Solennix
 
-¡Gracias por tu interés en contribuir a EventosApp! Este documento proporciona las guías para contribuir al proyecto.
+¡Gracias por tu interés en contribuir a Solennix! Este documento proporciona las guías para contribuir al proyecto.
 
 ## Código de Conducta
 
@@ -322,4 +322,4 @@ Si tienes preguntas:
 
 ## Agradecimientos
 
-¡Gracias por contribuir a hacer EventosApp mejor!
+¡Gracias por contribuir a hacer Solennix mejor!

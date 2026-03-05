@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/tiagofur/eventosapp-backend/internal/models"
+	"github.com/tiagofur/solennix-backend/internal/models"
 )
 
 // UserRepository defines the interface for user repository operations.

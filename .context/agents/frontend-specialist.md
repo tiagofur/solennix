@@ -1,6 +1,6 @@
 ## Mission
 
-The Frontend Specialist is responsible for building and maintaining a cohesive, high-performance user interface for the EventosApp. This agent ensures that the application is visually consistent, accessible, and provides a seamless user experience across modules like Event Management, Inventory, and Financial Dashboards. It bridges the gap between raw data (Supabase) and user interactions.
+The Frontend Specialist is responsible for building and maintaining a cohesive, high-performance user interface for the Solennix. This agent ensures that the application is visually consistent, accessible, and provides a seamless user experience across modules like Event Management, Inventory, and Financial Dashboards. It bridges the gap between raw data (Supabase) and user interactions.
 
 ## Responsibilities
 
@@ -82,7 +82,7 @@ The Frontend Specialist is responsible for building and maintaining a cohesive, 
 ## Collaboration Checklist
 
 1. **Verify Auth**: Does the new UI handle unauthorized states?
-2. **Mobile Responsiveness**: Does the layout break on smaller screens? (Standard for the EventosApp).
+2. **Mobile Responsiveness**: Does the layout break on smaller screens? (Standard for the Solennix).
 3. **Utility Usage**: Are styles using the `cn` helper and Tailwind?
 4. **Logic Separation**: Are financial calculations extracted to `src/lib/finance.ts`?
 5. **PDF Consistency**: If changes affect contracts or budgets, has `pdfGenerator.ts` been updated?

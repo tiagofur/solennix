@@ -1,6 +1,6 @@
 # Inventario y Catálogo
 
-EventosApp vincula el inventario físico con los servicios ofrecidos, permitiendo una trazabilidad total de costos.
+Solennix vincula el inventario físico con los servicios ofrecidos, permitiendo una trazabilidad total de costos.
 
 ## Catálogo de Productos
 

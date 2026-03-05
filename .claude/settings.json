@@ -22,7 +22,7 @@
       "Bash(npm install --save-dev react-is --legacy-peer-deps)",
       "Bash(npm run test:e2e -- tests/e2e/payments.spec.ts --workers=1)",
       "Bash(docker-compose up db -d)",
-      "Bash(docker start eventosapp-db)",
+      "Bash(docker start solennix-db)",
       "Bash(npm run test:e2e -- tests/e2e/payments.spec.ts tests/e2e/pdf.spec.ts tests/e2e/upgrade.spec.ts --workers=1)",
       "Bash(npx playwright test tests/e2e/payments.spec.ts --workers=1 --reporter=line)",
       "Bash(npx playwright test tests/e2e/payments.spec.ts tests/e2e/pdf.spec.ts tests/e2e/upgrade.spec.ts --workers=1 --reporter=list)",

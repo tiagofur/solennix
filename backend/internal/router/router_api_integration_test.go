@@ -11,10 +11,10 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/tiagofur/eventosapp-backend/internal/database"
-	"github.com/tiagofur/eventosapp-backend/internal/handlers"
-	"github.com/tiagofur/eventosapp-backend/internal/repository"
-	"github.com/tiagofur/eventosapp-backend/internal/services"
+	"github.com/tiagofur/solennix-backend/internal/database"
+	"github.com/tiagofur/solennix-backend/internal/handlers"
+	"github.com/tiagofur/solennix-backend/internal/repository"
+	"github.com/tiagofur/solennix-backend/internal/services"
 )
 
 func TestAPIIntegrationCoreFlows(t *testing.T) {

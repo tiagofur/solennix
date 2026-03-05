@@ -77,7 +77,7 @@ export const UpgradeBanner: React.FC<UpgradeBannerProps> = ({
             </div>
             <div>
                 <h4 className="text-lg font-bold text-text flex items-center gap-2">
-                    Desbloquea el poder de EventosApp
+                    Desbloquea el poder de Solennix
                     <span className="bg-primary text-white text-[10px] uppercase font-bold px-2 py-0.5 rounded-full">Pro</span>
                 </h4>
                 <p className="text-sm text-text-secondary mt-1">

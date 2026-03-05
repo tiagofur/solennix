@@ -150,7 +150,7 @@ const buildHeaderHTML = (
 ): string => {
   const brandColor = profile?.brand_color || DEFAULT_BRAND_COLOR;
   const showBusinessName = profile?.show_business_name_in_pdf ?? true;
-  const businessName = profile?.business_name || profile?.name || "EventosApp";
+  const businessName = profile?.business_name || profile?.name || "Solennix";
 
   let logoHtml = "";
   if (profile?.logo_url) {

@@ -1,6 +1,6 @@
 # Architecture Notes
 
-The `eventosapp` is built as a modern, client-heavy web application using React and TypeScript, leveraging Supabase as a Backend-as-a-Service (BaaS). The system follows a modular architecture where the frontend manages state, routing, and business logic orchestration, while the data persistence and authentication are delegated to Supabase. This design was chosen to minimize backend infrastructure overhead while providing real-time capabilities and robust security through Row Level Security (RLS).
+The `solennix` is built as a modern, client-heavy web application using React and TypeScript, leveraging Supabase as a Backend-as-a-Service (BaaS). The system follows a modular architecture where the frontend manages state, routing, and business logic orchestration, while the data persistence and authentication are delegated to Supabase. This design was chosen to minimize backend infrastructure overhead while providing real-time capabilities and robust security through Row Level Security (RLS).
 
 The application is structured to separate concerns between UI presentation (components), state management (contexts), and data access (services). A central theme is the automation of event management workflows, including budget generation and contract PDF creation, which are handled via client-side utility libraries.
 

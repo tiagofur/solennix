@@ -5,12 +5,12 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: eventosapp-backend
+    container_name: solennix-backend
     restart: always
     env_file:
       - ./backend/.env
     environment:
-      - DATABASE_URL=postgres://eventosapp_user:eventosapp_password@db:5432/eventosapp?sslmode=disable
+      - DATABASE_URL=postgres://solennix_user:solennix_password@db:5432/solennix?sslmode=disable
       - BOOTSTRAP_ADMIN_EMAIL=tiagofur@gmail.com
     depends_on:
       db:
@@ -24,25 +24,25 @@ services:
       dockerfile: Dockerfile
       args:
         - VITE_API_URL=https://api-eventos.creapolis.dev/api
-    container_name: eventosapp-frontend
+    container_name: solennix-frontend
     restart: always
     ports:
       - "3000:80"
 
   db:
     image: postgres:15-alpine
-    container_name: eventosapp-db
+    container_name: solennix-db
     restart: always
     environment:
-      POSTGRES_USER: eventosapp_user
-      POSTGRES_PASSWORD: eventosapp_password
-      POSTGRES_DB: eventosapp
+      POSTGRES_USER: solennix_user
+      POSTGRES_PASSWORD: solennix_password
+      POSTGRES_DB: solennix
     ports:
       - "5433:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U eventosapp_user -d eventosapp"]
+      test: ["CMD-SHELL", "pg_isready -U solennix_user -d solennix"]
       interval: 5s
       timeout: 5s
       retries: 5

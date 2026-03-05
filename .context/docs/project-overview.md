@@ -1,6 +1,6 @@
 # Project Overview
 
-The EventosApp is a comprehensive event management platform designed to streamline the lifecycle of event planning, from initial budgeting to final contract generation. It provides tools for service providers to manage clients, inventory, products, and financial tracking, ensuring a professional and organized approach to event coordination.
+The Solennix is a comprehensive event management platform designed to streamline the lifecycle of event planning, from initial budgeting to final contract generation. It provides tools for service providers to manage clients, inventory, products, and financial tracking, ensuring a professional and organized approach to event coordination.
 
 ## Codebase Reference
 
@@ -8,7 +8,7 @@ The EventosApp is a comprehensive event management platform designed to streamli
 
 ## Quick Facts
 
-- **Root**: `/Users/tiagofur/Desktop/creapolis/eventosapp`
+- **Root**: `/Users/tiagofur/Desktop/creapolis/solennix`
 - **Languages**: TypeScript (44 files), JavaScript (5 files)
 - **Primary Entry**: `src/main.tsx`
 - **Full analysis**: [`codebase-map.json`](./codebase-map.json)

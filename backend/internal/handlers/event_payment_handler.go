@@ -9,9 +9,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/stripe/stripe-go/v81"
 	"github.com/stripe/stripe-go/v81/checkout/session"
-	"github.com/tiagofur/eventosapp-backend/internal/config"
-	"github.com/tiagofur/eventosapp-backend/internal/middleware"
-	"github.com/tiagofur/eventosapp-backend/internal/repository"
+	"github.com/tiagofur/solennix-backend/internal/config"
+	"github.com/tiagofur/solennix-backend/internal/middleware"
+	"github.com/tiagofur/solennix-backend/internal/repository"
 )
 
 // EventPaymentHandler handles Stripe checkout for event payments

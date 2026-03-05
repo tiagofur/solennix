@@ -1,6 +1,6 @@
 # Testing Strategy
 
-The quality of the EventosApp codebase is maintained through a multi-layered testing strategy that combines automated testing, static analysis, and strict quality gates. Our approach ensures that business logic—particularly financial calculations, PDF generation, and authentication flows—remains robust and regression-free as the application scales.
+The quality of the Solennix codebase is maintained through a multi-layered testing strategy that combines automated testing, static analysis, and strict quality gates. Our approach ensures that business logic—particularly financial calculations, PDF generation, and authentication flows—remains robust and regression-free as the application scales.
 
 We prioritize testing for:
 - **Core Utilities**: Math and finance logic in `src/lib/finance.ts`.

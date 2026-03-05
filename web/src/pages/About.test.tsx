@@ -31,7 +31,7 @@ describe('About', () => {
     it('renders the app name and version', () => {
       renderAbout();
 
-      expect(screen.getByText('EventosApp')).toBeInTheDocument();
+      expect(screen.getByText('Solennix')).toBeInTheDocument();
       expect(screen.getByText('Version 1.0.0')).toBeInTheDocument();
     });
 
@@ -79,7 +79,7 @@ describe('About', () => {
 
       expect(screen.getByText('Sobre la app')).toBeInTheDocument();
       expect(
-        screen.getByText(/EventosApp es una aplicacion SaaS disenada para organizadores de eventos/)
+        screen.getByText(/Solennix es una aplicacion SaaS disenada para organizadores de eventos/)
       ).toBeInTheDocument();
     });
 

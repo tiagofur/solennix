@@ -58,7 +58,7 @@ func (s *AuthService) GenerateTokenPair(userID uuid.UUID, email string) (*TokenP
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expiresAt),
 			IssuedAt:  jwt.NewNumericDate(now),
-			Issuer:    "eventosapp-backend",
+			Issuer:    "solennix-backend",
 		},
 	}
 
@@ -75,7 +75,7 @@ func (s *AuthService) GenerateTokenPair(userID uuid.UUID, email string) (*TokenP
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(now.Add(7 * 24 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(now),
-			Issuer:    "eventosapp-backend",
+			Issuer:    "solennix-backend",
 		},
 	}
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims)
@@ -102,7 +102,7 @@ func (s *AuthService) GenerateResetToken(userID uuid.UUID, email string) (string
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expiresAt),
 			IssuedAt:  jwt.NewNumericDate(now),
-			Issuer:    "eventosapp-backend",
+			Issuer:    "solennix-backend",
 			Subject:   "password-reset", // Identify as reset token
 		},
 	}

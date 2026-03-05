@@ -1,6 +1,6 @@
-# EventosApp Mobile
+# Solennix Mobile
 
-Documentación para la aplicación móvil de EventosApp, construida con React Native + Expo.
+Documentación para la aplicación móvil de Solennix, construida con React Native + Expo.
 
 ## Índice
 

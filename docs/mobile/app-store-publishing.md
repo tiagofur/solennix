@@ -41,8 +41,8 @@
 1. En [developer.apple.com](https://developer.apple.com) → **Certificates, Identifiers & Profiles**
 2. Sección **Identifiers** → botón **+**
 3. Selecciona **App IDs** → **App**
-4. Description: `EventosApp`
-5. Bundle ID (Explicit): `com.creapolis.eventosapp`
+4. Description: `Solennix`
+5. Bundle ID (Explicit): `com.creapolis.solennix`
 6. Capabilities a activar:
    - **In-App Purchase** ✓
    - **Push Notifications** (opcional, para futuro)
@@ -54,10 +54,10 @@
 2. **My Apps** → botón **+** → **New App**
 3. Rellena:
    - **Platform:** iOS
-   - **Name:** EventosApp
+   - **Name:** Solennix
    - **Primary Language:** Spanish (Mexico)
-   - **Bundle ID:** `com.creapolis.eventosapp` (selecciona del desplegable)
-   - **SKU:** `eventosapp-ios-001` (cualquier identificador único tuyo)
+   - **Bundle ID:** `com.creapolis.solennix` (selecciona del desplegable)
+   - **SKU:** `solennix-ios-001` (cualquier identificador único tuyo)
    - **User Access:** Full Access
 4. Haz clic en **Create**
 
@@ -68,16 +68,16 @@
 1. En App Store Connect → tu app → **Monetization** → **In-App Purchases**
 2. Haz clic en **+** → **Auto-Renewable Subscription**
 3. Configura:
-   - **Reference Name:** EventosApp Pro Mensual
-   - **Product ID:** `com.creapolis.eventosapp.pro_monthly`
+   - **Reference Name:** Solennix Pro Mensual
+   - **Product ID:** `com.creapolis.solennix.pro_monthly`
 4. Haz clic en **Create**
 5. En la ficha del producto:
    - **Subscription Duration:** 1 Month
    - **Price:** selecciona tu tier (ej. **Tier 5** ≈ $99 MXN / $4.99 USD)
    - **Display Name:** Plan Pro
-   - **Description:** Acceso completo a todas las funcionalidades de EventosApp
+   - **Description:** Acceso completo a todas las funcionalidades de Solennix
 6. Crea un **Subscription Group**:
-   - Name: `EventosApp Subscriptions`
+   - Name: `Solennix Subscriptions`
    - Asigna el producto al grupo
 7. Guarda todo
 
@@ -94,11 +94,11 @@
 ### 4a. Crear cuenta y proyecto
 
 1. Ve a [app.revenuecat.com](https://app.revenuecat.com) y regístrate
-2. **Create new project** → Name: `EventosApp`
+2. **Create new project** → Name: `Solennix`
 3. En el proyecto → **Add app** → plataforma **App Store**
 4. Rellena:
-   - **App name:** EventosApp
-   - **Bundle ID:** `com.creapolis.eventosapp`
+   - **App name:** Solennix
+   - **Bundle ID:** `com.creapolis.solennix`
    - **App Store Connect App-Specific Shared Secret:** (el del Paso 3)
 5. Haz clic en **Save**
 
@@ -112,7 +112,7 @@
 ### 4c. Importar el producto
 
 1. En el menú lateral → **Products** → **+**
-2. **Product identifier:** `com.creapolis.eventosapp.pro_monthly`
+2. **Product identifier:** `com.creapolis.solennix.pro_monthly`
 3. **Type:** Auto-Renewable Subscription
 4. Asigna el entitlement `pro` al producto
 5. Guarda
@@ -124,7 +124,7 @@
 3. **Description:** Offering principal
 4. Dentro del offering → **Add Package**:
    - **Identifier:** `$rc_monthly`
-   - **Platform Product:** selecciona `com.creapolis.eventosapp.pro_monthly`
+   - **Platform Product:** selecciona `com.creapolis.solennix.pro_monthly`
 5. Guarda
 
 ### 4e. Copiar la API Key
@@ -225,7 +225,7 @@ Ve a App Store Connect → tu app → **App Store** tab → versión **1.0 Prepa
 - [ ] **Contact information:** tu nombre, teléfono y email
 
 **Age Rating:**
-- [ ] Completa el cuestionario — EventosApp debería quedar en **4+**
+- [ ] Completa el cuestionario — Solennix debería quedar en **4+**
 
 ---
 
@@ -276,9 +276,9 @@ CÓDIGO
 
 CUENTAS Y PLATAFORMAS
  □ Cuenta Apple Developer activa ($99/año)
- □ Bundle ID com.creapolis.eventosapp registrado
+ □ Bundle ID com.creapolis.solennix registrado
  □ App creada en App Store Connect
- □ In-App Purchase com.creapolis.eventosapp.pro_monthly creado
+ □ In-App Purchase com.creapolis.solennix.pro_monthly creado
  □ RevenueCat configurado (entitlement pro, offering default)
  □ EXPO_PUBLIC_RC_API_KEY_IOS rellenado en .env.production
 

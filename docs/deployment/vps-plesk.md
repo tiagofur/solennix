@@ -1,6 +1,6 @@
 # 🚀 Guía de Despliegue en VPS (Plesk / Docker)
 
-Tutorial paso a paso para desplegar **EventosApp** (backend Go + frontend Vite/React + PostgreSQL) en un VPS utilizando Docker Compose y Plesk para SSL/Reverse Proxy.
+Tutorial paso a paso para desplegar **Solennix** (backend Go + frontend Vite/React + PostgreSQL) en un VPS utilizando Docker Compose y Plesk para SSL/Reverse Proxy.
 
 ---
 
@@ -37,7 +37,7 @@ Genera un secreto seguro (min 32 caracteres) ejecutando localmente:
 
 ## 2. Preparación del `.env` de Producción
 
-En tu VPS (dentro de la carpeta `/opt/eventosapp` o similar), crea tu archivo `.env`:
+En tu VPS (dentro de la carpeta `/opt/solennix` o similar), crea tu archivo `.env`:
 
 ```env
 # ─── Seguridad ─────────────────────────────────────────────────────────
@@ -49,7 +49,7 @@ FRONTEND_URL=https://app.tu-dominio.com
 
 # ─── Resend (Email) ───────────────────────────────────────────────────
 RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxxxxxxxxx
-RESEND_FROM_EMAIL=EventosApp <noreply@tu-dominio.com>
+RESEND_FROM_EMAIL=Solennix <noreply@tu-dominio.com>
 
 # ─── Stripe (Pagos Web) ──────────────────────────────────────────────
 STRIPE_SECRET_KEY=sk_live_xxxxxxxxxxxxxxxxxxxx
@@ -70,7 +70,7 @@ REVENUECAT_WEBHOOK_SECRET=tu-secreto-revenuecat-super-seguro
 
 Asegúrate de ajustar el archivo `docker-compose.yml` base:
 
-1. **Credenciales DB**: Cambia `eventosapp_user` y `eventosapp_password` en la sección `db` y en la variable `DATABASE_URL` del backend.
+1. **Credenciales DB**: Cambia `solennix_user` y `solennix_password` en la sección `db` y en la variable `DATABASE_URL` del backend.
 2. **Build de Frontend**: Cambia el argumento `VITE_API_URL` por tu dominio real de API:
    ```yaml
    frontend:
@@ -87,7 +87,7 @@ Asegúrate de ajustar el archivo `docker-compose.yml` base:
 Sube tu código al VPS (vía git o ftp) e inicia Docker:
 
 ```bash
-cd /opt/eventosapp
+cd /opt/solennix
 
 # Iniciar backend, frontend y db
 docker compose up -d --build

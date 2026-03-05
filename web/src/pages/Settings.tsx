@@ -526,7 +526,7 @@ export const Settings: React.FC = () => {
             Informacion Legal
           </h3>
           <p className="text-sm text-text-secondary mb-4">
-            Conoce mas sobre EventosApp y nuestras politicas.
+            Conoce mas sobre Solennix y nuestras politicas.
           </p>
           <div className="flex flex-col sm:flex-row gap-3">
             <Link
@@ -534,7 +534,7 @@ export const Settings: React.FC = () => {
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-surface-alt/50 text-text hover:bg-border transition-colors text-sm font-medium"
             >
               <Info className="h-4 w-4 text-primary" />
-              Acerca de EventosApp
+              Acerca de Solennix
             </Link>
             <Link
               to="/terms"

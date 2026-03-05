@@ -78,7 +78,7 @@ const addHeader = (doc: jsPDF, profile: UserProfile | null, title: string): numb
   if (showBusinessName || !profile?.logo_url) {
     doc.setFontSize(20);
     doc.setTextColor(brandColor);
-    doc.text(profile?.business_name || profile?.name || 'EventosApp', startX, 22);
+    doc.text(profile?.business_name || profile?.name || 'Solennix', startX, 22);
   }
 
   // Title

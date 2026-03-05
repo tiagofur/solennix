@@ -1,6 +1,6 @@
 # Arquitectura del Sistema
 
-EventosApp es una plataforma SaaS diseñada para organizadores de eventos. El sistema sigue una arquitectura de tres capas: Frontend desacoplado, Backend monolítico y Base de Datos Relacional.
+Solennix es una plataforma SaaS diseñada para organizadores de eventos. El sistema sigue una arquitectura de tres capas: Frontend desacoplado, Backend monolítico y Base de Datos Relacional.
 
 ## Componentes
 

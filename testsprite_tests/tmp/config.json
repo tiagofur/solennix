@@ -5,7 +5,7 @@
   "localEndpoint": "http://localhost:5173/",
   "serverPort": 56097,
   "executionArgs": {
-    "projectName": "eventosapp",
+    "projectName": "solennix",
     "projectPath": "C:/Users/tfurt/source/repos/eventosapp",
     "testIds": [],
     "additionalInstruction": "The app UI is in Spanish. Use test credentials: email=test@test.com password=test1234. The backend API is running at http://localhost:8080/api. The frontend is at http://localhost:5173.",

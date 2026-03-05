@@ -1,10 +1,10 @@
-# EventosApp
+# Solennix
 
 Plataforma integral para la gestión de eventos, cotizaciones, inventario y control financiero.
 
 ## 📋 Descripción
 
-EventosApp es una solución SaaS diseñada para organizadores de eventos que buscan optimizar su operación. Permite gestionar desde el primer contacto con el cliente hasta la liquidación final, incluyendo el control de stock y la generación de documentos legales.
+Solennix es una solución SaaS diseñada para organizadores de eventos que buscan optimizar su operación. Permite gestionar desde el primer contacto con el cliente hasta la liquidación final, incluyendo el control de stock y la generación de documentos legales.
 
 ## 🏗️ Arquitectura
 
@@ -47,4 +47,4 @@ Si deseas colaborar en el proyecto, revisa el archivo [CONTRIBUTING.md](./CONTRI
 
 ---
 
-© 2026 EventosApp - Gestión Profesional de Eventos.
+© 2026 Solennix - La plataforma de eventos de élite.

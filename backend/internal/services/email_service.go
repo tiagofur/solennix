@@ -7,7 +7,7 @@ import (
 	"log/slog"
 
 	"github.com/resend/resend-go/v3"
-	"github.com/tiagofur/eventosapp-backend/internal/config"
+	"github.com/tiagofur/solennix-backend/internal/config"
 )
 
 type EmailService struct {
@@ -24,7 +24,7 @@ func (s *EmailService) SendPasswordReset(email, token, userName string) error {
 
 	htmlBody := s.generatePasswordResetHTML(userName, resetLink)
 
-	subject := "Recuperación de Contraseña - EventosApp"
+	subject := "Recuperación de Contraseña - Solennix"
 	return s.sendEmail(email, subject, htmlBody)
 }
 
@@ -95,12 +95,12 @@ func (s *EmailService) generatePasswordResetHTML(userName, resetLink string) str
 <body>
     <div class="container">
         <div class="logo">
-            <h1>EventosApp</h1>
+            <h1>Solennix</h1>
         </div>
 
         <p>Hola {{.UserName}},</p>
 
-        <p>Recibimos una solicitud para restablecer la contraseña de tu cuenta en EventosApp.</p>
+        <p>Recibimos una solicitud para restablecer la contraseña de tu cuenta en Solennix.</p>
 
         <p>Haz clic en el siguiente botón para crear una nueva contraseña:</p>
 
@@ -120,7 +120,7 @@ func (s *EmailService) generatePasswordResetHTML(userName, resetLink string) str
         <p style="word-break: break-all; color: #3b82f6;">{{.ResetLink}}</p>
 
         <div class="footer">
-            <p>EventosApp - Gestión profesional de eventos</p>
+            <p>Solennix — La plataforma de eventos de élite</p>
             <p>Este es un correo automático. Por favor, no respondas a este mensaje.</p>
         </div>
     </div>

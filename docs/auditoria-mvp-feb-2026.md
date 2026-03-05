@@ -10,7 +10,7 @@
 
 ## 🎯 RESUMEN EJECUTIVO
 
-EventosApp presenta una arquitectura sólida y features bien implementadas, pero requiere atención **INMEDIATA** en:
+Solennix presenta una arquitectura sólida y features bien implementadas, pero requiere atención **INMEDIATA** en:
 
 1. **Seguridad de autenticación** (tokens en localStorage)
 2. **Funcionalidad de reset de contraseña** (no envía emails)
@@ -115,7 +115,7 @@ func (s *EmailService) SendPasswordReset(email, token, frontendURL string) error
     body := fmt.Sprintf(`
         <html>
         <body>
-            <h2>Recuperación de Contraseña - EventosApp</h2>
+            <h2>Recuperación de Contraseña - Solennix</h2>
             <p>Haz clic en el siguiente enlace para restablecer tu contraseña:</p>
             <a href="%s">Restablecer Contraseña</a>
             <p>Este enlace es válido por 1 hora.</p>
@@ -171,7 +171,7 @@ SMTP_HOST=smtp.sendgrid.net
 SMTP_PORT=587
 SMTP_USER=apikey
 SMTP_PASSWORD=SG.xxxxxx
-SMTP_FROM=noreply@eventosapp.com
+SMTP_FROM=noreply@solennix.com
 ```
 
 **Frontend**: Crear página `/reset-password`
@@ -408,7 +408,7 @@ package handlers
 
 import (
     "fmt"
-    "github.com/yourusername/eventosapp/internal/models"
+    "github.com/yourusername/solennix/internal/models"
 )
 
 func validateEvent(event *models.Event) error {
@@ -1004,7 +1004,7 @@ Las siguientes áreas del proyecto están correctamente implementadas y no requi
 - [ ] Merge a main
 
 **Entregables Sprint 1**:
-- ✅ EventosApp con seguridad hardened
+- ✅ Solennix con seguridad hardened
 - ✅ Funcionalidad de reset de contraseña
 - ✅ Validaciones de negocio en backend
 - ✅ Tests de pagos/suscripciones
@@ -1050,7 +1050,7 @@ Las siguientes áreas del proyecto están correctamente implementadas y no requi
 - [ ] Cross-browser testing
 
 **Entregables Sprint 2**:
-- ✅ EventosApp accesible (WCAG AA)
+- ✅ Solennix accesible (WCAG AA)
 - ✅ Búsqueda server-side rápida
 - ✅ E2E tests covering flujos críticos
 - ✅ Cobertura de tests >85%
@@ -1069,7 +1069,7 @@ Las siguientes áreas del proyecto están correctamente implementadas y no requi
 - [ ] Offline detection
 
 **Entregables Sprint 3**:
-- ✅ EventosApp production-ready completa
+- ✅ Solennix production-ready completa
 
 ---
 

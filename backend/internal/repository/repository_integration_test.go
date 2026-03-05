@@ -9,8 +9,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/tiagofur/eventosapp-backend/internal/database"
-	"github.com/tiagofur/eventosapp-backend/internal/models"
+	"github.com/tiagofur/solennix-backend/internal/database"
+	"github.com/tiagofur/solennix-backend/internal/models"
 )
 
 func TestUserRepoIntegration(t *testing.T) {

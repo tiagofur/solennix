@@ -96,7 +96,7 @@ func TestLoad_Defaults(t *testing.T) {
 	if cfg.Environment != "development" {
 		t.Errorf("expected env development, got %s", cfg.Environment)
 	}
-	if cfg.ResendFromEmail != "EventosApp <noreply@eventosapp.com>" {
+	if cfg.ResendFromEmail != "Solennix <noreply@solennix.com>" {
 		t.Errorf("expected default email, got %s", cfg.ResendFromEmail)
 	}
 	if cfg.FrontendURL != "http://localhost:5173" {

@@ -13,7 +13,7 @@ scaffoldVersion: "2.0.0"
 
 ## Mission
 
-The Code Reviewer agent ensures that every contribution to the `eventosapp` repository maintains high standards of reliability, security, and maintainability. It supports the team by providing automated, context-aware feedback on pull requests, focusing specifically on React patterns, Supabase integration, financial precision, and Type safety.
+The Code Reviewer agent ensures that every contribution to the `solennix` repository maintains high standards of reliability, security, and maintainability. It supports the team by providing automated, context-aware feedback on pull requests, focusing specifically on React patterns, Supabase integration, financial precision, and Type safety.
 
 ## Responsibilities
 

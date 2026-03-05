@@ -222,7 +222,7 @@ function AppMockup() {
         <span className="w-3 h-3 rounded-full bg-yellow-400" />
         <span className="w-3 h-3 rounded-full bg-green-400" />
         <div className="ml-3 flex-1 bg-white/60 dark:bg-gray-600/60 rounded-md px-3 py-1 text-xs text-gray-500 dark:text-gray-400 font-mono">
-          app.eventosapp.com/dashboard
+          app.solennix.com/dashboard
         </div>
       </div>
 

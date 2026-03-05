@@ -2,7 +2,7 @@
 
 ## 1. Estado General de la Aplicación
 
-La aplicación `eventosapp` se encuentra en un estado funcional avanzado como un MVP robusto. La arquitectura basada en Go (Backend) y React/Vite (Frontend) está operando correctamente con Supabase/PostgreSQL como base de datos central.
+La aplicación `solennix` se encuentra en un estado funcional avanzado como un MVP robusto. La arquitectura basada en Go (Backend) y React/Vite (Frontend) está operando correctamente con Supabase/PostgreSQL como base de datos central.
 
 ### 1.1 Funcionalidades Principales Implementadas:
 

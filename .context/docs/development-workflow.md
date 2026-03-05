@@ -1,6 +1,6 @@
 # Development Workflow
 
-The engineering process for the EventosApp repository is designed to ensure high code quality and consistent feature delivery. Our day-to-day workflow follows a standard feature-driven approach:
+The engineering process for the Solennix repository is designed to ensure high code quality and consistent feature delivery. Our day-to-day workflow follows a standard feature-driven approach:
 
 1.  **Task Identification**: Developers pick up tasks from the project backlog. Each task should have a clear scope and objective.
 2.  **Implementation**: Features are developed in isolation using dedicated feature branches.

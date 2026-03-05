@@ -1,4 +1,4 @@
-# 🚀 EventosApp - Quick Deployment Guide (Feb 2026)
+# 🚀 Solennix - Quick Deployment Guide (Feb 2026)
 
 **Post-Security Hardening Update**
 
@@ -18,15 +18,15 @@ SMTP_HOST=smtp.sendgrid.net
 SMTP_PORT=587
 SMTP_USER=apikey
 SMTP_PASSWORD=SG.your_sendgrid_api_key_here
-SMTP_FROM=noreply@eventosapp.com
+SMTP_FROM=noreply@solennix.com
 
 # ===== FRONTEND URL (REQUIRED) =====
-FRONTEND_URL=https://app.eventosapp.com
+FRONTEND_URL=https://app.solennix.com
 
 # ===== EXISTING VARS (Verify) =====
-DATABASE_URL=postgresql://user:pass@host:5432/eventosapp
+DATABASE_URL=postgresql://user:pass@host:5432/solennix
 JWT_SECRET=your-super-secret-jwt-key-min-32-chars
-CORS_ALLOWED_ORIGINS=https://app.eventosapp.com,https://www.eventosapp.com
+CORS_ALLOWED_ORIGINS=https://app.solennix.com,https://www.solennix.com
 STRIPE_SECRET_KEY=sk_live_xxx
 STRIPE_WEBHOOK_SECRET=whsec_xxx
 STRIPE_PRO_PRICE_ID=price_xxx
@@ -51,8 +51,8 @@ SMTP_HOST=smtp.sendgrid.net
 SMTP_PORT=587
 SMTP_USER=apikey
 SMTP_PASSWORD=<from SendGrid>
-SMTP_FROM=noreply@eventosapp.com
-FRONTEND_URL=https://app.eventosapp.com
+SMTP_FROM=noreply@solennix.com
+FRONTEND_URL=https://app.solennix.com
 
 # Verify existing
 DATABASE_URL=<connection string>
@@ -70,8 +70,8 @@ services:
       - SMTP_PORT=587
       - SMTP_USER=apikey
       - SMTP_PASSWORD=${SMTP_PASSWORD}
-      - SMTP_FROM=noreply@eventosapp.com
-      - FRONTEND_URL=https://app.eventosapp.com
+      - SMTP_FROM=noreply@solennix.com
+      - FRONTEND_URL=https://app.solennix.com
 ```
 
 ---
@@ -92,7 +92,7 @@ go run main.go
 
 **Verify backend health:**
 ```bash
-curl https://api.eventosapp.com/health
+curl https://api.solennix.com/health
 # Should return: {"status":"ok"}
 ```
 
@@ -141,7 +141,7 @@ npm run build
 6. **⚠️ Note**: Frontend page pending - manually construct URL for now
 7. **Alternative**: Use curl to test:
    ```bash
-   curl -X POST https://api.eventosapp.com/api/auth/reset-password \
+   curl -X POST https://api.solennix.com/api/auth/reset-password \
      -H "Content-Type: application/json" \
      -d '{"token":"<from-email>","new_password":"NewPass123"}'
    ```
@@ -166,13 +166,13 @@ npm run build
 
 ```bash
 # Backend logs
-tail -f /var/log/eventosapp.log | grep "auth_token cookie"
+tail -f /var/log/solennix.log | grep "auth_token cookie"
 
 # Check for errors
-tail -f /var/log/eventosapp.log | grep "ERROR"
+tail -f /var/log/solennix.log | grep "ERROR"
 
 # SMTP send attempts
-tail -f /var/log/eventosapp.log | grep "Email sent"
+tail -f /var/log/solennix.log | grep "Email sent"
 ```
 
 ---
@@ -192,10 +192,10 @@ tail -f /var/log/eventosapp.log | grep "Email sent"
 **Debug:**
 ```bash
 # Backend logs
-grep "auth_token cookie" /var/log/eventosapp.log
+grep "auth_token cookie" /var/log/solennix.log
 
 # Check middleware
-curl -i https://api.eventosapp.com/api/auth/me \
+curl -i https://api.solennix.com/api/auth/me \
   -H "Cookie: auth_token=<token>"
 ```
 
@@ -218,9 +218,9 @@ curl -i https://api.eventosapp.com/api/auth/me \
 **Debug:**
 ```bash
 # Backend logs
-grep "Password reset" /var/log/eventosapp.log
-grep "Email sent" /var/log/eventosapp.log
-grep "SMTP" /var/log/eventosapp.log
+grep "Password reset" /var/log/solennix.log
+grep "Email sent" /var/log/solennix.log
+grep "SMTP" /var/log/solennix.log
 ```
 
 ---
@@ -335,9 +335,9 @@ Post-deployment security verification:
 ## 📞 Support
 
 **Issues?**
-- Check logs first: `tail -f /var/log/eventosapp.log`
+- Check logs first: `tail -f /var/log/solennix.log`
 - Review CHANGELOG.md for breaking changes
-- Open issue: https://github.com/tiagofur/eventosapp/issues
+- Open issue: https://github.com/tiagofur/solennix/issues
 
 **Emergency Rollback:**
 ```bash

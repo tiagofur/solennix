@@ -1,10 +1,10 @@
 # Documentation Index
 
-Welcome to the **EventosApp** technical documentation. This guide provides a comprehensive overview of the system architecture, development patterns, and core functionalities of the event management platform.
+Welcome to the **Solennix** technical documentation. This guide provides a comprehensive overview of the system architecture, development patterns, and core functionalities of the event management platform.
 
 ## Project Overview
 
-EventosApp is a specialized ERP solution designed for event planners and venue managers. Built with **React**, **TypeScript**, **Tailwind CSS**, and **Supabase**, it streamlines the lifecycle of event management—from inventory tracking and product costing to contract generation and financial reporting.
+Solennix is a specialized ERP solution designed for event planners and venue managers. Built with **React**, **TypeScript**, **Tailwind CSS**, and **Supabase**, it streamlines the lifecycle of event management—from inventory tracking and product costing to contract generation and financial reporting.
 
 ### Key Capabilities
 - **Event Lifecycle Management**: Track events from initial inquiry to post-event settlement.

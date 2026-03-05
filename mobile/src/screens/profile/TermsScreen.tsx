@@ -39,7 +39,7 @@ export default function TermsScreen({ navigation }: Props) {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>1. Uso del servicio</Text>
           <Text style={styles.body}>
-            Al usar EventosApp, aceptas estos t&#xE9;rminos. EventosApp es una plataforma
+            Al usar Solennix, aceptas estos t&#xE9;rminos. Solennix es una plataforma
             SaaS para organizadores de eventos. Te otorgamos una licencia limitada,
             no exclusiva y no transferible para usar el servicio seg&#xFA;n tu plan de
             suscripci&#xF3;n activo.{"\n\n"}
@@ -54,7 +54,7 @@ export default function TermsScreen({ navigation }: Props) {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>2. Suscripci&#xF3;n y pagos</Text>
           <Text style={styles.body}>
-            EventosApp ofrece planes de suscripci&#xF3;n mensual. Los cobros se realizan
+            Solennix ofrece planes de suscripci&#xF3;n mensual. Los cobros se realizan
             a trav&#xE9;s de la App Store de Apple o Google Play, seg&#xFA;n corresponda.{"\n\n"}
             &#x2022; El plan B&#xE1;sico es gratuito con funcionalidades limitadas{"\n"}
             &#x2022; El plan Pro incluye todas las funcionalidades sin restricciones{"\n"}
@@ -80,7 +80,7 @@ export default function TermsScreen({ navigation }: Props) {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>4. Propiedad intelectual</Text>
           <Text style={styles.body}>
-            EventosApp y su contenido son propiedad de Creapolis.Dev. Los datos que
+            Solennix y su contenido son propiedad de Creapolis.Dev. Los datos que
             introduces en la aplicaci&#xF3;n (clientes, eventos, productos) son de tu
             propiedad. Nos otorgas una licencia para almacenarlos y procesarlos
             &#xFA;nicamente con el fin de prestarte el servicio.
@@ -90,7 +90,7 @@ export default function TermsScreen({ navigation }: Props) {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>5. Disponibilidad del servicio</Text>
           <Text style={styles.body}>
-            Nos esforzamos por mantener EventosApp disponible 24/7, pero no garantizamos
+            Nos esforzamos por mantener Solennix disponible 24/7, pero no garantizamos
             disponibilidad ininterrumpida. Podemos realizar mantenimientos programados
             con previo aviso. No somos responsables por interrupciones causadas por
             factores externos.
@@ -100,7 +100,7 @@ export default function TermsScreen({ navigation }: Props) {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>6. Limitaci&#xF3;n de responsabilidad</Text>
           <Text style={styles.body}>
-            EventosApp se proporciona "tal cual". En la m&#xE1;xima medida permitida por
+            Solennix se proporciona "tal cual". En la m&#xE1;xima medida permitida por
             la ley aplicable:{"\n\n"}
             &#x2022; No garantizamos que el servicio sea libre de errores{"\n"}
             &#x2022; No somos responsables de p&#xE9;rdidas de datos por causas ajenas a nosotros{"\n"}

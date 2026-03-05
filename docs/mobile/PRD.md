@@ -1,10 +1,10 @@
-# PRD: EventosApp Mobile (React Native)
+# PRD: Solennix Mobile (React Native)
 
 > Última actualización: 2026-02-25
 
 ## 1. Resumen Ejecutivo
 
-Crear una app móvil en React Native (Expo) que replique el MVP de la web app de EventosApp, adaptada a patrones UX móviles (bottom tabs, stack navigation, pull-to-refresh, swipe actions). Reutiliza la lógica de servicios, tipos y utilidades de la web copiándolos al proyecto mobile. Conecta al mismo backend Go existente. Monetización vía RevenueCat (App Store / Play Store) en lugar de Stripe web.
+Crear una app móvil en React Native (Expo) que replique el MVP de la web app de Solennix, adaptada a patrones UX móviles (bottom tabs, stack navigation, pull-to-refresh, swipe actions). Reutiliza la lógica de servicios, tipos y utilidades de la web copiándolos al proyecto mobile. Conecta al mismo backend Go existente. Monetización vía RevenueCat (App Store / Play Store) en lugar de Stripe web.
 
 **Tiempo estimado:** 7-9 semanas (1 desarrollador full-time).
 
@@ -12,7 +12,7 @@ Crear una app móvil en React Native (Expo) que replique el MVP de la web app de
 
 ## 2. Contexto y Motivación
 
-EventosApp es un SaaS para organizadores de eventos (catering, banquetes, fiestas). El MVP web está completo con:
+Solennix es un SaaS para organizadores de eventos (catering, banquetes, fiestas). El MVP web está completo con:
 
 - Gestión de clientes
 - Catálogo de productos con recetas

@@ -3,7 +3,7 @@
 ---
 type: agent
 name: Test Writer
-description: Write comprehensive unit, integration, and E2E tests for the EventosApp ecosystem.
+description: Write comprehensive unit, integration, and E2E tests for the Solennix ecosystem.
 agentType: test-writer
 phases: [E, V]
 generated: 2026-02-17
@@ -13,7 +13,7 @@ scaffoldVersion: "2.0.0"
 
 ## Mission
 
-The Test Writer agent is responsible for ensuring the reliability, stability, and correctness of the EventosApp codebase. It supports the team by automating the verification of business logic in services, utility functions, and end-to-end user flows. Engage this agent when implementing new features, refactoring existing logic, or fixing bugs to prevent regressions.
+The Test Writer agent is responsible for ensuring the reliability, stability, and correctness of the Solennix codebase. It supports the team by automating the verification of business logic in services, utility functions, and end-to-end user flows. Engage this agent when implementing new features, refactoring existing logic, or fixing bugs to prevent regressions.
 
 ## Responsibilities
 

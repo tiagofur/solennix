@@ -1,6 +1,6 @@
 # Glossary & Domain Concepts
 
-The **EventosApp** is a management system designed for event organizers and buffet services. It centralizes the lifecycle of an event, from initial client contact and inventory management to financial settlement and document generation. The domain is centered around the relationship between products (items offered), inventory (raw materials), and the events where these are consumed.
+The **Solennix** is a management system designed for event organizers and buffet services. It centralizes the lifecycle of an event, from initial client contact and inventory management to financial settlement and document generation. The domain is centered around the relationship between products (items offered), inventory (raw materials), and the events where these are consumed.
 
 ### Domain Entities
 

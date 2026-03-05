@@ -2,7 +2,7 @@
 
 > **Última actualización:** 2026-03-02
 
-Este documento resume el estado general del proyecto EventosApp.
+Este documento resume el estado general del proyecto Solennix.
 
 ## Estado Actual
 

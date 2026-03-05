@@ -17,7 +17,7 @@ import DrawerNavigator from "./DrawerNavigator";
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const linking = {
-  prefixes: ["eventosapp://"],
+  prefixes: ["solennix://"],
   config: {
     screens: {
       Auth: {

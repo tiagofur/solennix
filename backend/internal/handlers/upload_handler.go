@@ -13,7 +13,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/tiagofur/eventosapp-backend/internal/middleware"
+	"github.com/tiagofur/solennix-backend/internal/middleware"
 	"golang.org/x/image/draw"
 )
 

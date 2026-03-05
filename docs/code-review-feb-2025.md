@@ -1,6 +1,6 @@
 # Code Review — Febrero 2025
 
-Revisión exhaustiva del repositorio EventosApp (frontend React + backend Go).
+Revisión exhaustiva del repositorio Solennix (frontend React + backend Go).
 Documento generado para dar continuidad al trabajo de corrección.
 
 ---

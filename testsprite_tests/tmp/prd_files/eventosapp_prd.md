@@ -1,7 +1,7 @@
-# EventosApp - Product Requirements Document
+# Solennix - Product Requirements Document
 
 ## Overview
-EventosApp is a SaaS platform for event organizers (catering, banquets, parties). It manages the full event lifecycle: clients, product catalogs with recipes, inventory, quotations with tax (IVA), payments, calendar, and PDF document generation.
+Solennix is a SaaS platform for event organizers (catering, banquets, parties). It manages the full event lifecycle: clients, product catalogs with recipes, inventory, quotations with tax (IVA), payments, calendar, and PDF document generation.
 
 ## Target Users
 Event organizers, catering businesses, banquet halls, party planners in Mexico and Latin America.

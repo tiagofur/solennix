@@ -1,6 +1,6 @@
 # Seguridad y Protección de Datos
 
-EventosApp implementa una estrategia de **Defensa en Profundidad** para asegurar que cada usuario acceda únicamente a su información.
+Solennix implementa una estrategia de **Defensa en Profundidad** para asegurar que cada usuario acceda únicamente a su información.
 
 ## Capas de Seguridad
 
@@ -12,7 +12,7 @@ EventosApp implementa una estrategia de **Defensa en Profundidad** para asegurar
 
 ### 2. Aislamiento en el Backend
 
-A diferencia de sistemas que dependen de políticas de DB (RLS), EventosApp refuerza el aislamiento en la capa de servicios de Go:
+A diferencia de sistemas que dependen de políticas de DB (RLS), Solennix refuerza el aislamiento en la capa de servicios de Go:
 
 - **Validación de Identidad:** El ID del usuario se extrae del JWT verificado.
 - **Filtrado Obligatorio:** Todas las sentencias SQL incluyen la cláusula `WHERE user_id = ?`.

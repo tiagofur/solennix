@@ -70,7 +70,7 @@ export default function LoginScreen({ navigation }: Props) {
         contentContainerStyle={styles.inner}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.title}>EventosApp</Text>
+        <Text style={styles.title}>Solennix</Text>
         <Text style={styles.subtitle}>Inicia sesión en tu cuenta</Text>
 
         {error && (

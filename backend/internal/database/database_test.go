@@ -26,7 +26,7 @@ func TestConnectPingFailure(t *testing.T) {
 }
 
 func TestConnectSuccessWhenDatabaseAvailable(t *testing.T) {
-	pool, err := Connect("postgres://eventosapp_user:eventosapp_password@localhost:5433/eventosapp?sslmode=disable")
+	pool, err := Connect("postgres://solennix_user:solennix_password@localhost:5433/solennix?sslmode=disable")
 	if err != nil {
 		t.Skipf("skipping success test when database is unavailable: %v", err)
 	}

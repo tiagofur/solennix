@@ -1,6 +1,6 @@
-# Feature Developer Playbook - EventosApp
+# Feature Developer Playbook - Solennix
 
-This playbook provides the context, workflows, and standards for a Feature Developer agent working on the EventosApp repository.
+This playbook provides the context, workflows, and standards for a Feature Developer agent working on the Solennix repository.
 
 ## 1. Role Overview
 The Feature Developer is responsible for implementing new features, UI components, and business logic. The primary focus is on expanding the event management capabilities, including product tracking, financials, and payment processing.

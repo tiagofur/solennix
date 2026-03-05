@@ -1,6 +1,6 @@
 # Data Flow & Integrations
 
-The EventosApp is designed as a data-driven React application that facilitates the management of event planning, inventory, and financial tracking. Data enters the system primarily through user interactions in the frontend forms (Clients, Products, Inventory, and Events). This data is processed through a structured service layer before being persisted in a Supabase PostgreSQL database.
+The Solennix is designed as a data-driven React application that facilitates the management of event planning, inventory, and financial tracking. Data enters the system primarily through user interactions in the frontend forms (Clients, Products, Inventory, and Events). This data is processed through a structured service layer before being persisted in a Supabase PostgreSQL database.
 
 The system follows a "Single Source of Truth" pattern where the database state is mirrored in the UI using React's state management and hooks. For read operations, data flows from Supabase through the service layer to the components. For write operations, data is validated in the UI, transformed in the service layer, and committed to the database via the Supabase client.
 
