@@ -24,9 +24,14 @@ import {
   endOfMonth,
   addMonths,
   subMonths,
-  parseISO,
   isSameDay,
 } from "date-fns";
+
+// Parse a yyyy-MM-dd date string as LOCAL date (avoids UTC midnight shifting day in negative-offset timezones)
+const parseLocalDate = (dateStr: string): Date => {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return new Date(y, m - 1, d);
+};
 import { es } from "date-fns/locale";
 import { logError } from "../../lib/errorHandler";
 import { usePagination } from "../../hooks/usePagination";
@@ -91,20 +96,11 @@ export const CalendarView: React.FC = () => {
   };
 
   const modifiers = {
-    booked: (events || []).map((e) => parseISO(e.event_date)),
-  };
-
-  const modifiersStyles = {
-    booked: {
-      fontWeight: "bold",
-      backgroundColor: "#FF6B35", // Brand Orange
-      color: "white",
-      borderRadius: "50%",
-    },
+    booked: (events || []).map((e) => parseLocalDate(e.event_date)),
   };
 
   const selectedEvents = (events || []).filter(
-    (e) => selectedDate && isSameDay(parseISO(e.event_date), selectedDate),
+    (e) => selectedDate && isSameDay(parseLocalDate(e.event_date), selectedDate),
   );
 
   // Pagination for list view
@@ -295,6 +291,20 @@ export const CalendarView: React.FC = () => {
                 color: #9CA3AF !important;
                 opacity: 0.5;
             }
+            /* Booked days (have events): orange circle with always-visible white text */
+            .rdp-booked .rdp-day_button {
+                background-color: #FF6B35 !important;
+                color: #ffffff !important;
+                border-radius: 50% !important;
+                font-weight: bold;
+            }
+            /* Selected booked day: add white ring so it's distinguishable from unselected booked */
+            .rdp-selected.rdp-booked .rdp-day_button:not([disabled]) {
+                background-color: #FF6B35 !important;
+                color: #ffffff !important;
+                border: 2px solid #ffffff !important;
+                box-shadow: 0 0 0 2px #FF6B35 !important;
+            }
             `}</style>
             <DayPicker
               mode="single"
@@ -304,7 +314,6 @@ export const CalendarView: React.FC = () => {
               onMonthChange={setCurrentMonth}
               locale={es}
               modifiers={modifiers}
-              modifiersStyles={modifiersStyles}
               className="flex justify-center"
             />
           </div>
@@ -584,11 +593,11 @@ export const CalendarView: React.FC = () => {
                             navigate(`/events/${event.id}/summary`);
                           }
                         }}
-                        aria-label={`Ver detalles del evento de ${event.client?.name} el ${format(parseISO(event.event_date), "d MMM yyyy", { locale: es })}`}
+                        aria-label={`Ver detalles del evento de ${event.client?.name} el ${format(parseLocalDate(event.event_date), "d MMM yyyy", { locale: es })}`}
                       >
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-semibold text-text">
-                            {format(parseISO(event.event_date), "d MMM yyyy", {
+                            {format(parseLocalDate(event.event_date), "d MMM yyyy", {
                               locale: es,
                             })}
                           </div>

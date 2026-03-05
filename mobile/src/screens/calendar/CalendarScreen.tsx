@@ -20,8 +20,13 @@ import {
   isSameDay,
   addMonths,
   subMonths,
-  parseISO,
 } from "date-fns";
+
+// Parse a yyyy-MM-dd string as LOCAL date to avoid UTC midnight shifting the day in negative-offset timezones
+const parseLocalDate = (dateStr: string): Date => {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return new Date(y, m - 1, d);
+};
 import { es } from "date-fns/locale";
 import {
   ChevronLeft,
@@ -122,12 +127,12 @@ export default function CalendarScreen({ navigation }: Props) {
   }, [loadEvents]);
 
   const getEventsForDate = (date: Date) => {
-    return events.filter((e) => isSameDay(parseISO(e.event_date), date));
+    return events.filter((e) => isSameDay(parseLocalDate(e.event_date), date));
   };
 
   const currentMonthEvents = useMemo(() => {
     return events.filter((e) => {
-      const d = parseISO(e.event_date);
+      const d = parseLocalDate(e.event_date);
       return d.getMonth() === currentDate.getMonth() && d.getFullYear() === currentDate.getFullYear();
     });
   }, [events, currentDate]);
@@ -179,7 +184,7 @@ export default function CalendarScreen({ navigation }: Props) {
       <View style={styles.eventInfo}>
         <Text style={styles.eventName}>{event.service_type}</Text>
         <Text style={styles.eventDetail}>
-          {format(parseISO(event.event_date), "d MMM yyyy", { locale: es })}
+          {format(parseLocalDate(event.event_date), "d MMM yyyy", { locale: es })}
           {" \u2022 "}
           {event.num_people} personas
           {event.location ? ` \u2022 ${event.location}` : ""}
@@ -484,7 +489,7 @@ const getStyles = (palette: typeof colors.light) => StyleSheet.create({
     color: palette.text,
   },
   dayTextSelected: {
-    color: palette.textInverse,
+    color: "#ffffff", // Always white — selected background is always orange (#ff6b35) in both themes
     fontWeight: "700",
   },
   dayTextToday: {
