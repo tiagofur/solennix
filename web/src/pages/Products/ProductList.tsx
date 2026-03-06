@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { productService } from '../../services/productService';
 import { Product } from '../../types/entities';
-import { Plus, Search, Edit, Trash2, Package, Download, UtensilsCrossed } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Package, Download, UtensilsCrossed, X } from 'lucide-react';
 import { exportToCsv } from '../../lib/exportCsv';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { logError } from '../../lib/errorHandler';
@@ -33,6 +33,7 @@ export const ProductList: React.FC = () => {
       setProducts(data || []);
     } catch (error) {
       logError('Error fetching products', error);
+      addToast('Error al cargar los productos.', 'error');
     } finally {
       setLoading(false);
     }
@@ -150,11 +151,21 @@ export const ProductList: React.FC = () => {
         <input
           id="product-search"
           type="search"
-          className="block w-full pl-10 pr-3 py-2 border border-border rounded-xl leading-5 bg-card text-text placeholder-text-secondary focus:outline-hidden focus:ring-2 focus:ring-primary/40 focus:border-primary sm:text-sm transition duration-150 ease-in-out"
+          className="block w-full pl-10 pr-8 py-2 border border-border rounded-xl leading-5 bg-card text-text placeholder-text-secondary focus:outline-hidden focus:ring-2 focus:ring-primary/40 focus:border-primary sm:text-sm transition duration-150 ease-in-out"
           placeholder="Buscar producto..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
+        {searchTerm && (
+          <button
+            type="button"
+            onClick={() => setSearchTerm('')}
+            className="absolute inset-y-0 right-0 pr-3 flex items-center text-text-secondary hover:text-text transition-colors"
+            aria-label="Limpiar búsqueda"
+          >
+            <X className="h-4 w-4" aria-hidden="true" />
+          </button>
+        )}
       </div>
 
       {categories.length > 0 && (
