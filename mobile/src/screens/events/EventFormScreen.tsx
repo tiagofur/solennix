@@ -38,7 +38,14 @@ import {
 } from "lucide-react-native";
 import { Image } from "expo-image";
 import { EventsStackParamList } from "../../types/navigation";
-import { Event, Client, Product, InventoryItem, EquipmentConflict, EquipmentSuggestion } from "../../types/entities";
+import {
+  Event,
+  Client,
+  Product,
+  InventoryItem,
+  EquipmentConflict,
+  EquipmentSuggestion,
+} from "../../types/entities";
 import { eventService } from "../../services/eventService";
 import { clientService } from "../../services/clientService";
 import { productService } from "../../services/productService";
@@ -49,7 +56,13 @@ import { useAuth } from "../../contexts/AuthContext";
 import { logError } from "../../lib/errorHandler";
 import { useStoreReview } from "../../hooks/useStoreReview";
 import { useTheme } from "../../hooks/useTheme";
-import { LoadingSpinner, UpgradeBanner, AppBottomSheet, Avatar, QuickClientSheet } from "../../components/shared";
+import {
+  LoadingSpinner,
+  UpgradeBanner,
+  AppBottomSheet,
+  Avatar,
+  QuickClientSheet,
+} from "../../components/shared";
 import { uploadService } from "../../services/uploadService";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
@@ -102,7 +115,8 @@ export default function EventFormScreen({ navigation, route }: Props) {
   const isEditing = !!id;
   const addToast = useToast((s) => s.addToast);
   const { user } = useAuth();
-  const { canCreateEvent, isBasicPlan, eventsThisMonth, limit } = usePlanLimits();
+  const { canCreateEvent, isBasicPlan, eventsThisMonth, limit } =
+    usePlanLimits();
   const { trackEventCreated } = useStoreReview();
   const { isDark } = useTheme();
   const palette = isDark ? colors.dark : colors.light;
@@ -112,16 +126,28 @@ export default function EventFormScreen({ navigation, route }: Props) {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(isEditing);
   const [saving, setSaving] = useState(false);
-  
+
   const [clients, setClients] = useState<Client[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-  const [selectedProducts, setSelectedProducts] = useState<SelectedProduct[]>([]);
+  const [selectedProducts, setSelectedProducts] = useState<SelectedProduct[]>(
+    [],
+  );
   const [extras, setExtras] = useState<SelectedExtra[]>([]);
-  const [productUnitCosts, setProductUnitCosts] = useState<Record<string, number>>({});
-  const [equipmentInventory, setEquipmentInventory] = useState<InventoryItem[]>([]);
-  const [selectedEquipment, setSelectedEquipment] = useState<SelectedEquipmentItem[]>([]);
-  const [equipmentConflicts, setEquipmentConflicts] = useState<EquipmentConflict[]>([]);
-  const [equipmentSuggestions, setEquipmentSuggestions] = useState<EquipmentSuggestion[]>([]);
+  const [productUnitCosts, setProductUnitCosts] = useState<
+    Record<string, number>
+  >({});
+  const [equipmentInventory, setEquipmentInventory] = useState<InventoryItem[]>(
+    [],
+  );
+  const [selectedEquipment, setSelectedEquipment] = useState<
+    SelectedEquipmentItem[]
+  >([]);
+  const [equipmentConflicts, setEquipmentConflicts] = useState<
+    EquipmentConflict[]
+  >([]);
+  const [equipmentSuggestions, setEquipmentSuggestions] = useState<
+    EquipmentSuggestion[]
+  >([]);
   const [showEquipmentPicker, setShowEquipmentPicker] = useState(false);
 
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -134,13 +160,13 @@ export default function EventFormScreen({ navigation, route }: Props) {
   const filteredClients = useMemo(() => {
     if (!clientSearch) return clients;
     const lower = clientSearch.toLowerCase();
-    return clients.filter(c => c.name.toLowerCase().includes(lower));
+    return clients.filter((c) => c.name.toLowerCase().includes(lower));
   }, [clients, clientSearch]);
 
   const filteredProducts = useMemo(() => {
     if (!productSearch) return products;
     const lower = productSearch.toLowerCase();
-    return products.filter(p => p.name.toLowerCase().includes(lower));
+    return products.filter((p) => p.name.toLowerCase().includes(lower));
   }, [products, productSearch]);
 
   const [formData, setFormData] = useState({
@@ -191,8 +217,10 @@ export default function EventFormScreen({ navigation, route }: Props) {
         inventoryService.getAll(),
       ]);
       setClients(clientsData || []);
-      setProducts((productsData || []).filter(p => p.is_active));
-      setEquipmentInventory((inventoryData || []).filter((i: any) => i.type === 'equipment'));
+      setProducts((productsData || []).filter((p) => p.is_active));
+      setEquipmentInventory(
+        (inventoryData || []).filter((i: any) => i.type === "equipment"),
+      );
 
       if (id) {
         const event = await eventService.getById(id);
@@ -207,13 +235,16 @@ export default function EventFormScreen({ navigation, route }: Props) {
           discount: event.discount,
           discount_type: "percent",
           tax_rate: event.tax_rate,
-          deposit_percent: event.deposit_percent ?? (user?.default_deposit_percent ?? 50),
+          deposit_percent:
+            event.deposit_percent ?? user?.default_deposit_percent ?? 50,
           location: event.location || "",
           city: event.city || "",
           notes: event.notes || "",
           requires_invoice: event.requires_invoice,
-          cancellation_days: event.cancellation_days ?? (user?.default_cancellation_days ?? 15),
-          refund_percent: event.refund_percent ?? (user?.default_refund_percent ?? 0),
+          cancellation_days:
+            event.cancellation_days ?? user?.default_cancellation_days ?? 15,
+          refund_percent:
+            event.refund_percent ?? user?.default_refund_percent ?? 0,
         });
 
         const eventProducts = await eventService.getProducts(id);
@@ -221,11 +252,11 @@ export default function EventFormScreen({ navigation, route }: Props) {
           setSelectedProducts(
             eventProducts.map((p: any) => ({
               product_id: p.product_id,
-              product: productsData?.find(pr => pr.id === p.product_id),
+              product: productsData?.find((pr) => pr.id === p.product_id),
               quantity: p.quantity,
               unit_price: p.unit_price,
               discount: p.discount,
-            }))
+            })),
           );
         }
 
@@ -237,7 +268,7 @@ export default function EventFormScreen({ navigation, route }: Props) {
               cost: e.cost,
               price: e.price,
               exclude_utility: e.exclude_utility ?? false,
-            }))
+            })),
           );
         }
 
@@ -247,8 +278,8 @@ export default function EventFormScreen({ navigation, route }: Props) {
             eventEquipment.map((eq: any) => ({
               inventory_id: eq.inventory_id,
               quantity: eq.quantity,
-              notes: eq.notes || '',
-            }))
+              notes: eq.notes || "",
+            })),
           );
         }
       }
@@ -269,14 +300,12 @@ export default function EventFormScreen({ navigation, route }: Props) {
   };
 
   const handleAddProduct = (product: Product) => {
-    const exists = selectedProducts.find(p => p.product_id === product.id);
+    const exists = selectedProducts.find((p) => p.product_id === product.id);
     if (exists) {
       setSelectedProducts(
-        selectedProducts.map(p =>
-          p.product_id === product.id
-            ? { ...p, quantity: p.quantity + 1 }
-            : p
-        )
+        selectedProducts.map((p) =>
+          p.product_id === product.id ? { ...p, quantity: p.quantity + 1 } : p,
+        ),
       );
     } else {
       setSelectedProducts([
@@ -300,24 +329,29 @@ export default function EventFormScreen({ navigation, route }: Props) {
   const handleProductQuantityChange = (index: number, quantity: number) => {
     setSelectedProducts(
       selectedProducts.map((p, i) =>
-        i === index ? { ...p, quantity: Math.max(1, quantity) } : p
-      )
+        i === index ? { ...p, quantity: Math.max(1, quantity) } : p,
+      ),
     );
   };
 
   const handleAddExtra = () => {
-    setExtras([...extras, { description: "", cost: 0, price: 0, exclude_utility: false }]);
+    setExtras([
+      ...extras,
+      { description: "", cost: 0, price: 0, exclude_utility: false },
+    ]);
   };
 
   const handleRemoveExtra = (index: number) => {
     setExtras(extras.filter((_, i) => i !== index));
   };
 
-  const handleExtraChange = (index: number, field: keyof SelectedExtra, value: string | number) => {
+  const handleExtraChange = (
+    index: number,
+    field: keyof SelectedExtra,
+    value: string | number,
+  ) => {
     setExtras(
-      extras.map((e, i) =>
-        i === index ? { ...e, [field]: value } : e
-      )
+      extras.map((e, i) => (i === index ? { ...e, [field]: value } : e)),
     );
   };
 
@@ -330,9 +364,10 @@ export default function EventFormScreen({ navigation, route }: Props) {
     const extrasSubtotal = extras.reduce((sum, e) => sum + e.price, 0);
 
     const subtotal = productsSubtotal + extrasSubtotal;
-    const discountAmount = formData.discount_type === "percent"
-      ? subtotal * (formData.discount / 100)
-      : formData.discount;
+    const discountAmount =
+      formData.discount_type === "percent"
+        ? subtotal * (formData.discount / 100)
+        : formData.discount;
     const afterDiscount = subtotal - discountAmount;
     const taxAmount = afterDiscount * (formData.tax_rate / 100);
     const total = afterDiscount + taxAmount;
@@ -356,19 +391,25 @@ export default function EventFormScreen({ navigation, route }: Props) {
   useEffect(() => {
     const fetchMissingCosts = async () => {
       const missing = selectedProducts
-        .filter(p => p.product_id && productUnitCosts[p.product_id] === undefined)
-        .map(p => p.product_id);
+        .filter(
+          (p) => p.product_id && productUnitCosts[p.product_id] === undefined,
+        )
+        .map((p) => p.product_id);
       if (missing.length === 0) return;
       try {
         const results = await productService.getIngredientsForProducts(missing);
         const costs: Record<string, number> = {};
-        missing.forEach(pid => { costs[pid] = 0; });
+        missing.forEach((pid) => {
+          costs[pid] = 0;
+        });
         (results || []).forEach((ing: any) => {
           if (ing.product_id && ing.quantity_required && ing.unit_cost) {
-            costs[ing.product_id] = (costs[ing.product_id] || 0) + ing.quantity_required * ing.unit_cost;
+            costs[ing.product_id] =
+              (costs[ing.product_id] || 0) +
+              ing.quantity_required * ing.unit_cost;
           }
         });
-        setProductUnitCosts(prev => ({ ...prev, ...costs }));
+        setProductUnitCosts((prev) => ({ ...prev, ...costs }));
       } catch {
         // silently fail — rentability section won't show costs
       }
@@ -379,15 +420,16 @@ export default function EventFormScreen({ navigation, route }: Props) {
   // Auto-suggest equipment when products change
   useEffect(() => {
     const products = selectedProducts
-      .filter(p => p.product_id)
-      .map(p => ({ product_id: p.product_id, quantity: p.quantity }));
+      .filter((p) => p.product_id)
+      .map((p) => ({ product_id: p.product_id, quantity: p.quantity }));
     if (products.length === 0) {
       setEquipmentSuggestions([]);
       return;
     }
     const fetchSuggestions = async () => {
       try {
-        const suggestions = await eventService.getEquipmentSuggestions(products);
+        const suggestions =
+          await eventService.getEquipmentSuggestions(products);
         setEquipmentSuggestions(suggestions || []);
       } catch {
         // Silently ignore
@@ -398,7 +440,9 @@ export default function EventFormScreen({ navigation, route }: Props) {
 
   // Check equipment conflicts (debounced)
   useEffect(() => {
-    const selectedIds = selectedEquipment.map(eq => eq.inventory_id).filter(Boolean);
+    const selectedIds = selectedEquipment
+      .map((eq) => eq.inventory_id)
+      .filter(Boolean);
     if (selectedIds.length === 0 || !formData.event_date) {
       setEquipmentConflicts([]);
       return;
@@ -418,28 +462,47 @@ export default function EventFormScreen({ navigation, route }: Props) {
       }
     }, 500);
     return () => clearTimeout(timer);
-  }, [selectedEquipment, formData.event_date, formData.start_time, formData.end_time, id]);
+  }, [
+    selectedEquipment,
+    formData.event_date,
+    formData.start_time,
+    formData.end_time,
+    id,
+  ]);
 
   const handleAddEquipmentItem = (item: InventoryItem) => {
-    if (!selectedEquipment.some(eq => eq.inventory_id === item.id)) {
-      setSelectedEquipment(prev => [...prev, { inventory_id: item.id, quantity: 1, notes: '' }]);
+    if (!selectedEquipment.some((eq) => eq.inventory_id === item.id)) {
+      setSelectedEquipment((prev) => [
+        ...prev,
+        { inventory_id: item.id, quantity: 1, notes: "" },
+      ]);
     }
     setShowEquipmentPicker(false);
   };
 
-  const handleQuickAddSuggestion = (suggestion: { id: string; suggested_quantity: number }) => {
-    if (!selectedEquipment.some(eq => eq.inventory_id === suggestion.id)) {
-      setSelectedEquipment(prev => [...prev, { inventory_id: suggestion.id, quantity: suggestion.suggested_quantity, notes: '' }]);
+  const handleQuickAddSuggestion = (suggestion: {
+    id: string;
+    suggested_quantity: number;
+  }) => {
+    if (!selectedEquipment.some((eq) => eq.inventory_id === suggestion.id)) {
+      setSelectedEquipment((prev) => [
+        ...prev,
+        {
+          inventory_id: suggestion.id,
+          quantity: suggestion.suggested_quantity,
+          notes: "",
+        },
+      ]);
     }
   };
 
   const handleRemoveEquipment = (index: number) => {
-    setSelectedEquipment(prev => prev.filter((_, i) => i !== index));
+    setSelectedEquipment((prev) => prev.filter((_, i) => i !== index));
   };
 
   const filteredEquipment = useMemo(() => {
     return equipmentInventory.filter(
-      e => !selectedEquipment.some(se => se.inventory_id === e.id)
+      (e) => !selectedEquipment.some((se) => se.inventory_id === e.id),
     );
   }, [equipmentInventory, selectedEquipment]);
 
@@ -486,6 +549,7 @@ export default function EventFormScreen({ navigation, route }: Props) {
         num_people: formData.num_people,
         status: formData.status,
         discount: formData.discount,
+        discount_type: formData.discount_type,
         requires_invoice: formData.requires_invoice,
         tax_rate: formData.tax_rate,
         tax_amount: totals.taxAmount,
@@ -510,7 +574,7 @@ export default function EventFormScreen({ navigation, route }: Props) {
 
       await eventService.updateItems(
         eventId!,
-        selectedProducts.map(p => ({
+        selectedProducts.map((p) => ({
           productId: p.product_id,
           quantity: p.quantity,
           unitPrice: p.unit_price,
@@ -518,8 +582,8 @@ export default function EventFormScreen({ navigation, route }: Props) {
         })),
         extras,
         selectedEquipment
-          .filter(eq => eq.inventory_id)
-          .map(eq => ({
+          .filter((eq) => eq.inventory_id)
+          .map((eq) => ({
             inventoryId: eq.inventory_id,
             quantity: eq.quantity,
             notes: eq.notes || undefined,
@@ -539,7 +603,7 @@ export default function EventFormScreen({ navigation, route }: Props) {
 
   if (loading) return <LoadingSpinner />;
 
-  const selectedClient = clients.find(c => c.id === formData.client_id);
+  const selectedClient = clients.find((c) => c.id === formData.client_id);
 
   return (
     <SafeAreaView style={styles.container} edges={[]}>
@@ -627,7 +691,11 @@ export default function EventFormScreen({ navigation, route }: Props) {
               <Text style={styles.selectorLabel}>Fecha del Evento</Text>
               <Text style={styles.selectorValue}>
                 {formData.event_date
-                  ? format(new Date(formData.event_date), "d 'de' MMMM 'de' yyyy", { locale: es })
+                  ? format(
+                      new Date(formData.event_date),
+                      "d 'de' MMMM 'de' yyyy",
+                      { locale: es },
+                    )
                   : "Seleccionar fecha..."}
               </Text>
             </TouchableOpacity>
@@ -639,7 +707,10 @@ export default function EventFormScreen({ navigation, route }: Props) {
                 onChange={(event, date) => {
                   setShowDatePicker(false);
                   if (date) {
-                    setFormData({ ...formData, event_date: date.toISOString().split("T")[0] });
+                    setFormData({
+                      ...formData,
+                      event_date: date.toISOString().split("T")[0],
+                    });
                   }
                 }}
               />
@@ -651,7 +722,9 @@ export default function EventFormScreen({ navigation, route }: Props) {
                 <TextInput
                   style={styles.input}
                   value={formData.start_time}
-                  onChangeText={(v) => setFormData({ ...formData, start_time: v })}
+                  onChangeText={(v) =>
+                    setFormData({ ...formData, start_time: v })
+                  }
                   placeholder="14:00"
                 />
               </View>
@@ -660,7 +733,9 @@ export default function EventFormScreen({ navigation, route }: Props) {
                 <TextInput
                   style={styles.input}
                   value={formData.end_time}
-                  onChangeText={(v) => setFormData({ ...formData, end_time: v })}
+                  onChangeText={(v) =>
+                    setFormData({ ...formData, end_time: v })
+                  }
                   placeholder="18:00"
                 />
               </View>
@@ -670,7 +745,9 @@ export default function EventFormScreen({ navigation, route }: Props) {
             <TextInput
               style={styles.input}
               value={formData.service_type}
-              onChangeText={(v) => setFormData({ ...formData, service_type: v })}
+              onChangeText={(v) =>
+                setFormData({ ...formData, service_type: v })
+              }
               placeholder="Ej: Decoración, Banquete, Fotografía"
             />
 
@@ -678,34 +755,43 @@ export default function EventFormScreen({ navigation, route }: Props) {
             <TextInput
               style={styles.input}
               value={formData.num_people.toString()}
-              onChangeText={(v) => setFormData({ ...formData, num_people: parseInt(v) || 0 })}
+              onChangeText={(v) =>
+                setFormData({ ...formData, num_people: parseInt(v) || 0 })
+              }
               keyboardType="number-pad"
               placeholder="0"
             />
 
             <Text style={styles.inputLabel}>Estado</Text>
             <View style={styles.statusButtons}>
-              {(["quoted", "confirmed", "completed", "cancelled"] as const).map((status) => (
-                <TouchableOpacity
-                  key={status}
-                  style={[
-                    styles.statusButton,
-                    formData.status === status && styles.statusButtonActive,
-                  ]}
-                  onPress={() => setFormData({ ...formData, status })}
-                >
-                  <Text
+              {(["quoted", "confirmed", "completed", "cancelled"] as const).map(
+                (status) => (
+                  <TouchableOpacity
+                    key={status}
                     style={[
-                      styles.statusButtonText,
-                      formData.status === status && styles.statusButtonTextActive,
+                      styles.statusButton,
+                      formData.status === status && styles.statusButtonActive,
                     ]}
+                    onPress={() => setFormData({ ...formData, status })}
                   >
-                    {status === "quoted" ? "Cotizado" :
-                     status === "confirmed" ? "Confirmado" :
-                     status === "completed" ? "Completado" : "Cancelado"}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+                    <Text
+                      style={[
+                        styles.statusButtonText,
+                        formData.status === status &&
+                          styles.statusButtonTextActive,
+                      ]}
+                    >
+                      {status === "quoted"
+                        ? "Cotizado"
+                        : status === "confirmed"
+                          ? "Confirmado"
+                          : status === "completed"
+                            ? "Completado"
+                            : "Cancelado"}
+                    </Text>
+                  </TouchableOpacity>
+                ),
+              )}
             </View>
 
             <Text style={styles.inputLabel}>Lugar</Text>
@@ -732,9 +818,7 @@ export default function EventFormScreen({ navigation, route }: Props) {
             </View>
 
             {selectedProducts.length === 0 ? (
-              <Text style={styles.emptyText}>
-                Agrega productos al evento.
-              </Text>
+              <Text style={styles.emptyText}>Agrega productos al evento.</Text>
             ) : (
               selectedProducts.map((p, index) => (
                 <View key={index} style={styles.productCard}>
@@ -746,18 +830,24 @@ export default function EventFormScreen({ navigation, route }: Props) {
                   </View>
                   <View style={styles.productQuantity}>
                     <TouchableOpacity
-                      onPress={() => handleProductQuantityChange(index, p.quantity - 1)}
+                      onPress={() =>
+                        handleProductQuantityChange(index, p.quantity - 1)
+                      }
                     >
                       <Text style={styles.quantityBtn}>-</Text>
                     </TouchableOpacity>
                     <TextInput
                       style={styles.quantityInput}
                       value={p.quantity.toString()}
-                      onChangeText={(v) => handleProductQuantityChange(index, parseInt(v) || 1)}
+                      onChangeText={(v) =>
+                        handleProductQuantityChange(index, parseInt(v) || 1)
+                      }
                       keyboardType="number-pad"
                     />
                     <TouchableOpacity
-                      onPress={() => handleProductQuantityChange(index, p.quantity + 1)}
+                      onPress={() =>
+                        handleProductQuantityChange(index, p.quantity + 1)
+                      }
                     >
                       <Text style={styles.quantityBtn}>+</Text>
                     </TouchableOpacity>
@@ -772,7 +862,9 @@ export default function EventFormScreen({ navigation, route }: Props) {
             {selectedProducts.length > 0 && (
               <View style={styles.totalRow}>
                 <Text style={styles.totalLabel}>Subtotal productos</Text>
-                <Text style={styles.totalValue}>{formatCurrency(totals.productsSubtotal)}</Text>
+                <Text style={styles.totalValue}>
+                  {formatCurrency(totals.productsSubtotal)}
+                </Text>
               </View>
             )}
           </View>
@@ -782,7 +874,10 @@ export default function EventFormScreen({ navigation, route }: Props) {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Extras</Text>
-              <TouchableOpacity style={styles.addButton} onPress={handleAddExtra}>
+              <TouchableOpacity
+                style={styles.addButton}
+                onPress={handleAddExtra}
+              >
                 <Plus color={palette.primary} size={18} />
                 <Text style={styles.addButtonText}>Agregar</Text>
               </TouchableOpacity>
@@ -798,7 +893,9 @@ export default function EventFormScreen({ navigation, route }: Props) {
                   <TextInput
                     style={styles.extraInput}
                     value={extra.description}
-                    onChangeText={(v) => handleExtraChange(index, "description", v)}
+                    onChangeText={(v) =>
+                      handleExtraChange(index, "description", v)
+                    }
                     placeholder="Descripción del extra"
                   />
                   <View style={styles.extraRow}>
@@ -809,11 +906,17 @@ export default function EventFormScreen({ navigation, route }: Props) {
                         value={extra.cost.toString()}
                         onChangeText={(v) => {
                           const cost = parseFloat(v) || 0;
-                          setExtras(extras.map((e, i) =>
-                            i === index
-                              ? { ...e, cost, price: e.exclude_utility ? cost : e.price }
-                              : e
-                          ));
+                          setExtras(
+                            extras.map((e, i) =>
+                              i === index
+                                ? {
+                                    ...e,
+                                    cost,
+                                    price: e.exclude_utility ? cost : e.price,
+                                  }
+                                : e,
+                            ),
+                          );
                         }}
                         keyboardType="decimal-pad"
                       />
@@ -821,9 +924,14 @@ export default function EventFormScreen({ navigation, route }: Props) {
                     <View style={styles.extraHalf}>
                       <Text style={styles.extraLabel}>Precio</Text>
                       <TextInput
-                        style={[styles.extraPriceInput, extra.exclude_utility && { opacity: 0.5 }]}
+                        style={[
+                          styles.extraPriceInput,
+                          extra.exclude_utility && { opacity: 0.5 },
+                        ]}
                         value={extra.price.toString()}
-                        onChangeText={(v) => handleExtraChange(index, "price", parseFloat(v) || 0)}
+                        onChangeText={(v) =>
+                          handleExtraChange(index, "price", parseFloat(v) || 0)
+                        }
                         keyboardType="decimal-pad"
                         editable={!extra.exclude_utility}
                       />
@@ -833,16 +941,33 @@ export default function EventFormScreen({ navigation, route }: Props) {
                     </TouchableOpacity>
                   </View>
                   <View style={styles.extraToggleRow}>
-                    <Text style={styles.extraLabel}>Solo cobrar costo (sin utilidad)</Text>
+                    <Text style={styles.extraLabel}>
+                      Solo cobrar costo (sin utilidad)
+                    </Text>
                     <Switch
                       value={extra.exclude_utility}
                       onValueChange={(v) =>
-                        setExtras(extras.map((e, i) =>
-                          i === index ? { ...e, exclude_utility: v, price: v ? e.cost : e.price } : e
-                        ))
+                        setExtras(
+                          extras.map((e, i) =>
+                            i === index
+                              ? {
+                                  ...e,
+                                  exclude_utility: v,
+                                  price: v ? e.cost : e.price,
+                                }
+                              : e,
+                          ),
+                        )
                       }
-                      trackColor={{ false: palette.separator, true: palette.primary + "80" }}
-                      thumbColor={extra.exclude_utility ? palette.primary : palette.surface}
+                      trackColor={{
+                        false: palette.separator,
+                        true: palette.primary + "80",
+                      }}
+                      thumbColor={
+                        extra.exclude_utility
+                          ? palette.primary
+                          : palette.surface
+                      }
                     />
                   </View>
                 </View>
@@ -852,7 +977,9 @@ export default function EventFormScreen({ navigation, route }: Props) {
             {extras.length > 0 && (
               <View style={styles.totalRow}>
                 <Text style={styles.totalLabel}>Subtotal extras</Text>
-                <Text style={styles.totalValue}>{formatCurrency(totals.extrasSubtotal)}</Text>
+                <Text style={styles.totalValue}>
+                  {formatCurrency(totals.extrasSubtotal)}
+                </Text>
               </View>
             )}
           </View>
@@ -861,49 +988,139 @@ export default function EventFormScreen({ navigation, route }: Props) {
         {step === 4 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Equipo</Text>
-            <Text style={{ ...typography.caption, color: palette.textMuted, marginBottom: spacing.md }}>
+            <Text
+              style={{
+                ...typography.caption,
+                color: palette.textMuted,
+                marginBottom: spacing.md,
+              }}
+            >
               Asigna equipos reutilizables. No afecta costos del evento.
             </Text>
 
             {/* Conflict warnings */}
             {equipmentConflicts.length > 0 && (
-              <View style={{ backgroundColor: palette.warningBackground || '#FEF3C7', borderRadius: 12, padding: spacing.md, marginBottom: spacing.md, borderWidth: 1, borderColor: palette.warning || '#F59E0B' }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.xs }}>
-                  <AlertTriangle color={palette.warning || '#F59E0B'} size={16} />
-                  <Text style={{ ...typography.caption, color: palette.warning || '#F59E0B', fontWeight: '600', marginLeft: spacing.xs }}>
+              <View
+                style={{
+                  backgroundColor: palette.warningBg || "#FEF3C7",
+                  borderRadius: 12,
+                  padding: spacing.md,
+                  marginBottom: spacing.md,
+                  borderWidth: 1,
+                  borderColor: palette.warning || "#F59E0B",
+                }}
+              >
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    marginBottom: spacing.xs,
+                  }}
+                >
+                  <AlertTriangle
+                    color={palette.warning || "#F59E0B"}
+                    size={16}
+                  />
+                  <Text
+                    style={{
+                      ...typography.caption,
+                      color: palette.warning || "#F59E0B",
+                      fontWeight: "600",
+                      marginLeft: spacing.xs,
+                    }}
+                  >
                     Conflictos detectados
                   </Text>
                 </View>
                 {equipmentConflicts.map((c, i) => (
-                  <Text key={i} style={{ ...typography.caption, color: palette.warning || '#D97706', marginLeft: spacing.lg }}>
+                  <Text
+                    key={i}
+                    style={{
+                      ...typography.caption,
+                      color: palette.warning || "#D97706",
+                      marginLeft: spacing.lg,
+                    }}
+                  >
                     {c.equipment_name} — {c.service_type}
-                    {c.start_time && c.end_time ? `, ${c.start_time.slice(0, 5)}-${c.end_time.slice(0, 5)}` : ''}
-                    {c.client_name ? ` (${c.client_name})` : ''}
+                    {c.start_time && c.end_time
+                      ? `, ${c.start_time.slice(0, 5)}-${c.end_time.slice(0, 5)}`
+                      : ""}
+                    {c.client_name ? ` (${c.client_name})` : ""}
                   </Text>
                 ))}
               </View>
             )}
 
             {/* Suggestions */}
-            {equipmentSuggestions.filter(s => !selectedEquipment.some(eq => eq.inventory_id === s.id)).length > 0 && (
-              <View style={{ backgroundColor: palette.infoBackground || '#EFF6FF', borderRadius: 12, padding: spacing.md, marginBottom: spacing.md, borderWidth: 1, borderColor: palette.info || '#3B82F6' }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.sm }}>
-                  <Lightbulb color={palette.info || '#3B82F6'} size={16} />
-                  <Text style={{ ...typography.caption, color: palette.info || '#3B82F6', fontWeight: '600', marginLeft: spacing.xs }}>
+            {equipmentSuggestions.filter(
+              (s) => !selectedEquipment.some((eq) => eq.inventory_id === s.id),
+            ).length > 0 && (
+              <View
+                style={{
+                  backgroundColor: palette.infoBg || "#EFF6FF",
+                  borderRadius: 12,
+                  padding: spacing.md,
+                  marginBottom: spacing.md,
+                  borderWidth: 1,
+                  borderColor: palette.info || "#3B82F6",
+                }}
+              >
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    marginBottom: spacing.sm,
+                  }}
+                >
+                  <Lightbulb color={palette.info || "#3B82F6"} size={16} />
+                  <Text
+                    style={{
+                      ...typography.caption,
+                      color: palette.info || "#3B82F6",
+                      fontWeight: "600",
+                      marginLeft: spacing.xs,
+                    }}
+                  >
                     Sugerido por tus productos
                   </Text>
                 </View>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs }}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    flexWrap: "wrap",
+                    gap: spacing.xs,
+                  }}
+                >
                   {equipmentSuggestions
-                    .filter(s => !selectedEquipment.some(eq => eq.inventory_id === s.id))
-                    .map(s => (
+                    .filter(
+                      (s) =>
+                        !selectedEquipment.some(
+                          (eq) => eq.inventory_id === s.id,
+                        ),
+                    )
+                    .map((s) => (
                       <TouchableOpacity
                         key={s.id}
-                        style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: palette.info || '#DBEAFE', paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, borderRadius: 8 }}
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          backgroundColor: palette.info || "#DBEAFE",
+                          paddingHorizontal: spacing.sm,
+                          paddingVertical: spacing.xs,
+                          borderRadius: 8,
+                        }}
                         onPress={() => handleQuickAddSuggestion(s)}
                       >
-                        <Plus color={palette.info || '#3B82F6'} size={14} />
-                        <Text style={{ ...typography.caption, color: palette.info || '#2563EB', marginLeft: 4 }}>{s.ingredient_name} ×{s.suggested_quantity}</Text>
+                        <Plus color={palette.info || "#3B82F6"} size={14} />
+                        <Text
+                          style={{
+                            ...typography.caption,
+                            color: palette.info || "#2563EB",
+                            marginLeft: 4,
+                          }}
+                        >
+                          {s.ingredient_name} ×{s.suggested_quantity}
+                        </Text>
                       </TouchableOpacity>
                     ))}
                 </View>
@@ -912,22 +1129,58 @@ export default function EventFormScreen({ navigation, route }: Props) {
 
             {/* Selected equipment */}
             {selectedEquipment.map((eq, i) => {
-              const item = equipmentInventory.find(e => e.id === eq.inventory_id);
+              const item = equipmentInventory.find(
+                (e) => e.id === eq.inventory_id,
+              );
               return (
-                <View key={i} style={[styles.productRow, { marginBottom: spacing.sm }]}>
+                <View
+                  key={i}
+                  style={[styles.productCard, { marginBottom: spacing.sm }]}
+                >
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.productName}>{item?.ingredient_name || 'Equipo'}</Text>
-                    <Text style={{ ...typography.caption, color: palette.textMuted }}>
+                    <Text style={styles.productName}>
+                      {item?.ingredient_name || "Equipo"}
+                    </Text>
+                    <Text
+                      style={{
+                        ...typography.caption,
+                        color: palette.textMuted,
+                      }}
+                    >
                       Sin costo - Activo reutilizable
                     </Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: spacing.xs }}>
-                      <Text style={{ ...typography.caption, color: palette.textSecondary, marginRight: spacing.xs }}>Cant:</Text>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        marginTop: spacing.xs,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          ...typography.caption,
+                          color: palette.textSecondary,
+                          marginRight: spacing.xs,
+                        }}
+                      >
+                        Cant:
+                      </Text>
                       <TextInput
-                        style={[styles.input, { width: 60, paddingVertical: spacing.xs, textAlign: 'center' }]}
+                        style={[
+                          styles.input,
+                          {
+                            width: 60,
+                            paddingVertical: spacing.xs,
+                            textAlign: "center",
+                          },
+                        ]}
                         value={eq.quantity.toString()}
                         onChangeText={(v) => {
                           const next = [...selectedEquipment];
-                          next[i] = { ...next[i], quantity: Math.max(1, parseInt(v) || 1) };
+                          next[i] = {
+                            ...next[i],
+                            quantity: Math.max(1, parseInt(v) || 1),
+                          };
                           setSelectedEquipment(next);
                         }}
                         keyboardType="number-pad"
@@ -961,7 +1214,9 @@ export default function EventFormScreen({ navigation, route }: Props) {
                 <TextInput
                   style={styles.input}
                   value={formData.discount.toString()}
-                  onChangeText={(v) => setFormData({ ...formData, discount: parseFloat(v) || 0 })}
+                  onChangeText={(v) =>
+                    setFormData({ ...formData, discount: parseFloat(v) || 0 })
+                  }
                   keyboardType="decimal-pad"
                 />
               </View>
@@ -970,7 +1225,9 @@ export default function EventFormScreen({ navigation, route }: Props) {
                 <TextInput
                   style={styles.input}
                   value={formData.tax_rate.toString()}
-                  onChangeText={(v) => setFormData({ ...formData, tax_rate: parseFloat(v) || 0 })}
+                  onChangeText={(v) =>
+                    setFormData({ ...formData, tax_rate: parseFloat(v) || 0 })
+                  }
                   keyboardType="decimal-pad"
                 />
               </View>
@@ -980,7 +1237,12 @@ export default function EventFormScreen({ navigation, route }: Props) {
             <TextInput
               style={styles.input}
               value={formData.deposit_percent.toString()}
-              onChangeText={(v) => setFormData({ ...formData, deposit_percent: parseFloat(v) || 0 })}
+              onChangeText={(v) =>
+                setFormData({
+                  ...formData,
+                  deposit_percent: parseFloat(v) || 0,
+                })
+              }
               keyboardType="number-pad"
             />
 
@@ -997,27 +1259,50 @@ export default function EventFormScreen({ navigation, route }: Props) {
             <View style={styles.totalsCard}>
               <View style={styles.totalLine}>
                 <Text style={styles.totalLineLabel}>Subtotal</Text>
-                <Text style={styles.totalLineValue}>{formatCurrency(totals.subtotal)}</Text>
+                <Text style={styles.totalLineValue}>
+                  {formatCurrency(totals.subtotal)}
+                </Text>
               </View>
               {formData.discount > 0 && (
                 <View style={styles.totalLine}>
                   <Text style={styles.totalLineLabel}>Descuento</Text>
-                  <Text style={[styles.totalLineValue, { color: palette.error }]}>
+                  <Text
+                    style={[styles.totalLineValue, { color: palette.error }]}
+                  >
                     -{formatCurrency(totals.discountAmount)}
                   </Text>
                 </View>
               )}
               <View style={styles.totalLine}>
-                <Text style={styles.totalLineLabel}>IVA ({formData.tax_rate}%)</Text>
-                <Text style={styles.totalLineValue}>{formatCurrency(totals.taxAmount)}</Text>
+                <Text style={styles.totalLineLabel}>
+                  IVA ({formData.tax_rate}%)
+                </Text>
+                <Text style={styles.totalLineValue}>
+                  {formatCurrency(totals.taxAmount)}
+                </Text>
               </View>
               <View style={[styles.totalLine, styles.totalLineBold]}>
                 <Text style={styles.totalLineLabelBold}>Total</Text>
-                <Text style={styles.totalLineValueBold}>{formatCurrency(totals.total)}</Text>
+                <Text style={styles.totalLineValueBold}>
+                  {formatCurrency(totals.total)}
+                </Text>
               </View>
-              <View style={[styles.totalLine, { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: palette.separator, paddingTop: spacing.sm }]}>
-                <Text style={styles.totalLineLabel}>Anticipo ({formData.deposit_percent}%)</Text>
-                <Text style={[styles.totalLineValue, { color: palette.primary }]}>
+              <View
+                style={[
+                  styles.totalLine,
+                  {
+                    borderTopWidth: StyleSheet.hairlineWidth,
+                    borderTopColor: palette.separator,
+                    paddingTop: spacing.sm,
+                  },
+                ]}
+              >
+                <Text style={styles.totalLineLabel}>
+                  Anticipo ({formData.deposit_percent}%)
+                </Text>
+                <Text
+                  style={[styles.totalLineValue, { color: palette.primary }]}
+                >
                   {formatCurrency(totals.deposit)}
                 </Text>
               </View>
@@ -1026,33 +1311,52 @@ export default function EventFormScreen({ navigation, route }: Props) {
             {/* Rentability metrics (internal) */}
             {(() => {
               const totalProductCost = selectedProducts.reduce(
-                (sum, p) => sum + (productUnitCosts[p.product_id] || 0) * p.quantity, 0
+                (sum, p) =>
+                  sum + (productUnitCosts[p.product_id] || 0) * p.quantity,
+                0,
               );
               const totalExtraCost = extras.reduce((sum, e) => sum + e.cost, 0);
               const totalCost = totalProductCost + totalExtraCost;
               const revenueExTax = totals.total - totals.taxAmount;
               const profit = revenueExTax - totalCost;
               const passThroughRevenue = extras
-                .filter(e => e.exclude_utility)
+                .filter((e) => e.exclude_utility)
                 .reduce((sum, e) => sum + e.price, 0);
               const adjustedRevenue = revenueExTax - passThroughRevenue;
-              const margin = adjustedRevenue > 0 ? (profit / adjustedRevenue) * 100 : 0;
+              const margin =
+                adjustedRevenue > 0 ? (profit / adjustedRevenue) * 100 : 0;
               return (
                 <View style={styles.rentabilityCard}>
-                  <Text style={styles.rentabilityTitle}>Métricas de Rentabilidad (Interno)</Text>
+                  <Text style={styles.rentabilityTitle}>
+                    Métricas de Rentabilidad (Interno)
+                  </Text>
                   <View style={styles.totalLine}>
                     <Text style={styles.totalLineLabel}>Costo Total</Text>
-                    <Text style={styles.totalLineValue}>{formatCurrency(totalCost)}</Text>
+                    <Text style={styles.totalLineValue}>
+                      {formatCurrency(totalCost)}
+                    </Text>
                   </View>
                   <View style={styles.totalLine}>
                     <Text style={styles.totalLineLabel}>Utilidad Neta</Text>
-                    <Text style={[styles.totalLineValue, { color: profit >= 0 ? palette.success : palette.error }]}>
+                    <Text
+                      style={[
+                        styles.totalLineValue,
+                        {
+                          color: profit >= 0 ? palette.success : palette.error,
+                        },
+                      ]}
+                    >
                       {formatCurrency(profit)}
                     </Text>
                   </View>
                   <View style={styles.totalLine}>
                     <Text style={styles.totalLineLabel}>Margen</Text>
-                    <Text style={[styles.totalLineValue, { color: palette.info || palette.primary }]}>
+                    <Text
+                      style={[
+                        styles.totalLineValue,
+                        { color: palette.info || palette.primary },
+                      ]}
+                    >
                       {margin.toFixed(1)}%
                     </Text>
                   </View>
@@ -1063,15 +1367,20 @@ export default function EventFormScreen({ navigation, route }: Props) {
         )}
       </ScrollView>
 
-      <View style={[styles.footer, { paddingBottom: tabBarHeight + spacing.sm }]}>
+      <View
+        style={[styles.footer, { paddingBottom: tabBarHeight + spacing.sm }]}
+      >
         <TouchableOpacity
           style={[styles.navButton, step === 1 && styles.navButtonDisabled]}
           onPress={handlePrev}
           disabled={step === 1}
         >
-          <ChevronLeft color={step === 1 ? palette.textMuted : palette.primary} size={20} />
+          <ChevronLeft
+            color={step === 1 ? palette.textMuted : palette.primary}
+            size={20}
+          />
         </TouchableOpacity>
-        
+
         <TouchableOpacity
           style={[styles.saveButton, saving && styles.saveButtonDisabled]}
           onPress={handleNext}
@@ -1099,9 +1408,12 @@ export default function EventFormScreen({ navigation, route }: Props) {
 
       <AppBottomSheet
         visible={showClientPicker}
-        onClose={() => { setShowClientPicker(false); setClientSearch(""); }}
+        onClose={() => {
+          setShowClientPicker(false);
+          setClientSearch("");
+        }}
         enableDynamicSizing={false}
-        snapPoints={['60%']}
+        snapPoints={["60%"]}
         scrollable
       >
         <View style={styles.sheetHeader}>
@@ -1159,9 +1471,12 @@ export default function EventFormScreen({ navigation, route }: Props) {
 
       <AppBottomSheet
         visible={showProductPicker}
-        onClose={() => { setShowProductPicker(false); setProductSearch(""); }}
+        onClose={() => {
+          setShowProductPicker(false);
+          setProductSearch("");
+        }}
         enableDynamicSizing={false}
-        snapPoints={['60%']}
+        snapPoints={["60%"]}
         scrollable
       >
         <View style={styles.sheetHeader}>
@@ -1190,7 +1505,9 @@ export default function EventFormScreen({ navigation, route }: Props) {
           >
             {product.image_url ? (
               <Image
-                source={{ uri: uploadService.getFullUrl(product.image_url) ?? undefined }}
+                source={{
+                  uri: uploadService.getFullUrl(product.image_url) ?? undefined,
+                }}
                 style={styles.sheetProductImage}
                 contentFit="cover"
               />
@@ -1203,7 +1520,9 @@ export default function EventFormScreen({ navigation, route }: Props) {
               <Text style={styles.sheetItemText}>{product.name}</Text>
               <Text style={styles.sheetItemSubtext}>{product.category}</Text>
             </View>
-            <Text style={styles.sheetItemPrice}>{formatCurrency(product.base_price)}</Text>
+            <Text style={styles.sheetItemPrice}>
+              {formatCurrency(product.base_price)}
+            </Text>
           </TouchableOpacity>
         ))}
       </AppBottomSheet>
@@ -1213,14 +1532,14 @@ export default function EventFormScreen({ navigation, route }: Props) {
         visible={showEquipmentPicker}
         onClose={() => setShowEquipmentPicker(false)}
         enableDynamicSizing={false}
-        snapPoints={['60%']}
+        snapPoints={["60%"]}
         scrollable
       >
         <View style={styles.sheetHeader}>
           <Text style={styles.sheetTitle}>Agregar Equipo</Text>
         </View>
         {filteredEquipment.length === 0 ? (
-          <View style={{ padding: spacing.lg, alignItems: 'center' }}>
+          <View style={{ padding: spacing.lg, alignItems: "center" }}>
             <Text style={{ ...typography.body, color: palette.textMuted }}>
               No hay equipo disponible
             </Text>
@@ -1238,7 +1557,9 @@ export default function EventFormScreen({ navigation, route }: Props) {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.sheetItemText}>{item.ingredient_name}</Text>
-                <Text style={styles.sheetItemSubtext}>{item.current_stock} {item.unit} disponible(s)</Text>
+                <Text style={styles.sheetItemSubtext}>
+                  {item.current_stock} {item.unit} disponible(s)
+                </Text>
               </View>
             </TouchableOpacity>
           ))
@@ -1248,440 +1569,441 @@ export default function EventFormScreen({ navigation, route }: Props) {
   );
 }
 
-const getStyles = (palette: typeof colors.light) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: palette.background,
-  },
-  stepIndicator: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    backgroundColor: palette.card,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: palette.separator,
-  },
-  stepItem: {
-    alignItems: "center",
-  },
-  stepLineWrapper: {
-    flex: 1,
-    justifyContent: "center",
-    paddingTop: 14,
-  },
-  stepLine: {
-    height: 2,
-    borderRadius: 1,
-  },
-  stepLineComplete: {
-    backgroundColor: palette.success,
-  },
-  stepLinePending: {
-    backgroundColor: palette.border,
-  },
-  stepCircle: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: palette.surface,
-    borderWidth: 2,
-    borderColor: palette.border,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 4,
-  },
-  stepCircleActive: {
-    borderColor: palette.primary,
-    backgroundColor: palette.primary,
-  },
-  stepCircleComplete: {
-    backgroundColor: palette.success,
-    borderColor: palette.success,
-  },
-  stepNumber: {
-    ...typography.caption,
-    fontWeight: "700",
-    color: palette.textMuted,
-  },
-  stepNumberActive: {
-    color: palette.textInverse,
-  },
-  stepTitle: {
-    ...typography.caption,
-    color: palette.textMuted,
-  },
-  stepTitleActive: {
-    color: palette.primary,
-    fontWeight: "600",
-  },
-  content: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xxl,
-  },
-  section: {
-    backgroundColor: palette.card,
-    borderRadius: spacing.borderRadius.lg,
-    padding: spacing.md,
-    marginTop: spacing.md,
-    ...shadows.sm,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: spacing.sm,
-  },
-  sectionTitle: {
-    ...typography.h3,
-    color: palette.text,
-    marginBottom: spacing.sm,
-  },
-  clientRow: {
-    flexDirection: "row" as const,
-    alignItems: "stretch" as const,
-    gap: spacing.sm,
-    marginBottom: spacing.sm,
-  },
-  quickClientBtn: {
-    backgroundColor: palette.primary,
-    borderRadius: spacing.borderRadius.md,
-    width: 48,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-  },
-  selector: {
-    backgroundColor: palette.surface,
-    borderRadius: spacing.borderRadius.md,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-  },
-  selectorLabel: {
-    ...typography.caption,
-    color: palette.textMuted,
-    marginBottom: 2,
-  },
-  selectorValue: {
-    ...typography.body,
-    color: palette.text,
-  },
-  inputLabel: {
-    ...typography.caption,
-    color: palette.textSecondary,
-    marginBottom: spacing.xs,
-    marginTop: spacing.sm,
-  },
-  input: {
-    backgroundColor: palette.surface,
-    borderRadius: spacing.borderRadius.md,
-    padding: spacing.md,
-    ...typography.body,
-    color: palette.text,
-  },
-  textArea: {
-    minHeight: 80,
-    textAlignVertical: "top",
-  },
-  row: {
-    flexDirection: "row",
-    gap: spacing.sm,
-  },
-  halfInput: {
-    flex: 1,
-  },
-  statusButtons: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.xs,
-    marginTop: spacing.sm,
-  },
-  statusButton: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs + 2,
-    borderRadius: spacing.borderRadius.md,
-    backgroundColor: palette.surface,
-  },
-  statusButtonActive: {
-    backgroundColor: palette.primary,
-  },
-  statusButtonText: {
-    ...typography.caption,
-    color: palette.textSecondary,
-  },
-  statusButtonTextActive: {
-    color: palette.textInverse,
-  },
-  addButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    backgroundColor: palette.primaryLight,
-    borderRadius: spacing.borderRadius.md,
-  },
-  addButtonText: {
-    ...typography.caption,
-    color: palette.primary,
-    fontWeight: "600",
-  },
-  emptyText: {
-    ...typography.body,
-    color: palette.textMuted,
-    fontStyle: "italic",
-    textAlign: "center",
-    paddingVertical: spacing.lg,
-  },
-  productCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: spacing.sm,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: palette.separator,
-    gap: spacing.sm,
-  },
-  productInfo: {
-    flex: 1,
-  },
-  productName: {
-    ...typography.label,
-    color: palette.text,
-  },
-  productPrice: {
-    ...typography.caption,
-    color: palette.textMuted,
-  },
-  productQuantity: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-  },
-  quantityBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: palette.surface,
-    textAlign: "center",
-    lineHeight: 26,
-    fontSize: 18,
-    color: palette.text,
-  },
-  quantityInput: {
-    width: 40,
-    height: 28,
-    borderRadius: spacing.borderRadius.sm,
-    backgroundColor: palette.surface,
-    textAlign: "center",
-    ...typography.bodySmall,
-    color: palette.text,
-  },
-  totalRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingTop: spacing.md,
-    marginTop: spacing.sm,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: palette.separator,
-  },
-  totalLabel: {
-    ...typography.label,
-    color: palette.text,
-  },
-  totalValue: {
-    ...typography.label,
-    color: palette.text,
-  },
-  extraCard: {
-    backgroundColor: palette.surface,
-    borderRadius: spacing.borderRadius.md,
-    padding: spacing.sm,
-    marginBottom: spacing.sm,
-  },
-  extraInput: {
-    backgroundColor: palette.background,
-    borderRadius: spacing.borderRadius.sm,
-    padding: spacing.sm,
-    ...typography.bodySmall,
-    color: palette.text,
-    marginBottom: spacing.sm,
-  },
-  extraRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-  },
-  extraToggleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: spacing.xs,
-  },
-  extraHalf: {
-    flex: 1,
-  },
-  extraLabel: {
-    ...typography.caption,
-    color: palette.textMuted,
-    marginBottom: 2,
-  },
-  extraPriceInput: {
-    backgroundColor: palette.background,
-    borderRadius: spacing.borderRadius.sm,
-    padding: spacing.xs,
-    ...typography.bodySmall,
-    color: palette.text,
-  },
-  totalsCard: {
-    backgroundColor: palette.surface,
-    borderRadius: spacing.borderRadius.lg,
-    padding: spacing.md,
-    marginTop: spacing.md,
-  },
-  rentabilityCard: {
-    backgroundColor: palette.surfaceGrouped || palette.background,
-    borderRadius: spacing.borderRadius.lg,
-    padding: spacing.md,
-    marginTop: spacing.sm,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: palette.separator,
-  },
-  rentabilityTitle: {
-    ...typography.caption,
-    color: palette.textMuted,
-    fontWeight: "600",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    marginBottom: spacing.sm,
-  },
-  totalLine: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: spacing.xs,
-  },
-  totalLineBold: {
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: palette.separator,
-    marginTop: spacing.xs,
-    paddingTop: spacing.sm,
-  },
-  totalLineLabel: {
-    ...typography.body,
-    color: palette.textSecondary,
-  },
-  totalLineValue: {
-    ...typography.label,
-    color: palette.text,
-  },
-  totalLineLabelBold: {
-    ...typography.h3,
-    color: palette.text,
-  },
-  totalLineValueBold: {
-    ...typography.h3,
-    color: palette.primary,
-  },
-  footer: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: spacing.lg,
-    backgroundColor: palette.card,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: palette.separator,
-    gap: spacing.sm,
-  },
-  navButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: palette.surface,
-    justifyContent: "center",
-    alignItems: "center",
-    ...shadows.sm,
-  },
-  navButtonDisabled: {
-    opacity: 0.5,
-  },
-  saveButton: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.xs,
-    backgroundColor: palette.primary,
-    borderRadius: spacing.borderRadius.md,
-    paddingVertical: spacing.md,
-    ...shadows.md,
-  },
-  saveButtonDisabled: {
-    opacity: 0.6,
-  },
-  saveButtonText: {
-    ...typography.button,
-    color: palette.textInverse,
-  },
-  nextButtonText: {
-    ...typography.button,
-    color: palette.textInverse,
-  },
-  sheetHeader: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.md,
-  },
-  sheetTitle: {
-    ...typography.h3,
-    color: palette.text,
-    marginBottom: spacing.sm,
-  },
-  searchBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: palette.surface,
-    borderRadius: spacing.borderRadius.md,
-    paddingHorizontal: spacing.md,
-    gap: spacing.sm,
-  },
-  searchInput: {
-    flex: 1,
-    ...typography.body,
-    color: palette.text,
-    paddingVertical: spacing.sm,
-  },
-  sheetItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.md,
-    paddingVertical: spacing.sm + 2,
-    paddingHorizontal: spacing.lg,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: palette.separator,
-  },
-  sheetItemActive: {
-    backgroundColor: palette.primaryLight,
-  },
-  sheetItemText: {
-    ...typography.body,
-    color: palette.text,
-  },
-  sheetItemSubtext: {
-    ...typography.caption,
-    color: palette.textMuted,
-  },
-  sheetItemPrice: {
-    ...typography.label,
-    color: palette.primary,
-  },
-  sheetProductImage: {
-    width: 36,
-    height: 36,
-    borderRadius: spacing.borderRadius.md,
-  },
-  sheetProductIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: palette.primaryLight,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-});
+const getStyles = (palette: typeof colors.light) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: palette.background,
+    },
+    stepIndicator: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+      backgroundColor: palette.card,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: palette.separator,
+    },
+    stepItem: {
+      alignItems: "center",
+    },
+    stepLineWrapper: {
+      flex: 1,
+      justifyContent: "center",
+      paddingTop: 14,
+    },
+    stepLine: {
+      height: 2,
+      borderRadius: 1,
+    },
+    stepLineComplete: {
+      backgroundColor: palette.success,
+    },
+    stepLinePending: {
+      backgroundColor: palette.border,
+    },
+    stepCircle: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      backgroundColor: palette.surface,
+      borderWidth: 2,
+      borderColor: palette.border,
+      justifyContent: "center",
+      alignItems: "center",
+      marginBottom: 4,
+    },
+    stepCircleActive: {
+      borderColor: palette.primary,
+      backgroundColor: palette.primary,
+    },
+    stepCircleComplete: {
+      backgroundColor: palette.success,
+      borderColor: palette.success,
+    },
+    stepNumber: {
+      ...typography.caption,
+      fontWeight: "700",
+      color: palette.textMuted,
+    },
+    stepNumberActive: {
+      color: palette.textInverse,
+    },
+    stepTitle: {
+      ...typography.caption,
+      color: palette.textMuted,
+    },
+    stepTitleActive: {
+      color: palette.primary,
+      fontWeight: "600",
+    },
+    content: {
+      paddingHorizontal: spacing.lg,
+      paddingBottom: spacing.xxl,
+    },
+    section: {
+      backgroundColor: palette.card,
+      borderRadius: spacing.borderRadius.lg,
+      padding: spacing.md,
+      marginTop: spacing.md,
+      ...shadows.sm,
+    },
+    sectionHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: spacing.sm,
+    },
+    sectionTitle: {
+      ...typography.h3,
+      color: palette.text,
+      marginBottom: spacing.sm,
+    },
+    clientRow: {
+      flexDirection: "row" as const,
+      alignItems: "stretch" as const,
+      gap: spacing.sm,
+      marginBottom: spacing.sm,
+    },
+    quickClientBtn: {
+      backgroundColor: palette.primary,
+      borderRadius: spacing.borderRadius.md,
+      width: 48,
+      alignItems: "center" as const,
+      justifyContent: "center" as const,
+    },
+    selector: {
+      backgroundColor: palette.surface,
+      borderRadius: spacing.borderRadius.md,
+      padding: spacing.md,
+      marginBottom: spacing.sm,
+    },
+    selectorLabel: {
+      ...typography.caption,
+      color: palette.textMuted,
+      marginBottom: 2,
+    },
+    selectorValue: {
+      ...typography.body,
+      color: palette.text,
+    },
+    inputLabel: {
+      ...typography.caption,
+      color: palette.textSecondary,
+      marginBottom: spacing.xs,
+      marginTop: spacing.sm,
+    },
+    input: {
+      backgroundColor: palette.surface,
+      borderRadius: spacing.borderRadius.md,
+      padding: spacing.md,
+      ...typography.body,
+      color: palette.text,
+    },
+    textArea: {
+      minHeight: 80,
+      textAlignVertical: "top",
+    },
+    row: {
+      flexDirection: "row",
+      gap: spacing.sm,
+    },
+    halfInput: {
+      flex: 1,
+    },
+    statusButtons: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: spacing.xs,
+      marginTop: spacing.sm,
+    },
+    statusButton: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs + 2,
+      borderRadius: spacing.borderRadius.md,
+      backgroundColor: palette.surface,
+    },
+    statusButtonActive: {
+      backgroundColor: palette.primary,
+    },
+    statusButtonText: {
+      ...typography.caption,
+      color: palette.textSecondary,
+    },
+    statusButtonTextActive: {
+      color: palette.textInverse,
+    },
+    addButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.xs,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      backgroundColor: palette.primaryLight,
+      borderRadius: spacing.borderRadius.md,
+    },
+    addButtonText: {
+      ...typography.caption,
+      color: palette.primary,
+      fontWeight: "600",
+    },
+    emptyText: {
+      ...typography.body,
+      color: palette.textMuted,
+      fontStyle: "italic",
+      textAlign: "center",
+      paddingVertical: spacing.lg,
+    },
+    productCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: spacing.sm,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: palette.separator,
+      gap: spacing.sm,
+    },
+    productInfo: {
+      flex: 1,
+    },
+    productName: {
+      ...typography.label,
+      color: palette.text,
+    },
+    productPrice: {
+      ...typography.caption,
+      color: palette.textMuted,
+    },
+    productQuantity: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.xs,
+    },
+    quantityBtn: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      backgroundColor: palette.surface,
+      textAlign: "center",
+      lineHeight: 26,
+      fontSize: 18,
+      color: palette.text,
+    },
+    quantityInput: {
+      width: 40,
+      height: 28,
+      borderRadius: spacing.borderRadius.sm,
+      backgroundColor: palette.surface,
+      textAlign: "center",
+      ...typography.bodySmall,
+      color: palette.text,
+    },
+    totalRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      paddingTop: spacing.md,
+      marginTop: spacing.sm,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: palette.separator,
+    },
+    totalLabel: {
+      ...typography.label,
+      color: palette.text,
+    },
+    totalValue: {
+      ...typography.label,
+      color: palette.text,
+    },
+    extraCard: {
+      backgroundColor: palette.surface,
+      borderRadius: spacing.borderRadius.md,
+      padding: spacing.sm,
+      marginBottom: spacing.sm,
+    },
+    extraInput: {
+      backgroundColor: palette.background,
+      borderRadius: spacing.borderRadius.sm,
+      padding: spacing.sm,
+      ...typography.bodySmall,
+      color: palette.text,
+      marginBottom: spacing.sm,
+    },
+    extraRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.sm,
+    },
+    extraToggleRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginTop: spacing.xs,
+    },
+    extraHalf: {
+      flex: 1,
+    },
+    extraLabel: {
+      ...typography.caption,
+      color: palette.textMuted,
+      marginBottom: 2,
+    },
+    extraPriceInput: {
+      backgroundColor: palette.background,
+      borderRadius: spacing.borderRadius.sm,
+      padding: spacing.xs,
+      ...typography.bodySmall,
+      color: palette.text,
+    },
+    totalsCard: {
+      backgroundColor: palette.surface,
+      borderRadius: spacing.borderRadius.lg,
+      padding: spacing.md,
+      marginTop: spacing.md,
+    },
+    rentabilityCard: {
+      backgroundColor: palette.surfaceGrouped || palette.background,
+      borderRadius: spacing.borderRadius.lg,
+      padding: spacing.md,
+      marginTop: spacing.sm,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: palette.separator,
+    },
+    rentabilityTitle: {
+      ...typography.caption,
+      color: palette.textMuted,
+      fontWeight: "600",
+      textTransform: "uppercase",
+      letterSpacing: 0.5,
+      marginBottom: spacing.sm,
+    },
+    totalLine: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      paddingVertical: spacing.xs,
+    },
+    totalLineBold: {
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: palette.separator,
+      marginTop: spacing.xs,
+      paddingTop: spacing.sm,
+    },
+    totalLineLabel: {
+      ...typography.body,
+      color: palette.textSecondary,
+    },
+    totalLineValue: {
+      ...typography.label,
+      color: palette.text,
+    },
+    totalLineLabelBold: {
+      ...typography.h3,
+      color: palette.text,
+    },
+    totalLineValueBold: {
+      ...typography.h3,
+      color: palette.primary,
+    },
+    footer: {
+      flexDirection: "row",
+      alignItems: "center",
+      padding: spacing.lg,
+      backgroundColor: palette.card,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: palette.separator,
+      gap: spacing.sm,
+    },
+    navButton: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: palette.surface,
+      justifyContent: "center",
+      alignItems: "center",
+      ...shadows.sm,
+    },
+    navButtonDisabled: {
+      opacity: 0.5,
+    },
+    saveButton: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: spacing.xs,
+      backgroundColor: palette.primary,
+      borderRadius: spacing.borderRadius.md,
+      paddingVertical: spacing.md,
+      ...shadows.md,
+    },
+    saveButtonDisabled: {
+      opacity: 0.6,
+    },
+    saveButtonText: {
+      ...typography.button,
+      color: palette.textInverse,
+    },
+    nextButtonText: {
+      ...typography.button,
+      color: palette.textInverse,
+    },
+    sheetHeader: {
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.sm,
+      paddingBottom: spacing.md,
+    },
+    sheetTitle: {
+      ...typography.h3,
+      color: palette.text,
+      marginBottom: spacing.sm,
+    },
+    searchBox: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: palette.surface,
+      borderRadius: spacing.borderRadius.md,
+      paddingHorizontal: spacing.md,
+      gap: spacing.sm,
+    },
+    searchInput: {
+      flex: 1,
+      ...typography.body,
+      color: palette.text,
+      paddingVertical: spacing.sm,
+    },
+    sheetItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.md,
+      paddingVertical: spacing.sm + 2,
+      paddingHorizontal: spacing.lg,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: palette.separator,
+    },
+    sheetItemActive: {
+      backgroundColor: palette.primaryLight,
+    },
+    sheetItemText: {
+      ...typography.body,
+      color: palette.text,
+    },
+    sheetItemSubtext: {
+      ...typography.caption,
+      color: palette.textMuted,
+    },
+    sheetItemPrice: {
+      ...typography.label,
+      color: palette.primary,
+    },
+    sheetProductImage: {
+      width: 36,
+      height: 36,
+      borderRadius: spacing.borderRadius.md,
+    },
+    sheetProductIcon: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: palette.primaryLight,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+  });

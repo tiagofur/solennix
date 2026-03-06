@@ -8,13 +8,7 @@ import { MainTabParamList } from "../types/navigation";
 import HomeStack from "./HomeStack";
 import CalendarStack from "./CalendarStack";
 import ClientStack from "./ClientStack";
-import {
-  Home,
-  CalendarDays,
-  Users,
-  Plus,
-  Menu,
-} from "lucide-react-native";
+import { Home, CalendarDays, Users, Plus, Menu } from "lucide-react-native";
 import { useTheme } from "../hooks/useTheme";
 import { colors } from "../theme/colors";
 import { DrawerActions, useNavigation } from "@react-navigation/native";
@@ -46,7 +40,7 @@ export default function MainTabs() {
         headerShown: false,
         tabBarActiveTintColor: palette.tabBar.active,
         tabBarInactiveTintColor: palette.tabBar.inactive,
-        contentStyle: { paddingBottom: tabBarHeight },
+        sceneStyle: { paddingBottom: tabBarHeight },
         tabBarStyle: {
           position: "absolute",
           borderTopWidth: 0,

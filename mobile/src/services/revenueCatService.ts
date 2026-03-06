@@ -75,7 +75,7 @@ export const revenueCatService = {
                     return getFallbackOfferings();
                 }
 
-                return current.availablePackages.map((pkg) => ({
+                return current.availablePackages.map((pkg: any) => ({
                     identifier: pkg.identifier,
                     title: pkg.product.title,
                     price: pkg.product.priceString,
@@ -175,7 +175,7 @@ export const revenueCatService = {
             error !== null &&
             'code' in error &&
             (error as PurchasesError).code ===
-                PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR
+            PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR
         );
     },
 };

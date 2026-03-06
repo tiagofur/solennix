@@ -60,14 +60,18 @@ const STATUS_OPTIONS = [
   { key: "cancelled", label: "Cancelado" },
 ] as const;
 
-const getStatusColors = (palette: typeof colors.light): Record<string, string> => ({
+const getStatusColors = (
+  palette: typeof colors.light,
+): Record<string, string> => ({
   quoted: palette.statusQuoted,
   confirmed: palette.statusConfirmed,
   completed: palette.statusCompleted,
   cancelled: palette.statusCancelled,
 });
 
-const getStatusBgColors = (palette: typeof colors.light): Record<string, string> => ({
+const getStatusBgColors = (
+  palette: typeof colors.light,
+): Record<string, string> => ({
   quoted: palette.statusQuotedBg,
   confirmed: palette.statusConfirmedBg,
   completed: palette.statusCompletedBg,
@@ -76,11 +80,16 @@ const getStatusBgColors = (palette: typeof colors.light): Record<string, string>
 
 const getStatusLabel = (status: string): string => {
   switch (status) {
-    case "quoted": return "Cotizado";
-    case "confirmed": return "Confirmado";
-    case "completed": return "Completado";
-    case "cancelled": return "Cancelado";
-    default: return status;
+    case "quoted":
+      return "Cotizado";
+    case "confirmed":
+      return "Confirmado";
+    case "completed":
+      return "Completado";
+    case "cancelled":
+      return "Cancelado";
+    default:
+      return status;
   }
 };
 
@@ -106,7 +115,9 @@ export default function CalendarScreen({ navigation }: Props) {
         <TouchableOpacity
           onPress={() =>
             navigation.navigate("EventForm", {
-              eventDate: selectedDate ? format(selectedDate, "yyyy-MM-dd") : undefined,
+              eventDate: selectedDate
+                ? format(selectedDate, "yyyy-MM-dd")
+                : undefined,
             })
           }
           style={{ marginRight: 8 }}
@@ -153,7 +164,10 @@ export default function CalendarScreen({ navigation }: Props) {
   const currentMonthEvents = useMemo(() => {
     return events.filter((e) => {
       const d = parseLocalDate(e.event_date);
-      return d.getMonth() === currentDate.getMonth() && d.getFullYear() === currentDate.getFullYear();
+      return (
+        d.getMonth() === currentDate.getMonth() &&
+        d.getFullYear() === currentDate.getFullYear()
+      );
     });
   }, [events, currentDate]);
 
@@ -180,11 +194,16 @@ export default function CalendarScreen({ navigation }: Props) {
       .filter((e) => {
         const matchesSearch =
           !searchTerm ||
-          (e.client?.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (e.service_type || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (e.clients?.name || "")
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          (e.service_type || "")
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
           (e.location || "").toLowerCase().includes(searchTerm.toLowerCase());
 
-        const matchesStatus = statusFilter === "all" || e.status === statusFilter;
+        const matchesStatus =
+          statusFilter === "all" || e.status === statusFilter;
 
         return matchesSearch && matchesStatus;
       })
@@ -203,18 +222,24 @@ export default function CalendarScreen({ navigation }: Props) {
       <View
         style={[
           styles.eventDotFull,
-          { backgroundColor: statusColors[event.status] || palette.textTertiary },
+          {
+            backgroundColor: statusColors[event.status] || palette.textTertiary,
+          },
         ]}
       />
       <View style={styles.eventInfo}>
         {event.clients?.name ? (
           <Text style={styles.eventName}>{event.clients.name}</Text>
         ) : null}
-        <Text style={event.clients?.name ? styles.eventDetail : styles.eventName}>
+        <Text
+          style={event.clients?.name ? styles.eventDetail : styles.eventName}
+        >
           {event.service_type}
         </Text>
         <Text style={styles.eventDetail}>
-          {format(parseLocalDate(event.event_date), "d MMM yyyy", { locale: es })}
+          {format(parseLocalDate(event.event_date), "d MMM yyyy", {
+            locale: es,
+          })}
           {" \u2022 "}
           {event.num_people} personas
           {event.location ? ` \u2022 ${event.location}` : ""}
@@ -253,17 +278,32 @@ export default function CalendarScreen({ navigation }: Props) {
         /* ========== CALENDAR VIEW ========== */
         <>
           <View style={styles.header}>
-            <TouchableOpacity onPress={handlePrevMonth} style={styles.navButton}>
+            <TouchableOpacity
+              onPress={handlePrevMonth}
+              style={styles.navButton}
+            >
               <ChevronLeft color={palette.textTertiary} size={24} />
             </TouchableOpacity>
             <Text style={styles.monthTitle}>
               {format(currentDate, "MMMM yyyy", { locale: es }).toUpperCase()}
             </Text>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: spacing.xs }}>
-              <TouchableOpacity onPress={handleGoToToday} style={styles.todayButton}>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: spacing.xs,
+              }}
+            >
+              <TouchableOpacity
+                onPress={handleGoToToday}
+                style={styles.todayButton}
+              >
                 <Text style={styles.todayButtonText}>Hoy</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={handleNextMonth} style={styles.navButton}>
+              <TouchableOpacity
+                onPress={handleNextMonth}
+                style={styles.navButton}
+              >
                 <ChevronRight color={palette.textTertiary} size={24} />
               </TouchableOpacity>
             </View>
@@ -314,7 +354,10 @@ export default function CalendarScreen({ navigation }: Props) {
                           key={i}
                           style={[
                             styles.eventDot,
-                            { backgroundColor: statusColors[e.status] || palette.textTertiary },
+                            {
+                              backgroundColor:
+                                statusColors[e.status] || palette.textTertiary,
+                            },
                           ]}
                         />
                       ))}
@@ -345,7 +388,9 @@ export default function CalendarScreen({ navigation }: Props) {
                     onPress={() =>
                       (navigation as any).navigate("HomeTab", {
                         screen: "EventForm",
-                        params: { eventDate: format(selectedDate, "yyyy-MM-dd") },
+                        params: {
+                          eventDate: format(selectedDate, "yyyy-MM-dd"),
+                        },
                       })
                     }
                   >
@@ -357,7 +402,10 @@ export default function CalendarScreen({ navigation }: Props) {
             ) : (
               <ScrollView
                 refreshControl={
-                  <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                  <RefreshControl
+                    refreshing={refreshing}
+                    onRefresh={onRefresh}
+                  />
                 }
                 showsVerticalScrollIndicator={false}
               >
@@ -419,16 +467,15 @@ export default function CalendarScreen({ navigation }: Props) {
 
           {/* Results count */}
           <Text style={styles.resultCount}>
-            {filteredListEvents.length} evento{filteredListEvents.length !== 1 ? "s" : ""}
+            {filteredListEvents.length} evento
+            {filteredListEvents.length !== 1 ? "s" : ""}
           </Text>
 
           {/* Event list */}
           {filteredListEvents.length === 0 ? (
             <View style={styles.emptyDay}>
               <List color={palette.textTertiary} size={32} />
-              <Text style={styles.emptyDayText}>
-                No se encontraron eventos
-              </Text>
+              <Text style={styles.emptyDayText}>No se encontraron eventos</Text>
               <Text style={[styles.emptyDayText, { fontSize: 14 }]}>
                 Intenta ajustar los filtros de búsqueda
               </Text>
@@ -451,239 +498,240 @@ export default function CalendarScreen({ navigation }: Props) {
   );
 }
 
-const getStyles = (palette: typeof colors.light) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: palette.surfaceGrouped,
-  },
-  toggleRow: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.sm,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.sm,
-  },
-  navButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: palette.card,
-    justifyContent: "center",
-    alignItems: "center",
-    ...shadows.sm,
-  },
-  todayButton: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
-    borderRadius: spacing.borderRadius.md,
-    borderWidth: 1,
-    borderColor: palette.primary,
-  },
-  todayButtonText: {
-    ...typography.caption1,
-    color: palette.primary,
-    fontWeight: "600",
-  },
-  monthTitle: {
-    ...typography.headline,
-    color: palette.text,
-  },
-  weekDays: {
-    flexDirection: "row",
-    paddingHorizontal: spacing.sm,
-    marginBottom: spacing.xs,
-  },
-  weekDayCell: {
-    flex: 1,
-    alignItems: "center",
-    paddingVertical: spacing.xs,
-  },
-  weekDayText: {
-    ...typography.caption1,
-    color: palette.textTertiary,
-    fontWeight: "600",
-  },
-  calendar: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    paddingHorizontal: spacing.sm,
-  },
-  dayCell: {
-    width: `${100 / 7}%`,
-    aspectRatio: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 2,
-  },
-  dayCellSelected: {
-    backgroundColor: palette.primary,
-    borderRadius: spacing.borderRadius.full,
-  },
-  dayCellToday: {
-    backgroundColor: palette.primaryLight,
-    borderRadius: spacing.borderRadius.full,
-    borderWidth: 2,
-    borderColor: palette.primary,
-  },
-  dayText: {
-    ...typography.body,
-    color: palette.text,
-  },
-  dayTextSelected: {
-    color: "#ffffff", // Always white — selected background is always orange (#ff6b35) in both themes
-    fontWeight: "700",
-  },
-  dayTextToday: {
-    color: palette.primary,
-    fontWeight: "700",
-  },
-  eventDots: {
-    flexDirection: "row",
-    gap: 2,
-    marginTop: 2,
-  },
-  eventDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-  },
-  eventsList: {
-    flex: 1,
-    backgroundColor: palette.card,
-    marginTop: spacing.md,
-    borderTopLeftRadius: spacing.borderRadius.xl,
-    borderTopRightRadius: spacing.borderRadius.xl,
-    padding: spacing.lg,
-    ...shadows.md,
-  },
-  eventsTitle: {
-    ...typography.headline,
-    color: palette.text,
-    marginBottom: spacing.md,
-    textTransform: "capitalize",
-  },
-  emptyDay: {
-    alignItems: "center",
-    paddingVertical: spacing.xl,
-    gap: spacing.sm,
-  },
-  emptyDayText: {
-    ...typography.body,
-    color: palette.textSecondary,
-  },
-  createEventButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-    backgroundColor: palette.primary,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: spacing.borderRadius.full,
-    marginTop: spacing.sm,
-  },
-  createEventText: {
-    ...typography.subheadline,
-    color: palette.textInverse,
-    fontWeight: "600",
-  },
-  eventCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: palette.card,
-    borderRadius: spacing.borderRadius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-    gap: spacing.sm,
-    ...shadows.sm,
-  },
-  eventDotFull: {
-    width: 8,
-    height: 40,
-    borderRadius: 4,
-  },
-  eventInfo: {
-    flex: 1,
-  },
-  eventName: {
-    ...typography.subheadline,
-    fontWeight: "600",
-    color: palette.text,
-  },
-  eventDetail: {
-    ...typography.caption1,
-    color: palette.textSecondary,
-  },
-  eventStatus: {
-    ...typography.caption1,
-    color: palette.textSecondary,
-    fontWeight: "600",
-  },
-  statusBadge: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xxs,
-    borderRadius: spacing.borderRadius.full,
-  },
-  statusBadgeText: {
-    ...typography.caption1,
-    fontWeight: "600",
-  },
-  // List view styles
-  listContainer: {
-    flex: 1,
-    paddingHorizontal: spacing.lg,
-  },
-  searchRow: {
-    marginBottom: spacing.sm,
-  },
-  searchBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: palette.surface,
-    borderRadius: spacing.borderRadius.md,
-    paddingHorizontal: spacing.md,
-    gap: spacing.sm,
-  },
-  searchInput: {
-    ...typography.body,
-    flex: 1,
-    color: palette.text,
-    paddingVertical: spacing.sm + 2,
-  },
-  filterRow: {
-    maxHeight: 40,
-    marginBottom: spacing.sm,
-  },
-  filterContent: {
-    gap: spacing.sm,
-    paddingRight: spacing.sm,
-  },
-  filterChip: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs + 2,
-    borderRadius: spacing.borderRadius.full,
-    backgroundColor: palette.surface,
-  },
-  filterChipActive: {
-    backgroundColor: palette.primary,
-  },
-  filterChipText: {
-    ...typography.caption1,
-    color: palette.textSecondary,
-    fontWeight: "500",
-  },
-  filterChipTextActive: {
-    color: palette.textInverse,
-    fontWeight: "600",
-  },
-  resultCount: {
-    ...typography.caption1,
-    color: palette.textMuted,
-    marginBottom: spacing.sm,
-  },
-});
+const getStyles = (palette: typeof colors.light) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: palette.surfaceGrouped,
+    },
+    toggleRow: {
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.sm,
+      paddingBottom: spacing.sm,
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.sm,
+      paddingBottom: spacing.sm,
+    },
+    navButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: palette.card,
+      justifyContent: "center",
+      alignItems: "center",
+      ...shadows.sm,
+    },
+    todayButton: {
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 4,
+      borderRadius: spacing.borderRadius.md,
+      borderWidth: 1,
+      borderColor: palette.primary,
+    },
+    todayButtonText: {
+      ...typography.caption1,
+      color: palette.primary,
+      fontWeight: "600",
+    },
+    monthTitle: {
+      ...typography.headline,
+      color: palette.text,
+    },
+    weekDays: {
+      flexDirection: "row",
+      paddingHorizontal: spacing.sm,
+      marginBottom: spacing.xs,
+    },
+    weekDayCell: {
+      flex: 1,
+      alignItems: "center",
+      paddingVertical: spacing.xs,
+    },
+    weekDayText: {
+      ...typography.caption1,
+      color: palette.textTertiary,
+      fontWeight: "600",
+    },
+    calendar: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      paddingHorizontal: spacing.sm,
+    },
+    dayCell: {
+      width: `${100 / 7}%`,
+      aspectRatio: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      padding: 2,
+    },
+    dayCellSelected: {
+      backgroundColor: palette.primary,
+      borderRadius: spacing.borderRadius.full,
+    },
+    dayCellToday: {
+      backgroundColor: palette.primaryLight,
+      borderRadius: spacing.borderRadius.full,
+      borderWidth: 2,
+      borderColor: palette.primary,
+    },
+    dayText: {
+      ...typography.body,
+      color: palette.text,
+    },
+    dayTextSelected: {
+      color: "#ffffff", // Always white — selected background is always orange (#ff6b35) in both themes
+      fontWeight: "700",
+    },
+    dayTextToday: {
+      color: palette.primary,
+      fontWeight: "700",
+    },
+    eventDots: {
+      flexDirection: "row",
+      gap: 2,
+      marginTop: 2,
+    },
+    eventDot: {
+      width: 4,
+      height: 4,
+      borderRadius: 2,
+    },
+    eventsList: {
+      flex: 1,
+      backgroundColor: palette.card,
+      marginTop: spacing.md,
+      borderTopLeftRadius: spacing.borderRadius.xl,
+      borderTopRightRadius: spacing.borderRadius.xl,
+      padding: spacing.lg,
+      ...shadows.md,
+    },
+    eventsTitle: {
+      ...typography.headline,
+      color: palette.text,
+      marginBottom: spacing.md,
+      textTransform: "capitalize",
+    },
+    emptyDay: {
+      alignItems: "center",
+      paddingVertical: spacing.xl,
+      gap: spacing.sm,
+    },
+    emptyDayText: {
+      ...typography.body,
+      color: palette.textSecondary,
+    },
+    createEventButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.xs,
+      backgroundColor: palette.primary,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: spacing.borderRadius.full,
+      marginTop: spacing.sm,
+    },
+    createEventText: {
+      ...typography.subheadline,
+      color: palette.textInverse,
+      fontWeight: "600",
+    },
+    eventCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: palette.card,
+      borderRadius: spacing.borderRadius.lg,
+      padding: spacing.md,
+      marginBottom: spacing.sm,
+      gap: spacing.sm,
+      ...shadows.sm,
+    },
+    eventDotFull: {
+      width: 8,
+      height: 40,
+      borderRadius: 4,
+    },
+    eventInfo: {
+      flex: 1,
+    },
+    eventName: {
+      ...typography.subheadline,
+      fontWeight: "600",
+      color: palette.text,
+    },
+    eventDetail: {
+      ...typography.caption1,
+      color: palette.textSecondary,
+    },
+    eventStatus: {
+      ...typography.caption1,
+      color: palette.textSecondary,
+      fontWeight: "600",
+    },
+    statusBadge: {
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xxs,
+      borderRadius: spacing.borderRadius.full,
+    },
+    statusBadgeText: {
+      ...typography.caption1,
+      fontWeight: "600",
+    },
+    // List view styles
+    listContainer: {
+      flex: 1,
+      paddingHorizontal: spacing.lg,
+    },
+    searchRow: {
+      marginBottom: spacing.sm,
+    },
+    searchBox: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: palette.surface,
+      borderRadius: spacing.borderRadius.md,
+      paddingHorizontal: spacing.md,
+      gap: spacing.sm,
+    },
+    searchInput: {
+      ...typography.body,
+      flex: 1,
+      color: palette.text,
+      paddingVertical: spacing.sm + 2,
+    },
+    filterRow: {
+      maxHeight: 40,
+      marginBottom: spacing.sm,
+    },
+    filterContent: {
+      gap: spacing.sm,
+      paddingRight: spacing.sm,
+    },
+    filterChip: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs + 2,
+      borderRadius: spacing.borderRadius.full,
+      backgroundColor: palette.surface,
+    },
+    filterChipActive: {
+      backgroundColor: palette.primary,
+    },
+    filterChipText: {
+      ...typography.caption1,
+      color: palette.textSecondary,
+      fontWeight: "500",
+    },
+    filterChipTextActive: {
+      color: palette.textInverse,
+      fontWeight: "600",
+    },
+    resultCount: {
+      ...typography.caption1,
+      color: palette.textMuted,
+      marginBottom: spacing.sm,
+    },
+  });

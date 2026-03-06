@@ -16,7 +16,9 @@ import DrawerNavigator from "./DrawerNavigator";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-const linking = {
+import { LinkingOptions } from "@react-navigation/native";
+
+const linking: LinkingOptions<any> = {
   prefixes: ["solennix://"],
   config: {
     screens: {
@@ -59,7 +61,11 @@ export default function RootNavigator() {
   };
 
   return (
-    <NavigationContainer theme={navTheme} linking={linking} onReady={onLayoutReady}>
+    <NavigationContainer
+      theme={navTheme}
+      linking={linking}
+      onReady={onLayoutReady}
+    >
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {user ? (
           <Stack.Screen name="Main" component={DrawerNavigator} />

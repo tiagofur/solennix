@@ -12,7 +12,6 @@ export default function CalendarStack() {
     <Stack.Navigator
       screenOptions={{
         headerShown: true,
-        headerBackTitleVisible: false,
       }}
     >
       <Stack.Screen

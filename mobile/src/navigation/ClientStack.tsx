@@ -12,7 +12,6 @@ export default function ClientStack() {
     <Stack.Navigator
       screenOptions={{
         headerShown: true,
-        headerBackTitleVisible: false,
       }}
     >
       <Stack.Screen

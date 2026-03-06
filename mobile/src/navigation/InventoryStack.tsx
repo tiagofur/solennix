@@ -13,7 +13,6 @@ export default function InventoryStack() {
     <Stack.Navigator
       screenOptions={{
         headerShown: true,
-        headerBackTitleVisible: false,
       }}
     >
       <Stack.Screen

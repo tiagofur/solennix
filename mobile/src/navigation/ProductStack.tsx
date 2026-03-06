@@ -13,7 +13,6 @@ export default function ProductStack() {
     <Stack.Navigator
       screenOptions={{
         headerShown: true,
-        headerBackTitleVisible: false,
       }}
     >
       <Stack.Screen

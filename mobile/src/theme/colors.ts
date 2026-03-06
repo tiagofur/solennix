@@ -141,7 +141,7 @@ export const colors = {
             '#BA68C8', '#F06292', '#4DB6AC', '#FF8A65',
         ],
     },
-} as const;
+};
 
 export type ColorScheme = keyof typeof colors;
-export type ThemeColors = typeof colors.light | typeof colors.dark;
+export type ThemeColors = typeof colors.light;
