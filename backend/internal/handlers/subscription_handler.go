@@ -20,17 +20,6 @@ import (
 	"github.com/tiagofur/solennix-backend/internal/models"
 )
 
-// EventRepository defines methods for event data access
-type EventRepository interface {
-	GetByID(ctx context.Context, id, userID uuid.UUID) (*models.Event, error)
-	Update(ctx context.Context, e *models.Event) error
-}
-
-// PaymentRepository defines methods for payment data access
-type PaymentRepository interface {
-	Create(ctx context.Context, p *models.Payment) error
-}
-
 // SubscriptionHandler handles SaaS subscription flows for both
 // web (Stripe) and mobile (Apple/Google via RevenueCat).
 // Also handles event payment webhooks.

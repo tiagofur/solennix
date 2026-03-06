@@ -11,19 +11,18 @@ import (
 	"github.com/stripe/stripe-go/v81/checkout/session"
 	"github.com/tiagofur/solennix-backend/internal/config"
 	"github.com/tiagofur/solennix-backend/internal/middleware"
-	"github.com/tiagofur/solennix-backend/internal/repository"
 )
 
 // EventPaymentHandler handles Stripe checkout for event payments
 type EventPaymentHandler struct {
-	eventRepo   *repository.EventRepo
-	paymentRepo *repository.PaymentRepo
+	eventRepo   FullEventRepository
+	paymentRepo FullPaymentRepository
 	cfg         *config.Config
 }
 
 func NewEventPaymentHandler(
-	eventRepo *repository.EventRepo,
-	paymentRepo *repository.PaymentRepo,
+	eventRepo FullEventRepository,
+	paymentRepo FullPaymentRepository,
 	cfg *config.Config,
 ) *EventPaymentHandler {
 	stripe.Key = cfg.StripeSecretKey

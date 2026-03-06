@@ -14,11 +14,11 @@ import (
 
 // AdminHandler handles admin-only operations.
 type AdminHandler struct {
-	adminRepo *repository.AdminRepo
+	adminRepo AdminRepository
 }
 
 // NewAdminHandler creates a new AdminHandler.
-func NewAdminHandler(adminRepo *repository.AdminRepo) *AdminHandler {
+func NewAdminHandler(adminRepo AdminRepository) *AdminHandler {
 	return &AdminHandler{adminRepo: adminRepo}
 }
 

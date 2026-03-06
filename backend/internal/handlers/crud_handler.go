@@ -16,21 +16,21 @@ import (
 )
 
 type CRUDHandler struct {
-	clientRepo    *repository.ClientRepo
-	eventRepo     *repository.EventRepo
-	productRepo   *repository.ProductRepo
-	inventoryRepo *repository.InventoryRepo
-	paymentRepo   *repository.PaymentRepo
-	userRepo      *repository.UserRepo
+	clientRepo    ClientRepository
+	eventRepo     FullEventRepository
+	productRepo   ProductRepository
+	inventoryRepo InventoryRepository
+	paymentRepo   FullPaymentRepository
+	userRepo      FullUserRepository
 }
 
 func NewCRUDHandler(
-	clientRepo *repository.ClientRepo,
-	eventRepo *repository.EventRepo,
-	productRepo *repository.ProductRepo,
-	inventoryRepo *repository.InventoryRepo,
-	paymentRepo *repository.PaymentRepo,
-	userRepo *repository.UserRepo,
+	clientRepo ClientRepository,
+	eventRepo FullEventRepository,
+	productRepo ProductRepository,
+	inventoryRepo InventoryRepository,
+	paymentRepo FullPaymentRepository,
+	userRepo FullUserRepository,
 ) *CRUDHandler {
 	return &CRUDHandler{
 		clientRepo:    clientRepo,

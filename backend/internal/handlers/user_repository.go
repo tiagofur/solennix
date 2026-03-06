@@ -23,3 +23,14 @@ type SubscriptionRepository interface {
 	UpdateStatusByProviderSubID(ctx context.Context, providerSubID string, status string, periodStart, periodEnd *time.Time) error
 	UpdateStatusByUserID(ctx context.Context, userID uuid.UUID, status string) error
 }
+
+// EventRepository defines methods for event data access (used by SubscriptionHandler).
+type EventRepository interface {
+	GetByID(ctx context.Context, id, userID uuid.UUID) (*models.Event, error)
+	Update(ctx context.Context, e *models.Event) error
+}
+
+// PaymentRepository defines methods for payment data access (used by SubscriptionHandler).
+type PaymentRepository interface {
+	Create(ctx context.Context, p *models.Payment) error
+}

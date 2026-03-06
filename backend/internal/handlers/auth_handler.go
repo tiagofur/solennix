@@ -8,19 +8,18 @@ import (
 
 	"github.com/tiagofur/solennix-backend/internal/middleware"
 	"github.com/tiagofur/solennix-backend/internal/models"
-	"github.com/tiagofur/solennix-backend/internal/repository"
 	"github.com/tiagofur/solennix-backend/internal/services"
 )
 
 var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
 
 type AuthHandler struct {
-	userRepo     *repository.UserRepo
+	userRepo     FullUserRepository
 	authService  *services.AuthService
 	emailService *services.EmailService
 }
 
-func NewAuthHandler(userRepo *repository.UserRepo, authService *services.AuthService, emailService *services.EmailService) *AuthHandler {
+func NewAuthHandler(userRepo FullUserRepository, authService *services.AuthService, emailService *services.EmailService) *AuthHandler {
 	return &AuthHandler{
 		userRepo:     userRepo,
 		authService:  authService,

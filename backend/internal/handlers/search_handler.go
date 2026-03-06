@@ -7,21 +7,20 @@ import (
 
 	"github.com/tiagofur/solennix-backend/internal/middleware"
 	"github.com/tiagofur/solennix-backend/internal/models"
-	"github.com/tiagofur/solennix-backend/internal/repository"
 )
 
 type SearchHandler struct {
-	clientRepo    *repository.ClientRepo
-	productRepo   *repository.ProductRepo
-	inventoryRepo *repository.InventoryRepo
-	eventRepo     *repository.EventRepo
+	clientRepo    ClientRepository
+	productRepo   ProductRepository
+	inventoryRepo InventoryRepository
+	eventRepo     FullEventRepository
 }
 
 func NewSearchHandler(
-	clientRepo *repository.ClientRepo,
-	productRepo *repository.ProductRepo,
-	inventoryRepo *repository.InventoryRepo,
-	eventRepo *repository.EventRepo,
+	clientRepo ClientRepository,
+	productRepo ProductRepository,
+	inventoryRepo InventoryRepository,
+	eventRepo FullEventRepository,
 ) *SearchHandler {
 	return &SearchHandler{
 		clientRepo:    clientRepo,
