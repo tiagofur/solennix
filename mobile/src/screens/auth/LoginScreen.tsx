@@ -8,12 +8,14 @@ import {
   Platform,
   ActivityIndicator,
   ScrollView,
+  useWindowDimensions,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Mail, Lock, Eye, EyeOff } from "lucide-react-native";
+import { Mail, Lock, Eye, EyeOff, Calendar, Users, BarChart2 } from "lucide-react-native";
 import { AuthStackParamList } from "../../types/navigation";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../hooks/useTheme";
@@ -31,6 +33,36 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 type Props = NativeStackScreenProps<AuthStackParamList, "Login">;
 
+const BRAND_FEATURES = [
+  { icon: Calendar, text: "Gestiona eventos de principio a fin" },
+  { icon: Users,    text: "CRM integrado para tus clientes" },
+  { icon: BarChart2, text: "Reportes financieros en tiempo real" },
+];
+
+function BrandPanel({ palette }: { palette: typeof colors.light }) {
+  return (
+    <LinearGradient
+      colors={[palette.primary, palette.primaryDark]}
+      style={styles.brandPanel}
+    >
+      <Text style={styles.brandTitle}>EventosApp</Text>
+      <Text style={styles.brandTagline}>
+        La plataforma todo-en-uno para organizadores de eventos
+      </Text>
+      <View style={styles.brandFeatures}>
+        {BRAND_FEATURES.map(({ icon: Icon, text }) => (
+          <View key={text} style={styles.brandFeatureRow}>
+            <View style={styles.brandFeatureIcon}>
+              <Icon color="#fff" size={18} />
+            </View>
+            <Text style={styles.brandFeatureText}>{text}</Text>
+          </View>
+        ))}
+      </View>
+    </LinearGradient>
+  );
+}
+
 export default function LoginScreen({ navigation }: Props) {
   const { signIn } = useAuth();
   const [error, setError] = useState<string | null>(null);
@@ -38,7 +70,9 @@ export default function LoginScreen({ navigation }: Props) {
   const [showPassword, setShowPassword] = useState(false);
   const { isDark } = useTheme();
   const palette = isDark ? colors.dark : colors.light;
-  const styles = getStyles(palette);
+  const { width, height } = useWindowDimensions();
+  const isTablet = width >= 600;
+  const isLandscapeTablet = isTablet && width > height;
 
   const {
     control,
@@ -61,17 +95,30 @@ export default function LoginScreen({ navigation }: Props) {
     }
   };
 
-  return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+  const formContent = (
+    <ScrollView
+      contentContainerStyle={[
+        styles.inner,
+        isTablet && !isLandscapeTablet && styles.innerTabletPortrait,
+        isLandscapeTablet && styles.innerTabletLandscape,
+      ]}
+      keyboardShouldPersistTaps="handled"
     >
-      <ScrollView
-        contentContainerStyle={styles.inner}
-        keyboardShouldPersistTaps="handled"
+      <View
+        style={[
+          styles.formCard,
+          isTablet && styles.formCardTablet,
+        ]}
       >
-        <Text style={styles.title}>EventosApp</Text>
-        <Text style={styles.subtitle}>Inicia sesión en tu cuenta</Text>
+        {!isLandscapeTablet && (
+          <>
+            <Text style={styles.title}>EventosApp</Text>
+            <Text style={styles.subtitle}>Inicia sesión en tu cuenta</Text>
+          </>
+        )}
+        {isLandscapeTablet && (
+          <Text style={styles.formTitle}>Inicia sesión</Text>
+        )}
 
         {error && (
           <View style={styles.errorBanner}>
@@ -126,7 +173,7 @@ export default function LoginScreen({ navigation }: Props) {
         />
 
         <TouchableOpacity
-          style={[styles.button, loading && styles.buttonDisabled]}
+          style={[styles.button, { backgroundColor: palette.primary }, loading && styles.buttonDisabled]}
           onPress={handleSubmit(onSubmit)}
           disabled={loading}
           activeOpacity={0.8}
@@ -145,59 +192,142 @@ export default function LoginScreen({ navigation }: Props) {
           onPress={() => navigation.navigate("ForgotPassword")}
           style={styles.linkContainer}
         >
-          <Text style={styles.link}>¿Olvidaste tu contraseña?</Text>
+          <Text style={[styles.link, { color: palette.primary }]}>¿Olvidaste tu contraseña?</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           onPress={() => navigation.navigate("Register")}
           style={styles.linkContainer}
         >
-          <Text style={styles.linkSecondary}>
-            ¿No tienes cuenta? <Text style={styles.link}>Regístrate</Text>
+          <Text style={[styles.linkSecondary, { color: palette.textSecondary }]}>
+            ¿No tienes cuenta?{" "}
+            <Text style={[styles.link, { color: palette.primary }]}>Regístrate</Text>
           </Text>
         </TouchableOpacity>
-      </ScrollView>
+      </View>
+    </ScrollView>
+  );
+
+  if (isLandscapeTablet) {
+    return (
+      <KeyboardAvoidingView
+        style={[styles.container, { backgroundColor: palette.background }]}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <View style={styles.landscapeWrapper}>
+          <BrandPanel palette={palette} />
+          {formContent}
+        </View>
+      </KeyboardAvoidingView>
+    );
+  }
+
+  return (
+    <KeyboardAvoidingView
+      style={[styles.container, { backgroundColor: palette.background }]}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      {formContent}
     </KeyboardAvoidingView>
   );
 }
 
-const getStyles = (palette: typeof colors.light) => StyleSheet.create({
+const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: palette.background,
   },
+  landscapeWrapper: {
+    flex: 1,
+    flexDirection: "row",
+  },
+  // Brand panel (landscape tablet left column)
+  brandPanel: {
+    width: "42%",
+    justifyContent: "center",
+    paddingHorizontal: spacing.xxxl,
+    paddingVertical: spacing.xxl,
+  },
+  brandTitle: {
+    ...typography.h1,
+    color: "#fff",
+    marginBottom: spacing.sm,
+  },
+  brandTagline: {
+    ...typography.body,
+    color: "rgba(255,255,255,0.85)",
+    marginBottom: spacing.xl,
+    lineHeight: 22,
+  },
+  brandFeatures: {
+    gap: spacing.md,
+  },
+  brandFeatureRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  brandFeatureIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  brandFeatureText: {
+    ...typography.body,
+    color: "#fff",
+    flex: 1,
+  },
+  // Form scroll area
   inner: {
     flexGrow: 1,
     justifyContent: "center",
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.xxl,
   },
+  innerTabletPortrait: {
+    alignItems: "center",
+  },
+  innerTabletLandscape: {
+    justifyContent: "center",
+    paddingHorizontal: spacing.xxxl,
+  },
+  formCard: {
+    width: "100%",
+  },
+  formCardTablet: {
+    maxWidth: 440,
+  },
+  formTitle: {
+    ...typography.h2,
+    color: "#666",
+    marginBottom: spacing.xl,
+    textAlign: "center",
+  },
   title: {
     ...typography.h1,
     textAlign: "center",
-    color: palette.primary,
     marginBottom: spacing.xxs,
   },
   subtitle: {
     ...typography.body,
     textAlign: "center",
-    color: palette.textSecondary,
     marginBottom: spacing.xxl,
   },
   errorBanner: {
     backgroundColor: "#fef2f2",
     borderLeftWidth: 4,
-    borderLeftColor: palette.error,
+    borderLeftColor: "#ef4444",
     borderRadius: spacing.borderRadius.sm,
     padding: spacing.sm + 4,
     marginBottom: spacing.md,
   },
   errorBannerText: {
     ...typography.bodySmall,
-    color: palette.error,
+    color: "#ef4444",
   },
   button: {
-    backgroundColor: palette.primary,
     borderRadius: spacing.borderRadius.md,
     paddingVertical: spacing.md - 2,
     alignItems: "center",
@@ -221,10 +351,8 @@ const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   },
   link: {
     ...typography.body,
-    color: palette.primary,
   },
   linkSecondary: {
     ...typography.body,
-    color: palette.textSecondary,
   },
 });

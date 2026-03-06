@@ -8,12 +8,14 @@ import {
   Platform,
   ActivityIndicator,
   ScrollView,
+  useWindowDimensions,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { User, Mail, Lock, Eye, EyeOff } from "lucide-react-native";
+import { User, Mail, Lock, Eye, EyeOff, Calendar, Users, BarChart2 } from "lucide-react-native";
 import { AuthStackParamList } from "../../types/navigation";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../hooks/useTheme";
@@ -40,6 +42,36 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 
 type Props = NativeStackScreenProps<AuthStackParamList, "Register">;
 
+const BRAND_FEATURES = [
+  { icon: Calendar,  text: "Empieza gratis, sin tarjeta de crédito" },
+  { icon: Users,     text: "Tus datos siempre seguros y privados" },
+  { icon: BarChart2, text: "Crece a tu ritmo, cancela cuando quieras" },
+];
+
+function BrandPanel({ palette }: { palette: typeof colors.light }) {
+  return (
+    <LinearGradient
+      colors={[palette.primary, palette.primaryDark]}
+      style={styles.brandPanel}
+    >
+      <Text style={styles.brandTitle}>Únete a EventosApp</Text>
+      <Text style={styles.brandTagline}>
+        Miles de organizadores ya gestionan sus eventos con nosotros
+      </Text>
+      <View style={styles.brandFeatures}>
+        {BRAND_FEATURES.map(({ icon: Icon, text }) => (
+          <View key={text} style={styles.brandFeatureRow}>
+            <View style={styles.brandFeatureIcon}>
+              <Icon color="#fff" size={18} />
+            </View>
+            <Text style={styles.brandFeatureText}>{text}</Text>
+          </View>
+        ))}
+      </View>
+    </LinearGradient>
+  );
+}
+
 export default function RegisterScreen({ navigation }: Props) {
   const { signUp } = useAuth();
   const [error, setError] = useState<string | null>(null);
@@ -48,7 +80,9 @@ export default function RegisterScreen({ navigation }: Props) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { isDark } = useTheme();
   const palette = isDark ? colors.dark : colors.light;
-  const styles = getStyles(palette);
+  const { width, height } = useWindowDimensions();
+  const isTablet = width >= 600;
+  const isLandscapeTablet = isTablet && width > height;
 
   const {
     control,
@@ -71,17 +105,25 @@ export default function RegisterScreen({ navigation }: Props) {
     }
   };
 
-  return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+  const formContent = (
+    <ScrollView
+      contentContainerStyle={[
+        styles.inner,
+        isTablet && !isLandscapeTablet && styles.innerTabletPortrait,
+        isLandscapeTablet && styles.innerTabletLandscape,
+      ]}
+      keyboardShouldPersistTaps="handled"
     >
-      <ScrollView
-        contentContainerStyle={styles.inner}
-        keyboardShouldPersistTaps="handled"
-      >
-        <Text style={styles.title}>Crear Cuenta</Text>
-        <Text style={styles.subtitle}>Regístrate para empezar</Text>
+      <View style={[styles.formCard, isTablet && styles.formCardTablet]}>
+        {!isLandscapeTablet && (
+          <>
+            <Text style={styles.title}>Crear Cuenta</Text>
+            <Text style={styles.subtitle}>Regístrate para empezar</Text>
+          </>
+        )}
+        {isLandscapeTablet && (
+          <Text style={styles.formTitle}>Crear cuenta</Text>
+        )}
 
         {error && (
           <View style={styles.errorBanner}>
@@ -178,15 +220,15 @@ export default function RegisterScreen({ navigation }: Props) {
           )}
         />
 
-        <Text style={styles.termsText}>
+        <Text style={[styles.termsText, { color: palette.textSecondary }]}>
           Al registrarte aceptas nuestros{" "}
-          <Text style={styles.termsLink}>Términos de Servicio</Text>
+          <Text style={[styles.termsLink, { color: palette.primary }]}>Términos de Servicio</Text>
           {" "}y{" "}
-          <Text style={styles.termsLink}>Política de Privacidad</Text>
+          <Text style={[styles.termsLink, { color: palette.primary }]}>Política de Privacidad</Text>
         </Text>
 
         <TouchableOpacity
-          style={[styles.button, loading && styles.buttonDisabled]}
+          style={[styles.button, { backgroundColor: palette.primary }, loading && styles.buttonDisabled]}
           onPress={handleSubmit(onSubmit)}
           disabled={loading}
           activeOpacity={0.8}
@@ -205,19 +247,84 @@ export default function RegisterScreen({ navigation }: Props) {
           onPress={() => navigation.navigate("Login")}
           style={styles.linkContainer}
         >
-          <Text style={styles.linkSecondary}>
-            ¿Ya tienes cuenta? <Text style={styles.link}>Inicia sesión</Text>
+          <Text style={[styles.linkSecondary, { color: palette.textSecondary }]}>
+            ¿Ya tienes cuenta?{" "}
+            <Text style={[styles.link, { color: palette.primary }]}>Inicia sesión</Text>
           </Text>
         </TouchableOpacity>
-      </ScrollView>
+      </View>
+    </ScrollView>
+  );
+
+  if (isLandscapeTablet) {
+    return (
+      <KeyboardAvoidingView
+        style={[styles.container, { backgroundColor: palette.background }]}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <View style={styles.landscapeWrapper}>
+          <BrandPanel palette={palette} />
+          {formContent}
+        </View>
+      </KeyboardAvoidingView>
+    );
+  }
+
+  return (
+    <KeyboardAvoidingView
+      style={[styles.container, { backgroundColor: palette.background }]}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      {formContent}
     </KeyboardAvoidingView>
   );
 }
 
-const getStyles = (palette: typeof colors.light) => StyleSheet.create({
+const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: palette.background,
+  },
+  landscapeWrapper: {
+    flex: 1,
+    flexDirection: "row",
+  },
+  brandPanel: {
+    width: "42%",
+    justifyContent: "center",
+    paddingHorizontal: spacing.xxxl,
+    paddingVertical: spacing.xxl,
+  },
+  brandTitle: {
+    ...typography.h1,
+    color: "#fff",
+    marginBottom: spacing.sm,
+  },
+  brandTagline: {
+    ...typography.body,
+    color: "rgba(255,255,255,0.85)",
+    marginBottom: spacing.xl,
+    lineHeight: 22,
+  },
+  brandFeatures: {
+    gap: spacing.md,
+  },
+  brandFeatureRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  brandFeatureIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  brandFeatureText: {
+    ...typography.body,
+    color: "#fff",
+    flex: 1,
   },
   inner: {
     flexGrow: 1,
@@ -225,32 +332,48 @@ const getStyles = (palette: typeof colors.light) => StyleSheet.create({
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.xxl,
   },
+  innerTabletPortrait: {
+    alignItems: "center",
+  },
+  innerTabletLandscape: {
+    justifyContent: "center",
+    paddingHorizontal: spacing.xxxl,
+  },
+  formCard: {
+    width: "100%",
+  },
+  formCardTablet: {
+    maxWidth: 440,
+  },
+  formTitle: {
+    ...typography.h2,
+    color: "#666",
+    marginBottom: spacing.xl,
+    textAlign: "center",
+  },
   title: {
     ...typography.h1,
     textAlign: "center",
-    color: palette.primary,
     marginBottom: spacing.xxs,
   },
   subtitle: {
     ...typography.body,
     textAlign: "center",
-    color: palette.textSecondary,
     marginBottom: spacing.xxl,
   },
   errorBanner: {
     backgroundColor: "#fef2f2",
     borderLeftWidth: 4,
-    borderLeftColor: palette.error,
+    borderLeftColor: "#ef4444",
     borderRadius: spacing.borderRadius.sm,
     padding: spacing.sm + 4,
     marginBottom: spacing.md,
   },
   errorBannerText: {
     ...typography.bodySmall,
-    color: palette.error,
+    color: "#ef4444",
   },
   button: {
-    backgroundColor: palette.primary,
     borderRadius: spacing.borderRadius.md,
     paddingVertical: spacing.md - 2,
     alignItems: "center",
@@ -264,20 +387,19 @@ const getStyles = (palette: typeof colors.light) => StyleSheet.create({
     alignItems: "center",
     gap: spacing.sm,
   },
+  buttonText: {
+    ...typography.button,
+    color: "#ffffff",
+  },
   termsText: {
     ...typography.caption,
-    color: palette.textSecondary,
     textAlign: "center",
     marginTop: spacing.md,
     marginBottom: spacing.xs,
     lineHeight: 18,
   },
   termsLink: {
-    color: palette.primary,
-  },
-  buttonText: {
-    ...typography.button,
-    color: "#ffffff",
+    ...typography.caption,
   },
   linkContainer: {
     paddingVertical: spacing.sm,
@@ -285,10 +407,8 @@ const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   },
   link: {
     ...typography.body,
-    color: palette.primary,
   },
   linkSecondary: {
     ...typography.body,
-    color: palette.textSecondary,
   },
 });
