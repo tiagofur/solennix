@@ -117,7 +117,7 @@ export const EventForm: React.FC = () => {
     { inventory_id: string; quantity: number; notes: string }[]
   >([]);
   const [equipmentConflicts, setEquipmentConflicts] = useState<EquipmentConflict[]>([]);
-  const [equipmentSuggestions, setEquipmentSuggestions] = useState<InventoryItem[]>([]);
+  const [equipmentSuggestions, setEquipmentSuggestions] = useState<{ id: string; ingredient_name: string; current_stock: number; unit: string; type: string; suggested_quantity: number }[]>([]);
 
   const methods = useForm<EventFormData>({
     resolver: zodResolver(eventSchema) as Resolver<EventFormData>,
@@ -404,24 +404,24 @@ export const EventForm: React.FC = () => {
     });
   };
 
-  const handleQuickAddSuggestion = (inventoryId: string) => {
+  const handleQuickAddSuggestion = (inventoryId: string, suggestedQty: number) => {
     if (!selectedEquipment.some(eq => eq.inventory_id === inventoryId)) {
-      setSelectedEquipment(prev => [...prev, { inventory_id: inventoryId, quantity: 1, notes: '' }]);
+      setSelectedEquipment(prev => [...prev, { inventory_id: inventoryId, quantity: suggestedQty, notes: '' }]);
     }
   };
 
   // Auto-suggest equipment when products change
   useEffect(() => {
-    const productIds = selectedProducts
-      .map(p => p.product_id)
-      .filter(Boolean);
-    if (productIds.length === 0) {
+    const products = selectedProducts
+      .filter(p => p.product_id)
+      .map(p => ({ product_id: p.product_id, quantity: p.quantity }));
+    if (products.length === 0) {
       setEquipmentSuggestions([]);
       return;
     }
     const fetchSuggestions = async () => {
       try {
-        const suggestions = await eventService.getEquipmentSuggestions(productIds);
+        const suggestions = await eventService.getEquipmentSuggestions(products);
         setEquipmentSuggestions(suggestions || []);
       } catch {
         // Silently ignore suggestion errors

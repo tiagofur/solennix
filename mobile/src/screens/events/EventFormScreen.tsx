@@ -118,7 +118,7 @@ export default function EventFormScreen({ navigation, route }: Props) {
   const [equipmentInventory, setEquipmentInventory] = useState<InventoryItem[]>([]);
   const [selectedEquipment, setSelectedEquipment] = useState<SelectedEquipmentItem[]>([]);
   const [equipmentConflicts, setEquipmentConflicts] = useState<EquipmentConflict[]>([]);
-  const [equipmentSuggestions, setEquipmentSuggestions] = useState<InventoryItem[]>([]);
+  const [equipmentSuggestions, setEquipmentSuggestions] = useState<{ id: string; ingredient_name: string; current_stock: number; unit: string; type: string; suggested_quantity: number }[]>([]);
   const [showEquipmentPicker, setShowEquipmentPicker] = useState(false);
 
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -350,14 +350,16 @@ export default function EventFormScreen({ navigation, route }: Props) {
 
   // Auto-suggest equipment when products change
   useEffect(() => {
-    const productIds = selectedProducts.map(p => p.product_id).filter(Boolean);
-    if (productIds.length === 0) {
+    const products = selectedProducts
+      .filter(p => p.product_id)
+      .map(p => ({ product_id: p.product_id, quantity: p.quantity }));
+    if (products.length === 0) {
       setEquipmentSuggestions([]);
       return;
     }
     const fetchSuggestions = async () => {
       try {
-        const suggestions = await eventService.getEquipmentSuggestions(productIds);
+        const suggestions = await eventService.getEquipmentSuggestions(products);
         setEquipmentSuggestions(suggestions || []);
       } catch {
         // Silently ignore
@@ -395,6 +397,12 @@ export default function EventFormScreen({ navigation, route }: Props) {
       setSelectedEquipment(prev => [...prev, { inventory_id: item.id, quantity: 1, notes: '' }]);
     }
     setShowEquipmentPicker(false);
+  };
+
+  const handleQuickAddSuggestion = (suggestion: { id: string; suggested_quantity: number }) => {
+    if (!selectedEquipment.some(eq => eq.inventory_id === suggestion.id)) {
+      setSelectedEquipment(prev => [...prev, { inventory_id: suggestion.id, quantity: suggestion.suggested_quantity, notes: '' }]);
+    }
   };
 
   const handleRemoveEquipment = (index: number) => {
@@ -843,10 +851,10 @@ export default function EventFormScreen({ navigation, route }: Props) {
                       <TouchableOpacity
                         key={s.id}
                         style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: palette.info || '#DBEAFE', paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, borderRadius: 8 }}
-                        onPress={() => handleAddEquipmentItem(s)}
+                        onPress={() => handleQuickAddSuggestion(s)}
                       >
                         <Plus color={palette.info || '#3B82F6'} size={14} />
-                        <Text style={{ ...typography.caption, color: palette.info || '#2563EB', marginLeft: 4 }}>{s.ingredient_name}</Text>
+                        <Text style={{ ...typography.caption, color: palette.info || '#2563EB', marginLeft: 4 }}>{s.ingredient_name} ×{s.suggested_quantity}</Text>
                       </TouchableOpacity>
                     ))}
                 </View>

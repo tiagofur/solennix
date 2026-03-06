@@ -142,7 +142,7 @@ func TestRepositoryMethodsWithClosedPool(t *testing.T) {
 	if _, err := NewEventRepo(pool).CheckEquipmentConflicts(ctx, userID, "2026-01-01", nil, nil, []uuid.UUID{id}, nil); err == nil {
 		t.Fatalf("EventRepo.CheckEquipmentConflicts() expected error with closed pool")
 	}
-	if _, err := NewEventRepo(pool).GetEquipmentSuggestionsFromProducts(ctx, userID, []uuid.UUID{id}); err == nil {
+	if _, err := NewEventRepo(pool).GetEquipmentSuggestionsFromProducts(ctx, userID, []ProductQuantity{{ID: id, Quantity: 1}}); err == nil {
 		t.Fatalf("EventRepo.GetEquipmentSuggestionsFromProducts() expected error with closed pool")
 	}
 	if _, err := NewEventRepo(pool).Search(ctx, userID, "test"); err == nil {
@@ -240,7 +240,7 @@ func TestRepositoryEdgeCases(t *testing.T) {
 	}
 
 	// EventRepo.GetEquipmentSuggestionsFromProducts with empty productIDs returns early without hitting the pool
-	suggestions, err := NewEventRepo(nil).GetEquipmentSuggestionsFromProducts(ctx, userID, []uuid.UUID{})
+	suggestions, err := NewEventRepo(nil).GetEquipmentSuggestionsFromProducts(ctx, userID, []ProductQuantity{})
 	if err != nil {
 		t.Fatalf("EventRepo.GetEquipmentSuggestionsFromProducts(empty) expected no error, got: %v", err)
 	}

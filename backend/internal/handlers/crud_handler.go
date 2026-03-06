@@ -511,34 +511,41 @@ func (h *CRUDHandler) CheckEquipmentConflicts(w http.ResponseWriter, r *http.Req
 func (h *CRUDHandler) GetEquipmentSuggestions(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 	var req struct {
-		ProductIDs []string `json:"product_ids"`
+		Products []struct {
+			ProductID string  `json:"product_id"`
+			Quantity  float64 `json:"quantity"`
+		} `json:"products"`
 	}
 	if err := decodeJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
-	if len(req.ProductIDs) == 0 {
-		writeJSON(w, http.StatusOK, []models.InventoryItem{})
+	if len(req.Products) == 0 {
+		writeJSON(w, http.StatusOK, []models.EquipmentSuggestion{})
 		return
 	}
 
-	var productUUIDs []uuid.UUID
-	for _, idStr := range req.ProductIDs {
-		id, err := uuid.Parse(idStr)
+	var productQtys []repository.ProductQuantity
+	for _, p := range req.Products {
+		id, err := uuid.Parse(p.ProductID)
 		if err != nil {
-			writeError(w, http.StatusBadRequest, "Invalid product ID: "+idStr)
+			writeError(w, http.StatusBadRequest, "Invalid product ID: "+p.ProductID)
 			return
 		}
-		productUUIDs = append(productUUIDs, id)
+		qty := p.Quantity
+		if qty <= 0 {
+			qty = 1
+		}
+		productQtys = append(productQtys, repository.ProductQuantity{ID: id, Quantity: qty})
 	}
 
-	suggestions, err := h.eventRepo.GetEquipmentSuggestionsFromProducts(r.Context(), userID, productUUIDs)
+	suggestions, err := h.eventRepo.GetEquipmentSuggestionsFromProducts(r.Context(), userID, productQtys)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Failed to fetch equipment suggestions")
 		return
 	}
 	if suggestions == nil {
-		suggestions = []models.InventoryItem{}
+		suggestions = []models.EquipmentSuggestion{}
 	}
 	writeJSON(w, http.StatusOK, suggestions)
 }
