@@ -562,11 +562,18 @@ export const Dashboard: React.FC = () => {
                       onClick={() => navigate(`/events/${event.id}/summary`)}
                     >
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-semibold text-text">
-                          {format(new Date(event.event_date + "T12:00:00"), "d MMM yyyy", { locale: es })}
-                        </div>
-                        <div className="text-xs text-text-secondary capitalize">
-                          {format(new Date(event.event_date + "T12:00:00"), "EEEE", { locale: es })}
+                        <div className="flex items-center gap-3">
+                          <div className="flex flex-col items-center justify-center bg-surface-alt border border-border rounded-xl w-11 h-11 shrink-0">
+                            <span className="text-lg font-black leading-none text-text">
+                              {format(new Date(event.event_date + "T12:00:00"), "d")}
+                            </span>
+                            <span className="text-[9px] font-semibold uppercase text-text-secondary leading-none mt-0.5">
+                              {format(new Date(event.event_date + "T12:00:00"), "MMM", { locale: es })}
+                            </span>
+                          </div>
+                          <div className="text-xs text-text-secondary capitalize">
+                            {format(new Date(event.event_date + "T12:00:00"), "EEEE", { locale: es })}
+                          </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-text">

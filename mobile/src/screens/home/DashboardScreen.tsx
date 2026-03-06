@@ -73,6 +73,7 @@ export default function DashboardScreen({ navigation }: Props) {
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const loadDashboardData = useCallback(async () => {
     const today = new Date();
@@ -80,6 +81,7 @@ export default function DashboardScreen({ navigation }: Props) {
     const end = format(endOfMonth(today), "yyyy-MM-dd");
 
     setLoading(true);
+    setError(null);
 
     try {
       const [clients, monthEvents, upcoming, inventory] = await Promise.all([
@@ -154,12 +156,13 @@ export default function DashboardScreen({ navigation }: Props) {
 
       // Low stock
       const lowItems = (inventory || []).filter(
-        (item) => item.current_stock <= item.minimum_stock,
+        (item) => item.minimum_stock > 0 && item.current_stock <= item.minimum_stock,
       );
       setLowStockCount(lowItems.length);
       setLowStockItems(lowItems.slice(0, 5));
     } catch (err) {
       logError("Error loading dashboard", err);
+      setError("Error al cargar los datos del dashboard");
     } finally {
       setLoading(false);
     }
@@ -241,6 +244,19 @@ export default function DashboardScreen({ navigation }: Props) {
             <Search color={palette.textSecondary} size={22} />
           </TouchableOpacity>
         </View>
+
+        {/* Error Banner */}
+        {error && (
+          <TouchableOpacity
+            style={styles.errorBanner}
+            onPress={loadDashboardData}
+            activeOpacity={0.8}
+          >
+            <AlertTriangle color={palette.error} size={16} />
+            <Text style={styles.errorBannerText}>{error}</Text>
+            <Text style={styles.errorBannerRetry}>Reintentar</Text>
+          </TouchableOpacity>
+        )}
 
         {/* Quick Action Buttons */}
         <View style={styles.quickActions}>
@@ -662,6 +678,27 @@ const getStyles = (palette: typeof colors.light) => StyleSheet.create({
     color: palette.textTertiary,
     width: 60,
     textAlign: "right",
+  },
+  errorBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    backgroundColor: palette.errorBg,
+    borderRadius: spacing.borderRadius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  errorBannerText: {
+    ...typography.subheadline,
+    color: palette.error,
+    flex: 1,
+  },
+  errorBannerRetry: {
+    ...typography.subheadline,
+    color: palette.error,
+    fontWeight: "700",
+    textDecorationLine: "underline",
   },
   // Events
   eventRow: {
