@@ -21,6 +21,7 @@ import {
   ChevronRight,
   RefreshCw,
   Moon,
+  Lock,
 } from "lucide-react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -28,6 +29,8 @@ import { SettingsStackParamList } from "../../types/navigation";
 import { useAuth } from "../../contexts/AuthContext";
 import { revenueCatService } from "../../services/revenueCatService";
 import { useToast } from "../../hooks/useToast";
+import { usePlanLimits } from "../../hooks/usePlanLimits";
+import { api } from "../../lib/api";
 import { ConfirmDialog } from "../../components/shared";
 import { useTheme } from "../../hooks/useTheme";
 import { colors } from "../../theme/colors";
@@ -97,8 +100,29 @@ export default function SettingsScreen() {
   const [showLogout, setShowLogout] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [restoring, setRestoring] = useState(false);
+  const [sendingPasswordReset, setSendingPasswordReset] = useState(false);
+  const {
+    eventsThisMonth,
+    limit: eventLimit,
+    clientsCount,
+    clientLimit,
+    isBasicPlan,
+  } = usePlanLimits();
 
   const planIsPro = user?.plan === "pro" || user?.plan === "premium";
+
+  const handleChangePassword = async () => {
+    if (!user?.email) return;
+    setSendingPasswordReset(true);
+    try {
+      await api.post("/auth/forgot-password", { email: user.email });
+      addToast("Revisa tu correo para cambiar la contraseña", "success");
+    } catch {
+      addToast("Error al enviar el correo", "error");
+    } finally {
+      setSendingPasswordReset(false);
+    }
+  };
 
   const handleRestore = async () => {
     setRestoring(true);
@@ -164,6 +188,19 @@ export default function SettingsScreen() {
             trailing={chevron}
           />
           <SettingsRow
+            icon={
+              sendingPasswordReset ? (
+                <ActivityIndicator color={palette.textTertiary} size={20} />
+              ) : (
+                <Lock color={palette.textTertiary} size={20} />
+              )
+            }
+            label="Cambiar Contraseña"
+            subtitle="Te enviaremos instrucciones por correo"
+            onPress={handleChangePassword}
+            disabled={sendingPasswordReset}
+          />
+          <SettingsRow
             icon={<CreditCard color={palette.textTertiary} size={20} />}
             label="Planes y Precios"
             onPress={() => navigation.navigate("Pricing")}
@@ -188,6 +225,43 @@ export default function SettingsScreen() {
               </View>
             }
           />
+        </View>
+
+        {/* Plan usage card */}
+        <Text style={styles.sectionTitle}>Uso del Plan</Text>
+        <View style={styles.usageCard}>
+          {isBasicPlan ? (
+            <>
+              <View style={styles.usageRow}>
+                <Text style={styles.usageLabel}>Eventos este mes</Text>
+                <Text style={styles.usageValue}>{eventsThisMonth} / {eventLimit}</Text>
+              </View>
+              <View style={styles.progressBar}>
+                <View
+                  style={[
+                    styles.progressFill,
+                    { width: `${Math.min((eventsThisMonth / eventLimit) * 100, 100)}%` },
+                  ]}
+                />
+              </View>
+              <View style={[styles.usageRow, { marginTop: spacing.sm }]}>
+                <Text style={styles.usageLabel}>Clientes</Text>
+                <Text style={styles.usageValue}>{clientsCount} / {clientLimit}</Text>
+              </View>
+              <View style={styles.progressBar}>
+                <View
+                  style={[
+                    styles.progressFillGreen,
+                    { width: `${Math.min((clientsCount / clientLimit) * 100, 100)}%` },
+                  ]}
+                />
+              </View>
+            </>
+          ) : (
+            <Text style={styles.unlimitedText}>
+              Plan Pro — eventos y clientes ilimitados
+            </Text>
+          )}
         </View>
 
         {/* Negocio section */}
@@ -411,5 +485,47 @@ const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   comingSoonText: {
     ...typography.caption1,
     color: palette.textTertiary,
+  },
+  usageCard: {
+    backgroundColor: palette.card,
+    borderRadius: spacing.borderRadius.lg,
+    marginBottom: spacing.md,
+    padding: spacing.md,
+    ...shadows.sm,
+  },
+  usageRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: spacing.xs,
+  },
+  usageLabel: {
+    ...typography.caption1,
+    color: palette.textSecondary,
+  },
+  usageValue: {
+    ...typography.caption1,
+    color: palette.text,
+    fontWeight: "600",
+  },
+  progressBar: {
+    height: 6,
+    backgroundColor: palette.surface,
+    borderRadius: 3,
+    overflow: "hidden",
+    marginBottom: spacing.xs,
+  },
+  progressFill: {
+    height: "100%",
+    backgroundColor: palette.primary,
+    borderRadius: 3,
+  },
+  progressFillGreen: {
+    height: "100%",
+    backgroundColor: palette.success,
+    borderRadius: 3,
+  },
+  unlimitedText: {
+    ...typography.caption1,
+    color: palette.textSecondary,
   },
 });

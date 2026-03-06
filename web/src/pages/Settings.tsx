@@ -18,6 +18,7 @@ import { api } from "@/lib/api";
 import { subscriptionService, SubscriptionStatus } from "@/services/subscriptionService";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { useToast } from "@/hooks/useToast";
+import { useTheme } from "@/hooks/useTheme";
 import {
   DEFAULT_CONTRACT_TEMPLATE,
   validateContractTemplate,
@@ -43,14 +44,15 @@ const subStatusLabel: Record<string, { text: string; color: string }> = {
 export const Settings: React.FC = () => {
   const { user: profile, updateProfile } = useAuth();
   const [searchParams] = useSearchParams();
-  const { 
-    eventsThisMonth, 
-    limit: eventLimit, 
-    clientsCount, 
-    clientLimit, 
-    isBasicPlan 
+  const {
+    eventsThisMonth,
+    limit: eventLimit,
+    clientsCount,
+    clientLimit,
+    isBasicPlan
   } = usePlanLimits();
   const { addToast } = useToast();
+  const { isDark, toggleTheme } = useTheme();
 
   const [isEditingBusiness, setIsEditingBusiness] = useState(false);
   const [businessName, setBusinessName] = useState(
@@ -70,6 +72,9 @@ export const Settings: React.FC = () => {
   );
   const [isPortalLoading, setIsPortalLoading] = useState(false);
   const [subStatus, setSubStatus] = useState<SubscriptionStatus | null>(null);
+  const [showBusinessNameInPdf, setShowBusinessNameInPdf] = useState(
+    profile?.show_business_name_in_pdf ?? true,
+  );
   const initialTab = searchParams.get("tab") === "subscription" ? "subscription" : "profile";
   const [activeTab, setActiveTab] = useState<"profile" | "business" | "subscription" | "contracts">(initialTab);
 
@@ -83,6 +88,7 @@ export const Settings: React.FC = () => {
       });
       setContractTemplate(profile.contract_template || DEFAULT_CONTRACT_TEMPLATE);
       setBrandColor(profile.brand_color || "#FF6B35");
+      setShowBusinessNameInPdf(profile.show_business_name_in_pdf ?? true);
     }
   }, [profile]);
 
@@ -110,12 +116,22 @@ export const Settings: React.FC = () => {
     }
   };
 
+  const handleToggleBusinessNameInPdf = async (value: boolean) => {
+    setShowBusinessNameInPdf(value);
+    try {
+      await updateProfile({ show_business_name_in_pdf: value });
+    } catch (error) {
+      logError("Error updating PDF name setting", error);
+      setShowBusinessNameInPdf(!value);
+    }
+  };
+
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 10 * 1024 * 1024) {
-      addToast("El archivo es demasiado grande (máximo 10MB).", "error");
+    if (file.size > 2 * 1024 * 1024) {
+      addToast("El archivo es demasiado grande (máximo 2MB).", "error");
       return;
     }
 
@@ -233,10 +249,34 @@ export const Settings: React.FC = () => {
                 </div>
               </div>
 
-              <div className="pt-6 border-t border-border">
+              <div className="pt-6 border-t border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <button className="flex items-center gap-2 text-primary font-bold hover:gap-3 transition-all">
                   Cambiar contraseña <ExternalLink className="h-4 w-4" />
                 </button>
+                <div className="flex items-center justify-between sm:justify-end gap-4">
+                  <div>
+                    <p className="font-bold text-text text-sm">Modo Oscuro</p>
+                    <p className="text-xs text-text-secondary">Apariencia de la aplicación</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={toggleTheme}
+                    className={clsx(
+                      "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none",
+                      isDark ? "bg-primary" : "bg-surface-alt border border-border",
+                    )}
+                    role="switch"
+                    aria-checked={isDark}
+                    aria-label="Modo oscuro"
+                  >
+                    <span
+                      className={clsx(
+                        "inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform",
+                        isDark ? "translate-x-6" : "translate-x-1",
+                      )}
+                    />
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -312,12 +352,41 @@ export const Settings: React.FC = () => {
                   </div>
                   <div className="flex-1 space-y-2">
                     <h4 className="font-bold">Sube tu logo profesional</h4>
-                    <p className="text-xs text-text-secondary">PNG transparente recomendado. Máx 10MB.</p>
+                    <p className="text-xs text-text-secondary">PNG transparente recomendado. Máx 2MB.</p>
                     <label className="inline-block bg-card text-text font-bold text-sm px-6 py-2.5 rounded-xl border border-border shadow-sm hover:shadow-md transition-all cursor-pointer">
                       Seleccionar archivo
                       <input type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} />
                     </label>
                   </div>
+                </div>
+              </div>
+
+              {/* Show Business Name in PDFs */}
+              <div className="space-y-4">
+                <label className="text-xs font-bold text-text-secondary uppercase tracking-wider">PDFs</label>
+                <div className="flex items-center justify-between p-4 bg-surface-alt/50 rounded-2xl border border-border">
+                  <div>
+                    <p className="font-bold text-text">Mostrar nombre en PDFs</p>
+                    <p className="text-xs text-text-secondary mt-0.5">Incluye el nombre de tu negocio en presupuestos y contratos</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleBusinessNameInPdf(!showBusinessNameInPdf)}
+                    className={clsx(
+                      "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none",
+                      showBusinessNameInPdf ? "bg-primary" : "bg-surface-alt border border-border",
+                    )}
+                    role="switch"
+                    aria-checked={showBusinessNameInPdf}
+                    aria-label="Mostrar nombre en PDFs"
+                  >
+                    <span
+                      className={clsx(
+                        "inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform",
+                        showBusinessNameInPdf ? "translate-x-6" : "translate-x-1",
+                      )}
+                    />
+                  </button>
                 </div>
               </div>
 
