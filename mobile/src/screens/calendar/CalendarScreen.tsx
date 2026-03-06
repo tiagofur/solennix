@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -50,6 +50,8 @@ import { shadows } from "../../theme/shadows";
 
 type Props = NativeStackScreenProps<CalendarStackParamList, "CalendarView">;
 
+type EventWithClient = Event & { clients?: { name: string } | null };
+
 const STATUS_OPTIONS = [
   { key: "all", label: "Todos" },
   { key: "quoted", label: "Cotizado" },
@@ -85,7 +87,7 @@ const getStatusLabel = (status: string): string => {
 export default function CalendarScreen({ navigation }: Props) {
   const addToast = useToast((s) => s.addToast);
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [events, setEvents] = useState<Event[]>([]);
+  const [events, setEvents] = useState<EventWithClient[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -97,6 +99,24 @@ export default function CalendarScreen({ navigation }: Props) {
   const styles = getStyles(palette);
   const statusColors = getStatusColors(palette);
   const statusBgColors = getStatusBgColors(palette);
+
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity
+          onPress={() =>
+            navigation.navigate("EventForm", {
+              eventDate: selectedDate ? format(selectedDate, "yyyy-MM-dd") : undefined,
+            })
+          }
+          style={{ marginRight: 8 }}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          <Plus color={palette.primary} size={22} />
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation, selectedDate, palette.primary]);
 
   const loadEvents = useCallback(async () => {
     try {
@@ -147,6 +167,11 @@ export default function CalendarScreen({ navigation }: Props) {
 
   const handlePrevMonth = () => setCurrentDate(subMonths(currentDate, 1));
   const handleNextMonth = () => setCurrentDate(addMonths(currentDate, 1));
+  const handleGoToToday = () => {
+    const today = new Date();
+    setCurrentDate(today);
+    setSelectedDate(today);
+  };
 
   const selectedDateEvents = selectedDate ? getEventsForDate(selectedDate) : [];
 
@@ -168,7 +193,7 @@ export default function CalendarScreen({ navigation }: Props) {
 
   const weekDays = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 
-  const renderEventCard = (event: Event) => (
+  const renderEventCard = (event: EventWithClient) => (
     <TouchableOpacity
       key={event.id}
       style={styles.eventCard}
@@ -182,7 +207,12 @@ export default function CalendarScreen({ navigation }: Props) {
         ]}
       />
       <View style={styles.eventInfo}>
-        <Text style={styles.eventName}>{event.service_type}</Text>
+        {event.clients?.name ? (
+          <Text style={styles.eventName}>{event.clients.name}</Text>
+        ) : null}
+        <Text style={event.clients?.name ? styles.eventDetail : styles.eventName}>
+          {event.service_type}
+        </Text>
         <Text style={styles.eventDetail}>
           {format(parseLocalDate(event.event_date), "d MMM yyyy", { locale: es })}
           {" \u2022 "}
@@ -229,9 +259,14 @@ export default function CalendarScreen({ navigation }: Props) {
             <Text style={styles.monthTitle}>
               {format(currentDate, "MMMM yyyy", { locale: es }).toUpperCase()}
             </Text>
-            <TouchableOpacity onPress={handleNextMonth} style={styles.navButton}>
-              <ChevronRight color={palette.textTertiary} size={24} />
-            </TouchableOpacity>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: spacing.xs }}>
+              <TouchableOpacity onPress={handleGoToToday} style={styles.todayButton}>
+                <Text style={styles.todayButtonText}>Hoy</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleNextMonth} style={styles.navButton}>
+                <ChevronRight color={palette.textTertiary} size={24} />
+              </TouchableOpacity>
+            </View>
           </View>
 
           <View style={styles.weekDays}>
@@ -442,6 +477,18 @@ const getStyles = (palette: typeof colors.light) => StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     ...shadows.sm,
+  },
+  todayButton: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: spacing.borderRadius.md,
+    borderWidth: 1,
+    borderColor: palette.primary,
+  },
+  todayButtonText: {
+    ...typography.caption1,
+    color: palette.primary,
+    fontWeight: "600",
   },
   monthTitle: {
     ...typography.headline,

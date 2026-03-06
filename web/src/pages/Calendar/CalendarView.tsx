@@ -14,9 +14,9 @@ import {
   List as ListIcon,
   CalendarDays,
   Search,
-  Filter,
   Download,
 } from "lucide-react";
+import { useToast } from "../../hooks/useToast";
 import { exportToCsv } from "../../lib/exportCsv";
 import {
   format,
@@ -44,8 +44,17 @@ type EventWithClient = Event & {
   client?: { name: string; phone: string };
 };
 
+const STATUS_OPTIONS = [
+  { key: "all", label: "Todos" },
+  { key: "quoted", label: "Cotizado" },
+  { key: "confirmed", label: "Confirmado" },
+  { key: "completed", label: "Completado" },
+  { key: "cancelled", label: "Cancelado" },
+] as const;
+
 export const CalendarView: React.FC = () => {
   const navigate = useNavigate();
+  const { addToast } = useToast();
   const [events, setEvents] = useState<EventWithClient[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
     new Date(),
@@ -76,6 +85,7 @@ export const CalendarView: React.FC = () => {
       setEvents(data || []);
     } catch (error) {
       logError("Error fetching events for list", error);
+      addToast("Error al cargar eventos", "error");
     } finally {
       setLoading(false);
     }
@@ -90,9 +100,16 @@ export const CalendarView: React.FC = () => {
       setEvents(data || []);
     } catch (error) {
       logError("Error fetching events", error);
+      addToast("Error al cargar eventos", "error");
     } finally {
       setLoading(false);
     }
+  };
+
+  const goToToday = () => {
+    const today = new Date();
+    setCurrentMonth(today);
+    setSelectedDate(today);
   };
 
   const modifiers = {
@@ -218,6 +235,15 @@ export const CalendarView: React.FC = () => {
         <div className="grid grid-cols-1 xl:grid-cols-5 gap-8 fade-in">
           {/* Calendar Card */}
           <div className="bg-card shadow-sm rounded-3xl p-4 sm:p-8 xl:col-span-3 border border-border transition-colors">
+            <div className="flex justify-end mb-2">
+              <button
+                type="button"
+                onClick={goToToday}
+                className="text-xs text-primary font-semibold hover:underline"
+              >
+                Hoy
+              </button>
+            </div>
             <style>{`
             .rdp-root {
                 --rdp-cell-size: 45px;
@@ -489,26 +515,23 @@ export const CalendarView: React.FC = () => {
                 aria-label="Buscar eventos por cliente o servicio"
               />
             </div>
-            <div className="relative">
-              <label htmlFor="status-filter" className="sr-only">
-                Filtrar eventos por estado
-              </label>
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Filter className="h-5 w-5 text-text-secondary" aria-hidden="true" />
-              </div>
-              <select
-                id="status-filter"
-                className="block w-full pl-10 pr-10 py-2 text-base border-border focus:outline-hidden focus:ring-primary focus:border-primary sm:text-sm rounded-md bg-card text-text"
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                aria-label="Filtrar eventos por estado"
-              >
-                <option value="all">Todos los estados</option>
-                <option value="draft">Borrador / Cotizado</option>
-                <option value="confirmed">Confirmado</option>
-                <option value="completed">Completado</option>
-                <option value="cancelled">Cancelado</option>
-              </select>
+            <div className="flex flex-wrap gap-2" role="group" aria-label="Filtrar eventos por estado">
+              {STATUS_OPTIONS.map((opt) => (
+                <button
+                  key={opt.key}
+                  type="button"
+                  onClick={() => setStatusFilter(opt.key)}
+                  className={clsx(
+                    "px-3 py-1.5 rounded-full text-sm font-medium transition-colors",
+                    statusFilter === opt.key
+                      ? "bg-primary text-white"
+                      : "bg-surface-alt text-text-secondary hover:text-text border border-border",
+                  )}
+                  aria-pressed={statusFilter === opt.key}
+                >
+                  {opt.label}
+                </button>
+              ))}
             </div>
           </div>
 
