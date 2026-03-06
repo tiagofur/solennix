@@ -45,7 +45,7 @@ describe('Terms', () => {
 
       expect(screen.getByText('1. Uso del servicio')).toBeInTheDocument();
       expect(
-        screen.getByText(/Al usar Solennix, aceptas estos terminos/)
+        screen.getByText(/Al usar Solennix, aceptas estos términos/)
       ).toBeInTheDocument();
       expect(screen.getByText('Proporcionar informacion veraz al registrarte')).toBeInTheDocument();
       expect(screen.getByText('Mantener la confidencialidad de tu cuenta')).toBeInTheDocument();
@@ -112,7 +112,7 @@ describe('Terms', () => {
 
       expect(screen.getByText('7. Modificaciones')).toBeInTheDocument();
       expect(
-        screen.getByText(/Nos reservamos el derecho de modificar estos terminos/)
+        screen.getByText(/Nos reservamos el derecho de modificar estos términos/)
       ).toBeInTheDocument();
     });
 
@@ -121,7 +121,7 @@ describe('Terms', () => {
 
       expect(screen.getByText('8. Ley aplicable')).toBeInTheDocument();
       expect(
-        screen.getByText(/Estos terminos se rigen por las leyes de Mexico/)
+        screen.getByText(/Estos términos se rigen por las leyes de México/)
       ).toBeInTheDocument();
     });
 
@@ -130,7 +130,7 @@ describe('Terms', () => {
 
       expect(screen.getByText('9. Contacto')).toBeInTheDocument();
       expect(
-        screen.getByText(/Para cualquier consulta sobre estos terminos/)
+        screen.getByText(/Para cualquier consulta sobre estos términos/)
       ).toBeInTheDocument();
     });
 

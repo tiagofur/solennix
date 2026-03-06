@@ -30,7 +30,7 @@ export const Terms: React.FC = () => {
             1. Uso del servicio
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed mb-3">
-            Al usar Solennix, aceptas estos terminos. Solennix es una plataforma
+            Al usar Solennix, aceptas estos términos. Solennix es una plataforma
             SaaS para organizadores de eventos. Te otorgamos una licencia limitada,
             no exclusiva y no transferible para usar el servicio segun tu plan de
             suscripcion activo.
@@ -132,7 +132,7 @@ export const Terms: React.FC = () => {
             7. Modificaciones
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-            Nos reservamos el derecho de modificar estos terminos. Te notificaremos
+            Nos reservamos el derecho de modificar estos términos. Te notificaremos
             con al menos 15 dias de anticipacion sobre cambios materiales.
             El uso continuado del servicio tras los cambios implica aceptacion.
           </p>
@@ -144,8 +144,8 @@ export const Terms: React.FC = () => {
             8. Ley aplicable
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-            Estos terminos se rigen por las leyes de Mexico. Cualquier disputa
-            se resolvera en los tribunales competentes de la Ciudad de Mexico.
+            Estos términos se rigen por las leyes de México. Cualquier disputa
+            se resolverá en los tribunales competentes de la Ciudad de México.
           </p>
         </div>
 
@@ -155,7 +155,7 @@ export const Terms: React.FC = () => {
             9. Contacto
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-            Para cualquier consulta sobre estos terminos:
+            Para cualquier consulta sobre estos términos:
           </p>
           <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed mt-2">
             Creapolis.Dev<br />

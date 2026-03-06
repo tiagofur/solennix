@@ -23,7 +23,7 @@ services:
       context: ./web
       dockerfile: Dockerfile
       args:
-        - VITE_API_URL=https://api-eventos.creapolis.dev/api
+        - VITE_API_URL=https://api.solennix.com/api
     container_name: solennix-frontend
     restart: always
     ports:
