@@ -70,7 +70,7 @@ func TestCRUDHandlerErrorBranchesWithClosedPool(t *testing.T) {
 		{"DeletePaymentRepoError", withURLParam(withUser(httptest.NewRequest(http.MethodDelete, "/api/payments/"+id, nil)), "id", id), (*CRUDHandler).DeletePayment, http.StatusNotFound},
 		// --- NEW: closed-pool error tests for additional repo paths ---
 		{"CheckEquipmentConflictsRepoError", withUser(httptest.NewRequest(http.MethodPost, "/api/events/equipment/conflicts", strings.NewReader(`{"event_date":"2026-01-01","inventory_ids":["`+id+`"]}`))), (*CRUDHandler).CheckEquipmentConflicts, http.StatusInternalServerError},
-		{"GetEquipmentSuggestionsRepoError", withUser(httptest.NewRequest(http.MethodPost, "/api/events/equipment/suggestions", strings.NewReader(`{"product_ids":["`+id+`"]}`))), (*CRUDHandler).GetEquipmentSuggestions, http.StatusInternalServerError},
+		{"GetEquipmentSuggestionsRepoError", withUser(httptest.NewRequest(http.MethodPost, "/api/events/equipment/suggestions", strings.NewReader(`{"products":[{"product_id":"`+id+`","quantity":1}]}`))), (*CRUDHandler).GetEquipmentSuggestions, http.StatusInternalServerError},
 		{"GetBatchProductIngredientsRepoError", withUser(httptest.NewRequest(http.MethodPost, "/api/products/ingredients/batch", strings.NewReader(`{"product_ids":["`+id+`"]}`))), (*CRUDHandler).GetBatchProductIngredients, http.StatusNotFound},
 		{"GetClientRepoError", withURLParam(withUser(httptest.NewRequest(http.MethodGet, "/api/clients/"+id, nil)), "id", id), (*CRUDHandler).GetClient, http.StatusNotFound},
 		{"GetProductRepoError", withURLParam(withUser(httptest.NewRequest(http.MethodGet, "/api/products/"+id, nil)), "id", id), (*CRUDHandler).GetProduct, http.StatusNotFound},

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"math"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -475,35 +476,103 @@ func (r *EventRepo) CheckEquipmentConflicts(ctx context.Context, userID uuid.UUI
 	return conflicts, nil
 }
 
-func (r *EventRepo) GetEquipmentSuggestionsFromProducts(ctx context.Context, userID uuid.UUID, productIDs []uuid.UUID) ([]models.InventoryItem, error) {
-	if len(productIDs) == 0 {
+// ProductQuantity pairs a product ID with the number of units in the event.
+type ProductQuantity struct {
+	ID       uuid.UUID
+	Quantity float64
+}
+
+// GetEquipmentSuggestionsFromProducts returns suggested equipment for an event,
+// with quantities calculated from each product's recipe:
+//   - If capacity is set: ceil(product_event_qty / capacity)
+//   - Otherwise: quantity_required (fixed, not scaled by event qty)
+//
+// Results are summed across all products that share the same equipment piece.
+func (r *EventRepo) GetEquipmentSuggestionsFromProducts(ctx context.Context, userID uuid.UUID, products []ProductQuantity) ([]models.EquipmentSuggestion, error) {
+	if len(products) == 0 {
 		return nil, nil
 	}
 
-	query := `SELECT DISTINCT i.id, i.user_id, i.ingredient_name, i.current_stock, i.minimum_stock,
-		i.unit, i.unit_cost, i.type, i.last_updated
-		FROM product_ingredients pi
+	productIDs := make([]uuid.UUID, len(products))
+	quantities := make([]float64, len(products))
+	for i, p := range products {
+		productIDs[i] = p.ID
+		quantities[i] = p.Quantity
+	}
+
+	// Join unnested product arrays with product_ingredients to get one row per
+	// (product, equipment) pair, then aggregate in Go.
+	query := `
+		SELECT i.id, i.ingredient_name, i.current_stock, i.unit, i.type,
+		       pi.quantity_required, pi.capacity, p.quantity AS product_quantity
+		FROM (
+			SELECT unnest($1::uuid[]) AS product_id,
+			       unnest($2::float8[]) AS quantity
+		) AS p
+		JOIN product_ingredients pi ON pi.product_id = p.product_id
 		JOIN inventory i ON pi.inventory_id = i.id
-		WHERE pi.product_id = ANY($1) AND i.type = 'equipment' AND i.user_id = $2`
-	rows, err := r.pool.Query(ctx, query, productIDs, userID)
+		WHERE i.type = 'equipment' AND i.user_id = $3`
+
+	rows, err := r.pool.Query(ctx, query, productIDs, quantities, userID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var items []models.InventoryItem
+	// Aggregate by inventory ID: sum the required equipment across products.
+	type row struct {
+		id              uuid.UUID
+		name            string
+		stock           float64
+		unit            string
+		typ             string
+		quantityReq     float64
+		capacity        *float64
+		productQty      float64
+	}
+
+	totals := make(map[uuid.UUID]*models.EquipmentSuggestion)
+	var order []uuid.UUID
+
 	for rows.Next() {
-		var item models.InventoryItem
-		if err := rows.Scan(&item.ID, &item.UserID, &item.IngredientName, &item.CurrentStock,
-			&item.MinimumStock, &item.Unit, &item.UnitCost, &item.Type, &item.LastUpdated); err != nil {
+		var r row
+		if err := rows.Scan(&r.id, &r.name, &r.stock, &r.unit, &r.typ,
+			&r.quantityReq, &r.capacity, &r.productQty); err != nil {
 			return nil, err
 		}
-		items = append(items, item)
+
+		var needed int
+		if r.capacity != nil && *r.capacity > 0 {
+			// Capacity-based: how many pieces of equipment handle this product qty
+			needed = int(math.Ceil(r.productQty / *r.capacity))
+		} else {
+			// Fixed: quantity_required is the total needed regardless of event qty
+			needed = int(math.Ceil(r.quantityReq))
+		}
+
+		if s, ok := totals[r.id]; ok {
+			s.SuggestedQty += needed
+		} else {
+			totals[r.id] = &models.EquipmentSuggestion{
+				ID:             r.id,
+				IngredientName: r.name,
+				CurrentStock:   r.stock,
+				Unit:           r.unit,
+				Type:           r.typ,
+				SuggestedQty:   needed,
+			}
+			order = append(order, r.id)
+		}
 	}
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("error iterating equipment suggestions: %w", err)
 	}
-	return items, nil
+
+	result := make([]models.EquipmentSuggestion, 0, len(order))
+	for _, id := range order {
+		result = append(result, *totals[id])
+	}
+	return result, nil
 }
 
 // Search performs a full-text search on events for the given user

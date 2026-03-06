@@ -489,7 +489,7 @@ func TestGetEquipmentSuggestionsValidation(t *testing.T) {
 	})
 
 	t.Run("InvalidProductID", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodPost, "/api/events/equipment-suggestions", strings.NewReader(`{"product_ids":["bad-id"]}`))
+		req := httptest.NewRequest(http.MethodPost, "/api/events/equipment-suggestions", strings.NewReader(`{"products":[{"product_id":"bad-id","quantity":1}]}`))
 		req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, uuid.New()))
 		rr := httptest.NewRecorder()
 		h.GetEquipmentSuggestions(rr, req)

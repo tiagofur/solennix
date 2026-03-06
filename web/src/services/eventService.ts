@@ -101,8 +101,8 @@ export const eventService = {
     return api.post<EquipmentConflict[]>('/events/equipment/conflicts', params);
   },
 
-  async getEquipmentSuggestions(productIds: string[]): Promise<InventoryItem[]> {
-    return api.post<InventoryItem[]>('/events/equipment/suggestions', { product_ids: productIds });
+  async getEquipmentSuggestions(products: { product_id: string; quantity: number }[]): Promise<{ id: string; ingredient_name: string; current_stock: number; unit: string; type: string; suggested_quantity: number }[]> {
+    return api.post('/events/equipment/suggestions', { products });
   },
 
   // Compatibility methods for legacy calls (if any individual update is used)

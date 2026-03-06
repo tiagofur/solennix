@@ -7,15 +7,24 @@ interface SelectedEquipment {
   notes: string;
 }
 
+interface EquipmentSuggestion {
+  id: string;
+  ingredient_name: string;
+  current_stock: number;
+  unit: string;
+  type: string;
+  suggested_quantity: number;
+}
+
 interface EventEquipmentProps {
   equipmentInventory: InventoryItem[];
   selectedEquipment: SelectedEquipment[];
   conflicts: EquipmentConflict[];
-  suggestions: InventoryItem[];
+  suggestions: EquipmentSuggestion[];
   onAddEquipment: () => void;
   onRemoveEquipment: (index: number) => void;
   onEquipmentChange: (index: number, field: keyof SelectedEquipment, value: string | number) => void;
-  onQuickAddSuggestion: (inventoryId: string) => void;
+  onQuickAddSuggestion: (inventoryId: string, suggestedQty: number) => void;
 }
 
 export const EventEquipment: React.FC<EventEquipmentProps> = ({
@@ -82,11 +91,11 @@ export const EventEquipment: React.FC<EventEquipmentProps> = ({
               <button
                 key={s.id}
                 type="button"
-                onClick={() => onQuickAddSuggestion(s.id)}
+                onClick={() => onQuickAddSuggestion(s.id, s.suggested_quantity)}
                 className="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors"
               >
                 <Plus className="h-3 w-3" />
-                {s.ingredient_name}
+                {s.ingredient_name} ×{s.suggested_quantity}
               </button>
             ))}
           </div>

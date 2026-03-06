@@ -133,6 +133,18 @@ type EventEquipment struct {
 	CurrentStock  *float64 `json:"current_stock,omitempty"`
 }
 
+// EquipmentSuggestion is returned by the suggestions endpoint.
+// SuggestedQty is already calculated: ceil(product_qty / capacity) if capacity is set,
+// or quantity_required otherwise, summed across all products in the event.
+type EquipmentSuggestion struct {
+	ID             uuid.UUID `json:"id"`
+	IngredientName string    `json:"ingredient_name"`
+	CurrentStock   float64   `json:"current_stock"`
+	Unit           string    `json:"unit"`
+	Type           string    `json:"type"`
+	SuggestedQty   int       `json:"suggested_quantity"`
+}
+
 type EquipmentConflict struct {
 	InventoryID   uuid.UUID `json:"inventory_id"`
 	EquipmentName string    `json:"equipment_name"`
