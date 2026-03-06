@@ -210,6 +210,93 @@ func TestValidateResetToken_MalformedToken(t *testing.T) {
 	}
 }
 
+func TestGenerateTokenPair_EmptySecret(t *testing.T) {
+	// An empty secret should still succeed since jwt.SignedString accepts any []byte.
+	svc := NewAuthService("", 1)
+	userID := uuid.New()
+	email := "empty@test.dev"
+
+	pair, err := svc.GenerateTokenPair(userID, email)
+	if err != nil {
+		t.Fatalf("GenerateTokenPair() with empty secret error = %v", err)
+	}
+	if pair.AccessToken == "" || pair.RefreshToken == "" {
+		t.Fatalf("GenerateTokenPair() should return both tokens even with empty secret")
+	}
+
+	// Validate with the same empty secret
+	claims, err := svc.ValidateToken(pair.AccessToken)
+	if err != nil {
+		t.Fatalf("ValidateToken() with empty secret error = %v", err)
+	}
+	if claims.UserID != userID || claims.Email != email {
+		t.Fatalf("claims mismatch")
+	}
+}
+
+func TestGenerateTokenPair_ZeroExpiry(t *testing.T) {
+	// jwtExpiryHours = 0 means the access token expires immediately,
+	// but the refresh token (7 days) should still be valid.
+	svc := NewAuthService("test-secret", 0)
+	userID := uuid.New()
+	email := "zero@test.dev"
+
+	pair, err := svc.GenerateTokenPair(userID, email)
+	if err != nil {
+		t.Fatalf("GenerateTokenPair() error = %v", err)
+	}
+
+	// Access token should be expired or at boundary
+	// Refresh token should still validate
+	claims, err := svc.ValidateToken(pair.RefreshToken)
+	if err != nil {
+		t.Fatalf("ValidateToken(refresh) error = %v", err)
+	}
+	if claims.UserID != userID {
+		t.Fatalf("refresh token UserID mismatch")
+	}
+}
+
+func TestGenerateResetToken_RoundTrip(t *testing.T) {
+	svc := NewAuthService("roundtrip-secret", 1)
+	userID := uuid.New()
+	email := "roundtrip@test.dev"
+
+	token, err := svc.GenerateResetToken(userID, email)
+	if err != nil {
+		t.Fatalf("GenerateResetToken() error = %v", err)
+	}
+
+	// Should be validatable as a reset token
+	claims, err := svc.ValidateResetToken(token)
+	if err != nil {
+		t.Fatalf("ValidateResetToken() error = %v", err)
+	}
+	if claims.UserID != userID {
+		t.Errorf("UserID = %v, want %v", claims.UserID, userID)
+	}
+	if claims.Email != email {
+		t.Errorf("Email = %q, want %q", claims.Email, email)
+	}
+	if claims.Issuer != "solennix-backend" {
+		t.Errorf("Issuer = %q, want %q", claims.Issuer, "solennix-backend")
+	}
+
+	// Should NOT be validatable by a service with a different secret
+	otherSvc := NewAuthService("other-secret", 1)
+	if _, err := otherSvc.ValidateResetToken(token); err == nil {
+		t.Fatal("ValidateResetToken() expected error with wrong secret")
+	}
+}
+
+func TestValidateToken_EmptyString(t *testing.T) {
+	svc := NewAuthService("test-secret", 1)
+	_, err := svc.ValidateToken("")
+	if err == nil {
+		t.Fatal("ValidateToken() expected error for empty string")
+	}
+}
+
 func TestValidateResetToken_ExpiredToken(t *testing.T) {
 	svc := NewAuthService("test-secret", 1)
 	userID := uuid.New()

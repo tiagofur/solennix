@@ -203,6 +203,67 @@ func TestRepositoryMethodsWithClosedPool(t *testing.T) {
 	}
 }
 
+func TestAdminRepoWithClosedPool(t *testing.T) {
+	pool, err := pgxpool.New(context.Background(), "postgres://solennix_user:solennix_password@localhost:5433/solennix?sslmode=disable")
+	if err != nil {
+		t.Skipf("pgxpool.New failed: %v", err)
+	}
+	pool.Close()
+
+	ctx := context.Background()
+	id := uuid.New()
+
+	repo := NewAdminRepo(pool)
+
+	if _, err := repo.GetPlatformStats(ctx); err == nil {
+		t.Fatal("AdminRepo.GetPlatformStats() expected error with closed pool")
+	}
+	if _, err := repo.GetAllUsers(ctx); err == nil {
+		t.Fatal("AdminRepo.GetAllUsers() expected error with closed pool")
+	}
+	if _, err := repo.GetUserByID(ctx, id); err == nil {
+		t.Fatal("AdminRepo.GetUserByID() expected error with closed pool")
+	}
+	if err := repo.UpdateUserPlan(ctx, id, "pro", nil); err == nil {
+		t.Fatal("AdminRepo.UpdateUserPlan() expected error with closed pool")
+	}
+	if _, err := repo.HasActiveSubscription(ctx, id); err == nil {
+		t.Fatal("AdminRepo.HasActiveSubscription() expected error with closed pool")
+	}
+	if _, err := repo.GetSubscriptionOverview(ctx); err == nil {
+		t.Fatal("AdminRepo.GetSubscriptionOverview() expected error with closed pool")
+	}
+	if _, err := repo.ExpireGiftedPlans(ctx); err == nil {
+		t.Fatal("AdminRepo.ExpireGiftedPlans() expected error with closed pool")
+	}
+}
+
+func TestSubscriptionRepoWithClosedPool(t *testing.T) {
+	pool, err := pgxpool.New(context.Background(), "postgres://solennix_user:solennix_password@localhost:5433/solennix?sslmode=disable")
+	if err != nil {
+		t.Skipf("pgxpool.New failed: %v", err)
+	}
+	pool.Close()
+
+	ctx := context.Background()
+	userID := uuid.New()
+
+	repo := NewSubscriptionRepo(pool)
+
+	if err := repo.Upsert(ctx, &models.Subscription{UserID: userID, Provider: "stripe", Plan: "pro", Status: "active"}); err == nil {
+		t.Fatal("SubscriptionRepo.Upsert() expected error with closed pool")
+	}
+	if _, err := repo.GetByUserID(ctx, userID); err == nil {
+		t.Fatal("SubscriptionRepo.GetByUserID() expected error with closed pool")
+	}
+	if err := repo.UpdateStatusByProviderSubID(ctx, "sub_test", "active", nil, nil); err == nil {
+		t.Fatal("SubscriptionRepo.UpdateStatusByProviderSubID() expected error with closed pool")
+	}
+	if err := repo.UpdateStatusByUserID(ctx, userID, "canceled"); err == nil {
+		t.Fatal("SubscriptionRepo.UpdateStatusByUserID() expected error with closed pool")
+	}
+}
+
 func TestRepositoryEdgeCases(t *testing.T) {
 	ctx := context.Background()
 	userID := uuid.New()

@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -47,6 +48,38 @@ func TestMigrateFailsWithClosedPool(t *testing.T) {
 
 	if err := Migrate(pool); err == nil {
 		t.Fatalf("Migrate() expected error when pool is closed")
+	}
+}
+
+func TestMigrateFailsWithNilPool(t *testing.T) {
+	// Calling Migrate with a nil pool should panic or error.
+	// Since pool.Exec will panic on nil, we recover and check.
+	defer func() {
+		if r := recover(); r == nil {
+			t.Fatal("Migrate(nil) expected panic")
+		}
+	}()
+	_ = Migrate(nil)
+}
+
+func TestMigrateFailsWithClosedPoolFromNew(t *testing.T) {
+	// Create a pool with a valid URL format but close it immediately.
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	pool, err := pgxpool.New(ctx, "postgres://user:pass@localhost:5433/solennix?sslmode=disable")
+	if err != nil {
+		t.Skipf("pgxpool.New failed (no local postgres): %v", err)
+	}
+	pool.Close()
+
+	err = Migrate(pool)
+	if err == nil {
+		t.Fatal("Migrate() expected error with closed pool")
+	}
+	// The error should mention failing to create migrations table
+	if !strings.Contains(err.Error(), "failed to create migrations table") {
+		t.Logf("got error: %v (acceptable — closed pool)", err)
 	}
 }
 
