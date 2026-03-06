@@ -33,6 +33,13 @@
       "expo-sharing",
       "@react-native-community/datetimepicker",
       "react-native-purchases"
-    ]
+    ],
+    "extra": {
+      "privacyPolicyUrl": "https://www.creapolis.dev/privacy",
+      "termsUrl": "https://www.creapolis.dev/terms",
+      "eas": {
+        "projectId": "2e366ad9-407a-42e8-adc1-8ba184962f8b"
+      }
+    }
   }
 }

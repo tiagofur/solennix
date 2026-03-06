@@ -77,6 +77,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     "@react-native-community/datetimepicker",
   ],
   extra: {
+    ...config.extra,
     privacyPolicyUrl: "https://www.creapolis.dev/privacy",
     termsUrl: "https://www.creapolis.dev/terms",
   },
