@@ -23,7 +23,7 @@ import { EventFinancials } from "./components/EventFinancials";
 import { EventEquipment } from "./components/EventEquipment";
 import { inventoryService } from "../../services/inventoryService";
 import { usePlanLimits } from "../../hooks/usePlanLimits";
-import { EquipmentConflict, InventoryItem } from "../../types/entities";
+import { EquipmentConflict, EquipmentSuggestion, InventoryItem } from "../../types/entities";
 import { UpgradeBanner } from "../../components/UpgradeBanner";
 
 // Local types to avoid Supabase dependency
@@ -118,7 +118,7 @@ export const EventForm: React.FC = () => {
     { inventory_id: string; quantity: number; notes: string }[]
   >([]);
   const [equipmentConflicts, setEquipmentConflicts] = useState<EquipmentConflict[]>([]);
-  const [equipmentSuggestions, setEquipmentSuggestions] = useState<{ id: string; ingredient_name: string; current_stock: number; unit: string; type: string; suggested_quantity: number }[]>([]);
+  const [equipmentSuggestions, setEquipmentSuggestions] = useState<EquipmentSuggestion[]>([]);
 
   const methods = useForm<EventFormData>({
     resolver: zodResolver(eventSchema) as Resolver<EventFormData>,

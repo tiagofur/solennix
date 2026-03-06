@@ -38,7 +38,7 @@ import {
 } from "lucide-react-native";
 import { Image } from "expo-image";
 import { EventsStackParamList } from "../../types/navigation";
-import { Event, Client, Product, InventoryItem, EquipmentConflict } from "../../types/entities";
+import { Event, Client, Product, InventoryItem, EquipmentConflict, EquipmentSuggestion } from "../../types/entities";
 import { eventService } from "../../services/eventService";
 import { clientService } from "../../services/clientService";
 import { productService } from "../../services/productService";
@@ -121,7 +121,7 @@ export default function EventFormScreen({ navigation, route }: Props) {
   const [equipmentInventory, setEquipmentInventory] = useState<InventoryItem[]>([]);
   const [selectedEquipment, setSelectedEquipment] = useState<SelectedEquipmentItem[]>([]);
   const [equipmentConflicts, setEquipmentConflicts] = useState<EquipmentConflict[]>([]);
-  const [equipmentSuggestions, setEquipmentSuggestions] = useState<{ id: string; ingredient_name: string; current_stock: number; unit: string; type: string; suggested_quantity: number }[]>([]);
+  const [equipmentSuggestions, setEquipmentSuggestions] = useState<EquipmentSuggestion[]>([]);
   const [showEquipmentPicker, setShowEquipmentPicker] = useState(false);
 
   const [showDatePicker, setShowDatePicker] = useState(false);

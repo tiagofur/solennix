@@ -1,5 +1,5 @@
 import { api } from '../lib/api';
-import { Event, EventInsert, EventUpdate, EventEquipment, EquipmentConflict, InventoryItem } from '../types/entities';
+import { Event, EventInsert, EventUpdate, EventEquipment, EquipmentConflict, EquipmentSuggestion, InventoryItem } from '../types/entities';
 
 // Helper for type safety on joined data
 type EventWithClient = Event & { clients?: { name: string } | null };
@@ -99,7 +99,7 @@ export const eventService = {
         return api.post<EquipmentConflict[]>('/events/equipment/conflicts', params);
     },
 
-    async getEquipmentSuggestions(products: { product_id: string; quantity: number }[]): Promise<{ id: string; ingredient_name: string; current_stock: number; unit: string; type: string; suggested_quantity: number }[]> {
+    async getEquipmentSuggestions(products: { product_id: string; quantity: number }[]): Promise<EquipmentSuggestion[]> {
         return api.post('/events/equipment/suggestions', { products });
     },
 

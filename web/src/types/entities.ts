@@ -182,6 +182,16 @@ export interface EventEquipment {
 
 export type EventEquipmentInsert = Omit<EventEquipment, 'id' | 'created_at' | 'equipment_name' | 'unit' | 'current_stock'>
 
+// ===== Equipment Suggestion =====
+export interface EquipmentSuggestion {
+    id: string
+    ingredient_name: string
+    current_stock: number
+    unit: string
+    type: string
+    suggested_quantity: number
+}
+
 // ===== Equipment Conflict =====
 export interface EquipmentConflict {
     inventory_id: string

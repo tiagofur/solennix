@@ -520,48 +520,48 @@ func (r *EventRepo) GetEquipmentSuggestionsFromProducts(ctx context.Context, use
 	defer rows.Close()
 
 	// Aggregate by inventory ID: sum the required equipment across products.
-	type row struct {
-		id              uuid.UUID
-		name            string
-		stock           float64
-		unit            string
-		typ             string
-		quantityReq     float64
-		capacity        *float64
-		productQty      float64
+	type equipRow struct {
+		id          uuid.UUID
+		name        string
+		stock       float64
+		unit        string
+		typ         string
+		quantityReq float64
+		capacity    *float64
+		productQty  float64
 	}
 
 	totals := make(map[uuid.UUID]*models.EquipmentSuggestion)
 	var order []uuid.UUID
 
 	for rows.Next() {
-		var r row
-		if err := rows.Scan(&r.id, &r.name, &r.stock, &r.unit, &r.typ,
-			&r.quantityReq, &r.capacity, &r.productQty); err != nil {
+		var eq equipRow
+		if err := rows.Scan(&eq.id, &eq.name, &eq.stock, &eq.unit, &eq.typ,
+			&eq.quantityReq, &eq.capacity, &eq.productQty); err != nil {
 			return nil, err
 		}
 
 		var needed int
-		if r.capacity != nil && *r.capacity > 0 {
+		if eq.capacity != nil && *eq.capacity > 0 {
 			// Capacity-based: how many pieces of equipment handle this product qty
-			needed = int(math.Ceil(r.productQty / *r.capacity))
+			needed = int(math.Ceil(eq.productQty / *eq.capacity))
 		} else {
 			// Fixed: quantity_required is the total needed regardless of event qty
-			needed = int(math.Ceil(r.quantityReq))
+			needed = int(math.Ceil(eq.quantityReq))
 		}
 
-		if s, ok := totals[r.id]; ok {
+		if s, ok := totals[eq.id]; ok {
 			s.SuggestedQty += needed
 		} else {
-			totals[r.id] = &models.EquipmentSuggestion{
-				ID:             r.id,
-				IngredientName: r.name,
-				CurrentStock:   r.stock,
-				Unit:           r.unit,
-				Type:           r.typ,
+			totals[eq.id] = &models.EquipmentSuggestion{
+				ID:             eq.id,
+				IngredientName: eq.name,
+				CurrentStock:   eq.stock,
+				Unit:           eq.unit,
+				Type:           eq.typ,
 				SuggestedQty:   needed,
 			}
-			order = append(order, r.id)
+			order = append(order, eq.id)
 		}
 	}
 	if err := rows.Err(); err != nil {

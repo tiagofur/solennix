@@ -1,19 +1,10 @@
 import { Plus, Trash2, AlertTriangle, Lightbulb, Wrench } from 'lucide-react';
-import { EquipmentConflict, InventoryItem } from '../../../types/entities';
+import { EquipmentConflict, EquipmentSuggestion, InventoryItem } from '../../../types/entities';
 
 interface SelectedEquipment {
   inventory_id: string;
   quantity: number;
   notes: string;
-}
-
-interface EquipmentSuggestion {
-  id: string;
-  ingredient_name: string;
-  current_stock: number;
-  unit: string;
-  type: string;
-  suggested_quantity: number;
 }
 
 interface EventEquipmentProps {

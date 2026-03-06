@@ -206,9 +206,10 @@ describe('eventService', () => {
     expect(api.post).toHaveBeenCalledWith('/events/equipment/conflicts', params);
   });
 
-  it('getEquipmentSuggestions calls api.post with product_ids', async () => {
+  it('getEquipmentSuggestions calls api.post with products', async () => {
     (api.post as any).mockResolvedValue([]);
-    await eventService.getEquipmentSuggestions(['p1', 'p2']);
-    expect(api.post).toHaveBeenCalledWith('/events/equipment/suggestions', { product_ids: ['p1', 'p2'] });
+    const products = [{ product_id: 'p1', quantity: 2 }, { product_id: 'p2', quantity: 5 }];
+    await eventService.getEquipmentSuggestions(products);
+    expect(api.post).toHaveBeenCalledWith('/events/equipment/suggestions', { products });
   });
 });
