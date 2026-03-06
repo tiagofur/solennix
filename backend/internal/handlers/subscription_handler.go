@@ -101,9 +101,22 @@ func (h *SubscriptionHandler) CreateCheckoutSession(w http.ResponseWriter, r *ht
 
 	s, err := session.New(params)
 	if err != nil {
-		slog.Error("Failed to create checkout session", "error", err)
-		writeError(w, http.StatusInternalServerError, "Failed to create checkout session")
-		return
+		slog.Error("Failed to create checkout session", "error", err, "user_id", userID)
+
+		// If we used a stored customer ID and it failed, retry with just the email.
+		// This handles stale/invalid customer IDs (e.g., test-mode IDs used in live mode).
+		if user.StripeCustomerID != nil && *user.StripeCustomerID != "" {
+			slog.Warn("Retrying checkout session without stored Stripe customer ID", "user_id", userID, "stripe_customer_id", *user.StripeCustomerID)
+			params.Customer = nil
+			params.CustomerEmail = stripe.String(user.Email)
+			s, err = session.New(params)
+		}
+
+		if err != nil {
+			slog.Error("Failed to create checkout session after retry", "error", err, "user_id", userID)
+			writeError(w, http.StatusInternalServerError, "Failed to create checkout session: "+err.Error())
+			return
+		}
 	}
 
 	writeJSON(w, http.StatusOK, map[string]string{

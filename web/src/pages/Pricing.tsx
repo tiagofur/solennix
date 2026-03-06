@@ -19,7 +19,8 @@ export const Pricing: React.FC = () => {
       }
     } catch (err: unknown) {
       logError('Failed to create checkout session', err);
-      setError('Hubo un error al iniciar el proceso de pago. Por favor intenta nuevamente.');
+      const detail = err instanceof Error ? err.message : '';
+      setError('Hubo un error al iniciar el proceso de pago. Por favor intenta nuevamente.' + (detail ? ` (${detail})` : ''));
     } finally {
       setLoading(false);
     }
