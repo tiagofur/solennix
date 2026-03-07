@@ -693,6 +693,26 @@ func TestValidateProductIngredient(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "valid with positive capacity",
+			ingredient: &models.ProductIngredient{
+				ProductID:        uuid.New(),
+				InventoryID:      uuid.New(),
+				QuantityRequired: 1.0,
+				Capacity:         float64Ptr(50.0),
+			},
+			wantErr: false,
+		},
+		{
+			name: "valid with nil capacity",
+			ingredient: &models.ProductIngredient{
+				ProductID:        uuid.New(),
+				InventoryID:      uuid.New(),
+				QuantityRequired: 3.0,
+				Capacity:         nil,
+			},
+			wantErr: false,
+		},
+		{
 			name: "quantity_required zero",
 			ingredient: &models.ProductIngredient{
 				ProductID:        uuid.New(),
@@ -711,6 +731,28 @@ func TestValidateProductIngredient(t *testing.T) {
 			},
 			wantErr: true,
 			errMsg:  "quantity_required: must be greater than 0",
+		},
+		{
+			name: "capacity zero should fail",
+			ingredient: &models.ProductIngredient{
+				ProductID:        uuid.New(),
+				InventoryID:      uuid.New(),
+				QuantityRequired: 1.0,
+				Capacity:         float64Ptr(0),
+			},
+			wantErr: true,
+			errMsg:  "capacity: must be greater than 0 when specified",
+		},
+		{
+			name: "capacity negative should fail",
+			ingredient: &models.ProductIngredient{
+				ProductID:        uuid.New(),
+				InventoryID:      uuid.New(),
+				QuantityRequired: 1.0,
+				Capacity:         float64Ptr(-10.0),
+			},
+			wantErr: true,
+			errMsg:  "capacity: must be greater than 0 when specified",
 		},
 	}
 

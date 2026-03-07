@@ -81,3 +81,57 @@ func TestEmailService_SendPasswordReset_WithFakeKey(t *testing.T) {
 		t.Error("expected error when sending with fake key")
 	}
 }
+
+func TestEmailService_SendPasswordReset_LinkFormat(t *testing.T) {
+	cfg := &config.Config{
+		FrontendURL:     "https://app.solennix.com",
+		ResendAPIKey:    "",
+		ResendFromEmail: "test@test.com",
+	}
+	emailService := NewEmailService(cfg)
+
+	// SendPasswordReset will fail because no API key, but the HTML should
+	// contain the correctly formatted link. We test generatePasswordResetHTML directly.
+	html := emailService.generatePasswordResetHTML("Maria", "https://app.solennix.com/reset-password?token=abc123")
+	if !strings.Contains(html, "Maria") {
+		t.Error("expected HTML to contain user name")
+	}
+	if !strings.Contains(html, "https://app.solennix.com/reset-password?token=abc123") {
+		t.Error("expected HTML to contain reset link")
+	}
+	if !strings.Contains(html, "Restablecer Contraseña") {
+		t.Error("expected HTML to contain Spanish button text")
+	}
+}
+
+func TestEmailService_SendEmail_EmptyRecipient(t *testing.T) {
+	cfg := &config.Config{
+		FrontendURL:     "http://localhost:5173",
+		ResendAPIKey:    "re_fake_key",
+		ResendFromEmail: "test@test.com",
+	}
+	emailService := NewEmailService(cfg)
+
+	// With a fake key, this will hit the Resend API and fail.
+	// This tests the error handling path in sendEmail.
+	err := emailService.sendEmail("", "Test", "<p>Test</p>")
+	if err == nil {
+		t.Error("expected error when sending with fake key")
+	}
+}
+
+func TestEmailService_GeneratePasswordResetHTML_EmptyName(t *testing.T) {
+	cfg := &config.Config{
+		FrontendURL: "http://localhost:5173",
+	}
+	emailService := NewEmailService(cfg)
+
+	// Test with empty username — should not panic
+	html := emailService.generatePasswordResetHTML("", "http://localhost:5173/reset?token=xyz")
+	if !strings.Contains(html, "Hola ") {
+		t.Error("expected HTML to contain greeting")
+	}
+	if !strings.Contains(html, "http://localhost:5173/reset?token=xyz") {
+		t.Error("expected HTML to contain the reset link")
+	}
+}

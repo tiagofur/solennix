@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -12,6 +13,48 @@ import (
 	"github.com/tiagofur/solennix-backend/internal/middleware"
 	"github.com/tiagofur/solennix-backend/internal/models"
 )
+
+// errTest is a reusable test error.
+var errTest = errors.New("test error")
+
+// newTestHandler creates a CRUDHandler with the given mocks.
+func newTestHandler(
+	clientRepo *MockClientRepo,
+	eventRepo *MockFullEventRepo,
+	productRepo *MockProductRepo,
+	inventoryRepo *MockInventoryRepo,
+	paymentRepo *MockFullPaymentRepo,
+	userRepo *MockFullUserRepo,
+) *CRUDHandler {
+	return NewCRUDHandler(clientRepo, eventRepo, productRepo, inventoryRepo, paymentRepo, userRepo)
+}
+
+// makeReqWithUserID creates a request with the given userID in context.
+func makeReqWithUserID(method, path string, body string, userID uuid.UUID) *http.Request {
+	req := httptest.NewRequest(method, path, strings.NewReader(body))
+	ctx := context.WithValue(req.Context(), middleware.UserIDKey, userID)
+	return req.WithContext(ctx)
+}
+
+// makeReqWithIDParam creates a request with chi URL param "id" and userID.
+func makeReqWithIDParam(method, path, body string, id string, userID uuid.UUID) *http.Request {
+	req := httptest.NewRequest(method, path, strings.NewReader(body))
+	rctx := chi.NewRouteContext()
+	rctx.URLParams.Add("id", id)
+	ctx := context.WithValue(req.Context(), chi.RouteCtxKey, rctx)
+	ctx = context.WithValue(ctx, middleware.UserIDKey, userID)
+	return req.WithContext(ctx)
+}
+
+// proUser returns a mock user with "pro" plan.
+func proUser() *models.User {
+	return &models.User{ID: uuid.New(), Plan: "pro"}
+}
+
+// basicUser returns a mock user with "basic" plan.
+func basicUser() *models.User {
+	return &models.User{ID: uuid.New(), Plan: "basic"}
+}
 
 func TestCRUDHandlerValidationPaths(t *testing.T) {
 	h := &CRUDHandler{}

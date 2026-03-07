@@ -25,6 +25,24 @@ func TestConnectPingFailure(t *testing.T) {
 	}
 }
 
+func TestConnectEmptyURL(t *testing.T) {
+	_, err := Connect("")
+	if err == nil {
+		t.Fatal("Connect() expected error for empty URL")
+	}
+	// Empty URL may fail at parse or ping depending on pgx version
+	// Just verify we get an error
+}
+
+func TestConnectUnreachableHost(t *testing.T) {
+	// Use a valid URL format but unreachable host/port to trigger connection pool creation
+	// followed by ping failure.
+	_, err := Connect("postgres://user:pass@192.0.2.1:5432/db?sslmode=disable&connect_timeout=1")
+	if err == nil {
+		t.Fatal("Connect() expected error for unreachable host")
+	}
+}
+
 func TestConnectSuccessWhenDatabaseAvailable(t *testing.T) {
 	pool, err := Connect("postgres://solennix_user:solennix_password@localhost:5433/solennix?sslmode=disable")
 	if err != nil {
