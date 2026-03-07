@@ -3,11 +3,22 @@ package repository
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/tiagofur/solennix-backend/internal/models"
 )
+
+func closedPool(t *testing.T) *pgxpool.Pool {
+	t.Helper()
+	pool, err := pgxpool.New(context.Background(), "postgres://solennix_user:solennix_password@localhost:5433/solennix?sslmode=disable")
+	if err != nil {
+		t.Skipf("pgxpool.New failed: %v", err)
+	}
+	pool.Close()
+	return pool
+}
 
 func TestRepositoryMethodsWithClosedPool(t *testing.T) {
 	pool, err := pgxpool.New(context.Background(), "postgres://solennix_user:solennix_password@localhost:5433/solennix?sslmode=disable")
@@ -261,6 +272,208 @@ func TestSubscriptionRepoWithClosedPool(t *testing.T) {
 	}
 	if err := repo.UpdateStatusByUserID(ctx, userID, "canceled"); err == nil {
 		t.Fatal("SubscriptionRepo.UpdateStatusByUserID() expected error with closed pool")
+	}
+}
+
+// TestCheckEquipmentConflictsWithParams tests CheckEquipmentConflicts with various parameter
+// combinations to exercise the query-building branches (excludeEventID, startTime/endTime).
+func TestCheckEquipmentConflictsWithParams(t *testing.T) {
+	pool := closedPool(t)
+
+	ctx := context.Background()
+	userID := uuid.New()
+	invID := uuid.New()
+	excludeID := uuid.New()
+	start := "09:00:00"
+	end := "17:00:00"
+
+	repo := NewEventRepo(pool)
+
+	// With excludeEventID set (covers the excludeEventID != nil branch)
+	if _, err := repo.CheckEquipmentConflicts(ctx, userID, "2026-01-01", nil, nil, []uuid.UUID{invID}, &excludeID); err == nil {
+		t.Fatal("CheckEquipmentConflicts(excludeEventID) expected error with closed pool")
+	}
+
+	// With startTime and endTime set (covers the time-overlap branch)
+	if _, err := repo.CheckEquipmentConflicts(ctx, userID, "2026-01-01", &start, &end, []uuid.UUID{invID}, nil); err == nil {
+		t.Fatal("CheckEquipmentConflicts(startTime+endTime) expected error with closed pool")
+	}
+
+	// With all params (both excludeEventID and times)
+	if _, err := repo.CheckEquipmentConflicts(ctx, userID, "2026-01-01", &start, &end, []uuid.UUID{invID}, &excludeID); err == nil {
+		t.Fatal("CheckEquipmentConflicts(all params) expected error with closed pool")
+	}
+}
+
+// TestEventCreateUpdateBranches tests the Event Create/Update early-return branches for
+// empty DiscountType and empty/nil time strings.
+func TestEventCreateUpdateBranches(t *testing.T) {
+	pool := closedPool(t)
+
+	ctx := context.Background()
+	userID := uuid.New()
+	clientID := uuid.New()
+
+	repo := NewEventRepo(pool)
+
+	// Create with empty DiscountType (triggers default "percent"), empty start/end times
+	emptyStr := ""
+	ev := &models.Event{
+		UserID:      userID,
+		ClientID:    clientID,
+		EventDate:   "2026-01-01",
+		StartTime:   &emptyStr, // non-nil but empty → should be set to nil
+		EndTime:     &emptyStr,
+		ServiceType: "catering",
+		Status:      "quoted",
+		DiscountType: "", // triggers default
+	}
+	if err := repo.Create(ctx, ev); err == nil {
+		t.Fatal("EventRepo.Create(empty discount/times) expected error with closed pool")
+	}
+
+	// Update with empty DiscountType and nil times
+	ev2 := &models.Event{
+		ID:           uuid.New(),
+		UserID:       userID,
+		ClientID:     clientID,
+		EventDate:    "2026-01-01",
+		StartTime:    nil,
+		EndTime:      nil,
+		ServiceType:  "banquet",
+		Status:       "confirmed",
+		DiscountType: "", // triggers default
+	}
+	if err := repo.Update(ctx, ev2); err == nil {
+		t.Fatal("EventRepo.Update(empty discount/nil times) expected error with closed pool")
+	}
+
+	// Create with valid non-empty times (covers the non-nil, non-empty branch)
+	validStart := "09:00:00"
+	validEnd := "17:00:00"
+	ev3 := &models.Event{
+		UserID:       userID,
+		ClientID:     clientID,
+		EventDate:    "2026-01-01",
+		StartTime:    &validStart,
+		EndTime:      &validEnd,
+		ServiceType:  "catering",
+		Status:       "quoted",
+		DiscountType: "fixed",
+	}
+	if err := repo.Create(ctx, ev3); err == nil {
+		t.Fatal("EventRepo.Create(valid times) expected error with closed pool")
+	}
+
+	// Update with valid non-empty times
+	ev4 := &models.Event{
+		ID:           uuid.New(),
+		UserID:       userID,
+		ClientID:     clientID,
+		EventDate:    "2026-01-01",
+		StartTime:    &validStart,
+		EndTime:      &validEnd,
+		ServiceType:  "banquet",
+		Status:       "confirmed",
+		DiscountType: "fixed",
+	}
+	if err := repo.Update(ctx, ev4); err == nil {
+		t.Fatal("EventRepo.Update(valid times) expected error with closed pool")
+	}
+}
+
+// TestUpdateEventItemsWithEquipment tests UpdateEventItems with equipment slice provided.
+func TestUpdateEventItemsWithEquipment(t *testing.T) {
+	pool := closedPool(t)
+
+	ctx := context.Background()
+	eventID := uuid.New()
+	invID := uuid.New()
+
+	repo := NewEventRepo(pool)
+
+	// With non-nil equipment list
+	equipment := []models.EventEquipment{{InventoryID: invID, Quantity: 2}}
+	if err := repo.UpdateEventItems(ctx, eventID, nil, nil, &equipment); err == nil {
+		t.Fatal("EventRepo.UpdateEventItems(with equipment) expected error with closed pool")
+	}
+
+	// With products and extras
+	products := []models.EventProduct{{ProductID: uuid.New(), Quantity: 1, UnitPrice: 10}}
+	extras := []models.EventExtra{{Description: "extra", Cost: 5, Price: 10}}
+	if err := repo.UpdateEventItems(ctx, eventID, products, extras, nil); err == nil {
+		t.Fatal("EventRepo.UpdateEventItems(products+extras) expected error with closed pool")
+	}
+}
+
+// TestAdminRepoUpdateUserPlanWithExpiry tests UpdateUserPlan with a non-nil expiresAt.
+func TestAdminRepoUpdateUserPlanWithExpiry(t *testing.T) {
+	pool := closedPool(t)
+
+	ctx := context.Background()
+	id := uuid.New()
+	expiry := time.Now().Add(24 * time.Hour)
+
+	repo := NewAdminRepo(pool)
+	if err := repo.UpdateUserPlan(ctx, id, "pro", &expiry); err == nil {
+		t.Fatal("AdminRepo.UpdateUserPlan(with expiry) expected error with closed pool")
+	}
+}
+
+// TestSubscriptionRepoUpdateStatusWithPeriods tests UpdateStatusByProviderSubID with non-nil periods.
+func TestSubscriptionRepoUpdateStatusWithPeriods(t *testing.T) {
+	pool := closedPool(t)
+
+	ctx := context.Background()
+	start := time.Now()
+	end := start.Add(30 * 24 * time.Hour)
+
+	repo := NewSubscriptionRepo(pool)
+	if err := repo.UpdateStatusByProviderSubID(ctx, "sub_test", "active", &start, &end); err == nil {
+		t.Fatal("SubscriptionRepo.UpdateStatusByProviderSubID(with periods) expected error with closed pool")
+	}
+}
+
+// TestUserRepoUpdateWithAllParams tests UserRepo.Update with all optional params set.
+func TestUserRepoUpdateWithAllParams(t *testing.T) {
+	pool := closedPool(t)
+
+	ctx := context.Background()
+	id := uuid.New()
+	name := "Test User"
+	biz := "Test Business"
+	logo := "https://example.com/logo.png"
+	color := "#ff0000"
+	showBiz := true
+	dep := 50.0
+	cancel := 7.0
+	refund := 50.0
+	contract := "template"
+
+	repo := NewUserRepo(pool)
+	if _, err := repo.Update(ctx, id, &name, &biz, &logo, &color, &showBiz, &dep, &cancel, &refund, &contract); err == nil {
+		t.Fatal("UserRepo.Update(all params) expected error with closed pool")
+	}
+}
+
+// TestUserRepoCreateWithDefaultRole tests UserRepo.Create with empty role (triggers default).
+func TestUserRepoCreateWithDefaultRole(t *testing.T) {
+	pool := closedPool(t)
+
+	ctx := context.Background()
+	user := &models.User{
+		Email:        "default-role@test.dev",
+		PasswordHash: "hash",
+		Name:         "Default Role",
+		Plan:         "basic",
+		Role:         "", // triggers default role = "user"
+	}
+	if err := NewUserRepo(pool).Create(ctx, user); err == nil {
+		t.Fatal("UserRepo.Create(default role) expected error with closed pool")
+	}
+	// Verify the role was set
+	if user.Role != "user" {
+		t.Fatalf("expected role to be set to 'user', got %q", user.Role)
 	}
 }
 

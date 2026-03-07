@@ -16,6 +16,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
 	"github.com/tiagofur/solennix-backend/internal/middleware"
 )
 
@@ -148,6 +149,83 @@ func TestUploadImage(t *testing.T) {
 	})
 }
 
+func TestNewUploadHandler_InvalidDirectory(t *testing.T) {
+	// Create a handler with a read-only path that can't have subdirs
+	// On Linux, /proc/1 is typically not writable
+	h := NewUploadHandler("/proc/1/nonexistent_upload_dir")
+	if h == nil {
+		t.Fatal("NewUploadHandler returned nil even with invalid dir")
+	}
+	// The handler should still be created; it just logs errors
+}
+
+func TestUploadImage_BodyTooLarge(t *testing.T) {
+	dir := t.TempDir()
+	h := NewUploadHandler(dir)
+	userID := uuid.New()
+
+	// Create a multipart form with a large body
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+
+	partHeader := make(textproto.MIMEHeader)
+	partHeader.Set("Content-Disposition", `form-data; name="file"; filename="large.png"`)
+	partHeader.Set("Content-Type", "image/png")
+	part, _ := writer.CreatePart(partHeader)
+
+	// Write more than 10MB
+	largeData := make([]byte, 11*1024*1024)
+	part.Write(largeData)
+	writer.Close()
+
+	req := httptest.NewRequest(http.MethodPost, "/api/uploads/image", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, userID))
+	rr := httptest.NewRecorder()
+
+	h.UploadImage(rr, req)
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+	// Should get either "File too large" or "Invalid multipart form data"
+	bodyStr := rr.Body.String()
+	assert.True(t, strings.Contains(bodyStr, "File too large") || strings.Contains(bodyStr, "Invalid multipart"),
+		"expected file-too-large or invalid-multipart error, got: %s", bodyStr)
+}
+
+func TestUploadImage_SuccessWithJpgExtension(t *testing.T) {
+	dir := t.TempDir()
+	h := NewUploadHandler(dir)
+	userID := uuid.New()
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+
+	partHeader := make(textproto.MIMEHeader)
+	partHeader.Set("Content-Disposition", `form-data; name="file"; filename="photo.jpg"`)
+	partHeader.Set("Content-Type", "image/jpeg")
+	part, _ := writer.CreatePart(partHeader)
+
+	// Write a small valid image
+	img := image.NewRGBA(image.Rect(0, 0, 5, 5))
+	for x := 0; x < 5; x++ {
+		for y := 0; y < 5; y++ {
+			img.Set(x, y, color.RGBA{0, 0, 255, 255})
+		}
+	}
+	png.Encode(part, img) // PNG-encoded data with .jpg extension, still valid
+	writer.Close()
+
+	req := httptest.NewRequest(http.MethodPost, "/api/uploads/image", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, userID))
+	rr := httptest.NewRecorder()
+
+	h.UploadImage(rr, req)
+	assert.Equal(t, http.StatusOK, rr.Code)
+	assert.Contains(t, rr.Body.String(), ".jpg")
+	assert.Contains(t, rr.Body.String(), "thumbnail_url")
+	assert.Contains(t, rr.Body.String(), "filename")
+}
+
 func TestGenerateThumbnail(t *testing.T) {
 	dir := t.TempDir()
 	h := NewUploadHandler(dir)
@@ -197,5 +275,50 @@ func TestGenerateThumbnail(t *testing.T) {
 		os.WriteFile(invalidPath, []byte("not an image"), 0644)
 		// Should not panic
 		h.generateThumbnail(invalidPath, "thumb_invalid.jpg")
+	})
+
+	t.Run("VeryWideImage", func(t *testing.T) {
+		// An extremely wide image (e.g., 10000x1) would result in newH being < 1
+		// However, the code clamps it to 1
+		imgPath := filepath.Join(dir, "wide.png")
+		img := image.NewRGBA(image.Rect(0, 0, 10000, 1))
+		f, _ := os.Create(imgPath)
+		png.Encode(f, img)
+		f.Close()
+
+		h.generateThumbnail(imgPath, "thumb_wide.jpg")
+		thumbPath := filepath.Join(dir, "thumbnails", "thumb_wide.jpg")
+		if _, err := os.Stat(thumbPath); os.IsNotExist(err) {
+			t.Fatal("wide thumbnail was not generated")
+		}
+	})
+
+	t.Run("VeryTallImage", func(t *testing.T) {
+		// Extremely tall image (1x10000) would result in newW being < 1
+		imgPath := filepath.Join(dir, "tall.png")
+		img := image.NewRGBA(image.Rect(0, 0, 1, 10000))
+		f, _ := os.Create(imgPath)
+		png.Encode(f, img)
+		f.Close()
+
+		h.generateThumbnail(imgPath, "thumb_tall.jpg")
+		thumbPath := filepath.Join(dir, "thumbnails", "thumb_tall.jpg")
+		if _, err := os.Stat(thumbPath); os.IsNotExist(err) {
+			t.Fatal("tall thumbnail was not generated")
+		}
+	})
+
+	t.Run("SquareImage", func(t *testing.T) {
+		imgPath := filepath.Join(dir, "square.png")
+		img := image.NewRGBA(image.Rect(0, 0, 500, 500))
+		f, _ := os.Create(imgPath)
+		png.Encode(f, img)
+		f.Close()
+
+		h.generateThumbnail(imgPath, "thumb_square.jpg")
+		thumbPath := filepath.Join(dir, "thumbnails", "thumb_square.jpg")
+		if _, err := os.Stat(thumbPath); os.IsNotExist(err) {
+			t.Fatal("square thumbnail was not generated")
+		}
 	})
 }
