@@ -14,7 +14,7 @@ import {
 import { Link, useSearchParams } from "react-router-dom";
 import clsx from "clsx";
 import { logError } from "@/lib/errorHandler";
-import { api } from "@/lib/api";
+import { api, getAssetUrl } from "@/lib/api";
 import { subscriptionService, SubscriptionStatus } from "@/services/subscriptionService";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { useToast } from "@/hooks/useToast";
@@ -340,7 +340,7 @@ export const Settings: React.FC = () => {
                 <div className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-surface-alt/30 rounded-3xl border-2 border-dashed border-border hover:border-primary/50 transition-all text-center sm:text-left">
                   <div className="relative h-24 w-24 shrink-0 bg-card rounded-2xl shadow-inner border border-border overflow-hidden flex items-center justify-center p-2">
                     {profile?.logo_url ? (
-                      <img src={profile.logo_url} alt="Logo" className="max-w-full max-h-full object-contain" />
+                      <img src={getAssetUrl(profile.logo_url)} alt="Logo" className="max-w-full max-h-full object-contain" />
                     ) : (
                       <ImageIcon className="h-10 w-10 text-text-secondary" />
                     )}

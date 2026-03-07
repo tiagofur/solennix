@@ -145,9 +145,12 @@ func TestAuthHandlerValidationPaths(t *testing.T) {
 }
 
 func TestAuthHandlerRefreshTokenSuccess(t *testing.T) {
+	userID := uuid.New()
 	authService := services.NewAuthService("test-secret", 1)
-	h := &AuthHandler{authService: authService}
-	pair, err := authService.GenerateTokenPair(uuid.New(), "refresh@test.dev")
+	userRepo := new(MockFullUserRepo)
+	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Email: "refresh@test.dev"}, nil)
+	h := &AuthHandler{authService: authService, userRepo: userRepo}
+	pair, err := authService.GenerateTokenPair(userID, "refresh@test.dev")
 	if err != nil {
 		t.Fatalf("GenerateTokenPair() error = %v", err)
 	}
@@ -157,7 +160,7 @@ func TestAuthHandlerRefreshTokenSuccess(t *testing.T) {
 	h.RefreshToken(rr, req)
 
 	if rr.Code != http.StatusOK {
-		t.Fatalf("status = %d, want %d", rr.Code, http.StatusOK)
+		t.Fatalf("status = %d, want %d; body = %s", rr.Code, http.StatusOK, rr.Body.String())
 	}
 	if !strings.Contains(rr.Body.String(), "access_token") {
 		t.Fatalf("body = %q, expected access_token", rr.Body.String())
@@ -429,8 +432,8 @@ func TestAuthHandler_Register_HappyPaths(t *testing.T) {
 		h.Register(rr, req)
 
 		assert.Equal(t, http.StatusCreated, rr.Code)
-		assert.Contains(t, rr.Body.String(), "access_token")
-		assert.Contains(t, rr.Body.String(), "refresh_token")
+		assert.Contains(t, rr.Body.String(), "user")
+		assert.NotContains(t, rr.Body.String(), "access_token", "tokens should not be in response body")
 
 		// Verify cookie is set
 		cookies := rr.Result().Cookies()
@@ -512,8 +515,8 @@ func TestAuthHandler_Login_HappyPaths(t *testing.T) {
 		h.Login(rr, req)
 
 		assert.Equal(t, http.StatusOK, rr.Code)
-		assert.Contains(t, rr.Body.String(), "access_token")
-		assert.Contains(t, rr.Body.String(), "refresh_token")
+		assert.Contains(t, rr.Body.String(), "user")
+		assert.NotContains(t, rr.Body.String(), "access_token", "tokens should not be in response body")
 
 		// Verify cookie is set
 		cookies := rr.Result().Cookies()
@@ -815,15 +818,12 @@ func TestAuthHandler_Register_GenerateTokenError(t *testing.T) {
 
 	assert.Equal(t, http.StatusCreated, rr.Code)
 
-	// Verify the response contains user and tokens
+	// Verify the response contains user but NOT tokens (tokens only in cookie)
 	var response map[string]interface{}
 	err := json.Unmarshal(rr.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.NotNil(t, response["user"])
-	assert.NotNil(t, response["tokens"])
-	tokens := response["tokens"].(map[string]interface{})
-	assert.NotEmpty(t, tokens["access_token"])
-	assert.NotEmpty(t, tokens["refresh_token"])
+	assert.Nil(t, response["tokens"], "tokens should not be in response body")
 
 	// Verify cookie
 	cookies := rr.Result().Cookies()
@@ -866,15 +866,12 @@ func TestAuthHandler_Login_FullSuccessVerification(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, rr.Code)
 
-	// Verify full response structure
+	// Verify response contains user but NOT tokens
 	var response map[string]interface{}
 	err := json.Unmarshal(rr.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.NotNil(t, response["tokens"])
-	tokens := response["tokens"].(map[string]interface{})
-	assert.NotEmpty(t, tokens["access_token"])
-	assert.NotEmpty(t, tokens["refresh_token"])
-	assert.NotNil(t, tokens["expires_at"])
+	assert.NotNil(t, response["user"])
+	assert.Nil(t, response["tokens"], "tokens should not be in response body")
 
 	// Verify cookie properties
 	cookies := rr.Result().Cookies()
@@ -892,9 +889,12 @@ func TestAuthHandler_Login_FullSuccessVerification(t *testing.T) {
 }
 
 func TestAuthHandler_RefreshToken_CookieSetOnSuccess(t *testing.T) {
+	userID := uuid.New()
 	authService := services.NewAuthService("test-secret", 1)
-	h := &AuthHandler{authService: authService}
-	pair, err := authService.GenerateTokenPair(uuid.New(), "cookie@test.dev")
+	userRepo := new(MockFullUserRepo)
+	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Email: "cookie@test.dev"}, nil)
+	h := &AuthHandler{authService: authService, userRepo: userRepo}
+	pair, err := authService.GenerateTokenPair(userID, "cookie@test.dev")
 	assert.NoError(t, err)
 
 	req := httptest.NewRequest(http.MethodPost, "/api/auth/refresh", strings.NewReader(`{"refresh_token":"`+pair.RefreshToken+`"}`))
@@ -1104,4 +1104,402 @@ func TestAuthHandler_UpdateProfile_Paths(t *testing.T) {
 		assert.Contains(t, rr.Body.String(), "Failed to update profile")
 		mockRepo.AssertExpectations(t)
 	})
+}
+
+// ---------------------------------------------------------------------------
+// Additional coverage tests — ForgotPassword edge cases
+// ---------------------------------------------------------------------------
+
+func TestAuthHandler_ForgotPassword_GenerateResetTokenError(t *testing.T) {
+	// When GenerateResetToken fails, ForgotPassword should still return 200
+	// for security reasons. We trigger this by using an auth service that
+	// generates tokens normally, but we verify the early-return path in
+	// ForgotPassword when the user is found but email send fails.
+	// The GenerateResetToken error path (lines 269-275) requires the JWT
+	// signing to fail, which is nearly impossible with HMAC. However, we
+	// can verify the full flow with a found user where email sending fails
+	// and confirm the response is always 200.
+
+	t.Run("UserFoundButGetByEmailReturnsNilUser_StillReturns200", func(t *testing.T) {
+		// Edge case: GetByEmail returns (nil, nil) — no error but no user either
+		mockRepo := new(MockFullUserRepo)
+		authService := services.NewAuthService("test-secret", 1)
+		emailService := services.NewEmailService(&config.Config{
+			FrontendURL: "http://localhost:5173",
+		})
+		h := &AuthHandler{
+			userRepo:     mockRepo,
+			authService:  authService,
+			emailService: emailService,
+		}
+
+		mockRepo.On("GetByEmail", mock.Anything, "niluser@test.dev").Return(nil, nil)
+
+		body := `{"email":"niluser@test.dev"}`
+		req := httptest.NewRequest(http.MethodPost, "/api/auth/forgot-password", strings.NewReader(body))
+		rr := httptest.NewRecorder()
+		h.ForgotPassword(rr, req)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+		assert.Contains(t, rr.Body.String(), "If the email exists")
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("UserFoundEmailSendError_StillReturns200_WithMessage", func(t *testing.T) {
+		// Verify the exact response body when email sending fails
+		mockRepo := new(MockFullUserRepo)
+		authService := services.NewAuthService("test-secret", 1)
+		emailService := services.NewEmailService(&config.Config{
+			FrontendURL:  "http://localhost:5173",
+			ResendAPIKey: "", // No API key -> email send will fail
+		})
+		h := &AuthHandler{
+			userRepo:     mockRepo,
+			authService:  authService,
+			emailService: emailService,
+		}
+
+		user := &models.User{
+			ID:    uuid.New(),
+			Email: "emailfail@test.dev",
+			Name:  "Email Fail User",
+		}
+		mockRepo.On("GetByEmail", mock.Anything, "emailfail@test.dev").Return(user, nil)
+
+		body := `{"email":"emailfail@test.dev"}`
+		req := httptest.NewRequest(http.MethodPost, "/api/auth/forgot-password", strings.NewReader(body))
+		rr := httptest.NewRecorder()
+		h.ForgotPassword(rr, req)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+		var response map[string]string
+		err := json.Unmarshal(rr.Body.Bytes(), &response)
+		assert.NoError(t, err)
+		assert.Equal(t, "If the email exists, a password reset link has been sent", response["message"])
+		mockRepo.AssertExpectations(t)
+	})
+}
+
+// ---------------------------------------------------------------------------
+// Additional coverage tests — RefreshToken edge cases
+// ---------------------------------------------------------------------------
+
+func TestAuthHandler_RefreshToken_EmptyTokenField(t *testing.T) {
+	authService := services.NewAuthService("test-secret", 1)
+	h := &AuthHandler{authService: authService}
+
+	// Empty refresh_token field should return 401
+	body := `{"refresh_token":""}`
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/refresh", strings.NewReader(body))
+	rr := httptest.NewRecorder()
+	h.RefreshToken(rr, req)
+
+	assert.Equal(t, http.StatusUnauthorized, rr.Code)
+	assert.Contains(t, rr.Body.String(), "Invalid or expired refresh token")
+}
+
+func TestAuthHandler_RefreshToken_MissingFieldEntirely(t *testing.T) {
+	authService := services.NewAuthService("test-secret", 1)
+	h := &AuthHandler{authService: authService}
+
+	// JSON body without the refresh_token field at all
+	body := `{}`
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/refresh", strings.NewReader(body))
+	rr := httptest.NewRecorder()
+	h.RefreshToken(rr, req)
+
+	assert.Equal(t, http.StatusUnauthorized, rr.Code)
+	assert.Contains(t, rr.Body.String(), "Invalid or expired refresh token")
+}
+
+func TestAuthHandler_RefreshToken_TokenFromDifferentSecret(t *testing.T) {
+	// Token signed with a different secret should fail validation
+	issuerService := services.NewAuthService("issuer-secret", 1)
+	validatorService := services.NewAuthService("validator-secret", 1)
+
+	pair, err := issuerService.GenerateTokenPair(uuid.New(), "wrong-secret@test.dev")
+	assert.NoError(t, err)
+
+	h := &AuthHandler{authService: validatorService}
+	body := `{"refresh_token":"` + pair.RefreshToken + `"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/refresh", strings.NewReader(body))
+	rr := httptest.NewRecorder()
+	h.RefreshToken(rr, req)
+
+	assert.Equal(t, http.StatusUnauthorized, rr.Code)
+	assert.Contains(t, rr.Body.String(), "Invalid or expired refresh token")
+}
+
+func TestAuthHandler_RefreshToken_ExpiredToken(t *testing.T) {
+	// Use negative expiry to create an immediately-expired token pair
+	svc := services.NewAuthService("test-secret", -1)
+	pair, err := svc.GenerateTokenPair(uuid.New(), "expired-refresh@test.dev")
+	assert.NoError(t, err)
+
+	// The refresh token has a 7-day expiry hardcoded, so it won't be expired.
+	// Instead, manually craft an expired refresh token.
+	// We'll just verify that the access token (which IS expired) fails.
+	h := &AuthHandler{authService: svc}
+	body := `{"refresh_token":"` + pair.AccessToken + `"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/refresh", strings.NewReader(body))
+	rr := httptest.NewRecorder()
+	h.RefreshToken(rr, req)
+
+	assert.Equal(t, http.StatusUnauthorized, rr.Code)
+	assert.Contains(t, rr.Body.String(), "Invalid or expired refresh token")
+}
+
+// ---------------------------------------------------------------------------
+// Additional coverage tests — UpdateProfile edge cases
+// ---------------------------------------------------------------------------
+
+func TestAuthHandler_UpdateProfile_ContractTemplateTooLong(t *testing.T) {
+	h := &AuthHandler{authService: services.NewAuthService("test-secret", 1)}
+
+	// Contract template exceeding 20000 characters
+	longTemplate := strings.Repeat("x", 20001)
+	body := `{"contract_template":"` + longTemplate + `"}`
+	req := httptest.NewRequest(http.MethodPut, "/api/users/me", strings.NewReader(body))
+	req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, uuid.New()))
+	rr := httptest.NewRecorder()
+	h.UpdateProfile(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+	assert.Contains(t, rr.Body.String(), "20000 characters or fewer")
+}
+
+func TestAuthHandler_UpdateProfile_SuccessWithAllFieldsIncludingContractTemplate(t *testing.T) {
+	mockRepo := new(MockFullUserRepo)
+	h := &AuthHandler{
+		userRepo:    mockRepo,
+		authService: services.NewAuthService("test-secret", 1),
+	}
+
+	userID := uuid.New()
+	updatedUser := &models.User{
+		ID:    userID,
+		Email: "full-update@test.dev",
+		Name:  "Full Update User",
+		Plan:  "pro",
+	}
+
+	mockRepo.On("Update", mock.Anything, userID,
+		mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+		mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+		mock.Anything,
+	).Return(updatedUser, nil)
+
+	body := `{
+		"name":"Full Update User",
+		"business_name":"My Business",
+		"logo_url":"https://example.com/logo.png",
+		"brand_color":"#ff6600",
+		"show_business_name_in_pdf":true,
+		"default_deposit_percent":50.0,
+		"default_cancellation_days":7.0,
+		"default_refund_percent":80.0,
+		"contract_template":"Contrato para [client_name] en [event_date] por [event_total_amount]."
+	}`
+	req := httptest.NewRequest(http.MethodPut, "/api/users/me", strings.NewReader(body))
+	req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, userID))
+	rr := httptest.NewRecorder()
+	h.UpdateProfile(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+
+	var response map[string]interface{}
+	err := json.Unmarshal(rr.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "full-update@test.dev", response["email"])
+	mockRepo.AssertExpectations(t)
+}
+
+func TestAuthHandler_UpdateProfile_MultipleInvalidContractTokens(t *testing.T) {
+	h := &AuthHandler{authService: services.NewAuthService("test-secret", 1)}
+
+	// Template with multiple tokens, one of which is invalid
+	body := `{"contract_template":"Hello [client_name], your [bogus_token] is ready."}`
+	req := httptest.NewRequest(http.MethodPut, "/api/users/me", strings.NewReader(body))
+	req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, uuid.New()))
+	rr := httptest.NewRecorder()
+	h.UpdateProfile(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+	assert.Contains(t, rr.Body.String(), "unsupported token")
+	assert.Contains(t, rr.Body.String(), "bogus_token")
+}
+
+// ---------------------------------------------------------------------------
+// Additional coverage tests — Login edge cases
+// ---------------------------------------------------------------------------
+
+func TestAuthHandler_Login_GetByEmailReturnsNilUserNilError(t *testing.T) {
+	// When GetByEmail returns (nil, nil), Login should return 401
+	mockRepo := new(MockFullUserRepo)
+	authService := services.NewAuthService("test-secret", 1)
+	h := &AuthHandler{
+		userRepo:    mockRepo,
+		authService: authService,
+	}
+
+	mockRepo.On("GetByEmail", mock.Anything, "ghost@test.dev").Return(nil, nil)
+
+	body := `{"email":"ghost@test.dev","password":"123456"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/login", strings.NewReader(body))
+	rr := httptest.NewRecorder()
+	h.Login(rr, req)
+
+	assert.Equal(t, http.StatusUnauthorized, rr.Code)
+	assert.Contains(t, rr.Body.String(), "Invalid email or password")
+	mockRepo.AssertExpectations(t)
+}
+
+func TestAuthHandler_Login_EmailTrimming(t *testing.T) {
+	// Verify that email is trimmed before lookup
+	mockRepo := new(MockFullUserRepo)
+	authService := services.NewAuthService("test-secret", 1)
+	h := &AuthHandler{
+		userRepo:    mockRepo,
+		authService: authService,
+	}
+
+	hash, _ := authService.HashPassword("password123")
+	user := &models.User{
+		ID:           uuid.New(),
+		Email:        "trimmed@test.dev",
+		PasswordHash: hash,
+		Name:         "Trimmed User",
+		Plan:         "basic",
+	}
+	// The mock expects the trimmed email
+	mockRepo.On("GetByEmail", mock.Anything, "trimmed@test.dev").Return(user, nil)
+
+	body := `{"email":"  trimmed@test.dev  ","password":"password123"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/login", strings.NewReader(body))
+	rr := httptest.NewRecorder()
+	h.Login(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	assert.Contains(t, rr.Body.String(), "user")
+	mockRepo.AssertExpectations(t)
+}
+
+// ---------------------------------------------------------------------------
+// Additional coverage tests — Register edge cases
+// ---------------------------------------------------------------------------
+
+func TestAuthHandler_Register_EmailAndNameTrimming(t *testing.T) {
+	// Verify that email and name are trimmed before processing
+	mockRepo := new(MockFullUserRepo)
+	authService := services.NewAuthService("test-secret", 1)
+	h := &AuthHandler{
+		userRepo:    mockRepo,
+		authService: authService,
+	}
+
+	mockRepo.On("GetByEmail", mock.Anything, "trimreg@test.dev").Return(nil, fmt.Errorf("not found"))
+	mockRepo.On("Create", mock.Anything, mock.AnythingOfType("*models.User")).Run(func(args mock.Arguments) {
+		user := args.Get(1).(*models.User)
+		user.ID = uuid.New()
+	}).Return(nil)
+
+	body := `{"email":"  trimreg@test.dev  ","password":"123456","name":"  Trim Name  "}`
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/register", strings.NewReader(body))
+	rr := httptest.NewRecorder()
+	h.Register(rr, req)
+
+	assert.Equal(t, http.StatusCreated, rr.Code)
+	assert.Contains(t, rr.Body.String(), "user")
+	mockRepo.AssertExpectations(t)
+}
+
+func TestAuthHandler_Register_WhitespaceOnlyFields(t *testing.T) {
+	// Whitespace-only email after trimming should be caught as empty
+	h := &AuthHandler{authService: services.NewAuthService("test-secret", 1)}
+
+	body := `{"email":"   ","password":"123456","name":"Test"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/register", strings.NewReader(body))
+	rr := httptest.NewRecorder()
+	h.Register(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+	assert.Contains(t, rr.Body.String(), "Email, password, and name are required")
+}
+
+func TestAuthHandler_Register_WhitespaceOnlyName(t *testing.T) {
+	// Whitespace-only name after trimming should be caught as empty
+	h := &AuthHandler{authService: services.NewAuthService("test-secret", 1)}
+
+	body := `{"email":"valid@test.dev","password":"123456","name":"   "}`
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/register", strings.NewReader(body))
+	rr := httptest.NewRecorder()
+	h.Register(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+	assert.Contains(t, rr.Body.String(), "Email, password, and name are required")
+}
+
+// ---------------------------------------------------------------------------
+// Security tests — Password max length
+// ---------------------------------------------------------------------------
+
+func TestAuthHandler_Register_PasswordTooLong(t *testing.T) {
+	h := &AuthHandler{authService: services.NewAuthService("test-secret", 1)}
+
+	// 129-character password should be rejected
+	longPassword := strings.Repeat("a", 129)
+	body := fmt.Sprintf(`{"email":"long-pw@test.dev","password":"%s","name":"Test User"}`, longPassword)
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/register", strings.NewReader(body))
+	rr := httptest.NewRecorder()
+	h.Register(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+	assert.Contains(t, rr.Body.String(), "Password must not exceed 128 characters")
+}
+
+func TestAuthHandler_ResetPassword_PasswordTooLong(t *testing.T) {
+	authService := services.NewAuthService("test-secret", 1)
+	h := &AuthHandler{authService: authService}
+
+	userID := uuid.New()
+	token, err := authService.GenerateResetToken(userID, "longpw-reset@test.dev")
+	assert.NoError(t, err)
+
+	// 129-character password should be rejected
+	longPassword := strings.Repeat("b", 129)
+	body := fmt.Sprintf(`{"token":"%s","new_password":"%s"}`, token, longPassword)
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/reset-password", strings.NewReader(body))
+	rr := httptest.NewRecorder()
+	h.ResetPassword(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+	assert.Contains(t, rr.Body.String(), "Password must not exceed 128 characters")
+}
+
+// ---------------------------------------------------------------------------
+// Security tests — Refresh token verifies user exists
+// ---------------------------------------------------------------------------
+
+func TestAuthHandler_RefreshToken_UserNotFound(t *testing.T) {
+	userID := uuid.New()
+	authService := services.NewAuthService("test-secret", 1)
+
+	// Generate a valid refresh token for a user
+	pair, err := authService.GenerateTokenPair(userID, "deleted@test.dev")
+	assert.NoError(t, err)
+
+	// Mock repo returns not found for the user (simulating a deleted user)
+	mockRepo := new(MockFullUserRepo)
+	mockRepo.On("GetByID", mock.Anything, userID).Return(nil, fmt.Errorf("not found"))
+
+	h := &AuthHandler{authService: authService, userRepo: mockRepo}
+
+	body := `{"refresh_token":"` + pair.RefreshToken + `"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/auth/refresh", strings.NewReader(body))
+	rr := httptest.NewRecorder()
+	h.RefreshToken(rr, req)
+
+	assert.Equal(t, http.StatusUnauthorized, rr.Code)
+	assert.Contains(t, rr.Body.String(), "User no longer exists")
+	mockRepo.AssertExpectations(t)
 }

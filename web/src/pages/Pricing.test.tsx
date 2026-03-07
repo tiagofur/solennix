@@ -330,9 +330,7 @@ describe('Pricing', () => {
       });
 
       expect(
-        screen.getByText(
-          'Hubo un error al iniciar el proceso de pago. Por favor intenta nuevamente.',
-        ),
+        screen.getByText(/Hubo un error al iniciar el proceso de pago/i),
       ).toBeInTheDocument();
     });
 

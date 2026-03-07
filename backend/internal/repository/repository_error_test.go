@@ -477,6 +477,139 @@ func TestUserRepoCreateWithDefaultRole(t *testing.T) {
 	}
 }
 
+// TestUpdateEventItemsProductsAndExtrasAndEquipment tests UpdateEventItems with all three
+// parameters populated (products, extras, and equipment) to exercise every insert branch.
+func TestUpdateEventItemsProductsAndExtrasAndEquipment(t *testing.T) {
+	pool := closedPool(t)
+
+	ctx := context.Background()
+	eventID := uuid.New()
+
+	repo := NewEventRepo(pool)
+
+	products := []models.EventProduct{{ProductID: uuid.New(), Quantity: 2, UnitPrice: 50}}
+	extras := []models.EventExtra{{Description: "Flowers", Cost: 20, Price: 30}}
+	equipment := []models.EventEquipment{{InventoryID: uuid.New(), Quantity: 3}}
+
+	if err := repo.UpdateEventItems(ctx, eventID, products, extras, &equipment); err == nil {
+		t.Fatal("EventRepo.UpdateEventItems(all three) expected error with closed pool")
+	}
+}
+
+// TestPaymentRepoGetByEventIDsWithNilList tests GetByEventIDs with nil list (different from empty).
+func TestPaymentRepoGetByEventIDsWithNilList(t *testing.T) {
+	ctx := context.Background()
+	userID := uuid.New()
+
+	// nil list should behave like empty list (no pool interaction needed)
+	payments, err := NewPaymentRepo(nil).GetByEventIDs(ctx, userID, nil)
+	if err != nil {
+		t.Fatalf("PaymentRepo.GetByEventIDs(nil) expected no error, got: %v", err)
+	}
+	if len(payments) != 0 {
+		t.Fatalf("PaymentRepo.GetByEventIDs(nil) expected empty slice, got %d items", len(payments))
+	}
+}
+
+// TestUserRepoUpdatePartialParams tests UserRepo.Update with various param combinations
+// to exercise different branches of the COALESCE query.
+func TestUserRepoUpdatePartialParams(t *testing.T) {
+	pool := closedPool(t)
+
+	ctx := context.Background()
+	id := uuid.New()
+
+	repo := NewUserRepo(pool)
+
+	// Only name + business name
+	name := "Partial User"
+	biz := "Partial Business"
+	if _, err := repo.Update(ctx, id, &name, &biz, nil, nil, nil, nil, nil, nil, nil); err == nil {
+		t.Fatal("UserRepo.Update(partial params) expected error with closed pool")
+	}
+
+	// Only logo + color + showBiz
+	logo := "https://example.com/logo.png"
+	color := "#abcdef"
+	showBiz := false
+	if _, err := repo.Update(ctx, id, nil, nil, &logo, &color, &showBiz, nil, nil, nil, nil); err == nil {
+		t.Fatal("UserRepo.Update(logo/color/showBiz) expected error with closed pool")
+	}
+
+	// Only contract defaults
+	dep := 30.0
+	cancel := 14.0
+	refund := 80.0
+	contract := "custom template"
+	if _, err := repo.Update(ctx, id, nil, nil, nil, nil, nil, &dep, &cancel, &refund, &contract); err == nil {
+		t.Fatal("UserRepo.Update(contract defaults) expected error with closed pool")
+	}
+}
+
+// TestUserRepoUpdatePlanAndStripeIDWithStripeID tests UpdatePlanAndStripeID with a non-nil stripe ID.
+func TestUserRepoUpdatePlanAndStripeIDWithStripeID(t *testing.T) {
+	pool := closedPool(t)
+
+	ctx := context.Background()
+	id := uuid.New()
+	stripeID := "cus_testStripeID123"
+
+	repo := NewUserRepo(pool)
+	if err := repo.UpdatePlanAndStripeID(ctx, id, "pro", &stripeID); err == nil {
+		t.Fatal("UserRepo.UpdatePlanAndStripeID(with stripeID) expected error with closed pool")
+	}
+}
+
+// TestAdminRepoUpdateUserPlanWithoutExpiry tests UpdateUserPlan with nil expiresAt.
+func TestAdminRepoUpdateUserPlanWithoutExpiry(t *testing.T) {
+	pool := closedPool(t)
+
+	ctx := context.Background()
+	id := uuid.New()
+
+	repo := NewAdminRepo(pool)
+	if err := repo.UpdateUserPlan(ctx, id, "basic", nil); err == nil {
+		t.Fatal("AdminRepo.UpdateUserPlan(no expiry) expected error with closed pool")
+	}
+}
+
+// TestSubscriptionRepoUpdateStatusWithoutPeriods tests UpdateStatusByProviderSubID with nil periods.
+func TestSubscriptionRepoUpdateStatusWithoutPeriods(t *testing.T) {
+	pool := closedPool(t)
+
+	ctx := context.Background()
+
+	repo := NewSubscriptionRepo(pool)
+	if err := repo.UpdateStatusByProviderSubID(ctx, "sub_test_no_periods", "canceled", nil, nil); err == nil {
+		t.Fatal("SubscriptionRepo.UpdateStatusByProviderSubID(no periods) expected error with closed pool")
+	}
+}
+
+// TestSubscriptionRepoUpsertWithAllFields tests Upsert with all fields populated.
+func TestSubscriptionRepoUpsertWithAllFields(t *testing.T) {
+	pool := closedPool(t)
+
+	ctx := context.Background()
+	start := time.Now()
+	end := start.Add(30 * 24 * time.Hour)
+	providerSubID := "sub_full_test"
+
+	sub := &models.Subscription{
+		UserID:             uuid.New(),
+		Provider:           "stripe",
+		ProviderSubID:      &providerSubID,
+		Plan:               "pro",
+		Status:             "active",
+		CurrentPeriodStart: &start,
+		CurrentPeriodEnd:   &end,
+	}
+
+	repo := NewSubscriptionRepo(pool)
+	if err := repo.Upsert(ctx, sub); err == nil {
+		t.Fatal("SubscriptionRepo.Upsert(all fields) expected error with closed pool")
+	}
+}
+
 func TestRepositoryEdgeCases(t *testing.T) {
 	ctx := context.Background()
 	userID := uuid.New()

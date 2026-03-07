@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"log/slog"
 	"net/http"
 	"time"
@@ -92,7 +91,7 @@ func (h *AdminHandler) UpgradeUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req upgradeRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	if err := decodeJSON(r, &req); err != nil {
 		req.Plan = "pro" // Default to 'pro' if no body
 	}
 	if req.Plan == "" {

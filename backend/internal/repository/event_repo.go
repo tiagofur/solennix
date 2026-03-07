@@ -125,7 +125,7 @@ func (r *EventRepo) GetByClientID(ctx context.Context, userID, clientID uuid.UUI
 		var e models.Event
 		err := rows.Scan(
 			&e.ID, &e.UserID, &e.ClientID, &e.EventDate, &e.StartTime, &e.EndTime,
-			&e.ServiceType, &e.NumPeople, &e.Status, &e.Discount, &e.RequiresInvoice,
+			&e.ServiceType, &e.NumPeople, &e.Status, &e.Discount, &e.DiscountType, &e.RequiresInvoice,
 			&e.TaxRate, &e.TaxAmount, &e.TotalAmount, &e.Location, &e.City,
 			&e.DepositPercent, &e.CancellationDays, &e.RefundPercent,
 			&e.Notes, &e.Photos, &e.CreatedAt, &e.UpdatedAt,

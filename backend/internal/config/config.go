@@ -32,6 +32,7 @@ type Config struct {
 
 	UploadDir           string // Directory for uploaded files (default: "./uploads")
 	BootstrapAdminEmail string // Email to automatically promote to admin on startup
+	TrustProxy          bool   // Trust X-Forwarded-For header for client IP (only enable behind a reverse proxy)
 }
 
 func Load() (*Config, error) {
@@ -53,6 +54,7 @@ func Load() (*Config, error) {
 		RevenueCatWebhookSecret: os.Getenv("REVENUECAT_WEBHOOK_SECRET"),
 		UploadDir:               getEnv("UPLOAD_DIR", "./uploads"),
 		BootstrapAdminEmail:     os.Getenv("BOOTSTRAP_ADMIN_EMAIL"),
+		TrustProxy:              getEnv("TRUST_PROXY", "false") == "true",
 	}
 
 	if cfg.DatabaseURL == "" {

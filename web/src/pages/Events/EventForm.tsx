@@ -3,10 +3,10 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useForm, FormProvider, useWatch, Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { eventService } from "../../services/eventService";
-import { clientService } from "../../services/clientService";
-import { productService } from "../../services/productService";
-import { useAuth } from "../../contexts/AuthContext";
+import { eventService } from "@/services/eventService";
+import { clientService } from "@/services/clientService";
+import { productService } from "@/services/productService";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   ArrowLeft,
   Save,
@@ -15,16 +15,16 @@ import {
   CheckCircle,
   AlertCircle,
 } from "lucide-react";
-import { logError } from "../../lib/errorHandler";
+import { logError } from "@/lib/errorHandler";
 import { EventGeneralInfo } from "./components/EventGeneralInfo";
 import { EventProducts } from "./components/EventProducts";
 import { EventExtras } from "./components/EventExtras";
 import { EventFinancials } from "./components/EventFinancials";
 import { EventEquipment } from "./components/EventEquipment";
-import { inventoryService } from "../../services/inventoryService";
-import { usePlanLimits } from "../../hooks/usePlanLimits";
-import { EquipmentConflict, EquipmentSuggestion, InventoryItem } from "../../types/entities";
-import { UpgradeBanner } from "../../components/UpgradeBanner";
+import { inventoryService } from "@/services/inventoryService";
+import { usePlanLimits } from "@/hooks/usePlanLimits";
+import { EquipmentConflict, EquipmentSuggestion, InventoryItem } from "@/types/entities";
+import { UpgradeBanner } from "@/components/UpgradeBanner";
 
 // Local types to avoid Supabase dependency
 interface Client {
@@ -166,11 +166,11 @@ export const EventForm: React.FC = () => {
           productService.getAll(),
           inventoryService.getAll(),
         ]);
-        setClients(clientsData as any || []);
-        setProducts(productsData as any || []);
+        setClients((clientsData as Client[]) || []);
+        setProducts((productsData as Product[]) || []);
         // Filter equipment items from inventory
         setEquipmentInventory(
-          ((inventoryData as any) || []).filter((i: any) => i.type === 'equipment')
+          ((inventoryData as InventoryItem[]) || []).filter((i) => i.type === 'equipment')
         );
       } catch (err) {
         logError("Error loading dependencies", err);
@@ -181,10 +181,10 @@ export const EventForm: React.FC = () => {
 
   useEffect(() => {
     const clientIdParam = searchParams.get("clientId");
-    if (clientIdParam && clients.length > 0) {
+    if (clientIdParam && !id) {
       setValue("client_id", clientIdParam);
     }
-  }, [searchParams, clients, setValue]);
+  }, [searchParams, id, setValue]);
 
   useEffect(() => {
     const loadEvent = async (eventId: string) => {
@@ -417,16 +417,16 @@ export const EventForm: React.FC = () => {
 
   // Auto-suggest equipment when products change
   useEffect(() => {
-    const products = selectedProducts
+    const productItems = selectedProducts
       .filter(p => p.product_id)
       .map(p => ({ product_id: p.product_id, quantity: p.quantity }));
-    if (products.length === 0) {
+    if (productItems.length === 0) {
       setEquipmentSuggestions([]);
       return;
     }
     const fetchSuggestions = async () => {
       try {
-        const suggestions = await eventService.getEquipmentSuggestions(products);
+        const suggestions = await eventService.getEquipmentSuggestions(productItems);
         setEquipmentSuggestions(suggestions || []);
       } catch {
         // Silently ignore suggestion errors
@@ -669,7 +669,7 @@ export const EventForm: React.FC = () => {
 
       <FormProvider {...methods}>
         <form 
-          onSubmit={handleSubmit(onSubmit as any)} 
+          onSubmit={handleSubmit(onSubmit)}
           className="space-y-6"
           onKeyDown={(e) => {
             if (e.key === "Enter" && (e.target as HTMLElement).tagName !== "TEXTAREA") {

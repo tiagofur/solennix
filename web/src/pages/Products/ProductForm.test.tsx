@@ -134,7 +134,7 @@ describe('ProductForm', () => {
         recipe: null,
       });
       expect(productService.updateIngredients).toHaveBeenCalledWith('prod-1', [
-        { inventoryId: 'inv-1', quantityRequired: 2 },
+        { inventoryId: 'inv-1', quantityRequired: 2, capacity: null, bringToEvent: false },
       ]);
     });
     expect(mockNavigate).toHaveBeenCalledWith('/products');
@@ -175,6 +175,7 @@ describe('ProductForm', () => {
         category: 'Postres',
         base_price: 60,
         image_url: null,
+        is_active: true,
       });
     });
   });
@@ -264,6 +265,11 @@ describe('ProductForm', () => {
 
     expect(screen.getByRole('status')).toBeInTheDocument();
     expect(screen.getByText('Cargando límites de plan...')).toBeInTheDocument();
+
+    // Settle background state updates to avoid act() warnings
+    await waitFor(() => {
+      expect(inventoryService.getAll).toHaveBeenCalled();
+    });
   });
 
   it('navigates to /products when clicking the back arrow button (line 205)', async () => {

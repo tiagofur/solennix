@@ -380,9 +380,7 @@ describe('CalendarView', () => {
     });
 
     // Filter by cancelled status (no events match)
-    fireEvent.change(screen.getByLabelText(/Filtrar eventos por estado/i), {
-      target: { value: 'cancelled' },
-    });
+    fireEvent.click(screen.getByRole('button', { name: 'Cancelado' }));
 
     expect(screen.getByText('No se encontraron eventos')).toBeInTheDocument();
     expect(screen.getByText('Intenta ajustando los filtros.')).toBeInTheDocument();
@@ -434,9 +432,7 @@ describe('CalendarView', () => {
       expect(screen.getByText('Ana')).toBeInTheDocument();
     });
 
-    fireEvent.change(screen.getByLabelText(/Filtrar eventos por estado/i), {
-      target: { value: 'completed' },
-    });
+    fireEvent.click(screen.getByRole('button', { name: 'Completado' }));
 
     expect(screen.getByText('Carlos')).toBeInTheDocument();
     expect(screen.queryByText('Ana')).not.toBeInTheDocument();
@@ -644,9 +640,7 @@ describe('CalendarView', () => {
       expect(screen.getByText('X')).toBeInTheDocument();
     });
 
-    fireEvent.change(screen.getByPlaceholderText(/Buscar por cliente o servicio/i), {
-      target: { value: 'churros' },
-    });
+    fireEvent.change(screen.getByPlaceholderText(/Buscar por cliente o servicio/i), { target: { value: 'churros' } });
 
     expect(screen.getByText('X')).toBeInTheDocument();
     expect(screen.queryByText('Y')).not.toBeInTheDocument();

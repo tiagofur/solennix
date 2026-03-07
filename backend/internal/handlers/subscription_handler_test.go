@@ -1167,6 +1167,424 @@ func TestSubscriptionHandler_RevenueCatWebhookErrors(t *testing.T) {
 	})
 }
 
+func TestSubscriptionHandler_CreateCheckoutSession_UserWithStripeCustomer(t *testing.T) {
+	// When user has a StripeCustomerID, session.New is called with params.Customer set.
+	// session.New will fail because we use a fake key, but we still exercise the code path
+	// that populates params.Customer and reaches the retry logic.
+	mockRepo := new(MockUserRepo)
+	cfg := &config.Config{
+		StripeSecretKey:  "sk_test_fake",
+		StripeProPriceID: "price_fake",
+		FrontendURL:      "http://localhost:5173",
+	}
+
+	userID := uuid.New()
+	customerID := "cus_test_existing"
+	user := &models.User{
+		ID:               userID,
+		Email:            "stripe-user@example.com",
+		StripeCustomerID: &customerID,
+	}
+	mockRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
+
+	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+
+	req := httptest.NewRequest("POST", "/api/subscriptions/checkout-session", nil)
+	w := httptest.NewRecorder()
+
+	ctx := context.WithValue(req.Context(), middleware.UserIDKey, userID)
+	req = req.WithContext(ctx)
+
+	handler.CreateCheckoutSession(w, req)
+
+	// session.New will fail with a fake key → handler should return 500 after retry
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Contains(t, w.Body.String(), "Failed to create checkout session")
+	mockRepo.AssertExpectations(t)
+}
+
+func TestSubscriptionHandler_CreateCheckoutSession_UserWithoutStripeCustomer(t *testing.T) {
+	// When user has no StripeCustomerID, session.New is called with params.CustomerEmail set.
+	mockRepo := new(MockUserRepo)
+	cfg := &config.Config{
+		StripeSecretKey:  "sk_test_fake",
+		StripeProPriceID: "price_fake",
+		FrontendURL:      "http://localhost:5173",
+	}
+
+	userID := uuid.New()
+	user := &models.User{
+		ID:               userID,
+		Email:            "nostripe@example.com",
+		StripeCustomerID: nil,
+	}
+	mockRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
+
+	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+
+	req := httptest.NewRequest("POST", "/api/subscriptions/checkout-session", nil)
+	w := httptest.NewRecorder()
+
+	ctx := context.WithValue(req.Context(), middleware.UserIDKey, userID)
+	req = req.WithContext(ctx)
+
+	handler.CreateCheckoutSession(w, req)
+
+	// session.New will fail with a fake key → no retry because there's no stored customer ID
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Contains(t, w.Body.String(), "Failed to create checkout session")
+	mockRepo.AssertExpectations(t)
+}
+
+func TestSubscriptionHandler_CreateCheckoutSession_UserWithEmptyStripeCustomer(t *testing.T) {
+	// When user has an empty string StripeCustomerID, should use CustomerEmail path.
+	mockRepo := new(MockUserRepo)
+	cfg := &config.Config{
+		StripeSecretKey:  "sk_test_fake",
+		StripeProPriceID: "price_fake",
+		FrontendURL:      "http://localhost:5173",
+	}
+
+	userID := uuid.New()
+	emptyCustomer := ""
+	user := &models.User{
+		ID:               userID,
+		Email:            "emptystripe@example.com",
+		StripeCustomerID: &emptyCustomer,
+	}
+	mockRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
+
+	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+
+	req := httptest.NewRequest("POST", "/api/subscriptions/checkout-session", nil)
+	w := httptest.NewRecorder()
+
+	ctx := context.WithValue(req.Context(), middleware.UserIDKey, userID)
+	req = req.WithContext(ctx)
+
+	handler.CreateCheckoutSession(w, req)
+
+	// session.New will fail, but exercises the CustomerEmail branch (empty StripeCustomerID)
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Contains(t, w.Body.String(), "Failed to create checkout session")
+	mockRepo.AssertExpectations(t)
+}
+
+func TestSubscriptionHandler_CreateCheckoutSession_OnlySecretKeyMissing(t *testing.T) {
+	// When only StripeSecretKey is empty but StripeProPriceID is set, still not configured.
+	mockRepo := new(MockUserRepo)
+	cfg := &config.Config{
+		StripeSecretKey:  "",
+		StripeProPriceID: "price_123",
+	}
+
+	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+
+	req := httptest.NewRequest("POST", "/api/subscriptions/checkout-session", nil)
+	w := httptest.NewRecorder()
+
+	userID := uuid.New()
+	ctx := context.WithValue(req.Context(), middleware.UserIDKey, userID)
+	req = req.WithContext(ctx)
+
+	handler.CreateCheckoutSession(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Contains(t, w.Body.String(), "Stripe is not configured")
+}
+
+func TestSubscriptionHandler_CreateCheckoutSession_OnlyPriceIDMissing(t *testing.T) {
+	// When only StripeProPriceID is empty but StripeSecretKey is set, still not configured.
+	mockRepo := new(MockUserRepo)
+	cfg := &config.Config{
+		StripeSecretKey:  "sk_test_fake",
+		StripeProPriceID: "",
+	}
+
+	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+
+	req := httptest.NewRequest("POST", "/api/subscriptions/checkout-session", nil)
+	w := httptest.NewRecorder()
+
+	userID := uuid.New()
+	ctx := context.WithValue(req.Context(), middleware.UserIDKey, userID)
+	req = req.WithContext(ctx)
+
+	handler.CreateCheckoutSession(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Contains(t, w.Body.String(), "Stripe is not configured")
+}
+
+func TestSubscriptionHandler_CreatePortalSession_EmptyStringStripeCustomerID(t *testing.T) {
+	// When user has a non-nil but empty StripeCustomerID, should return 400.
+	mockRepo := new(MockUserRepo)
+	cfg := &config.Config{
+		StripeSecretKey: "sk_test_fake",
+		FrontendURL:     "http://localhost:5173",
+	}
+
+	userID := uuid.New()
+	emptyCustomer := ""
+	user := &models.User{
+		ID:               userID,
+		Email:            "test@example.com",
+		StripeCustomerID: &emptyCustomer,
+	}
+	mockRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
+
+	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+
+	req := httptest.NewRequest("POST", "/api/subscriptions/portal-session", nil)
+	w := httptest.NewRecorder()
+
+	ctx := context.WithValue(req.Context(), middleware.UserIDKey, userID)
+	req = req.WithContext(ctx)
+
+	handler.CreatePortalSession(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "No Stripe customer")
+	mockRepo.AssertExpectations(t)
+}
+
+func TestSubscriptionHandler_CreatePortalSession_WithStripeCustomerID(t *testing.T) {
+	// When user has a valid StripeCustomerID, the handler calls stripeBilling.New
+	// which will fail with fake credentials, but exercises that code path.
+	mockRepo := new(MockUserRepo)
+	cfg := &config.Config{
+		StripeSecretKey: "sk_test_fake",
+		FrontendURL:     "http://localhost:5173",
+	}
+
+	userID := uuid.New()
+	customerID := "cus_test_valid"
+	user := &models.User{
+		ID:               userID,
+		Email:            "test@example.com",
+		StripeCustomerID: &customerID,
+	}
+	mockRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
+
+	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+
+	req := httptest.NewRequest("POST", "/api/subscriptions/portal-session", nil)
+	w := httptest.NewRecorder()
+
+	ctx := context.WithValue(req.Context(), middleware.UserIDKey, userID)
+	req = req.WithContext(ctx)
+
+	handler.CreatePortalSession(w, req)
+
+	// stripeBilling.New fails with fake key → 500
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Contains(t, w.Body.String(), "Failed to create billing portal session")
+	mockRepo.AssertExpectations(t)
+}
+
+func TestSubscriptionHandler_CreatePortalSession_WithPortalConfigID(t *testing.T) {
+	// Exercises the branch where StripePortalConfigID is non-empty.
+	mockRepo := new(MockUserRepo)
+	cfg := &config.Config{
+		StripeSecretKey:      "sk_test_fake",
+		FrontendURL:          "http://localhost:5173",
+		StripePortalConfigID: "bpc_test_config",
+	}
+
+	userID := uuid.New()
+	customerID := "cus_test_valid"
+	user := &models.User{
+		ID:               userID,
+		Email:            "test@example.com",
+		StripeCustomerID: &customerID,
+	}
+	mockRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
+
+	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+
+	req := httptest.NewRequest("POST", "/api/subscriptions/portal-session", nil)
+	w := httptest.NewRecorder()
+
+	ctx := context.WithValue(req.Context(), middleware.UserIDKey, userID)
+	req = req.WithContext(ctx)
+
+	handler.CreatePortalSession(w, req)
+
+	// stripeBilling.New fails with fake key → 500 but exercises the Configuration branch
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestSubscriptionHandler_GetSubscriptionStatus_SubWithNoPeriodEnd(t *testing.T) {
+	// When subscription has nil CurrentPeriodEnd, the response should not include it.
+	mockUserRepo := new(MockUserRepo)
+	mockSubRepo := new(MockSubscriptionRepo)
+	cfg := &config.Config{}
+
+	userID := uuid.New()
+	user := &models.User{
+		ID:   userID,
+		Plan: "pro",
+	}
+
+	sub := &models.Subscription{
+		UserID:           userID,
+		Provider:         "apple",
+		Status:           "active",
+		Plan:             "pro",
+		CurrentPeriodEnd: nil, // No period end
+	}
+
+	mockUserRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
+	mockSubRepo.On("GetByUserID", mock.Anything, userID).Return(sub, nil)
+
+	handler := NewSubscriptionHandler(mockUserRepo, mockSubRepo, nil, nil, cfg)
+
+	req := httptest.NewRequest("GET", "/api/subscriptions/status", nil)
+	w := httptest.NewRecorder()
+	ctx := context.WithValue(req.Context(), middleware.UserIDKey, userID)
+	req = req.WithContext(ctx)
+
+	handler.GetSubscriptionStatus(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response map[string]interface{}
+	json.Unmarshal(w.Body.Bytes(), &response)
+	assert.Equal(t, "pro", response["plan"])
+	assert.Equal(t, false, response["has_stripe_account"])
+
+	subInfo := response["subscription"].(map[string]interface{})
+	assert.Equal(t, "active", subInfo["status"])
+	assert.Equal(t, "apple", subInfo["provider"])
+	// current_period_end should be absent (omitempty)
+	_, hasPeriodEnd := subInfo["current_period_end"]
+	assert.False(t, hasPeriodEnd, "current_period_end should not be present when nil")
+
+	mockUserRepo.AssertExpectations(t)
+	mockSubRepo.AssertExpectations(t)
+}
+
+func TestSubscriptionHandler_GetSubscriptionStatus_SubWithNilProviderSubID(t *testing.T) {
+	// When subscription has nil ProviderSubID, the stripeSub.Get call is skipped
+	// even if the user has a StripeCustomerID.
+	mockUserRepo := new(MockUserRepo)
+	mockSubRepo := new(MockSubscriptionRepo)
+	cfg := &config.Config{}
+
+	userID := uuid.New()
+	customerID := "cus_test_123"
+	user := &models.User{
+		ID:               userID,
+		Plan:             "pro",
+		StripeCustomerID: &customerID,
+	}
+
+	periodEnd := time.Date(2026, 5, 1, 0, 0, 0, 0, time.UTC)
+	sub := &models.Subscription{
+		UserID:           userID,
+		Provider:         "stripe",
+		ProviderSubID:    nil, // No provider subscription ID
+		Status:           "active",
+		Plan:             "pro",
+		CurrentPeriodEnd: &periodEnd,
+	}
+
+	mockUserRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
+	mockSubRepo.On("GetByUserID", mock.Anything, userID).Return(sub, nil)
+
+	handler := NewSubscriptionHandler(mockUserRepo, mockSubRepo, nil, nil, cfg)
+
+	req := httptest.NewRequest("GET", "/api/subscriptions/status", nil)
+	w := httptest.NewRecorder()
+	ctx := context.WithValue(req.Context(), middleware.UserIDKey, userID)
+	req = req.WithContext(ctx)
+
+	handler.GetSubscriptionStatus(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response map[string]interface{}
+	json.Unmarshal(w.Body.Bytes(), &response)
+	subInfo := response["subscription"].(map[string]interface{})
+	assert.Equal(t, "active", subInfo["status"])
+	assert.Equal(t, "stripe", subInfo["provider"])
+	// Should have current_period_end from the DB record (not from stripeSub.Get)
+	assert.NotNil(t, subInfo["current_period_end"])
+	// cancel_at_period_end should be false (default, since stripeSub.Get was skipped)
+	assert.Equal(t, false, subInfo["cancel_at_period_end"])
+
+	mockUserRepo.AssertExpectations(t)
+	mockSubRepo.AssertExpectations(t)
+}
+
+func TestSubscriptionHandler_GetSubscriptionStatus_NonStripeProviderWithPeriodEnd(t *testing.T) {
+	// RevenueCat (apple/google) subscription with period end — should skip stripeSub.Get entirely.
+	mockUserRepo := new(MockUserRepo)
+	mockSubRepo := new(MockSubscriptionRepo)
+	cfg := &config.Config{}
+
+	userID := uuid.New()
+	user := &models.User{
+		ID:   userID,
+		Plan: "pro",
+		// No StripeCustomerID
+	}
+
+	periodEnd := time.Date(2026, 6, 15, 0, 0, 0, 0, time.UTC)
+	providerSubID := "rc_sub_123"
+	sub := &models.Subscription{
+		UserID:           userID,
+		Provider:         "apple",
+		ProviderSubID:    &providerSubID,
+		Status:           "active",
+		Plan:             "pro",
+		CurrentPeriodEnd: &periodEnd,
+	}
+
+	mockUserRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
+	mockSubRepo.On("GetByUserID", mock.Anything, userID).Return(sub, nil)
+
+	handler := NewSubscriptionHandler(mockUserRepo, mockSubRepo, nil, nil, cfg)
+
+	req := httptest.NewRequest("GET", "/api/subscriptions/status", nil)
+	w := httptest.NewRecorder()
+	ctx := context.WithValue(req.Context(), middleware.UserIDKey, userID)
+	req = req.WithContext(ctx)
+
+	handler.GetSubscriptionStatus(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response map[string]interface{}
+	json.Unmarshal(w.Body.Bytes(), &response)
+	assert.Equal(t, "pro", response["plan"])
+	assert.Equal(t, false, response["has_stripe_account"])
+
+	subInfo := response["subscription"].(map[string]interface{})
+	assert.Equal(t, "active", subInfo["status"])
+	assert.Equal(t, "apple", subInfo["provider"])
+	assert.NotNil(t, subInfo["current_period_end"])
+
+	mockUserRepo.AssertExpectations(t)
+	mockSubRepo.AssertExpectations(t)
+}
+
+func TestNewSubscriptionHandler(t *testing.T) {
+	mockUserRepo := new(MockUserRepo)
+	mockSubRepo := new(MockSubscriptionRepo)
+	mockEventRepo := new(MockEventRepoSmall)
+	mockPaymentRepo := new(MockPaymentRepoSmall)
+	cfg := &config.Config{
+		StripeSecretKey: "sk_test_constructor",
+	}
+
+	handler := NewSubscriptionHandler(mockUserRepo, mockSubRepo, mockEventRepo, mockPaymentRepo, cfg)
+
+	assert.NotNil(t, handler)
+	assert.Equal(t, cfg, handler.cfg)
+}
+
 func TestSubscriptionHandler_StripeWebhookMissingSignatureHeader(t *testing.T) {
 	mockRepo := new(MockUserRepo)
 	cfg := &config.Config{

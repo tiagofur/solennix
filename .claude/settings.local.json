@@ -154,7 +154,15 @@
       "Bash(netstat:*)",
       "Bash(MSYS_NO_PATHCONV=1 tasklist:*)",
       "Bash(powershell:*)",
-      "mcp__TestSprite__testsprite_rerun_tests"
+      "mcp__TestSprite__testsprite_rerun_tests",
+      "Bash(sort:*)",
+      "Bash(git -C /Users/tiagofur/Desktop/creapolis/eventosapp log --all --oneline -- backend/.env.production)",
+      "Bash(test:*)",
+      "Bash(git -C /Users/tiagofur/Desktop/creapolis/eventosapp show --stat 89123ec -- backend/.env.production)",
+      "Bash(git rm:*)",
+      "Bash(git status:*)",
+      "Bash(CLAUDECODE= git commit -m \"$\\(cat <<''EOF''\nfix\\(backend\\): harden security with 12 vulnerability fixes\n\n- Remove .env.production from git tracking \\(contained live secrets\\)\n- Differentiate access/refresh/reset tokens via JWT Subject claims\n- Stop returning tokens in response body \\(httpOnly cookies only\\)\n- Verify user exists on token refresh \\(prevent deleted user access\\)\n- Move debug endpoints behind AdminOnly middleware\n- Fix rate limit IP spoofing with TrustProxy config\n- Add magic-byte validation and extension whitelist for uploads\n- Enforce password max length \\(128 chars\\) for bcrypt safety\n- Fix admin handler unbounded body decode \\(use 1MB-limited decodeJSON\\)\n- Remove Stripe error message leak to client\n- Add rate limiting to upload and admin endpoints\n- Expand backend and frontend test coverage for security changes\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(CLAUDECODE= git commit:*)"
     ]
   }
 }

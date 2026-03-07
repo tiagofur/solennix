@@ -59,6 +59,7 @@ func (s *AuthService) GenerateTokenPair(userID uuid.UUID, email string) (*TokenP
 			ExpiresAt: jwt.NewNumericDate(expiresAt),
 			IssuedAt:  jwt.NewNumericDate(now),
 			Issuer:    "solennix-backend",
+			Subject:   "access",
 		},
 	}
 
@@ -76,6 +77,7 @@ func (s *AuthService) GenerateTokenPair(userID uuid.UUID, email string) (*TokenP
 			ExpiresAt: jwt.NewNumericDate(now.Add(7 * 24 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(now),
 			Issuer:    "solennix-backend",
+			Subject:   "refresh",
 		},
 	}
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims)
@@ -116,8 +118,9 @@ func (s *AuthService) GenerateResetToken(userID uuid.UUID, email string) (string
 	return tokenString, nil
 }
 
-// ValidateToken parses and validates a JWT token, returning its claims.
-func (s *AuthService) ValidateToken(tokenString string) (*TokenClaims, error) {
+// parseToken parses and validates a JWT token signature, returning its claims.
+// Does NOT check the Subject claim — callers must verify token type.
+func (s *AuthService) parseToken(tokenString string) (*TokenClaims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &TokenClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -137,9 +140,38 @@ func (s *AuthService) ValidateToken(tokenString string) (*TokenClaims, error) {
 	return claims, nil
 }
 
+// ValidateToken validates an access token (Subject must be "access" or empty for backward compatibility).
+func (s *AuthService) ValidateToken(tokenString string) (*TokenClaims, error) {
+	claims, err := s.parseToken(tokenString)
+	if err != nil {
+		return nil, err
+	}
+
+	// Reject refresh and password-reset tokens from being used as access tokens
+	if claims.Subject == "refresh" || claims.Subject == "password-reset" {
+		return nil, fmt.Errorf("invalid token type")
+	}
+
+	return claims, nil
+}
+
+// ValidateRefreshToken validates a refresh token specifically (Subject must be "refresh").
+func (s *AuthService) ValidateRefreshToken(tokenString string) (*TokenClaims, error) {
+	claims, err := s.parseToken(tokenString)
+	if err != nil {
+		return nil, err
+	}
+
+	if claims.Subject != "refresh" {
+		return nil, fmt.Errorf("token is not a refresh token")
+	}
+
+	return claims, nil
+}
+
 // ValidateResetToken validates a password reset token specifically
 func (s *AuthService) ValidateResetToken(tokenString string) (*TokenClaims, error) {
-	claims, err := s.ValidateToken(tokenString)
+	claims, err := s.parseToken(tokenString)
 	if err != nil {
 		return nil, err
 	}

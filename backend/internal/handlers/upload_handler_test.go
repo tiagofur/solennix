@@ -226,6 +226,218 @@ func TestUploadImage_SuccessWithJpgExtension(t *testing.T) {
 	assert.Contains(t, rr.Body.String(), "filename")
 }
 
+func TestUploadImage_CreateFileFails(t *testing.T) {
+	// Use a valid temp dir for NewUploadHandler so it initializes,
+	// then swap uploadDir to a non-existent path so os.Create fails.
+	dir := t.TempDir()
+	h := NewUploadHandler(dir)
+	userID := uuid.New()
+
+	// Overwrite uploadDir to a non-existent directory so file creation fails
+	h.uploadDir = "/nonexistent-dir-for-test"
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	partHeader := make(textproto.MIMEHeader)
+	partHeader.Set("Content-Disposition", `form-data; name="file"; filename="test.jpg"`)
+	partHeader.Set("Content-Type", "image/jpeg")
+	part, _ := writer.CreatePart(partHeader)
+	img := image.NewRGBA(image.Rect(0, 0, 2, 2))
+	png.Encode(part, img)
+	writer.Close()
+
+	req := httptest.NewRequest(http.MethodPost, "/api/uploads/image", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, userID))
+	rr := httptest.NewRecorder()
+
+	h.UploadImage(rr, req)
+	assert.Equal(t, http.StatusInternalServerError, rr.Code)
+	assert.Contains(t, rr.Body.String(), "Failed to save file")
+}
+
+func TestUploadImage_BodyTooLargeExact(t *testing.T) {
+	// Ensure the exact "http: request body too large" error triggers the correct message.
+	// This exercises the exact string check on line 45-46.
+	dir := t.TempDir()
+	h := NewUploadHandler(dir)
+	userID := uuid.New()
+
+	// Create a multipart body that is exactly over the 10MB limit.
+	// The MaxBytesReader wraps r.Body inside UploadImage.
+	// We need a body that's large enough that ParseMultipartForm triggers the MaxBytesError.
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	partHeader := make(textproto.MIMEHeader)
+	partHeader.Set("Content-Disposition", `form-data; name="file"; filename="huge.jpg"`)
+	partHeader.Set("Content-Type", "image/jpeg")
+	part, _ := writer.CreatePart(partHeader)
+
+	// Write exactly 10MB + 1 byte to exceed the limit
+	largeData := make([]byte, 10*1024*1024+1)
+	part.Write(largeData)
+	writer.Close()
+
+	req := httptest.NewRequest(http.MethodPost, "/api/uploads/image", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, userID))
+	rr := httptest.NewRecorder()
+
+	h.UploadImage(rr, req)
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+
+	bodyStr := rr.Body.String()
+	// Should trigger either "File too large" or "Invalid multipart" depending on how
+	// the MaxBytesReader error propagates
+	assert.True(t, strings.Contains(bodyStr, "File too large") || strings.Contains(bodyStr, "Invalid multipart"),
+		"expected size-related error, got: %s", bodyStr)
+}
+
+func TestUploadImage_BodyTooLargeRaw(t *testing.T) {
+	// This test sends a raw oversized body with correct multipart Content-Type
+	// to ensure ParseMultipartForm triggers the MaxBytesReader error.
+	dir := t.TempDir()
+	h := NewUploadHandler(dir)
+	userID := uuid.New()
+
+	// Build a multipart form with minimal overhead but a huge file part.
+	// Write the multipart boundary manually to keep overhead low.
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	partHeader := make(textproto.MIMEHeader)
+	partHeader.Set("Content-Disposition", `form-data; name="file"; filename="huge.jpg"`)
+	partHeader.Set("Content-Type", "image/jpeg")
+	part, _ := writer.CreatePart(partHeader)
+
+	// Write a chunk at a time to exceed 10MB
+	chunk := make([]byte, 1024*1024) // 1MB chunks
+	for i := 0; i < 11; i++ {
+		part.Write(chunk)
+	}
+	writer.Close()
+
+	req := httptest.NewRequest(http.MethodPost, "/api/uploads/image", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, userID))
+	rr := httptest.NewRecorder()
+
+	h.UploadImage(rr, req)
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+	// We accept either error message — "File too large" exercises line 46,
+	// "Invalid multipart" exercises line 48
+	bodyStr := rr.Body.String()
+	assert.True(t, strings.Contains(bodyStr, "File too large") || strings.Contains(bodyStr, "Invalid multipart"),
+		"expected error about file size or multipart, got: %s", bodyStr)
+}
+
+func TestUploadImage_MultipleFileExtensions(t *testing.T) {
+	// Test with various file extensions
+	dir := t.TempDir()
+	h := NewUploadHandler(dir)
+	userID := uuid.New()
+
+	testCases := []struct {
+		name     string
+		filename string
+		wantExt  string
+	}{
+		{"gif extension", "image.gif", ".gif"},
+		{"webp extension", "image.webp", ".webp"},
+		{"uppercase jpg", "IMAGE.JPG", ".jpg"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			body := &bytes.Buffer{}
+			writer := multipart.NewWriter(body)
+			partHeader := make(textproto.MIMEHeader)
+			partHeader.Set("Content-Disposition", `form-data; name="file"; filename="`+tc.filename+`"`)
+			partHeader.Set("Content-Type", "image/jpeg")
+			part, _ := writer.CreatePart(partHeader)
+			img := image.NewRGBA(image.Rect(0, 0, 2, 2))
+			png.Encode(part, img)
+			writer.Close()
+
+			req := httptest.NewRequest(http.MethodPost, "/api/uploads/image", body)
+			req.Header.Set("Content-Type", writer.FormDataContentType())
+			req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, userID))
+			rr := httptest.NewRecorder()
+
+			h.UploadImage(rr, req)
+			assert.Equal(t, http.StatusOK, rr.Code)
+			assert.Contains(t, rr.Body.String(), tc.wantExt)
+		})
+	}
+}
+
+// ---------------------------------------------------------------------------
+// Security tests — Upload magic-byte validation
+// ---------------------------------------------------------------------------
+
+func TestUploadImage_RejectsNonImageContent(t *testing.T) {
+	dir := t.TempDir()
+	h := NewUploadHandler(dir)
+	userID := uuid.New()
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+
+	// Set Content-Type header to image/jpeg, but send plain text content
+	partHeader := make(textproto.MIMEHeader)
+	partHeader.Set("Content-Disposition", `form-data; name="file"; filename="fake.jpg"`)
+	partHeader.Set("Content-Type", "image/jpeg")
+	part, _ := writer.CreatePart(partHeader)
+
+	// Write non-image content (plain text)
+	part.Write([]byte("This is definitely not an image file, just plain text content for testing."))
+	writer.Close()
+
+	req := httptest.NewRequest(http.MethodPost, "/api/uploads/image", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, userID))
+	rr := httptest.NewRecorder()
+
+	h.UploadImage(rr, req)
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+	assert.Contains(t, rr.Body.String(), "Only image files are allowed")
+}
+
+func TestUploadImage_DisallowedExtension(t *testing.T) {
+	dir := t.TempDir()
+	h := NewUploadHandler(dir)
+	userID := uuid.New()
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+
+	// Send a real image but with a .html extension (disallowed)
+	partHeader := make(textproto.MIMEHeader)
+	partHeader.Set("Content-Disposition", `form-data; name="file"; filename="malicious.html"`)
+	partHeader.Set("Content-Type", "image/png")
+	part, _ := writer.CreatePart(partHeader)
+
+	// Create a small valid PNG image so magic-byte check passes
+	img := image.NewRGBA(image.Rect(0, 0, 4, 4))
+	for x := 0; x < 4; x++ {
+		for y := 0; y < 4; y++ {
+			img.Set(x, y, color.RGBA{128, 128, 128, 255})
+		}
+	}
+	png.Encode(part, img)
+	writer.Close()
+
+	req := httptest.NewRequest(http.MethodPost, "/api/uploads/image", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, userID))
+	rr := httptest.NewRecorder()
+
+	h.UploadImage(rr, req)
+	// Should succeed but default to .jpg extension since .html is not allowed
+	assert.Equal(t, http.StatusOK, rr.Code)
+	assert.Contains(t, rr.Body.String(), ".jpg", "disallowed extension should default to .jpg")
+	assert.NotContains(t, rr.Body.String(), ".html", "response should not contain .html extension")
+}
+
 func TestGenerateThumbnail(t *testing.T) {
 	dir := t.TempDir()
 	h := NewUploadHandler(dir)

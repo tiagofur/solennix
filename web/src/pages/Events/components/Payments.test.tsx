@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within, act } from '@testing-library/react';
 import { Payments } from './Payments';
 import { paymentService } from '../../../services/paymentService';
 import { logError } from '../../../lib/errorHandler';
@@ -36,7 +36,10 @@ describe('Payments', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Registrar Pago/i }));
     fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '200' } });
-    fireEvent.click(screen.getByRole('button', { name: /Confirmar Pago/i }));
+    
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Confirmar Pago/i }));
+    });
 
     await waitFor(() => {
       expect(paymentService.create).toHaveBeenCalledWith(
@@ -64,7 +67,10 @@ describe('Payments', () => {
     expect(row).toBeTruthy();
     fireEvent.click(within(row as HTMLElement).getByRole('button'));
     const dialog = screen.getByRole('dialog', { name: 'Eliminar Pago' });
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Eliminar permanentemente' }));
+    
+    await act(async () => {
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Eliminar permanentemente' }));
+    });
 
     await waitFor(() => {
       expect(paymentService.delete).toHaveBeenCalledWith('pay-1');
@@ -98,7 +104,10 @@ describe('Payments', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Registrar Pago/i }));
     fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '20' } });
-    fireEvent.click(screen.getByRole('button', { name: /Confirmar Pago/i }));
+    
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Confirmar Pago/i }));
+    });
 
     await waitFor(() => {
       expect(logError).toHaveBeenCalledWith('Error creating payment', expect.any(Error));
@@ -201,7 +210,10 @@ describe('Payments', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Registrar Pago/i }));
     fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '100' } });
-    fireEvent.click(screen.getByRole('button', { name: /Confirmar Pago/i }));
+    
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Confirmar Pago/i }));
+    });
 
     await waitFor(() => {
       expect(onStatusChange).toHaveBeenCalledWith('confirmed');
@@ -211,7 +223,9 @@ describe('Payments', () => {
     expect(screen.getByRole('status')).toBeInTheDocument();
 
     // Status message clears after 5 seconds
-    vi.advanceTimersByTime(5000);
+    act(() => {
+      vi.advanceTimersByTime(5000);
+    });
 
     await waitFor(() => {
       expect(screen.queryByRole('status')).not.toBeInTheDocument();
@@ -242,7 +256,10 @@ describe('Payments', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Registrar Pago/i }));
     fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '100' } });
-    fireEvent.click(screen.getByRole('button', { name: /Confirmar Pago/i }));
+    
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Confirmar Pago/i }));
+    });
 
     await waitFor(() => {
       expect(paymentService.create).toHaveBeenCalled();
@@ -312,7 +329,10 @@ describe('Payments', () => {
     fireEvent.click(within(row as HTMLElement).getByRole('button'));
 
     const dialog = screen.getByRole('dialog', { name: 'Eliminar Pago' });
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Eliminar permanentemente' }));
+    
+    await act(async () => {
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Eliminar permanentemente' }));
+    });
 
     await waitFor(() => {
       expect(logError).toHaveBeenCalledWith('Error deleting payment', expect.any(Error));
@@ -412,7 +432,10 @@ describe('Payments', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Registrar Pago/i }));
     fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '100' } });
-    fireEvent.click(screen.getByRole('button', { name: /Confirmar Pago/i }));
+    
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Confirmar Pago/i }));
+    });
 
     await waitFor(() => {
       expect(paymentService.create).toHaveBeenCalled();

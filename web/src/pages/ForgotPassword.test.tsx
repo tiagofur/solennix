@@ -35,13 +35,13 @@ describe('ForgotPassword', () => {
       </MemoryRouter>
     );
 
-    fireEvent.change(screen.getByPlaceholderText('tu@ejemplo.com'), {
+    fireEvent.change(screen.getByPlaceholderText('tu@email.com'), {
       target: { value: 'ana@example.com' },
     });
     fireEvent.click(screen.getByRole('button', { name: /enviar instrucciones/i }));
 
     await waitFor(() => {
-      expect(screen.getByText('¡Correo enviado!')).toBeInTheDocument();
+      expect(screen.getByText('¡Revisa tu correo!')).toBeInTheDocument();
     });
   });
 
@@ -53,7 +53,7 @@ describe('ForgotPassword', () => {
       </MemoryRouter>
     );
 
-    fireEvent.change(screen.getByPlaceholderText('tu@ejemplo.com'), {
+    fireEvent.change(screen.getByPlaceholderText('tu@email.com'), {
       target: { value: 'ana@example.com' },
     });
     fireEvent.click(screen.getByRole('button', { name: /enviar instrucciones/i }));

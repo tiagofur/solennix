@@ -57,17 +57,28 @@ func (h *UploadHandler) UploadImage(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
-	// Validate content type
-	contentType := header.Header.Get("Content-Type")
-	if !strings.HasPrefix(contentType, "image/") {
+	// Validate file content by reading magic bytes (don't trust client Content-Type header)
+	buf := make([]byte, 512)
+	n, err := file.Read(buf)
+	if err != nil && err != io.EOF {
+		writeError(w, http.StatusBadRequest, "Failed to read file")
+		return
+	}
+	detectedType := http.DetectContentType(buf[:n])
+	if !strings.HasPrefix(detectedType, "image/") {
 		writeError(w, http.StatusBadRequest, "Only image files are allowed")
 		return
 	}
+	// Reset file reader position after sniffing
+	if seeker, ok := file.(io.Seeker); ok {
+		seeker.Seek(0, io.SeekStart)
+	}
 
-	// Generate unique filename
-	ext := filepath.Ext(header.Filename)
-	if ext == "" {
-		ext = ".jpg"
+	// Whitelist allowed extensions
+	ext := strings.ToLower(filepath.Ext(header.Filename))
+	allowedExts := map[string]bool{".jpg": true, ".jpeg": true, ".png": true, ".gif": true, ".webp": true}
+	if !allowedExts[ext] {
+		ext = ".jpg" // Default to .jpg for unknown/disallowed extensions
 	}
 	filename := fmt.Sprintf("%s%s", uuid.New().String(), ext)
 

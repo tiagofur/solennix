@@ -6,12 +6,16 @@ import { eventService } from '../services/eventService';
 import { inventoryService } from '../services/inventoryService';
 import { paymentService } from '../services/paymentService';
 import { useAuth } from '../contexts/AuthContext';
+import { productService } from '../services/productService';
+import { clientService } from '../services/clientService';
 import { logError } from '../lib/errorHandler';
 
 vi.mock('../services/eventService');
 vi.mock('../services/inventoryService');
 vi.mock('../services/paymentService');
 vi.mock('../contexts/AuthContext');
+vi.mock('../services/productService');
+vi.mock('../services/clientService');
 vi.mock('../lib/errorHandler');
 
 // Capture Tooltip formatter props so we can exercise them in tests
@@ -19,8 +23,8 @@ const capturedTooltipFormatters: Array<(value: number) => unknown> = [];
 
 vi.mock('recharts', async () => {
   const actual = await vi.importActual<any>('recharts');
-  const passthrough = (name: string) => ({ children, ...rest }: any) => {
-    return <div data-testid={name} {...rest}>{children}</div>;
+  const passthrough = (name: string) => ({ children }: any) => {
+    return <div data-testid={name}>{children}</div>;
   };
   return {
     ...actual,
@@ -55,6 +59,8 @@ describe('Dashboard', () => {
     (eventService.getByDateRange as any).mockResolvedValue([]);
     (eventService.getUpcoming as any).mockResolvedValue([]);
     (inventoryService.getAll as any).mockResolvedValue([]);
+    (productService.getAll as any).mockResolvedValue([]);
+    (clientService.getAll as any).mockResolvedValue([]);
     (paymentService.getByEventIds as any).mockResolvedValue([]);
     (paymentService.getByPaymentDateRange as any).mockResolvedValue([]);
   });
@@ -68,7 +74,7 @@ describe('Dashboard', () => {
     renderDashboard();
 
     expect(await screen.findByText(/no hay eventos próximos/i)).toBeInTheDocument();
-    expect(screen.getByText(/no hay datos suficientes para graficar/i)).toBeInTheDocument();
+    expect(screen.getByText(/Sin datos para graficar este mes/i)).toBeInTheDocument();
     expect(screen.getByText(/todo en orden/i)).toBeInTheDocument();
   });
 
@@ -108,7 +114,7 @@ describe('Dashboard', () => {
     renderDashboard();
 
     expect(await screen.findByText(/eventos este mes/i)).toBeInTheDocument();
-    expect(screen.getByText(/Reponer Inventario \(Crítico\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/Inventario crítico/i)).toBeInTheDocument();
     expect(screen.getByText('Luis')).toBeInTheDocument();
     expect(screen.getByText(/XV/i)).toBeInTheDocument();
   });

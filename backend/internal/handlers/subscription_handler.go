@@ -103,7 +103,7 @@ func (h *SubscriptionHandler) CreateCheckoutSession(w http.ResponseWriter, r *ht
 
 		if err != nil {
 			slog.Error("Failed to create checkout session after retry", "error", err, "user_id", userID)
-			writeError(w, http.StatusInternalServerError, "Failed to create checkout session: "+err.Error())
+			writeError(w, http.StatusInternalServerError, "Failed to create checkout session")
 			return
 		}
 	}

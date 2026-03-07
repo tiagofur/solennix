@@ -6,6 +6,7 @@ import { es } from 'date-fns/locale';
 import { logError } from '@/lib/errorHandler';
 import { renderContractTemplate } from '@/lib/contractTemplate';
 import { parseInlineFormatting, renderFormattedJsPDF } from '@/lib/inlineFormatting';
+import { getAssetUrl } from '@/lib/api';
 
 type EventWithClient = Event & {
   client?: Client | null;
@@ -39,14 +40,15 @@ const addHeader = (doc: jsPDF, profile: UserProfile | null, title: string): numb
   let startX = 20;
 
   // Render logo if present
-  if (profile?.logo_url) {
+  const logoUrl = getAssetUrl(profile?.logo_url);
+  if (logoUrl) {
     try {
       // jsPDF auto detects format, we reserve a max 30x30 bounding box
       // To maintain aspect ratio perfectly, we need the original dimensions.
       // Since jsPDF addImage in FAST mode can stretch if we force width/height, 
       // we use an HTML Image element to get real dimensions first.
 
-      const imgProps = doc.getImageProperties(profile.logo_url);
+      const imgProps = doc.getImageProperties(logoUrl);
       const maxWidth = 30;
       const maxHeight = 30;
 
@@ -63,7 +65,7 @@ const addHeader = (doc: jsPDF, profile: UserProfile | null, title: string): numb
       // Center vertically in the 30px height header space (y = 10 to 40)
       const yPos = 10 + (maxHeight - height) / 2;
 
-      doc.addImage(profile.logo_url, imgProps.fileType, 20, yPos, width, height, undefined, 'FAST');
+      doc.addImage(logoUrl, imgProps.fileType, 20, yPos, width, height, undefined, 'FAST');
       startX = 20 + width + 5; // Shift text to right of logo dynamically
     } catch (error) {
       logError('Error adding logo to PDF', error);
@@ -75,7 +77,7 @@ const addHeader = (doc: jsPDF, profile: UserProfile | null, title: string): numb
   const showBusinessName = profile?.show_business_name_in_pdf ?? true;
 
   // Business Name
-  if (showBusinessName || !profile?.logo_url) {
+  if (showBusinessName || !logoUrl) {
     doc.setFontSize(20);
     doc.setTextColor(brandColor);
     doc.text(profile?.business_name || profile?.name || 'Solennix', startX, 22);

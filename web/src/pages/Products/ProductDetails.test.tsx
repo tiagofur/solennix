@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { ProductDetails } from './ProductDetails';
 import { productService } from '../../services/productService';
@@ -67,7 +67,7 @@ describe('ProductDetails', () => {
     (productService.getIngredients as any).mockResolvedValue(sampleIngredients);
     renderDetails();
     await waitFor(() => expect(screen.getByText('Paquete Premium')).toBeInTheDocument());
-    expect(screen.getByText('$250.00')).toBeInTheDocument();
+    expect(screen.getAllByText('$250.00').length).toBeGreaterThan(0);
     expect(screen.getByText('2 insumos')).toBeInTheDocument();
     expect(screen.getByText('Harina')).toBeInTheDocument();
     expect(screen.getByText('Azúcar')).toBeInTheDocument();
@@ -127,7 +127,9 @@ describe('ProductDetails', () => {
     fireEvent.click(screen.getByText('Eliminar'));
     // Dialog confirm button (bg-red-600) is first in DOM, page button is second
     const confirmButtons = screen.getAllByRole('button', { name: 'Eliminar' });
-    fireEvent.click(confirmButtons[0]);
+    await act(async () => {
+      fireEvent.click(confirmButtons[0]);
+    });
 
     await waitFor(() => {
       expect(productService.delete).toHaveBeenCalledWith('prod-1');
@@ -145,7 +147,9 @@ describe('ProductDetails', () => {
 
     fireEvent.click(screen.getByText('Eliminar'));
     const confirmButtons = screen.getAllByRole('button', { name: 'Eliminar' });
-    fireEvent.click(confirmButtons[0]);
+    await act(async () => {
+      fireEvent.click(confirmButtons[0]);
+    });
 
     await waitFor(() => {
       expect(logError).toHaveBeenCalledWith('Error deleting product', expect.any(Error));

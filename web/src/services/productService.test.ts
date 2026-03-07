@@ -86,7 +86,13 @@ describe('productService', () => {
     ]);
     expect(api.put).toHaveBeenCalledWith('/products/prod-2/ingredients', {
       ingredients: [
-        { product_id: 'prod-2', inventory_id: 'inv-9', quantity_required: 1.5 },
+        {
+          product_id: 'prod-2',
+          inventory_id: 'inv-9',
+          quantity_required: 1.5,
+          capacity: null,
+          bring_to_event: false
+        },
       ],
     });
   });

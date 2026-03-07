@@ -9,31 +9,48 @@ import (
 )
 
 func TestExtractIP(t *testing.T) {
-	tests := []struct {
-		name     string
-		headers  map[string]string
-		remote   string
-		expected string
-	}{
-		{"Forwarded for single", map[string]string{"X-Forwarded-For": "10.0.0.1"}, "192.168.1.1:1234", "10.0.0.1"},
-		{"Forwarded for multiple", map[string]string{"X-Forwarded-For": "10.0.0.2, 192.168.1.5"}, "192.168.1.1:1234", "10.0.0.2"},
-		{"RemoteAddr specific", map[string]string{}, "192.168.1.3:1234", "192.168.1.3"},
-		{"RemoteAddr fallback", map[string]string{}, "invalid-format", "invalid-format"},
-	}
+	// Save and restore TrustProxy
+	origTrust := TrustProxy
+	defer func() { TrustProxy = origTrust }()
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			req := httptest.NewRequest("GET", "/", nil)
-			for k, v := range tt.headers {
-				req.Header.Set(k, v)
-			}
-			req.RemoteAddr = tt.remote
-			ip := extractIP(req)
-			if ip != tt.expected {
-				t.Errorf("expected %q, got %q", tt.expected, ip)
-			}
-		})
-	}
+	t.Run("TrustProxy=true", func(t *testing.T) {
+		TrustProxy = true
+		tests := []struct {
+			name     string
+			headers  map[string]string
+			remote   string
+			expected string
+		}{
+			{"Forwarded for single", map[string]string{"X-Forwarded-For": "10.0.0.1"}, "192.168.1.1:1234", "10.0.0.1"},
+			{"Forwarded for multiple", map[string]string{"X-Forwarded-For": "10.0.0.2, 192.168.1.5"}, "192.168.1.1:1234", "10.0.0.2"},
+			{"RemoteAddr specific", map[string]string{}, "192.168.1.3:1234", "192.168.1.3"},
+			{"RemoteAddr fallback", map[string]string{}, "invalid-format", "invalid-format"},
+		}
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				req := httptest.NewRequest("GET", "/", nil)
+				for k, v := range tt.headers {
+					req.Header.Set(k, v)
+				}
+				req.RemoteAddr = tt.remote
+				ip := extractIP(req)
+				if ip != tt.expected {
+					t.Errorf("expected %q, got %q", tt.expected, ip)
+				}
+			})
+		}
+	})
+
+	t.Run("TrustProxy=false ignores X-Forwarded-For", func(t *testing.T) {
+		TrustProxy = false
+		req := httptest.NewRequest("GET", "/", nil)
+		req.Header.Set("X-Forwarded-For", "10.0.0.1")
+		req.RemoteAddr = "192.168.1.1:1234"
+		ip := extractIP(req)
+		if ip != "192.168.1.1" {
+			t.Errorf("expected %q, got %q", "192.168.1.1", ip)
+		}
+	})
 }
 
 func TestRateLimit(t *testing.T) {

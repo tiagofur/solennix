@@ -176,7 +176,7 @@ describe('ClientDetails', () => {
     expect(screen.getByText('5551112222')).toBeInTheDocument();
     expect(screen.getByText('ana@example.com')).toBeInTheDocument();
     expect(screen.getByText('Calle 1')).toBeInTheDocument();
-    expect(screen.getByText('$1200.00')).toBeInTheDocument();
+    expect(screen.getByText('$1,200.00')).toBeInTheDocument();
     expect(screen.getByText('VIP')).toBeInTheDocument();
   });
 
@@ -296,10 +296,10 @@ describe('ClientDetails', () => {
     });
 
     expect(screen.getByText('Fiesta')).toBeInTheDocument();
-    expect(screen.getByText('75 personas')).toBeInTheDocument();
-    expect(screen.getByText('4500.00')).toBeInTheDocument();
+    expect(screen.getByText(/75 pax/i)).toBeInTheDocument();
+    expect(screen.getByText('$4,500.00')).toBeInTheDocument();
     // Date is formatted with date-fns es locale — check for "junio" month name
-    expect(screen.getByText(/junio/i)).toBeInTheDocument();
+    expect(screen.getByText(/jun/i)).toBeInTheDocument();
   });
 
   it('shows event with null total_amount as 0.00', async () => {
@@ -314,7 +314,7 @@ describe('ClientDetails', () => {
       expect(screen.getByText('Prueba')).toBeInTheDocument();
     });
 
-    expect(screen.getByText('0.00')).toBeInTheDocument();
+    expect(screen.getByText('$0.00')).toBeInTheDocument();
   });
 
   it('has edit link pointing to correct path', async () => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Calendar,
@@ -22,10 +22,10 @@ import {
   ArrowUp,
   Clock,
 } from 'lucide-react';
-import { useTheme } from '../hooks/useTheme';
-import { Logo } from '../components/Logo';
+import { useTheme } from '@/hooks/useTheme';
+import { Logo } from '@/components/Logo';
 
-const features = [
+const FEATURES = [
   {
     icon: Calendar,
     color: 'text-primary',
@@ -76,7 +76,7 @@ const features = [
   },
 ];
 
-const steps = [
+const STEPS = [
   {
     number: '01',
     title: 'Crea tu cuenta',
@@ -103,14 +103,14 @@ const steps = [
   },
 ];
 
-const stats = [
+const STATS = [
   { value: '500+', label: 'Organizadores activos' },
   { value: '12,000+', label: 'Eventos gestionados' },
   { value: '98%', label: 'Satisfacción de clientes' },
   { value: '40%', label: 'Ahorro de tiempo promedio' },
 ];
 
-const testimonials = [
+const TESTIMONIALS = [
   {
     name: 'María González',
     role: 'Organizadora de Bodas',
@@ -140,7 +140,7 @@ const testimonials = [
   },
 ];
 
-const plans = [
+const PLANS = [
   {
     name: 'Básico',
     price: 'Gratis',
@@ -181,7 +181,7 @@ const plans = [
 ];
 
 
-const faqs = [
+const FAQS = [
   {
     question: '¿Necesito tarjeta de crédito para registrarme?',
     answer: 'No. El plan Básico es completamente gratuito y no requiere tarjeta de crédito. Solo necesitas un correo electrónico.',
@@ -201,13 +201,13 @@ const faqs = [
 ];
 
 // Mini dashboard mockup data
-const mockEvents = [
+const MOCK_EVENTS = [
   { name: 'Boda Martínez', date: 'Sáb 15 Mar', guests: 180, status: 'confirmed', amount: '$45,000' },
   { name: 'Cumpleaños VIP', date: 'Dom 16 Mar', guests: 60, status: 'quoted', amount: '$12,500' },
   { name: 'Evento Corporativo', date: 'Vie 21 Mar', guests: 250, status: 'confirmed', amount: '$78,000' },
 ];
 
-const mockKpis = [
+const MOCK_KPIS = [
   { label: 'Ingresos del mes', value: '$135,500', delta: '+18%', color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-900/20' },
   { label: 'Eventos activos', value: '8', delta: '+3', color: 'text-primary', bg: 'bg-primary/10' },
   { label: 'Clientes totales', value: '47', delta: '+5', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-900/20' },
@@ -251,7 +251,7 @@ function AppMockup() {
           <div className="flex-1 p-4 overflow-hidden flex flex-col gap-3">
             {/* KPI row */}
             <div className="grid grid-cols-3 gap-2">
-              {mockKpis.map((kpi) => (
+              {MOCK_KPIS.map((kpi) => (
                 <div key={kpi.label} className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-100 dark:border-gray-700">
                   <div className="text-[10px] text-gray-500 dark:text-gray-400 mb-1">{kpi.label}</div>
                   <div className="text-sm font-black text-gray-900 dark:text-white">{kpi.value}</div>
@@ -267,7 +267,7 @@ function AppMockup() {
                 <span className="text-[10px] text-primary font-semibold">Ver todos →</span>
               </div>
               <div className="divide-y divide-gray-50 dark:divide-gray-700">
-                {mockEvents.map((event) => (
+                {MOCK_EVENTS.map((event) => (
                   <div key={event.name} className="px-3 py-2 flex items-center gap-2">
                     <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                       <Calendar className="h-3 w-3 text-primary" />
@@ -304,7 +304,6 @@ export const Landing: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
-  const faqRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
     const onScroll = () => setShowScrollTop(window.scrollY > 600);
@@ -359,17 +358,17 @@ export const Landing: React.FC = () => {
       </header>
 
       {/* Mobile menu */}
-      <div
-        className={`md:hidden border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950 px-4 overflow-hidden transition-all duration-300 ease-in-out ${mobileMenuOpen ? 'max-h-64 py-4 opacity-100' : 'max-h-0 py-0 opacity-0'}`}
-      >
-        <div className="space-y-3">
-          <a href="#features" className="block text-sm text-gray-700 dark:text-gray-300 py-2" onClick={() => setMobileMenuOpen(false)}>Características</a>
-          <a href="#how-it-works" className="block text-sm text-gray-700 dark:text-gray-300 py-2" onClick={() => setMobileMenuOpen(false)}>Cómo funciona</a>
-          <a href="#pricing" className="block text-sm text-gray-700 dark:text-gray-300 py-2" onClick={() => setMobileMenuOpen(false)}>Precios</a>
-          <a href="#faq" className="block text-sm text-gray-700 dark:text-gray-300 py-2" onClick={() => setMobileMenuOpen(false)}>FAQ</a>
-          <Link to="/login" className="block text-sm text-gray-700 dark:text-gray-300 py-2">Iniciar Sesión</Link>
+      {mobileMenuOpen && (
+        <div className="md:hidden border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950 px-4 py-4 animate-in slide-in-from-top-4 duration-200">
+          <div className="space-y-3">
+            <a href="#features" className="block text-sm text-gray-700 dark:text-gray-300 py-2" onClick={() => setMobileMenuOpen(false)}>Características</a>
+            <a href="#how-it-works" className="block text-sm text-gray-700 dark:text-gray-300 py-2" onClick={() => setMobileMenuOpen(false)}>Cómo funciona</a>
+            <a href="#pricing" className="block text-sm text-gray-700 dark:text-gray-300 py-2" onClick={() => setMobileMenuOpen(false)}>Precios</a>
+            <a href="#faq" className="block text-sm text-gray-700 dark:text-gray-300 py-2" onClick={() => setMobileMenuOpen(false)}>FAQ</a>
+            <Link to="/login" className="block text-sm text-gray-700 dark:text-gray-300 py-2" onClick={() => setMobileMenuOpen(false)}>Iniciar Sesión</Link>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ── HERO ── */}
       <section className="relative overflow-hidden pt-20 pb-32">
@@ -438,7 +437,7 @@ export const Landing: React.FC = () => {
       <section className="premium-gradient py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 text-center text-white">
-            {stats.map((stat) => (
+            {STATS.map((stat) => (
               <div key={stat.label}>
                 <div className="text-4xl font-extrabold mb-1">{stat.value}</div>
                 <div className="text-white/80 text-sm">{stat.label}</div>
@@ -464,7 +463,7 @@ export const Landing: React.FC = () => {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {features.map((feature) => (
+            {FEATURES.map((feature) => (
               <div
                 key={feature.title}
                 className="group p-6 rounded-2xl border border-gray-100 dark:border-gray-800 hover:border-brand-orange/30 dark:hover:border-brand-orange/30 hover:shadow-xl transition-all duration-300 bg-white dark:bg-gray-900"
@@ -496,9 +495,9 @@ export const Landing: React.FC = () => {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12">
-            {steps.map((step, index) => (
+            {STEPS.map((step, index) => (
               <div key={step.number} className="relative group">
-                {index < steps.length - 1 && (
+                {index < STEPS.length - 1 && (
                   <div className="hidden lg:block absolute top-[44px] left-[calc(50%+40px)] w-[calc(100%-80px)] h-1 bg-border/40 rounded-full" />
                 )}
                 <div className="relative text-center">
@@ -530,7 +529,7 @@ export const Landing: React.FC = () => {
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {testimonials.map((t) => (
+            {TESTIMONIALS.map((t) => (
               <div key={t.name} className="bg-gray-50 dark:bg-gray-900 rounded-2xl p-6 border border-gray-100 dark:border-gray-800">
                 <div className="flex items-center gap-1 mb-4" role="img" aria-label={`${t.rating} estrellas de 5`}>
                   {Array.from({ length: t.rating }).map((_, i) => (
@@ -572,7 +571,7 @@ export const Landing: React.FC = () => {
           </div>
 
           <div className="grid md:grid-cols-2 gap-10 items-stretch max-w-4xl mx-auto">
-            {plans.map((plan) => (
+            {PLANS.map((plan) => (
               <div
                 key={plan.name}
                 className={`relative rounded-3xl p-10 flex flex-col transition-all duration-300 border-2 ${
@@ -617,7 +616,7 @@ export const Landing: React.FC = () => {
                   </span>
                 </div>
 
-                <ul className="space-y-4 mb-10 flex-grow">
+                <ul className="space-y-4 mb-10 grow">
                   {plan.features.map((feature) => (
                     <li key={feature} className="flex items-center gap-3 text-sm">
                       <div className={`p-1 rounded-full ${plan.highlighted ? 'bg-primary/10 text-primary' : 'bg-success/10 text-success'}`}>
@@ -657,7 +656,7 @@ export const Landing: React.FC = () => {
           </div>
 
           <div className="space-y-4">
-            {faqs.map((faq, index) => (
+            {FAQS.map((faq, index) => (
               <div
                 key={index}
                 className="border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden"
@@ -675,17 +674,11 @@ export const Landing: React.FC = () => {
                     aria-hidden="true"
                   />
                 </button>
-                <div
-                  ref={(el) => { faqRefs.current[index] = el; }}
-                  className="overflow-hidden transition-all duration-300 ease-in-out"
-                  style={{
-                    maxHeight: openFaq === index ? `${faqRefs.current[index]?.scrollHeight ?? 200}px` : '0px',
-                  }}
-                >
-                  <div className="px-5 pb-5 pt-1 bg-white dark:bg-gray-900">
+                {openFaq === index && (
+                  <div className="px-5 pb-5 pt-1 bg-white dark:bg-gray-900 animate-in fade-in slide-in-from-top-2 duration-200">
                     <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">{faq.answer}</p>
                   </div>
-                </div>
+                )}
               </div>
             ))}
           </div>

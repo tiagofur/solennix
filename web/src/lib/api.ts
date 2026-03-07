@@ -1,4 +1,16 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+
+export function getAssetUrl(path: string | null | undefined): string | undefined {
+  if (!path) return undefined;
+  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) {
+    return path;
+  }
+  try {
+    return new URL(path, API_URL).href;
+  } catch {
+    return path;
+  }
+}
 
 interface RequestOptions extends RequestInit {
   params?: Record<string, string>;

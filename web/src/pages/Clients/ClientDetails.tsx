@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { clientService } from "../../services/clientService";
-import { eventService } from "../../services/eventService";
-import { Client, Event } from "../../types/entities";
+import { clientService } from "@/services/clientService";
+import { eventService } from "@/services/eventService";
+import { Client, Event } from "@/types/entities";
 import {
   ArrowLeft,
   Edit,
@@ -17,9 +17,9 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { logError } from "../../lib/errorHandler";
-import { useToast } from "../../hooks/useToast";
-import { ConfirmDialog } from "../../components/ConfirmDialog";
+import { logError } from "@/lib/errorHandler";
+import { useToast } from "@/hooks/useToast";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 
 const STATUS_MAP: Record<string, { label: string; className: string }> = {
   quoted: { label: "Cotizado", className: "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20" },
@@ -336,10 +336,12 @@ export const ClientDetails: React.FC = () => {
                         {format(new Date(event.event_date + "T12:00:00"), "d MMM yyyy", { locale: es })}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-primary">
-                        {event.service_type}
+                        <Link to={`/events/${event.id}/summary`} className="hover:underline">
+                          {event.service_type}
+                        </Link>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
-                        {event.num_people}
+                        {event.num_people} pax
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <StatusBadge status={event.status} />

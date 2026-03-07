@@ -89,7 +89,7 @@ export const AdminUsers: React.FC = () => {
     setError(null);
     try {
       const data = await adminService.getUsers();
-      setUsers(data || []);
+      setUsers(data);
     } catch (err) {
       logError('Admin: failed to load users', err);
       setError('Error al cargar usuarios.');
@@ -121,26 +121,25 @@ export const AdminUsers: React.FC = () => {
   };
 
   const handleGiftConfirm = async () => {
-    if (!gift) return;
-    if (!gift.noExpiry && !gift.expiresAt) {
+    if (!gift!.noExpiry && !gift!.expiresAt) {
       addToast('Selecciona una fecha de vencimiento o marca "Sin vencimiento".', 'error');
       return;
     }
 
     setSaving(gift.user.id);
     try {
-      const expiresAt = gift.noExpiry ? null : gift.expiresAt;
-      const updated = await adminService.upgradeUser(gift.user.id, gift.plan, expiresAt);
+      const expiresAt = gift!.noExpiry ? null : gift!.expiresAt;
+      const updated = await adminService.upgradeUser(gift!.user.id, gift!.plan, expiresAt);
       setUsers((prev) =>
         prev.map((u) =>
-          u.id === gift.user.id
+          u.id === gift!.user.id
             ? { ...u, plan: updated.plan, plan_expires_at: updated.plan_expires_at }
             : u,
         ),
       );
-      const label = gift.noExpiry
-        ? `${gift.user.name} ahora tiene plan ${gift.plan} (permanente) ✓`
-        : `${gift.user.name} tiene plan ${gift.plan} hasta ${format(parseISO(gift.expiresAt), 'd MMM yyyy', { locale: es })} ✓`;
+      const label = gift!.noExpiry
+        ? `${gift!.user.name} ahora tiene plan ${gift!.plan} (permanente) ✓`
+        : `${gift!.user.name} tiene plan ${gift!.plan} hasta ${format(parseISO(gift!.expiresAt!), 'd MMM yyyy', { locale: es })} ✓`;
       addToast(label, 'success');
       setGift(null);
     } catch (err: unknown) {
@@ -152,10 +151,6 @@ export const AdminUsers: React.FC = () => {
   };
 
   const handleDowngrade = async (user: AdminUser) => {
-    if (user.has_paid_subscription) {
-      addToast('No se puede rebajar a un usuario con suscripción activa pagada.', 'error');
-      return;
-    }
     if (!window.confirm(`¿Rebajar a ${user.name} (${user.email}) al plan Basic?`)) return;
 
     setSaving(user.id);
@@ -164,7 +159,7 @@ export const AdminUsers: React.FC = () => {
       setUsers((prev) =>
         prev.map((u) =>
           u.id === user.id
-            ? { ...u, plan: updated.plan || 'basic', plan_expires_at: null }
+            ? { ...u, plan: updated.plan, plan_expires_at: null }
             : u,
         ),
       );
@@ -287,30 +282,14 @@ export const AdminUsers: React.FC = () => {
               </button>
             </div>
 
-            {/* Plan selector */}
-            <div>
+            {/* Plan a regalar (Hardcoded) */}
+            <div className="mb-4">
               <label className="text-xs font-semibold text-text-secondary uppercase tracking-wider block mb-2">
                 Plan a regalar
               </label>
-              <div className="grid grid-cols-2 gap-3">
-                {(['pro', 'premium'] as const).map((p) => (
-                  <button
-                    key={p}
-                    type="button"
-                    onClick={() => setGift((g) => g ? { ...g, plan: p } : g)}
-                    className={clsx(
-                      'flex items-center gap-2 px-4 py-3 rounded-2xl border text-sm font-semibold transition-all',
-                      gift.plan === p
-                        ? p === 'pro'
-                          ? 'border-orange-400 bg-orange-50 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'
-                          : 'border-purple-400 bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
-                        : 'border-border bg-surface-alt text-text-secondary hover:bg-card',
-                    )}
-                  >
-                    <Crown className="h-4 w-4" />
-                    {p.charAt(0).toUpperCase() + p.slice(1)}
-                  </button>
-                ))}
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-orange-400 bg-orange-50 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300 text-sm font-semibold">
+                <Crown className="h-4 w-4" />
+                Pro
               </div>
             </div>
 
@@ -327,7 +306,7 @@ export const AdminUsers: React.FC = () => {
                     value={gift.expiresAt}
                     min={minGiftDate()}
                     disabled={gift.noExpiry}
-                    onChange={(e) => setGift((g) => g ? { ...g, expiresAt: e.target.value } : g)}
+                    onChange={(e) => setGift({ ...gift, expiresAt: e.target.value })}
                     className="w-full pl-10 pr-4 py-3 rounded-2xl border border-border bg-surface-alt text-sm text-text focus:ring-2 focus:ring-primary focus:bg-card transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                   />
                 </div>
@@ -335,7 +314,7 @@ export const AdminUsers: React.FC = () => {
                   <input
                     type="checkbox"
                     checked={gift.noExpiry}
-                    onChange={(e) => setGift((g) => g ? { ...g, noExpiry: e.target.checked } : g)}
+                    onChange={(e) => setGift({ ...gift, noExpiry: e.target.checked })}
                     className="w-4 h-4 rounded border-border text-primary focus:ring-primary"
                   />
                   <span className="text-sm text-text-secondary">
@@ -367,7 +346,7 @@ export const AdminUsers: React.FC = () => {
               <button
                 type="button"
                 onClick={handleGiftConfirm}
-                disabled={saving === gift.user.id || (!gift.noExpiry && !gift.expiresAt)}
+                disabled={saving === gift.user.id}
                 className="flex-1 px-4 py-3 rounded-2xl bg-primary text-white text-sm font-semibold hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {saving === gift.user.id ? (

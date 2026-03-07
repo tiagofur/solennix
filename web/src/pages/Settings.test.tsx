@@ -54,6 +54,7 @@ vi.mock('../lib/api', () => ({
   api: {
     postFormData: vi.fn(),
   },
+  getAssetUrl: vi.fn((url: string) => url),
 }));
 
 const renderSettings = () =>
@@ -248,7 +249,7 @@ describe('Settings', () => {
 
     fireEvent.change(fileInput, { target: { files: [file] } });
 
-    expect(mockAddToast).toHaveBeenCalledWith('El archivo es demasiado grande (máximo 10MB).', 'error');
+    expect(mockAddToast).toHaveBeenCalledWith('El archivo es demasiado grande (máximo 2MB).', 'error');
     expect(mockUpdateProfile).not.toHaveBeenCalled();
   });
 

@@ -73,6 +73,11 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if len(req.Password) > 128 {
+		writeError(w, http.StatusBadRequest, "Password must not exceed 128 characters")
+		return
+	}
+
 	// Check if user already exists
 	existing, _ := h.userRepo.GetByEmail(r.Context(), req.Email)
 	if existing != nil {
@@ -121,11 +126,8 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   24 * 60 * 60, // 24 hours
 	})
 
-	// Also return tokens in response for gradual migration
-	// TODO: Remove tokens from response body after frontend migration
 	writeJSON(w, http.StatusCreated, map[string]interface{}{
-		"user":   user,
-		"tokens": tokens,
+		"user": user,
 	})
 }
 
@@ -176,11 +178,8 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   24 * 60 * 60, // 24 hours
 	})
 
-	// Also return tokens in response for gradual migration
-	// TODO: Remove tokens from response body after frontend migration
 	writeJSON(w, http.StatusOK, map[string]interface{}{
-		"user":   user,
-		"tokens": tokens,
+		"user": user,
 	})
 }
 
@@ -207,9 +206,16 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	claims, err := h.authService.ValidateToken(req.RefreshToken)
+	claims, err := h.authService.ValidateRefreshToken(req.RefreshToken)
 	if err != nil {
 		writeError(w, http.StatusUnauthorized, "Invalid or expired refresh token")
+		return
+	}
+
+	// Verify user still exists (prevent deleted/suspended users from refreshing)
+	user, err := h.userRepo.GetByID(r.Context(), claims.UserID)
+	if err != nil || user == nil {
+		writeError(w, http.StatusUnauthorized, "User no longer exists")
 		return
 	}
 
@@ -309,6 +315,11 @@ func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 
 	if len(req.NewPassword) < 6 {
 		writeError(w, http.StatusBadRequest, "Password must be at least 6 characters")
+		return
+	}
+
+	if len(req.NewPassword) > 128 {
+		writeError(w, http.StatusBadRequest, "Password must not exceed 128 characters")
 		return
 	}
 

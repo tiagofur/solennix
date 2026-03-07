@@ -424,6 +424,107 @@ func TestAdminHandler_UpgradeUser(t *testing.T) {
 		repo.AssertExpectations(t)
 	})
 
+	t.Run("success with valid expires_at date", func(t *testing.T) {
+		repo := new(MockAdminRepo)
+		handler := NewAdminHandler(repo)
+
+		userID := uuid.New()
+		user := &repository.AdminUser{ID: userID, Plan: "basic", HasPaidSub: false}
+		updatedUser := &repository.AdminUser{ID: userID, Plan: "pro", HasPaidSub: false}
+
+		repo.On("GetUserByID", mock.Anything, userID).Return(user, nil).Once()
+		// The expiry date is parsed and set to end of day UTC
+		expectedExpiry := time.Date(2026, 12, 31, 23, 59, 59, 0, time.UTC)
+		repo.On("UpdateUserPlan", mock.Anything, userID, "pro", &expectedExpiry).Return(nil)
+		repo.On("GetUserByID", mock.Anything, userID).Return(updatedUser, nil).Once()
+
+		req := buildReq(userID, map[string]interface{}{
+			"plan":       "pro",
+			"expires_at": "2026-12-31",
+		})
+		w := httptest.NewRecorder()
+
+		handler.UpgradeUser(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		var resp repository.AdminUser
+		json.Unmarshal(w.Body.Bytes(), &resp)
+		assert.Equal(t, "pro", resp.Plan)
+		repo.AssertExpectations(t)
+	})
+
+	t.Run("upgrade to premium plan", func(t *testing.T) {
+		repo := new(MockAdminRepo)
+		handler := NewAdminHandler(repo)
+
+		userID := uuid.New()
+		user := &repository.AdminUser{ID: userID, Plan: "basic", HasPaidSub: false}
+		updatedUser := &repository.AdminUser{ID: userID, Plan: "premium", HasPaidSub: false}
+
+		repo.On("GetUserByID", mock.Anything, userID).Return(user, nil).Once()
+		repo.On("UpdateUserPlan", mock.Anything, userID, "premium", (*time.Time)(nil)).Return(nil)
+		repo.On("GetUserByID", mock.Anything, userID).Return(updatedUser, nil).Once()
+
+		req := buildReq(userID, map[string]string{"plan": "premium"})
+		w := httptest.NewRecorder()
+
+		handler.UpgradeUser(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		var resp repository.AdminUser
+		json.Unmarshal(w.Body.Bytes(), &resp)
+		assert.Equal(t, "premium", resp.Plan)
+		repo.AssertExpectations(t)
+	})
+
+	t.Run("downgrade to basic allowed when no paid sub", func(t *testing.T) {
+		repo := new(MockAdminRepo)
+		handler := NewAdminHandler(repo)
+
+		userID := uuid.New()
+		user := &repository.AdminUser{ID: userID, Plan: "pro", HasPaidSub: false}
+		updatedUser := &repository.AdminUser{ID: userID, Plan: "basic", HasPaidSub: false}
+
+		repo.On("GetUserByID", mock.Anything, userID).Return(user, nil).Once()
+		repo.On("UpdateUserPlan", mock.Anything, userID, "basic", (*time.Time)(nil)).Return(nil)
+		repo.On("GetUserByID", mock.Anything, userID).Return(updatedUser, nil).Once()
+
+		req := buildReq(userID, map[string]string{"plan": "basic"})
+		w := httptest.NewRecorder()
+
+		handler.UpgradeUser(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		var resp repository.AdminUser
+		json.Unmarshal(w.Body.Bytes(), &resp)
+		assert.Equal(t, "basic", resp.Plan)
+		repo.AssertExpectations(t)
+	})
+
+	t.Run("empty expires_at string is ignored", func(t *testing.T) {
+		repo := new(MockAdminRepo)
+		handler := NewAdminHandler(repo)
+
+		userID := uuid.New()
+		user := &repository.AdminUser{ID: userID, Plan: "basic", HasPaidSub: false}
+		updatedUser := &repository.AdminUser{ID: userID, Plan: "pro", HasPaidSub: false}
+
+		repo.On("GetUserByID", mock.Anything, userID).Return(user, nil).Once()
+		repo.On("UpdateUserPlan", mock.Anything, userID, "pro", (*time.Time)(nil)).Return(nil)
+		repo.On("GetUserByID", mock.Anything, userID).Return(updatedUser, nil).Once()
+
+		req := buildReq(userID, map[string]interface{}{
+			"plan":       "pro",
+			"expires_at": "",
+		})
+		w := httptest.NewRecorder()
+
+		handler.UpgradeUser(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		repo.AssertExpectations(t)
+	})
+
 	t.Run("default plan when plan field is empty string", func(t *testing.T) {
 		repo := new(MockAdminRepo)
 		handler := NewAdminHandler(repo)

@@ -13,6 +13,7 @@ import (
 	"github.com/tiagofur/solennix-backend/internal/config"
 	"github.com/tiagofur/solennix-backend/internal/database"
 	"github.com/tiagofur/solennix-backend/internal/handlers"
+	mw "github.com/tiagofur/solennix-backend/internal/middleware"
 	"github.com/tiagofur/solennix-backend/internal/repository"
 	"github.com/tiagofur/solennix-backend/internal/router"
 	"github.com/tiagofur/solennix-backend/internal/services"
@@ -30,6 +31,9 @@ func main() {
 		slog.Error("Failed to load config", "error", err)
 		os.Exit(1)
 	}
+
+	// Set rate limiter trust proxy from config
+	mw.TrustProxy = cfg.TrustProxy
 
 	slog.Info("Starting server", "environment", cfg.Environment, "port", cfg.Port)
 

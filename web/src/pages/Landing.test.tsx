@@ -129,9 +129,9 @@ describe('Landing', () => {
     await user.click(screen.getByRole('button', { name: /abrir menú/i }));
     expect(screen.getByRole('button', { name: /cerrar menú/i })).toBeInTheDocument();
 
-    // Mobile link is at index 0 (mobile=0, footer=1) — no desktop FAQ link
+    // Mobile link is at index 1 (desktop=0, mobile=1, footer=2)
     const links = screen.getAllByText('FAQ');
-    await user.click(links[0]);
+    await user.click(links[1]);
 
     expect(screen.queryByRole('button', { name: /cerrar menú/i })).not.toBeInTheDocument();
   });
@@ -156,7 +156,7 @@ describe('Landing', () => {
 
     // FAQ answer should not be visible initially
     expect(
-      screen.queryByText(/El plan Starter es completamente gratuito/i)
+      screen.queryByText(/El plan Básico es completamente gratuito/i)
     ).not.toBeInTheDocument();
 
     // Click the first FAQ question
@@ -167,7 +167,7 @@ describe('Landing', () => {
 
     // The answer should now be visible
     expect(
-      screen.getByText(/El plan Starter es completamente gratuito/i)
+      screen.getByText(/El plan Básico es completamente gratuito/i)
     ).toBeInTheDocument();
   });
 
@@ -181,7 +181,7 @@ describe('Landing', () => {
     fireEvent.click(firstFaqButton);
 
     expect(
-      screen.getByText(/El plan Starter es completamente gratuito/i)
+      screen.getByText(/El plan Básico es completamente gratuito/i)
     ).toBeInTheDocument();
 
     // Click again to close - now the label says "Cerrar"
@@ -191,7 +191,7 @@ describe('Landing', () => {
     fireEvent.click(closeFaqButton);
 
     expect(
-      screen.queryByText(/El plan Starter es completamente gratuito/i)
+      screen.queryByText(/El plan Básico es completamente gratuito/i)
     ).not.toBeInTheDocument();
   });
 
@@ -205,7 +205,7 @@ describe('Landing', () => {
     fireEvent.click(firstFaqButton);
 
     expect(
-      screen.getByText(/El plan Starter es completamente gratuito/i)
+      screen.getByText(/El plan Básico es completamente gratuito/i)
     ).toBeInTheDocument();
 
     // Open the second FAQ
@@ -216,7 +216,7 @@ describe('Landing', () => {
 
     // First FAQ answer should be closed
     expect(
-      screen.queryByText(/El plan Starter es completamente gratuito/i)
+      screen.queryByText(/El plan Básico es completamente gratuito/i)
     ).not.toBeInTheDocument();
 
     // Second FAQ answer should be visible

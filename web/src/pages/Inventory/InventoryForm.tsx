@@ -10,6 +10,19 @@ import { logError } from "../../lib/errorHandler";
 import { usePlanLimits } from "../../hooks/usePlanLimits";
 import { UpgradeBanner } from "../../components/UpgradeBanner";
 
+const COMMON_UNITS = [
+  { value: "pieza", label: "Pieza (pza)" },
+  { value: "kg", label: "Kilogramos (kg)" },
+  { value: "g", label: "Gramos (g)" },
+  { value: "l", label: "Litros (l)" },
+  { value: "ml", label: "Mililitros (ml)" },
+  { value: "caja", label: "Caja" },
+  { value: "paquete", label: "Paquete" },
+  { value: "servicio", label: "Servicio" },
+  { value: "hora", label: "Hora" },
+  { value: "dia", label: "Día" },
+];
+
 const inventorySchema = z.object({
   ingredient_name: z
     .string()
@@ -36,6 +49,7 @@ export const InventoryForm: React.FC = () => {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isCustomUnit, setIsCustomUnit] = useState(false);
 
   const { canCreateCatalogItem, catalogCount, catalogLimit, loading: limitsLoading } = usePlanLimits();
 
@@ -43,6 +57,7 @@ export const InventoryForm: React.FC = () => {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<InventoryFormData>({
     resolver: zodResolver(inventorySchema) as Resolver<InventoryFormData>,
@@ -50,6 +65,7 @@ export const InventoryForm: React.FC = () => {
       type: "ingredient",
       current_stock: 0,
       minimum_stock: 0,
+      unit: "",
       unit_cost: 0,
     },
   });
@@ -68,6 +84,14 @@ export const InventoryForm: React.FC = () => {
       if (!item) {
         throw new Error('Item no encontrado');
       }
+
+      const isCommon = COMMON_UNITS.some(u => u.value === item.unit);
+      if (item.unit && !isCommon) {
+        setIsCustomUnit(true);
+      } else {
+        setIsCustomUnit(false);
+      }
+
       reset({
         ingredient_name: item.ingredient_name || "",
         type: (item.type as "ingredient" | "equipment") || "ingredient",
@@ -230,16 +254,53 @@ export const InventoryForm: React.FC = () => {
               >
                 Unidad (kg, l, pza, etc.) *
               </label>
-              <input
-                id="unit"
-                type="text"
-                {...register("unit")}
-                className="w-full rounded-xl shadow-sm border border-border bg-card text-text p-3 transition-shadow focus:ring-2 focus:ring-primary/20"
-                placeholder="Ej. kg, Litros"
-                aria-required="true"
-                aria-invalid={errors.unit ? "true" : "false"}
-                aria-describedby={errors.unit ? "unit-error" : undefined}
-              />
+              {!isCustomUnit ? (
+                <select
+                  id="unit"
+                  {...register("unit", {
+                    onChange: (e) => {
+                      if (e.target.value === "otro") {
+                        setIsCustomUnit(true);
+                        setValue("unit", "", { shouldValidate: true });
+                      }
+                    }
+                  })}
+                  className="w-full rounded-xl shadow-sm border border-border bg-card text-text p-3 transition-shadow focus:ring-2 focus:ring-primary/20"
+                  aria-required="true"
+                  aria-invalid={errors.unit ? "true" : "false"}
+                  aria-describedby={errors.unit ? "unit-error" : undefined}
+                >
+                  <option value="" disabled>Selecciona una unidad</option>
+                  {COMMON_UNITS.map(u => (
+                    <option key={u.value} value={u.value}>{u.label}</option>
+                  ))}
+                  <option value="otro">Otra / Personalizada...</option>
+                </select>
+              ) : (
+                <div className="flex gap-2 relative">
+                  <input
+                    id="unit"
+                    type="text"
+                    {...register("unit")}
+                    className="w-full rounded-xl shadow-sm border border-border bg-card text-text p-3 transition-shadow focus:ring-2 focus:ring-primary/20"
+                    placeholder="Ej. tambor, lata"
+                    aria-required="true"
+                    aria-invalid={errors.unit ? "true" : "false"}
+                    aria-describedby={errors.unit ? "unit-error" : undefined}
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsCustomUnit(false);
+                      setValue("unit", "pieza", { shouldValidate: true });
+                    }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary hover:text-text text-sm bg-card px-1"
+                  >
+                    Volver a lista
+                  </button>
+                </div>
+              )}
               {errors.unit && (
                 <p id="unit-error" className="mt-2 text-sm text-error" role="alert">
                   {errors.unit.message}

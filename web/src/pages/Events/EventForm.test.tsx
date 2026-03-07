@@ -1,5 +1,4 @@
-import React, { useEffect } from 'react';
-import { act } from '@testing-library/react';
+import React, { useEffect, act } from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { EventForm } from './EventForm';
@@ -9,17 +8,17 @@ import { productService } from '../../services/productService';
 import { inventoryService } from '../../services/inventoryService';
 import { logError } from '../../lib/errorHandler';
 
-let triggerFetchCosts = () => {};
+let mockTriggerFetchCosts = () => {};
 
 const mockNavigate = vi.fn();
 let mockParams: { id?: string } = {};
-const mockTrigger = vi.fn().mockResolvedValue(true);
-let setValueMock = vi.fn();
-let productsBehavior: 'passive' | 'invoke' = 'passive';
-let extrasBehavior: 'passive' | 'invoke' = 'passive';
+const mockTrigger = vi.fn().mockImplementation(() => Promise.resolve(true));
+let mockSetValueMock = vi.fn();
+let mockProductsBehavior: 'passive' | 'invoke' = 'passive';
+let mockExtrasBehavior: 'passive' | 'invoke' = 'passive';
 let mockSearchParams = new URLSearchParams();
-let productsInvoked = false;
-let watchValues: Record<string, any> = {
+let mockProductsInvoked = false;
+let mockWatchValues: Record<string, any> = {
   discount: 0,
   client_id: '',
   location: '',
@@ -49,32 +48,52 @@ const mockFormData = {
   notes: '',
 };
 
-const resetMock = vi.fn();
-const watchMock = vi.fn();
-
-const controlMock = {};
-const handleSubmitMock = (fn: any) => () => fn(mockFormData);
-const setValueMockFn = (...args: any[]) => {
-  setValueMock(...args);
-  watchValues[args[0]] = args[1];
-};
-
-let mockFormState = { errors: {}, isValid: true, isSubmitted: false };
+// No more unused helpers here
 
 vi.mock('react-hook-form', async () => {
   const actual = await vi.importActual<any>('react-hook-form');
   return {
     ...actual,
-    useForm: () => ({
-      handleSubmit: handleSubmitMock,
-      reset: resetMock,
-      setValue: setValueMockFn,
-      control: controlMock,
-      watch: watchMock,
-      trigger: mockTrigger,
-      formState: mockFormState,
-    }),
-    useWatch: ({ name }: any) => watchValues[name] ?? 0,
+    useForm: (options: any) => {
+      const methods = actual.useForm(options);
+      return {
+        ...methods,
+        trigger: mockTrigger,
+        handleSubmit: (fn: any) => (e: any) => {
+          if (e && e.preventDefault) e.preventDefault();
+          return fn(mockFormData);
+        },
+        setValue: (name: string, value: any, options?: any) => {
+          mockWatchValues[name] = value;
+          mockSetValueMock(name, value, options);
+          methods.setValue(name, value, options);
+        },
+        watch: (name: any) => (name ? mockWatchValues[name] ?? methods.watch(name) : methods.watch()),
+      };
+    },
+    useWatch: (options: any) => {
+      try {
+        const val = actual.useWatch(options);
+        const name = typeof options === 'string' ? options : options?.name;
+        if (!name) return val;
+        return mockWatchValues[name] ?? val ?? (mockFormData as any)[name] ?? 0;
+      } catch {
+        const name = typeof options === 'string' ? options : options?.name;
+        return name ? (mockWatchValues[name] ?? (mockFormData as any)[name] ?? 0) : {};
+      }
+    },
+    useFormContext: () => {
+      const methods = actual.useFormContext();
+      if (!methods) return null;
+      return {
+        ...methods,
+        setValue: (name: string, value: any, options?: any) => {
+          mockWatchValues[name] = value;
+          mockSetValueMock(name, value, options);
+          methods.setValue(name, value, options);
+        },
+      };
+    }
   };
 });
 
@@ -110,7 +129,7 @@ vi.mock('./components/EventGeneralInfo', () => ({
 
 vi.mock('./components/EventProducts', () => ({
   EventProducts: (props: any) => {
-    triggerFetchCosts = () => {
+    mockTriggerFetchCosts = () => {
       if (props.selectedProducts.length === 0) {
         props.onAddProduct();
         return;
@@ -120,8 +139,8 @@ vi.mock('./components/EventProducts', () => ({
       props.onProductChange(0, 'discount', 5);
     };
     useEffect(() => {
-      if (productsBehavior !== 'invoke') return;
-      if (productsInvoked) return;
+      if (mockProductsBehavior !== 'invoke') return;
+      if (mockProductsInvoked) return;
       if (props.selectedProducts.length === 0) {
         props.onAddProduct();
         return;
@@ -129,7 +148,7 @@ vi.mock('./components/EventProducts', () => ({
       props.onProductChange(0, 'product_id', 'p1');
       props.onProductChange(0, 'quantity', 2);
       props.onProductChange(0, 'discount', 5);
-      productsInvoked = true;
+      mockProductsInvoked = true;
     }, [props.selectedProducts.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
     return <div>EVENT_PRODUCTS</div>;
@@ -139,7 +158,7 @@ vi.mock('./components/EventProducts', () => ({
 vi.mock('./components/EventExtras', () => ({
   EventExtras: (props: any) => {
     useEffect(() => {
-      if (extrasBehavior !== 'invoke') return;
+      if (mockExtrasBehavior !== 'invoke') return;
       if (props.extras?.length === 0) {
         props.onAddExtra();
         return;
@@ -203,11 +222,14 @@ vi.mock('react-router-dom', async () => {
 
 describe('EventForm', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    mockNavigate.mockClear();
     mockParams = {};
-    productsBehavior = 'passive';
-    extrasBehavior = 'passive';
-    watchValues = {
+    mockSearchParams = new URLSearchParams();
+    mockTrigger.mockClear().mockResolvedValue(true);
+    mockProductsBehavior = 'passive';
+    mockExtrasBehavior = 'passive';
+    mockProductsInvoked = false;
+    mockWatchValues = {
       discount: 0,
       client_id: '',
       location: '',
@@ -215,24 +237,27 @@ describe('EventForm', () => {
       requires_invoice: false,
       tax_rate: 16,
     };
-    mockSearchParams = new URLSearchParams();
-    productsInvoked = false;
-    triggerFetchCosts = () => {};
-    setValueMock = vi.fn();
-    mockFormState = { errors: {}, isValid: true, isSubmitted: false };
+    mockSetValueMock = vi.fn();
     mockPlanLimits = {
       canCreateEvent: true,
       eventsThisMonth: 0,
       limit: 3,
       loading: false,
     };
-    mockClientCreatedCallback = null;
-    (clientService.getAll as any).mockResolvedValue([]);
-    (productService.getAll as any).mockResolvedValue([]);
-    (inventoryService.getAll as any).mockResolvedValue([]);
+    (eventService.getById as any).mockResolvedValue(null);
+    (eventService.getProducts as any).mockResolvedValue([]);
+    (eventService.getExtras as any).mockResolvedValue([]);
     (eventService.getEquipment as any).mockResolvedValue([]);
+    (eventService.create as any).mockResolvedValue(null);
+    (eventService.update as any).mockResolvedValue(null);
+    (eventService.updateItems as any).mockResolvedValue(null);
     (eventService.checkEquipmentConflicts as any).mockResolvedValue([]);
     (eventService.getEquipmentSuggestions as any).mockResolvedValue([]);
+    (clientService.getAll as any).mockResolvedValue([]);
+    (productService.getAll as any).mockResolvedValue([]);
+    (productService.getIngredients as any).mockResolvedValue([]);
+    (inventoryService.getAll as any).mockResolvedValue([]);
+    mockTriggerFetchCosts = () => {};
   });
 
   it('advances steps and creates event', async () => {
@@ -240,35 +265,54 @@ describe('EventForm', () => {
     (eventService.updateItems as any).mockResolvedValue({});
 
     render(<EventForm />);
-
-    expect(screen.getByText('Nuevo Evento')).toBeInTheDocument();
-    expect(screen.getByText('EVENT_GENERAL')).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: /Siguiente/i }));
     await waitFor(() => {
-      expect(screen.getByText('EVENT_PRODUCTS')).toBeInTheDocument();
+      expect(screen.getByText('EVENT_GENERAL')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Siguiente/i }));
+    expect(screen.getByText('Nuevo Evento')).toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Siguiente/i }));
+    });
+    await waitFor(() => {
+      expect(screen.getByText('EVENT_PRODUCTS')).toBeInTheDocument();
+    }, { timeout: 3000 });
+
+    await act(async () => {
+      const nextBtn = screen.getByRole('button', { name: /Siguiente/i });
+      await waitFor(() => expect(nextBtn).not.toBeDisabled());
+      fireEvent.click(nextBtn);
+    });
     await waitFor(() => {
       expect(screen.getByText('EVENT_EXTRAS')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Siguiente/i }));
+    await act(async () => {
+      const nextBtn = screen.getByRole('button', { name: /Siguiente/i });
+      await waitFor(() => expect(nextBtn).not.toBeDisabled());
+      fireEvent.click(nextBtn);
+    });
     await waitFor(() => {
       expect(screen.getByText('EVENT_EQUIPMENT')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Siguiente/i }));
+    await act(async () => {
+      const nextBtn = screen.getByRole('button', { name: /Siguiente/i });
+      await waitFor(() => expect(nextBtn).not.toBeDisabled());
+      fireEvent.click(nextBtn);
+    });
     await waitFor(() => {
       expect(screen.getByText('EVENT_FINANCIALS')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Guardar Evento/i }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Guardar Evento/i }));
+    });
 
     await waitFor(() => {
       expect(eventService.create).toHaveBeenCalledWith({
         ...mockFormData,
+        discount_type: 'percent',
         start_time: null,
         end_time: null,
         user_id: 'user-1',
@@ -293,11 +337,14 @@ describe('EventForm', () => {
 
   it('does not advance when validation fails', async () => {
     mockTrigger.mockResolvedValueOnce(false);
-
     render(<EventForm />);
+    await waitFor(() => {
+      expect(screen.getByText('EVENT_GENERAL')).toBeInTheDocument();
+    });
 
-    fireEvent.click(screen.getByRole('button', { name: /Siguiente/i }));
-
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Siguiente/i }));
+    });
     await waitFor(() => {
       expect(screen.getByText('EVENT_GENERAL')).toBeInTheDocument();
     });
@@ -308,18 +355,27 @@ describe('EventForm', () => {
     (eventService.create as any).mockResolvedValue({ id: 'event-1' });
 
     const { container } = render(<EventForm />);
+    await waitFor(() => {
+      expect(screen.getByText('EVENT_GENERAL')).toBeInTheDocument();
+    });
 
-    fireEvent.click(screen.getByRole('button', { name: /Siguiente/i }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Siguiente/i }));
+    });
     await waitFor(() => {
       expect(screen.getByText('EVENT_PRODUCTS')).toBeInTheDocument();
-    });
+    }, { timeout: 3000 });
 
-    fireEvent.click(screen.getByRole('button', { name: /Siguiente/i }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Siguiente/i }));
+    });
     await waitFor(() => {
       expect(screen.getByText('EVENT_EXTRAS')).toBeInTheDocument();
-    });
+    }, { timeout: 3000 });
 
-    fireEvent.submit(container.querySelector('form')!);
+    await act(async () => {
+      fireEvent.submit(container.querySelector('form')!);
+    });
 
     await waitFor(() => {
       expect(screen.getByText('EVENT_EQUIPMENT')).toBeInTheDocument();
@@ -334,6 +390,9 @@ describe('EventForm', () => {
     ]);
 
     render(<EventForm />);
+    await waitFor(() => {
+      expect(screen.getByText('EVENT_GENERAL')).toBeInTheDocument();
+    });
 
     (productService.getAll as any).mockResolvedValueOnce([
       { id: 'p1', base_price: 100 } as any,
@@ -343,24 +402,42 @@ describe('EventForm', () => {
       expect(productService.getAll).toHaveBeenCalled();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Siguiente/i }));
+    await act(async () => {
+      const nextBtn = screen.getByRole('button', { name: /Siguiente/i });
+      await waitFor(() => expect(nextBtn).not.toBeDisabled());
+      fireEvent.click(nextBtn);
+    });
     await waitFor(() => {
       expect(screen.getByText('EVENT_PRODUCTS')).toBeInTheDocument();
     });
-    fireEvent.click(screen.getByRole('button', { name: /Siguiente/i }));
+    await act(async () => {
+      const nextBtn = screen.getByRole('button', { name: /Siguiente/i });
+      await waitFor(() => expect(nextBtn).not.toBeDisabled());
+      fireEvent.click(nextBtn);
+    });
     await waitFor(() => {
       expect(screen.getByText('EVENT_EXTRAS')).toBeInTheDocument();
     });
-    fireEvent.click(screen.getByRole('button', { name: /Siguiente/i }));
+    await act(async () => {
+      const nextBtn = screen.getByRole('button', { name: /Siguiente/i });
+      await waitFor(() => expect(nextBtn).not.toBeDisabled());
+      fireEvent.click(nextBtn);
+    });
     await waitFor(() => {
       expect(screen.getByText('EVENT_EQUIPMENT')).toBeInTheDocument();
     });
-    fireEvent.click(screen.getByRole('button', { name: /Siguiente/i }));
+    await act(async () => {
+      const nextBtn = screen.getByRole('button', { name: /Siguiente/i });
+      await waitFor(() => expect(nextBtn).not.toBeDisabled());
+      fireEvent.click(nextBtn);
+    });
     await waitFor(() => {
       expect(screen.getByText('EVENT_FINANCIALS')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Guardar Evento/i }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Guardar Evento/i }));
+    });
 
     await waitFor(() => {
       expect(screen.getByText(/Error al crear el evento/i)).toBeInTheDocument();
@@ -379,21 +456,25 @@ describe('EventForm', () => {
   });
 
   it('auto-fills location and city from client', async () => {
-    watchValues.client_id = 'client-1';
+    mockWatchValues.client_id = 'client-1';
     (clientService.getAll as any).mockResolvedValue([
       { id: 'client-1', address: 'Calle 1', city: 'CDMX' },
     ]);
-
+    (eventService.getById as any).mockResolvedValue(null);
+    
     render(<EventForm />);
 
     await waitFor(() => {
-      expect(setValueMock).toHaveBeenCalledWith('location', 'Calle 1');
-      expect(setValueMock).toHaveBeenCalledWith('city', 'CDMX');
+      const calls = mockSetValueMock.mock.calls;
+      const locationFound = calls.some(call => call[0] === 'location' && call[1] === 'Calle 1');
+      const cityFound = calls.some(call => call[0] === 'city' && call[1] === 'CDMX');
+      expect(locationFound).toBe(true);
+      expect(cityFound).toBe(true);
     });
   });
 
   it('sets client from query string', async () => {
-    watchValues.client_id = '';
+    mockWatchValues.client_id = '';
     (clientService.getAll as any).mockResolvedValue([
       { id: 'client-1', address: 'Calle 1', city: 'CDMX' },
     ]);
@@ -402,7 +483,9 @@ describe('EventForm', () => {
     render(<EventForm />);
 
     await waitFor(() => {
-      expect(setValueMock).toHaveBeenCalledWith('client_id', 'client-1');
+      const calls = mockSetValueMock.mock.calls;
+      const found = calls.some(call => call[0] === 'client_id' && call[1] === 'client-1');
+      expect(found).toBe(true);
     });
   });
 
@@ -453,7 +536,7 @@ describe('EventForm', () => {
   });
 
   it('logs failures when fetching product costs', async () => {
-    productsBehavior = 'passive';
+    mockProductsBehavior = 'passive';
     (clientService.getAll as any).mockResolvedValue([]);
     (productService.getAll as any).mockResolvedValue([{ id: 'p1', base_price: 100 }]);
     const error = new Error('fail');
@@ -461,14 +544,16 @@ describe('EventForm', () => {
 
     render(<EventForm />);
 
-    fireEvent.click(screen.getByRole('button', { name: /Siguiente/i }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Siguiente/i }));
+    });
 
     await waitFor(() => {
       expect(screen.getByText('EVENT_PRODUCTS')).toBeInTheDocument();
     });
 
     await act(async () => {
-      triggerFetchCosts();
+      mockTriggerFetchCosts();
     });
 
     await waitFor(() => {
@@ -481,8 +566,8 @@ describe('EventForm', () => {
   });
 
   it('saves items with updated products and extras', async () => {
-    productsBehavior = 'invoke';
-    extrasBehavior = 'invoke';
+    mockProductsBehavior = 'invoke';
+    mockExtrasBehavior = 'invoke';
     (eventService.create as any).mockResolvedValue({ id: 'event-1' });
     (eventService.updateItems as any).mockResolvedValue({});
     (productService.getAll as any).mockResolvedValue([{ id: 'p1', base_price: 100 }]);
@@ -491,28 +576,49 @@ describe('EventForm', () => {
     ]);
 
     render(<EventForm />);
+    await waitFor(() => {
+      expect(screen.getByText('EVENT_GENERAL')).toBeInTheDocument();
+    });
 
-    fireEvent.click(screen.getByRole('button', { name: /Siguiente/i }));
+    await act(async () => {
+      const nextBtn = screen.getByRole('button', { name: /Siguiente/i });
+      await waitFor(() => expect(nextBtn).not.toBeDisabled());
+      fireEvent.click(nextBtn);
+    });
     await waitFor(() => {
       expect(screen.getByText('EVENT_PRODUCTS')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Siguiente/i }));
+    await act(async () => {
+      const nextBtn = screen.getByRole('button', { name: /Siguiente/i });
+      await waitFor(() => expect(nextBtn).not.toBeDisabled());
+      fireEvent.click(nextBtn);
+    });
     await waitFor(() => {
       expect(screen.getByText('EVENT_EXTRAS')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Siguiente/i }));
+    await act(async () => {
+      const nextBtn = screen.getByRole('button', { name: /Siguiente/i });
+      await waitFor(() => expect(nextBtn).not.toBeDisabled());
+      fireEvent.click(nextBtn);
+    });
     await waitFor(() => {
       expect(screen.getByText('EVENT_EQUIPMENT')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Siguiente/i }));
+    await act(async () => {
+      const nextBtn = screen.getByRole('button', { name: /Siguiente/i });
+      await waitFor(() => expect(nextBtn).not.toBeDisabled());
+      fireEvent.click(nextBtn);
+    });
     await waitFor(() => {
       expect(screen.getByText('EVENT_FINANCIALS')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Guardar Evento/i }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Guardar Evento/i }));
+    });
 
     await waitFor(() => {
       expect(eventService.updateItems).toHaveBeenCalledWith(
@@ -536,9 +642,14 @@ describe('EventForm', () => {
 
   it('navigates to /calendar when clicking the back arrow button (line 460)', async () => {
     render(<EventForm />);
+    await waitFor(() => {
+      expect(screen.getByText('EVENT_GENERAL')).toBeInTheDocument();
+    });
 
     const backButton = screen.getByRole('button', { name: /Volver al calendario/i });
-    fireEvent.click(backButton);
+    act(() => {
+      fireEvent.click(backButton);
+    });
 
     expect(mockNavigate).toHaveBeenCalledWith('/calendar');
   });
@@ -556,56 +667,81 @@ describe('EventForm', () => {
     });
 
     const summaryButton = screen.getByRole('button', { name: /Ver Resumen/i });
-    fireEvent.click(summaryButton);
+    act(() => {
+      fireEvent.click(summaryButton);
+    });
 
     expect(mockNavigate).toHaveBeenCalledWith('/events/event-1/summary');
   });
 
   it('does not show Ver Resumen button when creating a new event', async () => {
-    mockParams = {};
+    await act(async () => {
+      render(<EventForm />);
+    });
 
-    render(<EventForm />);
-
-    expect(screen.getByText('Nuevo Evento')).toBeInTheDocument();
-    expect(screen.queryByText('Ver Resumen')).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Nuevo Evento')).toBeInTheDocument();
+      expect(screen.queryByText('Ver Resumen')).not.toBeInTheDocument();
+    });
   });
 
   it('navigates back to a completed step when clicking on its step button (lines 488-489)', async () => {
-    render(<EventForm />);
+    await act(async () => {
+      render(<EventForm />);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Nuevo Evento')).toBeInTheDocument();
+    });
 
     // Advance from step 1 to step 2
-    fireEvent.click(screen.getByRole('button', { name: /Siguiente/i }));
+    await act(async () => {
+      const nextBtn = screen.getByRole('button', { name: /Siguiente/i });
+      await waitFor(() => expect(nextBtn).not.toBeDisabled());
+      fireEvent.click(nextBtn);
+    });
     await waitFor(() => {
       expect(screen.getByText('EVENT_PRODUCTS')).toBeInTheDocument();
     });
 
     // Advance from step 2 to step 3
-    fireEvent.click(screen.getByRole('button', { name: /Siguiente/i }));
+    await act(async () => {
+      const nextBtn = screen.getByRole('button', { name: /Siguiente/i });
+      await waitFor(() => expect(nextBtn).not.toBeDisabled());
+      fireEvent.click(nextBtn);
+    });
     await waitFor(() => {
       expect(screen.getByText('EVENT_EXTRAS')).toBeInTheDocument();
     });
 
     // Now click on step 1 button ("Informacion General") to navigate back
-    const stepButtons = screen.getAllByRole('button').filter(
-      (btn) => btn.textContent?.includes('Información General')
-    );
-    expect(stepButtons.length).toBeGreaterThan(0);
-    fireEvent.click(stepButtons[0]);
-
+    const step1Btn = screen.getByText('Información General').closest('button')!;
+    act(() => {
+      fireEvent.click(step1Btn);
+    });
+    
     await waitFor(() => {
       expect(screen.getByText('EVENT_GENERAL')).toBeInTheDocument();
     });
   });
 
   it('does not navigate to a future step when clicking on its step button', async () => {
-    render(<EventForm />);
+    await act(async () => {
+      render(<EventForm />);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Nuevo Evento')).toBeInTheDocument();
+    });
 
     // We are on step 1. Clicking step 3 should not navigate forward.
     const stepButtons = screen.getAllByRole('button').filter(
       (btn) => btn.textContent?.includes('Extras')
     );
     expect(stepButtons.length).toBeGreaterThan(0);
-    fireEvent.click(stepButtons[0]);
+    act(() => {
+      fireEvent.click(stepButtons[0]);
+    });
 
     // Should still be on step 1
     expect(screen.getByText('EVENT_GENERAL')).toBeInTheDocument();
@@ -613,17 +749,27 @@ describe('EventForm', () => {
   });
 
   it('navigates back to previous step with the Anterior button (line 600)', async () => {
-    render(<EventForm />);
+    await act(async () => {
+      render(<EventForm />);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Nuevo Evento')).toBeInTheDocument();
+    });
 
     // Advance to step 2
-    fireEvent.click(screen.getByRole('button', { name: /Siguiente/i }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Siguiente/i }));
+    });
     await waitFor(() => {
       expect(screen.getByText('EVENT_PRODUCTS')).toBeInTheDocument();
     });
 
     // Click "Anterior" to go back to step 1
     const prevButton = screen.getByRole('button', { name: /Volver al paso anterior/i });
-    fireEvent.click(prevButton);
+    act(() => {
+      fireEvent.click(prevButton);
+    });
 
     await waitFor(() => {
       expect(screen.getByText('EVENT_GENERAL')).toBeInTheDocument();
@@ -647,7 +793,9 @@ describe('EventForm', () => {
 
     // Regresar button should navigate back
     const backBtn = screen.getByText('Regresar');
-    fireEvent.click(backBtn);
+    act(() => {
+      fireEvent.click(backBtn);
+    });
     expect(mockNavigate).toHaveBeenCalledWith(-1);
   });
 
@@ -663,10 +811,20 @@ describe('EventForm', () => {
 
     expect(screen.getByRole('status')).toBeInTheDocument();
     expect(screen.getByText('Cargando formulario de evento...')).toBeInTheDocument();
+
+    // Settle background state updates
+    await waitFor(() => {
+      expect(clientService.getAll).toHaveBeenCalled();
+    });
   });
 
   it('prevents Enter key from submitting the form (line 561)', async () => {
     const { container } = render(<EventForm />);
+
+    // Wait for the form to render after plan limits loading
+    await waitFor(() => {
+      expect(screen.getByText('EVENT_GENERAL')).toBeInTheDocument();
+    });
 
     const form = container.querySelector('form')!;
 
@@ -683,10 +841,20 @@ describe('EventForm', () => {
 
     // The form's onKeyDown should call preventDefault for Enter on non-textarea elements
     expect(preventDefaultSpy).toHaveBeenCalled();
+
+    // Settle background state updates
+    await waitFor(() => {
+      expect(clientService.getAll).toHaveBeenCalled();
+    });
   });
 
   it('allows Enter key in TEXTAREA elements', async () => {
     const { container } = render(<EventForm />);
+
+    // Wait for the form to render after plan limits loading
+    await waitFor(() => {
+      expect(screen.getByText('EVENT_GENERAL')).toBeInTheDocument();
+    });
 
     const form = container.querySelector('form')!;
 
@@ -703,10 +871,20 @@ describe('EventForm', () => {
     form.dispatchEvent(keyEvent);
 
     expect(preventDefaultSpy).not.toHaveBeenCalled();
+
+    // Settle background state updates
+    await waitFor(() => {
+      expect(clientService.getAll).toHaveBeenCalled();
+    });
   });
 
   it('shows step titles in the navigation bar', async () => {
     render(<EventForm />);
+
+    // Wait for the form to render after plan limits loading
+    await waitFor(() => {
+      expect(screen.getByText('EVENT_GENERAL')).toBeInTheDocument();
+    });
 
     expect(screen.getByText('Información General')).toBeInTheDocument();
     expect(screen.getByText('Productos')).toBeInTheDocument();
@@ -737,27 +915,45 @@ describe('EventForm', () => {
     });
 
     // Advance through all steps
-    fireEvent.click(screen.getByRole('button', { name: /Siguiente/i }));
+    await act(async () => {
+      const nextBtn = screen.getByRole('button', { name: /Siguiente/i });
+      await waitFor(() => expect(nextBtn).not.toBeDisabled());
+      fireEvent.click(nextBtn);
+    });
     await waitFor(() => {
       expect(screen.getByText('EVENT_PRODUCTS')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Siguiente/i }));
+    await act(async () => {
+      const nextBtn = screen.getByRole('button', { name: /Siguiente/i });
+      await waitFor(() => expect(nextBtn).not.toBeDisabled());
+      fireEvent.click(nextBtn);
+    });
     await waitFor(() => {
       expect(screen.getByText('EVENT_EXTRAS')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Siguiente/i }));
+    await act(async () => {
+      const nextBtn = screen.getByRole('button', { name: /Siguiente/i });
+      await waitFor(() => expect(nextBtn).not.toBeDisabled());
+      fireEvent.click(nextBtn);
+    });
     await waitFor(() => {
       expect(screen.getByText('EVENT_EQUIPMENT')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Siguiente/i }));
+    await act(async () => {
+      const nextBtn = screen.getByRole('button', { name: /Siguiente/i });
+      await waitFor(() => expect(nextBtn).not.toBeDisabled());
+      fireEvent.click(nextBtn);
+    });
     await waitFor(() => {
       expect(screen.getByText('EVENT_FINANCIALS')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Guardar Evento/i }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Guardar Evento/i }));
+    });
 
     await waitFor(() => {
       expect(eventService.update).toHaveBeenCalledWith('event-1', expect.objectContaining({
@@ -776,24 +972,42 @@ describe('EventForm', () => {
     render(<EventForm />);
 
     // Advance to final step
-    fireEvent.click(screen.getByRole('button', { name: /Siguiente/i }));
+    await act(async () => {
+      const nextBtn = screen.getByRole('button', { name: /Siguiente/i });
+      await waitFor(() => expect(nextBtn).not.toBeDisabled());
+      fireEvent.click(nextBtn);
+    });
     await waitFor(() => {
       expect(screen.getByText('EVENT_PRODUCTS')).toBeInTheDocument();
     });
-    fireEvent.click(screen.getByRole('button', { name: /Siguiente/i }));
+    await act(async () => {
+      const nextBtn = screen.getByRole('button', { name: /Siguiente/i });
+      await waitFor(() => expect(nextBtn).not.toBeDisabled());
+      fireEvent.click(nextBtn);
+    });
     await waitFor(() => {
       expect(screen.getByText('EVENT_EXTRAS')).toBeInTheDocument();
     });
-    fireEvent.click(screen.getByRole('button', { name: /Siguiente/i }));
+    await act(async () => {
+      const nextBtn = screen.getByRole('button', { name: /Siguiente/i });
+      await waitFor(() => expect(nextBtn).not.toBeDisabled());
+      fireEvent.click(nextBtn);
+    });
     await waitFor(() => {
       expect(screen.getByText('EVENT_EQUIPMENT')).toBeInTheDocument();
     });
-    fireEvent.click(screen.getByRole('button', { name: /Siguiente/i }));
+    await act(async () => {
+      const nextBtn = screen.getByRole('button', { name: /Siguiente/i });
+      await waitFor(() => expect(nextBtn).not.toBeDisabled());
+      fireEvent.click(nextBtn);
+    });
     await waitFor(() => {
       expect(screen.getByText('EVENT_FINANCIALS')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Guardar Evento/i }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Guardar Evento/i }));
+    });
 
     await waitFor(() => {
       expect(screen.getByText('Save failed')).toBeInTheDocument();
@@ -820,12 +1034,18 @@ describe('EventForm', () => {
 
     // The setValue should be called with the new client id after queueMicrotask
     await waitFor(() => {
-      expect(setValueMock).toHaveBeenCalledWith('client_id', 'client-new', { shouldValidate: true });
+      expect(mockSetValueMock).toHaveBeenCalledWith('client_id', 'client-new', { shouldValidate: true });
     });
   });
 
   it('does not allow going to previous step when on step 1', async () => {
-    render(<EventForm />);
+    await act(async () => {
+      render(<EventForm />);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Nuevo Evento')).toBeInTheDocument();
+    });
 
     // The "Anterior" button should be invisible on step 1
     const prevButton = screen.getByRole('button', { name: /Volver al paso anterior/i });

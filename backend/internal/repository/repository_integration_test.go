@@ -702,3 +702,650 @@ func seedProduct(t *testing.T, pool *pgxpool.Pool, userID uuid.UUID, name string
 	}
 	return productID
 }
+
+func seedEquipment(t *testing.T, pool *pgxpool.Pool, userID uuid.UUID, name string) uuid.UUID {
+	t.Helper()
+	var itemID uuid.UUID
+	err := pool.QueryRow(context.Background(), `
+		INSERT INTO inventory (user_id, ingredient_name, current_stock, minimum_stock, unit, type)
+		VALUES ($1, $2, $3, $4, $5, $6)
+		RETURNING id
+	`, userID, name, 5, 1, "units", "equipment").Scan(&itemID)
+	if err != nil {
+		t.Fatalf("failed to seed equipment: %v", err)
+	}
+	return itemID
+}
+
+// --- Search Integration Tests ---
+
+func TestClientRepoSearchIntegration(t *testing.T) {
+	pool := openTestPool(t)
+	defer pool.Close()
+	resetDatabase(t, pool)
+
+	userID := seedUser(t, pool, "client.search@test.dev")
+	_ = seedClient(t, pool, userID, "Maria Garcia")
+	_ = seedClient(t, pool, userID, "Carlos Lopez")
+
+	repo := NewClientRepo(pool)
+
+	// Search for existing client by name
+	results, err := repo.Search(context.Background(), userID, "Maria")
+	if err != nil {
+		t.Fatalf("Search() error = %v", err)
+	}
+	if len(results) != 1 {
+		t.Fatalf("Search('Maria') len = %d, want 1", len(results))
+	}
+	if results[0].Name != "Maria Garcia" {
+		t.Fatalf("Search('Maria') name = %q, want %q", results[0].Name, "Maria Garcia")
+	}
+
+	// Search for non-existing client
+	results, err = repo.Search(context.Background(), userID, "NonExistent")
+	if err != nil {
+		t.Fatalf("Search('NonExistent') error = %v", err)
+	}
+	if len(results) != 0 {
+		t.Fatalf("Search('NonExistent') len = %d, want 0", len(results))
+	}
+
+	// Search matching multiple clients
+	results, err = repo.Search(context.Background(), userID, "a")
+	if err != nil {
+		t.Fatalf("Search('a') error = %v", err)
+	}
+	if len(results) < 2 {
+		t.Fatalf("Search('a') len = %d, want >= 2", len(results))
+	}
+}
+
+func TestInventoryRepoSearchIntegration(t *testing.T) {
+	pool := openTestPool(t)
+	defer pool.Close()
+	resetDatabase(t, pool)
+
+	userID := seedUser(t, pool, "inventory.search@test.dev")
+	_ = seedInventory(t, pool, userID, "Harina de Trigo")
+	_ = seedInventory(t, pool, userID, "Azucar Blanca")
+
+	repo := NewInventoryRepo(pool)
+
+	results, err := repo.Search(context.Background(), userID, "Harina")
+	if err != nil {
+		t.Fatalf("Search('Harina') error = %v", err)
+	}
+	if len(results) != 1 {
+		t.Fatalf("Search('Harina') len = %d, want 1", len(results))
+	}
+	if results[0].IngredientName != "Harina de Trigo" {
+		t.Fatalf("Search('Harina') name = %q, want %q", results[0].IngredientName, "Harina de Trigo")
+	}
+
+	results, err = repo.Search(context.Background(), userID, "NoExiste")
+	if err != nil {
+		t.Fatalf("Search('NoExiste') error = %v", err)
+	}
+	if len(results) != 0 {
+		t.Fatalf("Search('NoExiste') len = %d, want 0", len(results))
+	}
+}
+
+func TestEventRepoSearchIntegration(t *testing.T) {
+	pool := openTestPool(t)
+	defer pool.Close()
+	resetDatabase(t, pool)
+
+	userID := seedUser(t, pool, "event.search@test.dev")
+	clientID := seedClient(t, pool, userID, "Search Event Client")
+
+	repo := NewEventRepo(pool)
+	event := &models.Event{
+		UserID:      userID,
+		ClientID:    clientID,
+		EventDate:   "2026-09-15",
+		ServiceType: "banquete",
+		NumPeople:   100,
+		Status:      "quoted",
+		TotalAmount: 5000,
+	}
+	if err := repo.Create(context.Background(), event); err != nil {
+		t.Fatalf("Create() error = %v", err)
+	}
+
+	// Search by service type
+	results, err := repo.Search(context.Background(), userID, "banquete")
+	if err != nil {
+		t.Fatalf("Search('banquete') error = %v", err)
+	}
+	if len(results) != 1 {
+		t.Fatalf("Search('banquete') len = %d, want 1", len(results))
+	}
+
+	// Search by client name
+	results, err = repo.Search(context.Background(), userID, "Search Event Client")
+	if err != nil {
+		t.Fatalf("Search('Search Event Client') error = %v", err)
+	}
+	if len(results) != 1 {
+		t.Fatalf("Search(client name) len = %d, want 1", len(results))
+	}
+	if results[0].Client == nil {
+		t.Fatal("Search() should populate client info")
+	}
+	if results[0].Client.Name != "Search Event Client" {
+		t.Fatalf("Search() client name = %q, want %q", results[0].Client.Name, "Search Event Client")
+	}
+
+	// Search with no matches
+	results, err = repo.Search(context.Background(), userID, "NoMatchHere")
+	if err != nil {
+		t.Fatalf("Search('NoMatchHere') error = %v", err)
+	}
+	if len(results) != 0 {
+		t.Fatalf("Search('NoMatchHere') len = %d, want 0", len(results))
+	}
+}
+
+func TestProductRepoSearchIntegration(t *testing.T) {
+	pool := openTestPool(t)
+	defer pool.Close()
+	resetDatabase(t, pool)
+
+	userID := seedUser(t, pool, "product.search@test.dev")
+	_ = seedProduct(t, pool, userID, "Paella Valenciana")
+	_ = seedProduct(t, pool, userID, "Tortilla Espanola")
+
+	repo := NewProductRepo(pool)
+
+	results, err := repo.Search(context.Background(), userID, "Paella")
+	if err != nil {
+		t.Fatalf("Search('Paella') error = %v", err)
+	}
+	if len(results) != 1 {
+		t.Fatalf("Search('Paella') len = %d, want 1", len(results))
+	}
+	if results[0].Name != "Paella Valenciana" {
+		t.Fatalf("Search('Paella') name = %q, want %q", results[0].Name, "Paella Valenciana")
+	}
+
+	// Search by category
+	results, err = repo.Search(context.Background(), userID, "main")
+	if err != nil {
+		t.Fatalf("Search('main') error = %v", err)
+	}
+	if len(results) != 2 {
+		t.Fatalf("Search('main') len = %d, want 2", len(results))
+	}
+
+	results, err = repo.Search(context.Background(), userID, "SinResultados")
+	if err != nil {
+		t.Fatalf("Search('SinResultados') error = %v", err)
+	}
+	if len(results) != 0 {
+		t.Fatalf("Search('SinResultados') len = %d, want 0", len(results))
+	}
+}
+
+// --- Count Integration Tests ---
+
+func TestEventRepoCountCurrentMonthIntegration(t *testing.T) {
+	pool := openTestPool(t)
+	defer pool.Close()
+	resetDatabase(t, pool)
+
+	userID := seedUser(t, pool, "event.count@test.dev")
+	clientID := seedClient(t, pool, userID, "Count Client")
+
+	repo := NewEventRepo(pool)
+
+	// Before creating any event, count should be 0
+	count, err := repo.CountCurrentMonth(context.Background(), userID)
+	if err != nil {
+		t.Fatalf("CountCurrentMonth() error = %v", err)
+	}
+	if count != 0 {
+		t.Fatalf("CountCurrentMonth() = %d, want 0 (no events)", count)
+	}
+
+	// Create an event in the current month
+	now := time.Now()
+	currentDate := now.Format("2006-01-02")
+	event := &models.Event{
+		UserID:      userID,
+		ClientID:    clientID,
+		EventDate:   currentDate,
+		ServiceType: "catering",
+		NumPeople:   50,
+		Status:      "quoted",
+		TotalAmount: 3000,
+	}
+	if err := repo.Create(context.Background(), event); err != nil {
+		t.Fatalf("Create() error = %v", err)
+	}
+
+	count, err = repo.CountCurrentMonth(context.Background(), userID)
+	if err != nil {
+		t.Fatalf("CountCurrentMonth() after create error = %v", err)
+	}
+	if count != 1 {
+		t.Fatalf("CountCurrentMonth() = %d, want 1", count)
+	}
+
+	// Create a second event in the current month
+	event2 := &models.Event{
+		UserID:      userID,
+		ClientID:    clientID,
+		EventDate:   currentDate,
+		ServiceType: "banquet",
+		NumPeople:   30,
+		Status:      "confirmed",
+		TotalAmount: 2000,
+	}
+	if err := repo.Create(context.Background(), event2); err != nil {
+		t.Fatalf("Create() second event error = %v", err)
+	}
+
+	count, err = repo.CountCurrentMonth(context.Background(), userID)
+	if err != nil {
+		t.Fatalf("CountCurrentMonth() after second create error = %v", err)
+	}
+	if count != 2 {
+		t.Fatalf("CountCurrentMonth() = %d, want 2", count)
+	}
+}
+
+func TestInventoryRepoCountByUserIDIntegration(t *testing.T) {
+	pool := openTestPool(t)
+	defer pool.Close()
+	resetDatabase(t, pool)
+
+	userID := seedUser(t, pool, "inventory.count@test.dev")
+	repo := NewInventoryRepo(pool)
+
+	count, err := repo.CountByUserID(context.Background(), userID)
+	if err != nil {
+		t.Fatalf("CountByUserID() error = %v", err)
+	}
+	if count != 0 {
+		t.Fatalf("CountByUserID() = %d, want 0", count)
+	}
+
+	_ = seedInventory(t, pool, userID, "Salt")
+	_ = seedInventory(t, pool, userID, "Pepper")
+
+	count, err = repo.CountByUserID(context.Background(), userID)
+	if err != nil {
+		t.Fatalf("CountByUserID() after seed error = %v", err)
+	}
+	if count != 2 {
+		t.Fatalf("CountByUserID() = %d, want 2", count)
+	}
+}
+
+func TestProductRepoCountByUserIDIntegration(t *testing.T) {
+	pool := openTestPool(t)
+	defer pool.Close()
+	resetDatabase(t, pool)
+
+	userID := seedUser(t, pool, "product.count@test.dev")
+	repo := NewProductRepo(pool)
+
+	count, err := repo.CountByUserID(context.Background(), userID)
+	if err != nil {
+		t.Fatalf("CountByUserID() error = %v", err)
+	}
+	if count != 0 {
+		t.Fatalf("CountByUserID() = %d, want 0", count)
+	}
+
+	_ = seedProduct(t, pool, userID, "Tacos")
+	_ = seedProduct(t, pool, userID, "Enchiladas")
+	_ = seedProduct(t, pool, userID, "Tamales")
+
+	count, err = repo.CountByUserID(context.Background(), userID)
+	if err != nil {
+		t.Fatalf("CountByUserID() after seed error = %v", err)
+	}
+	if count != 3 {
+		t.Fatalf("CountByUserID() = %d, want 3", count)
+	}
+}
+
+// --- GetAll / GetEquipment Integration Tests ---
+
+func TestPaymentRepoGetAllIntegration(t *testing.T) {
+	pool := openTestPool(t)
+	defer pool.Close()
+	resetDatabase(t, pool)
+
+	userID := seedUser(t, pool, "payment.getall@test.dev")
+	clientID := seedClient(t, pool, userID, "GetAll Payment Client")
+	eventID := seedEvent(t, pool, userID, clientID, "2026-07-01")
+
+	repo := NewPaymentRepo(pool)
+
+	// No payments yet
+	payments, err := repo.GetAll(context.Background(), userID)
+	if err != nil {
+		t.Fatalf("GetAll() empty error = %v", err)
+	}
+	if len(payments) != 0 {
+		t.Fatalf("GetAll() empty len = %d, want 0", len(payments))
+	}
+
+	// Create first payment
+	p1Notes := "first"
+	p1 := &models.Payment{
+		EventID:       eventID,
+		UserID:        userID,
+		Amount:        500,
+		PaymentDate:   "2026-07-01",
+		PaymentMethod: "cash",
+		Notes:         &p1Notes,
+	}
+	if err := repo.Create(context.Background(), p1); err != nil {
+		t.Fatalf("Create(p1) error = %v", err)
+	}
+
+	// Create second payment
+	p2 := &models.Payment{
+		EventID:       eventID,
+		UserID:        userID,
+		Amount:        300,
+		PaymentDate:   "2026-07-05",
+		PaymentMethod: "transfer",
+	}
+	if err := repo.Create(context.Background(), p2); err != nil {
+		t.Fatalf("Create(p2) error = %v", err)
+	}
+
+	payments, err = repo.GetAll(context.Background(), userID)
+	if err != nil {
+		t.Fatalf("GetAll() error = %v", err)
+	}
+	if len(payments) != 2 {
+		t.Fatalf("GetAll() len = %d, want 2", len(payments))
+	}
+	// Payments should be ordered by payment_date DESC
+	if payments[0].PaymentDate != "2026-07-05" {
+		t.Fatalf("GetAll() first payment date = %q, want %q (DESC order)", payments[0].PaymentDate, "2026-07-05")
+	}
+}
+
+func TestEventRepoGetEquipmentIntegration(t *testing.T) {
+	pool := openTestPool(t)
+	defer pool.Close()
+	resetDatabase(t, pool)
+
+	userID := seedUser(t, pool, "event.equipment@test.dev")
+	clientID := seedClient(t, pool, userID, "Equipment Client")
+	eventID := seedEvent(t, pool, userID, clientID, "2026-08-01")
+	equipmentID := seedEquipment(t, pool, userID, "Chafing Dish")
+
+	repo := NewEventRepo(pool)
+
+	// No equipment initially
+	equipment, err := repo.GetEquipment(context.Background(), eventID)
+	if err != nil {
+		t.Fatalf("GetEquipment() empty error = %v", err)
+	}
+	if len(equipment) != 0 {
+		t.Fatalf("GetEquipment() empty len = %d, want 0", len(equipment))
+	}
+
+	// Add equipment via UpdateEventItems
+	eqList := []models.EventEquipment{{InventoryID: equipmentID, Quantity: 3}}
+	if err := repo.UpdateEventItems(context.Background(), eventID, nil, nil, &eqList); err != nil {
+		t.Fatalf("UpdateEventItems(equipment) error = %v", err)
+	}
+
+	equipment, err = repo.GetEquipment(context.Background(), eventID)
+	if err != nil {
+		t.Fatalf("GetEquipment() error = %v", err)
+	}
+	if len(equipment) != 1 {
+		t.Fatalf("GetEquipment() len = %d, want 1", len(equipment))
+	}
+	if equipment[0].Quantity != 3 {
+		t.Fatalf("GetEquipment() quantity = %d, want 3", equipment[0].Quantity)
+	}
+	if equipment[0].EquipmentName == nil || *equipment[0].EquipmentName != "Chafing Dish" {
+		t.Fatalf("GetEquipment() equipment name unexpected, got %v", equipment[0].EquipmentName)
+	}
+}
+
+// --- User Mutation Integration Tests ---
+
+func TestUserRepoUpdatePlanAndStripeIDIntegration(t *testing.T) {
+	pool := openTestPool(t)
+	defer pool.Close()
+	resetDatabase(t, pool)
+
+	userID := seedUser(t, pool, "user.plan.update@test.dev")
+	repo := NewUserRepo(pool)
+
+	// Update plan without stripe ID
+	if err := repo.UpdatePlanAndStripeID(context.Background(), userID, "pro", nil); err != nil {
+		t.Fatalf("UpdatePlanAndStripeID(pro, nil) error = %v", err)
+	}
+
+	user, err := repo.GetByID(context.Background(), userID)
+	if err != nil {
+		t.Fatalf("GetByID() after plan update error = %v", err)
+	}
+	if user.Plan != "pro" {
+		t.Fatalf("Plan = %q, want %q", user.Plan, "pro")
+	}
+	if user.StripeCustomerID != nil {
+		t.Fatalf("StripeCustomerID should be nil, got %v", user.StripeCustomerID)
+	}
+
+	// Update plan with stripe ID
+	stripeID := "cus_test123"
+	if err := repo.UpdatePlanAndStripeID(context.Background(), userID, "basic", &stripeID); err != nil {
+		t.Fatalf("UpdatePlanAndStripeID(basic, stripeID) error = %v", err)
+	}
+
+	user, err = repo.GetByID(context.Background(), userID)
+	if err != nil {
+		t.Fatalf("GetByID() after stripe update error = %v", err)
+	}
+	if user.Plan != "basic" {
+		t.Fatalf("Plan = %q, want %q", user.Plan, "basic")
+	}
+	if user.StripeCustomerID == nil || *user.StripeCustomerID != stripeID {
+		t.Fatalf("StripeCustomerID = %v, want %q", user.StripeCustomerID, stripeID)
+	}
+}
+
+func TestUserRepoUpdatePasswordIntegration(t *testing.T) {
+	pool := openTestPool(t)
+	defer pool.Close()
+	resetDatabase(t, pool)
+
+	userID := seedUser(t, pool, "user.password@test.dev")
+	repo := NewUserRepo(pool)
+
+	// Get original password hash
+	origUser, err := repo.GetByID(context.Background(), userID)
+	if err != nil {
+		t.Fatalf("GetByID() error = %v", err)
+	}
+	origHash := origUser.PasswordHash
+
+	// Update password
+	newHash := "new_hashed_password_123"
+	if err := repo.UpdatePassword(context.Background(), userID, newHash); err != nil {
+		t.Fatalf("UpdatePassword() error = %v", err)
+	}
+
+	// Verify password changed
+	updatedUser, err := repo.GetByID(context.Background(), userID)
+	if err != nil {
+		t.Fatalf("GetByID() after password update error = %v", err)
+	}
+	if updatedUser.PasswordHash == origHash {
+		t.Fatal("password hash should have changed")
+	}
+	if updatedUser.PasswordHash != newHash {
+		t.Fatalf("PasswordHash = %q, want %q", updatedUser.PasswordHash, newHash)
+	}
+
+	// Update password for non-existent user should fail
+	if err := repo.UpdatePassword(context.Background(), uuid.New(), "hash"); err == nil {
+		t.Fatal("UpdatePassword() expected error for non-existent user")
+	}
+}
+
+// --- Client CountByUserID Integration Test ---
+
+func TestClientRepoCountByUserIDIntegration(t *testing.T) {
+	pool := openTestPool(t)
+	defer pool.Close()
+	resetDatabase(t, pool)
+
+	userID := seedUser(t, pool, "client.count@test.dev")
+	repo := NewClientRepo(pool)
+
+	count, err := repo.CountByUserID(context.Background(), userID)
+	if err != nil {
+		t.Fatalf("CountByUserID() error = %v", err)
+	}
+	if count != 0 {
+		t.Fatalf("CountByUserID() = %d, want 0", count)
+	}
+
+	_ = seedClient(t, pool, userID, "Client A")
+	_ = seedClient(t, pool, userID, "Client B")
+
+	count, err = repo.CountByUserID(context.Background(), userID)
+	if err != nil {
+		t.Fatalf("CountByUserID() after seed error = %v", err)
+	}
+	if count != 2 {
+		t.Fatalf("CountByUserID() = %d, want 2", count)
+	}
+}
+
+// --- UserRepo UpdatePlanByStripeCustomerID Integration Test ---
+
+func TestUserRepoUpdatePlanByStripeCustomerIDIntegration(t *testing.T) {
+	pool := openTestPool(t)
+	defer pool.Close()
+	resetDatabase(t, pool)
+
+	userID := seedUser(t, pool, "user.stripecust@test.dev")
+	repo := NewUserRepo(pool)
+
+	// First set a stripe customer ID
+	stripeID := "cus_integ_test_456"
+	if err := repo.UpdatePlanAndStripeID(context.Background(), userID, "pro", &stripeID); err != nil {
+		t.Fatalf("UpdatePlanAndStripeID() error = %v", err)
+	}
+
+	// Now update plan by stripe customer ID
+	if err := repo.UpdatePlanByStripeCustomerID(context.Background(), stripeID, "basic"); err != nil {
+		t.Fatalf("UpdatePlanByStripeCustomerID() error = %v", err)
+	}
+
+	user, err := repo.GetByID(context.Background(), userID)
+	if err != nil {
+		t.Fatalf("GetByID() error = %v", err)
+	}
+	if user.Plan != "basic" {
+		t.Fatalf("Plan = %q, want %q", user.Plan, "basic")
+	}
+
+	// Non-existent stripe customer ID should fail
+	if err := repo.UpdatePlanByStripeCustomerID(context.Background(), "cus_nonexistent", "pro"); err == nil {
+		t.Fatal("UpdatePlanByStripeCustomerID() expected error for non-existent stripe customer ID")
+	}
+}
+
+// --- VerifyOwnership Integration Test ---
+
+func TestProductRepoVerifyOwnershipIntegration(t *testing.T) {
+	pool := openTestPoolStandard(t)
+	defer pool.Close()
+	resetDatabase(t, pool)
+
+	userA := seedUser(t, pool, "ownership.usera@test.dev")
+	userB := seedUser(t, pool, "ownership.userb@test.dev")
+
+	productA := seedProduct(t, pool, userA, "Product A")
+	productB := seedProduct(t, pool, userB, "Product B")
+
+	repo := NewProductRepo(pool)
+
+	// Verify userA owns productA
+	if err := repo.VerifyOwnership(context.Background(), []uuid.UUID{productA}, userA); err != nil {
+		t.Fatalf("VerifyOwnership(own product) error = %v", err)
+	}
+
+	// Verify userA does NOT own productB
+	if err := repo.VerifyOwnership(context.Background(), []uuid.UUID{productB}, userA); err == nil {
+		t.Fatal("VerifyOwnership(other user's product) expected error")
+	}
+
+	// Verify mixed list fails
+	if err := repo.VerifyOwnership(context.Background(), []uuid.UUID{productA, productB}, userA); err == nil {
+		t.Fatal("VerifyOwnership(mixed ownership) expected error")
+	}
+
+	// Empty list should succeed
+	if err := repo.VerifyOwnership(context.Background(), []uuid.UUID{}, userA); err != nil {
+		t.Fatalf("VerifyOwnership(empty) error = %v", err)
+	}
+}
+
+// --- User Isolation Tests for Search ---
+
+func TestSearchUserIsolation(t *testing.T) {
+	pool := openTestPool(t)
+	defer pool.Close()
+	resetDatabase(t, pool)
+
+	userA := seedUser(t, pool, "search.usera@test.dev")
+	userB := seedUser(t, pool, "search.userb@test.dev")
+
+	_ = seedClient(t, pool, userA, "Alice Client")
+	_ = seedClient(t, pool, userB, "Alice Other")
+
+	_ = seedProduct(t, pool, userA, "Shared Product Name")
+	_ = seedProduct(t, pool, userB, "Shared Product Name")
+
+	_ = seedInventory(t, pool, userA, "Sugar")
+	_ = seedInventory(t, pool, userB, "Sugar")
+
+	// Client search should only return userA's client
+	clients, err := NewClientRepo(pool).Search(context.Background(), userA, "Alice")
+	if err != nil {
+		t.Fatalf("ClientRepo.Search(userA) error = %v", err)
+	}
+	if len(clients) != 1 {
+		t.Fatalf("ClientRepo.Search(userA, 'Alice') len = %d, want 1", len(clients))
+	}
+	if clients[0].UserID != userA {
+		t.Fatal("ClientRepo.Search returned wrong user's client")
+	}
+
+	// Product search should only return userA's product
+	products, err := NewProductRepo(pool).Search(context.Background(), userA, "Shared")
+	if err != nil {
+		t.Fatalf("ProductRepo.Search(userA) error = %v", err)
+	}
+	if len(products) != 1 {
+		t.Fatalf("ProductRepo.Search(userA, 'Shared') len = %d, want 1", len(products))
+	}
+
+	// Inventory search should only return userA's item
+	items, err := NewInventoryRepo(pool).Search(context.Background(), userA, "Sugar")
+	if err != nil {
+		t.Fatalf("InventoryRepo.Search(userA) error = %v", err)
+	}
+	if len(items) != 1 {
+		t.Fatalf("InventoryRepo.Search(userA, 'Sugar') len = %d, want 1", len(items))
+	}
+}

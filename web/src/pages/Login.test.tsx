@@ -36,8 +36,8 @@ describe('Login', () => {
 
   it('renders the form', () => {
     renderLogin();
-    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/contraseña/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/email/i, { selector: 'input' })).toBeInTheDocument();
+    expect(screen.getByLabelText(/contraseña/i, { selector: 'input' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /iniciar sesión/i })).toBeInTheDocument();
   });
 
@@ -53,8 +53,8 @@ describe('Login', () => {
     (api.post as any).mockResolvedValue({ tokens: { access_token: 'token' } });
     renderLogin();
 
-    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'test@example.com' } });
-    fireEvent.change(screen.getByLabelText(/contraseña/i), { target: { value: 'password' } });
+    fireEvent.change(screen.getByLabelText(/email/i, { selector: 'input' }), { target: { value: 'test@example.com' } });
+    fireEvent.change(screen.getByLabelText(/contraseña/i, { selector: 'input' }), { target: { value: 'password' } });
     fireEvent.click(screen.getByRole('button', { name: /iniciar sesión/i }));
 
     await waitFor(() => {
@@ -69,8 +69,8 @@ describe('Login', () => {
     (api.post as any).mockResolvedValue({ tokens: {} });
     renderLogin();
 
-    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'test@example.com' } });
-    fireEvent.change(screen.getByLabelText(/contraseña/i), { target: { value: 'password' } });
+    fireEvent.change(screen.getByLabelText(/email/i, { selector: 'input' }), { target: { value: 'test@example.com' } });
+    fireEvent.change(screen.getByLabelText(/contraseña/i, { selector: 'input' }), { target: { value: 'password' } });
     fireEvent.click(screen.getByRole('button', { name: /iniciar sesión/i }));
 
     await waitFor(() => {

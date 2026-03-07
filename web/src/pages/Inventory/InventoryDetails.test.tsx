@@ -16,6 +16,12 @@ vi.mock('../../lib/errorHandler', () => ({ logError: vi.fn() }));
 vi.mock('../../hooks/useToast', () => ({
   useToast: () => ({ toasts: [], addToast: mockAddToast, removeToast: vi.fn() }),
 }));
+vi.mock('../../services/eventService', () => ({
+  eventService: { getAll: vi.fn().mockResolvedValue([]), getProducts: vi.fn().mockResolvedValue([]) },
+}));
+vi.mock('../../services/productService', () => ({
+  productService: { getIngredientsForProducts: vi.fn().mockResolvedValue([]) },
+}));
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual<any>('react-router-dom');
   return { ...actual, useParams: () => mockParams, useNavigate: () => mockNavigate };
@@ -64,13 +70,13 @@ describe('InventoryDetails', () => {
   it('shows low stock alert when current_stock <= minimum_stock', async () => {
     (inventoryService.getById as any).mockResolvedValue({ ...baseItem, current_stock: 15 });
     renderDetails();
-    await waitFor(() => expect(screen.getByText(/stock está por debajo/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/está por debajo del mínimo/i)).toBeInTheDocument());
   });
 
   it('shows optimal stock message when stock is sufficient', async () => {
     (inventoryService.getById as any).mockResolvedValue(baseItem);
     renderDetails();
-    await waitFor(() => expect(screen.getByText(/niveles óptimos/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/Sin demanda/i)).toBeInTheDocument());
   });
 
   it('shows error state on fetch failure', async () => {

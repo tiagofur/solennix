@@ -63,6 +63,12 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 				r.Get("/status", subHandler.GetSubscriptionStatus)
 				r.Post("/checkout-session", subHandler.CreateCheckoutSession)
 				r.Post("/portal-session", subHandler.CreatePortalSession)
+			})
+
+			// Debug routes — admin only (defense-in-depth: handler also checks Environment)
+			r.Group(func(r chi.Router) {
+				r.Use(mw.Auth(authService))
+				r.Use(mw.AdminOnly(userRepo))
 				r.Post("/debug-upgrade", subHandler.DebugUpgrade)
 				r.Post("/debug-downgrade", subHandler.DebugDowngrade)
 			})
@@ -79,8 +85,11 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 		r.Group(func(r chi.Router) {
 			r.Use(mw.Auth(authService))
 
-			// Uploads (authenticated)
-			r.Post("/uploads/image", uploadHandler.UploadImage)
+			// Uploads (authenticated, rate limited)
+			r.Group(func(r chi.Router) {
+				r.Use(mw.RateLimit(5, 1*time.Minute))
+				r.Post("/uploads/image", uploadHandler.UploadImage)
+			})
 
 			// Users
 			r.Put("/users/me", authHandler.UpdateProfile)
@@ -150,10 +159,11 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 			})
 		})
 
-		// Admin routes — Auth + AdminOnly middleware
+		// Admin routes — Auth + AdminOnly middleware + rate limited
 		r.Route("/admin", func(r chi.Router) {
 			r.Use(mw.Auth(authService))
 			r.Use(mw.AdminOnly(userRepo))
+			r.Use(mw.RateLimit(30, 1*time.Minute))
 
 			r.Get("/stats", adminHandler.GetStats)
 			r.Get("/users", adminHandler.ListUsers)

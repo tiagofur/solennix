@@ -18,6 +18,10 @@ var RateLimitCleanupInterval = 5 * time.Minute
 // RateLimitStopFunc holds the function to stop the background loop of the latest created RateLimit.
 var RateLimitStopFunc func()
 
+// TrustProxy controls whether X-Forwarded-For is used for client IP extraction.
+// Set to true only when behind a trusted reverse proxy.
+var TrustProxy bool
+
 // RateLimit creates a middleware that limits requests per IP address.
 // maxRequests is the maximum number of requests allowed within the given window duration.
 // The cleanup goroutine stops when the returned stop function is called.
@@ -78,13 +82,14 @@ func RateLimit(maxRequests int, window time.Duration) func(http.Handler) http.Ha
 	}
 }
 
-// extractIP returns the client IP, preferring the first entry in X-Forwarded-For
-// but falling back to RemoteAddr. Only the IP portion is used (port stripped).
+// extractIP returns the client IP. Only trusts X-Forwarded-For when TrustProxy is true.
 func extractIP(r *http.Request) string {
-	if forwarded := r.Header.Get("X-Forwarded-For"); forwarded != "" {
-		// Take only the first IP (original client)
-		ip := strings.SplitN(forwarded, ",", 2)[0]
-		return strings.TrimSpace(ip)
+	if TrustProxy {
+		if forwarded := r.Header.Get("X-Forwarded-For"); forwarded != "" {
+			// Take only the first IP (original client)
+			ip := strings.SplitN(forwarded, ",", 2)[0]
+			return strings.TrimSpace(ip)
+		}
 	}
 	// Strip port from RemoteAddr
 	host, _, err := net.SplitHostPort(r.RemoteAddr)

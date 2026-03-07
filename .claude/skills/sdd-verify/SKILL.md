@@ -19,30 +19,15 @@ Static analysis alone is NOT enough. You must execute the code.
 
 From the orchestrator:
 - Change name
-- The `proposal.md` content
-- The delta specs from `specs/`
-- The `design.md` content
-- The `tasks.md` content (with completion status)
-- Project config from `openspec/config.yaml`
+- Artifact store mode (`engram | openspec | none`)
 
 ## Execution and Persistence Contract
 
-From the orchestrator:
-- `artifact_store.mode`: `engram | openspec | none`
-- `detail_level`: `concise | standard | deep`
+Read and follow `skills/_shared/persistence-contract.md` for mode resolution rules.
 
-Default resolution (when orchestrator does not explicitly set a mode):
-1. If Engram is available → use `engram`
-2. Otherwise → use `none`
-
-`openspec` is NEVER used by default — only when the orchestrator explicitly passes `openspec`.
-
-Rules:
-- **`none`**: Do NOT write any files to the project. Return the verification report inline only.
-- **`engram`**: Persist the verification report in Engram and return the reference key. Do NOT write project files.
-- **`openspec`**: Save `verify-report.md` to `openspec/changes/{change-name}/verify-report.md`. Only when explicitly instructed.
-
-IMPORTANT: If you are unsure which mode to use, default to `none`. Never write files into the project unless the mode is explicitly `openspec`.
+- If mode is `engram`: Read and follow `skills/_shared/engram-convention.md`. Artifact type: `verify-report`. Retrieve `proposal`, `spec`, `design`, and `tasks` as dependencies.
+- If mode is `openspec`: Read and follow `skills/_shared/openspec-convention.md`. Save to `openspec/changes/{change-name}/verify-report.md`.
+- If mode is `none`: Return the verification report inline only. Never write files.
 
 ## What to Do
 
@@ -185,21 +170,11 @@ A spec scenario is only considered COMPLIANT when there is a test that passed pr
 
 ### Step 6: Persist Verification Report
 
-Persist the report according to the resolved `artifact_store.mode`:
+Persist the report according to the resolved `artifact_store.mode`, following the conventions in `skills/_shared/`:
 
-```
-IF mode == openspec:
-  Write to: openspec/changes/{change-name}/verify-report.md
-  (create the file only in this case)
-
-IF mode == engram:
-  Save to Engram with title: "verify-report/{change-name}"
-  Return the Engram reference key
-
-IF mode == none:
-  Do NOT write any files
-  Return the full report content inline in the response
-```
+- **engram**: Use `engram-convention.md` — artifact type `verify-report`
+- **openspec**: Write to `openspec/changes/{change-name}/verify-report.md`
+- **none**: Return the full report inline, do NOT write any files
 
 ### Step 7: Return Summary
 
