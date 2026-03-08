@@ -188,7 +188,7 @@ const buildTokenValues = (
   event: EventWithClient, 
   profile: UserProfile, 
   products?: ProductWithName[],
-  payments?: { amount: number }[]
+  payments?: { amount: number; [key: string]: unknown }[]
 ): Record<ContractToken, string | undefined> => {
   const providerName = asText(profile?.name);
   const providerBusinessName = asText(profile?.business_name) || providerName;
@@ -239,7 +239,7 @@ export const renderContractTemplate = ({
   template?: string | null;
   strict?: boolean;
   products?: ProductWithName[];
-  payments?: { amount: number }[];
+  payments?: { amount: number; [key: string]: unknown }[];
 }) => {
   const sourceTemplate = asText(template) || DEFAULT_CONTRACT_TEMPLATE;
   const { invalidTokens } = validateContractTemplate(sourceTemplate);
