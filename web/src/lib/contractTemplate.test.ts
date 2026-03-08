@@ -140,32 +140,32 @@ describe('contractTemplate', () => {
       expect(rendered.length).toBeGreaterThan(100);
     });
 
-    it('renders event_services_list as comma-separated product names', () => {
+    it('renders event_services_list with quantity and product names', () => {
       const rendered = renderContractTemplate({
         event: mockEvent,
         profile: mockProfile,
         template: 'Servicios: [Servicios del evento]',
         strict: false,
         products: [
-          { products: { name: 'Churros' } },
-          { products: { name: 'Paletas' } },
-          { products: { name: 'Algodón de Azúcar' } },
+          { quantity: 2, products: { name: 'Churros' } },
+          { quantity: 3, products: { name: 'Paletas' } },
+          { quantity: 1, products: { name: 'Algodón de Azúcar' } },
         ] as any,
       });
-      expect(rendered).toBe('Servicios: Churros, Paletas, Algodón de Azúcar');
+      expect(rendered).toBe('Servicios: 2 Churros, 3 Paletas, 1 Algodón de Azúcar');
     });
 
-    it('renders single product without comma', () => {
+    it('renders single product with quantity without comma', () => {
       const rendered = renderContractTemplate({
         event: mockEvent,
         profile: mockProfile,
         template: 'Servicios: [Servicios del evento]',
         strict: false,
         products: [
-          { products: { name: 'Churros' } },
+          { quantity: 5, products: { name: 'Churros' } },
         ] as any,
       });
-      expect(rendered).toBe('Servicios: Churros');
+      expect(rendered).toBe('Servicios: 5 Churros');
     });
 
     it('leaves services placeholder unresolved when no products are provided', () => {
@@ -176,6 +176,20 @@ describe('contractTemplate', () => {
         strict: false,
       });
       expect(rendered).toBe('Servicios: [Servicios del evento]');
+    });
+
+    it('renders event_services_list using flat product_name field from API', () => {
+      const rendered = renderContractTemplate({
+        event: mockEvent,
+        profile: mockProfile,
+        template: 'Servicios: [Servicios del evento]',
+        strict: false,
+        products: [
+          { quantity: 45, product_name: 'Churros Clásicos' },
+          { quantity: 10, product_name: 'Paletas de Hielo' },
+        ] as any,
+      });
+      expect(rendered).toBe('Servicios: 45 Churros Clásicos, 10 Paletas de Hielo');
     });
   });
 });

@@ -10,6 +10,7 @@ type UserProfile = User | null;
 
 type ProductWithName = EventProduct & {
   products?: { name: string } | null;
+  product_name?: string | null;
 };
 
 export const CONTRACT_TEMPLATE_TOKENS = [
@@ -36,6 +37,7 @@ export const CONTRACT_TEMPLATE_TOKENS = [
   'client_city',
   'contract_city',
   'event_services_list',
+  'event_paid_amount',
 ] as const;
 
 type ContractToken = (typeof CONTRACT_TEMPLATE_TOKENS)[number];
@@ -64,6 +66,7 @@ export const CONTRACT_TEMPLATE_PLACEHOLDERS: Array<{ token: ContractToken; label
   { token: 'client_city', label: 'Ciudad del cliente' },
   { token: 'contract_city', label: 'Ciudad del contrato' },
   { token: 'event_services_list', label: 'Servicios del evento' },
+  { token: 'event_paid_amount', label: 'Total pagado' },
 ];
 
 const TOKEN_LABEL_BY_TOKEN: Record<ContractToken, string> = Object.fromEntries(
@@ -97,6 +100,7 @@ export const getMaskedPlaceholder = (token: ContractToken) => `[${TOKEN_LABEL_BY
 
 export const DEFAULT_CONTRACT_TEMPLATE = `1. El Proveedor es una empresa dedicada a [Tipo de servicio], [Nombre comercial del proveedor], y cuenta con la capacidad para la prestación de dicho servicio.
 2. El Cliente: [Nombre del cliente] desea contratar los servicios del Proveedor para el evento que se llevará a cabo el [Fecha del evento], en [Lugar del evento].
+3. Servicio contratados: [Servicios del evento]
 
 Por lo tanto, las partes acuerdan las siguientes cláusulas:
 
@@ -107,8 +111,8 @@ El Proveedor se compromete a prestar los servicios de [Tipo de servicio] para [N
 Segunda. Horarios de Servicio
 El servicio será prestado en el evento en un horario de [Horario del evento].
 
-Tercera. Costo Total
-El costo total del servicio contratado será de [Monto total del evento].
+Tercera. Costo Total/Anticipo
+El costo total del servicio contratado será de [Monto total del evento] con un anticipo de [Total pagado].
 
 Cuarta. Condiciones de Pago
 El Cliente deberá cubrir un anticipo del [Porcentaje de anticipo]% para reservar la fecha. El resto deberá liquidarse antes del inicio del evento.
@@ -180,11 +184,17 @@ export const validateContractTemplate = (template: string) => {
   };
 };
 
-const buildTokenValues = (event: EventWithClient, profile: UserProfile, products?: ProductWithName[]): Record<ContractToken, string | undefined> => {
+const buildTokenValues = (
+  event: EventWithClient, 
+  profile: UserProfile, 
+  products?: ProductWithName[],
+  payments?: { amount: number }[]
+): Record<ContractToken, string | undefined> => {
   const providerName = asText(profile?.name);
   const providerBusinessName = asText(profile?.business_name) || providerName;
   const eventStart = asText(event.start_time);
   const eventEnd = asText(event.end_time);
+  const totalPaid = payments?.reduce((sum, p) => sum + p.amount, 0) || 0;
 
   return {
     provider_name: providerName,
@@ -210,8 +220,9 @@ const buildTokenValues = (event: EventWithClient, profile: UserProfile, products
     client_city: asText(event.client?.city),
     contract_city: asText(event.city) || asText(event.client?.city),
     event_services_list: products && products.length > 0
-      ? products.map(p => p.products?.name || 'Producto').join(', ')
+      ? products.map(p => `${p.quantity ?? 1} ${p.products?.name || p.product_name || 'Producto'}`).join(', ')
       : undefined,
+    event_paid_amount: formatCurrency(totalPaid),
   };
 };
 
@@ -221,12 +232,14 @@ export const renderContractTemplate = ({
   template,
   strict = true,
   products,
+  payments,
 }: {
   event: EventWithClient;
   profile: UserProfile;
   template?: string | null;
   strict?: boolean;
   products?: ProductWithName[];
+  payments?: { amount: number }[];
 }) => {
   const sourceTemplate = asText(template) || DEFAULT_CONTRACT_TEMPLATE;
   const { invalidTokens } = validateContractTemplate(sourceTemplate);
@@ -234,7 +247,7 @@ export const renderContractTemplate = ({
     throw new ContractTemplateError('La plantilla contiene placeholders no soportados.', invalidTokens, []);
   }
 
-  const values = buildTokenValues(event, profile, products);
+  const values = buildTokenValues(event, profile, products, payments);
   const missingTokens = new Set<string>();
 
   const rendered = sourceTemplate.replace(TOKEN_REGEX, (_, tokenText: string) => {
