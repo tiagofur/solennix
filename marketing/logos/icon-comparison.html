@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solennix — Comparativa de Iconos</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; color: #333; padding: 32px; }
+  h1 { font-size: 24px; font-weight: 700; margin-bottom: 8px; color: #1B2A4A; }
+  .subtitle { color: #666; margin-bottom: 32px; font-size: 14px; }
+
+  .comparison-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 48px;
+  }
+
+  .variant-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  .variant-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 4px; color: #1B2A4A; }
+  .variant-card .desc { font-size: 12px; color: #888; margin-bottom: 20px; line-height: 1.4; }
+
+  .size-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .size-label { font-size: 11px; color: #999; width: 50px; text-align: right; flex-shrink: 0; }
+
+  .icon-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .icon-container.light { background: #f8f8f8; border-radius: 8px; }
+  .icon-container.dark  { background: #1B2A4A; border-radius: 8px; }
+
+  .section-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1B2A4A;
+    margin-bottom: 6px;
+  }
+  .section-desc {
+    font-size: 13px;
+    color: #888;
+    margin-bottom: 20px;
+  }
+
+  .bg-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 48px;
+  }
+
+  .bg-card {
+    border-radius: 16px;
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+  .bg-card.light-bg { background: #FFFFFF; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .bg-card.dark-bg { background: #1B2A4A; }
+  .bg-card h4 { font-size: 13px; font-weight: 600; }
+  .bg-card.light-bg h4 { color: #1B2A4A; }
+  .bg-card.dark-bg h4 { color: #D4B87A; }
+
+  .sizes-strip {
+    display: flex;
+    align-items: flex-end;
+    gap: 20px;
+  }
+  .size-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .size-item span { font-size: 10px; color: #999; }
+  .dark-bg .size-item span { color: rgba(255,255,255,0.4); }
+
+  .verdict {
+    background: linear-gradient(135deg, #1B2A4A, #0F1A2E);
+    color: white;
+    border-radius: 16px;
+    padding: 32px;
+    margin-top: 16px;
+  }
+  .verdict h3 { color: #D4B87A; margin-bottom: 12px; font-size: 16px; }
+  .verdict p { font-size: 14px; line-height: 1.6; color: rgba(255,255,255,0.8); }
+  .verdict strong { color: #D4B87A; }
+</style>
+</head>
+<body>
+
+<h1>Solennix — Comparativa de Iconos</h1>
+<p class="subtitle">Evaluación de legibilidad a tamaños reducidos: actual (outline) vs filled vs stroke grueso vs simplificado</p>
+
+<!-- =====================================================
+     VARIANT 1: ACTUAL (outline, stroke-width 3)
+     ===================================================== -->
+
+<div class="comparison-grid">
+
+  <div class="variant-card">
+    <h3>A. Actual (Outline)</h3>
+    <p class="desc">stroke-width: 2-3 sobre viewBox 200. Se pierden líneas en tamaños &lt;64px.</p>
+
+    <div class="size-row">
+      <span class="size-label">128px</span>
+      <div class="icon-container dark" style="width:128px;height:128px;padding:8px;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="112" height="112">
+          <defs>
+            <linearGradient id="gA1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#D4B87A"/><stop offset="100%" stop-color="#B8965A"/></linearGradient>
+            <linearGradient id="gAH1" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#B8965A"/><stop offset="50%" stop-color="#D4B87A"/><stop offset="100%" stop-color="#B8965A"/></linearGradient>
+          </defs>
+          <path d="M66,34 Q58,65 66,88 Q78,116 100,122 Q122,116 134,88 Q142,65 134,34" fill="none" stroke="url(#gA1)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M66,34 Q100,42 134,34" fill="none" stroke="url(#gAH1)" stroke-width="3" stroke-linecap="round"/>
+          <path d="M76,40 Q72,58 76,80" fill="none" stroke="#F5F0E8" stroke-width="1.8" opacity="0.25" stroke-linecap="round"/>
+          <ellipse cx="100" cy="124" rx="5" ry="2.5" fill="none" stroke="url(#gA1)" stroke-width="2"/>
+          <path d="M100,126 L100,150 Q100,155 88,158 L72,160" fill="none" stroke="url(#gA1)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M100,126 L100,150 Q100,155 112,158 L128,160" fill="none" stroke="url(#gA1)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M72,160 A28,7 0 0,0 128,160" fill="none" stroke="url(#gAH1)" stroke-width="2.8" stroke-linecap="round"/>
+          <g transform="translate(132,32)" opacity="0.65">
+            <line x1="0" y1="-8" x2="0" y2="8" stroke="#F5F0E8" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="-8" y1="0" x2="8" y2="0" stroke="#F5F0E8" stroke-width="1.5" stroke-linecap="round"/>
+          </g>
+        </svg>
+      </div>
+    </div>
+
+    <div class="size-row">
+      <span class="size-label">64px</span>
+      <div class="icon-container dark" style="width:64px;height:64px;padding:4px;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="56" height="56">
+          <defs>
+            <linearGradient id="gA2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#D4B87A"/><stop offset="100%" stop-color="#B8965A"/></linearGradient>
+            <linearGradient id="gAH2" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#B8965A"/><stop offset="50%" stop-color="#D4B87A"/><stop offset="100%" stop-color="#B8965A"/></linearGradient>
+          </defs>
+          <path d="M66,34 Q58,65 66,88 Q78,116 100,122 Q122,116 134,88 Q142,65 134,34" fill="none" stroke="url(#gA2)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M66,34 Q100,42 134,34" fill="none" stroke="url(#gAH2)" stroke-width="3" stroke-linecap="round"/>
+          <ellipse cx="100" cy="124" rx="5" ry="2.5" fill="none" stroke="url(#gA2)" stroke-width="2"/>
+          <path d="M100,126 L100,150 Q100,155 88,158 L72,160" fill="none" stroke="url(#gA2)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M100,126 L100,150 Q100,155 112,158 L128,160" fill="none" stroke="url(#gA2)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M72,160 A28,7 0 0,0 128,160" fill="none" stroke="url(#gAH2)" stroke-width="2.8" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="size-row">
+      <span class="size-label">48px</span>
+      <div class="icon-container dark" style="width:48px;height:48px;padding:3px;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="42" height="42">
+          <defs><linearGradient id="gA3" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#D4B87A"/><stop offset="100%" stop-color="#B8965A"/></linearGradient></defs>
+          <path d="M66,34 Q58,65 66,88 Q78,116 100,122 Q122,116 134,88 Q142,65 134,34" fill="none" stroke="url(#gA3)" stroke-width="3" stroke-linecap="round"/>
+          <path d="M66,34 Q100,42 134,34" fill="none" stroke="url(#gA3)" stroke-width="3" stroke-linecap="round"/>
+          <ellipse cx="100" cy="124" rx="5" ry="2.5" fill="none" stroke="url(#gA3)" stroke-width="2"/>
+          <path d="M100,126 L100,150 Q100,155 88,158 L72,160" fill="none" stroke="url(#gA3)" stroke-width="2.8" stroke-linecap="round"/>
+          <path d="M100,126 L100,150 Q100,155 112,158 L128,160" fill="none" stroke="url(#gA3)" stroke-width="2.8" stroke-linecap="round"/>
+          <path d="M72,160 A28,7 0 0,0 128,160" fill="none" stroke="url(#gA3)" stroke-width="2.8" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="size-row">
+      <span class="size-label">32px</span>
+      <div class="icon-container dark" style="width:32px;height:32px;padding:2px;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="28" height="28">
+          <path d="M66,34 Q58,65 66,88 Q78,116 100,122 Q122,116 134,88 Q142,65 134,34" fill="none" stroke="#D4B87A" stroke-width="3" stroke-linecap="round"/>
+          <path d="M66,34 Q100,42 134,34" fill="none" stroke="#D4B87A" stroke-width="3" stroke-linecap="round"/>
+          <ellipse cx="100" cy="124" rx="5" ry="2.5" fill="none" stroke="#D4B87A" stroke-width="2"/>
+          <path d="M100,126 L100,150 Q100,155 88,158 L72,160" fill="none" stroke="#D4B87A" stroke-width="2.8" stroke-linecap="round"/>
+          <path d="M100,126 L100,150 Q100,155 112,158 L128,160" fill="none" stroke="#D4B87A" stroke-width="2.8" stroke-linecap="round"/>
+          <path d="M72,160 A28,7 0 0,0 128,160" fill="none" stroke="#D4B87A" stroke-width="2.8" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="size-row">
+      <span class="size-label">24px</span>
+      <div class="icon-container dark" style="width:24px;height:24px;padding:1px;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="22" height="22">
+          <path d="M66,34 Q58,65 66,88 Q78,116 100,122 Q122,116 134,88 Q142,65 134,34" fill="none" stroke="#D4B87A" stroke-width="3" stroke-linecap="round"/>
+          <path d="M66,34 Q100,42 134,34" fill="none" stroke="#D4B87A" stroke-width="3" stroke-linecap="round"/>
+          <ellipse cx="100" cy="124" rx="5" ry="2.5" fill="none" stroke="#D4B87A" stroke-width="2"/>
+          <path d="M100,126 L100,150 Q100,155 88,158 L72,160" fill="none" stroke="#D4B87A" stroke-width="2.8" stroke-linecap="round"/>
+          <path d="M100,126 L100,150 Q100,155 112,158 L128,160" fill="none" stroke="#D4B87A" stroke-width="2.8" stroke-linecap="round"/>
+          <path d="M72,160 A28,7 0 0,0 128,160" fill="none" stroke="#D4B87A" stroke-width="2.8" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="size-row">
+      <span class="size-label">16px</span>
+      <div class="icon-container dark" style="width:16px;height:16px;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="16" height="16">
+          <path d="M66,34 Q58,65 66,88 Q78,116 100,122 Q122,116 134,88 Q142,65 134,34" fill="none" stroke="#D4B87A" stroke-width="3"/>
+          <path d="M66,34 Q100,42 134,34" fill="none" stroke="#D4B87A" stroke-width="3"/>
+          <path d="M100,126 L100,150 Q100,155 88,158 L72,160" fill="none" stroke="#D4B87A" stroke-width="2.8"/>
+          <path d="M100,126 L100,150 Q100,155 112,158 L128,160" fill="none" stroke="#D4B87A" stroke-width="2.8"/>
+          <path d="M72,160 A28,7 0 0,0 128,160" fill="none" stroke="#D4B87A" stroke-width="2.8"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================
+       VARIANT B: FILLED (copa rellena con color sólido)
+       ===================================================== -->
+
+  <div class="variant-card">
+    <h3>B. Filled (Copa Rellena)</h3>
+    <p class="desc">Copa con fill sólido dorado. Silueta reconocible incluso a 16px. Sin destellos.</p>
+
+    <div class="size-row">
+      <span class="size-label">128px</span>
+      <div class="icon-container dark" style="width:128px;height:128px;padding:8px;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="112" height="112">
+          <defs>
+            <linearGradient id="gB1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#D4B87A"/><stop offset="100%" stop-color="#B8965A"/></linearGradient>
+          </defs>
+          <!-- Copa rellena -->
+          <path d="M66,34 Q58,65 66,88 Q78,116 100,122 Q122,116 134,88 Q142,65 134,34 Q100,42 66,34 Z" fill="url(#gB1)"/>
+          <!-- Reflejo suave -->
+          <path d="M76,38 Q72,58 76,82 Q85,104 100,112 L100,42 Q82,44 76,38 Z" fill="rgba(255,255,255,0.12)"/>
+          <!-- Nodo -->
+          <ellipse cx="100" cy="124" rx="6" ry="3" fill="url(#gB1)"/>
+          <!-- Tallo relleno -->
+          <path d="M96,124 L96,150 Q96,156 84,159 L72,161 L72,164 A30,8 0 0,0 128,164 L128,161 L116,159 Q104,156 104,150 L104,124 Z" fill="url(#gB1)"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="size-row">
+      <span class="size-label">64px</span>
+      <div class="icon-container dark" style="width:64px;height:64px;padding:4px;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="56" height="56">
+          <defs><linearGradient id="gB2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#D4B87A"/><stop offset="100%" stop-color="#B8965A"/></linearGradient></defs>
+          <path d="M66,34 Q58,65 66,88 Q78,116 100,122 Q122,116 134,88 Q142,65 134,34 Q100,42 66,34 Z" fill="url(#gB2)"/>
+          <path d="M76,38 Q72,58 76,82 Q85,104 100,112 L100,42 Q82,44 76,38 Z" fill="rgba(255,255,255,0.12)"/>
+          <ellipse cx="100" cy="124" rx="6" ry="3" fill="url(#gB2)"/>
+          <path d="M96,124 L96,150 Q96,156 84,159 L72,161 L72,164 A30,8 0 0,0 128,164 L128,161 L116,159 Q104,156 104,150 L104,124 Z" fill="url(#gB2)"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="size-row">
+      <span class="size-label">48px</span>
+      <div class="icon-container dark" style="width:48px;height:48px;padding:3px;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="42" height="42">
+          <path d="M66,34 Q58,65 66,88 Q78,116 100,122 Q122,116 134,88 Q142,65 134,34 Q100,42 66,34 Z" fill="#D4B87A"/>
+          <path d="M76,38 Q72,58 76,82 Q85,104 100,112 L100,42 Q82,44 76,38 Z" fill="rgba(255,255,255,0.12)"/>
+          <ellipse cx="100" cy="124" rx="6" ry="3" fill="#D4B87A"/>
+          <path d="M96,124 L96,150 Q96,156 84,159 L72,161 L72,164 A30,8 0 0,0 128,164 L128,161 L116,159 Q104,156 104,150 L104,124 Z" fill="#D4B87A"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="size-row">
+      <span class="size-label">32px</span>
+      <div class="icon-container dark" style="width:32px;height:32px;padding:2px;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="28" height="28">
+          <path d="M66,34 Q58,65 66,88 Q78,116 100,122 Q122,116 134,88 Q142,65 134,34 Q100,42 66,34 Z" fill="#D4B87A"/>
+          <ellipse cx="100" cy="124" rx="6" ry="3" fill="#D4B87A"/>
+          <path d="M96,124 L96,150 Q96,156 84,159 L72,161 L72,164 A30,8 0 0,0 128,164 L128,161 L116,159 Q104,156 104,150 L104,124 Z" fill="#D4B87A"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="size-row">
+      <span class="size-label">24px</span>
+      <div class="icon-container dark" style="width:24px;height:24px;padding:1px;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="22" height="22">
+          <path d="M66,34 Q58,65 66,88 Q78,116 100,122 Q122,116 134,88 Q142,65 134,34 Q100,42 66,34 Z" fill="#D4B87A"/>
+          <ellipse cx="100" cy="124" rx="6" ry="3" fill="#D4B87A"/>
+          <path d="M96,124 L96,150 Q96,156 84,159 L72,161 L72,164 A30,8 0 0,0 128,164 L128,161 L116,159 Q104,156 104,150 L104,124 Z" fill="#D4B87A"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="size-row">
+      <span class="size-label">16px</span>
+      <div class="icon-container dark" style="width:16px;height:16px;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="16" height="16">
+          <path d="M66,34 Q58,65 66,88 Q78,116 100,122 Q122,116 134,88 Q142,65 134,34 Q100,42 66,34 Z" fill="#D4B87A"/>
+          <ellipse cx="100" cy="124" rx="6" ry="3" fill="#D4B87A"/>
+          <path d="M96,124 L96,150 Q96,156 84,159 L72,161 L72,164 A30,8 0 0,0 128,164 L128,161 L116,159 Q104,156 104,150 L104,124 Z" fill="#D4B87A"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================
+       VARIANT C: STROKE GRUESO (x2 stroke-width)
+       ===================================================== -->
+
+  <div class="variant-card">
+    <h3>C. Stroke Grueso (x2)</h3>
+    <p class="desc">Misma forma outline pero con stroke-width duplicado (5-6). Mantiene el estilo elegante.</p>
+
+    <div class="size-row">
+      <span class="size-label">128px</span>
+      <div class="icon-container dark" style="width:128px;height:128px;padding:8px;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="112" height="112">
+          <defs><linearGradient id="gC1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#D4B87A"/><stop offset="100%" stop-color="#B8965A"/></linearGradient></defs>
+          <path d="M66,34 Q58,65 66,88 Q78,116 100,122 Q122,116 134,88 Q142,65 134,34" fill="none" stroke="url(#gC1)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M66,34 Q100,42 134,34" fill="none" stroke="url(#gC1)" stroke-width="6" stroke-linecap="round"/>
+          <ellipse cx="100" cy="124" rx="6" ry="3" fill="none" stroke="url(#gC1)" stroke-width="4"/>
+          <path d="M100,126 L100,150 Q100,155 88,158 L72,160" fill="none" stroke="url(#gC1)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M100,126 L100,150 Q100,155 112,158 L128,160" fill="none" stroke="url(#gC1)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M72,160 A28,7 0 0,0 128,160" fill="none" stroke="url(#gC1)" stroke-width="5.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="size-row">
+      <span class="size-label">64px</span>
+      <div class="icon-container dark" style="width:64px;height:64px;padding:4px;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="56" height="56">
+          <defs><linearGradient id="gC2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#D4B87A"/><stop offset="100%" stop-color="#B8965A"/></linearGradient></defs>
+          <path d="M66,34 Q58,65 66,88 Q78,116 100,122 Q122,116 134,88 Q142,65 134,34" fill="none" stroke="url(#gC2)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M66,34 Q100,42 134,34" fill="none" stroke="url(#gC2)" stroke-width="6" stroke-linecap="round"/>
+          <ellipse cx="100" cy="124" rx="6" ry="3" fill="none" stroke="url(#gC2)" stroke-width="4"/>
+          <path d="M100,126 L100,150 Q100,155 88,158 L72,160" fill="none" stroke="url(#gC2)" stroke-width="5.5" stroke-linecap="round"/>
+          <path d="M100,126 L100,150 Q100,155 112,158 L128,160" fill="none" stroke="url(#gC2)" stroke-width="5.5" stroke-linecap="round"/>
+          <path d="M72,160 A28,7 0 0,0 128,160" fill="none" stroke="url(#gC2)" stroke-width="5.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="size-row">
+      <span class="size-label">48px</span>
+      <div class="icon-container dark" style="width:48px;height:48px;padding:3px;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="42" height="42">
+          <path d="M66,34 Q58,65 66,88 Q78,116 100,122 Q122,116 134,88 Q142,65 134,34" fill="none" stroke="#D4B87A" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M66,34 Q100,42 134,34" fill="none" stroke="#D4B87A" stroke-width="6" stroke-linecap="round"/>
+          <ellipse cx="100" cy="124" rx="6" ry="3" fill="none" stroke="#D4B87A" stroke-width="4"/>
+          <path d="M100,126 L100,150 Q100,155 88,158 L72,160" fill="none" stroke="#D4B87A" stroke-width="5.5" stroke-linecap="round"/>
+          <path d="M100,126 L100,150 Q100,155 112,158 L128,160" fill="none" stroke="#D4B87A" stroke-width="5.5" stroke-linecap="round"/>
+          <path d="M72,160 A28,7 0 0,0 128,160" fill="none" stroke="#D4B87A" stroke-width="5.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="size-row">
+      <span class="size-label">32px</span>
+      <div class="icon-container dark" style="width:32px;height:32px;padding:2px;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="28" height="28">
+          <path d="M66,34 Q58,65 66,88 Q78,116 100,122 Q122,116 134,88 Q142,65 134,34" fill="none" stroke="#D4B87A" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M66,34 Q100,42 134,34" fill="none" stroke="#D4B87A" stroke-width="6" stroke-linecap="round"/>
+          <ellipse cx="100" cy="124" rx="6" ry="3" fill="none" stroke="#D4B87A" stroke-width="4"/>
+          <path d="M100,126 L100,150 Q100,155 88,158 L72,160" fill="none" stroke="#D4B87A" stroke-width="5.5" stroke-linecap="round"/>
+          <path d="M100,126 L100,150 Q100,155 112,158 L128,160" fill="none" stroke="#D4B87A" stroke-width="5.5" stroke-linecap="round"/>
+          <path d="M72,160 A28,7 0 0,0 128,160" fill="none" stroke="#D4B87A" stroke-width="5.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="size-row">
+      <span class="size-label">24px</span>
+      <div class="icon-container dark" style="width:24px;height:24px;padding:1px;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="22" height="22">
+          <path d="M66,34 Q58,65 66,88 Q78,116 100,122 Q122,116 134,88 Q142,65 134,34" fill="none" stroke="#D4B87A" stroke-width="6" stroke-linecap="round"/>
+          <path d="M66,34 Q100,42 134,34" fill="none" stroke="#D4B87A" stroke-width="6" stroke-linecap="round"/>
+          <ellipse cx="100" cy="124" rx="6" ry="3" fill="none" stroke="#D4B87A" stroke-width="4"/>
+          <path d="M100,126 L100,150 Q100,155 88,158 L72,160" fill="none" stroke="#D4B87A" stroke-width="5.5" stroke-linecap="round"/>
+          <path d="M100,126 L100,150 Q100,155 112,158 L128,160" fill="none" stroke="#D4B87A" stroke-width="5.5" stroke-linecap="round"/>
+          <path d="M72,160 A28,7 0 0,0 128,160" fill="none" stroke="#D4B87A" stroke-width="5.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="size-row">
+      <span class="size-label">16px</span>
+      <div class="icon-container dark" style="width:16px;height:16px;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="16" height="16">
+          <path d="M66,34 Q58,65 66,88 Q78,116 100,122 Q122,116 134,88 Q142,65 134,34" fill="none" stroke="#D4B87A" stroke-width="6" stroke-linecap="round"/>
+          <path d="M66,34 Q100,42 134,34" fill="none" stroke="#D4B87A" stroke-width="6" stroke-linecap="round"/>
+          <path d="M100,126 L100,150 Q100,155 88,158 L72,160" fill="none" stroke="#D4B87A" stroke-width="5.5" stroke-linecap="round"/>
+          <path d="M100,126 L100,150 Q100,155 112,158 L128,160" fill="none" stroke="#D4B87A" stroke-width="5.5" stroke-linecap="round"/>
+          <path d="M72,160 A28,7 0 0,0 128,160" fill="none" stroke="#D4B87A" stroke-width="5.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================
+       VARIANT D: FILLED + OUTLINE (híbrido)
+       ===================================================== -->
+
+  <div class="variant-card">
+    <h3>D. Híbrido (Fill + Outline)</h3>
+    <p class="desc">Copa rellena con borde visible. Lo mejor de ambos mundos: masa visual + definición de forma.</p>
+
+    <div class="size-row">
+      <span class="size-label">128px</span>
+      <div class="icon-container dark" style="width:128px;height:128px;padding:8px;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="112" height="112">
+          <defs>
+            <linearGradient id="gD1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#D4B87A"/><stop offset="100%" stop-color="#B8965A"/></linearGradient>
+            <linearGradient id="gD1f" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#D4B87A" stop-opacity="0.25"/><stop offset="100%" stop-color="#B8965A" stop-opacity="0.15"/></linearGradient>
+          </defs>
+          <!-- Copa fill semitransparente + stroke fuerte -->
+          <path d="M66,34 Q58,65 66,88 Q78,116 100,122 Q122,116 134,88 Q142,65 134,34 Q100,42 66,34 Z" fill="url(#gD1f)" stroke="url(#gD1)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          <!-- Reflejo -->
+          <path d="M76,38 Q72,58 76,82 Q85,104 100,112 L100,42 Q82,44 76,38 Z" fill="rgba(255,255,255,0.08)"/>
+          <!-- Nodo -->
+          <ellipse cx="100" cy="124" rx="6" ry="3" fill="url(#gD1)" stroke="url(#gD1)" stroke-width="2"/>
+          <!-- Tallo + base -->
+          <path d="M96,124 L96,150 Q96,156 84,159 L72,161 L72,164 A30,8 0 0,0 128,164 L128,161 L116,159 Q104,156 104,150 L104,124 Z" fill="url(#gD1f)" stroke="url(#gD1)" stroke-width="3" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="size-row">
+      <span class="size-label">64px</span>
+      <div class="icon-container dark" style="width:64px;height:64px;padding:4px;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="56" height="56">
+          <defs>
+            <linearGradient id="gD2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#D4B87A"/><stop offset="100%" stop-color="#B8965A"/></linearGradient>
+            <linearGradient id="gD2f" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#D4B87A" stop-opacity="0.25"/><stop offset="100%" stop-color="#B8965A" stop-opacity="0.15"/></linearGradient>
+          </defs>
+          <path d="M66,34 Q58,65 66,88 Q78,116 100,122 Q122,116 134,88 Q142,65 134,34 Q100,42 66,34 Z" fill="url(#gD2f)" stroke="url(#gD2)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M76,38 Q72,58 76,82 Q85,104 100,112 L100,42 Q82,44 76,38 Z" fill="rgba(255,255,255,0.08)"/>
+          <ellipse cx="100" cy="124" rx="6" ry="3" fill="url(#gD2)" stroke="url(#gD2)" stroke-width="2"/>
+          <path d="M96,124 L96,150 Q96,156 84,159 L72,161 L72,164 A30,8 0 0,0 128,164 L128,161 L116,159 Q104,156 104,150 L104,124 Z" fill="url(#gD2f)" stroke="url(#gD2)" stroke-width="3" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="size-row">
+      <span class="size-label">48px</span>
+      <div class="icon-container dark" style="width:48px;height:48px;padding:3px;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="42" height="42">
+          <path d="M66,34 Q58,65 66,88 Q78,116 100,122 Q122,116 134,88 Q142,65 134,34 Q100,42 66,34 Z" fill="rgba(212,184,122,0.25)" stroke="#D4B87A" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          <ellipse cx="100" cy="124" rx="6" ry="3" fill="#D4B87A"/>
+          <path d="M96,124 L96,150 Q96,156 84,159 L72,161 L72,164 A30,8 0 0,0 128,164 L128,161 L116,159 Q104,156 104,150 L104,124 Z" fill="rgba(212,184,122,0.25)" stroke="#D4B87A" stroke-width="3" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="size-row">
+      <span class="size-label">32px</span>
+      <div class="icon-container dark" style="width:32px;height:32px;padding:2px;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="28" height="28">
+          <path d="M66,34 Q58,65 66,88 Q78,116 100,122 Q122,116 134,88 Q142,65 134,34 Q100,42 66,34 Z" fill="rgba(212,184,122,0.25)" stroke="#D4B87A" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          <ellipse cx="100" cy="124" rx="6" ry="3" fill="#D4B87A"/>
+          <path d="M96,124 L96,150 Q96,156 84,159 L72,161 L72,164 A30,8 0 0,0 128,164 L128,161 L116,159 Q104,156 104,150 L104,124 Z" fill="rgba(212,184,122,0.25)" stroke="#D4B87A" stroke-width="3" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="size-row">
+      <span class="size-label">24px</span>
+      <div class="icon-container dark" style="width:24px;height:24px;padding:1px;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="22" height="22">
+          <path d="M66,34 Q58,65 66,88 Q78,116 100,122 Q122,116 134,88 Q142,65 134,34 Q100,42 66,34 Z" fill="rgba(212,184,122,0.25)" stroke="#D4B87A" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+          <ellipse cx="100" cy="124" rx="6" ry="3" fill="#D4B87A"/>
+          <path d="M96,124 L96,150 Q96,156 84,159 L72,161 L72,164 A30,8 0 0,0 128,164 L128,161 L116,159 Q104,156 104,150 L104,124 Z" fill="rgba(212,184,122,0.25)" stroke="#D4B87A" stroke-width="3.5" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="size-row">
+      <span class="size-label">16px</span>
+      <div class="icon-container dark" style="width:16px;height:16px;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="16" height="16">
+          <path d="M66,34 Q58,65 66,88 Q78,116 100,122 Q122,116 134,88 Q142,65 134,34 Q100,42 66,34 Z" fill="rgba(212,184,122,0.3)" stroke="#D4B87A" stroke-width="5"/>
+          <ellipse cx="100" cy="124" rx="6" ry="3" fill="#D4B87A"/>
+          <path d="M96,124 L96,150 Q96,156 84,159 L72,161 L72,164 A30,8 0 0,0 128,164 L128,161 L116,159 Q104,156 104,150 L104,124 Z" fill="rgba(212,184,122,0.3)" stroke="#D4B87A" stroke-width="4"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- =====================================================
+     SECCIÓN: Test en fondo claro también
+     ===================================================== -->
+
+<div class="section-title">Test en ambos fondos</div>
+<p class="section-desc">Las 4 variantes a 32px (tamaño típico de tab bar / toolbar) en fondo claro y oscuro</p>
+
+<div class="bg-section">
+  <div class="bg-card light-bg">
+    <h4>Fondo claro — 32px</h4>
+    <div class="sizes-strip">
+      <div class="size-item">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="32" height="32">
+          <path d="M66,34 Q58,65 66,88 Q78,116 100,122 Q122,116 134,88 Q142,65 134,34" fill="none" stroke="#1B2A4A" stroke-width="3" stroke-linecap="round"/>
+          <path d="M66,34 Q100,42 134,34" fill="none" stroke="#1B2A4A" stroke-width="3" stroke-linecap="round"/>
+          <ellipse cx="100" cy="124" rx="5" ry="2.5" fill="none" stroke="#1B2A4A" stroke-width="2"/>
+          <path d="M100,126 L100,150 Q100,155 88,158 L72,160" fill="none" stroke="#1B2A4A" stroke-width="2.8" stroke-linecap="round"/>
+          <path d="M100,126 L100,150 Q100,155 112,158 L128,160" fill="none" stroke="#1B2A4A" stroke-width="2.8" stroke-linecap="round"/>
+          <path d="M72,160 A28,7 0 0,0 128,160" fill="none" stroke="#1B2A4A" stroke-width="2.8" stroke-linecap="round"/>
+        </svg>
+        <span>A. Actual</span>
+      </div>
+      <div class="size-item">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="32" height="32">
+          <path d="M66,34 Q58,65 66,88 Q78,116 100,122 Q122,116 134,88 Q142,65 134,34 Q100,42 66,34 Z" fill="#1B2A4A"/>
+          <ellipse cx="100" cy="124" rx="6" ry="3" fill="#1B2A4A"/>
+          <path d="M96,124 L96,150 Q96,156 84,159 L72,161 L72,164 A30,8 0 0,0 128,164 L128,161 L116,159 Q104,156 104,150 L104,124 Z" fill="#1B2A4A"/>
+        </svg>
+        <span>B. Filled</span>
+      </div>
+      <div class="size-item">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="32" height="32">
+          <path d="M66,34 Q58,65 66,88 Q78,116 100,122 Q122,116 134,88 Q142,65 134,34" fill="none" stroke="#1B2A4A" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M66,34 Q100,42 134,34" fill="none" stroke="#1B2A4A" stroke-width="6" stroke-linecap="round"/>
+          <ellipse cx="100" cy="124" rx="6" ry="3" fill="none" stroke="#1B2A4A" stroke-width="4"/>
+          <path d="M100,126 L100,150 Q100,155 88,158 L72,160" fill="none" stroke="#1B2A4A" stroke-width="5.5" stroke-linecap="round"/>
+          <path d="M100,126 L100,150 Q100,155 112,158 L128,160" fill="none" stroke="#1B2A4A" stroke-width="5.5" stroke-linecap="round"/>
+          <path d="M72,160 A28,7 0 0,0 128,160" fill="none" stroke="#1B2A4A" stroke-width="5.5" stroke-linecap="round"/>
+        </svg>
+        <span>C. Grueso</span>
+      </div>
+      <div class="size-item">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="32" height="32">
+          <path d="M66,34 Q58,65 66,88 Q78,116 100,122 Q122,116 134,88 Q142,65 134,34 Q100,42 66,34 Z" fill="rgba(27,42,74,0.15)" stroke="#1B2A4A" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          <ellipse cx="100" cy="124" rx="6" ry="3" fill="#1B2A4A"/>
+          <path d="M96,124 L96,150 Q96,156 84,159 L72,161 L72,164 A30,8 0 0,0 128,164 L128,161 L116,159 Q104,156 104,150 L104,124 Z" fill="rgba(27,42,74,0.15)" stroke="#1B2A4A" stroke-width="3" stroke-linejoin="round"/>
+        </svg>
+        <span>D. Híbrido</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-card dark-bg">
+    <h4>Fondo oscuro — 32px</h4>
+    <div class="sizes-strip">
+      <div class="size-item">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="32" height="32">
+          <path d="M66,34 Q58,65 66,88 Q78,116 100,122 Q122,116 134,88 Q142,65 134,34" fill="none" stroke="#D4B87A" stroke-width="3" stroke-linecap="round"/>
+          <path d="M66,34 Q100,42 134,34" fill="none" stroke="#D4B87A" stroke-width="3" stroke-linecap="round"/>
+          <ellipse cx="100" cy="124" rx="5" ry="2.5" fill="none" stroke="#D4B87A" stroke-width="2"/>
+          <path d="M100,126 L100,150 Q100,155 88,158 L72,160" fill="none" stroke="#D4B87A" stroke-width="2.8" stroke-linecap="round"/>
+          <path d="M100,126 L100,150 Q100,155 112,158 L128,160" fill="none" stroke="#D4B87A" stroke-width="2.8" stroke-linecap="round"/>
+          <path d="M72,160 A28,7 0 0,0 128,160" fill="none" stroke="#D4B87A" stroke-width="2.8" stroke-linecap="round"/>
+        </svg>
+        <span>A. Actual</span>
+      </div>
+      <div class="size-item">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="32" height="32">
+          <path d="M66,34 Q58,65 66,88 Q78,116 100,122 Q122,116 134,88 Q142,65 134,34 Q100,42 66,34 Z" fill="#D4B87A"/>
+          <ellipse cx="100" cy="124" rx="6" ry="3" fill="#D4B87A"/>
+          <path d="M96,124 L96,150 Q96,156 84,159 L72,161 L72,164 A30,8 0 0,0 128,164 L128,161 L116,159 Q104,156 104,150 L104,124 Z" fill="#D4B87A"/>
+        </svg>
+        <span>B. Filled</span>
+      </div>
+      <div class="size-item">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="32" height="32">
+          <path d="M66,34 Q58,65 66,88 Q78,116 100,122 Q122,116 134,88 Q142,65 134,34" fill="none" stroke="#D4B87A" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M66,34 Q100,42 134,34" fill="none" stroke="#D4B87A" stroke-width="6" stroke-linecap="round"/>
+          <ellipse cx="100" cy="124" rx="6" ry="3" fill="none" stroke="#D4B87A" stroke-width="4"/>
+          <path d="M100,126 L100,150 Q100,155 88,158 L72,160" fill="none" stroke="#D4B87A" stroke-width="5.5" stroke-linecap="round"/>
+          <path d="M100,126 L100,150 Q100,155 112,158 L128,160" fill="none" stroke="#D4B87A" stroke-width="5.5" stroke-linecap="round"/>
+          <path d="M72,160 A28,7 0 0,0 128,160" fill="none" stroke="#D4B87A" stroke-width="5.5" stroke-linecap="round"/>
+        </svg>
+        <span>C. Grueso</span>
+      </div>
+      <div class="size-item">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="32" height="32">
+          <path d="M66,34 Q58,65 66,88 Q78,116 100,122 Q122,116 134,88 Q142,65 134,34 Q100,42 66,34 Z" fill="rgba(212,184,122,0.25)" stroke="#D4B87A" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          <ellipse cx="100" cy="124" rx="6" ry="3" fill="#D4B87A"/>
+          <path d="M96,124 L96,150 Q96,156 84,159 L72,161 L72,164 A30,8 0 0,0 128,164 L128,161 L116,159 Q104,156 104,150 L104,124 Z" fill="rgba(212,184,122,0.25)" stroke="#D4B87A" stroke-width="3" stroke-linejoin="round"/>
+        </svg>
+        <span>D. Híbrido</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Verdict -->
+<div class="verdict">
+  <h3>Recomendación</h3>
+  <p>
+    <strong>B (Filled)</strong> es la opción más legible a tamaños reducidos (16-32px). La silueta sólida se reconoce instantáneamente como copa incluso en favicon.
+    <strong>D (Híbrido)</strong> es un buen compromiso si quieres mantener algo del estilo outline pero con más masa visual.
+    <strong>C (Grueso)</strong> mejora respecto al actual pero a 16-24px las líneas siguen compitiendo entre sí.
+    La estrategia ideal sería: usar <strong>B (Filled) para tamaños &lt;64px</strong> (app icons, favicons, tab bars) y mantener <strong>A (Outline) para tamaños &gt;64px</strong> (marketing, headers).
+  </p>
+</div>
+
+</body>
+</html>

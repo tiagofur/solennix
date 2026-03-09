@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Solennix — App Icon Final FILLED para fondo claro (Copa Tulipan dorada sobre crema) -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <!-- Dorado mas intenso para fondo claro -->
+    <linearGradient id="gIL" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#C4A265"/>
+      <stop offset="45%" stop-color="#B8965A"/>
+      <stop offset="100%" stop-color="#A6874E"/>
+    </linearGradient>
+    <radialGradient id="glIL" cx="50%" cy="38%">
+      <stop offset="0%" stop-color="#C4A265" stop-opacity="0.05"/>
+      <stop offset="70%" stop-color="#C4A265" stop-opacity="0.02"/>
+      <stop offset="100%" stop-color="#C4A265" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Fondo crema con esquinas redondeadas (misma forma que dark-bg) -->
+  <rect width="200" height="200" rx="40" fill="#F5F0E8"/>
+  <circle cx="100" cy="78" r="65" fill="url(#glIL)"/>
+
+  <!-- Copa rellena (bowl cerrado) — dorada -->
+  <path d="M66,34 Q58,65 66,88 Q78,116 100,122 Q122,116 134,88 Q142,65 134,34 Q100,42 66,34 Z"
+        fill="url(#gIL)"/>
+
+  <!-- Reflejo sutil en la copa -->
+  <path d="M76,38 Q72,58 76,82 Q85,104 100,112 L100,42 Q82,44 76,38 Z"
+        fill="rgba(255,255,255,0.15)"/>
+
+  <!-- Nodo (union bowl-tallo) -->
+  <ellipse cx="100" cy="124" rx="6" ry="3" fill="url(#gIL)"/>
+
+  <!-- Tallo + base rellenos — dorados -->
+  <path d="M96,124 L96,150 Q96,156 84,159 L72,161 L72,164 A30,8 0 0,0 128,164 L128,161 L116,159 Q104,156 104,150 L104,124 Z"
+        fill="url(#gIL)"/>
+
+  <!-- Destello principal (dorado sobre fondo claro) -->
+  <g transform="translate(132,32)" opacity="0.45">
+    <line x1="0" y1="-8" x2="0" y2="8" stroke="#C4A265" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="-8" y1="0" x2="8" y2="0" stroke="#C4A265" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="-4" y1="-4" x2="4" y2="4" stroke="#C4A265" stroke-width="0.8" stroke-linecap="round"/>
+    <line x1="4" y1="-4" x2="-4" y2="4" stroke="#C4A265" stroke-width="0.8" stroke-linecap="round"/>
+    <circle cx="0" cy="0" r="2" fill="#C4A265" opacity="0.35"/>
+  </g>
+
+  <!-- Destello secundario -->
+  <g transform="translate(72,30)" opacity="0.25">
+    <line x1="0" y1="-5" x2="0" y2="5" stroke="#C4A265" stroke-width="1" stroke-linecap="round"/>
+    <line x1="-5" y1="0" x2="5" y2="0" stroke="#C4A265" stroke-width="1" stroke-linecap="round"/>
+    <circle cx="0" cy="0" r="1.5" fill="#C4A265" opacity="0.3"/>
+  </g>
+
+  <circle cx="142" cy="50" r="1" fill="#C4A265" opacity="0.15"/>
+  <circle cx="60" cy="46" r="0.8" fill="#C4A265" opacity="0.12"/>
+  <circle cx="118" cy="24" r="0.8" fill="#C4A265" opacity="0.15"/>
+</svg>

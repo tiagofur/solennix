@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Solennix — Logo Vertical sobre fondo CLARO (Copa + Wordmark + Tagline apilados) -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 320">
+  <defs>
+    <!-- Dorado mas intenso para fondo claro -->
+    <linearGradient id="gVL" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#C4A265"/>
+      <stop offset="50%" stop-color="#B8965A"/>
+      <stop offset="100%" stop-color="#A6874E"/>
+    </linearGradient>
+    <linearGradient id="gVHL" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#A6874E"/>
+      <stop offset="50%" stop-color="#C4A265"/>
+      <stop offset="100%" stop-color="#A6874E"/>
+    </linearGradient>
+    <linearGradient id="liqVL" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#C4A265" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#C4A265" stop-opacity="0.02"/>
+    </linearGradient>
+    <radialGradient id="glowVL" cx="50%" cy="35%">
+      <stop offset="0%" stop-color="#C4A265" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#C4A265" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Wordmark en navy -->
+    <linearGradient id="tGVL" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#1B2A4A"/>
+      <stop offset="100%" stop-color="#0F1A2E"/>
+    </linearGradient>
+    <linearGradient id="lnGradVL" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#C4A265" stop-opacity="0"/>
+      <stop offset="20%" stop-color="#C4A265" stop-opacity="0.4"/>
+      <stop offset="50%" stop-color="#C4A265" stop-opacity="0.6"/>
+      <stop offset="80%" stop-color="#C4A265" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#C4A265" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Fondo crema -->
+  <rect width="280" height="320" rx="24" fill="#F5F0E8"/>
+
+  <!-- ═══ COPA CENTRADA (mas grande) ═══ -->
+  <g transform="translate(140,95) scale(1.15)">
+    <circle cx="0" cy="-22" r="58" fill="url(#glowVL)"/>
+
+    <!-- Bowl -->
+    <path d="M-34,-68 Q-42,-38 -34,-18 Q-22,8 0,14 Q22,8 34,-18 Q42,-38 34,-68"
+          fill="none" stroke="url(#gVL)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- Labio -->
+    <path d="M-34,-68 Q0,-60 34,-68" fill="none" stroke="url(#gVHL)" stroke-width="2.8" stroke-linecap="round"/>
+
+    <!-- Liquido -->
+    <path d="M-28,-42 Q0,-35 28,-42 L34,-68 Q0,-60 -34,-68 Z" fill="url(#liqVL)"/>
+    <path d="M-28,-42 Q0,-35 28,-42" fill="none" stroke="#B8965A" stroke-width="1" opacity="0.3"/>
+
+    <!-- Reflejo -->
+    <path d="M-26,-63 Q-28,-48 -26,-32" fill="none" stroke="#FFFFFF" stroke-width="1.5" opacity="0.35" stroke-linecap="round"/>
+
+    <!-- Nodo -->
+    <ellipse cx="0" cy="16" rx="4.5" ry="2.2" fill="none" stroke="url(#gVL)" stroke-width="1.8"/>
+
+    <!-- Tallo -->
+    <path d="M0,18 L0,38 Q0,42 -12,44 L-24,46"
+          fill="none" stroke="url(#gVL)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M0,18 L0,38 Q0,42 12,44 L24,46"
+          fill="none" stroke="url(#gVL)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- Base -->
+    <path d="M-24,46 A24,6 0 0,0 24,46"
+          fill="none" stroke="url(#gVHL)" stroke-width="2.5" stroke-linecap="round"/>
+
+    <!-- Destello principal -->
+    <g transform="translate(32,-70)" opacity="0.45">
+      <line x1="0" y1="-7" x2="0" y2="7" stroke="#C4A265" stroke-width="1.3" stroke-linecap="round"/>
+      <line x1="-7" y1="0" x2="7" y2="0" stroke="#C4A265" stroke-width="1.3" stroke-linecap="round"/>
+      <line x1="-3.5" y1="-3.5" x2="3.5" y2="3.5" stroke="#C4A265" stroke-width="0.7" stroke-linecap="round"/>
+      <line x1="3.5" y1="-3.5" x2="-3.5" y2="3.5" stroke="#C4A265" stroke-width="0.7" stroke-linecap="round"/>
+      <circle cx="0" cy="0" r="1.5" fill="#C4A265" opacity="0.35"/>
+    </g>
+
+    <!-- Destello secundario -->
+    <g transform="translate(-30,-72)" opacity="0.25">
+      <line x1="0" y1="-4" x2="0" y2="4" stroke="#C4A265" stroke-width="0.8" stroke-linecap="round"/>
+      <line x1="-4" y1="0" x2="4" y2="0" stroke="#C4A265" stroke-width="0.8" stroke-linecap="round"/>
+    </g>
+
+    <circle cx="38" cy="-52" r="0.8" fill="#C4A265" opacity="0.15"/>
+    <circle cx="-36" cy="-58" r="0.6" fill="#C4A265" opacity="0.12"/>
+  </g>
+
+  <!-- ═══ WORDMARK en navy ═══ -->
+  <text x="140" y="240" text-anchor="middle"
+        font-family="Cinzel, 'Playfair Display', Didot, 'Bodoni MT', Georgia, serif"
+        font-size="42"
+        font-weight="600"
+        letter-spacing="5"
+        fill="url(#tGVL)">Solennix</text>
+
+  <!-- Linea decorativa -->
+  <line x1="40" y1="254" x2="240" y2="254" stroke="url(#lnGradVL)" stroke-width="0.8"/>
+
+  <!-- Tagline -->
+  <text x="140" y="278" text-anchor="middle"
+        font-family="'Helvetica Neue', 'Segoe UI', Arial, sans-serif"
+        font-size="11.5"
+        font-weight="300"
+        letter-spacing="5"
+        fill="#6B7B8D">CADA DETALLE IMPORTA</text>
+</svg>
