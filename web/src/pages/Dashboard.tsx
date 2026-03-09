@@ -50,11 +50,11 @@ function SkeletonKpi() {
   return (
     <div className="bg-card border border-border rounded-3xl p-5 animate-pulse">
       <div className="flex items-start gap-4">
-        <div className="w-10 h-10 rounded-xl bg-gray-200 dark:bg-gray-700 shrink-0" />
+        <div className="w-10 h-10 rounded-xl bg-surface-alt shrink-0" />
         <div className="flex-1 space-y-2 pt-1">
-          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/3" />
-          <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
-          <div className="h-3 bg-gray-100 dark:bg-gray-800 rounded w-3/4" />
+          <div className="h-3 bg-surface-alt rounded w-2/3" />
+          <div className="h-6 bg-surface-alt rounded w-1/2" />
+          <div className="h-3 bg-surface rounded w-3/4" />
         </div>
       </div>
     </div>
@@ -63,14 +63,14 @@ function SkeletonKpi() {
 
 // ── Status badge ─────────────────────────────────────────────────
 const statusConfig: Record<string, { label: string; classes: string }> = {
-  quoted:    { label: "Cotizado",    classes: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400" },
-  confirmed: { label: "Confirmado",  classes: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400" },
-  completed: { label: "Completado",  classes: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400" },
-  cancelled: { label: "Cancelado",   classes: "bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400" },
+  quoted:    { label: "Cotizado",    classes: "bg-status-quoted/10 text-status-quoted" },
+  confirmed: { label: "Confirmado",  classes: "bg-status-confirmed/10 text-status-confirmed" },
+  completed: { label: "Completado",  classes: "bg-status-completed/10 text-status-completed" },
+  cancelled: { label: "Cancelado",   classes: "bg-status-cancelled/10 text-status-cancelled" },
 };
 
 function StatusBadge({ status }: { status: string }) {
-  const cfg = statusConfig[status] ?? { label: status, classes: "bg-gray-100 text-gray-500" };
+  const cfg = statusConfig[status] ?? { label: status, classes: "bg-surface-alt text-text-secondary" };
   return (
     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${cfg.classes}`}>
       {cfg.label}
@@ -231,10 +231,10 @@ export const Dashboard: React.FC = () => {
   const chartData = React.useMemo(() => {
     if (!eventsThisMonthList.length) return [];
     const statusData = [
-      { status: "quoted" as const,    name: "Cotizado",   value: 0, color: "#9CA3AF" },
-      { status: "confirmed" as const, name: "Confirmado", value: 0, color: "#3B82F6" },
-      { status: "completed" as const, name: "Completado", value: 0, color: "#10B981" },
-      { status: "cancelled" as const, name: "Cancelado",  value: 0, color: "#EF4444" },
+      { status: "quoted" as const,    name: "Cotizado",   value: 0, color: "var(--color-status-quoted)" },
+      { status: "confirmed" as const, name: "Confirmado", value: 0, color: "var(--color-status-confirmed)" },
+      { status: "completed" as const, name: "Completado", value: 0, color: "var(--color-status-completed)" },
+      { status: "cancelled" as const, name: "Cancelado",  value: 0, color: "var(--color-status-cancelled)" },
     ];
     eventsThisMonthList.forEach((event) => {
       const bucket = statusData.find((s) => s.status === event.status);
@@ -244,9 +244,9 @@ export const Dashboard: React.FC = () => {
   }, [eventsThisMonthList]);
 
   const financialComparisonData = React.useMemo(() => [
-    { name: "Ventas Netas",    value: netSalesThisMonth,       color: "#10B981" },
-    { name: "Cobrado Real",    value: cashCollectedThisMonth,  color: "#F97316" },
-    { name: "IVA por Cobrar",  value: vatOutstandingThisMonth, color: "#EF4444" },
+    { name: "Ventas Netas",    value: netSalesThisMonth,       color: "var(--color-success)" },
+    { name: "Cobrado Real",    value: cashCollectedThisMonth,  color: "var(--color-primary)" },
+    { name: "IVA por Cobrar",  value: vatOutstandingThisMonth, color: "var(--color-error)" },
   ], [netSalesThisMonth, cashCollectedThisMonth, vatOutstandingThisMonth]);
 
   const tooltipStyle = {
@@ -299,7 +299,7 @@ export const Dashboard: React.FC = () => {
 
       {/* ── ERROR ── */}
       {error && (
-        <div className="flex items-start gap-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 rounded-2xl p-4" role="alert">
+        <div className="flex items-start gap-3 bg-error/5 border border-error/30 text-error rounded-2xl p-4" role="alert">
           <AlertTriangle className="h-5 w-5 shrink-0 mt-0.5" aria-hidden="true" />
           <div className="flex-1 text-sm">{error}</div>
           <button
@@ -331,8 +331,8 @@ export const Dashboard: React.FC = () => {
           <>
             <KpiCard
               icon={TrendingUp}
-              iconBg="bg-emerald-100 dark:bg-emerald-900/30"
-              iconColor="text-emerald-600 dark:text-emerald-400"
+              iconBg="bg-success/10"
+              iconColor="text-success"
               label="Ventas netas"
               value={fmt(netSalesThisMonth)}
               sub="Eventos confirmados y completados"
@@ -347,16 +347,16 @@ export const Dashboard: React.FC = () => {
             />
             <KpiCard
               icon={FileCheck}
-              iconBg="bg-blue-100 dark:bg-blue-900/30"
-              iconColor="text-blue-600 dark:text-blue-400"
+              iconBg="bg-info/10"
+              iconColor="text-info"
               label="IVA cobrado"
               value={fmt(vatCollectedThisMonth)}
               sub="Proporcional al % pagado"
             />
             <KpiCard
               icon={AlertTriangle}
-              iconBg="bg-red-100 dark:bg-red-900/30"
-              iconColor="text-red-600 dark:text-red-400"
+              iconBg="bg-error/10"
+              iconColor="text-error"
               label="IVA pendiente"
               value={fmt(vatOutstandingThisMonth)}
               sub={<Link to="/calendar" className="font-semibold text-primary hover:underline">Ver eventos del mes</Link>}
@@ -371,8 +371,8 @@ export const Dashboard: React.FC = () => {
             />
             <KpiCard
               icon={Package}
-              iconBg={lowStockCount > 0 ? "bg-red-100 dark:bg-red-900/30" : "bg-emerald-100 dark:bg-emerald-900/30"}
-              iconColor={lowStockCount > 0 ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400"}
+              iconBg={lowStockCount > 0 ? "bg-error/10" : "bg-success/10"}
+              iconColor={lowStockCount > 0 ? "text-error" : "text-success"}
               label="Alertas de stock"
               value={lowStockCount > 0 ? `${lowStockCount} ítems bajos` : "Todo en orden"}
               sub={<Link to="/inventory" className="font-semibold text-primary hover:underline">Ver inventario</Link>}
@@ -464,11 +464,11 @@ export const Dashboard: React.FC = () => {
           <div className="bg-card shadow-sm border border-border rounded-3xl xl:col-span-2 overflow-hidden">
             <div className="flex items-center justify-between px-6 py-4 border-b border-border">
               <h3 className="text-base font-bold text-text flex items-center gap-2">
-                <span className="w-6 h-6 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center shrink-0">
-                  <AlertTriangle className="h-3.5 w-3.5 text-red-600 dark:text-red-400" aria-hidden="true" />
+                <span className="w-6 h-6 rounded-full bg-error/10 flex items-center justify-center shrink-0">
+                  <AlertTriangle className="h-3.5 w-3.5 text-error" aria-hidden="true" />
                 </span>
                 Inventario crítico
-                <span className="ml-1 text-xs font-semibold bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-0.5 rounded-full">
+                <span className="ml-1 text-xs font-semibold bg-error/10 text-error px-2 py-0.5 rounded-full">
                   {lowStockItems.length}
                 </span>
               </h3>
@@ -495,8 +495,8 @@ export const Dashboard: React.FC = () => {
                         <div className="text-xs text-text-secondary">Unidad: {item.unit}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-full text-xs font-bold">
-                          <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-error/10 text-error rounded-full text-xs font-bold">
+                          <span className="w-1.5 h-1.5 rounded-full bg-error animate-pulse" />
                           {item.current_stock} {item.unit}
                         </span>
                       </td>
@@ -529,14 +529,14 @@ export const Dashboard: React.FC = () => {
             <div className="divide-y divide-border">
               {Array.from({ length: 4 }).map((_, i) => (
                 <div key={i} className="flex items-center gap-4 px-6 py-4 animate-pulse">
-                  <div className="w-9 h-9 rounded-xl bg-gray-200 dark:bg-gray-700 shrink-0" />
+                  <div className="w-9 h-9 rounded-xl bg-surface-alt shrink-0" />
                   <div className="flex-1 space-y-2">
-                    <div className="h-3.5 bg-gray-200 dark:bg-gray-700 rounded w-1/3" />
-                    <div className="h-3 bg-gray-100 dark:bg-gray-800 rounded w-1/4" />
+                    <div className="h-3.5 bg-surface-alt rounded w-1/3" />
+                    <div className="h-3 bg-surface rounded w-1/4" />
                   </div>
-                  <div className="w-14 h-5 bg-gray-200 dark:bg-gray-700 rounded-full" />
-                  <div className="w-20 h-3 bg-gray-100 dark:bg-gray-800 rounded" />
-                  <div className="w-12 h-7 bg-gray-200 dark:bg-gray-700 rounded-xl" />
+                  <div className="w-14 h-5 bg-surface-alt rounded-full" />
+                  <div className="w-20 h-3 bg-surface rounded" />
+                  <div className="w-12 h-7 bg-surface-alt rounded-xl" />
                 </div>
               ))}
             </div>

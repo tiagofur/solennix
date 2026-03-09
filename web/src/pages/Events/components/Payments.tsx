@@ -130,7 +130,7 @@ export const Payments: React.FC<PaymentsProps> = ({
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {statusMessage && (
-        <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 flex items-center text-emerald-600 dark:text-emerald-400" role="status">
+        <div className="bg-success/10 border border-success/20 rounded-2xl p-4 flex items-center text-success" role="status">
           <CheckCircle className="h-5 w-5 mr-3 shrink-0" aria-hidden="true" />
           <p className="font-bold text-sm">{statusMessage}</p>
         </div>
@@ -181,25 +181,25 @@ export const Payments: React.FC<PaymentsProps> = ({
              <p className="text-[10px] font-black text-text-tertiary uppercase tracking-tighter mb-1">Total del Evento</p>
              <p className="text-2xl font-black text-text">${totalAmount.toFixed(2)}</p>
           </div>
-          <div className="bg-emerald-500/5 p-6 rounded-2xl border border-emerald-500/10">
-             <p className="text-[10px] font-black text-emerald-600/70 uppercase tracking-tighter mb-1">Total Pagado</p>
-             <p className="text-2xl font-black text-emerald-500">${totalPaid.toFixed(2)}</p>
+          <div className="bg-success/5 p-6 rounded-2xl border border-success/10">
+             <p className="text-[10px] font-black text-success/70 uppercase tracking-tighter mb-1">Total Pagado</p>
+             <p className="text-2xl font-black text-success">${totalPaid.toFixed(2)}</p>
           </div>
           <div className={clsx(
             "p-6 rounded-2xl border",
             balance > 0.01
               ? "bg-error/5 border-error/10"
-              : "bg-blue-500/5 border-blue-500/10"
+              : "bg-info/5 border-info/10"
           )}>
              <p className={clsx(
                "text-[10px] font-black uppercase tracking-tighter mb-1",
-               balance > 0.01 ? "text-error/70" : "text-blue-500/70"
+               balance > 0.01 ? "text-error/70" : "text-info/70"
              )}>
                {balance > 0.01 ? 'Saldo Pendiente' : 'Saldo Liquidado'}
              </p>
              <p className={clsx(
                "text-2xl font-black",
-               balance > 0.01 ? "text-error" : "text-blue-500"
+               balance > 0.01 ? "text-error" : "text-info"
              )}>
                ${Math.abs(balance).toFixed(2)}
              </p>
@@ -210,7 +210,7 @@ export const Payments: React.FC<PaymentsProps> = ({
           <div
             className={clsx(
               "h-full rounded-full transition-all duration-1000 ease-out",
-              isFullyPaid ? 'bg-emerald-500' : 'bg-primary'
+              isFullyPaid ? 'bg-success' : 'bg-primary'
             )}
             style={{ width: `${Math.min(progress, 100)}%` }}
             role="progressbar"
@@ -309,7 +309,7 @@ export const Payments: React.FC<PaymentsProps> = ({
                       <button
                         type="button"
                         onClick={() => setValue("amount", parseFloat(balance.toFixed(2)))}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 text-[9px] font-black bg-emerald-500 text-white rounded-md hover:bg-emerald-600 transition-colors uppercase"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 text-[9px] font-black bg-success text-white rounded-md hover:bg-success/90 transition-colors uppercase"
                       >
                         Saldo
                       </button>

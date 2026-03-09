@@ -55,7 +55,7 @@ export function ForgotPassword() {
   };
 
   return (
-    <div className="min-h-screen flex bg-white dark:bg-gray-950 transition-colors">
+    <div className="min-h-screen flex bg-card transition-colors">
       {/* ── LEFT PANEL ── */}
       <div className="hidden lg:flex lg:w-[45%] xl:w-[40%] premium-gradient flex-col relative overflow-hidden">
         <div className="absolute top-[-20%] right-[-20%] w-[60%] h-[60%] rounded-full bg-white/10 blur-3xl pointer-events-none" />
@@ -112,10 +112,10 @@ export function ForgotPassword() {
       {/* ── RIGHT PANEL ── */}
       <div className="flex-1 flex flex-col min-h-screen">
         {/* Top bar */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 dark:border-gray-800">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-border">
           <Link
             to="/login"
-            className="flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary transition-colors"
+            className="flex items-center gap-2 text-sm font-medium text-text-secondary hover:text-primary transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
             Volver al login
@@ -123,10 +123,10 @@ export function ForgotPassword() {
           <button
             type="button"
             onClick={toggleTheme}
-            className="p-2.5 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+            className="p-2.5 rounded-xl bg-surface-alt text-text-secondary hover:bg-surface-grouped transition-colors"
             aria-label={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
           >
-            {theme === 'dark' ? <Sun className="h-5 w-5 text-yellow-500" /> : <Moon className="h-5 w-5" />}
+            {theme === 'dark' ? <Sun className="h-5 w-5 text-warning" /> : <Moon className="h-5 w-5" />}
           </button>
         </div>
 
@@ -141,30 +141,30 @@ export function ForgotPassword() {
             {isSubmitted ? (
               /* ── SUCCESS STATE ── */
               <div className="text-center" role="status" aria-live="polite">
-                <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-emerald-100 dark:bg-emerald-900/30 mb-6">
-                  <CheckCircle className="h-10 w-10 text-emerald-600 dark:text-emerald-400" />
+                <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-success/10 mb-6">
+                  <CheckCircle className="h-10 w-10 text-success" />
                 </div>
 
-                <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-3 tracking-tight">
+                <h2 className="text-3xl font-black text-text mb-3 tracking-tight">
                   ¡Revisa tu correo!
                 </h2>
-                <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed mb-2">
+                <p className="text-text-secondary text-sm leading-relaxed mb-2">
                   Si existe una cuenta asociada a:
                 </p>
-                <p className="font-bold text-gray-900 dark:text-white text-sm mb-6 bg-gray-100 dark:bg-gray-800 inline-block px-4 py-2 rounded-xl">
+                <p className="font-bold text-text text-sm mb-6 bg-surface-alt inline-block px-4 py-2 rounded-xl">
                   {submittedEmail}
                 </p>
-                <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed mb-10">
-                  recibirás un enlace para restablecer tu contraseña. El enlace expira en <strong className="text-gray-700 dark:text-gray-300">24 horas</strong>.
+                <p className="text-text-secondary text-sm leading-relaxed mb-10">
+                  recibirás un enlace para restablecer tu contraseña. El enlace expira en <strong className="text-text">24 horas</strong>.
                 </p>
 
                 {/* Tips */}
-                <div className="bg-gray-50 dark:bg-gray-900 rounded-2xl p-5 text-left mb-8 border border-gray-100 dark:border-gray-800">
-                  <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-3">¿No ves el correo?</p>
-                  <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                <div className="bg-surface-alt rounded-2xl p-5 text-left mb-8 border border-border">
+                  <p className="text-xs font-bold text-text-secondary uppercase tracking-widest mb-3">¿No ves el correo?</p>
+                  <ul className="space-y-2 text-sm text-text-secondary">
                     <li className="flex items-start gap-2">
                       <span className="text-primary mt-0.5">•</span>
-                      Revisa tu carpeta de <strong className="text-gray-700 dark:text-gray-300">spam o correo no deseado</strong>
+                      Revisa tu carpeta de <strong className="text-text">spam o correo no deseado</strong>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-primary mt-0.5">•</span>
@@ -181,7 +181,7 @@ export function ForgotPassword() {
                   <button
                     type="button"
                     onClick={() => { setIsSubmitted(false); setError(null); }}
-                    className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                    className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl border border-border text-sm font-semibold text-text hover:bg-surface-alt transition-colors"
                   >
                     <RefreshCw className="h-4 w-4" />
                     Intentar con otro email
@@ -199,16 +199,16 @@ export function ForgotPassword() {
               /* ── FORM STATE ── */
               <>
                 <div className="mb-8">
-                  <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-2 tracking-tight">
+                  <h2 className="text-3xl font-black text-text mb-2 tracking-tight">
                     Recuperar contraseña
                   </h2>
-                  <p className="text-gray-500 dark:text-gray-400 text-sm">
+                  <p className="text-text-secondary text-sm">
                     Ingresa tu email y te enviamos un enlace para crear una nueva contraseña.
                   </p>
                 </div>
 
                 {error && (
-                  <div className="flex items-start gap-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 rounded-xl p-4 mb-6" role="alert">
+                  <div className="flex items-start gap-3 bg-error/5 border border-error/30 text-error rounded-xl p-4 mb-6" role="alert">
                     <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
                     <span className="text-sm">{error}</span>
                   </div>
@@ -216,12 +216,12 @@ export function ForgotPassword() {
 
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
                   <div>
-                    <label htmlFor="email" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                    <label htmlFor="email" className="block text-sm font-semibold text-text-secondary mb-1.5">
                       Correo electrónico
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <Mail className="h-5 w-5 text-gray-400" />
+                        <Mail className="h-5 w-5 text-text-tertiary" />
                       </div>
                       <input
                         id="email"
@@ -231,15 +231,15 @@ export function ForgotPassword() {
                         aria-required="true"
                         aria-invalid={errors.email ? 'true' : 'false'}
                         aria-describedby={errors.email ? 'email-error' : undefined}
-                        className={`w-full pl-11 pr-4 py-3.5 rounded-xl border text-sm transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary ${
+                        className={`w-full pl-11 pr-4 py-3.5 rounded-xl border text-sm transition-colors bg-card text-text placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary ${
                           errors.email
-                            ? 'border-red-400 dark:border-red-600'
-                            : 'border-gray-200 dark:border-gray-700'
+                            ? 'border-error/30'
+                            : 'border-border'
                         }`}
                       />
                     </div>
                     {errors.email && (
-                      <p id="email-error" className="mt-1.5 text-xs text-red-600 dark:text-red-400 flex items-center gap-1" role="alert">
+                      <p id="email-error" className="mt-1.5 text-xs text-error flex items-center gap-1" role="alert">
                         <AlertCircle className="h-3.5 w-3.5" /> {errors.email.message}
                       </p>
                     )}
@@ -265,7 +265,7 @@ export function ForgotPassword() {
                   </button>
                 </form>
 
-                <div className="mt-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                <div className="mt-8 text-center text-sm text-text-secondary">
                   ¿Recordaste tu contraseña?{' '}
                   <Link to="/login" className="font-semibold text-primary hover:underline">
                     Inicia sesión
@@ -273,8 +273,8 @@ export function ForgotPassword() {
                 </div>
 
                 {/* Trust badge */}
-                <div className="mt-6 flex items-center justify-center gap-2 text-xs text-gray-400 dark:text-gray-600">
-                  <Shield className="h-3.5 w-3.5 text-emerald-500" />
+                <div className="mt-6 flex items-center justify-center gap-2 text-xs text-text-tertiary">
+                  <Shield className="h-3.5 w-3.5 text-success" />
                   <span>Enlace seguro con expiración automática en 24 horas</span>
                 </div>
               </>
@@ -283,7 +283,7 @@ export function ForgotPassword() {
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-800 text-center text-xs text-gray-400 dark:text-gray-600">
+        <div className="px-6 py-4 border-t border-border text-center text-xs text-text-tertiary">
           © 2026 Eventos ·{' '}
           <Link to="/terms" className="hover:text-primary transition-colors">Términos</Link>
           {' · '}

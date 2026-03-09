@@ -44,7 +44,7 @@ export const EventSupplies: React.FC<EventSuppliesProps> = ({
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 mb-2">
-        <Fuel className="h-5 w-5 text-amber-500" />
+        <Fuel className="h-5 w-5 text-warning" />
         <h3 className="text-lg font-medium text-text">Insumos por Evento</h3>
       </div>
 
@@ -54,8 +54,8 @@ export const EventSupplies: React.FC<EventSuppliesProps> = ({
 
       {/* Auto-suggestions from products */}
       {availableSuggestions.length > 0 && (
-        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-300/30 dark:border-amber-700/30 rounded-xl p-4">
-          <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-medium text-sm mb-2">
+        <div className="bg-warning/10 border border-warning/30 rounded-xl p-4">
+          <div className="flex items-center gap-2 text-warning font-medium text-sm mb-2">
             <Lightbulb className="h-4 w-4" />
             Insumos sugeridos por tus productos
           </div>
@@ -65,7 +65,7 @@ export const EventSupplies: React.FC<EventSuppliesProps> = ({
                 key={s.id}
                 type="button"
                 onClick={() => onQuickAddSuggestion(s.id, s.suggested_quantity, s.unit_cost)}
-                className="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-amber-500/10 text-amber-700 dark:text-amber-300 rounded-lg hover:bg-amber-500/20 transition-colors"
+                className="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-warning/10 text-warning rounded-lg hover:bg-warning/20 transition-colors"
               >
                 <Plus className="h-3 w-3" />
                 {s.ingredient_name} ×{s.suggested_quantity} (${s.unit_cost}/{s.unit})
@@ -178,7 +178,7 @@ export const EventSupplies: React.FC<EventSuppliesProps> = ({
                 <span className={`text-sm font-semibold ${
                   item.exclude_cost
                     ? 'line-through text-text-tertiary'
-                    : 'text-amber-600 dark:text-amber-400'
+                    : 'text-warning'
                 }`}>
                   ${(item.quantity * item.unit_cost).toFixed(2)}
                 </span>
@@ -189,8 +189,8 @@ export const EventSupplies: React.FC<EventSuppliesProps> = ({
               <div className="mt-2">
                 <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium ${
                   inventoryItem.current_stock >= item.quantity
-                    ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800'
-                    : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800'
+                    ? 'bg-success/10 text-success border border-success/20'
+                    : 'bg-error/10 text-error border border-error/20'
                 }`}>
                   Stock: {inventoryItem.current_stock} {inventoryItem.unit}
                   {inventoryItem.current_stock < item.quantity && ' — Insuficiente'}
@@ -214,7 +214,7 @@ export const EventSupplies: React.FC<EventSuppliesProps> = ({
           <span className="text-sm text-text-secondary">
             Costo total insumos por evento
           </span>
-          <span className="text-lg font-bold text-amber-600 dark:text-amber-400">
+          <span className="text-lg font-bold text-warning">
             ${totalSupplyCost.toFixed(2)}
           </span>
         </div>

@@ -139,17 +139,17 @@ export const ProductDetails: React.FC = () => {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <div className="h-9 w-9 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse" />
+          <div className="h-9 w-9 rounded-full bg-surface-alt animate-pulse" />
           <div className="space-y-1">
-            <div className="h-7 w-48 rounded-md bg-gray-200 dark:bg-gray-700 animate-pulse" />
-            <div className="h-5 w-20 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse" />
+            <div className="h-7 w-48 rounded-md bg-surface-alt animate-pulse" />
+            <div className="h-5 w-20 rounded-full bg-surface-alt animate-pulse" />
           </div>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="bg-card rounded-3xl border border-border p-5">
-              <div className="h-3 w-20 rounded-md bg-gray-200 dark:bg-gray-700 animate-pulse mb-3" />
-              <div className="h-8 w-16 rounded-md bg-gray-200 dark:bg-gray-700 animate-pulse" />
+              <div className="h-3 w-20 rounded-md bg-surface-alt animate-pulse mb-3" />
+              <div className="h-8 w-16 rounded-md bg-surface-alt animate-pulse" />
             </div>
           ))}
         </div>
@@ -279,10 +279,10 @@ export const ProductDetails: React.FC = () => {
           className={clsx(
             "rounded-3xl border p-5 shadow-sm",
             margin >= 50
-              ? "bg-green-500/5 border-green-500/20"
+              ? "bg-success/5 border-success/20"
               : margin >= 20
                 ? "bg-card border-border"
-                : "bg-amber-500/5 border-amber-500/20",
+                : "bg-warning/5 border-warning/20",
           )}
         >
           <div className="flex items-center gap-2 mb-2">
@@ -290,10 +290,10 @@ export const ProductDetails: React.FC = () => {
               className={clsx(
                 "h-4 w-4",
                 margin >= 50
-                  ? "text-green-500"
+                  ? "text-success"
                   : margin >= 20
                     ? "text-primary"
-                    : "text-amber-500",
+                    : "text-warning",
               )}
             />
             <p className="text-xs text-text-secondary uppercase tracking-wide">Margen Est.</p>
@@ -302,10 +302,10 @@ export const ProductDetails: React.FC = () => {
             className={clsx(
               "text-3xl font-black",
               margin >= 50
-                ? "text-green-600 dark:text-green-400"
+                ? "text-success"
                 : margin >= 20
                   ? "text-text"
-                  : "text-amber-600 dark:text-amber-400",
+                  : "text-warning",
             )}
           >
             {margin.toFixed(1)}%
@@ -319,7 +319,7 @@ export const ProductDetails: React.FC = () => {
             <p className="text-xs text-text-secondary uppercase tracking-wide">Próximos Eventos</p>
           </div>
           {demandLoading ? (
-            <div className="h-8 w-10 rounded-md bg-gray-200 dark:bg-gray-700 animate-pulse" />
+            <div className="h-8 w-10 rounded-md bg-surface-alt animate-pulse" />
           ) : (
             <p className="text-3xl font-black text-text">{demandForecast.length}</p>
           )}
@@ -396,7 +396,7 @@ export const ProductDetails: React.FC = () => {
                 {demand7Days > 0 ? (
                   <AlertTriangle className="h-6 w-6 text-primary shrink-0 mt-0.5" />
                 ) : (
-                  <CheckCircle className="h-6 w-6 text-green-500 shrink-0 mt-0.5" />
+                  <CheckCircle className="h-6 w-6 text-success shrink-0 mt-0.5" />
                 )}
                 <div className="flex-1">
                   <p
@@ -404,7 +404,7 @@ export const ProductDetails: React.FC = () => {
                       "font-semibold text-sm",
                       demand7Days > 0
                         ? "text-primary"
-                        : "text-green-600 dark:text-green-400",
+                        : "text-success",
                     )}
                   >
                     {demand7Days > 0
@@ -481,7 +481,7 @@ export const ProductDetails: React.FC = () => {
                         isUrgent
                           ? "bg-primary/5 border-primary/20"
                           : diffDays <= 7
-                            ? "bg-amber-500/5 border-amber-500/20"
+                            ? "bg-warning/5 border-warning/20"
                             : "bg-surface-alt border-border",
                       )}
                     >
@@ -492,7 +492,7 @@ export const ProductDetails: React.FC = () => {
                             isUrgent
                               ? "bg-primary"
                               : diffDays <= 7
-                                ? "bg-amber-500"
+                                ? "bg-warning"
                                 : "bg-primary/40",
                           )}
                         />
@@ -510,7 +510,7 @@ export const ProductDetails: React.FC = () => {
                               </span>
                             )}
                             {diffDays === 1 && (
-                              <span className="text-xs bg-amber-500/10 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded-md">
+                              <span className="text-xs bg-warning/10 text-warning px-1.5 py-0.5 rounded-md">
                                 Mañana
                               </span>
                             )}
@@ -662,10 +662,10 @@ export const ProductDetails: React.FC = () => {
             <div className="bg-card rounded-3xl border border-border overflow-hidden shadow-sm">
               <div className="p-6 border-b border-border flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Fuel className="h-5 w-5 text-amber-500" />
+                  <Fuel className="h-5 w-5 text-warning" />
                   <h2 className="text-lg font-semibold text-text">Insumos por Evento</h2>
                 </div>
-                <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+                <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-warning/10 text-warning">
                   Costo fijo por evento
                 </span>
               </div>
@@ -705,7 +705,7 @@ export const ProductDetails: React.FC = () => {
                           </span>
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <span className="text-sm font-medium text-amber-600 dark:text-amber-400">
+                          <span className="text-sm font-medium text-warning">
                             {ing.unit_cost
                               ? `$${(ing.quantity_required * ing.unit_cost).toLocaleString("es-MX", { minimumFractionDigits: 2 })}`
                               : "—"}
@@ -717,7 +717,7 @@ export const ProductDetails: React.FC = () => {
               </table>
               <div className="px-6 py-4 border-t border-border flex justify-between items-center">
                 <span className="text-sm text-text-secondary">Costo por Evento (Insumos Fijos)</span>
-                <span className="text-lg font-bold text-amber-600 dark:text-amber-400">
+                <span className="text-lg font-bold text-warning">
                   ${ingredients
                     .filter((i: any) => i.type === "supply")
                     .reduce((sum: number, ing: any) => sum + ing.quantity_required * (ing.unit_cost || 0), 0)
@@ -732,10 +732,10 @@ export const ProductDetails: React.FC = () => {
             <div className="bg-card rounded-3xl border border-border overflow-hidden shadow-sm">
               <div className="p-6 border-b border-border flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Wrench className="h-5 w-5 text-blue-500" />
+                  <Wrench className="h-5 w-5 text-info" />
                   <h2 className="text-lg font-semibold text-text">Equipo Necesario</h2>
                 </div>
-                <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-info/10 text-info">
                   Sin costo - Reutilizable
                 </span>
               </div>

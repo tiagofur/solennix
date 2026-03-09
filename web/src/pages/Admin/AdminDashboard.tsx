@@ -85,25 +85,25 @@ export const AdminDashboard: React.FC = () => {
 
   const planDistribution = stats
     ? [
-        { name: 'Basic', value: stats.basic_users, color: '#9CA3AF' },
-        { name: 'Pro', value: stats.pro_users, color: '#F97316' },
-        { name: 'Premium', value: stats.premium_users, color: '#8B5CF6' },
+        { name: 'Basic', value: stats.basic_users, color: 'var(--color-text-tertiary)' },
+        { name: 'Pro', value: stats.pro_users, color: 'var(--color-primary)' },
+        { name: 'Premium', value: stats.premium_users, color: 'var(--color-info)' },
       ].filter((d) => d.value > 0)
     : [];
 
   const signupData = stats
     ? [
-        { name: 'Hoy', value: stats.new_users_today, color: '#10B981' },
-        { name: 'Semana', value: stats.new_users_week, color: '#3B82F6' },
-        { name: 'Mes', value: stats.new_users_month, color: '#F97316' },
+        { name: 'Hoy', value: stats.new_users_today, color: 'var(--color-success)' },
+        { name: 'Semana', value: stats.new_users_week, color: 'var(--color-info)' },
+        { name: 'Mes', value: stats.new_users_month, color: 'var(--color-warning)' },
       ]
     : [];
 
   const getPlanBadge = (plan: string) => {
     const styles: Record<string, string> = {
-      basic: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300',
-      pro: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
-      premium: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+      basic: 'bg-surface-alt text-text-secondary',
+      pro: 'bg-primary/10 text-primary',
+      premium: 'bg-purple-500/10 text-purple-500',
     };
     return (
       <span
@@ -151,7 +151,7 @@ export const AdminDashboard: React.FC = () => {
 
       {error && (
         <div
-          className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-400 p-4 rounded-r-xl"
+          className="bg-error/5 border-l-4 border-error p-4 rounded-r-xl"
           role="alert"
         >
           <p className="text-sm text-error">{error}</p>
@@ -163,14 +163,14 @@ export const AdminDashboard: React.FC = () => {
         {/* Total Usuarios */}
         <div className="bg-card rounded-3xl border border-border p-5 shadow-sm">
           <div className="flex items-center gap-2 mb-2">
-            <Users className="h-4 w-4 text-blue-500" />
+            <Users className="h-4 w-4 text-info" />
             <p className="text-xs text-text-secondary uppercase tracking-wide">Total Usuarios</p>
           </div>
           <p className="text-3xl font-black text-text">
             {loading ? '...' : stats?.total_users ?? 0}
           </p>
           <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-            <span className="text-xs bg-green-500/10 text-green-600 dark:text-green-400 px-1.5 py-0.5 rounded-md flex items-center gap-1">
+            <span className="text-xs bg-success/10 text-success px-1.5 py-0.5 rounded-md flex items-center gap-1">
               <UserPlus className="h-3 w-3" />
               +{loading ? '...' : stats?.new_users_today ?? 0} hoy
             </span>
@@ -328,7 +328,7 @@ export const AdminDashboard: React.FC = () => {
           <div className="h-56">
             {loading ? (
               <div className="h-full flex items-center justify-center">
-                <RefreshCw className="h-8 w-8 animate-spin text-gray-300" />
+                <RefreshCw className="h-8 w-8 animate-spin text-text-tertiary" />
               </div>
             ) : planDistribution.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
@@ -382,7 +382,7 @@ export const AdminDashboard: React.FC = () => {
           <div className="h-56">
             {loading ? (
               <div className="h-full flex items-center justify-center">
-                <RefreshCw className="h-8 w-8 animate-spin text-gray-300" />
+                <RefreshCw className="h-8 w-8 animate-spin text-text-tertiary" />
               </div>
             ) : (
               <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
@@ -397,12 +397,12 @@ export const AdminDashboard: React.FC = () => {
                     dataKey="name"
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fill: '#6B7280', fontSize: 12 }}
+                    tick={{ fill: 'var(--color-text-tertiary)', fontSize: 12 }}
                   />
                   <YAxis
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fill: '#6B7280', fontSize: 12 }}
+                    tick={{ fill: 'var(--color-text-tertiary)', fontSize: 12 }}
                     allowDecimals={false}
                   />
                   <Tooltip
@@ -431,7 +431,7 @@ export const AdminDashboard: React.FC = () => {
           </h3>
           {loading ? (
             <div className="h-56 flex items-center justify-center">
-              <RefreshCw className="h-8 w-8 animate-spin text-gray-300" />
+              <RefreshCw className="h-8 w-8 animate-spin text-text-tertiary" />
             </div>
           ) : subs ? (
             <div className="space-y-4">
@@ -444,12 +444,12 @@ export const AdminDashboard: React.FC = () => {
                   <div className="text-2xl font-bold text-error">{subs.total_canceled}</div>
                   <div className="text-xs text-text-secondary mt-1">Canceladas</div>
                 </div>
-                <div className="bg-blue-500/5 border border-blue-500/20 rounded-2xl p-4 text-center">
-                  <div className="text-2xl font-bold text-blue-500">{subs.total_trialing}</div>
+                <div className="bg-info/5 border border-info/20 rounded-2xl p-4 text-center">
+                  <div className="text-2xl font-bold text-info">{subs.total_trialing}</div>
                   <div className="text-xs text-text-secondary mt-1">Trial</div>
                 </div>
-                <div className="bg-yellow-500/5 border border-yellow-500/20 rounded-2xl p-4 text-center">
-                  <div className="text-2xl font-bold text-yellow-500">{subs.total_past_due}</div>
+                <div className="bg-warning/5 border border-warning/20 rounded-2xl p-4 text-center">
+                  <div className="text-2xl font-bold text-warning">{subs.total_past_due}</div>
                   <div className="text-xs text-text-secondary mt-1">Vencidas</div>
                 </div>
               </div>
@@ -460,8 +460,8 @@ export const AdminDashboard: React.FC = () => {
                 <div className="space-y-2">
                   {[
                     { name: 'Stripe', count: subs.stripe_count, color: 'bg-purple-500' },
-                    { name: 'Apple', count: subs.apple_count, color: 'bg-gray-800' },
-                    { name: 'Google', count: subs.google_count, color: 'bg-green-500' },
+                    { name: 'Apple', count: subs.apple_count, color: 'bg-text' },
+                    { name: 'Google', count: subs.google_count, color: 'bg-success' },
                   ].map((p) => (
                     <div key={p.name} className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2">
@@ -585,7 +585,7 @@ export const AdminDashboard: React.FC = () => {
             <div className="text-sm text-text-secondary mt-2">Nuevos hoy</div>
           </div>
           <div className="text-center p-6 bg-surface-alt rounded-2xl border border-border">
-            <div className="text-3xl font-bold text-blue-500">
+            <div className="text-3xl font-bold text-info">
               {loading ? '...' : stats?.new_users_week ?? 0}
             </div>
             <div className="text-sm text-text-secondary mt-2">Últimos 7 días</div>
@@ -613,10 +613,10 @@ export const AdminDashboard: React.FC = () => {
               </>
             ) : (
               <>
-                <TrendingDown className="h-4 w-4 text-amber-500" />
+                <TrendingDown className="h-4 w-4 text-warning" />
                 <p className="text-sm text-text-secondary">
                   Crecimiento{' '}
-                  <span className="font-semibold text-amber-600 dark:text-amber-400">
+                  <span className="font-semibold text-warning">
                     por debajo
                   </span>{' '}
                   del promedio semanal del mes ({Math.round(stats.new_users_month / 4)}{' '}

@@ -43,12 +43,12 @@ const activityScore = (u: AdminUser) =>
 const getActivityBadge = (u: AdminUser) => {
   const score = activityScore(u);
   if (score === 0)
-    return { label: 'Sin actividad', cls: 'bg-gray-100 text-gray-500 dark:bg-gray-700/60 dark:text-gray-400' };
+    return { label: 'Sin actividad', cls: 'bg-surface-alt text-text-secondary' };
   if (score <= 5)
-    return { label: 'Baja', cls: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' };
+    return { label: 'Baja', cls: 'bg-info/10 text-info' };
   if (score <= 20)
-    return { label: 'Media', cls: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400' };
-  return { label: 'Alta', cls: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400' };
+    return { label: 'Media', cls: 'bg-warning/10 text-warning' };
+  return { label: 'Alta', cls: 'bg-success/10 text-success' };
 };
 
 // Returns human-readable expiry label for a gift plan
@@ -56,8 +56,8 @@ const getExpiryLabel = (expiresAt: string) => {
   const date = parseISO(expiresAt);
   if (isPast(date)) return { text: 'Expirado', cls: 'text-error', urgent: true };
   const days = differenceInDays(date, new Date());
-  if (days === 0) return { text: 'Expira hoy', cls: 'text-amber-600 dark:text-amber-400', urgent: true };
-  if (days <= 7) return { text: `Expira en ${days}d`, cls: 'text-amber-600 dark:text-amber-400', urgent: true };
+  if (days === 0) return { text: 'Expira hoy', cls: 'text-warning', urgent: true };
+  if (days <= 7) return { text: `Expira en ${days}d`, cls: 'text-warning', urgent: true };
   return {
     text: `Hasta ${format(date, 'd MMM yy', { locale: es })}`,
     cls: 'text-text-secondary',
@@ -237,9 +237,9 @@ export const AdminUsers: React.FC = () => {
 
   const getPlanBadge = (plan: string) => {
     const styles: Record<string, string> = {
-      basic: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
-      pro: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
-      premium: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+      basic: 'bg-surface-alt text-text-secondary',
+      pro: 'bg-primary/10 text-primary',
+      premium: 'bg-purple-500/10 text-purple-500',
     };
     return (
       <span className={clsx('inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold', styles[plan] || styles.basic)}>
@@ -287,7 +287,7 @@ export const AdminUsers: React.FC = () => {
               <label className="text-xs font-semibold text-text-secondary uppercase tracking-wider block mb-2">
                 Plan a regalar
               </label>
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-orange-400 bg-orange-50 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300 text-sm font-semibold">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-primary/40 bg-primary/10 text-primary text-sm font-semibold">
                 <Crown className="h-4 w-4" />
                 Pro
               </div>
@@ -325,7 +325,7 @@ export const AdminUsers: React.FC = () => {
             </div>
 
             {/* Info note */}
-            <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl px-4 py-3 text-xs text-amber-700 dark:text-amber-400 flex items-start gap-2">
+            <div className="bg-warning/5 border border-warning/20 rounded-xl px-4 py-3 text-xs text-warning flex items-start gap-2">
               <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
               <span>
                 {gift.noExpiry
@@ -371,7 +371,7 @@ export const AdminUsers: React.FC = () => {
           >
             <ArrowLeft className="h-5 w-5" />
           </Link>
-          <div className="h-10 w-10 bg-linear-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
+          <div className="h-10 w-10 bg-linear-to-br from-info to-info/80 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-info/20">
             <Users className="h-5 w-5" aria-hidden="true" />
           </div>
           <div>
@@ -403,7 +403,7 @@ export const AdminUsers: React.FC = () => {
       </div>
 
       {error && (
-        <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-400 p-4 rounded-r-xl" role="alert">
+        <div className="bg-error/5 border-l-4 border-error p-4 rounded-r-xl" role="alert">
           <p className="text-sm text-error flex items-center gap-2">
             <AlertTriangle className="h-4 w-4" /> {error}
           </p>
@@ -417,7 +417,7 @@ export const AdminUsers: React.FC = () => {
             { label: 'Activos (con actividad)', value: users.filter((u) => activityScore(u) > 0).length, cls: 'bg-success/10 text-success border-success/20' },
             { label: 'Sin actividad', value: users.filter((u) => activityScore(u) === 0).length, cls: 'bg-surface-alt text-text-secondary border-border' },
             { label: 'Con suscripción pagada', value: users.filter((u) => u.has_paid_subscription).length, cls: 'bg-primary/10 text-primary border-primary/20' },
-            { label: 'Planes regalo activos', value: users.filter((u) => u.plan_expires_at && !isPast(parseISO(u.plan_expires_at))).length, cls: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20' },
+            { label: 'Planes regalo activos', value: users.filter((u) => u.plan_expires_at && !isPast(parseISO(u.plan_expires_at))).length, cls: 'bg-warning/10 text-warning border-warning/20' },
           ].map((chip) => (
             <div key={chip.label} className={clsx('inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border', chip.cls)}>
               <span className="font-black text-sm">{chip.value}</span>
@@ -431,7 +431,7 @@ export const AdminUsers: React.FC = () => {
       <div className="bg-card shadow-sm border border-border rounded-3xl p-5">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" aria-hidden="true" />
+            <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-text-secondary" aria-hidden="true" />
             <input
               type="search"
               value={searchQuery}
@@ -499,14 +499,14 @@ export const AdminUsers: React.FC = () => {
               {loading ? (
                 <tr>
                   <td colSpan={8} className="px-6 py-12 text-center">
-                    <RefreshCw className="h-8 w-8 animate-spin text-gray-300 mx-auto" />
+                    <RefreshCw className="h-8 w-8 animate-spin text-text-tertiary mx-auto" />
                     <p className="text-sm text-text-secondary mt-2">Cargando usuarios...</p>
                   </td>
                 </tr>
               ) : sortedUsers.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="px-6 py-12 text-center">
-                    <Users className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                    <Users className="h-12 w-12 text-text-tertiary mx-auto mb-3" />
                     <p className="text-sm text-text-secondary">
                       {searchQuery || planFilter !== 'all'
                         ? 'No se encontraron usuarios con esos filtros.'
@@ -526,14 +526,14 @@ export const AdminUsers: React.FC = () => {
                       {/* User info */}
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="h-9 w-9 rounded-xl bg-linear-to-br from-primary to-orange-400 flex items-center justify-center text-white font-bold text-sm shadow-sm shrink-0">
+                          <div className="h-9 w-9 rounded-xl bg-linear-to-br from-primary to-primary-light flex items-center justify-center text-white font-bold text-sm shadow-sm shrink-0">
                             {user.name.charAt(0).toUpperCase()}
                           </div>
                           <div className="min-w-0">
                             <div className="text-sm font-semibold text-text truncate flex items-center gap-1.5">
                               {user.name}
                               {user.role === 'admin' && (
-                                <Shield className="h-3.5 w-3.5 text-red-500 shrink-0" aria-label="Admin" />
+                                <Shield className="h-3.5 w-3.5 text-error shrink-0" aria-label="Admin" />
                               )}
                             </div>
                             <div className="text-xs text-text-secondary truncate">{user.email}</div>
@@ -550,7 +550,7 @@ export const AdminUsers: React.FC = () => {
                           <div className="flex items-center gap-1.5">
                             {getPlanBadge(user.plan)}
                             {isGifted && (
-                              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-xs font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-xs font-medium bg-warning/10 text-warning border border-warning/20">
                                 <Gift className="h-3 w-3" />
                                 Regalo
                               </span>
@@ -614,7 +614,7 @@ export const AdminUsers: React.FC = () => {
                               type="button"
                               onClick={() => openGiftDialog(user)}
                               disabled={saving === user.id}
-                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold bg-amber-500/10 text-amber-600 hover:bg-amber-500 hover:text-white dark:text-amber-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold bg-warning/10 text-warning hover:bg-warning hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                               title="Extender o cambiar el regalo"
                             >
                               {saving === user.id ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Gift className="h-3 w-3" />}
@@ -628,7 +628,7 @@ export const AdminUsers: React.FC = () => {
                               type="button"
                               onClick={() => handleDowngrade(user)}
                               disabled={saving === user.id}
-                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold bg-surface-alt text-text-secondary hover:bg-border transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               {saving === user.id && <RefreshCw className="h-3 w-3 animate-spin" />}
                               Rebajar

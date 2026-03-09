@@ -106,7 +106,7 @@ export const Pricing: React.FC = () => {
             <ul className="space-y-4">
               {featuresFree.map((feature, i) => (
                 <li key={i} className="flex items-start">
-                  <CheckCircle className="h-6 w-6 text-green-500 shrink-0 mr-3" aria-hidden="true" />
+                  <CheckCircle className="h-6 w-6 text-success shrink-0 mr-3" aria-hidden="true" />
                   <span className="text-text-secondary">{feature}</span>
                 </li>
               ))}
@@ -115,14 +115,14 @@ export const Pricing: React.FC = () => {
         </div>
 
         {/* Pro Plan */}
-        <div className="bg-linear-to-br from-primary via-primary-dark to-[#8a724d] rounded-2xl shadow-2xl overflow-hidden flex flex-col transform transition-all hover:-translate-y-1 relative" style={{background: 'linear-gradient(135deg, #C4A265 0%, #B8965A 45%, #0F1A2E 100%)'}}>
+        <div className="bg-linear-to-br from-primary via-primary-dark to-accent rounded-2xl shadow-2xl overflow-hidden flex flex-col transform transition-all hover:-translate-y-1 relative" style={{background: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 45%, var(--color-accent) 100%)'}}>
           <div className="absolute top-0 right-0 bg-white/25 backdrop-blur-sm text-white text-xs font-bold px-4 py-1.5 rounded-bl-xl uppercase tracking-widest">
             Recomendado
           </div>
           <div className="p-8 sm:p-10">
             <div className="flex items-center mb-2">
               <h3 className="text-2xl font-semibold text-white">Pro</h3>
-              <Star className="h-5 w-5 text-yellow-400 ml-2 fill-current" aria-hidden="true" />
+              <Star className="h-5 w-5 text-warning ml-2 fill-current" aria-hidden="true" />
             </div>
             <p className="text-primary-light mb-4">Todas las herramientas para escalar tu negocio sin límites.</p>
             {/* Promo badge */}
@@ -160,7 +160,7 @@ export const Pricing: React.FC = () => {
               >
                 {loading ? 'Procesando...' : (
                   <>
-                    <Zap className="h-5 w-5 text-yellow-500" aria-hidden="true" />
+                    <Zap className="h-5 w-5 text-warning" aria-hidden="true" />
                     Comenzar ahora <ArrowRight className="h-4 w-4" aria-hidden="true" />
                   </>
                 )}

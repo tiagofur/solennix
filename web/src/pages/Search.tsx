@@ -132,7 +132,7 @@ export const SearchPage: React.FC = () => {
         <section className="bg-card rounded-lg shadow-xs border border-border overflow-hidden mt-6">
           <div className="px-4 py-3 border-b border-border bg-surface-alt flex items-center justify-between">
             <h2 className="font-semibold text-text flex items-center">
-              <Users className="h-4 w-4 mr-2 text-blue-500" aria-hidden="true" />
+              <Users className="h-4 w-4 mr-2 text-info" aria-hidden="true" />
               Clientes ({results.client.length})
             </h2>
           </div>

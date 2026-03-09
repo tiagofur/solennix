@@ -47,7 +47,7 @@ export default function EventPaymentSuccess() {
     return (
       <div className="max-w-2xl mx-auto mt-12 p-8 text-center">
         <Loader2 className="w-16 h-16 mx-auto mb-4 text-primary animate-spin" />
-        <h2 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">
+        <h2 className="text-2xl font-bold mb-2 text-text">
           Verificando pago...
         </h2>
         <p className="text-text-secondary">
@@ -85,22 +85,22 @@ export default function EventPaymentSuccess() {
       <div
         className={`border rounded-lg p-8 text-center ${
           isSuccess
-            ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
-            : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800'
+            ? 'bg-success/10 border-success/30'
+            : 'bg-warning/10 border-warning/30'
         }`}
       >
         {isSuccess ? (
           <>
-            <CheckCircle className="w-20 h-20 mx-auto mb-4 text-green-600 dark:text-green-400" />
-            <h1 className="text-3xl font-bold mb-2 text-green-900 dark:text-green-300">
+            <CheckCircle className="w-20 h-20 mx-auto mb-4 text-success" />
+            <h1 className="text-3xl font-bold mb-2 text-success">
               ¡Pago Exitoso!
             </h1>
-            <p className="text-lg text-green-700 dark:text-green-400 mb-6">
+            <p className="text-lg text-success/80 mb-6">
               Tu pago ha sido procesado correctamente
             </p>
 
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 mb-6 text-left">
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-4">
+            <div className="bg-card rounded-lg p-6 mb-6 text-left">
+              <h3 className="font-semibold text-text mb-4">
                 Detalles del Pago
               </h3>
               <div className="space-y-2 text-text-secondary">
@@ -110,7 +110,7 @@ export default function EventPaymentSuccess() {
                 </div>
                 <div className="flex justify-between">
                   <span>Estado:</span>
-                  <span className="font-bold text-green-600 dark:text-green-400">Pagado</span>
+                  <span className="font-bold text-success">Pagado</span>
                 </div>
                 {paymentDetails.email && (
                   <div className="flex justify-between">
@@ -128,7 +128,7 @@ export default function EventPaymentSuccess() {
 
               <Link
                 to={`/events/${id}/summary`}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-semibold"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-success hover:bg-success/90 text-white rounded-lg transition-colors font-semibold"
               >
                 Ver detalles del evento
               </Link>
@@ -136,7 +136,7 @@ export default function EventPaymentSuccess() {
               <div className="pt-4">
                 <Link
                   to="/events"
-                  className="text-green-700 dark:text-green-400 hover:underline"
+                  className="text-success hover:underline"
                 >
                   Volver a la lista de eventos
                 </Link>
@@ -145,17 +145,17 @@ export default function EventPaymentSuccess() {
           </>
         ) : (
           <>
-            <XCircle className="w-20 h-20 mx-auto mb-4 text-yellow-600 dark:text-yellow-400" />
-            <h1 className="text-3xl font-bold mb-2 text-yellow-900 dark:text-yellow-300">
+            <XCircle className="w-20 h-20 mx-auto mb-4 text-warning" />
+            <h1 className="text-3xl font-bold mb-2 text-warning">
               Pago Pendiente
             </h1>
-            <p className="text-lg text-yellow-700 dark:text-yellow-400 mb-6">
+            <p className="text-lg text-warning/80 mb-6">
               El pago está siendo procesado. Por favor espera unos minutos.
             </p>
 
             <Link
               to={`/events/${id}/summary`}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg transition-colors font-semibold"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-warning hover:bg-warning/90 text-white rounded-lg transition-colors font-semibold"
             >
               <ArrowLeft className="w-5 h-5" />
               Volver al evento

@@ -470,8 +470,8 @@ export const InventoryList: React.FC = () => {
           {/* Insumos por Evento Section */}
           <section>
             <div className="flex items-center gap-3 mb-3">
-              <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-amber-500/10">
-                <Fuel className="h-5 w-5 text-amber-500" aria-hidden="true" />
+              <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-warning/10">
+                <Fuel className="h-5 w-5 text-warning" aria-hidden="true" />
               </div>
               <div>
                 <h2 className="text-lg font-semibold text-text">Insumos por Evento</h2>

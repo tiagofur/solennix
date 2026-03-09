@@ -6,7 +6,7 @@ export const NotFound: React.FC = () => {
   return (
     <div className="min-h-screen bg-surface-alt flex items-center justify-center px-4">
       <div className="max-w-md w-full bg-card border border-border rounded-xl shadow-xs p-8 text-center">
-        <div className="mx-auto w-12 h-12 rounded-full bg-orange-50 dark:bg-orange-500/10 flex items-center justify-center" aria-hidden="true">
+        <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center" aria-hidden="true">
           <AlertTriangle className="w-6 h-6 text-primary" aria-hidden="true" />
         </div>
         <h1 className="mt-6 text-2xl font-bold text-text">Página no encontrada</h1>

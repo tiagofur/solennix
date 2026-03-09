@@ -35,10 +35,10 @@ const formatSubDate = (dateStr?: string) => {
 };
 
 const subStatusLabel: Record<string, { text: string; color: string }> = {
-  active: { text: "Activa", color: "text-green-600 bg-green-50 dark:bg-green-900/20 dark:text-green-400" },
-  past_due: { text: "Pago pendiente", color: "text-yellow-600 bg-yellow-50 dark:bg-yellow-900/20 dark:text-yellow-400" },
+  active: { text: "Activa", color: "text-success bg-success/10" },
+  past_due: { text: "Pago pendiente", color: "text-warning bg-warning/10" },
   canceled: { text: "Cancelada", color: "text-error bg-error/5" },
-  trialing: { text: "Periodo de prueba", color: "text-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400" },
+  trialing: { text: "Periodo de prueba", color: "text-info bg-info/10" },
 };
 
 export const Settings: React.FC = () => {
@@ -309,7 +309,7 @@ export const Settings: React.FC = () => {
                     <div className="flex gap-2">
                       <button
                         onClick={handleUpdateBusinessName}
-                        className="bg-primary text-white font-medium px-4 py-2 rounded-md hover:bg-orange-600 transition-colors shadow-sm"
+                        className="bg-primary text-white font-medium px-4 py-2 rounded-md hover:bg-primary-dark transition-colors shadow-sm"
                       >
                         Guardar
                       </button>
@@ -474,7 +474,7 @@ export const Settings: React.FC = () => {
                 <div className="flex justify-end">
                   <button
                     onClick={handleUpdateContractSettings}
-                    className="bg-primary text-white font-medium px-6 py-3 rounded-md shadow-sm hover:bg-orange-600 transition-colors"
+                    className="bg-primary text-white font-medium px-6 py-3 rounded-md shadow-sm hover:bg-primary-dark transition-colors"
                   >
                     Guardar Cambios
                   </button>
@@ -522,7 +522,7 @@ export const Settings: React.FC = () => {
                     )}
 
                     {subStatus?.subscription?.cancel_at_period_end && (
-                      <div className="mt-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl text-sm text-yellow-700 dark:text-yellow-300">
+                      <div className="mt-2 p-3 bg-warning/10 border border-warning/30 rounded-xl text-sm text-warning">
                         Tu suscripción se cancelará al final del periodo actual. Puedes reactivarla desde el portal de pagos.
                       </div>
                     )}
@@ -532,7 +532,7 @@ export const Settings: React.FC = () => {
                     {profile?.plan !== "pro" && (
                       <Link
                         to="/pricing"
-                        className="bg-primary text-white px-6 py-3 rounded-md font-medium text-center shadow-sm hover:bg-orange-600 transition-colors"
+                        className="bg-primary text-white px-6 py-3 rounded-md font-medium text-center shadow-sm hover:bg-primary-dark transition-colors"
                       >
                         Subir a Pro
                       </Link>

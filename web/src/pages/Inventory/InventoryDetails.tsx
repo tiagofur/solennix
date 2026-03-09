@@ -156,17 +156,17 @@ export const InventoryDetails: React.FC = () => {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <div className="h-9 w-9 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse" />
+          <div className="h-9 w-9 rounded-full bg-surface-alt animate-pulse" />
           <div className="space-y-1">
-            <div className="h-7 w-48 rounded-md bg-gray-200 dark:bg-gray-700 animate-pulse" />
-            <div className="h-5 w-20 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse" />
+            <div className="h-7 w-48 rounded-md bg-surface-alt animate-pulse" />
+            <div className="h-5 w-20 rounded-full bg-surface-alt animate-pulse" />
           </div>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="bg-card rounded-3xl border border-border p-5">
-              <div className="h-3 w-20 rounded-md bg-gray-200 dark:bg-gray-700 animate-pulse mb-3" />
-              <div className="h-8 w-16 rounded-md bg-gray-200 dark:bg-gray-700 animate-pulse" />
+              <div className="h-3 w-20 rounded-md bg-surface-alt animate-pulse mb-3" />
+              <div className="h-8 w-16 rounded-md bg-surface-alt animate-pulse" />
             </div>
           ))}
         </div>
@@ -247,7 +247,7 @@ export const InventoryDetails: React.FC = () => {
                 item.type === "equipment"
                   ? "bg-purple-500/10 text-purple-500 border-purple-500/20"
                   : item.type === "supply"
-                  ? "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                  ? "bg-warning/10 text-warning border-warning/20"
                   : "bg-primary/10 text-primary border-primary/20",
               )}
             >
@@ -371,7 +371,7 @@ export const InventoryDetails: React.FC = () => {
                       isUrgent
                         ? "bg-error/5 border-error/20"
                         : diffDays <= 7
-                          ? "bg-amber-500/5 border-amber-500/20"
+                          ? "bg-warning/5 border-warning/20"
                           : "bg-surface-alt border-border",
                     )}
                   >
@@ -382,7 +382,7 @@ export const InventoryDetails: React.FC = () => {
                           isUrgent
                             ? "bg-error"
                             : diffDays <= 7
-                              ? "bg-amber-500"
+                              ? "bg-warning"
                               : "bg-primary/40",
                         )}
                       />
@@ -398,7 +398,7 @@ export const InventoryDetails: React.FC = () => {
                         </span>
                       )}
                       {diffDays === 1 && (
-                        <span className="text-xs bg-amber-500/10 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded-md">
+                        <span className="text-xs bg-warning/10 text-warning px-1.5 py-0.5 rounded-md">
                           Mañana
                         </span>
                       )}
@@ -442,7 +442,7 @@ export const InventoryDetails: React.FC = () => {
                 demand7Days > 0 && stockAfter7Days < 0
                   ? "bg-error/5 border-error/30"
                   : demand7Days > 0 && stockAfter7Days < item.minimum_stock
-                    ? "bg-amber-500/5 border-amber-500/30"
+                    ? "bg-warning/5 border-warning/30"
                     : isLowStock && demand7Days === 0
                       ? "bg-error/5 border-error/30"
                       : "bg-card border-border",
@@ -452,11 +452,11 @@ export const InventoryDetails: React.FC = () => {
                 {demand7Days > 0 && stockAfter7Days < 0 ? (
                   <AlertTriangle className="h-6 w-6 text-error shrink-0 mt-0.5" />
                 ) : demand7Days > 0 && stockAfter7Days < item.minimum_stock ? (
-                  <AlertTriangle className="h-6 w-6 text-amber-500 shrink-0 mt-0.5" />
+                  <AlertTriangle className="h-6 w-6 text-warning shrink-0 mt-0.5" />
                 ) : isLowStock && demand7Days === 0 ? (
                   <AlertTriangle className="h-6 w-6 text-error shrink-0 mt-0.5" />
                 ) : (
-                  <CheckCircle className="h-6 w-6 text-green-500 shrink-0 mt-0.5" />
+                  <CheckCircle className="h-6 w-6 text-success shrink-0 mt-0.5" />
                 )}
                 <div className="flex-1">
                   <p
@@ -465,10 +465,10 @@ export const InventoryDetails: React.FC = () => {
                       demand7Days > 0 && stockAfter7Days < 0
                         ? "text-error"
                         : demand7Days > 0 && stockAfter7Days < item.minimum_stock
-                          ? "text-amber-600 dark:text-amber-400"
+                          ? "text-warning"
                           : isLowStock && demand7Days === 0
                             ? "text-error"
-                            : "text-green-600 dark:text-green-400",
+                            : "text-success",
                     )}
                   >
                     {demand7Days > 0 && stockAfter7Days < 0
@@ -565,7 +565,7 @@ export const InventoryDetails: React.FC = () => {
                     </div>
                     <div className="h-2.5 bg-surface-alt rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-amber-400 rounded-full transition-all duration-500"
+                        className="h-full bg-warning rounded-full transition-all duration-500"
                         style={{ width: `${minPct}%` }}
                       />
                     </div>
@@ -583,7 +583,7 @@ export const InventoryDetails: React.FC = () => {
                         <div
                           className={clsx(
                             "h-full rounded-full transition-all duration-500",
-                            stockAfter7Days < 0 ? "bg-error" : "bg-amber-500",
+                            stockAfter7Days < 0 ? "bg-error" : "bg-warning",
                           )}
                           style={{ width: `${demandPct}%` }}
                         />

@@ -56,27 +56,27 @@ const STATUS_CONFIG: Record<
 > = {
   quoted: {
     label: "Cotizado",
-    color: "text-amber-700 dark:text-amber-300",
-    bg: "bg-amber-100 dark:bg-amber-900/30 border-amber-300 dark:border-amber-700",
-    dot: "bg-amber-500",
+    color: "text-status-quoted",
+    bg: "bg-status-quoted/10 border-status-quoted/30",
+    dot: "bg-status-quoted",
   },
   confirmed: {
     label: "Confirmado",
-    color: "text-blue-700 dark:text-blue-300",
-    bg: "bg-blue-100 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700",
-    dot: "bg-blue-500",
+    color: "text-status-confirmed",
+    bg: "bg-status-confirmed/10 border-status-confirmed/30",
+    dot: "bg-status-confirmed",
   },
   completed: {
     label: "Completado",
-    color: "text-green-700 dark:text-green-300",
-    bg: "bg-green-100 dark:bg-green-900/30 border-green-300 dark:border-green-700",
-    dot: "bg-green-500",
+    color: "text-status-completed",
+    bg: "bg-status-completed/10 border-status-completed/30",
+    dot: "bg-status-completed",
   },
   cancelled: {
     label: "Cancelado",
-    color: "text-red-700 dark:text-red-300",
-    bg: "bg-red-100 dark:bg-red-900/30 border-red-300 dark:border-red-700",
-    dot: "bg-red-500",
+    color: "text-status-cancelled",
+    bg: "bg-status-cancelled/10 border-status-cancelled/30",
+    dot: "bg-status-cancelled",
   },
 };
 
@@ -421,7 +421,7 @@ export const EventSummary: React.FC = () => {
               aria-pressed={viewMode === "contract"}
               aria-label="Ver contrato del evento"
             >
-              <FileCheck className={clsx("h-4 w-4 mr-2", !isDownpaymentMet && "text-amber-500")} aria-hidden="true" />
+              <FileCheck className={clsx("h-4 w-4 mr-2", !isDownpaymentMet && "text-warning")} aria-hidden="true" />
               Contrato
             </button>
             <button
@@ -589,7 +589,7 @@ export const EventSummary: React.FC = () => {
                   )}
                   role="menuitem"
                 >
-                  <FileCheck className={clsx("h-4 w-4 mr-3", !isDownpaymentMet ? "text-amber-500/50" : "text-text-secondary")} />
+                  <FileCheck className={clsx("h-4 w-4 mr-3", !isDownpaymentMet ? "text-warning/50" : "text-text-secondary")} />
                   Contrato {!isDownpaymentMet && "(Saldar Anticipo)"}
                 </button>
                 {viewMode === "payments" && payments.length > 0 && (
@@ -663,7 +663,7 @@ export const EventSummary: React.FC = () => {
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="bg-card shadow-sm rounded-3xl p-6 sm:p-8 border border-border">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 border-b border-border pb-6">
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              <h1 className="text-3xl font-bold text-text">
                 {event.client?.name} - {event.service_type}
               </h1>
 
@@ -842,7 +842,7 @@ export const EventSummary: React.FC = () => {
           {supplies.length > 0 && (
             <div className="bg-card shadow-sm rounded-3xl p-6 sm:p-8 border border-border mt-8">
               <h2 className="text-lg font-bold mb-6 flex items-center gap-2 text-text">
-                <Fuel className="h-5 w-5 text-amber-500" />
+                <Fuel className="h-5 w-5 text-warning" />
                 Insumos por Evento
               </h2>
               <div className="space-y-3">
@@ -856,21 +856,21 @@ export const EventSummary: React.FC = () => {
                     </div>
                     <div className="flex items-center gap-3">
                       {s.exclude_cost && (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-gray-100 dark:bg-gray-800 text-text-secondary">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-surface-alt text-text-secondary">
                           Sin costo
                         </span>
                       )}
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium ${
                         s.source === 'stock'
-                          ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300'
-                          : 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300'
+                          ? 'bg-success/10 text-success'
+                          : 'bg-status-quoted/10 text-status-quoted'
                       }`}>
                         {s.source === 'stock' ? 'Del stock' : 'Compra nueva'}
                       </span>
                       <span className={`font-bold ${
                         s.exclude_cost
                           ? 'line-through text-text-tertiary'
-                          : 'text-amber-600 dark:text-amber-400'
+                          : 'text-warning'
                       }`}>
                         ${(s.quantity * (s.unit_cost || 0)).toFixed(2)}
                       </span>
@@ -880,7 +880,7 @@ export const EventSummary: React.FC = () => {
               </div>
               <div className="mt-4 pt-3 border-t border-border flex justify-between items-center">
                 <span className="text-sm text-text-secondary">Costo total insumos</span>
-                <span className="text-lg font-bold text-amber-600 dark:text-amber-400">
+                <span className="text-lg font-bold text-warning">
                   ${supplies.reduce((sum: number, s: any) => sum + (s.exclude_cost ? 0 : s.quantity * (s.unit_cost || 0)), 0).toFixed(2)}
                 </span>
               </div>
@@ -936,19 +936,19 @@ export const EventSummary: React.FC = () => {
                 </div>
                 {event.deposit_percent > 0 && (
                   <div className="space-y-1">
-                    <p className="text-[10px] font-black text-orange-500 uppercase tracking-tighter">Cobrar Anticipo ({event.deposit_percent}%)</p>
-                    <p className={clsx("text-2xl font-black", isDownpaymentMet ? "text-text" : "text-orange-500")}>
+                    <p className="text-[10px] font-black text-warning uppercase tracking-tighter">Cobrar Anticipo ({event.deposit_percent}%)</p>
+                    <p className={clsx("text-2xl font-black", isDownpaymentMet ? "text-text" : "text-warning")}>
                       ${depositAmount.toFixed(2)}
                     </p>
                   </div>
                 )}
                 <div className="space-y-1">
                   <p className="text-[10px] font-black text-text-tertiary uppercase tracking-tighter">Utilidad Neta</p>
-                  <p className="text-2xl font-black text-emerald-500">${profit.toFixed(2)}</p>
+                  <p className="text-2xl font-black text-success">${profit.toFixed(2)}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-[10px] font-black text-text-tertiary uppercase tracking-tighter">Margen</p>
-                  <p className="text-2xl font-black text-blue-500">{margin.toFixed(1)}%</p>
+                  <p className="text-2xl font-black text-info">{margin.toFixed(1)}%</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-[10px] font-black text-text-tertiary uppercase tracking-tighter">Costos</p>
@@ -956,7 +956,7 @@ export const EventSummary: React.FC = () => {
                 </div>
                 <div className="space-y-1">
                   <p className="text-[10px] font-black text-text-tertiary uppercase tracking-tighter">Pagado</p>
-                  <p className="text-2xl font-black text-emerald-600">${totalPaid.toFixed(2)}</p>
+                  <p className="text-2xl font-black text-success">${totalPaid.toFixed(2)}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-[10px] font-black text-text-tertiary uppercase tracking-tighter">Pendiente</p>
@@ -979,7 +979,7 @@ export const EventSummary: React.FC = () => {
                     <div
                       className={clsx(
                         "h-full rounded-full transition-all duration-500",
-                        totalPaid >= totalCharged ? "bg-emerald-500" : "bg-primary"
+                        totalPaid >= totalCharged ? "bg-success" : "bg-primary"
                       )}
                       style={{ width: `${Math.min(100, (totalPaid / totalCharged) * 100)}%` }}
                     />
@@ -998,7 +998,7 @@ export const EventSummary: React.FC = () => {
                             setAutoOpenPayment(true);
                             setViewMode("payments");
                           }}
-                          className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-xl text-sm font-bold hover:bg-orange-600 transition-colors shadow-lg shadow-orange-500/20"
+                          className="flex items-center gap-2 px-4 py-2 bg-warning text-white rounded-xl text-sm font-bold hover:bg-warning/90 transition-colors shadow-lg shadow-warning/20"
                         >
                           <DollarSign className="h-4 w-4" />
                           Registrar Anticipo (${(depositAmount - totalPaid).toFixed(2)})
@@ -1065,7 +1065,7 @@ export const EventSummary: React.FC = () => {
                           "px-2 py-0.5 rounded-full text-xs font-semibold",
                           needsMore 
                             ? "bg-error/10 text-error border border-error/20"
-                            : "bg-green-500/10 text-green-500 border border-green-500/20"
+                            : "bg-success/10 text-success border border-success/20"
                         )}>
                           {(ing.currentStock || 0).toFixed(2)}
                         </span>
@@ -1124,8 +1124,8 @@ export const EventSummary: React.FC = () => {
             </div>
           ) : !isDownpaymentMet ? (
             <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
-              <div className="bg-amber-100 dark:bg-amber-900/30 p-6 rounded-full">
-                <AlertCircle className="h-12 w-12 text-amber-500" />
+              <div className="bg-warning/10 p-6 rounded-full">
+                <AlertCircle className="h-12 w-12 text-warning" />
               </div>
               <h3 className="text-2xl font-black text-text uppercase">Anticipo Requerido</h3>
               <p className="text-text-secondary max-w-md">
@@ -1133,7 +1133,7 @@ export const EventSummary: React.FC = () => {
                 <span className="font-bold text-text mx-1">{event.deposit_percent}%</span> 
                 (${depositAmount.toFixed(2)}).
               </p>
-              <p className="text-sm text-amber-600 dark:text-amber-400 font-bold">
+              <p className="text-sm text-warning font-bold">
                 Faltan ${(depositAmount - totalPaid).toFixed(2)} por cobrar.
               </p>
               <button

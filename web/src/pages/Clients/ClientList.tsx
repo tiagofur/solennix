@@ -304,7 +304,7 @@ export const ClientList: React.FC = () => {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400">
+                      <span className="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full bg-success/10 text-success">
                         {client.total_events} {client.total_events === 1 ? 'evento' : 'eventos'}
                       </span>
                     </td>

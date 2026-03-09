@@ -355,7 +355,7 @@ export const ProductForm: React.FC = () => {
                       <button
                         type="button"
                         onClick={removeImage}
-                        className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600 transition-colors"
+                        className="absolute -top-1 -right-1 bg-error text-white rounded-full p-0.5 hover:bg-error/80 transition-colors"
                         aria-label="Eliminar imagen"
                       >
                         <X className="h-3.5 w-3.5" />
@@ -391,7 +391,7 @@ export const ProductForm: React.FC = () => {
                     aria-describedby={errors.name ? "name-error" : undefined}
                 />
                 {errors.name && (
-                <p id="name-error" className="mt-2 text-sm text-red-600 dark:text-red-400" role="alert">
+                <p id="name-error" className="mt-2 text-sm text-error" role="alert">
                     {errors.name.message}
                 </p>
                 )}
@@ -415,7 +415,7 @@ export const ProductForm: React.FC = () => {
                     aria-describedby={errors.category ? "category-error" : undefined}
                 />
                 {errors.category && (
-                <p id="category-error" className="mt-2 text-sm text-red-600 dark:text-red-400" role="alert">
+                <p id="category-error" className="mt-2 text-sm text-error" role="alert">
                     {errors.category.message}
                 </p>
                 )}
@@ -439,7 +439,7 @@ export const ProductForm: React.FC = () => {
                     aria-describedby={errors.base_price ? "base_price-error" : undefined}
                 />
                 {errors.base_price && (
-                <p id="base_price-error" className="mt-2 text-sm text-red-600 dark:text-red-400" role="alert">
+                <p id="base_price-error" className="mt-2 text-sm text-error" role="alert">
                     {errors.base_price.message}
                 </p>
                 )}
@@ -555,7 +555,7 @@ export const ProductForm: React.FC = () => {
         {/* Maquinaria / Equipo Necesario */}
         <div className="bg-card shadow-sm border border-border px-4 py-8 rounded-3xl sm:p-10 flex flex-col">
             <h3 className="text-lg leading-6 font-medium text-text mb-4 flex items-center">
-                <Wrench className="h-5 w-5 mr-2 text-blue-500" aria-hidden="true" />
+                <Wrench className="h-5 w-5 mr-2 text-info" aria-hidden="true" />
                 Maquinaria / Equipo Necesario
             </h3>
             <p className="text-xs text-text-secondary mb-4">Equipo y maquinaria necesaria para preparar este producto. No se incluye en el costo (activos reutilizables).</p>
@@ -607,7 +607,7 @@ export const ProductForm: React.FC = () => {
                                 </p>
                             </div>
                             <div className="w-1/2 text-right">
-                                <span className="inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                                <span className="inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium bg-info/10 text-info">
                                     Sin costo - Reutilizable
                                 </span>
                             </div>
@@ -629,7 +629,7 @@ export const ProductForm: React.FC = () => {
         {/* Insumos por Evento */}
         <div className="bg-card shadow-sm border border-border px-4 py-8 rounded-3xl sm:p-10 flex flex-col">
             <h3 className="text-lg leading-6 font-medium text-text mb-4 flex items-center">
-                <Fuel className="h-5 w-5 mr-2 text-amber-500" aria-hidden="true" />
+                <Fuel className="h-5 w-5 mr-2 text-warning" aria-hidden="true" />
                 Insumos por Evento (costo fijo por evento)
             </h3>
             <p className="text-xs text-text-secondary mb-4">Insumos con cantidad fija por evento que no escala con unidades del producto (ej. aceite, gas). Se contabilizan como costo del evento.</p>
@@ -675,7 +675,7 @@ export const ProductForm: React.FC = () => {
                             </div>
                             <div className="w-1/2 text-right">
                                 <span className="text-xs text-text-secondary block">Costo por evento</span>
-                                <span className="text-sm font-medium text-amber-600 dark:text-amber-400">
+                                <span className="text-sm font-medium text-warning">
                                     ${(item.quantity_required * item.unit_cost).toFixed(2)}
                                 </span>
                             </div>
@@ -697,7 +697,7 @@ export const ProductForm: React.FC = () => {
               <div className="border-t border-border pt-4 space-y-2">
                   <div className="flex justify-between items-center">
                       <span className="text-sm text-text-secondary">Costo por Evento (Insumos Fijos)</span>
-                      <span className="text-lg font-bold text-amber-600 dark:text-amber-400">
+                      <span className="text-lg font-bold text-warning">
                           ${calculatePerEventCost().toFixed(2)}
                       </span>
                   </div>

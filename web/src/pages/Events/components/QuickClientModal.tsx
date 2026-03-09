@@ -73,7 +73,7 @@ export const QuickClientModal: React.FC<QuickClientModalProps> = ({
       <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
         <div className="fixed inset-0 transition-opacity" aria-hidden="true">
           <div
-            className="absolute inset-0 bg-gray-500 opacity-75"
+            className="absolute inset-0 bg-black/50"
             onClick={onClose}
           ></div>
         </div>
@@ -86,17 +86,17 @@ export const QuickClientModal: React.FC<QuickClientModalProps> = ({
         </span>
 
         <div
-          className="relative z-10 inline-block align-bottom bg-white dark:bg-gray-800 rounded-3xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-100 dark:border-gray-700"
+          className="relative z-10 inline-block align-bottom bg-card rounded-3xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-border"
           role="dialog"
           aria-modal="true"
           aria-labelledby="quick-client-modal-title"
           aria-describedby="quick-client-modal-description"
         >
-          <div className="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+          <div className="bg-card px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
             <div className="flex justify-between items-center mb-4">
               <h3
                 id="quick-client-modal-title"
-                className="text-lg leading-6 font-medium text-gray-900 dark:text-white"
+                className="text-lg leading-6 font-medium text-text"
               >
                 Nuevo Cliente Rápido
               </h3>
@@ -221,7 +221,7 @@ export const QuickClientModal: React.FC<QuickClientModalProps> = ({
             </div>
           </div>
 
-          <div className="bg-gray-50 dark:bg-gray-700/50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+          <div className="bg-surface-alt px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
             <button
               type="button"
               onClick={handleSubmit(onSubmit)}

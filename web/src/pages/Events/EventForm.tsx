@@ -785,12 +785,12 @@ export const EventForm: React.FC = () => {
       )}
 
       {isSubmitted && !isValid && (
-        <div className="bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-400 p-4 rounded-md" role="alert">
+        <div className="bg-warning/10 border-l-4 border-warning p-4 rounded-md" role="alert">
           <div className="flex">
-            <AlertCircle className="h-5 w-5 text-amber-500" aria-hidden="true" />
+            <AlertCircle className="h-5 w-5 text-warning" aria-hidden="true" />
             <div className="ml-3">
-              <p className="text-sm text-amber-700 dark:text-amber-300 font-medium">Hay errores en el formulario. Por favor revisa todos los pasos.</p>
-              <ul className="mt-2 text-xs text-amber-600 dark:text-amber-400 list-disc list-inside">
+              <p className="text-sm text-warning font-medium">Hay errores en el formulario. Por favor revisa todos los pasos.</p>
+              <ul className="mt-2 text-xs text-warning/80 list-disc list-inside">
                 {Object.entries(errors).map(([key, err]) => (
                   <li key={key}>{key}: {(err as any).message}</li>
                 ))}
@@ -900,7 +900,7 @@ export const EventForm: React.FC = () => {
                 type="button"
                 onClick={handleSubmit(onSubmit)}
                 disabled={isLoading || isStepLoading}
-                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-xs text-sm font-medium rounded-xl text-white bg-green-600 hover:bg-green-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 transition-colors"
+                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-xs text-sm font-medium rounded-xl text-white bg-success hover:bg-success/90 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-success/50 disabled:opacity-50 transition-colors"
               >
                 <Save className="h-5 w-5 mr-2" aria-hidden="true" />
                 {isLoading ? "Guardando..." : "Guardar Evento"}

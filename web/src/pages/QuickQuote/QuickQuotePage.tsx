@@ -494,7 +494,7 @@ export const QuickQuotePage: React.FC = () => {
                 </div>
 
                 {financials.discountAmount > 0 && (
-                  <div className="flex justify-between text-green-600 dark:text-green-400 font-medium">
+                  <div className="flex justify-between text-success font-medium">
                     <span>
                       Descuento {discountType === "percent" ? `(${discountValue}%)` : ""}:
                     </span>
@@ -538,12 +538,12 @@ export const QuickQuotePage: React.FC = () => {
                   </div>
 
                   <div className="text-text-secondary">Utilidad Neta:</div>
-                  <div className="text-right font-bold text-green-600 dark:text-green-400">
+                  <div className="text-right font-bold text-success">
                     ${financials.profit.toFixed(2)}
                   </div>
 
                   <div className="text-text-secondary">Margen:</div>
-                  <div className="text-right font-bold text-blue-600 dark:text-blue-400">
+                  <div className="text-right font-bold text-info">
                     {financials.margin.toFixed(1)}%
                   </div>
                 </div>

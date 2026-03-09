@@ -100,7 +100,7 @@ export const About: React.FC = () => {
         {/* Footer */}
         <div className="text-center mt-10">
           <p className="text-xs text-text-secondary flex items-center justify-center gap-1">
-            Hecho con <Heart className="h-3 w-3 text-red-500 fill-red-500" /> por el equipo de Creapolis.Dev
+            Hecho con <Heart className="h-3 w-3 text-error fill-error" /> por el equipo de Creapolis.Dev
           </p>
         </div>
       </div>

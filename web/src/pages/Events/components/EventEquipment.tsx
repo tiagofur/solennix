@@ -54,13 +54,13 @@ export const EventEquipment: React.FC<EventEquipmentProps> = ({
 
       {/* Conflict warnings */}
       {conflicts.length > 0 && (
-        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700 rounded-xl p-4 space-y-2">
-          <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300 font-medium text-sm">
+        <div className="bg-warning/10 border border-warning/30 rounded-xl p-4 space-y-2">
+          <div className="flex items-center gap-2 text-warning font-medium text-sm">
             <AlertTriangle className="h-4 w-4" />
             Conflictos de equipo detectados
           </div>
           {conflicts.map((c, i) => (
-            <div key={i} className="text-sm text-amber-600 dark:text-amber-400 ml-6">
+            <div key={i} className="text-sm text-warning/80 ml-6">
               <strong>{c.equipment_name}</strong> en uso en otro evento
               ({c.service_type}
               {c.start_time && c.end_time ? `, ${c.start_time.slice(0, 5)}-${c.end_time.slice(0, 5)}` : ', todo el día'}
@@ -101,7 +101,7 @@ export const EventEquipment: React.FC<EventEquipmentProps> = ({
             key={index}
             className={`bg-surface-alt p-4 rounded-xl relative group border shadow-xs ${
               itemConflicts.length > 0
-                ? 'border-amber-400 dark:border-amber-600'
+                ? 'border-warning/60'
                 : 'border-border'
             }`}
           >
@@ -163,7 +163,7 @@ export const EventEquipment: React.FC<EventEquipmentProps> = ({
                   Sin costo - Activo reutilizable
                 </span>
                 {getEquipmentName(item.inventory_id) && itemConflicts.length > 0 && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-warning/10 text-warning">
                     <AlertTriangle className="h-3 w-3" />
                     Conflicto
                   </span>

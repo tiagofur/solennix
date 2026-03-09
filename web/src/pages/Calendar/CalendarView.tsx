@@ -276,7 +276,7 @@ export const CalendarView: React.FC = () => {
             <button
               type="button"
               onClick={() => setIsConfirmingUnblock(true)}
-              className="inline-flex items-center justify-center px-4 py-2 border border-red-300 dark:border-red-700 text-sm font-medium rounded-xl text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 shadow-sm transition-colors"
+              className="inline-flex items-center justify-center px-4 py-2 border border-error/30 text-sm font-medium rounded-xl text-error bg-error/5 hover:bg-error/10 shadow-sm transition-colors"
               aria-label="Desbloquear Fecha"
             >
               Desbloquear Fecha
@@ -318,8 +318,8 @@ export const CalendarView: React.FC = () => {
             <style>{`
             .rdp-root {
                 --rdp-cell-size: 45px;
-                --rdp-accent-color: #C4A265;
-                --rdp-accent-background-color: rgba(196, 162, 101, 0.1);
+                --rdp-accent-color: var(--color-primary);
+                --rdp-accent-background-color: color-mix(in srgb, var(--color-primary), transparent 90%);
                 margin: 0;
                 width: 100%;
             }
@@ -343,8 +343,8 @@ export const CalendarView: React.FC = () => {
                 border-radius: 50% !important;
             }
             .rdp-selected .rdp-day_button:hover:not([disabled]) { 
-                background-color: #B8965A !important; 
-                border-color: #B8965A !important;
+                background-color: var(--color-primary-dark) !important; 
+                border-color: var(--color-primary-dark) !important;
             }
             .rdp-today:not(.rdp-selected) .rdp-day_button {
                 font-weight: bold;
@@ -365,52 +365,52 @@ export const CalendarView: React.FC = () => {
                 text-transform: uppercase;
                 font-size: 0.75rem;
                 font-weight: 700;
-                color: #6B7280;
+                color: var(--color-text-secondary);
                 padding-bottom: 1rem;
             }
             .rdp-nav_button {
-                color: #C4A265;
+                color: var(--color-primary);
             }
             .rdp-nav_button:hover {
-                color: #B8965A;
+                color: var(--color-primary-dark);
             }
             .rdp-caption_label {
                 font-size: 1.125rem;
                 font-weight: 700;
-                color: #111827;
+                color: var(--color-text);
                 text-transform: capitalize;
             }
             .rdp-day {
                 font-weight: 500;
-                color: #374151;
+                color: var(--color-text);
             }
             .rdp-day_outside {
-                color: #9CA3AF !important;
+                color: var(--color-text-tertiary) !important;
                 opacity: 0.5;
             }
             /* Booked days (have events): orange circle with always-visible white text */
             .rdp-booked .rdp-day_button {
-                background-color: #C4A265 !important;
+                background-color: var(--color-primary) !important;
                 color: #ffffff !important;
                 border-radius: 50% !important;
                 font-weight: bold;
             }
             /* Selected booked day: add white ring so it's distinguishable from unselected booked */
             .rdp-selected.rdp-booked .rdp-day_button:not([disabled]) {
-                background-color: #C4A265 !important;
+                background-color: var(--color-primary) !important;
                 color: #ffffff !important;
                 border: 2px solid #ffffff !important;
-                box-shadow: 0 0 0 2px #C4A265 !important;
+                box-shadow: 0 0 0 2px var(--color-primary) !important;
             }
             /* Unavailable days */
             .rdp-unavailable .rdp-day_button {
-                background-color: #F3F4F6 !important;
-                color: #9CA3AF !important;
+                background-color: var(--color-surface-alt) !important;
+                color: var(--color-text-tertiary) !important;
                 text-decoration: line-through;
             }
             .dark .rdp-unavailable .rdp-day_button {
-                 background-color: #374151 !important;
-                 color: #6B7280 !important;
+                 background-color: var(--color-surface-alt) !important;
+                 color: var(--color-text-tertiary) !important;
             }
             `}</style>
             <DayPicker
@@ -449,11 +449,11 @@ export const CalendarView: React.FC = () => {
                   role="status"
                 >
                   <div
-                    className="h-16 w-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-4"
+                    className="h-16 w-16 bg-error/10 rounded-full flex items-center justify-center mb-4"
                     aria-hidden="true"
                   >
                     <Lock
-                      className="h-8 w-8 text-red-500 dark:text-red-400"
+                      className="h-8 w-8 text-error"
                       aria-hidden="true"
                     />
                   </div>
@@ -473,7 +473,7 @@ export const CalendarView: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setIsConfirmingUnblock(true)}
-                    className="mt-4 text-red-600 dark:text-red-400 text-sm font-semibold hover:underline"
+                    className="mt-4 text-error text-sm font-semibold hover:underline"
                   >
                     Desbloquear
                   </button>
@@ -532,12 +532,12 @@ export const CalendarView: React.FC = () => {
                         <span
                           className={`inline-flex items-center px-2 py-0.5 rounded-lg text-[9px] font-bold uppercase tracking-wider shrink-0 ${
                             event.status === "confirmed"
-                              ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                              ? "bg-status-confirmed/10 text-status-confirmed"
                               : event.status === "completed"
-                                ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                                ? "bg-status-completed/10 text-status-completed"
                                 : event.status === "cancelled"
-                                  ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                                  : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
+                                  ? "bg-status-cancelled/10 text-status-cancelled"
+                                  : "bg-status-quoted/10 text-status-quoted"
                           }`}
                         >
                           {event.status === "confirmed"
@@ -594,7 +594,7 @@ export const CalendarView: React.FC = () => {
                           </div>
                           <div className="flex items-center text-xs font-bold text-text">
                             <DollarIcon
-                              className="h-3 w-3 mr-0.5 text-green-600"
+                              className="h-3 w-3 mr-0.5 text-success"
                               aria-hidden="true"
                             />
                             {event.total_amount?.toLocaleString("es-MX", {
@@ -770,12 +770,12 @@ export const CalendarView: React.FC = () => {
                           <span
                             className={`inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-semibold ${
                               event.status === "confirmed"
-                                ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                                ? "bg-status-confirmed/10 text-status-confirmed"
                                 : event.status === "completed"
-                                  ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                                  ? "bg-status-completed/10 text-status-completed"
                                   : event.status === "cancelled"
-                                    ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                                    : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
+                                    ? "bg-status-cancelled/10 text-status-cancelled"
+                                    : "bg-status-quoted/10 text-status-quoted"
                             }`}
                           >
                             {event.status === "confirmed"
@@ -827,8 +827,8 @@ export const CalendarView: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm fallback-bg">
           <div className="bg-card w-full max-w-sm rounded-2xl shadow-xl border border-border overflow-hidden fade-in">
             <div className="p-6 text-center">
-              <div className="mx-auto h-14 w-14 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-4">
-                <Unlock className="h-7 w-7 text-red-600 dark:text-red-400" />
+              <div className="mx-auto h-14 w-14 bg-error/10 rounded-full flex items-center justify-center mb-4">
+                <Unlock className="h-7 w-7 text-error" />
               </div>
               <h3 className="text-lg font-bold text-text mb-2">
                 Desbloquear Fechas
@@ -859,7 +859,7 @@ export const CalendarView: React.FC = () => {
               <button
                 type="button"
                 onClick={handleUnblock}
-                className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-xl transition-colors shadow-sm"
+                className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-error hover:bg-error/90 rounded-xl transition-colors shadow-sm"
               >
                 Desbloquear
               </button>

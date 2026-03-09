@@ -67,8 +67,8 @@ export function ResetPassword() {
       <div className="min-h-screen bg-surface-alt flex flex-col justify-center py-12 sm:px-6 lg:px-8 transition-colors">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
           <div className="bg-card py-8 px-4 shadow-sm sm:rounded-lg sm:px-10 text-center" role="status" aria-live="polite">
-            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 dark:bg-green-900/30 mb-4" aria-hidden="true">
-              <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" aria-hidden="true" />
+            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-success/10 mb-4" aria-hidden="true">
+              <CheckCircle className="h-6 w-6 text-success" aria-hidden="true" />
             </div>
             <h2 className="text-2xl font-bold text-text mb-2">¡Contraseña actualizada!</h2>
             <p className="text-text-secondary mb-6">

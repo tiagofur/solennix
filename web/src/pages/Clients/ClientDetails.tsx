@@ -22,10 +22,10 @@ import { useToast } from "@/hooks/useToast";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 
 const STATUS_MAP: Record<string, { label: string; className: string }> = {
-  quoted: { label: "Cotizado", className: "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20" },
-  confirmed: { label: "Confirmado", className: "bg-brand-green/10 text-brand-green border-brand-green/20" },
-  completed: { label: "Completado", className: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20" },
-  cancelled: { label: "Cancelado", className: "bg-red-500/10 text-red-500 border-red-500/20" },
+  quoted: { label: "Cotizado", className: "bg-status-quoted/10 text-status-quoted border-status-quoted/20" },
+  confirmed: { label: "Confirmado", className: "bg-status-confirmed/10 text-status-confirmed border-status-confirmed/20" },
+  completed: { label: "Completado", className: "bg-status-completed/10 text-status-completed border-status-completed/20" },
+  cancelled: { label: "Cancelado", className: "bg-status-cancelled/10 text-status-cancelled border-status-cancelled/20" },
 };
 
 const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
@@ -100,7 +100,7 @@ export const ClientDetails: React.FC = () => {
   if (error) {
     return (
       <div className="text-center p-8">
-        <p className="text-red-600 dark:text-red-400" role="alert">
+        <p className="text-error" role="alert">
           {error}
         </p>
         <button
@@ -162,7 +162,7 @@ export const ClientDetails: React.FC = () => {
           <button
             type="button"
             onClick={() => setConfirmDeleteOpen(true)}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-xl text-white bg-red-600 hover:bg-red-700 shadow-sm transition-colors"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-xl text-white bg-error hover:bg-error/90 shadow-sm transition-colors"
             aria-label="Eliminar cliente permanentemente"
           >
             <Trash2 className="h-5 w-5 mr-2" aria-hidden="true" />

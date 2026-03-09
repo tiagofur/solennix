@@ -29,7 +29,7 @@ const FEATURES = [
   {
     icon: Calendar,
     color: 'text-primary',
-    bg: 'bg-primary/10 dark:bg-primary/20',
+    bg: 'bg-primary/10',
     title: 'Calendario Inteligente',
     description:
       'Visualiza todos tus eventos en un calendario interactivo. Arrastra, suelta y reorganiza con facilidad.',
@@ -37,39 +37,39 @@ const FEATURES = [
   {
     icon: Users,
     color: 'text-success',
-    bg: 'bg-success/10 dark:bg-success/20',
+    bg: 'bg-success/10',
     title: 'Gestión de Clientes',
     description:
       'CRM integrado para mantener el historial completo de cada cliente: contratos, pagos y más.',
   },
   {
     icon: Package,
-    color: 'text-indigo-500',
-    bg: 'bg-indigo-50 dark:bg-indigo-900/20',
+    color: 'text-info',
+    bg: 'bg-info/10',
     title: 'Control de Inventario',
     description:
       'Administra equipos y recursos. Evita dobles reservas y asegura disponibilidad.',
   },
   {
     icon: BarChart3,
-    color: 'text-blue-500',
-    bg: 'bg-blue-50 dark:bg-blue-900/20',
+    color: 'text-info',
+    bg: 'bg-info/10',
     title: 'Reportes y Análisis',
     description:
       'Dashboards en tiempo real con métricas de ingresos, eventos y tendencias.',
   },
   {
     icon: DollarSign,
-    color: 'text-emerald-500',
-    bg: 'bg-emerald-50 dark:bg-emerald-900/20',
+    color: 'text-success',
+    bg: 'bg-success/10',
     title: 'Cotizaciones y Pagos',
     description:
       'Genera cotizaciones profesionales. Registra anticipos y pagos automáticamente.',
   },
   {
     icon: Bell,
-    color: 'text-rose-500',
-    bg: 'bg-rose-50 dark:bg-rose-900/20',
+    color: 'text-warning',
+    bg: 'bg-warning/10',
     title: 'Recordatorios',
     description:
       'Notificaciones automáticas: confirmaciones, recordatorios de pago y seguimiento.',
@@ -116,7 +116,7 @@ const TESTIMONIALS = [
     role: 'Organizadora de Bodas',
     location: 'Ciudad de México',
     avatar: 'MG',
-    avatarColor: 'bg-pink-500',
+    avatarColor: 'bg-error',
     rating: 5,
     text: 'Antes usaba hojas de cálculo y me volvía loca. Ahora con Eventos tengo todo centralizado: clientes, inventario, pagos. ¡Recuperé 10 horas a la semana!',
   },
@@ -125,7 +125,7 @@ const TESTIMONIALS = [
     role: 'Productor de Eventos Corporativos',
     location: 'Monterrey',
     avatar: 'CM',
-    avatarColor: 'bg-blue-500',
+    avatarColor: 'bg-info',
     rating: 5,
     text: 'El control de inventario es increíble. Ya no tenemos dobles reservas de equipo y el equipo de logística trabaja mucho más coordinado.',
   },
@@ -134,7 +134,7 @@ const TESTIMONIALS = [
     role: 'DJ y Animadora',
     location: 'Guadalajara',
     avatar: 'AR',
-    avatarColor: 'bg-purple-500',
+    avatarColor: 'bg-primary',
     rating: 5,
     text: 'Las cotizaciones automáticas me ahorran tiempo y se ven muy profesionales. Mis clientes quedan impresionados desde el primer contacto.',
   },
@@ -176,7 +176,7 @@ const PLANS = [
     cta: 'Comenzar Ahora',
     href: '/register',
     highlighted: true,
-    ctaClass: 'premium-gradient text-white dark:text-white',
+    ctaClass: 'premium-gradient text-white',
   },
 ];
 
@@ -208,30 +208,30 @@ const MOCK_EVENTS = [
 ];
 
 const MOCK_KPIS = [
-  { label: 'Ingresos del mes', value: '$135,500', delta: '+18%', color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-900/20' },
+  { label: 'Ingresos del mes', value: '$135,500', delta: '+18%', color: 'text-success', bg: 'bg-success/10' },
   { label: 'Eventos activos', value: '8', delta: '+3', color: 'text-primary', bg: 'bg-primary/10' },
-  { label: 'Clientes totales', value: '47', delta: '+5', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-900/20' },
+  { label: 'Clientes totales', value: '47', delta: '+5', color: 'text-info', bg: 'bg-info/10' },
 ];
 
 function AppMockup() {
   return (
     <div className="relative w-full max-w-2xl mx-auto select-none pointer-events-none">
       {/* Browser chrome */}
-      <div className="bg-gray-200 dark:bg-gray-700 rounded-t-2xl px-4 py-3 flex items-center gap-2">
+      <div className="bg-surface-alt rounded-t-2xl px-4 py-3 flex items-center gap-2">
         <span className="w-3 h-3 rounded-full bg-red-400" />
         <span className="w-3 h-3 rounded-full bg-yellow-400" />
         <span className="w-3 h-3 rounded-full bg-green-400" />
-        <div className="ml-3 flex-1 bg-white/60 dark:bg-gray-600/60 rounded-md px-3 py-1 text-xs text-gray-500 dark:text-gray-400 font-mono">
+        <div className="ml-3 flex-1 bg-surface/60 rounded-md px-3 py-1 text-xs text-text-tertiary font-mono">
           app.solennix.com/dashboard
         </div>
       </div>
 
       {/* App window */}
-      <div className="bg-gray-50 dark:bg-gray-900 rounded-b-2xl border-x border-b border-gray-300 dark:border-gray-600 shadow-2xl overflow-hidden">
+      <div className="bg-surface-alt rounded-b-2xl border-x border-b border-border shadow-2xl overflow-hidden">
         {/* Sidebar + content layout */}
         <div className="flex h-[340px]">
           {/* Sidebar */}
-          <div className="w-14 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col items-center py-4 gap-4">
+          <div className="w-14 bg-card border-r border-border flex flex-col items-center py-4 gap-4">
             <div className="w-8 h-8 rounded-lg premium-gradient flex items-center justify-center">
               <Zap className="h-4 w-4 text-white" />
             </div>
@@ -239,7 +239,7 @@ function AppMockup() {
               {[BarChart3, Calendar, Users, Package].map((Icon, i) => (
                 <div
                   key={i}
-                  className={`w-8 h-8 rounded-lg flex items-center justify-center ${i === 0 ? 'bg-primary/10 text-primary' : 'text-gray-400 dark:text-gray-500'}`}
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center ${i === 0 ? 'bg-primary/10 text-primary' : 'text-text-tertiary'}`}
                 >
                   <Icon className="h-4 w-4" />
                 </div>
@@ -252,36 +252,36 @@ function AppMockup() {
             {/* KPI row */}
             <div className="grid grid-cols-3 gap-2">
               {MOCK_KPIS.map((kpi) => (
-                <div key={kpi.label} className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-100 dark:border-gray-700">
-                  <div className="text-[10px] text-gray-500 dark:text-gray-400 mb-1">{kpi.label}</div>
-                  <div className="text-sm font-black text-gray-900 dark:text-white">{kpi.value}</div>
+                <div key={kpi.label} className="bg-card rounded-xl p-3 border border-border">
+                  <div className="text-[10px] text-text-secondary mb-1">{kpi.label}</div>
+                  <div className="text-sm font-black text-text">{kpi.value}</div>
                   <div className={`text-[10px] font-bold ${kpi.color} mt-0.5`}>{kpi.delta} este mes</div>
                 </div>
               ))}
             </div>
 
             {/* Events list */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 overflow-hidden flex-1">
-              <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
-                <span className="text-xs font-bold text-gray-700 dark:text-gray-300">Próximos eventos</span>
+            <div className="bg-card rounded-xl border border-border overflow-hidden flex-1">
+              <div className="px-3 py-2 border-b border-border flex items-center justify-between">
+                <span className="text-xs font-bold text-text-secondary">Próximos eventos</span>
                 <span className="text-[10px] text-primary font-semibold">Ver todos →</span>
               </div>
-              <div className="divide-y divide-gray-50 dark:divide-gray-700">
+              <div className="divide-y divide-border">
                 {MOCK_EVENTS.map((event) => (
                   <div key={event.name} className="px-3 py-2 flex items-center gap-2">
                     <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                       <Calendar className="h-3 w-3 text-primary" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-[11px] font-semibold text-gray-800 dark:text-gray-200 truncate">{event.name}</div>
-                      <div className="text-[10px] text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                      <div className="text-[11px] font-semibold text-text truncate">{event.name}</div>
+                      <div className="text-[10px] text-text-secondary flex items-center gap-1">
                         <Clock className="h-2.5 w-2.5" />
                         {event.date} · {event.guests} personas
                       </div>
                     </div>
                     <div className="text-right shrink-0">
-                      <div className="text-[11px] font-bold text-gray-800 dark:text-white">{event.amount}</div>
-                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${event.status === 'confirmed' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400'}`}>
+                      <div className="text-[11px] font-bold text-text">{event.amount}</div>
+                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${event.status === 'confirmed' ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
                         {event.status === 'confirmed' ? 'Confirmado' : 'Cotizado'}
                       </span>
                     </div>
@@ -314,9 +314,9 @@ export const Landing: React.FC = () => {
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-950 transition-colors">
+    <div className="min-h-screen bg-bg transition-colors">
       {/* ── NAVBAR ── */}
-      <header className="sticky top-0 z-50 bg-white/80 dark:bg-bg/80 backdrop-blur-md border-b border-border">
+      <header className="sticky top-0 z-50 bg-bg/80 backdrop-blur-md border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <nav className="flex justify-between items-center h-20">
             <Logo size={40} />
@@ -359,13 +359,13 @@ export const Landing: React.FC = () => {
 
       {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950 px-4 py-4 animate-in slide-in-from-top-4 duration-200">
+        <div className="md:hidden border-t border-border bg-bg px-4 py-4 animate-in slide-in-from-top-4 duration-200">
           <div className="space-y-3">
-            <a href="#features" className="block text-sm text-gray-700 dark:text-gray-300 py-2" onClick={() => setMobileMenuOpen(false)}>Características</a>
-            <a href="#how-it-works" className="block text-sm text-gray-700 dark:text-gray-300 py-2" onClick={() => setMobileMenuOpen(false)}>Cómo funciona</a>
-            <a href="#pricing" className="block text-sm text-gray-700 dark:text-gray-300 py-2" onClick={() => setMobileMenuOpen(false)}>Precios</a>
-            <a href="#faq" className="block text-sm text-gray-700 dark:text-gray-300 py-2" onClick={() => setMobileMenuOpen(false)}>FAQ</a>
-            <Link to="/login" className="block text-sm text-gray-700 dark:text-gray-300 py-2" onClick={() => setMobileMenuOpen(false)}>Iniciar Sesión</Link>
+            <a href="#features" className="block text-sm text-text-secondary py-2" onClick={() => setMobileMenuOpen(false)}>Características</a>
+            <a href="#how-it-works" className="block text-sm text-text-secondary py-2" onClick={() => setMobileMenuOpen(false)}>Cómo funciona</a>
+            <a href="#pricing" className="block text-sm text-text-secondary py-2" onClick={() => setMobileMenuOpen(false)}>Precios</a>
+            <a href="#faq" className="block text-sm text-text-secondary py-2" onClick={() => setMobileMenuOpen(false)}>FAQ</a>
+            <Link to="/login" className="block text-sm text-text-secondary py-2" onClick={() => setMobileMenuOpen(false)}>Iniciar Sesión</Link>
           </div>
         </div>
       )}
@@ -373,9 +373,9 @@ export const Landing: React.FC = () => {
       {/* ── HERO ── */}
       <section className="relative overflow-hidden pt-20 pb-32">
         {/* Background mesh */}
-        <div className="absolute inset-0 z-[-1] opacity-30 dark:opacity-20 pointer-events-none">
+        <div className="absolute inset-0 z-[-1] opacity-30 pointer-events-none">
           <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-primary/20 blur-[120px]" />
-          <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-blue-500/10 blur-[120px]" />
+          <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-info/10 blur-[120px]" />
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -448,16 +448,16 @@ export const Landing: React.FC = () => {
       </section>
 
       {/* ── FEATURES ── */}
-      <section id="features" className="py-24 bg-white dark:bg-gray-950">
+      <section id="features" className="py-24 bg-bg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <div className="inline-flex items-center space-x-2 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-sm font-medium px-4 py-1.5 rounded-full mb-4">
+            <div className="inline-flex items-center space-x-2 bg-surface-alt text-text-secondary text-sm font-medium px-4 py-1.5 rounded-full mb-4">
               <span>✨ Características</span>
             </div>
-            <h2 className="text-4xl font-extrabold text-gray-900 dark:text-white mb-4">
+            <h2 className="text-4xl font-extrabold text-text mb-4">
               Todo lo que necesitas en un solo lugar
             </h2>
-            <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+            <p className="text-lg text-text-secondary max-w-2xl mx-auto">
               Deja de usar hojas de cálculo, WhatsApp y notas dispersas. Centraliza toda tu operación en una plataforma diseñada para organizadores de eventos.
             </p>
           </div>
@@ -466,13 +466,13 @@ export const Landing: React.FC = () => {
             {FEATURES.map((feature) => (
               <div
                 key={feature.title}
-                className="group p-6 rounded-2xl border border-gray-100 dark:border-gray-800 hover:border-brand-orange/30 dark:hover:border-brand-orange/30 hover:shadow-xl transition-all duration-300 bg-white dark:bg-gray-900"
+                className="group p-6 rounded-2xl border border-border hover:border-brand-orange/30 hover:shadow-xl transition-all duration-300 bg-card"
               >
                 <div className={`${feature.bg} w-12 h-12 rounded-xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform`}>
                   <feature.icon className={`h-6 w-6 ${feature.color}`} aria-hidden="true" />
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{feature.title}</h3>
-                <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">{feature.description}</p>
+                <h3 className="text-lg font-bold text-text mb-2">{feature.title}</h3>
+                <p className="text-text-secondary text-sm leading-relaxed">{feature.description}</p>
               </div>
             ))}
           </div>
@@ -514,36 +514,36 @@ export const Landing: React.FC = () => {
       </section>
 
       {/* ── TESTIMONIALS ── */}
-      <section className="py-24 bg-white dark:bg-gray-950">
+      <section className="py-24 bg-bg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <div className="inline-flex items-center space-x-2 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-sm font-medium px-4 py-1.5 rounded-full mb-4">
+            <div className="inline-flex items-center space-x-2 bg-surface-alt text-text-secondary text-sm font-medium px-4 py-1.5 rounded-full mb-4">
               <span>💬 Testimonios</span>
             </div>
-            <h2 className="text-4xl font-extrabold text-gray-900 dark:text-white mb-4">
+            <h2 className="text-4xl font-extrabold text-text mb-4">
               Lo que dicen nuestros usuarios
             </h2>
-            <p className="text-lg text-gray-600 dark:text-gray-400">
+            <p className="text-lg text-text-secondary">
               Más de 500 organizadores ya confían en Eventos para gestionar su negocio.
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
             {TESTIMONIALS.map((t) => (
-              <div key={t.name} className="bg-gray-50 dark:bg-gray-900 rounded-2xl p-6 border border-gray-100 dark:border-gray-800">
+              <div key={t.name} className="bg-surface-alt rounded-2xl p-6 border border-border">
                 <div className="flex items-center gap-1 mb-4" role="img" aria-label={`${t.rating} estrellas de 5`}>
                   {Array.from({ length: t.rating }).map((_, i) => (
                     <Star key={i} className="h-4 w-4 text-yellow-400 fill-yellow-400" aria-hidden="true" />
                   ))}
                 </div>
-                <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed mb-6">"{t.text}"</p>
+                <p className="text-text-secondary text-sm leading-relaxed mb-6">"{t.text}"</p>
                 <div className="flex items-center gap-3">
                   <div className={`${t.avatarColor} w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0`}>
                     {t.avatar}
                   </div>
                   <div>
-                    <div className="font-semibold text-gray-900 dark:text-white text-sm">{t.name}</div>
-                    <div className="text-gray-500 dark:text-gray-400 text-xs flex items-center gap-1">
+                    <div className="font-semibold text-text text-sm">{t.name}</div>
+                    <div className="text-text-secondary text-xs flex items-center gap-1">
                       <MapPin className="h-3 w-3" aria-hidden="true" />
                       {t.role} · {t.location}
                     </div>
@@ -576,7 +576,7 @@ export const Landing: React.FC = () => {
                 key={plan.name}
                 className={`relative rounded-3xl p-10 flex flex-col transition-all duration-300 border-2 ${
                   plan.highlighted
-                    ? 'border-primary bg-card dark:bg-card shadow-2xl shadow-primary/10 dark:shadow-primary/5 scale-[1.02] z-10'
+                    ? 'border-primary bg-card shadow-2xl shadow-primary/10 scale-[1.02] z-10'
                     : 'border-border bg-card shadow-sm hover:shadow-md'
                 }`}
               >
@@ -644,13 +644,13 @@ export const Landing: React.FC = () => {
       </section>
 
       {/* ── FAQ ── */}
-      <section id="faq" className="py-24 bg-white dark:bg-gray-950">
+      <section id="faq" className="py-24 bg-bg">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <div className="inline-flex items-center space-x-2 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-sm font-medium px-4 py-1.5 rounded-full mb-4">
+            <div className="inline-flex items-center space-x-2 bg-surface-alt text-text-secondary text-sm font-medium px-4 py-1.5 rounded-full mb-4">
               <span>❓ Preguntas frecuentes</span>
             </div>
-            <h2 className="text-4xl font-extrabold text-gray-900 dark:text-white mb-4">
+            <h2 className="text-4xl font-extrabold text-text mb-4">
               Resolvemos tus dudas
             </h2>
           </div>
@@ -659,24 +659,24 @@ export const Landing: React.FC = () => {
             {FAQS.map((faq, index) => (
               <div
                 key={index}
-                className="border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden"
+                className="border border-border rounded-xl overflow-hidden"
               >
                 <button
                   type="button"
-                  className="w-full flex items-center justify-between p-5 text-left bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                  className="w-full flex items-center justify-between p-5 text-left bg-card hover:bg-surface-alt transition-colors"
                   onClick={() => setOpenFaq(openFaq === index ? null : index)}
                   aria-expanded={openFaq === index}
                   aria-label={`${faq.question} - ${openFaq === index ? 'Cerrar' : 'Abrir'} respuesta`}
                 >
-                  <span className="font-semibold text-gray-900 dark:text-white text-sm">{faq.question}</span>
+                  <span className="font-semibold text-text text-sm">{faq.question}</span>
                   <ChevronDown
-                    className={`h-4 w-4 text-gray-500 shrink-0 ml-4 transition-transform duration-300 ${openFaq === index ? 'rotate-180' : ''}`}
+                    className={`h-4 w-4 text-text-secondary shrink-0 ml-4 transition-transform duration-300 ${openFaq === index ? 'rotate-180' : ''}`}
                     aria-hidden="true"
                   />
                 </button>
                 {openFaq === index && (
-                  <div className="px-5 pb-5 pt-1 bg-white dark:bg-gray-900 animate-in fade-in slide-in-from-top-2 duration-200">
-                    <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">{faq.answer}</p>
+                  <div className="px-5 pb-5 pt-1 bg-card animate-in fade-in slide-in-from-top-2 duration-200">
+                    <p className="text-text-secondary text-sm leading-relaxed">{faq.answer}</p>
                   </div>
                 )}
               </div>
@@ -686,7 +686,7 @@ export const Landing: React.FC = () => {
       </section>
 
       {/* ── CTA FINAL ── */}
-      <section className="py-24 bg-white dark:bg-gray-950">
+      <section className="py-24 bg-bg">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="relative overflow-hidden premium-gradient rounded-[3rem] p-12 sm:p-20 text-center premium-shadow">
             {/* Background decorative elements */}
@@ -737,7 +737,7 @@ export const Landing: React.FC = () => {
       </section>
 
       {/* ── FOOTER ── */}
-      <footer className="bg-gray-900 dark:bg-black text-gray-400 py-12">
+      <footer className="bg-surface-grouped text-text-secondary py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-5 gap-8 mb-10">
             <div className="md:col-span-2">
@@ -747,35 +747,35 @@ export const Landing: React.FC = () => {
               </p>
             </div>
             <div>
-              <h4 className="text-white font-semibold text-sm mb-4">Producto</h4>
+              <h4 className="text-text font-semibold text-sm mb-4">Producto</h4>
               <ul className="space-y-2 text-sm">
-                <li><a href="#features" className="hover:text-white transition-colors">Características</a></li>
-                <li><a href="#pricing" className="hover:text-white transition-colors">Precios</a></li>
-                <li><a href="#how-it-works" className="hover:text-white transition-colors">Cómo funciona</a></li>
-                <li><a href="#faq" className="hover:text-white transition-colors">FAQ</a></li>
+                <li><a href="#features" className="hover:text-text transition-colors">Características</a></li>
+                <li><a href="#pricing" className="hover:text-text transition-colors">Precios</a></li>
+                <li><a href="#how-it-works" className="hover:text-text transition-colors">Cómo funciona</a></li>
+                <li><a href="#faq" className="hover:text-text transition-colors">FAQ</a></li>
               </ul>
             </div>
             <div>
-              <h4 className="text-white font-semibold text-sm mb-4">Cuenta</h4>
+              <h4 className="text-text font-semibold text-sm mb-4">Cuenta</h4>
               <ul className="space-y-2 text-sm">
-                <li><Link to="/register" className="hover:text-white transition-colors">Registrarse</Link></li>
-                <li><Link to="/login" className="hover:text-white transition-colors">Iniciar Sesión</Link></li>
-                <li><Link to="/forgot-password" className="hover:text-white transition-colors">Recuperar contraseña</Link></li>
+                <li><Link to="/register" className="hover:text-text transition-colors">Registrarse</Link></li>
+                <li><Link to="/login" className="hover:text-text transition-colors">Iniciar Sesión</Link></li>
+                <li><Link to="/forgot-password" className="hover:text-text transition-colors">Recuperar contraseña</Link></li>
               </ul>
             </div>
             <div>
-              <h4 className="text-white font-semibold text-sm mb-4">Legal</h4>
+              <h4 className="text-text font-semibold text-sm mb-4">Legal</h4>
               <ul className="space-y-2 text-sm">
-                <li><Link to="/about" className="hover:text-white transition-colors">Acerca de</Link></li>
-                <li><Link to="/terms" className="hover:text-white transition-colors">Términos y Condiciones</Link></li>
-                <li><Link to="/privacy" className="hover:text-white transition-colors">Política de Privacidad</Link></li>
+                <li><Link to="/about" className="hover:text-text transition-colors">Acerca de</Link></li>
+                <li><Link to="/terms" className="hover:text-text transition-colors">Términos y Condiciones</Link></li>
+                <li><Link to="/privacy" className="hover:text-text transition-colors">Política de Privacidad</Link></li>
               </ul>
             </div>
           </div>
-          <div className="border-t border-gray-800 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div className="border-t border-border pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
             <p className="text-sm">© 2026 Eventos. Todos los derechos reservados.</p>
             <div className="flex items-center gap-2 text-sm">
-              <Shield className="h-4 w-4 text-emerald-400" aria-hidden="true" />
+              <Shield className="h-4 w-4 text-success" aria-hidden="true" />
               <span>Datos protegidos con encriptación de extremo a extremo</span>
             </div>
           </div>

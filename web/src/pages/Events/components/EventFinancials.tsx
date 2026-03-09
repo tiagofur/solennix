@@ -163,7 +163,7 @@ export const EventFinancials: React.FC<EventFinancialsProps> = ({
             </div>
 
             {discountValue > 0 && (
-              <div className="flex justify-between text-green-600 dark:text-green-400 font-medium">
+              <div className="flex justify-between text-success font-medium">
                 <span>
                   Descuento {discountType === "percent" ? `(${discountValue}%)` : ""}:
                 </span>
@@ -193,7 +193,7 @@ export const EventFinancials: React.FC<EventFinancialsProps> = ({
             </div>
 
             {depositPercentValue > 0 && (
-              <div className="flex justify-between text-orange-600 dark:text-orange-400 font-medium">
+              <div className="flex justify-between text-warning font-medium">
                 <span>Anticipo ({depositPercentValue}%):</span>
                 <span>${(totalAmountValue * (depositPercentValue / 100)).toFixed(2)}</span>
               </div>
@@ -218,8 +218,8 @@ export const EventFinancials: React.FC<EventFinancialsProps> = ({
 
               {supplyCost > 0 && (
                 <>
-                  <div className="text-amber-600 dark:text-amber-400">Costo Insumos Evento:</div>
-                  <div className="text-right font-medium text-amber-600 dark:text-amber-400">
+                  <div className="text-warning">Costo Insumos Evento:</div>
+                  <div className="text-right font-medium text-warning">
                     ${supplyCost.toFixed(2)}
                   </div>
                 </>
@@ -231,7 +231,7 @@ export const EventFinancials: React.FC<EventFinancialsProps> = ({
               </div>
 
               <div className="text-text-secondary">Utilidad Neta:</div>
-              <div className="text-right font-bold text-green-600 dark:text-green-400">
+              <div className="text-right font-bold text-success">
                  ${(
                     totalAmountValue -
                     (requiresInvoiceValue ? taxAmountValue : 0) -
@@ -246,7 +246,7 @@ export const EventFinancials: React.FC<EventFinancialsProps> = ({
               </div>
 
               <div className="text-text-secondary">Margen:</div>
-              <div className="text-right font-bold text-blue-600 dark:text-blue-400">
+              <div className="text-right font-bold text-info">
                  {(() => {
                     const totalRevenue = totalAmountValue - (requiresInvoiceValue ? taxAmountValue : 0);
                     const totalCost =

@@ -87,7 +87,7 @@ export const Register: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex bg-white dark:bg-gray-950 transition-colors">
+    <div className="min-h-screen flex bg-card transition-colors">
       {/* ── LEFT PANEL ── */}
       <div className="hidden lg:flex lg:w-[45%] xl:w-[40%] premium-gradient flex-col relative overflow-hidden">
         {/* Decorative blobs */}
@@ -152,10 +152,10 @@ export const Register: React.FC = () => {
       {/* ── RIGHT PANEL (form) ── */}
       <div className="flex-1 flex flex-col min-h-screen">
         {/* Top bar */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 dark:border-gray-800">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-border">
           <Link
             to="/"
-            className="flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-primary transition-colors"
+            className="flex items-center gap-2 text-sm font-medium text-text-secondary hover:text-primary transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
             Volver al inicio
@@ -163,10 +163,10 @@ export const Register: React.FC = () => {
           <button
             type="button"
             onClick={toggleTheme}
-            className="p-2.5 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+            className="p-2.5 rounded-xl bg-surface-alt text-text-secondary hover:bg-surface-grouped transition-colors"
             aria-label={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
           >
-            {theme === 'dark' ? <Sun className="h-5 w-5 text-yellow-500" /> : <Moon className="h-5 w-5" />}
+            {theme === 'dark' ? <Sun className="h-5 w-5 text-warning" /> : <Moon className="h-5 w-5" />}
           </button>
         </div>
 
@@ -180,10 +180,10 @@ export const Register: React.FC = () => {
           <div className="w-full max-w-md">
             {/* Heading */}
             <div className="mb-8">
-              <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-2 tracking-tight">
+              <h2 className="text-3xl font-black text-text mb-2 tracking-tight">
                 Crear cuenta gratis
               </h2>
-              <p className="text-gray-500 dark:text-gray-400 text-sm">
+              <p className="text-text-secondary text-sm">
                 ¿Ya tienes cuenta?{' '}
                 <Link to="/login" className="font-semibold text-primary hover:underline">
                   Inicia sesión aquí
@@ -193,7 +193,7 @@ export const Register: React.FC = () => {
 
             {/* Error */}
             {error && (
-              <div className="flex items-start gap-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 rounded-xl p-4 mb-6" role="alert">
+              <div className="flex items-start gap-3 bg-error/5 border border-error/30 text-error rounded-xl p-4 mb-6" role="alert">
                 <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
                 <span className="text-sm">{error}</span>
               </div>
@@ -203,12 +203,12 @@ export const Register: React.FC = () => {
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
               {/* Name */}
               <div>
-                <label htmlFor="name" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                <label htmlFor="name" className="block text-sm font-semibold text-text-secondary mb-1.5">
                   Nombre completo
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <User className="h-5 w-5 text-gray-400" />
+                    <User className="h-5 w-5 text-text-tertiary" />
                   </div>
                   <input
                     id="name"
@@ -218,15 +218,15 @@ export const Register: React.FC = () => {
                     aria-required="true"
                     aria-invalid={errors.name ? 'true' : 'false'}
                     aria-describedby={errors.name ? 'name-error' : undefined}
-                    className={`w-full pl-11 pr-4 py-3.5 rounded-xl border text-sm transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary ${
+                    className={`w-full pl-11 pr-4 py-3.5 rounded-xl border text-sm transition-colors bg-card text-text placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary ${
                       errors.name
-                        ? 'border-red-400 dark:border-red-600'
-                        : 'border-gray-200 dark:border-gray-700'
+                        ? 'border-error/30'
+                        : 'border-border'
                     }`}
                   />
                 </div>
                 {errors.name && (
-                  <p id="name-error" className="mt-1.5 text-xs text-red-600 dark:text-red-400 flex items-center gap-1" role="alert">
+                  <p id="name-error" className="mt-1.5 text-xs text-error flex items-center gap-1" role="alert">
                     <AlertCircle className="h-3.5 w-3.5" /> {errors.name.message}
                   </p>
                 )}
@@ -234,12 +234,12 @@ export const Register: React.FC = () => {
 
               {/* Email */}
               <div>
-                <label htmlFor="email" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                <label htmlFor="email" className="block text-sm font-semibold text-text-secondary mb-1.5">
                   Email
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <Mail className="h-5 w-5 text-gray-400" />
+                    <Mail className="h-5 w-5 text-text-tertiary" />
                   </div>
                   <input
                     id="email"
@@ -249,15 +249,15 @@ export const Register: React.FC = () => {
                     aria-required="true"
                     aria-invalid={errors.email ? 'true' : 'false'}
                     aria-describedby={errors.email ? 'email-error' : undefined}
-                    className={`w-full pl-11 pr-4 py-3.5 rounded-xl border text-sm transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary ${
+                    className={`w-full pl-11 pr-4 py-3.5 rounded-xl border text-sm transition-colors bg-card text-text placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary ${
                       errors.email
-                        ? 'border-red-400 dark:border-red-600'
-                        : 'border-gray-200 dark:border-gray-700'
+                        ? 'border-error/30'
+                        : 'border-border'
                     }`}
                   />
                 </div>
                 {errors.email && (
-                  <p id="email-error" className="mt-1.5 text-xs text-red-600 dark:text-red-400 flex items-center gap-1" role="alert">
+                  <p id="email-error" className="mt-1.5 text-xs text-error flex items-center gap-1" role="alert">
                     <AlertCircle className="h-3.5 w-3.5" /> {errors.email.message}
                   </p>
                 )}
@@ -265,12 +265,12 @@ export const Register: React.FC = () => {
 
               {/* Password */}
               <div>
-                <label htmlFor="password" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                <label htmlFor="password" className="block text-sm font-semibold text-text-secondary mb-1.5">
                   Contraseña
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <Lock className="h-5 w-5 text-gray-400" />
+                    <Lock className="h-5 w-5 text-text-tertiary" />
                   </div>
                   <input
                     id="password"
@@ -280,23 +280,23 @@ export const Register: React.FC = () => {
                     aria-required="true"
                     aria-invalid={errors.password ? 'true' : 'false'}
                     aria-describedby={errors.password ? 'password-error' : undefined}
-                    className={`w-full pl-11 pr-11 py-3.5 rounded-xl border text-sm transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary ${
+                    className={`w-full pl-11 pr-11 py-3.5 rounded-xl border text-sm transition-colors bg-card text-text placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary ${
                       errors.password
-                        ? 'border-red-400 dark:border-red-600'
-                        : 'border-gray-200 dark:border-gray-700'
+                        ? 'border-error/30'
+                        : 'border-border'
                     }`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-text-tertiary hover:text-text-secondary transition-colors"
                     aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                   >
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
                 {errors.password && (
-                  <p id="password-error" className="mt-1.5 text-xs text-red-600 dark:text-red-400 flex items-center gap-1" role="alert">
+                  <p id="password-error" className="mt-1.5 text-xs text-error flex items-center gap-1" role="alert">
                     <AlertCircle className="h-3.5 w-3.5" /> {errors.password.message}
                   </p>
                 )}
@@ -304,12 +304,12 @@ export const Register: React.FC = () => {
 
               {/* Confirm Password */}
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                <label htmlFor="confirmPassword" className="block text-sm font-semibold text-text-secondary mb-1.5">
                   Confirmar contraseña
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <Lock className="h-5 w-5 text-gray-400" />
+                    <Lock className="h-5 w-5 text-text-tertiary" />
                   </div>
                   <input
                     id="confirmPassword"
@@ -319,30 +319,30 @@ export const Register: React.FC = () => {
                     aria-required="true"
                     aria-invalid={errors.confirmPassword ? 'true' : 'false'}
                     aria-describedby={errors.confirmPassword ? 'confirm-error' : undefined}
-                    className={`w-full pl-11 pr-11 py-3.5 rounded-xl border text-sm transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary ${
+                    className={`w-full pl-11 pr-11 py-3.5 rounded-xl border text-sm transition-colors bg-card text-text placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary ${
                       errors.confirmPassword
-                        ? 'border-red-400 dark:border-red-600'
-                        : 'border-gray-200 dark:border-gray-700'
+                        ? 'border-error/30'
+                        : 'border-border'
                     }`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirm(!showConfirm)}
-                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-text-tertiary hover:text-text-secondary transition-colors"
                     aria-label={showConfirm ? 'Ocultar confirmación' : 'Mostrar confirmación'}
                   >
                     {showConfirm ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
                 {errors.confirmPassword && (
-                  <p id="confirm-error" className="mt-1.5 text-xs text-red-600 dark:text-red-400 flex items-center gap-1" role="alert">
+                  <p id="confirm-error" className="mt-1.5 text-xs text-error flex items-center gap-1" role="alert">
                     <AlertCircle className="h-3.5 w-3.5" /> {errors.confirmPassword.message}
                   </p>
                 )}
               </div>
 
               {/* Terms notice */}
-              <p className="text-xs text-gray-400 dark:text-gray-500 leading-relaxed pt-1">
+              <p className="text-xs text-text-tertiary leading-relaxed pt-1">
                 Al registrarte aceptas nuestros{' '}
                 <Link to="/terms" className="text-primary hover:underline font-medium">Términos de Servicio</Link>
                 {' '}y{' '}
@@ -371,17 +371,17 @@ export const Register: React.FC = () => {
             </form>
 
             {/* Trust badges */}
-            <div className="mt-6 flex items-center justify-center gap-6 text-xs text-gray-400 dark:text-gray-600">
+            <div className="mt-6 flex items-center justify-center gap-6 text-xs text-text-tertiary">
               <div className="flex items-center gap-1.5">
-                <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
+                <CheckCircle className="h-3.5 w-3.5 text-success" />
                 <span>Sin tarjeta</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
+                <CheckCircle className="h-3.5 w-3.5 text-success" />
                 <span>Cancela gratis</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
+                <CheckCircle className="h-3.5 w-3.5 text-success" />
                 <span>Datos seguros</span>
               </div>
             </div>
@@ -389,7 +389,7 @@ export const Register: React.FC = () => {
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-800 text-center text-xs text-gray-400 dark:text-gray-600">
+        <div className="px-6 py-4 border-t border-border text-center text-xs text-text-tertiary">
           © 2026 Eventos ·{' '}
           <Link to="/terms" className="hover:text-primary transition-colors">Términos</Link>
           {' · '}
