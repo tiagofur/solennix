@@ -51,7 +51,7 @@ export function PhotoGallery({ photos, onAdd, onRemove, editable = false }: Phot
                                     onPress={() => onRemove(index)}
                                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                                 >
-                                    <X color="#fff" size={12} />
+                                    <X color={palette.textInverse} size={12} />
                                 </TouchableOpacity>
                             )}
                         </TouchableOpacity>
@@ -70,7 +70,7 @@ export function PhotoGallery({ photos, onAdd, onRemove, editable = false }: Phot
                 <Modal visible transparent animationType="fade">
                     <View style={styles.fullscreenContainer}>
                         <TouchableOpacity style={styles.closeFullscreen} onPress={() => setFullscreenIndex(null)}>
-                            <X color="#fff" size={28} />
+                            <X color={palette.textInverse} size={28} />
                         </TouchableOpacity>
                         <Image
                             source={{ uri: uploadService.getFullUrl(photos[fullscreenIndex]) || '' }}

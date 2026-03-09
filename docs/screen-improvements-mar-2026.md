@@ -131,9 +131,43 @@
 
 ---
 
-## Próximos pasos recomendados
+## Referencia de Diseño Definitiva
 
-1. **Eventos** (`EventSummary` + todos sus sub-componentes) — es la pantalla más crítica y la que más uso tiene
-2. **ClientForm** e **InventoryForm** — para completar el ciclo CRUD de las secciones ya mejoradas
-3. **Settings** — alta visibilidad para usuarios frecuentes
-4. **Calendar** y **Search** — completar la experiencia de navegación
+> **⚠️ Para cualquier trabajo futuro en pantallas, consultar obligatoriamente:**
+> - **`docs/design/UI-DESIGN-GUIDE.md`** — Guía completa de diseño UI con tokens, componentes y patrones
+> - **`marketing/brand-manual/BRAND-MANUAL.md`** — Manual de marca con paleta, tipografía y reglas
+> - **`marketing/brand-manual/Solennix-Brand-Manual.pdf`** — Manual de marca en PDF profesional
+
+### Filosofía de Diseño: Moderna, Elegante, Minimalista
+
+La app debe sentirse **premium pero accesible**. Cinco principios guían todo el diseño:
+
+1. **Espacio es lujo** — Generoso padding y spacing. Nunca amontonar contenido.
+2. **Color como acento** — Fondos neutros; el dorado aparece **solo** donde importa (CTAs, iconos activos, badges, focus rings).
+3. **Un CTA por pantalla** — Un solo botón `premium-gradient`. El resto es secundario.
+4. **Consistencia sobre creatividad** — Mismos tokens, mismos patrones, en toda la app.
+5. **Mobile-first, responsive siempre** — Diseñar para mobile, adaptar para desktop.
+
+### Regla de Oro para Colores
+
+| Rol | Token Correcto | Valor (Light) | Valor (Dark) | ❌ Nunca usar |
+|-----|----------------|---------------|--------------|---------------|
+| CTA principal | `premium-gradient` | `#C4A265 → #D4B87A` | igual | `bg-primary` como fondo sólido |
+| Icono activo | `text-primary` | `#C4A265` | `#C4A265` | `text-amber-*`, `text-yellow-*` |
+| Badge | `bg-primary/10 text-primary` | — | — | `bg-primary` sólido |
+| Focus ring | `ring-primary/40` | — | — | `ring-brand-orange`, `ring-amber-*` |
+| Fondo página | `bg-bg` | `#f3f4f6` | `#000000` | `bg-primary`, `bg-accent` |
+| Fondo card | `bg-card` | `#ffffff` | `#121212` | `bg-white` hardcodeado |
+| Texto principal | `text-text` | `#111827` | `#f5f5f7` | `text-gray-900`, `text-black` |
+| Texto secundario | `text-text-secondary` | `#6b7280` | `#a1a1aa` | `text-gray-500`, `gray-400` |
+| Borde estándar | `border-border` | `#e5e7eb` | `#27272a` | `border-gray-200`, `border-gray-700` |
+| Error | `text-error` / `bg-error/5` | `#ff3b30` | `#ff453a` | `text-red-500`, `bg-red-50` |
+| Éxito | `text-success` / `bg-success/5` | `#34c759` | `#30d158` | `text-green-500`, `bg-green-50` |
+
+> **Navy (`#1B2A4A`) es exclusivamente para branding** (landing page, logos, materiales de marketing). NO se usa como fondo de la UI de la app.
+
+### Próximos Pasos
+
+1. **Admin Dashboard** y **Admin Users** — Únicas pantallas pendientes de migración a tokens
+2. **Auditoría dark mode** — Verificar que todos los colores cambian correctamente
+3. **Auditoría de accesibilidad** — Contraste mínimo 4.5:1 en todos los textos

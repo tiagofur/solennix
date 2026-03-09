@@ -153,7 +153,7 @@ export default function ResetPasswordScreen({ navigation, route }: Props) {
           activeOpacity={0.8}
         >
           {loading ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color={palette.textInverse} />
           ) : (
             <Text style={styles.buttonText}>Restablecer Contrase&#xF1;a</Text>
           )}
@@ -199,7 +199,7 @@ const getStyles = (palette: typeof colors.light) => StyleSheet.create({
     marginBottom: spacing.xxl,
   },
   errorBanner: {
-    backgroundColor: "#fef2f2",
+    backgroundColor: palette.errorBg,
     borderLeftWidth: 4,
     borderLeftColor: palette.error,
     borderRadius: spacing.borderRadius.sm,
@@ -223,7 +223,7 @@ const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   },
   buttonText: {
     ...typography.button,
-    color: "#ffffff",
+    color: palette.textInverse,
   },
   linkContainer: {
     paddingVertical: spacing.sm,

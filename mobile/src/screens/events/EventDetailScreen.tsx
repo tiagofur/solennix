@@ -554,7 +554,7 @@ export default function EventDetailScreen({ navigation, route }: Props) {
         {supplies.length > 0 && (
           <View style={styles.section}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: spacing.xs, marginBottom: spacing.sm }}>
-              <Fuel color="#D97706" size={18} />
+              <Fuel color={palette.statusQuoted} size={18} />
               <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>Insumos por Evento</Text>
             </View>
 
@@ -570,7 +570,7 @@ export default function EventDetailScreen({ navigation, route }: Props) {
                   </Text>
                 </View>
                 <Text style={[styles.itemTotal, {
-                  color: s.exclude_cost ? palette.textMuted : "#D97706",
+                  color: s.exclude_cost ? palette.textMuted : palette.statusQuoted,
                   textDecorationLine: s.exclude_cost ? 'line-through' : 'none',
                 }]}>
                   {formatCurrency(s.quantity * (s.unit_cost || 0))}
@@ -579,8 +579,8 @@ export default function EventDetailScreen({ navigation, route }: Props) {
             ))}
 
             <View style={[styles.itemRow, { borderBottomWidth: 0 }]}>
-              <Text style={[styles.itemName, { color: "#D97706" }]}>Total Insumos</Text>
-              <Text style={[styles.itemTotal, { color: "#D97706", fontWeight: "700" }]}>
+              <Text style={[styles.itemName, { color: palette.statusQuoted }]}>Total Insumos</Text>
+              <Text style={[styles.itemTotal, { color: palette.statusQuoted, fontWeight: "700" }]}>
                 {formatCurrency(supplies.reduce((sum: number, s: any) => sum + (s.exclude_cost ? 0 : s.quantity * (s.unit_cost || 0)), 0))}
               </Text>
             </View>
@@ -754,7 +754,7 @@ export default function EventDetailScreen({ navigation, route }: Props) {
               style={[styles.actionBtn, styles.payRemainingBtn]}
               onPress={handlePayRemaining}
             >
-              <DollarSign color="#fff" size={18} />
+              <DollarSign color={palette.textInverse} size={18} />
               <Text style={styles.primaryActionText}>
                 Liquidar ({formatCurrency(remaining)})
               </Text>

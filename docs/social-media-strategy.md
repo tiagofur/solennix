@@ -39,3 +39,35 @@ CTAs directos, ofertas, registro gratuito, demos.
 ## Hashtags Recomendados
 - #Solennix #GestiónDeEventos #EventPlanning #Catering #OrganizaciónDeEventos
 - #EventosPerfectos #CadaDetalleImporta #SaaS #TechParaEventos
+
+## Guía Visual para Posts
+
+### Paleta de Colores para Redes Sociales
+Todos los materiales visuales deben seguir la paleta del Brand Manual (`marketing/brand-manual/BRAND-MANUAL.md`):
+
+| Elemento | Color | HEX | Uso |
+|----------|-------|-----|-----|
+| Fondo principal | Navy | `#1B2A4A` | Fondo de posts, stories, banners |
+| Acentos/CTAs | Dorado | `#C4A265` | Botones, iconos, líneas decorativas |
+| Highlights | Dorado Claro | `#D4B87A` | Gradientes, destellos |
+| Texto sobre navy | Crema | `#F5F0E8` | Títulos y body text sobre fondos oscuros |
+| Texto secundario | Gris Suave | `#6B7B8D` | Subtítulos, captions |
+
+### Tipografía
+- **Títulos:** Cinzel SemiBold (serif elegante) — la misma del logo
+- **Body/Captions:** Helvetica Neue o sistema sans-serif — limpia y legible
+- **Tagline:** "CADA DETALLE IMPORTA" siempre en Helvetica Neue Light, letter-spacing 5.5px
+
+### Reglas Visuales
+1. Siempre incluir el logo (icon o horizontal según contexto)
+2. Navy como fondo principal; dorado como acento, **nunca** al revés
+3. Mantener espacio libre alrededor del logo (mínimo 1x la altura del icono)
+4. No usar gradientes de marca distintos a los aprobados
+5. CTAs con gradiente dorado (`#C4A265 → #D4B87A`) y texto blanco
+
+### Assets Disponibles
+- **Brand Kit Canva:** `kAHDZ5uZ9CU` — colores y fuentes pre-configurados
+- **Carpeta Canva:** `FAHDaFi9k0s` — templates y diseños editables
+- **Logos locales:** `marketing/logos/svg/` y `marketing/logos/png/`
+- **Banners publicitarios:** `marketing/logos/png/ads/` — 9 tamaños IAB estándar
+- **Social media profiles:** `marketing/logos/png/social-media/` — 5 tamaños

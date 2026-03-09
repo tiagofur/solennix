@@ -1089,7 +1089,7 @@ export default function EventFormScreen({ navigation, route }: Props) {
           <View style={styles.section}>
             {/* Supplies Section */}
             <View style={{ flexDirection: "row", alignItems: "center", gap: spacing.xs, marginBottom: spacing.sm }}>
-              <Fuel color="#D97706" size={18} />
+              <Fuel color={palette.statusQuoted} size={18} />
               <Text style={styles.sectionTitle}>Insumos por Evento</Text>
             </View>
             <Text
@@ -1108,12 +1108,12 @@ export default function EventFormScreen({ navigation, route }: Props) {
             ).length > 0 && (
               <View
                 style={{
-                  backgroundColor: "#FFFBEB",
+                  backgroundColor: palette.statusQuotedBg,
                   borderRadius: 12,
                   padding: spacing.md,
                   marginBottom: spacing.md,
                   borderWidth: 1,
-                  borderColor: "#FCD34D",
+                  borderColor: palette.warning,
                 }}
               >
                 <View
@@ -1123,11 +1123,11 @@ export default function EventFormScreen({ navigation, route }: Props) {
                     marginBottom: spacing.sm,
                   }}
                 >
-                  <Lightbulb color="#D97706" size={16} />
+                  <Lightbulb color={palette.statusQuoted} size={16} />
                   <Text
                     style={{
                       ...typography.caption,
-                      color: "#D97706",
+                      color: palette.statusQuoted,
                       fontWeight: "600",
                       marginLeft: spacing.xs,
                     }}
@@ -1155,18 +1155,18 @@ export default function EventFormScreen({ navigation, route }: Props) {
                         style={{
                           flexDirection: "row",
                           alignItems: "center",
-                          backgroundColor: "#FEF3C7",
+                          backgroundColor: palette.statusQuotedBg,
                           paddingHorizontal: spacing.sm,
                           paddingVertical: spacing.xs,
                           borderRadius: 8,
                         }}
                         onPress={() => handleQuickAddSupplySuggestion(s)}
                       >
-                        <Plus color="#D97706" size={14} />
+                        <Plus color={palette.statusQuoted} size={14} />
                         <Text
                           style={{
                             ...typography.caption,
-                            color: "#92400E",
+                            color: palette.statusQuoted,
                             marginLeft: 4,
                           }}
                         >
@@ -1195,7 +1195,7 @@ export default function EventFormScreen({ navigation, route }: Props) {
                     <Text
                       style={{
                         ...typography.caption,
-                        color: "#D97706",
+                        color: palette.statusQuoted,
                       }}
                     >
                       ${(sup.quantity * sup.unit_cost).toFixed(2)} — {sup.source === 'stock' ? 'Del stock' : 'Compra nueva'}
@@ -1231,7 +1231,7 @@ export default function EventFormScreen({ navigation, route }: Props) {
                           paddingHorizontal: spacing.sm,
                           paddingVertical: spacing.xs,
                           borderRadius: 8,
-                          backgroundColor: sup.source === 'stock' ? palette.successBg || '#DCFCE7' : palette.surface,
+                          backgroundColor: sup.source === 'stock' ? palette.successBg : palette.surface,
                         }}
                         onPress={() => {
                           const next = [...selectedSupplies];
@@ -1276,8 +1276,8 @@ export default function EventFormScreen({ navigation, route }: Props) {
 
             {selectedSupplies.length > 0 && (
               <View style={[styles.totalRow, { marginTop: spacing.sm }]}>
-                <Text style={[styles.totalLabel, { color: "#D97706" }]}>Costo insumos evento</Text>
-                <Text style={[styles.totalValue, { color: "#D97706" }]}>
+                <Text style={[styles.totalLabel, { color: palette.statusQuoted }]}>Costo insumos evento</Text>
+                <Text style={[styles.totalValue, { color: palette.statusQuoted }]}>
                   {formatCurrency(supplyCost)}
                 </Text>
               </View>
@@ -1301,12 +1301,12 @@ export default function EventFormScreen({ navigation, route }: Props) {
             {equipmentConflicts.length > 0 && (
               <View
                 style={{
-                  backgroundColor: palette.warningBg || "#FEF3C7",
+                  backgroundColor: palette.warningBg,
                   borderRadius: 12,
                   padding: spacing.md,
                   marginBottom: spacing.md,
                   borderWidth: 1,
-                  borderColor: palette.warning || "#F59E0B",
+                  borderColor: palette.warning,
                 }}
               >
                 <View
@@ -1317,13 +1317,13 @@ export default function EventFormScreen({ navigation, route }: Props) {
                   }}
                 >
                   <AlertTriangle
-                    color={palette.warning || "#F59E0B"}
+                    color={palette.warning}
                     size={16}
                   />
                   <Text
                     style={{
                       ...typography.caption,
-                      color: palette.warning || "#F59E0B",
+                      color: palette.warning,
                       fontWeight: "600",
                       marginLeft: spacing.xs,
                     }}
@@ -1336,7 +1336,7 @@ export default function EventFormScreen({ navigation, route }: Props) {
                     key={i}
                     style={{
                       ...typography.caption,
-                      color: palette.warning || "#D97706",
+                      color: palette.warning,
                       marginLeft: spacing.lg,
                     }}
                   >
@@ -1356,12 +1356,12 @@ export default function EventFormScreen({ navigation, route }: Props) {
             ).length > 0 && (
               <View
                 style={{
-                  backgroundColor: palette.infoBg || "#EFF6FF",
+                  backgroundColor: palette.infoBg,
                   borderRadius: 12,
                   padding: spacing.md,
                   marginBottom: spacing.md,
                   borderWidth: 1,
-                  borderColor: palette.info || "#3B82F6",
+                  borderColor: palette.info,
                 }}
               >
                 <View
@@ -1371,11 +1371,11 @@ export default function EventFormScreen({ navigation, route }: Props) {
                     marginBottom: spacing.sm,
                   }}
                 >
-                  <Lightbulb color={palette.info || "#3B82F6"} size={16} />
+                  <Lightbulb color={palette.info} size={16} />
                   <Text
                     style={{
                       ...typography.caption,
-                      color: palette.info || "#3B82F6",
+                      color: palette.info,
                       fontWeight: "600",
                       marginLeft: spacing.xs,
                     }}
@@ -1403,18 +1403,18 @@ export default function EventFormScreen({ navigation, route }: Props) {
                         style={{
                           flexDirection: "row",
                           alignItems: "center",
-                          backgroundColor: palette.info || "#DBEAFE",
+                          backgroundColor: palette.infoBg,
                           paddingHorizontal: spacing.sm,
                           paddingVertical: spacing.xs,
                           borderRadius: 8,
                         }}
                         onPress={() => handleQuickAddSuggestion(s)}
                       >
-                        <Plus color={palette.info || "#3B82F6"} size={14} />
+                        <Plus color={palette.info} size={14} />
                         <Text
                           style={{
                             ...typography.caption,
-                            color: palette.info || "#2563EB",
+                            color: palette.info,
                             marginLeft: 4,
                           }}
                         >
@@ -1890,8 +1890,8 @@ export default function EventFormScreen({ navigation, route }: Props) {
               onPress={() => handleAddSupplyItem(item)}
               activeOpacity={0.7}
             >
-              <View style={[styles.sheetProductIcon, { backgroundColor: "#FEF3C7" }]}>
-                <Fuel color="#D97706" size={18} />
+              <View style={[styles.sheetProductIcon, { backgroundColor: palette.statusQuotedBg }]}>
+                <Fuel color={palette.statusQuoted} size={18} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.sheetItemText}>{item.ingredient_name}</Text>

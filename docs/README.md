@@ -15,6 +15,14 @@ Bienvenido a la documentación oficial de **Solennix**. Aquí encontrarás todo 
 - **Clientes y Catálogo:** (Próximamente)
 - **Inventario y Recetas:** (Próximamente)
 
+### 🎨 [Diseño y Marca](./design/UI-DESIGN-GUIDE.md)
+
+- **[Guía de Diseño UI](./design/UI-DESIGN-GUIDE.md):** Tokens de color, componentes, patrones y checklist de pantalla. **Referencia obligatoria** para cualquier cambio visual.
+- **[Brand Manual (MD)](../marketing/brand-manual/BRAND-MANUAL.md):** Identidad de marca, logo, paleta de colores, tipografía y reglas de uso.
+- **[Brand Manual (PDF)](../marketing/brand-manual/Solennix-Brand-Manual.pdf):** Manual visual profesional de 11 páginas.
+- **[Mejoras de Pantalla](./screen-improvements-mar-2026.md):** Historial de migración de todas las pantallas al design system.
+- **[Mejoras Cross-Platform](./roadmap/cross-platform-improvements.md):** Estandarización de diseño web y mobile.
+
 ### 💻 [Desarrollo](./development/setup.md)
 
 - **[Instalación Local](./development/setup.md):** Pasos para correr el proyecto.
@@ -28,9 +36,10 @@ Bienvenido a la documentación oficial de **Solennix**. Aquí encontrarás todo 
 
 ## 🛠️ Stack Principal
 
-- **Frontend:** React 18, TypeScript, Vite, Tailwind CSS.
-- **Backend:** Go 1.21, Chi Router, PostgreSQL.
-- **Tools:** Vitest, Lucide Icons, jsPDF.
+- **Frontend:** React 19, TypeScript ~5.9, Vite 7, Tailwind CSS 4.
+- **Mobile:** React Native 0.83, Expo SDK 55, React Navigation 7.
+- **Backend:** Go 1.25, Chi v5, PostgreSQL 15.
+- **Tools:** Vitest, Playwright, Lucide Icons, jsPDF.
 
 ## 🔗 Enlaces Rápidos
 

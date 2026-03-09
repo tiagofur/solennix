@@ -6,6 +6,8 @@
         fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
   <!-- Labio -->
   <path d="M66,34 Q100,42 134,34" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+  <!-- Reflejo sutil -->
+  <path d="M76,40 Q72,58 76,80" fill="none" stroke="#FFFFFF" stroke-width="1.5" opacity="0.2" stroke-linecap="round"/>
   <!-- Nodo -->
   <ellipse cx="100" cy="124" rx="5" ry="2.5" fill="none" stroke="#FFFFFF" stroke-width="2"/>
   <!-- Tallo -->
@@ -16,4 +18,16 @@
   <!-- Base -->
   <path d="M72,160 A28,7 0 0,0 128,160"
         fill="none" stroke="#FFFFFF" stroke-width="2.8" stroke-linecap="round"/>
+  <!-- Destello -->
+  <g transform="translate(132,32)" opacity="0.5">
+    <line x1="0" y1="-7" x2="0" y2="7" stroke="#FFFFFF" stroke-width="1.3" stroke-linecap="round"/>
+    <line x1="-7" y1="0" x2="7" y2="0" stroke="#FFFFFF" stroke-width="1.3" stroke-linecap="round"/>
+    <line x1="-3.5" y1="-3.5" x2="3.5" y2="3.5" stroke="#FFFFFF" stroke-width="0.7" stroke-linecap="round"/>
+    <line x1="3.5" y1="-3.5" x2="-3.5" y2="3.5" stroke="#FFFFFF" stroke-width="0.7" stroke-linecap="round"/>
+  </g>
+  <!-- Micro destello -->
+  <g transform="translate(70,30)" opacity="0.25">
+    <line x1="0" y1="-4" x2="0" y2="4" stroke="#FFFFFF" stroke-width="0.8" stroke-linecap="round"/>
+    <line x1="-4" y1="0" x2="4" y2="0" stroke="#FFFFFF" stroke-width="0.8" stroke-linecap="round"/>
+  </g>
 </svg>

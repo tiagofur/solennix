@@ -37,15 +37,16 @@ async function svgToPng(svgPath, outPath, width, height, opts = {}) {
 }
 
 async function main() {
-  const icon = join(__dirname, 'solennix-icon-final.svg');
-  const iconTransparent = join(__dirname, 'solennix-icon-transparent.svg');
-  const iconWhite = join(__dirname, 'solennix-icon-white.svg');
-  const iconDark = join(__dirname, 'solennix-icon-dark.svg');
-  const logoH = join(__dirname, 'solennix-logo-horizontal.svg');
-  const logoHL = join(__dirname, 'solennix-logo-horizontal-light.svg');
-  const logoV = join(__dirname, 'solennix-logo-vertical.svg');
-  const wordmarkDark = join(__dirname, 'solennix-wordmark-dark.svg');
-  const wordmarkLight = join(__dirname, 'solennix-wordmark-light.svg');
+  const SVG_DIR = join(__dirname, 'svg');
+  const icon = join(SVG_DIR, 'solennix-icon-final.svg');
+  const iconTransparent = join(SVG_DIR, 'solennix-icon-transparent.svg');
+  const iconWhite = join(SVG_DIR, 'solennix-icon-white.svg');
+  const iconDark = join(SVG_DIR, 'solennix-icon-dark.svg');
+  const logoH = join(SVG_DIR, 'solennix-logo-horizontal.svg');
+  const logoHL = join(SVG_DIR, 'solennix-logo-horizontal-light.svg');
+  const logoV = join(SVG_DIR, 'solennix-logo-vertical.svg');
+  const wordmarkDark = join(SVG_DIR, 'solennix-wordmark-dark.svg');
+  const wordmarkLight = join(SVG_DIR, 'solennix-wordmark-light.svg');
 
   // ─── APP ICONS ───
   console.log('\n📱 App Icons');

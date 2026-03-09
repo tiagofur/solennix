@@ -310,7 +310,7 @@ export default function ClientListScreen({ navigation }: Props) {
         activeOpacity={0.8}
         onPress={handleNew}
       >
-        <Plus color="#fff" size={28} />
+        <Plus color={palette.textInverse} size={28} />
       </TouchableOpacity>
 
       <ConfirmDialog

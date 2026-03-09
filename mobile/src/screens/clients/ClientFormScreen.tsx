@@ -186,14 +186,14 @@ export default function ClientFormScreen({ navigation, route }: Props) {
                 <View style={styles.avatarContainer}>
                   <Avatar name={control._formValues.name || "?"} photoUrl={localPhotoUri || photoUrl} size={80} />
                   <View style={styles.cameraOverlay}>
-                    <Camera color="#fff" size={16} />
+                    <Camera color={palette.textInverse} size={16} />
                   </View>
                 </View>
               ) : (
                 <View style={styles.avatarContainer}>
                   <Avatar name={control._formValues.name || "?"} size={80} />
                   <View style={styles.cameraOverlay}>
-                    <Camera color="#fff" size={16} />
+                    <Camera color={palette.textInverse} size={16} />
                   </View>
                 </View>
               )}
@@ -330,10 +330,10 @@ export default function ClientFormScreen({ navigation, route }: Props) {
             disabled={submitting}
           >
             {submitting ? (
-              <ActivityIndicator color="#fff" size="small" />
+              <ActivityIndicator color={palette.textInverse} size="small" />
             ) : (
               <>
-                <Save color="#fff" size={20} />
+                <Save color={palette.textInverse} size={20} />
                 <Text style={styles.saveText}>
                   {isEdit ? "Guardar Cambios" : "Crear Cliente"}
                 </Text>
@@ -400,7 +400,7 @@ const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   },
   saveText: {
     ...typography.button,
-    color: "#ffffff",
+    color: palette.textInverse,
     fontSize: 16,
   },
 });

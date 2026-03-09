@@ -174,3 +174,72 @@ La web usa `jspdf` + `jspdf-autotable`. En mobile:
 | Performance de listas grandes     | Media        | Medio   | FlatList optimizada con `getItemLayout`, windowSize, memoización. Paginación server-side si necesario. |
 | Review de App Store rechazada     | Baja         | Alto    | Seguir Human Interface Guidelines. No mencionar pagos externos. RevenueCat maneja compliance.          |
 | Drift entre código web y mobile   | Media        | Medio   | Mantener tests equivalentes. Documentar cambios en API contract.                                       |
+
+---
+
+## 11. Guía de Diseño Visual — Mobile
+
+> **Referencia completa:** `docs/design/UI-DESIGN-GUIDE.md`
+> **Brand Manual:** `marketing/brand-manual/Solennix-Brand-Manual.pdf`
+
+### Filosofía
+
+La app mobile debe ser **moderna, elegante y minimalista**, siguiendo los mismos principios de la web:
+
+- **Espacio es lujo** — Generoso padding entre elementos, nunca amontonar
+- **Color como acento** — El dorado `#C4A265` aparece solo en CTAs, iconos activos, badges y focus states
+- **Un CTA por pantalla** — Un solo botón `premium-gradient` como acción principal
+- **Layered Panel** — `bg-surface-grouped` como fondo, cards `rounded-3xl` con `shadow-sm`
+
+### Tokens de Color (Mobile)
+
+Los tokens están definidos en `mobile/src/theme/colors.ts` y deben coincidir con `web/src/index.css`:
+
+| Token | Light | Dark | Uso |
+|-------|-------|------|-----|
+| `primary` | `#C4A265` | `#C4A265` | Acentos, CTAs, iconos activos |
+| `background` | `#f3f4f6` | `#000000` | Fondo de pantalla externo |
+| `surface` | `#f9fafb` | `#121212` | Áreas internas |
+| `card` | `#ffffff` | `#121212` | Cards y contenedores |
+| `text.primary` | `#111827` | `#f5f5f7` | Texto principal |
+| `text.secondary` | `#6b7280` | `#a1a1aa` | Labels, texto auxiliar |
+| `text.tertiary` | `#9ca3af` | `#71717a` | Placeholders |
+| `border` | `#e5e7eb` | `#27272a` | Bordes de cards e inputs |
+
+### Reglas de Aplicación de Color
+
+**✅ Correcto:**
+- Botón CTA: `premium-gradient` (degradado dorado `#C4A265 → #D4B87A`) con texto blanco
+- Tab activo: `colors.primary` para icono y label
+- Avatar sin imagen: `bg-primary/10` con texto `colors.primary`
+- Badge de categoría: `bg-primary/10` con texto `colors.primary`
+- Focus ring: `borderColor: colors.primary` con `opacity: 0.4`
+
+**❌ Incorrecto:**
+- Fondo de card en dorado (`backgroundColor: colors.primary`)
+- Texto de párrafo en dorado (solo para links e iconos activos)
+- Navy (`#1B2A4A`) como fondo de pantalla (solo para landing/branding)
+- Colores hardcodeados (`'#gray'`, `'#555'`) en lugar de tokens del theme
+- `Platform.select` para colores que deben ser iguales en ambas plataformas
+
+### Componentes Clave (Mobile)
+
+| Componente | Estilo |
+|-----------|--------|
+| Card | `rounded-3xl`, `shadow-sm`, `bg: colors.card`, `border: colors.border` |
+| Botón Primary | `premium-gradient`, `rounded-lg`, `py: spacing.md`, texto blanco `fontWeight: '600'` |
+| Botón Secondary | `bg: colors.surface-alt`, `border: colors.border`, `rounded-lg` |
+| Input | `bg: colors.card`, `border: colors.border`, `rounded-lg`, focus: `borderColor: colors.primary` |
+| Empty State | Ilustración gris suave + título `fontWeight: '600'` + subtítulo `colors.text.secondary` + CTA `premium-gradient` |
+| Loading | `Skeleton` con `animate-pulse` en `colors.surface-alt`. **Nunca** spinner solo |
+
+### Checklist de Pantalla Mobile
+
+- [ ] Título usa `fontWeight: '900'` (equivalente a `font-black`) con `letterSpacing: -0.5`
+- [ ] Solo un botón `premium-gradient` por pantalla
+- [ ] Todos los colores vienen de `useTheme()`, sin hardcoded
+- [ ] Dark mode: todos los colores cambian correctamente
+- [ ] Cards usan `rounded: 24` (equivalente a `rounded-3xl`)
+- [ ] Spacing consistente con escala del theme (`spacing.sm`, `spacing.md`, `spacing.lg`)
+- [ ] Precios formateados con `toLocaleString('es-MX', { minimumFractionDigits: 2 })`
+- [ ] Skeleton loading en todas las listas y cards

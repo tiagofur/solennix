@@ -237,8 +237,8 @@ export default function ClientDetailScreen({ navigation, route }: Props) {
 
           {client.notes && (
             <View style={styles.infoRow}>
-              <View style={[styles.infoIcon, { backgroundColor: "#f3e8ff" }]}>
-                <StickyNote color="#7c3aed" size={16} />
+              <View style={[styles.infoIcon, { backgroundColor: palette.primaryLight }]}>
+                <StickyNote color={palette.primary} size={16} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.infoLabel}>Notas</Text>
@@ -259,7 +259,7 @@ export default function ClientDetailScreen({ navigation, route }: Props) {
               });
             }}
           >
-            <Plus color="#fff" size={18} />
+            <Plus color={palette.textInverse} size={18} />
             <Text style={styles.primaryActionText}>
               Crear Evento
             </Text>

@@ -6,23 +6,23 @@ export const colors = {
     primaryLight: "#F5F0E8",
     secondary: "#6B7B8D",
 
-    // Neutral palette (backbone of the UI)
+    // Warm neutral palette (backbone of the UI)
     background: "#ffffff",
-    surfaceGrouped: "#f2f2f7", // iOS grouped background — default for authenticated screens
-    surface: "#f9fafb", // inputs, search bars, inactive chips
-    surfaceAlt: "#f3f4f6",
+    surfaceGrouped: "#F5F4F1", // Warm cream-tinted grouped background
+    surface: "#FAF9F7", // inputs, search bars, inactive chips
+    surfaceAlt: "#F0EFEC",
     card: "#ffffff", // card fill on top of surfaceGrouped
 
-    // Text
-    text: "#1c1c1e", // iOS system label
-    textSecondary: "#8e8e93", // iOS secondary label
-    textTertiary: "#aeaeb2", // placeholders, muted icons
-    textMuted: "#aeaeb2", // alias
+    // Text (warm tones)
+    text: "#1A1A1A",
+    textSecondary: "#7A7670",
+    textTertiary: "#A8A29E",
+    textMuted: "#A8A29E", // alias
     textInverse: "#ffffff",
 
-    // Borders & separators
-    border: "#e5e7eb",
-    borderStrong: "#d1d5db",
+    // Borders & separators (warm)
+    border: "#E6E3DD",
+    borderStrong: "#D4D0C8",
     separator: "rgba(60, 60, 67, 0.29)", // iOS hairline separator
 
     // Semantic (iOS system colors)
@@ -61,9 +61,9 @@ export const colors = {
     tabBar: {
       background: "#ffffff",
       active: "#C4A265",
-      inactive: "#aeaeb2",
+      inactive: "#A8A29E",
     },
-    tabBarBorder: "#e5e7eb",
+    tabBarBorder: "#E6E3DD",
 
     // Avatar palette (muted, lower saturation)
     avatarColors: [
@@ -84,23 +84,23 @@ export const colors = {
     primaryLight: "#1B2A4A",
     secondary: "#94a3b8",
 
-    // Neutral palette
+    // Navy-tinted dark palette
     background: "#000000",
-    surfaceGrouped: "#000000",
-    surface: "#2c2c2e",
-    surfaceAlt: "#3a3a3c",
-    card: "#1c1c1e",
+    surfaceGrouped: "#0A0F1A", // Subtle navy tint
+    surface: "#1A2030", // Navy-tinted surface
+    surfaceAlt: "#252A35",
+    card: "#111722", // Navy-tinted cards
 
-    // Text
-    text: "#f5f5f7",
-    textSecondary: "#8e8e93",
-    textTertiary: "#636366",
-    textMuted: "#636366",
-    textInverse: "#1c1c1e",
+    // Warm cream text
+    text: "#F5F0E8", // Brand crema
+    textSecondary: "#9A9590",
+    textTertiary: "#6B6560",
+    textMuted: "#6B6560",
+    textInverse: "#1A1A1A",
 
-    // Borders & separators
-    border: "#38383a",
-    borderStrong: "#48484a",
+    // Navy-tinted borders
+    border: "#252A35",
+    borderStrong: "#3A3F4A",
     separator: "rgba(84, 84, 88, 0.65)",
 
     // Semantic
@@ -137,11 +137,11 @@ export const colors = {
 
     // Tab bar
     tabBar: {
-      background: "#1c1c1e",
+      background: "#111722",
       active: "#C4A265",
-      inactive: "#636366",
+      inactive: "#6B6560",
     },
-    tabBarBorder: "#38383a",
+    tabBarBorder: "#252A35",
 
     // Avatar palette
     avatarColors: [

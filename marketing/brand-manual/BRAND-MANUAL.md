@@ -275,7 +275,54 @@ marketing/
 
 ---
 
-## 8. Contacto
+## 8. Aplicación de Colores en la App (UI)
+
+> **⚠️ IMPORTANTE:** Los colores de marca (Navy, Dorado, Crema) son para **branding y acentos**. La UI de la app usa **tokens semánticos del design system** para fondos, textos y bordes.
+
+### 8.1 Cómo se Mapean los Colores de Marca a la UI
+
+| Color de Marca | Rol en la UI | Token CSS | Ejemplo de Uso |
+|----------------|-------------|-----------|----------------|
+| **Dorado `#C4A265`** | Acento premium | `--color-primary` | CTAs (`premium-gradient`), iconos activos, badges, focus rings, links |
+| **Dorado Claro `#D4B87A`** | Gradiente CTA | Parte de `premium-gradient` | Botón principal de cada pantalla |
+| **Navy `#1B2A4A`** | Solo branding | `--color-accent` | Landing page, logos, materiales de marketing. **NO** en la UI de la app |
+| **Crema `#F5F0E8`** | Hover sutil | `--color-primary-light` | `bg-primary-light/50` para hovers muy sutiles |
+| **Gris `#6B7B8D`** | Texto terciario | `--color-secondary` | Elementos decorativos, texto de menor importancia |
+
+### 8.2 Superficies y Fondos (NO usan colores de marca)
+
+| Superficie | Light | Dark | ❌ Nunca |
+|-----------|-------|------|----------|
+| Fondo de página | `#f3f4f6` | `#000000` (OLED) | Navy ni Crema |
+| Panel principal | `#ffffff` | `#09090b` | Dorado |
+| Card | `#ffffff` | `#121212` | Ningún color de marca |
+| Hover/Alt | `#f3f4f6` | `#1c1c1e` | — |
+
+### 8.3 Principios de Diseño de la App
+
+1. **Moderna** — Diseño limpio inspirado en Apple HIG, sin ornamentos innecesarios
+2. **Elegante** — El dorado aparece solo donde importa, creando puntos focales claros
+3. **Minimalista** — Generoso espacio en blanco, un CTA por pantalla, tipografía limpia
+4. **Accesible** — Contraste mínimo 4.5:1, dark mode OLED, skeleton loading states
+
+> **Referencia completa:** Ver `docs/design/UI-DESIGN-GUIDE.md` para tokens, componentes y patrones detallados.
+
+---
+
+## 9. Documentos de Referencia
+
+| Documento | Ubicación | Contenido |
+|-----------|-----------|-----------|
+| **UI Design Guide** | `docs/design/UI-DESIGN-GUIDE.md` | Tokens completos, componentes, patrones, checklist |
+| **Brand Manual PDF** | `marketing/brand-manual/Solennix-Brand-Manual.pdf` | Manual visual profesional (11 páginas) |
+| **Screen Improvements** | `docs/screen-improvements-mar-2026.md` | Historial de migración a tokens del design system |
+| **Mobile PRD** | `docs/mobile/PRD.md` | Arquitectura y patrones de diseño mobile |
+| **index.css** | `web/src/index.css` | Definición de tokens CSS (fuente de verdad) |
+| **colors.ts** | `mobile/src/theme/colors.ts` | Paleta de colores mobile (fuente de verdad) |
+
+---
+
+## 10. Contacto
 
 Para dudas sobre el uso de la marca, contactar al equipo de Solennix.
 
@@ -284,4 +331,4 @@ Para dudas sobre el uso de la marca, contactar al equipo de Solennix.
 
 ---
 
-*Manual de Marca v1.0 — Marzo 2026*
+*Manual de Marca v2.0 — Marzo 2026*

@@ -247,8 +247,8 @@ export default function InventoryListScreen({ navigation }: Props) {
   const renderSectionHeader = useCallback(
     ({ section }: { section: InventorySection }) => {
       const Icon = section.type === "equipment" ? Wrench : section.type === "supply" ? Fuel : ShoppingCart;
-      const iconColor = section.type === "equipment" ? palette.info : section.type === "supply" ? "#D97706" : palette.primary;
-      const bgColor = section.type === "equipment" ? palette.infoBg : section.type === "supply" ? "#FEF3C7" : palette.primaryLight;
+      const iconColor = section.type === "equipment" ? palette.info : section.type === "supply" ? palette.statusQuoted : palette.primary;
+      const bgColor = section.type === "equipment" ? palette.infoBg : section.type === "supply" ? palette.statusQuotedBg : palette.primaryLight;
 
       return (
         <View style={styles.sectionHeader}>

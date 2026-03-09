@@ -152,7 +152,7 @@ export default function BusinessSettingsScreen({ navigation }: Props) {
               <View
                 style={[
                   styles.colorPreview,
-                  { backgroundColor: /^#[0-9A-Fa-f]{6}$/.test(brandColor) ? brandColor : "#ccc" },
+                  { backgroundColor: /^#[0-9A-Fa-f]{6}$/.test(brandColor) ? brandColor : palette.border },
                 ]}
               />
               <View style={{ flex: 1 }}>
@@ -254,10 +254,10 @@ export default function BusinessSettingsScreen({ navigation }: Props) {
             disabled={saving}
           >
             {saving ? (
-              <ActivityIndicator color="#fff" size="small" />
+              <ActivityIndicator color={palette.textInverse} size="small" />
             ) : (
               <>
-                <Save color="#fff" size={20} />
+                <Save color={palette.textInverse} size={20} />
                 <Text style={styles.saveText}>Guardar Configuración</Text>
               </>
             )}
@@ -407,7 +407,7 @@ const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   },
   saveText: {
     ...typography.button,
-    color: "#ffffff",
+    color: palette.textInverse,
     fontSize: 16,
   },
 });

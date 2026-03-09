@@ -292,7 +292,7 @@ export default function SettingsScreen() {
                 value={isDark}
                 onValueChange={toggleTheme}
                 trackColor={{ false: palette.separator, true: palette.primary }}
-                thumbColor="#ffffff"
+                thumbColor={palette.card}
               />
             }
           />

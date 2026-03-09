@@ -122,6 +122,17 @@ Se realizó un análisis completo de paridad entre la SPA web (React 19) y la ap
 | 7 | Reportes/Analytics | ~16-24h | Nuevos endpoints de agregación + páginas de reportes con gráficas |
 | 10 | Activity log | ~8-16h | Tabla `activity_logs` + trigger/middleware en backend + UI timeline |
 
+### Design System y Marca (Completado — Marzo 2026)
+
+| # | Item | Estado | Descripción |
+|---|------|--------|-------------|
+| 31 | Brand Manual PDF | **Completado** | Manual visual profesional de 11 páginas (`marketing/brand-manual/Solennix-Brand-Manual.pdf`) |
+| 32 | UI Design Guide | **Completado** | Guía completa de diseño UI con tokens, componentes, patrones y checklist (`docs/design/UI-DESIGN-GUIDE.md`) |
+| 33 | Migración tokens design system | **Completado** | Todas las pantallas de usuario migradas de colores hardcoded a tokens semánticos (ver `docs/screen-improvements-mar-2026.md`) |
+| 34 | Documentación de aplicación de color | **Completado** | Reglas claras de cómo mapear colores de marca (Navy, Dorado, Crema) a tokens de la UI |
+
+> **Referencia de diseño:** `docs/design/UI-DESIGN-GUIDE.md` es la fuente de verdad para cómo debe lucir la app: moderna, elegante, minimalista, con colores correctamente aplicados.
+
 ### Nice-to-have (Prioridad Baja)
 
 | # | Item | Notas |
@@ -157,7 +168,7 @@ Se realizó un análisis completo de paridad entre la SPA web (React 19) y la ap
 |----------|-------|-------|
 | Feature parity Web/Mobile | 88% | 97% |
 | Comunicación con backend | 95% | 97% |
-| Estandarización de diseño | 92% | 94% |
+| Estandarización de diseño | 92% | 98% |
 | Utilización del backend | 85% | 95% |
 | Preparación para producción | 80% | 90% |
 | Competitividad del producto | 75% | 88% |

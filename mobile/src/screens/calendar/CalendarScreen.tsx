@@ -584,7 +584,7 @@ const getStyles = (palette: typeof colors.light) =>
       color: palette.text,
     },
     dayTextSelected: {
-      color: "#ffffff", // Always white — selected background is always gold (#C4A265) in both themes
+      color: palette.textInverse, // Always contrasts with selected background (gold #C4A265 in both themes)
       fontWeight: "700",
     },
     dayTextToday: {

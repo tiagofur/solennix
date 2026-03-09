@@ -121,10 +121,10 @@ export default function EditProfileScreen({ navigation }: Props) {
             disabled={submitting}
           >
             {submitting ? (
-              <ActivityIndicator color="#fff" size="small" />
+              <ActivityIndicator color={palette.textInverse} size="small" />
             ) : (
               <>
-                <Save color="#fff" size={20} />
+                <Save color={palette.textInverse} size={20} />
                 <Text style={styles.saveText}>Guardar Cambios</Text>
               </>
             )}
@@ -172,7 +172,7 @@ const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   },
   saveText: {
     ...typography.button,
-    color: "#ffffff",
+    color: palette.textInverse,
     fontSize: 16,
   },
 });

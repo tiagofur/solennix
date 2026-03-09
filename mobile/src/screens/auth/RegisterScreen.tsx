@@ -49,6 +49,7 @@ const BRAND_FEATURES = [
 ];
 
 function BrandPanel({ palette }: { palette: typeof colors.light }) {
+  const styles = getStyles(palette);
   return (
     <LinearGradient
       colors={[palette.primary, palette.primaryDark]}
@@ -62,7 +63,7 @@ function BrandPanel({ palette }: { palette: typeof colors.light }) {
         {BRAND_FEATURES.map(({ icon: Icon, text }) => (
           <View key={text} style={styles.brandFeatureRow}>
             <View style={styles.brandFeatureIcon}>
-              <Icon color="#fff" size={18} />
+              <Icon color={palette.textInverse} size={18} />
             </View>
             <Text style={styles.brandFeatureText}>{text}</Text>
           </View>
@@ -80,6 +81,7 @@ export default function RegisterScreen({ navigation }: Props) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { isDark } = useTheme();
   const palette = isDark ? colors.dark : colors.light;
+  const styles = getStyles(palette);
   const { width, height } = useWindowDimensions();
   const isTablet = width >= 600;
   const isLandscapeTablet = isTablet && width > height;
@@ -235,7 +237,7 @@ export default function RegisterScreen({ navigation }: Props) {
         >
           {loading ? (
             <View style={styles.buttonLoadingContent}>
-              <ActivityIndicator color="#fff" size="small" />
+              <ActivityIndicator color={palette.textInverse} size="small" />
               <Text style={styles.buttonText}>Creando cuenta...</Text>
             </View>
           ) : (
@@ -280,7 +282,7 @@ export default function RegisterScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   container: {
     flex: 1,
   },
@@ -296,7 +298,7 @@ const styles = StyleSheet.create({
   },
   brandTitle: {
     ...typography.h1,
-    color: "#fff",
+    color: palette.textInverse,
     marginBottom: spacing.sm,
   },
   brandTagline: {
@@ -323,7 +325,7 @@ const styles = StyleSheet.create({
   },
   brandFeatureText: {
     ...typography.body,
-    color: "#fff",
+    color: palette.textInverse,
     flex: 1,
   },
   inner: {
@@ -347,7 +349,7 @@ const styles = StyleSheet.create({
   },
   formTitle: {
     ...typography.h2,
-    color: "#666",
+    color: palette.textSecondary,
     marginBottom: spacing.xl,
     textAlign: "center",
   },
@@ -362,16 +364,16 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xxl,
   },
   errorBanner: {
-    backgroundColor: "#fef2f2",
+    backgroundColor: palette.errorBg,
     borderLeftWidth: 4,
-    borderLeftColor: "#ef4444",
+    borderLeftColor: palette.error,
     borderRadius: spacing.borderRadius.sm,
     padding: spacing.sm + 4,
     marginBottom: spacing.md,
   },
   errorBannerText: {
     ...typography.bodySmall,
-    color: "#ef4444",
+    color: palette.error,
   },
   button: {
     borderRadius: spacing.borderRadius.md,
@@ -389,7 +391,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     ...typography.button,
-    color: "#ffffff",
+    color: palette.textInverse,
   },
   termsText: {
     ...typography.caption,

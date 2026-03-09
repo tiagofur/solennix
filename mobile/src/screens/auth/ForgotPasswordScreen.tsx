@@ -37,6 +37,7 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
   const [sent, setSent] = useState(false);
   const { isDark } = useTheme();
   const palette = isDark ? colors.dark : colors.light;
+  const styles = getStyles(palette);
   const { width, height } = useWindowDimensions();
   const isTablet = width >= 600;
   const isLandscapeTablet = isTablet && width > height;
@@ -134,7 +135,7 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
           >
             {loading ? (
               <View style={styles.buttonLoadingContent}>
-                <ActivityIndicator color="#fff" size="small" />
+                <ActivityIndicator color={palette.textInverse} size="small" />
                 <Text style={styles.buttonText}>Enviando...</Text>
               </View>
             ) : (
@@ -154,7 +155,7 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (palette: typeof colors.light) => StyleSheet.create({
   container: {
     flex: 1,
   },
@@ -194,16 +195,16 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xxl,
   },
   errorBanner: {
-    backgroundColor: "#fef2f2",
+    backgroundColor: palette.errorBg,
     borderLeftWidth: 4,
-    borderLeftColor: "#ef4444",
+    borderLeftColor: palette.error,
     borderRadius: spacing.borderRadius.sm,
     padding: spacing.sm + 4,
     marginBottom: spacing.md,
   },
   errorBannerText: {
     ...typography.bodySmall,
-    color: "#ef4444",
+    color: palette.error,
   },
   button: {
     borderRadius: spacing.borderRadius.md,
@@ -227,7 +228,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     ...typography.button,
-    color: "#ffffff",
+    color: palette.textInverse,
   },
   linkContainer: {
     paddingVertical: spacing.sm,
