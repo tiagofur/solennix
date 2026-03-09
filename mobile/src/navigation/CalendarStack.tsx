@@ -4,6 +4,7 @@ import { CalendarStackParamList } from "../types/navigation";
 import CalendarScreen from "../screens/calendar/CalendarScreen";
 import EventDetailScreen from "../screens/events/EventDetailScreen";
 import EventFormScreen from "../screens/events/EventFormScreen";
+import EventChecklistScreen from "../screens/events/EventChecklistScreen";
 
 const Stack = createNativeStackNavigator<CalendarStackParamList>();
 
@@ -30,6 +31,11 @@ export default function CalendarStack() {
         options={({ route }) => ({
           title: route.params?.id ? "Editar Evento" : "Nuevo Evento",
         })}
+      />
+      <Stack.Screen
+        name="EventChecklist"
+        component={EventChecklistScreen}
+        options={{ title: "Checklist de Carga" }}
       />
     </Stack.Navigator>
   );

@@ -54,7 +54,14 @@ import {
   generateInvoicePDF,
 } from "../../lib/pdfGenerator";
 import { ContractTemplateError } from "../../lib/contractTemplate";
-import { LoadingSpinner, ConfirmDialog, EmptyState, AppBottomSheet, PhotoGallery } from "../../components/shared";
+import {
+  LoadingSpinner,
+  ConfirmDialog,
+  EmptyState,
+  AppBottomSheet,
+  PhotoGallery,
+  PremiumButton,
+} from "../../components/shared";
 import { uploadService } from "../../services/uploadService";
 import { useImagePicker } from "../../hooks/useImagePicker";
 import { useStoreReview } from "../../hooks/useStoreReview";
@@ -67,10 +74,34 @@ import { shadows } from "../../theme/shadows";
 type Props = NativeStackScreenProps<EventsStackParamList, "EventDetail">;
 
 const getStatusOptions = (palette: typeof colors.light) => [
-  { key: "quoted", label: "Cotizado", color: palette.statusQuoted, bg: palette.statusQuotedBg, text: palette.statusQuoted },
-  { key: "confirmed", label: "Confirmado", color: palette.statusConfirmed, bg: palette.statusConfirmedBg, text: palette.statusConfirmed },
-  { key: "completed", label: "Completado", color: palette.statusCompleted, bg: palette.statusCompletedBg, text: palette.statusCompleted },
-  { key: "cancelled", label: "Cancelado", color: palette.statusCancelled, bg: palette.statusCancelledBg, text: palette.statusCancelled },
+  {
+    key: "quoted",
+    label: "Cotizado",
+    color: palette.statusQuoted,
+    bg: palette.statusQuotedBg,
+    text: palette.statusQuoted,
+  },
+  {
+    key: "confirmed",
+    label: "Confirmado",
+    color: palette.statusConfirmed,
+    bg: palette.statusConfirmedBg,
+    text: palette.statusConfirmed,
+  },
+  {
+    key: "completed",
+    label: "Completado",
+    color: palette.statusCompleted,
+    bg: palette.statusCompletedBg,
+    text: palette.statusCompleted,
+  },
+  {
+    key: "cancelled",
+    label: "Cancelado",
+    color: palette.statusCancelled,
+    bg: palette.statusCancelledBg,
+    text: palette.statusCancelled,
+  },
 ];
 
 const statusLabels: Record<string, string> = {
@@ -98,14 +129,14 @@ export default function EventDetailScreen({ navigation, route }: Props) {
   const [equipment, setEquipment] = useState<any[]>([]);
   const [supplies, setSupplies] = useState<any[]>([]);
   const [payments, setPayments] = useState<any[]>([]);
-  
+
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showActionsMenu, setShowActionsMenu] = useState(false);
-  
+
   const [paymentAmount, setPaymentAmount] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("efectivo");
   const [paymentNotes, setPaymentNotes] = useState("");
@@ -124,7 +155,10 @@ export default function EventDetailScreen({ navigation, route }: Props) {
     [event?.total_amount, totalPaid],
   );
   const progress = useMemo(
-    () => (event?.total_amount ? Math.min((totalPaid / event.total_amount) * 100, 100) : 0),
+    () =>
+      event?.total_amount
+        ? Math.min((totalPaid / event.total_amount) * 100, 100)
+        : 0,
     [totalPaid, event?.total_amount],
   );
   const isFullyPaid = remaining <= 0.01;
@@ -134,7 +168,14 @@ export default function EventDetailScreen({ navigation, route }: Props) {
       const eventData = await eventService.getById(id);
       setEvent(eventData);
 
-      const [clientData, productsData, extrasData, paymentsData, equipmentData, suppliesData] = await Promise.all([
+      const [
+        clientData,
+        productsData,
+        extrasData,
+        paymentsData,
+        equipmentData,
+        suppliesData,
+      ] = await Promise.all([
         clientService.getById(eventData.client_id),
         eventService.getProducts(id),
         eventService.getExtras(id),
@@ -152,7 +193,10 @@ export default function EventDetailScreen({ navigation, route }: Props) {
       // Parse photos JSONB
       if (eventData.photos) {
         try {
-          const parsed = typeof eventData.photos === 'string' ? JSON.parse(eventData.photos) : eventData.photos;
+          const parsed =
+            typeof eventData.photos === "string"
+              ? JSON.parse(eventData.photos)
+              : eventData.photos;
           setEventPhotos(Array.isArray(parsed) ? parsed : []);
         } catch {
           setEventPhotos([]);
@@ -191,17 +235,20 @@ export default function EventDetailScreen({ navigation, route }: Props) {
     }
   }, [id, addToast, navigation]);
 
-  const handleStatusChange = useCallback(async (newStatus: string) => {
-    try {
-      await eventService.update(id, { status: newStatus as any });
-      setEvent({ ...event!, status: newStatus as any });
-      addToast("Estado actualizado", "success");
-      setShowStatusModal(false);
-    } catch (err) {
-      logError("Error updating status", err);
-      addToast("Error al actualizar estado", "error");
-    }
-  }, [id, event, addToast]);
+  const handleStatusChange = useCallback(
+    async (newStatus: string) => {
+      try {
+        await eventService.update(id, { status: newStatus as any });
+        setEvent({ ...event!, status: newStatus as any });
+        addToast("Estado actualizado", "success");
+        setShowStatusModal(false);
+      } catch (err) {
+        logError("Error updating status", err);
+        addToast("Error al actualizar estado", "error");
+      }
+    },
+    [id, event, addToast],
+  );
 
   const handleAddPayment = useCallback(async () => {
     const amount = parseFloat(paymentAmount);
@@ -224,7 +271,9 @@ export default function EventDetailScreen({ navigation, route }: Props) {
       // Auto-confirm quoted events when payment is registered
       if (amount > 0 && event?.status === "quoted") {
         await eventService.update(id, { status: "confirmed" as any });
-        setEvent((prev) => prev ? { ...prev, status: "confirmed" as any } : prev);
+        setEvent((prev) =>
+          prev ? { ...prev, status: "confirmed" as any } : prev,
+        );
         addToast("Pago registrado. Evento marcado como Confirmado.", "success");
       } else {
         addToast("Pago registrado", "success");
@@ -240,7 +289,15 @@ export default function EventDetailScreen({ navigation, route }: Props) {
     } finally {
       setSavingPayment(false);
     }
-  }, [id, paymentAmount, paymentMethod, paymentNotes, event, addToast, loadData]);
+  }, [
+    id,
+    paymentAmount,
+    paymentMethod,
+    paymentNotes,
+    event,
+    addToast,
+    loadData,
+  ]);
 
   const handleDeletePayment = useCallback(async () => {
     if (!deletePaymentId) return;
@@ -286,17 +343,20 @@ export default function EventDetailScreen({ navigation, route }: Props) {
     }
   }, [id, eventPhotos, pickFromGallery, addToast]);
 
-  const handleRemovePhoto = useCallback(async (index: number) => {
-    try {
-      const updated = eventPhotos.filter((_, i) => i !== index);
-      await eventService.update(id, { photos: JSON.stringify(updated) });
-      setEventPhotos(updated);
-      addToast("Foto eliminada", "success");
-    } catch (err) {
-      logError("Error removing photo", err);
-      addToast("Error al eliminar foto", "error");
-    }
-  }, [id, eventPhotos, addToast]);
+  const handleRemovePhoto = useCallback(
+    async (index: number) => {
+      try {
+        const updated = eventPhotos.filter((_, i) => i !== index);
+        await eventService.update(id, { photos: JSON.stringify(updated) });
+        setEventPhotos(updated);
+        addToast("Foto eliminada", "success");
+      } catch (err) {
+        logError("Error removing photo", err);
+        addToast("Error al eliminar foto", "error");
+      }
+    },
+    [id, eventPhotos, addToast],
+  );
 
   const [generatingPdf, setGeneratingPdf] = useState<string | null>(null);
 
@@ -304,7 +364,12 @@ export default function EventDetailScreen({ navigation, route }: Props) {
     setShowActionsMenu(false);
     try {
       setGeneratingPdf("quote");
-      await generateBudgetPDF({ ...event!, client: client as any }, user, products, extras);
+      await generateBudgetPDF(
+        { ...event!, client: client as any },
+        user,
+        products,
+        extras,
+      );
       trackPdfShared();
     } catch (err) {
       logError("Error generating quote PDF", err);
@@ -341,25 +406,40 @@ export default function EventDetailScreen({ navigation, route }: Props) {
         productQuantities.set(p.product_id, p.quantity || 0);
       });
       const productIds = Array.from(productQuantities.keys());
-      const prodIngredients = productIds.length > 0
-        ? await productService.getIngredientsForProducts(productIds)
-        : [];
-      const aggregated: Record<string, { name: string; quantity: number; unit: string }> = {};
+      const prodIngredients =
+        productIds.length > 0
+          ? await productService.getIngredientsForProducts(productIds)
+          : [];
+      const aggregated: Record<
+        string,
+        { name: string; quantity: number; unit: string }
+      > = {};
       (prodIngredients || [])
-        .filter((ing: any) => ing.type === 'ingredient')
+        .filter((ing: any) => ing.type === "ingredient")
         .forEach((ing: any) => {
           const key = ing.inventory_id;
           const qty = productQuantities.get(ing.product_id) || 0;
           if (!aggregated[key]) {
-            aggregated[key] = { name: ing.ingredient_name || "Insumo", unit: ing.unit || "", quantity: 0 };
+            aggregated[key] = {
+              name: ing.ingredient_name || "Insumo",
+              unit: ing.unit || "",
+              quantity: 0,
+            };
           }
           aggregated[key].quantity += (ing.quantity_required || 0) * qty;
         });
       // Include purchase supplies in shopping list
       const purchaseSupplies = supplies
-        .filter((s: any) => s.source === 'purchase')
-        .map((s: any) => ({ name: s.supply_name || 'Insumo', quantity: s.quantity, unit: s.unit || 'und' }));
-      await generateShoppingListPDF(event!, user, [...Object.values(aggregated), ...purchaseSupplies]);
+        .filter((s: any) => s.source === "purchase")
+        .map((s: any) => ({
+          name: s.supply_name || "Insumo",
+          quantity: s.quantity,
+          unit: s.unit || "und",
+        }));
+      await generateShoppingListPDF(event!, user, [
+        ...Object.values(aggregated),
+        ...purchaseSupplies,
+      ]);
       trackPdfShared();
     } catch (err) {
       logError("Error generating shopping list PDF", err);
@@ -378,25 +458,44 @@ export default function EventDetailScreen({ navigation, route }: Props) {
         productQuantities.set(p.product_id, p.quantity || 0);
       });
       const productIds = Array.from(productQuantities.keys());
-      const prodIngredients = productIds.length > 0
-        ? await productService.getIngredientsForProducts(productIds)
-        : [];
-      const aggregated: Record<string, { name: string; quantity: number; unit: string }> = {};
+      const prodIngredients =
+        productIds.length > 0
+          ? await productService.getIngredientsForProducts(productIds)
+          : [];
+      const aggregated: Record<
+        string,
+        { name: string; quantity: number; unit: string }
+      > = {};
       (prodIngredients || [])
-        .filter((ing: any) => ing.type === 'ingredient' && ing.bring_to_event)
+        .filter((ing: any) => ing.type === "ingredient" && ing.bring_to_event)
         .forEach((ing: any) => {
           const key = ing.inventory_id;
           const qty = productQuantities.get(ing.product_id) || 0;
           if (!aggregated[key]) {
-            aggregated[key] = { name: ing.ingredient_name || "Insumo", unit: ing.unit || "", quantity: 0 };
+            aggregated[key] = {
+              name: ing.ingredient_name || "Insumo",
+              unit: ing.unit || "",
+              quantity: 0,
+            };
           }
           aggregated[key].quantity += (ing.quantity_required || 0) * qty;
         });
       // Include stock supplies in checklist
       const stockSupplies = supplies
-        .filter((s: any) => s.source === 'stock')
-        .map((s: any) => ({ name: s.supply_name || 'Insumo', quantity: s.quantity, unit: s.unit || 'und' }));
-      await generateChecklistPDF(event!, user, products, equipment, [...Object.values(aggregated), ...stockSupplies], extras);
+        .filter((s: any) => s.source === "stock")
+        .map((s: any) => ({
+          name: s.supply_name || "Insumo",
+          quantity: s.quantity,
+          unit: s.unit || "und",
+        }));
+      await generateChecklistPDF(
+        event!,
+        user,
+        products,
+        equipment,
+        [...Object.values(aggregated), ...stockSupplies],
+        extras,
+      );
       trackPdfShared();
     } catch (err) {
       logError("Error generating checklist PDF", err);
@@ -410,7 +509,11 @@ export default function EventDetailScreen({ navigation, route }: Props) {
     setShowActionsMenu(false);
     try {
       setGeneratingPdf("payments");
-      await generatePaymentReportPDF({ ...event!, client: client as any }, user, payments);
+      await generatePaymentReportPDF(
+        { ...event!, client: client as any },
+        user,
+        payments,
+      );
       trackPdfShared();
     } catch (err) {
       logError("Error generating payment report PDF", err);
@@ -424,7 +527,12 @@ export default function EventDetailScreen({ navigation, route }: Props) {
     setShowActionsMenu(false);
     try {
       setGeneratingPdf("invoice");
-      await generateInvoicePDF({ ...event!, client: client as any }, user, products, extras);
+      await generateInvoicePDF(
+        { ...event!, client: client as any },
+        user,
+        products,
+        extras,
+      );
       trackPdfShared();
     } catch (err) {
       logError("Error generating invoice PDF", err);
@@ -447,7 +555,8 @@ export default function EventDetailScreen({ navigation, route }: Props) {
     );
   }
 
-  const currentStatus = STATUS_OPTIONS.find(s => s.key === event.status) || STATUS_OPTIONS[0];
+  const currentStatus =
+    STATUS_OPTIONS.find((s) => s.key === event.status) || STATUS_OPTIONS[0];
 
   return (
     <SafeAreaView style={styles.container} edges={["bottom"]}>
@@ -461,7 +570,9 @@ export default function EventDetailScreen({ navigation, route }: Props) {
         <View style={styles.headerCard}>
           <View style={styles.dateBox}>
             <Text style={styles.dateMonth}>
-              {format(parseISO(event.event_date), "MMM", { locale: es }).toUpperCase()}
+              {format(parseISO(event.event_date), "MMM", {
+                locale: es,
+              }).toUpperCase()}
             </Text>
             <Text style={styles.dateDay}>
               {format(parseISO(event.event_date), "d")}
@@ -470,8 +581,11 @@ export default function EventDetailScreen({ navigation, route }: Props) {
           <View style={styles.headerInfo}>
             <Text style={styles.eventType}>{event.service_type}</Text>
             <Text style={styles.clientName}>{client?.name}</Text>
-            <TouchableOpacity 
-              style={[styles.statusBadge, { backgroundColor: currentStatus.bg }]}
+            <TouchableOpacity
+              style={[
+                styles.statusBadge,
+                { backgroundColor: currentStatus.bg },
+              ]}
               onPress={() => setShowStatusModal(true)}
             >
               <Text style={[styles.statusText, { color: currentStatus.text }]}>
@@ -484,14 +598,18 @@ export default function EventDetailScreen({ navigation, route }: Props) {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Detalles</Text>
-          
+
           <View style={styles.infoRow}>
             <Calendar color={palette.textMuted} size={18} />
             <Text style={styles.infoText}>
-              {format(parseISO(event.event_date), "EEEE d 'de' MMMM 'de' yyyy", { locale: es })}
+              {format(
+                parseISO(event.event_date),
+                "EEEE d 'de' MMMM 'de' yyyy",
+                { locale: es },
+              )}
             </Text>
           </View>
-          
+
           {event.start_time && (
             <View style={styles.infoRow}>
               <Clock color={palette.textMuted} size={18} />
@@ -500,17 +618,18 @@ export default function EventDetailScreen({ navigation, route }: Props) {
               </Text>
             </View>
           )}
-          
+
           <View style={styles.infoRow}>
             <Users color={palette.textMuted} size={18} />
             <Text style={styles.infoText}>{event.num_people} personas</Text>
           </View>
-          
+
           {event.location && (
             <View style={styles.infoRow}>
               <MapPin color={palette.textMuted} size={18} />
               <Text style={styles.infoText}>
-                {event.location}{event.city ? `, ${event.city}` : ""}
+                {event.location}
+                {event.city ? `, ${event.city}` : ""}
               </Text>
             </View>
           )}
@@ -519,11 +638,13 @@ export default function EventDetailScreen({ navigation, route }: Props) {
         {products.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Productos</Text>
-            
+
             {products.map((p: any, index: number) => (
               <View key={index} style={styles.itemRow}>
                 <View style={styles.itemInfo}>
-                  <Text style={styles.itemName}>{p.products?.name || "Producto"}</Text>
+                  <Text style={styles.itemName}>
+                    {p.products?.name || "Producto"}
+                  </Text>
                   <Text style={styles.itemDetail}>
                     {p.quantity} x {formatCurrency(p.unit_price)}
                   </Text>
@@ -553,35 +674,70 @@ export default function EventDetailScreen({ navigation, route }: Props) {
 
         {supplies.length > 0 && (
           <View style={styles.section}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: spacing.xs, marginBottom: spacing.sm }}>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: spacing.xs,
+                marginBottom: spacing.sm,
+              }}
+            >
               <Fuel color={palette.statusQuoted} size={18} />
-              <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>Insumos por Evento</Text>
+              <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>
+                Insumos por Evento
+              </Text>
             </View>
 
             {supplies.map((s: any, index: number) => (
               <View key={index} style={styles.itemRow}>
                 <View style={styles.itemInfo}>
-                  <Text style={styles.itemName}>{s.supply_name || 'Insumo'}</Text>
+                  <Text style={styles.itemName}>
+                    {s.supply_name || "Insumo"}
+                  </Text>
                   <Text style={styles.itemDetail}>
-                    {s.quantity} × ${s.unit_cost?.toFixed(2) || '0.00'}/{s.unit || 'und'}
-                    {' — '}
-                    {s.source === 'stock' ? 'Del stock' : 'Compra nueva'}
-                    {s.exclude_cost ? ' — Sin costo' : ''}
+                    {s.quantity} × ${s.unit_cost?.toFixed(2) || "0.00"}/
+                    {s.unit || "und"}
+                    {" — "}
+                    {s.source === "stock" ? "Del stock" : "Compra nueva"}
+                    {s.exclude_cost ? " — Sin costo" : ""}
                   </Text>
                 </View>
-                <Text style={[styles.itemTotal, {
-                  color: s.exclude_cost ? palette.textMuted : palette.statusQuoted,
-                  textDecorationLine: s.exclude_cost ? 'line-through' : 'none',
-                }]}>
+                <Text
+                  style={[
+                    styles.itemTotal,
+                    {
+                      color: s.exclude_cost
+                        ? palette.textMuted
+                        : palette.statusQuoted,
+                      textDecorationLine: s.exclude_cost
+                        ? "line-through"
+                        : "none",
+                    },
+                  ]}
+                >
                   {formatCurrency(s.quantity * (s.unit_cost || 0))}
                 </Text>
               </View>
             ))}
 
             <View style={[styles.itemRow, { borderBottomWidth: 0 }]}>
-              <Text style={[styles.itemName, { color: palette.statusQuoted }]}>Total Insumos</Text>
-              <Text style={[styles.itemTotal, { color: palette.statusQuoted, fontWeight: "700" }]}>
-                {formatCurrency(supplies.reduce((sum: number, s: any) => sum + (s.exclude_cost ? 0 : s.quantity * (s.unit_cost || 0)), 0))}
+              <Text style={[styles.itemName, { color: palette.statusQuoted }]}>
+                Total Insumos
+              </Text>
+              <Text
+                style={[
+                  styles.itemTotal,
+                  { color: palette.statusQuoted, fontWeight: "700" },
+                ]}
+              >
+                {formatCurrency(
+                  supplies.reduce(
+                    (sum: number, s: any) =>
+                      sum +
+                      (s.exclude_cost ? 0 : s.quantity * (s.unit_cost || 0)),
+                    0,
+                  ),
+                )}
               </Text>
             </View>
           </View>
@@ -594,12 +750,17 @@ export default function EventDetailScreen({ navigation, route }: Props) {
             {equipment.map((eq: any, index: number) => (
               <View key={index} style={styles.itemRow}>
                 <View style={styles.itemInfo}>
-                  <Text style={styles.itemName}>{eq.equipment_name || 'Equipo'}</Text>
+                  <Text style={styles.itemName}>
+                    {eq.equipment_name || "Equipo"}
+                  </Text>
                   <Text style={styles.itemDetail}>
-                    x{eq.quantity}{eq.notes ? ` — ${eq.notes}` : ''}
+                    x{eq.quantity}
+                    {eq.notes ? ` — ${eq.notes}` : ""}
                   </Text>
                 </View>
-                <Text style={[styles.itemTotal, { color: palette.textMuted }]}>Sin costo</Text>
+                <Text style={[styles.itemTotal, { color: palette.textMuted }]}>
+                  Sin costo
+                </Text>
               </View>
             ))}
           </View>
@@ -607,7 +768,7 @@ export default function EventDetailScreen({ navigation, route }: Props) {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Finanzas</Text>
-          
+
           <View style={styles.totalCard}>
             <View style={styles.totalLine}>
               <Text style={styles.totalLabel}>Subtotal</Text>
@@ -625,11 +786,15 @@ export default function EventDetailScreen({ navigation, route }: Props) {
             )}
             <View style={styles.totalLine}>
               <Text style={styles.totalLabel}>IVA ({event.tax_rate}%)</Text>
-              <Text style={styles.totalValue}>{formatCurrency(event.tax_amount)}</Text>
+              <Text style={styles.totalValue}>
+                {formatCurrency(event.tax_amount)}
+              </Text>
             </View>
             <View style={[styles.totalLine, styles.totalLineBold]}>
               <Text style={styles.totalLabelBold}>Total</Text>
-              <Text style={styles.totalValueBold}>{formatCurrency(event.total_amount)}</Text>
+              <Text style={styles.totalValueBold}>
+                {formatCurrency(event.total_amount)}
+              </Text>
             </View>
           </View>
 
@@ -644,15 +809,38 @@ export default function EventDetailScreen({ navigation, route }: Props) {
                   {formatCurrency(event.total_amount)}
                 </Text>
               </View>
-              <View style={[styles.paymentSummaryCard, { backgroundColor: palette.successBg }]}>
+              <View
+                style={[
+                  styles.paymentSummaryCard,
+                  { backgroundColor: palette.successBg },
+                ]}
+              >
                 <Text style={styles.paymentSummaryLabel}>Pagado</Text>
-                <Text style={[styles.paymentSummaryValue, { color: palette.success }]}>
+                <Text
+                  style={[
+                    styles.paymentSummaryValue,
+                    { color: palette.success },
+                  ]}
+                >
                   {formatCurrency(totalPaid)}
                 </Text>
               </View>
-              <View style={[styles.paymentSummaryCard, { backgroundColor: remaining > 0 ? palette.errorBg : palette.successBg }]}>
+              <View
+                style={[
+                  styles.paymentSummaryCard,
+                  {
+                    backgroundColor:
+                      remaining > 0 ? palette.errorBg : palette.successBg,
+                  },
+                ]}
+              >
                 <Text style={styles.paymentSummaryLabel}>Saldo</Text>
-                <Text style={[styles.paymentSummaryValue, { color: remaining > 0 ? palette.error : palette.success }]}>
+                <Text
+                  style={[
+                    styles.paymentSummaryValue,
+                    { color: remaining > 0 ? palette.error : palette.success },
+                  ]}
+                >
                   {formatCurrency(Math.abs(remaining))}
                 </Text>
               </View>
@@ -666,12 +854,16 @@ export default function EventDetailScreen({ navigation, route }: Props) {
                     styles.progressFill,
                     {
                       width: `${progress}%`,
-                      backgroundColor: isFullyPaid ? palette.success : palette.primary,
+                      backgroundColor: isFullyPaid
+                        ? palette.success
+                        : palette.primary,
                     },
                   ]}
                 />
               </View>
-              <Text style={styles.progressText}>{Math.round(progress)}% pagado</Text>
+              <Text style={styles.progressText}>
+                {Math.round(progress)}% pagado
+              </Text>
             </View>
 
             {/* Payments list */}
@@ -683,13 +875,19 @@ export default function EventDetailScreen({ navigation, route }: Props) {
                       <CreditCard color={palette.textMuted} size={14} />
                       <View>
                         <Text style={styles.paymentDate}>
-                          {format(parseISO(p.payment_date), "d MMM", { locale: es })}
+                          {format(parseISO(p.payment_date), "d MMM", {
+                            locale: es,
+                          })}
                           {" · "}
-                          {p.payment_method === "efectivo" ? "Efectivo" :
-                           p.payment_method === "transferencia" ? "Transferencia" :
-                           p.payment_method === "tarjeta" ? "Tarjeta" :
-                           p.payment_method === "cheque" ? "Cheque" :
-                           p.payment_method || ""}
+                          {p.payment_method === "efectivo"
+                            ? "Efectivo"
+                            : p.payment_method === "transferencia"
+                              ? "Transferencia"
+                              : p.payment_method === "tarjeta"
+                                ? "Tarjeta"
+                                : p.payment_method === "cheque"
+                                  ? "Cheque"
+                                  : p.payment_method || ""}
                         </Text>
                         {p.notes ? (
                           <Text style={styles.paymentNoteText}>{p.notes}</Text>
@@ -697,7 +895,9 @@ export default function EventDetailScreen({ navigation, route }: Props) {
                       </View>
                     </View>
                     <View style={styles.paymentRowRight}>
-                      <Text style={styles.paymentAmount}>{formatCurrency(p.amount)}</Text>
+                      <Text style={styles.paymentAmount}>
+                        {formatCurrency(p.amount)}
+                      </Text>
                       <TouchableOpacity
                         onPress={() => setDeletePaymentId(p.id)}
                         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -722,7 +922,9 @@ export default function EventDetailScreen({ navigation, route }: Props) {
         <View style={styles.section}>
           <View style={styles.photoSectionHeader}>
             <Text style={styles.sectionTitle}>Fotos</Text>
-            {isUploadingPhoto && <ActivityIndicator size="small" color={palette.primary} />}
+            {isUploadingPhoto && (
+              <ActivityIndicator size="small" color={palette.primary} />
+            )}
           </View>
           {eventPhotos.length > 0 || true ? (
             <PhotoGallery
@@ -745,9 +947,7 @@ export default function EventDetailScreen({ navigation, route }: Props) {
             onPress={() => setShowPaymentModal(true)}
           >
             <Plus color={palette.textInverse} size={18} />
-            <Text style={styles.primaryActionText}>
-              Registrar Pago
-            </Text>
+            <Text style={styles.primaryActionText}>Registrar Pago</Text>
           </TouchableOpacity>
           {remaining > 0.01 && (
             <TouchableOpacity
@@ -760,6 +960,20 @@ export default function EventDetailScreen({ navigation, route }: Props) {
               </Text>
             </TouchableOpacity>
           )}
+        </View>
+
+        <View
+          style={[
+            styles.actions,
+            { marginTop: spacing.xs, marginBottom: spacing.xs },
+          ]}
+        >
+          <PremiumButton
+            label="Checklist de Carga"
+            icon={<ClipboardList color="#ffffff" size={18} />}
+            onPress={() => navigation.navigate("EventChecklist", { id })}
+            style={{ flex: 1 }}
+          />
         </View>
 
         <View style={styles.actions}>
@@ -809,8 +1023,12 @@ export default function EventDetailScreen({ navigation, route }: Props) {
               onPress={() => handleStatusChange(status.key)}
               activeOpacity={0.7}
             >
-              <View style={[styles.statusDot, { backgroundColor: status.color }]} />
-              <Text style={[styles.modalOptionText, { flex: 1 }]}>{status.label}</Text>
+              <View
+                style={[styles.statusDot, { backgroundColor: status.color }]}
+              />
+              <Text style={[styles.modalOptionText, { flex: 1 }]}>
+                {status.label}
+              </Text>
               {event.status === status.key && (
                 <Check color={palette.primary} size={18} />
               )}
@@ -838,28 +1056,35 @@ export default function EventDetailScreen({ navigation, route }: Props) {
 
           <Text style={styles.inputLabel}>Método de Pago</Text>
           <View style={styles.methodButtons}>
-            {["efectivo", "transferencia", "tarjeta", "cheque"].map((method) => (
-              <TouchableOpacity
-                key={method}
-                style={[
-                  styles.methodButton,
-                  paymentMethod === method && styles.methodButtonActive,
-                ]}
-                onPress={() => setPaymentMethod(method)}
-              >
-                <Text style={[
-                  styles.methodButtonText,
-                  paymentMethod === method && styles.methodButtonTextActive,
-                ]}>
-                  {method.charAt(0).toUpperCase() + method.slice(1)}
-                </Text>
-              </TouchableOpacity>
-            ))}
+            {["efectivo", "transferencia", "tarjeta", "cheque"].map(
+              (method) => (
+                <TouchableOpacity
+                  key={method}
+                  style={[
+                    styles.methodButton,
+                    paymentMethod === method && styles.methodButtonActive,
+                  ]}
+                  onPress={() => setPaymentMethod(method)}
+                >
+                  <Text
+                    style={[
+                      styles.methodButtonText,
+                      paymentMethod === method && styles.methodButtonTextActive,
+                    ]}
+                  >
+                    {method.charAt(0).toUpperCase() + method.slice(1)}
+                  </Text>
+                </TouchableOpacity>
+              ),
+            )}
           </View>
 
           <Text style={styles.inputLabel}>Notas / Referencia</Text>
           <TextInput
-            style={[styles.modalInput, { minHeight: 60, textAlignVertical: "top" }]}
+            style={[
+              styles.modalInput,
+              { minHeight: 60, textAlignVertical: "top" },
+            ]}
             value={paymentNotes}
             onChangeText={setPaymentNotes}
             placeholder="Referencia, folio, etc."
@@ -870,11 +1095,16 @@ export default function EventDetailScreen({ navigation, route }: Props) {
 
           <View style={styles.modalTotal}>
             <Text style={styles.modalTotalLabel}>Restante:</Text>
-            <Text style={styles.modalTotalValue}>{formatCurrency(remaining)}</Text>
+            <Text style={styles.modalTotalValue}>
+              {formatCurrency(remaining)}
+            </Text>
           </View>
 
           <TouchableOpacity
-            style={[styles.modalSaveButton, savingPayment && styles.modalSaveButtonDisabled]}
+            style={[
+              styles.modalSaveButton,
+              savingPayment && styles.modalSaveButtonDisabled,
+            ]}
             onPress={handleAddPayment}
             disabled={savingPayment}
             activeOpacity={0.7}
@@ -902,51 +1132,87 @@ export default function EventDetailScreen({ navigation, route }: Props) {
             </View>
           ) : (
             <>
-              <TouchableOpacity style={styles.menuOption} onPress={handleGenerateQuote} activeOpacity={0.7}>
+              <TouchableOpacity
+                style={styles.menuOption}
+                onPress={handleGenerateQuote}
+                activeOpacity={0.7}
+              >
                 <FileText color={palette.primary} size={24} />
                 <View style={styles.menuOptionInfo}>
                   <Text style={styles.menuOptionTitle}>Cotización</Text>
-                  <Text style={styles.menuOptionDesc}>Genera PDF de la cotización</Text>
+                  <Text style={styles.menuOptionDesc}>
+                    Genera PDF de la cotización
+                  </Text>
                 </View>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.menuOption} onPress={handleGenerateContract} activeOpacity={0.7}>
+              <TouchableOpacity
+                style={styles.menuOption}
+                onPress={handleGenerateContract}
+                activeOpacity={0.7}
+              >
                 <FileCheck color={palette.primary} size={24} />
                 <View style={styles.menuOptionInfo}>
                   <Text style={styles.menuOptionTitle}>Contrato</Text>
-                  <Text style={styles.menuOptionDesc}>Genera PDF del contrato</Text>
+                  <Text style={styles.menuOptionDesc}>
+                    Genera PDF del contrato
+                  </Text>
                 </View>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.menuOption} onPress={handleGenerateShoppingList} activeOpacity={0.7}>
+              <TouchableOpacity
+                style={styles.menuOption}
+                onPress={handleGenerateShoppingList}
+                activeOpacity={0.7}
+              >
                 <ShoppingCart color={palette.primary} size={24} />
                 <View style={styles.menuOptionInfo}>
                   <Text style={styles.menuOptionTitle}>Lista de Insumos</Text>
-                  <Text style={styles.menuOptionDesc}>Genera lista de insumos necesarios</Text>
+                  <Text style={styles.menuOptionDesc}>
+                    Genera lista de insumos necesarios
+                  </Text>
                 </View>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.menuOption} onPress={handleGenerateChecklist} activeOpacity={0.7}>
+              <TouchableOpacity
+                style={styles.menuOption}
+                onPress={handleGenerateChecklist}
+                activeOpacity={0.7}
+              >
                 <ClipboardList color={palette.primary} size={24} />
                 <View style={styles.menuOptionInfo}>
                   <Text style={styles.menuOptionTitle}>Checklist de Carga</Text>
-                  <Text style={styles.menuOptionDesc}>Todo lo que llevar al evento</Text>
+                  <Text style={styles.menuOptionDesc}>
+                    Todo lo que llevar al evento
+                  </Text>
                 </View>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.menuOption} onPress={handleGeneratePaymentReport} activeOpacity={0.7}>
+              <TouchableOpacity
+                style={styles.menuOption}
+                onPress={handleGeneratePaymentReport}
+                activeOpacity={0.7}
+              >
                 <DollarSign color={palette.primary} size={24} />
                 <View style={styles.menuOptionInfo}>
                   <Text style={styles.menuOptionTitle}>Reporte de Pagos</Text>
-                  <Text style={styles.menuOptionDesc}>Resumen de pagos realizados</Text>
+                  <Text style={styles.menuOptionDesc}>
+                    Resumen de pagos realizados
+                  </Text>
                 </View>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.menuOption} onPress={handleGenerateInvoice} activeOpacity={0.7}>
+              <TouchableOpacity
+                style={styles.menuOption}
+                onPress={handleGenerateInvoice}
+                activeOpacity={0.7}
+              >
                 <Receipt color={palette.primary} size={24} />
                 <View style={styles.menuOptionInfo}>
                   <Text style={styles.menuOptionTitle}>Factura</Text>
-                  <Text style={styles.menuOptionDesc}>Genera factura simplificada</Text>
+                  <Text style={styles.menuOptionDesc}>
+                    Genera factura simplificada
+                  </Text>
                 </View>
               </TouchableOpacity>
             </>
@@ -979,410 +1245,411 @@ export default function EventDetailScreen({ navigation, route }: Props) {
   );
 }
 
-const getStyles = (palette: typeof colors.light) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: palette.surfaceGrouped,
-  },
-  content: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xxl,
-  },
-  headerCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: palette.card,
-    borderRadius: spacing.borderRadius.xl,
-    padding: spacing.lg,
-    marginTop: spacing.sm,
-    gap: spacing.md,
-    ...shadows.sm,
-  },
-  dateBox: {
-    width: 56,
-    height: 56,
-    borderRadius: spacing.borderRadius.lg,
-    backgroundColor: palette.primaryLight,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  dateMonth: {
-    fontSize: 10,
-    fontWeight: "700",
-    color: palette.primary,
-    letterSpacing: 0.5,
-  },
-  dateDay: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: palette.primary,
-    lineHeight: 24,
-  },
-  headerInfo: {
-    flex: 1,
-  },
-  eventType: {
-    ...typography.h3,
-    color: palette.text,
-  },
-  clientName: {
-    ...typography.body,
-    color: palette.textSecondary,
-    marginBottom: spacing.xs,
-  },
-  statusText: {
-    fontSize: 11,
-    fontWeight: "700",
-  },
-  section: {
-    backgroundColor: palette.card,
-    borderRadius: spacing.borderRadius.lg,
-    padding: spacing.md,
-    marginTop: spacing.md,
-    ...shadows.sm,
-  },
-  sectionTitle: {
-    ...typography.h3,
-    color: palette.text,
-    marginBottom: spacing.sm,
-  },
-  infoRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-    paddingVertical: spacing.xs + 2,
-  },
-  infoText: {
-    ...typography.body,
-    color: palette.text,
-    flex: 1,
-  },
-  itemRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: spacing.sm,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: palette.separator,
-  },
-  itemInfo: {
-    flex: 1,
-  },
-  itemName: {
-    ...typography.label,
-    color: palette.text,
-  },
-  itemDetail: {
-    ...typography.caption,
-    color: palette.textMuted,
-  },
-  itemTotal: {
-    ...typography.label,
-    color: palette.text,
-  },
-  totalCard: {
-    backgroundColor: palette.surface,
-    borderRadius: spacing.borderRadius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-  },
-  totalLine: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: spacing.xs,
-  },
-  totalLineBold: {
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: palette.separator,
-    marginTop: spacing.xs,
-    paddingTop: spacing.sm,
-  },
-  totalLabel: {
-    ...typography.body,
-    color: palette.textSecondary,
-  },
-  totalValue: {
-    ...typography.label,
-    color: palette.text,
-  },
-  totalLabelBold: {
-    ...typography.h3,
-    color: palette.text,
-  },
-  totalValueBold: {
-    ...typography.h3,
-    color: palette.primary,
-  },
-  paymentCard: {
-    backgroundColor: palette.surface,
-    borderRadius: spacing.borderRadius.lg,
-    padding: spacing.md,
-  },
-  paymentTitle: {
-    ...typography.label,
-    color: palette.text,
-    marginBottom: spacing.sm,
-  },
-  paymentSummary: {
-    flexDirection: "row",
-    gap: spacing.sm,
-    marginBottom: spacing.md,
-  },
-  paymentSummaryCard: {
-    flex: 1,
-    backgroundColor: palette.surfaceAlt,
-    borderRadius: spacing.borderRadius.md,
-    padding: spacing.sm,
-    alignItems: "center",
-  },
-  paymentSummaryLabel: {
-    ...typography.caption1,
-    color: palette.textSecondary,
-    marginBottom: 2,
-  },
-  paymentSummaryValue: {
-    ...typography.headline,
-    color: palette.text,
-    fontSize: 14,
-  },
-  progressContainer: {
-    marginBottom: spacing.sm,
-  },
-  progressTrack: {
-    height: 8,
-    backgroundColor: palette.surfaceAlt,
-    borderRadius: 4,
-    overflow: "hidden",
-  },
-  progressFill: {
-    height: "100%",
-    borderRadius: 4,
-  },
-  progressText: {
-    ...typography.caption1,
-    color: palette.textSecondary,
-    marginTop: spacing.xxs,
-    textAlign: "right",
-  },
-  paymentsList: {
-    marginTop: spacing.sm,
-    paddingTop: spacing.sm,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: palette.separator,
-  },
-  paymentRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: spacing.sm,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: palette.separator,
-  },
-  paymentInfo: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: spacing.sm,
-    flex: 1,
-  },
-  paymentDate: {
-    ...typography.caption,
-    color: palette.textMuted,
-  },
-  paymentNoteText: {
-    ...typography.caption1,
-    color: palette.textTertiary,
-    marginTop: 2,
-  },
-  paymentRowRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-  },
-  paymentAmount: {
-    ...typography.label,
-    color: palette.success,
-  },
-  payRemainingBtn: {
-    backgroundColor: palette.success,
-  },
-  notesText: {
-    ...typography.body,
-    color: palette.text,
-  },
-  photoSectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: spacing.sm,
-  },
-  photosEmptyText: {
-    ...typography.bodySmall,
-    color: palette.textTertiary,
-    marginTop: spacing.xs,
-  },
-  actions: {
-    flexDirection: "row",
-    gap: spacing.md,
-    marginTop: spacing.md,
-  },
-  actionBtn: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.xs,
-    paddingVertical: spacing.sm + 2,
-    backgroundColor: palette.card,
-    borderRadius: spacing.borderRadius.lg,
-    ...shadows.sm,
-  },
-  primaryActionBtn: {
-    backgroundColor: palette.primary,
-  },
-  primaryActionText: {
-    ...typography.button,
-    fontSize: 14,
-    color: palette.textInverse,
-  },
-  deleteBtn: {
-    backgroundColor: palette.errorBg,
-  },
-  actionText: {
-    ...typography.button,
-    fontSize: 14,
-  },
-  statusBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    borderRadius: spacing.borderRadius.full,
-    alignSelf: "flex-start",
-  },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  sheetContent: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
-  },
-  modalTitle: {
-    ...typography.h3,
-    color: palette.text,
-    marginBottom: spacing.md,
-  },
-  modalOption: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.md,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
-    borderRadius: spacing.borderRadius.md,
-    marginBottom: spacing.xs,
-  },
-  modalOptionActive: {
-    backgroundColor: palette.surface,
-  },
-  modalOptionText: {
-    ...typography.body,
-    color: palette.text,
-  },
-  inputLabel: {
-    ...typography.caption,
-    color: palette.textSecondary,
-    marginBottom: spacing.xs,
-  },
-  modalInput: {
-    backgroundColor: palette.surface,
-    borderRadius: spacing.borderRadius.md,
-    padding: spacing.md,
-    ...typography.body,
-    color: palette.text,
-    marginBottom: spacing.md,
-  },
-  methodButtons: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.xs,
-    marginBottom: spacing.md,
-  },
-  methodButton: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: spacing.borderRadius.md,
-    backgroundColor: palette.surface,
-  },
-  methodButtonActive: {
-    backgroundColor: palette.primary,
-  },
-  methodButtonText: {
-    ...typography.caption,
-    color: palette.textSecondary,
-  },
-  methodButtonTextActive: {
-    color: palette.textInverse,
-  },
-  modalTotal: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: spacing.md,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: palette.separator,
-    marginBottom: spacing.md,
-  },
-  modalTotalLabel: {
-    ...typography.label,
-    color: palette.text,
-  },
-  modalTotalValue: {
-    ...typography.h3,
-    color: palette.error,
-  },
-  modalSaveButton: {
-    backgroundColor: palette.primary,
-    borderRadius: spacing.borderRadius.md,
-    paddingVertical: spacing.md,
-    alignItems: "center",
-  },
-  modalSaveButtonDisabled: {
-    opacity: 0.6,
-  },
-  modalSaveButtonText: {
-    ...typography.button,
-    color: palette.textInverse,
-  },
-  menuOption: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.md,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
-    borderRadius: spacing.borderRadius.md,
-    backgroundColor: palette.surface,
-    marginBottom: spacing.sm,
-  },
-  menuOptionInfo: {
-    flex: 1,
-  },
-  menuOptionTitle: {
-    ...typography.label,
-    color: palette.text,
-  },
-  menuOptionDesc: {
-    ...typography.caption,
-    color: palette.textMuted,
-  },
-  menuLoadingContainer: {
-    alignItems: "center",
-    paddingVertical: spacing.xl,
-    gap: spacing.md,
-  },
-  menuLoadingText: {
-    ...typography.body,
-    color: palette.textSecondary,
-  },
-});
+const getStyles = (palette: typeof colors.light) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: palette.surfaceGrouped,
+    },
+    content: {
+      paddingHorizontal: spacing.lg,
+      paddingBottom: spacing.xxl,
+    },
+    headerCard: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: palette.card,
+      borderRadius: spacing.borderRadius.xl,
+      padding: spacing.lg,
+      marginTop: spacing.sm,
+      gap: spacing.md,
+      ...shadows.sm,
+    },
+    dateBox: {
+      width: 56,
+      height: 56,
+      borderRadius: spacing.borderRadius.lg,
+      backgroundColor: palette.primaryLight,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    dateMonth: {
+      fontSize: 10,
+      fontWeight: "700",
+      color: palette.primary,
+      letterSpacing: 0.5,
+    },
+    dateDay: {
+      fontSize: 22,
+      fontWeight: "700",
+      color: palette.primary,
+      lineHeight: 24,
+    },
+    headerInfo: {
+      flex: 1,
+    },
+    eventType: {
+      ...typography.h3,
+      color: palette.text,
+    },
+    clientName: {
+      ...typography.body,
+      color: palette.textSecondary,
+      marginBottom: spacing.xs,
+    },
+    statusText: {
+      fontSize: 11,
+      fontWeight: "700",
+    },
+    section: {
+      backgroundColor: palette.card,
+      borderRadius: spacing.borderRadius.lg,
+      padding: spacing.md,
+      marginTop: spacing.md,
+      ...shadows.sm,
+    },
+    sectionTitle: {
+      ...typography.h3,
+      color: palette.text,
+      marginBottom: spacing.sm,
+    },
+    infoRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.sm,
+      paddingVertical: spacing.xs + 2,
+    },
+    infoText: {
+      ...typography.body,
+      color: palette.text,
+      flex: 1,
+    },
+    itemRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingVertical: spacing.sm,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: palette.separator,
+    },
+    itemInfo: {
+      flex: 1,
+    },
+    itemName: {
+      ...typography.label,
+      color: palette.text,
+    },
+    itemDetail: {
+      ...typography.caption,
+      color: palette.textMuted,
+    },
+    itemTotal: {
+      ...typography.label,
+      color: palette.text,
+    },
+    totalCard: {
+      backgroundColor: palette.surface,
+      borderRadius: spacing.borderRadius.lg,
+      padding: spacing.md,
+      marginBottom: spacing.md,
+    },
+    totalLine: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      paddingVertical: spacing.xs,
+    },
+    totalLineBold: {
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: palette.separator,
+      marginTop: spacing.xs,
+      paddingTop: spacing.sm,
+    },
+    totalLabel: {
+      ...typography.body,
+      color: palette.textSecondary,
+    },
+    totalValue: {
+      ...typography.label,
+      color: palette.text,
+    },
+    totalLabelBold: {
+      ...typography.h3,
+      color: palette.text,
+    },
+    totalValueBold: {
+      ...typography.h3,
+      color: palette.primary,
+    },
+    paymentCard: {
+      backgroundColor: palette.surface,
+      borderRadius: spacing.borderRadius.lg,
+      padding: spacing.md,
+    },
+    paymentTitle: {
+      ...typography.label,
+      color: palette.text,
+      marginBottom: spacing.sm,
+    },
+    paymentSummary: {
+      flexDirection: "row",
+      gap: spacing.sm,
+      marginBottom: spacing.md,
+    },
+    paymentSummaryCard: {
+      flex: 1,
+      backgroundColor: palette.surfaceAlt,
+      borderRadius: spacing.borderRadius.md,
+      padding: spacing.sm,
+      alignItems: "center",
+    },
+    paymentSummaryLabel: {
+      ...typography.caption1,
+      color: palette.textSecondary,
+      marginBottom: 2,
+    },
+    paymentSummaryValue: {
+      ...typography.headline,
+      color: palette.text,
+      fontSize: 14,
+    },
+    progressContainer: {
+      marginBottom: spacing.sm,
+    },
+    progressTrack: {
+      height: 8,
+      backgroundColor: palette.surfaceAlt,
+      borderRadius: 4,
+      overflow: "hidden",
+    },
+    progressFill: {
+      height: "100%",
+      borderRadius: 4,
+    },
+    progressText: {
+      ...typography.caption1,
+      color: palette.textSecondary,
+      marginTop: spacing.xxs,
+      textAlign: "right",
+    },
+    paymentsList: {
+      marginTop: spacing.sm,
+      paddingTop: spacing.sm,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: palette.separator,
+    },
+    paymentRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingVertical: spacing.sm,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: palette.separator,
+    },
+    paymentInfo: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      gap: spacing.sm,
+      flex: 1,
+    },
+    paymentDate: {
+      ...typography.caption,
+      color: palette.textMuted,
+    },
+    paymentNoteText: {
+      ...typography.caption1,
+      color: palette.textTertiary,
+      marginTop: 2,
+    },
+    paymentRowRight: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.sm,
+    },
+    paymentAmount: {
+      ...typography.label,
+      color: palette.success,
+    },
+    payRemainingBtn: {
+      backgroundColor: palette.success,
+    },
+    notesText: {
+      ...typography.body,
+      color: palette.text,
+    },
+    photoSectionHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginBottom: spacing.sm,
+    },
+    photosEmptyText: {
+      ...typography.bodySmall,
+      color: palette.textTertiary,
+      marginTop: spacing.xs,
+    },
+    actions: {
+      flexDirection: "row",
+      gap: spacing.md,
+      marginTop: spacing.md,
+    },
+    actionBtn: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: spacing.xs,
+      paddingVertical: spacing.sm + 2,
+      backgroundColor: palette.card,
+      borderRadius: spacing.borderRadius.lg,
+      ...shadows.sm,
+    },
+    primaryActionBtn: {
+      backgroundColor: palette.primary,
+    },
+    primaryActionText: {
+      ...typography.button,
+      fontSize: 14,
+      color: palette.textInverse,
+    },
+    deleteBtn: {
+      backgroundColor: palette.errorBg,
+    },
+    actionText: {
+      ...typography.button,
+      fontSize: 14,
+    },
+    statusBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      borderRadius: spacing.borderRadius.full,
+      alignSelf: "flex-start",
+    },
+    statusDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+    },
+    sheetContent: {
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.sm,
+    },
+    modalTitle: {
+      ...typography.h3,
+      color: palette.text,
+      marginBottom: spacing.md,
+    },
+    modalOption: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.md,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.md,
+      borderRadius: spacing.borderRadius.md,
+      marginBottom: spacing.xs,
+    },
+    modalOptionActive: {
+      backgroundColor: palette.surface,
+    },
+    modalOptionText: {
+      ...typography.body,
+      color: palette.text,
+    },
+    inputLabel: {
+      ...typography.caption,
+      color: palette.textSecondary,
+      marginBottom: spacing.xs,
+    },
+    modalInput: {
+      backgroundColor: palette.surface,
+      borderRadius: spacing.borderRadius.md,
+      padding: spacing.md,
+      ...typography.body,
+      color: palette.text,
+      marginBottom: spacing.md,
+    },
+    methodButtons: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: spacing.xs,
+      marginBottom: spacing.md,
+    },
+    methodButton: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
+      borderRadius: spacing.borderRadius.md,
+      backgroundColor: palette.surface,
+    },
+    methodButtonActive: {
+      backgroundColor: palette.primary,
+    },
+    methodButtonText: {
+      ...typography.caption,
+      color: palette.textSecondary,
+    },
+    methodButtonTextActive: {
+      color: palette.textInverse,
+    },
+    modalTotal: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingVertical: spacing.md,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: palette.separator,
+      marginBottom: spacing.md,
+    },
+    modalTotalLabel: {
+      ...typography.label,
+      color: palette.text,
+    },
+    modalTotalValue: {
+      ...typography.h3,
+      color: palette.error,
+    },
+    modalSaveButton: {
+      backgroundColor: palette.primary,
+      borderRadius: spacing.borderRadius.md,
+      paddingVertical: spacing.md,
+      alignItems: "center",
+    },
+    modalSaveButtonDisabled: {
+      opacity: 0.6,
+    },
+    modalSaveButtonText: {
+      ...typography.button,
+      color: palette.textInverse,
+    },
+    menuOption: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.md,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.md,
+      borderRadius: spacing.borderRadius.md,
+      backgroundColor: palette.surface,
+      marginBottom: spacing.sm,
+    },
+    menuOptionInfo: {
+      flex: 1,
+    },
+    menuOptionTitle: {
+      ...typography.label,
+      color: palette.text,
+    },
+    menuOptionDesc: {
+      ...typography.caption,
+      color: palette.textMuted,
+    },
+    menuLoadingContainer: {
+      alignItems: "center",
+      paddingVertical: spacing.xl,
+      gap: spacing.md,
+    },
+    menuLoadingText: {
+      ...typography.body,
+      color: palette.textSecondary,
+    },
+  });

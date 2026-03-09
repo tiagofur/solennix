@@ -37,7 +37,12 @@ import {
   getEventTotalCharged,
 } from "../../lib/finance";
 import { logError } from "../../lib/errorHandler";
-import { KPICard, UpgradeBanner, EmptyState } from "../../components/shared";
+import {
+  KPICard,
+  UpgradeBanner,
+  EmptyState,
+  PremiumButton,
+} from "../../components/shared";
 import OnboardingChecklist from "../../components/OnboardingChecklist";
 import PendingEventsModal from "../../components/PendingEventsModal";
 import { useTheme } from "../../hooks/useTheme";
@@ -61,7 +66,9 @@ export default function DashboardScreen({ navigation }: Props) {
   const palette = isDark ? colors.dark : colors.light;
   const styles = getStyles(palette);
 
-  const [eventsThisMonthList, setEventsThisMonthList] = useState<EventWithClient[]>([]);
+  const [eventsThisMonthList, setEventsThisMonthList] = useState<
+    EventWithClient[]
+  >([]);
   const [upcomingEvents, setUpcomingEvents] = useState<EventWithClient[]>([]);
   const [lowStockItems, setLowStockItems] = useState<any[]>([]);
   const [netSalesThisMonth, setNetSalesThisMonth] = useState(0);
@@ -69,7 +76,8 @@ export default function DashboardScreen({ navigation }: Props) {
   const [vatOutstandingThisMonth, setVatOutstandingThisMonth] = useState(0);
   const [lowStockCount, setLowStockCount] = useState(0);
   const [vatCollectedThisMonth, setVatCollectedThisMonth] = useState(0);
-  const [cashAppliedToThisMonthsEvents, setCashAppliedToThisMonthsEvents] = useState(0);
+  const [cashAppliedToThisMonthsEvents, setCashAppliedToThisMonthsEvents] =
+    useState(0);
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -85,19 +93,35 @@ export default function DashboardScreen({ navigation }: Props) {
 
     try {
       const [clients, monthEvents, upcoming, inventory] = await Promise.all([
-        clientService.getAll().catch((err) => { logError("Error loading clients", err); return []; }),
-        eventService.getByDateRange(start, end).catch((err) => { logError("Error loading month events", err); return []; }),
-        eventService.getUpcoming(5).catch((err) => { logError("Error loading upcoming events", err); return []; }),
-        inventoryService.getAll().catch((err) => { logError("Error loading inventory", err); return []; }),
+        clientService.getAll().catch((err) => {
+          logError("Error loading clients", err);
+          return [];
+        }),
+        eventService.getByDateRange(start, end).catch((err) => {
+          logError("Error loading month events", err);
+          return [];
+        }),
+        eventService.getUpcoming(5).catch((err) => {
+          logError("Error loading upcoming events", err);
+          return [];
+        }),
+        inventoryService.getAll().catch((err) => {
+          logError("Error loading inventory", err);
+          return [];
+        }),
       ]);
 
       const clientMap: Record<string, Client> = {};
-      (clients || []).forEach((c) => { clientMap[c.id] = c; });
+      (clients || []).forEach((c) => {
+        clientMap[c.id] = c;
+      });
 
       const addClientToEvents = (events: Event[]) =>
         (events || []).map((e) => ({
           ...e,
-          clients: e.client_id ? { name: clientMap[e.client_id]?.name || "Cliente" } : null,
+          clients: e.client_id
+            ? { name: clientMap[e.client_id]?.name || "Cliente" }
+            : null,
         }));
 
       // Month events + financials
@@ -121,10 +145,14 @@ export default function DashboardScreen({ navigation }: Props) {
 
       const paidByEvent: Record<string, number> = {};
       payments.forEach((p: any) => {
-        paidByEvent[p.event_id] = (paidByEvent[p.event_id] || 0) + Number(p.amount || 0);
+        paidByEvent[p.event_id] =
+          (paidByEvent[p.event_id] || 0) + Number(p.amount || 0);
       });
 
-      const cashApplied = Object.values(paidByEvent).reduce((sum, v) => sum + v, 0);
+      const cashApplied = Object.values(paidByEvent).reduce(
+        (sum, v) => sum + v,
+        0,
+      );
       setCashAppliedToThisMonthsEvents(cashApplied);
 
       const cashInMonth = (paymentsInMonth || []).reduce(
@@ -156,7 +184,8 @@ export default function DashboardScreen({ navigation }: Props) {
 
       // Low stock
       const lowItems = (inventory || []).filter(
-        (item) => item.minimum_stock > 0 && item.current_stock <= item.minimum_stock,
+        (item) =>
+          item.minimum_stock > 0 && item.current_stock <= item.minimum_stock,
       );
       setLowStockCount(lowItems.length);
       setLowStockItems(lowItems.slice(0, 5));
@@ -184,10 +213,30 @@ export default function DashboardScreen({ navigation }: Props) {
   const statusData = useMemo(() => {
     if (!eventsThisMonthList.length) return [];
     const buckets = [
-      { status: "quoted", label: "Cotizado", count: 0, color: palette.statusQuoted },
-      { status: "confirmed", label: "Confirmado", count: 0, color: palette.statusConfirmed },
-      { status: "completed", label: "Completado", count: 0, color: palette.statusCompleted },
-      { status: "cancelled", label: "Cancelado", count: 0, color: palette.statusCancelled },
+      {
+        status: "quoted",
+        label: "Cotizado",
+        count: 0,
+        color: palette.statusQuoted,
+      },
+      {
+        status: "confirmed",
+        label: "Confirmado",
+        count: 0,
+        color: palette.statusConfirmed,
+      },
+      {
+        status: "completed",
+        label: "Completado",
+        count: 0,
+        color: palette.statusCompleted,
+      },
+      {
+        status: "cancelled",
+        label: "Cancelado",
+        count: 0,
+        color: palette.statusCancelled,
+      },
     ];
     eventsThisMonthList.forEach((e) => {
       const b = buckets.find((s) => s.status === e.status);
@@ -200,21 +249,31 @@ export default function DashboardScreen({ navigation }: Props) {
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case "quoted": return "Cotizado";
-      case "confirmed": return "Confirmado";
-      case "completed": return "Completado";
-      case "cancelled": return "Cancelado";
-      default: return status;
+      case "quoted":
+        return "Cotizado";
+      case "confirmed":
+        return "Confirmado";
+      case "completed":
+        return "Completado";
+      case "cancelled":
+        return "Cancelado";
+      default:
+        return status;
     }
   };
 
   const getStatusColors = (status: string) => {
     switch (status) {
-      case "quoted": return { bg: palette.surfaceGrouped, text: palette.textSecondary };
-      case "confirmed": return { bg: palette.kpiBlueBg, text: palette.kpiBlue };
-      case "completed": return { bg: palette.kpiGreenBg, text: palette.kpiGreen };
-      case "cancelled": return { bg: palette.errorBg, text: palette.error };
-      default: return { bg: palette.surfaceGrouped, text: palette.textSecondary };
+      case "quoted":
+        return { bg: palette.surfaceGrouped, text: palette.textSecondary };
+      case "confirmed":
+        return { bg: palette.kpiBlueBg, text: palette.kpiBlue };
+      case "completed":
+        return { bg: palette.kpiGreenBg, text: palette.kpiGreen };
+      case "cancelled":
+        return { bg: palette.errorBg, text: palette.error };
+      default:
+        return { bg: palette.surfaceGrouped, text: palette.textSecondary };
     }
   };
 
@@ -260,22 +319,21 @@ export default function DashboardScreen({ navigation }: Props) {
 
         {/* Quick Action Buttons */}
         <View style={styles.quickActions}>
-          <TouchableOpacity
-            style={styles.quickActionBtn}
+          <PremiumButton
+            label="Nuevo Evento"
+            icon={<Plus color="#ffffff" size={16} />}
             onPress={() => navigation.navigate("EventForm", {})}
-            activeOpacity={0.7}
-          >
-            <Plus color={palette.primary} size={16} />
-            <Text style={styles.quickActionText}>Evento</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.quickActionBtn}
+            size="small"
+            style={{ flex: 1 }}
+          />
+          <PremiumButton
+            label="Nuevo Cliente"
+            icon={<UserPlus color={palette.primary} size={16} />}
+            variant="outline"
             onPress={() => (navigation as any).navigate("ClientTab")}
-            activeOpacity={0.7}
-          >
-            <UserPlus color={palette.primary} size={16} />
-            <Text style={styles.quickActionText}>Cliente</Text>
-          </TouchableOpacity>
+            size="small"
+            style={{ flex: 1 }}
+          />
         </View>
 
         {/* Onboarding Checklist */}
@@ -351,7 +409,9 @@ export default function DashboardScreen({ navigation }: Props) {
                 size={20}
               />
             }
-            iconBgColor={lowStockCount > 0 ? palette.errorBg : palette.kpiGreenBg}
+            iconBgColor={
+              lowStockCount > 0 ? palette.errorBg : palette.kpiGreenBg
+            }
             title="Alertas Stock"
             value={
               loading
@@ -394,42 +454,71 @@ export default function DashboardScreen({ navigation }: Props) {
         )}
 
         {/* Financial Comparison */}
-        {!loading && (netSalesThisMonth > 0 || cashCollectedThisMonth > 0 || vatOutstandingThisMonth > 0) && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Resumen Financiero</Text>
-            {(() => {
-              const financialData = [
-                { name: "Ventas Netas", value: netSalesThisMonth, color: palette.kpiGreen },
-                { name: "Cobrado Real", value: cashCollectedThisMonth, color: palette.kpiOrange },
-                { name: "IVA por Cobrar", value: vatOutstandingThisMonth, color: palette.error },
-              ];
-              const maxVal = Math.max(...financialData.map((d) => d.value), 1);
-              return (
-                <View style={styles.chartContainer}>
-                  {financialData.map((d) => (
-                    <View key={d.name} style={styles.chartRow}>
-                      <Text style={[styles.chartLabel, { width: 90 }]} numberOfLines={1}>{d.name}</Text>
-                      <View style={styles.barBg}>
-                        <View
+        {!loading &&
+          (netSalesThisMonth > 0 ||
+            cashCollectedThisMonth > 0 ||
+            vatOutstandingThisMonth > 0) && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Resumen Financiero</Text>
+              {(() => {
+                const financialData = [
+                  {
+                    name: "Ventas Netas",
+                    value: netSalesThisMonth,
+                    color: palette.kpiGreen,
+                  },
+                  {
+                    name: "Cobrado Real",
+                    value: cashCollectedThisMonth,
+                    color: palette.kpiOrange,
+                  },
+                  {
+                    name: "IVA por Cobrar",
+                    value: vatOutstandingThisMonth,
+                    color: palette.error,
+                  },
+                ];
+                const maxVal = Math.max(
+                  ...financialData.map((d) => d.value),
+                  1,
+                );
+                return (
+                  <View style={styles.chartContainer}>
+                    {financialData.map((d) => (
+                      <View key={d.name} style={styles.chartRow}>
+                        <Text
+                          style={[styles.chartLabel, { width: 90 }]}
+                          numberOfLines={1}
+                        >
+                          {d.name}
+                        </Text>
+                        <View style={styles.barBg}>
+                          <View
+                            style={[
+                              styles.barFill,
+                              {
+                                backgroundColor: d.color,
+                                width: `${(d.value / maxVal) * 100}%`,
+                              },
+                            ]}
+                          />
+                        </View>
+                        <Text
                           style={[
-                            styles.barFill,
-                            {
-                              backgroundColor: d.color,
-                              width: `${(d.value / maxVal) * 100}%`,
-                            },
+                            styles.chartValue,
+                            { width: 70, fontSize: 11 },
                           ]}
-                        />
+                          numberOfLines={1}
+                        >
+                          {formatCurrency(d.value)}
+                        </Text>
                       </View>
-                      <Text style={[styles.chartValue, { width: 70, fontSize: 11 }]} numberOfLines={1}>
-                        {formatCurrency(d.value)}
-                      </Text>
-                    </View>
-                  ))}
-                </View>
-              );
-            })()}
-          </View>
-        )}
+                    ))}
+                  </View>
+                );
+              })()}
+            </View>
+          )}
 
         {/* Low Stock Alerts */}
         {lowStockItems.length > 0 && (
@@ -445,7 +534,9 @@ export default function DashboardScreen({ navigation }: Props) {
                 <AlertTriangle color={palette.error} size={18} />
                 <Text style={styles.sectionTitle}>Reponer Inventario</Text>
               </View>
-              <TouchableOpacity onPress={() => (navigation as any).navigate("InventoryStack")}>
+              <TouchableOpacity
+                onPress={() => (navigation as any).navigate("InventoryStack")}
+              >
                 <Text style={styles.sectionLink}>Ver inventario</Text>
               </TouchableOpacity>
             </View>
@@ -469,7 +560,9 @@ export default function DashboardScreen({ navigation }: Props) {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Próximos Eventos</Text>
-            <TouchableOpacity onPress={() => (navigation as any).navigate("CalendarTab")}>
+            <TouchableOpacity
+              onPress={() => (navigation as any).navigate("CalendarTab")}
+            >
               <Text style={styles.sectionLink}>Ver todos</Text>
             </TouchableOpacity>
           </View>
@@ -510,8 +603,18 @@ export default function DashboardScreen({ navigation }: Props) {
                   >
                     <Text style={styles.eventType}>{event.service_type}</Text>
                     <Text style={styles.eventPax}>{event.num_people} pax</Text>
-                    <View style={[styles.statusBadge, { backgroundColor: getStatusColors(event.status).bg }]}>
-                      <Text style={[styles.statusBadgeText, { color: getStatusColors(event.status).text }]}>
+                    <View
+                      style={[
+                        styles.statusBadge,
+                        { backgroundColor: getStatusColors(event.status).bg },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.statusBadgeText,
+                          { color: getStatusColors(event.status).text },
+                        ]}
+                      >
                         {getStatusLabel(event.status)}
                       </Text>
                     </View>
@@ -534,238 +637,239 @@ export default function DashboardScreen({ navigation }: Props) {
   );
 }
 
-const getStyles = (palette: typeof colors.light) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: palette.surfaceGrouped,
-  },
-  content: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xxl,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: spacing.sm,
-    marginBottom: spacing.md,
-  },
-  greeting: {
-    ...typography.largeTitle,
-    color: palette.text,
-  },
-  date: {
-    ...typography.subheadline,
-    color: palette.textSecondary,
-    marginTop: 2,
-    textTransform: "capitalize",
-  },
-  searchButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: palette.card,
-    justifyContent: "center",
-    alignItems: "center",
-    ...shadows.sm,
-  },
-  quickActions: {
-    flexDirection: "row",
-    gap: spacing.sm,
-    marginBottom: spacing.md,
-  },
-  quickActionBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-    backgroundColor: palette.card,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: spacing.borderRadius.full,
-    ...shadows.sm,
-  },
-  quickActionText: {
-    ...typography.subheadline,
-    color: palette.primary,
-    fontWeight: "600",
-  },
-  kpiRow: {
-    paddingRight: spacing.lg,
-  },
-  section: {
-    backgroundColor: palette.card,
-    borderRadius: spacing.borderRadius.lg,
-    ...shadows.sm,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: spacing.sm,
-  },
-  sectionTitle: {
-    ...typography.headline,
-    color: palette.text,
-  },
-  placeholder: {
-    ...typography.body,
-    color: palette.textTertiary,
-    fontStyle: "italic",
-    textAlign: "center",
-    paddingVertical: spacing.lg,
-  },
-  // Chart
-  chartContainer: {
-    gap: spacing.sm,
-    marginTop: spacing.sm,
-  },
-  chartRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-  },
-  chartLabel: {
-    ...typography.caption1,
-    color: palette.textSecondary,
-    width: 80,
-  },
-  barBg: {
-    flex: 1,
-    height: 16,
-    backgroundColor: palette.surfaceGrouped,
-    borderRadius: spacing.borderRadius.sm,
-    overflow: "hidden",
-  },
-  barFill: {
-    height: "100%",
-    borderRadius: spacing.borderRadius.sm,
-  },
-  chartValue: {
-    ...typography.headline,
-    fontSize: 14,
-    color: palette.text,
-    width: 24,
-    textAlign: "right",
-  },
-  // Stock alerts
-  stockRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: spacing.xs + 2,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: palette.separator,
-    gap: spacing.sm,
-  },
-  stockName: {
-    ...typography.subheadline,
-    color: palette.text,
-    flex: 1,
-  },
-  stockBadge: {
-    backgroundColor: palette.errorBg,
-    paddingHorizontal: spacing.xs + 2,
-    paddingVertical: 2,
-    borderRadius: spacing.borderRadius.full,
-  },
-  stockBadgeText: {
-    ...typography.caption1,
-    color: palette.error,
-    fontWeight: "700",
-  },
-  stockMin: {
-    ...typography.caption1,
-    color: palette.textTertiary,
-    width: 60,
-    textAlign: "right",
-  },
-  errorBanner: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-    backgroundColor: palette.errorBg,
-    borderRadius: spacing.borderRadius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    marginBottom: spacing.md,
-  },
-  errorBannerText: {
-    ...typography.subheadline,
-    color: palette.error,
-    flex: 1,
-  },
-  errorBannerRetry: {
-    ...typography.subheadline,
-    color: palette.error,
-    fontWeight: "700",
-    textDecorationLine: "underline",
-  },
-  // Events
-  eventRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: spacing.sm + 2,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: palette.separator,
-    gap: spacing.sm,
-  },
-  eventDateBox: {
-    width: 48,
-    height: 48,
-    borderRadius: spacing.borderRadius.md,
-    backgroundColor: palette.primaryLight,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  eventMonth: {
-    fontSize: 9,
-    fontWeight: "700",
-    color: palette.primary,
-    letterSpacing: 0.5,
-  },
-  eventDay: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: palette.primary,
-    lineHeight: 20,
-  },
-  eventInfo: {
-    flex: 1,
-  },
-  eventClient: {
-    ...typography.headline,
-    fontSize: 15,
-    color: palette.text,
-  },
-  eventType: {
-    ...typography.caption2,
-    color: palette.textSecondary,
-    backgroundColor: palette.surfaceGrouped,
-    paddingHorizontal: 4,
-    paddingVertical: 1,
-    borderRadius: spacing.borderRadius.sm,
-    overflow: "hidden",
-    textTransform: "uppercase",
-    fontWeight: "600",
-    letterSpacing: 0.3,
-  },
-  eventPax: {
-    ...typography.caption1,
-    color: palette.textTertiary,
-  },
-  statusBadge: {
-    paddingHorizontal: spacing.xs + 2,
-    paddingVertical: 2,
-    borderRadius: spacing.borderRadius.full,
-  },
-  statusBadgeText: {
-    ...typography.caption2,
-    fontWeight: "600",
-    fontSize: 10,
-  },
-  sectionLink: {
-    ...typography.subheadline,
-    color: palette.primary,
-    fontWeight: "600",
-  },
-});
+const getStyles = (palette: typeof colors.light) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: palette.surfaceGrouped,
+    },
+    content: {
+      paddingHorizontal: spacing.lg,
+      paddingBottom: spacing.xxl,
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginTop: spacing.sm,
+      marginBottom: spacing.md,
+    },
+    greeting: {
+      ...typography.h1Premium,
+      color: palette.text,
+    },
+    date: {
+      ...typography.subheadline,
+      color: palette.textSecondary,
+      marginTop: 2,
+      textTransform: "capitalize",
+    },
+    searchButton: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: palette.card,
+      justifyContent: "center",
+      alignItems: "center",
+      ...shadows.sm,
+    },
+    quickActions: {
+      flexDirection: "row",
+      gap: spacing.sm,
+      marginBottom: spacing.md,
+    },
+    quickActionBtn: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.xs,
+      backgroundColor: palette.card,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: spacing.borderRadius.full,
+      ...shadows.sm,
+    },
+    quickActionText: {
+      ...typography.subheadline,
+      color: palette.primary,
+      fontWeight: "600",
+    },
+    kpiRow: {
+      paddingRight: spacing.lg,
+    },
+    section: {
+      backgroundColor: palette.card,
+      borderRadius: spacing.borderRadius.lg,
+      ...shadows.sm,
+      padding: spacing.md,
+      marginBottom: spacing.md,
+    },
+    sectionHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: spacing.sm,
+    },
+    sectionTitle: {
+      ...typography.headline,
+      color: palette.text,
+    },
+    placeholder: {
+      ...typography.body,
+      color: palette.textTertiary,
+      fontStyle: "italic",
+      textAlign: "center",
+      paddingVertical: spacing.lg,
+    },
+    // Chart
+    chartContainer: {
+      gap: spacing.sm,
+      marginTop: spacing.sm,
+    },
+    chartRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.sm,
+    },
+    chartLabel: {
+      ...typography.caption1,
+      color: palette.textSecondary,
+      width: 80,
+    },
+    barBg: {
+      flex: 1,
+      height: 16,
+      backgroundColor: palette.surfaceGrouped,
+      borderRadius: spacing.borderRadius.sm,
+      overflow: "hidden",
+    },
+    barFill: {
+      height: "100%",
+      borderRadius: spacing.borderRadius.sm,
+    },
+    chartValue: {
+      ...typography.headline,
+      fontSize: 14,
+      color: palette.text,
+      width: 24,
+      textAlign: "right",
+    },
+    // Stock alerts
+    stockRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: spacing.xs + 2,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: palette.separator,
+      gap: spacing.sm,
+    },
+    stockName: {
+      ...typography.subheadline,
+      color: palette.text,
+      flex: 1,
+    },
+    stockBadge: {
+      backgroundColor: palette.errorBg,
+      paddingHorizontal: spacing.xs + 2,
+      paddingVertical: 2,
+      borderRadius: spacing.borderRadius.full,
+    },
+    stockBadgeText: {
+      ...typography.caption1,
+      color: palette.error,
+      fontWeight: "700",
+    },
+    stockMin: {
+      ...typography.caption1,
+      color: palette.textTertiary,
+      width: 60,
+      textAlign: "right",
+    },
+    errorBanner: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.xs,
+      backgroundColor: palette.errorBg,
+      borderRadius: spacing.borderRadius.md,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      marginBottom: spacing.md,
+    },
+    errorBannerText: {
+      ...typography.subheadline,
+      color: palette.error,
+      flex: 1,
+    },
+    errorBannerRetry: {
+      ...typography.subheadline,
+      color: palette.error,
+      fontWeight: "700",
+      textDecorationLine: "underline",
+    },
+    // Events
+    eventRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: spacing.sm + 2,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: palette.separator,
+      gap: spacing.sm,
+    },
+    eventDateBox: {
+      width: 48,
+      height: 48,
+      borderRadius: spacing.borderRadius.md,
+      backgroundColor: palette.primaryLight,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    eventMonth: {
+      fontSize: 9,
+      fontWeight: "700",
+      color: palette.primary,
+      letterSpacing: 0.5,
+    },
+    eventDay: {
+      fontSize: 18,
+      fontWeight: "700",
+      color: palette.primary,
+      lineHeight: 20,
+    },
+    eventInfo: {
+      flex: 1,
+    },
+    eventClient: {
+      ...typography.headline,
+      fontSize: 15,
+      color: palette.text,
+    },
+    eventType: {
+      ...typography.caption2,
+      color: palette.textSecondary,
+      backgroundColor: palette.surfaceGrouped,
+      paddingHorizontal: 4,
+      paddingVertical: 1,
+      borderRadius: spacing.borderRadius.sm,
+      overflow: "hidden",
+      textTransform: "uppercase",
+      fontWeight: "600",
+      letterSpacing: 0.3,
+    },
+    eventPax: {
+      ...typography.caption1,
+      color: palette.textTertiary,
+    },
+    statusBadge: {
+      paddingHorizontal: spacing.xs + 2,
+      paddingVertical: 2,
+      borderRadius: spacing.borderRadius.full,
+    },
+    statusBadgeText: {
+      ...typography.caption2,
+      fontWeight: "600",
+      fontSize: 10,
+    },
+    sectionLink: {
+      ...typography.subheadline,
+      color: palette.primary,
+      fontWeight: "600",
+    },
+  });

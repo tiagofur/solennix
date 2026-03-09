@@ -17,3 +17,4 @@ export { QuickClientSheet } from './QuickClientSheet';
 export { SortSelector } from './SortSelector';
 export type { SortOption } from './SortSelector';
 export { Logo } from './Logo';
+export { PremiumButton } from './PremiumButton';

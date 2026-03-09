@@ -4,6 +4,7 @@ import { HomeStackParamList } from "../types/navigation";
 import DashboardScreen from "../screens/home/DashboardScreen";
 import EventFormScreen from "../screens/events/EventFormScreen";
 import EventDetailScreen from "../screens/events/EventDetailScreen";
+import EventChecklistScreen from "../screens/events/EventChecklistScreen";
 
 const Stack = createNativeStackNavigator<HomeStackParamList>();
 
@@ -30,6 +31,11 @@ export default function HomeStack() {
         name="EventDetail"
         component={EventDetailScreen}
         options={{ title: "Detalle del Evento" }}
+      />
+      <Stack.Screen
+        name="EventChecklist"
+        component={EventChecklistScreen}
+        options={{ title: "Checklist de Carga" }}
       />
     </Stack.Navigator>
   );

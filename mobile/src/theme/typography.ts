@@ -7,6 +7,14 @@ const fontFamily = Platform.select({
 });
 
 export const typography = {
+    // Premium Design Series (March 2026 overhaul)
+    h1Premium: {
+        fontFamily,
+        fontSize: 28,
+        fontWeight: '900' as const, // For "font-black"
+        letterSpacing: -0.5, // For "tracking-tight"
+        lineHeight: 34,
+    },
     // iOS Dynamic Type scale
     largeTitle: {
         fontFamily,

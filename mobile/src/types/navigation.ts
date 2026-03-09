@@ -16,6 +16,7 @@ export type HomeStackParamList = {
     Dashboard: undefined;
     EventForm: { id?: string; clientId?: string; eventDate?: string };
     EventDetail: { id: string };
+    EventChecklist: { id: string };
 };
 
 // Calendar stack
@@ -23,12 +24,14 @@ export type CalendarStackParamList = {
     CalendarView: undefined;
     EventDetail: { id: string };
     EventForm: { id?: string; clientId?: string; eventDate?: string };
+    EventChecklist: { id: string };
 };
 
 // Events stack (used in Home tab)
 export type EventsStackParamList = {
     EventForm: { id?: string; clientId?: string; eventDate?: string };
     EventDetail: { id: string };
+    EventChecklist: { id: string };
 };
 
 // Client stack
