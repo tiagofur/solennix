@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Opcion 25: Carpa/marquesina de evento elegante -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="bg25" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1B2A4A"/>
+      <stop offset="100%" stop-color="#0F1A2E"/>
+    </linearGradient>
+    <linearGradient id="g25" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#D4B87A"/>
+      <stop offset="100%" stop-color="#C4A265"/>
+    </linearGradient>
+  </defs>
+  <rect width="200" height="200" rx="40" fill="url(#bg25)"/>
+  <!-- Bandera superior -->
+  <polygon points="100,28 106,40 94,40" fill="#D4B87A"/>
+  <!-- Techo de carpa -->
+  <path d="M38,100 L100,42 L162,100" fill="none" stroke="url(#g25)" stroke-width="3" stroke-linejoin="round"/>
+  <!-- Pliegues del techo -->
+  <path d="M100,42 L70,100" stroke="#C4A265" stroke-width="1.5" opacity="0.3"/>
+  <path d="M100,42 L130,100" stroke="#C4A265" stroke-width="1.5" opacity="0.3"/>
+  <!-- Paredes -->
+  <line x1="42" y1="100" x2="42" y2="160" stroke="url(#g25)" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="158" y1="100" x2="158" y2="160" stroke="url(#g25)" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Entrada (cortinas abiertas) -->
+  <path d="M80,100 Q78,130 85,160" fill="none" stroke="#F5F0E8" stroke-width="2" stroke-linecap="round"/>
+  <path d="M120,100 Q122,130 115,160" fill="none" stroke="#F5F0E8" stroke-width="2" stroke-linecap="round"/>
+  <!-- Piso -->
+  <line x1="42" y1="160" x2="158" y2="160" stroke="#C4A265" stroke-width="1.5" opacity="0.3"/>
+  <!-- Luces interiores -->
+  <circle cx="100" cy="125" r="3" fill="#D4B87A" opacity="0.4"/>
+  <circle cx="100" cy="125" r="8" fill="#D4B87A" opacity="0.06"/>
+</svg>

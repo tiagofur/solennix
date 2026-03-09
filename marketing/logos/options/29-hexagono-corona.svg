@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Opcion 29: Hexagono con corona integrada -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="bg29" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1B2A4A"/>
+      <stop offset="100%" stop-color="#0F1A2E"/>
+    </linearGradient>
+    <linearGradient id="g29" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#D4B87A"/>
+      <stop offset="100%" stop-color="#C4A265"/>
+    </linearGradient>
+  </defs>
+  <rect width="200" height="200" rx="40" fill="url(#bg29)"/>
+  <!-- Hexagono -->
+  <polygon points="100,35 155,67 155,133 100,165 45,133 45,67"
+           fill="none" stroke="url(#g29)" stroke-width="3"/>
+  <!-- Corona en la parte superior (integrada con borde del hex) -->
+  <path d="M65,62 L72,45 L86,55 L100,35 L114,55 L128,45 L135,62"
+        fill="none" stroke="#F5F0E8" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+  <!-- Joyas de la corona -->
+  <circle cx="100" cy="38" r="3" fill="#D4B87A"/>
+  <circle cx="72" cy="48" r="2" fill="#C4A265" opacity="0.6"/>
+  <circle cx="128" cy="48" r="2" fill="#C4A265" opacity="0.6"/>
+  <!-- Linea interna decorativa -->
+  <polygon points="100,55 140,78 140,122 100,145 60,122 60,78"
+           fill="none" stroke="#C4A265" stroke-width="0.8" opacity="0.2"/>
+  <!-- S central -->
+  <path d="M110,82 C118,82 120,88 115,92 C112,95 96,95 92,100 C88,106 94,112 106,112"
+        fill="none" stroke="#F5F0E8" stroke-width="4.5" stroke-linecap="round"/>
+</svg>

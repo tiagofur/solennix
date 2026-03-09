@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Opcion 14: Calendario con estrella/momento especial -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="bg14" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1B2A4A"/>
+      <stop offset="100%" stop-color="#0F1A2E"/>
+    </linearGradient>
+    <linearGradient id="g14" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#D4B87A"/>
+      <stop offset="100%" stop-color="#C4A265"/>
+    </linearGradient>
+  </defs>
+  <rect width="200" height="200" rx="40" fill="url(#bg14)"/>
+  <!-- Calendario base -->
+  <rect x="45" y="55" width="110" height="100" rx="8" fill="none" stroke="url(#g14)" stroke-width="3"/>
+  <!-- Barra superior del calendario -->
+  <rect x="45" y="55" width="110" height="25" rx="8" fill="#C4A265" opacity="0.15"/>
+  <line x1="45" y1="80" x2="155" y2="80" stroke="url(#g14)" stroke-width="2"/>
+  <!-- Anillas -->
+  <line x1="75" y1="45" x2="75" y2="62" stroke="#F5F0E8" stroke-width="3.5" stroke-linecap="round"/>
+  <line x1="125" y1="45" x2="125" y2="62" stroke="#F5F0E8" stroke-width="3.5" stroke-linecap="round"/>
+  <!-- Estrella central grande -->
+  <polygon points="100,90 104,104 118,104 107,112 111,126 100,118 89,126 93,112 82,104 96,104"
+           fill="#D4B87A" opacity="0.85"/>
+  <!-- Destellos -->
+  <line x1="100" y1="84" x2="100" y2="87" stroke="#F5F0E8" stroke-width="1" stroke-linecap="round" opacity="0.6"/>
+  <line x1="122" y1="100" x2="120" y2="102" stroke="#F5F0E8" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
+  <line x1="78" y1="100" x2="80" y2="102" stroke="#F5F0E8" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
+</svg>

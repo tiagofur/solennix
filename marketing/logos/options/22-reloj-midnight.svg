@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Opcion 22: Reloj marcando medianoche / momento especial -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="bg22" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1B2A4A"/>
+      <stop offset="100%" stop-color="#0F1A2E"/>
+    </linearGradient>
+    <linearGradient id="g22" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#C4A265"/>
+      <stop offset="100%" stop-color="#D4B87A"/>
+    </linearGradient>
+  </defs>
+  <rect width="200" height="200" rx="40" fill="url(#bg22)"/>
+  <!-- Circulo del reloj -->
+  <circle cx="100" cy="105" r="55" fill="none" stroke="url(#g22)" stroke-width="3"/>
+  <!-- Marcas horarias -->
+  <line x1="100" y1="55" x2="100" y2="62" stroke="#F5F0E8" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="100" y1="148" x2="100" y2="155" stroke="#C4A265" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+  <line x1="50" y1="105" x2="57" y2="105" stroke="#C4A265" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+  <line x1="143" y1="105" x2="150" y2="105" stroke="#C4A265" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+  <!-- Manecillas apuntando a las 12 (medianoche) -->
+  <line x1="100" y1="105" x2="100" y2="65" stroke="#F5F0E8" stroke-width="3.5" stroke-linecap="round"/>
+  <line x1="100" y1="105" x2="100" y2="75" stroke="#D4B87A" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Centro -->
+  <circle cx="100" cy="105" r="4" fill="#D4B87A"/>
+  <!-- Destellos de celebracion arriba -->
+  <line x1="100" y1="32" x2="100" y2="40" stroke="#D4B87A" stroke-width="1.5" stroke-linecap="round" opacity="0.7"/>
+  <line x1="88" y1="36" x2="92" y2="42" stroke="#D4B87A" stroke-width="1" stroke-linecap="round" opacity="0.5"/>
+  <line x1="112" y1="36" x2="108" y2="42" stroke="#D4B87A" stroke-width="1" stroke-linecap="round" opacity="0.5"/>
+  <circle cx="85" cy="33" r="1.5" fill="#F5F0E8" opacity="0.4"/>
+  <circle cx="115" cy="33" r="1.5" fill="#F5F0E8" opacity="0.4"/>
+</svg>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Opcion 2: S elegante con trazo grueso y acento dorado -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1B2A4A"/>
+      <stop offset="100%" stop-color="#0F1A2E"/>
+    </linearGradient>
+    <linearGradient id="gold2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#D4B87A"/>
+      <stop offset="50%" stop-color="#C4A265"/>
+      <stop offset="100%" stop-color="#D4B87A"/>
+    </linearGradient>
+  </defs>
+  <rect width="200" height="200" rx="40" fill="url(#bg2)"/>
+  <!-- S curva principal -->
+  <path d="M125,52 C125,52 135,52 135,52
+           C135,52 140,52 140,58
+           C140,68 125,68 110,68
+           C90,68 65,68 65,88
+           C65,104 85,108 100,108
+           C115,108 135,112 135,128
+           C135,148 110,152 90,152
+           C75,152 65,152 60,148"
+        fill="none" stroke="url(#gold2)" stroke-width="14" stroke-linecap="round"/>
+  <!-- Acento luminoso superior -->
+  <circle cx="132" cy="52" r="4" fill="#F5F0E8" opacity="0.8"/>
+  <!-- Acento luminoso inferior -->
+  <circle cx="68" cy="148" r="4" fill="#F5F0E8" opacity="0.8"/>
+</svg>

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Solennix — Logo Horizontal sobre fondo CLARO -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 140">
+  <defs>
+    <!-- Dorado vertical (sobre fondo claro, mas intenso) -->
+    <linearGradient id="gVL" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#C4A265"/>
+      <stop offset="50%" stop-color="#B8965A"/>
+      <stop offset="100%" stop-color="#A6874E"/>
+    </linearGradient>
+    <linearGradient id="gHL" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#A6874E"/>
+      <stop offset="50%" stop-color="#C4A265"/>
+      <stop offset="100%" stop-color="#A6874E"/>
+    </linearGradient>
+    <linearGradient id="lqL" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#C4A265" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#C4A265" stop-opacity="0.02"/>
+    </linearGradient>
+    <radialGradient id="glL" cx="50%" cy="38%">
+      <stop offset="0%" stop-color="#C4A265" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#C4A265" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="tGL" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#1B2A4A"/>
+      <stop offset="100%" stop-color="#0F1A2E"/>
+    </linearGradient>
+    <linearGradient id="lnL" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#C4A265" stop-opacity="0"/>
+      <stop offset="15%" stop-color="#C4A265" stop-opacity="0.4"/>
+      <stop offset="50%" stop-color="#C4A265" stop-opacity="0.6"/>
+      <stop offset="85%" stop-color="#C4A265" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#C4A265" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Fondo crema -->
+  <rect width="520" height="140" rx="20" fill="#F5F0E8"/>
+
+  <!-- ═══ COPA (misma estructura, colores para fondo claro) ═══ -->
+  <g transform="translate(12,2) scale(0.95)">
+    <circle cx="70" cy="55" r="48" fill="url(#glL)"/>
+
+    <path d="M46,22 Q40,48 46,66 Q55,88 70,92 Q85,88 94,66 Q100,48 94,22"
+          fill="none" stroke="url(#gVL)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M46,22 Q70,29 94,22" fill="none" stroke="url(#gHL)" stroke-width="2.8" stroke-linecap="round"/>
+    <path d="M51,50 Q70,56 89,50 L94,22 Q70,29 46,22 Z" fill="url(#lqL)"/>
+    <path d="M51,50 Q70,56 89,50" fill="none" stroke="#B8965A" stroke-width="1" opacity="0.3"/>
+    <path d="M54,27 Q51,42 54,58" fill="none" stroke="#FFFFFF" stroke-width="1.5" opacity="0.35" stroke-linecap="round"/>
+
+    <!-- Nodo (union bowl-tallo) -->
+    <ellipse cx="70" cy="94" rx="4" ry="2" fill="none" stroke="url(#gVL)" stroke-width="1.8"/>
+    <!-- Tallo que se ensancha hacia la base -->
+    <path d="M70,96 L70,114 Q70,118 60,120 L48,122"
+          fill="none" stroke="url(#gVL)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M70,96 L70,114 Q70,118 80,120 L92,122"
+          fill="none" stroke="url(#gVL)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- Base: semicirculo inferior -->
+    <path d="M48,122 A22,5.5 0 0,0 92,122"
+          fill="none" stroke="url(#gHL)" stroke-width="2.5" stroke-linecap="round"/>
+
+    <!-- Destello -->
+    <g transform="translate(93,20)" opacity="0.45">
+      <line x1="0" y1="-6" x2="0" y2="6" stroke="#C4A265" stroke-width="1.3" stroke-linecap="round"/>
+      <line x1="-6" y1="0" x2="6" y2="0" stroke="#C4A265" stroke-width="1.3" stroke-linecap="round"/>
+      <line x1="-3" y1="-3" x2="3" y2="3" stroke="#C4A265" stroke-width="0.7" stroke-linecap="round"/>
+      <line x1="3" y1="-3" x2="-3" y2="3" stroke="#C4A265" stroke-width="0.7" stroke-linecap="round"/>
+      <circle cx="0" cy="0" r="1.5" fill="#C4A265" opacity="0.35"/>
+    </g>
+  </g>
+
+  <!-- Wordmark en navy -->
+  <text x="155" y="72"
+        font-family="Cinzel, 'Playfair Display', Didot, 'Bodoni MT', Georgia, serif"
+        font-size="48"
+        font-weight="600"
+        letter-spacing="4"
+        fill="url(#tGL)">Solennix</text>
+
+  <!-- Linea -->
+  <line x1="155" y1="86" x2="500" y2="86" stroke="url(#lnL)" stroke-width="0.8"/>
+
+  <!-- Tagline -->
+  <text x="155" y="108"
+        font-family="'Helvetica Neue', 'Segoe UI', Arial, sans-serif"
+        font-size="13"
+        font-weight="300"
+        letter-spacing="5.5"
+        fill="#6B7B8D">CADA DETALLE IMPORTA</text>
+</svg>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Opcion 30: Anillo con destello / engagement ring style -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="bg30" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1B2A4A"/>
+      <stop offset="100%" stop-color="#0F1A2E"/>
+    </linearGradient>
+    <linearGradient id="g30" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#D4B87A"/>
+      <stop offset="100%" stop-color="#C4A265"/>
+    </linearGradient>
+  </defs>
+  <rect width="200" height="200" rx="40" fill="url(#bg30)"/>
+  <!-- Aro del anillo -->
+  <ellipse cx="100" cy="115" rx="45" ry="40" fill="none" stroke="url(#g30)" stroke-width="6"/>
+  <!-- Montura (prongs) -->
+  <path d="M88,80 L94,68 L100,62 L106,68 L112,80" fill="none" stroke="url(#g30)" stroke-width="3" stroke-linejoin="round"/>
+  <!-- Diamante/gema -->
+  <polygon points="100,50 112,62 106,72 94,72 88,62" fill="none" stroke="#F5F0E8" stroke-width="2.5" stroke-linejoin="round"/>
+  <!-- Facetas del diamante -->
+  <line x1="100" y1="50" x2="100" y2="72" stroke="#F5F0E8" stroke-width="1" opacity="0.4"/>
+  <line x1="88" y1="62" x2="106" y2="72" stroke="#F5F0E8" stroke-width="0.8" opacity="0.3"/>
+  <line x1="112" y1="62" x2="94" y2="72" stroke="#F5F0E8" stroke-width="0.8" opacity="0.3"/>
+  <!-- Destellos de la gema -->
+  <line x1="100" y1="35" x2="100" y2="42" stroke="#D4B87A" stroke-width="1.5" stroke-linecap="round" opacity="0.7"/>
+  <line x1="118" y1="48" x2="122" y2="44" stroke="#D4B87A" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+  <line x1="82" y1="48" x2="78" y2="44" stroke="#D4B87A" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+  <circle cx="75" cy="40" r="1.5" fill="#F5F0E8" opacity="0.3"/>
+  <circle cx="125" cy="40" r="1.5" fill="#F5F0E8" opacity="0.3"/>
+  <!-- Reflejo en el aro -->
+  <path d="M62,105 Q60,115 62,125" fill="none" stroke="#F5F0E8" stroke-width="1.5" opacity="0.2" stroke-linecap="round"/>
+</svg>

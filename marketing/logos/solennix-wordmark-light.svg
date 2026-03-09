@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Solennix — Wordmark Only (sobre fondo claro) -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 60">
+  <defs>
+    <linearGradient id="wNavy" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#1B2A4A"/>
+      <stop offset="100%" stop-color="#0F1A2E"/>
+    </linearGradient>
+  </defs>
+
+  <text x="190" y="40" text-anchor="middle"
+        font-family="Cinzel, 'Playfair Display', Didot, 'Bodoni MT', Georgia, serif"
+        font-size="48"
+        font-weight="600"
+        letter-spacing="4"
+        fill="url(#wNavy)">Solennix</text>
+</svg>

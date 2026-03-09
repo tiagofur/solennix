@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Opcion 7: Monograma S dentro de doble circulo -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="bg7" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1B2A4A"/>
+      <stop offset="100%" stop-color="#0F1A2E"/>
+    </linearGradient>
+    <linearGradient id="gold7" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#C4A265"/>
+      <stop offset="100%" stop-color="#D4B87A"/>
+    </linearGradient>
+  </defs>
+  <rect width="200" height="200" rx="40" fill="url(#bg7)"/>
+  <!-- Circulo exterior -->
+  <circle cx="100" cy="100" r="72" fill="none" stroke="url(#gold7)" stroke-width="2.5"/>
+  <!-- Circulo interior -->
+  <circle cx="100" cy="100" r="64" fill="none" stroke="url(#gold7)" stroke-width="1" opacity="0.4"/>
+  <!-- S estilizada - curvas suaves -->
+  <path d="M120,58 C138,58 142,72 130,80 C120,86 88,86 80,96 C70,108 82,120 100,120 C110,120 138,118 138,138 C138,152 120,156 106,156"
+        fill="none" stroke="#F5F0E8" stroke-width="9" stroke-linecap="round"/>
+  <!-- Serifa superior -->
+  <line x1="106" y1="58" x2="120" y2="58" stroke="#F5F0E8" stroke-width="4" stroke-linecap="round" opacity="0.8"/>
+  <!-- Serifa inferior -->
+  <line x1="106" y1="156" x2="92" y2="156" stroke="#F5F0E8" stroke-width="4" stroke-linecap="round" opacity="0.8"/>
+</svg>

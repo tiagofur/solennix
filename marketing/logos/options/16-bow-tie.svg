@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Opcion 16: Corbata de moño / bow tie elegante -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="bg16" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1B2A4A"/>
+      <stop offset="100%" stop-color="#0F1A2E"/>
+    </linearGradient>
+    <linearGradient id="g16" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#C4A265"/>
+      <stop offset="50%" stop-color="#D4B87A"/>
+      <stop offset="100%" stop-color="#C4A265"/>
+    </linearGradient>
+  </defs>
+  <rect width="200" height="200" rx="40" fill="url(#bg16)"/>
+  <!-- Lado izquierdo del moño -->
+  <path d="M100,95 L42,62 Q38,60 38,65 L38,135 Q38,140 42,138 L100,105"
+        fill="none" stroke="url(#g16)" stroke-width="3" stroke-linejoin="round"/>
+  <!-- Lado derecho del moño -->
+  <path d="M100,95 L158,62 Q162,60 162,65 L162,135 Q162,140 158,138 L100,105"
+        fill="none" stroke="url(#g16)" stroke-width="3" stroke-linejoin="round"/>
+  <!-- Nudo central -->
+  <ellipse cx="100" cy="100" rx="8" ry="12" fill="none" stroke="#F5F0E8" stroke-width="3"/>
+  <ellipse cx="100" cy="100" rx="3" ry="5" fill="#C4A265" opacity="0.4"/>
+  <!-- Lineas internas sutiles (pliegues de tela) -->
+  <path d="M95,97 L55,72" stroke="#C4A265" stroke-width="0.8" opacity="0.25"/>
+  <path d="M95,103 L55,128" stroke="#C4A265" stroke-width="0.8" opacity="0.25"/>
+  <path d="M105,97 L145,72" stroke="#C4A265" stroke-width="0.8" opacity="0.25"/>
+  <path d="M105,103 L145,128" stroke="#C4A265" stroke-width="0.8" opacity="0.25"/>
+</svg>

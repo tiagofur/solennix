@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Opcion 21: Arco triunfal / portal de evento -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="bg21" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1B2A4A"/>
+      <stop offset="100%" stop-color="#0F1A2E"/>
+    </linearGradient>
+    <linearGradient id="g21" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%" stop-color="#C4A265"/>
+      <stop offset="100%" stop-color="#D4B87A"/>
+    </linearGradient>
+  </defs>
+  <rect width="200" height="200" rx="40" fill="url(#bg21)"/>
+  <!-- Columna izquierda -->
+  <rect x="48" y="75" width="18" height="85" fill="none" stroke="url(#g21)" stroke-width="2.5"/>
+  <!-- Columna derecha -->
+  <rect x="134" y="75" width="18" height="85" fill="none" stroke="url(#g21)" stroke-width="2.5"/>
+  <!-- Arco -->
+  <path d="M48,75 Q48,35 100,35 Q152,35 152,75" fill="none" stroke="url(#g21)" stroke-width="3"/>
+  <!-- Arco interior -->
+  <path d="M60,80 Q60,52 100,52 Q140,52 140,80" fill="none" stroke="#C4A265" stroke-width="1.5" opacity="0.3"/>
+  <!-- Keystone (clave del arco) -->
+  <polygon points="100,32 106,40 94,40" fill="#D4B87A"/>
+  <!-- Base columnas -->
+  <rect x="44" y="155" width="26" height="8" rx="2" fill="none" stroke="#C4A265" stroke-width="1.5"/>
+  <rect x="130" y="155" width="26" height="8" rx="2" fill="none" stroke="#C4A265" stroke-width="1.5"/>
+  <!-- Estrella en la clave -->
+  <circle cx="100" cy="68" r="4" fill="#F5F0E8" opacity="0.5"/>
+  <!-- Luz que sale del portal -->
+  <line x1="85" y1="160" x2="80" y2="145" stroke="#D4B87A" stroke-width="0.8" opacity="0.15"/>
+  <line x1="100" y1="160" x2="100" y2="140" stroke="#D4B87A" stroke-width="0.8" opacity="0.2"/>
+  <line x1="115" y1="160" x2="120" y2="145" stroke="#D4B87A" stroke-width="0.8" opacity="0.15"/>
+</svg>

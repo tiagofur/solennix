@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 36: Dos copas cruzadas en X (estilo heraldico moderno) -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="bg36" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1B2A4A"/>
+      <stop offset="100%" stop-color="#0F1A2E"/>
+    </linearGradient>
+    <linearGradient id="g36" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#D4B87A"/>
+      <stop offset="100%" stop-color="#C4A265"/>
+    </linearGradient>
+  </defs>
+  <rect width="200" height="200" rx="40" fill="url(#bg36)"/>
+  <!-- Copa izquierda cruzada -->
+  <g transform="translate(100,100) rotate(-25) translate(-100,-100)">
+    <path d="M82,40 L82,80 Q82,100 100,105 Q118,100 118,80 L118,40" fill="none" stroke="#F5F0E8" stroke-width="2.5"/>
+    <line x1="82" y1="40" x2="118" y2="40" stroke="#F5F0E8" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="100" y1="105" x2="100" y2="140" stroke="#F5F0E8" stroke-width="2.5"/>
+    <line x1="85" y1="142" x2="115" y2="142" stroke="#F5F0E8" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+  <!-- Copa derecha cruzada -->
+  <g transform="translate(100,100) rotate(25) translate(-100,-100)">
+    <path d="M82,40 L82,80 Q82,100 100,105 Q118,100 118,80 L118,40" fill="none" stroke="url(#g36)" stroke-width="2.5"/>
+    <line x1="82" y1="40" x2="118" y2="40" stroke="url(#g36)" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="100" y1="105" x2="100" y2="140" stroke="url(#g36)" stroke-width="2.5"/>
+    <line x1="85" y1="142" x2="115" y2="142" stroke="url(#g36)" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+  <!-- Destello en la interseccion -->
+  <circle cx="100" cy="72" r="4" fill="#D4B87A" opacity="0.5"/>
+  <circle cx="100" cy="72" r="8" fill="#D4B87A" opacity="0.08"/>
+</svg>

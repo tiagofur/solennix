@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Opcion 23: Flor geometrica / rosa estilizada -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="bg23" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1B2A4A"/>
+      <stop offset="100%" stop-color="#0F1A2E"/>
+    </linearGradient>
+    <linearGradient id="g23" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#D4B87A"/>
+      <stop offset="100%" stop-color="#C4A265"/>
+    </linearGradient>
+  </defs>
+  <rect width="200" height="200" rx="40" fill="url(#bg23)"/>
+  <!-- Petalos (5 elipses rotadas) -->
+  <ellipse cx="100" cy="75" rx="14" ry="28" fill="none" stroke="url(#g23)" stroke-width="2.5" transform="rotate(0,100,100)"/>
+  <ellipse cx="100" cy="75" rx="14" ry="28" fill="none" stroke="url(#g23)" stroke-width="2.5" transform="rotate(72,100,100)"/>
+  <ellipse cx="100" cy="75" rx="14" ry="28" fill="none" stroke="url(#g23)" stroke-width="2.5" transform="rotate(144,100,100)"/>
+  <ellipse cx="100" cy="75" rx="14" ry="28" fill="none" stroke="url(#g23)" stroke-width="2.5" transform="rotate(216,100,100)"/>
+  <ellipse cx="100" cy="75" rx="14" ry="28" fill="none" stroke="url(#g23)" stroke-width="2.5" transform="rotate(288,100,100)"/>
+  <!-- Centro -->
+  <circle cx="100" cy="100" r="10" fill="#C4A265" opacity="0.3"/>
+  <circle cx="100" cy="100" r="5" fill="#F5F0E8" opacity="0.6"/>
+  <!-- Tallo sutil -->
+  <line x1="100" y1="132" x2="100" y2="168" stroke="#6B7B8D" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+  <path d="M100,148 Q110,140 118,142" fill="none" stroke="#6B7B8D" stroke-width="1.5" opacity="0.3" stroke-linecap="round"/>
+</svg>

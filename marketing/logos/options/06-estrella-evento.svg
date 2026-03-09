@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Opcion 6: Estrella/destello de celebracion -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="bg6" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1B2A4A"/>
+      <stop offset="100%" stop-color="#0F1A2E"/>
+    </linearGradient>
+    <linearGradient id="gold6" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#D4B87A"/>
+      <stop offset="100%" stop-color="#C4A265"/>
+    </linearGradient>
+  </defs>
+  <rect width="200" height="200" rx="40" fill="url(#bg6)"/>
+  <!-- Estrella de 4 puntas principal -->
+  <path d="M100,30 L108,85 L165,100 L108,115 L100,170 L92,115 L35,100 L92,85 Z"
+        fill="url(#gold6)" opacity="0.9"/>
+  <!-- Estrella interior (crema) -->
+  <path d="M100,58 L105,90 L138,100 L105,110 L100,142 L95,110 L62,100 L95,90 Z"
+        fill="#F5F0E8" opacity="0.3"/>
+  <!-- Destellos diagonales pequeños -->
+  <path d="M148,48 L152,58 L162,52 L156,62 L165,66 L155,68 L152,78 L150,68 L140,66 L148,62 Z"
+        fill="#D4B87A" opacity="0.6" transform="scale(0.6) translate(100,20)"/>
+  <path d="M148,48 L152,58 L162,52 L156,62 L165,66 L155,68 L152,78 L150,68 L140,66 L148,62 Z"
+        fill="#D4B87A" opacity="0.4" transform="scale(0.45) translate(30,200)"/>
+  <!-- Centro -->
+  <circle cx="100" cy="100" r="6" fill="#F5F0E8"/>
+</svg>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Opcion 24: Campana de celebracion -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="bg24" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1B2A4A"/>
+      <stop offset="100%" stop-color="#0F1A2E"/>
+    </linearGradient>
+    <linearGradient id="g24" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#D4B87A"/>
+      <stop offset="100%" stop-color="#C4A265"/>
+    </linearGradient>
+  </defs>
+  <rect width="200" height="200" rx="40" fill="url(#bg24)"/>
+  <!-- Aro superior -->
+  <circle cx="100" cy="42" r="6" fill="none" stroke="url(#g24)" stroke-width="2.5"/>
+  <!-- Cuerpo de campana -->
+  <path d="M72,70 Q72,48 100,48 Q128,48 128,70 L135,130 Q135,140 100,140 Q65,140 65,130 Z"
+        fill="none" stroke="url(#g24)" stroke-width="3"/>
+  <!-- Borde inferior (lip) -->
+  <path d="M60,135 Q60,148 100,148 Q140,148 140,135" fill="none" stroke="url(#g24)" stroke-width="3"/>
+  <!-- Badajo -->
+  <line x1="100" y1="120" x2="100" y2="138" stroke="#F5F0E8" stroke-width="2.5"/>
+  <circle cx="100" cy="140" r="5" fill="#F5F0E8" opacity="0.7"/>
+  <!-- Reflejo -->
+  <path d="M82,70 Q82,90 85,110" fill="none" stroke="#F5F0E8" stroke-width="1.5" opacity="0.25" stroke-linecap="round"/>
+  <!-- Ondas de sonido -->
+  <path d="M55,100 Q48,90 55,80" fill="none" stroke="#D4B87A" stroke-width="1.5" opacity="0.3" stroke-linecap="round"/>
+  <path d="M145,100 Q152,90 145,80" fill="none" stroke="#D4B87A" stroke-width="1.5" opacity="0.3" stroke-linecap="round"/>
+  <!-- Destello -->
+  <circle cx="130" cy="55" r="2" fill="#D4B87A" opacity="0.4"/>
+</svg>

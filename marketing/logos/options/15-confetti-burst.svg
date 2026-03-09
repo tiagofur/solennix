@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Opcion 15: Explosion de confetti geometrico -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="bg15" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1B2A4A"/>
+      <stop offset="100%" stop-color="#0F1A2E"/>
+    </linearGradient>
+  </defs>
+  <rect width="200" height="200" rx="40" fill="url(#bg15)"/>
+  <!-- Centro de explosion -->
+  <circle cx="100" cy="100" r="8" fill="#C4A265"/>
+  <!-- Rayos dorados -->
+  <line x1="100" y1="55" x2="100" y2="75" stroke="#D4B87A" stroke-width="3" stroke-linecap="round"/>
+  <line x1="100" y1="125" x2="100" y2="145" stroke="#D4B87A" stroke-width="3" stroke-linecap="round"/>
+  <line x1="55" y1="100" x2="75" y2="100" stroke="#D4B87A" stroke-width="3" stroke-linecap="round"/>
+  <line x1="125" y1="100" x2="145" y2="100" stroke="#D4B87A" stroke-width="3" stroke-linecap="round"/>
+  <!-- Rayos diagonales -->
+  <line x1="68" y1="68" x2="80" y2="80" stroke="#C4A265" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="132" y1="68" x2="120" y2="80" stroke="#C4A265" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="68" y1="132" x2="80" y2="120" stroke="#C4A265" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="132" y1="132" x2="120" y2="120" stroke="#C4A265" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Confetti pieces -->
+  <rect x="58" y="52" width="6" height="3" rx="1" fill="#F5F0E8" transform="rotate(25,61,53)" opacity="0.8"/>
+  <rect x="130" y="55" width="6" height="3" rx="1" fill="#F5F0E8" transform="rotate(-15,133,56)" opacity="0.7"/>
+  <rect x="55" y="130" width="5" height="3" rx="1" fill="#D4B87A" transform="rotate(40,57,131)" opacity="0.6"/>
+  <rect x="138" y="128" width="6" height="3" rx="1" fill="#F5F0E8" transform="rotate(-30,141,129)" opacity="0.6"/>
+  <circle cx="78" cy="50" r="2.5" fill="#D4B87A" opacity="0.5"/>
+  <circle cx="128" cy="148" r="2.5" fill="#C4A265" opacity="0.5"/>
+  <circle cx="145" cy="78" r="2" fill="#F5F0E8" opacity="0.4"/>
+  <circle cx="52" cy="115" r="2" fill="#F5F0E8" opacity="0.4"/>
+  <!-- Diamantes pequenos -->
+  <polygon points="140,42 143,46 140,50 137,46" fill="#D4B87A" opacity="0.6"/>
+  <polygon points="58,148 61,152 58,156 55,152" fill="#C4A265" opacity="0.5"/>
+</svg>

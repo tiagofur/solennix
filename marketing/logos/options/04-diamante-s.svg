@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Opcion 4: Diamante/rombo con S interior -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="bg4" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0F1A2E"/>
+      <stop offset="100%" stop-color="#1B2A4A"/>
+    </linearGradient>
+    <linearGradient id="gold4" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#D4B87A"/>
+      <stop offset="100%" stop-color="#C4A265"/>
+    </linearGradient>
+  </defs>
+  <rect width="200" height="200" rx="40" fill="url(#bg4)"/>
+  <!-- Diamante exterior -->
+  <polygon points="100,22 178,100 100,178 22,100" fill="none" stroke="url(#gold4)" stroke-width="3"/>
+  <!-- Diamante interior -->
+  <polygon points="100,40 160,100 100,160 40,100" fill="none" stroke="#C4A265" stroke-width="1.5" opacity="0.3"/>
+  <!-- S central -->
+  <path d="M118,62 C130,62 136,70 136,80 C136,92 122,96 108,98 C94,100 80,104 80,116 C80,126 90,134 102,134"
+        fill="none" stroke="#F5F0E8" stroke-width="8" stroke-linecap="round"/>
+  <!-- Puntos cardinales del diamante -->
+  <circle cx="100" cy="22" r="3" fill="#D4B87A"/>
+  <circle cx="178" cy="100" r="3" fill="#D4B87A"/>
+  <circle cx="100" cy="178" r="3" fill="#D4B87A"/>
+  <circle cx="22" cy="100" r="3" fill="#D4B87A"/>
+</svg>
