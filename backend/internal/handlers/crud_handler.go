@@ -81,6 +81,13 @@ func (h *CRUDHandler) CreateClient(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
+
+	// Validate business rules
+	if err := ValidateClient(&client); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
 	// Check limits
 	user, err := h.userRepo.GetByID(r.Context(), userID)
 	if err != nil {
@@ -120,6 +127,13 @@ func (h *CRUDHandler) UpdateClient(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
+
+	// Validate business rules
+	if err := ValidateClient(&client); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
 	client.ID = id
 	client.UserID = userID
 	if err := h.clientRepo.Update(r.Context(), &client); err != nil {

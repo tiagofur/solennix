@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	"log/slog"
+	"math"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -68,7 +69,8 @@ func (h *EventPaymentHandler) CreateEventCheckoutSession(w http.ResponseWriter, 
 	}
 
 	// Calculate amount in cents (Stripe uses smallest currency unit)
-	amountCents := int64(event.TotalAmount * 100)
+	// Use math.Round to avoid float truncation (e.g. 19.99*100 = 1998.999... → 1999)
+	amountCents := int64(math.Round(event.TotalAmount * 100))
 
 	// Build description
 	description := fmt.Sprintf("Evento: %s", event.ServiceType)
@@ -100,10 +102,9 @@ func (h *EventPaymentHandler) CreateEventCheckoutSession(w http.ResponseWriter, 
 			"user_id":  userID.String(),
 			"type":     "event_payment",
 		},
-		CustomerEmail: stripe.String(""), // Optional: pre-fill with client email if available
 	}
 
-	// Add client email if available
+	// Pre-fill client email if available (don't send empty string to Stripe)
 	if event.Client != nil && event.Client.Email != nil && *event.Client.Email != "" {
 		params.CustomerEmail = event.Client.Email
 	}
@@ -162,10 +163,15 @@ func (h *EventPaymentHandler) HandleEventPaymentSuccess(w http.ResponseWriter, r
 		return
 	}
 
+	var customerEmail string
+	if sess.CustomerDetails != nil {
+		customerEmail = sess.CustomerDetails.Email
+	}
+
 	writeJSON(w, http.StatusOK, map[string]interface{}{
 		"session_id":     sess.ID,
 		"payment_status": sess.PaymentStatus,
 		"amount_total":   float64(sess.AmountTotal) / 100.0,
-		"customer_email": sess.CustomerDetails.Email,
+		"customer_email": customerEmail,
 	})
 }

@@ -128,6 +128,28 @@ func ValidateEventExtra(ee *models.EventExtra) error {
 	return nil
 }
 
+// ValidateClient validates client business rules
+func ValidateClient(client *models.Client) error {
+	// Validate name is not empty
+	if client.Name == "" {
+		return ValidationError{Field: "name", Message: "is required"}
+	}
+
+	// Validate name length
+	if len(client.Name) > 255 {
+		return ValidationError{Field: "name", Message: "must not exceed 255 characters"}
+	}
+
+	// Validate email format if provided
+	if client.Email != nil && *client.Email != "" {
+		if !emailRegex.MatchString(*client.Email) {
+			return ValidationError{Field: "email", Message: "invalid email format"}
+		}
+	}
+
+	return nil
+}
+
 // ValidateProduct validates product business rules
 func ValidateProduct(product *models.Product) error {
 	// Validate name is not empty

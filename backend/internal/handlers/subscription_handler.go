@@ -559,11 +559,16 @@ func (h *SubscriptionHandler) handleEventPayment(ctx context.Context, session *s
 		}
 	}
 
+	var customerEmail string
+	if session.CustomerDetails != nil {
+		customerEmail = session.CustomerDetails.Email
+	}
+
 	slog.Info("Event payment processed successfully",
 		"event_id", eventID,
 		"amount", amountPaid,
 		"session_id", session.ID,
-		"customer_email", session.CustomerDetails.Email,
+		"customer_email", customerEmail,
 	)
 }
 
