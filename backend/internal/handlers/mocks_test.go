@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/stripe/stripe-go/v81"
 	"github.com/stretchr/testify/mock"
 	"github.com/tiagofur/solennix-backend/internal/models"
 	"github.com/tiagofur/solennix-backend/internal/repository"
@@ -525,4 +526,44 @@ func (m *MockUnavailableDateRepo) GetByDateRange(ctx context.Context, userID uui
 func (m *MockUnavailableDateRepo) Delete(ctx context.Context, id, userID uuid.UUID) error {
 	args := m.Called(ctx, id, userID)
 	return args.Error(0)
+}
+
+// ---------------------------------------------------------------------------
+// MockStripeService — implements StripeService
+// ---------------------------------------------------------------------------
+
+type MockStripeService struct {
+	mock.Mock
+}
+
+func (m *MockStripeService) NewCheckoutSession(params *stripe.CheckoutSessionParams) (*stripe.CheckoutSession, error) {
+	args := m.Called(params)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*stripe.CheckoutSession), args.Error(1)
+}
+
+func (m *MockStripeService) GetCheckoutSession(id string, params *stripe.CheckoutSessionParams) (*stripe.CheckoutSession, error) {
+	args := m.Called(id, params)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*stripe.CheckoutSession), args.Error(1)
+}
+
+func (m *MockStripeService) NewBillingPortalSession(params *stripe.BillingPortalSessionParams) (*stripe.BillingPortalSession, error) {
+	args := m.Called(params)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*stripe.BillingPortalSession), args.Error(1)
+}
+
+func (m *MockStripeService) GetSubscription(id string, params *stripe.SubscriptionParams) (*stripe.Subscription, error) {
+	args := m.Called(id, params)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*stripe.Subscription), args.Error(1)
 }

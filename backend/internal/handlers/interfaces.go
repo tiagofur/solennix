@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/stripe/stripe-go/v81"
 	"github.com/tiagofur/solennix-backend/internal/models"
 	"github.com/tiagofur/solennix-backend/internal/repository"
 )
@@ -105,4 +106,13 @@ type AdminRepository interface {
 	HasActiveSubscription(ctx context.Context, userID uuid.UUID) (bool, error)
 	GetSubscriptionOverview(ctx context.Context) (*repository.SubscriptionOverview, error)
 	ExpireGiftedPlans(ctx context.Context) (int, error)
+}
+
+// StripeService defines the subset of Stripe operations used by handlers.
+// This allows mocking for testing.
+type StripeService interface {
+	NewCheckoutSession(params *stripe.CheckoutSessionParams) (*stripe.CheckoutSession, error)
+	GetCheckoutSession(id string, params *stripe.CheckoutSessionParams) (*stripe.CheckoutSession, error)
+	NewBillingPortalSession(params *stripe.BillingPortalSessionParams) (*stripe.BillingPortalSession, error)
+	GetSubscription(id string, params *stripe.SubscriptionParams) (*stripe.Subscription, error)
 }

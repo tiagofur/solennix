@@ -19,6 +19,11 @@ import {
   ChevronRight,
   CheckCircle,
   AlertCircle,
+  Info,
+  Utensils,
+  PlusCircle,
+  Package,
+  Calculator,
 } from "lucide-react";
 import { logError } from "@/lib/errorHandler";
 import { EventGeneralInfo } from "./components/EventGeneralInfo";
@@ -88,11 +93,11 @@ const eventSchema = z.object({
 type EventFormData = z.infer<typeof eventSchema>;
 
 const STEPS = [
-  { id: 1, title: "Información General" },
-  { id: 2, title: "Productos" },
-  { id: 3, title: "Extras" },
-  { id: 4, title: "Insumos y Equipo" },
-  { id: 5, title: "Finanzas y Contrato" },
+  { id: 1, title: "Información General", icon: Info },
+  { id: 2, title: "Productos", icon: Utensils },
+  { id: 3, title: "Extras", icon: PlusCircle },
+  { id: 4, title: "Insumos y Equipo", icon: Package },
+  { id: 5, title: "Finanzas y Contrato", icon: FileText },
 ];
 
 export const EventForm: React.FC = () => {
@@ -862,74 +867,67 @@ export const EventForm: React.FC = () => {
         )}
       </div>
 
-      <nav aria-label="Progreso del formulario de evento">
-        <ol
-          role="list"
-          className="bg-card rounded-3xl shadow-sm md:flex md:divide-y-0 md:divide-x divide-border overflow-hidden border border-border"
-        >
-          {STEPS.map((step, stepIdx) => (
-            <li key={step.id} className="relative md:flex-1 md:flex">
-              <button
-                type="button"
-                onClick={() => {
-                  if (activeStep > step.id) setActiveStep(step.id);
-                }}
-                disabled={activeStep < step.id}
-                className="group flex items-center w-full"
-              >
-                <span className="px-6 py-4 flex items-center text-sm font-medium">
-                  <span
-                    className={`shrink-0 w-10 h-10 flex items-center justify-center rounded-full border-2 ${
-                      activeStep > step.id
-                        ? "bg-primary border-primary"
-                        : activeStep === step.id
-                          ? "border-primary text-primary"
-                          : "border-border text-text-secondary"
-                    }`}
+      <nav aria-label="Progreso del formulario de evento" className="mb-8">
+        <div className="relative">
+          {/* Progress Line */}
+          <div
+            className="absolute top-1/2 left-0 w-full h-1 bg-border -translate-y-1/2 rounded-full overflow-hidden"
+            aria-hidden="true"
+          >
+            <div
+              className="h-full bg-primary transition-all duration-500 ease-in-out"
+              style={{ width: `${((activeStep - 1) / (STEPS.length - 1)) * 100}%` }}
+            />
+          </div>
+
+          <ol role="list" className="relative flex justify-between w-full">
+            {STEPS.map((step) => {
+              const Icon = step.icon;
+              const isCompleted = activeStep > step.id;
+              const isActive = activeStep === step.id;
+
+              return (
+                <li key={step.id} className="relative">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (activeStep > step.id) setActiveStep(step.id);
+                    }}
+                    disabled={activeStep < step.id}
+                    className="group flex flex-col items-center focus:outline-hidden"
                   >
-                    {activeStep > step.id ? (
-                      <CheckCircle
-                        className="w-6 h-6 text-white"
-                        aria-hidden="true"
-                      />
-                    ) : (
-                      <span>{step.id}</span>
-                    )}
-                  </span>
-                  <span
-                    className={`ml-4 text-sm font-medium ${
-                      activeStep >= step.id
-                        ? "text-text"
-                        : "text-text-secondary"
-                    }`}
-                  >
-                    {step.title}
-                  </span>
-                </span>
-              </button>
-              {stepIdx !== STEPS.length - 1 && (
-                <div
-                  className="hidden md:block absolute top-0 right-0 h-full w-5"
-                  aria-hidden="true"
-                >
-                  <svg
-                    className="h-full w-full text-border"
-                    viewBox="0 0 22 80"
-                    fill="none"
-                    preserveAspectRatio="none"
-                  >
-                    <path
-                      d="M0 -2L20 40L0 82"
-                      vectorEffect="non-scaling-stroke"
-                      stroke="currentcolor"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </div>
-              )}
-            </li>
-          ))}
-        </ol>
+                    <span
+                      className={`relative z-10 w-12 h-12 flex items-center justify-center rounded-2xl transition-all duration-500 ${
+                        isCompleted
+                          ? "bg-primary text-white shadow-lg shadow-primary/20"
+                          : isActive
+                            ? "bg-card border-2 border-primary text-primary shadow-xl ring-4 ring-primary/10 scale-110"
+                            : "bg-surface-alt border-2 border-border text-text-tertiary"
+                      }`}
+                    >
+                      {isCompleted ? (
+                        <CheckCircle className="w-6 h-6" aria-hidden="true" />
+                      ) : (
+                        <Icon className="w-6 h-6" aria-hidden="true" />
+                      )}
+                      
+                      {isActive && (
+                        <span className="absolute -inset-1 rounded-2xl animate-pulse bg-primary/20 blur-sm -z-10" />
+                      )}
+                    </span>
+                    <span
+                      className={`mt-3 text-xs font-black uppercase tracking-widest transition-colors duration-300 ${
+                        isActive ? "text-primary" : "text-text-secondary"
+                      }`}
+                    >
+                      {step.title}
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ol>
+        </div>
       </nav>
 
       {error && (
@@ -948,19 +946,25 @@ export const EventForm: React.FC = () => {
 
       {isSubmitted && !isValid && (
         <div
-          className="bg-warning/10 border-l-4 border-warning p-4 rounded-md"
+          className="bg-error/5 border border-error/20 p-5 rounded-2xl animate-in fade-in slide-in-from-top-2 duration-500"
           role="alert"
         >
-          <div className="flex">
-            <AlertCircle className="h-5 w-5 text-warning" aria-hidden="true" />
-            <div className="ml-3">
-              <p className="text-sm text-warning font-medium">
-                Hay errores en el formulario. Por favor revisa todos los pasos.
+          <div className="flex gap-4">
+            <div className="p-2 bg-error/10 rounded-xl h-fit">
+              <AlertCircle className="h-6 w-6 text-error" aria-hidden="true" />
+            </div>
+            <div>
+              <p className="text-sm text-error font-black uppercase tracking-tight mb-2">
+                Errores en el formulario
               </p>
-              <ul className="mt-2 text-xs text-warning/80 list-disc list-inside">
+              <p className="text-sm text-text-secondary mb-3">
+                Por favor revisa todos los pasos antes de guardar el evento.
+              </p>
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 list-none">
                 {Object.entries(errors).map(([key, err]) => (
-                  <li key={key}>
-                    {key}: {(err as any).message}
+                  <li key={key} className="text-xs text-error/80 flex items-center">
+                    <span className="mr-2 opacity-50">●</span>
+                    {(err as any).message}
                   </li>
                 ))}
               </ul>
@@ -982,71 +986,73 @@ export const EventForm: React.FC = () => {
             }
           }}
         >
-          <div className="bg-card shadow-sm border border-border p-6 rounded-3xl">
-            {activeStep === 1 && (
-              <EventGeneralInfo
-                clients={clients as any}
-                clientIdValue={clientIdValue}
-                onClientCreated={handleClientCreated as any}
-                unavailableDates={unavailableDates}
-              />
-            )}
-            {activeStep === 2 && (
-              <EventProducts
-                products={products as any}
-                selectedProducts={selectedProducts}
-                productUnitCosts={productUnitCosts}
-                onAddProduct={handleAddProduct}
-                onRemoveProduct={handleRemoveProduct}
-                onProductChange={handleProductChange}
-              />
-            )}
-            {activeStep === 3 && (
-              <EventExtras
-                extras={extras}
-                onAddExtra={handleAddExtra}
-                onRemoveExtra={handleRemoveExtra}
-                onExtraChange={handleExtraChange}
-              />
-            )}
-            {activeStep === 4 && (
-              <div className="space-y-8">
-                <EventSupplies
-                  supplyInventory={supplyInventory}
-                  selectedSupplies={selectedSupplies}
-                  suggestions={supplySuggestions}
-                  onAddSupply={handleAddSupply}
-                  onRemoveSupply={handleRemoveSupply}
-                  onSupplyChange={handleSupplyChange}
-                  onQuickAddSuggestion={handleQuickAddSupplySuggestion}
+          <div className="bg-card shadow-xl border border-border p-6 rounded-3xl overflow-hidden min-h-[400px]">
+            <div key={activeStep} className="animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
+              {activeStep === 1 && (
+                <EventGeneralInfo
+                  clients={clients as any}
+                  clientIdValue={clientIdValue}
+                  onClientCreated={handleClientCreated as any}
+                  unavailableDates={unavailableDates}
                 />
-                <div className="border-t border-border" />
-                <EventEquipment
-                  equipmentInventory={equipmentInventory}
-                  selectedEquipment={selectedEquipment}
-                  conflicts={equipmentConflicts}
-                  suggestions={equipmentSuggestions}
-                  onAddEquipment={handleAddEquipment}
-                  onRemoveEquipment={handleRemoveEquipment}
-                  onEquipmentChange={handleEquipmentChange}
-                  onQuickAddSuggestion={handleQuickAddSuggestion}
+              )}
+              {activeStep === 2 && (
+                <EventProducts
+                  products={products as any}
+                  selectedProducts={selectedProducts}
+                  productUnitCosts={productUnitCosts}
+                  onAddProduct={handleAddProduct}
+                  onRemoveProduct={handleRemoveProduct}
+                  onProductChange={handleProductChange}
                 />
-              </div>
-            )}
-            {activeStep === 5 && (
-              <EventFinancials
-                selectedProducts={selectedProducts as any}
-                extras={extras}
-                productUnitCosts={productUnitCosts}
-                supplyCost={selectedSupplies.reduce(
-                  (sum, s) =>
-                    sum + (s.exclude_cost ? 0 : s.quantity * s.unit_cost),
-                  0,
-                )}
-                discountType={discountType}
-                onDiscountTypeChange={setDiscountType}
-              />
-            )}
+              )}
+              {activeStep === 3 && (
+                <EventExtras
+                  extras={extras}
+                  onAddExtra={handleAddExtra}
+                  onRemoveExtra={handleRemoveExtra}
+                  onExtraChange={handleExtraChange}
+                />
+              )}
+              {activeStep === 4 && (
+                <div className="space-y-8">
+                  <EventSupplies
+                    supplyInventory={supplyInventory}
+                    selectedSupplies={selectedSupplies}
+                    suggestions={supplySuggestions}
+                    onAddSupply={handleAddSupply}
+                    onRemoveSupply={handleRemoveSupply}
+                    onSupplyChange={handleSupplyChange}
+                    onQuickAddSuggestion={handleQuickAddSupplySuggestion}
+                  />
+                  <div className="border-t border-border" />
+                  <EventEquipment
+                    equipmentInventory={equipmentInventory}
+                    selectedEquipment={selectedEquipment}
+                    conflicts={equipmentConflicts}
+                    suggestions={equipmentSuggestions}
+                    onAddEquipment={handleAddEquipment}
+                    onRemoveEquipment={handleRemoveEquipment}
+                    onEquipmentChange={handleEquipmentChange}
+                    onQuickAddSuggestion={handleQuickAddSuggestion}
+                  />
+                </div>
+              )}
+              {activeStep === 5 && (
+                <EventFinancials
+                  selectedProducts={selectedProducts as any}
+                  extras={extras}
+                  productUnitCosts={productUnitCosts}
+                  supplyCost={selectedSupplies.reduce(
+                    (sum, s) =>
+                      sum + (s.exclude_cost ? 0 : s.quantity * s.unit_cost),
+                    0,
+                  )}
+                  discountType={discountType}
+                  onDiscountTypeChange={setDiscountType}
+                />
+              )}
+            </div>
           </div>
 
           <div className="flex justify-between pt-4">

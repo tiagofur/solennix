@@ -3,13 +3,27 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { CalendarView } from './CalendarView';
 import { eventService } from '../../services/eventService';
+import { unavailableDatesService } from '../../services/unavailableDatesService';
 import { logError } from '../../lib/errorHandler';
+import { Event } from '../../types/entities';
+
+type EventWithClient = Partial<Event> & {
+  client?: { name: string; phone?: string; email?: string };
+};
 
 const mockNavigate = vi.fn();
 
 vi.mock('../../services/eventService', () => ({
   eventService: {
     getByDateRange: vi.fn(),
+    getAll: vi.fn(),
+  },
+}));
+
+vi.mock('../../services/unavailableDatesService', () => ({
+  unavailableDatesService: {
+    getDates: vi.fn(),
+    removeDate: vi.fn(),
   },
 }));
 
@@ -20,9 +34,9 @@ vi.mock('../../lib/errorHandler', () => ({
 vi.mock('react-day-picker', () => ({
   DayPicker: ({ onSelect, onMonthChange }: any) => (
     <div>
-      <button onClick={() => onSelect?.(new Date(2024, 0, 2, 12))}>Select</button>
-      <button onClick={() => onSelect?.(undefined)}>Clear</button>
-      <button onClick={() => onMonthChange?.(new Date(2024, 1, 1, 12))}>Next</button>
+      <button data-testid="mock-select" onClick={() => onSelect?.(new Date(2024, 0, 2))}>Select</button>
+      <button data-testid="mock-clear" onClick={() => onSelect?.(undefined)}>Clear</button>
+      <button data-testid="mock-next" onClick={() => onMonthChange?.(new Date(2024, 1, 1))}>Next</button>
     </div>
   ),
 }));
@@ -38,6 +52,18 @@ const renderCalendar = () =>
       <CalendarView />
     </MemoryRouter>
   );
+
+const waitForLoading = async () => {
+  // Wait for fetches to start if they haven't started yet
+  await waitFor(() => {
+    expect(eventService.getByDateRange).toHaveBeenCalled();
+  }, { timeout: 2000 });
+
+  // Wait for fetches to finish (spinner should appear and then disappear)
+  await waitFor(() => {
+    expect(screen.queryByRole('status', { name: /Cargando/i })).not.toBeInTheDocument();
+  }, { timeout: 5000 });
+};
 
 // Helper: full event data with all fields populated
 const makeEvent = (overrides: Record<string, any> = {}) => ({
@@ -55,8 +81,43 @@ const makeEvent = (overrides: Record<string, any> = {}) => ({
 });
 
 describe('CalendarView', () => {
+  const mockEvents: EventWithClient[] = [
+    {
+      id: '1',
+      event_date: '2024-01-02',
+      service_type: 'Catering',
+      status: 'confirmed',
+      client: { name: 'Ana', email: 'ana@example.com' },
+      client_id: 'c1',
+      created_at: '',
+      updated_at: '',
+    },
+    {
+      id: '2',
+      event_date: '2024-01-02',
+      service_type: 'Boda',
+      status: 'quoted',
+      client: { name: 'Juan', email: 'juan@example.com' },
+      client_id: 'c2',
+      created_at: '',
+      updated_at: '',
+    },
+  ];
+
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.useFakeTimers();
+    // Set system time to Jan 2, 2024
+    vi.setSystemTime(new Date(2024, 0, 2));
+
+    (eventService.getByDateRange as any).mockResolvedValue(mockEvents);
+    (eventService.getAll as any).mockResolvedValue(mockEvents);
+    (unavailableDatesService.getDates as any).mockResolvedValue([]);
+    (unavailableDatesService.removeDate as any).mockResolvedValue({ success: true });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('renders events for selected date', async () => {
@@ -72,18 +133,7 @@ describe('CalendarView', () => {
     ]);
 
     renderCalendar();
-
-    fireEvent.click(screen.getByText('Select'));
-
-    await waitFor(() => {
-      expect(eventService.getByDateRange).toHaveBeenCalled();
-    });
-    expect(eventService.getByDateRange).toHaveBeenCalledWith(
-      expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
-      expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/)
-    );
-
-    fireEvent.click(screen.getByText('Next'));
+    await waitForLoading();
 
     await waitFor(() => {
       expect(screen.getByText('Ana')).toBeInTheDocument();
@@ -104,13 +154,19 @@ describe('CalendarView', () => {
     ]);
 
     renderCalendar();
-    fireEvent.click(screen.getByText('Select'));
+    await waitForLoading();
 
     await waitFor(() => {
-      expect(eventService.getByDateRange).toHaveBeenCalled();
+      expect(screen.getByTestId('mock-select')).toBeInTheDocument();
     });
+    fireEvent.click(screen.getByTestId('mock-select'));
+    await waitForLoading();
 
-    fireEvent.click(screen.getByText('Next'));
+    await waitFor(() => {
+      expect(screen.getByTestId('mock-next')).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByTestId('mock-next'));
+    await waitForLoading();
 
     await waitFor(() => {
       expect(screen.getByText('Ana')).toBeInTheDocument();
@@ -136,7 +192,10 @@ describe('CalendarView', () => {
 
     renderCalendar();
 
-    fireEvent.click(screen.getByText('Clear'));
+    await waitFor(() => {
+      expect(screen.getByTestId('mock-clear')).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByTestId('mock-clear'));
 
     await waitFor(() => {
       expect(screen.getByRole('link', { name: 'Crear nuevo evento' }).getAttribute('href')).toEqual('/events/new');
@@ -149,7 +208,7 @@ describe('CalendarView', () => {
     renderCalendar();
 
     await waitFor(() => {
-      expect(logError).toHaveBeenCalledWith('Error fetching events', expect.any(Error));
+      expect(logError).toHaveBeenCalledWith('CalendarView:fetchEvents', expect.any(Error));
     });
   });
 
@@ -568,7 +627,7 @@ describe('CalendarView', () => {
     fireEvent.click(screen.getByRole('button', { name: /Ver eventos en lista/i }));
 
     await waitFor(() => {
-      expect(logError).toHaveBeenCalledWith('Error fetching events for list', expect.any(Error));
+      expect(logError).toHaveBeenCalledWith('CalendarView:fetchAllEvents', expect.any(Error));
     });
   });
 

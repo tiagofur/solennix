@@ -25,12 +25,13 @@ import {
 } from "lucide-react";
 import { useToast } from "../../hooks/useToast";
 import { exportToCsv } from "../../lib/exportCsv";
-import { format, startOfMonth, endOfMonth, isSameDay } from "date-fns";
+import { logError } from "../../lib/errorHandler";
+import { format, startOfMonth, endOfMonth, isSameDay, startOfDay } from "date-fns";
 
 // Parse a yyyy-MM-dd date string as LOCAL date (avoids UTC midnight shifting day in negative-offset timezones)
 const parseLocalDate = (dateStr: string): Date => {
   const [y, m, d] = dateStr.split("-").map(Number);
-  return new Date(y, m - 1, d);
+  return startOfDay(new Date(y, m - 1, d));
 };
 import { es } from "date-fns/locale";
 import { usePagination } from "../../hooks/usePagination";
@@ -53,12 +54,13 @@ const STATUS_OPTIONS = [
 
 export const CalendarView: React.FC = () => {
   const navigate = useNavigate();
+  const normalizedToday = startOfDay(new Date());
   const { addToast } = useToast();
   const [events, setEvents] = useState<EventWithClient[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
-    new Date(),
+    normalizedToday,
   );
-  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
+  const [currentMonth, setCurrentMonth] = useState<Date>(startOfMonth(normalizedToday));
   const [viewMode, setViewMode] = useState<"calendar" | "list">("calendar");
   const [unavailableDates, setUnavailableDates] = useState<UnavailableDate[]>(
     [],
@@ -70,10 +72,12 @@ export const CalendarView: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [loading, setLoading] = useState(true);
+  const [isFetching, setIsFetching] = useState(false);
 
   const fetchAllEvents = useCallback(async () => {
     try {
       setLoading(true);
+      setIsFetching(true);
       const data = (await eventService.getAll()) || [];
       // Sort events starting from today
       const todayStr = format(new Date(), "yyyy-MM-dd");
@@ -82,15 +86,17 @@ export const CalendarView: React.FC = () => {
         .sort((a, b) => a.event_date.localeCompare(b.event_date));
       setEvents(upcomingEvents);
     } catch (error) {
-      console.error("Error fetching all events:", error);
+      logError("CalendarView:fetchAllEvents", error);
     } finally {
       setLoading(false);
+      setIsFetching(false);
     }
   }, []);
 
   const fetchEvents = useCallback(async (date: Date) => {
     try {
       setLoading(true);
+      setIsFetching(true); // Set fetching to true
       const start = startOfMonth(date);
       const endMonth = endOfMonth(date);
 
@@ -104,31 +110,44 @@ export const CalendarView: React.FC = () => {
           format(endMonth, "yyyy-MM-dd"),
         ),
       ]);
-      setEvents(eventsData || []);
+
+      setEvents((eventsData as EventWithClient[]) || []);
       setUnavailableDates(unavailableData || []);
     } catch (error) {
-      console.error("Error fetching events:", error);
+      logError("CalendarView:fetchEvents", error);
     } finally {
       setLoading(false);
+      setIsFetching(false); // Set fetching to false
     }
   }, []);
 
   useEffect(() => {
-    if (viewMode === "calendar") {
-      fetchEvents(currentMonth);
-    } else {
-      fetchAllEvents();
-    }
+    let isMounted = true;
+
+    const fetchData = async () => {
+      if (!isMounted) return;
+      if (viewMode === 'calendar') {
+        await fetchEvents(currentMonth);
+      } else {
+        await fetchAllEvents();
+      }
+    };
+
+    fetchData();
+
+    return () => {
+      isMounted = false;
+    };
   }, [currentMonth, viewMode, fetchAllEvents, fetchEvents]);
 
   const handleMonthChange = (month: Date) => {
-    setCurrentMonth(month);
+    setCurrentMonth(startOfMonth(startOfDay(month)));
     setSelectedDate(undefined); // Clear selection when changing month
   };
 
   const goToToday = () => {
-    const today = new Date();
-    setCurrentMonth(today);
+    const today = startOfDay(new Date());
+    setCurrentMonth(startOfMonth(today));
     setSelectedDate(today);
   };
 
@@ -318,7 +337,19 @@ export const CalendarView: React.FC = () => {
       </div>
 
       {viewMode === "calendar" ? (
-        <div className="grid grid-cols-1 xl:grid-cols-5 gap-8 fade-in">
+        <div 
+          className="relative grid grid-cols-1 xl:grid-cols-5 gap-8 fade-in"
+          aria-busy={isFetching}
+        >
+          {isFetching && (
+            <div 
+              className="absolute inset-0 flex items-center justify-center bg-card/70 z-10 rounded-3xl"
+              role="status"
+              aria-label="Cargando eventos..."
+            >
+              <div className="animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent" />
+            </div>
+          )}
           {/* Calendar Card */}
           <div className="bg-card shadow-sm rounded-3xl p-4 sm:p-8 xl:col-span-3 border border-border transition-colors">
             <div className="flex justify-end mb-2">

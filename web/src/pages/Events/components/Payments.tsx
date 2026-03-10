@@ -5,6 +5,7 @@ import { Payment } from "../../../types/entities";
 import { Plus, Trash2, DollarSign, CheckCircle, AlertCircle, Calendar, CreditCard, Banknote } from "lucide-react";
 import { logError } from "../../../lib/errorHandler";
 import { ConfirmDialog } from "../../../components/ConfirmDialog";
+import { Modal } from "../../../components/Modal";
 import { useToast } from "../../../hooks/useToast";
 import clsx from "clsx";
 
@@ -280,19 +281,22 @@ export const Payments: React.FC<PaymentsProps> = ({
           </table>
         </div>
 
-        {isAdding && (
-          <div className="mt-8 animate-in zoom-in-95 fade-in duration-300">
+        <Modal
+          isOpen={isAdding}
+          onClose={() => setIsAdding(false)}
+          title="Registrar Pago"
+          maxWidth="2xl"
+        >
+          <div className="animate-in zoom-in-95 fade-in duration-300">
             <form 
               onSubmit={handleSubmit(onSubmit)} 
-              className="bg-surface-alt/50 p-8 rounded-3xl border border-primary/20 relative overflow-hidden"
+              className="relative overflow-hidden"
             >
               <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
                 <Plus className="h-24 w-24 text-primary" />
               </div>
               
-              <h3 className="text-lg font-black text-text uppercase tracking-tight mb-6">Nuevo Pago</h3>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
                 <div>
                   <label htmlFor="payment-amount" className="block text-[10px] font-black text-text-tertiary uppercase tracking-widest mb-2">Monto *</label>
                   <div className="relative group">
@@ -372,7 +376,7 @@ export const Payments: React.FC<PaymentsProps> = ({
               </div>
             </form>
           </div>
-        )}
+        </Modal>
       </div>
 
       <ConfirmDialog

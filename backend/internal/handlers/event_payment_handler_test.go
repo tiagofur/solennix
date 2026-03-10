@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/stripe/stripe-go/v81"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/tiagofur/solennix-backend/internal/config"
@@ -18,7 +19,7 @@ import (
 func TestEventPaymentHandler(t *testing.T) {
 	t.Run("NewEventPaymentHandler", func(t *testing.T) {
 		cfg := &config.Config{}
-		h := NewEventPaymentHandler(nil, nil, cfg)
+		h := NewEventPaymentHandler(nil, nil, nil, cfg)
 		if h == nil {
 			t.Fatal("NewEventPaymentHandler returned nil")
 		}
@@ -26,7 +27,7 @@ func TestEventPaymentHandler(t *testing.T) {
 
 	t.Run("CreateEventCheckoutSession_StripeNotConfigured", func(t *testing.T) {
 		cfg := &config.Config{StripeSecretKey: ""}
-		h := &EventPaymentHandler{cfg: cfg}
+		h := &EventPaymentHandler{cfg: cfg, stripe: new(MockStripeService)}
 
 		req := httptest.NewRequest(http.MethodPost, "/api/events/123/checkout-session", nil)
 		req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, uuid.New()))
@@ -81,7 +82,8 @@ func TestEventPaymentHandler(t *testing.T) {
 func TestEventPaymentHandler_CreateEventCheckoutSession_Paths(t *testing.T) {
 	t.Run("StripeNotConfigured_Returns503", func(t *testing.T) {
 		cfg := &config.Config{StripeSecretKey: ""}
-		h := &EventPaymentHandler{cfg: cfg}
+		mockStripe := new(MockStripeService)
+		h := &EventPaymentHandler{cfg: cfg, stripe: mockStripe}
 
 		req := httptest.NewRequest(http.MethodPost, "/api/events/123/checkout-session", nil)
 		req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, uuid.New()))
@@ -94,7 +96,8 @@ func TestEventPaymentHandler_CreateEventCheckoutSession_Paths(t *testing.T) {
 
 	t.Run("InvalidEventID_Returns400", func(t *testing.T) {
 		cfg := &config.Config{StripeSecretKey: "sk_test_fake"}
-		h := &EventPaymentHandler{cfg: cfg}
+		mockStripe := new(MockStripeService)
+		h := &EventPaymentHandler{cfg: cfg, stripe: mockStripe}
 
 		req := httptest.NewRequest(http.MethodPost, "/api/events/not-a-uuid/checkout-session", nil)
 		req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, uuid.New()))
@@ -108,9 +111,11 @@ func TestEventPaymentHandler_CreateEventCheckoutSession_Paths(t *testing.T) {
 
 	t.Run("EventNotFound_Returns404", func(t *testing.T) {
 		mockEventRepo := new(MockFullEventRepo)
+		mockStripe := new(MockStripeService)
 		cfg := &config.Config{StripeSecretKey: "sk_test_fake"}
 		h := &EventPaymentHandler{
 			eventRepo: mockEventRepo,
+			stripe:    mockStripe,
 			cfg:       cfg,
 		}
 
@@ -131,9 +136,11 @@ func TestEventPaymentHandler_CreateEventCheckoutSession_Paths(t *testing.T) {
 
 	t.Run("CancelledEvent_Returns400", func(t *testing.T) {
 		mockEventRepo := new(MockFullEventRepo)
+		mockStripe := new(MockStripeService)
 		cfg := &config.Config{StripeSecretKey: "sk_test_fake"}
 		h := &EventPaymentHandler{
 			eventRepo: mockEventRepo,
+			stripe:    mockStripe,
 			cfg:       cfg,
 		}
 
@@ -160,9 +167,11 @@ func TestEventPaymentHandler_CreateEventCheckoutSession_Paths(t *testing.T) {
 
 	t.Run("ZeroTotalAmount_Returns400", func(t *testing.T) {
 		mockEventRepo := new(MockFullEventRepo)
+		mockStripe := new(MockStripeService)
 		cfg := &config.Config{StripeSecretKey: "sk_test_fake"}
 		h := &EventPaymentHandler{
 			eventRepo: mockEventRepo,
+			stripe:    mockStripe,
 			cfg:       cfg,
 		}
 
@@ -189,9 +198,11 @@ func TestEventPaymentHandler_CreateEventCheckoutSession_Paths(t *testing.T) {
 
 	t.Run("NegativeTotalAmount_Returns400", func(t *testing.T) {
 		mockEventRepo := new(MockFullEventRepo)
+		mockStripe := new(MockStripeService)
 		cfg := &config.Config{StripeSecretKey: "sk_test_fake"}
 		h := &EventPaymentHandler{
 			eventRepo: mockEventRepo,
+			stripe:    mockStripe,
 			cfg:       cfg,
 		}
 
@@ -217,15 +228,15 @@ func TestEventPaymentHandler_CreateEventCheckoutSession_Paths(t *testing.T) {
 	})
 
 	t.Run("EventWithClientEmail_UsesClientEmail", func(t *testing.T) {
-		// This tests the path where event.Client != nil and email is present
-		// We can't actually hit Stripe, but we test up to that point
 		mockEventRepo := new(MockFullEventRepo)
+		mockStripe := new(MockStripeService)
 		cfg := &config.Config{
 			StripeSecretKey: "sk_test_fake",
 			FrontendURL:     "http://localhost:5173",
 		}
 		h := &EventPaymentHandler{
 			eventRepo: mockEventRepo,
+			stripe:    mockStripe,
 			cfg:       cfg,
 		}
 
@@ -247,6 +258,9 @@ func TestEventPaymentHandler_CreateEventCheckoutSession_Paths(t *testing.T) {
 			},
 		}
 		mockEventRepo.On("GetByID", mock.Anything, eventID, userID).Return(event, nil)
+		mockStripe.On("NewCheckoutSession", mock.MatchedBy(func(p *stripe.CheckoutSessionParams) bool {
+			return p.CustomerEmail != nil && *p.CustomerEmail == clientEmail
+		})).Return(&stripe.CheckoutSession{ID: "sess_123", URL: "http://stripe.com/test"}, nil)
 
 		req := httptest.NewRequest(http.MethodPost, "/api/events/"+eventID.String()+"/checkout-session", nil)
 		req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, userID))
@@ -254,21 +268,22 @@ func TestEventPaymentHandler_CreateEventCheckoutSession_Paths(t *testing.T) {
 		rr := httptest.NewRecorder()
 		h.CreateEventCheckoutSession(rr, req)
 
-		// Will fail at Stripe API call with invalid key, but we've covered all the
-		// validation and parameter building paths
-		assert.True(t, rr.Code == http.StatusInternalServerError || rr.Code == http.StatusOK,
-			"expected 500 (Stripe API error) or 200, got %d: %s", rr.Code, rr.Body.String())
+		assert.Equal(t, http.StatusOK, rr.Code)
+		assert.Contains(t, rr.Body.String(), "sess_123")
 		mockEventRepo.AssertExpectations(t)
+		mockStripe.AssertExpectations(t)
 	})
 
 	t.Run("EventWithNoClient_StillProceeds", func(t *testing.T) {
 		mockEventRepo := new(MockFullEventRepo)
+		mockStripe := new(MockStripeService)
 		cfg := &config.Config{
 			StripeSecretKey: "sk_test_fake",
 			FrontendURL:     "http://localhost:5173",
 		}
 		h := &EventPaymentHandler{
 			eventRepo: mockEventRepo,
+			stripe:    mockStripe,
 			cfg:       cfg,
 		}
 
@@ -281,9 +296,10 @@ func TestEventPaymentHandler_CreateEventCheckoutSession_Paths(t *testing.T) {
 			ServiceType: "Banquet",
 			NumPeople:   100,
 			TotalAmount: 10000.0,
-			Client:      nil, // No client
+			Client:      nil,
 		}
 		mockEventRepo.On("GetByID", mock.Anything, eventID, userID).Return(event, nil)
+		mockStripe.On("NewCheckoutSession", mock.Anything).Return(&stripe.CheckoutSession{ID: "sess_no_client", URL: "http://stripe.com/test"}, nil)
 
 		req := httptest.NewRequest(http.MethodPost, "/api/events/"+eventID.String()+"/checkout-session", nil)
 		req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, userID))
@@ -291,20 +307,22 @@ func TestEventPaymentHandler_CreateEventCheckoutSession_Paths(t *testing.T) {
 		rr := httptest.NewRecorder()
 		h.CreateEventCheckoutSession(rr, req)
 
-		// Will fail at Stripe API call
-		assert.True(t, rr.Code == http.StatusInternalServerError || rr.Code == http.StatusOK,
-			"expected 500 or 200, got %d: %s", rr.Code, rr.Body.String())
+		assert.Equal(t, http.StatusOK, rr.Code)
+		assert.Contains(t, rr.Body.String(), "sess_no_client")
 		mockEventRepo.AssertExpectations(t)
+		mockStripe.AssertExpectations(t)
 	})
 
 	t.Run("EventWithEmptyEventDate_BuildsDescription", func(t *testing.T) {
 		mockEventRepo := new(MockFullEventRepo)
+		mockStripe := new(MockStripeService)
 		cfg := &config.Config{
 			StripeSecretKey: "sk_test_fake",
 			FrontendURL:     "http://localhost:5173",
 		}
 		h := &EventPaymentHandler{
 			eventRepo: mockEventRepo,
+			stripe:    mockStripe,
 			cfg:       cfg,
 		}
 
@@ -315,11 +333,12 @@ func TestEventPaymentHandler_CreateEventCheckoutSession_Paths(t *testing.T) {
 			UserID:      userID,
 			Status:      "confirmed",
 			ServiceType: "Party",
-			EventDate:   "", // empty date
+			EventDate:   "",
 			NumPeople:   25,
 			TotalAmount: 3000.0,
 		}
 		mockEventRepo.On("GetByID", mock.Anything, eventID, userID).Return(event, nil)
+		mockStripe.On("NewCheckoutSession", mock.Anything).Return(&stripe.CheckoutSession{ID: "sess_no_date", URL: "http://stripe.com/test"}, nil)
 
 		req := httptest.NewRequest(http.MethodPost, "/api/events/"+eventID.String()+"/checkout-session", nil)
 		req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, userID))
@@ -327,16 +346,16 @@ func TestEventPaymentHandler_CreateEventCheckoutSession_Paths(t *testing.T) {
 		rr := httptest.NewRecorder()
 		h.CreateEventCheckoutSession(rr, req)
 
-		// Will fail at Stripe API call
-		assert.True(t, rr.Code == http.StatusInternalServerError || rr.Code == http.StatusOK,
-			"expected 500 or 200, got %d: %s", rr.Code, rr.Body.String())
+		assert.Equal(t, http.StatusOK, rr.Code)
+		assert.Contains(t, rr.Body.String(), "sess_no_date")
 		mockEventRepo.AssertExpectations(t)
+		mockStripe.AssertExpectations(t)
 	})
 }
 
 func TestEventPaymentHandler_HandleEventPaymentSuccess_Paths(t *testing.T) {
 	t.Run("MissingSessionID_Returns400", func(t *testing.T) {
-		h := &EventPaymentHandler{}
+		h := &EventPaymentHandler{stripe: new(MockStripeService)}
 		req := httptest.NewRequest(http.MethodGet, "/api/events/123/payment-session", nil)
 		rr := httptest.NewRecorder()
 		h.HandleEventPaymentSuccess(rr, req)
@@ -346,7 +365,7 @@ func TestEventPaymentHandler_HandleEventPaymentSuccess_Paths(t *testing.T) {
 	})
 
 	t.Run("InvalidEventID_Returns400", func(t *testing.T) {
-		h := &EventPaymentHandler{}
+		h := &EventPaymentHandler{stripe: new(MockStripeService)}
 		req := httptest.NewRequest(http.MethodGet, "/api/events/bad-id/payment-session?session_id=sess_123", nil)
 		req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, uuid.New()))
 		req = withURLParam(req, "id", "bad-id")
@@ -358,8 +377,9 @@ func TestEventPaymentHandler_HandleEventPaymentSuccess_Paths(t *testing.T) {
 	})
 
 	t.Run("StripeSessionRetrievalFails_Returns500", func(t *testing.T) {
+		mockStripe := new(MockStripeService)
 		cfg := &config.Config{StripeSecretKey: "sk_test_fake"}
-		h := &EventPaymentHandler{cfg: cfg}
+		h := &EventPaymentHandler{cfg: cfg, stripe: mockStripe}
 
 		eventID := uuid.New()
 		userID := uuid.New()
@@ -367,10 +387,11 @@ func TestEventPaymentHandler_HandleEventPaymentSuccess_Paths(t *testing.T) {
 			fmt.Sprintf("/api/events/%s/payment-session?session_id=cs_nonexistent", eventID.String()), nil)
 		req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, userID))
 		req = withURLParam(req, "id", eventID.String())
+		mockStripe.On("GetCheckoutSession", "cs_nonexistent", mock.Anything).Return(nil, assert.AnError)
+
 		rr := httptest.NewRecorder()
 		h.HandleEventPaymentSuccess(rr, req)
 
-		// Should fail at Stripe API call
 		assert.Equal(t, http.StatusInternalServerError, rr.Code)
 		assert.Contains(t, rr.Body.String(), "Failed to retrieve payment session")
 	})

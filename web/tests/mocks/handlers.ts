@@ -122,5 +122,6 @@ export const handlers = [
   http.get(`${API_BASE}/events/upcoming`, () => HttpResponse.json(mockStore.events)),
   http.get(`${API_BASE}/inventory`, () => HttpResponse.json(mockStore.inventory)),
   http.get(`${API_BASE}/payments`, () => HttpResponse.json(mockStore.payments)),
+  http.get(`${API_BASE}/unavailable-dates`, () => HttpResponse.json([])),
   http.get('http://localhost:8080/health', () => HttpResponse.json({ status: 'ok' })),
 ];

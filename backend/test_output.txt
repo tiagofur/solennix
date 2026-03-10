@@ -1,0 +1,1469 @@
+=== RUN   TestNewAdminHandler
+--- PASS: TestNewAdminHandler (0.00s)
+=== RUN   TestAdminHandler_GetStats
+=== RUN   TestAdminHandler_GetStats/success
+=== RUN   TestAdminHandler_GetStats/repo_error
+2026/03/10 15:00:02 ERROR admin: failed to get platform stats error="assert.AnError general error for testing"
+--- PASS: TestAdminHandler_GetStats (0.01s)
+    --- PASS: TestAdminHandler_GetStats/success (0.00s)
+    --- PASS: TestAdminHandler_GetStats/repo_error (0.01s)
+=== RUN   TestAdminHandler_ListUsers
+=== RUN   TestAdminHandler_ListUsers/success_with_data
+=== RUN   TestAdminHandler_ListUsers/success_with_nil_users_returns_empty_array
+=== RUN   TestAdminHandler_ListUsers/repo_error
+2026/03/10 15:00:02 ERROR admin: failed to list users error="assert.AnError general error for testing"
+--- PASS: TestAdminHandler_ListUsers (0.00s)
+    --- PASS: TestAdminHandler_ListUsers/success_with_data (0.00s)
+    --- PASS: TestAdminHandler_ListUsers/success_with_nil_users_returns_empty_array (0.00s)
+    --- PASS: TestAdminHandler_ListUsers/repo_error (0.00s)
+=== RUN   TestAdminHandler_GetUser
+=== RUN   TestAdminHandler_GetUser/success
+=== RUN   TestAdminHandler_GetUser/invalid_UUID
+=== RUN   TestAdminHandler_GetUser/repo_error_(not_found)
+2026/03/10 15:00:02 ERROR admin: failed to get user error="assert.AnError general error for testing" id=2efbd4ae-4fb2-431c-8b55-747049c4d5ea
+--- PASS: TestAdminHandler_GetUser (0.00s)
+    --- PASS: TestAdminHandler_GetUser/success (0.00s)
+    --- PASS: TestAdminHandler_GetUser/invalid_UUID (0.00s)
+    --- PASS: TestAdminHandler_GetUser/repo_error_(not_found) (0.00s)
+=== RUN   TestAdminHandler_UpgradeUser
+=== RUN   TestAdminHandler_UpgradeUser/success_basic_to_pro
+2026/03/10 15:00:02 INFO admin: upgrading user admin_id=d617ae63-9d96-4bc1-ae2d-5fb862e7c37b target_user_id=4870ccae-e017-469c-9ac1-88c01cf04121 from_plan=basic to_plan=pro expires_at=<nil>
+=== RUN   TestAdminHandler_UpgradeUser/invalid_UUID
+=== RUN   TestAdminHandler_UpgradeUser/invalid_plan
+=== RUN   TestAdminHandler_UpgradeUser/user_not_found
+=== RUN   TestAdminHandler_UpgradeUser/active_paid_sub_blocks_downgrade_to_basic
+=== RUN   TestAdminHandler_UpgradeUser/invalid_expires_at_date
+=== RUN   TestAdminHandler_UpgradeUser/UpdateUserPlan_error
+2026/03/10 15:00:02 INFO admin: upgrading user admin_id=39e0ca95-fb64-4081-9e50-a11bde5fc5f4 target_user_id=fb3011fd-4d9c-47eb-a637-822077595971 from_plan=basic to_plan=pro expires_at=<nil>
+2026/03/10 15:00:02 ERROR admin: failed to upgrade user error="assert.AnError general error for testing"
+=== RUN   TestAdminHandler_UpgradeUser/re-fetch_error_returns_message
+2026/03/10 15:00:02 INFO admin: upgrading user admin_id=bb7350a7-8361-4b28-b750-e249924500ca target_user_id=d01092c9-95ec-4beb-9d36-cf48653d8fd2 from_plan=basic to_plan=pro expires_at=<nil>
+=== RUN   TestAdminHandler_UpgradeUser/default_plan_when_body_is_empty
+2026/03/10 15:00:02 INFO admin: upgrading user admin_id=4f7ecf97-9015-4027-8101-7148bbd68b9a target_user_id=4fc444d1-cdb5-4917-927c-e9aa57ca5f64 from_plan=basic to_plan=pro expires_at=<nil>
+=== RUN   TestAdminHandler_UpgradeUser/success_with_valid_expires_at_date
+2026/03/10 15:00:02 INFO admin: upgrading user admin_id=79bc838a-f64b-4c6e-81d2-36b3b8deb61b target_user_id=cddd7d5a-6744-4d7d-821a-172fe1c62fd8 from_plan=basic to_plan=pro expires_at=2026-12-31T23:59:59Z
+=== RUN   TestAdminHandler_UpgradeUser/upgrade_to_premium_plan
+2026/03/10 15:00:02 INFO admin: upgrading user admin_id=35e5b517-f2df-4982-8b58-b5580cf0d8f5 target_user_id=dab4bc85-c56e-4a87-8694-f3255c3e0374 from_plan=basic to_plan=premium expires_at=<nil>
+=== RUN   TestAdminHandler_UpgradeUser/downgrade_to_basic_allowed_when_no_paid_sub
+2026/03/10 15:00:02 INFO admin: upgrading user admin_id=fc91f7d6-9475-46e2-90a0-5fd4b3a7a53a target_user_id=ce63a124-0595-403c-8796-130d77365c19 from_plan=pro to_plan=basic expires_at=<nil>
+=== RUN   TestAdminHandler_UpgradeUser/empty_expires_at_string_is_ignored
+2026/03/10 15:00:02 INFO admin: upgrading user admin_id=ac87c378-c52a-4ed7-a129-fd9a59c7974c target_user_id=71f7722a-f16c-4264-8e19-cc8a4838c07c from_plan=basic to_plan=pro expires_at=<nil>
+=== RUN   TestAdminHandler_UpgradeUser/default_plan_when_plan_field_is_empty_string
+2026/03/10 15:00:02 INFO admin: upgrading user admin_id=c895884a-69ba-4bd4-b303-74dc9251f320 target_user_id=7ffd8f77-24d4-4d75-b959-99e7d00d498d from_plan=basic to_plan=pro expires_at=<nil>
+--- PASS: TestAdminHandler_UpgradeUser (0.00s)
+    --- PASS: TestAdminHandler_UpgradeUser/success_basic_to_pro (0.00s)
+    --- PASS: TestAdminHandler_UpgradeUser/invalid_UUID (0.00s)
+    --- PASS: TestAdminHandler_UpgradeUser/invalid_plan (0.00s)
+    --- PASS: TestAdminHandler_UpgradeUser/user_not_found (0.00s)
+    --- PASS: TestAdminHandler_UpgradeUser/active_paid_sub_blocks_downgrade_to_basic (0.00s)
+    --- PASS: TestAdminHandler_UpgradeUser/invalid_expires_at_date (0.00s)
+    --- PASS: TestAdminHandler_UpgradeUser/UpdateUserPlan_error (0.00s)
+    --- PASS: TestAdminHandler_UpgradeUser/re-fetch_error_returns_message (0.00s)
+    --- PASS: TestAdminHandler_UpgradeUser/default_plan_when_body_is_empty (0.00s)
+    --- PASS: TestAdminHandler_UpgradeUser/success_with_valid_expires_at_date (0.00s)
+    --- PASS: TestAdminHandler_UpgradeUser/upgrade_to_premium_plan (0.00s)
+    --- PASS: TestAdminHandler_UpgradeUser/downgrade_to_basic_allowed_when_no_paid_sub (0.00s)
+    --- PASS: TestAdminHandler_UpgradeUser/empty_expires_at_string_is_ignored (0.00s)
+    --- PASS: TestAdminHandler_UpgradeUser/default_plan_when_plan_field_is_empty_string (0.00s)
+=== RUN   TestAdminHandler_GetSubscriptions
+=== RUN   TestAdminHandler_GetSubscriptions/success
+=== RUN   TestAdminHandler_GetSubscriptions/repo_error
+2026/03/10 15:00:02 ERROR admin: failed to get subscription overview error="assert.AnError general error for testing"
+--- PASS: TestAdminHandler_GetSubscriptions (0.00s)
+    --- PASS: TestAdminHandler_GetSubscriptions/success (0.00s)
+    --- PASS: TestAdminHandler_GetSubscriptions/repo_error (0.00s)
+=== RUN   TestAuthHandlerValidationPaths
+=== RUN   TestAuthHandlerValidationPaths/GivenInvalidRegisterBody_WhenRegister_ThenBadRequest
+=== RUN   TestAuthHandlerValidationPaths/GivenMissingRegisterFields_WhenRegister_ThenBadRequest
+=== RUN   TestAuthHandlerValidationPaths/GivenShortPassword_WhenRegister_ThenBadRequest
+=== RUN   TestAuthHandlerValidationPaths/GivenInvalidLoginBody_WhenLogin_ThenBadRequest
+=== RUN   TestAuthHandlerValidationPaths/GivenMissingLoginFields_WhenLogin_ThenBadRequest
+=== RUN   TestAuthHandlerValidationPaths/GivenInvalidRefreshBody_WhenRefresh_ThenBadRequest
+=== RUN   TestAuthHandlerValidationPaths/GivenInvalidRefreshToken_WhenRefresh_ThenUnauthorized
+=== RUN   TestAuthHandlerValidationPaths/GivenInvalidForgotPasswordBody_WhenForgotPassword_ThenBadRequest
+=== RUN   TestAuthHandlerValidationPaths/GivenInvalidUpdateProfileBody_WhenUpdateProfile_ThenBadRequest
+--- PASS: TestAuthHandlerValidationPaths (0.00s)
+    --- PASS: TestAuthHandlerValidationPaths/GivenInvalidRegisterBody_WhenRegister_ThenBadRequest (0.00s)
+    --- PASS: TestAuthHandlerValidationPaths/GivenMissingRegisterFields_WhenRegister_ThenBadRequest (0.00s)
+    --- PASS: TestAuthHandlerValidationPaths/GivenShortPassword_WhenRegister_ThenBadRequest (0.00s)
+    --- PASS: TestAuthHandlerValidationPaths/GivenInvalidLoginBody_WhenLogin_ThenBadRequest (0.00s)
+    --- PASS: TestAuthHandlerValidationPaths/GivenMissingLoginFields_WhenLogin_ThenBadRequest (0.00s)
+    --- PASS: TestAuthHandlerValidationPaths/GivenInvalidRefreshBody_WhenRefresh_ThenBadRequest (0.00s)
+    --- PASS: TestAuthHandlerValidationPaths/GivenInvalidRefreshToken_WhenRefresh_ThenUnauthorized (0.00s)
+    --- PASS: TestAuthHandlerValidationPaths/GivenInvalidForgotPasswordBody_WhenForgotPassword_ThenBadRequest (0.00s)
+    --- PASS: TestAuthHandlerValidationPaths/GivenInvalidUpdateProfileBody_WhenUpdateProfile_ThenBadRequest (0.00s)
+=== RUN   TestAuthHandlerRefreshTokenSuccess
+--- PASS: TestAuthHandlerRefreshTokenSuccess (0.00s)
+=== RUN   TestAuthHandlerErrorBranchesWithClosedRepo
+=== RUN   TestAuthHandlerErrorBranchesWithClosedRepo/RegisterCreateError
+2026/03/10 15:00:02 ERROR Failed to create user error="closed pool"
+=== RUN   TestAuthHandlerErrorBranchesWithClosedRepo/RegisterHashError
+2026/03/10 15:00:02 ERROR Failed to hash password error="failed to hash password: bcrypt: password length exceeds 72 bytes"
+=== RUN   TestAuthHandlerErrorBranchesWithClosedRepo/LoginRepoError
+=== RUN   TestAuthHandlerErrorBranchesWithClosedRepo/UpdateProfileRepoError
+2026/03/10 15:00:02 ERROR Failed to update profile error="failed to update user: closed pool"
+--- PASS: TestAuthHandlerErrorBranchesWithClosedRepo (0.06s)
+    --- PASS: TestAuthHandlerErrorBranchesWithClosedRepo/RegisterCreateError (0.06s)
+    --- PASS: TestAuthHandlerErrorBranchesWithClosedRepo/RegisterHashError (0.00s)
+    --- PASS: TestAuthHandlerErrorBranchesWithClosedRepo/LoginRepoError (0.00s)
+    --- PASS: TestAuthHandlerErrorBranchesWithClosedRepo/UpdateProfileRepoError (0.00s)
+=== RUN   TestNewAuthHandler
+--- PASS: TestNewAuthHandler (0.00s)
+=== RUN   TestAuthHandlerMe
+--- PASS: TestAuthHandlerMe (0.00s)
+=== RUN   TestAuthHandlerLogout
+--- PASS: TestAuthHandlerLogout (0.00s)
+=== RUN   TestAuthHandlerForgotPasswordWithClosedPool
+--- PASS: TestAuthHandlerForgotPasswordWithClosedPool (0.00s)
+=== RUN   TestAuthHandlerResetPassword
+=== RUN   TestAuthHandlerResetPassword/InvalidBody
+=== RUN   TestAuthHandlerResetPassword/MissingFields
+=== RUN   TestAuthHandlerResetPassword/ShortPassword
+=== RUN   TestAuthHandlerResetPassword/InvalidToken
+=== RUN   TestAuthHandlerResetPassword/ValidResetTokenButUserNotFound
+=== RUN   TestAuthHandlerResetPassword/NonResetToken
+--- PASS: TestAuthHandlerResetPassword (0.00s)
+    --- PASS: TestAuthHandlerResetPassword/InvalidBody (0.00s)
+    --- PASS: TestAuthHandlerResetPassword/MissingFields (0.00s)
+    --- PASS: TestAuthHandlerResetPassword/ShortPassword (0.00s)
+    --- PASS: TestAuthHandlerResetPassword/InvalidToken (0.00s)
+    --- PASS: TestAuthHandlerResetPassword/ValidResetTokenButUserNotFound (0.00s)
+    --- PASS: TestAuthHandlerResetPassword/NonResetToken (0.00s)
+=== RUN   TestRegisterValidationEdgeCases
+=== RUN   TestRegisterValidationEdgeCases/InvalidEmailFormat
+=== RUN   TestRegisterValidationEdgeCases/TooLongEmail
+=== RUN   TestRegisterValidationEdgeCases/TooLongName
+--- PASS: TestRegisterValidationEdgeCases (0.00s)
+    --- PASS: TestRegisterValidationEdgeCases/InvalidEmailFormat (0.00s)
+    --- PASS: TestRegisterValidationEdgeCases/TooLongEmail (0.00s)
+    --- PASS: TestRegisterValidationEdgeCases/TooLongName (0.00s)
+=== RUN   TestAuthHandler_Register_HappyPaths
+=== RUN   TestAuthHandler_Register_HappyPaths/Success_ValidRegistration
+=== RUN   TestAuthHandler_Register_HappyPaths/DuplicateEmail_Returns409
+=== RUN   TestAuthHandler_Register_HappyPaths/CreateError_Returns500
+2026/03/10 15:00:03 ERROR Failed to create user error="db error"
+--- PASS: TestAuthHandler_Register_HappyPaths (0.12s)
+    --- PASS: TestAuthHandler_Register_HappyPaths/Success_ValidRegistration (0.06s)
+    --- PASS: TestAuthHandler_Register_HappyPaths/DuplicateEmail_Returns409 (0.00s)
+    --- PASS: TestAuthHandler_Register_HappyPaths/CreateError_Returns500 (0.06s)
+=== RUN   TestAuthHandler_Login_HappyPaths
+=== RUN   TestAuthHandler_Login_HappyPaths/Success_ValidLogin
+=== RUN   TestAuthHandler_Login_HappyPaths/UserNotFound_Returns401
+=== RUN   TestAuthHandler_Login_HappyPaths/WrongPassword_Returns401
+--- PASS: TestAuthHandler_Login_HappyPaths (0.24s)
+    --- PASS: TestAuthHandler_Login_HappyPaths/Success_ValidLogin (0.12s)
+    --- PASS: TestAuthHandler_Login_HappyPaths/UserNotFound_Returns401 (0.00s)
+    --- PASS: TestAuthHandler_Login_HappyPaths/WrongPassword_Returns401 (0.12s)
+=== RUN   TestAuthHandler_Me_HappyPaths
+=== RUN   TestAuthHandler_Me_HappyPaths/Success_ReturnsUser
+=== RUN   TestAuthHandler_Me_HappyPaths/NotFound_Returns404
+--- PASS: TestAuthHandler_Me_HappyPaths (0.00s)
+    --- PASS: TestAuthHandler_Me_HappyPaths/Success_ReturnsUser (0.00s)
+    --- PASS: TestAuthHandler_Me_HappyPaths/NotFound_Returns404 (0.00s)
+=== RUN   TestAuthHandler_UpdateProfile_HappyPaths
+=== RUN   TestAuthHandler_UpdateProfile_HappyPaths/Success_ValidUpdate
+=== RUN   TestAuthHandler_UpdateProfile_HappyPaths/InvalidTemplate_Returns400
+=== RUN   TestAuthHandler_UpdateProfile_HappyPaths/RepoError_Returns500
+2026/03/10 15:00:03 ERROR Failed to update profile error="db error"
+--- PASS: TestAuthHandler_UpdateProfile_HappyPaths (0.00s)
+    --- PASS: TestAuthHandler_UpdateProfile_HappyPaths/Success_ValidUpdate (0.00s)
+    --- PASS: TestAuthHandler_UpdateProfile_HappyPaths/InvalidTemplate_Returns400 (0.00s)
+    --- PASS: TestAuthHandler_UpdateProfile_HappyPaths/RepoError_Returns500 (0.00s)
+=== RUN   TestAuthHandler_Logout_HappyPaths
+=== RUN   TestAuthHandler_Logout_HappyPaths/Success_ReturnsOKAndClearsCookie
+--- PASS: TestAuthHandler_Logout_HappyPaths (0.00s)
+    --- PASS: TestAuthHandler_Logout_HappyPaths/Success_ReturnsOKAndClearsCookie (0.00s)
+=== RUN   TestAuthHandler_ForgotPassword_Paths
+=== RUN   TestAuthHandler_ForgotPassword_Paths/UserFound_EmailSendFails_StillReturns200
+2026/03/10 15:00:03 WARN Resend not configured, email not sent to=found@test.dev
+2026/03/10 15:00:03 ERROR Failed to send password reset email error="Resend not configured" email=found@test.dev
+=== RUN   TestAuthHandler_ForgotPassword_Paths/UserNotFound_StillReturns200
+--- PASS: TestAuthHandler_ForgotPassword_Paths (0.00s)
+    --- PASS: TestAuthHandler_ForgotPassword_Paths/UserFound_EmailSendFails_StillReturns200 (0.00s)
+    --- PASS: TestAuthHandler_ForgotPassword_Paths/UserNotFound_StillReturns200 (0.00s)
+=== RUN   TestAuthHandler_ResetPassword_Paths
+=== RUN   TestAuthHandler_ResetPassword_Paths/Success_ValidTokenAndPassword
+2026/03/10 15:00:03 INFO Password reset successful user_id=553d4279-34db-4b9c-9f03-fe92200e52be
+=== RUN   TestAuthHandler_ResetPassword_Paths/InvalidToken_Returns401
+=== RUN   TestAuthHandler_ResetPassword_Paths/ShortPassword_Returns400
+=== RUN   TestAuthHandler_ResetPassword_Paths/UserNotFoundFromToken_Returns404
+=== RUN   TestAuthHandler_ResetPassword_Paths/UpdatePasswordError_Returns500
+2026/03/10 15:00:03 ERROR Failed to update user password error="db error"
+--- PASS: TestAuthHandler_ResetPassword_Paths (0.12s)
+    --- PASS: TestAuthHandler_ResetPassword_Paths/Success_ValidTokenAndPassword (0.06s)
+    --- PASS: TestAuthHandler_ResetPassword_Paths/InvalidToken_Returns401 (0.00s)
+    --- PASS: TestAuthHandler_ResetPassword_Paths/ShortPassword_Returns400 (0.00s)
+    --- PASS: TestAuthHandler_ResetPassword_Paths/UserNotFoundFromToken_Returns404 (0.00s)
+    --- PASS: TestAuthHandler_ResetPassword_Paths/UpdatePasswordError_Returns500 (0.06s)
+=== RUN   TestAuthHandler_Register_GenerateTokenError
+--- PASS: TestAuthHandler_Register_GenerateTokenError (0.06s)
+=== RUN   TestAuthHandler_Login_FullSuccessVerification
+--- PASS: TestAuthHandler_Login_FullSuccessVerification (0.12s)
+=== RUN   TestAuthHandler_RefreshToken_CookieSetOnSuccess
+--- PASS: TestAuthHandler_RefreshToken_CookieSetOnSuccess (0.00s)
+=== RUN   TestAuthHandler_ResetPassword_HashPasswordError
+2026/03/10 15:00:03 ERROR Failed to hash password error="failed to hash password: bcrypt: password length exceeds 72 bytes"
+--- PASS: TestAuthHandler_ResetPassword_HashPasswordError (0.00s)
+=== RUN   TestAuthHandler_UpdateProfile_WithValidContractTemplate
+--- PASS: TestAuthHandler_UpdateProfile_WithValidContractTemplate (0.00s)
+=== RUN   TestAuthHandler_UpdateProfile_WithAllFields
+--- PASS: TestAuthHandler_UpdateProfile_WithAllFields (0.00s)
+=== RUN   TestAuthHandler_UpdateProfile_Paths
+=== RUN   TestAuthHandler_UpdateProfile_Paths/Success_ReturnsUpdatedUser
+=== RUN   TestAuthHandler_UpdateProfile_Paths/InvalidBody_Returns400
+=== RUN   TestAuthHandler_UpdateProfile_Paths/InvalidContractTemplate_Returns400
+=== RUN   TestAuthHandler_UpdateProfile_Paths/UpdateError_Returns500
+2026/03/10 15:00:03 ERROR Failed to update profile error="db error"
+--- PASS: TestAuthHandler_UpdateProfile_Paths (0.00s)
+    --- PASS: TestAuthHandler_UpdateProfile_Paths/Success_ReturnsUpdatedUser (0.00s)
+    --- PASS: TestAuthHandler_UpdateProfile_Paths/InvalidBody_Returns400 (0.00s)
+    --- PASS: TestAuthHandler_UpdateProfile_Paths/InvalidContractTemplate_Returns400 (0.00s)
+    --- PASS: TestAuthHandler_UpdateProfile_Paths/UpdateError_Returns500 (0.00s)
+=== RUN   TestAuthHandler_ForgotPassword_GenerateResetTokenError
+=== RUN   TestAuthHandler_ForgotPassword_GenerateResetTokenError/UserFoundButGetByEmailReturnsNilUser_StillReturns200
+=== RUN   TestAuthHandler_ForgotPassword_GenerateResetTokenError/UserFoundEmailSendError_StillReturns200_WithMessage
+2026/03/10 15:00:03 WARN Resend not configured, email not sent to=emailfail@test.dev
+2026/03/10 15:00:03 ERROR Failed to send password reset email error="Resend not configured" email=emailfail@test.dev
+--- PASS: TestAuthHandler_ForgotPassword_GenerateResetTokenError (0.00s)
+    --- PASS: TestAuthHandler_ForgotPassword_GenerateResetTokenError/UserFoundButGetByEmailReturnsNilUser_StillReturns200 (0.00s)
+    --- PASS: TestAuthHandler_ForgotPassword_GenerateResetTokenError/UserFoundEmailSendError_StillReturns200_WithMessage (0.00s)
+=== RUN   TestAuthHandler_RefreshToken_EmptyTokenField
+--- PASS: TestAuthHandler_RefreshToken_EmptyTokenField (0.00s)
+=== RUN   TestAuthHandler_RefreshToken_MissingFieldEntirely
+--- PASS: TestAuthHandler_RefreshToken_MissingFieldEntirely (0.00s)
+=== RUN   TestAuthHandler_RefreshToken_TokenFromDifferentSecret
+--- PASS: TestAuthHandler_RefreshToken_TokenFromDifferentSecret (0.00s)
+=== RUN   TestAuthHandler_RefreshToken_ExpiredToken
+--- PASS: TestAuthHandler_RefreshToken_ExpiredToken (0.00s)
+=== RUN   TestAuthHandler_UpdateProfile_ContractTemplateTooLong
+--- PASS: TestAuthHandler_UpdateProfile_ContractTemplateTooLong (0.00s)
+=== RUN   TestAuthHandler_UpdateProfile_SuccessWithAllFieldsIncludingContractTemplate
+--- PASS: TestAuthHandler_UpdateProfile_SuccessWithAllFieldsIncludingContractTemplate (0.00s)
+=== RUN   TestAuthHandler_UpdateProfile_MultipleInvalidContractTokens
+--- PASS: TestAuthHandler_UpdateProfile_MultipleInvalidContractTokens (0.00s)
+=== RUN   TestAuthHandler_Login_GetByEmailReturnsNilUserNilError
+--- PASS: TestAuthHandler_Login_GetByEmailReturnsNilUserNilError (0.00s)
+=== RUN   TestAuthHandler_Login_EmailTrimming
+--- PASS: TestAuthHandler_Login_EmailTrimming (0.12s)
+=== RUN   TestAuthHandler_Register_EmailAndNameTrimming
+--- PASS: TestAuthHandler_Register_EmailAndNameTrimming (0.06s)
+=== RUN   TestAuthHandler_Register_WhitespaceOnlyFields
+--- PASS: TestAuthHandler_Register_WhitespaceOnlyFields (0.00s)
+=== RUN   TestAuthHandler_Register_WhitespaceOnlyName
+--- PASS: TestAuthHandler_Register_WhitespaceOnlyName (0.00s)
+=== RUN   TestAuthHandler_Register_PasswordTooLong
+--- PASS: TestAuthHandler_Register_PasswordTooLong (0.00s)
+=== RUN   TestAuthHandler_ResetPassword_PasswordTooLong
+--- PASS: TestAuthHandler_ResetPassword_PasswordTooLong (0.00s)
+=== RUN   TestAuthHandler_RefreshToken_UserNotFound
+--- PASS: TestAuthHandler_RefreshToken_UserNotFound (0.00s)
+=== RUN   TestNormalizeContractTemplateToken
+=== RUN   TestNormalizeContractTemplateToken/lowercase
+=== RUN   TestNormalizeContractTemplateToken/diacritics_removal
+=== RUN   TestNormalizeContractTemplateToken/underscores_to_spaces
+=== RUN   TestNormalizeContractTemplateToken/extra_whitespace_collapse
+=== RUN   TestNormalizeContractTemplateToken/trim
+=== RUN   TestNormalizeContractTemplateToken/combined_diacritics_and_underscores
+=== RUN   TestNormalizeContractTemplateToken/empty_string
+=== RUN   TestNormalizeContractTemplateToken/only_whitespace
+=== RUN   TestNormalizeContractTemplateToken/only_underscores
+=== RUN   TestNormalizeContractTemplateToken/mixed_underscores_and_spaces
+=== RUN   TestNormalizeContractTemplateToken/tabs_and_newlines_treated_as_whitespace
+=== RUN   TestNormalizeContractTemplateToken/multiple_consecutive_diacritics
+=== RUN   TestNormalizeContractTemplateToken/uppercase_diacritics
+--- PASS: TestNormalizeContractTemplateToken (0.00s)
+    --- PASS: TestNormalizeContractTemplateToken/lowercase (0.00s)
+    --- PASS: TestNormalizeContractTemplateToken/diacritics_removal (0.00s)
+    --- PASS: TestNormalizeContractTemplateToken/underscores_to_spaces (0.00s)
+    --- PASS: TestNormalizeContractTemplateToken/extra_whitespace_collapse (0.00s)
+    --- PASS: TestNormalizeContractTemplateToken/trim (0.00s)
+    --- PASS: TestNormalizeContractTemplateToken/combined_diacritics_and_underscores (0.00s)
+    --- PASS: TestNormalizeContractTemplateToken/empty_string (0.00s)
+    --- PASS: TestNormalizeContractTemplateToken/only_whitespace (0.00s)
+    --- PASS: TestNormalizeContractTemplateToken/only_underscores (0.00s)
+    --- PASS: TestNormalizeContractTemplateToken/mixed_underscores_and_spaces (0.00s)
+    --- PASS: TestNormalizeContractTemplateToken/tabs_and_newlines_treated_as_whitespace (0.00s)
+    --- PASS: TestNormalizeContractTemplateToken/multiple_consecutive_diacritics (0.00s)
+    --- PASS: TestNormalizeContractTemplateToken/uppercase_diacritics (0.00s)
+=== RUN   TestResolveContractTemplateToken
+=== RUN   TestResolveContractTemplateToken/direct_English_token
+=== RUN   TestResolveContractTemplateToken/Spanish_alias
+=== RUN   TestResolveContractTemplateToken/unknown_token_returns_empty
+=== RUN   TestResolveContractTemplateToken/diacritics_in_alias
+=== RUN   TestResolveContractTemplateToken/event_date_English_token
+=== RUN   TestResolveContractTemplateToken/Spanish_alias_fecha_del_evento
+=== RUN   TestResolveContractTemplateToken/Spanish_alias_with_uppercase
+=== RUN   TestResolveContractTemplateToken/empty_token_returns_empty
+=== RUN   TestResolveContractTemplateToken/whitespace-only_token_returns_empty
+=== RUN   TestResolveContractTemplateToken/token_with_extra_whitespace_resolves
+=== RUN   TestResolveContractTemplateToken/token_with_mixed_case_resolves_English
+=== RUN   TestResolveContractTemplateToken/all_English_tokens_resolve
+=== RUN   TestResolveContractTemplateToken/all_Spanish_aliases_resolve
+=== RUN   TestResolveContractTemplateToken/Spanish_alias_direcci├│n_del_cliente_with_diacritics
+=== RUN   TestResolveContractTemplateToken/Spanish_alias_tel├®fono_del_cliente_with_diacritics
+=== RUN   TestResolveContractTemplateToken/Spanish_alias_d├¡as_de_cancelaci├│n_with_diacritics
+=== RUN   TestResolveContractTemplateToken/provider_business_name_with_underscores_and_caps
+=== RUN   TestResolveContractTemplateToken/contract_city_via_English
+=== RUN   TestResolveContractTemplateToken/contract_city_via_Spanish_alias
+--- PASS: TestResolveContractTemplateToken (0.00s)
+    --- PASS: TestResolveContractTemplateToken/direct_English_token (0.00s)
+    --- PASS: TestResolveContractTemplateToken/Spanish_alias (0.00s)
+    --- PASS: TestResolveContractTemplateToken/unknown_token_returns_empty (0.00s)
+    --- PASS: TestResolveContractTemplateToken/diacritics_in_alias (0.00s)
+    --- PASS: TestResolveContractTemplateToken/event_date_English_token (0.00s)
+    --- PASS: TestResolveContractTemplateToken/Spanish_alias_fecha_del_evento (0.00s)
+    --- PASS: TestResolveContractTemplateToken/Spanish_alias_with_uppercase (0.00s)
+    --- PASS: TestResolveContractTemplateToken/empty_token_returns_empty (0.00s)
+    --- PASS: TestResolveContractTemplateToken/whitespace-only_token_returns_empty (0.00s)
+    --- PASS: TestResolveContractTemplateToken/token_with_extra_whitespace_resolves (0.00s)
+    --- PASS: TestResolveContractTemplateToken/token_with_mixed_case_resolves_English (0.00s)
+    --- PASS: TestResolveContractTemplateToken/all_English_tokens_resolve (0.00s)
+    --- PASS: TestResolveContractTemplateToken/all_Spanish_aliases_resolve (0.00s)
+    --- PASS: TestResolveContractTemplateToken/Spanish_alias_direcci├│n_del_cliente_with_diacritics (0.00s)
+    --- PASS: TestResolveContractTemplateToken/Spanish_alias_tel├®fono_del_cliente_with_diacritics (0.00s)
+    --- PASS: TestResolveContractTemplateToken/Spanish_alias_d├¡as_de_cancelaci├│n_with_diacritics (0.00s)
+    --- PASS: TestResolveContractTemplateToken/provider_business_name_with_underscores_and_caps (0.00s)
+    --- PASS: TestResolveContractTemplateToken/contract_city_via_English (0.00s)
+    --- PASS: TestResolveContractTemplateToken/contract_city_via_Spanish_alias (0.00s)
+=== RUN   TestValidateContractTemplate
+=== RUN   TestValidateContractTemplate/valid_template_with_tokens
+=== RUN   TestValidateContractTemplate/too_long_template
+=== RUN   TestValidateContractTemplate/unsupported_token
+=== RUN   TestValidateContractTemplate/valid_Spanish_aliases
+=== RUN   TestValidateContractTemplate/empty_template
+=== RUN   TestValidateContractTemplate/template_with_no_tokens
+=== RUN   TestValidateContractTemplate/valid_template_at_exact_max_length
+=== RUN   TestValidateContractTemplate/template_with_Spanish_alias_with_diacritics
+=== RUN   TestValidateContractTemplate/mix_of_valid_and_invalid_tokens_errors_on_invalid
+=== RUN   TestValidateContractTemplate/error_is_ValidationError_type
+=== RUN   TestValidateContractTemplate/too_long_template_returns_ValidationError
+=== RUN   TestValidateContractTemplate/all_allowed_English_tokens_in_one_template
+=== RUN   TestValidateContractTemplate/valid_template_with_mixed_English_and_Spanish_tokens
+=== RUN   TestValidateContractTemplate/template_with_diacritics-bearing_Spanish_alias_resolves
+=== RUN   TestValidateContractTemplate/template_with_uppercase_English_tokens_resolves
+=== RUN   TestValidateContractTemplate/nested_brackets_are_not_tokens
+=== RUN   TestValidateContractTemplate/token_with_only_whitespace_is_unsupported
+--- PASS: TestValidateContractTemplate (0.00s)
+    --- PASS: TestValidateContractTemplate/valid_template_with_tokens (0.00s)
+    --- PASS: TestValidateContractTemplate/too_long_template (0.00s)
+    --- PASS: TestValidateContractTemplate/unsupported_token (0.00s)
+    --- PASS: TestValidateContractTemplate/valid_Spanish_aliases (0.00s)
+    --- PASS: TestValidateContractTemplate/empty_template (0.00s)
+    --- PASS: TestValidateContractTemplate/template_with_no_tokens (0.00s)
+    --- PASS: TestValidateContractTemplate/valid_template_at_exact_max_length (0.00s)
+    --- PASS: TestValidateContractTemplate/template_with_Spanish_alias_with_diacritics (0.00s)
+    --- PASS: TestValidateContractTemplate/mix_of_valid_and_invalid_tokens_errors_on_invalid (0.00s)
+    --- PASS: TestValidateContractTemplate/error_is_ValidationError_type (0.00s)
+    --- PASS: TestValidateContractTemplate/too_long_template_returns_ValidationError (0.00s)
+    --- PASS: TestValidateContractTemplate/all_allowed_English_tokens_in_one_template (0.00s)
+    --- PASS: TestValidateContractTemplate/valid_template_with_mixed_English_and_Spanish_tokens (0.00s)
+    --- PASS: TestValidateContractTemplate/template_with_diacritics-bearing_Spanish_alias_resolves (0.00s)
+    --- PASS: TestValidateContractTemplate/template_with_uppercase_English_tokens_resolves (0.00s)
+    --- PASS: TestValidateContractTemplate/nested_brackets_are_not_tokens (0.00s)
+    --- PASS: TestValidateContractTemplate/token_with_only_whitespace_is_unsupported (0.00s)
+=== RUN   TestCRUDHandlerErrorBranchesWithClosedPool
+=== RUN   TestCRUDHandlerErrorBranchesWithClosedPool/ListClientsRepoError
+=== RUN   TestCRUDHandlerErrorBranchesWithClosedPool/CreateClientRepoError
+=== RUN   TestCRUDHandlerErrorBranchesWithClosedPool/UpdateClientRepoError
+=== RUN   TestCRUDHandlerErrorBranchesWithClosedPool/DeleteClientRepoError
+=== RUN   TestCRUDHandlerErrorBranchesWithClosedPool/ListEventsRepoError
+=== RUN   TestCRUDHandlerErrorBranchesWithClosedPool/GetUpcomingEventsRepoError
+=== RUN   TestCRUDHandlerErrorBranchesWithClosedPool/GetEventRepoError
+=== RUN   TestCRUDHandlerErrorBranchesWithClosedPool/UpdateEventRepoError
+=== RUN   TestCRUDHandlerErrorBranchesWithClosedPool/DeleteEventRepoError
+=== RUN   TestCRUDHandlerErrorBranchesWithClosedPool/CreateEventRepoError
+=== RUN   TestCRUDHandlerErrorBranchesWithClosedPool/GetEventProductsRepoError
+=== RUN   TestCRUDHandlerErrorBranchesWithClosedPool/GetEventExtrasRepoError
+=== RUN   TestCRUDHandlerErrorBranchesWithClosedPool/UpdateEventItemsRepoError
+=== RUN   TestCRUDHandlerErrorBranchesWithClosedPool/ListProductsRepoError
+=== RUN   TestCRUDHandlerErrorBranchesWithClosedPool/CreateProductRepoError
+=== RUN   TestCRUDHandlerErrorBranchesWithClosedPool/UpdateProductRepoError
+=== RUN   TestCRUDHandlerErrorBranchesWithClosedPool/DeleteProductRepoError
+=== RUN   TestCRUDHandlerErrorBranchesWithClosedPool/GetProductIngredientsRepoError
+=== RUN   TestCRUDHandlerErrorBranchesWithClosedPool/UpdateProductIngredientsRepoError
+=== RUN   TestCRUDHandlerErrorBranchesWithClosedPool/ListInventoryRepoError
+=== RUN   TestCRUDHandlerErrorBranchesWithClosedPool/CreateInventoryRepoError
+=== RUN   TestCRUDHandlerErrorBranchesWithClosedPool/UpdateInventoryRepoError
+=== RUN   TestCRUDHandlerErrorBranchesWithClosedPool/DeleteInventoryRepoError
+=== RUN   TestCRUDHandlerErrorBranchesWithClosedPool/ListPaymentsRepoError
+=== RUN   TestCRUDHandlerErrorBranchesWithClosedPool/CreatePaymentRepoError
+=== RUN   TestCRUDHandlerErrorBranchesWithClosedPool/UpdatePaymentRepoError
+=== RUN   TestCRUDHandlerErrorBranchesWithClosedPool/GetEventEquipmentRepoError
+=== RUN   TestCRUDHandlerErrorBranchesWithClosedPool/DeletePaymentRepoError
+=== RUN   TestCRUDHandlerErrorBranchesWithClosedPool/CheckEquipmentConflictsRepoError
+=== RUN   TestCRUDHandlerErrorBranchesWithClosedPool/GetEquipmentSuggestionsRepoError
+=== RUN   TestCRUDHandlerErrorBranchesWithClosedPool/GetBatchProductIngredientsRepoError
+=== RUN   TestCRUDHandlerErrorBranchesWithClosedPool/GetClientRepoError
+=== RUN   TestCRUDHandlerErrorBranchesWithClosedPool/GetProductRepoError
+=== RUN   TestCRUDHandlerErrorBranchesWithClosedPool/GetInventoryItemRepoError
+=== RUN   TestCRUDHandlerErrorBranchesWithClosedPool/ListPaymentsNoFilterRepoError
+=== RUN   TestCRUDHandlerErrorBranchesWithClosedPool/ListPaymentsDateRangeRepoError
+=== RUN   TestCRUDHandlerErrorBranchesWithClosedPool/ListPaymentsEventIDsRepoError
+=== RUN   TestCRUDHandlerErrorBranchesWithClosedPool/ListEventsDateRangeRepoError
+=== RUN   TestCRUDHandlerErrorBranchesWithClosedPool/ListEventsClientIDRepoError
+--- PASS: TestCRUDHandlerErrorBranchesWithClosedPool (0.00s)
+    --- PASS: TestCRUDHandlerErrorBranchesWithClosedPool/ListClientsRepoError (0.00s)
+    --- PASS: TestCRUDHandlerErrorBranchesWithClosedPool/CreateClientRepoError (0.00s)
+    --- PASS: TestCRUDHandlerErrorBranchesWithClosedPool/UpdateClientRepoError (0.00s)
+    --- PASS: TestCRUDHandlerErrorBranchesWithClosedPool/DeleteClientRepoError (0.00s)
+    --- PASS: TestCRUDHandlerErrorBranchesWithClosedPool/ListEventsRepoError (0.00s)
+    --- PASS: TestCRUDHandlerErrorBranchesWithClosedPool/GetUpcomingEventsRepoError (0.00s)
+    --- PASS: TestCRUDHandlerErrorBranchesWithClosedPool/GetEventRepoError (0.00s)
+    --- PASS: TestCRUDHandlerErrorBranchesWithClosedPool/UpdateEventRepoError (0.00s)
+    --- PASS: TestCRUDHandlerErrorBranchesWithClosedPool/DeleteEventRepoError (0.00s)
+    --- PASS: TestCRUDHandlerErrorBranchesWithClosedPool/CreateEventRepoError (0.00s)
+    --- PASS: TestCRUDHandlerErrorBranchesWithClosedPool/GetEventProductsRepoError (0.00s)
+    --- PASS: TestCRUDHandlerErrorBranchesWithClosedPool/GetEventExtrasRepoError (0.00s)
+    --- PASS: TestCRUDHandlerErrorBranchesWithClosedPool/UpdateEventItemsRepoError (0.00s)
+    --- PASS: TestCRUDHandlerErrorBranchesWithClosedPool/ListProductsRepoError (0.00s)
+    --- PASS: TestCRUDHandlerErrorBranchesWithClosedPool/CreateProductRepoError (0.00s)
+    --- PASS: TestCRUDHandlerErrorBranchesWithClosedPool/UpdateProductRepoError (0.00s)
+    --- PASS: TestCRUDHandlerErrorBranchesWithClosedPool/DeleteProductRepoError (0.00s)
+    --- PASS: TestCRUDHandlerErrorBranchesWithClosedPool/GetProductIngredientsRepoError (0.00s)
+    --- PASS: TestCRUDHandlerErrorBranchesWithClosedPool/UpdateProductIngredientsRepoError (0.00s)
+    --- PASS: TestCRUDHandlerErrorBranchesWithClosedPool/ListInventoryRepoError (0.00s)
+    --- PASS: TestCRUDHandlerErrorBranchesWithClosedPool/CreateInventoryRepoError (0.00s)
+    --- PASS: TestCRUDHandlerErrorBranchesWithClosedPool/UpdateInventoryRepoError (0.00s)
+    --- PASS: TestCRUDHandlerErrorBranchesWithClosedPool/DeleteInventoryRepoError (0.00s)
+    --- PASS: TestCRUDHandlerErrorBranchesWithClosedPool/ListPaymentsRepoError (0.00s)
+    --- PASS: TestCRUDHandlerErrorBranchesWithClosedPool/CreatePaymentRepoError (0.00s)
+    --- PASS: TestCRUDHandlerErrorBranchesWithClosedPool/UpdatePaymentRepoError (0.00s)
+    --- PASS: TestCRUDHandlerErrorBranchesWithClosedPool/GetEventEquipmentRepoError (0.00s)
+    --- PASS: TestCRUDHandlerErrorBranchesWithClosedPool/DeletePaymentRepoError (0.00s)
+    --- PASS: TestCRUDHandlerErrorBranchesWithClosedPool/CheckEquipmentConflictsRepoError (0.00s)
+    --- PASS: TestCRUDHandlerErrorBranchesWithClosedPool/GetEquipmentSuggestionsRepoError (0.00s)
+    --- PASS: TestCRUDHandlerErrorBranchesWithClosedPool/GetBatchProductIngredientsRepoError (0.00s)
+    --- PASS: TestCRUDHandlerErrorBranchesWithClosedPool/GetClientRepoError (0.00s)
+    --- PASS: TestCRUDHandlerErrorBranchesWithClosedPool/GetProductRepoError (0.00s)
+    --- PASS: TestCRUDHandlerErrorBranchesWithClosedPool/GetInventoryItemRepoError (0.00s)
+    --- PASS: TestCRUDHandlerErrorBranchesWithClosedPool/ListPaymentsNoFilterRepoError (0.00s)
+    --- PASS: TestCRUDHandlerErrorBranchesWithClosedPool/ListPaymentsDateRangeRepoError (0.00s)
+    --- PASS: TestCRUDHandlerErrorBranchesWithClosedPool/ListPaymentsEventIDsRepoError (0.00s)
+    --- PASS: TestCRUDHandlerErrorBranchesWithClosedPool/ListEventsDateRangeRepoError (0.00s)
+    --- PASS: TestCRUDHandlerErrorBranchesWithClosedPool/ListEventsClientIDRepoError (0.00s)
+=== RUN   TestCreateClient_ProUser_Success
+--- PASS: TestCreateClient_ProUser_Success (0.00s)
+=== RUN   TestCreateClient_BasicUser_UnderLimit_Success
+--- PASS: TestCreateClient_BasicUser_UnderLimit_Success (0.00s)
+=== RUN   TestCreateClient_BasicUser_AtLimit_Forbidden
+--- PASS: TestCreateClient_BasicUser_AtLimit_Forbidden (0.00s)
+=== RUN   TestCreateClient_GetUserError_Returns500
+--- PASS: TestCreateClient_GetUserError_Returns500 (0.00s)
+=== RUN   TestCreateClient_CountByUserIDError_Returns500
+--- PASS: TestCreateClient_CountByUserIDError_Returns500 (0.00s)
+=== RUN   TestCreateEvent_ProUser_Success
+--- PASS: TestCreateEvent_ProUser_Success (0.00s)
+=== RUN   TestCreateEvent_BasicUser_UnderLimit_Success
+--- PASS: TestCreateEvent_BasicUser_UnderLimit_Success (0.00s)
+=== RUN   TestCreateEvent_BasicUser_AtLimit_Forbidden
+--- PASS: TestCreateEvent_BasicUser_AtLimit_Forbidden (0.00s)
+=== RUN   TestCreateEvent_CountCurrentMonthError_Returns500
+--- PASS: TestCreateEvent_CountCurrentMonthError_Returns500 (0.00s)
+=== RUN   TestCreateEvent_CreateRepoError_Returns500
+--- PASS: TestCreateEvent_CreateRepoError_Returns500 (0.00s)
+=== RUN   TestUpdateEvent_Success_SameClient
+--- PASS: TestUpdateEvent_Success_SameClient (0.00s)
+=== RUN   TestUpdateEvent_Success_ClientChanged
+--- PASS: TestUpdateEvent_Success_ClientChanged (0.00s)
+=== RUN   TestUpdateEvent_GetByIDError_Returns404
+--- PASS: TestUpdateEvent_GetByIDError_Returns404 (0.00s)
+=== RUN   TestUpdateEvent_InvalidBody_Returns400
+--- PASS: TestUpdateEvent_InvalidBody_Returns400 (0.00s)
+=== RUN   TestUpdateEvent_ValidationError_Returns400
+--- PASS: TestUpdateEvent_ValidationError_Returns400 (0.00s)
+=== RUN   TestUpdateEvent_UpdateRepoError_Returns500
+--- PASS: TestUpdateEvent_UpdateRepoError_Returns500 (0.00s)
+=== RUN   TestDeleteEvent_Success
+--- PASS: TestDeleteEvent_Success (0.00s)
+=== RUN   TestDeleteEvent_GetByIDError_Returns404
+--- PASS: TestDeleteEvent_GetByIDError_Returns404 (0.00s)
+=== RUN   TestDeleteEvent_DeleteRepoError_Returns404
+--- PASS: TestDeleteEvent_DeleteRepoError_Returns404 (0.00s)
+=== RUN   TestCreateProduct_ProUser_Success
+--- PASS: TestCreateProduct_ProUser_Success (0.00s)
+=== RUN   TestCreateProduct_BasicUser_UnderLimit_Success
+--- PASS: TestCreateProduct_BasicUser_UnderLimit_Success (0.00s)
+=== RUN   TestCreateProduct_BasicUser_AtCatalogLimit_Forbidden
+--- PASS: TestCreateProduct_BasicUser_AtCatalogLimit_Forbidden (0.00s)
+=== RUN   TestCreateProduct_ProductCountError_Returns500
+--- PASS: TestCreateProduct_ProductCountError_Returns500 (0.00s)
+=== RUN   TestCreateProduct_InventoryCountError_Returns500
+--- PASS: TestCreateProduct_InventoryCountError_Returns500 (0.00s)
+=== RUN   TestCreateInventoryItem_ProUser_Success
+--- PASS: TestCreateInventoryItem_ProUser_Success (0.00s)
+=== RUN   TestCreateInventoryItem_BasicUser_UnderLimit_Success
+--- PASS: TestCreateInventoryItem_BasicUser_UnderLimit_Success (0.00s)
+=== RUN   TestCreateInventoryItem_BasicUser_AtCatalogLimit_Forbidden
+--- PASS: TestCreateInventoryItem_BasicUser_AtCatalogLimit_Forbidden (0.00s)
+=== RUN   TestUpdateEventItems_Success
+--- PASS: TestUpdateEventItems_Success (0.00s)
+=== RUN   TestUpdateEventItems_EmptyLists_Success
+--- PASS: TestUpdateEventItems_EmptyLists_Success (0.00s)
+=== RUN   TestUpdateEventItems_InvalidProduct_Returns400
+--- PASS: TestUpdateEventItems_InvalidProduct_Returns400 (0.00s)
+=== RUN   TestUpdateEventItems_InvalidExtra_Returns400
+--- PASS: TestUpdateEventItems_InvalidExtra_Returns400 (0.00s)
+=== RUN   TestUpdateEventItems_InvalidEquipment_Returns400
+--- PASS: TestUpdateEventItems_InvalidEquipment_Returns400 (0.00s)
+=== RUN   TestUpdateEventItems_RepoError_Returns500
+--- PASS: TestUpdateEventItems_RepoError_Returns500 (0.00s)
+=== RUN   TestUpdateEventItems_EventNotFound_Returns404
+--- PASS: TestUpdateEventItems_EventNotFound_Returns404 (0.00s)
+=== RUN   TestGetEventProducts_Success
+--- PASS: TestGetEventProducts_Success (0.00s)
+=== RUN   TestGetEventProducts_RepoError_Returns500
+--- PASS: TestGetEventProducts_RepoError_Returns500 (0.00s)
+=== RUN   TestGetEventExtras_Success
+--- PASS: TestGetEventExtras_Success (0.00s)
+=== RUN   TestGetEventExtras_RepoError_Returns500
+--- PASS: TestGetEventExtras_RepoError_Returns500 (0.00s)
+=== RUN   TestGetEventEquipment_Success
+--- PASS: TestGetEventEquipment_Success (0.00s)
+=== RUN   TestGetEventEquipment_RepoError_Returns500
+--- PASS: TestGetEventEquipment_RepoError_Returns500 (0.00s)
+=== RUN   TestUpdateProductIngredients_Success
+--- PASS: TestUpdateProductIngredients_Success (0.00s)
+=== RUN   TestUpdateProductIngredients_InvalidIngredient_Returns400
+--- PASS: TestUpdateProductIngredients_InvalidIngredient_Returns400 (0.00s)
+=== RUN   TestUpdateProductIngredients_RepoError_Returns500
+--- PASS: TestUpdateProductIngredients_RepoError_Returns500 (0.00s)
+=== RUN   TestUpdateProductIngredients_ProductNotFound_Returns404
+--- PASS: TestUpdateProductIngredients_ProductNotFound_Returns404 (0.00s)
+=== RUN   TestUpdateProductIngredients_InvalidBody_Returns400
+--- PASS: TestUpdateProductIngredients_InvalidBody_Returns400 (0.00s)
+=== RUN   TestGetProductIngredients_Success
+--- PASS: TestGetProductIngredients_Success (0.00s)
+=== RUN   TestGetProductIngredients_RepoError_Returns500
+--- PASS: TestGetProductIngredients_RepoError_Returns500 (0.00s)
+=== RUN   TestGetUpcomingEvents_DefaultLimit
+--- PASS: TestGetUpcomingEvents_DefaultLimit (0.00s)
+=== RUN   TestGetUpcomingEvents_CustomLimit
+--- PASS: TestGetUpcomingEvents_CustomLimit (0.00s)
+=== RUN   TestGetUpcomingEvents_InvalidLimit_UsesDefault
+--- PASS: TestGetUpcomingEvents_InvalidLimit_UsesDefault (0.00s)
+=== RUN   TestGetUpcomingEvents_ZeroLimit_UsesDefault
+--- PASS: TestGetUpcomingEvents_ZeroLimit_UsesDefault (0.00s)
+=== RUN   TestListPayments_ByEventID_Success
+--- PASS: TestListPayments_ByEventID_Success (0.00s)
+=== RUN   TestListPayments_ByDateRange_Success
+--- PASS: TestListPayments_ByDateRange_Success (0.00s)
+=== RUN   TestListPayments_ByEventIDs_Success
+--- PASS: TestListPayments_ByEventIDs_Success (0.00s)
+=== RUN   TestListPayments_NoFilters_Success
+--- PASS: TestListPayments_NoFilters_Success (0.00s)
+=== RUN   TestListPayments_GetAllError_Returns500
+--- PASS: TestListPayments_GetAllError_Returns500 (0.00s)
+=== RUN   TestListEvents_DateRange_RFC3339_Success
+--- PASS: TestListEvents_DateRange_RFC3339_Success (0.00s)
+=== RUN   TestListEvents_DateRange_PlainDate_Success
+--- PASS: TestListEvents_DateRange_PlainDate_Success (0.00s)
+=== RUN   TestListEvents_ByClientID_Success
+--- PASS: TestListEvents_ByClientID_Success (0.00s)
+=== RUN   TestListEvents_NoFilters_Success
+--- PASS: TestListEvents_NoFilters_Success (0.00s)
+=== RUN   TestListClients_Success
+--- PASS: TestListClients_Success (0.00s)
+=== RUN   TestGetClient_Success
+--- PASS: TestGetClient_Success (0.00s)
+=== RUN   TestUpdateClient_Success
+--- PASS: TestUpdateClient_Success (0.00s)
+=== RUN   TestDeleteClient_Success
+--- PASS: TestDeleteClient_Success (0.00s)
+=== RUN   TestListProducts_Success
+--- PASS: TestListProducts_Success (0.00s)
+=== RUN   TestGetProduct_Success
+--- PASS: TestGetProduct_Success (0.00s)
+=== RUN   TestUpdateProduct_Success
+--- PASS: TestUpdateProduct_Success (0.00s)
+=== RUN   TestDeleteProduct_Success
+--- PASS: TestDeleteProduct_Success (0.00s)
+=== RUN   TestListInventory_Success
+--- PASS: TestListInventory_Success (0.00s)
+=== RUN   TestGetInventoryItem_Success
+--- PASS: TestGetInventoryItem_Success (0.00s)
+=== RUN   TestUpdateInventoryItem_Success
+--- PASS: TestUpdateInventoryItem_Success (0.00s)
+=== RUN   TestDeleteInventoryItem_Success
+--- PASS: TestDeleteInventoryItem_Success (0.00s)
+=== RUN   TestCreatePayment_Success
+--- PASS: TestCreatePayment_Success (0.00s)
+=== RUN   TestUpdatePayment_Success
+--- PASS: TestUpdatePayment_Success (0.00s)
+=== RUN   TestDeletePayment_Success
+--- PASS: TestDeletePayment_Success (0.00s)
+=== RUN   TestGetEvent_Success
+--- PASS: TestGetEvent_Success (0.00s)
+=== RUN   TestNormalizeDateParam_EmptyString
+--- PASS: TestNormalizeDateParam_EmptyString (0.00s)
+=== RUN   TestNormalizeDateParam_RFC3339WithTimezone
+--- PASS: TestNormalizeDateParam_RFC3339WithTimezone (0.00s)
+=== RUN   TestNormalizeDateParam_PlainDate
+--- PASS: TestNormalizeDateParam_PlainDate (0.00s)
+=== RUN   TestNormalizeDateParam_InvalidFormat
+--- PASS: TestNormalizeDateParam_InvalidFormat (0.00s)
+=== RUN   TestNormalizeDateParam_GarbageInput
+--- PASS: TestNormalizeDateParam_GarbageInput (0.00s)
+=== RUN   TestCreateClient_ResponseBodyHasUserID
+--- PASS: TestCreateClient_ResponseBodyHasUserID (0.00s)
+=== RUN   TestCreateEvent_ResponseBodyHasEventFields
+--- PASS: TestCreateEvent_ResponseBodyHasEventFields (0.00s)
+=== RUN   TestCheckEquipmentConflicts_Success
+--- PASS: TestCheckEquipmentConflicts_Success (0.00s)
+=== RUN   TestGetEquipmentSuggestions_Success
+--- PASS: TestGetEquipmentSuggestions_Success (0.00s)
+=== RUN   TestGetBatchProductIngredients_Success
+--- PASS: TestGetBatchProductIngredients_Success (0.00s)
+=== RUN   TestGetBatchProductIngredients_GetIngredientsError_Returns500
+--- PASS: TestGetBatchProductIngredients_GetIngredientsError_Returns500 (0.00s)
+=== RUN   TestCreateClient_CreateRepoError_Returns500
+--- PASS: TestCreateClient_CreateRepoError_Returns500 (0.00s)
+=== RUN   TestCreateInventoryItem_ValidationError_MissingName_Returns400
+--- PASS: TestCreateInventoryItem_ValidationError_MissingName_Returns400 (0.00s)
+=== RUN   TestCreateInventoryItem_ValidationError_NegativeStock_Returns400
+--- PASS: TestCreateInventoryItem_ValidationError_NegativeStock_Returns400 (0.00s)
+=== RUN   TestCreateInventoryItem_ValidationError_InvalidType_Returns400
+--- PASS: TestCreateInventoryItem_ValidationError_InvalidType_Returns400 (0.00s)
+=== RUN   TestCreateInventoryItem_GetUserError_Returns500
+--- PASS: TestCreateInventoryItem_GetUserError_Returns500 (0.00s)
+=== RUN   TestCreateInventoryItem_ProductCountError_Returns500
+--- PASS: TestCreateInventoryItem_ProductCountError_Returns500 (0.00s)
+=== RUN   TestCreateInventoryItem_InventoryCountError_Returns500
+--- PASS: TestCreateInventoryItem_InventoryCountError_Returns500 (0.00s)
+=== RUN   TestCreateInventoryItem_CreateRepoError_Returns500
+--- PASS: TestCreateInventoryItem_CreateRepoError_Returns500 (0.00s)
+=== RUN   TestUpdateProduct_ValidationError_MissingName_Returns400
+--- PASS: TestUpdateProduct_ValidationError_MissingName_Returns400 (0.00s)
+=== RUN   TestUpdateProduct_ValidationError_NegativePrice_Returns400
+--- PASS: TestUpdateProduct_ValidationError_NegativePrice_Returns400 (0.00s)
+=== RUN   TestUpdateProduct_ValidationError_MissingCategory_Returns400
+--- PASS: TestUpdateProduct_ValidationError_MissingCategory_Returns400 (0.00s)
+=== RUN   TestUpdateInventoryItem_ValidationError_MissingName_Returns400
+--- PASS: TestUpdateInventoryItem_ValidationError_MissingName_Returns400 (0.00s)
+=== RUN   TestUpdateInventoryItem_ValidationError_MissingUnit_Returns400
+--- PASS: TestUpdateInventoryItem_ValidationError_MissingUnit_Returns400 (0.00s)
+=== RUN   TestUpdateInventoryItem_ValidationError_InvalidType_Returns400
+--- PASS: TestUpdateInventoryItem_ValidationError_InvalidType_Returns400 (0.00s)
+=== RUN   TestUpdateInventoryItem_ValidationError_NegativeMinStock_Returns400
+--- PASS: TestUpdateInventoryItem_ValidationError_NegativeMinStock_Returns400 (0.00s)
+=== RUN   TestUpdatePayment_ValidationError_ZeroAmount_Returns400
+--- PASS: TestUpdatePayment_ValidationError_ZeroAmount_Returns400 (0.00s)
+=== RUN   TestUpdatePayment_ValidationError_NegativeAmount_Returns400
+--- PASS: TestUpdatePayment_ValidationError_NegativeAmount_Returns400 (0.00s)
+=== RUN   TestUpdatePayment_ValidationError_MissingPaymentMethod_Returns400
+--- PASS: TestUpdatePayment_ValidationError_MissingPaymentMethod_Returns400 (0.00s)
+=== RUN   TestCreateProduct_ValidationError_MissingName_Returns400
+--- PASS: TestCreateProduct_ValidationError_MissingName_Returns400 (0.00s)
+=== RUN   TestCreateProduct_ValidationError_MissingCategory_Returns400
+--- PASS: TestCreateProduct_ValidationError_MissingCategory_Returns400 (0.00s)
+=== RUN   TestCreateProduct_ValidationError_NegativePrice_Returns400
+--- PASS: TestCreateProduct_ValidationError_NegativePrice_Returns400 (0.00s)
+=== RUN   TestCreateEvent_ValidationError_ZeroPeople_Returns400
+--- PASS: TestCreateEvent_ValidationError_ZeroPeople_Returns400 (0.00s)
+=== RUN   TestCreateEvent_ValidationError_InvalidStatus_Returns400
+--- PASS: TestCreateEvent_ValidationError_InvalidStatus_Returns400 (0.00s)
+=== RUN   TestCreateEvent_ValidationError_NegativeDiscount_Returns400
+--- PASS: TestCreateEvent_ValidationError_NegativeDiscount_Returns400 (0.00s)
+=== RUN   TestCreateEvent_ValidationError_NegativeTotalAmount_Returns400
+--- PASS: TestCreateEvent_ValidationError_NegativeTotalAmount_Returns400 (0.00s)
+=== RUN   TestUpdateEvent_ValidationError_DiscountOver100_Returns400
+--- PASS: TestUpdateEvent_ValidationError_DiscountOver100_Returns400 (0.00s)
+=== RUN   TestUpdateEvent_ValidationError_InvalidStatus_Returns400
+--- PASS: TestUpdateEvent_ValidationError_InvalidStatus_Returns400 (0.00s)
+=== RUN   TestUpdateEvent_ValidationError_TaxRateOver100_Returns400
+--- PASS: TestUpdateEvent_ValidationError_TaxRateOver100_Returns400 (0.00s)
+=== RUN   TestCreatePayment_ValidationError_ZeroAmount_Returns400
+--- PASS: TestCreatePayment_ValidationError_ZeroAmount_Returns400 (0.00s)
+=== RUN   TestCreatePayment_ValidationError_MissingPaymentMethod_Returns400
+--- PASS: TestCreatePayment_ValidationError_MissingPaymentMethod_Returns400 (0.00s)
+=== RUN   TestUpdateEvent_ClientChange_UpdateClientStatsError_StillReturns200
+2026/03/10 15:00:03 WARN Failed to update client stats client_id=6c0e0e00-aa4b-42ef-8f92-825c2b0142d6 error="test error"
+--- PASS: TestUpdateEvent_ClientChange_UpdateClientStatsError_StillReturns200 (0.00s)
+=== RUN   TestUpdateEvent_ClientChange_NewClientStatsError_StillReturns200
+2026/03/10 15:00:03 WARN Failed to update client stats client_id=c708f98f-9474-4cca-b824-13267d82912f error="test error"
+--- PASS: TestUpdateEvent_ClientChange_NewClientStatsError_StillReturns200 (0.00s)
+=== RUN   TestDeleteEvent_UpdateClientStatsError_StillReturns204
+2026/03/10 15:00:03 WARN Failed to update client stats client_id=057f9042-41ce-4d31-97b9-9c878adbf242 error="test error"
+--- PASS: TestDeleteEvent_UpdateClientStatsError_StillReturns204 (0.00s)
+=== RUN   TestCheckEquipmentConflicts_WithValidExcludeEventID_ReturnsEmptyArray
+--- PASS: TestCheckEquipmentConflicts_WithValidExcludeEventID_ReturnsEmptyArray (0.00s)
+=== RUN   TestCheckEquipmentConflicts_InvalidExcludeEventID_Returns400
+--- PASS: TestCheckEquipmentConflicts_InvalidExcludeEventID_Returns400 (0.00s)
+=== RUN   TestCheckEquipmentConflicts_RepoError_Returns500
+--- PASS: TestCheckEquipmentConflicts_RepoError_Returns500 (0.00s)
+=== RUN   TestGetEquipmentSuggestions_ZeroQuantity_AdjustedToOne
+--- PASS: TestGetEquipmentSuggestions_ZeroQuantity_AdjustedToOne (0.00s)
+=== RUN   TestGetEquipmentSuggestions_NegativeQuantity_AdjustedToOne
+--- PASS: TestGetEquipmentSuggestions_NegativeQuantity_AdjustedToOne (0.00s)
+=== RUN   TestGetEquipmentSuggestions_RepoError_Returns500
+--- PASS: TestGetEquipmentSuggestions_RepoError_Returns500 (0.00s)
+=== RUN   TestUpdateProduct_RepoUpdateError_Returns500
+--- PASS: TestUpdateProduct_RepoUpdateError_Returns500 (0.00s)
+=== RUN   TestUpdateInventoryItem_RepoUpdateError_Returns500
+--- PASS: TestUpdateInventoryItem_RepoUpdateError_Returns500 (0.00s)
+=== RUN   TestUpdatePayment_RepoUpdateError_Returns500
+--- PASS: TestUpdatePayment_RepoUpdateError_Returns500 (0.00s)
+=== RUN   TestCreateProduct_RepoCreateError_Returns500
+--- PASS: TestCreateProduct_RepoCreateError_Returns500 (0.00s)
+=== RUN   TestUpdateProduct_InvalidJSON_Returns400
+--- PASS: TestUpdateProduct_InvalidJSON_Returns400 (0.00s)
+=== RUN   TestUpdateInventoryItem_InvalidJSON_Returns400
+--- PASS: TestUpdateInventoryItem_InvalidJSON_Returns400 (0.00s)
+=== RUN   TestUpdatePayment_InvalidJSON_Returns400
+--- PASS: TestUpdatePayment_InvalidJSON_Returns400 (0.00s)
+=== RUN   TestUpdateEventItems_EquipmentValidationError_Returns400
+--- PASS: TestUpdateEventItems_EquipmentValidationError_Returns400 (0.00s)
+=== RUN   TestUpdateEventItems_InvalidJSON_Returns400
+--- PASS: TestUpdateEventItems_InvalidJSON_Returns400 (0.00s)
+=== RUN   TestGetEquipmentSuggestions_NilSuggestions_ReturnsEmptyArray
+--- PASS: TestGetEquipmentSuggestions_NilSuggestions_ReturnsEmptyArray (0.00s)
+=== RUN   TestCreateEvent_UpdateClientStatsError_StillReturns201
+2026/03/10 15:00:03 WARN Failed to update client stats client_id=49ed430b-4f99-423c-993e-5879f55d8beb error="test error"
+--- PASS: TestCreateEvent_UpdateClientStatsError_StillReturns201 (0.00s)
+=== RUN   TestCRUDHandlerValidationPaths
+=== RUN   TestCRUDHandlerValidationPaths/GivenInvalidClientID_WhenGetClient_ThenBadRequest
+=== RUN   TestCRUDHandlerValidationPaths/GivenInvalidClientID_WhenUpdateClient_ThenBadRequest
+=== RUN   TestCRUDHandlerValidationPaths/GivenInvalidClientBody_WhenCreateClient_ThenBadRequest
+=== RUN   TestCRUDHandlerValidationPaths/GivenInvalidEventID_WhenGetEvent_ThenBadRequest
+=== RUN   TestCRUDHandlerValidationPaths/GivenInvalidEventID_WhenUpdateEvent_ThenBadRequest
+=== RUN   TestCRUDHandlerValidationPaths/GivenInvalidEventID_WhenUpdateEventItems_ThenBadRequest
+=== RUN   TestCRUDHandlerValidationPaths/GivenInvalidProductID_WhenGetProduct_ThenBadRequest
+=== RUN   TestCRUDHandlerValidationPaths/GivenInvalidProductBody_WhenCreateProduct_ThenBadRequest
+=== RUN   TestCRUDHandlerValidationPaths/GivenInvalidInventoryID_WhenGetInventory_ThenBadRequest
+=== RUN   TestCRUDHandlerValidationPaths/GivenInvalidInventoryBody_WhenCreateInventory_ThenBadRequest
+=== RUN   TestCRUDHandlerValidationPaths/GivenInvalidPaymentID_WhenUpdatePayment_ThenBadRequest
+=== RUN   TestCRUDHandlerValidationPaths/GivenInvalidPaymentID_WhenDeletePayment_ThenBadRequest
+=== RUN   TestCRUDHandlerValidationPaths/GivenInvalidPaymentBody_WhenCreatePayment_ThenBadRequest
+=== RUN   TestCRUDHandlerValidationPaths/GivenInvalidEventIDFilter_WhenListPayments_ThenBadRequest
+=== RUN   TestCRUDHandlerValidationPaths/GivenInvalidClientIDFilter_WhenListEvents_ThenBadRequest
+=== RUN   TestCRUDHandlerValidationPaths/GivenInvalidStartDateFilter_WhenListEvents_ThenBadRequest
+=== RUN   TestCRUDHandlerValidationPaths/GivenInvalidEndDateFilter_WhenListEvents_ThenBadRequest
+=== RUN   TestCRUDHandlerValidationPaths/GivenInvalidEventIDsFilter_WhenListPayments_ThenBadRequest
+=== RUN   TestCRUDHandlerValidationPaths/GivenEmptyEventIDsFilter_WhenListPayments_ThenBadRequest
+=== RUN   TestCRUDHandlerValidationPaths/GivenInvalidEventID_WhenGetEventEquipment_ThenBadRequest
+=== RUN   TestCRUDHandlerValidationPaths/GivenInvalidEventBody_WhenCreateEvent_ThenBadRequest
+=== RUN   TestCRUDHandlerValidationPaths/GivenInvalidUpdateClientBody_WhenUpdateClient_ThenBadRequest
+=== RUN   TestCRUDHandlerValidationPaths/GivenInvalidDeleteClientID_WhenDeleteClient_ThenBadRequest
+=== RUN   TestCRUDHandlerValidationPaths/GivenInvalidDeleteEventID_WhenDeleteEvent_ThenBadRequest
+=== RUN   TestCRUDHandlerValidationPaths/GivenInvalidProductID_WhenUpdateProduct_ThenBadRequest
+=== RUN   TestCRUDHandlerValidationPaths/GivenInvalidDeleteProductID_WhenDeleteProduct_ThenBadRequest
+=== RUN   TestCRUDHandlerValidationPaths/GivenInvalidProductID_WhenGetIngredients_ThenBadRequest
+=== RUN   TestCRUDHandlerValidationPaths/GivenInvalidProductID_WhenUpdateIngredients_ThenBadRequest
+=== RUN   TestCRUDHandlerValidationPaths/GivenInvalidInventoryID_WhenUpdateInventory_ThenBadRequest
+=== RUN   TestCRUDHandlerValidationPaths/GivenInvalidDeleteInventoryID_WhenDeleteInventory_ThenBadRequest
+=== RUN   TestCRUDHandlerValidationPaths/GivenInvalidEventID_WhenGetEventProducts_ThenBadRequest
+=== RUN   TestCRUDHandlerValidationPaths/GivenInvalidEventID_WhenGetEventExtras_ThenBadRequest
+--- PASS: TestCRUDHandlerValidationPaths (0.00s)
+    --- PASS: TestCRUDHandlerValidationPaths/GivenInvalidClientID_WhenGetClient_ThenBadRequest (0.00s)
+    --- PASS: TestCRUDHandlerValidationPaths/GivenInvalidClientID_WhenUpdateClient_ThenBadRequest (0.00s)
+    --- PASS: TestCRUDHandlerValidationPaths/GivenInvalidClientBody_WhenCreateClient_ThenBadRequest (0.00s)
+    --- PASS: TestCRUDHandlerValidationPaths/GivenInvalidEventID_WhenGetEvent_ThenBadRequest (0.00s)
+    --- PASS: TestCRUDHandlerValidationPaths/GivenInvalidEventID_WhenUpdateEvent_ThenBadRequest (0.00s)
+    --- PASS: TestCRUDHandlerValidationPaths/GivenInvalidEventID_WhenUpdateEventItems_ThenBadRequest (0.00s)
+    --- PASS: TestCRUDHandlerValidationPaths/GivenInvalidProductID_WhenGetProduct_ThenBadRequest (0.00s)
+    --- PASS: TestCRUDHandlerValidationPaths/GivenInvalidProductBody_WhenCreateProduct_ThenBadRequest (0.00s)
+    --- PASS: TestCRUDHandlerValidationPaths/GivenInvalidInventoryID_WhenGetInventory_ThenBadRequest (0.00s)
+    --- PASS: TestCRUDHandlerValidationPaths/GivenInvalidInventoryBody_WhenCreateInventory_ThenBadRequest (0.00s)
+    --- PASS: TestCRUDHandlerValidationPaths/GivenInvalidPaymentID_WhenUpdatePayment_ThenBadRequest (0.00s)
+    --- PASS: TestCRUDHandlerValidationPaths/GivenInvalidPaymentID_WhenDeletePayment_ThenBadRequest (0.00s)
+    --- PASS: TestCRUDHandlerValidationPaths/GivenInvalidPaymentBody_WhenCreatePayment_ThenBadRequest (0.00s)
+    --- PASS: TestCRUDHandlerValidationPaths/GivenInvalidEventIDFilter_WhenListPayments_ThenBadRequest (0.00s)
+    --- PASS: TestCRUDHandlerValidationPaths/GivenInvalidClientIDFilter_WhenListEvents_ThenBadRequest (0.00s)
+    --- PASS: TestCRUDHandlerValidationPaths/GivenInvalidStartDateFilter_WhenListEvents_ThenBadRequest (0.00s)
+    --- PASS: TestCRUDHandlerValidationPaths/GivenInvalidEndDateFilter_WhenListEvents_ThenBadRequest (0.00s)
+    --- PASS: TestCRUDHandlerValidationPaths/GivenInvalidEventIDsFilter_WhenListPayments_ThenBadRequest (0.00s)
+    --- PASS: TestCRUDHandlerValidationPaths/GivenEmptyEventIDsFilter_WhenListPayments_ThenBadRequest (0.00s)
+    --- PASS: TestCRUDHandlerValidationPaths/GivenInvalidEventID_WhenGetEventEquipment_ThenBadRequest (0.00s)
+    --- PASS: TestCRUDHandlerValidationPaths/GivenInvalidEventBody_WhenCreateEvent_ThenBadRequest (0.00s)
+    --- PASS: TestCRUDHandlerValidationPaths/GivenInvalidUpdateClientBody_WhenUpdateClient_ThenBadRequest (0.00s)
+    --- PASS: TestCRUDHandlerValidationPaths/GivenInvalidDeleteClientID_WhenDeleteClient_ThenBadRequest (0.00s)
+    --- PASS: TestCRUDHandlerValidationPaths/GivenInvalidDeleteEventID_WhenDeleteEvent_ThenBadRequest (0.00s)
+    --- PASS: TestCRUDHandlerValidationPaths/GivenInvalidProductID_WhenUpdateProduct_ThenBadRequest (0.00s)
+    --- PASS: TestCRUDHandlerValidationPaths/GivenInvalidDeleteProductID_WhenDeleteProduct_ThenBadRequest (0.00s)
+    --- PASS: TestCRUDHandlerValidationPaths/GivenInvalidProductID_WhenGetIngredients_ThenBadRequest (0.00s)
+    --- PASS: TestCRUDHandlerValidationPaths/GivenInvalidProductID_WhenUpdateIngredients_ThenBadRequest (0.00s)
+    --- PASS: TestCRUDHandlerValidationPaths/GivenInvalidInventoryID_WhenUpdateInventory_ThenBadRequest (0.00s)
+    --- PASS: TestCRUDHandlerValidationPaths/GivenInvalidDeleteInventoryID_WhenDeleteInventory_ThenBadRequest (0.00s)
+    --- PASS: TestCRUDHandlerValidationPaths/GivenInvalidEventID_WhenGetEventProducts_ThenBadRequest (0.00s)
+    --- PASS: TestCRUDHandlerValidationPaths/GivenInvalidEventID_WhenGetEventExtras_ThenBadRequest (0.00s)
+=== RUN   TestListPaymentsNoFiltersReturnsEmptyArray
+    crud_handler_test.go:407: Skipping unit test that requires DB setup; use integration tests instead.
+--- SKIP: TestListPaymentsNoFiltersReturnsEmptyArray (0.00s)
+=== RUN   TestSplitCSV
+--- PASS: TestSplitCSV (0.00s)
+=== RUN   TestListPayments
+--- PASS: TestListPayments (0.00s)
+=== RUN   TestSplitAndTrim
+--- PASS: TestSplitAndTrim (0.00s)
+=== RUN   TestNormalizeDateParam
+--- PASS: TestNormalizeDateParam (0.00s)
+=== RUN   TestUpdateHandlersInvalidBodyWithValidIDs
+    crud_handler_test.go:487: Skipping unit test that requires DB setup; use integration tests instead.
+--- SKIP: TestUpdateHandlersInvalidBodyWithValidIDs (0.00s)
+=== RUN   TestCheckEquipmentConflictsValidation
+=== RUN   TestCheckEquipmentConflictsValidation/InvalidBody
+=== RUN   TestCheckEquipmentConflictsValidation/EmptyDateOrIDs
+=== RUN   TestCheckEquipmentConflictsValidation/InvalidInventoryID
+=== RUN   TestCheckEquipmentConflictsValidation/InvalidExcludeEventID
+--- PASS: TestCheckEquipmentConflictsValidation (0.00s)
+    --- PASS: TestCheckEquipmentConflictsValidation/InvalidBody (0.00s)
+    --- PASS: TestCheckEquipmentConflictsValidation/EmptyDateOrIDs (0.00s)
+    --- PASS: TestCheckEquipmentConflictsValidation/InvalidInventoryID (0.00s)
+    --- PASS: TestCheckEquipmentConflictsValidation/InvalidExcludeEventID (0.00s)
+=== RUN   TestGetEquipmentSuggestionsValidation
+=== RUN   TestGetEquipmentSuggestionsValidation/InvalidBody
+=== RUN   TestGetEquipmentSuggestionsValidation/EmptyProductIDs
+=== RUN   TestGetEquipmentSuggestionsValidation/InvalidProductID
+--- PASS: TestGetEquipmentSuggestionsValidation (0.00s)
+    --- PASS: TestGetEquipmentSuggestionsValidation/InvalidBody (0.00s)
+    --- PASS: TestGetEquipmentSuggestionsValidation/EmptyProductIDs (0.00s)
+    --- PASS: TestGetEquipmentSuggestionsValidation/InvalidProductID (0.00s)
+=== RUN   TestGetBatchProductIngredientsValidation
+=== RUN   TestGetBatchProductIngredientsValidation/InvalidBody
+=== RUN   TestGetBatchProductIngredientsValidation/EmptyProductIDs
+=== RUN   TestGetBatchProductIngredientsValidation/TooManyProductIDs
+=== RUN   TestGetBatchProductIngredientsValidation/InvalidProductID
+--- PASS: TestGetBatchProductIngredientsValidation (0.00s)
+    --- PASS: TestGetBatchProductIngredientsValidation/InvalidBody (0.00s)
+    --- PASS: TestGetBatchProductIngredientsValidation/EmptyProductIDs (0.00s)
+    --- PASS: TestGetBatchProductIngredientsValidation/TooManyProductIDs (0.00s)
+    --- PASS: TestGetBatchProductIngredientsValidation/InvalidProductID (0.00s)
+=== RUN   TestCreateEventValidation
+=== RUN   TestCreateEventValidation/NumPeopleZero
+=== RUN   TestCreateEventValidation/InvalidStatus
+=== RUN   TestCreateEventValidation/DiscountOver100
+=== RUN   TestCreateEventValidation/NegativeTaxRate
+--- PASS: TestCreateEventValidation (0.00s)
+    --- PASS: TestCreateEventValidation/NumPeopleZero (0.00s)
+    --- PASS: TestCreateEventValidation/InvalidStatus (0.00s)
+    --- PASS: TestCreateEventValidation/DiscountOver100 (0.00s)
+    --- PASS: TestCreateEventValidation/NegativeTaxRate (0.00s)
+=== RUN   TestUpdateEventValidation
+=== RUN   TestUpdateEventValidation/NumPeopleZero
+=== RUN   TestUpdateEventValidation/InvalidStatus
+=== RUN   TestUpdateEventValidation/NegativeDiscount
+=== RUN   TestUpdateEventValidation/NegativeTotalAmount
+--- PASS: TestUpdateEventValidation (0.00s)
+    --- PASS: TestUpdateEventValidation/NumPeopleZero (0.00s)
+    --- PASS: TestUpdateEventValidation/InvalidStatus (0.00s)
+    --- PASS: TestUpdateEventValidation/NegativeDiscount (0.00s)
+    --- PASS: TestUpdateEventValidation/NegativeTotalAmount (0.00s)
+=== RUN   TestCreateProductValidation
+=== RUN   TestCreateProductValidation/EmptyName
+=== RUN   TestCreateProductValidation/EmptyCategory
+=== RUN   TestCreateProductValidation/NegativeBasePrice
+--- PASS: TestCreateProductValidation (0.00s)
+    --- PASS: TestCreateProductValidation/EmptyName (0.00s)
+    --- PASS: TestCreateProductValidation/EmptyCategory (0.00s)
+    --- PASS: TestCreateProductValidation/NegativeBasePrice (0.00s)
+=== RUN   TestCreateInventoryItemValidation
+=== RUN   TestCreateInventoryItemValidation/EmptyIngredientName
+=== RUN   TestCreateInventoryItemValidation/EmptyUnit
+=== RUN   TestCreateInventoryItemValidation/InvalidType
+=== RUN   TestCreateInventoryItemValidation/NegativeCurrentStock
+=== RUN   TestCreateInventoryItemValidation/NegativeMinimumStock
+--- PASS: TestCreateInventoryItemValidation (0.00s)
+    --- PASS: TestCreateInventoryItemValidation/EmptyIngredientName (0.00s)
+    --- PASS: TestCreateInventoryItemValidation/EmptyUnit (0.00s)
+    --- PASS: TestCreateInventoryItemValidation/InvalidType (0.00s)
+    --- PASS: TestCreateInventoryItemValidation/NegativeCurrentStock (0.00s)
+    --- PASS: TestCreateInventoryItemValidation/NegativeMinimumStock (0.00s)
+=== RUN   TestCreatePaymentValidation
+=== RUN   TestCreatePaymentValidation/ZeroAmount
+=== RUN   TestCreatePaymentValidation/NegativeAmount
+=== RUN   TestCreatePaymentValidation/EmptyPaymentMethod
+--- PASS: TestCreatePaymentValidation (0.00s)
+    --- PASS: TestCreatePaymentValidation/ZeroAmount (0.00s)
+    --- PASS: TestCreatePaymentValidation/NegativeAmount (0.00s)
+    --- PASS: TestCreatePaymentValidation/EmptyPaymentMethod (0.00s)
+=== RUN   TestUpdatePaymentValidation
+=== RUN   TestUpdatePaymentValidation/ZeroAmount
+=== RUN   TestUpdatePaymentValidation/EmptyPaymentMethod
+--- PASS: TestUpdatePaymentValidation (0.00s)
+    --- PASS: TestUpdatePaymentValidation/ZeroAmount (0.00s)
+    --- PASS: TestUpdatePaymentValidation/EmptyPaymentMethod (0.00s)
+=== RUN   TestUpdateEventItemsValidation
+=== RUN   TestUpdateEventItemsValidation/ValidateEventProduct_ZeroQuantity
+=== RUN   TestUpdateEventItemsValidation/ValidateEventProduct_NegativeUnitPrice
+=== RUN   TestUpdateEventItemsValidation/ValidateEventProduct_DiscountOver100
+=== RUN   TestUpdateEventItemsValidation/ValidateEventExtra_EmptyDescription
+=== RUN   TestUpdateEventItemsValidation/ValidateEventExtra_NegativeCost
+=== RUN   TestUpdateEventItemsValidation/ValidateEventExtra_NegativePrice
+=== RUN   TestUpdateEventItemsValidation/ValidateEventEquipment_ZeroQuantity
+=== RUN   TestUpdateEventItemsValidation/ValidateProductIngredient_ZeroQuantityRequired
+=== RUN   TestUpdateEventItemsValidation/ValidateProductIngredient_NegativeQuantityRequired
+--- PASS: TestUpdateEventItemsValidation (0.00s)
+    --- PASS: TestUpdateEventItemsValidation/ValidateEventProduct_ZeroQuantity (0.00s)
+    --- PASS: TestUpdateEventItemsValidation/ValidateEventProduct_NegativeUnitPrice (0.00s)
+    --- PASS: TestUpdateEventItemsValidation/ValidateEventProduct_DiscountOver100 (0.00s)
+    --- PASS: TestUpdateEventItemsValidation/ValidateEventExtra_EmptyDescription (0.00s)
+    --- PASS: TestUpdateEventItemsValidation/ValidateEventExtra_NegativeCost (0.00s)
+    --- PASS: TestUpdateEventItemsValidation/ValidateEventExtra_NegativePrice (0.00s)
+    --- PASS: TestUpdateEventItemsValidation/ValidateEventEquipment_ZeroQuantity (0.00s)
+    --- PASS: TestUpdateEventItemsValidation/ValidateProductIngredient_ZeroQuantityRequired (0.00s)
+    --- PASS: TestUpdateEventItemsValidation/ValidateProductIngredient_NegativeQuantityRequired (0.00s)
+=== RUN   TestCreateClientMissingFields
+=== RUN   TestCreateClientMissingFields/InvalidJSON
+--- PASS: TestCreateClientMissingFields (0.00s)
+    --- PASS: TestCreateClientMissingFields/InvalidJSON (0.00s)
+=== RUN   TestUpdateProductValidation
+=== RUN   TestUpdateProductValidation/EmptyName
+=== RUN   TestUpdateProductValidation/EmptyCategory
+=== RUN   TestUpdateProductValidation/NegativeBasePrice
+--- PASS: TestUpdateProductValidation (0.00s)
+    --- PASS: TestUpdateProductValidation/EmptyName (0.00s)
+    --- PASS: TestUpdateProductValidation/EmptyCategory (0.00s)
+    --- PASS: TestUpdateProductValidation/NegativeBasePrice (0.00s)
+=== RUN   TestUpdateInventoryItemValidation
+=== RUN   TestUpdateInventoryItemValidation/EmptyIngredientName
+=== RUN   TestUpdateInventoryItemValidation/EmptyUnit
+=== RUN   TestUpdateInventoryItemValidation/InvalidType
+--- PASS: TestUpdateInventoryItemValidation (0.00s)
+    --- PASS: TestUpdateInventoryItemValidation/EmptyIngredientName (0.00s)
+    --- PASS: TestUpdateInventoryItemValidation/EmptyUnit (0.00s)
+    --- PASS: TestUpdateInventoryItemValidation/InvalidType (0.00s)
+=== RUN   TestValidationErrorFormat
+--- PASS: TestValidationErrorFormat (0.00s)
+=== RUN   TestCreateEventDepositPercentValidation
+=== RUN   TestCreateEventDepositPercentValidation/DepositPercentOver100
+=== RUN   TestCreateEventDepositPercentValidation/NegativeDepositPercent
+=== RUN   TestCreateEventDepositPercentValidation/NegativeCancellationDays
+=== RUN   TestCreateEventDepositPercentValidation/RefundPercentOver100
+--- PASS: TestCreateEventDepositPercentValidation (0.00s)
+    --- PASS: TestCreateEventDepositPercentValidation/DepositPercentOver100 (0.00s)
+    --- PASS: TestCreateEventDepositPercentValidation/NegativeDepositPercent (0.00s)
+    --- PASS: TestCreateEventDepositPercentValidation/NegativeCancellationDays (0.00s)
+    --- PASS: TestCreateEventDepositPercentValidation/RefundPercentOver100 (0.00s)
+=== RUN   TestCRUDHandler_Payments
+=== RUN   TestCRUDHandler_Payments/ListPayments_All
+=== RUN   TestCRUDHandler_Payments/ListPayments_ByEventID
+=== RUN   TestCRUDHandler_Payments/ListPayments_ByDateRange
+=== RUN   TestCRUDHandler_Payments/ListPayments_ByEventIDs
+=== RUN   TestCRUDHandler_Payments/CreatePayment_Success
+=== RUN   TestCRUDHandler_Payments/UpdatePayment_Success
+=== RUN   TestCRUDHandler_Payments/DeletePayment_Success
+--- PASS: TestCRUDHandler_Payments (0.00s)
+    --- PASS: TestCRUDHandler_Payments/ListPayments_All (0.00s)
+    --- PASS: TestCRUDHandler_Payments/ListPayments_ByEventID (0.00s)
+    --- PASS: TestCRUDHandler_Payments/ListPayments_ByDateRange (0.00s)
+    --- PASS: TestCRUDHandler_Payments/ListPayments_ByEventIDs (0.00s)
+    --- PASS: TestCRUDHandler_Payments/CreatePayment_Success (0.00s)
+    --- PASS: TestCRUDHandler_Payments/UpdatePayment_Success (0.00s)
+    --- PASS: TestCRUDHandler_Payments/DeletePayment_Success (0.00s)
+=== RUN   TestCRUDHandler_Helpers
+=== RUN   TestCRUDHandler_Helpers/normalizeDateParam
+=== RUN   TestCRUDHandler_Helpers/splitCSV
+--- PASS: TestCRUDHandler_Helpers (0.00s)
+    --- PASS: TestCRUDHandler_Helpers/normalizeDateParam (0.00s)
+    --- PASS: TestCRUDHandler_Helpers/splitCSV (0.00s)
+=== RUN   TestEventPaymentHandler
+=== RUN   TestEventPaymentHandler/NewEventPaymentHandler
+=== RUN   TestEventPaymentHandler/CreateEventCheckoutSession_StripeNotConfigured
+=== RUN   TestEventPaymentHandler/CreateEventCheckoutSession_InvalidEventID
+=== RUN   TestEventPaymentHandler/HandleEventPaymentSuccess_MissingSessionID
+=== RUN   TestEventPaymentHandler/HandleEventPaymentSuccess_InvalidEventID
+--- PASS: TestEventPaymentHandler (0.00s)
+    --- PASS: TestEventPaymentHandler/NewEventPaymentHandler (0.00s)
+    --- PASS: TestEventPaymentHandler/CreateEventCheckoutSession_StripeNotConfigured (0.00s)
+    --- PASS: TestEventPaymentHandler/CreateEventCheckoutSession_InvalidEventID (0.00s)
+    --- PASS: TestEventPaymentHandler/HandleEventPaymentSuccess_MissingSessionID (0.00s)
+    --- PASS: TestEventPaymentHandler/HandleEventPaymentSuccess_InvalidEventID (0.00s)
+=== RUN   TestEventPaymentHandler_CreateEventCheckoutSession_Paths
+=== RUN   TestEventPaymentHandler_CreateEventCheckoutSession_Paths/StripeNotConfigured_Returns503
+=== RUN   TestEventPaymentHandler_CreateEventCheckoutSession_Paths/InvalidEventID_Returns400
+=== RUN   TestEventPaymentHandler_CreateEventCheckoutSession_Paths/EventNotFound_Returns404
+2026/03/10 15:00:03 ERROR Failed to get event error="assert.AnError general error for testing" event_id=61123776-06d6-463b-91e2-219b09459737
+=== RUN   TestEventPaymentHandler_CreateEventCheckoutSession_Paths/CancelledEvent_Returns400
+=== RUN   TestEventPaymentHandler_CreateEventCheckoutSession_Paths/ZeroTotalAmount_Returns400
+=== RUN   TestEventPaymentHandler_CreateEventCheckoutSession_Paths/NegativeTotalAmount_Returns400
+=== RUN   TestEventPaymentHandler_CreateEventCheckoutSession_Paths/EventWithClientEmail_UsesClientEmail
+2026/03/10 15:00:03 INFO Created Stripe checkout session session_id=sess_123 event_id=5963499f-2d77-4cee-8d5b-800cb1d063de amount=5000
+=== RUN   TestEventPaymentHandler_CreateEventCheckoutSession_Paths/EventWithNoClient_StillProceeds
+2026/03/10 15:00:03 INFO Created Stripe checkout session session_id=sess_no_client event_id=86885f21-8cf3-4913-95af-f75aaff8ff45 amount=10000
+=== RUN   TestEventPaymentHandler_CreateEventCheckoutSession_Paths/EventWithEmptyEventDate_BuildsDescription
+2026/03/10 15:00:03 INFO Created Stripe checkout session session_id=sess_no_date event_id=ea0408de-1ffd-4826-90b8-1cc7e4b16873 amount=3000
+--- PASS: TestEventPaymentHandler_CreateEventCheckoutSession_Paths (0.00s)
+    --- PASS: TestEventPaymentHandler_CreateEventCheckoutSession_Paths/StripeNotConfigured_Returns503 (0.00s)
+    --- PASS: TestEventPaymentHandler_CreateEventCheckoutSession_Paths/InvalidEventID_Returns400 (0.00s)
+    --- PASS: TestEventPaymentHandler_CreateEventCheckoutSession_Paths/EventNotFound_Returns404 (0.00s)
+    --- PASS: TestEventPaymentHandler_CreateEventCheckoutSession_Paths/CancelledEvent_Returns400 (0.00s)
+    --- PASS: TestEventPaymentHandler_CreateEventCheckoutSession_Paths/ZeroTotalAmount_Returns400 (0.00s)
+    --- PASS: TestEventPaymentHandler_CreateEventCheckoutSession_Paths/NegativeTotalAmount_Returns400 (0.00s)
+    --- PASS: TestEventPaymentHandler_CreateEventCheckoutSession_Paths/EventWithClientEmail_UsesClientEmail (0.00s)
+    --- PASS: TestEventPaymentHandler_CreateEventCheckoutSession_Paths/EventWithNoClient_StillProceeds (0.00s)
+    --- PASS: TestEventPaymentHandler_CreateEventCheckoutSession_Paths/EventWithEmptyEventDate_BuildsDescription (0.00s)
+=== RUN   TestEventPaymentHandler_HandleEventPaymentSuccess_Paths
+=== RUN   TestEventPaymentHandler_HandleEventPaymentSuccess_Paths/MissingSessionID_Returns400
+=== RUN   TestEventPaymentHandler_HandleEventPaymentSuccess_Paths/InvalidEventID_Returns400
+=== RUN   TestEventPaymentHandler_HandleEventPaymentSuccess_Paths/StripeSessionRetrievalFails_Returns500
+2026/03/10 15:00:03 ERROR Failed to retrieve Stripe session error="assert.AnError general error for testing" session_id=cs_nonexistent
+--- PASS: TestEventPaymentHandler_HandleEventPaymentSuccess_Paths (0.00s)
+    --- PASS: TestEventPaymentHandler_HandleEventPaymentSuccess_Paths/MissingSessionID_Returns400 (0.00s)
+    --- PASS: TestEventPaymentHandler_HandleEventPaymentSuccess_Paths/InvalidEventID_Returns400 (0.00s)
+    --- PASS: TestEventPaymentHandler_HandleEventPaymentSuccess_Paths/StripeSessionRetrievalFails_Returns500 (0.00s)
+=== RUN   TestAuthHandlerIntegration
+    handlers_integration_test.go:25: Skipping integration tests: TEST_DATABASE_URL is not set (safety guard)
+--- SKIP: TestAuthHandlerIntegration (0.00s)
+=== RUN   TestCRUDHandlerIntegration
+    handlers_integration_test.go:121: Skipping integration tests: TEST_DATABASE_URL is not set (safety guard)
+--- SKIP: TestCRUDHandlerIntegration (0.00s)
+=== RUN   TestWriteJSON
+--- PASS: TestWriteJSON (0.00s)
+=== RUN   TestWriteError
+--- PASS: TestWriteError (0.00s)
+=== RUN   TestWriteJSON_EncodingError
+2026/03/10 15:00:03 ERROR Failed to encode JSON response error="json: unsupported type: chan int"
+--- PASS: TestWriteJSON_EncodingError (0.00s)
+=== RUN   TestDecodeJSON
+=== RUN   TestDecodeJSON/GivenValidJSON_WhenDecode_ThenPopulateStruct
+=== RUN   TestDecodeJSON/GivenInvalidJSON_WhenDecode_ThenReturnError
+=== RUN   TestDecodeJSON/GivenOversizedBody_WhenDecode_ThenReturnError
+--- PASS: TestDecodeJSON (0.00s)
+    --- PASS: TestDecodeJSON/GivenValidJSON_WhenDecode_ThenPopulateStruct (0.00s)
+    --- PASS: TestDecodeJSON/GivenInvalidJSON_WhenDecode_ThenReturnError (0.00s)
+    --- PASS: TestDecodeJSON/GivenOversizedBody_WhenDecode_ThenReturnError (0.00s)
+=== RUN   TestSearchHandler
+=== RUN   TestSearchHandler/NewSearchHandler
+=== RUN   TestSearchHandler/SearchAll_EmptyQuery
+=== RUN   TestSearchHandler/SearchAll_WithClosedPool
+2026/03/10 15:00:03 WARN Event search error error="closed pool" user_id=d5f21282-f7dd-404a-9f3f-d894b613454e
+2026/03/10 15:00:03 WARN Client search error error="closed pool" user_id=d5f21282-f7dd-404a-9f3f-d894b613454e
+2026/03/10 15:00:03 WARN Product search error error="closed pool" user_id=d5f21282-f7dd-404a-9f3f-d894b613454e
+2026/03/10 15:00:03 WARN Inventory search error error="closed pool" user_id=d5f21282-f7dd-404a-9f3f-d894b613454e
+=== RUN   TestSearchHandler/SearchAll_NoQueryParam
+--- PASS: TestSearchHandler (0.00s)
+    --- PASS: TestSearchHandler/NewSearchHandler (0.00s)
+    --- PASS: TestSearchHandler/SearchAll_EmptyQuery (0.00s)
+    --- PASS: TestSearchHandler/SearchAll_WithClosedPool (0.00s)
+    --- PASS: TestSearchHandler/SearchAll_NoQueryParam (0.00s)
+=== RUN   TestSearchHandler_SearchAll_HappyPaths
+=== RUN   TestSearchHandler_SearchAll_HappyPaths/Success_AllReposReturnResults
+=== RUN   TestSearchHandler_SearchAll_HappyPaths/SomeReposFail_PartialResults
+2026/03/10 15:00:03 WARN Product search error error="product search error" user_id=827603af-9e20-4d6a-8c87-9ca193e46a61
+2026/03/10 15:00:03 WARN Event search error error="event search error" user_id=827603af-9e20-4d6a-8c87-9ca193e46a61
+2026/03/10 15:00:03 WARN Inventory search error error="inventory search error" user_id=827603af-9e20-4d6a-8c87-9ca193e46a61
+=== RUN   TestSearchHandler_SearchAll_HappyPaths/ResultsTruncatedTo6
+=== RUN   TestSearchHandler_SearchAll_HappyPaths/MissingQuery_Returns400
+=== RUN   TestSearchHandler_SearchAll_HappyPaths/AllCategoriesTruncatedTo6
+=== RUN   TestSearchHandler_SearchAll_HappyPaths/AllReposFail_ReturnsEmptyArrays
+2026/03/10 15:00:03 WARN Event search error error="event error" user_id=827603af-9e20-4d6a-8c87-9ca193e46a61
+2026/03/10 15:00:03 WARN Client search error error="client error" user_id=827603af-9e20-4d6a-8c87-9ca193e46a61
+2026/03/10 15:00:03 WARN Inventory search error error="inventory error" user_id=827603af-9e20-4d6a-8c87-9ca193e46a61
+2026/03/10 15:00:03 WARN Product search error error="product error" user_id=827603af-9e20-4d6a-8c87-9ca193e46a61
+--- PASS: TestSearchHandler_SearchAll_HappyPaths (0.00s)
+    --- PASS: TestSearchHandler_SearchAll_HappyPaths/Success_AllReposReturnResults (0.00s)
+    --- PASS: TestSearchHandler_SearchAll_HappyPaths/SomeReposFail_PartialResults (0.00s)
+    --- PASS: TestSearchHandler_SearchAll_HappyPaths/ResultsTruncatedTo6 (0.00s)
+    --- PASS: TestSearchHandler_SearchAll_HappyPaths/MissingQuery_Returns400 (0.00s)
+    --- PASS: TestSearchHandler_SearchAll_HappyPaths/AllCategoriesTruncatedTo6 (0.00s)
+    --- PASS: TestSearchHandler_SearchAll_HappyPaths/AllReposFail_ReturnsEmptyArrays (0.00s)
+=== RUN   TestSubscriptionHandler_CreateCheckoutSession
+=== RUN   TestSubscriptionHandler_CreateCheckoutSession/should_reject_when_Stripe_is_not_configured
+=== RUN   TestSubscriptionHandler_CreateCheckoutSession/should_return_error_when_user_not_found
+--- PASS: TestSubscriptionHandler_CreateCheckoutSession (0.00s)
+    --- PASS: TestSubscriptionHandler_CreateCheckoutSession/should_reject_when_Stripe_is_not_configured (0.00s)
+    --- PASS: TestSubscriptionHandler_CreateCheckoutSession/should_return_error_when_user_not_found (0.00s)
+=== RUN   TestSubscriptionHandler_CreatePortalSession
+=== RUN   TestSubscriptionHandler_CreatePortalSession/should_reject_when_Stripe_is_not_configured
+=== RUN   TestSubscriptionHandler_CreatePortalSession/should_reject_when_user_has_no_Stripe_customer_ID
+--- PASS: TestSubscriptionHandler_CreatePortalSession (0.00s)
+    --- PASS: TestSubscriptionHandler_CreatePortalSession/should_reject_when_Stripe_is_not_configured (0.00s)
+    --- PASS: TestSubscriptionHandler_CreatePortalSession/should_reject_when_user_has_no_Stripe_customer_ID (0.00s)
+=== RUN   TestSubscriptionHandler_DebugUpgrade
+=== RUN   TestSubscriptionHandler_DebugUpgrade/should_upgrade_user_to_pro_in_development
+=== RUN   TestSubscriptionHandler_DebugUpgrade/should_reject_in_production_environment
+--- PASS: TestSubscriptionHandler_DebugUpgrade (0.00s)
+    --- PASS: TestSubscriptionHandler_DebugUpgrade/should_upgrade_user_to_pro_in_development (0.00s)
+    --- PASS: TestSubscriptionHandler_DebugUpgrade/should_reject_in_production_environment (0.00s)
+=== RUN   TestSubscriptionHandler_DebugDowngrade
+=== RUN   TestSubscriptionHandler_DebugDowngrade/should_downgrade_user_to_basic_in_development
+--- PASS: TestSubscriptionHandler_DebugDowngrade (0.00s)
+    --- PASS: TestSubscriptionHandler_DebugDowngrade/should_downgrade_user_to_basic_in_development (0.00s)
+=== RUN   TestSubscriptionHandler_GetSubscriptionStatus
+=== RUN   TestSubscriptionHandler_GetSubscriptionStatus/should_return_user_subscription_status
+=== RUN   TestSubscriptionHandler_GetSubscriptionStatus/should_return_basic_plan_for_user_without_Stripe
+--- PASS: TestSubscriptionHandler_GetSubscriptionStatus (0.00s)
+    --- PASS: TestSubscriptionHandler_GetSubscriptionStatus/should_return_user_subscription_status (0.00s)
+    --- PASS: TestSubscriptionHandler_GetSubscriptionStatus/should_return_basic_plan_for_user_without_Stripe (0.00s)
+=== RUN   TestSubscriptionHandler_RevenueCatWebhook
+=== RUN   TestSubscriptionHandler_RevenueCatWebhook/should_reject_without_authorization_header
+2026/03/10 15:00:03 WARN Invalid RevenueCat webhook authorization
+=== RUN   TestSubscriptionHandler_RevenueCatWebhook/should_reject_with_invalid_authorization
+2026/03/10 15:00:03 WARN Invalid RevenueCat webhook authorization
+=== RUN   TestSubscriptionHandler_RevenueCatWebhook/should_accept_with_valid_authorization
+2026/03/10 15:00:03 INFO RevenueCat webhook received type=INITIAL_PURCHASE app_user_id=1ac37ea8-6b0f-413e-8583-2e46386a5174 store=APP_STORE
+2026/03/10 15:00:03 INFO User upgraded to pro via RevenueCat user_id=1ac37ea8-6b0f-413e-8583-2e46386a5174 store=APP_STORE
+--- PASS: TestSubscriptionHandler_RevenueCatWebhook (0.00s)
+    --- PASS: TestSubscriptionHandler_RevenueCatWebhook/should_reject_without_authorization_header (0.00s)
+    --- PASS: TestSubscriptionHandler_RevenueCatWebhook/should_reject_with_invalid_authorization (0.00s)
+    --- PASS: TestSubscriptionHandler_RevenueCatWebhook/should_accept_with_valid_authorization (0.00s)
+=== RUN   TestSubscriptionHandler_StripeWebhookMissingSecret
+2026/03/10 15:00:03 ERROR Stripe webhook secret not configured
+--- PASS: TestSubscriptionHandler_StripeWebhookMissingSecret (0.00s)
+=== RUN   TestSubscriptionHandler_StripeWebhookBodyTooLarge
+--- PASS: TestSubscriptionHandler_StripeWebhookBodyTooLarge (0.00s)
+=== RUN   TestSubscriptionHandler_RevenueCatWebhookMissingSecretConfig
+2026/03/10 15:00:03 ERROR RevenueCat webhook secret not configured
+--- PASS: TestSubscriptionHandler_RevenueCatWebhookMissingSecretConfig (0.00s)
+=== RUN   TestSubscriptionHandler_RevenueCatWebhookInvalidPayload
+2026/03/10 15:00:03 ERROR Failed to parse RevenueCat webhook payload error="invalid character 'o' in literal null (expecting 'u')"
+--- PASS: TestSubscriptionHandler_RevenueCatWebhookInvalidPayload (0.00s)
+=== RUN   TestSubscriptionHandler_RevenueCatWebhookUnparseableAppUserID
+2026/03/10 15:00:03 INFO RevenueCat webhook received type=INITIAL_PURCHASE app_user_id=anonymous-user-abc123 store=APP_STORE
+2026/03/10 15:00:03 WARN RevenueCat event with unparseable app_user_id (likely anonymous) app_user_id=anonymous-user-abc123
+--- PASS: TestSubscriptionHandler_RevenueCatWebhookUnparseableAppUserID (0.00s)
+=== RUN   TestSubscriptionHandler_RevenueCatWebhookCancellation
+2026/03/10 15:00:03 INFO RevenueCat webhook received type=CANCELLATION app_user_id=5a1e42cc-11bd-4612-92f6-c8b722e9d894 store=APP_STORE
+2026/03/10 15:00:03 INFO User downgraded to basic via RevenueCat user_id=5a1e42cc-11bd-4612-92f6-c8b722e9d894 event=CANCELLATION
+--- PASS: TestSubscriptionHandler_RevenueCatWebhookCancellation (0.00s)
+=== RUN   TestSubscriptionHandler_RevenueCatWebhookProductChange
+2026/03/10 15:00:03 INFO RevenueCat webhook received type=PRODUCT_CHANGE app_user_id=110415ba-39b2-4b62-93f7-9a08c86b8851 store=PLAY_STORE
+2026/03/10 15:00:03 INFO RevenueCat product change event received (plan change) user_id=110415ba-39b2-4b62-93f7-9a08c86b8851
+--- PASS: TestSubscriptionHandler_RevenueCatWebhookProductChange (0.00s)
+=== RUN   TestSubscriptionHandler_DebugDowngradeInProduction
+--- PASS: TestSubscriptionHandler_DebugDowngradeInProduction (0.00s)
+=== RUN   TestSubscriptionHandler_DebugUpgradeRepoError
+--- PASS: TestSubscriptionHandler_DebugUpgradeRepoError (0.00s)
+=== RUN   TestSubscriptionHandler_DebugDowngradeRepoError
+--- PASS: TestSubscriptionHandler_DebugDowngradeRepoError (0.00s)
+=== RUN   TestSubscriptionHandler_GetSubscriptionStatusRepoError
+--- PASS: TestSubscriptionHandler_GetSubscriptionStatusRepoError (0.00s)
+=== RUN   TestSubscriptionHandler_CreatePortalSessionRepoError
+--- PASS: TestSubscriptionHandler_CreatePortalSessionRepoError (0.00s)
+=== RUN   TestStringPtr
+--- PASS: TestStringPtr (0.00s)
+=== RUN   TestSubscriptionHandler_StripeWebhookInvalidSignature
+2026/03/10 15:00:03 ERROR Failed to verify Stripe webhook signature error="webhook had no valid signature"
+--- PASS: TestSubscriptionHandler_StripeWebhookInvalidSignature (0.00s)
+=== RUN   TestSubscriptionHandler_RevenueCatWebhookAllEventTypes
+=== RUN   TestSubscriptionHandler_RevenueCatWebhookAllEventTypes/EXPIRATION_DowngradesUser
+2026/03/10 15:00:03 INFO RevenueCat webhook received type=EXPIRATION app_user_id=40d2ae19-e200-4b4c-8432-0f1c73d5ca8e store=APP_STORE
+2026/03/10 15:00:03 INFO User downgraded to basic via RevenueCat user_id=40d2ae19-e200-4b4c-8432-0f1c73d5ca8e event=EXPIRATION
+=== RUN   TestSubscriptionHandler_RevenueCatWebhookAllEventTypes/BILLING_ISSUE_DowngradesUser
+2026/03/10 15:00:03 INFO RevenueCat webhook received type=BILLING_ISSUE app_user_id=16b1e115-897c-441c-904f-2c5d842e5592 store=PLAY_STORE
+2026/03/10 15:00:03 INFO User downgraded to basic via RevenueCat user_id=16b1e115-897c-441c-904f-2c5d842e5592 event=BILLING_ISSUE
+=== RUN   TestSubscriptionHandler_RevenueCatWebhookAllEventTypes/RENEWAL_UpgradesUser
+2026/03/10 15:00:03 INFO RevenueCat webhook received type=RENEWAL app_user_id=497ea5f2-be59-47fb-8ac3-5f7b6d62ad6a store=APP_STORE
+2026/03/10 15:00:03 INFO User upgraded to pro via RevenueCat user_id=497ea5f2-be59-47fb-8ac3-5f7b6d62ad6a store=APP_STORE
+=== RUN   TestSubscriptionHandler_RevenueCatWebhookAllEventTypes/UNCANCELLATION_UpgradesUser
+2026/03/10 15:00:03 INFO RevenueCat webhook received type=UNCANCELLATION app_user_id=f92cc68e-85ff-41a2-8613-5a83d5d4d33d store=PLAY_STORE
+2026/03/10 15:00:03 INFO User upgraded to pro via RevenueCat user_id=f92cc68e-85ff-41a2-8613-5a83d5d4d33d store=PLAY_STORE
+--- PASS: TestSubscriptionHandler_RevenueCatWebhookAllEventTypes (0.00s)
+    --- PASS: TestSubscriptionHandler_RevenueCatWebhookAllEventTypes/EXPIRATION_DowngradesUser (0.00s)
+    --- PASS: TestSubscriptionHandler_RevenueCatWebhookAllEventTypes/BILLING_ISSUE_DowngradesUser (0.00s)
+    --- PASS: TestSubscriptionHandler_RevenueCatWebhookAllEventTypes/RENEWAL_UpgradesUser (0.00s)
+    --- PASS: TestSubscriptionHandler_RevenueCatWebhookAllEventTypes/UNCANCELLATION_UpgradesUser (0.00s)
+=== RUN   TestSubscriptionHandler_RevenueCatWebhookBodyTooLarge
+--- PASS: TestSubscriptionHandler_RevenueCatWebhookBodyTooLarge (0.00s)
+=== RUN   TestSubscriptionHandler_HandleEventPayment
+=== RUN   TestSubscriptionHandler_HandleEventPayment/MissingMetadata_DoesNothing
+2026/03/10 15:00:03 ERROR Event payment webhook missing metadata session_id=cs_test_123
+=== RUN   TestSubscriptionHandler_HandleEventPayment/InvalidEventID_DoesNothing
+2026/03/10 15:00:03 ERROR Invalid event ID in webhook metadata event_id=not-a-uuid error="invalid UUID length: 10"
+=== RUN   TestSubscriptionHandler_HandleEventPayment/InvalidUserID_DoesNothing
+2026/03/10 15:00:03 ERROR Invalid user ID in webhook metadata user_id=not-a-uuid error="invalid UUID length: 10"
+=== RUN   TestSubscriptionHandler_HandleEventPayment/EventNotFound_DoesNothing
+2026/03/10 15:00:03 ERROR Failed to get event for payment webhook event_id=1dd0f9fe-b745-42a9-a266-558e5c64f884 error="assert.AnError general error for testing"
+=== RUN   TestSubscriptionHandler_HandleEventPayment/PaymentCreateError_DoesNothing
+2026/03/10 15:00:03 ERROR Failed to create payment record from webhook event_id=d9a83773-2366-4670-b3d3-a103d8bae187 error="assert.AnError general error for testing"
+=== RUN   TestSubscriptionHandler_HandleEventPayment/SuccessQuotedEvent_StatusUpdatedToConfirmed
+2026/03/10 15:00:03 INFO Event payment processed successfully event_id=cb75863f-055d-4a04-90d1-9d48781ea6bd amount=1000 session_id=cs_test_123 customer_email=client@test.dev
+=== RUN   TestSubscriptionHandler_HandleEventPayment/SuccessConfirmedEvent_StatusNotChanged
+2026/03/10 15:00:03 INFO Event payment processed successfully event_id=eadf7680-bad1-4f54-8b18-743d702c5a56 amount=500 session_id=cs_test_456 customer_email=client@test.dev
+=== RUN   TestSubscriptionHandler_HandleEventPayment/QuotedEvent_UpdateFails_StillCompletes
+2026/03/10 15:00:03 ERROR Failed to update event status after payment event_id=7f258d49-9703-4044-9554-d1071ed27101 error="assert.AnError general error for testing"
+2026/03/10 15:00:03 INFO Event payment processed successfully event_id=7f258d49-9703-4044-9554-d1071ed27101 amount=250 session_id=cs_test_789 customer_email=client@test.dev
+--- PASS: TestSubscriptionHandler_HandleEventPayment (0.00s)
+    --- PASS: TestSubscriptionHandler_HandleEventPayment/MissingMetadata_DoesNothing (0.00s)
+    --- PASS: TestSubscriptionHandler_HandleEventPayment/InvalidEventID_DoesNothing (0.00s)
+    --- PASS: TestSubscriptionHandler_HandleEventPayment/InvalidUserID_DoesNothing (0.00s)
+    --- PASS: TestSubscriptionHandler_HandleEventPayment/EventNotFound_DoesNothing (0.00s)
+    --- PASS: TestSubscriptionHandler_HandleEventPayment/PaymentCreateError_DoesNothing (0.00s)
+    --- PASS: TestSubscriptionHandler_HandleEventPayment/SuccessQuotedEvent_StatusUpdatedToConfirmed (0.00s)
+    --- PASS: TestSubscriptionHandler_HandleEventPayment/SuccessConfirmedEvent_StatusNotChanged (0.00s)
+    --- PASS: TestSubscriptionHandler_HandleEventPayment/QuotedEvent_UpdateFails_StillCompletes (0.00s)
+=== RUN   TestSubscriptionHandler_RevenueCatWebhookErrors
+=== RUN   TestSubscriptionHandler_RevenueCatWebhookErrors/INITIAL_PURCHASE_UpgradeError_StillReturns200
+2026/03/10 15:00:03 INFO RevenueCat webhook received type=INITIAL_PURCHASE app_user_id=e28361ef-3e4c-473e-8397-86336fcc2931 store=APP_STORE
+2026/03/10 15:00:03 ERROR Failed to upgrade user plan via RevenueCat user_id=e28361ef-3e4c-473e-8397-86336fcc2931 error="assert.AnError general error for testing"
+=== RUN   TestSubscriptionHandler_RevenueCatWebhookErrors/CANCELLATION_DowngradeError_StillReturns200
+2026/03/10 15:00:03 INFO RevenueCat webhook received type=CANCELLATION app_user_id=ce9fa5e1-a6ca-4a44-8090-fa48411f4cfb store=APP_STORE
+2026/03/10 15:00:03 ERROR Failed to downgrade user plan via RevenueCat user_id=ce9fa5e1-a6ca-4a44-8090-fa48411f4cfb error="assert.AnError general error for testing"
+--- PASS: TestSubscriptionHandler_RevenueCatWebhookErrors (0.00s)
+    --- PASS: TestSubscriptionHandler_RevenueCatWebhookErrors/INITIAL_PURCHASE_UpgradeError_StillReturns200 (0.00s)
+    --- PASS: TestSubscriptionHandler_RevenueCatWebhookErrors/CANCELLATION_DowngradeError_StillReturns200 (0.00s)
+=== RUN   TestSubscriptionHandler_CreateCheckoutSession_UserWithStripeCustomer
+    subscription_handler_test.go:1206: 
+        	Error Trace:	C:/Users/tfurt/source/repos/eventosapp/backend/internal/handlers/subscription_handler_test.go:1206
+        	Error:      	"{\"url\":\"\"}\n" does not contain "sess_123"
+        	Test:       	TestSubscriptionHandler_CreateCheckoutSession_UserWithStripeCustomer
+--- FAIL: TestSubscriptionHandler_CreateCheckoutSession_UserWithStripeCustomer (0.00s)
+=== RUN   TestSubscriptionHandler_CreateCheckoutSession_UserWithoutStripeCustomer
+    subscription_handler_test.go:1242: 
+        	Error Trace:	C:/Users/tfurt/source/repos/eventosapp/backend/internal/handlers/subscription_handler_test.go:1242
+        	Error:      	"{\"url\":\"\"}\n" does not contain "sess_234"
+        	Test:       	TestSubscriptionHandler_CreateCheckoutSession_UserWithoutStripeCustomer
+--- FAIL: TestSubscriptionHandler_CreateCheckoutSession_UserWithoutStripeCustomer (0.00s)
+=== RUN   TestSubscriptionHandler_CreateCheckoutSession_UserWithEmptyStripeCustomer
+--- PASS: TestSubscriptionHandler_CreateCheckoutSession_UserWithEmptyStripeCustomer (0.00s)
+=== RUN   TestSubscriptionHandler_CreateCheckoutSession_OnlySecretKeyMissing
+--- PASS: TestSubscriptionHandler_CreateCheckoutSession_OnlySecretKeyMissing (0.00s)
+=== RUN   TestSubscriptionHandler_CreateCheckoutSession_OnlyPriceIDMissing
+--- PASS: TestSubscriptionHandler_CreateCheckoutSession_OnlyPriceIDMissing (0.00s)
+=== RUN   TestSubscriptionHandler_CreatePortalSession_EmptyStringStripeCustomerID
+--- PASS: TestSubscriptionHandler_CreatePortalSession_EmptyStringStripeCustomerID (0.00s)
+=== RUN   TestSubscriptionHandler_CreatePortalSession_WithStripeCustomerID
+--- PASS: TestSubscriptionHandler_CreatePortalSession_WithStripeCustomerID (0.00s)
+=== RUN   TestSubscriptionHandler_CreatePortalSession_WithPortalConfigID
+--- PASS: TestSubscriptionHandler_CreatePortalSession_WithPortalConfigID (0.00s)
+=== RUN   TestSubscriptionHandler_GetSubscriptionStatus_SubWithNoPeriodEnd
+--- PASS: TestSubscriptionHandler_GetSubscriptionStatus_SubWithNoPeriodEnd (0.00s)
+=== RUN   TestSubscriptionHandler_GetSubscriptionStatus_SubWithNilProviderSubID
+--- PASS: TestSubscriptionHandler_GetSubscriptionStatus_SubWithNilProviderSubID (0.00s)
+=== RUN   TestSubscriptionHandler_GetSubscriptionStatus_NonStripeProviderWithPeriodEnd
+--- PASS: TestSubscriptionHandler_GetSubscriptionStatus_NonStripeProviderWithPeriodEnd (0.00s)
+=== RUN   TestNewSubscriptionHandler
+--- PASS: TestNewSubscriptionHandler (0.00s)
+=== RUN   TestSubscriptionHandler_StripeWebhookMissingSignatureHeader
+2026/03/10 15:00:03 ERROR Failed to verify Stripe webhook signature error="webhook has no Stripe-Signature header"
+--- PASS: TestSubscriptionHandler_StripeWebhookMissingSignatureHeader (0.00s)
+=== RUN   TestSubscriptionHandler_GetSubscriptionStatusWithSubRepo
+=== RUN   TestSubscriptionHandler_GetSubscriptionStatusWithSubRepo/should_return_subscription_details_when_subRepo_has_data
+=== RUN   TestSubscriptionHandler_GetSubscriptionStatusWithSubRepo/should_return_status_without_subscription_when_subRepo_has_no_data
+=== RUN   TestSubscriptionHandler_GetSubscriptionStatusWithSubRepo/should_return_subscription_with_past_due_status
+--- PASS: TestSubscriptionHandler_GetSubscriptionStatusWithSubRepo (0.00s)
+    --- PASS: TestSubscriptionHandler_GetSubscriptionStatusWithSubRepo/should_return_subscription_details_when_subRepo_has_data (0.00s)
+    --- PASS: TestSubscriptionHandler_GetSubscriptionStatusWithSubRepo/should_return_status_without_subscription_when_subRepo_has_no_data (0.00s)
+    --- PASS: TestSubscriptionHandler_GetSubscriptionStatusWithSubRepo/should_return_subscription_with_past_due_status (0.00s)
+=== RUN   TestNewUploadHandler
+--- PASS: TestNewUploadHandler (0.00s)
+=== RUN   TestUploadImage
+=== RUN   TestUploadImage/MissingFileField
+=== RUN   TestUploadImage/NonImageContentType
+=== RUN   TestUploadImage/SuccessfulUpload
+2026/03/10 15:00:03 INFO Image uploaded user_id=d0a94e17-1cce-419c-9b23-2e5ec5484061 filename=ef26882e-a6ba-4a84-9291-5ee68e5be83b.png
+=== RUN   TestUploadImage/FileWithoutExtension
+2026/03/10 15:00:03 INFO Image uploaded user_id=d0a94e17-1cce-419c-9b23-2e5ec5484061 filename=7f64a480-c332-4afb-adc5-d4d182ef471b.jpg
+=== RUN   TestUploadImage/InvalidMultipartForm
+--- PASS: TestUploadImage (0.01s)
+    --- PASS: TestUploadImage/MissingFileField (0.00s)
+    --- PASS: TestUploadImage/NonImageContentType (0.00s)
+    --- PASS: TestUploadImage/SuccessfulUpload (0.01s)
+    --- PASS: TestUploadImage/FileWithoutExtension (0.00s)
+    --- PASS: TestUploadImage/InvalidMultipartForm (0.00s)
+=== RUN   TestNewUploadHandler_InvalidDirectory
+--- PASS: TestNewUploadHandler_InvalidDirectory (0.00s)
+=== RUN   TestUploadImage_BodyTooLarge
+--- PASS: TestUploadImage_BodyTooLarge (0.02s)
+=== RUN   TestUploadImage_SuccessWithJpgExtension
+2026/03/10 15:00:03 INFO Image uploaded user_id=1ac12ca8-4ebd-4e31-a49c-900c95c2c057 filename=bf50f641-b0e2-43ad-9607-c814d9f9a77f.jpg
+--- PASS: TestUploadImage_SuccessWithJpgExtension (0.01s)
+=== RUN   TestUploadImage_CreateFileFails
+2026/03/10 15:00:03 ERROR Failed to create user upload directory dir="C:\\Users\\tfurt\\AppData\\Local\\Temp\\TestUploadImage_CreateFileFails1896202138\\002\\invalid\x00path\\e11873bc-36b3-4e74-a6ba-ab024473a669" error="mkdir C:\\Users\\tfurt\\AppData\\Local\\Temp\\TestUploadImage_CreateFileFails1896202138\\002\\invalid\x00path: invalid argument"
+--- PASS: TestUploadImage_CreateFileFails (0.00s)
+=== RUN   TestUploadImage_BodyTooLargeExact
+--- PASS: TestUploadImage_BodyTooLargeExact (0.02s)
+=== RUN   TestUploadImage_BodyTooLargeRaw
+--- PASS: TestUploadImage_BodyTooLargeRaw (0.02s)
+=== RUN   TestUploadImage_MultipleFileExtensions
+=== RUN   TestUploadImage_MultipleFileExtensions/gif_extension
+2026/03/10 15:00:03 INFO Image uploaded user_id=85bc8061-9e47-4340-a5e8-a67ae64eeff5 filename=9386a277-b052-475f-8732-01293ad1cb8c.gif
+=== RUN   TestUploadImage_MultipleFileExtensions/webp_extension
+2026/03/10 15:00:03 INFO Image uploaded user_id=85bc8061-9e47-4340-a5e8-a67ae64eeff5 filename=52a2c2d4-b11f-4beb-bdf2-5347891a4d09.webp
+=== RUN   TestUploadImage_MultipleFileExtensions/uppercase_jpg
+2026/03/10 15:00:03 INFO Image uploaded user_id=85bc8061-9e47-4340-a5e8-a67ae64eeff5 filename=2d3a2d32-9d80-4d3b-badb-a5b948fbe98e.jpg
+--- PASS: TestUploadImage_MultipleFileExtensions (0.02s)
+    --- PASS: TestUploadImage_MultipleFileExtensions/gif_extension (0.00s)
+    --- PASS: TestUploadImage_MultipleFileExtensions/webp_extension (0.00s)
+    --- PASS: TestUploadImage_MultipleFileExtensions/uppercase_jpg (0.00s)
+=== RUN   TestUploadImage_RejectsNonImageContent
+--- PASS: TestUploadImage_RejectsNonImageContent (0.00s)
+=== RUN   TestUploadImage_DisallowedExtension
+2026/03/10 15:00:03 INFO Image uploaded user_id=29b676c4-477c-4174-b061-4e1b02e109c0 filename=ff1a1db6-8b33-4a38-8e4f-7eedb5ae11e7.jpg
+--- PASS: TestUploadImage_DisallowedExtension (0.01s)
+=== RUN   TestGenerateThumbnail
+=== RUN   TestGenerateThumbnail/ValidImage
+=== RUN   TestGenerateThumbnail/PortraitImage
+=== RUN   TestGenerateThumbnail/NonExistentFile
+2026/03/10 15:00:04 ERROR Failed to open source for thumbnail error="open /nonexistent/file.png: The system cannot find the path specified."
+=== RUN   TestGenerateThumbnail/InvalidImageFile
+2026/03/10 15:00:04 ERROR Failed to decode image for thumbnail error="image: unknown format"
+=== RUN   TestGenerateThumbnail/VeryWideImage
+=== RUN   TestGenerateThumbnail/VeryTallImage
+=== RUN   TestGenerateThumbnail/SquareImage
+--- PASS: TestGenerateThumbnail (0.04s)
+    --- PASS: TestGenerateThumbnail/ValidImage (0.01s)
+    --- PASS: TestGenerateThumbnail/PortraitImage (0.00s)
+    --- PASS: TestGenerateThumbnail/NonExistentFile (0.00s)
+    --- PASS: TestGenerateThumbnail/InvalidImageFile (0.00s)
+    --- PASS: TestGenerateThumbnail/VeryWideImage (0.00s)
+    --- PASS: TestGenerateThumbnail/VeryTallImage (0.00s)
+    --- PASS: TestGenerateThumbnail/SquareImage (0.01s)
+=== RUN   TestValidateEvent
+=== RUN   TestValidateEvent/valid_event
+=== RUN   TestValidateEvent/num_people_less_than_1
+=== RUN   TestValidateEvent/discount_below_0
+=== RUN   TestValidateEvent/discount_above_100
+=== RUN   TestValidateEvent/tax_rate_below_0
+=== RUN   TestValidateEvent/tax_rate_above_100
+=== RUN   TestValidateEvent/total_amount_negative
+=== RUN   TestValidateEvent/deposit_percent_below_0
+=== RUN   TestValidateEvent/deposit_percent_above_100
+=== RUN   TestValidateEvent/refund_percent_below_0
+=== RUN   TestValidateEvent/cancellation_days_negative
+=== RUN   TestValidateEvent/invalid_status
+--- PASS: TestValidateEvent (0.00s)
+    --- PASS: TestValidateEvent/valid_event (0.00s)
+    --- PASS: TestValidateEvent/num_people_less_than_1 (0.00s)
+    --- PASS: TestValidateEvent/discount_below_0 (0.00s)
+    --- PASS: TestValidateEvent/discount_above_100 (0.00s)
+    --- PASS: TestValidateEvent/tax_rate_below_0 (0.00s)
+    --- PASS: TestValidateEvent/tax_rate_above_100 (0.00s)
+    --- PASS: TestValidateEvent/total_amount_negative (0.00s)
+    --- PASS: TestValidateEvent/deposit_percent_below_0 (0.00s)
+    --- PASS: TestValidateEvent/deposit_percent_above_100 (0.00s)
+    --- PASS: TestValidateEvent/refund_percent_below_0 (0.00s)
+    --- PASS: TestValidateEvent/cancellation_days_negative (0.00s)
+    --- PASS: TestValidateEvent/invalid_status (0.00s)
+=== RUN   TestValidatePayment
+=== RUN   TestValidatePayment/valid_payment
+=== RUN   TestValidatePayment/amount_zero
+=== RUN   TestValidatePayment/amount_negative
+=== RUN   TestValidatePayment/empty_payment_method
+--- PASS: TestValidatePayment (0.00s)
+    --- PASS: TestValidatePayment/valid_payment (0.00s)
+    --- PASS: TestValidatePayment/amount_zero (0.00s)
+    --- PASS: TestValidatePayment/amount_negative (0.00s)
+    --- PASS: TestValidatePayment/empty_payment_method (0.00s)
+=== RUN   TestValidateEventProduct
+=== RUN   TestValidateEventProduct/valid_event_product
+=== RUN   TestValidateEventProduct/quantity_zero
+=== RUN   TestValidateEventProduct/unit_price_negative
+=== RUN   TestValidateEventProduct/discount_above_100
+--- PASS: TestValidateEventProduct (0.00s)
+    --- PASS: TestValidateEventProduct/valid_event_product (0.00s)
+    --- PASS: TestValidateEventProduct/quantity_zero (0.00s)
+    --- PASS: TestValidateEventProduct/unit_price_negative (0.00s)
+    --- PASS: TestValidateEventProduct/discount_above_100 (0.00s)
+=== RUN   TestValidateEventExtra
+=== RUN   TestValidateEventExtra/valid_event_extra
+=== RUN   TestValidateEventExtra/empty_description
+=== RUN   TestValidateEventExtra/cost_negative
+=== RUN   TestValidateEventExtra/price_negative
+--- PASS: TestValidateEventExtra (0.00s)
+    --- PASS: TestValidateEventExtra/valid_event_extra (0.00s)
+    --- PASS: TestValidateEventExtra/empty_description (0.00s)
+    --- PASS: TestValidateEventExtra/cost_negative (0.00s)
+    --- PASS: TestValidateEventExtra/price_negative (0.00s)
+=== RUN   TestValidateProduct
+=== RUN   TestValidateProduct/valid_product
+=== RUN   TestValidateProduct/empty_name
+=== RUN   TestValidateProduct/empty_category
+=== RUN   TestValidateProduct/negative_base_price
+--- PASS: TestValidateProduct (0.00s)
+    --- PASS: TestValidateProduct/valid_product (0.00s)
+    --- PASS: TestValidateProduct/empty_name (0.00s)
+    --- PASS: TestValidateProduct/empty_category (0.00s)
+    --- PASS: TestValidateProduct/negative_base_price (0.00s)
+=== RUN   TestValidateInventoryItem
+=== RUN   TestValidateInventoryItem/valid_inventory_item
+=== RUN   TestValidateInventoryItem/empty_ingredient_name
+=== RUN   TestValidateInventoryItem/negative_current_stock
+=== RUN   TestValidateInventoryItem/negative_minimum_stock
+=== RUN   TestValidateInventoryItem/empty_unit
+=== RUN   TestValidateInventoryItem/negative_unit_cost
+=== RUN   TestValidateInventoryItem/invalid_type
+--- PASS: TestValidateInventoryItem (0.00s)
+    --- PASS: TestValidateInventoryItem/valid_inventory_item (0.00s)
+    --- PASS: TestValidateInventoryItem/empty_ingredient_name (0.00s)
+    --- PASS: TestValidateInventoryItem/negative_current_stock (0.00s)
+    --- PASS: TestValidateInventoryItem/negative_minimum_stock (0.00s)
+    --- PASS: TestValidateInventoryItem/empty_unit (0.00s)
+    --- PASS: TestValidateInventoryItem/negative_unit_cost (0.00s)
+    --- PASS: TestValidateInventoryItem/invalid_type (0.00s)
+=== RUN   TestValidateInventoryItem_EquipmentType
+--- PASS: TestValidateInventoryItem_EquipmentType (0.00s)
+=== RUN   TestValidateEventEquipment
+=== RUN   TestValidateEventEquipment/valid_equipment_with_quantity_1
+=== RUN   TestValidateEventEquipment/valid_equipment_with_quantity_10
+=== RUN   TestValidateEventEquipment/quantity_zero
+=== RUN   TestValidateEventEquipment/quantity_negative
+--- PASS: TestValidateEventEquipment (0.00s)
+    --- PASS: TestValidateEventEquipment/valid_equipment_with_quantity_1 (0.00s)
+    --- PASS: TestValidateEventEquipment/valid_equipment_with_quantity_10 (0.00s)
+    --- PASS: TestValidateEventEquipment/quantity_zero (0.00s)
+    --- PASS: TestValidateEventEquipment/quantity_negative (0.00s)
+=== RUN   TestValidateInventoryItem_SupplyType
+--- PASS: TestValidateInventoryItem_SupplyType (0.00s)
+=== RUN   TestValidateEventSupply
+=== RUN   TestValidateEventSupply/valid_supply_from_stock
+=== RUN   TestValidateEventSupply/valid_supply_as_purchase
+=== RUN   TestValidateEventSupply/zero_quantity
+=== RUN   TestValidateEventSupply/negative_quantity
+=== RUN   TestValidateEventSupply/negative_unit_cost
+=== RUN   TestValidateEventSupply/invalid_source
+--- PASS: TestValidateEventSupply (0.00s)
+    --- PASS: TestValidateEventSupply/valid_supply_from_stock (0.00s)
+    --- PASS: TestValidateEventSupply/valid_supply_as_purchase (0.00s)
+    --- PASS: TestValidateEventSupply/zero_quantity (0.00s)
+    --- PASS: TestValidateEventSupply/negative_quantity (0.00s)
+    --- PASS: TestValidateEventSupply/negative_unit_cost (0.00s)
+    --- PASS: TestValidateEventSupply/invalid_source (0.00s)
+=== RUN   TestValidationError_Error
+--- PASS: TestValidationError_Error (0.00s)
+=== RUN   TestValidateEvent_RefundPercentAbove100
+--- PASS: TestValidateEvent_RefundPercentAbove100 (0.00s)
+=== RUN   TestValidateEvent_AllValidStatuses
+=== RUN   TestValidateEvent_AllValidStatuses/quoted
+=== RUN   TestValidateEvent_AllValidStatuses/confirmed
+=== RUN   TestValidateEvent_AllValidStatuses/completed
+=== RUN   TestValidateEvent_AllValidStatuses/cancelled
+--- PASS: TestValidateEvent_AllValidStatuses (0.00s)
+    --- PASS: TestValidateEvent_AllValidStatuses/quoted (0.00s)
+    --- PASS: TestValidateEvent_AllValidStatuses/confirmed (0.00s)
+    --- PASS: TestValidateEvent_AllValidStatuses/completed (0.00s)
+    --- PASS: TestValidateEvent_AllValidStatuses/cancelled (0.00s)
+=== RUN   TestValidateEvent_ValidWithOptionalFields
+--- PASS: TestValidateEvent_ValidWithOptionalFields (0.00s)
+=== RUN   TestValidateEventProduct_DiscountBelowZero
+--- PASS: TestValidateEventProduct_DiscountBelowZero (0.00s)
+=== RUN   TestValidateProductIngredient
+=== RUN   TestValidateProductIngredient/valid_product_ingredient
+=== RUN   TestValidateProductIngredient/valid_with_positive_capacity
+=== RUN   TestValidateProductIngredient/valid_with_nil_capacity
+=== RUN   TestValidateProductIngredient/quantity_required_zero
+=== RUN   TestValidateProductIngredient/quantity_required_negative
+=== RUN   TestValidateProductIngredient/capacity_zero_should_fail
+=== RUN   TestValidateProductIngredient/capacity_negative_should_fail
+--- PASS: TestValidateProductIngredient (0.00s)
+    --- PASS: TestValidateProductIngredient/valid_product_ingredient (0.00s)
+    --- PASS: TestValidateProductIngredient/valid_with_positive_capacity (0.00s)
+    --- PASS: TestValidateProductIngredient/valid_with_nil_capacity (0.00s)
+    --- PASS: TestValidateProductIngredient/quantity_required_zero (0.00s)
+    --- PASS: TestValidateProductIngredient/quantity_required_negative (0.00s)
+    --- PASS: TestValidateProductIngredient/capacity_zero_should_fail (0.00s)
+    --- PASS: TestValidateProductIngredient/capacity_negative_should_fail (0.00s)
+=== RUN   FuzzSplitCSV_NoEmptyElements
+=== RUN   FuzzSplitCSV_NoEmptyElements/seed#0
+=== RUN   FuzzSplitCSV_NoEmptyElements/seed#1
+=== RUN   FuzzSplitCSV_NoEmptyElements/seed#2
+=== RUN   FuzzSplitCSV_NoEmptyElements/seed#3
+=== RUN   FuzzSplitCSV_NoEmptyElements/seed#4
+--- PASS: FuzzSplitCSV_NoEmptyElements (0.00s)
+    --- PASS: FuzzSplitCSV_NoEmptyElements/seed#0 (0.00s)
+    --- PASS: FuzzSplitCSV_NoEmptyElements/seed#1 (0.00s)
+    --- PASS: FuzzSplitCSV_NoEmptyElements/seed#2 (0.00s)
+    --- PASS: FuzzSplitCSV_NoEmptyElements/seed#3 (0.00s)
+    --- PASS: FuzzSplitCSV_NoEmptyElements/seed#4 (0.00s)
+=== RUN   FuzzTrim_Idempotent
+=== RUN   FuzzTrim_Idempotent/seed#0
+=== RUN   FuzzTrim_Idempotent/seed#1
+=== RUN   FuzzTrim_Idempotent/seed#2
+=== RUN   FuzzTrim_Idempotent/seed#3
+--- PASS: FuzzTrim_Idempotent (0.00s)
+    --- PASS: FuzzTrim_Idempotent/seed#0 (0.00s)
+    --- PASS: FuzzTrim_Idempotent/seed#1 (0.00s)
+    --- PASS: FuzzTrim_Idempotent/seed#2 (0.00s)
+    --- PASS: FuzzTrim_Idempotent/seed#3 (0.00s)
+FAIL
+FAIL	github.com/tiagofur/solennix-backend/internal/handlers	1.301s
+FAIL

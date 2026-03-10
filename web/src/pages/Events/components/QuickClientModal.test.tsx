@@ -82,12 +82,14 @@ describe('QuickClientModal', () => {
     expect(defaultProps.onClose).toHaveBeenCalledTimes(1);
   });
 
-  it('calls onClose when clicking the backdrop overlay', () => {
+  it('calls onClose when clicking the backdrop overlay', async () => {
+    const user = userEvent.setup();
     render(<QuickClientModal {...defaultProps} />);
 
-    const overlay = document.querySelector('.absolute.inset-0.bg-gray-500.opacity-75');
+    // Click the overlay (the div with aria-hidden="true" sibling to dialog)
+    const overlay = screen.getByRole('dialog').previousSibling as HTMLElement;
     expect(overlay).toBeTruthy();
-    fireEvent.click(overlay!);
+    await user.click(overlay);
     expect(defaultProps.onClose).toHaveBeenCalledTimes(1);
   });
 

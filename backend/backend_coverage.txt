@@ -1,0 +1,9 @@
+ok  	github.com/tiagofur/solennix-backend/cmd/server	(cached)	coverage: 0.0% of statements
+ok  	github.com/tiagofur/solennix-backend/internal/config	(cached)	coverage: 100.0% of statements
+ok  	github.com/tiagofur/solennix-backend/internal/database	(cached)	coverage: 27.7% of statements
+ok  	github.com/tiagofur/solennix-backend/internal/handlers	(cached)	coverage: 81.1% of statements
+ok  	github.com/tiagofur/solennix-backend/internal/middleware	(cached)	coverage: 100.0% of statements
+?   	github.com/tiagofur/solennix-backend/internal/models	[no test files]
+ok  	github.com/tiagofur/solennix-backend/internal/repository	(cached)	coverage: 40.7% of statements
+ok  	github.com/tiagofur/solennix-backend/internal/router	(cached)	coverage: 100.0% of statements
+ok  	github.com/tiagofur/solennix-backend/internal/services	(cached)	coverage: 90.8% of statements

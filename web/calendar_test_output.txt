@@ -1,0 +1,4536 @@
+
+> eventos@0.0.0 test:run
+> vitest run src/pages/Calendar/CalendarView.test.tsx
+
+
+[1m[46m RUN [49m[22m [36mv4.0.18 [39m[90mC:/Users/tfurt/source/repos/eventosapp/web[39m
+
+stderr | src/pages/Calendar/CalendarView.test.tsx > CalendarView > logs errors when events fetch fails
+Error fetching events: Error: fail
+    at C:/Users/tfurt/source/repos/eventosapp/web/src/pages/Calendar/CalendarView.test.tsx:148:60
+    at file:///C:/Users/tfurt/source/repos/eventosapp/web/node_modules/@vitest/runner/dist/index.js:145:11
+    at file:///C:/Users/tfurt/source/repos/eventosapp/web/node_modules/@vitest/runner/dist/index.js:915:26
+    at file:///C:/Users/tfurt/source/repos/eventosapp/web/node_modules/@vitest/runner/dist/index.js:1243:20
+    at new Promise (<anonymous>)
+    at runWithTimeout (file:///C:/Users/tfurt/source/repos/eventosapp/web/node_modules/@vitest/runner/dist/index.js:1209:10)
+    at file:///C:/Users/tfurt/source/repos/eventosapp/web/node_modules/@vitest/runner/dist/index.js:1653:37
+    at Traces.$ (file:///C:/Users/tfurt/source/repos/eventosapp/web/node_modules/vitest/dist/chunks/traces.CCmnQaNT.js:142:27)
+    at trace (file:///C:/Users/tfurt/source/repos/eventosapp/web/node_modules/vitest/dist/chunks/test.B8ej_ZHS.js:239:21)
+    at runTest (file:///C:/Users/tfurt/source/repos/eventosapp/web/node_modules/@vitest/runner/dist/index.js:1653:12)
+
+stderr | src/pages/Calendar/CalendarView.test.tsx > CalendarView > switches back from list to calendar view
+Error fetching events: Error: list fail
+    at C:/Users/tfurt/source/repos/eventosapp/web/src/pages/Calendar/CalendarView.test.tsx:561:30
+    at file:///C:/Users/tfurt/source/repos/eventosapp/web/node_modules/@vitest/runner/dist/index.js:145:11
+    at file:///C:/Users/tfurt/source/repos/eventosapp/web/node_modules/@vitest/runner/dist/index.js:915:26
+    at file:///C:/Users/tfurt/source/repos/eventosapp/web/node_modules/@vitest/runner/dist/index.js:1243:20
+    at new Promise (<anonymous>)
+    at runWithTimeout (file:///C:/Users/tfurt/source/repos/eventosapp/web/node_modules/@vitest/runner/dist/index.js:1209:10)
+    at file:///C:/Users/tfurt/source/repos/eventosapp/web/node_modules/@vitest/runner/dist/index.js:1653:37
+    at Traces.$ (file:///C:/Users/tfurt/source/repos/eventosapp/web/node_modules/vitest/dist/chunks/traces.CCmnQaNT.js:142:27)
+    at trace (file:///C:/Users/tfurt/source/repos/eventosapp/web/node_modules/vitest/dist/chunks/test.B8ej_ZHS.js:239:21)
+    at runTest (file:///C:/Users/tfurt/source/repos/eventosapp/web/node_modules/@vitest/runner/dist/index.js:1653:12)
+
+ [31mÔØ»[39m src/pages/Calendar/CalendarView.test.tsx [2m([22m[2m33 tests[22m[2m | [22m[31m14 failed[39m[2m)[22m[33m 19034[2mms[22m[39m
+[31m     [31m├ù[31m renders events for selected date[39m[33m 1229[2mms[22m[39m
+[31m     [31m├ù[31m navigates to edit on event click[39m[33m 1063[2mms[22m[39m
+     [32mÔ£ô[39m shows empty state when no events[32m 34[2mms[22m[39m
+     [32mÔ£ô[39m clears selected date for new event link[32m 284[2mms[22m[39m
+[31m     [31m├ù[31m logs errors when events fetch fails[39m[33m 1035[2mms[22m[39m
+[31m     [31m├ù[31m displays event card with all detail fields (time, location, phone, total)[39m[33m 1064[2mms[22m[39m
+[31m     [31m├ù[31m shows "Sin tel." when client has no phone[39m[33m 1098[2mms[22m[39m
+[31m     [31m├ù[31m shows "S/H" when event has no start_time[39m[33m 1052[2mms[22m[39m
+[31m     [31m├ù[31m does not render location when event.location is null[39m[33m 1064[2mms[22m[39m
+[31m     [31m├ù[31m renders all four status labels in calendar view[39m[33m 1046[2mms[22m[39m
+[31m     [31m├ù[31m shows badge count when multiple events on selected date[39m[33m 1037[2mms[22m[39m
+[31m     [31m├ù[31m shows singular "Evento" badge for one event[39m[33m 1037[2mms[22m[39m
+[31m     [31m├ù[31m navigates via keyboard (Enter) on event card[39m[33m 1034[2mms[22m[39m
+[31m     [31m├ù[31m navigates via keyboard (Space) on event card[39m[33m 1053[2mms[22m[39m
+[31m     [31m├ù[31m does not navigate on non-Enter/Space keydown on event card[39m[33m 1024[2mms[22m[39m
+     [32mÔ£ô[39m switches to list view and fetches all events[32m 270[2mms[22m[39m
+     [32mÔ£ô[39m shows loading state in list view[32m 203[2mms[22m[39m
+     [33m[2mÔ£ô[22m[39m shows empty state with filter hint when list is filtered with no results [33m 413[2mms[22m[39m
+     [32mÔ£ô[39m shows empty state without filter hint when no events at all[32m 206[2mms[22m[39m
+     [32mÔ£ô[39m filters list view by search term[32m 212[2mms[22m[39m
+     [33m[2mÔ£ô[22m[39m filters list view by status [33m 326[2mms[22m[39m
+     [33m[2mÔ£ô[22m[39m navigates on list row click [33m 302[2mms[22m[39m
+     [32mÔ£ô[39m navigates on list row keyboard Enter[32m 272[2mms[22m[39m
+     [33m[2mÔ£ô[22m[39m navigates on list row keyboard Space [33m 356[2mms[22m[39m
+     [32mÔ£ô[39m renders all status labels in list view[32m 164[2mms[22m[39m
+     [32mÔ£ô[39m shows location and time info in list view rows[32m 145[2mms[22m[39m
+     [32mÔ£ô[39m shows "--" for missing start/end times in list view[32m 125[2mms[22m[39m
+[31m     [31m├ù[31m logs error when fetchAllEvents fails[39m[33m 1151[2mms[22m[39m
+     [33m[2mÔ£ô[22m[39m switches back from list to calendar view [33m 329[2mms[22m[39m
+     [32mÔ£ô[39m includes selected date in Nuevo Evento link when in calendar mode[32m 143[2mms[22m[39m
+     [32mÔ£ô[39m handles null data from getByDateRange gracefully[32m 45[2mms[22m[39m
+     [32mÔ£ô[39m shows "Crear uno nuevo" link in calendar empty state[32m 31[2mms[22m[39m
+     [32mÔ£ô[39m filters list by search on service_type[32m 181[2mms[22m[39m
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ» Failed Tests 14 ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»
+
+ FAIL  src/pages/Calendar/CalendarView.test.tsx > CalendarView > renders events for selected date
+TestingLibraryElementError: Unable to find an element with the text: Ana. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <div
+      class="space-y-6"
+    >
+      <div
+        class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+      >
+        <div>
+          <h1
+            class="text-2xl font-bold text-text"
+          >
+            Eventos
+          </h1>
+          <p
+            class="text-sm text-text-secondary mt-1"
+          >
+            Gestiona tu agenda y el hist├│rico de reservas.
+          </p>
+        </div>
+        <div
+          class="flex flex-wrap items-center gap-3"
+        >
+          <button
+            aria-label="Exportar eventos a CSV"
+            class="inline-flex items-center justify-center px-4 py-2 border border-border text-sm font-medium rounded-xl text-text-secondary bg-card hover:bg-surface-alt shadow-sm transition-colors"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-download h-4 w-4 mr-2"
+              fill="none"
+              height="24"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 15V3"
+              />
+              <path
+                d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+              />
+              <path
+                d="m7 10 5 5 5-5"
+              />
+            </svg>
+            CSV
+          </button>
+          <div
+            aria-label="Modo de visualizaci├│n de eventos"
+            class="flex bg-surface-alt p-1 rounded-xl border border-border"
+            role="group"
+          >
+            <button
+              aria-label="Ver eventos en calendario"
+              aria-pressed="true"
+              class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all bg-card text-text shadow-sm"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-calendar-days h-4 w-4 mr-2"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M8 2v4"
+                />
+                <path
+                  d="M16 2v4"
+                />
+                <rect
+                  height="18"
+                  rx="2"
+                  width="18"
+                  x="3"
+                  y="4"
+                />
+                <path
+                  d="M3 10h18"
+                />
+                <path
+                  d="M8 14h.01"
+                />
+                <path
+                  d="M12 14h.01"
+                />
+                <path
+                  d="M16 14h.01"
+                />
+                <path
+                  d="M8 18h.01"
+                />
+                <path
+                  d="M12 18h.01"
+                />
+                <path
+                  d="M16 18h.01"
+                />
+              </svg>
+              Calendario
+            </button>
+            <button
+              aria-label="Ver eventos en lista"
+              aria-pressed="false"
+              class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all text-text-secondary hover:text-text"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-list h-4 w-4 mr-2"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M3 5h.01"
+                />
+                <path
+                  d="M3 12h.01"
+                />
+                <path
+                  d="M3 19h.01"
+                />
+                <path
+                  d="M8 5h13"
+                />
+                <path
+                  d="M8 12h13"
+                />
+                <path
+                  d="M8 19h13"
+                />
+              </svg>
+              Lista
+            </button>
+          </div>
+          <button
+            aria-label="Bloquear Fechas"
+            class=[...
+
+Ignored nodes: comments, script, style
+<html>
+  <head />
+  <body>
+    <div>
+      <div
+        class="space-y-6"
+      >
+        <div
+          class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+        >
+          <div>
+            <h1
+              class="text-2xl font-bold text-text"
+            >
+              Eventos
+            </h1>
+            <p
+              class="text-sm text-text-secondary mt-1"
+            >
+              Gestiona tu agenda y el hist├│rico de reservas.
+            </p>
+          </div>
+          <div
+            class="flex flex-wrap items-center gap-3"
+          >
+            <button
+              aria-label="Exportar eventos a CSV"
+              class="inline-flex items-center justify-center px-4 py-2 border border-border text-sm font-medium rounded-xl text-text-secondary bg-card hover:bg-surface-alt shadow-sm transition-colors"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-download h-4 w-4 mr-2"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M12 15V3"
+                />
+                <path
+                  d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                />
+                <path
+                  d="m7 10 5 5 5-5"
+                />
+              </svg>
+              CSV
+            </button>
+            <div
+              aria-label="Modo de visualizaci├│n de eventos"
+              class="flex bg-surface-alt p-1 rounded-xl border border-border"
+              role="group"
+            >
+              <button
+                aria-label="Ver eventos en calendario"
+                aria-pressed="true"
+                class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all bg-card text-text shadow-sm"
+                type="button"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-calendar-days h-4 w-4 mr-2"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M8 2v4"
+                  />
+                  <path
+                    d="M16 2v4"
+                  />
+                  <rect
+                    height="18"
+                    rx="2"
+                    width="18"
+                    x="3"
+                    y="4"
+                  />
+                  <path
+                    d="M3 10h18"
+                  />
+                  <path
+                    d="M8 14h.01"
+                  />
+                  <path
+                    d="M12 14h.01"
+                  />
+                  <path
+                    d="M16 14h.01"
+                  />
+                  <path
+                    d="M8 18h.01"
+                  />
+                  <path
+                    d="M12 18h.01"
+                  />
+                  <path
+                    d="M16 18h.01"
+                  />
+                </svg>
+                Calendario
+              </button>
+              <button
+                aria-label="Ver eventos en lista"
+                aria-pressed="false"
+                class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all text-text-secondary hover:text-text"
+                type="button"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-list h-4 w-4 mr-2"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M3 5h.01"
+                  />
+                  <path
+                    d="M3 12h.01"
+                  />
+                  <path
+                    d="M3 19h.01"
+                  />
+                  <path
+                    d="M8 5h13"
+                  />
+                  <path
+                    d="M8 12h13"
+                  />
+               ...
+ ÔØ» Proxy.waitForWrapper node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ÔØ» src/pages/Calendar/CalendarView.test.tsx:89:11
+     87|     fireEvent.click(screen.getByText('Next'));
+     88| 
+     89|     await waitFor(() => {
+       |           ^
+     90|       expect(screen.getByText('Ana')).toBeInTheDocument();
+     91|     });
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[1/14]ÔÄ»
+
+ FAIL  src/pages/Calendar/CalendarView.test.tsx > CalendarView > navigates to edit on event click
+TestingLibraryElementError: Unable to find an element with the text: Ana. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <div
+      class="space-y-6"
+    >
+      <div
+        class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+      >
+        <div>
+          <h1
+            class="text-2xl font-bold text-text"
+          >
+            Eventos
+          </h1>
+          <p
+            class="text-sm text-text-secondary mt-1"
+          >
+            Gestiona tu agenda y el hist├│rico de reservas.
+          </p>
+        </div>
+        <div
+          class="flex flex-wrap items-center gap-3"
+        >
+          <button
+            aria-label="Exportar eventos a CSV"
+            class="inline-flex items-center justify-center px-4 py-2 border border-border text-sm font-medium rounded-xl text-text-secondary bg-card hover:bg-surface-alt shadow-sm transition-colors"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-download h-4 w-4 mr-2"
+              fill="none"
+              height="24"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 15V3"
+              />
+              <path
+                d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+              />
+              <path
+                d="m7 10 5 5 5-5"
+              />
+            </svg>
+            CSV
+          </button>
+          <div
+            aria-label="Modo de visualizaci├│n de eventos"
+            class="flex bg-surface-alt p-1 rounded-xl border border-border"
+            role="group"
+          >
+            <button
+              aria-label="Ver eventos en calendario"
+              aria-pressed="true"
+              class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all bg-card text-text shadow-sm"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-calendar-days h-4 w-4 mr-2"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M8 2v4"
+                />
+                <path
+                  d="M16 2v4"
+                />
+                <rect
+                  height="18"
+                  rx="2"
+                  width="18"
+                  x="3"
+                  y="4"
+                />
+                <path
+                  d="M3 10h18"
+                />
+                <path
+                  d="M8 14h.01"
+                />
+                <path
+                  d="M12 14h.01"
+                />
+                <path
+                  d="M16 14h.01"
+                />
+                <path
+                  d="M8 18h.01"
+                />
+                <path
+                  d="M12 18h.01"
+                />
+                <path
+                  d="M16 18h.01"
+                />
+              </svg>
+              Calendario
+            </button>
+            <button
+              aria-label="Ver eventos en lista"
+              aria-pressed="false"
+              class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all text-text-secondary hover:text-text"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-list h-4 w-4 mr-2"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M3 5h.01"
+                />
+                <path
+                  d="M3 12h.01"
+                />
+                <path
+                  d="M3 19h.01"
+                />
+                <path
+                  d="M8 5h13"
+                />
+                <path
+                  d="M8 12h13"
+                />
+                <path
+                  d="M8 19h13"
+                />
+              </svg>
+              Lista
+            </button>
+          </div>
+          <button
+            aria-label="Bloquear Fechas"
+            class=[...
+
+Ignored nodes: comments, script, style
+<html>
+  <head />
+  <body>
+    <div>
+      <div
+        class="space-y-6"
+      >
+        <div
+          class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+        >
+          <div>
+            <h1
+              class="text-2xl font-bold text-text"
+            >
+              Eventos
+            </h1>
+            <p
+              class="text-sm text-text-secondary mt-1"
+            >
+              Gestiona tu agenda y el hist├│rico de reservas.
+            </p>
+          </div>
+          <div
+            class="flex flex-wrap items-center gap-3"
+          >
+            <button
+              aria-label="Exportar eventos a CSV"
+              class="inline-flex items-center justify-center px-4 py-2 border border-border text-sm font-medium rounded-xl text-text-secondary bg-card hover:bg-surface-alt shadow-sm transition-colors"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-download h-4 w-4 mr-2"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M12 15V3"
+                />
+                <path
+                  d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                />
+                <path
+                  d="m7 10 5 5 5-5"
+                />
+              </svg>
+              CSV
+            </button>
+            <div
+              aria-label="Modo de visualizaci├│n de eventos"
+              class="flex bg-surface-alt p-1 rounded-xl border border-border"
+              role="group"
+            >
+              <button
+                aria-label="Ver eventos en calendario"
+                aria-pressed="true"
+                class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all bg-card text-text shadow-sm"
+                type="button"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-calendar-days h-4 w-4 mr-2"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M8 2v4"
+                  />
+                  <path
+                    d="M16 2v4"
+                  />
+                  <rect
+                    height="18"
+                    rx="2"
+                    width="18"
+                    x="3"
+                    y="4"
+                  />
+                  <path
+                    d="M3 10h18"
+                  />
+                  <path
+                    d="M8 14h.01"
+                  />
+                  <path
+                    d="M12 14h.01"
+                  />
+                  <path
+                    d="M16 14h.01"
+                  />
+                  <path
+                    d="M8 18h.01"
+                  />
+                  <path
+                    d="M12 18h.01"
+                  />
+                  <path
+                    d="M16 18h.01"
+                  />
+                </svg>
+                Calendario
+              </button>
+              <button
+                aria-label="Ver eventos en lista"
+                aria-pressed="false"
+                class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all text-text-secondary hover:text-text"
+                type="button"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-list h-4 w-4 mr-2"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M3 5h.01"
+                  />
+                  <path
+                    d="M3 12h.01"
+                  />
+                  <path
+                    d="M3 19h.01"
+                  />
+                  <path
+                    d="M8 5h13"
+                  />
+                  <path
+                    d="M8 12h13"
+                  />
+               ...
+ ÔØ» Proxy.waitForWrapper node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ÔØ» src/pages/Calendar/CalendarView.test.tsx:116:11
+    114|     fireEvent.click(screen.getByText('Next'));
+    115| 
+    116|     await waitFor(() => {
+       |           ^
+    117|       expect(screen.getByText('Ana')).toBeInTheDocument();
+    118|     });
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[2/14]ÔÄ»
+
+ FAIL  src/pages/Calendar/CalendarView.test.tsx > CalendarView > logs errors when events fetch fails
+AssertionError: expected "vi.fn()" to be called with arguments: [ 'Error fetching events', Any<Error> ]
+
+Number of calls: 0
+
+
+Ignored nodes: comments, script, style
+<html>
+  <head />
+  <body>
+    <div>
+      <div
+        class="space-y-6"
+      >
+        <div
+          class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+        >
+          <div>
+            <h1
+              class="text-2xl font-bold text-text"
+            >
+              Eventos
+            </h1>
+            <p
+              class="text-sm text-text-secondary mt-1"
+            >
+              Gestiona tu agenda y el hist├│rico de reservas.
+            </p>
+          </div>
+          <div
+            class="flex flex-wrap items-center gap-3"
+          >
+            <div
+              aria-label="Modo de visualizaci├│n de eventos"
+              class="flex bg-surface-alt p-1 rounded-xl border border-border"
+              role="group"
+            >
+              <button
+                aria-label="Ver eventos en calendario"
+                aria-pressed="true"
+                class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all bg-card text-text shadow-sm"
+                type="button"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-calendar-days h-4 w-4 mr-2"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M8 2v4"
+                  />
+                  <path
+                    d="M16 2v4"
+                  />
+                  <rect
+                    height="18"
+                    rx="2"
+                    width="18"
+                    x="3"
+                    y="4"
+                  />
+                  <path
+                    d="M3 10h18"
+                  />
+                  <path
+                    d="M8 14h.01"
+                  />
+                  <path
+                    d="M12 14h.01"
+                  />
+                  <path
+                    d="M16 14h.01"
+                  />
+                  <path
+                    d="M8 18h.01"
+                  />
+                  <path
+                    d="M12 18h.01"
+                  />
+                  <path
+                    d="M16 18h.01"
+                  />
+                </svg>
+                Calendario
+              </button>
+              <button
+                aria-label="Ver eventos en lista"
+                aria-pressed="false"
+                class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all text-text-secondary hover:text-text"
+                type="button"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-list h-4 w-4 mr-2"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M3 5h.01"
+                  />
+                  <path
+                    d="M3 12h.01"
+                  />
+                  <path
+                    d="M3 19h.01"
+                  />
+                  <path
+                    d="M8 5h13"
+                  />
+                  <path
+                    d="M8 12h13"
+                  />
+                  <path
+                    d="M8 19h13"
+                  />
+                </svg>
+                Lista
+              </button>
+            </div>
+            <button
+              aria-label="Bloquear Fechas"
+              class="inline-flex items-center justify-center px-4 py-2 border border-border text-sm font-medium rounded-xl text-text bg-surface hover:bg-surface-alt shadow-sm transition-colors"
+              type="button"
+            >
+              Bloquear Fechas
+            </button>
+            <a
+              aria-label="Crear nuevo evento"
+              class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-xl text-white premium-gradient hover:opacity-90 shadow-xs transition-opacity"
+              data-discover="true"
+              href="/events/new?date=2026-03-10"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-plus h-5 w-5 mr-2"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linej...
+ ÔØ» src/pages/Calendar/CalendarView.test.tsx:153:24
+    151| 
+    152|     await waitFor(() => {
+    153|       expect(logError).toHaveBeenCalledWith('Error fetching events', eÔÇª
+       |                        ^
+    154|     });
+    155|   });
+ ÔØ» runWithExpensiveErrorDiagnosticsDisabled node_modules/@testing-library/dom/dist/config.js:47:12
+ ÔØ» checkCallback node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ÔØ» Timeout.checkRealTimersCallback node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[3/14]ÔÄ»
+
+ FAIL  src/pages/Calendar/CalendarView.test.tsx > CalendarView > displays event card with all detail fields (time, location, phone, total)
+TestingLibraryElementError: Unable to find an element with the text: Ana. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <div
+      class="space-y-6"
+    >
+      <div
+        class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+      >
+        <div>
+          <h1
+            class="text-2xl font-bold text-text"
+          >
+            Eventos
+          </h1>
+          <p
+            class="text-sm text-text-secondary mt-1"
+          >
+            Gestiona tu agenda y el hist├│rico de reservas.
+          </p>
+        </div>
+        <div
+          class="flex flex-wrap items-center gap-3"
+        >
+          <button
+            aria-label="Exportar eventos a CSV"
+            class="inline-flex items-center justify-center px-4 py-2 border border-border text-sm font-medium rounded-xl text-text-secondary bg-card hover:bg-surface-alt shadow-sm transition-colors"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-download h-4 w-4 mr-2"
+              fill="none"
+              height="24"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 15V3"
+              />
+              <path
+                d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+              />
+              <path
+                d="m7 10 5 5 5-5"
+              />
+            </svg>
+            CSV
+          </button>
+          <div
+            aria-label="Modo de visualizaci├│n de eventos"
+            class="flex bg-surface-alt p-1 rounded-xl border border-border"
+            role="group"
+          >
+            <button
+              aria-label="Ver eventos en calendario"
+              aria-pressed="true"
+              class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all bg-card text-text shadow-sm"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-calendar-days h-4 w-4 mr-2"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M8 2v4"
+                />
+                <path
+                  d="M16 2v4"
+                />
+                <rect
+                  height="18"
+                  rx="2"
+                  width="18"
+                  x="3"
+                  y="4"
+                />
+                <path
+                  d="M3 10h18"
+                />
+                <path
+                  d="M8 14h.01"
+                />
+                <path
+                  d="M12 14h.01"
+                />
+                <path
+                  d="M16 14h.01"
+                />
+                <path
+                  d="M8 18h.01"
+                />
+                <path
+                  d="M12 18h.01"
+                />
+                <path
+                  d="M16 18h.01"
+                />
+              </svg>
+              Calendario
+            </button>
+            <button
+              aria-label="Ver eventos en lista"
+              aria-pressed="false"
+              class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all text-text-secondary hover:text-text"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-list h-4 w-4 mr-2"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M3 5h.01"
+                />
+                <path
+                  d="M3 12h.01"
+                />
+                <path
+                  d="M3 19h.01"
+                />
+                <path
+                  d="M8 5h13"
+                />
+                <path
+                  d="M8 12h13"
+                />
+                <path
+                  d="M8 19h13"
+                />
+              </svg>
+              Lista
+            </button>
+          </div>
+          <button
+            aria-label="Bloquear Fechas"
+            class=[...
+
+Ignored nodes: comments, script, style
+<html>
+  <head />
+  <body>
+    <div>
+      <div
+        class="space-y-6"
+      >
+        <div
+          class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+        >
+          <div>
+            <h1
+              class="text-2xl font-bold text-text"
+            >
+              Eventos
+            </h1>
+            <p
+              class="text-sm text-text-secondary mt-1"
+            >
+              Gestiona tu agenda y el hist├│rico de reservas.
+            </p>
+          </div>
+          <div
+            class="flex flex-wrap items-center gap-3"
+          >
+            <button
+              aria-label="Exportar eventos a CSV"
+              class="inline-flex items-center justify-center px-4 py-2 border border-border text-sm font-medium rounded-xl text-text-secondary bg-card hover:bg-surface-alt shadow-sm transition-colors"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-download h-4 w-4 mr-2"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M12 15V3"
+                />
+                <path
+                  d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                />
+                <path
+                  d="m7 10 5 5 5-5"
+                />
+              </svg>
+              CSV
+            </button>
+            <div
+              aria-label="Modo de visualizaci├│n de eventos"
+              class="flex bg-surface-alt p-1 rounded-xl border border-border"
+              role="group"
+            >
+              <button
+                aria-label="Ver eventos en calendario"
+                aria-pressed="true"
+                class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all bg-card text-text shadow-sm"
+                type="button"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-calendar-days h-4 w-4 mr-2"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M8 2v4"
+                  />
+                  <path
+                    d="M16 2v4"
+                  />
+                  <rect
+                    height="18"
+                    rx="2"
+                    width="18"
+                    x="3"
+                    y="4"
+                  />
+                  <path
+                    d="M3 10h18"
+                  />
+                  <path
+                    d="M8 14h.01"
+                  />
+                  <path
+                    d="M12 14h.01"
+                  />
+                  <path
+                    d="M16 14h.01"
+                  />
+                  <path
+                    d="M8 18h.01"
+                  />
+                  <path
+                    d="M12 18h.01"
+                  />
+                  <path
+                    d="M16 18h.01"
+                  />
+                </svg>
+                Calendario
+              </button>
+              <button
+                aria-label="Ver eventos en lista"
+                aria-pressed="false"
+                class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all text-text-secondary hover:text-text"
+                type="button"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-list h-4 w-4 mr-2"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M3 5h.01"
+                  />
+                  <path
+                    d="M3 12h.01"
+                  />
+                  <path
+                    d="M3 19h.01"
+                  />
+                  <path
+                    d="M8 5h13"
+                  />
+                  <path
+                    d="M8 12h13"
+                  />
+               ...
+ ÔØ» Proxy.waitForWrapper node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ÔØ» src/pages/Calendar/CalendarView.test.tsx:166:11
+    164|     fireEvent.click(screen.getByText('Next'));
+    165| 
+    166|     await waitFor(() => {
+       |           ^
+    167|       expect(screen.getByText('Ana')).toBeInTheDocument();
+    168|     });
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[4/14]ÔÄ»
+
+ FAIL  src/pages/Calendar/CalendarView.test.tsx > CalendarView > shows "Sin tel." when client has no phone
+TestingLibraryElementError: Unable to find an element with the text: Luis. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <div
+      class="space-y-6"
+    >
+      <div
+        class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+      >
+        <div>
+          <h1
+            class="text-2xl font-bold text-text"
+          >
+            Eventos
+          </h1>
+          <p
+            class="text-sm text-text-secondary mt-1"
+          >
+            Gestiona tu agenda y el hist├│rico de reservas.
+          </p>
+        </div>
+        <div
+          class="flex flex-wrap items-center gap-3"
+        >
+          <button
+            aria-label="Exportar eventos a CSV"
+            class="inline-flex items-center justify-center px-4 py-2 border border-border text-sm font-medium rounded-xl text-text-secondary bg-card hover:bg-surface-alt shadow-sm transition-colors"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-download h-4 w-4 mr-2"
+              fill="none"
+              height="24"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 15V3"
+              />
+              <path
+                d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+              />
+              <path
+                d="m7 10 5 5 5-5"
+              />
+            </svg>
+            CSV
+          </button>
+          <div
+            aria-label="Modo de visualizaci├│n de eventos"
+            class="flex bg-surface-alt p-1 rounded-xl border border-border"
+            role="group"
+          >
+            <button
+              aria-label="Ver eventos en calendario"
+              aria-pressed="true"
+              class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all bg-card text-text shadow-sm"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-calendar-days h-4 w-4 mr-2"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M8 2v4"
+                />
+                <path
+                  d="M16 2v4"
+                />
+                <rect
+                  height="18"
+                  rx="2"
+                  width="18"
+                  x="3"
+                  y="4"
+                />
+                <path
+                  d="M3 10h18"
+                />
+                <path
+                  d="M8 14h.01"
+                />
+                <path
+                  d="M12 14h.01"
+                />
+                <path
+                  d="M16 14h.01"
+                />
+                <path
+                  d="M8 18h.01"
+                />
+                <path
+                  d="M12 18h.01"
+                />
+                <path
+                  d="M16 18h.01"
+                />
+              </svg>
+              Calendario
+            </button>
+            <button
+              aria-label="Ver eventos en lista"
+              aria-pressed="false"
+              class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all text-text-secondary hover:text-text"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-list h-4 w-4 mr-2"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M3 5h.01"
+                />
+                <path
+                  d="M3 12h.01"
+                />
+                <path
+                  d="M3 19h.01"
+                />
+                <path
+                  d="M8 5h13"
+                />
+                <path
+                  d="M8 12h13"
+                />
+                <path
+                  d="M8 19h13"
+                />
+              </svg>
+              Lista
+            </button>
+          </div>
+          <button
+            aria-label="Bloquear Fechas"
+            class=[...
+
+Ignored nodes: comments, script, style
+<html>
+  <head />
+  <body>
+    <div>
+      <div
+        class="space-y-6"
+      >
+        <div
+          class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+        >
+          <div>
+            <h1
+              class="text-2xl font-bold text-text"
+            >
+              Eventos
+            </h1>
+            <p
+              class="text-sm text-text-secondary mt-1"
+            >
+              Gestiona tu agenda y el hist├│rico de reservas.
+            </p>
+          </div>
+          <div
+            class="flex flex-wrap items-center gap-3"
+          >
+            <button
+              aria-label="Exportar eventos a CSV"
+              class="inline-flex items-center justify-center px-4 py-2 border border-border text-sm font-medium rounded-xl text-text-secondary bg-card hover:bg-surface-alt shadow-sm transition-colors"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-download h-4 w-4 mr-2"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M12 15V3"
+                />
+                <path
+                  d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                />
+                <path
+                  d="m7 10 5 5 5-5"
+                />
+              </svg>
+              CSV
+            </button>
+            <div
+              aria-label="Modo de visualizaci├│n de eventos"
+              class="flex bg-surface-alt p-1 rounded-xl border border-border"
+              role="group"
+            >
+              <button
+                aria-label="Ver eventos en calendario"
+                aria-pressed="true"
+                class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all bg-card text-text shadow-sm"
+                type="button"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-calendar-days h-4 w-4 mr-2"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M8 2v4"
+                  />
+                  <path
+                    d="M16 2v4"
+                  />
+                  <rect
+                    height="18"
+                    rx="2"
+                    width="18"
+                    x="3"
+                    y="4"
+                  />
+                  <path
+                    d="M3 10h18"
+                  />
+                  <path
+                    d="M8 14h.01"
+                  />
+                  <path
+                    d="M12 14h.01"
+                  />
+                  <path
+                    d="M16 14h.01"
+                  />
+                  <path
+                    d="M8 18h.01"
+                  />
+                  <path
+                    d="M12 18h.01"
+                  />
+                  <path
+                    d="M16 18h.01"
+                  />
+                </svg>
+                Calendario
+              </button>
+              <button
+                aria-label="Ver eventos en lista"
+                aria-pressed="false"
+                class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all text-text-secondary hover:text-text"
+                type="button"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-list h-4 w-4 mr-2"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M3 5h.01"
+                  />
+                  <path
+                    d="M3 12h.01"
+                  />
+                  <path
+                    d="M3 19h.01"
+                  />
+                  <path
+                    d="M8 5h13"
+                  />
+                  <path
+                    d="M8 12h13"
+                  />
+               ...
+ ÔØ» Proxy.waitForWrapper node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ÔØ» src/pages/Calendar/CalendarView.test.tsx:187:11
+    185|     fireEvent.click(screen.getByText('Next'));
+    186| 
+    187|     await waitFor(() => {
+       |           ^
+    188|       expect(screen.getByText('Luis')).toBeInTheDocument();
+    189|     });
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[5/14]ÔÄ»
+
+ FAIL  src/pages/Calendar/CalendarView.test.tsx > CalendarView > shows "S/H" when event has no start_time
+TestingLibraryElementError: Unable to find an element with the text: Ana. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <div
+      class="space-y-6"
+    >
+      <div
+        class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+      >
+        <div>
+          <h1
+            class="text-2xl font-bold text-text"
+          >
+            Eventos
+          </h1>
+          <p
+            class="text-sm text-text-secondary mt-1"
+          >
+            Gestiona tu agenda y el hist├│rico de reservas.
+          </p>
+        </div>
+        <div
+          class="flex flex-wrap items-center gap-3"
+        >
+          <button
+            aria-label="Exportar eventos a CSV"
+            class="inline-flex items-center justify-center px-4 py-2 border border-border text-sm font-medium rounded-xl text-text-secondary bg-card hover:bg-surface-alt shadow-sm transition-colors"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-download h-4 w-4 mr-2"
+              fill="none"
+              height="24"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 15V3"
+              />
+              <path
+                d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+              />
+              <path
+                d="m7 10 5 5 5-5"
+              />
+            </svg>
+            CSV
+          </button>
+          <div
+            aria-label="Modo de visualizaci├│n de eventos"
+            class="flex bg-surface-alt p-1 rounded-xl border border-border"
+            role="group"
+          >
+            <button
+              aria-label="Ver eventos en calendario"
+              aria-pressed="true"
+              class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all bg-card text-text shadow-sm"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-calendar-days h-4 w-4 mr-2"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M8 2v4"
+                />
+                <path
+                  d="M16 2v4"
+                />
+                <rect
+                  height="18"
+                  rx="2"
+                  width="18"
+                  x="3"
+                  y="4"
+                />
+                <path
+                  d="M3 10h18"
+                />
+                <path
+                  d="M8 14h.01"
+                />
+                <path
+                  d="M12 14h.01"
+                />
+                <path
+                  d="M16 14h.01"
+                />
+                <path
+                  d="M8 18h.01"
+                />
+                <path
+                  d="M12 18h.01"
+                />
+                <path
+                  d="M16 18h.01"
+                />
+              </svg>
+              Calendario
+            </button>
+            <button
+              aria-label="Ver eventos en lista"
+              aria-pressed="false"
+              class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all text-text-secondary hover:text-text"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-list h-4 w-4 mr-2"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M3 5h.01"
+                />
+                <path
+                  d="M3 12h.01"
+                />
+                <path
+                  d="M3 19h.01"
+                />
+                <path
+                  d="M8 5h13"
+                />
+                <path
+                  d="M8 12h13"
+                />
+                <path
+                  d="M8 19h13"
+                />
+              </svg>
+              Lista
+            </button>
+          </div>
+          <button
+            aria-label="Bloquear Fechas"
+            class=[...
+
+Ignored nodes: comments, script, style
+<html>
+  <head />
+  <body>
+    <div>
+      <div
+        class="space-y-6"
+      >
+        <div
+          class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+        >
+          <div>
+            <h1
+              class="text-2xl font-bold text-text"
+            >
+              Eventos
+            </h1>
+            <p
+              class="text-sm text-text-secondary mt-1"
+            >
+              Gestiona tu agenda y el hist├│rico de reservas.
+            </p>
+          </div>
+          <div
+            class="flex flex-wrap items-center gap-3"
+          >
+            <button
+              aria-label="Exportar eventos a CSV"
+              class="inline-flex items-center justify-center px-4 py-2 border border-border text-sm font-medium rounded-xl text-text-secondary bg-card hover:bg-surface-alt shadow-sm transition-colors"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-download h-4 w-4 mr-2"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M12 15V3"
+                />
+                <path
+                  d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                />
+                <path
+                  d="m7 10 5 5 5-5"
+                />
+              </svg>
+              CSV
+            </button>
+            <div
+              aria-label="Modo de visualizaci├│n de eventos"
+              class="flex bg-surface-alt p-1 rounded-xl border border-border"
+              role="group"
+            >
+              <button
+                aria-label="Ver eventos en calendario"
+                aria-pressed="true"
+                class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all bg-card text-text shadow-sm"
+                type="button"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-calendar-days h-4 w-4 mr-2"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M8 2v4"
+                  />
+                  <path
+                    d="M16 2v4"
+                  />
+                  <rect
+                    height="18"
+                    rx="2"
+                    width="18"
+                    x="3"
+                    y="4"
+                  />
+                  <path
+                    d="M3 10h18"
+                  />
+                  <path
+                    d="M8 14h.01"
+                  />
+                  <path
+                    d="M12 14h.01"
+                  />
+                  <path
+                    d="M16 14h.01"
+                  />
+                  <path
+                    d="M8 18h.01"
+                  />
+                  <path
+                    d="M12 18h.01"
+                  />
+                  <path
+                    d="M16 18h.01"
+                  />
+                </svg>
+                Calendario
+              </button>
+              <button
+                aria-label="Ver eventos en lista"
+                aria-pressed="false"
+                class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all text-text-secondary hover:text-text"
+                type="button"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-list h-4 w-4 mr-2"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M3 5h.01"
+                  />
+                  <path
+                    d="M3 12h.01"
+                  />
+                  <path
+                    d="M3 19h.01"
+                  />
+                  <path
+                    d="M8 5h13"
+                  />
+                  <path
+                    d="M8 12h13"
+                  />
+               ...
+ ÔØ» Proxy.waitForWrapper node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ÔØ» src/pages/Calendar/CalendarView.test.tsx:202:11
+    200|     fireEvent.click(screen.getByText('Next'));
+    201| 
+    202|     await waitFor(() => {
+       |           ^
+    203|       expect(screen.getByText('Ana')).toBeInTheDocument();
+    204|     });
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[6/14]ÔÄ»
+
+ FAIL  src/pages/Calendar/CalendarView.test.tsx > CalendarView > does not render location when event.location is null
+TestingLibraryElementError: Unable to find an element with the text: Ana. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <div
+      class="space-y-6"
+    >
+      <div
+        class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+      >
+        <div>
+          <h1
+            class="text-2xl font-bold text-text"
+          >
+            Eventos
+          </h1>
+          <p
+            class="text-sm text-text-secondary mt-1"
+          >
+            Gestiona tu agenda y el hist├│rico de reservas.
+          </p>
+        </div>
+        <div
+          class="flex flex-wrap items-center gap-3"
+        >
+          <button
+            aria-label="Exportar eventos a CSV"
+            class="inline-flex items-center justify-center px-4 py-2 border border-border text-sm font-medium rounded-xl text-text-secondary bg-card hover:bg-surface-alt shadow-sm transition-colors"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-download h-4 w-4 mr-2"
+              fill="none"
+              height="24"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 15V3"
+              />
+              <path
+                d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+              />
+              <path
+                d="m7 10 5 5 5-5"
+              />
+            </svg>
+            CSV
+          </button>
+          <div
+            aria-label="Modo de visualizaci├│n de eventos"
+            class="flex bg-surface-alt p-1 rounded-xl border border-border"
+            role="group"
+          >
+            <button
+              aria-label="Ver eventos en calendario"
+              aria-pressed="true"
+              class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all bg-card text-text shadow-sm"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-calendar-days h-4 w-4 mr-2"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M8 2v4"
+                />
+                <path
+                  d="M16 2v4"
+                />
+                <rect
+                  height="18"
+                  rx="2"
+                  width="18"
+                  x="3"
+                  y="4"
+                />
+                <path
+                  d="M3 10h18"
+                />
+                <path
+                  d="M8 14h.01"
+                />
+                <path
+                  d="M12 14h.01"
+                />
+                <path
+                  d="M16 14h.01"
+                />
+                <path
+                  d="M8 18h.01"
+                />
+                <path
+                  d="M12 18h.01"
+                />
+                <path
+                  d="M16 18h.01"
+                />
+              </svg>
+              Calendario
+            </button>
+            <button
+              aria-label="Ver eventos en lista"
+              aria-pressed="false"
+              class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all text-text-secondary hover:text-text"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-list h-4 w-4 mr-2"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M3 5h.01"
+                />
+                <path
+                  d="M3 12h.01"
+                />
+                <path
+                  d="M3 19h.01"
+                />
+                <path
+                  d="M8 5h13"
+                />
+                <path
+                  d="M8 12h13"
+                />
+                <path
+                  d="M8 19h13"
+                />
+              </svg>
+              Lista
+            </button>
+          </div>
+          <button
+            aria-label="Bloquear Fechas"
+            class=[...
+
+Ignored nodes: comments, script, style
+<html>
+  <head />
+  <body>
+    <div>
+      <div
+        class="space-y-6"
+      >
+        <div
+          class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+        >
+          <div>
+            <h1
+              class="text-2xl font-bold text-text"
+            >
+              Eventos
+            </h1>
+            <p
+              class="text-sm text-text-secondary mt-1"
+            >
+              Gestiona tu agenda y el hist├│rico de reservas.
+            </p>
+          </div>
+          <div
+            class="flex flex-wrap items-center gap-3"
+          >
+            <button
+              aria-label="Exportar eventos a CSV"
+              class="inline-flex items-center justify-center px-4 py-2 border border-border text-sm font-medium rounded-xl text-text-secondary bg-card hover:bg-surface-alt shadow-sm transition-colors"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-download h-4 w-4 mr-2"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M12 15V3"
+                />
+                <path
+                  d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                />
+                <path
+                  d="m7 10 5 5 5-5"
+                />
+              </svg>
+              CSV
+            </button>
+            <div
+              aria-label="Modo de visualizaci├│n de eventos"
+              class="flex bg-surface-alt p-1 rounded-xl border border-border"
+              role="group"
+            >
+              <button
+                aria-label="Ver eventos en calendario"
+                aria-pressed="true"
+                class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all bg-card text-text shadow-sm"
+                type="button"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-calendar-days h-4 w-4 mr-2"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M8 2v4"
+                  />
+                  <path
+                    d="M16 2v4"
+                  />
+                  <rect
+                    height="18"
+                    rx="2"
+                    width="18"
+                    x="3"
+                    y="4"
+                  />
+                  <path
+                    d="M3 10h18"
+                  />
+                  <path
+                    d="M8 14h.01"
+                  />
+                  <path
+                    d="M12 14h.01"
+                  />
+                  <path
+                    d="M16 14h.01"
+                  />
+                  <path
+                    d="M8 18h.01"
+                  />
+                  <path
+                    d="M12 18h.01"
+                  />
+                  <path
+                    d="M16 18h.01"
+                  />
+                </svg>
+                Calendario
+              </button>
+              <button
+                aria-label="Ver eventos en lista"
+                aria-pressed="false"
+                class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all text-text-secondary hover:text-text"
+                type="button"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-list h-4 w-4 mr-2"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M3 5h.01"
+                  />
+                  <path
+                    d="M3 12h.01"
+                  />
+                  <path
+                    d="M3 19h.01"
+                  />
+                  <path
+                    d="M8 5h13"
+                  />
+                  <path
+                    d="M8 12h13"
+                  />
+               ...
+ ÔØ» Proxy.waitForWrapper node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ÔØ» src/pages/Calendar/CalendarView.test.tsx:217:11
+    215|     fireEvent.click(screen.getByText('Next'));
+    216| 
+    217|     await waitFor(() => {
+       |           ^
+    218|       expect(screen.getByText('Ana')).toBeInTheDocument();
+    219|     });
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[7/14]ÔÄ»
+
+ FAIL  src/pages/Calendar/CalendarView.test.tsx > CalendarView > renders all four status labels in calendar view
+TestingLibraryElementError: Unable to find an element with the text: C1. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <div
+      class="space-y-6"
+    >
+      <div
+        class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+      >
+        <div>
+          <h1
+            class="text-2xl font-bold text-text"
+          >
+            Eventos
+          </h1>
+          <p
+            class="text-sm text-text-secondary mt-1"
+          >
+            Gestiona tu agenda y el hist├│rico de reservas.
+          </p>
+        </div>
+        <div
+          class="flex flex-wrap items-center gap-3"
+        >
+          <button
+            aria-label="Exportar eventos a CSV"
+            class="inline-flex items-center justify-center px-4 py-2 border border-border text-sm font-medium rounded-xl text-text-secondary bg-card hover:bg-surface-alt shadow-sm transition-colors"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-download h-4 w-4 mr-2"
+              fill="none"
+              height="24"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 15V3"
+              />
+              <path
+                d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+              />
+              <path
+                d="m7 10 5 5 5-5"
+              />
+            </svg>
+            CSV
+          </button>
+          <div
+            aria-label="Modo de visualizaci├│n de eventos"
+            class="flex bg-surface-alt p-1 rounded-xl border border-border"
+            role="group"
+          >
+            <button
+              aria-label="Ver eventos en calendario"
+              aria-pressed="true"
+              class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all bg-card text-text shadow-sm"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-calendar-days h-4 w-4 mr-2"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M8 2v4"
+                />
+                <path
+                  d="M16 2v4"
+                />
+                <rect
+                  height="18"
+                  rx="2"
+                  width="18"
+                  x="3"
+                  y="4"
+                />
+                <path
+                  d="M3 10h18"
+                />
+                <path
+                  d="M8 14h.01"
+                />
+                <path
+                  d="M12 14h.01"
+                />
+                <path
+                  d="M16 14h.01"
+                />
+                <path
+                  d="M8 18h.01"
+                />
+                <path
+                  d="M12 18h.01"
+                />
+                <path
+                  d="M16 18h.01"
+                />
+              </svg>
+              Calendario
+            </button>
+            <button
+              aria-label="Ver eventos en lista"
+              aria-pressed="false"
+              class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all text-text-secondary hover:text-text"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-list h-4 w-4 mr-2"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M3 5h.01"
+                />
+                <path
+                  d="M3 12h.01"
+                />
+                <path
+                  d="M3 19h.01"
+                />
+                <path
+                  d="M8 5h13"
+                />
+                <path
+                  d="M8 12h13"
+                />
+                <path
+                  d="M8 19h13"
+                />
+              </svg>
+              Lista
+            </button>
+          </div>
+          <button
+            aria-label="Bloquear Fechas"
+            class=[...
+
+Ignored nodes: comments, script, style
+<html>
+  <head />
+  <body>
+    <div>
+      <div
+        class="space-y-6"
+      >
+        <div
+          class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+        >
+          <div>
+            <h1
+              class="text-2xl font-bold text-text"
+            >
+              Eventos
+            </h1>
+            <p
+              class="text-sm text-text-secondary mt-1"
+            >
+              Gestiona tu agenda y el hist├│rico de reservas.
+            </p>
+          </div>
+          <div
+            class="flex flex-wrap items-center gap-3"
+          >
+            <button
+              aria-label="Exportar eventos a CSV"
+              class="inline-flex items-center justify-center px-4 py-2 border border-border text-sm font-medium rounded-xl text-text-secondary bg-card hover:bg-surface-alt shadow-sm transition-colors"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-download h-4 w-4 mr-2"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M12 15V3"
+                />
+                <path
+                  d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                />
+                <path
+                  d="m7 10 5 5 5-5"
+                />
+              </svg>
+              CSV
+            </button>
+            <div
+              aria-label="Modo de visualizaci├│n de eventos"
+              class="flex bg-surface-alt p-1 rounded-xl border border-border"
+              role="group"
+            >
+              <button
+                aria-label="Ver eventos en calendario"
+                aria-pressed="true"
+                class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all bg-card text-text shadow-sm"
+                type="button"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-calendar-days h-4 w-4 mr-2"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M8 2v4"
+                  />
+                  <path
+                    d="M16 2v4"
+                  />
+                  <rect
+                    height="18"
+                    rx="2"
+                    width="18"
+                    x="3"
+                    y="4"
+                  />
+                  <path
+                    d="M3 10h18"
+                  />
+                  <path
+                    d="M8 14h.01"
+                  />
+                  <path
+                    d="M12 14h.01"
+                  />
+                  <path
+                    d="M16 14h.01"
+                  />
+                  <path
+                    d="M8 18h.01"
+                  />
+                  <path
+                    d="M12 18h.01"
+                  />
+                  <path
+                    d="M16 18h.01"
+                  />
+                </svg>
+                Calendario
+              </button>
+              <button
+                aria-label="Ver eventos en lista"
+                aria-pressed="false"
+                class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all text-text-secondary hover:text-text"
+                type="button"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-list h-4 w-4 mr-2"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M3 5h.01"
+                  />
+                  <path
+                    d="M3 12h.01"
+                  />
+                  <path
+                    d="M3 19h.01"
+                  />
+                  <path
+                    d="M8 5h13"
+                  />
+                  <path
+                    d="M8 12h13"
+                  />
+               ...
+ ÔØ» Proxy.waitForWrapper node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ÔØ» src/pages/Calendar/CalendarView.test.tsx:235:11
+    233|     fireEvent.click(screen.getByText('Next'));
+    234| 
+    235|     await waitFor(() => {
+       |           ^
+    236|       expect(screen.getByText('C1')).toBeInTheDocument();
+    237|     });
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[8/14]ÔÄ»
+
+ FAIL  src/pages/Calendar/CalendarView.test.tsx > CalendarView > shows badge count when multiple events on selected date
+TestingLibraryElementError: Unable to find an element with the text: A1. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <div
+      class="space-y-6"
+    >
+      <div
+        class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+      >
+        <div>
+          <h1
+            class="text-2xl font-bold text-text"
+          >
+            Eventos
+          </h1>
+          <p
+            class="text-sm text-text-secondary mt-1"
+          >
+            Gestiona tu agenda y el hist├│rico de reservas.
+          </p>
+        </div>
+        <div
+          class="flex flex-wrap items-center gap-3"
+        >
+          <button
+            aria-label="Exportar eventos a CSV"
+            class="inline-flex items-center justify-center px-4 py-2 border border-border text-sm font-medium rounded-xl text-text-secondary bg-card hover:bg-surface-alt shadow-sm transition-colors"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-download h-4 w-4 mr-2"
+              fill="none"
+              height="24"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 15V3"
+              />
+              <path
+                d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+              />
+              <path
+                d="m7 10 5 5 5-5"
+              />
+            </svg>
+            CSV
+          </button>
+          <div
+            aria-label="Modo de visualizaci├│n de eventos"
+            class="flex bg-surface-alt p-1 rounded-xl border border-border"
+            role="group"
+          >
+            <button
+              aria-label="Ver eventos en calendario"
+              aria-pressed="true"
+              class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all bg-card text-text shadow-sm"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-calendar-days h-4 w-4 mr-2"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M8 2v4"
+                />
+                <path
+                  d="M16 2v4"
+                />
+                <rect
+                  height="18"
+                  rx="2"
+                  width="18"
+                  x="3"
+                  y="4"
+                />
+                <path
+                  d="M3 10h18"
+                />
+                <path
+                  d="M8 14h.01"
+                />
+                <path
+                  d="M12 14h.01"
+                />
+                <path
+                  d="M16 14h.01"
+                />
+                <path
+                  d="M8 18h.01"
+                />
+                <path
+                  d="M12 18h.01"
+                />
+                <path
+                  d="M16 18h.01"
+                />
+              </svg>
+              Calendario
+            </button>
+            <button
+              aria-label="Ver eventos en lista"
+              aria-pressed="false"
+              class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all text-text-secondary hover:text-text"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-list h-4 w-4 mr-2"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M3 5h.01"
+                />
+                <path
+                  d="M3 12h.01"
+                />
+                <path
+                  d="M3 19h.01"
+                />
+                <path
+                  d="M8 5h13"
+                />
+                <path
+                  d="M8 12h13"
+                />
+                <path
+                  d="M8 19h13"
+                />
+              </svg>
+              Lista
+            </button>
+          </div>
+          <button
+            aria-label="Bloquear Fechas"
+            class=[...
+
+Ignored nodes: comments, script, style
+<html>
+  <head />
+  <body>
+    <div>
+      <div
+        class="space-y-6"
+      >
+        <div
+          class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+        >
+          <div>
+            <h1
+              class="text-2xl font-bold text-text"
+            >
+              Eventos
+            </h1>
+            <p
+              class="text-sm text-text-secondary mt-1"
+            >
+              Gestiona tu agenda y el hist├│rico de reservas.
+            </p>
+          </div>
+          <div
+            class="flex flex-wrap items-center gap-3"
+          >
+            <button
+              aria-label="Exportar eventos a CSV"
+              class="inline-flex items-center justify-center px-4 py-2 border border-border text-sm font-medium rounded-xl text-text-secondary bg-card hover:bg-surface-alt shadow-sm transition-colors"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-download h-4 w-4 mr-2"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M12 15V3"
+                />
+                <path
+                  d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                />
+                <path
+                  d="m7 10 5 5 5-5"
+                />
+              </svg>
+              CSV
+            </button>
+            <div
+              aria-label="Modo de visualizaci├│n de eventos"
+              class="flex bg-surface-alt p-1 rounded-xl border border-border"
+              role="group"
+            >
+              <button
+                aria-label="Ver eventos en calendario"
+                aria-pressed="true"
+                class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all bg-card text-text shadow-sm"
+                type="button"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-calendar-days h-4 w-4 mr-2"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M8 2v4"
+                  />
+                  <path
+                    d="M16 2v4"
+                  />
+                  <rect
+                    height="18"
+                    rx="2"
+                    width="18"
+                    x="3"
+                    y="4"
+                  />
+                  <path
+                    d="M3 10h18"
+                  />
+                  <path
+                    d="M8 14h.01"
+                  />
+                  <path
+                    d="M12 14h.01"
+                  />
+                  <path
+                    d="M16 14h.01"
+                  />
+                  <path
+                    d="M8 18h.01"
+                  />
+                  <path
+                    d="M12 18h.01"
+                  />
+                  <path
+                    d="M16 18h.01"
+                  />
+                </svg>
+                Calendario
+              </button>
+              <button
+                aria-label="Ver eventos en lista"
+                aria-pressed="false"
+                class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all text-text-secondary hover:text-text"
+                type="button"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-list h-4 w-4 mr-2"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M3 5h.01"
+                  />
+                  <path
+                    d="M3 12h.01"
+                  />
+                  <path
+                    d="M3 19h.01"
+                  />
+                  <path
+                    d="M8 5h13"
+                  />
+                  <path
+                    d="M8 12h13"
+                  />
+               ...
+ ÔØ» Proxy.waitForWrapper node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ÔØ» src/pages/Calendar/CalendarView.test.tsx:255:11
+    253|     fireEvent.click(screen.getByText('Next'));
+    254| 
+    255|     await waitFor(() => {
+       |           ^
+    256|       expect(screen.getByText('A1')).toBeInTheDocument();
+    257|     });
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[9/14]ÔÄ»
+
+ FAIL  src/pages/Calendar/CalendarView.test.tsx > CalendarView > shows singular "Evento" badge for one event
+TestingLibraryElementError: Unable to find an element with the text: Ana. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <div
+      class="space-y-6"
+    >
+      <div
+        class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+      >
+        <div>
+          <h1
+            class="text-2xl font-bold text-text"
+          >
+            Eventos
+          </h1>
+          <p
+            class="text-sm text-text-secondary mt-1"
+          >
+            Gestiona tu agenda y el hist├│rico de reservas.
+          </p>
+        </div>
+        <div
+          class="flex flex-wrap items-center gap-3"
+        >
+          <button
+            aria-label="Exportar eventos a CSV"
+            class="inline-flex items-center justify-center px-4 py-2 border border-border text-sm font-medium rounded-xl text-text-secondary bg-card hover:bg-surface-alt shadow-sm transition-colors"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-download h-4 w-4 mr-2"
+              fill="none"
+              height="24"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 15V3"
+              />
+              <path
+                d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+              />
+              <path
+                d="m7 10 5 5 5-5"
+              />
+            </svg>
+            CSV
+          </button>
+          <div
+            aria-label="Modo de visualizaci├│n de eventos"
+            class="flex bg-surface-alt p-1 rounded-xl border border-border"
+            role="group"
+          >
+            <button
+              aria-label="Ver eventos en calendario"
+              aria-pressed="true"
+              class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all bg-card text-text shadow-sm"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-calendar-days h-4 w-4 mr-2"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M8 2v4"
+                />
+                <path
+                  d="M16 2v4"
+                />
+                <rect
+                  height="18"
+                  rx="2"
+                  width="18"
+                  x="3"
+                  y="4"
+                />
+                <path
+                  d="M3 10h18"
+                />
+                <path
+                  d="M8 14h.01"
+                />
+                <path
+                  d="M12 14h.01"
+                />
+                <path
+                  d="M16 14h.01"
+                />
+                <path
+                  d="M8 18h.01"
+                />
+                <path
+                  d="M12 18h.01"
+                />
+                <path
+                  d="M16 18h.01"
+                />
+              </svg>
+              Calendario
+            </button>
+            <button
+              aria-label="Ver eventos en lista"
+              aria-pressed="false"
+              class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all text-text-secondary hover:text-text"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-list h-4 w-4 mr-2"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M3 5h.01"
+                />
+                <path
+                  d="M3 12h.01"
+                />
+                <path
+                  d="M3 19h.01"
+                />
+                <path
+                  d="M8 5h13"
+                />
+                <path
+                  d="M8 12h13"
+                />
+                <path
+                  d="M8 19h13"
+                />
+              </svg>
+              Lista
+            </button>
+          </div>
+          <button
+            aria-label="Bloquear Fechas"
+            class=[...
+
+Ignored nodes: comments, script, style
+<html>
+  <head />
+  <body>
+    <div>
+      <div
+        class="space-y-6"
+      >
+        <div
+          class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+        >
+          <div>
+            <h1
+              class="text-2xl font-bold text-text"
+            >
+              Eventos
+            </h1>
+            <p
+              class="text-sm text-text-secondary mt-1"
+            >
+              Gestiona tu agenda y el hist├│rico de reservas.
+            </p>
+          </div>
+          <div
+            class="flex flex-wrap items-center gap-3"
+          >
+            <button
+              aria-label="Exportar eventos a CSV"
+              class="inline-flex items-center justify-center px-4 py-2 border border-border text-sm font-medium rounded-xl text-text-secondary bg-card hover:bg-surface-alt shadow-sm transition-colors"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-download h-4 w-4 mr-2"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M12 15V3"
+                />
+                <path
+                  d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                />
+                <path
+                  d="m7 10 5 5 5-5"
+                />
+              </svg>
+              CSV
+            </button>
+            <div
+              aria-label="Modo de visualizaci├│n de eventos"
+              class="flex bg-surface-alt p-1 rounded-xl border border-border"
+              role="group"
+            >
+              <button
+                aria-label="Ver eventos en calendario"
+                aria-pressed="true"
+                class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all bg-card text-text shadow-sm"
+                type="button"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-calendar-days h-4 w-4 mr-2"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M8 2v4"
+                  />
+                  <path
+                    d="M16 2v4"
+                  />
+                  <rect
+                    height="18"
+                    rx="2"
+                    width="18"
+                    x="3"
+                    y="4"
+                  />
+                  <path
+                    d="M3 10h18"
+                  />
+                  <path
+                    d="M8 14h.01"
+                  />
+                  <path
+                    d="M12 14h.01"
+                  />
+                  <path
+                    d="M16 14h.01"
+                  />
+                  <path
+                    d="M8 18h.01"
+                  />
+                  <path
+                    d="M12 18h.01"
+                  />
+                  <path
+                    d="M16 18h.01"
+                  />
+                </svg>
+                Calendario
+              </button>
+              <button
+                aria-label="Ver eventos en lista"
+                aria-pressed="false"
+                class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all text-text-secondary hover:text-text"
+                type="button"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-list h-4 w-4 mr-2"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M3 5h.01"
+                  />
+                  <path
+                    d="M3 12h.01"
+                  />
+                  <path
+                    d="M3 19h.01"
+                  />
+                  <path
+                    d="M8 5h13"
+                  />
+                  <path
+                    d="M8 12h13"
+                  />
+               ...
+ ÔØ» Proxy.waitForWrapper node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ÔØ» src/pages/Calendar/CalendarView.test.tsx:269:11
+    267|     fireEvent.click(screen.getByText('Next'));
+    268| 
+    269|     await waitFor(() => {
+       |           ^
+    270|       expect(screen.getByText('Ana')).toBeInTheDocument();
+    271|     });
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[10/14]ÔÄ»
+
+ FAIL  src/pages/Calendar/CalendarView.test.tsx > CalendarView > navigates via keyboard (Enter) on event card
+TestingLibraryElementError: Unable to find an element with the text: Ana. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <div
+      class="space-y-6"
+    >
+      <div
+        class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+      >
+        <div>
+          <h1
+            class="text-2xl font-bold text-text"
+          >
+            Eventos
+          </h1>
+          <p
+            class="text-sm text-text-secondary mt-1"
+          >
+            Gestiona tu agenda y el hist├│rico de reservas.
+          </p>
+        </div>
+        <div
+          class="flex flex-wrap items-center gap-3"
+        >
+          <button
+            aria-label="Exportar eventos a CSV"
+            class="inline-flex items-center justify-center px-4 py-2 border border-border text-sm font-medium rounded-xl text-text-secondary bg-card hover:bg-surface-alt shadow-sm transition-colors"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-download h-4 w-4 mr-2"
+              fill="none"
+              height="24"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 15V3"
+              />
+              <path
+                d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+              />
+              <path
+                d="m7 10 5 5 5-5"
+              />
+            </svg>
+            CSV
+          </button>
+          <div
+            aria-label="Modo de visualizaci├│n de eventos"
+            class="flex bg-surface-alt p-1 rounded-xl border border-border"
+            role="group"
+          >
+            <button
+              aria-label="Ver eventos en calendario"
+              aria-pressed="true"
+              class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all bg-card text-text shadow-sm"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-calendar-days h-4 w-4 mr-2"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M8 2v4"
+                />
+                <path
+                  d="M16 2v4"
+                />
+                <rect
+                  height="18"
+                  rx="2"
+                  width="18"
+                  x="3"
+                  y="4"
+                />
+                <path
+                  d="M3 10h18"
+                />
+                <path
+                  d="M8 14h.01"
+                />
+                <path
+                  d="M12 14h.01"
+                />
+                <path
+                  d="M16 14h.01"
+                />
+                <path
+                  d="M8 18h.01"
+                />
+                <path
+                  d="M12 18h.01"
+                />
+                <path
+                  d="M16 18h.01"
+                />
+              </svg>
+              Calendario
+            </button>
+            <button
+              aria-label="Ver eventos en lista"
+              aria-pressed="false"
+              class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all text-text-secondary hover:text-text"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-list h-4 w-4 mr-2"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M3 5h.01"
+                />
+                <path
+                  d="M3 12h.01"
+                />
+                <path
+                  d="M3 19h.01"
+                />
+                <path
+                  d="M8 5h13"
+                />
+                <path
+                  d="M8 12h13"
+                />
+                <path
+                  d="M8 19h13"
+                />
+              </svg>
+              Lista
+            </button>
+          </div>
+          <button
+            aria-label="Bloquear Fechas"
+            class=[...
+
+Ignored nodes: comments, script, style
+<html>
+  <head />
+  <body>
+    <div>
+      <div
+        class="space-y-6"
+      >
+        <div
+          class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+        >
+          <div>
+            <h1
+              class="text-2xl font-bold text-text"
+            >
+              Eventos
+            </h1>
+            <p
+              class="text-sm text-text-secondary mt-1"
+            >
+              Gestiona tu agenda y el hist├│rico de reservas.
+            </p>
+          </div>
+          <div
+            class="flex flex-wrap items-center gap-3"
+          >
+            <button
+              aria-label="Exportar eventos a CSV"
+              class="inline-flex items-center justify-center px-4 py-2 border border-border text-sm font-medium rounded-xl text-text-secondary bg-card hover:bg-surface-alt shadow-sm transition-colors"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-download h-4 w-4 mr-2"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M12 15V3"
+                />
+                <path
+                  d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                />
+                <path
+                  d="m7 10 5 5 5-5"
+                />
+              </svg>
+              CSV
+            </button>
+            <div
+              aria-label="Modo de visualizaci├│n de eventos"
+              class="flex bg-surface-alt p-1 rounded-xl border border-border"
+              role="group"
+            >
+              <button
+                aria-label="Ver eventos en calendario"
+                aria-pressed="true"
+                class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all bg-card text-text shadow-sm"
+                type="button"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-calendar-days h-4 w-4 mr-2"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M8 2v4"
+                  />
+                  <path
+                    d="M16 2v4"
+                  />
+                  <rect
+                    height="18"
+                    rx="2"
+                    width="18"
+                    x="3"
+                    y="4"
+                  />
+                  <path
+                    d="M3 10h18"
+                  />
+                  <path
+                    d="M8 14h.01"
+                  />
+                  <path
+                    d="M12 14h.01"
+                  />
+                  <path
+                    d="M16 14h.01"
+                  />
+                  <path
+                    d="M8 18h.01"
+                  />
+                  <path
+                    d="M12 18h.01"
+                  />
+                  <path
+                    d="M16 18h.01"
+                  />
+                </svg>
+                Calendario
+              </button>
+              <button
+                aria-label="Ver eventos en lista"
+                aria-pressed="false"
+                class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all text-text-secondary hover:text-text"
+                type="button"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-list h-4 w-4 mr-2"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M3 5h.01"
+                  />
+                  <path
+                    d="M3 12h.01"
+                  />
+                  <path
+                    d="M3 19h.01"
+                  />
+                  <path
+                    d="M8 5h13"
+                  />
+                  <path
+                    d="M8 12h13"
+                  />
+               ...
+ ÔØ» Proxy.waitForWrapper node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ÔØ» src/pages/Calendar/CalendarView.test.tsx:283:11
+    281|     fireEvent.click(screen.getByText('Next'));
+    282| 
+    283|     await waitFor(() => {
+       |           ^
+    284|       expect(screen.getByText('Ana')).toBeInTheDocument();
+    285|     });
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[11/14]ÔÄ»
+
+ FAIL  src/pages/Calendar/CalendarView.test.tsx > CalendarView > navigates via keyboard (Space) on event card
+TestingLibraryElementError: Unable to find an element with the text: Ana. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <div
+      class="space-y-6"
+    >
+      <div
+        class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+      >
+        <div>
+          <h1
+            class="text-2xl font-bold text-text"
+          >
+            Eventos
+          </h1>
+          <p
+            class="text-sm text-text-secondary mt-1"
+          >
+            Gestiona tu agenda y el hist├│rico de reservas.
+          </p>
+        </div>
+        <div
+          class="flex flex-wrap items-center gap-3"
+        >
+          <button
+            aria-label="Exportar eventos a CSV"
+            class="inline-flex items-center justify-center px-4 py-2 border border-border text-sm font-medium rounded-xl text-text-secondary bg-card hover:bg-surface-alt shadow-sm transition-colors"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-download h-4 w-4 mr-2"
+              fill="none"
+              height="24"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 15V3"
+              />
+              <path
+                d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+              />
+              <path
+                d="m7 10 5 5 5-5"
+              />
+            </svg>
+            CSV
+          </button>
+          <div
+            aria-label="Modo de visualizaci├│n de eventos"
+            class="flex bg-surface-alt p-1 rounded-xl border border-border"
+            role="group"
+          >
+            <button
+              aria-label="Ver eventos en calendario"
+              aria-pressed="true"
+              class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all bg-card text-text shadow-sm"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-calendar-days h-4 w-4 mr-2"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M8 2v4"
+                />
+                <path
+                  d="M16 2v4"
+                />
+                <rect
+                  height="18"
+                  rx="2"
+                  width="18"
+                  x="3"
+                  y="4"
+                />
+                <path
+                  d="M3 10h18"
+                />
+                <path
+                  d="M8 14h.01"
+                />
+                <path
+                  d="M12 14h.01"
+                />
+                <path
+                  d="M16 14h.01"
+                />
+                <path
+                  d="M8 18h.01"
+                />
+                <path
+                  d="M12 18h.01"
+                />
+                <path
+                  d="M16 18h.01"
+                />
+              </svg>
+              Calendario
+            </button>
+            <button
+              aria-label="Ver eventos en lista"
+              aria-pressed="false"
+              class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all text-text-secondary hover:text-text"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-list h-4 w-4 mr-2"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M3 5h.01"
+                />
+                <path
+                  d="M3 12h.01"
+                />
+                <path
+                  d="M3 19h.01"
+                />
+                <path
+                  d="M8 5h13"
+                />
+                <path
+                  d="M8 12h13"
+                />
+                <path
+                  d="M8 19h13"
+                />
+              </svg>
+              Lista
+            </button>
+          </div>
+          <button
+            aria-label="Bloquear Fechas"
+            class=[...
+
+Ignored nodes: comments, script, style
+<html>
+  <head />
+  <body>
+    <div>
+      <div
+        class="space-y-6"
+      >
+        <div
+          class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+        >
+          <div>
+            <h1
+              class="text-2xl font-bold text-text"
+            >
+              Eventos
+            </h1>
+            <p
+              class="text-sm text-text-secondary mt-1"
+            >
+              Gestiona tu agenda y el hist├│rico de reservas.
+            </p>
+          </div>
+          <div
+            class="flex flex-wrap items-center gap-3"
+          >
+            <button
+              aria-label="Exportar eventos a CSV"
+              class="inline-flex items-center justify-center px-4 py-2 border border-border text-sm font-medium rounded-xl text-text-secondary bg-card hover:bg-surface-alt shadow-sm transition-colors"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-download h-4 w-4 mr-2"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M12 15V3"
+                />
+                <path
+                  d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                />
+                <path
+                  d="m7 10 5 5 5-5"
+                />
+              </svg>
+              CSV
+            </button>
+            <div
+              aria-label="Modo de visualizaci├│n de eventos"
+              class="flex bg-surface-alt p-1 rounded-xl border border-border"
+              role="group"
+            >
+              <button
+                aria-label="Ver eventos en calendario"
+                aria-pressed="true"
+                class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all bg-card text-text shadow-sm"
+                type="button"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-calendar-days h-4 w-4 mr-2"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M8 2v4"
+                  />
+                  <path
+                    d="M16 2v4"
+                  />
+                  <rect
+                    height="18"
+                    rx="2"
+                    width="18"
+                    x="3"
+                    y="4"
+                  />
+                  <path
+                    d="M3 10h18"
+                  />
+                  <path
+                    d="M8 14h.01"
+                  />
+                  <path
+                    d="M12 14h.01"
+                  />
+                  <path
+                    d="M16 14h.01"
+                  />
+                  <path
+                    d="M8 18h.01"
+                  />
+                  <path
+                    d="M12 18h.01"
+                  />
+                  <path
+                    d="M16 18h.01"
+                  />
+                </svg>
+                Calendario
+              </button>
+              <button
+                aria-label="Ver eventos en lista"
+                aria-pressed="false"
+                class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all text-text-secondary hover:text-text"
+                type="button"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-list h-4 w-4 mr-2"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M3 5h.01"
+                  />
+                  <path
+                    d="M3 12h.01"
+                  />
+                  <path
+                    d="M3 19h.01"
+                  />
+                  <path
+                    d="M8 5h13"
+                  />
+                  <path
+                    d="M8 12h13"
+                  />
+               ...
+ ÔØ» Proxy.waitForWrapper node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ÔØ» src/pages/Calendar/CalendarView.test.tsx:299:11
+    297|     fireEvent.click(screen.getByText('Next'));
+    298| 
+    299|     await waitFor(() => {
+       |           ^
+    300|       expect(screen.getByText('Ana')).toBeInTheDocument();
+    301|     });
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[12/14]ÔÄ»
+
+ FAIL  src/pages/Calendar/CalendarView.test.tsx > CalendarView > does not navigate on non-Enter/Space keydown on event card
+TestingLibraryElementError: Unable to find an element with the text: Ana. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <div
+      class="space-y-6"
+    >
+      <div
+        class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+      >
+        <div>
+          <h1
+            class="text-2xl font-bold text-text"
+          >
+            Eventos
+          </h1>
+          <p
+            class="text-sm text-text-secondary mt-1"
+          >
+            Gestiona tu agenda y el hist├│rico de reservas.
+          </p>
+        </div>
+        <div
+          class="flex flex-wrap items-center gap-3"
+        >
+          <button
+            aria-label="Exportar eventos a CSV"
+            class="inline-flex items-center justify-center px-4 py-2 border border-border text-sm font-medium rounded-xl text-text-secondary bg-card hover:bg-surface-alt shadow-sm transition-colors"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-download h-4 w-4 mr-2"
+              fill="none"
+              height="24"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 15V3"
+              />
+              <path
+                d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+              />
+              <path
+                d="m7 10 5 5 5-5"
+              />
+            </svg>
+            CSV
+          </button>
+          <div
+            aria-label="Modo de visualizaci├│n de eventos"
+            class="flex bg-surface-alt p-1 rounded-xl border border-border"
+            role="group"
+          >
+            <button
+              aria-label="Ver eventos en calendario"
+              aria-pressed="true"
+              class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all bg-card text-text shadow-sm"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-calendar-days h-4 w-4 mr-2"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M8 2v4"
+                />
+                <path
+                  d="M16 2v4"
+                />
+                <rect
+                  height="18"
+                  rx="2"
+                  width="18"
+                  x="3"
+                  y="4"
+                />
+                <path
+                  d="M3 10h18"
+                />
+                <path
+                  d="M8 14h.01"
+                />
+                <path
+                  d="M12 14h.01"
+                />
+                <path
+                  d="M16 14h.01"
+                />
+                <path
+                  d="M8 18h.01"
+                />
+                <path
+                  d="M12 18h.01"
+                />
+                <path
+                  d="M16 18h.01"
+                />
+              </svg>
+              Calendario
+            </button>
+            <button
+              aria-label="Ver eventos en lista"
+              aria-pressed="false"
+              class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all text-text-secondary hover:text-text"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-list h-4 w-4 mr-2"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M3 5h.01"
+                />
+                <path
+                  d="M3 12h.01"
+                />
+                <path
+                  d="M3 19h.01"
+                />
+                <path
+                  d="M8 5h13"
+                />
+                <path
+                  d="M8 12h13"
+                />
+                <path
+                  d="M8 19h13"
+                />
+              </svg>
+              Lista
+            </button>
+          </div>
+          <button
+            aria-label="Bloquear Fechas"
+            class=[...
+
+Ignored nodes: comments, script, style
+<html>
+  <head />
+  <body>
+    <div>
+      <div
+        class="space-y-6"
+      >
+        <div
+          class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+        >
+          <div>
+            <h1
+              class="text-2xl font-bold text-text"
+            >
+              Eventos
+            </h1>
+            <p
+              class="text-sm text-text-secondary mt-1"
+            >
+              Gestiona tu agenda y el hist├│rico de reservas.
+            </p>
+          </div>
+          <div
+            class="flex flex-wrap items-center gap-3"
+          >
+            <button
+              aria-label="Exportar eventos a CSV"
+              class="inline-flex items-center justify-center px-4 py-2 border border-border text-sm font-medium rounded-xl text-text-secondary bg-card hover:bg-surface-alt shadow-sm transition-colors"
+              type="button"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-download h-4 w-4 mr-2"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M12 15V3"
+                />
+                <path
+                  d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                />
+                <path
+                  d="m7 10 5 5 5-5"
+                />
+              </svg>
+              CSV
+            </button>
+            <div
+              aria-label="Modo de visualizaci├│n de eventos"
+              class="flex bg-surface-alt p-1 rounded-xl border border-border"
+              role="group"
+            >
+              <button
+                aria-label="Ver eventos en calendario"
+                aria-pressed="true"
+                class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all bg-card text-text shadow-sm"
+                type="button"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-calendar-days h-4 w-4 mr-2"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M8 2v4"
+                  />
+                  <path
+                    d="M16 2v4"
+                  />
+                  <rect
+                    height="18"
+                    rx="2"
+                    width="18"
+                    x="3"
+                    y="4"
+                  />
+                  <path
+                    d="M3 10h18"
+                  />
+                  <path
+                    d="M8 14h.01"
+                  />
+                  <path
+                    d="M12 14h.01"
+                  />
+                  <path
+                    d="M16 14h.01"
+                  />
+                  <path
+                    d="M8 18h.01"
+                  />
+                  <path
+                    d="M12 18h.01"
+                  />
+                  <path
+                    d="M16 18h.01"
+                  />
+                </svg>
+                Calendario
+              </button>
+              <button
+                aria-label="Ver eventos en lista"
+                aria-pressed="false"
+                class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all text-text-secondary hover:text-text"
+                type="button"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-list h-4 w-4 mr-2"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M3 5h.01"
+                  />
+                  <path
+                    d="M3 12h.01"
+                  />
+                  <path
+                    d="M3 19h.01"
+                  />
+                  <path
+                    d="M8 5h13"
+                  />
+                  <path
+                    d="M8 12h13"
+                  />
+               ...
+ ÔØ» Proxy.waitForWrapper node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ÔØ» src/pages/Calendar/CalendarView.test.tsx:315:11
+    313|     fireEvent.click(screen.getByText('Next'));
+    314| 
+    315|     await waitFor(() => {
+       |           ^
+    316|       expect(screen.getByText('Ana')).toBeInTheDocument();
+    317|     });
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[13/14]ÔÄ»
+
+ FAIL  src/pages/Calendar/CalendarView.test.tsx > CalendarView > logs error when fetchAllEvents fails
+AssertionError: expected "vi.fn()" to be called with arguments: [ ÔÇª(2) ]
+
+Number of calls: 0
+
+
+Ignored nodes: comments, script, style
+<html>
+  <head />
+  <body>
+    <div>
+      <div
+        class="space-y-6"
+      >
+        <div
+          class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+        >
+          <div>
+            <h1
+              class="text-2xl font-bold text-text"
+            >
+              Eventos
+            </h1>
+            <p
+              class="text-sm text-text-secondary mt-1"
+            >
+              Gestiona tu agenda y el hist├│rico de reservas.
+            </p>
+          </div>
+          <div
+            class="flex flex-wrap items-center gap-3"
+          >
+            <div
+              aria-label="Modo de visualizaci├│n de eventos"
+              class="flex bg-surface-alt p-1 rounded-xl border border-border"
+              role="group"
+            >
+              <button
+                aria-label="Ver eventos en calendario"
+                aria-pressed="false"
+                class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all text-text-secondary hover:text-text"
+                type="button"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-calendar-days h-4 w-4 mr-2"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M8 2v4"
+                  />
+                  <path
+                    d="M16 2v4"
+                  />
+                  <rect
+                    height="18"
+                    rx="2"
+                    width="18"
+                    x="3"
+                    y="4"
+                  />
+                  <path
+                    d="M3 10h18"
+                  />
+                  <path
+                    d="M8 14h.01"
+                  />
+                  <path
+                    d="M12 14h.01"
+                  />
+                  <path
+                    d="M16 14h.01"
+                  />
+                  <path
+                    d="M8 18h.01"
+                  />
+                  <path
+                    d="M12 18h.01"
+                  />
+                  <path
+                    d="M16 18h.01"
+                  />
+                </svg>
+                Calendario
+              </button>
+              <button
+                aria-label="Ver eventos en lista"
+                aria-pressed="true"
+                class="flex items-center px-3 py-1.5 text-sm font-medium rounded-xl transition-all bg-card text-text shadow-sm"
+                type="button"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-list h-4 w-4 mr-2"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M3 5h.01"
+                  />
+                  <path
+                    d="M3 12h.01"
+                  />
+                  <path
+                    d="M3 19h.01"
+                  />
+                  <path
+                    d="M8 5h13"
+                  />
+                  <path
+                    d="M8 12h13"
+                  />
+                  <path
+                    d="M8 19h13"
+                  />
+                </svg>
+                Lista
+              </button>
+            </div>
+            <button
+              aria-label="Bloquear Fechas"
+              class="inline-flex items-center justify-center px-4 py-2 border border-border text-sm font-medium rounded-xl text-text bg-surface hover:bg-surface-alt shadow-sm transition-colors"
+              type="button"
+            >
+              Bloquear Fechas
+            </button>
+            <a
+              aria-label="Crear nuevo evento"
+              class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-xl text-white premium-gradient hover:opacity-90 shadow-xs transition-opacity"
+              data-discover="true"
+              href="/events/new"
+            >
+              <svg
+                aria-hidden="true"
+                class="lucide lucide-plus h-5 w-5 mr-2"
+                fill="none"
+                height="24"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                width="24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M5 12h14"
+                />
+                <path
+                  d="M12 5v14"
+                />
+              </svg>
+              Nuevo Evento
+            </a>
+          </div>
+        </div>
+        <div
+          class="space-y-6 fade-in"
+        >
+          <div
+            class="flex flex-col sm:flex-row gap-4"
+          >
+            <div
+              class="relative flex-1 max-w-md"
+            >
+              <label
+                class="sr-only"
+                for="event-search"
+              >
+                Buscar eventos por cliente o servicio
+              </label>
+              <div
+                class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="lucide lucide-search h-5 w-5 text-text-secondary"
+                  fill="none"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                  width="24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="m21 21-4.34-4.34"
+                  />
+                  <circle
+                    cx="11"
+                    cy="11"
+                    r="8"
+                  />
+                </svg>
+              </div>
+              <input
+                aria-label="Buscar eventos por cliente o servicio"
+                class="block w-full pl-10 pr-3 py-2 border border-border rounded-md leading-5 bg-card text-text placeholder-text-tertiary focus:outline-hidden focus:ring-primary sm:text-sm"
+                id="event-search"
+                placeholder="Buscar por cliente o servicio..."
+                type="search"
+                value=""
+              />
+            </div>
+            <div
+              aria-label="Filtrar eventos por estado"
+              class="flex flex-wrap gap-2"
+              role="group"
+            >
+              <button
+                aria-pressed="true"
+                class="px-3 py-1.5 rounded-full text-sm font-medium transition-colors bg-primary text-white"
+                type="button"
+              >
+                Todos
+              </button>
+              <button
+                aria-pressed="false"
+                class="px-3 py-1.5 rounded-full text-sm font-medium transition-colors bg-surface-alt text-text-secondary hover:text-text border border-border"
+                type="button"
+              >
+                Cotizado
+              </button>
+              <button
+                aria-pressed="false"
+                class="px-3 py-1.5 rounded-full text-sm font-medium transition-colors bg-surface-alt text-text-secondary hover:text-text border border-border"
+                type="button"
+              >
+                Confirmado
+              </button>
+              <button
+                aria-pressed="false"
+                class="px-3 py-1.5 rounded-full text-sm font-medium transition-colors bg-surface-alt text-text-secondary hover:text-text border border-border"
+                type="button"
+              >
+                Completado
+              </button>
+              <button
+                aria-pressed="false"
+                class="px-3 py-1.5 rounded-full text-sm font-medium transition-colors bg-surface-alt text-text-secondary hover:text-text border border-border"
+                type="button"
+              >
+                Cancelado
+              </button>
+            </div>
+          </div>
+          <div
+            class="bg-card shadow-sm overflow-hidden rounded-3xl border border-border"
+          >
+            <div
+              class="flex flex-col items-center justify-center px-4 py-20 text-center animate-fade-in"
+              role="status"
+            >
+              <div
+                aria-hidden="true"
+                class="relative mb-8 group"
+              >
+                <div
+                  class="absolute inset-0 bg-primary/10 blur-3xl rounded-full scale-150 group-hover:bg-primary/15 transition-all duration-500"
+                />
+                <div
+                  class="relative mb-6"
+                >
+                  <div
+                    class="absolute -inset-4 rounded-full border-2 border-dashed border-primary/15 animate-[spin_25s_linear_infinite]"
+                  />
+                  <div
+                    class="absolute -inset-8 rounded-full border border-primary/8 animate-[spin_35s_linear_infinite_reverse]"
+                  />
+                  <div
+                    class="relative w-24 h-24 rounded-2xl bg-gradient-to-br from-primary/15 to-primary/5 dark:from-primary/20 dark:to-primary/8 flex items-center justify-center shadow-lg shadow-primary/10 group-hover:scale-105 transition-transform duration-500 ring-1 ring-primary/20"
+                  >
+                    <svg
+                      aria-hidden="true"
+                      class="lucide lucide-calendar-days w-10 h-10 text-primary"
+                      fill="none"
+                      height="24"
+                      stroke="currentColor"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.5"
+                      viewBox="0 0 24 24"
+                      width="24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M8 2v4"
+                      />
+                      <path
+                        d="M16 2v4"
+                      />
+                      <rect
+                        height="18"
+                        rx="2"
+                        width="18"
+                        x="3"
+                        y="4"
+                      />
+                      <path
+                        d="M3 10h18"
+                      />
+                      <path
+                        d="M8 14h.01"
+                      />
+                      <path
+                        d="M12 14h.01"
+                      />
+                      <path
+                        d="M16 14h.01"
+                      />
+                      <path
+                        d="M8 18h.01"
+                      />
+                      <path
+                        d="M12 18h.01"
+                      />
+                      <path
+                        d="M16 18h.01"
+                      />
+                    </svg>
+                  </div>
+                  <div
+                    class="absolute -top-2 -right-2 w-3 h-3 rounded-full bg-primary/30 animate-pulse"
+                  />
+                  <div
+                    class="absolute -bottom-1 -left-3 w-2 h-2 rounded-full bg-primary/20 animate-pulse [animation-delay:1s]"
+                  />
+                </div>
+              </div>
+              <div
+                class="max-w-md relative z-10"
+              >
+                <h3
+                  class="text-xl font-semibold text-text mb-2"
+                >
+                  No se encontraron eventos
+                </h3>
+                <p
+                  class="text-text-secondary text-sm mb-8 leading-relaxed"
+                >
+                  Agrega tu primer evento.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
+ ÔØ» src/pages/Calendar/CalendarView.test.tsx:572:24
+    570| 
+    571|     await waitFor(() => {
+    572|       expect(logError).toHaveBeenCalledWith('Error fetching events forÔÇª
+       |                        ^
+    573|     });
+    574|   });
+ ÔØ» runWithExpensiveErrorDiagnosticsDisabled node_modules/@testing-library/dom/dist/config.js:47:12
+ ÔØ» checkCallback node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ÔØ» Timeout.checkRealTimersCallback node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[14/14]ÔÄ»
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m14 failed[39m[22m[2m | [22m[1m[32m19 passed[39m[22m[90m (33)[39m
+[2m   Start at [22m 15:23:16
+[2m   Duration [22m 25.54s[2m (transform 463ms, setup 440ms, import 4.54s, tests 19.03s, environment 1.21s)[22m
+

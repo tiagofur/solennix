@@ -80,7 +80,7 @@ func TestSubscriptionHandler_CreateCheckoutSession(t *testing.T) {
 			StripeProPriceID: "",
 		}
 
-		handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+		handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, new(MockStripeService), cfg)
 
 		req := httptest.NewRequest("POST", "/api/subscriptions/checkout-session", nil)
 		w := httptest.NewRecorder()
@@ -106,7 +106,7 @@ func TestSubscriptionHandler_CreateCheckoutSession(t *testing.T) {
 		userID := uuid.New()
 		mockRepo.On("GetByID", mock.Anything, userID).Return(nil, assert.AnError)
 
-		handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+		handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, new(MockStripeService), cfg)
 
 		req := httptest.NewRequest("POST", "/api/subscriptions/checkout-session", nil)
 		w := httptest.NewRecorder()
@@ -129,7 +129,7 @@ func TestSubscriptionHandler_CreatePortalSession(t *testing.T) {
 			StripeSecretKey: "", // Not configured
 		}
 
-		handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+		handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, new(MockStripeService), cfg)
 
 		req := httptest.NewRequest("POST", "/api/subscriptions/portal-session", nil)
 		w := httptest.NewRecorder()
@@ -159,7 +159,7 @@ func TestSubscriptionHandler_CreatePortalSession(t *testing.T) {
 		}
 		mockRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
 
-		handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+		handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, new(MockStripeService), cfg)
 
 		req := httptest.NewRequest("POST", "/api/subscriptions/portal-session", nil)
 		w := httptest.NewRecorder()
@@ -186,7 +186,7 @@ func TestSubscriptionHandler_DebugUpgrade(t *testing.T) {
 
 		mockRepo.On("UpdatePlanAndStripeID", mock.Anything, userID, "pro", (*string)(nil)).Return(nil)
 
-		handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+		handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, new(MockStripeService), cfg)
 
 		req := httptest.NewRequest("POST", "/api/subscriptions/debug-upgrade", nil)
 		w := httptest.NewRecorder()
@@ -211,7 +211,7 @@ func TestSubscriptionHandler_DebugUpgrade(t *testing.T) {
 			Environment: "production",
 		}
 
-		handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+		handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, new(MockStripeService), cfg)
 
 		req := httptest.NewRequest("POST", "/api/subscriptions/debug-upgrade", nil)
 		w := httptest.NewRecorder()
@@ -238,7 +238,7 @@ func TestSubscriptionHandler_DebugDowngrade(t *testing.T) {
 
 		mockRepo.On("UpdatePlanAndStripeID", mock.Anything, userID, "basic", (*string)(nil)).Return(nil)
 
-		handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+		handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, new(MockStripeService), cfg)
 
 		req := httptest.NewRequest("POST", "/api/subscriptions/debug-downgrade", nil)
 		w := httptest.NewRecorder()
@@ -273,7 +273,7 @@ func TestSubscriptionHandler_GetSubscriptionStatus(t *testing.T) {
 
 		mockRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
 
-		handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+		handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, new(MockStripeService), cfg)
 
 		req := httptest.NewRequest("GET", "/api/subscriptions/status", nil)
 		w := httptest.NewRecorder()
@@ -306,7 +306,7 @@ func TestSubscriptionHandler_GetSubscriptionStatus(t *testing.T) {
 
 		mockRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
 
-		handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+		handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, new(MockStripeService), cfg)
 
 		req := httptest.NewRequest("GET", "/api/subscriptions/status", nil)
 		w := httptest.NewRecorder()
@@ -334,7 +334,7 @@ func TestSubscriptionHandler_RevenueCatWebhook(t *testing.T) {
 			RevenueCatWebhookSecret: "rc_secret_123",
 		}
 
-		handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+		handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, new(MockStripeService), cfg)
 
 		req := httptest.NewRequest("POST", "/api/subscriptions/webhook/revenuecat", bytes.NewReader([]byte("{}")))
 		// No Authorization header
@@ -351,7 +351,7 @@ func TestSubscriptionHandler_RevenueCatWebhook(t *testing.T) {
 			RevenueCatWebhookSecret: "rc_secret_123",
 		}
 
-		handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+		handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, new(MockStripeService), cfg)
 
 		req := httptest.NewRequest("POST", "/api/subscriptions/webhook/revenuecat", bytes.NewReader([]byte("{}")))
 		req.Header.Set("Authorization", "wrong_secret")
@@ -368,7 +368,7 @@ func TestSubscriptionHandler_RevenueCatWebhook(t *testing.T) {
 			RevenueCatWebhookSecret: "rc_secret_123",
 		}
 
-		handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+		handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, new(MockStripeService), cfg)
 
 		// Valid RevenueCat payload (minimal)
 		payload := `{
@@ -401,7 +401,7 @@ func TestSubscriptionHandler_StripeWebhookMissingSecret(t *testing.T) {
 		StripeWebhookSecret: "", // Not configured
 	}
 
-	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, new(MockStripeService), cfg)
 
 	req := httptest.NewRequest("POST", "/api/subscriptions/webhook/stripe", bytes.NewReader([]byte(`{}`)))
 	w := httptest.NewRecorder()
@@ -418,7 +418,7 @@ func TestSubscriptionHandler_StripeWebhookBodyTooLarge(t *testing.T) {
 		StripeWebhookSecret: "whsec_test",
 	}
 
-	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, new(MockStripeService), cfg)
 
 	// Create a body larger than 65536 bytes
 	largeBody := bytes.Repeat([]byte("x"), 70000)
@@ -438,7 +438,7 @@ func TestSubscriptionHandler_RevenueCatWebhookMissingSecretConfig(t *testing.T) 
 		RevenueCatWebhookSecret: "", // Not configured
 	}
 
-	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, new(MockStripeService), cfg)
 
 	req := httptest.NewRequest("POST", "/api/subscriptions/webhook/revenuecat", bytes.NewReader([]byte(`{}`)))
 	req.Header.Set("Authorization", "some_secret")
@@ -456,7 +456,7 @@ func TestSubscriptionHandler_RevenueCatWebhookInvalidPayload(t *testing.T) {
 		RevenueCatWebhookSecret: "rc_secret_123",
 	}
 
-	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, new(MockStripeService), cfg)
 
 	req := httptest.NewRequest("POST", "/api/subscriptions/webhook/revenuecat", bytes.NewReader([]byte(`not-json`)))
 	req.Header.Set("Authorization", "rc_secret_123")
@@ -474,7 +474,7 @@ func TestSubscriptionHandler_RevenueCatWebhookUnparseableAppUserID(t *testing.T)
 		RevenueCatWebhookSecret: "rc_secret_123",
 	}
 
-	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, new(MockStripeService), cfg)
 
 	// Use a non-UUID app_user_id (anonymous ID)
 	payload := `{
@@ -503,7 +503,7 @@ func TestSubscriptionHandler_RevenueCatWebhookCancellation(t *testing.T) {
 		RevenueCatWebhookSecret: "rc_secret_123",
 	}
 
-	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, new(MockStripeService), cfg)
 
 	userID := uuid.New()
 	payload := fmt.Sprintf(`{
@@ -534,7 +534,7 @@ func TestSubscriptionHandler_RevenueCatWebhookProductChange(t *testing.T) {
 		RevenueCatWebhookSecret: "rc_secret_123",
 	}
 
-	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, new(MockStripeService), cfg)
 
 	userID := uuid.New()
 	payload := fmt.Sprintf(`{
@@ -563,7 +563,7 @@ func TestSubscriptionHandler_DebugDowngradeInProduction(t *testing.T) {
 		Environment: "production",
 	}
 
-	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, new(MockStripeService), cfg)
 
 	req := httptest.NewRequest("POST", "/api/subscriptions/debug-downgrade", nil)
 	w := httptest.NewRecorder()
@@ -587,7 +587,7 @@ func TestSubscriptionHandler_DebugUpgradeRepoError(t *testing.T) {
 	userID := uuid.New()
 	mockRepo.On("UpdatePlanAndStripeID", mock.Anything, userID, "pro", (*string)(nil)).Return(assert.AnError)
 
-	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, new(MockStripeService), cfg)
 
 	req := httptest.NewRequest("POST", "/api/subscriptions/debug-upgrade", nil)
 	w := httptest.NewRecorder()
@@ -611,7 +611,7 @@ func TestSubscriptionHandler_DebugDowngradeRepoError(t *testing.T) {
 	userID := uuid.New()
 	mockRepo.On("UpdatePlanAndStripeID", mock.Anything, userID, "basic", (*string)(nil)).Return(assert.AnError)
 
-	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, new(MockStripeService), cfg)
 
 	req := httptest.NewRequest("POST", "/api/subscriptions/debug-downgrade", nil)
 	w := httptest.NewRecorder()
@@ -633,7 +633,7 @@ func TestSubscriptionHandler_GetSubscriptionStatusRepoError(t *testing.T) {
 	userID := uuid.New()
 	mockRepo.On("GetByID", mock.Anything, userID).Return(nil, assert.AnError)
 
-	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, new(MockStripeService), cfg)
 
 	req := httptest.NewRequest("GET", "/api/subscriptions/status", nil)
 	w := httptest.NewRecorder()
@@ -658,7 +658,7 @@ func TestSubscriptionHandler_CreatePortalSessionRepoError(t *testing.T) {
 	userID := uuid.New()
 	mockRepo.On("GetByID", mock.Anything, userID).Return(nil, assert.AnError)
 
-	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, new(MockStripeService), cfg)
 
 	req := httptest.NewRequest("POST", "/api/subscriptions/portal-session", nil)
 	w := httptest.NewRecorder()
@@ -718,7 +718,7 @@ func TestSubscriptionHandler_StripeWebhookInvalidSignature(t *testing.T) {
 		StripeWebhookSecret: "whsec_test_secret_123",
 	}
 
-	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, new(MockStripeService), cfg)
 
 	// Send a valid body with a wrong Stripe-Signature header
 	body := []byte(`{"id":"evt_test","type":"checkout.session.completed"}`)
@@ -739,7 +739,7 @@ func TestSubscriptionHandler_RevenueCatWebhookAllEventTypes(t *testing.T) {
 
 	t.Run("EXPIRATION_DowngradesUser", func(t *testing.T) {
 		mockRepo := new(MockUserRepo)
-		handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+		handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, new(MockStripeService), cfg)
 
 		userID := uuid.New()
 		payload := fmt.Sprintf(`{
@@ -766,7 +766,7 @@ func TestSubscriptionHandler_RevenueCatWebhookAllEventTypes(t *testing.T) {
 
 	t.Run("BILLING_ISSUE_DowngradesUser", func(t *testing.T) {
 		mockRepo := new(MockUserRepo)
-		handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+		handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, new(MockStripeService), cfg)
 
 		userID := uuid.New()
 		payload := fmt.Sprintf(`{
@@ -793,7 +793,7 @@ func TestSubscriptionHandler_RevenueCatWebhookAllEventTypes(t *testing.T) {
 
 	t.Run("RENEWAL_UpgradesUser", func(t *testing.T) {
 		mockRepo := new(MockUserRepo)
-		handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+		handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, new(MockStripeService), cfg)
 
 		userID := uuid.New()
 		payload := fmt.Sprintf(`{
@@ -820,7 +820,7 @@ func TestSubscriptionHandler_RevenueCatWebhookAllEventTypes(t *testing.T) {
 
 	t.Run("UNCANCELLATION_UpgradesUser", func(t *testing.T) {
 		mockRepo := new(MockUserRepo)
-		handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+		handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, new(MockStripeService), cfg)
 
 		userID := uuid.New()
 		payload := fmt.Sprintf(`{
@@ -851,7 +851,7 @@ func TestSubscriptionHandler_RevenueCatWebhookBodyTooLarge(t *testing.T) {
 		RevenueCatWebhookSecret: "rc_secret_123",
 	}
 
-	handler := NewSubscriptionHandler(new(MockUserRepo), nil, nil, nil, cfg)
+	handler := NewSubscriptionHandler(new(MockUserRepo), nil, nil, nil, new(MockStripeService), cfg)
 
 	// Create body larger than 65536 bytes
 	largeBody := bytes.Repeat([]byte("x"), 70000)
@@ -1114,7 +1114,7 @@ func TestSubscriptionHandler_RevenueCatWebhookErrors(t *testing.T) {
 
 	t.Run("INITIAL_PURCHASE_UpgradeError_StillReturns200", func(t *testing.T) {
 		mockRepo := new(MockUserRepo)
-		handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+		handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, new(MockStripeService), cfg)
 
 		userID := uuid.New()
 		payload := fmt.Sprintf(`{
@@ -1141,7 +1141,7 @@ func TestSubscriptionHandler_RevenueCatWebhookErrors(t *testing.T) {
 
 	t.Run("CANCELLATION_DowngradeError_StillReturns200", func(t *testing.T) {
 		mockRepo := new(MockUserRepo)
-		handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+		handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, new(MockStripeService), cfg)
 
 		userID := uuid.New()
 		payload := fmt.Sprintf(`{
@@ -1187,7 +1187,12 @@ func TestSubscriptionHandler_CreateCheckoutSession_UserWithStripeCustomer(t *tes
 	}
 	mockRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
 
-	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+	mockStripe := new(MockStripeService)
+	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, mockStripe, cfg)
+
+	mockStripe.On("NewCheckoutSession", mock.MatchedBy(func(p *stripe.CheckoutSessionParams) bool {
+		return p.Customer != nil && *p.Customer == customerID
+	})).Return(&stripe.CheckoutSession{URL: "https://stripe.com/sess_123"}, nil)
 
 	req := httptest.NewRequest("POST", "/api/subscriptions/checkout-session", nil)
 	w := httptest.NewRecorder()
@@ -1197,10 +1202,10 @@ func TestSubscriptionHandler_CreateCheckoutSession_UserWithStripeCustomer(t *tes
 
 	handler.CreateCheckoutSession(w, req)
 
-	// session.New will fail with a fake key → handler should return 500 after retry
-	assert.Equal(t, http.StatusInternalServerError, w.Code)
-	assert.Contains(t, w.Body.String(), "Failed to create checkout session")
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), "sess_123")
 	mockRepo.AssertExpectations(t)
+	mockStripe.AssertExpectations(t)
 }
 
 func TestSubscriptionHandler_CreateCheckoutSession_UserWithoutStripeCustomer(t *testing.T) {
@@ -1220,7 +1225,10 @@ func TestSubscriptionHandler_CreateCheckoutSession_UserWithoutStripeCustomer(t *
 	}
 	mockRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
 
-	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+	mockStripe := new(MockStripeService)
+	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, mockStripe, cfg)
+
+	mockStripe.On("NewCheckoutSession", mock.Anything).Return(&stripe.CheckoutSession{URL: "https://stripe.com/sess_234"}, nil)
 
 	req := httptest.NewRequest("POST", "/api/subscriptions/checkout-session", nil)
 	w := httptest.NewRecorder()
@@ -1230,10 +1238,10 @@ func TestSubscriptionHandler_CreateCheckoutSession_UserWithoutStripeCustomer(t *
 
 	handler.CreateCheckoutSession(w, req)
 
-	// session.New will fail with a fake key → no retry because there's no stored customer ID
-	assert.Equal(t, http.StatusInternalServerError, w.Code)
-	assert.Contains(t, w.Body.String(), "Failed to create checkout session")
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), "sess_234")
 	mockRepo.AssertExpectations(t)
+	mockStripe.AssertExpectations(t)
 }
 
 func TestSubscriptionHandler_CreateCheckoutSession_UserWithEmptyStripeCustomer(t *testing.T) {
@@ -1254,7 +1262,10 @@ func TestSubscriptionHandler_CreateCheckoutSession_UserWithEmptyStripeCustomer(t
 	}
 	mockRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
 
-	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+	mockStripe := new(MockStripeService)
+	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, mockStripe, cfg)
+
+	mockStripe.On("NewCheckoutSession", mock.Anything).Return(&stripe.CheckoutSession{URL: "http://checkout.test"}, nil)
 
 	req := httptest.NewRequest("POST", "/api/subscriptions/checkout-session", nil)
 	w := httptest.NewRecorder()
@@ -1264,9 +1275,8 @@ func TestSubscriptionHandler_CreateCheckoutSession_UserWithEmptyStripeCustomer(t
 
 	handler.CreateCheckoutSession(w, req)
 
-	// session.New will fail, but exercises the CustomerEmail branch (empty StripeCustomerID)
-	assert.Equal(t, http.StatusInternalServerError, w.Code)
-	assert.Contains(t, w.Body.String(), "Failed to create checkout session")
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), "http://checkout.test")
 	mockRepo.AssertExpectations(t)
 }
 
@@ -1278,7 +1288,7 @@ func TestSubscriptionHandler_CreateCheckoutSession_OnlySecretKeyMissing(t *testi
 		StripeProPriceID: "price_123",
 	}
 
-	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, new(MockStripeService), cfg)
 
 	req := httptest.NewRequest("POST", "/api/subscriptions/checkout-session", nil)
 	w := httptest.NewRecorder()
@@ -1301,7 +1311,7 @@ func TestSubscriptionHandler_CreateCheckoutSession_OnlyPriceIDMissing(t *testing
 		StripeProPriceID: "",
 	}
 
-	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, new(MockStripeService), cfg)
 
 	req := httptest.NewRequest("POST", "/api/subscriptions/checkout-session", nil)
 	w := httptest.NewRecorder()
@@ -1333,7 +1343,7 @@ func TestSubscriptionHandler_CreatePortalSession_EmptyStringStripeCustomerID(t *
 	}
 	mockRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
 
-	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, new(MockStripeService), cfg)
 
 	req := httptest.NewRequest("POST", "/api/subscriptions/portal-session", nil)
 	w := httptest.NewRecorder()
@@ -1366,7 +1376,10 @@ func TestSubscriptionHandler_CreatePortalSession_WithStripeCustomerID(t *testing
 	}
 	mockRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
 
-	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+	mockStripe := new(MockStripeService)
+	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, mockStripe, cfg)
+
+	mockStripe.On("NewBillingPortalSession", mock.Anything).Return(&stripe.BillingPortalSession{URL: "http://portal.test"}, nil)
 
 	req := httptest.NewRequest("POST", "/api/subscriptions/portal-session", nil)
 	w := httptest.NewRecorder()
@@ -1376,10 +1389,10 @@ func TestSubscriptionHandler_CreatePortalSession_WithStripeCustomerID(t *testing
 
 	handler.CreatePortalSession(w, req)
 
-	// stripeBilling.New fails with fake key → 500
-	assert.Equal(t, http.StatusInternalServerError, w.Code)
-	assert.Contains(t, w.Body.String(), "Failed to create billing portal session")
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), "http://portal.test")
 	mockRepo.AssertExpectations(t)
+	mockStripe.AssertExpectations(t)
 }
 
 func TestSubscriptionHandler_CreatePortalSession_WithPortalConfigID(t *testing.T) {
@@ -1400,7 +1413,12 @@ func TestSubscriptionHandler_CreatePortalSession_WithPortalConfigID(t *testing.T
 	}
 	mockRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
 
-	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+	mockStripe := new(MockStripeService)
+	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, mockStripe, cfg)
+
+	mockStripe.On("NewBillingPortalSession", mock.MatchedBy(func(p *stripe.BillingPortalSessionParams) bool {
+		return p.Configuration != nil && *p.Configuration == "bpc_test_config"
+	})).Return(&stripe.BillingPortalSession{URL: "http://portal.test/config"}, nil)
 
 	req := httptest.NewRequest("POST", "/api/subscriptions/portal-session", nil)
 	w := httptest.NewRecorder()
@@ -1410,9 +1428,10 @@ func TestSubscriptionHandler_CreatePortalSession_WithPortalConfigID(t *testing.T
 
 	handler.CreatePortalSession(w, req)
 
-	// stripeBilling.New fails with fake key → 500 but exercises the Configuration branch
-	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), "http://portal.test/config")
 	mockRepo.AssertExpectations(t)
+	mockStripe.AssertExpectations(t)
 }
 
 func TestSubscriptionHandler_GetSubscriptionStatus_SubWithNoPeriodEnd(t *testing.T) {
@@ -1438,7 +1457,7 @@ func TestSubscriptionHandler_GetSubscriptionStatus_SubWithNoPeriodEnd(t *testing
 	mockUserRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
 	mockSubRepo.On("GetByUserID", mock.Anything, userID).Return(sub, nil)
 
-	handler := NewSubscriptionHandler(mockUserRepo, mockSubRepo, nil, nil, cfg)
+	handler := NewSubscriptionHandler(mockUserRepo, mockSubRepo, nil, nil, new(MockStripeService), cfg)
 
 	req := httptest.NewRequest("GET", "/api/subscriptions/status", nil)
 	w := httptest.NewRecorder()
@@ -1493,7 +1512,7 @@ func TestSubscriptionHandler_GetSubscriptionStatus_SubWithNilProviderSubID(t *te
 	mockUserRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
 	mockSubRepo.On("GetByUserID", mock.Anything, userID).Return(sub, nil)
 
-	handler := NewSubscriptionHandler(mockUserRepo, mockSubRepo, nil, nil, cfg)
+	handler := NewSubscriptionHandler(mockUserRepo, mockSubRepo, nil, nil, new(MockStripeService), cfg)
 
 	req := httptest.NewRequest("GET", "/api/subscriptions/status", nil)
 	w := httptest.NewRecorder()
@@ -1545,7 +1564,7 @@ func TestSubscriptionHandler_GetSubscriptionStatus_NonStripeProviderWithPeriodEn
 	mockUserRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
 	mockSubRepo.On("GetByUserID", mock.Anything, userID).Return(sub, nil)
 
-	handler := NewSubscriptionHandler(mockUserRepo, mockSubRepo, nil, nil, cfg)
+	handler := NewSubscriptionHandler(mockUserRepo, mockSubRepo, nil, nil, new(MockStripeService), cfg)
 
 	req := httptest.NewRequest("GET", "/api/subscriptions/status", nil)
 	w := httptest.NewRecorder()
@@ -1579,7 +1598,7 @@ func TestNewSubscriptionHandler(t *testing.T) {
 		StripeSecretKey: "sk_test_constructor",
 	}
 
-	handler := NewSubscriptionHandler(mockUserRepo, mockSubRepo, mockEventRepo, mockPaymentRepo, cfg)
+	handler := NewSubscriptionHandler(mockUserRepo, mockSubRepo, mockEventRepo, mockPaymentRepo, new(MockStripeService), cfg)
 
 	assert.NotNil(t, handler)
 	assert.Equal(t, cfg, handler.cfg)
@@ -1591,7 +1610,7 @@ func TestSubscriptionHandler_StripeWebhookMissingSignatureHeader(t *testing.T) {
 		StripeWebhookSecret: "whsec_test_secret_123",
 	}
 
-	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, cfg)
+	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, new(MockStripeService), cfg)
 
 	// Send a body without the Stripe-Signature header
 	body := []byte(`{"id":"evt_test","type":"checkout.session.completed"}`)
@@ -1633,7 +1652,13 @@ func TestSubscriptionHandler_GetSubscriptionStatusWithSubRepo(t *testing.T) {
 		mockUserRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
 		mockSubRepo.On("GetByUserID", mock.Anything, userID).Return(sub, nil)
 
-		handler := NewSubscriptionHandler(mockUserRepo, mockSubRepo, nil, nil, cfg)
+		mockStripe := new(MockStripeService)
+		handler := NewSubscriptionHandler(mockUserRepo, mockSubRepo, nil, nil, mockStripe, cfg)
+
+		mockStripe.On("GetSubscription", providerSubID, mock.Anything).Return(&stripe.Subscription{
+			CancelAtPeriodEnd: false,
+			CurrentPeriodEnd:  periodEnd.Unix(),
+		}, nil)
 
 		req := httptest.NewRequest("GET", "/api/subscriptions/status", nil)
 		w := httptest.NewRecorder()
@@ -1656,6 +1681,7 @@ func TestSubscriptionHandler_GetSubscriptionStatusWithSubRepo(t *testing.T) {
 
 		mockUserRepo.AssertExpectations(t)
 		mockSubRepo.AssertExpectations(t)
+		mockStripe.AssertExpectations(t)
 	})
 
 	t.Run("should return status without subscription when subRepo has no data", func(t *testing.T) {
@@ -1672,7 +1698,7 @@ func TestSubscriptionHandler_GetSubscriptionStatusWithSubRepo(t *testing.T) {
 		mockUserRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
 		mockSubRepo.On("GetByUserID", mock.Anything, userID).Return(nil, assert.AnError)
 
-		handler := NewSubscriptionHandler(mockUserRepo, mockSubRepo, nil, nil, cfg)
+		handler := NewSubscriptionHandler(mockUserRepo, mockSubRepo, nil, nil, new(MockStripeService), cfg)
 
 		req := httptest.NewRequest("GET", "/api/subscriptions/status", nil)
 		w := httptest.NewRecorder()
@@ -1713,7 +1739,7 @@ func TestSubscriptionHandler_GetSubscriptionStatusWithSubRepo(t *testing.T) {
 		mockUserRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
 		mockSubRepo.On("GetByUserID", mock.Anything, userID).Return(sub, nil)
 
-		handler := NewSubscriptionHandler(mockUserRepo, mockSubRepo, nil, nil, cfg)
+		handler := NewSubscriptionHandler(mockUserRepo, mockSubRepo, nil, nil, new(MockStripeService), cfg)
 
 		req := httptest.NewRequest("GET", "/api/subscriptions/status", nil)
 		w := httptest.NewRecorder()

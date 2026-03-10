@@ -12,9 +12,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stripe/stripe-go/v81"
-	stripeBilling "github.com/stripe/stripe-go/v81/billingportal/session"
-	"github.com/stripe/stripe-go/v81/checkout/session"
-	stripeSub "github.com/stripe/stripe-go/v81/subscription"
 	"github.com/stripe/stripe-go/v81/webhook"
 	"github.com/tiagofur/solennix-backend/internal/config"
 	"github.com/tiagofur/solennix-backend/internal/middleware"
@@ -29,6 +26,7 @@ type SubscriptionHandler struct {
 	subRepo     SubscriptionRepository
 	eventRepo   EventRepository
 	paymentRepo PaymentRepository
+	stripe      StripeService
 	cfg         *config.Config
 }
 
@@ -37,6 +35,7 @@ func NewSubscriptionHandler(
 	subRepo SubscriptionRepository,
 	eventRepo EventRepository,
 	paymentRepo PaymentRepository,
+	stripeService StripeService,
 	cfg *config.Config,
 ) *SubscriptionHandler {
 	stripe.Key = cfg.StripeSecretKey
@@ -45,6 +44,7 @@ func NewSubscriptionHandler(
 		subRepo:     subRepo,
 		eventRepo:   eventRepo,
 		paymentRepo: paymentRepo,
+		stripe:      stripeService,
 		cfg:         cfg,
 	}
 }
@@ -89,7 +89,7 @@ func (h *SubscriptionHandler) CreateCheckoutSession(w http.ResponseWriter, r *ht
 		params.CustomerEmail = stripe.String(user.Email)
 	}
 
-	s, err := session.New(params)
+	s, err := h.stripe.NewCheckoutSession(params)
 	if err != nil {
 		slog.Error("Failed to create checkout session", "error", err, "user_id", userID)
 
@@ -99,7 +99,7 @@ func (h *SubscriptionHandler) CreateCheckoutSession(w http.ResponseWriter, r *ht
 			slog.Warn("Retrying checkout session without stored Stripe customer ID", "user_id", userID, "stripe_customer_id", *user.StripeCustomerID)
 			params.Customer = nil
 			params.CustomerEmail = stripe.String(user.Email)
-			s, err = session.New(params)
+			s, err = h.stripe.NewCheckoutSession(params)
 		}
 
 		if err != nil {
@@ -145,7 +145,7 @@ func (h *SubscriptionHandler) CreatePortalSession(w http.ResponseWriter, r *http
 		params.Configuration = stripe.String(h.cfg.StripePortalConfigID)
 	}
 
-	ps, err := stripeBilling.New(params)
+	ps, err := h.stripe.NewBillingPortalSession(params)
 	if err != nil {
 		slog.Error("Failed to create portal session", "error", err)
 		writeError(w, http.StatusInternalServerError, "Failed to create billing portal session")
@@ -225,7 +225,7 @@ func (h *SubscriptionHandler) StripeWebhook(w http.ResponseWriter, r *http.Reque
 					Status:        "active",
 				}
 				// Fetch Stripe subscription for period dates
-				if stripeSubData, err := stripeSub.Get(s.Subscription.ID, nil); err == nil {
+				if stripeSubData, err := h.stripe.GetSubscription(s.Subscription.ID, nil); err == nil {
 					start := time.Unix(stripeSubData.CurrentPeriodStart, 0)
 					end := time.Unix(stripeSubData.CurrentPeriodEnd, 0)
 					subRecord.CurrentPeriodStart = &start
@@ -520,7 +520,7 @@ func (h *SubscriptionHandler) GetSubscriptionStatus(w http.ResponseWriter, r *ht
 					info.CurrentPeriodEnd = &end
 				} else {
 					// Fetch from Stripe and cache
-					if stripeSubData, err := stripeSub.Get(subID, nil); err == nil {
+					if stripeSubData, err := h.stripe.GetSubscription(subID, nil); err == nil {
 						info.CancelAtPeriodEnd = stripeSubData.CancelAtPeriodEnd
 						end := time.Unix(stripeSubData.CurrentPeriodEnd, 0).Format(time.RFC3339)
 						info.CurrentPeriodEnd = &end

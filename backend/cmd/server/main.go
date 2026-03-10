@@ -76,11 +76,12 @@ func main() {
 	unavailRepo := repository.NewUnavailableDateRepo(pool)
 
 	// Initialize handlers
+	stripeService := &handlers.DefaultStripeService{}
 	authHandler := handlers.NewAuthHandler(userRepo, authService, emailService)
 	crudHandler := handlers.NewCRUDHandler(clientRepo, eventRepo, productRepo, inventoryRepo, paymentRepo, userRepo, unavailRepo)
-	subHandler := handlers.NewSubscriptionHandler(userRepo, subscriptionRepo, eventRepo, paymentRepo, cfg)
+	subHandler := handlers.NewSubscriptionHandler(userRepo, subscriptionRepo, eventRepo, paymentRepo, stripeService, cfg)
 	searchHandler := handlers.NewSearchHandler(clientRepo, productRepo, inventoryRepo, eventRepo)
-	eventPaymentHandler := handlers.NewEventPaymentHandler(eventRepo, paymentRepo, cfg)
+	eventPaymentHandler := handlers.NewEventPaymentHandler(eventRepo, paymentRepo, stripeService, cfg)
 	uploadHandler := handlers.NewUploadHandler(cfg.UploadDir, userRepo)
 	adminHandler := handlers.NewAdminHandler(adminRepo)
 	unavailHandler := handlers.NewUnavailableDateHandler(unavailRepo)

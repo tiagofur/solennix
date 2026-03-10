@@ -9,7 +9,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/stripe/stripe-go/v81"
-	"github.com/stripe/stripe-go/v81/checkout/session"
 	"github.com/tiagofur/solennix-backend/internal/config"
 	"github.com/tiagofur/solennix-backend/internal/middleware"
 )
@@ -18,18 +17,21 @@ import (
 type EventPaymentHandler struct {
 	eventRepo   FullEventRepository
 	paymentRepo FullPaymentRepository
+	stripe      StripeService
 	cfg         *config.Config
 }
 
 func NewEventPaymentHandler(
 	eventRepo FullEventRepository,
 	paymentRepo FullPaymentRepository,
+	stripeService StripeService,
 	cfg *config.Config,
 ) *EventPaymentHandler {
 	stripe.Key = cfg.StripeSecretKey
 	return &EventPaymentHandler{
 		eventRepo:   eventRepo,
 		paymentRepo: paymentRepo,
+		stripe:      stripeService,
 		cfg:         cfg,
 	}
 }
@@ -109,7 +111,7 @@ func (h *EventPaymentHandler) CreateEventCheckoutSession(w http.ResponseWriter, 
 		params.CustomerEmail = event.Client.Email
 	}
 
-	sess, err := session.New(params)
+	sess, err := h.stripe.NewCheckoutSession(params)
 	if err != nil {
 		slog.Error("Failed to create Stripe checkout session", "error", err, "event_id", eventID)
 		writeError(w, http.StatusInternalServerError, "Failed to create payment session")
@@ -145,7 +147,7 @@ func (h *EventPaymentHandler) HandleEventPaymentSuccess(w http.ResponseWriter, r
 	}
 
 	// Retrieve the session from Stripe
-	sess, err := session.Get(sessionID, nil)
+	sess, err := h.stripe.GetCheckoutSession(sessionID, nil)
 	if err != nil {
 		slog.Error("Failed to retrieve Stripe session", "error", err, "session_id", sessionID)
 		writeError(w, http.StatusInternalServerError, "Failed to retrieve payment session")

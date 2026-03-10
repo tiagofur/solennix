@@ -616,6 +616,74 @@ func TestAuthHandler_Me_HappyPaths(t *testing.T) {
 	})
 }
 
+func TestAuthHandler_UpdateProfile_HappyPaths(t *testing.T) {
+	t.Run("Success_ValidUpdate", func(t *testing.T) {
+		mockRepo := new(MockFullUserRepo)
+		h := &AuthHandler{userRepo: mockRepo}
+
+		userID := uuid.New()
+		newName := "New Name"
+		newBusiness := "New Business"
+		user := &models.User{
+			ID:           userID,
+			Email:        "update@test.dev",
+			Name:         newName,
+			BusinessName: &newBusiness,
+		}
+
+		mockRepo.On("Update", mock.Anything, userID,
+			&newName, &newBusiness, (*string)(nil), (*string)(nil), (*bool)(nil),
+			(*float64)(nil), (*float64)(nil), (*float64)(nil), (*string)(nil),
+		).Return(user, nil)
+
+		body := `{"name":"New Name","business_name":"New Business"}`
+		req := httptest.NewRequest(http.MethodPut, "/api/users/me", strings.NewReader(body))
+		req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, userID))
+		rr := httptest.NewRecorder()
+		h.UpdateProfile(rr, req)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+		assert.Contains(t, rr.Body.String(), "New Name")
+		assert.Contains(t, rr.Body.String(), "New Business")
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("InvalidTemplate_Returns400", func(t *testing.T) {
+		h := &AuthHandler{}
+		userID := uuid.New()
+
+		body := `{"contract_template":"Invalid [token]"}`
+		req := httptest.NewRequest(http.MethodPut, "/api/users/me", strings.NewReader(body))
+		req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, userID))
+		rr := httptest.NewRecorder()
+		h.UpdateProfile(rr, req)
+
+		assert.Equal(t, http.StatusBadRequest, rr.Code)
+		assert.Contains(t, rr.Body.String(), "contains unsupported token [token]")
+	})
+
+	t.Run("RepoError_Returns500", func(t *testing.T) {
+		mockRepo := new(MockFullUserRepo)
+		h := &AuthHandler{userRepo: mockRepo}
+		userID := uuid.New()
+
+		mockRepo.On("Update", mock.Anything, userID,
+			mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+			mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+		).Return(nil, fmt.Errorf("db error"))
+
+		body := `{"name":"Fail Update"}`
+		req := httptest.NewRequest(http.MethodPut, "/api/users/me", strings.NewReader(body))
+		req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, userID))
+		rr := httptest.NewRecorder()
+		h.UpdateProfile(rr, req)
+
+		assert.Equal(t, http.StatusInternalServerError, rr.Code)
+		assert.Contains(t, rr.Body.String(), "Failed to update profile")
+		mockRepo.AssertExpectations(t)
+	})
+}
+
 func TestAuthHandler_Logout_HappyPaths(t *testing.T) {
 	t.Run("Success_ReturnsOKAndClearsCookie", func(t *testing.T) {
 		h := &AuthHandler{}
