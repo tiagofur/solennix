@@ -100,7 +100,6 @@ export default function SettingsScreen() {
   const [showLogout, setShowLogout] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [restoring, setRestoring] = useState(false);
-  const [sendingPasswordReset, setSendingPasswordReset] = useState(false);
   const {
     eventsThisMonth,
     limit: eventLimit,
@@ -111,17 +110,8 @@ export default function SettingsScreen() {
 
   const planIsPro = user?.plan === "pro" || user?.plan === "premium";
 
-  const handleChangePassword = async () => {
-    if (!user?.email) return;
-    setSendingPasswordReset(true);
-    try {
-      await api.post("/auth/forgot-password", { email: user.email });
-      addToast("Revisa tu correo para cambiar la contraseña", "success");
-    } catch {
-      addToast("Error al enviar el correo", "error");
-    } finally {
-      setSendingPasswordReset(false);
-    }
+  const handleChangePassword = () => {
+    navigation.navigate("ChangePassword" as any);
   };
 
   const handleRestore = async () => {
@@ -188,17 +178,10 @@ export default function SettingsScreen() {
             trailing={chevron}
           />
           <SettingsRow
-            icon={
-              sendingPasswordReset ? (
-                <ActivityIndicator color={palette.textTertiary} size={20} />
-              ) : (
-                <Lock color={palette.textTertiary} size={20} />
-              )
-            }
+            icon={<Lock color={palette.textTertiary} size={20} />}
             label="Cambiar Contraseña"
-            subtitle="Te enviaremos instrucciones por correo"
             onPress={handleChangePassword}
-            disabled={sendingPasswordReset}
+            trailing={chevron}
           />
           <SettingsRow
             icon={<CreditCard color={palette.textTertiary} size={20} />}

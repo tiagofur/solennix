@@ -59,6 +59,7 @@ export type InventoryStackParamList = {
 export type SettingsStackParamList = {
     Settings: undefined;
     EditProfile: undefined;
+    ChangePassword: undefined;
     BusinessSettings: undefined;
     ContractDefaults: undefined;
     Pricing: undefined;

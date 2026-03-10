@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { SettingsStackParamList } from "../types/navigation";
 import SettingsScreen from "../screens/profile/SettingsScreen";
 import EditProfileScreen from "../screens/profile/EditProfileScreen";
+import ChangePasswordScreen from "../screens/profile/ChangePasswordScreen";
 import BusinessSettingsScreen from "../screens/profile/BusinessSettingsScreen";
 import ContractDefaultsScreen from "../screens/profile/ContractDefaultsScreen";
 import PricingScreen from "../screens/profile/PricingScreen";
@@ -32,6 +33,11 @@ export default function SettingsStack() {
         name="EditProfile"
         component={EditProfileScreen}
         options={{ title: "Editar Perfil" }}
+      />
+      <Stack.Screen
+        name="ChangePassword"
+        component={ChangePasswordScreen}
+        options={{ title: "Cambiar Contraseña" }}
       />
       <Stack.Screen
         name="BusinessSettings"

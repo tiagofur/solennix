@@ -48,6 +48,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 			r.Group(func(r chi.Router) {
 				r.Use(mw.Auth(authService))
 				r.Get("/me", authHandler.Me)
+				r.Post("/change-password", authHandler.ChangePassword)
 			})
 		})
 

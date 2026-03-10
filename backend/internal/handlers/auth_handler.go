@@ -361,6 +361,68 @@ func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// ChangePassword handles POST /api/auth/change-password (authenticated)
+func (h *AuthHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+
+	var req struct {
+		CurrentPassword string `json:"current_password"`
+		NewPassword     string `json:"new_password"`
+	}
+	if err := decodeJSON(r, &req); err != nil {
+		writeError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	if req.CurrentPassword == "" || req.NewPassword == "" {
+		writeError(w, http.StatusBadRequest, "Current password and new password are required")
+		return
+	}
+
+	if len(req.NewPassword) < 6 {
+		writeError(w, http.StatusBadRequest, "New password must be at least 6 characters")
+		return
+	}
+
+	if len(req.NewPassword) > 128 {
+		writeError(w, http.StatusBadRequest, "New password must not exceed 128 characters")
+		return
+	}
+
+	// Get user to verify current password
+	user, err := h.userRepo.GetByID(r.Context(), userID)
+	if err != nil || user == nil {
+		writeError(w, http.StatusNotFound, "User not found")
+		return
+	}
+
+	// Verify current password
+	if !h.authService.CheckPassword(req.CurrentPassword, user.PasswordHash) {
+		writeError(w, http.StatusUnauthorized, "Current password is incorrect")
+		return
+	}
+
+	// Hash new password
+	hash, err := h.authService.HashPassword(req.NewPassword)
+	if err != nil {
+		slog.Error("Failed to hash password", "error", err)
+		writeError(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+
+	// Update password
+	if err := h.userRepo.UpdatePassword(r.Context(), userID, hash); err != nil {
+		slog.Error("Failed to update password", "error", err)
+		writeError(w, http.StatusInternalServerError, "Failed to update password")
+		return
+	}
+
+	slog.Info("Password changed successfully", "user_id", userID)
+	writeJSON(w, http.StatusOK, map[string]string{
+		"message": "Password changed successfully",
+	})
+}
+
 // UpdateProfile handles PUT /api/users/me
 func (h *AuthHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())

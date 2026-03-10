@@ -78,6 +78,10 @@ export const Settings: React.FC = () => {
   const initialTab = searchParams.get("tab") === "subscription" ? "subscription" : "profile";
   const [activeTab, setActiveTab] = useState<"profile" | "business" | "subscription" | "contracts">(initialTab);
   const [isSendingPasswordReset, setIsSendingPasswordReset] = useState(false);
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   useEffect(() => {
     if (profile) {
@@ -171,13 +175,34 @@ export const Settings: React.FC = () => {
   };
 
   const handleChangePassword = async () => {
-    if (!profile?.email) return;
+    if (!currentPassword || !newPassword) {
+      addToast("Completa todos los campos", "error");
+      return;
+    }
+    if (newPassword.length < 6) {
+      addToast("La nueva contraseña debe tener al menos 6 caracteres", "error");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      addToast("Las contraseñas no coinciden", "error");
+      return;
+    }
     setIsSendingPasswordReset(true);
     try {
-      await api.post("/auth/forgot-password", { email: profile.email });
-      addToast("Revisa tu correo para cambiar la contraseña", "success");
-    } catch {
-      addToast("Error al enviar el correo de recuperación", "error");
+      await api.post("/auth/change-password", {
+        current_password: currentPassword,
+        new_password: newPassword,
+      });
+      addToast("Contraseña actualizada correctamente", "success");
+      setShowPasswordForm(false);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (error: any) {
+      const msg = error?.message?.includes("incorrect")
+        ? "La contraseña actual es incorrecta"
+        : "Error al cambiar la contraseña";
+      addToast(msg, "error");
     } finally {
       setIsSendingPasswordReset(false);
     }
@@ -265,14 +290,62 @@ export const Settings: React.FC = () => {
                 </div>
               </div>
 
-              <div className="pt-6 border-t border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <button
-                  onClick={handleChangePassword}
-                  disabled={isSendingPasswordReset}
-                  className="flex items-center gap-2 text-primary font-bold hover:gap-3 transition-all disabled:opacity-50"
-                >
-                  {isSendingPasswordReset ? "Enviando..." : "Cambiar contraseña"} <ExternalLink className="h-4 w-4" />
-                </button>
+              <div className="pt-6 border-t border-border space-y-4">
+                {!showPasswordForm ? (
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <button
+                      onClick={() => setShowPasswordForm(true)}
+                      className="flex items-center gap-2 text-primary font-bold hover:gap-3 transition-all"
+                    >
+                      Cambiar contraseña <Shield className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4 max-w-md">
+                    <h4 className="font-bold text-text">Cambiar contraseña</h4>
+                    <input
+                      type="password"
+                      placeholder="Contraseña actual"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      className="w-full bg-surface border border-border rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+                    />
+                    <input
+                      type="password"
+                      placeholder="Nueva contraseña (mín. 6 caracteres)"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="w-full bg-surface border border-border rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+                    />
+                    <input
+                      type="password"
+                      placeholder="Confirmar nueva contraseña"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="w-full bg-surface border border-border rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+                    />
+                    <div className="flex gap-3">
+                      <button
+                        onClick={handleChangePassword}
+                        disabled={isSendingPasswordReset}
+                        className="bg-primary text-white font-medium px-4 py-2 rounded-md hover:bg-primary-dark transition-colors shadow-sm disabled:opacity-50"
+                      >
+                        {isSendingPasswordReset ? "Guardando..." : "Guardar"}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowPasswordForm(false);
+                          setCurrentPassword("");
+                          setNewPassword("");
+                          setConfirmPassword("");
+                        }}
+                        className="bg-surface-alt text-text font-bold px-4 py-2 rounded-xl border border-border hover:bg-border transition-all"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                )}
                 <div className="flex items-center justify-between sm:justify-end gap-4">
                   <div>
                     <p className="font-bold text-text text-sm">Modo Oscuro</p>
