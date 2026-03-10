@@ -77,6 +77,7 @@ export const Settings: React.FC = () => {
   );
   const initialTab = searchParams.get("tab") === "subscription" ? "subscription" : "profile";
   const [activeTab, setActiveTab] = useState<"profile" | "business" | "subscription" | "contracts">(initialTab);
+  const [isSendingPasswordReset, setIsSendingPasswordReset] = useState(false);
 
   useEffect(() => {
     if (profile) {
@@ -169,6 +170,19 @@ export const Settings: React.FC = () => {
     }
   };
 
+  const handleChangePassword = async () => {
+    if (!profile?.email) return;
+    setIsSendingPasswordReset(true);
+    try {
+      await api.post("/auth/forgot-password", { email: profile.email });
+      addToast("Revisa tu correo para cambiar la contraseña", "success");
+    } catch {
+      addToast("Error al enviar el correo de recuperación", "error");
+    } finally {
+      setIsSendingPasswordReset(false);
+    }
+  };
+
   const handleManageSubscription = async () => {
     try {
       setIsPortalLoading(true);
@@ -252,8 +266,12 @@ export const Settings: React.FC = () => {
               </div>
 
               <div className="pt-6 border-t border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <button className="flex items-center gap-2 text-primary font-bold hover:gap-3 transition-all">
-                  Cambiar contraseña <ExternalLink className="h-4 w-4" />
+                <button
+                  onClick={handleChangePassword}
+                  disabled={isSendingPasswordReset}
+                  className="flex items-center gap-2 text-primary font-bold hover:gap-3 transition-all disabled:opacity-50"
+                >
+                  {isSendingPasswordReset ? "Enviando..." : "Cambiar contraseña"} <ExternalLink className="h-4 w-4" />
                 </button>
                 <div className="flex items-center justify-between sm:justify-end gap-4">
                   <div>
