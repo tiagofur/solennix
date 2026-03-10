@@ -147,7 +147,10 @@ export const ProductDetails: React.FC = () => {
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="bg-card rounded-3xl border border-border p-5">
+            <div
+              key={i}
+              className="bg-card rounded-3xl border border-border p-5"
+            >
               <div className="h-3 w-20 rounded-md bg-surface-alt animate-pulse mb-3" />
               <div className="h-8 w-16 rounded-md bg-surface-alt animate-pulse" />
             </div>
@@ -218,7 +221,7 @@ export const ProductDetails: React.FC = () => {
       />
 
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate("/products")}
@@ -227,7 +230,9 @@ export const ProductDetails: React.FC = () => {
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div>
-            <h1 className="text-2xl font-black tracking-tight text-text">{product.name}</h1>
+            <h1 className="text-2xl font-black tracking-tight text-text">
+              {product.name}
+            </h1>
             <span className="px-2.5 py-0.5 mt-1 inline-flex text-xs font-semibold rounded-full bg-primary/10 text-primary border border-primary/20">
               {product.category}
             </span>
@@ -256,10 +261,15 @@ export const ProductDetails: React.FC = () => {
         <div className="bg-card rounded-3xl border border-border p-5 shadow-sm">
           <div className="flex items-center gap-2 mb-2">
             <DollarSign className="h-4 w-4 text-primary" />
-            <p className="text-xs text-text-secondary uppercase tracking-wide">Precio Base</p>
+            <p className="text-xs text-text-secondary uppercase tracking-wide">
+              Precio Base
+            </p>
           </div>
           <p className="text-3xl font-black text-text">
-            ${product.base_price.toLocaleString("es-MX", { minimumFractionDigits: 2 })}
+            $
+            {product.base_price.toLocaleString("es-MX", {
+              minimumFractionDigits: 2,
+            })}
           </p>
           <p className="text-xs text-text-secondary mt-1">por unidad</p>
         </div>
@@ -267,7 +277,9 @@ export const ProductDetails: React.FC = () => {
         <div className="bg-card rounded-3xl border border-border p-5 shadow-sm">
           <div className="flex items-center gap-2 mb-2">
             <Layers className="h-4 w-4 text-text-secondary" />
-            <p className="text-xs text-text-secondary uppercase tracking-wide">Costo por Unidad</p>
+            <p className="text-xs text-text-secondary uppercase tracking-wide">
+              Costo por Unidad
+            </p>
           </div>
           <p className="text-3xl font-black text-text">
             ${unitCost.toLocaleString("es-MX", { minimumFractionDigits: 2 })}
@@ -296,7 +308,9 @@ export const ProductDetails: React.FC = () => {
                     : "text-warning",
               )}
             />
-            <p className="text-xs text-text-secondary uppercase tracking-wide">Margen Est.</p>
+            <p className="text-xs text-text-secondary uppercase tracking-wide">
+              Margen Est.
+            </p>
           </div>
           <p
             className={clsx(
@@ -316,12 +330,16 @@ export const ProductDetails: React.FC = () => {
         <div className="bg-card rounded-3xl border border-border p-5 shadow-sm">
           <div className="flex items-center gap-2 mb-2">
             <Calendar className="h-4 w-4 text-primary" />
-            <p className="text-xs text-text-secondary uppercase tracking-wide">Próximos Eventos</p>
+            <p className="text-xs text-text-secondary uppercase tracking-wide">
+              Próximos Eventos
+            </p>
           </div>
           {demandLoading ? (
             <div className="h-8 w-10 rounded-md bg-surface-alt animate-pulse" />
           ) : (
-            <p className="text-3xl font-black text-text">{demandForecast.length}</p>
+            <p className="text-3xl font-black text-text">
+              {demandForecast.length}
+            </p>
           )}
           <p className="text-xs text-text-secondary mt-1">confirmados</p>
         </div>
@@ -352,7 +370,9 @@ export const ProductDetails: React.FC = () => {
                 <Tag className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                 <div>
                   <p className="text-xs text-text-secondary">Categoría</p>
-                  <p className="text-sm font-medium text-text">{product.category}</p>
+                  <p className="text-sm font-medium text-text">
+                    {product.category}
+                  </p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
@@ -360,7 +380,10 @@ export const ProductDetails: React.FC = () => {
                 <div>
                   <p className="text-xs text-text-secondary">Precio Base</p>
                   <p className="text-sm font-medium text-text">
-                    ${product.base_price.toLocaleString("es-MX", { minimumFractionDigits: 2 })}
+                    $
+                    {product.base_price.toLocaleString("es-MX", {
+                      minimumFractionDigits: 2,
+                    })}
                   </p>
                 </div>
               </div>
@@ -369,10 +392,16 @@ export const ProductDetails: React.FC = () => {
                 <div>
                   <p className="text-xs text-text-secondary">Composición</p>
                   <p className="text-sm font-medium text-text">
-                    {ingredients.filter((i: any) => i.type === "ingredient").length} insumos
-                    {ingredients.filter((i: any) => i.type === "supply").length > 0 &&
+                    {
+                      ingredients.filter((i: any) => i.type === "ingredient")
+                        .length
+                    }{" "}
+                    insumos
+                    {ingredients.filter((i: any) => i.type === "supply")
+                      .length > 0 &&
                       `, ${ingredients.filter((i: any) => i.type === "supply").length} insumo(s) por evento`}
-                    {ingredients.filter((i: any) => i.type === "equipment").length > 0 &&
+                    {ingredients.filter((i: any) => i.type === "equipment")
+                      .length > 0 &&
                       `, ${ingredients.filter((i: any) => i.type === "equipment").length} equipo(s)`}
                   </p>
                 </div>
@@ -402,9 +431,7 @@ export const ProductDetails: React.FC = () => {
                   <p
                     className={clsx(
                       "font-semibold text-sm",
-                      demand7Days > 0
-                        ? "text-primary"
-                        : "text-success",
+                      demand7Days > 0 ? "text-primary" : "text-success",
                     )}
                   >
                     {demand7Days > 0
@@ -451,8 +478,12 @@ export const ProductDetails: React.FC = () => {
           <div className="bg-card rounded-3xl border border-border p-6 shadow-sm">
             <div className="flex items-center gap-2 mb-4 pb-4 border-b border-border">
               <Calendar className="h-5 w-5 text-primary" />
-              <h2 className="text-sm font-semibold text-text">Demanda por Fecha</h2>
-              <span className="ml-auto text-xs text-text-secondary">Eventos confirmados</span>
+              <h2 className="text-sm font-semibold text-text">
+                Demanda por Fecha
+              </h2>
+              <span className="ml-auto text-xs text-text-secondary">
+                Eventos confirmados
+              </span>
             </div>
 
             {demandLoading ? (
@@ -469,7 +500,8 @@ export const ProductDetails: React.FC = () => {
                 {demandForecast.map((entry, idx) => {
                   const dateObj = new Date(entry.date + "T00:00:00");
                   const diffDays = Math.ceil(
-                    (dateObj.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
+                    (dateObj.getTime() - today.getTime()) /
+                      (1000 * 60 * 60 * 24),
                   );
                   const isUrgent = diffDays <= 3;
 
@@ -542,9 +574,12 @@ export const ProductDetails: React.FC = () => {
                         </span>
                         <p className="text-xs text-text-secondary">
                           $
-                          {(entry.quantity * product.base_price).toLocaleString("es-MX", {
-                            minimumFractionDigits: 2,
-                          })}
+                          {(entry.quantity * product.base_price).toLocaleString(
+                            "es-MX",
+                            {
+                              minimumFractionDigits: 2,
+                            },
+                          )}
                         </p>
                       </div>
                     </div>
@@ -558,7 +593,8 @@ export const ProductDetails: React.FC = () => {
                         Total demanda
                       </span>
                       <p className="text-xs text-text-secondary">
-                        {demandForecast.length} evento{demandForecast.length !== 1 ? "s" : ""}
+                        {demandForecast.length} evento
+                        {demandForecast.length !== 1 ? "s" : ""}
                       </p>
                     </div>
                     <div className="text-right">
@@ -581,17 +617,22 @@ export const ProductDetails: React.FC = () => {
 
           {/* Composición / Insumos */}
           <div className="bg-card rounded-3xl border border-border overflow-hidden shadow-sm">
-            <div className="p-6 border-b border-border flex items-center justify-between">
+            <div className="p-6 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-2">
                 <Layers className="h-5 w-5 text-primary" />
-                <h2 className="text-lg font-semibold text-text">Composición / Insumos</h2>
+                <h2 className="text-lg font-semibold text-text">
+                  Composición / Insumos
+                </h2>
               </div>
             </div>
 
-            {ingredients.filter((i: any) => i.type === "ingredient").length === 0 ? (
+            {ingredients.filter((i: any) => i.type === "ingredient").length ===
+            0 ? (
               <div className="p-12 text-center">
                 <Package className="h-12 w-12 text-text-secondary mx-auto mb-4 opacity-20" />
-                <p className="text-text-secondary">Este producto no tiene insumos configurados.</p>
+                <p className="text-text-secondary">
+                  Este producto no tiene insumos configurados.
+                </p>
                 <Link
                   to={`/products/${id}/edit`}
                   className="text-primary hover:underline mt-2 inline-block text-sm"
@@ -648,9 +689,14 @@ export const ProductDetails: React.FC = () => {
                   </tbody>
                 </table>
                 <div className="px-6 py-4 border-t border-border flex justify-between items-center">
-                  <span className="text-sm text-text-secondary">Costo Total por Unidad</span>
+                  <span className="text-sm text-text-secondary">
+                    Costo Total por Unidad
+                  </span>
                   <span className="text-lg font-bold text-text">
-                    ${unitCost.toLocaleString("es-MX", { minimumFractionDigits: 2 })}
+                    $
+                    {unitCost.toLocaleString("es-MX", {
+                      minimumFractionDigits: 2,
+                    })}
                   </span>
                 </div>
               </>
@@ -660,10 +706,12 @@ export const ProductDetails: React.FC = () => {
           {/* Insumos por Evento */}
           {ingredients.filter((i: any) => i.type === "supply").length > 0 && (
             <div className="bg-card rounded-3xl border border-border overflow-hidden shadow-sm">
-              <div className="p-6 border-b border-border flex items-center justify-between">
+              <div className="p-6 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-2">
                   <Fuel className="h-5 w-5 text-warning" />
-                  <h2 className="text-lg font-semibold text-text">Insumos por Evento</h2>
+                  <h2 className="text-lg font-semibold text-text">
+                    Insumos por Evento
+                  </h2>
                 </div>
                 <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-warning/10 text-warning">
                   Costo fijo por evento
@@ -716,11 +764,18 @@ export const ProductDetails: React.FC = () => {
                 </tbody>
               </table>
               <div className="px-6 py-4 border-t border-border flex justify-between items-center">
-                <span className="text-sm text-text-secondary">Costo por Evento (Insumos Fijos)</span>
+                <span className="text-sm text-text-secondary">
+                  Costo por Evento (Insumos Fijos)
+                </span>
                 <span className="text-lg font-bold text-warning">
-                  ${ingredients
+                  $
+                  {ingredients
                     .filter((i: any) => i.type === "supply")
-                    .reduce((sum: number, ing: any) => sum + ing.quantity_required * (ing.unit_cost || 0), 0)
+                    .reduce(
+                      (sum: number, ing: any) =>
+                        sum + ing.quantity_required * (ing.unit_cost || 0),
+                      0,
+                    )
                     .toLocaleString("es-MX", { minimumFractionDigits: 2 })}
                 </span>
               </div>
@@ -728,12 +783,15 @@ export const ProductDetails: React.FC = () => {
           )}
 
           {/* Maquinaria / Equipo Necesario */}
-          {ingredients.filter((i: any) => i.type === "equipment").length > 0 && (
+          {ingredients.filter((i: any) => i.type === "equipment").length >
+            0 && (
             <div className="bg-card rounded-3xl border border-border overflow-hidden shadow-sm">
-              <div className="p-6 border-b border-border flex items-center justify-between">
+              <div className="p-6 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-2">
                   <Wrench className="h-5 w-5 text-info" />
-                  <h2 className="text-lg font-semibold text-text">Equipo Necesario</h2>
+                  <h2 className="text-lg font-semibold text-text">
+                    Equipo Necesario
+                  </h2>
                 </div>
                 <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-info/10 text-info">
                   Sin costo - Reutilizable

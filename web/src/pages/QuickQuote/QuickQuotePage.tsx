@@ -48,12 +48,18 @@ export const QuickQuotePage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   // Items
-  const [selectedProducts, setSelectedProducts] = useState<SelectedProduct[]>([]);
+  const [selectedProducts, setSelectedProducts] = useState<SelectedProduct[]>(
+    [],
+  );
   const [extras, setExtras] = useState<SelectedExtra[]>([]);
-  const [productUnitCosts, setProductUnitCosts] = useState<Record<string, number>>({});
+  const [productUnitCosts, setProductUnitCosts] = useState<
+    Record<string, number>
+  >({});
 
   // Financials
-  const [discountType, setDiscountType] = useState<"percent" | "fixed">("percent");
+  const [discountType, setDiscountType] = useState<"percent" | "fixed">(
+    "percent",
+  );
   const [discountValue, setDiscountValue] = useState(0);
   const [requiresInvoice, setRequiresInvoice] = useState(false);
   const [taxRate] = useState(16);
@@ -83,7 +89,9 @@ export const QuickQuotePage: React.FC = () => {
   useEffect(() => {
     const fetchMissingCosts = async () => {
       const missing = selectedProducts
-        .filter((p) => p.product_id && productUnitCosts[p.product_id] === undefined)
+        .filter(
+          (p) => p.product_id && productUnitCosts[p.product_id] === undefined,
+        )
         .map((p) => p.product_id);
 
       if (missing.length === 0) return;
@@ -140,9 +148,11 @@ export const QuickQuotePage: React.FC = () => {
       discountType === "percent"
         ? Math.round(discountableBase * (discountValue / 100) * 100) / 100
         : Math.min(discountValue, discountableBase);
-    const discountedBase = Math.round((discountableBase - discountAmount) * 100) / 100;
+    const discountedBase =
+      Math.round((discountableBase - discountAmount) * 100) / 100;
 
-    const baseTotal = Math.round((discountedBase + passThroughExtrasTotal) * 100) / 100;
+    const baseTotal =
+      Math.round((discountedBase + passThroughExtrasTotal) * 100) / 100;
     const taxAmount = requiresInvoice
       ? Math.round(baseTotal * (taxRate / 100) * 100) / 100
       : 0;
@@ -176,7 +186,15 @@ export const QuickQuotePage: React.FC = () => {
       profit,
       margin,
     };
-  }, [selectedProducts, extras, discountValue, discountType, requiresInvoice, taxRate, productUnitCosts]);
+  }, [
+    selectedProducts,
+    extras,
+    discountValue,
+    discountType,
+    requiresInvoice,
+    taxRate,
+    productUnitCosts,
+  ]);
 
   const hasItems = selectedProducts.length > 0 || extras.length > 0;
 
@@ -186,7 +204,12 @@ export const QuickQuotePage: React.FC = () => {
       const product = products[0];
       setSelectedProducts((prev) => [
         ...prev,
-        { product_id: product.id, quantity: 1, price: product.base_price, discount: 0 },
+        {
+          product_id: product.id,
+          quantity: 1,
+          price: product.base_price,
+          discount: 0,
+        },
       ]);
     }
   };
@@ -211,7 +234,10 @@ export const QuickQuotePage: React.FC = () => {
   };
 
   const handleAddExtra = () => {
-    setExtras((prev) => [...prev, { description: "", cost: 0, price: 0, exclude_utility: false }]);
+    setExtras((prev) => [
+      ...prev,
+      { description: "", cost: 0, price: 0, exclude_utility: false },
+    ]);
   };
 
   const handleRemoveExtra = (index: number) => {
@@ -260,7 +286,20 @@ export const QuickQuotePage: React.FC = () => {
       created_at: today,
       updated_at: today,
       client: clientName
-        ? { id: "", user_id: "", name: clientName, phone: clientPhone, email: clientEmail || null, address: null, city: null, notes: null, total_events: 0, total_spent: 0, created_at: today, updated_at: today }
+        ? {
+            id: "",
+            user_id: "",
+            name: clientName,
+            phone: clientPhone,
+            email: clientEmail || null,
+            address: null,
+            city: null,
+            notes: null,
+            total_events: 0,
+            total_spent: 0,
+            created_at: today,
+            updated_at: today,
+          }
         : null,
     };
 
@@ -268,7 +307,9 @@ export const QuickQuotePage: React.FC = () => {
       ...sp,
       id: "",
       event_id: "",
-      products: { name: products.find((p) => p.id === sp.product_id)?.name || "Producto" },
+      products: {
+        name: products.find((p) => p.id === sp.product_id)?.name || "Producto",
+      },
     }));
 
     const extraItems = extras.map((e) => ({
@@ -277,7 +318,12 @@ export const QuickQuotePage: React.FC = () => {
       event_id: "",
     }));
 
-    generateBudgetPDF(mockEvent as any, user as any, productItems as any, extraItems as any);
+    generateBudgetPDF(
+      mockEvent as any,
+      user as any,
+      productItems as any,
+      extraItems as any,
+    );
   };
 
   const handleConvertToEvent = () => {
@@ -313,7 +359,7 @@ export const QuickQuotePage: React.FC = () => {
               Arma una cotización sin registrar cliente ni fecha
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2 sm:justify-end">
             <button
               type="button"
               onClick={handleExportPDF}
@@ -342,13 +388,22 @@ export const QuickQuotePage: React.FC = () => {
             onClick={() => setShowClientInfo(!showClientInfo)}
             className="flex items-center gap-2 text-sm text-text-secondary hover:text-text transition-colors"
           >
-            {showClientInfo ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            {showClientInfo ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
             Datos del cliente (opcional, para el PDF)
           </button>
           {showClientInfo && (
             <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <label htmlFor="client-name" className="block text-xs text-text-secondary mb-1">Nombre</label>
+                <label
+                  htmlFor="client-name"
+                  className="block text-xs text-text-secondary mb-1"
+                >
+                  Nombre
+                </label>
                 <input
                   id="client-name"
                   type="text"
@@ -359,7 +414,12 @@ export const QuickQuotePage: React.FC = () => {
                 />
               </div>
               <div>
-                <label htmlFor="client-phone" className="block text-xs text-text-secondary mb-1">Teléfono</label>
+                <label
+                  htmlFor="client-phone"
+                  className="block text-xs text-text-secondary mb-1"
+                >
+                  Teléfono
+                </label>
                 <input
                   id="client-phone"
                   type="tel"
@@ -370,7 +430,12 @@ export const QuickQuotePage: React.FC = () => {
                 />
               </div>
               <div>
-                <label htmlFor="client-email" className="block text-xs text-text-secondary mb-1">Email</label>
+                <label
+                  htmlFor="client-email"
+                  className="block text-xs text-text-secondary mb-1"
+                >
+                  Email
+                </label>
                 <input
                   id="client-email"
                   type="email"
@@ -390,7 +455,10 @@ export const QuickQuotePage: React.FC = () => {
           <div className="lg:col-span-3 space-y-6">
             {/* Num people */}
             <div className="bg-card p-4 rounded-xl shadow-xs border border-border">
-              <label htmlFor="num-people" className="flex items-center gap-2 text-sm font-medium text-text-secondary mb-2">
+              <label
+                htmlFor="num-people"
+                className="flex items-center gap-2 text-sm font-medium text-text-secondary mb-2"
+              >
                 <Users className="h-4 w-4" />
                 Número de Personas
               </label>
@@ -427,7 +495,9 @@ export const QuickQuotePage: React.FC = () => {
 
             {/* Discount & Invoice controls */}
             <div className="bg-card p-4 sm:p-6 rounded-xl shadow-xs border border-border space-y-4">
-              <h3 className="text-lg font-medium text-text">Descuento y Facturación</h3>
+              <h3 className="text-lg font-medium text-text">
+                Descuento y Facturación
+              </h3>
 
               <div className="flex items-center gap-3">
                 <input
@@ -437,14 +507,20 @@ export const QuickQuotePage: React.FC = () => {
                   onChange={(e) => setRequiresInvoice(e.target.checked)}
                   className="h-4 w-4 text-primary border-border rounded-sm focus:ring-primary bg-card"
                 />
-                <label htmlFor="requires-invoice" className="text-sm text-text-secondary">
+                <label
+                  htmlFor="requires-invoice"
+                  className="text-sm text-text-secondary"
+                >
                   Requiere factura (IVA {taxRate}%)
                 </label>
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label htmlFor="discount-value" className="text-sm font-medium text-text-secondary">
+                  <label
+                    htmlFor="discount-value"
+                    className="text-sm font-medium text-text-secondary"
+                  >
                     Descuento General
                   </label>
                   <div className="flex rounded-lg border border-border overflow-hidden text-xs">
@@ -496,7 +572,8 @@ export const QuickQuotePage: React.FC = () => {
                 {financials.discountAmount > 0 && (
                   <div className="flex justify-between text-success font-medium">
                     <span>
-                      Descuento {discountType === "percent" ? `(${discountValue}%)` : ""}:
+                      Descuento{" "}
+                      {discountType === "percent" ? `(${discountValue}%)` : ""}:
                     </span>
                     <span>-${financials.discountAmount.toFixed(2)}</span>
                   </div>
@@ -511,7 +588,9 @@ export const QuickQuotePage: React.FC = () => {
 
                 <div className="border-t border-border pt-3 flex justify-between text-xl font-bold text-text">
                   <span>Total:</span>
-                  <span className="text-primary">${financials.total.toFixed(2)}</span>
+                  <span className="text-primary">
+                    ${financials.total.toFixed(2)}
+                  </span>
                 </div>
               </div>
 
@@ -532,7 +611,9 @@ export const QuickQuotePage: React.FC = () => {
                     ${financials.extrasCost.toFixed(2)}
                   </div>
 
-                  <div className="text-text-secondary font-medium border-t border-border pt-2">Costo Total:</div>
+                  <div className="text-text-secondary font-medium border-t border-border pt-2">
+                    Costo Total:
+                  </div>
                   <div className="text-right font-medium text-text border-t border-border pt-2">
                     ${financials.totalCost.toFixed(2)}
                   </div>

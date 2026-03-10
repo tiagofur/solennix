@@ -1,17 +1,23 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
-import { Search as SearchIcon, Users, ChevronRight, Loader2, SearchX } from "lucide-react";
-import { format, parseISO } from 'date-fns';
-import { es } from 'date-fns/locale';
-import Empty from '../components/Empty';
-import { logError } from '../lib/errorHandler';
-import { SearchResults, searchService } from '../services/searchService';
+import React, { useEffect, useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import {
+  Search as SearchIcon,
+  Users,
+  ChevronRight,
+  Loader2,
+  SearchX,
+} from "lucide-react";
+import { format, parseISO } from "date-fns";
+import { es } from "date-fns/locale";
+import Empty from "../components/Empty";
+import { logError } from "../lib/errorHandler";
+import { SearchResults, searchService } from "../services/searchService";
 
 const STATUS_LABELS: Record<string, string> = {
-  quoted: 'Cotizado',
-  confirmed: 'Confirmado',
-  completed: 'Completado',
-  cancelled: 'Cancelado',
+  quoted: "Cotizado",
+  confirmed: "Confirmado",
+  completed: "Completado",
+  cancelled: "Cancelado",
 };
 
 const formatEventDate = (value: string) => {
@@ -24,7 +30,7 @@ const formatEventDate = (value: string) => {
 
 export const SearchPage: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const query = (searchParams.get('q') || '').trim();
+  const query = (searchParams.get("q") || "").trim();
   const [results, setResults] = useState<SearchResults>({
     client: [],
     event: [],
@@ -50,9 +56,9 @@ export const SearchPage: React.FC = () => {
         const data = await searchService.searchAll(query);
         if (isMounted) setResults(data);
       } catch (err) {
-        logError('Error running global search', err);
+        logError("Error running global search", err);
         if (isMounted) {
-          setError('No pudimos completar la búsqueda. Intenta de nuevo.');
+          setError("No pudimos completar la búsqueda. Intenta de nuevo.");
         }
       } finally {
         if (isMounted) setLoading(false);
@@ -87,7 +93,11 @@ export const SearchPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12 text-text-secondary" role="status" aria-live="polite">
+      <div
+        className="flex items-center justify-center py-12 text-text-secondary"
+        role="status"
+        aria-live="polite"
+      >
         <Loader2 className="h-5 w-5 animate-spin mr-2" aria-hidden="true" />
         <span className="sr-only">Buscando resultados...</span>
         Buscando resultados...
@@ -97,7 +107,10 @@ export const SearchPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="bg-error/5 border border-error/30 rounded-lg p-4 text-sm text-error" role="alert">
+      <div
+        className="bg-error/5 border border-error/30 rounded-lg p-4 text-sm text-error"
+        role="alert"
+      >
         {error}
       </div>
     );
@@ -115,11 +128,12 @@ export const SearchPage: React.FC = () => {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-text">Resultados</h1>
           <p className="text-sm text-text-secondary">
-            {totalResults} resultado{totalResults === 1 ? '' : 's'} para "{query}"
+            {totalResults} resultado{totalResults === 1 ? "" : "s"} para "
+            {query}"
           </p>
         </div>
         <div className="flex items-center text-sm text-text-secondary">
@@ -154,7 +168,10 @@ export const SearchPage: React.FC = () => {
                         </p>
                       )}
                     </div>
-                    <ChevronRight className="h-5 w-5 text-text-secondary group-hover:text-primary transition-colors" aria-hidden="true" />
+                    <ChevronRight
+                      className="h-5 w-5 text-text-secondary group-hover:text-primary transition-colors"
+                      aria-hidden="true"
+                    />
                   </div>
                 </Link>
               </li>
@@ -177,12 +194,14 @@ export const SearchPage: React.FC = () => {
                   {event.title}
                 </p>
                 {event.subtitle && (
-                  <p className="text-xs text-text-secondary">{event.subtitle}</p>
+                  <p className="text-xs text-text-secondary">
+                    {event.subtitle}
+                  </p>
                 )}
                 <p className="text-xs text-text-secondary">
-                  {event.meta ? formatEventDate(event.meta) : ''}
-                  {event.meta && event.status ? ' - ' : ''}
-                  {event.status ? STATUS_LABELS[event.status] : ''}
+                  {event.meta ? formatEventDate(event.meta) : ""}
+                  {event.meta && event.status ? " - " : ""}
+                  {event.status ? STATUS_LABELS[event.status] : ""}
                 </p>
               </Link>
             ))}
@@ -204,7 +223,9 @@ export const SearchPage: React.FC = () => {
                   {product.title}
                 </p>
                 {product.subtitle && (
-                  <p className="text-xs text-text-secondary">{product.subtitle}</p>
+                  <p className="text-xs text-text-secondary">
+                    {product.subtitle}
+                  </p>
                 )}
                 {product.meta && (
                   <p className="text-xs text-text-secondary">{product.meta}</p>

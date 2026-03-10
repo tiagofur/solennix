@@ -1,5 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, useParams, useSearchParams, useLocation } from "react-router-dom";
+import {
+  useNavigate,
+  useParams,
+  useSearchParams,
+  useLocation,
+} from "react-router-dom";
 import { useForm, FormProvider, useWatch, Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -24,7 +29,12 @@ import { EventEquipment } from "./components/EventEquipment";
 import { EventSupplies } from "./components/EventSupplies";
 import { inventoryService } from "@/services/inventoryService";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
-import { EquipmentConflict, EquipmentSuggestion, SupplySuggestion, InventoryItem } from "@/types/entities";
+import {
+  EquipmentConflict,
+  EquipmentSuggestion,
+  SupplySuggestion,
+  InventoryItem,
+} from "@/types/entities";
 import { UpgradeBanner } from "@/components/UpgradeBanner";
 import { unavailableDatesService } from "@/services/unavailableDatesService";
 
@@ -91,7 +101,9 @@ export const EventForm: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-  const quickQuoteData = (location.state as any)?.fromQuickQuote ? (location.state as any) : null;
+  const quickQuoteData = (location.state as any)?.fromQuickQuote
+    ? (location.state as any)
+    : null;
 
   const [activeStep, setActiveStep] = useState(1);
   const [clients, setClients] = useState<Client[]>([]);
@@ -101,10 +113,17 @@ export const EventForm: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   // Plan Limits
-  const { canCreateEvent, eventsThisMonth, limit, loading: limitsLoading } = usePlanLimits();
+  const {
+    canCreateEvent,
+    eventsThisMonth,
+    limit,
+    loading: limitsLoading,
+  } = usePlanLimits();
 
   // Unavailable Dates
-  const [unavailableDates, setUnavailableDates] = useState<UnavailableDate[]>([]);
+  const [unavailableDates, setUnavailableDates] = useState<UnavailableDate[]>(
+    [],
+  );
 
   // Local state for items
   const [selectedProducts, setSelectedProducts] = useState<
@@ -124,29 +143,46 @@ export const EventForm: React.FC = () => {
   const [productUnitCosts, setProductUnitCosts] = useState<{
     [key: string]: number;
   }>({});
-  const [discountType, setDiscountType] = useState<"percent" | "fixed">("percent");
+  const [discountType, setDiscountType] = useState<"percent" | "fixed">(
+    "percent",
+  );
 
   // Equipment state
-  const [equipmentInventory, setEquipmentInventory] = useState<InventoryItem[]>([]);
+  const [equipmentInventory, setEquipmentInventory] = useState<InventoryItem[]>(
+    [],
+  );
   const [selectedEquipment, setSelectedEquipment] = useState<
     { inventory_id: string; quantity: number; notes: string }[]
   >([]);
-  const [equipmentConflicts, setEquipmentConflicts] = useState<EquipmentConflict[]>([]);
-  const [equipmentSuggestions, setEquipmentSuggestions] = useState<EquipmentSuggestion[]>([]);
+  const [equipmentConflicts, setEquipmentConflicts] = useState<
+    EquipmentConflict[]
+  >([]);
+  const [equipmentSuggestions, setEquipmentSuggestions] = useState<
+    EquipmentSuggestion[]
+  >([]);
 
   // Supply state
   const [supplyInventory, setSupplyInventory] = useState<InventoryItem[]>([]);
   const [selectedSupplies, setSelectedSupplies] = useState<
-    { inventory_id: string; quantity: number; unit_cost: number; source: 'stock' | 'purchase'; exclude_cost: boolean }[]
+    {
+      inventory_id: string;
+      quantity: number;
+      unit_cost: number;
+      source: "stock" | "purchase";
+      exclude_cost: boolean;
+    }[]
   >([]);
-  const [supplySuggestions, setSupplySuggestions] = useState<SupplySuggestion[]>([]);
+  const [supplySuggestions, setSupplySuggestions] = useState<
+    SupplySuggestion[]
+  >([]);
 
   const methods = useForm<EventFormData>({
     resolver: zodResolver(eventSchema) as Resolver<EventFormData>,
     defaultValues: {
       client_id: "",
       service_type: "",
-      event_date: searchParams.get("date") || new Date().toISOString().split("T")[0],
+      event_date:
+        searchParams.get("date") || new Date().toISOString().split("T")[0],
       start_time: "",
       end_time: "",
       status: "quoted",
@@ -165,13 +201,20 @@ export const EventForm: React.FC = () => {
     },
   });
 
-  const { handleSubmit, reset, setValue, control, formState: { errors, isValid, isSubmitted } } = methods;
+  const {
+    handleSubmit,
+    reset,
+    setValue,
+    control,
+    formState: { errors, isValid, isSubmitted },
+  } = methods;
 
   const discountValue = useWatch({ control, name: "discount" }) || 0;
   const clientIdValue = useWatch({ control, name: "client_id" });
   const locationValue = useWatch({ control, name: "location" });
   const cityValue = useWatch({ control, name: "city" });
-  const requiresInvoiceValue = useWatch({ control, name: "requires_invoice" }) || false;
+  const requiresInvoiceValue =
+    useWatch({ control, name: "requires_invoice" }) || false;
   const taxRateValue = useWatch({ control, name: "tax_rate" }) || 16;
   const eventDateValue = useWatch({ control, name: "event_date" });
   const startTimeValue = useWatch({ control, name: "start_time" });
@@ -190,15 +233,17 @@ export const EventForm: React.FC = () => {
         setClients((clientsData as Client[]) || []);
         setProducts((productsData as Product[]) || []);
         const allInventory = (inventoryData as InventoryItem[]) || [];
-        setEquipmentInventory(allInventory.filter((i) => i.type === 'equipment'));
-        setSupplyInventory(allInventory.filter((i) => i.type === 'supply'));
+        setEquipmentInventory(
+          allInventory.filter((i) => i.type === "equipment"),
+        );
+        setSupplyInventory(allInventory.filter((i) => i.type === "supply"));
 
         // Load unavailable dates
         const endOfNextYear = new Date();
         endOfNextYear.setFullYear(endOfNextYear.getFullYear() + 1);
         const dates = await unavailableDatesService.getDates(
-          '2020-01-01',
-          endOfNextYear.toISOString().split('T')[0]
+          "2020-01-01",
+          endOfNextYear.toISOString().split("T")[0],
         );
         setUnavailableDates(dates);
       } catch (err) {
@@ -220,7 +265,7 @@ export const EventForm: React.FC = () => {
       try {
         setIsLoading(true);
         const event = await eventService.getById(eventId);
-        if (!event) throw new Error('Evento no encontrado');
+        if (!event) throw new Error("Evento no encontrado");
 
         setDiscountType(event.discount_type || "percent");
         reset({
@@ -238,53 +283,65 @@ export const EventForm: React.FC = () => {
           total_amount: event.total_amount || 0,
           location: event.location || "",
           city: event.city || "",
-          deposit_percent: event.deposit_percent ?? (user?.default_deposit_percent || 50),
-          cancellation_days: event.cancellation_days ?? (user?.default_cancellation_days || 15),
-          refund_percent: event.refund_percent ?? (user?.default_refund_percent || 0),
+          deposit_percent:
+            event.deposit_percent ?? (user?.default_deposit_percent || 50),
+          cancellation_days:
+            event.cancellation_days ?? (user?.default_cancellation_days || 15),
+          refund_percent:
+            event.refund_percent ?? (user?.default_refund_percent || 0),
           notes: event.notes || "",
         });
 
-        const [eventProducts, eventExtras, eventEquipment, eventSupplies] = await Promise.all([
-          eventService.getProducts(eventId),
-          eventService.getExtras(eventId),
-          eventService.getEquipment(eventId),
-          eventService.getSupplies(eventId),
-        ]);
+        const [eventProducts, eventExtras, eventEquipment, eventSupplies] =
+          await Promise.all([
+            eventService.getProducts(eventId),
+            eventService.getExtras(eventId),
+            eventService.getEquipment(eventId),
+            eventService.getSupplies(eventId),
+          ]);
 
         if (eventProducts) {
-          setSelectedProducts(eventProducts.map((ep: any) => ({
-            product_id: ep.product_id,
-            quantity: ep.quantity,
-            price: ep.unit_price,
-            discount: ep.discount || 0,
-          })));
+          setSelectedProducts(
+            eventProducts.map((ep: any) => ({
+              product_id: ep.product_id,
+              quantity: ep.quantity,
+              price: ep.unit_price,
+              discount: ep.discount || 0,
+            })),
+          );
         }
 
         if (eventExtras) {
-          setExtras(eventExtras.map((e: any) => ({
-            description: e.description,
-            cost: e.cost,
-            price: e.price,
-            exclude_utility: e.exclude_utility || false,
-          })));
+          setExtras(
+            eventExtras.map((e: any) => ({
+              description: e.description,
+              cost: e.cost,
+              price: e.price,
+              exclude_utility: e.exclude_utility || false,
+            })),
+          );
         }
 
         if (eventEquipment) {
-          setSelectedEquipment(eventEquipment.map((eq: any) => ({
-            inventory_id: eq.inventory_id,
-            quantity: eq.quantity,
-            notes: eq.notes || '',
-          })));
+          setSelectedEquipment(
+            eventEquipment.map((eq: any) => ({
+              inventory_id: eq.inventory_id,
+              quantity: eq.quantity,
+              notes: eq.notes || "",
+            })),
+          );
         }
 
         if (eventSupplies) {
-          setSelectedSupplies(eventSupplies.map((s: any) => ({
-            inventory_id: s.inventory_id,
-            quantity: s.quantity,
-            unit_cost: s.unit_cost,
-            source: s.source || 'purchase',
-            exclude_cost: s.exclude_cost || false,
-          })));
+          setSelectedSupplies(
+            eventSupplies.map((s: any) => ({
+              inventory_id: s.inventory_id,
+              quantity: s.quantity,
+              unit_cost: s.unit_cost,
+              source: s.source || "purchase",
+              exclude_cost: s.exclude_cost || false,
+            })),
+          );
         }
       } catch (err) {
         logError("Error loading event", err);
@@ -302,7 +359,7 @@ export const EventForm: React.FC = () => {
   useEffect(() => {
     const productsSubtotal = selectedProducts.reduce(
       (sum, item) => sum + (item.price - (item.discount || 0)) * item.quantity,
-      0
+      0,
     );
 
     const normalExtrasTotal = extras
@@ -314,13 +371,18 @@ export const EventForm: React.FC = () => {
       .reduce((sum, item) => sum + item.price, 0);
 
     const discountableBase = productsSubtotal + normalExtrasTotal;
-    const discountAmount = discountType === "percent"
-      ? Math.round(discountableBase * (discountValue / 100) * 100) / 100
-      : Math.min(discountValue, discountableBase);
-    const discountedBase = Math.round((discountableBase - discountAmount) * 100) / 100;
+    const discountAmount =
+      discountType === "percent"
+        ? Math.round(discountableBase * (discountValue / 100) * 100) / 100
+        : Math.min(discountValue, discountableBase);
+    const discountedBase =
+      Math.round((discountableBase - discountAmount) * 100) / 100;
 
-    const baseTotal = Math.round((discountedBase + passThroughExtrasTotal) * 100) / 100;
-    const taxAmount = requiresInvoiceValue ? Math.round(baseTotal * (taxRateValue / 100) * 100) / 100 : 0;
+    const baseTotal =
+      Math.round((discountedBase + passThroughExtrasTotal) * 100) / 100;
+    const taxAmount = requiresInvoiceValue
+      ? Math.round(baseTotal * (taxRateValue / 100) * 100) / 100
+      : 0;
     const total = Math.round((baseTotal + taxAmount) * 100) / 100;
 
     setValue("tax_amount", taxAmount);
@@ -328,7 +390,9 @@ export const EventForm: React.FC = () => {
 
     const fetchMissingCosts = async () => {
       const missing = selectedProducts
-        .filter((p) => p.product_id && productUnitCosts[p.product_id] === undefined)
+        .filter(
+          (p) => p.product_id && productUnitCosts[p.product_id] === undefined,
+        )
         .map((p) => p.product_id);
 
       if (missing.length === 0) return;
@@ -337,12 +401,13 @@ export const EventForm: React.FC = () => {
         const costs = await Promise.all(
           missing.map(async (productId) => {
             const ingredients = await productService.getIngredients(productId);
-            const cost = ingredients
-              ?.filter((ing: any) => ing.type === 'ingredient')
-              .reduce((sum, ing: any) => {
-                const unitCost = ing.unit_cost ?? 0;
-                return sum + ing.quantity_required * unitCost;
-              }, 0) || 0;
+            const cost =
+              ingredients
+                ?.filter((ing: any) => ing.type === "ingredient")
+                .reduce((sum, ing: any) => {
+                  const unitCost = ing.unit_cost ?? 0;
+                  return sum + ing.quantity_required * unitCost;
+                }, 0) || 0;
             return { productId, cost };
           }),
         );
@@ -360,13 +425,23 @@ export const EventForm: React.FC = () => {
     };
 
     fetchMissingCosts();
-  }, [selectedProducts, extras, discountValue, discountType, requiresInvoiceValue, taxRateValue, setValue, productUnitCosts]);
+  }, [
+    selectedProducts,
+    extras,
+    discountValue,
+    discountType,
+    requiresInvoiceValue,
+    taxRateValue,
+    setValue,
+    productUnitCosts,
+  ]);
 
   useEffect(() => {
     if (clientIdValue && !locationValue && !cityValue) {
       const selectedClient = clients.find((c) => c.id === clientIdValue);
       if (selectedClient) {
-        if (selectedClient.address) setValue("location", selectedClient.address);
+        if (selectedClient.address)
+          setValue("location", selectedClient.address);
         if (selectedClient.city) setValue("city", selectedClient.city);
       }
     }
@@ -401,21 +476,26 @@ export const EventForm: React.FC = () => {
       const product = products[0];
       setSelectedProducts([
         ...selectedProducts,
-        { product_id: product.id, quantity: 1, price: product.base_price, discount: 0 },
+        {
+          product_id: product.id,
+          quantity: 1,
+          price: product.base_price,
+          discount: 0,
+        },
       ]);
     }
   };
 
   const handleRemoveProduct = (index: number) => {
-    setSelectedProducts(prev => prev.filter((_, i) => i !== index));
+    setSelectedProducts((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleProductChange = (index: number, field: string, value: any) => {
-    setSelectedProducts(prev => {
+    setSelectedProducts((prev) => {
       const next = [...prev];
       next[index] = { ...next[index], [field]: value };
       if (field === "product_id") {
-        const product = products.find(p => p.id === value);
+        const product = products.find((p) => p.id === value);
         if (product) {
           next[index].price = product.base_price;
           next[index].discount = 0;
@@ -426,15 +506,18 @@ export const EventForm: React.FC = () => {
   };
 
   const handleAddExtra = () => {
-    setExtras([...extras, { description: "", cost: 0, price: 0, exclude_utility: false }]);
+    setExtras([
+      ...extras,
+      { description: "", cost: 0, price: 0, exclude_utility: false },
+    ]);
   };
 
   const handleRemoveExtra = (index: number) => {
-    setExtras(prev => prev.filter((_, i) => i !== index));
+    setExtras((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleExtraChange = (index: number, field: string, value: any) => {
-    setExtras(prev => {
+    setExtras((prev) => {
       const next = [...prev];
       next[index] = { ...next[index], [field]: value };
       if (field === "exclude_utility" && value === true) {
@@ -448,7 +531,7 @@ export const EventForm: React.FC = () => {
   };
 
   const handleClientCreated = (newClient: Client) => {
-    setClients(prev => [...prev, newClient]);
+    setClients((prev) => [...prev, newClient]);
     // Use queueMicrotask to set value after React state update flushes
     queueMicrotask(() => {
       setValue("client_id", newClient.id, { shouldValidate: true });
@@ -458,63 +541,103 @@ export const EventForm: React.FC = () => {
   // --- Equipment handlers ---
 
   const handleAddEquipment = () => {
-    setSelectedEquipment(prev => [...prev, { inventory_id: '', quantity: 1, notes: '' }]);
+    setSelectedEquipment((prev) => [
+      ...prev,
+      { inventory_id: "", quantity: 1, notes: "" },
+    ]);
   };
 
   const handleRemoveEquipment = (index: number) => {
-    setSelectedEquipment(prev => prev.filter((_, i) => i !== index));
+    setSelectedEquipment((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleEquipmentChange = (index: number, field: string, value: string | number) => {
-    setSelectedEquipment(prev => {
+  const handleEquipmentChange = (
+    index: number,
+    field: string,
+    value: string | number,
+  ) => {
+    setSelectedEquipment((prev) => {
       const next = [...prev];
       next[index] = { ...next[index], [field]: value };
       return next;
     });
   };
 
-  const handleQuickAddSuggestion = (inventoryId: string, suggestedQty: number) => {
-    if (!selectedEquipment.some(eq => eq.inventory_id === inventoryId)) {
-      setSelectedEquipment(prev => [...prev, { inventory_id: inventoryId, quantity: suggestedQty, notes: '' }]);
+  const handleQuickAddSuggestion = (
+    inventoryId: string,
+    suggestedQty: number,
+  ) => {
+    if (!selectedEquipment.some((eq) => eq.inventory_id === inventoryId)) {
+      setSelectedEquipment((prev) => [
+        ...prev,
+        { inventory_id: inventoryId, quantity: suggestedQty, notes: "" },
+      ]);
     }
   };
 
   // --- Supply handlers ---
 
   const handleAddSupply = () => {
-    setSelectedSupplies(prev => [...prev, { inventory_id: '', quantity: 1, unit_cost: 0, source: 'purchase', exclude_cost: false }]);
+    setSelectedSupplies((prev) => [
+      ...prev,
+      {
+        inventory_id: "",
+        quantity: 1,
+        unit_cost: 0,
+        source: "purchase",
+        exclude_cost: false,
+      },
+    ]);
   };
 
   const handleRemoveSupply = (index: number) => {
-    setSelectedSupplies(prev => prev.filter((_, i) => i !== index));
+    setSelectedSupplies((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleSupplyChange = (index: number, field: string, value: string | number | boolean) => {
-    setSelectedSupplies(prev => {
+  const handleSupplyChange = (
+    index: number,
+    field: string,
+    value: string | number | boolean,
+  ) => {
+    setSelectedSupplies((prev) => {
       const next = [...prev];
       next[index] = { ...next[index], [field]: value };
       return next;
     });
   };
 
-  const handleQuickAddSupplySuggestion = (inventoryId: string, suggestedQty: number, unitCost: number) => {
-    if (!selectedSupplies.some(s => s.inventory_id === inventoryId)) {
-      setSelectedSupplies(prev => [...prev, { inventory_id: inventoryId, quantity: suggestedQty, unit_cost: unitCost, source: 'purchase', exclude_cost: false }]);
+  const handleQuickAddSupplySuggestion = (
+    inventoryId: string,
+    suggestedQty: number,
+    unitCost: number,
+  ) => {
+    if (!selectedSupplies.some((s) => s.inventory_id === inventoryId)) {
+      setSelectedSupplies((prev) => [
+        ...prev,
+        {
+          inventory_id: inventoryId,
+          quantity: suggestedQty,
+          unit_cost: unitCost,
+          source: "purchase",
+          exclude_cost: false,
+        },
+      ]);
     }
   };
 
   // Auto-suggest equipment when products change
   useEffect(() => {
     const productItems = selectedProducts
-      .filter(p => p.product_id)
-      .map(p => ({ product_id: p.product_id, quantity: p.quantity }));
+      .filter((p) => p.product_id)
+      .map((p) => ({ product_id: p.product_id, quantity: p.quantity }));
     if (productItems.length === 0) {
       setEquipmentSuggestions([]);
       return;
     }
     const fetchSuggestions = async () => {
       try {
-        const suggestions = await eventService.getEquipmentSuggestions(productItems);
+        const suggestions =
+          await eventService.getEquipmentSuggestions(productItems);
         setEquipmentSuggestions(suggestions || []);
       } catch {
         // Silently ignore suggestion errors
@@ -526,15 +649,16 @@ export const EventForm: React.FC = () => {
   // Auto-suggest supplies when products change
   useEffect(() => {
     const productItems = selectedProducts
-      .filter(p => p.product_id)
-      .map(p => ({ product_id: p.product_id, quantity: p.quantity }));
+      .filter((p) => p.product_id)
+      .map((p) => ({ product_id: p.product_id, quantity: p.quantity }));
     if (productItems.length === 0) {
       setSupplySuggestions([]);
       return;
     }
     const fetchSupplySuggestions = async () => {
       try {
-        const suggestions = await eventService.getSupplySuggestions(productItems);
+        const suggestions =
+          await eventService.getSupplySuggestions(productItems);
         setSupplySuggestions(suggestions || []);
       } catch {
         // Silently ignore suggestion errors
@@ -546,7 +670,7 @@ export const EventForm: React.FC = () => {
   // Check equipment conflicts (debounced)
   useEffect(() => {
     const selectedIds = selectedEquipment
-      .map(eq => eq.inventory_id)
+      .map((eq) => eq.inventory_id)
       .filter(Boolean);
     if (selectedIds.length === 0 || !eventDateValue) {
       setEquipmentConflicts([]);
@@ -587,7 +711,7 @@ export const EventForm: React.FC = () => {
       // Validate unavailable dates
       if (unavailableDates && unavailableDates.length > 0) {
         const eventDateObj = new Date(data.event_date);
-        const isUnavailable = unavailableDates.some(range => {
+        const isUnavailable = unavailableDates.some((range) => {
           const start = new Date(range.start_date);
           const end = new Date(range.end_date);
           return eventDateObj >= start && eventDateObj <= end;
@@ -614,7 +738,8 @@ export const EventForm: React.FC = () => {
         await eventService.update(id, payload);
       } else {
         const newEvent = await eventService.create(payload);
-        if (!newEvent || !newEvent.id) throw new Error("Error al crear el evento.");
+        if (!newEvent || !newEvent.id)
+          throw new Error("Error al crear el evento.");
         eventId = newEvent.id;
       }
 
@@ -629,15 +754,15 @@ export const EventForm: React.FC = () => {
           })),
           extras,
           selectedEquipment
-            .filter(eq => eq.inventory_id)
-            .map(eq => ({
+            .filter((eq) => eq.inventory_id)
+            .map((eq) => ({
               inventoryId: eq.inventory_id,
               quantity: eq.quantity,
               notes: eq.notes || undefined,
             })),
           selectedSupplies
-            .filter(s => s.inventory_id)
-            .map(s => ({
+            .filter((s) => s.inventory_id)
+            .map((s) => ({
               inventoryId: s.inventory_id,
               quantity: s.quantity,
               unitCost: s.unit_cost,
@@ -650,7 +775,10 @@ export const EventForm: React.FC = () => {
       navigate(`/events/${eventId}/summary`);
     } catch (err: any) {
       logError("Error saving event", err);
-      setError(err.message || "Error al guardar el evento. Por favor intenta de nuevo.");
+      setError(
+        err.message ||
+          "Error al guardar el evento. Por favor intenta de nuevo.",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -667,12 +795,16 @@ export const EventForm: React.FC = () => {
   };
 
   const prevStep = () => {
-    setActiveStep(prev => Math.max(prev - 1, 1));
+    setActiveStep((prev) => Math.max(prev - 1, 1));
   };
 
   if (isLoading || limitsLoading) {
     return (
-      <div className="flex justify-center items-center h-64" role="status" aria-live="polite">
+      <div
+        className="flex justify-center items-center h-64"
+        role="status"
+        aria-live="polite"
+      >
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         <span className="sr-only">Cargando formulario de evento...</span>
       </div>
@@ -681,26 +813,30 @@ export const EventForm: React.FC = () => {
 
   // If creating new event and limit is reached
   if (!id && !canCreateEvent) {
-      return (
-          <div className="max-w-4xl mx-auto py-8 px-4">
-              <button
-                  type="button"
-                  onClick={() => navigate(-1)}
-                  className="mb-6 flex items-center text-sm font-medium text-text-secondary hover:text-text transition-colors"
-              >
-                  <ArrowLeft className="h-4 w-4 mr-1" aria-hidden="true" />
-                  Regresar
-              </button>
-              <div className="flex justify-center mt-12">
-                  <UpgradeBanner type="limit-reached" currentUsage={eventsThisMonth} limit={limit} />
-              </div>
-          </div>
-      );
+    return (
+      <div className="max-w-4xl mx-auto py-8 px-4">
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          className="mb-6 flex items-center text-sm font-medium text-text-secondary hover:text-text transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4 mr-1" aria-hidden="true" />
+          Regresar
+        </button>
+        <div className="flex justify-center mt-12">
+          <UpgradeBanner
+            type="limit-reached"
+            currentUsage={eventsThisMonth}
+            limit={limit}
+          />
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center">
           <button
             type="button"
@@ -727,7 +863,10 @@ export const EventForm: React.FC = () => {
       </div>
 
       <nav aria-label="Progreso del formulario de evento">
-        <ol role="list" className="bg-card rounded-3xl shadow-sm md:flex md:divide-y-0 md:divide-x divide-border overflow-hidden border border-border">
+        <ol
+          role="list"
+          className="bg-card rounded-3xl shadow-sm md:flex md:divide-y-0 md:divide-x divide-border overflow-hidden border border-border"
+        >
           {STEPS.map((step, stepIdx) => (
             <li key={step.id} className="relative md:flex-1 md:flex">
               <button
@@ -744,27 +883,47 @@ export const EventForm: React.FC = () => {
                       activeStep > step.id
                         ? "bg-primary border-primary"
                         : activeStep === step.id
-                        ? "border-primary text-primary"
-                        : "border-border text-text-secondary"
+                          ? "border-primary text-primary"
+                          : "border-border text-text-secondary"
                     }`}
                   >
                     {activeStep > step.id ? (
-                      <CheckCircle className="w-6 h-6 text-white" aria-hidden="true" />
+                      <CheckCircle
+                        className="w-6 h-6 text-white"
+                        aria-hidden="true"
+                      />
                     ) : (
                       <span>{step.id}</span>
                     )}
                   </span>
-                  <span className={`ml-4 text-sm font-medium ${
-                    activeStep >= step.id ? 'text-text' : 'text-text-secondary'
-                  }`}>
+                  <span
+                    className={`ml-4 text-sm font-medium ${
+                      activeStep >= step.id
+                        ? "text-text"
+                        : "text-text-secondary"
+                    }`}
+                  >
                     {step.title}
                   </span>
                 </span>
               </button>
               {stepIdx !== STEPS.length - 1 && (
-                <div className="hidden md:block absolute top-0 right-0 h-full w-5" aria-hidden="true">
-                  <svg className="h-full w-full text-border" viewBox="0 0 22 80" fill="none" preserveAspectRatio="none">
-                    <path d="M0 -2L20 40L0 82" vectorEffect="non-scaling-stroke" stroke="currentcolor" strokeLinejoin="round" />
+                <div
+                  className="hidden md:block absolute top-0 right-0 h-full w-5"
+                  aria-hidden="true"
+                >
+                  <svg
+                    className="h-full w-full text-border"
+                    viewBox="0 0 22 80"
+                    fill="none"
+                    preserveAspectRatio="none"
+                  >
+                    <path
+                      d="M0 -2L20 40L0 82"
+                      vectorEffect="non-scaling-stroke"
+                      stroke="currentcolor"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                 </div>
               )}
@@ -774,7 +933,10 @@ export const EventForm: React.FC = () => {
       </nav>
 
       {error && (
-        <div className="bg-error/5 border-l-4 border-error p-4 rounded-md" role="alert">
+        <div
+          className="bg-error/5 border-l-4 border-error p-4 rounded-md"
+          role="alert"
+        >
           <div className="flex">
             <AlertCircle className="h-5 w-5 text-error" aria-hidden="true" />
             <div className="ml-3">
@@ -785,14 +947,21 @@ export const EventForm: React.FC = () => {
       )}
 
       {isSubmitted && !isValid && (
-        <div className="bg-warning/10 border-l-4 border-warning p-4 rounded-md" role="alert">
+        <div
+          className="bg-warning/10 border-l-4 border-warning p-4 rounded-md"
+          role="alert"
+        >
           <div className="flex">
             <AlertCircle className="h-5 w-5 text-warning" aria-hidden="true" />
             <div className="ml-3">
-              <p className="text-sm text-warning font-medium">Hay errores en el formulario. Por favor revisa todos los pasos.</p>
+              <p className="text-sm text-warning font-medium">
+                Hay errores en el formulario. Por favor revisa todos los pasos.
+              </p>
               <ul className="mt-2 text-xs text-warning/80 list-disc list-inside">
                 {Object.entries(errors).map(([key, err]) => (
-                  <li key={key}>{key}: {(err as any).message}</li>
+                  <li key={key}>
+                    {key}: {(err as any).message}
+                  </li>
                 ))}
               </ul>
             </div>
@@ -801,20 +970,23 @@ export const EventForm: React.FC = () => {
       )}
 
       <FormProvider {...methods}>
-        <form 
+        <form
           onSubmit={handleSubmit(onSubmit)}
           className="space-y-6"
           onKeyDown={(e) => {
-            if (e.key === "Enter" && (e.target as HTMLElement).tagName !== "TEXTAREA") {
+            if (
+              e.key === "Enter" &&
+              (e.target as HTMLElement).tagName !== "TEXTAREA"
+            ) {
               e.preventDefault();
             }
           }}
         >
           <div className="bg-card shadow-sm border border-border p-6 rounded-3xl">
             {activeStep === 1 && (
-              <EventGeneralInfo 
-                clients={clients as any} 
-                clientIdValue={clientIdValue} 
+              <EventGeneralInfo
+                clients={clients as any}
+                clientIdValue={clientIdValue}
                 onClientCreated={handleClientCreated as any}
                 unavailableDates={unavailableDates}
               />
@@ -866,7 +1038,11 @@ export const EventForm: React.FC = () => {
                 selectedProducts={selectedProducts as any}
                 extras={extras}
                 productUnitCosts={productUnitCosts}
-                supplyCost={selectedSupplies.reduce((sum, s) => sum + (s.exclude_cost ? 0 : s.quantity * s.unit_cost), 0)}
+                supplyCost={selectedSupplies.reduce(
+                  (sum, s) =>
+                    sum + (s.exclude_cost ? 0 : s.quantity * s.unit_cost),
+                  0,
+                )}
                 discountType={discountType}
                 onDiscountTypeChange={setDiscountType}
               />
@@ -878,12 +1054,12 @@ export const EventForm: React.FC = () => {
               type="button"
               onClick={prevStep}
               disabled={activeStep === 1}
-              className={`px-4 py-2 border border-border rounded-xl shadow-sm text-sm font-medium text-text-secondary bg-card hover:bg-surface-alt transition-colors ${activeStep === 1 ? 'invisible' : ''}`}
+              className={`px-4 py-2 border border-border rounded-xl shadow-sm text-sm font-medium text-text-secondary bg-card hover:bg-surface-alt transition-colors ${activeStep === 1 ? "invisible" : ""}`}
               aria-label="Volver al paso anterior del formulario"
             >
               Anterior
             </button>
-            
+
             {activeStep < STEPS.length ? (
               <button
                 type="button"

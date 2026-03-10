@@ -28,9 +28,7 @@ const inventorySchema = z.object({
     .string()
     .min(2, "El nombre debe tener al menos 2 caracteres"),
   type: z.enum(["ingredient", "equipment", "supply"]),
-  current_stock: z.coerce
-    .number()
-    .min(0, "El stock no puede ser negativo"),
+  current_stock: z.coerce.number().min(0, "El stock no puede ser negativo"),
   minimum_stock: z.coerce
     .number()
     .min(0, "El stock mínimo no puede ser negativo"),
@@ -51,7 +49,12 @@ export const InventoryForm: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isCustomUnit, setIsCustomUnit] = useState(false);
 
-  const { canCreateCatalogItem, catalogCount, catalogLimit, loading: limitsLoading } = usePlanLimits();
+  const {
+    canCreateCatalogItem,
+    catalogCount,
+    catalogLimit,
+    loading: limitsLoading,
+  } = usePlanLimits();
 
   const {
     register,
@@ -82,10 +85,10 @@ export const InventoryForm: React.FC = () => {
       setIsLoading(true);
       const item = await inventoryService.getById(itemId);
       if (!item) {
-        throw new Error('Item no encontrado');
+        throw new Error("Item no encontrado");
       }
 
-      const isCommon = COMMON_UNITS.some(u => u.value === item.unit);
+      const isCommon = COMMON_UNITS.some((u) => u.value === item.unit);
       if (item.unit && !isCommon) {
         setIsCustomUnit(true);
       } else {
@@ -94,7 +97,8 @@ export const InventoryForm: React.FC = () => {
 
       reset({
         ingredient_name: item.ingredient_name || "",
-        type: (item.type as "ingredient" | "equipment" | "supply") || "ingredient",
+        type:
+          (item.type as "ingredient" | "equipment" | "supply") || "ingredient",
         current_stock: item.current_stock || 0,
         minimum_stock: item.minimum_stock || 0,
         unit: item.unit || "",
@@ -140,8 +144,15 @@ export const InventoryForm: React.FC = () => {
 
   if (limitsLoading) {
     return (
-      <div className="flex justify-center items-center h-64" role="status" aria-live="polite">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" aria-hidden="true"></div>
+      <div
+        className="flex justify-center items-center h-64"
+        role="status"
+        aria-live="polite"
+      >
+        <div
+          className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"
+          aria-hidden="true"
+        ></div>
         <span className="sr-only">Cargando límites de plan...</span>
       </div>
     );
@@ -160,7 +171,12 @@ export const InventoryForm: React.FC = () => {
           Regresar
         </button>
         <div className="flex justify-center mt-12">
-          <UpgradeBanner type="limit-reached" resource="catalog" currentUsage={catalogCount} limit={catalogLimit} />
+          <UpgradeBanner
+            type="limit-reached"
+            resource="catalog"
+            currentUsage={catalogCount}
+            limit={catalogLimit}
+          />
         </div>
       </div>
     );
@@ -168,7 +184,7 @@ export const InventoryForm: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center">
           <button
             type="button"
@@ -187,7 +203,10 @@ export const InventoryForm: React.FC = () => {
       <div className="bg-card shadow-sm border border-border px-4 py-8 rounded-3xl sm:p-10">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {error && (
-            <div className="bg-error/5 border-l-4 border-error p-4" role="alert">
+            <div
+              className="bg-error/5 border-l-4 border-error p-4"
+              role="alert"
+            >
               <div className="flex">
                 <div className="ml-3">
                   <p className="text-sm text-error">{error}</p>
@@ -211,10 +230,16 @@ export const InventoryForm: React.FC = () => {
                 className="w-full rounded-xl shadow-sm border border-border bg-card text-text p-3 transition-shadow focus:ring-2 focus:ring-primary/20"
                 aria-required="true"
                 aria-invalid={errors.ingredient_name ? "true" : "false"}
-                aria-describedby={errors.ingredient_name ? "ingredient_name-error" : undefined}
+                aria-describedby={
+                  errors.ingredient_name ? "ingredient_name-error" : undefined
+                }
               />
               {errors.ingredient_name && (
-                <p id="ingredient_name-error" className="mt-2 text-sm text-error" role="alert">
+                <p
+                  id="ingredient_name-error"
+                  className="mt-2 text-sm text-error"
+                  role="alert"
+                >
                   {errors.ingredient_name.message}
                 </p>
               )}
@@ -239,12 +264,14 @@ export const InventoryForm: React.FC = () => {
                 <option value="supply">
                   Insumo por Evento (Costo fijo por evento)
                 </option>
-                <option value="equipment">
-                  Activo / Equipo (Retornable)
-                </option>
+                <option value="equipment">Activo / Equipo (Retornable)</option>
               </select>
               {errors.type && (
-                <p id="type-error" className="mt-2 text-sm text-error" role="alert">
+                <p
+                  id="type-error"
+                  className="mt-2 text-sm text-error"
+                  role="alert"
+                >
                   {errors.type.message}
                 </p>
               )}
@@ -266,16 +293,20 @@ export const InventoryForm: React.FC = () => {
                         setIsCustomUnit(true);
                         setValue("unit", "", { shouldValidate: true });
                       }
-                    }
+                    },
                   })}
                   className="w-full rounded-xl shadow-sm border border-border bg-card text-text p-3 transition-shadow focus:ring-2 focus:ring-primary/20"
                   aria-required="true"
                   aria-invalid={errors.unit ? "true" : "false"}
                   aria-describedby={errors.unit ? "unit-error" : undefined}
                 >
-                  <option value="" disabled>Selecciona una unidad</option>
-                  {COMMON_UNITS.map(u => (
-                    <option key={u.value} value={u.value}>{u.label}</option>
+                  <option value="" disabled>
+                    Selecciona una unidad
+                  </option>
+                  {COMMON_UNITS.map((u) => (
+                    <option key={u.value} value={u.value}>
+                      {u.label}
+                    </option>
                   ))}
                   <option value="otro">Otra / Personalizada...</option>
                 </select>
@@ -305,7 +336,11 @@ export const InventoryForm: React.FC = () => {
                 </div>
               )}
               {errors.unit && (
-                <p id="unit-error" className="mt-2 text-sm text-error" role="alert">
+                <p
+                  id="unit-error"
+                  className="mt-2 text-sm text-error"
+                  role="alert"
+                >
                   {errors.unit.message}
                 </p>
               )}
@@ -326,10 +361,16 @@ export const InventoryForm: React.FC = () => {
                 className="w-full rounded-xl shadow-sm border border-border bg-card text-text p-3 transition-shadow focus:ring-2 focus:ring-primary/20"
                 aria-required="true"
                 aria-invalid={errors.current_stock ? "true" : "false"}
-                aria-describedby={errors.current_stock ? "current_stock-error" : undefined}
+                aria-describedby={
+                  errors.current_stock ? "current_stock-error" : undefined
+                }
               />
               {errors.current_stock && (
-                <p id="current_stock-error" className="mt-2 text-sm text-error" role="alert">
+                <p
+                  id="current_stock-error"
+                  className="mt-2 text-sm text-error"
+                  role="alert"
+                >
                   {errors.current_stock.message}
                 </p>
               )}
@@ -350,10 +391,16 @@ export const InventoryForm: React.FC = () => {
                 className="w-full rounded-xl shadow-sm border border-border bg-card text-text p-3 transition-shadow focus:ring-2 focus:ring-primary/20"
                 aria-required="true"
                 aria-invalid={errors.minimum_stock ? "true" : "false"}
-                aria-describedby={errors.minimum_stock ? "minimum_stock-error" : undefined}
+                aria-describedby={
+                  errors.minimum_stock ? "minimum_stock-error" : undefined
+                }
               />
               {errors.minimum_stock && (
-                <p id="minimum_stock-error" className="mt-2 text-sm text-error" role="alert">
+                <p
+                  id="minimum_stock-error"
+                  className="mt-2 text-sm text-error"
+                  role="alert"
+                >
                   {errors.minimum_stock.message}
                 </p>
               )}
@@ -373,10 +420,16 @@ export const InventoryForm: React.FC = () => {
                 {...register("unit_cost")}
                 className="w-full rounded-xl shadow-sm border border-border bg-card text-text p-3 transition-shadow focus:ring-2 focus:ring-primary/20"
                 aria-invalid={errors.unit_cost ? "true" : "false"}
-                aria-describedby={errors.unit_cost ? "unit_cost-error" : undefined}
+                aria-describedby={
+                  errors.unit_cost ? "unit_cost-error" : undefined
+                }
               />
               {errors.unit_cost && (
-                <p id="unit_cost-error" className="mt-2 text-sm text-error" role="alert">
+                <p
+                  id="unit_cost-error"
+                  className="mt-2 text-sm text-error"
+                  role="alert"
+                >
                   {errors.unit_cost.message}
                 </p>
               )}

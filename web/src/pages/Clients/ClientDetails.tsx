@@ -22,16 +22,33 @@ import { useToast } from "@/hooks/useToast";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 
 const STATUS_MAP: Record<string, { label: string; className: string }> = {
-  quoted: { label: "Cotizado", className: "bg-status-quoted/10 text-status-quoted border-status-quoted/20" },
-  confirmed: { label: "Confirmado", className: "bg-status-confirmed/10 text-status-confirmed border-status-confirmed/20" },
-  completed: { label: "Completado", className: "bg-status-completed/10 text-status-completed border-status-completed/20" },
-  cancelled: { label: "Cancelado", className: "bg-status-cancelled/10 text-status-cancelled border-status-cancelled/20" },
+  quoted: {
+    label: "Cotizado",
+    className: "bg-status-quoted/10 text-status-quoted border-status-quoted/20",
+  },
+  confirmed: {
+    label: "Confirmado",
+    className:
+      "bg-status-confirmed/10 text-status-confirmed border-status-confirmed/20",
+  },
+  completed: {
+    label: "Completado",
+    className:
+      "bg-status-completed/10 text-status-completed border-status-completed/20",
+  },
+  cancelled: {
+    label: "Cancelado",
+    className:
+      "bg-status-cancelled/10 text-status-cancelled border-status-cancelled/20",
+  },
 };
 
 const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
   const cfg = STATUS_MAP[status] ?? STATUS_MAP.quoted;
   return (
-    <span className={`px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full border ${cfg.className}`}>
+    <span
+      className={`px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full border ${cfg.className}`}
+    >
       {cfg.label}
     </span>
   );
@@ -91,7 +108,10 @@ export const ClientDetails: React.FC = () => {
         role="status"
         aria-live="polite"
       >
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mr-3" aria-hidden="true"></div>
+        <div
+          className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mr-3"
+          aria-hidden="true"
+        ></div>
         Cargando detalles...
       </div>
     );
@@ -117,15 +137,13 @@ export const ClientDetails: React.FC = () => {
 
   if (!client) {
     return (
-      <div className="text-center p-8 text-text">
-        Cliente no encontrado
-      </div>
+      <div className="text-center p-8 text-text">Cliente no encontrado</div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center">
           <button
             type="button"
@@ -142,7 +160,10 @@ export const ClientDetails: React.FC = () => {
               className="h-10 w-10 rounded-full object-cover mr-3"
             />
           ) : (
-            <div className="h-10 w-10 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary font-bold mr-3" aria-hidden="true">
+            <div
+              className="h-10 w-10 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary font-bold mr-3"
+              aria-hidden="true"
+            >
               {client.name.charAt(0).toUpperCase()}
             </div>
           )}
@@ -180,24 +201,31 @@ export const ClientDetails: React.FC = () => {
             Detalles personales y de contacto.
           </p>
         </div>
-        <div className="grid grid-cols-3 divide-x divide-border border-t border-border">
+        <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-border border-t border-border">
           <div className="px-4 py-4 text-center">
-            <p className="text-2xl font-black text-text">{client.total_events ?? 0}</p>
+            <p className="text-2xl font-black text-text">
+              {client.total_events ?? 0}
+            </p>
             <p className="text-xs text-text-secondary mt-0.5">Eventos</p>
           </div>
           <div className="px-4 py-4 text-center">
             <p className="text-2xl font-black text-text">
-              ${(client.total_spent ?? 0).toLocaleString('es-MX', { minimumFractionDigits: 0 })}
+              $
+              {(client.total_spent ?? 0).toLocaleString("es-MX", {
+                minimumFractionDigits: 0,
+              })}
             </p>
             <p className="text-xs text-text-secondary mt-0.5">Total gastado</p>
           </div>
           <div className="px-4 py-4 text-center">
             <p className="text-2xl font-black text-text">
               {client.total_events
-                ? `$${Math.round((client.total_spent ?? 0) / client.total_events).toLocaleString('es-MX')}`
-                : '—'}
+                ? `$${Math.round((client.total_spent ?? 0) / client.total_events).toLocaleString("es-MX")}`
+                : "—"}
             </p>
-            <p className="text-xs text-text-secondary mt-0.5">Promedio por evento</p>
+            <p className="text-xs text-text-secondary mt-0.5">
+              Promedio por evento
+            </p>
           </div>
         </div>
         <div className="border-t border-border px-4 py-5 sm:px-6">
@@ -260,7 +288,10 @@ export const ClientDetails: React.FC = () => {
                 Gastado
               </dt>
               <dd className="mt-1 text-sm text-text font-semibold">
-                ${(client.total_spent ?? 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                $
+                {(client.total_spent ?? 0).toLocaleString("es-MX", {
+                  minimumFractionDigits: 2,
+                })}
               </dd>
             </div>
             <div className="sm:col-span-2">
@@ -276,7 +307,7 @@ export const ClientDetails: React.FC = () => {
       </div>
 
       <div className="bg-card shadow-sm overflow-hidden rounded-3xl border border-border">
-        <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
+        <div className="px-4 py-5 sm:px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h3 className="text-lg leading-6 font-semibold text-text">
               Historial de Eventos
@@ -305,23 +336,53 @@ export const ClientDetails: React.FC = () => {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-border" aria-label="Historial de eventos del cliente">
+              <table
+                className="min-w-full divide-y divide-border"
+                aria-label="Historial de eventos del cliente"
+              >
                 <thead className="bg-surface-alt">
                   <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
-                      <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" aria-hidden="true" /> Fecha</span>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider"
+                    >
+                      <span className="flex items-center gap-1">
+                        <Calendar className="h-3.5 w-3.5" aria-hidden="true" />{" "}
+                        Fecha
+                      </span>
                     </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider"
+                    >
                       Servicio
                     </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
-                      <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5" aria-hidden="true" /> Personas</span>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider"
+                    >
+                      <span className="flex items-center gap-1">
+                        <Users className="h-3.5 w-3.5" aria-hidden="true" />{" "}
+                        Personas
+                      </span>
                     </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider"
+                    >
                       Estado
                     </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
-                      <span className="flex items-center gap-1"><DollarSign className="h-3.5 w-3.5" aria-hidden="true" /> Total</span>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider"
+                    >
+                      <span className="flex items-center gap-1">
+                        <DollarSign
+                          className="h-3.5 w-3.5"
+                          aria-hidden="true"
+                        />{" "}
+                        Total
+                      </span>
                     </th>
                   </tr>
                 </thead>
@@ -333,10 +394,17 @@ export const ClientDetails: React.FC = () => {
                       onClick={() => navigate(`/events/${event.id}/summary`)}
                     >
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
-                        {format(new Date(event.event_date + "T12:00:00"), "d MMM yyyy", { locale: es })}
+                        {format(
+                          new Date(event.event_date + "T12:00:00"),
+                          "d MMM yyyy",
+                          { locale: es },
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-primary">
-                        <Link to={`/events/${event.id}/summary`} className="hover:underline">
+                        <Link
+                          to={`/events/${event.id}/summary`}
+                          className="hover:underline"
+                        >
                           {event.service_type}
                         </Link>
                       </td>
@@ -347,7 +415,10 @@ export const ClientDetails: React.FC = () => {
                         <StatusBadge status={event.status} />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-text">
-                        ${(event.total_amount ?? 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                        $
+                        {(event.total_amount ?? 0).toLocaleString("es-MX", {
+                          minimumFractionDigits: 2,
+                        })}
                       </td>
                     </tr>
                   ))}

@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { api } from '../lib/api';
-import { useAuth } from '../contexts/AuthContext';
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { api } from "../lib/api";
+import { useAuth } from "../contexts/AuthContext";
 import {
   Lock,
   Mail,
@@ -20,36 +20,50 @@ import {
   Zap,
   Shield,
   TrendingUp,
-} from 'lucide-react';
-import { useTheme } from '../hooks/useTheme';
-import { Logo } from '../components/Logo';
+} from "lucide-react";
+import { useTheme } from "../hooks/useTheme";
+import { Logo } from "../components/Logo";
 
 const registerSchema = z
   .object({
-    name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
-    email: z.string().email('Email inválido'),
-    password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
+    name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
+    email: z.string().email("Email inválido"),
+    password: z
+      .string()
+      .min(6, "La contraseña debe tener al menos 6 caracteres"),
     confirmPassword: z.string(),
   })
   .refine((d) => d.password === d.confirmPassword, {
-    message: 'Las contraseñas no coinciden',
-    path: ['confirmPassword'],
+    message: "Las contraseñas no coinciden",
+    path: ["confirmPassword"],
   });
 
 type RegisterForm = z.infer<typeof registerSchema>;
 
 const sidePerks = [
-  { icon: Zap, label: 'Gratis para siempre', desc: 'Plan Básico sin tarjeta de crédito' },
-  { icon: Shield, label: 'Datos 100% seguros', desc: 'Cifrado de extremo a extremo' },
-  { icon: TrendingUp, label: 'Escala cuando quieras', desc: 'Actualiza a Pro en un clic' },
+  {
+    icon: Zap,
+    label: "Gratis para siempre",
+    desc: "Plan Básico sin tarjeta de crédito",
+  },
+  {
+    icon: Shield,
+    label: "Datos 100% seguros",
+    desc: "Cifrado de extremo a extremo",
+  },
+  {
+    icon: TrendingUp,
+    label: "Escala cuando quieras",
+    desc: "Actualiza a Pro en un clic",
+  },
 ];
 
 const testimonial = {
   text: '"En 2 semanas recuperé el tiempo que perdía en hojas de cálculo."',
-  name: 'María González',
-  role: 'Organizadora de bodas · CDMX',
-  avatar: 'MG',
-  avatarColor: 'bg-pink-500',
+  name: "María González",
+  role: "Organizadora de bodas · CDMX",
+  avatar: "MG",
+  avatarColor: "bg-pink-500",
 };
 
 export const Register: React.FC = () => {
@@ -71,16 +85,20 @@ export const Register: React.FC = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await api.post<{ tokens: { access_token: string; refresh_token: string } }>(
-        '/auth/register',
-        { name: data.name, email: data.email, password: data.password }
-      );
-      localStorage.setItem('auth_token', res.tokens.access_token);
-      if (res.tokens.refresh_token) localStorage.setItem('refresh_token', res.tokens.refresh_token);
+      const res = await api.post<{
+        tokens: { access_token: string; refresh_token: string };
+      }>("/auth/register", {
+        name: data.name,
+        email: data.email,
+        password: data.password,
+      });
+      localStorage.setItem("auth_token", res.tokens.access_token);
+      if (res.tokens.refresh_token)
+        localStorage.setItem("refresh_token", res.tokens.refresh_token);
       await checkAuth();
-      navigate('/dashboard');
+      navigate("/dashboard");
     } catch (err: any) {
-      setError(err.message || 'Error al registrarse');
+      setError(err.message || "Error al registrarse");
     } finally {
       setIsLoading(false);
     }
@@ -110,7 +128,8 @@ export const Register: React.FC = () => {
               <span className="text-white/80">tu operación de eventos</span>
             </h1>
             <p className="text-white/70 text-lg leading-relaxed mb-12">
-              Únete a más de 500 organizadores que ya gestionan su negocio sin hojas de cálculo ni WhatsApp.
+              Únete a más de 500 organizadores que ya gestionan su negocio sin
+              hojas de cálculo ni WhatsApp.
             </p>
 
             <ul className="space-y-5">
@@ -132,16 +151,25 @@ export const Register: React.FC = () => {
           <div className="mt-12 pt-8 border-t border-white/20">
             <div className="flex gap-1 mb-3">
               {Array.from({ length: 5 }).map((_, i) => (
-                <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                <Star
+                  key={i}
+                  className="h-4 w-4 fill-yellow-400 text-yellow-400"
+                />
               ))}
             </div>
-            <p className="text-white/90 text-sm italic leading-relaxed mb-4">{testimonial.text}</p>
+            <p className="text-white/90 text-sm italic leading-relaxed mb-4">
+              {testimonial.text}
+            </p>
             <div className="flex items-center gap-3">
-              <div className={`${testimonial.avatarColor} w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-xs shrink-0`}>
+              <div
+                className={`${testimonial.avatarColor} w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-xs shrink-0`}
+              >
                 {testimonial.avatar}
               </div>
               <div>
-                <div className="text-white font-bold text-sm">{testimonial.name}</div>
+                <div className="text-white font-bold text-sm">
+                  {testimonial.name}
+                </div>
                 <div className="text-white/60 text-xs">{testimonial.role}</div>
               </div>
             </div>
@@ -164,9 +192,17 @@ export const Register: React.FC = () => {
             type="button"
             onClick={toggleTheme}
             className="p-2.5 rounded-xl bg-surface-alt text-text-secondary hover:bg-surface-grouped transition-colors"
-            aria-label={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+            aria-label={
+              theme === "dark"
+                ? "Cambiar a modo claro"
+                : "Cambiar a modo oscuro"
+            }
           >
-            {theme === 'dark' ? <Sun className="h-5 w-5 text-warning" /> : <Moon className="h-5 w-5" />}
+            {theme === "dark" ? (
+              <Sun className="h-5 w-5 text-warning" />
+            ) : (
+              <Moon className="h-5 w-5" />
+            )}
           </button>
         </div>
 
@@ -184,8 +220,11 @@ export const Register: React.FC = () => {
                 Crear cuenta gratis
               </h2>
               <p className="text-text-secondary text-sm">
-                ¿Ya tienes cuenta?{' '}
-                <Link to="/login" className="font-semibold text-primary hover:underline">
+                ¿Ya tienes cuenta?{" "}
+                <Link
+                  to="/login"
+                  className="font-semibold text-primary hover:underline"
+                >
                   Inicia sesión aquí
                 </Link>
               </p>
@@ -193,17 +232,27 @@ export const Register: React.FC = () => {
 
             {/* Error */}
             {error && (
-              <div className="flex items-start gap-3 bg-error/5 border border-error/30 text-error rounded-xl p-4 mb-6" role="alert">
+              <div
+                className="flex items-start gap-3 bg-error/5 border border-error/30 text-error rounded-xl p-4 mb-6"
+                role="alert"
+              >
                 <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
                 <span className="text-sm">{error}</span>
               </div>
             )}
 
             {/* Form */}
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className="space-y-4"
+              noValidate
+            >
               {/* Name */}
               <div>
-                <label htmlFor="name" className="block text-sm font-semibold text-text-secondary mb-1.5">
+                <label
+                  htmlFor="name"
+                  className="block text-sm font-semibold text-text-secondary mb-1.5"
+                >
                   Nombre completo
                 </label>
                 <div className="relative">
@@ -213,28 +262,34 @@ export const Register: React.FC = () => {
                   <input
                     id="name"
                     type="text"
-                    {...register('name')}
+                    {...register("name")}
                     placeholder="Juan Pérez"
                     aria-required="true"
-                    aria-invalid={errors.name ? 'true' : 'false'}
-                    aria-describedby={errors.name ? 'name-error' : undefined}
+                    aria-invalid={errors.name ? "true" : "false"}
+                    aria-describedby={errors.name ? "name-error" : undefined}
                     className={`w-full pl-11 pr-4 py-3.5 rounded-xl border text-sm transition-colors bg-card text-text placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary ${
-                      errors.name
-                        ? 'border-error/30'
-                        : 'border-border'
+                      errors.name ? "border-error/30" : "border-border"
                     }`}
                   />
                 </div>
                 {errors.name && (
-                  <p id="name-error" className="mt-1.5 text-xs text-error flex items-center gap-1" role="alert">
-                    <AlertCircle className="h-3.5 w-3.5" /> {errors.name.message}
+                  <p
+                    id="name-error"
+                    className="mt-1.5 text-xs text-error flex items-center gap-1"
+                    role="alert"
+                  >
+                    <AlertCircle className="h-3.5 w-3.5" />{" "}
+                    {errors.name.message}
                   </p>
                 )}
               </div>
 
               {/* Email */}
               <div>
-                <label htmlFor="email" className="block text-sm font-semibold text-text-secondary mb-1.5">
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-semibold text-text-secondary mb-1.5"
+                >
                   Email
                 </label>
                 <div className="relative">
@@ -244,28 +299,34 @@ export const Register: React.FC = () => {
                   <input
                     id="email"
                     type="email"
-                    {...register('email')}
+                    {...register("email")}
                     placeholder="tu@email.com"
                     aria-required="true"
-                    aria-invalid={errors.email ? 'true' : 'false'}
-                    aria-describedby={errors.email ? 'email-error' : undefined}
+                    aria-invalid={errors.email ? "true" : "false"}
+                    aria-describedby={errors.email ? "email-error" : undefined}
                     className={`w-full pl-11 pr-4 py-3.5 rounded-xl border text-sm transition-colors bg-card text-text placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary ${
-                      errors.email
-                        ? 'border-error/30'
-                        : 'border-border'
+                      errors.email ? "border-error/30" : "border-border"
                     }`}
                   />
                 </div>
                 {errors.email && (
-                  <p id="email-error" className="mt-1.5 text-xs text-error flex items-center gap-1" role="alert">
-                    <AlertCircle className="h-3.5 w-3.5" /> {errors.email.message}
+                  <p
+                    id="email-error"
+                    className="mt-1.5 text-xs text-error flex items-center gap-1"
+                    role="alert"
+                  >
+                    <AlertCircle className="h-3.5 w-3.5" />{" "}
+                    {errors.email.message}
                   </p>
                 )}
               </div>
 
               {/* Password */}
               <div>
-                <label htmlFor="password" className="block text-sm font-semibold text-text-secondary mb-1.5">
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-semibold text-text-secondary mb-1.5"
+                >
                   Contraseña
                 </label>
                 <div className="relative">
@@ -274,37 +335,51 @@ export const Register: React.FC = () => {
                   </div>
                   <input
                     id="password"
-                    type={showPassword ? 'text' : 'password'}
-                    {...register('password')}
+                    type={showPassword ? "text" : "password"}
+                    {...register("password")}
                     placeholder="Mínimo 6 caracteres"
                     aria-required="true"
-                    aria-invalid={errors.password ? 'true' : 'false'}
-                    aria-describedby={errors.password ? 'password-error' : undefined}
+                    aria-invalid={errors.password ? "true" : "false"}
+                    aria-describedby={
+                      errors.password ? "password-error" : undefined
+                    }
                     className={`w-full pl-11 pr-11 py-3.5 rounded-xl border text-sm transition-colors bg-card text-text placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary ${
-                      errors.password
-                        ? 'border-error/30'
-                        : 'border-border'
+                      errors.password ? "border-error/30" : "border-border"
                     }`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute inset-y-0 right-0 pr-4 flex items-center text-text-tertiary hover:text-text-secondary transition-colors"
-                    aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                    aria-label={
+                      showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
+                    }
                   >
-                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
                   </button>
                 </div>
                 {errors.password && (
-                  <p id="password-error" className="mt-1.5 text-xs text-error flex items-center gap-1" role="alert">
-                    <AlertCircle className="h-3.5 w-3.5" /> {errors.password.message}
+                  <p
+                    id="password-error"
+                    className="mt-1.5 text-xs text-error flex items-center gap-1"
+                    role="alert"
+                  >
+                    <AlertCircle className="h-3.5 w-3.5" />{" "}
+                    {errors.password.message}
                   </p>
                 )}
               </div>
 
               {/* Confirm Password */}
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-semibold text-text-secondary mb-1.5">
+                <label
+                  htmlFor="confirmPassword"
+                  className="block text-sm font-semibold text-text-secondary mb-1.5"
+                >
                   Confirmar contraseña
                 </label>
                 <div className="relative">
@@ -313,40 +388,66 @@ export const Register: React.FC = () => {
                   </div>
                   <input
                     id="confirmPassword"
-                    type={showConfirm ? 'text' : 'password'}
-                    {...register('confirmPassword')}
+                    type={showConfirm ? "text" : "password"}
+                    {...register("confirmPassword")}
                     placeholder="Repite tu contraseña"
                     aria-required="true"
-                    aria-invalid={errors.confirmPassword ? 'true' : 'false'}
-                    aria-describedby={errors.confirmPassword ? 'confirm-error' : undefined}
+                    aria-invalid={errors.confirmPassword ? "true" : "false"}
+                    aria-describedby={
+                      errors.confirmPassword ? "confirm-error" : undefined
+                    }
                     className={`w-full pl-11 pr-11 py-3.5 rounded-xl border text-sm transition-colors bg-card text-text placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary ${
                       errors.confirmPassword
-                        ? 'border-error/30'
-                        : 'border-border'
+                        ? "border-error/30"
+                        : "border-border"
                     }`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirm(!showConfirm)}
                     className="absolute inset-y-0 right-0 pr-4 flex items-center text-text-tertiary hover:text-text-secondary transition-colors"
-                    aria-label={showConfirm ? 'Ocultar confirmación' : 'Mostrar confirmación'}
+                    aria-label={
+                      showConfirm
+                        ? "Ocultar confirmación"
+                        : "Mostrar confirmación"
+                    }
                   >
-                    {showConfirm ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    {showConfirm ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
                   </button>
                 </div>
                 {errors.confirmPassword && (
-                  <p id="confirm-error" className="mt-1.5 text-xs text-error flex items-center gap-1" role="alert">
-                    <AlertCircle className="h-3.5 w-3.5" /> {errors.confirmPassword.message}
+                  <p
+                    id="confirm-error"
+                    className="mt-1.5 text-xs text-error flex items-center gap-1"
+                    role="alert"
+                  >
+                    <AlertCircle className="h-3.5 w-3.5" />{" "}
+                    {errors.confirmPassword.message}
                   </p>
                 )}
               </div>
 
               {/* Terms notice */}
               <p className="text-xs text-text-tertiary leading-relaxed pt-1">
-                Al registrarte aceptas nuestros{' '}
-                <Link to="/terms" className="text-primary hover:underline font-medium">Términos de Servicio</Link>
-                {' '}y{' '}
-                <Link to="/privacy" className="text-primary hover:underline font-medium">Política de Privacidad</Link>.
+                Al registrarte aceptas nuestros{" "}
+                <Link
+                  to="/terms"
+                  className="text-primary hover:underline font-medium"
+                >
+                  Términos de Servicio
+                </Link>{" "}
+                y{" "}
+                <Link
+                  to="/privacy"
+                  className="text-primary hover:underline font-medium"
+                >
+                  Política de Privacidad
+                </Link>
+                .
               </p>
 
               {/* Submit */}
@@ -354,24 +455,39 @@ export const Register: React.FC = () => {
                 type="submit"
                 disabled={isLoading}
                 className="w-full premium-gradient text-white py-3.5 rounded-xl font-bold text-sm shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100 flex items-center justify-center gap-2"
-                aria-label={isLoading ? 'Creando cuenta...' : 'Crear cuenta'}
+                aria-label={isLoading ? "Creando cuenta..." : "Crear cuenta"}
               >
                 {isLoading ? (
                   <>
-                    <svg className="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24" fill="none">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                    <svg
+                      className="animate-spin h-4 w-4 text-white"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v8z"
+                      />
                     </svg>
                     Creando cuenta...
                   </>
                 ) : (
-                  'Crear cuenta gratis'
+                  "Crear cuenta gratis"
                 )}
               </button>
             </form>
 
             {/* Trust badges */}
-            <div className="mt-6 flex items-center justify-center gap-6 text-xs text-text-tertiary">
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs text-text-tertiary">
               <div className="flex items-center gap-1.5">
                 <CheckCircle className="h-3.5 w-3.5 text-success" />
                 <span>Sin tarjeta</span>
@@ -390,10 +506,14 @@ export const Register: React.FC = () => {
 
         {/* Footer */}
         <div className="px-6 py-4 border-t border-border text-center text-xs text-text-tertiary">
-          © 2026 Eventos ·{' '}
-          <Link to="/terms" className="hover:text-primary transition-colors">Términos</Link>
-          {' · '}
-          <Link to="/privacy" className="hover:text-primary transition-colors">Privacidad</Link>
+          © 2026 Eventos ·{" "}
+          <Link to="/terms" className="hover:text-primary transition-colors">
+            Términos
+          </Link>
+          {" · "}
+          <Link to="/privacy" className="hover:text-primary transition-colors">
+            Privacidad
+          </Link>
         </div>
       </div>
     </div>

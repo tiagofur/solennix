@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import {
   Calendar,
   Users,
@@ -21,196 +21,239 @@ import {
   Bell,
   ArrowUp,
   Clock,
-} from 'lucide-react';
-import { useTheme } from '@/hooks/useTheme';
-import { Logo } from '@/components/Logo';
+} from "lucide-react";
+import { useTheme } from "@/hooks/useTheme";
+import { Logo } from "@/components/Logo";
 
 const FEATURES = [
   {
     icon: Calendar,
-    color: 'text-primary',
-    bg: 'bg-primary/10',
-    title: 'Calendario Inteligente',
+    color: "text-primary",
+    bg: "bg-primary/10",
+    title: "Calendario Inteligente",
     description:
-      'Visualiza todos tus eventos en un calendario interactivo. Arrastra, suelta y reorganiza con facilidad.',
+      "Visualiza todos tus eventos en un calendario interactivo. Arrastra, suelta y reorganiza con facilidad.",
   },
   {
     icon: Users,
-    color: 'text-success',
-    bg: 'bg-success/10',
-    title: 'Gestión de Clientes',
+    color: "text-success",
+    bg: "bg-success/10",
+    title: "Gestión de Clientes",
     description:
-      'CRM integrado para mantener el historial completo de cada cliente: contratos, pagos y más.',
+      "CRM integrado para mantener el historial completo de cada cliente: contratos, pagos y más.",
   },
   {
     icon: Package,
-    color: 'text-info',
-    bg: 'bg-info/10',
-    title: 'Control de Inventario',
+    color: "text-info",
+    bg: "bg-info/10",
+    title: "Control de Inventario",
     description:
-      'Administra equipos y recursos. Evita dobles reservas y asegura disponibilidad.',
+      "Administra equipos y recursos. Evita dobles reservas y asegura disponibilidad.",
   },
   {
     icon: BarChart3,
-    color: 'text-info',
-    bg: 'bg-info/10',
-    title: 'Reportes y Análisis',
+    color: "text-info",
+    bg: "bg-info/10",
+    title: "Reportes y Análisis",
     description:
-      'Dashboards en tiempo real con métricas de ingresos, eventos y tendencias.',
+      "Dashboards en tiempo real con métricas de ingresos, eventos y tendencias.",
   },
   {
     icon: DollarSign,
-    color: 'text-success',
-    bg: 'bg-success/10',
-    title: 'Cotizaciones y Pagos',
+    color: "text-success",
+    bg: "bg-success/10",
+    title: "Cotizaciones y Pagos",
     description:
-      'Genera cotizaciones profesionales. Registra anticipos y pagos automáticamente.',
+      "Genera cotizaciones profesionales. Registra anticipos y pagos automáticamente.",
   },
   {
     icon: Bell,
-    color: 'text-warning',
-    bg: 'bg-warning/10',
-    title: 'Recordatorios',
+    color: "text-warning",
+    bg: "bg-warning/10",
+    title: "Recordatorios",
     description:
-      'Notificaciones automáticas: confirmaciones, recordatorios de pago y seguimiento.',
+      "Notificaciones automáticas: confirmaciones, recordatorios de pago y seguimiento.",
   },
 ];
 
 const STEPS = [
   {
-    number: '01',
-    title: 'Crea tu cuenta',
-    description: 'Regístrate gratis en menos de 2 minutos. Sin tarjeta de crédito requerida.',
+    number: "01",
+    title: "Crea tu cuenta",
+    description:
+      "Regístrate gratis en menos de 2 minutos. Sin tarjeta de crédito requerida.",
     icon: Zap,
   },
   {
-    number: '02',
-    title: 'Agrega tus clientes y eventos',
-    description: 'Importa tus contactos existentes o agrégalos manualmente. Crea tu primer evento en segundos.',
+    number: "02",
+    title: "Agrega tus clientes y eventos",
+    description:
+      "Importa tus contactos existentes o agrégalos manualmente. Crea tu primer evento en segundos.",
     icon: Users,
   },
   {
-    number: '03',
-    title: 'Gestiona tu inventario',
-    description: 'Registra todos tus equipos y recursos. El sistema evitará conflictos de disponibilidad automáticamente.',
+    number: "03",
+    title: "Gestiona tu inventario",
+    description:
+      "Registra todos tus equipos y recursos. El sistema evitará conflictos de disponibilidad automáticamente.",
     icon: Package,
   },
   {
-    number: '04',
-    title: 'Crece tu negocio',
-    description: 'Usa los reportes para identificar oportunidades, optimizar precios y escalar tu operación.',
+    number: "04",
+    title: "Crece tu negocio",
+    description:
+      "Usa los reportes para identificar oportunidades, optimizar precios y escalar tu operación.",
     icon: TrendingUp,
   },
 ];
 
 const STATS = [
-  { value: '500+', label: 'Organizadores activos' },
-  { value: '12,000+', label: 'Eventos gestionados' },
-  { value: '98%', label: 'Satisfacción de clientes' },
-  { value: '40%', label: 'Ahorro de tiempo promedio' },
+  { value: "500+", label: "Organizadores activos" },
+  { value: "12,000+", label: "Eventos gestionados" },
+  { value: "98%", label: "Satisfacción de clientes" },
+  { value: "40%", label: "Ahorro de tiempo promedio" },
 ];
 
 const TESTIMONIALS = [
   {
-    name: 'María González',
-    role: 'Organizadora de Bodas',
-    location: 'Ciudad de México',
-    avatar: 'MG',
-    avatarColor: 'bg-error',
+    name: "María González",
+    role: "Organizadora de Bodas",
+    location: "Ciudad de México",
+    avatar: "MG",
+    avatarColor: "bg-error",
     rating: 5,
-    text: 'Antes usaba hojas de cálculo y me volvía loca. Ahora con Eventos tengo todo centralizado: clientes, inventario, pagos. ¡Recuperé 10 horas a la semana!',
+    text: "Antes usaba hojas de cálculo y me volvía loca. Ahora con Eventos tengo todo centralizado: clientes, inventario, pagos. ¡Recuperé 10 horas a la semana!",
   },
   {
-    name: 'Carlos Mendoza',
-    role: 'Productor de Eventos Corporativos',
-    location: 'Monterrey',
-    avatar: 'CM',
-    avatarColor: 'bg-info',
+    name: "Carlos Mendoza",
+    role: "Productor de Eventos Corporativos",
+    location: "Monterrey",
+    avatar: "CM",
+    avatarColor: "bg-info",
     rating: 5,
-    text: 'El control de inventario es increíble. Ya no tenemos dobles reservas de equipo y el equipo de logística trabaja mucho más coordinado.',
+    text: "El control de inventario es increíble. Ya no tenemos dobles reservas de equipo y el equipo de logística trabaja mucho más coordinado.",
   },
   {
-    name: 'Ana Rodríguez',
-    role: 'DJ y Animadora',
-    location: 'Guadalajara',
-    avatar: 'AR',
-    avatarColor: 'bg-primary',
+    name: "Ana Rodríguez",
+    role: "DJ y Animadora",
+    location: "Guadalajara",
+    avatar: "AR",
+    avatarColor: "bg-primary",
     rating: 5,
-    text: 'Las cotizaciones automáticas me ahorran tiempo y se ven muy profesionales. Mis clientes quedan impresionados desde el primer contacto.',
+    text: "Las cotizaciones automáticas me ahorran tiempo y se ven muy profesionales. Mis clientes quedan impresionados desde el primer contacto.",
   },
 ];
 
 const PLANS = [
   {
-    name: 'Básico',
-    price: 'Gratis',
+    name: "Básico",
+    price: "Gratis",
     originalPrice: null,
-    period: '',
-    description: 'Perfecto para empezar',
+    period: "",
+    description: "Perfecto para empezar",
     promo: null,
     features: [
-      'Hasta 3 eventos por mes',
-      'Hasta 50 clientes registrados',
-      'Hasta 20 ítems en catálogo',
-      'Gestión básica de clientes',
-      'Calendario de eventos',
+      "Hasta 3 eventos por mes",
+      "Hasta 50 clientes registrados",
+      "Hasta 20 ítems en catálogo",
+      "Gestión básica de clientes",
+      "Calendario de eventos",
     ],
-    cta: 'Comenzar Gratis',
-    href: '/register',
+    cta: "Comenzar Gratis",
+    href: "/register",
     highlighted: false,
   },
   {
-    name: 'Pro',
-    price: '$99',
-    originalPrice: '$199',
-    period: 'MXN/mes',
-    description: 'Para profesionales en crecimiento',
-    promo: '🎉 Precio de lanzamiento',
+    name: "Pro",
+    price: "$99",
+    originalPrice: "$199",
+    period: "MXN/mes",
+    description: "Para profesionales en crecimiento",
+    promo: "🎉 Precio de lanzamiento",
     features: [
-      'Eventos, clientes y catálogo ilimitados',
-      'Generación de cotizaciones PDF',
-      'Control de pagos en múltiples plazos',
-      'Reportes y analíticas avanzadas',
-      'Soporte prioritario',
+      "Eventos, clientes y catálogo ilimitados",
+      "Generación de cotizaciones PDF",
+      "Control de pagos en múltiples plazos",
+      "Reportes y analíticas avanzadas",
+      "Soporte prioritario",
     ],
-    cta: 'Comenzar Ahora',
-    href: '/register',
+    cta: "Comenzar Ahora",
+    href: "/register",
     highlighted: true,
-    ctaClass: 'premium-gradient text-white',
+    ctaClass: "premium-gradient text-white",
   },
 ];
 
-
 const FAQS = [
   {
-    question: '¿Necesito tarjeta de crédito para registrarme?',
-    answer: 'No. El plan Básico es completamente gratuito y no requiere tarjeta de crédito. Solo necesitas un correo electrónico.',
+    question: "¿Necesito tarjeta de crédito para registrarme?",
+    answer:
+      "No. El plan Básico es completamente gratuito y no requiere tarjeta de crédito. Solo necesitas un correo electrónico.",
   },
   {
-    question: '¿Puedo importar mis datos existentes?',
-    answer: 'Sí. Puedes importar clientes desde CSV o Excel. También ofrecemos migración asistida para cuentas Pro.',
+    question: "¿Puedo importar mis datos existentes?",
+    answer:
+      "Sí. Puedes importar clientes desde CSV o Excel. También ofrecemos migración asistida para cuentas Pro.",
   },
   {
-    question: '¿Mis datos están seguros?',
-    answer: 'Absolutamente. Usamos encriptación de extremo a extremo, backups automáticos diarios y servidores con certificación SOC 2.',
+    question: "¿Mis datos están seguros?",
+    answer:
+      "Absolutamente. Usamos encriptación de extremo a extremo, backups automáticos diarios y servidores con certificación SOC 2.",
   },
   {
-    question: '¿Puedo cancelar en cualquier momento?',
-    answer: 'Sí, sin penalizaciones ni contratos de permanencia. Puedes cancelar cuando quieras y conservar acceso hasta el final del período pagado.',
+    question: "¿Puedo cancelar en cualquier momento?",
+    answer:
+      "Sí, sin penalizaciones ni contratos de permanencia. Puedes cancelar cuando quieras y conservar acceso hasta el final del período pagado.",
   },
 ];
 
 // Mini dashboard mockup data
 const MOCK_EVENTS = [
-  { name: 'Boda Martínez', date: 'Sáb 15 Mar', guests: 180, status: 'confirmed', amount: '$45,000' },
-  { name: 'Cumpleaños VIP', date: 'Dom 16 Mar', guests: 60, status: 'quoted', amount: '$12,500' },
-  { name: 'Evento Corporativo', date: 'Vie 21 Mar', guests: 250, status: 'confirmed', amount: '$78,000' },
+  {
+    name: "Boda Martínez",
+    date: "Sáb 15 Mar",
+    guests: 180,
+    status: "confirmed",
+    amount: "$45,000",
+  },
+  {
+    name: "Cumpleaños VIP",
+    date: "Dom 16 Mar",
+    guests: 60,
+    status: "quoted",
+    amount: "$12,500",
+  },
+  {
+    name: "Evento Corporativo",
+    date: "Vie 21 Mar",
+    guests: 250,
+    status: "confirmed",
+    amount: "$78,000",
+  },
 ];
 
 const MOCK_KPIS = [
-  { label: 'Ingresos del mes', value: '$135,500', delta: '+18%', color: 'text-success', bg: 'bg-success/10' },
-  { label: 'Eventos activos', value: '8', delta: '+3', color: 'text-primary', bg: 'bg-primary/10' },
-  { label: 'Clientes totales', value: '47', delta: '+5', color: 'text-info', bg: 'bg-info/10' },
+  {
+    label: "Ingresos del mes",
+    value: "$135,500",
+    delta: "+18%",
+    color: "text-success",
+    bg: "bg-success/10",
+  },
+  {
+    label: "Eventos activos",
+    value: "8",
+    delta: "+3",
+    color: "text-primary",
+    bg: "bg-primary/10",
+  },
+  {
+    label: "Clientes totales",
+    value: "47",
+    delta: "+5",
+    color: "text-info",
+    bg: "bg-info/10",
+  },
 ];
 
 function AppMockup() {
@@ -239,7 +282,7 @@ function AppMockup() {
               {[BarChart3, Calendar, Users, Package].map((Icon, i) => (
                 <div
                   key={i}
-                  className={`w-8 h-8 rounded-lg flex items-center justify-center ${i === 0 ? 'bg-primary/10 text-primary' : 'text-text-tertiary'}`}
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center ${i === 0 ? "bg-primary/10 text-primary" : "text-text-tertiary"}`}
                 >
                   <Icon className="h-4 w-4" />
                 </div>
@@ -252,10 +295,19 @@ function AppMockup() {
             {/* KPI row */}
             <div className="grid grid-cols-3 gap-2">
               {MOCK_KPIS.map((kpi) => (
-                <div key={kpi.label} className="bg-card rounded-xl p-3 border border-border">
-                  <div className="text-[10px] text-text-secondary mb-1">{kpi.label}</div>
-                  <div className="text-sm font-black text-text">{kpi.value}</div>
-                  <div className={`text-[10px] font-bold ${kpi.color} mt-0.5`}>{kpi.delta} este mes</div>
+                <div
+                  key={kpi.label}
+                  className="bg-card rounded-xl p-3 border border-border"
+                >
+                  <div className="text-[10px] text-text-secondary mb-1">
+                    {kpi.label}
+                  </div>
+                  <div className="text-sm font-black text-text">
+                    {kpi.value}
+                  </div>
+                  <div className={`text-[10px] font-bold ${kpi.color} mt-0.5`}>
+                    {kpi.delta} este mes
+                  </div>
                 </div>
               ))}
             </div>
@@ -263,26 +315,41 @@ function AppMockup() {
             {/* Events list */}
             <div className="bg-card rounded-xl border border-border overflow-hidden flex-1">
               <div className="px-3 py-2 border-b border-border flex items-center justify-between">
-                <span className="text-xs font-bold text-text-secondary">Próximos eventos</span>
-                <span className="text-[10px] text-primary font-semibold">Ver todos →</span>
+                <span className="text-xs font-bold text-text-secondary">
+                  Próximos eventos
+                </span>
+                <span className="text-[10px] text-primary font-semibold">
+                  Ver todos →
+                </span>
               </div>
               <div className="divide-y divide-border">
                 {MOCK_EVENTS.map((event) => (
-                  <div key={event.name} className="px-3 py-2 flex items-center gap-2">
+                  <div
+                    key={event.name}
+                    className="px-3 py-2 flex items-center gap-2"
+                  >
                     <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                       <Calendar className="h-3 w-3 text-primary" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-[11px] font-semibold text-text truncate">{event.name}</div>
+                      <div className="text-[11px] font-semibold text-text truncate">
+                        {event.name}
+                      </div>
                       <div className="text-[10px] text-text-secondary flex items-center gap-1">
                         <Clock className="h-2.5 w-2.5" />
                         {event.date} · {event.guests} personas
                       </div>
                     </div>
                     <div className="text-right shrink-0">
-                      <div className="text-[11px] font-bold text-text">{event.amount}</div>
-                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${event.status === 'confirmed' ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
-                        {event.status === 'confirmed' ? 'Confirmado' : 'Cotizado'}
+                      <div className="text-[11px] font-bold text-text">
+                        {event.amount}
+                      </div>
+                      <span
+                        className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${event.status === "confirmed" ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}`}
+                      >
+                        {event.status === "confirmed"
+                          ? "Confirmado"
+                          : "Cotizado"}
                       </span>
                     </div>
                   </div>
@@ -307,11 +374,11 @@ export const Landing: React.FC = () => {
 
   useEffect(() => {
     const onScroll = () => setShowScrollTop(window.scrollY > 600);
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
   return (
     <div className="min-h-screen bg-bg transition-colors">
@@ -322,10 +389,30 @@ export const Landing: React.FC = () => {
             <Logo size={40} />
 
             <div className="hidden md:flex items-center space-x-10">
-              <a href="#features" className="text-[15px] font-medium text-text-secondary hover:text-primary transition-colors">Características</a>
-              <a href="#how-it-works" className="text-[15px] font-medium text-text-secondary hover:text-primary transition-colors">Cómo funciona</a>
-              <a href="#pricing" className="text-[15px] font-medium text-text-secondary hover:text-primary transition-colors">Precios</a>
-              <a href="#faq" className="text-[15px] font-medium text-text-secondary hover:text-primary transition-colors">FAQ</a>
+              <a
+                href="#features"
+                className="text-[15px] font-medium text-text-secondary hover:text-primary transition-colors"
+              >
+                Características
+              </a>
+              <a
+                href="#how-it-works"
+                className="text-[15px] font-medium text-text-secondary hover:text-primary transition-colors"
+              >
+                Cómo funciona
+              </a>
+              <a
+                href="#pricing"
+                className="text-[15px] font-medium text-text-secondary hover:text-primary transition-colors"
+              >
+                Precios
+              </a>
+              <a
+                href="#faq"
+                className="text-[15px] font-medium text-text-secondary hover:text-primary transition-colors"
+              >
+                FAQ
+              </a>
             </div>
 
             <div className="flex items-center space-x-4">
@@ -333,23 +420,41 @@ export const Landing: React.FC = () => {
                 type="button"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="md:hidden p-2.5 rounded-xl text-text-secondary hover:bg-surface-alt transition-colors border border-transparent hover:border-border"
-                aria-label={mobileMenuOpen ? 'Cerrar menú' : 'Abrir menú'}
+                aria-label={mobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
                 aria-expanded={mobileMenuOpen}
               >
-                {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                {mobileMenuOpen ? (
+                  <X className="h-5 w-5" />
+                ) : (
+                  <Menu className="h-5 w-5" />
+                )}
               </button>
               <button
                 type="button"
                 onClick={toggleTheme}
                 className="p-2.5 rounded-xl text-text-secondary hover:bg-surface-alt transition-colors border border-transparent hover:border-border"
-                aria-label={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+                aria-label={
+                  theme === "dark"
+                    ? "Cambiar a modo claro"
+                    : "Cambiar a modo oscuro"
+                }
               >
-                {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                {theme === "dark" ? (
+                  <Sun className="h-5 w-5" />
+                ) : (
+                  <Moon className="h-5 w-5" />
+                )}
               </button>
-              <Link to="/login" className="hidden sm:inline-flex text-[15px] font-semibold text-text hover:text-primary transition-colors">
+              <Link
+                to="/login"
+                className="hidden sm:inline-flex text-[15px] font-semibold text-text hover:text-primary transition-colors"
+              >
                 Ingresar
               </Link>
-              <Link to="/register" className="premium-gradient text-white text-[15px] px-6 py-3 rounded-xl font-bold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all hover:scale-[1.02]">
+              <Link
+                to="/register"
+                className="premium-gradient text-white text-[15px] px-6 py-3 rounded-xl font-bold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all hover:scale-[1.02]"
+              >
                 Probar Gratis
               </Link>
             </div>
@@ -361,11 +466,41 @@ export const Landing: React.FC = () => {
       {mobileMenuOpen && (
         <div className="md:hidden border-t border-border bg-bg px-4 py-4 animate-in slide-in-from-top-4 duration-200">
           <div className="space-y-3">
-            <a href="#features" className="block text-sm text-text-secondary py-2" onClick={() => setMobileMenuOpen(false)}>Características</a>
-            <a href="#how-it-works" className="block text-sm text-text-secondary py-2" onClick={() => setMobileMenuOpen(false)}>Cómo funciona</a>
-            <a href="#pricing" className="block text-sm text-text-secondary py-2" onClick={() => setMobileMenuOpen(false)}>Precios</a>
-            <a href="#faq" className="block text-sm text-text-secondary py-2" onClick={() => setMobileMenuOpen(false)}>FAQ</a>
-            <Link to="/login" className="block text-sm text-text-secondary py-2" onClick={() => setMobileMenuOpen(false)}>Iniciar Sesión</Link>
+            <a
+              href="#features"
+              className="block text-sm text-text-secondary py-2"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Características
+            </a>
+            <a
+              href="#how-it-works"
+              className="block text-sm text-text-secondary py-2"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Cómo funciona
+            </a>
+            <a
+              href="#pricing"
+              className="block text-sm text-text-secondary py-2"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Precios
+            </a>
+            <a
+              href="#faq"
+              className="block text-sm text-text-secondary py-2"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              FAQ
+            </a>
+            <Link
+              to="/login"
+              className="block text-sm text-text-secondary py-2"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Iniciar Sesión
+            </Link>
           </div>
         </div>
       )}
@@ -386,14 +521,17 @@ export const Landing: React.FC = () => {
               <span>Diseñado para organizadores de eventos</span>
             </div>
 
-            <h1 className="text-6xl sm:text-7xl lg:text-8xl font-black text-text mb-8 leading-[1.05] tracking-tight">
+            <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black text-text mb-8 leading-[1.05] tracking-tight">
               Gestiona eventos
               <br />
-              <span className="text-transparent bg-clip-text premium-gradient animate-gradient">profesionales</span>
+              <span className="text-transparent bg-clip-text premium-gradient animate-gradient">
+                profesionales
+              </span>
             </h1>
 
-            <p className="text-xl sm:text-2xl text-text-secondary mb-12 max-w-3xl mx-auto leading-relaxed">
-              Organiza, gestiona y escala tu negocio con la plataforma diseñada específicamente para la industria de eventos.
+            <p className="text-lg sm:text-2xl text-text-secondary mb-12 max-w-3xl mx-auto leading-relaxed">
+              Organiza, gestiona y escala tu negocio con la plataforma diseñada
+              específicamente para la industria de eventos.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-5 justify-center mb-12">
@@ -412,7 +550,7 @@ export const Landing: React.FC = () => {
               </Link>
             </div>
 
-            <div className="flex flex-wrap items-center justify-center gap-10 text-[15px] font-semibold text-text-secondary opacity-80">
+            <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-10 text-[15px] font-semibold text-text-secondary opacity-80">
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-5 w-5 text-success" />
                 <span>Sin tarjeta de crédito</span>
@@ -454,11 +592,13 @@ export const Landing: React.FC = () => {
             <div className="inline-flex items-center space-x-2 bg-surface-alt text-text-secondary text-sm font-medium px-4 py-1.5 rounded-full mb-4">
               <span>✨ Características</span>
             </div>
-            <h2 className="text-4xl font-extrabold text-text mb-4">
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-text mb-4">
               Todo lo que necesitas en un solo lugar
             </h2>
-            <p className="text-lg text-text-secondary max-w-2xl mx-auto">
-              Deja de usar hojas de cálculo, WhatsApp y notas dispersas. Centraliza toda tu operación en una plataforma diseñada para organizadores de eventos.
+            <p className="text-base sm:text-lg text-text-secondary max-w-2xl mx-auto">
+              Deja de usar hojas de cálculo, WhatsApp y notas dispersas.
+              Centraliza toda tu operación en una plataforma diseñada para
+              organizadores de eventos.
             </p>
           </div>
 
@@ -468,11 +608,20 @@ export const Landing: React.FC = () => {
                 key={feature.title}
                 className="group p-6 rounded-2xl border border-border hover:border-brand-orange/30 hover:shadow-xl transition-all duration-300 bg-card"
               >
-                <div className={`${feature.bg} w-12 h-12 rounded-xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform`}>
-                  <feature.icon className={`h-6 w-6 ${feature.color}`} aria-hidden="true" />
+                <div
+                  className={`${feature.bg} w-12 h-12 rounded-xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform`}
+                >
+                  <feature.icon
+                    className={`h-6 w-6 ${feature.color}`}
+                    aria-hidden="true"
+                  />
                 </div>
-                <h3 className="text-lg font-bold text-text mb-2">{feature.title}</h3>
-                <p className="text-text-secondary text-sm leading-relaxed">{feature.description}</p>
+                <h3 className="text-lg font-bold text-text mb-2">
+                  {feature.title}
+                </h3>
+                <p className="text-text-secondary text-sm leading-relaxed">
+                  {feature.description}
+                </p>
               </div>
             ))}
           </div>
@@ -480,21 +629,25 @@ export const Landing: React.FC = () => {
       </section>
 
       {/* ── HOW IT WORKS ── */}
-      <section id="how-it-works" className="py-32 bg-surface-grouped relative overflow-hidden">
+      <section
+        id="how-it-works"
+        className="py-32 bg-surface-grouped relative overflow-hidden"
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="text-center mb-20">
             <div className="inline-flex items-center space-x-2 bg-primary/10 text-primary text-[13px] font-bold px-5 py-2 rounded-full mb-6 uppercase tracking-wider">
               <span>🚀 Cómo funciona</span>
             </div>
-            <h2 className="text-4xl sm:text-5xl font-black text-text mb-6 tracking-tight">
+            <h2 className="text-3xl sm:text-5xl font-black text-text mb-6 tracking-tight">
               Empieza en minutos, no en días
             </h2>
-            <p className="text-xl text-text-secondary max-w-2xl mx-auto leading-relaxed">
-              Diseñamos la plataforma para que sea intuitiva y potente desde el primer segundo.
+            <p className="text-lg sm:text-xl text-text-secondary max-w-2xl mx-auto leading-relaxed">
+              Diseñamos la plataforma para que sea intuitiva y potente desde el
+              primer segundo.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
             {STEPS.map((step, index) => (
               <div key={step.number} className="relative group">
                 {index < STEPS.length - 1 && (
@@ -504,8 +657,12 @@ export const Landing: React.FC = () => {
                   <div className="inline-flex items-center justify-center w-20 h-20 rounded-[28px] premium-gradient text-white font-black text-2xl mb-8 shadow-xl shadow-primary/25 transform group-hover:scale-110 transition-transform">
                     {step.number}
                   </div>
-                  <h3 className="text-xl font-bold text-text mb-4 tracking-tight">{step.title}</h3>
-                  <p className="text-text-secondary text-[15px] leading-relaxed">{step.description}</p>
+                  <h3 className="text-xl font-bold text-text mb-4 tracking-tight">
+                    {step.title}
+                  </h3>
+                  <p className="text-text-secondary text-[15px] leading-relaxed">
+                    {step.description}
+                  </p>
                 </div>
               </div>
             ))}
@@ -520,29 +677,47 @@ export const Landing: React.FC = () => {
             <div className="inline-flex items-center space-x-2 bg-surface-alt text-text-secondary text-sm font-medium px-4 py-1.5 rounded-full mb-4">
               <span>💬 Testimonios</span>
             </div>
-            <h2 className="text-4xl font-extrabold text-text mb-4">
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-text mb-4">
               Lo que dicen nuestros usuarios
             </h2>
-            <p className="text-lg text-text-secondary">
-              Más de 500 organizadores ya confían en Eventos para gestionar su negocio.
+            <p className="text-base sm:text-lg text-text-secondary">
+              Más de 500 organizadores ya confían en Eventos para gestionar su
+              negocio.
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
             {TESTIMONIALS.map((t) => (
-              <div key={t.name} className="bg-surface-alt rounded-2xl p-6 border border-border">
-                <div className="flex items-center gap-1 mb-4" role="img" aria-label={`${t.rating} estrellas de 5`}>
+              <div
+                key={t.name}
+                className="bg-surface-alt rounded-2xl p-6 border border-border"
+              >
+                <div
+                  className="flex items-center gap-1 mb-4"
+                  role="img"
+                  aria-label={`${t.rating} estrellas de 5`}
+                >
                   {Array.from({ length: t.rating }).map((_, i) => (
-                    <Star key={i} className="h-4 w-4 text-yellow-400 fill-yellow-400" aria-hidden="true" />
+                    <Star
+                      key={i}
+                      className="h-4 w-4 text-yellow-400 fill-yellow-400"
+                      aria-hidden="true"
+                    />
                   ))}
                 </div>
-                <p className="text-text-secondary text-sm leading-relaxed mb-6">"{t.text}"</p>
+                <p className="text-text-secondary text-sm leading-relaxed mb-6">
+                  "{t.text}"
+                </p>
                 <div className="flex items-center gap-3">
-                  <div className={`${t.avatarColor} w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0`}>
+                  <div
+                    className={`${t.avatarColor} w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0`}
+                  >
                     {t.avatar}
                   </div>
                   <div>
-                    <div className="font-semibold text-text text-sm">{t.name}</div>
+                    <div className="font-semibold text-text text-sm">
+                      {t.name}
+                    </div>
                     <div className="text-text-secondary text-xs flex items-center gap-1">
                       <MapPin className="h-3 w-3" aria-hidden="true" />
                       {t.role} · {t.location}
@@ -556,28 +731,31 @@ export const Landing: React.FC = () => {
       </section>
 
       {/* ── PRICING ── */}
-      <section id="pricing" className="py-32 bg-surface-grouped relative overflow-hidden">
+      <section
+        id="pricing"
+        className="py-32 bg-surface-grouped relative overflow-hidden"
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-20">
             <div className="inline-flex items-center space-x-2 bg-primary/10 text-primary text-[13px] font-bold px-5 py-2 rounded-full mb-6 uppercase tracking-wider">
               <span>💰 Precios</span>
             </div>
-            <h2 className="text-4xl sm:text-5xl font-black text-text mb-6 tracking-tight">
+            <h2 className="text-3xl sm:text-5xl font-black text-text mb-6 tracking-tight">
               Planes para cada etapa
             </h2>
-            <p className="text-xl text-text-secondary max-w-2xl mx-auto">
+            <p className="text-base sm:text-xl text-text-secondary max-w-2xl mx-auto">
               Comienza gratis y activa el plan Pro cuando lo necesites.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-10 items-stretch max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10 items-stretch max-w-4xl mx-auto">
             {PLANS.map((plan) => (
               <div
                 key={plan.name}
                 className={`relative rounded-3xl p-10 flex flex-col transition-all duration-300 border-2 ${
                   plan.highlighted
-                    ? 'border-primary bg-card shadow-2xl shadow-primary/10 scale-[1.02] z-10'
-                    : 'border-border bg-card shadow-sm hover:shadow-md'
+                    ? "border-primary bg-card shadow-2xl shadow-primary/10 scale-[1.02] z-10"
+                    : "border-border bg-card shadow-sm hover:shadow-md"
                 }`}
               >
                 {plan.highlighted && (
@@ -618,8 +796,13 @@ export const Landing: React.FC = () => {
 
                 <ul className="space-y-4 mb-10 grow">
                   {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-center gap-3 text-sm">
-                      <div className={`p-1 rounded-full ${plan.highlighted ? 'bg-primary/10 text-primary' : 'bg-success/10 text-success'}`}>
+                    <li
+                      key={feature}
+                      className="flex items-center gap-3 text-sm"
+                    >
+                      <div
+                        className={`p-1 rounded-full ${plan.highlighted ? "bg-primary/10 text-primary" : "bg-success/10 text-success"}`}
+                      >
                         <CheckCircle className="h-4 w-4 shrink-0" />
                       </div>
                       <span className="text-text font-medium">{feature}</span>
@@ -631,8 +814,8 @@ export const Landing: React.FC = () => {
                   to={plan.href}
                   className={`block text-center py-5 px-8 rounded-2xl font-black text-lg transition-all ${
                     plan.highlighted
-                      ? 'premium-gradient text-white shadow-xl shadow-primary/20 hover:shadow-primary/30 hover:scale-[1.02]'
-                      : 'bg-surface-alt text-text hover:bg-border transition-colors border border-border'
+                      ? "premium-gradient text-white shadow-xl shadow-primary/20 hover:shadow-primary/30 hover:scale-[1.02]"
+                      : "bg-surface-alt text-text hover:bg-border transition-colors border border-border"
                   }`}
                 >
                   {plan.cta}
@@ -650,7 +833,7 @@ export const Landing: React.FC = () => {
             <div className="inline-flex items-center space-x-2 bg-surface-alt text-text-secondary text-sm font-medium px-4 py-1.5 rounded-full mb-4">
               <span>❓ Preguntas frecuentes</span>
             </div>
-            <h2 className="text-4xl font-extrabold text-text mb-4">
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-text mb-4">
               Resolvemos tus dudas
             </h2>
           </div>
@@ -666,17 +849,21 @@ export const Landing: React.FC = () => {
                   className="w-full flex items-center justify-between p-5 text-left bg-card hover:bg-surface-alt transition-colors"
                   onClick={() => setOpenFaq(openFaq === index ? null : index)}
                   aria-expanded={openFaq === index}
-                  aria-label={`${faq.question} - ${openFaq === index ? 'Cerrar' : 'Abrir'} respuesta`}
+                  aria-label={`${faq.question} - ${openFaq === index ? "Cerrar" : "Abrir"} respuesta`}
                 >
-                  <span className="font-semibold text-text text-sm">{faq.question}</span>
+                  <span className="font-semibold text-text text-sm">
+                    {faq.question}
+                  </span>
                   <ChevronDown
-                    className={`h-4 w-4 text-text-secondary shrink-0 ml-4 transition-transform duration-300 ${openFaq === index ? 'rotate-180' : ''}`}
+                    className={`h-4 w-4 text-text-secondary shrink-0 ml-4 transition-transform duration-300 ${openFaq === index ? "rotate-180" : ""}`}
                     aria-hidden="true"
                   />
                 </button>
                 {openFaq === index && (
                   <div className="px-5 pb-5 pt-1 bg-card animate-in fade-in slide-in-from-top-2 duration-200">
-                    <p className="text-text-secondary text-sm leading-relaxed">{faq.answer}</p>
+                    <p className="text-text-secondary text-sm leading-relaxed">
+                      {faq.answer}
+                    </p>
                   </div>
                 )}
               </div>
@@ -688,36 +875,38 @@ export const Landing: React.FC = () => {
       {/* ── CTA FINAL ── */}
       <section className="py-24 bg-bg">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="relative overflow-hidden premium-gradient rounded-[3rem] p-12 sm:p-20 text-center premium-shadow">
+          <div className="relative overflow-hidden premium-gradient rounded-3xl sm:rounded-[3rem] px-6 py-12 sm:p-20 text-center premium-shadow mx-2 sm:mx-0">
             {/* Background decorative elements */}
             <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.2),transparent_50%)]" />
             <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 blur-3xl rounded-full -mr-20 -mt-20" />
 
             <div className="relative z-10 max-w-4xl mx-auto">
               <h2 className="text-4xl sm:text-7xl font-black text-white mb-8 tracking-tight leading-[1.1]">
-                ¿Listo para escalar <br />tu negocio?
+                ¿Listo para escalar <br />
+                tu negocio?
               </h2>
-              <p className="text-xl sm:text-2xl text-white/90 mb-12 max-w-2xl mx-auto leading-relaxed font-medium">
-                Únete a la nueva generación de organizadores que ya profesionalizaron su operación.
+              <p className="text-lg sm:text-2xl text-white/90 mb-12 max-w-2xl mx-auto leading-relaxed font-medium">
+                Únete a la nueva generación de organizadores que ya
+                profesionalizaron su operación.
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+              <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center">
                 <Link
                   to="/register"
-                  className="bg-white text-primary px-12 py-6 rounded-2xl font-black text-2xl shadow-xl hover:shadow-2xl transition-all hover:scale-[1.05] flex items-center justify-center gap-3 w-full sm:w-auto"
+                  className="bg-white text-primary px-8 sm:px-12 py-5 sm:py-6 rounded-2xl font-black text-xl sm:text-2xl shadow-xl hover:shadow-2xl transition-all hover:scale-[1.05] flex items-center justify-center gap-3 w-full sm:w-auto"
                 >
                   Comenzar Gratis
-                  <ArrowRight className="h-7 w-7" />
+                  <ArrowRight className="h-6 w-6 sm:h-7 sm:w-7" />
                 </Link>
                 <Link
                   to="/login"
-                  className="bg-white/10 backdrop-blur-md border-2 border-white/30 text-white px-12 py-6 rounded-2xl font-black text-2xl hover:bg-white/20 transition-all flex items-center justify-center w-full sm:w-auto"
+                  className="bg-white/10 backdrop-blur-md border-2 border-white/30 text-white px-8 sm:px-12 py-5 sm:py-6 rounded-2xl font-black text-xl sm:text-2xl hover:bg-white/20 transition-all flex items-center justify-center w-full sm:w-auto"
                 >
                   Ya tengo cuenta
                 </Link>
               </div>
 
-              <div className="mt-12 flex flex-wrap justify-center gap-x-8 gap-y-4 text-white/80 text-sm font-bold uppercase tracking-wider">
+              <div className="mt-8 sm:mt-12 flex flex-wrap justify-center gap-x-4 sm:gap-x-8 gap-y-4 text-white/80 text-xs sm:text-sm font-bold uppercase tracking-wider">
                 <div className="flex items-center gap-2">
                   <CheckCircle className="h-5 w-5 text-white" />
                   <span>Sin tarjeta de crédito</span>
@@ -743,40 +932,112 @@ export const Landing: React.FC = () => {
             <div className="md:col-span-2">
               <Logo size={40} className="mb-4" />
               <p className="text-sm leading-relaxed max-w-xs">
-                La plataforma todo-en-uno para organizadores de eventos profesionales en México y Latinoamérica.
+                La plataforma todo-en-uno para organizadores de eventos
+                profesionales en México y Latinoamérica.
               </p>
             </div>
             <div>
               <h4 className="text-text font-semibold text-sm mb-4">Producto</h4>
               <ul className="space-y-2 text-sm">
-                <li><a href="#features" className="hover:text-text transition-colors">Características</a></li>
-                <li><a href="#pricing" className="hover:text-text transition-colors">Precios</a></li>
-                <li><a href="#how-it-works" className="hover:text-text transition-colors">Cómo funciona</a></li>
-                <li><a href="#faq" className="hover:text-text transition-colors">FAQ</a></li>
+                <li>
+                  <a
+                    href="#features"
+                    className="hover:text-text transition-colors"
+                  >
+                    Características
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#pricing"
+                    className="hover:text-text transition-colors"
+                  >
+                    Precios
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#how-it-works"
+                    className="hover:text-text transition-colors"
+                  >
+                    Cómo funciona
+                  </a>
+                </li>
+                <li>
+                  <a href="#faq" className="hover:text-text transition-colors">
+                    FAQ
+                  </a>
+                </li>
               </ul>
             </div>
             <div>
               <h4 className="text-text font-semibold text-sm mb-4">Cuenta</h4>
               <ul className="space-y-2 text-sm">
-                <li><Link to="/register" className="hover:text-text transition-colors">Registrarse</Link></li>
-                <li><Link to="/login" className="hover:text-text transition-colors">Iniciar Sesión</Link></li>
-                <li><Link to="/forgot-password" className="hover:text-text transition-colors">Recuperar contraseña</Link></li>
+                <li>
+                  <Link
+                    to="/register"
+                    className="hover:text-text transition-colors"
+                  >
+                    Registrarse
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/login"
+                    className="hover:text-text transition-colors"
+                  >
+                    Iniciar Sesión
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/forgot-password"
+                    className="hover:text-text transition-colors"
+                  >
+                    Recuperar contraseña
+                  </Link>
+                </li>
               </ul>
             </div>
             <div>
               <h4 className="text-text font-semibold text-sm mb-4">Legal</h4>
               <ul className="space-y-2 text-sm">
-                <li><Link to="/about" className="hover:text-text transition-colors">Acerca de</Link></li>
-                <li><Link to="/terms" className="hover:text-text transition-colors">Términos y Condiciones</Link></li>
-                <li><Link to="/privacy" className="hover:text-text transition-colors">Política de Privacidad</Link></li>
+                <li>
+                  <Link
+                    to="/about"
+                    className="hover:text-text transition-colors"
+                  >
+                    Acerca de
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/terms"
+                    className="hover:text-text transition-colors"
+                  >
+                    Términos y Condiciones
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/privacy"
+                    className="hover:text-text transition-colors"
+                  >
+                    Política de Privacidad
+                  </Link>
+                </li>
               </ul>
             </div>
           </div>
           <div className="border-t border-border pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <p className="text-sm">© 2026 Eventos. Todos los derechos reservados.</p>
+            <p className="text-sm">
+              © 2026 Eventos. Todos los derechos reservados.
+            </p>
             <div className="flex items-center gap-2 text-sm">
               <Shield className="h-4 w-4 text-success" aria-hidden="true" />
-              <span>Datos protegidos con encriptación de extremo a extremo</span>
+              <span>
+                Datos protegidos con encriptación de extremo a extremo
+              </span>
             </div>
           </div>
         </div>
@@ -787,7 +1048,7 @@ export const Landing: React.FC = () => {
         type="button"
         onClick={scrollToTop}
         aria-label="Volver al inicio"
-        className={`fixed bottom-8 right-8 z-50 w-12 h-12 rounded-full premium-gradient text-white shadow-lg shadow-primary/30 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-xl hover:shadow-primary/40 ${showScrollTop ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}
+        className={`fixed bottom-8 right-8 z-50 w-12 h-12 rounded-full premium-gradient text-white shadow-lg shadow-primary/30 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-xl hover:shadow-primary/40 ${showScrollTop ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"}`}
       >
         <ArrowUp className="h-5 w-5" />
       </button>
