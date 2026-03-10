@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Check, Star, Zap, RefreshCw } from "lucide-react-native";
@@ -44,6 +45,9 @@ export default function PricingScreen() {
   const { isDark } = useTheme();
   const palette = isDark ? colors.dark : colors.light;
   const styles = getStyles(palette);
+  const { width } = useWindowDimensions();
+  const isTablet = width >= 600;
+
   const [offerings, setOfferings] = useState<OfferingInfo[]>([]);
   const [purchasing, setPurchasing] = useState(false);
   const [restoring, setRestoring] = useState(false);
@@ -113,7 +117,10 @@ export default function PricingScreen() {
   return (
     <SafeAreaView style={styles.container} edges={["bottom"]}>
       <ScrollView
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[
+          styles.content,
+          isTablet && styles.contentTablet,
+        ]}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
@@ -159,10 +166,7 @@ export default function PricingScreen() {
             <Text style={[styles.planName, styles.planNamePro]}>Premium</Text>
             <View style={styles.planPrice}>
               {loadingOfferings ? (
-                <ActivityIndicator
-                  color={palette.textInverse}
-                  size="small"
-                />
+                <ActivityIndicator color={palette.textInverse} size="small" />
               ) : (
                 <>
                   <Text style={[styles.priceAmount, styles.priceAmountPro]}>
@@ -192,9 +196,7 @@ export default function PricingScreen() {
             {isPremium ? (
               <View style={styles.currentPlanBadge}>
                 <Star color={palette.warning} size={16} />
-                <Text style={styles.currentPlanText}>
-                  Ya tienes Premium
-                </Text>
+                <Text style={styles.currentPlanText}>Ya tienes Premium</Text>
               </View>
             ) : (
               <TouchableOpacity
@@ -224,16 +226,11 @@ export default function PricingScreen() {
             activeOpacity={0.7}
           >
             {restoring ? (
-              <ActivityIndicator
-                color={palette.textTertiary}
-                size="small"
-              />
+              <ActivityIndicator color={palette.textTertiary} size="small" />
             ) : (
               <>
                 <RefreshCw color={palette.textTertiary} size={14} />
-                <Text style={styles.restoreButtonText}>
-                  Restaurar Compras
-                </Text>
+                <Text style={styles.restoreButtonText}>Restaurar Compras</Text>
               </>
             )}
           </TouchableOpacity>
@@ -261,9 +258,8 @@ export default function PricingScreen() {
               ¿Puedo cancelar en cualquier momento?
             </Text>
             <Text style={styles.faqAnswer}>
-              Sí, puedes cancelar tu plan Premium en cualquier momento.
-              Seguirás teniendo acceso hasta el final del período de
-              facturación.
+              Sí, puedes cancelar tu plan Premium en cualquier momento. Seguirás
+              teniendo acceso hasta el final del período de facturación.
             </Text>
           </View>
 
@@ -293,188 +289,194 @@ export default function PricingScreen() {
   );
 }
 
-const getStyles = (palette: typeof colors.light) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: palette.surfaceGrouped,
-  },
-  content: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xxl,
-  },
-  header: {
-    alignItems: "center",
-    paddingVertical: spacing.xl,
-  },
-  title: {
-    ...typography.title1,
-    color: palette.text,
-    textAlign: "center",
-  },
-  subtitle: {
-    ...typography.body,
-    color: palette.textSecondary,
-    textAlign: "center",
-    marginTop: spacing.xs,
-  },
-  plansContainer: {
-    gap: spacing.lg,
-  },
-  planCard: {
-    backgroundColor: palette.card,
-    borderRadius: spacing.borderRadius.xl,
-    padding: spacing.lg,
-    position: "relative",
-    ...shadows.sm,
-  },
-  planCardPro: {
-    backgroundColor: palette.primary,
-    ...shadows.md,
-  },
-  planBadge: {
-    position: "absolute",
-    top: -12,
-    left: spacing.lg,
-    backgroundColor: palette.card,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: spacing.borderRadius.full,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-    ...shadows.sm,
-  },
-  planBadgePro: {
-    backgroundColor: palette.warning,
-  },
-  planBadgeText: {
-    ...typography.caption1,
-    color: palette.textSecondary,
-    fontWeight: "600",
-  },
-  planBadgeTextPro: {
-    ...typography.caption1,
-    color: palette.text,
-    fontWeight: "600",
-  },
-  planName: {
-    ...typography.title2,
-    color: palette.text,
-    marginTop: spacing.sm,
-  },
-  planNamePro: {
-    color: palette.textInverse,
-  },
-  planPrice: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    marginTop: spacing.sm,
-  },
-  priceAmount: {
-    ...typography.title1,
-    color: palette.text,
-  },
-  priceAmountPro: {
-    color: palette.textInverse,
-  },
-  pricePeriod: {
-    ...typography.body,
-    color: palette.textSecondary,
-    marginLeft: spacing.xs,
-  },
-  pricePeriodPro: {
-    color: palette.textInverse,
-    opacity: 0.8,
-  },
-  planDescription: {
-    ...typography.body,
-    color: palette.textSecondary,
-    marginTop: spacing.xs,
-  },
-  planDescriptionPro: {
-    color: palette.textInverse,
-    opacity: 0.8,
-  },
-  featuresList: {
-    marginTop: spacing.lg,
-    gap: spacing.sm,
-  },
-  featureRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-  },
-  featureText: {
-    ...typography.body,
-    color: palette.text,
-    flex: 1,
-  },
-  featureTextPro: {
-    color: palette.textInverse,
-  },
-  upgradeButton: {
-    backgroundColor: palette.warning,
-    borderRadius: spacing.borderRadius.lg,
-    paddingVertical: spacing.md,
-    alignItems: "center",
-    marginTop: spacing.lg,
-  },
-  upgradeButtonText: {
-    ...typography.button,
-    color: palette.text,
-  },
-  currentPlanBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.xs,
-    backgroundColor: palette.primaryLight,
-    borderRadius: spacing.borderRadius.lg,
-    paddingVertical: spacing.md,
-    marginTop: spacing.lg,
-  },
-  currentPlanText: {
-    ...typography.button,
-    color: palette.textInverse,
-  },
-  restoreButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.xs,
-    paddingVertical: spacing.lg,
-  },
-  restoreButtonText: {
-    ...typography.subheadline,
-    color: palette.textTertiary,
-  },
-  debugButton: {
-    alignItems: "center",
-    paddingVertical: spacing.sm,
-  },
-  debugButtonText: {
-    ...typography.caption1,
-    color: palette.textTertiary,
-  },
-  faq: {
-    marginTop: spacing.xl,
-  },
-  faqTitle: {
-    ...typography.headline,
-    color: palette.text,
-    marginBottom: spacing.md,
-  },
-  faqItem: {
-    marginBottom: spacing.md,
-  },
-  faqQuestion: {
-    ...typography.subheadline,
-    fontWeight: "600",
-    color: palette.text,
-  },
-  faqAnswer: {
-    ...typography.body,
-    color: palette.textSecondary,
-    marginTop: spacing.xs,
-  },
-});
+const getStyles = (palette: typeof colors.light) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: palette.surfaceGrouped,
+    },
+    content: {
+      paddingHorizontal: spacing.lg,
+      paddingBottom: spacing.xxl,
+    },
+    contentTablet: {
+      maxWidth: 600,
+      width: "100%",
+      alignSelf: "center",
+    },
+    header: {
+      alignItems: "center",
+      paddingVertical: spacing.xl,
+    },
+    title: {
+      ...typography.title1,
+      color: palette.text,
+      textAlign: "center",
+    },
+    subtitle: {
+      ...typography.body,
+      color: palette.textSecondary,
+      textAlign: "center",
+      marginTop: spacing.xs,
+    },
+    plansContainer: {
+      gap: spacing.lg,
+    },
+    planCard: {
+      backgroundColor: palette.card,
+      borderRadius: spacing.borderRadius.xl,
+      padding: spacing.lg,
+      position: "relative",
+      ...shadows.sm,
+    },
+    planCardPro: {
+      backgroundColor: palette.primary,
+      ...shadows.md,
+    },
+    planBadge: {
+      position: "absolute",
+      top: -12,
+      left: spacing.lg,
+      backgroundColor: palette.card,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
+      borderRadius: spacing.borderRadius.full,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.xs,
+      ...shadows.sm,
+    },
+    planBadgePro: {
+      backgroundColor: palette.warning,
+    },
+    planBadgeText: {
+      ...typography.caption1,
+      color: palette.textSecondary,
+      fontWeight: "600",
+    },
+    planBadgeTextPro: {
+      ...typography.caption1,
+      color: palette.text,
+      fontWeight: "600",
+    },
+    planName: {
+      ...typography.title2,
+      color: palette.text,
+      marginTop: spacing.sm,
+    },
+    planNamePro: {
+      color: palette.textInverse,
+    },
+    planPrice: {
+      flexDirection: "row",
+      alignItems: "baseline",
+      marginTop: spacing.sm,
+    },
+    priceAmount: {
+      ...typography.title1,
+      color: palette.text,
+    },
+    priceAmountPro: {
+      color: palette.textInverse,
+    },
+    pricePeriod: {
+      ...typography.body,
+      color: palette.textSecondary,
+      marginLeft: spacing.xs,
+    },
+    pricePeriodPro: {
+      color: palette.textInverse,
+      opacity: 0.8,
+    },
+    planDescription: {
+      ...typography.body,
+      color: palette.textSecondary,
+      marginTop: spacing.xs,
+    },
+    planDescriptionPro: {
+      color: palette.textInverse,
+      opacity: 0.8,
+    },
+    featuresList: {
+      marginTop: spacing.lg,
+      gap: spacing.sm,
+    },
+    featureRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.sm,
+    },
+    featureText: {
+      ...typography.body,
+      color: palette.text,
+      flex: 1,
+    },
+    featureTextPro: {
+      color: palette.textInverse,
+    },
+    upgradeButton: {
+      backgroundColor: palette.warning,
+      borderRadius: spacing.borderRadius.lg,
+      paddingVertical: spacing.md,
+      alignItems: "center",
+      marginTop: spacing.lg,
+    },
+    upgradeButtonText: {
+      ...typography.button,
+      color: palette.text,
+    },
+    currentPlanBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: spacing.xs,
+      backgroundColor: palette.primaryLight,
+      borderRadius: spacing.borderRadius.lg,
+      paddingVertical: spacing.md,
+      marginTop: spacing.lg,
+    },
+    currentPlanText: {
+      ...typography.button,
+      color: palette.textInverse,
+    },
+    restoreButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: spacing.xs,
+      paddingVertical: spacing.lg,
+    },
+    restoreButtonText: {
+      ...typography.subheadline,
+      color: palette.textTertiary,
+    },
+    debugButton: {
+      alignItems: "center",
+      paddingVertical: spacing.sm,
+    },
+    debugButtonText: {
+      ...typography.caption1,
+      color: palette.textTertiary,
+    },
+    faq: {
+      marginTop: spacing.xl,
+    },
+    faqTitle: {
+      ...typography.headline,
+      color: palette.text,
+      marginBottom: spacing.md,
+    },
+    faqItem: {
+      marginBottom: spacing.md,
+    },
+    faqQuestion: {
+      ...typography.subheadline,
+      fontWeight: "600",
+      color: palette.text,
+    },
+    faqAnswer: {
+      ...typography.body,
+      color: palette.textSecondary,
+      marginTop: spacing.xs,
+    },
+  });

@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Linking,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Constants from "expo-constants";
@@ -35,6 +36,8 @@ export default function AboutScreen({ navigation }: Props) {
   const { isDark } = useTheme();
   const palette = isDark ? colors.dark : colors.light;
   const styles = getStyles(palette);
+  const { width } = useWindowDimensions();
+  const isTablet = width >= 600;
 
   const openURL = (url: string) => {
     Linking.openURL(url);
@@ -42,7 +45,12 @@ export default function AboutScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.content,
+          isTablet && styles.contentTablet,
+        ]}
+      >
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
@@ -132,6 +140,11 @@ const getStyles = (palette: typeof colors.light) =>
     content: {
       paddingHorizontal: spacing.lg,
       paddingBottom: spacing.xxl,
+    },
+    contentTablet: {
+      maxWidth: 600,
+      width: "100%",
+      alignSelf: "center",
     },
     backButton: {
       alignSelf: "flex-start",

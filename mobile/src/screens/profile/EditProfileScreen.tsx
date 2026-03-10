@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -39,6 +40,9 @@ export default function EditProfileScreen({ navigation }: Props) {
   const { isDark } = useTheme();
   const palette = isDark ? colors.dark : colors.light;
   const styles = getStyles(palette);
+  const { width } = useWindowDimensions();
+  const isTablet = width >= 600;
+
   const [submitting, setSubmitting] = useState(false);
 
   const {
@@ -82,7 +86,7 @@ export default function EditProfileScreen({ navigation }: Props) {
         keyboardVerticalOffset={100}
       >
         <ScrollView
-          contentContainerStyle={styles.form}
+          contentContainerStyle={[styles.form, isTablet && styles.formTablet]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
@@ -113,7 +117,7 @@ export default function EditProfileScreen({ navigation }: Props) {
           />
         </ScrollView>
 
-        <View style={styles.footer}>
+        <View style={[styles.footer, isTablet && styles.footerTablet]}>
           <TouchableOpacity
             style={[styles.saveButton, submitting && styles.saveButtonDisabled]}
             activeOpacity={0.8}
@@ -135,44 +139,57 @@ export default function EditProfileScreen({ navigation }: Props) {
   );
 }
 
-const getStyles = (palette: typeof colors.light) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: palette.background,
-  },
-  form: {
-    padding: spacing.lg,
-    gap: spacing.sm,
-  },
-  sectionTitle: {
-    ...typography.headline,
-    color: palette.text,
-    marginBottom: spacing.sm,
-  },
-  readonlyInput: {
-    color: palette.textTertiary,
-  },
-  footer: {
-    padding: spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: palette.border,
-    backgroundColor: palette.background,
-  },
-  saveButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: palette.primary,
-    borderRadius: spacing.borderRadius.lg,
-    paddingVertical: spacing.md,
-    gap: spacing.sm,
-  },
-  saveButtonDisabled: {
-    opacity: 0.6,
-  },
-  saveText: {
-    ...typography.button,
-    color: palette.textInverse,
-    fontSize: 16,
-  },
-});
+const getStyles = (palette: typeof colors.light) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: palette.background,
+    },
+    form: {
+      padding: spacing.lg,
+      gap: spacing.sm,
+    },
+    formTablet: {
+      maxWidth: 600,
+      width: "100%",
+      alignSelf: "center",
+    },
+    sectionTitle: {
+      ...typography.headline,
+      color: palette.text,
+      marginBottom: spacing.sm,
+    },
+    readonlyInput: {
+      color: palette.textTertiary,
+    },
+    footer: {
+      padding: spacing.lg,
+      borderTopWidth: 1,
+      borderTopColor: palette.border,
+      backgroundColor: palette.background,
+    },
+    footerTablet: {
+      maxWidth: 600,
+      width: "100%",
+      alignSelf: "center",
+      borderTopWidth: 0,
+      backgroundColor: "transparent",
+    },
+    saveButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: palette.primary,
+      borderRadius: spacing.borderRadius.lg,
+      paddingVertical: spacing.md,
+      gap: spacing.sm,
+    },
+    saveButtonDisabled: {
+      opacity: 0.6,
+    },
+    saveText: {
+      ...typography.button,
+      color: palette.textInverse,
+      fontSize: 16,
+    },
+  });

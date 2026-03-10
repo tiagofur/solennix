@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Image,
   Switch,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -79,9 +80,7 @@ function SettingsRow({
           >
             {label}
           </Text>
-          {subtitle ? (
-            <Text style={styles.rowSubtitle}>{subtitle}</Text>
-          ) : null}
+          {subtitle ? <Text style={styles.rowSubtitle}>{subtitle}</Text> : null}
         </View>
       </View>
       {trailing}
@@ -97,6 +96,9 @@ export default function SettingsScreen() {
   const { isDark, toggleTheme } = useTheme();
   const palette = isDark ? colors.dark : colors.light;
   const styles = getStyles(palette);
+  const { width } = useWindowDimensions();
+  const isTablet = width >= 600;
+
   const [showLogout, setShowLogout] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [restoring, setRestoring] = useState(false);
@@ -150,7 +152,12 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={[]}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.content,
+          isTablet && styles.contentTablet,
+        ]}
+      >
         <Text style={styles.header}>Ajustes</Text>
 
         {/* User info card */}
@@ -190,10 +197,7 @@ export default function SettingsScreen() {
             trailing={
               <View style={styles.rowTrailingGroup}>
                 <View
-                  style={[
-                    styles.planBadge,
-                    planIsPro && styles.planBadgePro,
-                  ]}
+                  style={[styles.planBadge, planIsPro && styles.planBadgePro]}
                 >
                   <Text
                     style={[
@@ -217,25 +221,33 @@ export default function SettingsScreen() {
             <>
               <View style={styles.usageRow}>
                 <Text style={styles.usageLabel}>Eventos este mes</Text>
-                <Text style={styles.usageValue}>{eventsThisMonth} / {eventLimit}</Text>
+                <Text style={styles.usageValue}>
+                  {eventsThisMonth} / {eventLimit}
+                </Text>
               </View>
               <View style={styles.progressBar}>
                 <View
                   style={[
                     styles.progressFill,
-                    { width: `${Math.min((eventsThisMonth / eventLimit) * 100, 100)}%` },
+                    {
+                      width: `${Math.min((eventsThisMonth / eventLimit) * 100, 100)}%`,
+                    },
                   ]}
                 />
               </View>
               <View style={[styles.usageRow, { marginTop: spacing.sm }]}>
                 <Text style={styles.usageLabel}>Clientes</Text>
-                <Text style={styles.usageValue}>{clientsCount} / {clientLimit}</Text>
+                <Text style={styles.usageValue}>
+                  {clientsCount} / {clientLimit}
+                </Text>
               </View>
               <View style={styles.progressBar}>
                 <View
                   style={[
                     styles.progressFillGreen,
-                    { width: `${Math.min((clientsCount / clientLimit) * 100, 100)}%` },
+                    {
+                      width: `${Math.min((clientsCount / clientLimit) * 100, 100)}%`,
+                    },
                   ]}
                 />
               </View>
@@ -288,9 +300,7 @@ export default function SettingsScreen() {
             icon={<Bell color={palette.textTertiary} size={20} />}
             label="Notificaciones"
             disabled
-            trailing={
-              <Text style={styles.comingSoonText}>Próximamente</Text>
-            }
+            trailing={<Text style={styles.comingSoonText}>Próximamente</Text>}
           />
           <SettingsRow
             icon={<Info color={palette.textTertiary} size={20} />}
@@ -307,10 +317,7 @@ export default function SettingsScreen() {
             <SettingsRow
               icon={
                 restoring ? (
-                  <ActivityIndicator
-                    color={palette.textTertiary}
-                    size={20}
-                  />
+                  <ActivityIndicator color={palette.textTertiary} size={20} />
                 ) : (
                   <RefreshCw color={palette.textTertiary} size={20} />
                 )
@@ -348,167 +355,173 @@ export default function SettingsScreen() {
   );
 }
 
-const getStyles = (palette: typeof colors.light) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: palette.surfaceGrouped,
-  },
-  content: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xxl,
-  },
-  header: {
-    ...typography.title1,
-    color: palette.text,
-    marginTop: spacing.sm,
-    marginBottom: spacing.md,
-  },
-  card: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: palette.card,
-    borderRadius: spacing.borderRadius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.lg,
-    ...shadows.sm,
-  },
-  avatar: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: palette.surface,
-  },
-  avatarPlaceholder: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: palette.primaryLight,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  userInfo: {
-    marginLeft: spacing.md,
-    flex: 1,
-  },
-  userName: {
-    ...typography.headline,
-    color: palette.text,
-  },
-  userEmail: {
-    ...typography.bodySmall,
-    color: palette.textSecondary,
-    marginTop: 2,
-  },
-  sectionTitle: {
-    ...typography.footnote,
-    color: palette.textTertiary,
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-    marginBottom: spacing.xs,
-    marginTop: spacing.sm,
-  },
-  section: {
-    backgroundColor: palette.card,
-    borderRadius: spacing.borderRadius.lg,
-    marginBottom: spacing.md,
-    overflow: "hidden",
-    ...shadows.sm,
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: palette.separator,
-  },
-  rowLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-  },
-  rowLabel: {
-    ...typography.body,
-    color: palette.text,
-  },
-  rowSubtitle: {
-    ...typography.caption1,
-    color: palette.textTertiary,
-    marginTop: 2,
-  },
-  destructiveText: {
-    color: palette.error,
-  },
-  disabledText: {
-    color: palette.textTertiary,
-  },
-  rowTrailingGroup: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-  },
-  planBadge: {
-    backgroundColor: palette.surfaceAlt,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xxs,
-    borderRadius: spacing.borderRadius.sm,
-  },
-  planBadgePro: {
-    backgroundColor: palette.successBg,
-  },
-  planBadgeText: {
-    ...typography.caption1,
-    color: palette.textSecondary,
-    fontWeight: "600",
-  },
-  planBadgeTextPro: {
-    color: palette.success,
-  },
-  comingSoonText: {
-    ...typography.caption1,
-    color: palette.textTertiary,
-  },
-  usageCard: {
-    backgroundColor: palette.card,
-    borderRadius: spacing.borderRadius.lg,
-    marginBottom: spacing.md,
-    padding: spacing.md,
-    ...shadows.sm,
-  },
-  usageRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: spacing.xs,
-  },
-  usageLabel: {
-    ...typography.caption1,
-    color: palette.textSecondary,
-  },
-  usageValue: {
-    ...typography.caption1,
-    color: palette.text,
-    fontWeight: "600",
-  },
-  progressBar: {
-    height: 6,
-    backgroundColor: palette.surface,
-    borderRadius: 3,
-    overflow: "hidden",
-    marginBottom: spacing.xs,
-  },
-  progressFill: {
-    height: "100%",
-    backgroundColor: palette.primary,
-    borderRadius: 3,
-  },
-  progressFillGreen: {
-    height: "100%",
-    backgroundColor: palette.success,
-    borderRadius: 3,
-  },
-  unlimitedText: {
-    ...typography.caption1,
-    color: palette.textSecondary,
-  },
-});
+const getStyles = (palette: typeof colors.light) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: palette.surfaceGrouped,
+    },
+    content: {
+      paddingHorizontal: spacing.lg,
+      paddingBottom: spacing.xxl,
+    },
+    contentTablet: {
+      maxWidth: 600,
+      width: "100%",
+      alignSelf: "center",
+    },
+    header: {
+      ...typography.title1,
+      color: palette.text,
+      marginTop: spacing.sm,
+      marginBottom: spacing.md,
+    },
+    card: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: palette.card,
+      borderRadius: spacing.borderRadius.lg,
+      padding: spacing.md,
+      marginBottom: spacing.lg,
+      ...shadows.sm,
+    },
+    avatar: {
+      width: 52,
+      height: 52,
+      borderRadius: 26,
+      backgroundColor: palette.surface,
+    },
+    avatarPlaceholder: {
+      width: 52,
+      height: 52,
+      borderRadius: 26,
+      backgroundColor: palette.primaryLight,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    userInfo: {
+      marginLeft: spacing.md,
+      flex: 1,
+    },
+    userName: {
+      ...typography.headline,
+      color: palette.text,
+    },
+    userEmail: {
+      ...typography.bodySmall,
+      color: palette.textSecondary,
+      marginTop: 2,
+    },
+    sectionTitle: {
+      ...typography.footnote,
+      color: palette.textTertiary,
+      textTransform: "uppercase",
+      letterSpacing: 0.8,
+      marginBottom: spacing.xs,
+      marginTop: spacing.sm,
+    },
+    section: {
+      backgroundColor: palette.card,
+      borderRadius: spacing.borderRadius.lg,
+      marginBottom: spacing.md,
+      overflow: "hidden",
+      ...shadows.sm,
+    },
+    row: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.md,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: palette.separator,
+    },
+    rowLeft: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.sm,
+    },
+    rowLabel: {
+      ...typography.body,
+      color: palette.text,
+    },
+    rowSubtitle: {
+      ...typography.caption1,
+      color: palette.textTertiary,
+      marginTop: 2,
+    },
+    destructiveText: {
+      color: palette.error,
+    },
+    disabledText: {
+      color: palette.textTertiary,
+    },
+    rowTrailingGroup: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.sm,
+    },
+    planBadge: {
+      backgroundColor: palette.surfaceAlt,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xxs,
+      borderRadius: spacing.borderRadius.sm,
+    },
+    planBadgePro: {
+      backgroundColor: palette.successBg,
+    },
+    planBadgeText: {
+      ...typography.caption1,
+      color: palette.textSecondary,
+      fontWeight: "600",
+    },
+    planBadgeTextPro: {
+      color: palette.success,
+    },
+    comingSoonText: {
+      ...typography.caption1,
+      color: palette.textTertiary,
+    },
+    usageCard: {
+      backgroundColor: palette.card,
+      borderRadius: spacing.borderRadius.lg,
+      marginBottom: spacing.md,
+      padding: spacing.md,
+      ...shadows.sm,
+    },
+    usageRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      marginBottom: spacing.xs,
+    },
+    usageLabel: {
+      ...typography.caption1,
+      color: palette.textSecondary,
+    },
+    usageValue: {
+      ...typography.caption1,
+      color: palette.text,
+      fontWeight: "600",
+    },
+    progressBar: {
+      height: 6,
+      backgroundColor: palette.surface,
+      borderRadius: 3,
+      overflow: "hidden",
+      marginBottom: spacing.xs,
+    },
+    progressFill: {
+      height: "100%",
+      backgroundColor: palette.primary,
+      borderRadius: 3,
+    },
+    progressFillGreen: {
+      height: "100%",
+      backgroundColor: palette.success,
+      borderRadius: 3,
+    },
+    unlimitedText: {
+      ...typography.caption1,
+      color: palette.textSecondary,
+    },
+  });

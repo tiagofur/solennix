@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -28,6 +29,9 @@ export default function ChangePasswordScreen({ navigation }: Props) {
   const { isDark } = useTheme();
   const palette = isDark ? colors.dark : colors.light;
   const styles = getStyles(palette);
+  const { width } = useWindowDimensions();
+  const isTablet = width >= 600;
+
   const [submitting, setSubmitting] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -71,7 +75,12 @@ export default function ChangePasswordScreen({ navigation }: Props) {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={{ flex: 1 }}
       >
-        <ScrollView contentContainerStyle={styles.content}>
+        <ScrollView
+          contentContainerStyle={[
+            styles.content,
+            isTablet && styles.contentTablet,
+          ]}
+        >
           <Text style={styles.description}>
             Ingresa tu contraseña actual y elige una nueva contraseña.
           </Text>
@@ -129,6 +138,11 @@ const getStyles = (palette: typeof colors.light) =>
     },
     content: {
       padding: spacing.lg,
+    },
+    contentTablet: {
+      maxWidth: 600,
+      width: "100%",
+      alignSelf: "center",
     },
     description: {
       ...typography.body,

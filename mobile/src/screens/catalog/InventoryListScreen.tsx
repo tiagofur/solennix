@@ -29,7 +29,12 @@ import { InventoryItem } from "../../types/entities";
 import { inventoryService } from "../../services/inventoryService";
 import { useToast } from "../../hooks/useToast";
 import { logError } from "../../lib/errorHandler";
-import { EmptyState, SkeletonList, SwipeableRow, SortSelector } from "../../components/shared";
+import {
+  EmptyState,
+  SkeletonList,
+  SwipeableRow,
+  SortSelector,
+} from "../../components/shared";
 import { useTheme } from "../../hooks/useTheme";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
@@ -57,15 +62,20 @@ export default function InventoryListScreen({ navigation }: Props) {
   const [showLowStockOnly, setShowLowStockOnly] = useState(false);
   const [sortKey, setSortKey] = useState("ingredient_name");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
-  const [adjustingItem, setAdjustingItem] = useState<InventoryItem | null>(null);
+  const [adjustingItem, setAdjustingItem] = useState<InventoryItem | null>(
+    null,
+  );
   const [adjustmentValue, setAdjustmentValue] = useState("");
 
-  const inventorySortOptions = useMemo(() => [
-    { key: "ingredient_name", label: "Nombre" },
-    { key: "current_stock", label: "Stock actual" },
-    { key: "minimum_stock", label: "Stock mínimo" },
-    { key: "unit_cost", label: "Costo unitario" },
-  ], []);
+  const inventorySortOptions = useMemo(
+    () => [
+      { key: "ingredient_name", label: "Nombre" },
+      { key: "current_stock", label: "Stock actual" },
+      { key: "minimum_stock", label: "Stock mínimo" },
+      { key: "unit_cost", label: "Costo unitario" },
+    ],
+    [],
+  );
 
   const loadItems = useCallback(async () => {
     try {
@@ -105,10 +115,15 @@ export default function InventoryListScreen({ navigation }: Props) {
       });
       setItems((prev) =>
         prev.map((item) =>
-          item.id === adjustingItem.id ? { ...item, current_stock: newStock } : item,
+          item.id === adjustingItem.id
+            ? { ...item, current_stock: newStock }
+            : item,
         ),
       );
-      addToast(`Stock de ${adjustingItem.ingredient_name} actualizado.`, "success");
+      addToast(
+        `Stock de ${adjustingItem.ingredient_name} actualizado.`,
+        "success",
+      );
       setAdjustingItem(null);
       setAdjustmentValue("");
     } catch (err) {
@@ -121,7 +136,9 @@ export default function InventoryListScreen({ navigation }: Props) {
     let filtered = items;
 
     if (showLowStockOnly) {
-      filtered = filtered.filter(item => item.current_stock <= item.minimum_stock);
+      filtered = filtered.filter(
+        (item) => item.current_stock <= item.minimum_stock,
+      );
     }
 
     if (search.trim()) {
@@ -129,7 +146,7 @@ export default function InventoryListScreen({ navigation }: Props) {
       filtered = filtered.filter(
         (item) =>
           item.ingredient_name.toLowerCase().includes(q) ||
-          item.type.toLowerCase().includes(q)
+          item.type.toLowerCase().includes(q),
       );
     }
 
@@ -153,25 +170,40 @@ export default function InventoryListScreen({ navigation }: Props) {
       return sortOrder === "asc" ? cmp : -cmp;
     });
 
-    const ingredientItems = sorted.filter(item => item.type === "ingredient");
-    const supplyItems = sorted.filter(item => item.type === "supply");
-    const equipmentItems = sorted.filter(item => item.type === "equipment");
+    const ingredientItems = sorted.filter((item) => item.type === "ingredient");
+    const supplyItems = sorted.filter((item) => item.type === "supply");
+    const equipmentItems = sorted.filter((item) => item.type === "equipment");
 
     const sections: InventorySection[] = [];
     if (ingredientItems.length > 0) {
-      sections.push({ title: "Consumibles", type: "ingredient", data: ingredientItems });
+      sections.push({
+        title: "Consumibles",
+        type: "ingredient",
+        data: ingredientItems,
+      });
     }
     if (supplyItems.length > 0) {
-      sections.push({ title: "Insumos por Evento", type: "supply", data: supplyItems });
+      sections.push({
+        title: "Insumos por Evento",
+        type: "supply",
+        data: supplyItems,
+      });
     }
     if (equipmentItems.length > 0) {
-      sections.push({ title: "Equipos", type: "equipment", data: equipmentItems });
+      sections.push({
+        title: "Equipos",
+        type: "equipment",
+        data: equipmentItems,
+      });
     }
 
     return sections;
   }, [search, items, showLowStockOnly, sortKey, sortOrder]);
 
-  const totalFilteredItems = sortedSections.reduce((sum, s) => sum + s.data.length, 0);
+  const totalFilteredItems = sortedSections.reduce(
+    (sum, s) => sum + s.data.length,
+    0,
+  );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -180,7 +212,7 @@ export default function InventoryListScreen({ navigation }: Props) {
   }, [loadItems]);
 
   const lowStockCount = items.filter(
-    item => item.current_stock <= item.minimum_stock
+    (item) => item.current_stock <= item.minimum_stock,
   ).length;
 
   const renderItem = useCallback(
@@ -188,56 +220,67 @@ export default function InventoryListScreen({ navigation }: Props) {
       const isLowStock = item.current_stock <= item.minimum_stock;
 
       return (
-        <Animated.View entering={FadeInDown.delay(Math.min(index, 10) * 50).springify()}>
-        <SwipeableRow
-          onEdit={() => navigation.navigate("InventoryForm", { id: item.id })}
+        <Animated.View
+          entering={FadeInDown.delay(Math.min(index, 10) * 50).springify()}
         >
-        <TouchableOpacity
-          style={[styles.card, isLowStock && styles.cardLowStock]}
-          activeOpacity={0.7}
-          onPress={() => navigation.navigate("InventoryDetail", { id: item.id })}
-        >
-          <View style={[styles.iconBox, isLowStock && styles.iconBoxLow]}>
-            <Package
-              color={isLowStock ? palette.error : palette.primary}
-              size={22}
-            />
-          </View>
-          <View style={styles.cardBody}>
-            <Text style={styles.cardName} numberOfLines={1}>
-              {item.ingredient_name}
-            </Text>
-            <Text style={styles.cardUnit}>{item.unit}</Text>
-          </View>
-          <View style={styles.stockInfo}>
-            <Text style={[styles.stockValue, isLowStock && styles.stockValueLow]}>
-              {item.current_stock} {item.unit}
-            </Text>
-            {item.unit_cost != null && item.unit_cost > 0 && (
-              <Text style={styles.unitCostText}>
-                ${item.unit_cost.toFixed(2)}/{item.unit}
-              </Text>
-            )}
-            {isLowStock && (
-              <View style={styles.lowStockBadge}>
-                <AlertTriangle color={palette.error} size={10} />
-                <Text style={styles.lowStockText}>Mín: {item.minimum_stock}</Text>
-              </View>
-            )}
-          </View>
-          <TouchableOpacity
-            style={styles.adjustBtn}
-            onPress={(e) => {
-              e.stopPropagation?.();
-              setAdjustingItem(item);
-              setAdjustmentValue("");
-            }}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          <SwipeableRow
+            onEdit={() => navigation.navigate("InventoryForm", { id: item.id })}
           >
-            <Plus color={palette.primary} size={18} />
-          </TouchableOpacity>
-        </TouchableOpacity>
-        </SwipeableRow>
+            <TouchableOpacity
+              style={[styles.card, isLowStock && styles.cardLowStock]}
+              activeOpacity={0.7}
+              onPress={() =>
+                navigation.navigate("InventoryDetail", { id: item.id })
+              }
+            >
+              <View style={[styles.iconBox, isLowStock && styles.iconBoxLow]}>
+                <Package
+                  color={isLowStock ? palette.error : palette.primary}
+                  size={22}
+                />
+              </View>
+              <View style={styles.cardBody}>
+                <Text style={styles.cardName} numberOfLines={1}>
+                  {item.ingredient_name}
+                </Text>
+                <Text style={styles.cardUnit}>{item.unit}</Text>
+              </View>
+              <View style={styles.stockInfo}>
+                <Text
+                  style={[
+                    styles.stockValue,
+                    isLowStock && styles.stockValueLow,
+                  ]}
+                >
+                  {item.current_stock} {item.unit}
+                </Text>
+                {item.unit_cost != null && item.unit_cost > 0 && (
+                  <Text style={styles.unitCostText}>
+                    ${item.unit_cost.toFixed(2)}/{item.unit}
+                  </Text>
+                )}
+                {isLowStock && (
+                  <View style={styles.lowStockBadge}>
+                    <AlertTriangle color={palette.error} size={10} />
+                    <Text style={styles.lowStockText}>
+                      Mín: {item.minimum_stock}
+                    </Text>
+                  </View>
+                )}
+              </View>
+              <TouchableOpacity
+                style={styles.adjustBtn}
+                onPress={(e) => {
+                  e.stopPropagation?.();
+                  setAdjustingItem(item);
+                  setAdjustmentValue("");
+                }}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Plus color={palette.primary} size={18} />
+              </TouchableOpacity>
+            </TouchableOpacity>
+          </SwipeableRow>
         </Animated.View>
       );
     },
@@ -246,9 +289,24 @@ export default function InventoryListScreen({ navigation }: Props) {
 
   const renderSectionHeader = useCallback(
     ({ section }: { section: InventorySection }) => {
-      const Icon = section.type === "equipment" ? Wrench : section.type === "supply" ? Fuel : ShoppingCart;
-      const iconColor = section.type === "equipment" ? palette.info : section.type === "supply" ? palette.statusQuoted : palette.primary;
-      const bgColor = section.type === "equipment" ? palette.infoBg : section.type === "supply" ? palette.statusQuotedBg : palette.primaryLight;
+      const Icon =
+        section.type === "equipment"
+          ? Wrench
+          : section.type === "supply"
+            ? Fuel
+            : ShoppingCart;
+      const iconColor =
+        section.type === "equipment"
+          ? palette.info
+          : section.type === "supply"
+            ? palette.statusQuoted
+            : palette.primary;
+      const bgColor =
+        section.type === "equipment"
+          ? palette.infoBg
+          : section.type === "supply"
+            ? palette.statusQuotedBg
+            : palette.primaryLight;
 
       return (
         <View style={styles.sectionHeader}>
@@ -292,7 +350,10 @@ export default function InventoryListScreen({ navigation }: Props) {
             options={inventorySortOptions}
             sortKey={sortKey}
             sortOrder={sortOrder}
-            onSort={(key, order) => { setSortKey(key); setSortOrder(order); }}
+            onSort={(key, order) => {
+              setSortKey(key);
+              setSortOrder(order);
+            }}
           />
         </View>
       </View>
@@ -305,11 +366,13 @@ export default function InventoryListScreen({ navigation }: Props) {
         >
           <AlertTriangle color={palette.error} size={18} />
           <Text style={styles.alertText}>
-            {lowStockCount} {' '}
-            {lowStockCount === 1 ? 'ítem con stock bajo' : 'ítems con stock bajo'}
+            {lowStockCount}{" "}
+            {lowStockCount === 1
+              ? "ítem con stock bajo"
+              : "ítems con stock bajo"}
           </Text>
           <Text style={styles.alertAction}>
-            {showLowStockOnly ? 'Ver todos' : 'Ver alertas'}
+            {showLowStockOnly ? "Ver todos" : "Ver alertas"}
           </Text>
         </TouchableOpacity>
       )}
@@ -320,9 +383,7 @@ export default function InventoryListScreen({ navigation }: Props) {
         renderItem={renderItem}
         renderSectionHeader={renderSectionHeader}
         contentContainerStyle={
-          totalFilteredItems === 0
-            ? styles.emptyContent
-            : styles.listContent
+          totalFilteredItems === 0 ? styles.emptyContent : styles.listContent
         }
         stickySectionHeadersEnabled={false}
         refreshControl={
@@ -362,12 +423,15 @@ export default function InventoryListScreen({ navigation }: Props) {
         onRequestClose={() => setAdjustingItem(null)}
       >
         <View style={styles.modalOverlay}>
-          <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : undefined}
+          >
             <View style={styles.modalCard}>
               <Text style={styles.modalTitle}>Ajustar Stock</Text>
               {adjustingItem && (
                 <Text style={styles.modalSubtitle}>
-                  {adjustingItem.ingredient_name} ({adjustingItem.current_stock} {adjustingItem.unit})
+                  {adjustingItem.ingredient_name} ({adjustingItem.current_stock}{" "}
+                  {adjustingItem.unit})
                 </Text>
               )}
               <Text style={styles.modalLabel}>Cantidad a sumar/restar</Text>
@@ -403,252 +467,254 @@ export default function InventoryListScreen({ navigation }: Props) {
   );
 }
 
-const getStyles = (palette: typeof colors.light) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: palette.surfaceGrouped,
-  },
-  searchContainer: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.sm,
-  },
-  searchRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-  },
-  searchBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: palette.surface,
-    borderRadius: spacing.borderRadius.md,
-    paddingHorizontal: spacing.md,
-    height: 38,
-    gap: spacing.sm,
-  },
-  searchInput: {
-    flex: 1,
-    ...typography.body,
-    color: palette.text,
-    padding: 0,
-  },
-  alertBanner: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: palette.errorBg,
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.sm,
-    padding: spacing.md,
-    borderRadius: spacing.borderRadius.lg,
-    ...shadows.sm,
-    gap: spacing.sm,
-  },
-  alertText: {
-    ...typography.bodySmall,
-    color: palette.error,
-    flex: 1,
-    fontWeight: "600",
-  },
-  alertAction: {
-    ...typography.caption,
-    color: palette.primary,
-    fontWeight: "700",
-  },
-  listContent: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: 100,
-  },
-  emptyContent: {
-    flex: 1,
-    paddingHorizontal: spacing.lg,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: spacing.md,
-    paddingTop: spacing.lg,
-    gap: spacing.sm,
-  },
-  sectionIconBox: {
-    width: 28,
-    height: 28,
-    borderRadius: spacing.borderRadius.md,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  sectionTitle: {
-    ...typography.subheadline,
-    fontWeight: "700",
-    color: palette.text,
-    flex: 1,
-  },
-  sectionCountBadge: {
-    backgroundColor: palette.surface,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    borderRadius: spacing.borderRadius.sm,
-  },
-  sectionCountText: {
-    ...typography.caption,
-    color: palette.textSecondary,
-    fontWeight: "600",
-  },
-  card: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: palette.card,
-    borderRadius: spacing.borderRadius.lg,
-    ...shadows.sm,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-    gap: spacing.md,
-  },
-  cardLowStock: {
-    backgroundColor: palette.errorBg,
-  },
-  iconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: spacing.borderRadius.lg,
-    backgroundColor: palette.primaryLight,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  iconBoxLow: {
-    backgroundColor: palette.errorBg,
-  },
-  cardBody: {
-    flex: 1,
-    gap: 2,
-  },
-  cardName: {
-    ...typography.subheadline,
-    fontWeight: "500",
-    color: palette.text,
-  },
-  cardUnit: {
-    ...typography.caption,
-    color: palette.textSecondary,
-  },
-  stockInfo: {
-    alignItems: "flex-end",
-  },
-  stockValue: {
-    ...typography.label,
-    color: palette.text,
-    fontSize: 14,
-  },
-  stockValueLow: {
-    color: palette.error,
-  },
-  lowStockBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 2,
-    marginTop: 2,
-  },
-  lowStockText: {
-    ...typography.caption,
-    color: palette.error,
-    fontSize: 10,
-  },
-  unitCostText: {
-    ...typography.caption,
-    color: palette.textSecondary,
-    fontSize: 10,
-    marginTop: 1,
-  },
-  fab: {
-    position: "absolute",
-    bottom: spacing.xl,
-    right: spacing.xl,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: palette.primary,
-    justifyContent: "center",
-    alignItems: "center",
-    ...shadows.fab,
-  },
-  adjustBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: palette.primaryLight,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  // Modal
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.6)",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: spacing.lg,
-  },
-  modalCard: {
-    backgroundColor: palette.card,
-    borderRadius: spacing.borderRadius.xl,
-    padding: spacing.lg,
-    width: "100%",
-    ...shadows.lg,
-  },
-  modalTitle: {
-    ...typography.title2,
-    color: palette.text,
-    marginBottom: spacing.xs,
-  },
-  modalSubtitle: {
-    ...typography.body,
-    color: palette.textSecondary,
-    marginBottom: spacing.md,
-  },
-  modalLabel: {
-    ...typography.caption1,
-    color: palette.textSecondary,
-    fontWeight: "600",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    marginBottom: spacing.xs,
-  },
-  modalInput: {
-    backgroundColor: palette.surfaceGrouped,
-    borderWidth: 1,
-    borderColor: palette.separator,
-    borderRadius: spacing.borderRadius.lg,
-    padding: spacing.md,
-    ...typography.body,
-    color: palette.text,
-    marginBottom: spacing.md,
-  },
-  modalActions: {
-    flexDirection: "row",
-    gap: spacing.sm,
-  },
-  modalCancelBtn: {
-    flex: 1,
-    paddingVertical: spacing.sm + 2,
-    borderRadius: spacing.borderRadius.lg,
-    borderWidth: 1,
-    borderColor: palette.separator,
-    alignItems: "center",
-  },
-  modalCancelText: {
-    ...typography.subheadline,
-    color: palette.textSecondary,
-    fontWeight: "500",
-  },
-  modalConfirmBtn: {
-    flex: 1,
-    paddingVertical: spacing.sm + 2,
-    borderRadius: spacing.borderRadius.lg,
-    backgroundColor: palette.primary,
-    alignItems: "center",
-  },
-  modalConfirmText: {
-    ...typography.subheadline,
-    color: palette.textInverse,
-    fontWeight: "700",
-  },
-});
+const getStyles = (palette: typeof colors.light) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: palette.surfaceGrouped,
+    },
+    searchContainer: {
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.sm,
+      paddingBottom: spacing.sm,
+    },
+    searchRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.sm,
+    },
+    searchBox: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: palette.surface,
+      borderRadius: spacing.borderRadius.md,
+      paddingHorizontal: spacing.md,
+      height: 38,
+      gap: spacing.sm,
+    },
+    searchInput: {
+      flex: 1,
+      ...typography.body,
+      color: palette.text,
+      padding: 0,
+    },
+    alertBanner: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: palette.errorBg,
+      marginHorizontal: spacing.lg,
+      marginBottom: spacing.sm,
+      padding: spacing.md,
+      borderRadius: spacing.borderRadius.lg,
+      ...shadows.sm,
+      gap: spacing.sm,
+    },
+    alertText: {
+      ...typography.bodySmall,
+      color: palette.error,
+      flex: 1,
+      fontWeight: "600",
+    },
+    alertAction: {
+      ...typography.caption,
+      color: palette.primary,
+      fontWeight: "700",
+    },
+    listContent: {
+      paddingHorizontal: spacing.lg,
+      paddingBottom: 100,
+    },
+    emptyContent: {
+      flex: 1,
+      paddingHorizontal: spacing.lg,
+    },
+    sectionHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: spacing.md,
+      paddingTop: spacing.lg,
+      gap: spacing.sm,
+    },
+    sectionIconBox: {
+      width: 28,
+      height: 28,
+      borderRadius: spacing.borderRadius.md,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    sectionTitle: {
+      ...typography.subheadline,
+      fontWeight: "700",
+      color: palette.text,
+      flex: 1,
+    },
+    sectionCountBadge: {
+      backgroundColor: palette.surface,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 2,
+      borderRadius: spacing.borderRadius.sm,
+    },
+    sectionCountText: {
+      ...typography.caption,
+      color: palette.textSecondary,
+      fontWeight: "600",
+    },
+    card: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: palette.card,
+      borderRadius: spacing.borderRadius.lg,
+      ...shadows.sm,
+      padding: spacing.md,
+      marginBottom: spacing.sm,
+      gap: spacing.md,
+    },
+    cardLowStock: {
+      backgroundColor: palette.errorBg,
+    },
+    iconBox: {
+      width: 44,
+      height: 44,
+      borderRadius: spacing.borderRadius.lg,
+      backgroundColor: palette.primaryLight,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    iconBoxLow: {
+      backgroundColor: palette.errorBg,
+    },
+    cardBody: {
+      flex: 1,
+      gap: 2,
+    },
+    cardName: {
+      ...typography.subheadline,
+      fontWeight: "500",
+      color: palette.text,
+    },
+    cardUnit: {
+      ...typography.caption,
+      color: palette.textSecondary,
+    },
+    stockInfo: {
+      alignItems: "flex-end",
+    },
+    stockValue: {
+      ...typography.label,
+      color: palette.text,
+      fontSize: 14,
+    },
+    stockValueLow: {
+      color: palette.error,
+    },
+    lowStockBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 2,
+      marginTop: 2,
+    },
+    lowStockText: {
+      ...typography.caption,
+      color: palette.error,
+      fontSize: 10,
+    },
+    unitCostText: {
+      ...typography.caption,
+      color: palette.textSecondary,
+      fontSize: 10,
+      marginTop: 1,
+    },
+    fab: {
+      position: "absolute",
+      bottom: spacing.xl,
+      right: spacing.xl,
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      backgroundColor: palette.primary,
+      justifyContent: "center",
+      alignItems: "center",
+      ...shadows.fab,
+    },
+    adjustBtn: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: palette.primaryLight,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    // Modal
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.6)",
+      justifyContent: "center",
+      alignItems: "center",
+      padding: spacing.lg,
+    },
+    modalCard: {
+      backgroundColor: palette.card,
+      borderRadius: spacing.borderRadius.xl,
+      padding: spacing.lg,
+      width: "100%",
+      maxWidth: 400,
+      ...shadows.lg,
+    },
+    modalTitle: {
+      ...typography.title2,
+      color: palette.text,
+      marginBottom: spacing.xs,
+    },
+    modalSubtitle: {
+      ...typography.body,
+      color: palette.textSecondary,
+      marginBottom: spacing.md,
+    },
+    modalLabel: {
+      ...typography.caption1,
+      color: palette.textSecondary,
+      fontWeight: "600",
+      textTransform: "uppercase",
+      letterSpacing: 0.5,
+      marginBottom: spacing.xs,
+    },
+    modalInput: {
+      backgroundColor: palette.surfaceGrouped,
+      borderWidth: 1,
+      borderColor: palette.separator,
+      borderRadius: spacing.borderRadius.lg,
+      padding: spacing.md,
+      ...typography.body,
+      color: palette.text,
+      marginBottom: spacing.md,
+    },
+    modalActions: {
+      flexDirection: "row",
+      gap: spacing.sm,
+    },
+    modalCancelBtn: {
+      flex: 1,
+      paddingVertical: spacing.sm + 2,
+      borderRadius: spacing.borderRadius.lg,
+      borderWidth: 1,
+      borderColor: palette.separator,
+      alignItems: "center",
+    },
+    modalCancelText: {
+      ...typography.subheadline,
+      color: palette.textSecondary,
+      fontWeight: "500",
+    },
+    modalConfirmBtn: {
+      flex: 1,
+      paddingVertical: spacing.sm + 2,
+      borderRadius: spacing.borderRadius.lg,
+      backgroundColor: palette.primary,
+      alignItems: "center",
+    },
+    modalConfirmText: {
+      ...typography.subheadline,
+      color: palette.textInverse,
+      fontWeight: "700",
+    },
+  });

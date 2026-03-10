@@ -9,6 +9,7 @@ import {
   TextInput as RNTextInput,
   KeyboardAvoidingView,
   Platform,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -50,6 +51,8 @@ export default function ClientFormScreen({ navigation, route }: Props) {
   const palette = isDark ? colors.dark : colors.light;
   const styles = getStyles(palette);
   const tabBarHeight = useBottomTabBarHeight();
+  const { width } = useWindowDimensions();
+  const isTablet = width >= 600;
 
   const [loadingData, setLoadingData] = useState(isEdit);
   const [submitting, setSubmitting] = useState(false);
@@ -169,7 +172,7 @@ export default function ClientFormScreen({ navigation, route }: Props) {
         keyboardVerticalOffset={100}
       >
         <ScrollView
-          contentContainerStyle={styles.form}
+          contentContainerStyle={[styles.form, isTablet && styles.formTablet]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
@@ -184,7 +187,11 @@ export default function ClientFormScreen({ navigation, route }: Props) {
             >
               {localPhotoUri || photoUrl ? (
                 <View style={styles.avatarContainer}>
-                  <Avatar name={control._formValues.name || "?"} photoUrl={localPhotoUri || photoUrl} size={80} />
+                  <Avatar
+                    name={control._formValues.name || "?"}
+                    photoUrl={localPhotoUri || photoUrl}
+                    size={80}
+                  />
                   <View style={styles.cameraOverlay}>
                     <Camera color={palette.textInverse} size={16} />
                   </View>
@@ -322,9 +329,15 @@ export default function ClientFormScreen({ navigation, route }: Props) {
         </ScrollView>
 
         {/* Save Button */}
-        <View style={[styles.footer, { paddingBottom: tabBarHeight + spacing.sm }]}>
+        <View
+          style={[styles.footer, { paddingBottom: tabBarHeight + spacing.sm }]}
+        >
           <TouchableOpacity
-            style={[styles.saveButton, submitting && styles.saveButtonDisabled]}
+            style={[
+              styles.saveButton,
+              submitting && styles.saveButtonDisabled,
+              isTablet && styles.saveButtonTablet,
+            ]}
             activeOpacity={0.8}
             onPress={handleSubmit(onSubmit)}
             disabled={submitting}
@@ -346,61 +359,72 @@ export default function ClientFormScreen({ navigation, route }: Props) {
   );
 }
 
-const getStyles = (palette: typeof colors.light) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: palette.background,
-  },
-  form: {
-    padding: spacing.lg,
-    gap: spacing.sm,
-  },
-  avatarSection: {
-    alignItems: "center",
-    paddingVertical: spacing.md,
-  },
-  avatarContainer: {
-    position: "relative",
-  },
-  cameraOverlay: {
-    position: "absolute",
-    bottom: 0,
-    right: 0,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: palette.primary,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 2,
-    borderColor: palette.background,
-  },
-  avatarHint: {
-    ...typography.caption,
-    color: palette.textTertiary,
-    marginTop: spacing.xs,
-  },
-  footer: {
-    padding: spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: palette.border,
-    backgroundColor: palette.background,
-  },
-  saveButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: palette.primary,
-    borderRadius: spacing.borderRadius.lg,
-    paddingVertical: spacing.md,
-    gap: spacing.sm,
-  },
-  saveButtonDisabled: {
-    opacity: 0.6,
-  },
-  saveText: {
-    ...typography.button,
-    color: palette.textInverse,
-    fontSize: 16,
-  },
-});
+const getStyles = (palette: typeof colors.light) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: palette.background,
+    },
+    form: {
+      padding: spacing.lg,
+      gap: spacing.sm,
+    },
+    formTablet: {
+      maxWidth: 600,
+      width: "100%",
+      alignSelf: "center",
+    },
+    avatarSection: {
+      alignItems: "center",
+      paddingVertical: spacing.md,
+    },
+    avatarContainer: {
+      position: "relative",
+    },
+    cameraOverlay: {
+      position: "absolute",
+      bottom: 0,
+      right: 0,
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      backgroundColor: palette.primary,
+      justifyContent: "center",
+      alignItems: "center",
+      borderWidth: 2,
+      borderColor: palette.background,
+    },
+    avatarHint: {
+      ...typography.caption,
+      color: palette.textTertiary,
+      marginTop: spacing.xs,
+    },
+    footer: {
+      padding: spacing.lg,
+      borderTopWidth: 1,
+      borderTopColor: palette.border,
+      backgroundColor: palette.background,
+    },
+    saveButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: palette.primary,
+      borderRadius: spacing.borderRadius.lg,
+      paddingVertical: spacing.md,
+      gap: spacing.sm,
+    },
+    saveButtonDisabled: {
+      opacity: 0.6,
+    },
+    saveButtonTablet: {
+      maxWidth: 600,
+      width: "100%",
+      alignSelf: "center",
+    },
+    saveText: {
+      ...typography.button,
+      color: palette.textInverse,
+      fontSize: 16,
+    },
+  });

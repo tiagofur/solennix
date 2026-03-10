@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -32,10 +33,22 @@ import {
 } from "../../lib/contractTemplate";
 
 const contractSchema = z.object({
-  default_deposit_percent: z.number().min(0, "Mínimo 0%").max(100, "Máximo 100%"),
-  default_cancellation_days: z.number().min(0, "Mínimo 0 días").max(365, "Máximo 365 días"),
-  default_refund_percent: z.number().min(0, "Mínimo 0%").max(100, "Máximo 100%"),
-  contract_template: z.string().min(1, "La plantilla es obligatoria").max(20000, "Máximo 20000 caracteres"),
+  default_deposit_percent: z
+    .number()
+    .min(0, "Mínimo 0%")
+    .max(100, "Máximo 100%"),
+  default_cancellation_days: z
+    .number()
+    .min(0, "Mínimo 0 días")
+    .max(365, "Máximo 365 días"),
+  default_refund_percent: z
+    .number()
+    .min(0, "Mínimo 0%")
+    .max(100, "Máximo 100%"),
+  contract_template: z
+    .string()
+    .min(1, "La plantilla es obligatoria")
+    .max(20000, "Máximo 20000 caracteres"),
 });
 
 type ContractFormData = z.infer<typeof contractSchema>;
@@ -48,6 +61,9 @@ export default function ContractDefaultsScreen({ navigation }: Props) {
   const { isDark } = useTheme();
   const palette = isDark ? colors.dark : colors.light;
   const styles = getStyles(palette);
+  const { width } = useWindowDimensions();
+  const isTablet = width >= 600;
+
   const [submitting, setSubmitting] = useState(false);
 
   const {
@@ -78,7 +94,9 @@ export default function ContractDefaultsScreen({ navigation }: Props) {
 
   const onSubmit = useCallback(
     async (data: ContractFormData) => {
-      const { invalidTokens } = validateContractTemplate(data.contract_template);
+      const { invalidTokens } = validateContractTemplate(
+        data.contract_template,
+      );
       if (invalidTokens.length > 0) {
         addToast(
           `Placeholders no soportados: ${invalidTokens.map((t) => `[${t}]`).join(", ")}`,
@@ -115,7 +133,7 @@ export default function ContractDefaultsScreen({ navigation }: Props) {
         keyboardVerticalOffset={100}
       >
         <ScrollView
-          contentContainerStyle={styles.form}
+          contentContainerStyle={[styles.form, isTablet && styles.formTablet]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
@@ -206,17 +224,20 @@ export default function ContractDefaultsScreen({ navigation }: Props) {
                   style={styles.templateInput}
                 />
                 <Text style={styles.helperText}>
-                  Usa placeholders legibles en formato [Nombre del cliente]. También se aceptan tokens técnicos.
+                  Usa placeholders legibles en formato [Nombre del cliente].
+                  También se aceptan tokens técnicos.
                 </Text>
                 <Text style={styles.tokenList}>
-                  {CONTRACT_TEMPLATE_PLACEHOLDERS.map(({ token }) => getMaskedPlaceholder(token)).join("  ")}
+                  {CONTRACT_TEMPLATE_PLACEHOLDERS.map(({ token }) =>
+                    getMaskedPlaceholder(token),
+                  ).join("  ")}
                 </Text>
               </View>
             )}
           />
         </ScrollView>
 
-        <View style={styles.footer}>
+        <View style={[styles.footer, isTablet && styles.footerTablet]}>
           <TouchableOpacity
             style={[styles.saveButton, submitting && styles.saveButtonDisabled]}
             activeOpacity={0.8}
@@ -238,63 +259,76 @@ export default function ContractDefaultsScreen({ navigation }: Props) {
   );
 }
 
-const getStyles = (palette: typeof colors.light) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: palette.background,
-  },
-  form: {
-    padding: spacing.lg,
-    gap: spacing.sm,
-  },
-  sectionTitle: {
-    ...typography.headline,
-    color: palette.text,
-    marginBottom: spacing.xs,
-  },
-  description: {
-    ...typography.subheadline,
-    color: palette.textSecondary,
-    marginBottom: spacing.md,
-  },
-  helperText: {
-    ...typography.caption1,
-    color: palette.textTertiary,
-    marginTop: -spacing.sm,
-    marginBottom: spacing.sm,
-    paddingHorizontal: spacing.xxs,
-  },
-  templateInput: {
-    minHeight: 240,
-    textAlignVertical: "top",
-  },
-  tokenList: {
-    ...typography.caption2,
-    color: palette.textSecondary,
-    marginTop: spacing.xs,
-    lineHeight: 18,
-  },
-  footer: {
-    padding: spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: palette.border,
-    backgroundColor: palette.background,
-  },
-  saveButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: palette.primary,
-    borderRadius: spacing.borderRadius.lg,
-    paddingVertical: spacing.md,
-    gap: spacing.sm,
-  },
-  saveButtonDisabled: {
-    opacity: 0.6,
-  },
-  saveText: {
-    ...typography.button,
-    color: palette.textInverse,
-    fontSize: 16,
-  },
-});
+const getStyles = (palette: typeof colors.light) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: palette.background,
+    },
+    form: {
+      padding: spacing.lg,
+      gap: spacing.sm,
+    },
+    formTablet: {
+      maxWidth: 600,
+      width: "100%",
+      alignSelf: "center",
+    },
+    sectionTitle: {
+      ...typography.headline,
+      color: palette.text,
+      marginBottom: spacing.xs,
+    },
+    description: {
+      ...typography.subheadline,
+      color: palette.textSecondary,
+      marginBottom: spacing.md,
+    },
+    helperText: {
+      ...typography.caption1,
+      color: palette.textTertiary,
+      marginTop: -spacing.sm,
+      marginBottom: spacing.sm,
+      paddingHorizontal: spacing.xxs,
+    },
+    templateInput: {
+      minHeight: 240,
+      textAlignVertical: "top",
+    },
+    tokenList: {
+      ...typography.caption2,
+      color: palette.textSecondary,
+      marginTop: spacing.xs,
+      lineHeight: 18,
+    },
+    footer: {
+      padding: spacing.lg,
+      borderTopWidth: 1,
+      borderTopColor: palette.border,
+      backgroundColor: palette.background,
+    },
+    footerTablet: {
+      maxWidth: 600,
+      width: "100%",
+      alignSelf: "center",
+      borderTopWidth: 0,
+      backgroundColor: "transparent",
+    },
+    saveButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: palette.primary,
+      borderRadius: spacing.borderRadius.lg,
+      paddingVertical: spacing.md,
+      gap: spacing.sm,
+    },
+    saveButtonDisabled: {
+      opacity: 0.6,
+    },
+    saveText: {
+      ...typography.button,
+      color: palette.textInverse,
+      fontSize: 16,
+    },
+  });

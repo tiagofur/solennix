@@ -11,6 +11,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -48,6 +49,8 @@ export default function BusinessSettingsScreen({ navigation }: Props) {
   const { isDark } = useTheme();
   const palette = isDark ? colors.dark : colors.light;
   const styles = getStyles(palette);
+  const { width } = useWindowDimensions();
+  const isTablet = width >= 600;
 
   const [businessName, setBusinessName] = useState(user?.business_name || "");
   const [brandColor, setBrandColor] = useState(user?.brand_color || "#C4A265");
@@ -125,7 +128,7 @@ export default function BusinessSettingsScreen({ navigation }: Props) {
         keyboardVerticalOffset={100}
       >
         <ScrollView
-          contentContainerStyle={styles.form}
+          contentContainerStyle={[styles.form, isTablet && styles.formTablet]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
@@ -152,7 +155,11 @@ export default function BusinessSettingsScreen({ navigation }: Props) {
               <View
                 style={[
                   styles.colorPreview,
-                  { backgroundColor: /^#[0-9A-Fa-f]{6}$/.test(brandColor) ? brandColor : palette.border },
+                  {
+                    backgroundColor: /^#[0-9A-Fa-f]{6}$/.test(brandColor)
+                      ? brandColor
+                      : palette.border,
+                  },
                 ]}
               />
               <View style={{ flex: 1 }}>
@@ -177,7 +184,8 @@ export default function BusinessSettingsScreen({ navigation }: Props) {
                   style={[
                     styles.swatch,
                     { backgroundColor: color },
-                    brandColor.toUpperCase() === color.toUpperCase() && styles.swatchSelected,
+                    brandColor.toUpperCase() === color.toUpperCase() &&
+                      styles.swatchSelected,
                   ]}
                   onPress={() => setBrandColor(color)}
                   activeOpacity={0.7}
@@ -211,7 +219,9 @@ export default function BusinessSettingsScreen({ navigation }: Props) {
                     activeOpacity={0.7}
                   >
                     <Trash2 color={palette.error} size={18} />
-                    <Text style={[styles.logoButtonText, { color: palette.error }]}>
+                    <Text
+                      style={[styles.logoButtonText, { color: palette.error }]}
+                    >
                       Eliminar
                     </Text>
                   </TouchableOpacity>
@@ -246,7 +256,7 @@ export default function BusinessSettingsScreen({ navigation }: Props) {
           </View>
         </ScrollView>
 
-        <View style={styles.footer}>
+        <View style={[styles.footer, isTablet && styles.footerTablet]}>
           <TouchableOpacity
             style={[styles.saveButton, saving && styles.saveButtonDisabled]}
             activeOpacity={0.8}
@@ -268,146 +278,159 @@ export default function BusinessSettingsScreen({ navigation }: Props) {
   );
 }
 
-const getStyles = (palette: typeof colors.light) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: palette.surfaceGrouped,
-  },
-  form: {
-    padding: spacing.lg,
-    gap: spacing.md,
-  },
-  section: {
-    backgroundColor: palette.card,
-    borderRadius: spacing.borderRadius.lg,
-    padding: spacing.md,
-    ...shadows.sm,
-  },
-  sectionTitle: {
-    ...typography.headline,
-    color: palette.text,
-    marginBottom: spacing.xs,
-  },
-  sectionDescription: {
-    ...typography.caption1,
-    color: palette.textSecondary,
-    marginBottom: spacing.md,
-  },
-  // Color picker
-  colorRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: spacing.md,
-  },
-  colorPreview: {
-    width: 48,
-    height: 48,
-    borderRadius: spacing.borderRadius.md,
-    marginTop: 22,
-    borderWidth: 2,
-    borderColor: palette.separator,
-  },
-  swatchContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-    marginTop: spacing.xs,
-  },
-  swatch: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderWidth: 2,
-    borderColor: "transparent",
-  },
-  swatchSelected: {
-    borderColor: palette.text,
-    borderWidth: 3,
-  },
-  // Logo
-  logoContainer: {
-    alignItems: "center",
-    gap: spacing.md,
-  },
-  logoPreview: {
-    width: 80,
-    height: 80,
-    borderRadius: spacing.borderRadius.lg,
-    backgroundColor: palette.surface,
-  },
-  logoActions: {
-    flexDirection: "row",
-    gap: spacing.md,
-  },
-  logoButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    borderRadius: spacing.borderRadius.md,
-    backgroundColor: palette.surface,
-  },
-  logoDeleteButton: {
-    backgroundColor: palette.errorBg,
-  },
-  logoButtonText: {
-    ...typography.subheadline,
-    color: palette.primary,
-    fontWeight: "500",
-  },
-  logoPlaceholder: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: spacing.xl,
-    borderWidth: 2,
-    borderStyle: "dashed",
-    borderColor: palette.separator,
-    borderRadius: spacing.borderRadius.lg,
-    gap: spacing.sm,
-  },
-  logoPlaceholderText: {
-    ...typography.subheadline,
-    color: palette.textTertiary,
-  },
-  // Toggle
-  toggleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: spacing.md,
-    paddingTop: spacing.md,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: palette.separator,
-  },
-  toggleLabel: {
-    ...typography.subheadline,
-    color: palette.text,
-    flex: 1,
-    marginRight: spacing.sm,
-  },
-  // Footer
-  footer: {
-    padding: spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: palette.border,
-    backgroundColor: palette.background,
-  },
-  saveButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: palette.primary,
-    borderRadius: spacing.borderRadius.lg,
-    paddingVertical: spacing.md,
-    gap: spacing.sm,
-  },
-  saveButtonDisabled: {
-    opacity: 0.6,
-  },
-  saveText: {
-    ...typography.button,
-    color: palette.textInverse,
-    fontSize: 16,
-  },
-});
+const getStyles = (palette: typeof colors.light) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: palette.surfaceGrouped,
+    },
+    form: {
+      padding: spacing.lg,
+      gap: spacing.md,
+    },
+    formTablet: {
+      maxWidth: 600,
+      width: "100%",
+      alignSelf: "center",
+    },
+    section: {
+      backgroundColor: palette.card,
+      borderRadius: spacing.borderRadius.lg,
+      padding: spacing.md,
+      ...shadows.sm,
+    },
+    sectionTitle: {
+      ...typography.headline,
+      color: palette.text,
+      marginBottom: spacing.xs,
+    },
+    sectionDescription: {
+      ...typography.caption1,
+      color: palette.textSecondary,
+      marginBottom: spacing.md,
+    },
+    // Color picker
+    colorRow: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      gap: spacing.md,
+    },
+    colorPreview: {
+      width: 48,
+      height: 48,
+      borderRadius: spacing.borderRadius.md,
+      marginTop: 22,
+      borderWidth: 2,
+      borderColor: palette.separator,
+    },
+    swatchContainer: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: spacing.sm,
+      marginTop: spacing.xs,
+    },
+    swatch: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      borderWidth: 2,
+      borderColor: "transparent",
+    },
+    swatchSelected: {
+      borderColor: palette.text,
+      borderWidth: 3,
+    },
+    // Logo
+    logoContainer: {
+      alignItems: "center",
+      gap: spacing.md,
+    },
+    logoPreview: {
+      width: 80,
+      height: 80,
+      borderRadius: spacing.borderRadius.lg,
+      backgroundColor: palette.surface,
+    },
+    logoActions: {
+      flexDirection: "row",
+      gap: spacing.md,
+    },
+    logoButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing.xs,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md,
+      borderRadius: spacing.borderRadius.md,
+      backgroundColor: palette.surface,
+    },
+    logoDeleteButton: {
+      backgroundColor: palette.errorBg,
+    },
+    logoButtonText: {
+      ...typography.subheadline,
+      color: palette.primary,
+      fontWeight: "500",
+    },
+    logoPlaceholder: {
+      alignItems: "center",
+      justifyContent: "center",
+      paddingVertical: spacing.xl,
+      borderWidth: 2,
+      borderStyle: "dashed",
+      borderColor: palette.separator,
+      borderRadius: spacing.borderRadius.lg,
+      gap: spacing.sm,
+    },
+    logoPlaceholderText: {
+      ...typography.subheadline,
+      color: palette.textTertiary,
+    },
+    // Toggle
+    toggleRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginTop: spacing.md,
+      paddingTop: spacing.md,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: palette.separator,
+    },
+    toggleLabel: {
+      ...typography.subheadline,
+      color: palette.text,
+      flex: 1,
+      marginRight: spacing.sm,
+    },
+    // Footer
+    footer: {
+      padding: spacing.lg,
+      borderTopWidth: 1,
+      borderTopColor: palette.border,
+      backgroundColor: palette.background,
+    },
+    footerTablet: {
+      maxWidth: 600,
+      width: "100%",
+      alignSelf: "center",
+      borderTopWidth: 0,
+      backgroundColor: "transparent",
+    },
+    saveButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: palette.primary,
+      borderRadius: spacing.borderRadius.lg,
+      paddingVertical: spacing.md,
+      gap: spacing.sm,
+    },
+    saveButtonDisabled: {
+      opacity: 0.6,
+    },
+    saveText: {
+      ...typography.button,
+      color: palette.textInverse,
+      fontSize: 16,
+    },
+  });

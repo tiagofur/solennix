@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Alert,
   Switch,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -124,6 +125,8 @@ export default function EventFormScreen({ navigation, route }: Props) {
   const palette = isDark ? colors.dark : colors.light;
   const styles = getStyles(palette);
   const tabBarHeight = useBottomTabBarHeight();
+  const { width } = useWindowDimensions();
+  const isTablet = width >= 600;
 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(isEditing);
@@ -157,12 +160,16 @@ export default function EventFormScreen({ navigation, route }: Props) {
     inventory_id: string;
     quantity: number;
     unit_cost: number;
-    source: 'stock' | 'purchase';
+    source: "stock" | "purchase";
     exclude_cost: boolean;
   };
   const [supplyInventory, setSupplyInventory] = useState<InventoryItem[]>([]);
-  const [selectedSupplies, setSelectedSupplies] = useState<SelectedSupplyItem[]>([]);
-  const [supplySuggestions, setSupplySuggestions] = useState<SupplySuggestion[]>([]);
+  const [selectedSupplies, setSelectedSupplies] = useState<
+    SelectedSupplyItem[]
+  >([]);
+  const [supplySuggestions, setSupplySuggestions] = useState<
+    SupplySuggestion[]
+  >([]);
   const [showSupplyPicker, setShowSupplyPicker] = useState(false);
 
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -310,7 +317,7 @@ export default function EventFormScreen({ navigation, route }: Props) {
               inventory_id: s.inventory_id,
               quantity: s.quantity,
               unit_cost: s.unit_cost,
-              source: s.source || 'purchase',
+              source: s.source || "purchase",
               exclude_cost: s.exclude_cost || false,
             })),
           );
@@ -558,7 +565,13 @@ export default function EventFormScreen({ navigation, route }: Props) {
     if (!selectedSupplies.some((s) => s.inventory_id === item.id)) {
       setSelectedSupplies((prev) => [
         ...prev,
-        { inventory_id: item.id, quantity: 1, unit_cost: item.unit_cost || 0, source: 'purchase', exclude_cost: false },
+        {
+          inventory_id: item.id,
+          quantity: 1,
+          unit_cost: item.unit_cost || 0,
+          source: "purchase",
+          exclude_cost: false,
+        },
       ]);
     }
     setShowSupplyPicker(false);
@@ -572,7 +585,7 @@ export default function EventFormScreen({ navigation, route }: Props) {
           inventory_id: suggestion.id,
           quantity: suggestion.suggested_quantity,
           unit_cost: suggestion.unit_cost,
-          source: 'purchase',
+          source: "purchase",
           exclude_cost: false,
         },
       ]);
@@ -590,7 +603,10 @@ export default function EventFormScreen({ navigation, route }: Props) {
   }, [supplyInventory, selectedSupplies]);
 
   const supplyCost = useMemo(() => {
-    return selectedSupplies.reduce((sum, s) => sum + (s.exclude_cost ? 0 : s.quantity * s.unit_cost), 0);
+    return selectedSupplies.reduce(
+      (sum, s) => sum + (s.exclude_cost ? 0 : s.quantity * s.unit_cost),
+      0,
+    );
   }, [selectedSupplies]);
 
   const filteredEquipment = useMemo(() => {
@@ -759,7 +775,10 @@ export default function EventFormScreen({ navigation, route }: Props) {
       </View>
 
       <ScrollView
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[
+          styles.content,
+          isTablet && styles.contentTablet,
+        ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
@@ -826,7 +845,13 @@ export default function EventFormScreen({ navigation, route }: Props) {
                   style={styles.selector}
                   onPress={() => setShowStartTimePicker(true)}
                 >
-                  <Text style={formData.start_time ? styles.selectorValue : styles.selectorPlaceholder}>
+                  <Text
+                    style={
+                      formData.start_time
+                        ? styles.selectorValue
+                        : styles.selectorPlaceholder
+                    }
+                  >
                     {formData.start_time || "Seleccionar..."}
                   </Text>
                 </TouchableOpacity>
@@ -835,7 +860,9 @@ export default function EventFormScreen({ navigation, route }: Props) {
                     value={(() => {
                       const d = new Date();
                       if (formData.start_time) {
-                        const [h, m] = formData.start_time.split(":").map(Number);
+                        const [h, m] = formData.start_time
+                          .split(":")
+                          .map(Number);
                         d.setHours(h, m, 0, 0);
                       }
                       return d;
@@ -860,7 +887,13 @@ export default function EventFormScreen({ navigation, route }: Props) {
                   style={styles.selector}
                   onPress={() => setShowEndTimePicker(true)}
                 >
-                  <Text style={formData.end_time ? styles.selectorValue : styles.selectorPlaceholder}>
+                  <Text
+                    style={
+                      formData.end_time
+                        ? styles.selectorValue
+                        : styles.selectorPlaceholder
+                    }
+                  >
                     {formData.end_time || "Seleccionar..."}
                   </Text>
                 </TouchableOpacity>
@@ -1139,7 +1172,14 @@ export default function EventFormScreen({ navigation, route }: Props) {
         {step === 4 && (
           <View style={styles.section}>
             {/* Supplies Section */}
-            <View style={{ flexDirection: "row", alignItems: "center", gap: spacing.xs, marginBottom: spacing.sm }}>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: spacing.xs,
+                marginBottom: spacing.sm,
+              }}
+            >
               <Fuel color={palette.statusQuoted} size={18} />
               <Text style={styles.sectionTitle}>Insumos por Evento</Text>
             </View>
@@ -1150,7 +1190,8 @@ export default function EventFormScreen({ navigation, route }: Props) {
                 marginBottom: spacing.md,
               }}
             >
-              Insumos de costo fijo por evento (ej. aceite, gas). Se suma al costo total.
+              Insumos de costo fijo por evento (ej. aceite, gas). Se suma al
+              costo total.
             </Text>
 
             {/* Supply suggestions */}
@@ -1221,7 +1262,8 @@ export default function EventFormScreen({ navigation, route }: Props) {
                             marginLeft: 4,
                           }}
                         >
-                          {s.ingredient_name} ×{s.suggested_quantity} (${s.unit_cost}/{s.unit})
+                          {s.ingredient_name} ×{s.suggested_quantity} ($
+                          {s.unit_cost}/{s.unit})
                         </Text>
                       </TouchableOpacity>
                     ))}
@@ -1235,10 +1277,7 @@ export default function EventFormScreen({ navigation, route }: Props) {
                 (s) => s.id === sup.inventory_id,
               );
               return (
-                <View
-                  key={i}
-                  style={styles.supplyCard}
-                >
+                <View key={i} style={styles.supplyCard}>
                   {/* Header: name + delete */}
                   <View style={styles.supplyCardHeader}>
                     <View style={{ flex: 1 }}>
@@ -1248,12 +1287,16 @@ export default function EventFormScreen({ navigation, route }: Props) {
                       <Text
                         style={{
                           ...typography.caption,
-                          color: sup.exclude_cost ? palette.textMuted : palette.statusQuoted,
+                          color: sup.exclude_cost
+                            ? palette.textMuted
+                            : palette.statusQuoted,
                         }}
                       >
-                        {sup.exclude_cost ? "Sin costo" : `$${(sup.quantity * sup.unit_cost).toFixed(2)}`}
+                        {sup.exclude_cost
+                          ? "Sin costo"
+                          : `$${(sup.quantity * sup.unit_cost).toFixed(2)}`}
                         {" — "}
-                        {sup.source === 'stock' ? 'Del stock' : 'Compra nueva'}
+                        {sup.source === "stock" ? "Del stock" : "Compra nueva"}
                       </Text>
                     </View>
                     <TouchableOpacity
@@ -1267,7 +1310,12 @@ export default function EventFormScreen({ navigation, route }: Props) {
                   {/* Controls row: quantity + source */}
                   <View style={styles.supplyControlsRow}>
                     <View style={styles.supplyQuantityGroup}>
-                      <Text style={{ ...typography.caption, color: palette.textSecondary }}>
+                      <Text
+                        style={{
+                          ...typography.caption,
+                          color: palette.textSecondary,
+                        }}
+                      >
                         Cant:
                       </Text>
                       <TextInput
@@ -1275,7 +1323,10 @@ export default function EventFormScreen({ navigation, route }: Props) {
                         value={sup.quantity.toString()}
                         onChangeText={(v) => {
                           const next = [...selectedSupplies];
-                          next[i] = { ...next[i], quantity: Math.max(0.001, parseFloat(v) || 0.001) };
+                          next[i] = {
+                            ...next[i],
+                            quantity: Math.max(0.001, parseFloat(v) || 0.001),
+                          };
                           setSelectedSupplies(next);
                         }}
                         keyboardType="decimal-pad"
@@ -1284,23 +1335,44 @@ export default function EventFormScreen({ navigation, route }: Props) {
                     <TouchableOpacity
                       style={[
                         styles.supplySourceBtn,
-                        { backgroundColor: sup.source === 'stock' ? palette.successBg : palette.surface },
+                        {
+                          backgroundColor:
+                            sup.source === "stock"
+                              ? palette.successBg
+                              : palette.surface,
+                        },
                       ]}
                       onPress={() => {
                         const next = [...selectedSupplies];
-                        next[i] = { ...next[i], source: sup.source === 'stock' ? 'purchase' : 'stock' };
+                        next[i] = {
+                          ...next[i],
+                          source: sup.source === "stock" ? "purchase" : "stock",
+                        };
                         setSelectedSupplies(next);
                       }}
                     >
-                      <Text style={{ ...typography.caption, color: sup.source === 'stock' ? palette.success : palette.textSecondary }}>
-                        {sup.source === 'stock' ? 'Del stock' : 'Compra nueva'}
+                      <Text
+                        style={{
+                          ...typography.caption,
+                          color:
+                            sup.source === "stock"
+                              ? palette.success
+                              : palette.textSecondary,
+                        }}
+                      >
+                        {sup.source === "stock" ? "Del stock" : "Compra nueva"}
                       </Text>
                     </TouchableOpacity>
                   </View>
 
                   {/* Exclude cost toggle - separate row */}
                   <View style={styles.supplyToggleRow}>
-                    <Text style={{ ...typography.caption, color: palette.textSecondary }}>
+                    <Text
+                      style={{
+                        ...typography.caption,
+                        color: palette.textSecondary,
+                      }}
+                    >
                       Excluir del costo total
                     </Text>
                     <Switch
@@ -1315,9 +1387,7 @@ export default function EventFormScreen({ navigation, route }: Props) {
                         true: palette.primary + "80",
                       }}
                       thumbColor={
-                        sup.exclude_cost
-                          ? palette.primary
-                          : palette.surface
+                        sup.exclude_cost ? palette.primary : palette.surface
                       }
                     />
                   </View>
@@ -1335,15 +1405,27 @@ export default function EventFormScreen({ navigation, route }: Props) {
 
             {selectedSupplies.length > 0 && (
               <View style={[styles.totalRow, { marginTop: spacing.sm }]}>
-                <Text style={[styles.totalLabel, { color: palette.statusQuoted }]}>Costo insumos evento</Text>
-                <Text style={[styles.totalValue, { color: palette.statusQuoted }]}>
+                <Text
+                  style={[styles.totalLabel, { color: palette.statusQuoted }]}
+                >
+                  Costo insumos evento
+                </Text>
+                <Text
+                  style={[styles.totalValue, { color: palette.statusQuoted }]}
+                >
                   {formatCurrency(supplyCost)}
                 </Text>
               </View>
             )}
 
             {/* Divider */}
-            <View style={{ height: 1, backgroundColor: palette.separator, marginVertical: spacing.md }} />
+            <View
+              style={{
+                height: 1,
+                backgroundColor: palette.separator,
+                marginVertical: spacing.md,
+              }}
+            />
 
             <Text style={styles.sectionTitle}>Equipo</Text>
             <Text
@@ -1375,10 +1457,7 @@ export default function EventFormScreen({ navigation, route }: Props) {
                     marginBottom: spacing.xs,
                   }}
                 >
-                  <AlertTriangle
-                    color={palette.warning}
-                    size={16}
-                  />
+                  <AlertTriangle color={palette.warning} size={16} />
                   <Text
                     style={{
                       ...typography.caption,
@@ -1491,10 +1570,7 @@ export default function EventFormScreen({ navigation, route }: Props) {
                 (e) => e.id === eq.inventory_id,
               );
               return (
-                <View
-                  key={i}
-                  style={styles.supplyCard}
-                >
+                <View key={i} style={styles.supplyCard}>
                   <View style={styles.supplyCardHeader}>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.productName}>
@@ -1518,7 +1594,12 @@ export default function EventFormScreen({ navigation, route }: Props) {
                   </View>
                   <View style={styles.supplyControlsRow}>
                     <View style={styles.supplyQuantityGroup}>
-                      <Text style={{ ...typography.caption, color: palette.textSecondary }}>
+                      <Text
+                        style={{
+                          ...typography.caption,
+                          color: palette.textSecondary,
+                        }}
+                      >
                         Cant:
                       </Text>
                       <TextInput
@@ -1714,7 +1795,11 @@ export default function EventFormScreen({ navigation, route }: Props) {
       </ScrollView>
 
       <View
-        style={[styles.footer, { paddingBottom: tabBarHeight + spacing.sm }]}
+        style={[
+          styles.footer,
+          isTablet && styles.footerTablet,
+          { paddingBottom: tabBarHeight + spacing.sm },
+        ]}
       >
         <TouchableOpacity
           style={[styles.navButton, step === 1 && styles.navButtonDisabled]}
@@ -1937,13 +2022,19 @@ export default function EventFormScreen({ navigation, route }: Props) {
               onPress={() => handleAddSupplyItem(item)}
               activeOpacity={0.7}
             >
-              <View style={[styles.sheetProductIcon, { backgroundColor: palette.statusQuotedBg }]}>
+              <View
+                style={[
+                  styles.sheetProductIcon,
+                  { backgroundColor: palette.statusQuotedBg },
+                ]}
+              >
                 <Fuel color={palette.statusQuoted} size={18} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.sheetItemText}>{item.ingredient_name}</Text>
                 <Text style={styles.sheetItemSubtext}>
-                  {item.current_stock} {item.unit} — ${item.unit_cost || 0}/{item.unit}
+                  {item.current_stock} {item.unit} — ${item.unit_cost || 0}/
+                  {item.unit}
                 </Text>
               </View>
             </TouchableOpacity>
@@ -2025,6 +2116,12 @@ const getStyles = (palette: typeof colors.light) =>
     content: {
       paddingHorizontal: spacing.lg,
       paddingBottom: spacing.xxl,
+    },
+    contentTablet: {
+      maxWidth: 600,
+      width: "100%",
+      alignSelf: "center",
+      paddingHorizontal: 0,
     },
     section: {
       backgroundColor: palette.card,
@@ -2362,6 +2459,14 @@ const getStyles = (palette: typeof colors.light) =>
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: palette.separator,
       gap: spacing.sm,
+    },
+    footerTablet: {
+      maxWidth: 600,
+      width: "100%",
+      alignSelf: "center",
+      paddingHorizontal: 0,
+      backgroundColor: "transparent",
+      borderTopWidth: 0,
     },
     navButton: {
       width: 44,
