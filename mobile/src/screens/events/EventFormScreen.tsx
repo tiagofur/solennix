@@ -260,7 +260,7 @@ export default function EventFormScreen({ navigation, route }: Props) {
           num_people: event.num_people,
           status: event.status,
           discount: event.discount,
-          discount_type: "percent",
+          discount_type: event.discount_type || "percent",
           tax_rate: event.tax_rate,
           deposit_percent:
             event.deposit_percent ?? user?.default_deposit_percent ?? 50,
@@ -409,7 +409,9 @@ export default function EventFormScreen({ navigation, route }: Props) {
         ? subtotal * (formData.discount / 100)
         : formData.discount;
     const afterDiscount = subtotal - discountAmount;
-    const taxAmount = afterDiscount * (formData.tax_rate / 100);
+    const taxAmount = formData.requires_invoice
+      ? afterDiscount * (formData.tax_rate / 100)
+      : 0;
     const total = afterDiscount + taxAmount;
     const deposit = total * (formData.deposit_percent / 100);
 
@@ -619,6 +621,21 @@ export default function EventFormScreen({ navigation, route }: Props) {
     `$${n.toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
 
   const handleNext = () => {
+    if (step === 1) {
+      if (!formData.client_id) {
+        addToast("Selecciona un cliente", "error");
+        return;
+      }
+      if (!formData.service_type || formData.service_type.trim().length < 2) {
+        addToast("Agrega el tipo de servicio", "error");
+        return;
+      }
+      if (formData.num_people < 1) {
+        addToast("Mínimo 1 persona", "error");
+        return;
+      }
+    }
+
     if (step < 5) {
       setStep(step + 1);
     } else {
@@ -982,6 +999,14 @@ export default function EventFormScreen({ navigation, route }: Props) {
               value={formData.location}
               onChangeText={(v) => setFormData({ ...formData, location: v })}
               placeholder="Dirección del evento"
+            />
+
+            <Text style={styles.inputLabel}>Ciudad</Text>
+            <TextInput
+              style={styles.input}
+              value={formData.city}
+              onChangeText={(v) => setFormData({ ...formData, city: v })}
+              placeholder="Ciudad del evento (para contrato)"
             />
           </View>
         )}
@@ -1637,7 +1662,59 @@ export default function EventFormScreen({ navigation, route }: Props) {
 
             <View style={styles.row}>
               <View style={styles.halfInput}>
-                <Text style={styles.inputLabel}>Descuento (%)</Text>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: spacing.xs,
+                    marginTop: spacing.sm,
+                  }}
+                >
+                  <Text style={[styles.inputLabel, { marginTop: 0 }]}>
+                    Descuento
+                  </Text>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      backgroundColor: palette.surface,
+                      borderRadius: 8,
+                      borderWidth: 1,
+                      borderColor: palette.border,
+                      overflow: "hidden",
+                    }}
+                  >
+                    {(["percent", "fixed"] as const).map((type) => (
+                      <TouchableOpacity
+                        key={type}
+                        onPress={() =>
+                          setFormData({ ...formData, discount_type: type })
+                        }
+                        style={{
+                          paddingHorizontal: 10,
+                          paddingVertical: 4,
+                          backgroundColor:
+                            formData.discount_type === type
+                              ? palette.primary
+                              : "transparent",
+                        }}
+                      >
+                        <Text
+                          style={{
+                            ...typography.caption,
+                            color:
+                              formData.discount_type === type
+                                ? palette.textInverse
+                                : palette.textMuted,
+                            fontWeight: "bold",
+                          }}
+                        >
+                          {type === "percent" ? "%" : "$"}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
                 <TextInput
                   style={styles.input}
                   value={formData.discount.toString()}
@@ -1648,14 +1725,45 @@ export default function EventFormScreen({ navigation, route }: Props) {
                 />
               </View>
               <View style={styles.halfInput}>
-                <Text style={styles.inputLabel}>IVA (%)</Text>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: spacing.xs,
+                    marginTop: spacing.sm,
+                  }}
+                >
+                  <Text style={[styles.inputLabel, { marginTop: 0 }]}>
+                    IVA (%)
+                  </Text>
+                  <Switch
+                    value={formData.requires_invoice}
+                    onValueChange={(v) =>
+                      setFormData({ ...formData, requires_invoice: v })
+                    }
+                    trackColor={{
+                      false: palette.separator,
+                      true: palette.primary + "80",
+                    }}
+                    thumbColor={
+                      formData.requires_invoice
+                        ? palette.primary
+                        : palette.surface
+                    }
+                  />
+                </View>
                 <TextInput
-                  style={styles.input}
+                  style={[
+                    styles.input,
+                    !formData.requires_invoice && { opacity: 0.5 },
+                  ]}
                   value={formData.tax_rate.toString()}
                   onChangeText={(v) =>
                     setFormData({ ...formData, tax_rate: parseFloat(v) || 0 })
                   }
                   keyboardType="decimal-pad"
+                  editable={formData.requires_invoice}
                 />
               </View>
             </View>
@@ -1672,6 +1780,37 @@ export default function EventFormScreen({ navigation, route }: Props) {
               }
               keyboardType="number-pad"
             />
+
+            <View style={styles.row}>
+              <View style={styles.halfInput}>
+                <Text style={styles.inputLabel}>Días Cancelación</Text>
+                <TextInput
+                  style={styles.input}
+                  value={formData.cancellation_days.toString()}
+                  onChangeText={(v) =>
+                    setFormData({
+                      ...formData,
+                      cancellation_days: parseInt(v) || 0,
+                    })
+                  }
+                  keyboardType="number-pad"
+                />
+              </View>
+              <View style={styles.halfInput}>
+                <Text style={styles.inputLabel}>Reembolso (%)</Text>
+                <TextInput
+                  style={styles.input}
+                  value={formData.refund_percent.toString()}
+                  onChangeText={(v) =>
+                    setFormData({
+                      ...formData,
+                      refund_percent: parseFloat(v) || 0,
+                    })
+                  }
+                  keyboardType="decimal-pad"
+                />
+              </View>
+            </View>
 
             <Text style={styles.inputLabel}>Notas</Text>
             <TextInput
@@ -2281,16 +2420,17 @@ const getStyles = (palette: typeof colors.light) =>
       lineHeight: 20,
     },
     quantityInput: {
-      width: 48,
-      height: 32,
+      width: 60,
+      height: 40,
       borderRadius: spacing.borderRadius.sm,
       backgroundColor: palette.surface,
       borderWidth: 1,
       borderColor: palette.border,
       textAlign: "center" as const,
       ...typography.body,
-      fontWeight: "600" as const,
+      fontWeight: "700" as const,
       color: palette.text,
+      paddingVertical: 0,
     },
     totalRow: {
       flexDirection: "row",
@@ -2376,16 +2516,17 @@ const getStyles = (palette: typeof colors.light) =>
       gap: spacing.xs,
     },
     supplyQuantityInput: {
-      width: 64,
-      paddingVertical: spacing.xs,
-      paddingHorizontal: spacing.sm,
+      width: 70,
+      height: 36,
+      paddingVertical: 0,
+      paddingHorizontal: spacing.xs,
       textAlign: "center" as const,
       backgroundColor: palette.background,
       borderRadius: spacing.borderRadius.sm,
       borderWidth: 1,
       borderColor: palette.border,
       ...typography.body,
-      fontWeight: "600" as const,
+      fontWeight: "700" as const,
       color: palette.text,
     },
     supplySourceBtn: {

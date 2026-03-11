@@ -9,12 +9,14 @@ interface LoadingSpinnerProps {
   message?: string;
   size?: "small" | "large";
   fullScreen?: boolean;
+  testID?: string;
 }
 
 export default function LoadingSpinner({
   message,
   size = "large",
   fullScreen = true,
+  testID,
 }: LoadingSpinnerProps) {
   const { isDark } = useTheme();
   const palette = isDark ? colors.dark : colors.light;
@@ -22,7 +24,7 @@ export default function LoadingSpinner({
 
   const content = (
     <>
-      <ActivityIndicator size={size} color={palette.primary} />
+      <ActivityIndicator size={size} color={palette.primary} testID={testID} />
       {message && <Text style={styles.message}>{message}</Text>}
     </>
   );

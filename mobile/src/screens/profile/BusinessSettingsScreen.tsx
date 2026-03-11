@@ -31,7 +31,7 @@ import { shadows } from "../../theme/shadows";
 const COLOR_SWATCHES = [
   "#C4A265",
   "#007AFF",
-  "#34C759",
+  "#2D6A4F",
   "#FF3B30",
   "#FF9500",
   "#AF52DE",

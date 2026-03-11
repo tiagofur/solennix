@@ -14,7 +14,7 @@ interface ThemeContextValue {
     loaded: boolean;
 }
 
-const ThemeContext = createContext<ThemeContextValue | null>(null);
+export const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const systemScheme = useColorScheme();

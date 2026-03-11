@@ -97,7 +97,9 @@ export function SkeletonList({ count = 5, showAvatar = false }: { count?: number
   return (
     <View style={skeletonStyles.list}>
       {Array.from({ length: count }).map((_, i) => (
-        <SkeletonCard key={i} showAvatar={showAvatar} />
+        <View key={i} testID="skeleton-card">
+          <SkeletonCard showAvatar={showAvatar} />
+        </View>
       ))}
     </View>
   );

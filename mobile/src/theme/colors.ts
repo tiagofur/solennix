@@ -26,13 +26,13 @@ export const colors = {
     separator: "rgba(60, 60, 67, 0.29)", // iOS hairline separator
 
     // Semantic (iOS system colors)
-    success: "#34c759",
+    success: "#2D6A4F", // Muted Sage/Forest Green
     warning: "#ff9500",
     error: "#ff3b30",
     info: "#007aff",
 
     // Semantic tinted backgrounds
-    successBg: "#eefbf0",
+    successBg: "#F0F7F4", // Very soft sage tint
     warningBg: "#fff8f0",
     errorBg: "#fff0f0",
     infoBg: "#eef4ff",
@@ -40,13 +40,13 @@ export const colors = {
     // Event status
     statusQuoted: "#d97706", // Amber 600 (more solemn/gold than bright orange)
     statusConfirmed: "#007aff",
-    statusCompleted: "#34c759",
+    statusCompleted: "#2D6A4F",
     statusCancelled: "#ff3b30",
 
     // Event status backgrounds
     statusQuotedBg: "#fff8f0",
     statusConfirmedBg: "#eef4ff",
-    statusCompletedBg: "#eefbf0",
+    statusCompletedBg: "#F0F7F4",
     statusCancelledBg: "#fff0f0",
 
     // KPI icon colors (soft, muted)
@@ -65,16 +65,16 @@ export const colors = {
     },
     tabBarBorder: "#E6E3DD",
 
-    // Avatar palette (muted, lower saturation)
+    // Avatar palette (muted, professional tones)
     avatarColors: [
-      "#5B8DEF",
-      "#E57373",
-      "#81C784",
-      "#FFB74D",
-      "#BA68C8",
-      "#F06292",
-      "#4DB6AC",
-      "#FF8A65",
+      "#5B8DEF", // Blue
+      "#E57373", // Soft Red
+      "#7DB38A", // Muted Sage
+      "#D4B87A", // Soft Gold
+      "#BA68C8", // Purple
+      "#F06292", // Pink
+      "#4DB6AC", // Teal
+      "#FF8A65", // Terracotta
     ],
   },
   dark: {
@@ -104,13 +104,13 @@ export const colors = {
     separator: "rgba(84, 84, 88, 0.65)",
 
     // Semantic
-    success: "#30d158",
+    success: "#52B788", // More visible soft green for dark mode
     warning: "#ff9f0a",
     error: "#ff453a",
     info: "#0a84ff",
 
     // Semantic tinted backgrounds
-    successBg: "#0d2818",
+    successBg: "#0B1D14",
     warningBg: "#2a1a00",
     errorBg: "#2a0a0a",
     infoBg: "#001a33",
@@ -118,13 +118,13 @@ export const colors = {
     // Event status
     statusQuoted: "#fbbf24", // Amber 400 for dark mode
     statusConfirmed: "#0a84ff",
-    statusCompleted: "#30d158",
+    statusCompleted: "#52B788",
     statusCancelled: "#ff453a",
 
     // Event status backgrounds
     statusQuotedBg: "#2a1a00",
     statusConfirmedBg: "#001a33",
-    statusCompletedBg: "#0d2818",
+    statusCompletedBg: "#0B1D14",
     statusCancelledBg: "#2a0a0a",
 
     // KPI icon colors
@@ -147,8 +147,8 @@ export const colors = {
     avatarColors: [
       "#5B8DEF",
       "#E57373",
-      "#81C784",
-      "#FFB74D",
+      "#7DB38A",
+      "#D4B87A",
       "#BA68C8",
       "#F06292",
       "#4DB6AC",

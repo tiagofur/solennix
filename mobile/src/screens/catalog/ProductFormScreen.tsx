@@ -946,7 +946,7 @@ const getStyles = (palette: typeof colors.light) =>
     },
     input: {
       flex: 1,
-      height: 36,
+      height: 40,
       borderWidth: 1,
       borderColor: palette.border,
       borderRadius: spacing.borderRadius.sm,
@@ -954,6 +954,7 @@ const getStyles = (palette: typeof colors.light) =>
       ...typography.body,
       color: palette.text,
       backgroundColor: palette.surface,
+      paddingVertical: 0,
     },
     unitText: {
       ...typography.caption,

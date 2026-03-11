@@ -42,7 +42,7 @@ export function Avatar({ name, photoUrl, size = 44 }: AvatarProps) {
     const fontSize = size * 0.38;
 
     return (
-        <View style={[styles.initialsContainer, { width: size, height: size, borderRadius, backgroundColor: bgColor }]}>
+        <View testID="avatar-container" style={[styles.initialsContainer, { width: size, height: size, borderRadius, backgroundColor: bgColor }]}>
             <Text style={[styles.initialsText, { fontSize }]}>{getInitials(name)}</Text>
         </View>
     );
