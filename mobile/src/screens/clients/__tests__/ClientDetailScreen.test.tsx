@@ -15,6 +15,25 @@ const mockNavigation = {
   setOptions: jest.fn(),
 };
 
+const mockOpenURL = jest.fn();
+
+jest.mock('react-native', () => {
+  const RN = jest.requireActual('react-native');
+  return new Proxy(RN, {
+    get(target, prop) {
+      if (prop === 'Linking') {
+        return {
+          openURL: mockOpenURL,
+          canOpenURL: jest.fn(() => Promise.resolve(true)),
+          addEventListener: jest.fn(),
+          removeEventListener: jest.fn(),
+        };
+      }
+      return target[prop];
+    }
+  });
+});
+
 jest.mock('../../../services/clientService', () => ({
   clientService: {
     getById: jest.fn(),
@@ -195,7 +214,7 @@ describe('ClientDetailScreen', () => {
     (clientService.getById as jest.Mock).mockResolvedValue(mockClient);
     (eventService.getByClientId as jest.Mock).mockResolvedValue(mockEvents);
 
-    const { getByText, queryByTestId } = render(
+    const { getByTestId, queryByTestId } = render(
       <ClientDetailScreen 
         navigation={mockNavigation as any} 
         route={{ params: { id: mockId } } as any} 
@@ -204,9 +223,9 @@ describe('ClientDetailScreen', () => {
 
     await waitFor(() => expect(queryByTestId('loading-spinner')).toBeNull());
 
-    const phoneRow = getByText('1234567890');
-    fireEvent.press(phoneRow);
+    const phoneBtn = getByTestId('btn-phone');
+    fireEvent.press(phoneBtn);
 
-    expect(Linking.openURL).toHaveBeenCalledWith('tel:1234567890');
+    expect(mockOpenURL).toHaveBeenCalledWith('tel:1234567890');
   });
 });

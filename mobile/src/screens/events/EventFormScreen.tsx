@@ -843,6 +843,8 @@ export default function EventFormScreen({ navigation, route }: Props) {
                 value={new Date(formData.event_date)}
                 mode="date"
                 themeVariant={isDark ? "dark" : "light"}
+                textColor={palette.text}
+                accentColor={palette.primary}
                 onChange={(event, date) => {
                   setShowDatePicker(false);
                   if (date) {
@@ -887,6 +889,8 @@ export default function EventFormScreen({ navigation, route }: Props) {
                     mode="time"
                     is24Hour
                     themeVariant={isDark ? "dark" : "light"}
+                    textColor={palette.text}
+                    accentColor={palette.primary}
                     onChange={(event, date) => {
                       setShowStartTimePicker(false);
                       if (date) {
@@ -927,6 +931,8 @@ export default function EventFormScreen({ navigation, route }: Props) {
                     mode="time"
                     is24Hour
                     themeVariant={isDark ? "dark" : "light"}
+                    textColor={palette.text}
+                    accentColor={palette.primary}
                     onChange={(event, date) => {
                       setShowEndTimePicker(false);
                       if (date) {

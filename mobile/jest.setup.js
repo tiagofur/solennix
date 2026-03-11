@@ -3,36 +3,8 @@ global.__ExpoImportMetaRegistry = {
   get: () => ({}),
 };
 
-// Robust Reanimated Mock
-jest.mock('react-native-reanimated', () => {
-  const { View, Text, Image, ScrollView } = require('react-native');
-  
-  const REA = {
-    default: {
-      call: () => {},
-      createAnimatedComponent: (c) => c,
-    },
-    useSharedValue: (v) => ({ value: v }),
-    useAnimatedStyle: (cb) => cb() || {},
-    withRepeat: (v) => v,
-    withTiming: (v) => v,
-    withSpring: (v) => v,
-    interpolate: () => 0,
-    Extrapolate: { CLAMP: 'clamp' },
-    createAnimatedComponent: (c) => c,
-    View: View,
-    Text: Text,
-    Image: Image,
-    ScrollView: ScrollView,
-    FadeIn: { delay: () => ({ duration: () => ({ springify: () => {} }) }) },
-    FadeOut: { delay: () => ({ duration: () => ({ springify: () => {} }) }) },
-    FadeInDown: { delay: () => ({ duration: () => ({ springify: () => {} }) }) },
-    Layout: { springify: () => {} },
-    runOnJS: (fn) => fn,
-  };
-  
-  return REA;
-});
+// Simplified Reanimated Mock
+jest.mock('react-native-reanimated', () => require('react-native-reanimated/mock'));
 
 // Gesture Handler Mock
 jest.mock('react-native-gesture-handler', () => ({
@@ -61,3 +33,4 @@ jest.mock('react-native-safe-area-context', () => ({
   SafeAreaView: ({ children }) => children,
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
+

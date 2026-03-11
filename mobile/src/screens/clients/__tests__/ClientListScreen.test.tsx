@@ -46,14 +46,13 @@ jest.mock('../../../hooks/useTheme', () => ({
 }));
 
 jest.mock('react-native-reanimated', () => {
-  const { View } = require('react-native');
   return {
     default: { call: () => {} },
     useSharedValue: (v: any) => ({ value: v }),
     useAnimatedStyle: (cb: any) => cb(),
     createAnimatedComponent: (c: any) => c,
     FadeInDown: { delay: () => ({ springify: () => ({ duration: () => {} }) }) },
-    View: View,
+    View: 'View',
   };
 });
 
@@ -79,12 +78,11 @@ jest.mock('@react-navigation/native', () => {
     useFocusEffect: (cb: any) => {
       const React = require('react');
       React.useEffect(() => {
-        console.log('useFocusEffect triggered');
         const cleanup = cb();
         return () => {
           if (typeof cleanup === 'function') cleanup();
         };
-      }, []);
+      }, [cb]); // Added cb to deps to ensure it updates properly
     },
   };
 });
@@ -144,38 +142,34 @@ describe('ClientListScreen', () => {
     },
   ];
 
-  it('renders loading skeleton', () => {
-    (clientService.getAll as jest.Mock).mockReturnValue(new Promise(() => {}));
+  it('renders loading skeleton', async () => {
+    let resolvePromise: any;
+    (clientService.getAll as jest.Mock).mockReturnValue(new Promise(resolve => { resolvePromise = resolve; }));
     const { getByTestId } = render(
       <ClientListScreen navigation={mockNavigation as any} route={{} as any} />
     );
     expect(getByTestId('mock-skeleton')).toBeTruthy();
+    resolvePromise([]);
   });
 
   it('renders list of clients', async () => {
     (clientService.getAll as jest.Mock).mockResolvedValue(mockClients);
     
-    const { getByText, queryByTestId, debug } = render(
+    const { findByText } = render(
       <ClientListScreen navigation={mockNavigation as any} route={{} as any} />
     );
 
-    await waitFor(() => {
-      expect(queryByTestId('mock-skeleton')).toBeNull();
-    }, { timeout: 3000 });
-
-    expect(getByText('Alice Johnson')).toBeTruthy();
+    expect(await findByText('Alice Johnson')).toBeTruthy();
   });
 
   it('searches for clients securely', async () => {
     (clientService.getAll as jest.Mock).mockResolvedValue(mockClients);
     
-    const { getByPlaceholderText, getByText, queryByText, queryByTestId } = render(
+    const { getByPlaceholderText, findByText, queryByText } = render(
       <ClientListScreen navigation={mockNavigation as any} route={{} as any} />
     );
 
-    await waitFor(() => {
-      expect(queryByTestId('mock-skeleton')).toBeNull();
-    });
+    expect(await findByText('Alice Johnson')).toBeTruthy();
 
     const searchInput = getByPlaceholderText('Buscar clientes...');
     
@@ -183,7 +177,7 @@ describe('ClientListScreen', () => {
       fireEvent.changeText(searchInput, 'Alice');
     });
 
-    expect(getByText('Alice Johnson')).toBeTruthy();
+    expect(queryByText('Alice Johnson')).toBeTruthy();
     expect(queryByText('Bob Smith')).toBeNull();
   });
 
@@ -191,13 +185,11 @@ describe('ClientListScreen', () => {
     (clientService.getAll as jest.Mock).mockResolvedValue(mockClients);
     (clientService.delete as jest.Mock).mockResolvedValue({});
     
-    const { getByText, queryByText, queryByTestId, getAllByTestId, getByTestId } = render(
+    const { findByText, queryByText, getAllByTestId, getByTestId } = render(
       <ClientListScreen navigation={mockNavigation as any} route={{} as any} />
     );
 
-    await waitFor(() => {
-      expect(queryByTestId('mock-skeleton')).toBeNull();
-    });
+    expect(await findByText('Alice Johnson')).toBeTruthy();
 
     const deleteBtns = getAllByTestId('swipe-btn-delete');
     

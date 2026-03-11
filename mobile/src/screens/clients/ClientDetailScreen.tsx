@@ -198,7 +198,7 @@ export default function ClientDetailScreen({ navigation, route }: Props) {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Información de Contacto</Text>
 
-          <TouchableOpacity style={styles.infoRow} onPress={handleCall}>
+          <TouchableOpacity style={styles.infoRow} onPress={handleCall} testID="btn-phone">
             <View style={[styles.infoIcon, { backgroundColor: palette.successBg }]}>
               <Phone color={palette.success} size={16} />
             </View>
@@ -209,7 +209,7 @@ export default function ClientDetailScreen({ navigation, route }: Props) {
           </TouchableOpacity>
 
           {client.email && (
-            <TouchableOpacity style={styles.infoRow} onPress={handleEmail}>
+            <TouchableOpacity style={styles.infoRow} onPress={handleEmail} testID="btn-email">
               <View style={[styles.infoIcon, { backgroundColor: palette.infoBg }]}>
                 <Mail color={palette.info} size={16} />
               </View>
