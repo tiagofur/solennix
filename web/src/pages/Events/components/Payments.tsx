@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { paymentService } from "../../../services/paymentService";
 import { Payment } from "../../../types/entities";
-import { Plus, Trash2, DollarSign, CheckCircle, AlertCircle, Calendar, CreditCard, Banknote } from "lucide-react";
+import { Trash2, DollarSign, CheckCircle, AlertCircle, Calendar, CreditCard, Banknote } from "lucide-react";
 import { logError } from "../../../lib/errorHandler";
 import { ConfirmDialog } from "../../../components/ConfirmDialog";
 import { Modal } from "../../../components/Modal";
@@ -173,8 +173,11 @@ export const Payments: React.FC<PaymentsProps> = ({
         </div>
       )}
 
-      <div className="bg-card shadow-sm rounded-3xl p-6 sm:p-8 border border-border">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+      <div className="bg-card shadow-sm rounded-3xl p-6 sm:p-8 border border-border overflow-hidden relative">
+        <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none" aria-hidden="true">
+          <DollarSign className="h-32 w-32 text-primary" />
+        </div>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4 relative z-10">
           <div>
             <h2 className="text-2xl font-black text-text uppercase tracking-tight flex items-center gap-2">
               <DollarSign className="h-6 w-6 text-primary" aria-hidden="true" />
@@ -188,20 +191,20 @@ export const Payments: React.FC<PaymentsProps> = ({
               <button
                 type="button"
                 onClick={openAddDeposit}
-                className="inline-flex items-center px-4 py-2.5 bg-warning/10 text-warning border border-warning/30 text-sm font-black rounded-2xl hover:bg-warning/20 transition-all active:scale-95 uppercase tracking-tighter"
+                className="inline-flex items-center px-4 py-2 bg-warning text-white text-sm font-bold rounded-xl hover:bg-warning/90 shadow-md shadow-warning/20 transition-all active:scale-95"
               >
-                <Plus className="h-4 w-4 mr-1.5" />
-                Anticipo
+                <DollarSign className="h-4 w-4 mr-1.5" />
+                $ Anticipo
               </button>
             )}
             {!isAdding && (
               <button
                 type="button"
                 onClick={openAddPayment}
-                className="inline-flex items-center px-4 py-2.5 premium-gradient text-white text-sm font-black rounded-2xl hover:opacity-90 shadow-lg shadow-primary/20 transition-all active:scale-95 uppercase tracking-tighter"
+                className="inline-flex items-center px-4 py-2 bg-surface-alt text-text border border-border text-sm font-bold rounded-xl hover:bg-surface-alt/80 transition-all active:scale-95"
               >
-                <Plus className="h-4 w-4 mr-1.5" />
-                Pago
+                <DollarSign className="h-4 w-4 mr-1.5" />
+                $ Pago
               </button>
             )}
           </div>

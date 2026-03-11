@@ -998,10 +998,10 @@ export const EventSummary: React.FC = () => {
                             setAutoOpenPayment(true);
                             setViewMode("payments");
                           }}
-                          className="flex items-center gap-2 px-4 py-2 bg-warning text-white rounded-xl text-sm font-bold hover:bg-warning/90 transition-colors shadow-lg shadow-warning/20"
+                          className="flex items-center gap-2 px-4 py-2 bg-warning text-white rounded-xl text-sm font-bold hover:bg-warning/90 transition-colors shadow-md shadow-warning/20"
                         >
                           <DollarSign className="h-4 w-4" />
-                          Registrar Anticipo (${(depositAmount - totalPaid).toFixed(2)})
+                          $ Anticipo
                         </button>
                       )}
                       <button
@@ -1011,10 +1011,10 @@ export const EventSummary: React.FC = () => {
                           setAutoOpenPayment(false);
                           setViewMode("payments");
                         }}
-                        className="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-xl text-sm font-bold hover:bg-primary/20 transition-colors"
+                        className="flex items-center gap-2 px-4 py-2 bg-surface-alt text-text border border-border rounded-xl text-sm font-bold hover:bg-surface-alt/80 transition-colors"
                       >
                         <DollarSign className="h-4 w-4" />
-                        Registrar Pago
+                        $ Pago
                       </button>
                     </div>
                   )}
