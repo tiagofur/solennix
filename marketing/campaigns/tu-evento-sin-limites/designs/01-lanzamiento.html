@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Post Lanzamiento — Tu Evento, Sin Límites</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Montserrat:wght@300;400;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: #333;
+    font-family: 'Montserrat', sans-serif;
+  }
+
+  .post {
+    width: 1080px;
+    height: 1080px;
+    background: #1B2A4A;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Geometric background lines */
+  .post::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background:
+      linear-gradient(135deg, transparent 40%, rgba(201,169,110,0.06) 40%, rgba(201,169,110,0.06) 40.5%, transparent 40.5%),
+      linear-gradient(135deg, transparent 60%, rgba(201,169,110,0.06) 60%, rgba(201,169,110,0.06) 60.5%, transparent 60.5%),
+      linear-gradient(45deg, transparent 45%, rgba(201,169,110,0.04) 45%, rgba(201,169,110,0.04) 45.5%, transparent 45.5%),
+      linear-gradient(45deg, transparent 55%, rgba(201,169,110,0.04) 55%, rgba(201,169,110,0.04) 55.5%, transparent 55.5%);
+    pointer-events: none;
+  }
+
+  /* Corner sparkles */
+  .sparkle {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: radial-gradient(circle, rgba(201,169,110,0.6) 0%, transparent 70%);
+  }
+  .sparkle.tl { top: 40px; left: 40px; width: 30px; height: 30px; }
+  .sparkle.tr { top: 40px; right: 40px; width: 25px; height: 25px; }
+  .sparkle.bl { bottom: 40px; left: 40px; width: 25px; height: 25px; }
+  .sparkle.br { bottom: 40px; right: 40px; width: 30px; height: 30px; }
+  .sparkle.m1 { top: 120px; right: 100px; width: 15px; height: 15px; }
+  .sparkle.m2 { bottom: 150px; left: 80px; width: 18px; height: 18px; }
+
+  /* Decorative border */
+  .border-frame {
+    position: absolute;
+    top: 20px; left: 20px; right: 20px; bottom: 20px;
+    border: 1px solid rgba(201,169,110,0.15);
+    pointer-events: none;
+  }
+
+  .content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 60px;
+    width: 100%;
+  }
+
+  .logo {
+    font-family: 'Cinzel', serif;
+    font-weight: 900;
+    font-size: 42px;
+    color: #C9A96E;
+    letter-spacing: 8px;
+    margin-bottom: 12px;
+  }
+
+  .logo-sub {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 13px;
+    color: rgba(201,169,110,0.7);
+    letter-spacing: 12px;
+    text-transform: uppercase;
+    margin-bottom: 60px;
+  }
+
+  .title {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: 64px;
+    color: #C9A96E;
+    line-height: 1.15;
+    margin-bottom: 24px;
+    letter-spacing: 3px;
+  }
+
+  .subtitle {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 300;
+    font-size: 28px;
+    color: #FAF6F0;
+    margin-bottom: 50px;
+    letter-spacing: 1px;
+  }
+
+  .divider {
+    width: 200px;
+    height: 1px;
+    background: linear-gradient(to right, transparent, #C9A96E, transparent);
+    margin-bottom: 50px;
+  }
+
+  .promo-box {
+    background: rgba(201,169,110,0.1);
+    border: 1px solid rgba(201,169,110,0.3);
+    padding: 28px 50px;
+    border-radius: 4px;
+    margin-bottom: 30px;
+  }
+
+  .promo-label {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: #C9A96E;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .promo-text {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 22px;
+    color: #FAF6F0;
+    line-height: 1.5;
+  }
+
+  .promo-text span {
+    color: #C9A96E;
+    font-weight: 700;
+  }
+
+  .url {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 400;
+    font-size: 18px;
+    color: rgba(250,246,240,0.6);
+    letter-spacing: 2px;
+    margin-top: 10px;
+  }
+</style>
+</head>
+<body>
+  <div class="post">
+    <div class="border-frame"></div>
+    <div class="sparkle tl"></div>
+    <div class="sparkle tr"></div>
+    <div class="sparkle bl"></div>
+    <div class="sparkle br"></div>
+    <div class="sparkle m1"></div>
+    <div class="sparkle m2"></div>
+
+    <div class="content">
+      <div class="logo">SOLENNIX</div>
+      <div class="logo-sub">Cada Detalle Importa</div>
+
+      <div class="title">TU EVENTO,<br>SIN LÍMITES</div>
+
+      <div class="subtitle">Organiza como Pro. Empieza gratis.</div>
+
+      <div class="divider"></div>
+
+      <div class="promo-box">
+        <div class="promo-label">🔥 Promo de Lanzamiento</div>
+        <div class="promo-text">
+          <span>20 CUENTAS PRO GRATIS</span><br>
+          Primeros en registrarse ganan
+        </div>
+      </div>
+
+      <div class="url">solennix.com</div>
+    </div>
+  </div>
+</body>
+</html>

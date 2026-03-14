@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Post — ¡Lugares Agotados!</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Montserrat:wght@300;400;600;700;800&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #333; }
+
+  .post {
+    width: 1080px; height: 1080px;
+    background: #1B2A4A;
+    position: relative; overflow: hidden;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+
+  /* Confetti particles */
+  .confetti {
+    position: absolute;
+    width: 12px;
+    border-radius: 2px;
+    opacity: 0.6;
+    background: #C9A96E;
+  }
+  .c1 { height: 30px; top: 30px; left: 15%; transform: rotate(25deg); opacity: 0.5; }
+  .c2 { height: 20px; top: 60px; left: 30%; transform: rotate(-15deg); opacity: 0.4; width: 8px; }
+  .c3 { height: 35px; top: 20px; left: 50%; transform: rotate(45deg); opacity: 0.6; }
+  .c4 { height: 25px; top: 50px; left: 70%; transform: rotate(-30deg); opacity: 0.3; width: 10px; }
+  .c5 { height: 28px; top: 40px; left: 85%; transform: rotate(60deg); opacity: 0.5; }
+  .c6 { height: 22px; top: 80px; left: 22%; transform: rotate(-45deg); opacity: 0.35; width: 9px; }
+  .c7 { height: 18px; top: 70px; left: 60%; transform: rotate(10deg); opacity: 0.45; }
+  .c8 { height: 32px; top: 15px; left: 40%; transform: rotate(-55deg); opacity: 0.4; width: 10px; }
+  .c9 { height: 15px; top: 90px; left: 78%; transform: rotate(35deg); opacity: 0.5; width: 8px; }
+  .c10 { height: 24px; top: 45px; left: 8%; transform: rotate(-20deg); opacity: 0.4; }
+  .c11 { height: 20px; top: 55px; left: 92%; transform: rotate(50deg); opacity: 0.35; width: 9px; }
+  .c12 { height: 26px; top: 100px; left: 45%; transform: rotate(-40deg); opacity: 0.3; }
+
+  /* Radial glow */
+  .post::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(ellipse at 50% 40%, rgba(201,169,110,0.12) 0%, transparent 50%);
+  }
+
+  .border-frame {
+    position: absolute;
+    top: 24px; left: 24px; right: 24px; bottom: 24px;
+    border: 1px solid rgba(201,169,110,0.12);
+  }
+
+  .content {
+    position: relative; z-index: 2;
+    display: flex; flex-direction: column;
+    align-items: center; text-align: center;
+    padding: 60px;
+  }
+
+  .emoji-header {
+    font-size: 80px;
+    margin-bottom: 30px;
+  }
+
+  .title {
+    font-family: 'Cinzel', serif;
+    font-weight: 900;
+    font-size: 52px;
+    color: #C9A96E;
+    line-height: 1.2;
+    margin-bottom: 20px;
+    letter-spacing: 2px;
+    text-shadow: 0 0 40px rgba(201,169,110,0.3);
+  }
+
+  .subtitle {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 400;
+    font-size: 28px;
+    color: #FAF6F0;
+    margin-bottom: 50px;
+    line-height: 1.4;
+  }
+
+  .subtitle span {
+    color: #C9A96E;
+    font-weight: 700;
+  }
+
+  .coupon-box {
+    background: rgba(201,169,110,0.1);
+    border: 2px solid #C9A96E;
+    border-radius: 12px;
+    padding: 30px 60px;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+
+  .coupon-label {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 400;
+    font-size: 16px;
+    color: rgba(250,246,240,0.6);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .coupon-code {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 48px;
+    color: #C9A96E;
+    letter-spacing: 6px;
+    margin-bottom: 10px;
+  }
+
+  .coupon-detail {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 20px;
+    color: #FAF6F0;
+  }
+
+  .coupon-validity {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    color: rgba(250,246,240,0.4);
+    margin-top: 6px;
+  }
+
+  .footer {
+    margin-top: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .footer-url {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 22px;
+    color: rgba(250,246,240,0.6);
+    letter-spacing: 2px;
+  }
+
+  .footer-logo {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: 18px;
+    color: rgba(201,169,110,0.4);
+    letter-spacing: 6px;
+    margin-top: 10px;
+  }
+</style>
+</head>
+<body>
+  <div class="post">
+    <div class="border-frame"></div>
+
+    <!-- Confetti particles -->
+    <div class="confetti c1"></div>
+    <div class="confetti c2"></div>
+    <div class="confetti c3"></div>
+    <div class="confetti c4"></div>
+    <div class="confetti c5"></div>
+    <div class="confetti c6"></div>
+    <div class="confetti c7"></div>
+    <div class="confetti c8"></div>
+    <div class="confetti c9"></div>
+    <div class="confetti c10"></div>
+    <div class="confetti c11"></div>
+    <div class="confetti c12"></div>
+
+    <div class="content">
+      <div class="emoji-header">🎉</div>
+
+      <div class="title">¡SE AGOTARON LOS<br>20 LUGARES!</div>
+
+      <div class="subtitle">
+        Pero Solennix sigue siendo <span>GRATIS</span>
+      </div>
+
+      <div class="coupon-box">
+        <div class="coupon-label">Código de descuento</div>
+        <div class="coupon-code">TUEVENTO20</div>
+        <div class="coupon-detail">20% OFF tu primer mes de Pro</div>
+        <div class="coupon-validity">Válido por 7 días</div>
+      </div>
+
+      <div class="footer">
+        <div class="footer-url">solennix.com</div>
+        <div class="footer-logo">SOLENNIX</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

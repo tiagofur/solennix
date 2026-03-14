@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Story — Testimonio</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #333; }
+
+  .story {
+    width: 1080px; height: 1920px;
+    background: #FAF6F0;
+    position: relative; overflow: hidden;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+
+  /* Subtle paper texture */
+  .story::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background:
+      radial-gradient(circle at 30% 20%, rgba(201,169,110,0.05) 0%, transparent 40%),
+      radial-gradient(circle at 70% 80%, rgba(27,42,74,0.03) 0%, transparent 40%);
+  }
+
+  .content {
+    position: relative; z-index: 2;
+    display: flex; flex-direction: column;
+    align-items: center; text-align: center;
+    padding: 80px 100px;
+    width: 100%;
+  }
+
+  .quote-mark {
+    font-family: 'Playfair Display', serif;
+    font-size: 200px;
+    color: #C9A96E;
+    line-height: 0.6;
+    margin-bottom: 40px;
+    opacity: 0.6;
+  }
+
+  .quote-text {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 42px;
+    color: #1B2A4A;
+    line-height: 1.5;
+    margin-bottom: 50px;
+    max-width: 800px;
+  }
+
+  .divider {
+    width: 80px;
+    height: 2px;
+    background: #C9A96E;
+    margin-bottom: 40px;
+  }
+
+  .author {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 24px;
+    color: #C9A96E;
+    margin-bottom: 6px;
+    letter-spacing: 2px;
+  }
+
+  .author-title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 400;
+    font-size: 20px;
+    color: rgba(27,42,74,0.5);
+    margin-bottom: 4px;
+  }
+
+  .author-location {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 400;
+    font-size: 18px;
+    color: rgba(27,42,74,0.4);
+  }
+
+  /* Stats */
+  .stats {
+    display: flex;
+    gap: 50px;
+    margin-top: 80px;
+    margin-bottom: 20px;
+  }
+
+  .stat {
+    text-align: center;
+  }
+
+  .stat-number {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: 36px;
+    color: #C9A96E;
+    margin-bottom: 4px;
+  }
+
+  .stat-label {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    color: rgba(27,42,74,0.4);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  /* Bottom CTA bar */
+  .cta-bar {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: #1B2A4A;
+    padding: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+  }
+
+  .cta-label {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 26px;
+    color: #FAF6F0;
+    letter-spacing: 2px;
+  }
+
+  .cta-url {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 26px;
+    color: #C9A96E;
+  }
+
+  .cta-badge {
+    background: #C9A96E;
+    color: #1B2A4A;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 16px;
+    padding: 6px 18px;
+    border-radius: 50px;
+    margin-left: 10px;
+  }
+</style>
+</head>
+<body>
+  <div class="story">
+    <div class="content">
+      <div class="quote-mark">"</div>
+
+      <div class="quote-text">
+        Antes me tardaba 2 horas haciendo una sola cotización. Con Solennix la hago en 5 minutos desde mi celular.
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="author">— María G.</div>
+      <div class="author-title">Wedding Planner 💍</div>
+      <div class="author-location">Ciudad de México</div>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-number">+500</div>
+          <div class="stat-label">Organizadores</div>
+        </div>
+        <div class="stat">
+          <div class="stat-number">+12,000</div>
+          <div class="stat-label">Eventos</div>
+        </div>
+        <div class="stat">
+          <div class="stat-number">98%</div>
+          <div class="stat-label">Satisfacción</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cta-bar">
+      <span class="cta-label">GRATIS →</span>
+      <span class="cta-url">solennix.com</span>
+      <span class="cta-badge">GRATIS</span>
+    </div>
+  </div>
+</body>
+</html>

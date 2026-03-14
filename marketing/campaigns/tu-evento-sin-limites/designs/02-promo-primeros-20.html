@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Post Promo Primeros 20 — Solennix</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Montserrat:wght@300;400;600;700;800&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: #333;
+  }
+
+  .post {
+    width: 1080px;
+    height: 1080px;
+    background: linear-gradient(160deg, #1B2A4A 0%, #2A3A5A 100%);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Subtle geometric pattern */
+  .post::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(201,169,110,0.08) 0%, transparent 40%),
+      radial-gradient(circle at 80% 80%, rgba(201,169,110,0.06) 0%, transparent 40%);
+    pointer-events: none;
+  }
+
+  .border-frame {
+    position: absolute;
+    top: 24px; left: 24px; right: 24px; bottom: 24px;
+    border: 1px solid rgba(201,169,110,0.12);
+  }
+
+  .content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 60px;
+    width: 100%;
+  }
+
+  .fire-icon {
+    font-size: 72px;
+    margin-bottom: 30px;
+    filter: drop-shadow(0 0 20px rgba(201,169,110,0.4));
+  }
+
+  .title {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: 52px;
+    color: #C9A96E;
+    line-height: 1.2;
+    margin-bottom: 12px;
+    letter-spacing: 2px;
+  }
+
+  .title-accent {
+    font-family: 'Cinzel', serif;
+    font-weight: 900;
+    font-size: 58px;
+    color: #C9A96E;
+    margin-bottom: 50px;
+    letter-spacing: 3px;
+    text-shadow: 0 0 40px rgba(201,169,110,0.3);
+  }
+
+  .cards {
+    display: flex;
+    gap: 30px;
+    margin-bottom: 50px;
+  }
+
+  .card {
+    width: 380px;
+    background: rgba(201,169,110,0.08);
+    border: 1.5px solid rgba(201,169,110,0.35);
+    border-radius: 12px;
+    padding: 40px 30px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(to right, transparent, #C9A96E, transparent);
+  }
+
+  .card-medal {
+    font-size: 48px;
+    margin-bottom: 16px;
+  }
+
+  .card-range {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 32px;
+    color: #C9A96E;
+    margin-bottom: 8px;
+  }
+
+  .card-duration {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: 46px;
+    color: #FAF6F0;
+    line-height: 1.1;
+    margin-bottom: 6px;
+  }
+
+  .card-plan {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    color: #C9A96E;
+    letter-spacing: 3px;
+    margin-bottom: 16px;
+  }
+
+  .card-value {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 400;
+    font-size: 16px;
+    color: rgba(250,246,240,0.5);
+  }
+
+  .cta-bar {
+    background: rgba(201,169,110,0.15);
+    border: 1px solid rgba(201,169,110,0.3);
+    padding: 20px 50px;
+    border-radius: 50px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .cta-text {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 22px;
+    color: #FAF6F0;
+  }
+
+  .cta-arrow {
+    font-size: 24px;
+    color: #C9A96E;
+  }
+
+  .cta-url {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    color: #C9A96E;
+  }
+</style>
+</head>
+<body>
+  <div class="post">
+    <div class="border-frame"></div>
+
+    <div class="content">
+      <div class="fire-icon">🔥</div>
+
+      <div class="title">LOS PRIMEROS 20 GANAN</div>
+      <div class="title-accent">PRO GRATIS</div>
+
+      <div class="cards">
+        <div class="card">
+          <div class="card-medal">🥇</div>
+          <div class="card-range">Lugares 1 — 10</div>
+          <div class="card-duration">6 MESES</div>
+          <div class="card-plan">PRO</div>
+          <div class="card-value">Valor: $894 MXN</div>
+        </div>
+
+        <div class="card">
+          <div class="card-medal">🥈</div>
+          <div class="card-range">Lugares 11 — 20</div>
+          <div class="card-duration">3 MESES</div>
+          <div class="card-plan">PRO</div>
+          <div class="card-value">Valor: $447 MXN</div>
+        </div>
+      </div>
+
+      <div class="cta-bar">
+        <span class="cta-text">Regístrate ya</span>
+        <span class="cta-arrow">→</span>
+        <span class="cta-url">solennix.com</span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
