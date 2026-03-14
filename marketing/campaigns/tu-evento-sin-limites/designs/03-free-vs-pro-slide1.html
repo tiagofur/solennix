@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Carrusel Free vs Pro — Slide 1 (Cover)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Montserrat:wght@300;400;600;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #333; }
+
+  .post {
+    width: 1080px; height: 1080px;
+    background: #1B2A4A;
+    position: relative; overflow: hidden;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+
+  .post::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(ellipse at center, rgba(201,169,110,0.08) 0%, transparent 60%);
+  }
+
+  .border-frame {
+    position: absolute;
+    top: 24px; left: 24px; right: 24px; bottom: 24px;
+    border: 1px solid rgba(201,169,110,0.12);
+  }
+
+  .content {
+    position: relative; z-index: 2;
+    display: flex; flex-direction: column;
+    align-items: center; text-align: center;
+  }
+
+  .vs-badge {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 300;
+    font-size: 24px;
+    color: rgba(250,246,240,0.5);
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    margin-bottom: 30px;
+  }
+
+  .title-free {
+    font-family: 'Cinzel', serif;
+    font-weight: 900;
+    font-size: 110px;
+    color: #FAF6F0;
+    letter-spacing: 8px;
+    line-height: 1;
+  }
+
+  .title-vs {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 300;
+    font-size: 36px;
+    color: rgba(201,169,110,0.6);
+    margin: 15px 0;
+    letter-spacing: 10px;
+  }
+
+  .title-pro {
+    font-family: 'Cinzel', serif;
+    font-weight: 900;
+    font-size: 110px;
+    color: #C9A96E;
+    letter-spacing: 8px;
+    line-height: 1;
+    text-shadow: 0 0 40px rgba(201,169,110,0.3);
+  }
+
+  .question {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 400;
+    font-size: 28px;
+    color: #FAF6F0;
+    margin-top: 50px;
+  }
+
+  .swipe {
+    position: absolute;
+    bottom: 60px;
+    right: 60px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 18px;
+    color: #C9A96E;
+    letter-spacing: 2px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .swipe-arrow {
+    font-size: 24px;
+    animation: slideRight 1.5s infinite;
+  }
+
+  @keyframes slideRight {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(10px); }
+  }
+
+  .logo-small {
+    position: absolute;
+    top: 50px;
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: 20px;
+    color: rgba(201,169,110,0.5);
+    letter-spacing: 6px;
+  }
+</style>
+</head>
+<body>
+  <div class="post">
+    <div class="border-frame"></div>
+    <div class="logo-small">SOLENNIX</div>
+
+    <div class="content">
+      <div class="title-free">FREE</div>
+      <div class="title-vs">vs</div>
+      <div class="title-pro">PRO</div>
+      <div class="question">¿Cuál es para ti?</div>
+    </div>
+
+    <div class="swipe">Desliza <span class="swipe-arrow">→</span></div>
+  </div>
+</body>
+</html>
