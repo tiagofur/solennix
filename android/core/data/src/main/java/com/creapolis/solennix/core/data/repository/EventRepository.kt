@@ -11,6 +11,7 @@ import com.creapolis.solennix.core.network.ApiService
 import com.creapolis.solennix.core.network.Endpoints
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.Serializable
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -108,7 +109,7 @@ class OfflineFirstEventRepository @Inject constructor(
     }
 }
 
-@kotlinx.serialization.Serializable
+@Serializable
 data class EventItemsResponse(
     val products: List<EventProduct>,
     val extras: List<EventExtra>

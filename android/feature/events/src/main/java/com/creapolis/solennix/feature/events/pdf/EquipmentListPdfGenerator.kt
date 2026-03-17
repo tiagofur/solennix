@@ -64,8 +64,8 @@ object EquipmentListPdfGenerator {
             inventoryItems.forEachIndexed { index, item ->
                 manager.drawTableRow(
                     listOf(
-                        item.name.take(30) to colWidths[0],
-                        item.quantity.toString() to colWidths[1],
+                        item.ingredientName.take(30) to colWidths[0],
+                        item.currentStock.toInt().toString() to colWidths[1],
                         "☐" to colWidths[2],
                         "☐" to colWidths[3],
                         "______" to colWidths[4]

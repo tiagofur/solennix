@@ -225,7 +225,7 @@ fun EventCard(event: com.creapolis.solennix.core.model.Event) {
 }
 
 @Composable
-fun SummaryRow(label: String, value: String, isTotal: Boolean = false, color: androidx.compose.ui.graphics.Color = SolennixTheme.colors.primaryText) {
+private fun SummaryRow(label: String, value: String, isTotal: Boolean = false, color: androidx.compose.ui.graphics.Color = SolennixTheme.colors.primaryText) {
     Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), horizontalArrangement = Arrangement.SpaceBetween) {
         Text(
             text = label,
@@ -254,7 +254,9 @@ fun DocumentActionsGrid(
         name = "Cliente no disponible",
         phone = "-",
         email = null,
-        address = null
+        address = null,
+        createdAt = "",
+        updatedAt = ""
     )
     var isGenerating by remember { mutableStateOf(false) }
 

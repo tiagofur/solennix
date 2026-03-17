@@ -190,7 +190,8 @@
       "Bash(tree:*)",
       "Bash(./gradlew :app:assembleDebug:*)",
       "Bash(cmd.exe:*)",
-      "Bash(.gradlew :app:assembleDebug:*)"
+      "Bash(.gradlew :app:assembleDebug:*)",
+      "Bash(./gradlew :feature:events:compileDebugKotlin:*)"
     ]
   }
 }

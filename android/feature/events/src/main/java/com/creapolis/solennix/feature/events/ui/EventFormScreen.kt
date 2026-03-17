@@ -409,7 +409,7 @@ fun StepExtras(viewModel: EventFormViewModel) {
                 keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
             )
             Spacer(modifier = Modifier.width(16.dp))
-            MultiChoiceSegmentedButtonRow(modifier = Modifier.weight(1f)) {
+            SingleChoiceSegmentedButtonRow(modifier = Modifier.weight(1f)) {
                 SegmentedButton(
                     selected = viewModel.discountType == com.creapolis.solennix.core.model.DiscountType.PERCENT,
                     onClick = { viewModel.discountType = com.creapolis.solennix.core.model.DiscountType.PERCENT },
@@ -513,7 +513,7 @@ fun StepSummary(viewModel: EventFormViewModel) {
 }
 
 @Composable
-fun SummaryRow(label: String, value: String, isTotal: Boolean = false, color: Color = SolennixTheme.colors.primaryText) {
+private fun SummaryRow(label: String, value: String, isTotal: Boolean = false, color: Color = SolennixTheme.colors.primaryText) {
     Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), horizontalArrangement = Arrangement.SpaceBetween) {
         Text(
             text = label,

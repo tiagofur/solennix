@@ -71,8 +71,8 @@ object ChecklistPdfGenerator {
             inventoryItems.forEach { item ->
                 drawChecklistItem(
                     manager,
-                    text = "${item.name} (${item.quantity} disponible)",
-                    notes = item.notes
+                    text = "${item.ingredientName} (${item.currentStock.toInt()} ${item.unit})",
+                    notes = null
                 )
             }
             manager.moveDown(PdfConstants.PARAGRAPH_SPACING)
