@@ -24,4 +24,8 @@
     <string name="shortcut_new_event">Nuevo Evento</string>
     <string name="shortcut_new_event_long">Crear un nuevo evento</string>
     <string name="shortcut_calendar">Calendario</string>
+
+    <!-- Widgets -->
+    <string name="widget_upcoming_events">Próximos Eventos</string>
+    <string name="widget_kpi_description">Resumen de KPIs</string>
 </resources>

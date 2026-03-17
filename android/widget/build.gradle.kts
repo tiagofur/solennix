@@ -21,10 +21,14 @@ android {
 dependencies {
     implementation(project(":core:model"))
     implementation(project(":core:database"))
-    
+
+    // Room (needed for database access)
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+
     implementation(libs.glance.appwidget)
     implementation(libs.glance.material3)
-    
+
     val composeBom = platform(libs.compose.bom)
     implementation(composeBom)
     implementation(libs.compose.material3)

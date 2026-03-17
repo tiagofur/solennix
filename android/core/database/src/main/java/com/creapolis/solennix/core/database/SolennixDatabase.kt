@@ -1,6 +1,8 @@
 package com.creapolis.solennix.core.database
 
+import android.content.Context
 import androidx.room.Database
+import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.creapolis.solennix.core.database.converter.JsonConverters
@@ -40,4 +42,23 @@ abstract class SolennixDatabase : RoomDatabase() {
     abstract fun inventoryDao(): InventoryDao
     abstract fun paymentDao(): PaymentDao
     abstract fun eventItemDao(): EventItemDao
+
+    companion object {
+        @Volatile
+        private var INSTANCE: SolennixDatabase? = null
+
+        fun getInstance(context: Context): SolennixDatabase {
+            return INSTANCE ?: synchronized(this) {
+                val instance = Room.databaseBuilder(
+                    context.applicationContext,
+                    SolennixDatabase::class.java,
+                    "solennix_database"
+                )
+                    .fallbackToDestructiveMigration()
+                    .build()
+                INSTANCE = instance
+                instance
+            }
+        }
+    }
 }
