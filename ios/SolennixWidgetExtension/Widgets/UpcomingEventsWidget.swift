@@ -378,20 +378,56 @@ struct UpcomingEventsWidget: Widget {
 
 // MARK: - Preview
 
+private let previewSampleEvents: [WidgetEvent] = [
+    WidgetEvent(
+        id: "1",
+        clientName: "María García",
+        eventType: "Boda",
+        eventDate: Date(),
+        startTime: "14:00",
+        location: "Salón Jardín",
+        guestCount: 150,
+        status: "confirmed",
+        totalAmount: 45000
+    ),
+    WidgetEvent(
+        id: "2",
+        clientName: "Carlos López",
+        eventType: "XV Años",
+        eventDate: Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date(),
+        startTime: "18:00",
+        location: "Club Social",
+        guestCount: 200,
+        status: "confirmed",
+        totalAmount: 55000
+    ),
+    WidgetEvent(
+        id: "3",
+        clientName: "Ana Martínez",
+        eventType: "Corporativo",
+        eventDate: Calendar.current.date(byAdding: .day, value: 3, to: Date()) ?? Date(),
+        startTime: "12:00",
+        location: "Hotel Plaza",
+        guestCount: 80,
+        status: "quoted",
+        totalAmount: 28000
+    )
+]
+
 #Preview("Small", as: .systemSmall) {
     UpcomingEventsWidget()
 } timeline: {
-    UpcomingEventsEntry(date: Date(), events: [])
+    UpcomingEventsEntry(date: Date(), events: previewSampleEvents)
 }
 
 #Preview("Medium", as: .systemMedium) {
     UpcomingEventsWidget()
 } timeline: {
-    UpcomingEventsEntry(date: Date(), events: [])
+    UpcomingEventsEntry(date: Date(), events: previewSampleEvents)
 }
 
 #Preview("Large", as: .systemLarge) {
     UpcomingEventsWidget()
 } timeline: {
-    UpcomingEventsEntry(date: Date(), events: [])
+    UpcomingEventsEntry(date: Date(), events: previewSampleEvents)
 }

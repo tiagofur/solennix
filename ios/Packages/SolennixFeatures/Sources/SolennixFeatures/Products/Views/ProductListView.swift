@@ -135,7 +135,7 @@ public struct ProductListView: View {
                 }
 
                 // Product info
-                VStack(alignment: .leading, spacing: 3) {
+                VStack(alignment: .leading, spacing: Spacing.xs) {
                     Text(product.name)
                         .font(.subheadline)
                         .fontWeight(.medium)

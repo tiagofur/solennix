@@ -279,6 +279,9 @@ public final class ProductFormViewModel {
         } catch {
             errorMessage = "Error al cargar la imagen"
         }
+
+        // Clear selection to allow re-selecting the same photo
+        selectedPhoto = nil
     }
 
     // MARK: - Save

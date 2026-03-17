@@ -100,6 +100,14 @@ public final class InventoryFormViewModel {
             stockError = "El stock no puede ser negativo"
         }
 
+        if minimumStock < 0 {
+            stockError = "El stock mínimo no puede ser negativo"
+        }
+
+        if let cost = unitCost, cost < 0 {
+            stockError = "El costo unitario no puede ser negativo"
+        }
+
         return nameError == nil && stockError == nil
     }
 

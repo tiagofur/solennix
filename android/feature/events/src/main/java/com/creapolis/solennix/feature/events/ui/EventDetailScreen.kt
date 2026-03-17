@@ -1,5 +1,6 @@
 package com.creapolis.solennix.feature.events.ui
 
+import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -15,12 +16,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.component.*
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
+import com.creapolis.solennix.core.model.Client
+import com.creapolis.solennix.feature.events.pdf.BudgetPdfGenerator
+import com.creapolis.solennix.feature.events.pdf.ChecklistPdfGenerator
+import com.creapolis.solennix.feature.events.pdf.ContractPdfGenerator
+import com.creapolis.solennix.feature.events.pdf.PaymentReportPdfGenerator
+import com.creapolis.solennix.feature.events.viewmodel.EventDetailUiState
 import com.creapolis.solennix.feature.events.viewmodel.EventDetailViewModel
 import androidx.window.layout.FoldingFeature
 import androidx.window.layout.WindowInfoTracker
+import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -109,10 +118,12 @@ fun EventDetailScreen(
                     Spacer(modifier = Modifier.height(24.dp))
                     Text("Generar Documentos", style = MaterialTheme.typography.titleMedium)
                     Spacer(modifier = Modifier.height(12.dp))
-                    ActionGrid(
-                        onPdfClick = { Toast.makeText(context, "Generando Cotización...", Toast.LENGTH_SHORT).show() },
-                        onChecklistClick = { Toast.makeText(context, "Generando Checklist...", Toast.LENGTH_SHORT).show() },
-                        onPhotosClick = { Toast.makeText(context, "Abriendo fotos...", Toast.LENGTH_SHORT).show() }
+                    DocumentActionsGrid(
+                        uiState = uiState,
+                        context = context,
+                        onSharePdf = { file ->
+                            sharePdfFile(context, file)
+                        }
                     )
 
                     Spacer(modifier = Modifier.height(24.dp))
@@ -231,28 +242,157 @@ fun SummaryRow(label: String, value: String, isTotal: Boolean = false, color: an
 }
 
 @Composable
-fun ActionGrid(onPdfClick: () -> Unit, onChecklistClick: () -> Unit, onPhotosClick: () -> Unit) {
-    Row(modifier = Modifier.fillMaxWidth()) {
-        ActionButton(
-            icon = Icons.Default.Description,
-            label = "Cotización",
-            modifier = Modifier.weight(1f),
-            onClick = onPdfClick
+fun DocumentActionsGrid(
+    uiState: EventDetailUiState,
+    context: android.content.Context,
+    onSharePdf: (File) -> Unit
+) {
+    val event = uiState.event ?: return
+    val client = uiState.client ?: Client(
+        id = "",
+        userId = "",
+        name = "Cliente no disponible",
+        phone = "-",
+        email = null,
+        address = null
+    )
+    var isGenerating by remember { mutableStateOf(false) }
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        // First row
+        Row(modifier = Modifier.fillMaxWidth()) {
+            ActionButton(
+                icon = Icons.Default.Description,
+                label = "Cotización",
+                modifier = Modifier.weight(1f),
+                onClick = {
+                    isGenerating = true
+                    try {
+                        val file = BudgetPdfGenerator.generate(
+                            context = context,
+                            event = event,
+                            client = client,
+                            products = uiState.products,
+                            extras = uiState.extras,
+                            user = uiState.currentUser
+                        )
+                        onSharePdf(file)
+                    } catch (e: Exception) {
+                        Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+                    isGenerating = false
+                }
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            ActionButton(
+                icon = Icons.Default.Article,
+                label = "Contrato",
+                modifier = Modifier.weight(1f),
+                onClick = {
+                    isGenerating = true
+                    try {
+                        val file = ContractPdfGenerator.generate(
+                            context = context,
+                            event = event,
+                            client = client,
+                            products = uiState.products,
+                            extras = uiState.extras,
+                            user = uiState.currentUser
+                        )
+                        onSharePdf(file)
+                    } catch (e: Exception) {
+                        Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+                    isGenerating = false
+                }
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            ActionButton(
+                icon = Icons.Default.Checklist,
+                label = "Checklist",
+                modifier = Modifier.weight(1f),
+                onClick = {
+                    isGenerating = true
+                    try {
+                        val file = ChecklistPdfGenerator.generate(
+                            context = context,
+                            event = event,
+                            client = client,
+                            products = uiState.products,
+                            inventoryItems = emptyList(), // TODO: Load inventory items
+                            user = uiState.currentUser
+                        )
+                        onSharePdf(file)
+                    } catch (e: Exception) {
+                        Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+                    isGenerating = false
+                }
+            )
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        // Second row
+        Row(modifier = Modifier.fillMaxWidth()) {
+            ActionButton(
+                icon = Icons.Default.Payments,
+                label = "Pagos",
+                modifier = Modifier.weight(1f),
+                onClick = {
+                    isGenerating = true
+                    try {
+                        val file = PaymentReportPdfGenerator.generate(
+                            context = context,
+                            event = event,
+                            client = client,
+                            payments = uiState.payments,
+                            user = uiState.currentUser
+                        )
+                        onSharePdf(file)
+                    } catch (e: Exception) {
+                        Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+                    isGenerating = false
+                }
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            ActionButton(
+                icon = Icons.Default.PhotoLibrary,
+                label = "Fotos",
+                modifier = Modifier.weight(1f),
+                onClick = {
+                    Toast.makeText(context, "Próximamente...", Toast.LENGTH_SHORT).show()
+                }
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            // Empty space for alignment
+            Spacer(modifier = Modifier.weight(1f))
+        }
+    }
+
+    if (isGenerating) {
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(modifier = Modifier.size(24.dp))
+        }
+    }
+}
+
+private fun sharePdfFile(context: android.content.Context, file: File) {
+    try {
+        val uri = FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.fileprovider",
+            file
         )
-        Spacer(modifier = Modifier.width(8.dp))
-        ActionButton(
-            icon = Icons.Default.Checklist,
-            label = "Checklist",
-            modifier = Modifier.weight(1f),
-            onClick = onChecklistClick
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        ActionButton(
-            icon = Icons.Default.PhotoLibrary,
-            label = "Fotos",
-            modifier = Modifier.weight(1f),
-            onClick = onPhotosClick
-        )
+        val intent = Intent(Intent.ACTION_VIEW).apply {
+            setDataAndType(uri, "application/pdf")
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        context.startActivity(Intent.createChooser(intent, "Abrir PDF con..."))
+    } catch (e: Exception) {
+        Toast.makeText(context, "No hay aplicación para abrir PDFs", Toast.LENGTH_SHORT).show()
     }
 }
 

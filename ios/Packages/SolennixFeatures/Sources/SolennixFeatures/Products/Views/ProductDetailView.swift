@@ -236,7 +236,7 @@ public struct ProductDetailView: View {
 
     private func infoSection(_ product: Product) -> some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
-            Text("Informacion")
+            Text("Información")
                 .font(.headline)
                 .foregroundStyle(SolennixColors.text)
 

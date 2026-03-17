@@ -120,7 +120,7 @@ public struct InventoryListView: View {
                 stockIndicator(item)
 
                 // Item info
-                VStack(alignment: .leading, spacing: 3) {
+                VStack(alignment: .leading, spacing: Spacing.xs) {
                     Text(item.ingredientName)
                         .font(.subheadline)
                         .fontWeight(.medium)

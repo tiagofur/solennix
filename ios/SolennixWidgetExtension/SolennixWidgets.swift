@@ -9,6 +9,7 @@ struct SolennixWidgets: WidgetBundle {
         UpcomingEventsWidget()
         KPIWidget()
         LockScreenWidget()
+        InteractiveEventWidget()
     }
 }
 

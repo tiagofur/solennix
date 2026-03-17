@@ -125,6 +125,12 @@ public final class InventoryListViewModel {
     public func saveStockAdjustment() async {
         guard let item = adjustmentTarget else { return }
 
+        // Validate non-negative stock
+        guard adjustmentQuantity >= 0 else {
+            errorMessage = "El stock no puede ser negativo"
+            return
+        }
+
         do {
             let body: [String: Any] = [
                 "current_stock": adjustmentQuantity
@@ -148,6 +154,7 @@ public final class InventoryListViewModel {
             applyFilters()
             showStockAdjustment = false
             adjustmentTarget = nil
+            adjustmentQuantity = 0
         } catch {
             errorMessage = mapError(error)
         }

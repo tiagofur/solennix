@@ -149,7 +149,7 @@ public struct InventoryDetailView: View {
                     Image(systemName: "clock")
                         .foregroundStyle(SolennixColors.textTertiary)
 
-                    Text("Ultima actualizacion")
+                    Text("Última actualización")
                         .foregroundStyle(SolennixColors.textSecondary)
 
                     Spacer()
@@ -209,7 +209,7 @@ public struct InventoryDetailView: View {
                 Spacer()
 
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text("Minimo")
+                    Text("Mínimo")
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textTertiary)
 
@@ -263,7 +263,7 @@ public struct InventoryDetailView: View {
 
     private func infoCard(_ item: InventoryItem) -> some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
-            Text("Informacion")
+            Text("Información")
                 .font(.headline)
                 .foregroundStyle(SolennixColors.text)
 

@@ -187,7 +187,10 @@
       "Bash(unset CLAUDECODE && git add web/src/components/Modal.tsx && git commit -m \"$\\(cat <<'EOF'\nfix: modal dialog quedaba detrás del backdrop por z-index duplicado\n\nEl backdrop tenía z-[200] propio siendo fixed, lo que lo sacaba del stacking\ncontext del wrapper y tapaba el dialog. Removiendo el z-index del backdrop,\nqueda en el flujo del wrapper \\(z-[200]\\) y el dialog lo supera por orden DOM.\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\nEOF\n\\)\" && git push)",
       "Bash(grep -E \"\\\\.tsx$\")",
       "Bash(grep -n QuickClientSheet /c/Users/tfurt/source/repos/eventosapp/mobile/src/components/shared/*.tsx)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(./gradlew :app:assembleDebug:*)",
+      "Bash(cmd.exe:*)",
+      "Bash(.gradlew :app:assembleDebug:*)"
     ]
   }
 }
