@@ -33,8 +33,38 @@ class ClientFormViewModel @Inject constructor(
     var saveSuccess by mutableStateOf(false)
     var errorMessage by mutableStateOf<String?>(null)
 
+    // Field-level validation tracking
+    var hasAttemptedSubmit by mutableStateOf(false)
+
+    val nameError: String?
+        get() = if (hasAttemptedSubmit && name.isBlank()) "El nombre es requerido" else null
+
+    val phoneError: String?
+        get() = when {
+            hasAttemptedSubmit && phone.isBlank() -> "El teléfono es requerido"
+            hasAttemptedSubmit && phone.isNotBlank() && !isValidPhone(phone) -> "Formato de teléfono inválido (mínimo 10 dígitos)"
+            else -> null
+        }
+
+    val emailError: String?
+        get() = when {
+            email.isNotBlank() && !isValidEmail(email) -> "Formato de correo inválido"
+            else -> null
+        }
+
     val isFormValid: Boolean
-        get() = name.isNotBlank() && phone.isNotBlank()
+        get() = name.isNotBlank() && phone.isNotBlank() && isValidPhone(phone) &&
+                (email.isBlank() || isValidEmail(email))
+
+    private fun isValidEmail(email: String): Boolean {
+        return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    }
+
+    private fun isValidPhone(phone: String): Boolean {
+        // Accept phone numbers with 10+ digits (allowing spaces, dashes, parentheses)
+        val digitsOnly = phone.filter { it.isDigit() }
+        return digitsOnly.length >= 10
+    }
 
     init {
         if (clientId != null) {
@@ -64,6 +94,7 @@ class ClientFormViewModel @Inject constructor(
     }
 
     fun saveClient() {
+        hasAttemptedSubmit = true
         if (!isFormValid) return
 
         viewModelScope.launch {

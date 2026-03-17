@@ -63,7 +63,8 @@ fun ClientFormScreen(
                     value = viewModel.name,
                     onValueChange = { viewModel.name = it },
                     label = "Nombre *",
-                    leadingIcon = Icons.Default.Person
+                    leadingIcon = Icons.Default.Person,
+                    errorMessage = viewModel.nameError
                 )
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -72,7 +73,8 @@ fun ClientFormScreen(
                     onValueChange = { viewModel.phone = it },
                     label = "Teléfono *",
                     leadingIcon = Icons.Default.Phone,
-                    keyboardType = KeyboardType.Phone
+                    keyboardType = KeyboardType.Phone,
+                    errorMessage = viewModel.phoneError
                 )
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -81,7 +83,8 @@ fun ClientFormScreen(
                     onValueChange = { viewModel.email = it },
                     label = "Correo Electrónico",
                     leadingIcon = Icons.Default.Email,
-                    keyboardType = KeyboardType.Email
+                    keyboardType = KeyboardType.Email,
+                    errorMessage = viewModel.emailError
                 )
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -122,7 +125,7 @@ fun ClientFormScreen(
                     text = "Guardar",
                     onClick = { viewModel.saveClient() },
                     isLoading = viewModel.isSaving,
-                    enabled = viewModel.isFormValid
+                    enabled = !viewModel.isSaving
                 )
                 Spacer(modifier = Modifier.height(32.dp))
             }

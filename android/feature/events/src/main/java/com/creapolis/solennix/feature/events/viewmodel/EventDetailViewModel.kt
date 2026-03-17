@@ -89,7 +89,7 @@ class EventDetailViewModel @Inject constructor(
                 val newPayment = Payment(
                     id = "", // Backend will generate or override if empty
                     eventId = eventId,
-                    userId = _uiState.value.event?.userId ?: "",
+                    userId = uiState.value.event?.userId ?: "",
                     amount = amount,
                     paymentDate = java.time.LocalDate.now().toString(),
                     paymentMethod = method,
@@ -97,9 +97,9 @@ class EventDetailViewModel @Inject constructor(
                     createdAt = ""
                 )
                 paymentRepository.createPayment(newPayment)
-                // Reload or observe flow
+                // Flow automatically updates via Room → paymentRepository.getPaymentsByEventId
             } catch (e: Exception) {
-                _uiState.update { it.copy(errorMessage = "Error adding payment: ${e.message}") }
+                _errorMessage.value = "Error adding payment: ${e.message}"
             }
         }
     }
