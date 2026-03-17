@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">Solennix</string>
+    <string name="tagline">EVERY DETAIL MATTERS</string>
+    
+    <!-- Auth -->
+    <string name="login_title">Log In</string>
+    <string name="register_title">Create Account</string>
+    <string name="forgot_password_title">Forgot your password?</string>
+    <string name="reset_password_title">Reset Password</string>
+    
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_calendar">Calendar</string>
+    <string name="nav_clients">Clients</string>
+    <string name="nav_more">More</string>
+</resources>

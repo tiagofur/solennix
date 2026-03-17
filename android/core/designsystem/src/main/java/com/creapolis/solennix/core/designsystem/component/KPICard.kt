@@ -13,6 +13,9 @@ import androidx.compose.ui.unit.sp
 import com.creapolis.solennix.core.designsystem.theme.SolennixElevation
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
+
 @Composable
 fun KPICard(
     title: String,
@@ -25,7 +28,10 @@ fun KPICard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
+            .padding(vertical = 8.dp)
+            .semantics(mergeDescendants = true) {
+                contentDescription = "$title: $value" + (subtitle?.let { ". $it" } ?: "")
+            },
         colors = CardDefaults.cardColors(
             containerColor = SolennixTheme.colors.card
         ),

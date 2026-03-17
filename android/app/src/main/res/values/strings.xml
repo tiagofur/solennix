@@ -19,4 +19,9 @@
     <string name="cancel">Cancelar</string>
     <string name="error_unknown">Ha ocurrido un error inesperado</string>
     <string name="error_network">Error de conexion. Revisa tu internet.</string>
+    
+    <!-- Shortcuts -->
+    <string name="shortcut_new_event">Nuevo Evento</string>
+    <string name="shortcut_new_event_long">Crear un nuevo evento</string>
+    <string name="shortcut_calendar">Calendario</string>
 </resources>

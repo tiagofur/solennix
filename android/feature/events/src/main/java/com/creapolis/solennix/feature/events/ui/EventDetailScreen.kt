@@ -17,6 +17,11 @@ import com.creapolis.solennix.core.designsystem.component.*
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.feature.events.viewmodel.EventDetailViewModel
 
+import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.platform.LocalContext
+import androidx.window.layout.FoldingFeature
+import androidx.window.layout.WindowInfoTracker
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EventDetailScreen(
@@ -26,6 +31,17 @@ fun EventDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
+    val context = LocalContext.current
+    val windowInfoTracker = WindowInfoTracker.getOrCreate(context)
+    val windowLayoutInfo by windowInfoTracker.windowLayoutInfo(context as android.app.Activity)
+        .collectAsState(initial = null)
+
+    val foldingFeature = windowLayoutInfo?.displayFeatures
+        ?.filterIsInstance<FoldingFeature>()
+        ?.firstOrNull()
+
+    val isTableTop = foldingFeature?.state == FoldingFeature.State.HALF_OPENED &&
+            foldingFeature.orientation == FoldingFeature.Orientation.HORIZONTAL
 
     Scaffold(
         topBar = {
@@ -52,79 +68,96 @@ fun EventDetailScreen(
             }
         } else if (uiState.event != null) {
             val event = uiState.event!!
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .verticalScroll(scrollState)
-                    .padding(16.dp)
-            ) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
-                    shape = MaterialTheme.shapes.large
-                ) {
-                    Column(modifier = Modifier.padding(20.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            StatusBadge(status = event.status.name)
-                            Spacer(modifier = Modifier.weight(1f))
-                            Text(
-                                text = event.eventDate,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = SolennixTheme.colors.secondaryText
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = event.serviceType,
-                            style = MaterialTheme.typography.headlineSmall,
-                            color = SolennixTheme.colors.primaryText
-                        )
-                        Text(
-                            text = "${event.numPeople} personas",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = SolennixTheme.colors.secondaryText
-                        )
+            
+            if (isTableTop) {
+                // Table-top mode: Split screen
+                Column(modifier = Modifier.padding(padding).fillMaxSize()) {
+                    Box(modifier = Modifier.weight(1f)) {
+                        EventCard(event = event)
+                    }
+                    Box(modifier = Modifier.weight(1f).padding(16.dp)) {
+                        ActionGrid(onPdfClick = {}, onChecklistClick = {}, onPhotosClick = {})
                     }
                 }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Text("Acciones", style = MaterialTheme.typography.titleMedium)
-                Spacer(modifier = Modifier.height(12.dp))
-                
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    ActionButton(
-                        icon = Icons.Default.Description,
-                        label = "PDF",
-                        modifier = Modifier.weight(1f),
-                        onClick = { /* Generate PDF */ }
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    ActionButton(
-                        icon = Icons.Default.Checklist,
-                        label = "Checklist",
-                        modifier = Modifier.weight(1f),
-                        onClick = { /* Open Checklist */ }
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    ActionButton(
-                        icon = Icons.Default.PhotoLibrary,
-                        label = "Fotos",
-                        modifier = Modifier.weight(1f),
-                        onClick = { /* Open Gallery */ }
-                    )
+            } else {
+                // Normal mode
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding)
+                        .verticalScroll(scrollState)
+                        .padding(16.dp)
+                ) {
+                    EventCard(event = event)
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Text("Acciones", style = MaterialTheme.typography.titleMedium)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    ActionGrid(onPdfClick = {}, onChecklistClick = {}, onPhotosClick = {})
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Text("Detalles Financieros", style = MaterialTheme.typography.titleMedium)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    SummaryRow("Total del Evento", "$${event.totalAmount}", isTotal = true)
                 }
-
-                Spacer(modifier = Modifier.height(24.dp))
-                
-                Text("Detalles Financieros", style = MaterialTheme.typography.titleMedium)
-                Spacer(modifier = Modifier.height(12.dp))
-                
-                SummaryRow("Total del Evento", "$${event.totalAmount}", isTotal = true)
-                // Add more breakdown here
             }
         }
+    }
+}
+
+@Composable
+fun EventCard(event: com.creapolis.solennix.core.model.Event) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
+        shape = MaterialTheme.shapes.large
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                StatusBadge(status = event.status.name)
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    text = event.eventDate,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = SolennixTheme.colors.secondaryText
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = event.serviceType,
+                style = MaterialTheme.typography.headlineSmall,
+                color = SolennixTheme.colors.primaryText
+            )
+            Text(
+                text = "${event.numPeople} personas",
+                style = MaterialTheme.typography.bodyMedium,
+                color = SolennixTheme.colors.secondaryText
+            )
+        }
+    }
+}
+
+@Composable
+fun ActionGrid(onPdfClick: () -> Unit, onChecklistClick: () -> Unit, onPhotosClick: () -> Unit) {
+    Row(modifier = Modifier.fillMaxWidth()) {
+        ActionButton(
+            icon = Icons.Default.Description,
+            label = "PDF",
+            modifier = Modifier.weight(1f),
+            onClick = onPdfClick
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        ActionButton(
+            icon = Icons.Default.Checklist,
+            label = "Checklist",
+            modifier = Modifier.weight(1f),
+            onClick = onChecklistClick
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        ActionButton(
+            icon = Icons.Default.PhotoLibrary,
+            label = "Fotos",
+            modifier = Modifier.weight(1f),
+            onClick = onPhotosClick
+        )
     }
 }
 

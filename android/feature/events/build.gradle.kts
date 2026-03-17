@@ -57,4 +57,7 @@ dependencies {
     
     // Coil for photos
     implementation(libs.coil.compose)
+    
+    // Window Manager for Foldables
+    implementation(libs.androidx.window)
 }

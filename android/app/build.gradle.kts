@@ -56,6 +56,7 @@ dependencies {
     implementation(project(":feature:products"))
     implementation(project(":feature:inventory"))
     implementation(project(":feature:settings"))
+    implementation(project(":widget"))
 
     val composeBom = platform(libs.compose.bom)
     implementation(composeBom)
