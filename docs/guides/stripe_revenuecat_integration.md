@@ -151,3 +151,201 @@ Si estás usando React Native o Flutter, sigue estos pasos:
 - **Seguridad:** Nunca expongas tu `STRIPE_SECRET_KEY` en el frontend.
 - **Precios:** Si cambias el precio en Stripe, debes actualizar el `STRIPE_PRO_PRICE_ID`.
 - **Markup:** El 15% de markup para móvil se configura directamente en los precios de App Store / Play Store.
+
+---
+
+## 🛡️ Manejo de Errores
+
+### Errores Comunes en Stripe
+
+| Código | Causa | Solución |
+|--------|-------|----------|
+| `card_declined` | Tarjeta rechazada por el banco | Mostrar mensaje amigable al usuario para que intente otra tarjeta |
+| `expired_card` | Tarjeta expirada | Solicitar actualización de método de pago |
+| `insufficient_funds` | Fondos insuficientes | Notificar al usuario sin revelar detalles sensibles |
+| `processing_error` | Error temporal de procesamiento | Reintentar automáticamente después de 5 segundos |
+
+### Errores en RevenueCat
+
+```javascript
+try {
+  const { purchaserInfo } = await Purchases.purchasePackage(package);
+  // Éxito
+} catch (error) {
+  if (error.userCancelled) {
+    // El usuario canceló - no mostrar error
+    return;
+  }
+  if (error.code === Purchases.PURCHASE_CANCELLED_ERROR) {
+    // Compra cancelada
+  } else if (error.code === Purchases.STORE_PROBLEM_ERROR) {
+    // Problema con la tienda (App Store / Play Store)
+    showAlert("Error de conexión con la tienda. Intenta de nuevo.");
+  } else if (error.code === Purchases.NETWORK_ERROR) {
+    // Sin conexión
+    showAlert("Verifica tu conexión a internet.");
+  } else {
+    // Error genérico
+    logError(error);
+    showAlert("Ocurrió un error. Contacta a soporte.");
+  }
+}
+```
+
+### Manejo de Webhooks Fallidos
+
+1. **Reintentos automáticos:** Tanto Stripe como RevenueCat reintentan webhooks fallidos con backoff exponencial.
+2. **Logging:** Registrar todos los webhooks recibidos para debugging.
+3. **Idempotencia:** Los handlers deben ser idempotentes - procesar el mismo evento múltiples veces no debe causar efectos secundarios.
+
+```go
+// Ejemplo de handler idempotente
+func handleSubscriptionCreated(userID string, plan string) error {
+    user, err := repo.GetUser(userID)
+    if err != nil {
+        return err
+    }
+    // Solo actualizar si el plan es diferente
+    if user.Plan != plan {
+        return repo.UpdateUserPlan(userID, plan)
+    }
+    return nil // Ya tiene el plan correcto, no hacer nada
+}
+```
+
+---
+
+## 🔐 Verificación de Webhooks
+
+### Verificación de Stripe
+
+Stripe firma cada webhook con tu `STRIPE_WEBHOOK_SECRET`. **Siempre verifica la firma** antes de procesar:
+
+```go
+func StripeWebhookHandler(w http.ResponseWriter, r *http.Request) {
+    const MaxBodyBytes = int64(65536)
+    r.Body = http.MaxBytesReader(w, r.Body, MaxBodyBytes)
+
+    payload, err := io.ReadAll(r.Body)
+    if err != nil {
+        http.Error(w, "Error reading body", http.StatusServiceUnavailable)
+        return
+    }
+
+    // Obtener la firma del header
+    sigHeader := r.Header.Get("Stripe-Signature")
+
+    // Verificar la firma
+    event, err := webhook.ConstructEvent(payload, sigHeader, os.Getenv("STRIPE_WEBHOOK_SECRET"))
+    if err != nil {
+        log.Printf("Webhook signature verification failed: %v", err)
+        http.Error(w, "Invalid signature", http.StatusBadRequest)
+        return
+    }
+
+    // Procesar el evento verificado
+    switch event.Type {
+    case "checkout.session.completed":
+        // Manejar pago exitoso
+    case "customer.subscription.deleted":
+        // Manejar cancelación
+    }
+
+    w.WriteHeader(http.StatusOK)
+}
+```
+
+### Verificación de RevenueCat
+
+RevenueCat usa un header de autorización personalizado:
+
+```go
+func RevenueCatWebhookHandler(w http.ResponseWriter, r *http.Request) {
+    // Verificar el header de autorización
+    authHeader := r.Header.Get("Authorization")
+    expectedSecret := os.Getenv("REVENUECAT_WEBHOOK_SECRET")
+
+    if authHeader != expectedSecret {
+        log.Printf("RevenueCat webhook auth failed")
+        http.Error(w, "Unauthorized", http.StatusUnauthorized)
+        return
+    }
+
+    // Parsear y procesar el evento
+    var event RevenueCatEvent
+    if err := json.NewDecoder(r.Body).Decode(&event); err != nil {
+        http.Error(w, "Invalid JSON", http.StatusBadRequest)
+        return
+    }
+
+    // event.AppUserID contiene nuestro UserID
+    switch event.Type {
+    case "INITIAL_PURCHASE":
+        upgradeUserToPro(event.AppUserID)
+    case "CANCELLATION", "EXPIRATION":
+        downgradeUserToBasic(event.AppUserID)
+    }
+
+    w.WriteHeader(http.StatusOK)
+}
+```
+
+---
+
+## ✅ Checklist de Testing Completo
+
+### Pre-Producción
+
+- [ ] **Configuración de Stripe**
+  - [ ] Producto "Solennix Pro" creado en modo test
+  - [ ] Precio configurado correctamente (monto, moneda, frecuencia)
+  - [ ] Webhook endpoint registrado con los eventos correctos
+  - [ ] `STRIPE_WEBHOOK_SECRET` configurado en `.env`
+  - [ ] Customer Portal habilitado y configurado
+
+- [ ] **Configuración de RevenueCat**
+  - [ ] Proyecto creado con iOS y Android apps
+  - [ ] Entitlement `pro` configurado
+  - [ ] Productos registrados desde App Store Connect y Play Console
+  - [ ] Offering `default` con el paquete mensual
+  - [ ] Webhook URL configurado con Authorization header
+  - [ ] `REVENUECAT_WEBHOOK_SECRET` configurado en `.env`
+
+### Pruebas Funcionales
+
+- [ ] **Flujo Web (Stripe)**
+  - [ ] Checkout con tarjeta de prueba `4242 4242 4242 4242` -> Usuario actualizado a Pro
+  - [ ] Checkout con tarjeta que requiere 3D Secure `4000 0027 6000 3184` -> Flujo completado
+  - [ ] Webhook `checkout.session.completed` recibido y procesado
+  - [ ] Usuario puede acceder al Customer Portal
+  - [ ] Cancelación desde Portal -> Webhook recibido -> Usuario degradado a Basic
+
+- [ ] **Flujo Móvil (RevenueCat)**
+  - [ ] SDK configurado con `appUserID` correcto (UUID del backend)
+  - [ ] Offerings cargados correctamente
+  - [ ] Compra en Sandbox (iOS) / Test (Android) completada
+  - [ ] Webhook `INITIAL_PURCHASE` recibido -> Usuario actualizado a Pro
+  - [ ] Cancelación procesada correctamente
+
+- [ ] **Sincronización Cross-Platform**
+  - [ ] Comprar en Web -> Verificar acceso Pro en Mobile
+  - [ ] Comprar en Mobile -> Verificar acceso Pro en Web
+  - [ ] Estado consistente en la base de datos
+
+### Pruebas de Errores
+
+- [ ] **Manejo de fallos**
+  - [ ] Tarjeta rechazada muestra mensaje apropiado
+  - [ ] Timeout de red manejado gracefully
+  - [ ] Webhook con firma inválida rechazado con 400
+  - [ ] Webhook repetido procesado sin duplicar acciones (idempotencia)
+
+### Pre-Go-Live
+
+- [ ] **Migración a Producción**
+  - [ ] Cambiar claves de Stripe de `sk_test_` a `sk_live_`
+  - [ ] Actualizar `STRIPE_WEBHOOK_SECRET` con el de producción
+  - [ ] Configurar webhook de producción en Stripe Dashboard
+  - [ ] Cambiar API key de RevenueCat a producción
+  - [ ] Verificar precios reales en App Store Connect y Play Console
+  - [ ] Probar un pago real con monto pequeño (reembolsable)

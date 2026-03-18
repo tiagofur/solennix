@@ -9,11 +9,11 @@ Bienvenido a la documentación oficial de **Solennix**. Aquí encontrarás todo 
 - **[Visión General](./architecture/system-overview.md):** Stack tecnológico completo (Web + Mobile + Backend) y flujo de datos.
 - **[Seguridad y Datos](./architecture/security.md):** Estrategia de protección de datos, httpOnly cookies y aislamiento por usuario.
 
-### 🚀 [Funcionalidades](./features/financials.md)
+### 🚀 [Funcionalidades](./architecture/system-overview.md#detalle-de-funcionalidades)
 
-- **[Gestión Financiera](./features/financials.md):** IVA, Pagos y Generación de PDFs.
-- **[Gestión de Clientes](./features/clients.md):** Registro, historial, estadísticas de valor.
-- **[Inventario y Catálogo](./features/inventory.md):** Productos, recetas, control de stock.
+- **[Gestión de Clientes](./architecture/system-overview.md#gestión-de-clientes):** Registro, historial, estadísticas de valor.
+- **[Gestión Financiera](./architecture/system-overview.md#gestión-financiera):** IVA, Pagos y Generación de PDFs.
+- **[Inventario y Catálogo](./architecture/system-overview.md#inventario-y-catálogo):** Productos, recetas, control de stock.
 
 ### 🎨 [Diseño y Marca](./design/UI-DESIGN-GUIDE.md)
 
