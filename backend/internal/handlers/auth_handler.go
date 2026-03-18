@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log/slog"
@@ -628,5 +629,183 @@ func validateGoogleIDToken(ctx context.Context, idToken string) (*GoogleIDTokenC
 		Subject: result.Sub,
 		Email:   result.Email,
 		Name:    result.Name,
+	}, nil
+}
+
+// AppleSignIn handles POST /api/auth/apple
+// Validates an Apple identity token and returns user + JWT tokens
+func (h *AuthHandler) AppleSignIn(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		IdentityToken     string  `json:"identity_token"`
+		AuthorizationCode string  `json:"authorization_code"`
+		FullName          *string `json:"full_name,omitempty"`
+		Email             *string `json:"email,omitempty"`
+	}
+	if err := decodeJSON(r, &req); err != nil {
+		writeError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	if req.IdentityToken == "" {
+		writeError(w, http.StatusBadRequest, "identity_token is required")
+		return
+	}
+
+	// Validate Apple identity token
+	claims, err := validateAppleIDToken(req.IdentityToken)
+	if err != nil {
+		slog.Warn("Invalid Apple identity token", "error", err)
+		writeError(w, http.StatusUnauthorized, "Invalid Apple identity token")
+		return
+	}
+
+	appleUserID := claims.Subject
+	email := claims.Email
+	if email == "" && req.Email != nil {
+		email = *req.Email
+	}
+
+	name := ""
+	if req.FullName != nil && *req.FullName != "" {
+		name = *req.FullName
+	}
+	if name == "" && email != "" {
+		name = strings.Split(email, "@")[0] // Fallback to email prefix
+	}
+	if name == "" {
+		name = "Usuario Apple"
+	}
+
+	// Try to find user by Apple ID first
+	user, err := h.userRepo.GetByAppleUserID(r.Context(), appleUserID)
+	if err == nil && user != nil {
+		// User exists with this Apple ID - login
+		tokens, err := h.authService.GenerateTokenPair(user.ID, user.Email)
+		if err != nil {
+			slog.Error("Failed to generate tokens", "error", err)
+			writeError(w, http.StatusInternalServerError, "Internal server error")
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]interface{}{
+			"user":   user,
+			"tokens": tokens,
+		})
+		return
+	}
+
+	// Try to find user by email (if email is available)
+	if email != "" {
+		user, err = h.userRepo.GetByEmail(r.Context(), email)
+		if err == nil && user != nil {
+			// User exists with this email - link Apple account
+			if err := h.userRepo.LinkAppleAccount(r.Context(), user.ID, appleUserID); err != nil {
+				slog.Error("Failed to link Apple account", "error", err)
+				writeError(w, http.StatusInternalServerError, "Failed to link Apple account")
+				return
+			}
+			tokens, err := h.authService.GenerateTokenPair(user.ID, user.Email)
+			if err != nil {
+				slog.Error("Failed to generate tokens", "error", err)
+				writeError(w, http.StatusInternalServerError, "Internal server error")
+				return
+			}
+			writeJSON(w, http.StatusOK, map[string]interface{}{
+				"user":   user,
+				"tokens": tokens,
+			})
+			return
+		}
+	}
+
+	// Create new user with Apple account
+	// Apple may hide the real email, so we use a placeholder if not available
+	if email == "" {
+		email = appleUserID + "@privaterelay.appleid.com"
+	}
+
+	newUser := &models.User{
+		Email:       email,
+		Name:        name,
+		Plan:        "basic",
+		AppleUserID: &appleUserID,
+	}
+	if err := h.userRepo.CreateWithOAuth(r.Context(), newUser); err != nil {
+		slog.Error("Failed to create user", "error", err)
+		writeError(w, http.StatusInternalServerError, "Failed to create account")
+		return
+	}
+
+	tokens, err := h.authService.GenerateTokenPair(newUser.ID, newUser.Email)
+	if err != nil {
+		slog.Error("Failed to generate tokens", "error", err)
+		writeError(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+
+	writeJSON(w, http.StatusCreated, map[string]interface{}{
+		"user":   newUser,
+		"tokens": tokens,
+	})
+}
+
+// AppleIDTokenClaims represents the claims from an Apple identity token
+type AppleIDTokenClaims struct {
+	Subject string `json:"sub"`
+	Email   string `json:"email"`
+}
+
+// validateAppleIDToken validates an Apple identity token by decoding its JWT claims
+func validateAppleIDToken(identityToken string) (*AppleIDTokenClaims, error) {
+	// Decode the JWT to get claims
+	parts := strings.Split(identityToken, ".")
+	if len(parts) != 3 {
+		return nil, fmt.Errorf("invalid token format")
+	}
+
+	// Decode payload (second part) using URL-safe base64
+	payload := parts[1]
+	// Add padding if needed
+	switch len(payload) % 4 {
+	case 2:
+		payload += "=="
+	case 3:
+		payload += "="
+	}
+
+	decoded, err := base64.URLEncoding.DecodeString(payload)
+	if err != nil {
+		// Try with RawURLEncoding (no padding)
+		decoded, err = base64.RawURLEncoding.DecodeString(parts[1])
+		if err != nil {
+			return nil, fmt.Errorf("failed to decode payload: %w", err)
+		}
+	}
+
+	var claims struct {
+		Iss           string `json:"iss"`
+		Sub           string `json:"sub"`
+		Aud           string `json:"aud"`
+		Exp           int64  `json:"exp"`
+		Email         string `json:"email"`
+		EmailVerified any    `json:"email_verified"` // Can be bool or string
+	}
+
+	if err := json.Unmarshal(decoded, &claims); err != nil {
+		return nil, fmt.Errorf("failed to parse claims: %w", err)
+	}
+
+	// Verify issuer
+	if claims.Iss != "https://appleid.apple.com" {
+		return nil, fmt.Errorf("invalid token issuer: %s", claims.Iss)
+	}
+
+	// Verify expiration
+	if time.Now().Unix() > claims.Exp {
+		return nil, fmt.Errorf("token expired")
+	}
+
+	return &AppleIDTokenClaims{
+		Subject: claims.Sub,
+		Email:   claims.Email,
 	}, nil
 }
