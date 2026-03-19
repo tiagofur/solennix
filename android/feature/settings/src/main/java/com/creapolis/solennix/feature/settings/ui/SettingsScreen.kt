@@ -24,6 +24,7 @@ fun SettingsScreen(
     onEditProfile: () -> Unit,
     onChangePassword: () -> Unit,
     onBusinessSettings: () -> Unit,
+    onContractDefaults: () -> Unit,
     onPricing: () -> Unit,
     onAbout: () -> Unit,
     onPrivacy: () -> Unit,
@@ -72,6 +73,7 @@ fun SettingsScreen(
                 SettingsItem(icon = Icons.Default.Person, label = "Editar Perfil", onClick = onEditProfile)
                 SettingsItem(icon = Icons.Default.Lock, label = "Cambiar Contraseña", onClick = onChangePassword)
                 SettingsItem(icon = Icons.Default.Business, label = "Ajustes del Negocio", onClick = onBusinessSettings)
+                SettingsItem(icon = Icons.Default.Receipt, label = "Valores del Contrato", onClick = onContractDefaults)
             }
 
             SettingsSection(title = "Suscripción") {

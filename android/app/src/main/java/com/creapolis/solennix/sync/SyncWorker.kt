@@ -7,6 +7,9 @@ import com.creapolis.solennix.core.data.repository.ClientRepository
 import com.creapolis.solennix.core.data.repository.EventRepository
 import com.creapolis.solennix.core.data.repository.InventoryRepository
 import com.creapolis.solennix.core.data.repository.ProductRepository
+import com.creapolis.solennix.core.data.search.AppSearchIndexer
+import com.creapolis.solennix.core.network.EventDayNotificationManager
+import kotlinx.coroutines.flow.first
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import java.util.concurrent.TimeUnit
@@ -21,7 +24,9 @@ class SyncWorker @AssistedInject constructor(
     private val eventRepository: EventRepository,
     private val clientRepository: ClientRepository,
     private val productRepository: ProductRepository,
-    private val inventoryRepository: InventoryRepository
+    private val inventoryRepository: InventoryRepository,
+    private val eventDayNotificationManager: EventDayNotificationManager,
+    private val appSearchIndexer: AppSearchIndexer
 ) : CoroutineWorker(context, workerParams) {
 
     override suspend fun doWork(): Result {
@@ -31,6 +36,12 @@ class SyncWorker @AssistedInject constructor(
             syncClients()
             syncProducts()
             syncInventory()
+
+            // Post-sync: verificar eventos de hoy y mostrar notificaciones persistentes
+            checkTodayEventsNotifications()
+
+            // Post-sync: indexar contenido para busqueda en el dispositivo
+            indexContentForSearch()
 
             Result.success()
         } catch (e: Exception) {
@@ -71,6 +82,37 @@ class SyncWorker @AssistedInject constructor(
             inventoryRepository.syncInventory()
         } catch (e: Exception) {
             // Log but don't fail the entire sync
+        }
+    }
+
+    /**
+     * Verifica eventos de hoy y muestra notificaciones persistentes para los confirmados.
+     */
+    private suspend fun checkTodayEventsNotifications() {
+        try {
+            val events = eventRepository.getEvents().first()
+            val clients = clientRepository.getClients().first()
+            val clientsMap = clients.associateBy { it.id }
+            eventDayNotificationManager.checkAndShowTodayEvents(events, clientsMap)
+        } catch (e: Exception) {
+            // No fallar el sync por errores de notificacion
+        }
+    }
+
+    /**
+     * Indexa clientes, eventos y productos para busqueda en el dispositivo.
+     */
+    private suspend fun indexContentForSearch() {
+        try {
+            val clients = clientRepository.getClients().first()
+            val events = eventRepository.getEvents().first()
+            val products = productRepository.getProducts().first()
+
+            appSearchIndexer.indexClients(clients)
+            appSearchIndexer.indexEvents(events)
+            appSearchIndexer.indexProducts(products)
+        } catch (e: Exception) {
+            // No fallar el sync por errores de indexacion
         }
     }
 

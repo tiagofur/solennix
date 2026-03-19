@@ -31,13 +31,24 @@ import com.creapolis.solennix.feature.settings.ui.ChangePasswordScreen
 import com.creapolis.solennix.feature.settings.ui.EditProfileScreen
 import com.creapolis.solennix.feature.settings.ui.PricingScreen
 import com.creapolis.solennix.feature.settings.ui.PrivacyScreen
+import com.creapolis.solennix.feature.settings.ui.BusinessSettingsScreen
+import com.creapolis.solennix.feature.settings.ui.ContractDefaultsScreen
 import com.creapolis.solennix.feature.settings.ui.SettingsScreen
 import com.creapolis.solennix.feature.settings.ui.TermsScreen
 
 @Composable
-fun CompactBottomNavLayout() {
+fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
     var selectedDestination by remember { mutableStateOf(TopLevelDestination.HOME) }
     val navController = rememberNavController()
+
+    // Navegar al deep link despues de que el NavHost se haya inicializado
+    LaunchedEffect(initialDeepLinkRoute) {
+        initialDeepLinkRoute?.let { route ->
+            navController.navigate(route) {
+                launchSingleTop = true
+            }
+        }
+    }
 
     Scaffold(
         bottomBar = {
@@ -168,7 +179,8 @@ fun CompactBottomNavLayout() {
                     viewModel = hiltViewModel(),
                     onEditProfile = { navController.navigate("edit_profile") },
                     onChangePassword = { navController.navigate("change_password") },
-                    onBusinessSettings = { /* TODO: Business Settings */ },
+                    onBusinessSettings = { navController.navigate("business_settings") },
+                    onContractDefaults = { navController.navigate("contract_defaults") },
                     onPricing = { navController.navigate("pricing") },
                     onAbout = { navController.navigate("about") },
                     onPrivacy = { navController.navigate("privacy") },
@@ -185,6 +197,18 @@ fun CompactBottomNavLayout() {
             }
             composable("change_password") {
                 ChangePasswordScreen(
+                    viewModel = hiltViewModel(),
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+            composable("business_settings") {
+                BusinessSettingsScreen(
+                    viewModel = hiltViewModel(),
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+            composable("contract_defaults") {
+                ContractDefaultsScreen(
                     viewModel = hiltViewModel(),
                     onNavigateBack = { navController.popBackStack() }
                 )

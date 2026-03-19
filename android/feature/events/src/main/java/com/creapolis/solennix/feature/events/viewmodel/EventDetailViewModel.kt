@@ -13,7 +13,9 @@ import com.creapolis.solennix.core.model.EventPhoto
 import com.creapolis.solennix.core.model.EventProduct
 import com.creapolis.solennix.core.model.Payment
 import com.creapolis.solennix.core.model.User
+import com.creapolis.solennix.core.model.EventStatus
 import com.creapolis.solennix.core.network.AuthManager
+import com.creapolis.solennix.core.network.EventDayNotificationManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -44,6 +46,7 @@ class EventDetailViewModel @Inject constructor(
     private val clientRepository: ClientRepository,
     private val paymentRepository: PaymentRepository,
     private val authManager: AuthManager,
+    private val eventDayNotificationManager: EventDayNotificationManager,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -130,6 +133,9 @@ class EventDetailViewModel @Inject constructor(
                     _client.value = clientRepository.getClient(clientId)
                 }
 
+                // Auto-mostrar notificacion persistente si el evento es hoy y confirmado
+                checkAndShowEventDayNotification(event, _client.value)
+
                 _isLoading.value = false
             } catch (e: Exception) {
                 _errorMessage.value = e.message
@@ -195,6 +201,33 @@ class EventDetailViewModel @Inject constructor(
             } catch (e: Exception) {
                 _errorMessage.value = "Error deleting photo: ${e.message}"
             }
+        }
+    }
+
+    /**
+     * Muestra la notificacion persistente del evento del dia.
+     */
+    fun startEventDayNotification() {
+        val event = _event.value ?: return
+        val client = _client.value ?: return
+        eventDayNotificationManager.showEventNotification(event, client)
+    }
+
+    /**
+     * Cancela la notificacion persistente del evento del dia.
+     */
+    fun stopEventDayNotification() {
+        eventDayNotificationManager.dismissEventNotification(eventId)
+    }
+
+    /**
+     * Verifica si el evento es hoy y esta confirmado para mostrar notificacion automaticamente.
+     */
+    private fun checkAndShowEventDayNotification(event: Event?, client: Client?) {
+        if (event == null || client == null) return
+        val today = java.time.LocalDate.now().toString()
+        if (event.eventDate == today && event.status == EventStatus.CONFIRMED) {
+            eventDayNotificationManager.showEventNotification(event, client)
         }
     }
 }

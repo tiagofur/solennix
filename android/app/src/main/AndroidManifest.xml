@@ -32,6 +32,16 @@
                 <data android:host="reset-password" />
             </intent-filter>
 
+            <!-- Deep Links for App Search indexing and notifications -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="solennix" android:host="client" />
+                <data android:scheme="solennix" android:host="event" />
+                <data android:scheme="solennix" android:host="product" />
+            </intent-filter>
+
             <meta-data
                 android:name="android.app.shortcuts"
                 android:resource="@xml/shortcuts" />

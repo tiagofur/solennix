@@ -13,6 +13,7 @@ sealed class Route {
     @Serializable data class ProductForm(val id: String? = null) : Route()
     @Serializable data class InventoryDetail(val id: String) : Route()
     @Serializable data class InventoryForm(val id: String? = null) : Route()
+    @Serializable data object Onboarding : Route()
     @Serializable data object EditProfile : Route()
     @Serializable data object ChangePassword : Route()
     @Serializable data object BusinessSettings : Route()
