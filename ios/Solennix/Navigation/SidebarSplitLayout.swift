@@ -101,13 +101,16 @@ struct SidebarSplitLayout: View {
     private func sectionListView(for section: SidebarSection) -> some View {
         switch section {
         case .dashboard:
-            SidebarSectionPlaceholder(section: section)
+            DashboardView()
                 .navigationTitle(section.title)
         case .calendar:
-            SidebarSectionPlaceholder(section: section)
+            CalendarView(viewModel: CalendarViewModel(apiClient: apiClient))
+                .navigationTitle(section.title)
+        case .events:
+            EventListView(apiClient: apiClient)
                 .navigationTitle(section.title)
         case .clients:
-            SidebarSectionPlaceholder(section: section)
+            ClientListView(apiClient: apiClient)
                 .navigationTitle(section.title)
         case .products:
             ProductListView(apiClient: apiClient)
@@ -116,7 +119,7 @@ struct SidebarSplitLayout: View {
             InventoryListView(apiClient: apiClient)
                 .navigationTitle(section.title)
         case .search:
-            SidebarSectionPlaceholder(section: section)
+            SearchView()
                 .navigationTitle(section.title)
         case .settings:
             SettingsView(apiClient: apiClient)
@@ -126,38 +129,13 @@ struct SidebarSplitLayout: View {
 
 }
 
-// MARK: - Sidebar Section Placeholder
-
-/// Placeholder list view for a sidebar section that hasn't been implemented yet.
-private struct SidebarSectionPlaceholder: View {
-
-    let section: SidebarSection
-
-    var body: some View {
-        VStack(spacing: 16) {
-            Image(systemName: section.iconName)
-                .font(.system(size: 48))
-                .foregroundStyle(.secondary)
-
-            Text(section.title)
-                .font(.title2)
-                .fontWeight(.semibold)
-
-            Text("Disponible en Fase 2")
-                .font(.footnote)
-                .foregroundStyle(.tertiary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-}
-
 // MARK: - SidebarSection Grouping
 
 extension SidebarSection {
 
     /// Main navigation sections (displayed first in the sidebar).
     static let mainSections: [SidebarSection] = [
-        .dashboard, .calendar, .clients, .products, .inventory
+        .dashboard, .calendar, .events, .clients, .products, .inventory
     ]
 
     /// Utility sections (search, etc.).

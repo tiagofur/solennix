@@ -108,6 +108,16 @@ public final class CalendarViewModel {
 
     // MARK: - Computed Properties
 
+    /// Count of events grouped by status.
+    public var statusCounts: [EventStatus: Int] {
+        Dictionary(grouping: events, by: { $0.status }).mapValues { $0.count }
+    }
+
+    /// Total number of events (all statuses).
+    public var totalEventCount: Int {
+        events.count
+    }
+
     /// Events matching the selected date.
     public var eventsForSelectedDate: [Event] {
         guard let selected = selectedDate else { return [] }

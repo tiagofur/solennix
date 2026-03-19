@@ -45,6 +45,14 @@ public final class DashboardViewModel {
         return counts
     }
 
+    public var totalClients: Int {
+        clientMap.count
+    }
+
+    public var pendingQuotes: Int {
+        eventsThisMonth.filter { $0.status == .quoted }.count
+    }
+
     /// Resolve a client name from the client map.
     public func clientName(for clientId: String) -> String {
         clientMap[clientId]?.name ?? "Cliente"

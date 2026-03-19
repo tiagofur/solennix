@@ -6,6 +6,7 @@ import Foundation
 public enum Route: Hashable {
 
     // MARK: Events
+    case eventList
     case eventDetail(id: String)
     case eventForm(id: String? = nil, clientId: String? = nil, date: Date? = nil)
     case eventChecklist(id: String)
@@ -71,6 +72,7 @@ public enum Tab: Int, Hashable, CaseIterable {
 public enum SidebarSection: String, Hashable, CaseIterable {
     case dashboard
     case calendar
+    case events
     case clients
     case products
     case inventory
@@ -82,6 +84,7 @@ public enum SidebarSection: String, Hashable, CaseIterable {
         switch self {
         case .dashboard: return "house.fill"
         case .calendar:  return "calendar"
+        case .events:    return "calendar.badge.clock"
         case .clients:   return "person.2.fill"
         case .products:  return "shippingbox.fill"
         case .inventory: return "archivebox.fill"
@@ -95,6 +98,7 @@ public enum SidebarSection: String, Hashable, CaseIterable {
         switch self {
         case .dashboard: return "Inicio"
         case .calendar:  return "Calendario"
+        case .events:    return "Eventos"
         case .clients:   return "Clientes"
         case .products:  return "Productos"
         case .inventory: return "Inventario"

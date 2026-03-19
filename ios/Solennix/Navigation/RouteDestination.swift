@@ -15,6 +15,8 @@ struct RouteDestination: View {
     var body: some View {
         switch route {
         // Events
+        case .eventList:
+            EventListView(apiClient: apiClient)
         case .eventDetail(let id):
             EventDetailView(eventId: id, apiClient: apiClient)
         case .eventForm(let id, _, _):

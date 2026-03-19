@@ -274,6 +274,22 @@ public struct DashboardView: View {
                         ? SolennixColors.kpiOrangeBg
                         : SolennixColors.kpiGreenBg
                 )
+
+                KPICardView(
+                    title: "Clientes",
+                    value: "\(viewModel?.totalClients ?? 0)",
+                    icon: "person.2",
+                    iconColor: SolennixColors.kpiBlue,
+                    iconBgColor: SolennixColors.kpiBlueBg
+                )
+
+                KPICardView(
+                    title: "Cotizaciones",
+                    value: "\(viewModel?.pendingQuotes ?? 0)",
+                    icon: "doc.text.badge.clock",
+                    iconColor: SolennixColors.kpiOrange,
+                    iconBgColor: SolennixColors.kpiOrangeBg
+                )
             }
             .padding(.horizontal, Spacing.md)
         }

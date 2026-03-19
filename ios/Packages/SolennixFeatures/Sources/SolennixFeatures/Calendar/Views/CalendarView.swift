@@ -309,27 +309,45 @@ public struct CalendarView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: Spacing.sm) {
                     ForEach(StatusFilter.allCases, id: \.self) { filter in
+                        let count = filterCount(for: filter)
+                        let isSelected = viewModel.statusFilter == filter
                         Button {
                             withAnimation(.easeInOut(duration: 0.2)) {
                                 viewModel.statusFilter = filter
                             }
                         } label: {
-                            Text(filter.rawValue)
-                                .font(.caption)
-                                .fontWeight(.semibold)
-                                .foregroundStyle(
-                                    viewModel.statusFilter == filter
-                                        ? .white
-                                        : SolennixColors.textSecondary
-                                )
-                                .padding(.horizontal, Spacing.sm)
-                                .padding(.vertical, Spacing.xs)
-                                .background(
-                                    viewModel.statusFilter == filter
-                                        ? SolennixColors.primary
-                                        : SolennixColors.surfaceAlt
-                                )
-                                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.full))
+                            HStack(spacing: Spacing.xs) {
+                                Text(filter.rawValue)
+                                if count > 0 {
+                                    Text("\(count)")
+                                        .font(.caption2)
+                                        .fontWeight(.bold)
+                                        .foregroundStyle(isSelected ? .white : SolennixColors.textTertiary)
+                                        .padding(.horizontal, 4)
+                                        .padding(.vertical, 1)
+                                        .background(
+                                            isSelected
+                                                ? Color.white.opacity(0.3)
+                                                : SolennixColors.textTertiary.opacity(0.2)
+                                        )
+                                        .clipShape(RoundedRectangle(cornerRadius: 4))
+                                }
+                            }
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(
+                                isSelected
+                                    ? .white
+                                    : SolennixColors.textSecondary
+                            )
+                            .padding(.horizontal, Spacing.sm)
+                            .padding(.vertical, Spacing.xs)
+                            .background(
+                                isSelected
+                                    ? SolennixColors.primary
+                                    : SolennixColors.surfaceAlt
+                            )
+                            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.full))
                         }
                     }
                 }
@@ -443,6 +461,13 @@ public struct CalendarView: View {
     }
 
     // MARK: - Helpers
+
+    private func filterCount(for filter: StatusFilter) -> Int {
+        if let status = filter.eventStatus {
+            return viewModel.statusCounts[status] ?? 0
+        }
+        return viewModel.totalEventCount
+    }
 
     private func colorForStatus(_ status: EventStatus) -> Color {
         switch status {

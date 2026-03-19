@@ -15,6 +15,25 @@ struct MoreMenuView: View {
 
     var body: some View {
         List {
+            // Events section
+            Section {
+                NavigationLink {
+                    EventListView(apiClient: apiClient)
+                } label: {
+                    menuRow(
+                        icon: "calendar.badge.clock",
+                        title: "Eventos",
+                        subtitle: "Lista completa de eventos",
+                        color: SolennixColors.statusConfirmed
+                    )
+                }
+            } header: {
+                Text("Eventos")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(SolennixColors.textSecondary)
+            }
+
             // Catalog section
             Section {
                 NavigationLink {
