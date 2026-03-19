@@ -3,6 +3,8 @@ package com.creapolis.solennix.ui.navigation
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -238,7 +240,9 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                 SearchScreen(
                     viewModel = hiltViewModel(),
                     onClientClick = { id -> navController.navigate("client_detail/$id") },
-                    onEventClick = { id -> navController.navigate("event_detail/$id") }
+                    onEventClick = { id -> navController.navigate("event_detail/$id") },
+                    onProductClick = { id -> navController.navigate("product_detail/$id") },
+                    onInventoryClick = { id -> navController.navigate("inventory_detail/$id") }
                 )
             }
 
@@ -297,7 +301,7 @@ fun MoreMenuScreen(
         Text("Menu Principal", style = MaterialTheme.typography.headlineSmall, color = SolennixTheme.colors.primaryText)
         Spacer(modifier = Modifier.height(24.dp))
         
-        MenuCard(title = "Productos", icon = Icons.Default.List, onClick = onProductsClick)
+        MenuCard(title = "Productos", icon = Icons.AutoMirrored.Filled.List, onClick = onProductsClick)
         MenuCard(title = "Inventario", icon = Icons.Default.Build, onClick = onInventoryClick)
         MenuCard(title = "Busqueda Global", icon = Icons.Default.Search, onClick = onSearchClick)
         MenuCard(title = "Ajustes", icon = Icons.Default.Settings, onClick = onSettingsClick)
@@ -315,7 +319,7 @@ fun MenuCard(title: String, icon: androidx.compose.ui.graphics.vector.ImageVecto
             Spacer(modifier = Modifier.width(16.dp))
             Text(title, style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.weight(1f))
-            Icon(Icons.Default.KeyboardArrowRight, contentDescription = null, tint = SolennixTheme.colors.secondaryText)
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = SolennixTheme.colors.secondaryText)
         }
     }
 }

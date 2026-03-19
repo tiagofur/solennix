@@ -16,6 +16,9 @@ interface InventoryRepository {
     fun getLowStockItems(): Flow<List<InventoryItem>>
     suspend fun getInventoryItem(id: String): InventoryItem?
     suspend fun syncInventory()
+    suspend fun createInventoryItem(item: InventoryItem): InventoryItem
+    suspend fun updateInventoryItem(item: InventoryItem): InventoryItem
+    suspend fun deleteInventoryItem(id: String)
 }
 
 @Singleton
@@ -36,5 +39,22 @@ class OfflineFirstInventoryRepository @Inject constructor(
     override suspend fun syncInventory() {
         val networkItems: List<InventoryItem> = apiService.get(Endpoints.INVENTORY)
         inventoryDao.insertInventoryItems(networkItems.map { it.asEntity() })
+    }
+
+    override suspend fun createInventoryItem(item: InventoryItem): InventoryItem {
+        val networkItem: InventoryItem = apiService.post(Endpoints.INVENTORY, item)
+        inventoryDao.insertInventoryItems(listOf(networkItem.asEntity()))
+        return networkItem
+    }
+
+    override suspend fun updateInventoryItem(item: InventoryItem): InventoryItem {
+        val networkItem: InventoryItem = apiService.put(Endpoints.inventoryItem(item.id), item)
+        inventoryDao.insertInventoryItems(listOf(networkItem.asEntity()))
+        return networkItem
+    }
+
+    override suspend fun deleteInventoryItem(id: String) {
+        apiService.delete(Endpoints.inventoryItem(id))
+        inventoryDao.deleteInventoryItemById(id)
     }
 }

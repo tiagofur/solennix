@@ -11,8 +11,10 @@ public struct CalendarGridView: View {
 
     let days: [DateDay]
     let eventDotsForDay: (Date) -> [EventStatus]
+    let isDateBlocked: (Date) -> Bool
     let selectedDate: Date?
     let onSelectDate: (Date) -> Void
+    let onLongPressDate: ((Date) -> Void)?
 
     // MARK: - Constants
 
@@ -24,13 +26,17 @@ public struct CalendarGridView: View {
     public init(
         days: [DateDay],
         eventDotsForDay: @escaping (Date) -> [EventStatus],
+        isDateBlocked: @escaping (Date) -> Bool = { _ in false },
         selectedDate: Date?,
-        onSelectDate: @escaping (Date) -> Void
+        onSelectDate: @escaping (Date) -> Void,
+        onLongPressDate: ((Date) -> Void)? = nil
     ) {
         self.days = days
         self.eventDotsForDay = eventDotsForDay
+        self.isDateBlocked = isDateBlocked
         self.selectedDate = selectedDate
         self.onSelectDate = onSelectDate
+        self.onLongPressDate = onLongPressDate
     }
 
     // MARK: - Body
@@ -53,7 +59,8 @@ public struct CalendarGridView: View {
                 ForEach(days) { day in
                     DayCellView(
                         day: day,
-                        dots: day.isCurrentMonth ? eventDotsForDay(day.date) : []
+                        dots: day.isCurrentMonth ? eventDotsForDay(day.date) : [],
+                        isBlocked: day.isCurrentMonth ? isDateBlocked(day.date) : false
                     )
                     .onTapGesture {
                         guard day.isCurrentMonth else { return }
@@ -61,6 +68,13 @@ public struct CalendarGridView: View {
                             onSelectDate(day.date)
                         }
                     }
+                    .simultaneousGesture(
+                        LongPressGesture(minimumDuration: 0.5)
+                            .onEnded { _ in
+                                guard day.isCurrentMonth else { return }
+                                onLongPressDate?(day.date)
+                            }
+                    )
                 }
             }
         }
@@ -72,11 +86,19 @@ public struct CalendarGridView: View {
 private struct DayCellView: View {
     let day: DateDay
     let dots: [EventStatus]
+    let isBlocked: Bool
 
     var body: some View {
         VStack(spacing: 3) {
             // Day number with selection/today indicator
             ZStack {
+                // Blocked date background
+                if isBlocked && day.isCurrentMonth && !day.isSelected {
+                    Circle()
+                        .fill(SolennixColors.error.opacity(0.15))
+                        .frame(width: 32, height: 32)
+                }
+
                 if day.isSelected && day.isCurrentMonth {
                     Circle()
                         .fill(SolennixColors.primary)
@@ -91,6 +113,7 @@ private struct DayCellView: View {
                     .font(.subheadline)
                     .fontWeight(day.isToday ? .bold : .regular)
                     .foregroundStyle(dayTextColor)
+                    .strikethrough(isBlocked && day.isCurrentMonth && !day.isSelected, color: SolennixColors.error.opacity(0.6))
             }
             .frame(width: 32, height: 32)
 
@@ -115,6 +138,9 @@ private struct DayCellView: View {
         }
         if !day.isCurrentMonth {
             return SolennixColors.textTertiary
+        }
+        if isBlocked {
+            return SolennixColors.error.opacity(0.7)
         }
         return SolennixColors.text
     }
@@ -160,8 +186,13 @@ private struct DayCellView: View {
     CalendarGridView(
         days: days,
         eventDotsForDay: { _ in [.confirmed, .quoted] },
+        isDateBlocked: { date in
+            let day = calendar.component(.day, from: date)
+            return day == 10 || day == 15 || day == 20
+        },
         selectedDate: today,
-        onSelectDate: { _ in }
+        onSelectDate: { _ in },
+        onLongPressDate: { _ in }
     )
     .padding()
     .background(SolennixColors.background)

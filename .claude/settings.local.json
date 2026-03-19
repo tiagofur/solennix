@@ -200,7 +200,20 @@
       "Bash(pushd:*)",
       "Bash(cmd /c \"gradlew.bat assembleDebug\")",
       "Bash(cmd /c \"cd /d c:\\\\Users\\\\tfurt\\\\source\\\\repos\\\\eventosapp\\\\android && gradlew.bat assembleDebug\")",
-      "Bash(c:Userstfurtsourcereposeventosappandroidgradlew.bat -p c:Userstfurtsourcereposeventosappandroid assembleDebug)"
+      "Bash(c:Userstfurtsourcereposeventosappandroidgradlew.bat -p c:Userstfurtsourcereposeventosappandroid assembleDebug)",
+      "Bash(./gradlew assembleDebug)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(RES=\"/c/Users/tfurt/source/repos/eventosapp/android/app/src/main/res\")",
+      "Bash(for d:*)",
+      "Bash(do)",
+      "Bash(echo \"$d:\")",
+      "Read(//c/Users/tfurt/source/repos/eventosapp/android/$RES/**)",
+      "Bash(grep -r \"R.drawable\\\\|R.mipmap\\\\|painterResource\" /c/Users/tfurt/source/repos/eventosapp/android/feature/*/src/main/java --include=\"*.kt\")",
+      "Bash(find /c/Users/tfurt/source/repos/eventosapp/mobile/src -type f \\\\\\(-name *.ts -o -name *.tsx \\\\\\))",
+      "Bash(find /c/Users/tfurt/source/repos/eventosapp/mobile/src -type f \\\\\\(-name *Navigation* -o -name *Stack* -o -name *navigation.ts \\\\\\))",
+      "Bash(find /c/Users/tfurt/source/repos/eventosapp/android -type f \\\\\\(-name *NavHost* -o -name *Stack* -o -name *Navigation* \\\\\\))",
+      "Bash(cat:*)",
+      "Read(//tmp/**)"
     ]
   }
 }

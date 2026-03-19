@@ -51,7 +51,7 @@ object PdfGenerator {
         document.finishPage(page)
 
         val file = File(context.cacheDir, "presupuesto_${event.id}.pdf")
-        document.writeTo(FileOutputStream(file))
+        FileOutputStream(file).use { fos -> document.writeTo(fos) }
         document.close()
 
         return file

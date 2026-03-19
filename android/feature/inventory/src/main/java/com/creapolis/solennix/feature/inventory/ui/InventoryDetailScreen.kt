@@ -5,10 +5,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -24,6 +24,37 @@ fun InventoryDetailScreen(
     onEditClick: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(viewModel.deleteSuccess) {
+        if (viewModel.deleteSuccess) {
+            onNavigateBack()
+        }
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Eliminar Item") },
+            text = { Text("¿Estás seguro de que deseas eliminar este item del inventario? Esta acción no se puede deshacer.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                        viewModel.deleteItem()
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = SolennixTheme.colors.error)
+                ) {
+                    Text("Eliminar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -39,6 +70,9 @@ fun InventoryDetailScreen(
                         IconButton(onClick = { onEditClick(item.id) }) {
                             Icon(Icons.Default.Edit, contentDescription = "Edit")
                         }
+                        IconButton(onClick = { showDeleteDialog = true }) {
+                            Icon(Icons.Default.Delete, contentDescription = "Delete")
+                        }
                     }
                 }
             )
@@ -48,8 +82,12 @@ fun InventoryDetailScreen(
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
+        } else if (uiState.errorMessage != null) {
+            Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                Text(uiState.errorMessage.orEmpty(), color = SolennixTheme.colors.error)
+            }
         } else if (uiState.item != null) {
-            val item = uiState.item!!
+            val item = uiState.item ?: return@Scaffold
             val scrollState = rememberScrollState()
             Column(
                 modifier = Modifier

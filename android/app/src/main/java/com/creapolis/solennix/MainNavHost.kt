@@ -75,7 +75,14 @@ fun MainNavHost(deepLinkIntent: Intent? = null) {
             }
         }
         AuthManager.AuthState.Unauthenticated -> {
-            AuthNavHost()
+            AuthNavHost(
+                onAuthenticated = {
+                    // Force re-evaluation of auth state as a safety net.
+                    // storeTokens already sets Authenticated, but this ensures
+                    // MainNavHost recomposes even if the StateFlow update was missed.
+                    authViewModel.refreshAuthState()
+                }
+            )
         }
         AuthManager.AuthState.BiometricLocked -> {
             BiometricGateScreen(authManager = authViewModel.authManager)

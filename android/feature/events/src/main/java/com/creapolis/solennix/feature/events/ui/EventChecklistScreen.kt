@@ -63,7 +63,7 @@ fun EventChecklistScreen(
                 }
             } else if (uiState.error != null) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(uiState.error!!, color = SolennixTheme.colors.error)
+                    Text(uiState.error.orEmpty(), color = SolennixTheme.colors.error)
                 }
             } else if (uiState.items.isEmpty()) {
                 EmptyState(

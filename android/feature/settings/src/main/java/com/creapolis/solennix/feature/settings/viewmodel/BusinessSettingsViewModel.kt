@@ -39,19 +39,27 @@ class BusinessSettingsViewModel @Inject constructor(
             isLoading = true
             errorMessage = null
             try {
-                val user = authManager.currentUser.value
-                if (user != null) {
-                    businessName = user.businessName ?: ""
-                    showBusinessNameInPdf = user.showBusinessNameInPdf ?: true
-                    logoUrl = user.logoUrl
-                    brandColor = user.brandColor ?: "#007AFF"
-                }
+                val freshUser: User = apiService.get(Endpoints.ME)
+                authManager.storeUser(freshUser)
+                populateFromUser(freshUser)
             } catch (e: Exception) {
+                // Fallback to cached data if API call fails
+                val cachedUser = authManager.currentUser.value
+                if (cachedUser != null) {
+                    populateFromUser(cachedUser)
+                }
                 errorMessage = "Error al cargar los datos: ${e.message}"
             } finally {
                 isLoading = false
             }
         }
+    }
+
+    private fun populateFromUser(user: User) {
+        businessName = user.businessName ?: ""
+        showBusinessNameInPdf = user.showBusinessNameInPdf ?: true
+        logoUrl = user.logoUrl
+        brandColor = user.brandColor ?: "#007AFF"
     }
 
     fun saveBusinessSettings() {

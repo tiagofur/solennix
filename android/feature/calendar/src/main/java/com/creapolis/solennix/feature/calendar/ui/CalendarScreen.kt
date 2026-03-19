@@ -1,7 +1,9 @@
 package com.creapolis.solennix.feature.calendar.ui
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,12 +15,17 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.ViewList
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,6 +39,7 @@ import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.designsystem.component.StatusBadge
 import com.creapolis.solennix.core.model.Event
 import com.creapolis.solennix.core.model.EventStatus
+import com.creapolis.solennix.core.model.UnavailableDate
 import com.creapolis.solennix.feature.calendar.viewmodel.CalendarUiState
 import com.creapolis.solennix.feature.calendar.viewmodel.CalendarViewModel
 import com.creapolis.solennix.feature.calendar.viewmodel.CalendarViewMode
@@ -50,6 +58,9 @@ fun CalendarScreen(
     onEventClick: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var showBlockDialog by remember { mutableStateOf(false) }
+    var showUnblockDialog by remember { mutableStateOf(false) }
+    var longPressedDate by remember { mutableStateOf<LocalDate?>(null) }
 
     Scaffold(
         topBar = {
@@ -79,6 +90,14 @@ fun CalendarScreen(
                         onPreviousMonth = { viewModel.onMonthChange(uiState.currentMonth.minusMonths(1)) },
                         onNextMonth = { viewModel.onMonthChange(uiState.currentMonth.plusMonths(1)) },
                         onDateSelected = { viewModel.onDateSelected(it) },
+                        onDateLongPress = { date ->
+                            longPressedDate = date
+                            if (viewModel.isDateBlocked(date)) {
+                                showUnblockDialog = true
+                            } else {
+                                showBlockDialog = true
+                            }
+                        },
                         onEventClick = onEventClick
                     )
                 }
@@ -92,6 +111,40 @@ fun CalendarScreen(
                 }
             }
         }
+    }
+
+    // Block date dialog
+    if (showBlockDialog && longPressedDate != null) {
+        BlockDateDialog(
+            date = longPressedDate!!,
+            onConfirm = { reason ->
+                viewModel.toggleDateBlock(longPressedDate!!, reason)
+                showBlockDialog = false
+                longPressedDate = null
+            },
+            onDismiss = {
+                showBlockDialog = false
+                longPressedDate = null
+            }
+        )
+    }
+
+    // Unblock date dialog
+    if (showUnblockDialog && longPressedDate != null) {
+        val unavailableDate = viewModel.getUnavailableDateFor(longPressedDate!!)
+        UnblockDateDialog(
+            date = longPressedDate!!,
+            reason = unavailableDate?.reason,
+            onConfirm = {
+                viewModel.toggleDateBlock(longPressedDate!!)
+                showUnblockDialog = false
+                longPressedDate = null
+            },
+            onDismiss = {
+                showUnblockDialog = false
+                longPressedDate = null
+            }
+        )
     }
 }
 
@@ -191,6 +244,7 @@ fun CalendarViewContent(
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
     onDateSelected: (LocalDate) -> Unit,
+    onDateLongPress: (LocalDate) -> Unit = {},
     onEventClick: (String) -> Unit
 ) {
     Column {
@@ -204,7 +258,9 @@ fun CalendarViewContent(
             currentMonth = uiState.currentMonth,
             selectedDate = uiState.selectedDate,
             onDateSelected = onDateSelected,
+            onDateLongPress = onDateLongPress,
             events = uiState.events,
+            unavailableDates = uiState.unavailableDates,
             selectedStatus = uiState.selectedStatus
         )
 
@@ -318,7 +374,7 @@ fun CalendarHeader(
         verticalAlignment = Alignment.CenterVertically
     ) {
         IconButton(onClick = onPreviousMonth) {
-            Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "Previous")
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Previous")
         }
         Text(
             text = "${currentMonth.month.getDisplayName(TextStyle.FULL, Locale("es", "MX")).replaceFirstChar { it.uppercase() }} ${currentMonth.year}",
@@ -326,17 +382,20 @@ fun CalendarHeader(
             color = SolennixTheme.colors.primaryText
         )
         IconButton(onClick = onNextMonth) {
-            Icon(Icons.Default.KeyboardArrowRight, contentDescription = "Next")
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Next")
         }
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun CalendarGrid(
     currentMonth: YearMonth,
     selectedDate: LocalDate,
     onDateSelected: (LocalDate) -> Unit,
+    onDateLongPress: (LocalDate) -> Unit = {},
     events: List<Event>,
+    unavailableDates: List<UnavailableDate> = emptyList(),
     selectedStatus: EventStatus? = null
 ) {
     val daysInMonth = currentMonth.lengthOfMonth()
@@ -351,6 +410,8 @@ fun CalendarGrid(
     } else {
         events
     }
+
+    val errorColor = SolennixTheme.colors.error
 
     Column(modifier = Modifier.padding(horizontal = 8.dp)) {
         Row(modifier = Modifier.fillMaxWidth()) {
@@ -375,6 +436,10 @@ fun CalendarGrid(
                 if (day != null) {
                     val date = currentMonth.atDay(day)
                     val isSelected = date == selectedDate
+                    val dateStr = date.toString()
+                    val isBlocked = unavailableDates.any { ud ->
+                        dateStr >= ud.startDate && dateStr <= ud.endDate
+                    }
                     val eventsOnDate = filteredEvents.filter {
                         try {
                             ZonedDateTime.parse(it.eventDate).toLocalDate() == date
@@ -382,21 +447,38 @@ fun CalendarGrid(
                     }
                     val hasEvents = eventsOnDate.isNotEmpty()
 
+                    val bgColor = when {
+                        isSelected -> SolennixTheme.colors.primary
+                        isBlocked -> errorColor.copy(alpha = 0.15f)
+                        else -> Color.Transparent
+                    }
+
                     Box(
                         modifier = Modifier
                             .aspectRatio(1f)
                             .padding(4.dp)
                             .clip(CircleShape)
-                            .background(if (isSelected) SolennixTheme.colors.primary else Color.Transparent)
-                            .clickable { onDateSelected(date) },
+                            .background(bgColor)
+                            .combinedClickable(
+                                onClick = { onDateSelected(date) },
+                                onLongClick = { onDateLongPress(date) }
+                            ),
                         contentAlignment = Alignment.Center
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
                                 text = day.toString(),
-                                color = if (isSelected) Color.White else SolennixTheme.colors.primaryText,
+                                color = when {
+                                    isSelected -> Color.White
+                                    isBlocked -> errorColor
+                                    else -> SolennixTheme.colors.primaryText
+                                },
                                 style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                fontWeight = when {
+                                    isSelected -> FontWeight.Bold
+                                    isBlocked -> FontWeight.SemiBold
+                                    else -> FontWeight.Normal
+                                }
                             )
                             if (hasEvents && !isSelected) {
                                 // Show colored dots based on event status
@@ -604,4 +686,100 @@ fun ListEventItem(
             }
         }
     }
+}
+
+@Composable
+fun BlockDateDialog(
+    date: LocalDate,
+    onConfirm: (String?) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var reason by remember { mutableStateOf("") }
+    val dateFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy", Locale("es", "MX"))
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Bloquear fecha") },
+        text = {
+            Column {
+                Text(
+                    text = date.format(dateFormatter),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = SolennixTheme.colors.primaryText
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                OutlinedTextField(
+                    value = reason,
+                    onValueChange = { reason = it },
+                    label = { Text("Motivo (opcional)") },
+                    placeholder = { Text("Ej: Vacaciones, dia personal...") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = SolennixTheme.colors.primary,
+                        unfocusedBorderColor = SolennixTheme.colors.divider
+                    )
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(reason.ifBlank { null }) }) {
+                Text("Bloquear", color = SolennixTheme.colors.error)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar")
+            }
+        }
+    )
+}
+
+@Composable
+fun UnblockDateDialog(
+    date: LocalDate,
+    reason: String?,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    val dateFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy", Locale("es", "MX"))
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Desbloquear fecha") },
+        text = {
+            Column {
+                Text(
+                    text = "¿Desbloquear esta fecha?",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = SolennixTheme.colors.primaryText
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = date.format(dateFormatter),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = SolennixTheme.colors.secondaryText
+                )
+                if (!reason.isNullOrBlank()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Motivo: $reason",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = SolennixTheme.colors.secondaryText
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text("Desbloquear", color = SolennixTheme.colors.primary)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar")
+            }
+        }
+    )
 }

@@ -974,6 +974,7 @@ public struct EventDetailView: View {
             ("cotizacion", "Cotizacion", "doc.text"),
             ("contrato", "Contrato", "doc.richtext"),
             ("insumos", "Lista de Insumos", "list.clipboard"),
+            ("equipo", "Lista de Equipo", "wrench.and.screwdriver"),
             ("checklist", "Checklist", "checklist"),
             ("pagos", "Pagos", "dollarsign.circle"),
             ("factura", "Factura", "doc.badge.arrow.up"),

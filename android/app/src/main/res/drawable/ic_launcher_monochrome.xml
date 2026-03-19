@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+
+    <!-- Cup bowl -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M66,34 Q58,65 66,88 Q78,116 100,122 Q122,116 134,88 Q142,65 134,34 Q100,42 66,34 Z" />
+
+    <!-- Node -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M100,124 m-6,0 a6,3 0 1,0 12,0 a6,3 0 1,0 -12,0" />
+
+    <!-- Stem and base -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M96,124 L96,150 Q96,156 84,159 L72,161 L72,164 A30,8 0 0,0 128,164 L128,161 L116,159 Q104,156 104,150 L104,124 Z" />
+</vector>

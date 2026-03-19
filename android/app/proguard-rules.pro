@@ -20,3 +20,20 @@
 # Keep Room
 -keep class * extends androidx.room.RoomDatabase
 -keep class androidx.room.Room
+
+# Ktor Client
+-keep class io.ktor.** { *; }
+-keepclassmembers class io.ktor.** { *; }
+-dontwarn io.ktor.**
+
+# Coil image loading
+-keep class coil3.** { *; }
+-dontwarn coil3.**
+
+# OkHttp (used by Ktor)
+-dontwarn okhttp3.**
+-dontwarn okio.**
+-keep class okhttp3.** { *; }
+
+# App models - keep all serializable data classes
+-keepclassmembers class com.creapolis.solennix.core.model.** { *; }

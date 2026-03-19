@@ -7,8 +7,10 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.creapolis.solennix.core.data.repository.ProductRepository
+import com.creapolis.solennix.core.model.Product
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
@@ -64,8 +66,24 @@ class ProductFormViewModel @Inject constructor(
             isSaving = true
             errorMessage = null
             try {
-                // In a real scenario, we'd map this back to Product and use repository.
-                // productRepository.createProduct(...)
+                val product = Product(
+                    id = productId ?: UUID.randomUUID().toString(),
+                    userId = "", // Managed by backend
+                    name = name,
+                    category = category,
+                    basePrice = basePrice.toDoubleOrNull() ?: 0.0,
+                    recipe = null,
+                    imageUrl = imageUrl.takeIf { it.isNotBlank() },
+                    isActive = true,
+                    createdAt = "", // Handled by backend
+                    updatedAt = ""  // Handled by backend
+                )
+
+                if (productId != null) {
+                    productRepository.updateProduct(product)
+                } else {
+                    productRepository.createProduct(product)
+                }
                 saveSuccess = true
             } catch (e: Exception) {
                 errorMessage = "Error al guardar producto: ${e.message}"

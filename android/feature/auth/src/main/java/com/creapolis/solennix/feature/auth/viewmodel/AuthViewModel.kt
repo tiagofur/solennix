@@ -13,7 +13,10 @@ import com.creapolis.solennix.core.network.ApiService
 import com.creapolis.solennix.core.network.AuthManager
 import com.creapolis.solennix.core.network.Endpoints
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -25,9 +28,23 @@ class AuthViewModel @Inject constructor(
 
     val authState: StateFlow<AuthManager.AuthState> = authManager.authState
 
+    private val _loginSuccess = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    val loginSuccess: SharedFlow<Unit> = _loginSuccess.asSharedFlow()
+
     // UI State
     var isLoading by mutableStateOf(false)
     var errorMessage by mutableStateOf<String?>(null)
+
+    /**
+     * Forces a re-evaluation of auth state by calling restoreSession.
+     * Used as a safety net when the login success event fires,
+     * ensuring MainNavHost picks up the Authenticated state.
+     */
+    fun refreshAuthState() {
+        viewModelScope.launch {
+            authManager.restoreSession()
+        }
+    }
 
     // Login
     var loginEmail by mutableStateOf("")
@@ -46,6 +63,7 @@ class AuthViewModel @Inject constructor(
                 )
                 authManager.storeTokens(response.accessToken, response.refreshToken)
                 authManager.storeUser(response.user)
+                _loginSuccess.tryEmit(Unit)
             } catch (e: Exception) {
                 errorMessage = when {
                     e.message?.contains("401") == true -> "Email o contrasena incorrectos"
@@ -84,6 +102,7 @@ class AuthViewModel @Inject constructor(
                 )
                 authManager.storeTokens(response.accessToken, response.refreshToken)
                 authManager.storeUser(response.user)
+                _loginSuccess.tryEmit(Unit)
             } catch (e: Exception) {
                 errorMessage = "Error al crear la cuenta. Intenta de nuevo."
             } finally {
@@ -148,6 +167,7 @@ class AuthViewModel @Inject constructor(
                 )
                 authManager.storeTokens(response.accessToken, response.refreshToken)
                 authManager.storeUser(response.user)
+                _loginSuccess.tryEmit(Unit)
             } catch (e: Exception) {
                 errorMessage = "Error al iniciar sesion con Google"
             } finally {

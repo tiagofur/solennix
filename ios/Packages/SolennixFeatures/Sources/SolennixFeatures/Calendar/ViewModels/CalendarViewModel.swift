@@ -50,11 +50,13 @@ public final class CalendarViewModel {
 
     public var currentMonth: Date
     public var events: [Event] = []
+    public var unavailableDates: [UnavailableDate] = []
     public var selectedDate: Date?
     public var viewMode: ViewMode = .calendar
     public var searchText: String = ""
     public var statusFilter: StatusFilter = .all
     public var isLoading: Bool = false
+    public var isBlockingDate: Bool = false
     public var errorMessage: String?
 
     /// Map of client ID -> Client for resolving client names.
@@ -286,6 +288,79 @@ public final class CalendarViewModel {
         selectedDate = date
     }
 
+    // MARK: - Unavailable Dates
+
+    /// Check if a date falls within any unavailable date range.
+    public func isDateBlocked(_ date: Date) -> Bool {
+        let dateStr = Self.apiDateFormatter.string(from: date)
+        return unavailableDates.contains { $0.startDate <= dateStr && dateStr <= $0.endDate }
+    }
+
+    /// Return the `UnavailableDate` that covers this date, if any.
+    public func unavailableDateFor(_ date: Date) -> UnavailableDate? {
+        let dateStr = Self.apiDateFormatter.string(from: date)
+        return unavailableDates.first { $0.startDate <= dateStr && dateStr <= $0.endDate }
+    }
+
+    /// Toggle the blocked state of a date. If blocked, unblock it; if not, block it.
+    @MainActor
+    public func toggleDateBlock(date: Date, reason: String?) async {
+        isBlockingDate = true
+        do {
+            if let existing = unavailableDateFor(date) {
+                // Unblock: DELETE the unavailable date
+                try await apiClient.delete(Endpoint.unavailableDate(existing.id))
+            } else {
+                // Block: POST a new unavailable date
+                let dateStr = Self.apiDateFormatter.string(from: date)
+                struct BlockRequest: Encodable {
+                    let startDate: String
+                    let endDate: String
+                    let reason: String?
+
+                    enum CodingKeys: String, CodingKey {
+                        case startDate = "start_date"
+                        case endDate = "end_date"
+                        case reason
+                    }
+                }
+                let body = BlockRequest(startDate: dateStr, endDate: dateStr, reason: reason)
+                let _: UnavailableDate = try await apiClient.post(Endpoint.unavailableDates, body: body)
+            }
+            // Reload unavailable dates
+            await loadUnavailableDates()
+        } catch {
+            if let apiError = error as? APIError {
+                errorMessage = apiError.errorDescription ?? "Error actualizando fecha"
+            } else {
+                errorMessage = "Error actualizando fecha"
+            }
+        }
+        isBlockingDate = false
+    }
+
+    /// Load unavailable dates for the visible range.
+    @MainActor
+    public func loadUnavailableDates() async {
+        let now = Date()
+        guard let startDate = calendar.date(byAdding: .month, value: -6, to: now),
+              let endDate = calendar.date(byAdding: .month, value: 6, to: now)
+        else { return }
+
+        let startStr = Self.apiDateFormatter.string(from: startDate)
+        let endStr = Self.apiDateFormatter.string(from: endDate)
+
+        do {
+            let fetched: [UnavailableDate] = try await apiClient.get(
+                Endpoint.unavailableDates,
+                params: ["start": startStr, "end": endStr]
+            )
+            unavailableDates = fetched
+        } catch {
+            // Silently fail — unavailable dates are non-critical
+        }
+    }
+
     // MARK: - Data Loading
 
     /// Load events within a 12-month window (6 months back, 6 months forward)
@@ -313,12 +388,18 @@ public final class CalendarViewModel {
                 params: ["start_date": startStr, "end_date": endStr]
             )
             async let clientsResult: [Client] = apiClient.get(Endpoint.clients)
+            async let unavailableResult: [UnavailableDate] = apiClient.get(
+                Endpoint.unavailableDates,
+                params: ["start": startStr, "end": endStr]
+            )
 
             let fetchedEvents = try await eventsResult
             let fetchedClients = try await clientsResult
+            let fetchedUnavailable = try await unavailableResult
 
             events = fetchedEvents
             clientMap = Dictionary(uniqueKeysWithValues: fetchedClients.map { ($0.id, $0) })
+            unavailableDates = fetchedUnavailable
 
         } catch {
             if let apiError = error as? APIError {

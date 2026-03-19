@@ -9,6 +9,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Article
+import androidx.compose.material.icons.automirrored.filled.PlaylistAddCheck
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -21,10 +23,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.component.*
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.Client
+import com.creapolis.solennix.core.model.EventStatus
 import com.creapolis.solennix.feature.events.pdf.BudgetPdfGenerator
 import com.creapolis.solennix.feature.events.pdf.ChecklistPdfGenerator
 import com.creapolis.solennix.feature.events.pdf.ContractPdfGenerator
+import com.creapolis.solennix.feature.events.pdf.EquipmentListPdfGenerator
+import com.creapolis.solennix.feature.events.pdf.InvoicePdfGenerator
 import com.creapolis.solennix.feature.events.pdf.PaymentReportPdfGenerator
+import com.creapolis.solennix.feature.events.pdf.ShoppingListPdfGenerator
 import com.creapolis.solennix.feature.events.viewmodel.EventDetailUiState
 import com.creapolis.solennix.feature.events.viewmodel.EventDetailViewModel
 import androidx.window.layout.FoldingFeature
@@ -44,6 +50,7 @@ fun EventDetailScreen(
     val context = LocalContext.current
     var showPaymentModal by remember { mutableStateOf(false) }
     var showPhotoGallery by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     val windowInfoTracker = WindowInfoTracker.getOrCreate(context)
     val windowLayoutInfo by windowInfoTracker.windowLayoutInfo(context as android.app.Activity)
@@ -55,6 +62,13 @@ fun EventDetailScreen(
 
     val isTableTop = foldingFeature?.state == FoldingFeature.State.HALF_OPENED &&
             foldingFeature.orientation == FoldingFeature.Orientation.HORIZONTAL
+
+    // Navigate back on delete success
+    LaunchedEffect(viewModel.deleteSuccess) {
+        if (viewModel.deleteSuccess) {
+            onNavigateBack()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -70,6 +84,9 @@ fun EventDetailScreen(
                         IconButton(onClick = { onEditClick(event.id) }) {
                             Icon(Icons.Default.Edit, contentDescription = "Edit")
                         }
+                        IconButton(onClick = { showDeleteDialog = true }) {
+                            Icon(Icons.Default.Delete, contentDescription = "Delete", tint = SolennixTheme.colors.error)
+                        }
                     }
                 }
             )
@@ -79,8 +96,12 @@ fun EventDetailScreen(
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
+        } else if (uiState.errorMessage != null) {
+            Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                Text(uiState.errorMessage.orEmpty(), color = SolennixTheme.colors.error)
+            }
         } else if (uiState.event != null) {
-            val event = uiState.event!!
+            val event = uiState.event ?: return@Scaffold
             val remaining = event.totalAmount - uiState.totalPaid
 
             val content = @Composable {
@@ -90,6 +111,13 @@ fun EventDetailScreen(
                         .padding(16.dp)
                 ) {
                     EventCard(event = event)
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Status Change Section
+                    StatusChangeSection(
+                        currentStatus = event.status,
+                        onStatusChange = { newStatus -> viewModel.updateEventStatus(newStatus) }
+                    )
                     Spacer(modifier = Modifier.height(16.dp))
 
                     // Financial Summary
@@ -153,7 +181,7 @@ fun EventDetailScreen(
                                         Text(payment.paymentDate, style = MaterialTheme.typography.bodySmall)
                                         Text(payment.paymentMethod.replaceFirstChar { it.uppercase() }, style = MaterialTheme.typography.labelMedium)
                                         if (!payment.notes.isNullOrEmpty()) {
-                                            Text(payment.notes!!, style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.secondaryText)
+                                            Text(payment.notes.orEmpty(), style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.secondaryText)
                                         }
                                     }
                                     Text("$${payment.amount}", style = MaterialTheme.typography.titleMedium, color = SolennixTheme.colors.success)
@@ -175,7 +203,7 @@ fun EventDetailScreen(
                     content()
                 }
             }
-            
+
             if (showPaymentModal) {
                 PaymentModal(
                     remaining = remaining,
@@ -203,6 +231,84 @@ fun EventDetailScreen(
                         viewModel.deletePhoto(photo)
                     }
                 )
+            }
+
+            if (showDeleteDialog) {
+                AlertDialog(
+                    onDismissRequest = { showDeleteDialog = false },
+                    title = { Text("Eliminar evento") },
+                    text = { Text("\u00bfEliminar este evento? Esta acci\u00f3n no se puede deshacer.") },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                showDeleteDialog = false
+                                viewModel.deleteEvent()
+                            },
+                            colors = ButtonDefaults.textButtonColors(contentColor = SolennixTheme.colors.error)
+                        ) {
+                            Text("Eliminar")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showDeleteDialog = false }) {
+                            Text("Cancelar")
+                        }
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun StatusChangeSection(
+    currentStatus: EventStatus,
+    onStatusChange: (EventStatus) -> Unit
+) {
+    val statusOptions = listOf(
+        EventStatus.QUOTED to "Cotizado",
+        EventStatus.CONFIRMED to "Confirmado",
+        EventStatus.COMPLETED to "Completado",
+        EventStatus.CANCELLED to "Cancelado"
+    )
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text("Estado del Evento", style = MaterialTheme.typography.titleMedium)
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                statusOptions.forEach { (status, label) ->
+                    FilterChip(
+                        selected = currentStatus == status,
+                        onClick = {
+                            if (currentStatus != status) {
+                                onStatusChange(status)
+                            }
+                        },
+                        label = { Text(label, style = MaterialTheme.typography.labelSmall) },
+                        modifier = Modifier.weight(1f),
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = when (status) {
+                                EventStatus.QUOTED -> SolennixTheme.colors.primary.copy(alpha = 0.15f)
+                                EventStatus.CONFIRMED -> SolennixTheme.colors.success.copy(alpha = 0.15f)
+                                EventStatus.COMPLETED -> SolennixTheme.colors.primary.copy(alpha = 0.15f)
+                                EventStatus.CANCELLED -> SolennixTheme.colors.error.copy(alpha = 0.15f)
+                            },
+                            selectedLabelColor = when (status) {
+                                EventStatus.QUOTED -> SolennixTheme.colors.primary
+                                EventStatus.CONFIRMED -> SolennixTheme.colors.success
+                                EventStatus.COMPLETED -> SolennixTheme.colors.primary
+                                EventStatus.CANCELLED -> SolennixTheme.colors.error
+                            }
+                        )
+                    )
+                }
             }
         }
     }
@@ -241,7 +347,7 @@ fun EventCard(event: com.creapolis.solennix.core.model.Event) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.LocationOn, contentDescription = null, tint = SolennixTheme.colors.secondaryText, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(event.location!!, style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.secondaryText)
+                    Text(event.location.orEmpty(), style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.secondaryText)
                 }
             }
         }
@@ -291,7 +397,7 @@ fun DocumentActionsGrid(
         Row(modifier = Modifier.fillMaxWidth()) {
             ActionButton(
                 icon = Icons.Default.Description,
-                label = "Cotización",
+                label = "Cotizaci\u00f3n",
                 modifier = Modifier.weight(1f),
                 onClick = {
                     isGenerating = true
@@ -313,7 +419,7 @@ fun DocumentActionsGrid(
             )
             Spacer(modifier = Modifier.width(8.dp))
             ActionButton(
-                icon = Icons.Default.Article,
+                icon = Icons.AutoMirrored.Filled.Article,
                 label = "Contrato",
                 modifier = Modifier.weight(1f),
                 onClick = {
@@ -384,7 +490,78 @@ fun DocumentActionsGrid(
             )
             Spacer(modifier = Modifier.width(8.dp))
             ActionButton(
-                icon = Icons.Default.PlaylistAddCheck,
+                icon = Icons.Default.Receipt,
+                label = "Factura",
+                modifier = Modifier.weight(1f),
+                onClick = {
+                    isGenerating = true
+                    try {
+                        val file = InvoicePdfGenerator.generate(
+                            context = context,
+                            event = event,
+                            client = client,
+                            products = uiState.products,
+                            extras = uiState.extras,
+                            payments = uiState.payments,
+                            user = uiState.currentUser
+                        )
+                        onSharePdf(file)
+                    } catch (e: Exception) {
+                        Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+                    isGenerating = false
+                }
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            ActionButton(
+                icon = Icons.Default.ShoppingCart,
+                label = "Compras",
+                modifier = Modifier.weight(1f),
+                onClick = {
+                    isGenerating = true
+                    try {
+                        val file = ShoppingListPdfGenerator.generate(
+                            context = context,
+                            event = event,
+                            client = client,
+                            supplies = emptyList(), // TODO: Load event supplies
+                            user = uiState.currentUser
+                        )
+                        onSharePdf(file)
+                    } catch (e: Exception) {
+                        Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+                    isGenerating = false
+                }
+            )
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        // Third row
+        Row(modifier = Modifier.fillMaxWidth()) {
+            ActionButton(
+                icon = Icons.Default.Inventory2,
+                label = "Equipo",
+                modifier = Modifier.weight(1f),
+                onClick = {
+                    isGenerating = true
+                    try {
+                        val file = EquipmentListPdfGenerator.generate(
+                            context = context,
+                            event = event,
+                            client = client,
+                            inventoryItems = emptyList(), // TODO: Load inventory items
+                            user = uiState.currentUser
+                        )
+                        onSharePdf(file)
+                    } catch (e: Exception) {
+                        Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+                    isGenerating = false
+                }
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            ActionButton(
+                icon = Icons.AutoMirrored.Filled.PlaylistAddCheck,
                 label = "Lista",
                 modifier = Modifier.weight(1f),
                 onClick = onChecklistClick
@@ -422,7 +599,7 @@ private fun sharePdfFile(context: android.content.Context, file: File) {
         }
         context.startActivity(Intent.createChooser(intent, "Abrir PDF con..."))
     } catch (e: Exception) {
-        Toast.makeText(context, "No hay aplicación para abrir PDFs", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, "No hay aplicaci\u00f3n para abrir PDFs", Toast.LENGTH_SHORT).show()
     }
 }
 
@@ -461,7 +638,7 @@ fun PaymentModal(
         ) {
             Text("Registrar Pago", style = MaterialTheme.typography.titleLarge)
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             OutlinedTextField(
                 value = amount,
                 onValueChange = { amount = it },
@@ -470,8 +647,8 @@ fun PaymentModal(
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(16.dp))
-            
-            Text("Método de Pago", style = MaterialTheme.typography.labelMedium)
+
+            Text("M\u00e9todo de Pago", style = MaterialTheme.typography.labelMedium)
             Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf("efectivo", "transferencia", "tarjeta").forEach { opt ->
                     FilterChip(
@@ -481,7 +658,7 @@ fun PaymentModal(
                     )
                 }
             }
-            
+
             OutlinedTextField(
                 value = notes,
                 onValueChange = { notes = it },
@@ -489,7 +666,7 @@ fun PaymentModal(
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(24.dp))
-            
+
             PremiumButton(
                 text = "Guardar Pago",
                 onClick = {
@@ -504,4 +681,3 @@ fun PaymentModal(
         }
     }
 }
-

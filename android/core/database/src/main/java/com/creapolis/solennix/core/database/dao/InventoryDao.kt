@@ -18,6 +18,12 @@ interface InventoryDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertInventoryItems(items: List<CachedInventoryItem>)
 
+    @Delete
+    suspend fun deleteInventoryItem(item: CachedInventoryItem)
+
+    @Query("DELETE FROM inventory WHERE id = :id")
+    suspend fun deleteInventoryItemById(id: String)
+
     @Query("DELETE FROM inventory")
     suspend fun deleteAll()
 }

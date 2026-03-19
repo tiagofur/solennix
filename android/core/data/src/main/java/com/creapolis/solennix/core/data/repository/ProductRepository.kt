@@ -15,6 +15,9 @@ interface ProductRepository {
     fun getProducts(): Flow<List<Product>>
     suspend fun getProduct(id: String): Product?
     suspend fun syncProducts()
+    suspend fun createProduct(product: Product): Product
+    suspend fun updateProduct(product: Product): Product
+    suspend fun deleteProduct(id: String)
 }
 
 @Singleton
@@ -32,5 +35,22 @@ class OfflineFirstProductRepository @Inject constructor(
     override suspend fun syncProducts() {
         val networkProducts: List<Product> = apiService.get(Endpoints.PRODUCTS)
         productDao.insertProducts(networkProducts.map { it.asEntity() })
+    }
+
+    override suspend fun createProduct(product: Product): Product {
+        val networkProduct: Product = apiService.post(Endpoints.PRODUCTS, product)
+        productDao.insertProducts(listOf(networkProduct.asEntity()))
+        return networkProduct
+    }
+
+    override suspend fun updateProduct(product: Product): Product {
+        val networkProduct: Product = apiService.put(Endpoints.product(product.id), product)
+        productDao.insertProducts(listOf(networkProduct.asEntity()))
+        return networkProduct
+    }
+
+    override suspend fun deleteProduct(id: String) {
+        apiService.delete(Endpoints.product(id))
+        productDao.deleteProductById(id)
     }
 }

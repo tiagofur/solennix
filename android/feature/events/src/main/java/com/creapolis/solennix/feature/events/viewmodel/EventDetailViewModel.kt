@@ -16,6 +16,9 @@ import com.creapolis.solennix.core.model.User
 import com.creapolis.solennix.core.model.EventStatus
 import com.creapolis.solennix.core.network.AuthManager
 import com.creapolis.solennix.core.network.EventDayNotificationManager
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -228,6 +231,33 @@ class EventDetailViewModel @Inject constructor(
         val today = java.time.LocalDate.now().toString()
         if (event.eventDate == today && event.status == EventStatus.CONFIRMED) {
             eventDayNotificationManager.showEventNotification(event, client)
+        }
+    }
+
+    fun updateEventStatus(newStatus: EventStatus) {
+        viewModelScope.launch {
+            try {
+                val currentEvent = _event.value ?: return@launch
+                val updated = currentEvent.copy(status = newStatus)
+                eventRepository.updateEvent(updated)
+                _event.value = updated
+            } catch (e: Exception) {
+                _errorMessage.value = "Error al cambiar status: ${e.message}"
+            }
+        }
+    }
+
+    var deleteSuccess by mutableStateOf(false)
+        private set
+
+    fun deleteEvent() {
+        viewModelScope.launch {
+            try {
+                eventRepository.deleteEvent(eventId)
+                deleteSuccess = true
+            } catch (e: Exception) {
+                _errorMessage.value = "Error al eliminar evento: ${e.message}"
+            }
         }
     }
 }

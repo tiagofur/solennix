@@ -167,7 +167,7 @@ object ContractPdfGenerator {
         // Save document
         manager.finishDocument()
         val file = File(context.cacheDir, "contrato_${event.id.take(8)}.pdf")
-        document.writeTo(FileOutputStream(file))
+        FileOutputStream(file).use { fos -> document.writeTo(fos) }
         document.close()
 
         return file

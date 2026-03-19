@@ -5,6 +5,9 @@ import androidx.lifecycle.viewModelScope
 import com.creapolis.solennix.core.data.repository.EventRepository
 import com.creapolis.solennix.core.model.Event
 import com.creapolis.solennix.core.model.EventStatus
+import com.creapolis.solennix.core.model.UnavailableDate
+import com.creapolis.solennix.core.network.ApiService
+import com.creapolis.solennix.core.network.Endpoints
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -28,6 +31,7 @@ data class CalendarUiState(
     val events: List<Event> = emptyList(),
     val eventsForSelectedDate: List<Event> = emptyList(),
     val filteredEvents: List<Event> = emptyList(),
+    val unavailableDates: List<UnavailableDate> = emptyList(),
     val viewMode: CalendarViewMode = CalendarViewMode.CALENDAR,
     val selectedStatus: EventStatus? = null,
     val searchQuery: String = "",
@@ -37,7 +41,8 @@ data class CalendarUiState(
 
 @HiltViewModel
 class CalendarViewModel @Inject constructor(
-    private val eventRepository: EventRepository
+    private val eventRepository: EventRepository,
+    private val apiService: ApiService
 ) : ViewModel() {
 
     private val _selectedDate = MutableStateFlow(LocalDate.now())
@@ -45,21 +50,24 @@ class CalendarViewModel @Inject constructor(
     private val _viewMode = MutableStateFlow(CalendarViewMode.CALENDAR)
     private val _selectedStatus = MutableStateFlow<EventStatus?>(null)
     private val _searchQuery = MutableStateFlow("")
+    private val _unavailableDates = MutableStateFlow<List<UnavailableDate>>(emptyList())
 
     val uiState: StateFlow<CalendarUiState> = combine(
         eventRepository.getEvents(),
         _selectedDate,
         _currentMonth,
         _viewMode,
-        _selectedStatus,
-        _searchQuery
+        combine(_selectedStatus, _searchQuery, _unavailableDates) { s, q, u -> Triple(s, q, u) }
     ) { values ->
         val events = values[0] as List<Event>
         val selected = values[1] as LocalDate
         val month = values[2] as YearMonth
         val viewMode = values[3] as CalendarViewMode
-        val selectedStatus = values[4] as EventStatus?
-        val searchQuery = values[5] as String
+        @Suppress("UNCHECKED_CAST")
+        val extras = values[4] as Triple<EventStatus?, String, List<UnavailableDate>>
+        val selectedStatus = extras.first
+        val searchQuery = extras.second
+        val unavailableDates = extras.third
 
         // Build status filters with counts
         val statusFilters = buildStatusFilters(events)
@@ -96,6 +104,7 @@ class CalendarViewModel @Inject constructor(
             events = events,
             eventsForSelectedDate = eventsForSelectedDate,
             filteredEvents = filteredEvents.sortedByDescending { it.eventDate },
+            unavailableDates = unavailableDates,
             viewMode = viewMode,
             selectedStatus = selectedStatus,
             searchQuery = searchQuery,
@@ -121,6 +130,7 @@ class CalendarViewModel @Inject constructor(
 
     init {
         refresh()
+        loadUnavailableDates(_currentMonth.value)
     }
 
     fun onDateSelected(date: LocalDate) {
@@ -129,6 +139,7 @@ class CalendarViewModel @Inject constructor(
 
     fun onMonthChange(month: YearMonth) {
         _currentMonth.value = month
+        loadUnavailableDates(month)
     }
 
     fun onViewModeChange(mode: CalendarViewMode) {
@@ -150,6 +161,62 @@ class CalendarViewModel @Inject constructor(
             } catch (e: Exception) {
                 // Handle error
             }
+        }
+    }
+
+    private fun loadUnavailableDates(yearMonth: YearMonth) {
+        viewModelScope.launch {
+            try {
+                val start = yearMonth.atDay(1).toString()
+                val end = yearMonth.atEndOfMonth().toString()
+                val dates: List<UnavailableDate> = apiService.get(
+                    Endpoints.UNAVAILABLE_DATES,
+                    mapOf("start" to start, "end" to end)
+                )
+                _unavailableDates.value = dates
+            } catch (e: Exception) {
+                // Keep existing dates on error
+            }
+        }
+    }
+
+    fun toggleDateBlock(date: LocalDate, reason: String? = null) {
+        viewModelScope.launch {
+            try {
+                val dateStr = date.toString()
+                val existing = _unavailableDates.value.find { ud ->
+                    dateStr >= ud.startDate && dateStr <= ud.endDate
+                }
+                if (existing != null) {
+                    apiService.delete(Endpoints.unavailableDate(existing.id))
+                } else {
+                    val payload = buildMap<String, String> {
+                        put("start_date", dateStr)
+                        put("end_date", dateStr)
+                        if (!reason.isNullOrBlank()) {
+                            put("reason", reason)
+                        }
+                    }
+                    apiService.post<UnavailableDate>(Endpoints.UNAVAILABLE_DATES, payload)
+                }
+                loadUnavailableDates(_currentMonth.value)
+            } catch (e: Exception) {
+                // Handle error
+            }
+        }
+    }
+
+    fun isDateBlocked(date: LocalDate): Boolean {
+        val dateStr = date.toString()
+        return _unavailableDates.value.any { ud ->
+            dateStr >= ud.startDate && dateStr <= ud.endDate
+        }
+    }
+
+    fun getUnavailableDateFor(date: LocalDate): UnavailableDate? {
+        val dateStr = date.toString()
+        return _unavailableDates.value.find { ud ->
+            dateStr >= ud.startDate && dateStr <= ud.endDate
         }
     }
 }

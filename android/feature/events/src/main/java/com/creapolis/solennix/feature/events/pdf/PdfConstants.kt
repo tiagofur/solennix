@@ -181,7 +181,7 @@ class PdfPageManager(
         val pageInfo = PdfDocument.PageInfo.Builder(pageWidth, pageHeight, pageNumber).create()
         currentPage = document.startPage(pageInfo)
         currentY = PdfConstants.MARGIN_TOP
-        return currentPage!!.canvas
+        return currentPage?.canvas ?: startNewPage()
     }
 
     fun ensureSpace(requiredHeight: Float): Boolean {

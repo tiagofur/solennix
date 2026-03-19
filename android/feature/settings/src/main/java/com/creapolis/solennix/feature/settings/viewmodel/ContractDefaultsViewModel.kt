@@ -38,19 +38,27 @@ class ContractDefaultsViewModel @Inject constructor(
             isLoading = true
             errorMessage = null
             try {
-                val user = authManager.currentUser.value
-                if (user != null) {
-                    depositPercent = user.defaultDepositPercent?.toFloat() ?: 50f
-                    cancellationDays = user.defaultCancellationDays?.toFloat() ?: 7f
-                    refundPercent = user.defaultRefundPercent?.toFloat() ?: 50f
-                    contractTemplate = user.contractTemplate ?: ""
-                }
+                val freshUser: User = apiService.get(Endpoints.ME)
+                authManager.storeUser(freshUser)
+                populateFromUser(freshUser)
             } catch (e: Exception) {
+                // Fallback to cached data if API call fails
+                val cachedUser = authManager.currentUser.value
+                if (cachedUser != null) {
+                    populateFromUser(cachedUser)
+                }
                 errorMessage = "Error al cargar los datos: ${e.message}"
             } finally {
                 isLoading = false
             }
         }
+    }
+
+    private fun populateFromUser(user: User) {
+        depositPercent = user.defaultDepositPercent?.toFloat() ?: 50f
+        cancellationDays = user.defaultCancellationDays?.toFloat() ?: 7f
+        refundPercent = user.defaultRefundPercent?.toFloat() ?: 50f
+        contractTemplate = user.contractTemplate ?: ""
     }
 
     fun saveContractDefaults() {

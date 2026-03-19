@@ -7,9 +7,11 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.creapolis.solennix.core.data.repository.InventoryRepository
+import com.creapolis.solennix.core.model.InventoryItem
 import com.creapolis.solennix.core.model.InventoryType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
@@ -69,7 +71,23 @@ class InventoryFormViewModel @Inject constructor(
             isSaving = true
             errorMessage = null
             try {
-                // Mapping and saving to repo goes here
+                val item = InventoryItem(
+                    id = itemId ?: UUID.randomUUID().toString(),
+                    userId = "", // Managed by backend
+                    ingredientName = ingredientName,
+                    currentStock = currentStock.toDouble(),
+                    minimumStock = minimumStock.toDouble(),
+                    unit = unit,
+                    unitCost = unitCost.toDoubleOrNull(),
+                    lastUpdated = "", // Handled by backend
+                    type = type
+                )
+
+                if (itemId != null) {
+                    inventoryRepository.updateInventoryItem(item)
+                } else {
+                    inventoryRepository.createInventoryItem(item)
+                }
                 saveSuccess = true
             } catch (e: Exception) {
                 errorMessage = "Error al guardar item: ${e.message}"

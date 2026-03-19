@@ -54,7 +54,7 @@ abstract class SolennixDatabase : RoomDatabase() {
                     SolennixDatabase::class.java,
                     "solennix_database"
                 )
-                    .fallbackToDestructiveMigration()
+                    .fallbackToDestructiveMigrationOnDowngrade()
                     .build()
                 INSTANCE = instance
                 instance

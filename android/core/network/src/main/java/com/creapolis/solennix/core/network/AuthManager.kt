@@ -2,6 +2,7 @@ package com.creapolis.solennix.core.network
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
 import com.creapolis.solennix.core.model.AuthResponse
@@ -10,6 +11,7 @@ import com.creapolis.solennix.core.model.User
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.ktor.client.*
 import io.ktor.client.call.*
+import io.ktor.client.plugins.*
 import io.ktor.client.plugins.auth.providers.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
@@ -61,6 +63,8 @@ class AuthManager @Inject constructor(
     }
 
     suspend fun restoreSession() {
+        if (_authState.value == AuthState.Authenticated) return
+
         val accessToken = encryptedPrefs.getString(KEY_ACCESS_TOKEN, null)
         val refreshToken = encryptedPrefs.getString(KEY_REFRESH_TOKEN, null)
 
@@ -83,13 +87,13 @@ class AuthManager @Inject constructor(
         encryptedPrefs.edit()
             .putString(KEY_ACCESS_TOKEN, accessToken)
             .putString(KEY_REFRESH_TOKEN, refreshToken)
-            .apply()
+            .commit()
         _authState.value = AuthState.Authenticated
     }
 
     fun storeUser(user: User) {
         val userJson = json.encodeToString(User.serializer(), user)
-        encryptedPrefs.edit().putString(KEY_USER_JSON, userJson).apply()
+        encryptedPrefs.edit().putString(KEY_USER_JSON, userJson).commit()
         _currentUser.value = user
     }
 
@@ -124,8 +128,14 @@ class AuthManager @Inject constructor(
 
                 storeTokens(response.accessToken, response.refreshToken)
                 BearerTokens(response.accessToken, response.refreshToken)
-            } catch (e: Exception) {
+            } catch (e: ClientRequestException) {
+                // 4xx from server = refresh token rejected → clear session
+                Log.w("AuthManager", "Token refresh rejected by server: ${e.response.status}", e)
                 clearTokens()
+                null
+            } catch (e: Exception) {
+                // Network/timeout/other transient error → keep tokens, just return null
+                Log.w("AuthManager", "Token refresh failed (transient): ${e.message}", e)
                 null
             }
         }
@@ -151,7 +161,7 @@ class AuthManager @Inject constructor(
             .remove(KEY_ACCESS_TOKEN)
             .remove(KEY_REFRESH_TOKEN)
             .remove(KEY_USER_JSON)
-            .apply()
+            .commit()
         _currentUser.value = null
         _authState.value = AuthState.Unauthenticated
     }
@@ -171,6 +181,6 @@ class AuthManager @Inject constructor(
     }
 
     fun setBiometricEnabled(enabled: Boolean) {
-        encryptedPrefs.edit().putBoolean(KEY_BIOMETRIC_ENABLED, enabled).apply()
+        encryptedPrefs.edit().putBoolean(KEY_BIOMETRIC_ENABLED, enabled).commit()
     }
 }

@@ -8,6 +8,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -26,8 +27,13 @@ import androidx.compose.ui.graphics.vector.ImageVector
 @Composable
 fun RegisterScreen(
     viewModel: AuthViewModel,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onLoginSuccess: () -> Unit = {}
 ) {
+    LaunchedEffect(Unit) {
+        viewModel.loginSuccess.collect { onLoginSuccess() }
+    }
+
     val scrollState = rememberScrollState()
 
     Scaffold(
@@ -127,7 +133,7 @@ fun RegisterScreen(
             if (viewModel.errorMessage != null) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = viewModel.errorMessage!!,
+                    text = viewModel.errorMessage.orEmpty(),
                     color = SolennixTheme.colors.error,
                     style = MaterialTheme.typography.bodySmall,
                     textAlign = TextAlign.Center

@@ -103,7 +103,7 @@ fun InventoryFormScreen(
 
                 if (viewModel.errorMessage != null) {
                     Text(
-                        text = viewModel.errorMessage!!,
+                        text = viewModel.errorMessage.orEmpty(),
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.padding(bottom = 16.dp)

@@ -55,8 +55,8 @@ fun PhotoGallerySheet(
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
-        if (success && photoUri != null) {
-            onPhotoSelected(photoUri!!)
+        if (success) {
+            photoUri?.let { onPhotoSelected(it) }
         }
     }
 
@@ -74,12 +74,13 @@ fun PhotoGallerySheet(
         if (isGranted) {
             // Create temp file and launch camera
             val file = File.createTempFile("photo_", ".jpg", context.cacheDir)
+            file.deleteOnExit()
             photoUri = FileProvider.getUriForFile(
                 context,
                 "${context.packageName}.fileprovider",
                 file
             )
-            cameraLauncher.launch(photoUri!!)
+            photoUri?.let { cameraLauncher.launch(it) }
         } else {
             Toast.makeText(context, "Permiso de cámara denegado", Toast.LENGTH_SHORT).show()
         }
@@ -92,12 +93,13 @@ fun PhotoGallerySheet(
                 Manifest.permission.CAMERA
             ) == PackageManager.PERMISSION_GRANTED -> {
                 val file = File.createTempFile("photo_", ".jpg", context.cacheDir)
+                file.deleteOnExit()
                 photoUri = FileProvider.getUriForFile(
                     context,
                     "${context.packageName}.fileprovider",
                     file
                 )
-                cameraLauncher.launch(photoUri!!)
+                photoUri?.let { cameraLauncher.launch(it) }
             }
             else -> {
                 permissionLauncher.launch(Manifest.permission.CAMERA)

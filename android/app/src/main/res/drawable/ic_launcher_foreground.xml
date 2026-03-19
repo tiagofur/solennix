@@ -2,9 +2,53 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
-    android:viewportWidth="108"
-    android:viewportHeight="108">
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+
+    <!-- Cup bowl -->
+    <path
+        android:fillColor="#D4B87A"
+        android:pathData="M66,34 Q58,65 66,88 Q78,116 100,122 Q122,116 134,88 Q142,65 134,34 Q100,42 66,34 Z" />
+
+    <!-- Cup reflection (subtle lighter area) -->
+    <path
+        android:fillColor="#E0C88E"
+        android:fillAlpha="0.2"
+        android:pathData="M76,38 Q72,58 76,82 Q85,104 100,112 L100,42 Q82,44 76,38 Z" />
+
+    <!-- Node -->
+    <path
+        android:fillColor="#D4B87A"
+        android:pathData="M100,124 m-6,0 a6,3 0 1,0 12,0 a6,3 0 1,0 -12,0" />
+
+    <!-- Stem and base -->
     <path
         android:fillColor="#C4A265"
-        android:pathData="M30,30h48v48h-48z" />
+        android:pathData="M96,124 L96,150 Q96,156 84,159 L72,161 L72,164 A30,8 0 0,0 128,164 L128,161 L116,159 Q104,156 104,150 L104,124 Z" />
+
+    <!-- Sparkle - vertical line -->
+    <path
+        android:fillColor="#F5F0E8"
+        android:fillAlpha="0.65"
+        android:pathData="M132,24 L132,40"
+        android:strokeWidth="1.5"
+        android:strokeColor="#F5F0E8"
+        android:strokeAlpha="0.65"
+        android:strokeLineCap="round" />
+
+    <!-- Sparkle - horizontal line -->
+    <path
+        android:fillColor="#F5F0E8"
+        android:fillAlpha="0.65"
+        android:pathData="M124,32 L140,32"
+        android:strokeWidth="1.5"
+        android:strokeColor="#F5F0E8"
+        android:strokeAlpha="0.65"
+        android:strokeLineCap="round" />
+
+    <!-- Sparkle - center dot -->
+    <path
+        android:fillColor="#F5F0E8"
+        android:fillAlpha="0.35"
+        android:pathData="M132,32 m-2,0 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0" />
 </vector>

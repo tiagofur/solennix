@@ -34,8 +34,13 @@ import com.creapolis.solennix.feature.auth.viewmodel.AuthViewModel
 fun LoginScreen(
     viewModel: AuthViewModel,
     onNavigateToRegister: () -> Unit,
-    onNavigateToForgot: () -> Unit
+    onNavigateToForgot: () -> Unit,
+    onLoginSuccess: () -> Unit = {}
 ) {
+    LaunchedEffect(Unit) {
+        viewModel.loginSuccess.collect { onLoginSuccess() }
+    }
+
     val scrollState = rememberScrollState()
     
     // Animation for logo
@@ -130,7 +135,7 @@ fun LoginScreen(
         if (viewModel.errorMessage != null) {
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = viewModel.errorMessage!!,
+                text = viewModel.errorMessage.orEmpty(),
                 color = SolennixTheme.colors.error,
                 style = MaterialTheme.typography.bodySmall,
                 textAlign = TextAlign.Center

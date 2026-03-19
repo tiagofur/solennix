@@ -111,7 +111,7 @@ fun ResetPasswordScreen(
             if (viewModel.errorMessage != null) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = viewModel.errorMessage!!,
+                    text = viewModel.errorMessage.orEmpty(),
                     color = SolennixTheme.colors.error,
                     style = MaterialTheme.typography.bodySmall,
                     textAlign = TextAlign.Center

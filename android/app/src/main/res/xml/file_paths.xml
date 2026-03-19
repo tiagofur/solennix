@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths>
-    <!-- Cache directory for generated PDFs -->
+    <!-- Cache directory for generated PDFs and camera temp files -->
     <cache-path
-        name="pdfs"
+        name="cache"
+        path="." />
+    <external-cache-path
+        name="external_cache"
         path="." />
 </paths>

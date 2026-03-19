@@ -49,8 +49,12 @@ fun ClientDetailScreen(
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
+        } else if (uiState.errorMessage != null) {
+            Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                Text(uiState.errorMessage.orEmpty(), color = SolennixTheme.colors.error)
+            }
         } else if (uiState.client != null) {
-            val client = uiState.client!!
+            val client = uiState.client ?: return@Scaffold
             Column(
                 modifier = Modifier
                     .fillMaxSize()

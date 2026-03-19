@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import SolennixCore
 import SolennixDesign
 import SolennixNetwork
@@ -95,8 +96,13 @@ public struct QuickQuoteView: View {
                             }
                         }
                         
-                        if let user = try? AuthManager().getStoredToken() {
-                            // TODO PDF Export
+                        Section("Exportar") {
+                            Button {
+                                viewModel.generatePDF(profile: nil)
+                            } label: {
+                                Label("Exportar PDF", systemImage: "doc.text")
+                            }
+                            .disabled(viewModel.selectedProducts.isEmpty)
                         }
                     }
                 }
@@ -119,6 +125,14 @@ public struct QuickQuoteView: View {
             }
             .task {
                 await viewModel.loadData()
+            }
+            .sheet(isPresented: $viewModel.showShareSheet) {
+                if let data = viewModel.pdfData {
+                    let tempURL = FileManager.default.temporaryDirectory
+                        .appendingPathComponent("CotizacionRapida.pdf")
+                    let _ = try? data.write(to: tempURL)
+                    ShareSheetView(activityItems: [tempURL])
+                }
             }
         }
     }
@@ -176,7 +190,7 @@ public struct QuickQuoteView: View {
 private struct SummaryRow: View {
     let label: String
     let value: Double
-    
+
     var body: some View {
         HStack {
             Text(label)
@@ -185,5 +199,17 @@ private struct SummaryRow: View {
             Text(value.asMXN)
         }
     }
+}
+
+// MARK: - Share Sheet
+
+private struct ShareSheetView: UIViewControllerRepresentable {
+    let activityItems: [Any]
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 

@@ -1,33 +1,38 @@
 import Foundation
+import UIKit
 import SolennixCore
 import SolennixNetwork
 
 @Observable
 public final class QuickQuoteViewModel {
     let apiClient: APIClient
-    
+
     // Form Data
     public var numPeople: Int = 100
     public var clientName: String = ""
     public var clientPhone: String = ""
     public var clientEmail: String = ""
     public var showClientInfo: Bool = false
-    
+
     // Items
     public var selectedProducts: [EventProduct] = []
     public var extras: [EventExtra] = []
-    
+
     // Financials
     public var discountType: DiscountType = .percent
     public var discountValue: Double = 0
     public var requiresInvoice: Bool = false
     public var taxRate: Double = 16
-    
+
     // Source data
     public var availableProducts: [Product] = []
     public var productUnitCosts: [String: Double] = [:]
-    
+
     public var isLoading: Bool = true
+
+    // PDF
+    public var pdfData: Data?
+    public var showShareSheet: Bool = false
     
     public init(apiClient: APIClient) {
         self.apiClient = apiClient
@@ -158,6 +163,55 @@ public final class QuickQuoteViewModel {
             profit: profit,
             margin: margin
         )
+    }
+
+    // MARK: - PDF Generation
+
+    /// Generates a quick quote PDF using current form data.
+    public func generatePDF(profile: User?) {
+        let fin = financials
+
+        let items: [QuickQuotePDFGenerator.QuoteItem] = selectedProducts.compactMap { product in
+            let name = availableProducts.first(where: { $0.id == product.productId })?.name ?? "Producto"
+            let total = Double(product.quantity) * product.unitPrice
+            return QuickQuotePDFGenerator.QuoteItem(
+                name: name,
+                quantity: product.quantity,
+                unitPrice: product.unitPrice,
+                total: total
+            )
+        }
+
+        let quoteExtras: [QuickQuotePDFGenerator.QuoteExtra] = extras.map { extra in
+            QuickQuotePDFGenerator.QuoteExtra(
+                description: extra.description,
+                price: extra.price
+            )
+        }
+
+        let discountLabel: String
+        if discountType == .percent && discountValue > 0 {
+            discountLabel = "\(Int(discountValue))%"
+        } else if discountValue > 0 {
+            discountLabel = PDFConstants.formatCurrency(discountValue)
+        } else {
+            discountLabel = ""
+        }
+
+        pdfData = QuickQuotePDFGenerator.generate(
+            profile: profile,
+            numPeople: numPeople,
+            items: items,
+            extras: quoteExtras,
+            productsSubtotal: fin.productsSubtotal,
+            extrasTotal: fin.extrasTotal,
+            discountAmount: fin.discountAmount,
+            discountLabel: discountLabel,
+            taxAmount: fin.taxAmount,
+            taxRate: taxRate,
+            total: fin.total
+        )
+        showShareSheet = true
     }
 }
 

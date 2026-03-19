@@ -1,5 +1,8 @@
 package com.creapolis.solennix.feature.inventory.viewmodel
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -31,6 +34,9 @@ class InventoryDetailViewModel @Inject constructor(
         loadItem()
     }
 
+    var deleteSuccess by mutableStateOf(false)
+        private set
+
     private fun loadItem() {
         viewModelScope.launch {
             try {
@@ -38,6 +44,17 @@ class InventoryDetailViewModel @Inject constructor(
                 _uiState.value = InventoryDetailUiState(item = item, isLoading = false)
             } catch (e: Exception) {
                 _uiState.value = InventoryDetailUiState(errorMessage = e.message, isLoading = false)
+            }
+        }
+    }
+
+    fun deleteItem() {
+        viewModelScope.launch {
+            try {
+                inventoryRepository.deleteInventoryItem(itemId)
+                deleteSuccess = true
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(errorMessage = "Error al eliminar item: ${e.message}")
             }
         }
     }

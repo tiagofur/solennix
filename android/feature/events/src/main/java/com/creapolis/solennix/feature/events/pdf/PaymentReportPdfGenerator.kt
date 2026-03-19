@@ -141,7 +141,7 @@ object PaymentReportPdfGenerator {
         // Save document
         manager.finishDocument()
         val file = File(context.cacheDir, "pagos_${event.id.take(8)}.pdf")
-        document.writeTo(FileOutputStream(file))
+        FileOutputStream(file).use { fos -> document.writeTo(fos) }
         document.close()
 
         return file

@@ -15,7 +15,7 @@ import com.creapolis.solennix.feature.auth.ui.ResetPasswordScreen
 import com.creapolis.solennix.feature.auth.viewmodel.AuthViewModel
 
 @Composable
-fun AuthNavHost() {
+fun AuthNavHost(onAuthenticated: () -> Unit = {}) {
     val navController = rememberNavController()
     val viewModel: AuthViewModel = hiltViewModel()
 
@@ -24,13 +24,15 @@ fun AuthNavHost() {
             LoginScreen(
                 viewModel = viewModel,
                 onNavigateToRegister = { navController.navigate("register") },
-                onNavigateToForgot = { navController.navigate("forgot") }
+                onNavigateToForgot = { navController.navigate("forgot") },
+                onLoginSuccess = onAuthenticated
             )
         }
         composable("register") {
             RegisterScreen(
                 viewModel = viewModel,
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
+                onLoginSuccess = onAuthenticated
             )
         }
         composable("forgot") {

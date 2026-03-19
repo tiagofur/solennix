@@ -10,6 +10,10 @@ public struct CalendarView: View {
     // MARK: - Properties
 
     @Bindable private var viewModel: CalendarViewModel
+    @State private var showBlockAlert = false
+    @State private var showUnblockAlert = false
+    @State private var longPressedDate: Date?
+    @State private var blockReason: String = ""
 
     // MARK: - Init
 
@@ -53,6 +57,47 @@ public struct CalendarView: View {
                     .tint(SolennixColors.primary)
             }
         }
+        .alert("Bloquear fecha", isPresented: $showBlockAlert) {
+            TextField("Motivo (opcional)", text: $blockReason)
+            Button("Cancelar", role: .cancel) {
+                longPressedDate = nil
+                blockReason = ""
+            }
+            Button("Bloquear") {
+                guard let date = longPressedDate else { return }
+                let reason = blockReason.trimmingCharacters(in: .whitespacesAndNewlines)
+                Task {
+                    await viewModel.toggleDateBlock(
+                        date: date,
+                        reason: reason.isEmpty ? nil : reason
+                    )
+                }
+                longPressedDate = nil
+                blockReason = ""
+            }
+        } message: {
+            Text("Esta fecha se marcara como no disponible.")
+        }
+        .alert("Desbloquear fecha", isPresented: $showUnblockAlert) {
+            Button("Cancelar", role: .cancel) {
+                longPressedDate = nil
+            }
+            Button("Desbloquear", role: .destructive) {
+                guard let date = longPressedDate else { return }
+                Task {
+                    await viewModel.toggleDateBlock(date: date, reason: nil)
+                }
+                longPressedDate = nil
+            }
+        } message: {
+            if let date = longPressedDate,
+               let unavailable = viewModel.unavailableDateFor(date),
+               let reason = unavailable.reason, !reason.isEmpty {
+                Text("Motivo: \(reason)\n\nEsta accion habilitara la fecha nuevamente.")
+            } else {
+                Text("Esta accion habilitara la fecha nuevamente.")
+            }
+        }
     }
 
     // MARK: - Calendar Mode
@@ -67,8 +112,18 @@ public struct CalendarView: View {
                 CalendarGridView(
                     days: viewModel.daysInMonth,
                     eventDotsForDay: viewModel.eventDotsForDay,
+                    isDateBlocked: viewModel.isDateBlocked,
                     selectedDate: viewModel.selectedDate,
-                    onSelectDate: viewModel.selectDate
+                    onSelectDate: viewModel.selectDate,
+                    onLongPressDate: { date in
+                        longPressedDate = date
+                        blockReason = ""
+                        if viewModel.isDateBlocked(date) {
+                            showUnblockAlert = true
+                        } else {
+                            showBlockAlert = true
+                        }
+                    }
                 )
                 .padding(.horizontal, Spacing.sm)
 

@@ -20,11 +20,6 @@ import com.creapolis.solennix.core.model.InventoryItem
 import com.creapolis.solennix.core.model.extensions.asMXN
 import com.creapolis.solennix.feature.dashboard.viewmodel.DashboardViewModel
 
-import androidx.compose.material.icons.filled.AttachMoney
-import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Warning
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
@@ -70,12 +65,46 @@ fun DashboardScreen(
                 }
 
                 item {
-                    Row(Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
                         KPICard(
-                            title = "Ingresos",
+                            title = "Ventas del Mes",
                             value = uiState.revenueThisMonth.asMXN(),
                             icon = Icons.Default.AttachMoney,
                             iconColor = SolennixTheme.colors.kpiGreen,
+                            modifier = Modifier.weight(1f)
+                        )
+                        KPICard(
+                            title = "Cobrado",
+                            value = uiState.cashCollected.asMXN(),
+                            icon = Icons.Default.Payments,
+                            iconColor = SolennixTheme.colors.kpiBlue,
+                            subtitle = "Este mes",
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        KPICard(
+                            title = "Eventos del Mes",
+                            value = uiState.eventsThisMonth.toString(),
+                            icon = Icons.Default.CalendarMonth,
+                            iconColor = SolennixTheme.colors.kpiOrange,
+                            modifier = Modifier.weight(1f)
+                        )
+                        KPICard(
+                            title = "Clientes",
+                            value = uiState.totalClients.toString(),
+                            icon = Icons.Default.People,
+                            iconColor = SolennixTheme.colors.kpiBlue,
+                            subtitle = "Total",
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -83,11 +112,10 @@ fun DashboardScreen(
 
                 item {
                     KPICard(
-                        title = "Eventos",
-                        value = uiState.eventsThisMonth.toString(),
-                        icon = Icons.Default.CalendarMonth,
-                        iconColor = SolennixTheme.colors.kpiBlue,
-                        subtitle = "Este mes"
+                        title = "Cotizaciones Pendientes",
+                        value = uiState.pendingQuotes.toString(),
+                        icon = Icons.Default.RequestQuote,
+                        iconColor = SolennixTheme.colors.kpiRed
                     )
                 }
 
