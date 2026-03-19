@@ -12,6 +12,8 @@ import SolennixNetwork
 /// for quick event creation.
 struct CompactTabLayout: View {
 
+    @Binding var pendingSpotlightRoute: Route?
+
     @State private var selectedTab: Tab = .home
     @State private var homePath = NavigationPath()
     @State private var calendarPath = NavigationPath()
@@ -82,6 +84,16 @@ struct CompactTabLayout: View {
             }
             .padding(.bottom, 54) // Position above the tab bar
         }
+        .onChange(of: pendingSpotlightRoute) { _, newRoute in
+            guard let route = newRoute else { return }
+            // Navegar desde la pestaña Home para rutas de Spotlight
+            selectedTab = .home
+            homePath = NavigationPath()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                homePath.append(route)
+            }
+            pendingSpotlightRoute = nil
+        }
     }
 }
 
@@ -143,5 +155,5 @@ private struct ClientsRootView: View {
 // MARK: - Preview
 
 #Preview {
-    CompactTabLayout()
+    CompactTabLayout(pendingSpotlightRoute: .constant(nil))
 }

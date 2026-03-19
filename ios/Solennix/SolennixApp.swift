@@ -1,4 +1,7 @@
 import SwiftUI
+import SwiftData
+import CoreSpotlight
+import SolennixCore
 import SolennixNetwork
 import SolennixDesign
 import SolennixFeatures
@@ -29,10 +32,15 @@ struct SolennixApp: App {
 
     @State private var authManager: AuthManager
     @State private var planLimitsManager: PlanLimitsManager
+    @State private var subscriptionManager = SubscriptionManager()
     @State private var toastManager = ToastManager()
     @State private var networkMonitor = NetworkMonitor()
+    @State private var cacheManager: CacheManager?
 
     @AppStorage("appearance") private var appearance: String = "system"
+
+    /// The SwiftData model container for offline caching.
+    private let modelContainer: ModelContainer
 
     /// The shared API client instance.
     private let apiClient: APIClient
@@ -62,6 +70,9 @@ struct SolennixApp: App {
         
         // Configure Sentry
         SentryHelper.configure()
+
+        // Configure SwiftData for offline caching
+        self.modelContainer = SolennixModelContainer.create()
     }
 
     // MARK: - Scene
@@ -71,14 +82,41 @@ struct SolennixApp: App {
             ContentView()
                 .environment(authManager)
                 .environment(planLimitsManager)
+                .environment(subscriptionManager)
                 .environment(\.apiClient, apiClient)
                 .environment(toastManager)
                 .toastOverlay(toastManager)
                 .environment(networkMonitor)
+                .modelContainer(modelContainer)
                 .preferredColorScheme(resolvedColorScheme)
+                .task {
+                    // Initialize CacheManager with the model context
+                    if cacheManager == nil {
+                        cacheManager = CacheManager(
+                            modelContext: modelContainer.mainContext
+                        )
+                    }
+                }
+                .environment(cacheManager)
                 .task {
                     // Start checking for auth tokens
                     await authManager.checkAuth()
+                }
+                .task {
+                    // Iniciar escucha de transacciones de StoreKit
+                    subscriptionManager.startTransactionListener()
+                    await subscriptionManager.loadProducts()
+                    await subscriptionManager.updateSubscriptionStatus()
+                }
+                .onContinueUserActivity(CSSearchableItemActionType) { userActivity in
+                    // Manejar resultado de búsqueda de Core Spotlight
+                    guard let action = DeepLinkHandler.handleSpotlight(userActivity) else { return }
+                    let route = DeepLinkHandler.route(for: action)
+                    NotificationCenter.default.post(
+                        name: .spotlightNavigationRequested,
+                        object: nil,
+                        userInfo: ["route": route]
+                    )
                 }
         }
     }
@@ -93,4 +131,12 @@ struct SolennixApp: App {
         default:      return nil // system default
         }
     }
+}
+
+// MARK: - Spotlight Navigation Notification
+
+extension Notification.Name {
+    /// Se publica cuando el usuario toca un resultado de Core Spotlight
+    /// y la app necesita navegar a la ruta correspondiente.
+    static let spotlightNavigationRequested = Notification.Name("spotlightNavigationRequested")
 }

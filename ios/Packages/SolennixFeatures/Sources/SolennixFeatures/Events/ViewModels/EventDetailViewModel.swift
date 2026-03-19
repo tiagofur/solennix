@@ -1,3 +1,4 @@
+import ActivityKit
 import Foundation
 import Observation
 import SolennixCore
@@ -34,6 +35,7 @@ public final class EventDetailViewModel {
     public var deletePaymentId: String?
 
     public var errorMessage: String?
+    public var isLiveActivityActive: Bool = false
 
     /// Map of product ID -> Product for resolving product names.
     public var productMap: [String: Product] = [:]
@@ -66,6 +68,22 @@ public final class EventDetailViewModel {
 
     public var isFullyPaid: Bool {
         remaining <= 0.01
+    }
+
+    /// Indica si el evento es elegible para iniciar una Live Activity.
+    /// Solo disponible para eventos confirmados del día de hoy.
+    public var canStartLiveActivity: Bool {
+        guard let event else { return false }
+        guard event.status == .confirmed else { return false }
+        guard LiveActivityManager.shared.areActivitiesEnabled else { return false }
+
+        // Verificar que el evento sea de hoy
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        let today = formatter.string(from: Date())
+        let eventDateStr = String(event.eventDate.prefix(10))
+
+        return eventDateStr == today
     }
 
     // MARK: - Data Loading
@@ -121,6 +139,7 @@ public final class EventDetailViewModel {
         }
 
         isLoading = false
+        checkLiveActivityState()
     }
 
     // MARK: - Status
@@ -131,6 +150,9 @@ public final class EventDetailViewModel {
             let body: [String: String] = ["status": newStatus.rawValue]
             let updated: Event = try await apiClient.put(Endpoint.event(eventId), body: body)
             event = updated
+
+            // Actualizar la Live Activity si está activa
+            await updateLiveActivityStatus()
         } catch {
             errorMessage = "Error al cambiar el estado"
         }
@@ -247,6 +269,51 @@ public final class EventDetailViewModel {
         } catch {
             errorMessage = "Error al eliminar la foto"
         }
+    }
+
+    // MARK: - Live Activity
+
+    /// Inicia una Live Activity para el evento actual.
+    @MainActor
+    public func startLiveActivity() {
+        guard let event, let client else { return }
+        let started = LiveActivityManager.shared.startEventActivity(event: event, client: client)
+        isLiveActivityActive = started
+    }
+
+    /// Finaliza la Live Activity del evento actual.
+    @MainActor
+    public func stopLiveActivity() async {
+        guard let event else { return }
+        await LiveActivityManager.shared.endEventActivity(eventId: event.id)
+        isLiveActivityActive = false
+    }
+
+    /// Actualiza el estado de la Live Activity del evento actual según su nuevo estado.
+    @MainActor
+    public func updateLiveActivityStatus() async {
+        guard let event, isLiveActivityActive else { return }
+
+        let liveStatus: String
+        switch event.status {
+        case .confirmed: liveStatus = "setup"
+        case .completed: liveStatus = "completed"
+        default:         liveStatus = "in_progress"
+        }
+
+        await LiveActivityManager.shared.updateEventActivity(eventId: event.id, status: liveStatus)
+
+        // Si el evento se completó o canceló, finalizar la actividad
+        if event.status == .completed || event.status == .cancelled {
+            await stopLiveActivity()
+        }
+    }
+
+    /// Verifica si hay una Live Activity activa para este evento al cargar los datos.
+    @MainActor
+    public func checkLiveActivityState() {
+        guard let event else { return }
+        isLiveActivityActive = LiveActivityManager.shared.hasActiveActivity(for: event.id)
     }
 
     // MARK: - Helpers

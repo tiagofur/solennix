@@ -105,6 +105,7 @@ public struct EventDetailView: View {
                 photosSection
 
                 actionButtonsRow1(event)
+                liveActivityButton
                 actionButtonsRow2
                 actionButtonsRow3
             }
@@ -638,6 +639,50 @@ public struct EventDetailView: View {
                     }
                 }
             }
+        }
+    }
+
+    // MARK: - Live Activity Button
+
+    @ViewBuilder
+    private var liveActivityButton: some View {
+        if viewModel.canStartLiveActivity || viewModel.isLiveActivityActive {
+            Button {
+                if viewModel.isLiveActivityActive {
+                    Task { await viewModel.stopLiveActivity() }
+                } else {
+                    viewModel.startLiveActivity()
+                }
+            } label: {
+                HStack(spacing: Spacing.sm) {
+                    Image(systemName: viewModel.isLiveActivityActive ? "stop.circle.fill" : "dot.radiowaves.left.and.right")
+                        .font(.body)
+                        .foregroundStyle(viewModel.isLiveActivityActive ? SolennixColors.error : .white)
+                        .symbolEffect(.pulse, isActive: viewModel.isLiveActivityActive)
+
+                    Text(viewModel.isLiveActivityActive ? "Detener Actividad en Vivo" : "Iniciar Actividad en Vivo")
+                        .font(.body)
+                        .fontWeight(.medium)
+                        .foregroundStyle(viewModel.isLiveActivityActive ? SolennixColors.error : .white)
+
+                    Spacer()
+
+                    if viewModel.isLiveActivityActive {
+                        Circle()
+                            .fill(SolennixColors.success)
+                            .frame(width: 8, height: 8)
+                    }
+                }
+                .padding(Spacing.md)
+                .frame(maxWidth: .infinity)
+                .background(
+                    viewModel.isLiveActivityActive
+                        ? SolennixColors.errorBg
+                        : SolennixColors.success
+                )
+                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+            }
+            .buttonStyle(.plain)
         }
     }
 

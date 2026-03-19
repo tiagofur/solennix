@@ -1,6 +1,8 @@
 import SwiftUI
+import CoreSpotlight
 import SolennixNetwork
 import SolennixDesign
+import SolennixFeatures
 
 // MARK: - Content View
 
@@ -9,29 +11,72 @@ import SolennixDesign
 struct ContentView: View {
 
     @Environment(AuthManager.self) private var authManager
+    @Environment(NetworkMonitor.self) private var networkMonitor
     @Environment(\.horizontalSizeClass) private var sizeClass
 
+    @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding = false
     @State private var deepLinkResetToken: String?
+    @State private var pendingSpotlightRoute: Route?
 
     var body: some View {
-        Group {
-            switch authManager.authState {
-            case .unknown:
-                SplashView()
-
-            case .unauthenticated:
-                AuthFlowView(deepLinkResetToken: $deepLinkResetToken)
-
-            case .biometricLocked:
-                BiometricGateView()
-
-            case .authenticated:
-                mainLayout
+        VStack(spacing: 0) {
+            // MARK: - Offline Banner
+            if !networkMonitor.isConnected {
+                offlineBanner
             }
+
+            Group {
+                switch authManager.authState {
+                case .unknown:
+                    SplashView()
+
+                case .unauthenticated:
+                    AuthFlowView(deepLinkResetToken: $deepLinkResetToken)
+
+                case .biometricLocked:
+                    BiometricGateView()
+
+                case .authenticated:
+                    mainLayout
+                }
+            }
+            .frame(maxHeight: .infinity)
+        }
+        .animation(.easeInOut(duration: 0.3), value: networkMonitor.isConnected)
+        .fullScreenCover(isPresented: Binding(
+            get: { !hasSeenOnboarding },
+            set: { newValue in hasSeenOnboarding = !newValue }
+        )) {
+            OnboardingView()
         }
         .onOpenURL { url in
             handleDeepLink(url)
         }
+        .onReceive(NotificationCenter.default.publisher(for: .spotlightNavigationRequested)) { notification in
+            guard authManager.authState == .authenticated,
+                  let route = notification.userInfo?["route"] as? Route else { return }
+            pendingSpotlightRoute = route
+        }
+    }
+
+    // MARK: - Offline Banner
+
+    /// Banner shown at the top of the screen when the device has no network connectivity.
+    private var offlineBanner: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "wifi.slash")
+                .font(.subheadline)
+
+            Text("Sin conexion - Mostrando datos guardados")
+                .font(.subheadline)
+                .fontWeight(.medium)
+        }
+        .foregroundStyle(.white)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 10)
+        .padding(.horizontal, 16)
+        .background(SolennixColors.warning)
+        .transition(.move(edge: .top).combined(with: .opacity))
     }
 
     // MARK: - Main Layout
@@ -40,9 +85,9 @@ struct ContentView: View {
     @ViewBuilder
     private var mainLayout: some View {
         if sizeClass == .compact {
-            CompactTabLayout()
+            CompactTabLayout(pendingSpotlightRoute: $pendingSpotlightRoute)
         } else {
-            SidebarSplitLayout()
+            SidebarSplitLayout(pendingSpotlightRoute: $pendingSpotlightRoute)
         }
     }
 

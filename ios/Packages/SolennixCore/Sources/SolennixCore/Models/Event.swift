@@ -44,6 +44,60 @@ public struct Event: Codable, Identifiable, Sendable, Hashable {
     public let createdAt: String
     public let updatedAt: String
 
+    // MARK: - Init
+
+    public init(
+        id: String,
+        userId: String,
+        clientId: String,
+        eventDate: String,
+        startTime: String? = nil,
+        endTime: String? = nil,
+        serviceType: String,
+        numPeople: Int,
+        status: EventStatus,
+        discount: Double,
+        discountType: DiscountType,
+        requiresInvoice: Bool,
+        taxRate: Double,
+        taxAmount: Double,
+        totalAmount: Double,
+        location: String? = nil,
+        city: String? = nil,
+        depositPercent: Double? = nil,
+        cancellationDays: Double? = nil,
+        refundPercent: Double? = nil,
+        notes: String? = nil,
+        photos: String? = nil,
+        createdAt: String,
+        updatedAt: String
+    ) {
+        self.id = id
+        self.userId = userId
+        self.clientId = clientId
+        self.eventDate = eventDate
+        self.startTime = startTime
+        self.endTime = endTime
+        self.serviceType = serviceType
+        self.numPeople = numPeople
+        self.status = status
+        self.discount = discount
+        self.discountType = discountType
+        self.requiresInvoice = requiresInvoice
+        self.taxRate = taxRate
+        self.taxAmount = taxAmount
+        self.totalAmount = totalAmount
+        self.location = location
+        self.city = city
+        self.depositPercent = depositPercent
+        self.cancellationDays = cancellationDays
+        self.refundPercent = refundPercent
+        self.notes = notes
+        self.photos = photos
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+    }
+
     enum CodingKeys: String, CodingKey {
         case id
         case userId = "user_id"

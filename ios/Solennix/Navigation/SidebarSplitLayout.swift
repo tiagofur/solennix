@@ -12,6 +12,8 @@ import SolennixNetwork
 /// for item-level views.
 struct SidebarSplitLayout: View {
 
+    @Binding var pendingSpotlightRoute: Route?
+
     @State private var selectedSection: SidebarSection? = .dashboard
     @State private var detailPath = NavigationPath()
     @Environment(\.apiClient) private var apiClient
@@ -51,6 +53,15 @@ struct SidebarSplitLayout: View {
                     RouteDestination(route: route)
                 }
             }
+        }
+        .onChange(of: pendingSpotlightRoute) { _, newRoute in
+            guard let route = newRoute else { return }
+            // Navegar al detalle desde la ruta de Spotlight
+            detailPath = NavigationPath()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                detailPath.append(route)
+            }
+            pendingSpotlightRoute = nil
         }
     }
 
@@ -158,5 +169,5 @@ extension SidebarSection {
 // MARK: - Preview
 
 #Preview {
-    SidebarSplitLayout()
+    SidebarSplitLayout(pendingSpotlightRoute: .constant(nil))
 }

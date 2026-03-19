@@ -2,6 +2,7 @@ import SwiftUI
 import SolennixCore
 import SolennixDesign
 import SolennixNetwork
+import StoreKit
 
 // MARK: - Pricing View
 
@@ -9,6 +10,9 @@ public struct PricingView: View {
 
     @State private var viewModel: SettingsViewModel
     @State private var selectedPlan: Plan = .basic
+    @State private var showError: Bool = false
+    @State private var purchaseErrorMessage: String = ""
+    @Environment(SubscriptionManager.self) private var subscriptionManager
 
     public init(apiClient: APIClient) {
         _viewModel = State(initialValue: SettingsViewModel(apiClient: apiClient))
@@ -20,11 +24,19 @@ public struct PricingView: View {
                 // Header
                 headerSection
 
+                // Estado de suscripcion activa
+                if subscriptionManager.isPremium {
+                    activeSubscriptionSection
+                }
+
                 // Plan cards
                 planCardsSection
 
                 // Feature comparison
                 featureComparisonSection
+
+                // Restaurar compras y administrar suscripcion
+                subscriptionActionsSection
 
                 // FAQ section
                 faqSection
@@ -38,6 +50,13 @@ public struct PricingView: View {
             if let user = viewModel.user {
                 selectedPlan = user.plan
             }
+            await subscriptionManager.loadProducts()
+            await subscriptionManager.updateSubscriptionStatus()
+        }
+        .alert("Error", isPresented: $showError) {
+            Button("Aceptar", role: .cancel) {}
+        } message: {
+            Text(purchaseErrorMessage)
         }
     }
 
@@ -57,6 +76,29 @@ public struct PricingView: View {
                 .font(.headline)
                 .multilineTextAlignment(.center)
         }
+    }
+
+    // MARK: - Active Subscription Section
+
+    private var activeSubscriptionSection: some View {
+        VStack(spacing: Spacing.sm) {
+            HStack {
+                Image(systemName: "crown.fill")
+                    .foregroundStyle(SolennixColors.warning)
+
+                Text("Suscripcion Premium activa")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+
+                Spacer()
+
+                Image(systemName: "checkmark.seal.fill")
+                    .foregroundStyle(SolennixColors.success)
+            }
+        }
+        .padding(Spacing.md)
+        .background(SolennixColors.success.opacity(0.1))
+        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
     }
 
     // MARK: - Plan Cards Section
@@ -81,7 +123,7 @@ public struct PricingView: View {
             planCard(
                 plan: .premium,
                 title: "Premium",
-                price: "$199 MXN/mes",
+                price: formattedPremiumPrice,
                 features: [
                     "Productos ilimitados",
                     "Clientes ilimitados",
@@ -90,10 +132,20 @@ public struct PricingView: View {
                     "Soporte prioritario",
                     "Sin marca de agua en PDFs"
                 ],
-                isCurrentPlan: viewModel.user?.plan == .premium,
+                isCurrentPlan: viewModel.user?.plan == .premium || subscriptionManager.isPremium,
                 isRecommended: true
             )
         }
+    }
+
+    // MARK: - Formatted Premium Price
+
+    /// Muestra el precio del producto mensual de StoreKit, o el precio por defecto.
+    private var formattedPremiumPrice: String {
+        if let monthly = subscriptionManager.monthlyProduct {
+            return "\(monthly.displayPrice)/mes"
+        }
+        return "$199 MXN/mes"
     }
 
     // MARK: - Plan Card
@@ -130,6 +182,13 @@ public struct PricingView: View {
                     Text(price)
                         .font(.headline)
                         .foregroundStyle(SolennixColors.primary)
+
+                    // Mostrar precio anual si esta disponible
+                    if plan == .premium, let yearly = subscriptionManager.yearlyProduct {
+                        Text("\(yearly.displayPrice)/ano")
+                            .font(.caption)
+                            .foregroundStyle(SolennixColors.textSecondary)
+                    }
                 }
 
                 Spacer()
@@ -158,21 +217,9 @@ public struct PricingView: View {
                 }
             }
 
-            // Action button
-            if !isCurrentPlan && plan == .premium {
-                Button {
-                    // TODO: Implement Stripe subscription
-                } label: {
-                    Text("Actualizar a Premium")
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, Spacing.sm)
-                        .background(SolennixGradient.premium)
-                        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-                }
-                .buttonStyle(.plain)
+            // Action button - solo mostrar si no es premium activo
+            if !isCurrentPlan && plan == .premium && !subscriptionManager.isPremium {
+                purchaseButtonsSection
             }
         }
         .padding(Spacing.md)
@@ -186,6 +233,139 @@ public struct PricingView: View {
                 )
         )
         .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
+    }
+
+    // MARK: - Purchase Buttons Section
+
+    private var purchaseButtonsSection: some View {
+        VStack(spacing: Spacing.sm) {
+            // Boton mensual
+            if let monthly = subscriptionManager.monthlyProduct {
+                Button {
+                    Task { await handlePurchase(monthly) }
+                } label: {
+                    HStack {
+                        if subscriptionManager.isPurchasing {
+                            ProgressView()
+                                .tint(.white)
+                        }
+                        Text("Suscribirse Mensual - \(monthly.displayPrice)")
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                    }
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, Spacing.sm)
+                    .background(SolennixGradient.premium)
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                }
+                .buttonStyle(.plain)
+                .disabled(subscriptionManager.isPurchasing)
+            }
+
+            // Boton anual
+            if let yearly = subscriptionManager.yearlyProduct {
+                Button {
+                    Task { await handlePurchase(yearly) }
+                } label: {
+                    HStack {
+                        if subscriptionManager.isPurchasing {
+                            ProgressView()
+                                .tint(SolennixColors.primary)
+                        }
+                        Text("Suscribirse Anual - \(yearly.displayPrice)")
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                    }
+                    .foregroundStyle(SolennixColors.primary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, Spacing.sm)
+                    .background(SolennixColors.primary.opacity(0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                }
+                .buttonStyle(.plain)
+                .disabled(subscriptionManager.isPurchasing)
+            }
+
+            // Fallback si los productos no se cargaron
+            if subscriptionManager.products.isEmpty && !subscriptionManager.isLoading {
+                Button {
+                    Task { await subscriptionManager.loadProducts() }
+                } label: {
+                    Text("Actualizar a Premium")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, Spacing.sm)
+                        .background(SolennixGradient.premium)
+                        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                }
+                .buttonStyle(.plain)
+            }
+
+            if subscriptionManager.isLoading {
+                ProgressView()
+                    .padding(.vertical, Spacing.sm)
+            }
+        }
+    }
+
+    // MARK: - Subscription Actions Section
+
+    private var subscriptionActionsSection: some View {
+        VStack(spacing: Spacing.sm) {
+            // Restaurar compras
+            Button {
+                Task { await subscriptionManager.restorePurchases() }
+            } label: {
+                HStack {
+                    Image(systemName: "arrow.clockwise")
+                    Text("Restaurar compras")
+                }
+                .font(.subheadline)
+                .foregroundStyle(SolennixColors.primary)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, Spacing.sm)
+            }
+            .buttonStyle(.plain)
+            .disabled(subscriptionManager.isLoading)
+
+            // Administrar suscripcion (solo si es premium)
+            if subscriptionManager.isPremium {
+                Button {
+                    Task { await subscriptionManager.openSubscriptionManagement() }
+                } label: {
+                    HStack {
+                        Image(systemName: "gearshape")
+                        Text("Administrar suscripcion")
+                    }
+                    .font(.subheadline)
+                    .foregroundStyle(SolennixColors.textSecondary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, Spacing.sm)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+
+    // MARK: - Handle Purchase
+
+    private func handlePurchase(_ product: Product) async {
+        do {
+            try await subscriptionManager.purchase(product)
+        } catch let error as SubscriptionError {
+            if case .userCancelled = error {
+                // No mostrar error si el usuario cancelo voluntariamente
+                return
+            }
+            purchaseErrorMessage = error.localizedDescription
+            showError = true
+        } catch {
+            purchaseErrorMessage = "Ocurrio un error inesperado al procesar la compra."
+            showError = true
+        }
     }
 
     // MARK: - Feature Comparison Section
@@ -293,5 +473,6 @@ public struct PricingView: View {
 #Preview("Pricing") {
     NavigationStack {
         PricingView(apiClient: APIClient())
+            .environment(SubscriptionManager())
     }
 }
