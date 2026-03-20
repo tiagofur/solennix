@@ -75,7 +75,7 @@ public final class EventDetailViewModel {
     public var canStartLiveActivity: Bool {
         guard let event else { return false }
         guard event.status == .confirmed else { return false }
-        guard LiveActivityManager.shared.areActivitiesEnabled else { return false }
+        guard ActivityAuthorizationInfo().areActivitiesEnabled else { return false }
 
         // Verificar que el evento sea de hoy
         let formatter = DateFormatter()

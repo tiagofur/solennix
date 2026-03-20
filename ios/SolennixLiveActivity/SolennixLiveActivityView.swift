@@ -1,4 +1,5 @@
 import ActivityKit
+import SolennixCore
 import SwiftUI
 import WidgetKit
 

@@ -1,5 +1,6 @@
 import Foundation
 import CoreSpotlight
+import SolennixCore
 
 // MARK: - Deep Link Action
 

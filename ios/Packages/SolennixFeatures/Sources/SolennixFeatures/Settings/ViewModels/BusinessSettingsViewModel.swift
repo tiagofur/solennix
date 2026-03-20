@@ -5,6 +5,34 @@ import SwiftUI
 import SolennixCore
 import SolennixNetwork
 
+// MARK: - Business Settings Request Bodies
+
+private struct BusinessInfoBody: Encodable {
+    let businessName: String
+    let showBusinessNameInPdf: Bool
+    let brandColor: String
+
+    enum CodingKeys: String, CodingKey {
+        case businessName = "business_name"
+        case showBusinessNameInPdf = "show_business_name_in_pdf"
+        case brandColor = "brand_color"
+    }
+}
+
+private struct ContractDefaultsBody: Encodable {
+    let defaultDepositPercent: Double
+    let defaultCancellationDays: Double
+    let defaultRefundPercent: Double
+    let contractTemplate: String
+
+    enum CodingKeys: String, CodingKey {
+        case defaultDepositPercent = "default_deposit_percent"
+        case defaultCancellationDays = "default_cancellation_days"
+        case defaultRefundPercent = "default_refund_percent"
+        case contractTemplate = "contract_template"
+    }
+}
+
 // MARK: - Business Settings View Model
 
 @Observable
@@ -85,11 +113,11 @@ public final class BusinessSettingsViewModel {
         errorMessage = nil
 
         do {
-            let body: [String: Any] = [
-                "business_name": businessName.trimmingCharacters(in: .whitespacesAndNewlines),
-                "show_business_name_in_pdf": showBusinessNameInPdf,
-                "brand_color": brandColor.toHex() ?? "#007AFF"
-            ]
+            let body = BusinessInfoBody(
+                businessName: businessName.trimmingCharacters(in: .whitespacesAndNewlines),
+                showBusinessNameInPdf: showBusinessNameInPdf,
+                brandColor: brandColor.toHex() ?? "#007AFF"
+            )
             user = try await apiClient.put(Endpoint.updateProfile, body: body)
             isSaving = false
             return true
@@ -108,12 +136,12 @@ public final class BusinessSettingsViewModel {
         errorMessage = nil
 
         do {
-            let body: [String: Any] = [
-                "default_deposit_percent": depositPercent,
-                "default_cancellation_days": cancellationDays,
-                "default_refund_percent": refundPercent,
-                "contract_template": contractTemplate.trimmingCharacters(in: .whitespacesAndNewlines)
-            ]
+            let body = ContractDefaultsBody(
+                defaultDepositPercent: depositPercent,
+                defaultCancellationDays: cancellationDays,
+                defaultRefundPercent: refundPercent,
+                contractTemplate: contractTemplate.trimmingCharacters(in: .whitespacesAndNewlines)
+            )
             user = try await apiClient.put(Endpoint.updateProfile, body: body)
             isSaving = false
             return true
@@ -147,7 +175,7 @@ public final class BusinessSettingsViewModel {
             )
 
             // Update profile with new logo URL
-            let body: [String: Any] = ["logo_url": response.url]
+            let body = ["logo_url": response.url]
             user = try await apiClient.put(Endpoint.updateProfile, body: body)
             logoUrl = response.url
         } catch {

@@ -1,0 +1,723 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		068E2590B0822A94C6FAE122 /* SolennixDesign in Frameworks */ = {isa = PBXBuildFile; productRef = 43F2AB059D2E23826CAEE699 /* SolennixDesign */; };
+		1479593905C36807BC5595A8 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81690A3205045775059AB12D /* ContentView.swift */; };
+		175AB50ACB86012043B58889 /* CompactTabLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FD390257381E93F0922F9DF /* CompactTabLayout.swift */; };
+		1DEF87BFAF9F63670363B09B /* SolennixNetwork in Frameworks */ = {isa = PBXBuildFile; productRef = DC521897BBEAC6707453E470 /* SolennixNetwork */; };
+		26314057AB37187F042BCE2E /* MoreMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F34A685767D81C0E207E6AA /* MoreMenuView.swift */; };
+		38157680A3287F18EA61BD48 /* SolennixFeatures in Frameworks */ = {isa = PBXBuildFile; productRef = 15FA5790BF9FBB377C754173 /* SolennixFeatures */; };
+		40A6DAE581CB68D9CD746D87 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BD8FAF4B7299793724BA9DF /* NotificationManager.swift */; };
+		463241C8CE37DF4EA6D1A2B6 /* ShowMonthlyRevenueIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A639BA04B2C90E8F96B85CB /* ShowMonthlyRevenueIntent.swift */; };
+		4B8444FA9F8DD556DA2AC5BD /* CheckLowStockIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37AD23CC5B1391CBA9558C1C /* CheckLowStockIntent.swift */; };
+		5F007783634178490F0F2104 /* SolennixCore in Frameworks */ = {isa = PBXBuildFile; productRef = B6C6823DFAB04CC472F37EAE /* SolennixCore */; };
+		66F6F5DFE0E5D087760F1B6A /* UpcomingEventsWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 451A5953A5F61726A9FA40A8 /* UpcomingEventsWidget.swift */; };
+		681F97FBFBFEAAB745539523 /* SidebarSplitLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFD6B263EC4549ED0AE7340A /* SidebarSplitLayout.swift */; };
+		768E25DC84A88666B09A2363 /* SolennixLiveActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5311BA08A554C452F2BF622A /* SolennixLiveActivityAttributes.swift */; };
+		7956F1C942F0EEC6E17ACFE9 /* LockScreenWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E4DB82EC9A6C6C52AFD8046 /* LockScreenWidget.swift */; };
+		7C31948E19EF9953FE88C597 /* SolennixApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3B0FFA9AF756AB9C85E856D /* SolennixApp.swift */; };
+		87181E7C5D01864E818B612B /* EventCountIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2E55DCCA04D139222E1CEBC /* EventCountIntent.swift */; };
+		898C82163ABABB80647816C6 /* WidgetDataSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = F712A2D8BEDA9371EBEED283 /* WidgetDataSync.swift */; };
+		8FF23558D4051655BE8FDC8F /* ShowUpcomingEventsIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93621466CB78E70396E79E29 /* ShowUpcomingEventsIntent.swift */; };
+		91D88C661B112F014E08641E /* Route.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70877D09C7C58457DDD2F657 /* Route.swift */; };
+		942FB2F3312D316A2C8A427A /* ShowTodayEventsIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77B8BB419FD62C7CD2B47639 /* ShowTodayEventsIntent.swift */; };
+		9D545715DA05F6C817070AAD /* SolennixWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCDE53D42FC31925A920B98C /* SolennixWidgets.swift */; };
+		AAB2D4DEF3E2E7C0732C4DF3 /* RouteDestination.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC512DE1AC7C660755ECA909 /* RouteDestination.swift */; };
+		AE5C577C51730FE91172BAEA /* SolennixShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26D154F9FACF2A74B9D23331 /* SolennixShortcuts.swift */; };
+		AE74FD8C34B25B8AD268869C /* KeyboardShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C00F21C74E3F4FEFE8F1C50 /* KeyboardShortcuts.swift */; };
+		AF2A2F27420B89787CBB6237 /* SolennixCore in Frameworks */ = {isa = PBXBuildFile; productRef = 218818B9682EEA80A5555EF5 /* SolennixCore */; };
+		B58301ACDCAB10C078D350D3 /* WidgetModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB69CCDF04807E01479F4939 /* WidgetModels.swift */; };
+		B92C68A6EC06ACA21048C7F5 /* KPIWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC4BED0BA0668EB3B1475A7D /* KPIWidget.swift */; };
+		BE57C9FA226ABB99B5271812 /* InteractiveWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55B62E2796D149F1C17BE7FE /* InteractiveWidget.swift */; };
+		C10D6B3E2969262852FF6369 /* SolennixWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 68A9B9C7CCD508780816FFD3 /* SolennixWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		C7862E1051955E8D56F89519 /* SolennixDesign in Frameworks */ = {isa = PBXBuildFile; productRef = FE19AF27F762FD5C5E20E30D /* SolennixDesign */; };
+		D295D991799955D364C735AD /* SolennixLiveActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F69128CE543478DD8DF13D6 /* SolennixLiveActivityView.swift */; };
+		D738B142D5858B5FCA5E737C /* DeepLinkHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A362069977C87D34D5E51A2 /* DeepLinkHandler.swift */; };
+		D82CBBD7D2E30D0A2EBB7A36 /* AuthFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C051B91E5F738A07F4A1E176 /* AuthFlowView.swift */; };
+		DC5AA5EFC61BF9A75FB47CD6 /* SolennixNetwork in Frameworks */ = {isa = PBXBuildFile; productRef = 5ED55B2A557A9FD74159614F /* SolennixNetwork */; };
+		FCBBA0F06BEA4DA4EBC599AE /* EventLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA4056B4B0E121CB1775005F /* EventLiveActivity.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		A962FEEC67EFD3D78CBB6A5A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7A42FEFDAD7DC91F050D08CA /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 533502EEC4678D63921D71A6;
+			remoteInfo = SolennixWidgetExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		479609D689A5500F868887A8 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				C10D6B3E2969262852FF6369 /* SolennixWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		0243D8F43F07F77468C0E894 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		0DB0E0FDAE4DCB607FD61386 /* SolennixWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SolennixWidgetExtension.entitlements; sourceTree = "<group>"; };
+		0FAD0D0C832A899350E8ED0C /* SolennixCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = SolennixCore; path = Packages/SolennixCore; sourceTree = SOURCE_ROOT; };
+		1A639BA04B2C90E8F96B85CB /* ShowMonthlyRevenueIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowMonthlyRevenueIntent.swift; sourceTree = "<group>"; };
+		1EF7A9FBEE935FF6D1DCCF98 /* SolennixDesign */ = {isa = PBXFileReference; lastKnownFileType = folder; name = SolennixDesign; path = Packages/SolennixDesign; sourceTree = SOURCE_ROOT; };
+		20FD5F115715FD819AE007D8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		26D154F9FACF2A74B9D23331 /* SolennixShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolennixShortcuts.swift; sourceTree = "<group>"; };
+		2A362069977C87D34D5E51A2 /* DeepLinkHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepLinkHandler.swift; sourceTree = "<group>"; };
+		37AD23CC5B1391CBA9558C1C /* CheckLowStockIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckLowStockIntent.swift; sourceTree = "<group>"; };
+		3EDE477D65F41F57F76457B4 /* Solennix.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Solennix.entitlements; sourceTree = "<group>"; };
+		3FD390257381E93F0922F9DF /* CompactTabLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompactTabLayout.swift; sourceTree = "<group>"; };
+		451A5953A5F61726A9FA40A8 /* UpcomingEventsWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpcomingEventsWidget.swift; sourceTree = "<group>"; };
+		5311BA08A554C452F2BF622A /* SolennixLiveActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolennixLiveActivityAttributes.swift; sourceTree = "<group>"; };
+		55B62E2796D149F1C17BE7FE /* InteractiveWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InteractiveWidget.swift; sourceTree = "<group>"; };
+		5E4DB82EC9A6C6C52AFD8046 /* LockScreenWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockScreenWidget.swift; sourceTree = "<group>"; };
+		5F34A685767D81C0E207E6AA /* MoreMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoreMenuView.swift; sourceTree = "<group>"; };
+		5F69128CE543478DD8DF13D6 /* SolennixLiveActivityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolennixLiveActivityView.swift; sourceTree = "<group>"; };
+		63856E6F5C0F3C9413900FB5 /* SolennixFeatures */ = {isa = PBXFileReference; lastKnownFileType = folder; name = SolennixFeatures; path = Packages/SolennixFeatures; sourceTree = SOURCE_ROOT; };
+		68A9B9C7CCD508780816FFD3 /* SolennixWidgetExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = SolennixWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		70877D09C7C58457DDD2F657 /* Route.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Route.swift; sourceTree = "<group>"; };
+		77B8BB419FD62C7CD2B47639 /* ShowTodayEventsIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowTodayEventsIntent.swift; sourceTree = "<group>"; };
+		81690A3205045775059AB12D /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		8BD8FAF4B7299793724BA9DF /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
+		8C00F21C74E3F4FEFE8F1C50 /* KeyboardShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardShortcuts.swift; sourceTree = "<group>"; };
+		93621466CB78E70396E79E29 /* ShowUpcomingEventsIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowUpcomingEventsIntent.swift; sourceTree = "<group>"; };
+		A3B0FFA9AF756AB9C85E856D /* SolennixApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolennixApp.swift; sourceTree = "<group>"; };
+		AB69CCDF04807E01479F4939 /* WidgetModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetModels.swift; sourceTree = "<group>"; };
+		BC512DE1AC7C660755ECA909 /* RouteDestination.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteDestination.swift; sourceTree = "<group>"; };
+		C051B91E5F738A07F4A1E176 /* AuthFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthFlowView.swift; sourceTree = "<group>"; };
+		CA4056B4B0E121CB1775005F /* EventLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventLiveActivity.swift; sourceTree = "<group>"; };
+		CB729295B156CBB8B4B765E2 /* Solennix.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Solennix.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CCDE53D42FC31925A920B98C /* SolennixWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolennixWidgets.swift; sourceTree = "<group>"; };
+		CDF2A0ED96EB0D2C7CA30A42 /* SolennixNetwork */ = {isa = PBXFileReference; lastKnownFileType = folder; name = SolennixNetwork; path = Packages/SolennixNetwork; sourceTree = SOURCE_ROOT; };
+		DFD6B263EC4549ED0AE7340A /* SidebarSplitLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarSplitLayout.swift; sourceTree = "<group>"; };
+		E2E55DCCA04D139222E1CEBC /* EventCountIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventCountIntent.swift; sourceTree = "<group>"; };
+		EC4BED0BA0668EB3B1475A7D /* KPIWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KPIWidget.swift; sourceTree = "<group>"; };
+		F712A2D8BEDA9371EBEED283 /* WidgetDataSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetDataSync.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		868030691E82B022703D39D7 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AF2A2F27420B89787CBB6237 /* SolennixCore in Frameworks */,
+				068E2590B0822A94C6FAE122 /* SolennixDesign in Frameworks */,
+				1DEF87BFAF9F63670363B09B /* SolennixNetwork in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA71D4EF266A91EDA4F8ECD9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5F007783634178490F0F2104 /* SolennixCore in Frameworks */,
+				C7862E1051955E8D56F89519 /* SolennixDesign in Frameworks */,
+				DC5AA5EFC61BF9A75FB47CD6 /* SolennixNetwork in Frameworks */,
+				38157680A3287F18EA61BD48 /* SolennixFeatures in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		00B3A82EFA8ECD121B573E85 = {
+			isa = PBXGroup;
+			children = (
+				826E410389D263A701F16DF3 /* Packages */,
+				435EFF914B76BCDC680C2927 /* Solennix */,
+				AC58D8766C08AC5506C7BB54 /* SolennixIntents */,
+				1CBDEC2D8A602CADCC4BE4B3 /* SolennixLiveActivity */,
+				58C12AB9D6560302A4E17B9D /* SolennixWidgetExtension */,
+				9E6B3A43E92B9C5181767046 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		1661383B6CAFD0EAF76BDBC6 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				AB69CCDF04807E01479F4939 /* WidgetModels.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		1CBDEC2D8A602CADCC4BE4B3 /* SolennixLiveActivity */ = {
+			isa = PBXGroup;
+			children = (
+				5311BA08A554C452F2BF622A /* SolennixLiveActivityAttributes.swift */,
+				5F69128CE543478DD8DF13D6 /* SolennixLiveActivityView.swift */,
+			);
+			path = SolennixLiveActivity;
+			sourceTree = "<group>";
+		};
+		20224FEB708F6BA8B34A7F87 /* Keyboard */ = {
+			isa = PBXGroup;
+			children = (
+				8C00F21C74E3F4FEFE8F1C50 /* KeyboardShortcuts.swift */,
+			);
+			path = Keyboard;
+			sourceTree = "<group>";
+		};
+		2A8484A8A1C69C29C7CD06F5 /* Intents */ = {
+			isa = PBXGroup;
+			children = (
+				37AD23CC5B1391CBA9558C1C /* CheckLowStockIntent.swift */,
+				E2E55DCCA04D139222E1CEBC /* EventCountIntent.swift */,
+				1A639BA04B2C90E8F96B85CB /* ShowMonthlyRevenueIntent.swift */,
+				77B8BB419FD62C7CD2B47639 /* ShowTodayEventsIntent.swift */,
+				93621466CB78E70396E79E29 /* ShowUpcomingEventsIntent.swift */,
+			);
+			path = Intents;
+			sourceTree = "<group>";
+		};
+		435EFF914B76BCDC680C2927 /* Solennix */ = {
+			isa = PBXGroup;
+			children = (
+				20224FEB708F6BA8B34A7F87 /* Keyboard */,
+				73400EA7AD4B877E7DA7CFD4 /* Navigation */,
+				D8EE45DD926AA88AD01D9995 /* Notifications */,
+				6C92B91AEB6A0E5ACE33DA18 /* Widgets */,
+				C051B91E5F738A07F4A1E176 /* AuthFlowView.swift */,
+				81690A3205045775059AB12D /* ContentView.swift */,
+				20FD5F115715FD819AE007D8 /* Info.plist */,
+				3EDE477D65F41F57F76457B4 /* Solennix.entitlements */,
+				A3B0FFA9AF756AB9C85E856D /* SolennixApp.swift */,
+			);
+			path = Solennix;
+			sourceTree = "<group>";
+		};
+		58C12AB9D6560302A4E17B9D /* SolennixWidgetExtension */ = {
+			isa = PBXGroup;
+			children = (
+				FB44423BA039C4EBFC800B5F /* LiveActivity */,
+				1661383B6CAFD0EAF76BDBC6 /* Models */,
+				CDB07D578E4648966F144CE6 /* Widgets */,
+				0243D8F43F07F77468C0E894 /* Info.plist */,
+				0DB0E0FDAE4DCB607FD61386 /* SolennixWidgetExtension.entitlements */,
+				CCDE53D42FC31925A920B98C /* SolennixWidgets.swift */,
+			);
+			path = SolennixWidgetExtension;
+			sourceTree = "<group>";
+		};
+		6C92B91AEB6A0E5ACE33DA18 /* Widgets */ = {
+			isa = PBXGroup;
+			children = (
+				F712A2D8BEDA9371EBEED283 /* WidgetDataSync.swift */,
+			);
+			path = Widgets;
+			sourceTree = "<group>";
+		};
+		73400EA7AD4B877E7DA7CFD4 /* Navigation */ = {
+			isa = PBXGroup;
+			children = (
+				3FD390257381E93F0922F9DF /* CompactTabLayout.swift */,
+				2A362069977C87D34D5E51A2 /* DeepLinkHandler.swift */,
+				5F34A685767D81C0E207E6AA /* MoreMenuView.swift */,
+				70877D09C7C58457DDD2F657 /* Route.swift */,
+				BC512DE1AC7C660755ECA909 /* RouteDestination.swift */,
+				DFD6B263EC4549ED0AE7340A /* SidebarSplitLayout.swift */,
+			);
+			path = Navigation;
+			sourceTree = "<group>";
+		};
+		826E410389D263A701F16DF3 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				0FAD0D0C832A899350E8ED0C /* SolennixCore */,
+				1EF7A9FBEE935FF6D1DCCF98 /* SolennixDesign */,
+				63856E6F5C0F3C9413900FB5 /* SolennixFeatures */,
+				CDF2A0ED96EB0D2C7CA30A42 /* SolennixNetwork */,
+			);
+			path = Packages;
+			sourceTree = "<group>";
+		};
+		9E6B3A43E92B9C5181767046 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				CB729295B156CBB8B4B765E2 /* Solennix.app */,
+				68A9B9C7CCD508780816FFD3 /* SolennixWidgetExtension.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		AC58D8766C08AC5506C7BB54 /* SolennixIntents */ = {
+			isa = PBXGroup;
+			children = (
+				2A8484A8A1C69C29C7CD06F5 /* Intents */,
+				26D154F9FACF2A74B9D23331 /* SolennixShortcuts.swift */,
+			);
+			path = SolennixIntents;
+			sourceTree = "<group>";
+		};
+		CDB07D578E4648966F144CE6 /* Widgets */ = {
+			isa = PBXGroup;
+			children = (
+				55B62E2796D149F1C17BE7FE /* InteractiveWidget.swift */,
+				EC4BED0BA0668EB3B1475A7D /* KPIWidget.swift */,
+				5E4DB82EC9A6C6C52AFD8046 /* LockScreenWidget.swift */,
+				451A5953A5F61726A9FA40A8 /* UpcomingEventsWidget.swift */,
+			);
+			path = Widgets;
+			sourceTree = "<group>";
+		};
+		D8EE45DD926AA88AD01D9995 /* Notifications */ = {
+			isa = PBXGroup;
+			children = (
+				8BD8FAF4B7299793724BA9DF /* NotificationManager.swift */,
+			);
+			path = Notifications;
+			sourceTree = "<group>";
+		};
+		FB44423BA039C4EBFC800B5F /* LiveActivity */ = {
+			isa = PBXGroup;
+			children = (
+				CA4056B4B0E121CB1775005F /* EventLiveActivity.swift */,
+			);
+			path = LiveActivity;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		14FD8C2D317599754E5758B8 /* Solennix */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AFB13B9F7652FF17B532BF3A /* Build configuration list for PBXNativeTarget "Solennix" */;
+			buildPhases = (
+				6A20AA2A96B628371764A49B /* Sources */,
+				AA71D4EF266A91EDA4F8ECD9 /* Frameworks */,
+				479609D689A5500F868887A8 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				CDD123BCBEF8360ED5D4DF64 /* PBXTargetDependency */,
+			);
+			name = Solennix;
+			packageProductDependencies = (
+				B6C6823DFAB04CC472F37EAE /* SolennixCore */,
+				FE19AF27F762FD5C5E20E30D /* SolennixDesign */,
+				5ED55B2A557A9FD74159614F /* SolennixNetwork */,
+				15FA5790BF9FBB377C754173 /* SolennixFeatures */,
+			);
+			productName = Solennix;
+			productReference = CB729295B156CBB8B4B765E2 /* Solennix.app */;
+			productType = "com.apple.product-type.application";
+		};
+		533502EEC4678D63921D71A6 /* SolennixWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B6CCD6CA107B4B9D9C46CAD8 /* Build configuration list for PBXNativeTarget "SolennixWidgetExtension" */;
+			buildPhases = (
+				D0B95EFDED292742F2A0C420 /* Sources */,
+				868030691E82B022703D39D7 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SolennixWidgetExtension;
+			packageProductDependencies = (
+				218818B9682EEA80A5555EF5 /* SolennixCore */,
+				43F2AB059D2E23826CAEE699 /* SolennixDesign */,
+				DC521897BBEAC6707453E470 /* SolennixNetwork */,
+			);
+			productName = SolennixWidgetExtension;
+			productReference = 68A9B9C7CCD508780816FFD3 /* SolennixWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		7A42FEFDAD7DC91F050D08CA /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					14FD8C2D317599754E5758B8 = {
+						DevelopmentTeam = "";
+					};
+					533502EEC4678D63921D71A6 = {
+						DevelopmentTeam = "";
+					};
+				};
+			};
+			buildConfigurationList = 70310F7E6A776E4EB5633230 /* Build configuration list for PBXProject "Solennix" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 00B3A82EFA8ECD121B573E85;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				A6C2F7E662A8160E4391E47E /* XCLocalSwiftPackageReference "Packages/SolennixCore" */,
+				69A02BF1E2CB4A997972DEFF /* XCLocalSwiftPackageReference "Packages/SolennixDesign" */,
+				E93AFF29772B74ADC5A5E97C /* XCLocalSwiftPackageReference "Packages/SolennixFeatures" */,
+				54D10EE33C2832E939E4C2DF /* XCLocalSwiftPackageReference "Packages/SolennixNetwork" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 9E6B3A43E92B9C5181767046 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				14FD8C2D317599754E5758B8 /* Solennix */,
+				533502EEC4678D63921D71A6 /* SolennixWidgetExtension */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		6A20AA2A96B628371764A49B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D82CBBD7D2E30D0A2EBB7A36 /* AuthFlowView.swift in Sources */,
+				4B8444FA9F8DD556DA2AC5BD /* CheckLowStockIntent.swift in Sources */,
+				175AB50ACB86012043B58889 /* CompactTabLayout.swift in Sources */,
+				1479593905C36807BC5595A8 /* ContentView.swift in Sources */,
+				D738B142D5858B5FCA5E737C /* DeepLinkHandler.swift in Sources */,
+				87181E7C5D01864E818B612B /* EventCountIntent.swift in Sources */,
+				AE74FD8C34B25B8AD268869C /* KeyboardShortcuts.swift in Sources */,
+				26314057AB37187F042BCE2E /* MoreMenuView.swift in Sources */,
+				40A6DAE581CB68D9CD746D87 /* NotificationManager.swift in Sources */,
+				91D88C661B112F014E08641E /* Route.swift in Sources */,
+				AAB2D4DEF3E2E7C0732C4DF3 /* RouteDestination.swift in Sources */,
+				463241C8CE37DF4EA6D1A2B6 /* ShowMonthlyRevenueIntent.swift in Sources */,
+				942FB2F3312D316A2C8A427A /* ShowTodayEventsIntent.swift in Sources */,
+				8FF23558D4051655BE8FDC8F /* ShowUpcomingEventsIntent.swift in Sources */,
+				681F97FBFBFEAAB745539523 /* SidebarSplitLayout.swift in Sources */,
+				7C31948E19EF9953FE88C597 /* SolennixApp.swift in Sources */,
+				AE5C577C51730FE91172BAEA /* SolennixShortcuts.swift in Sources */,
+				898C82163ABABB80647816C6 /* WidgetDataSync.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D0B95EFDED292742F2A0C420 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FCBBA0F06BEA4DA4EBC599AE /* EventLiveActivity.swift in Sources */,
+				BE57C9FA226ABB99B5271812 /* InteractiveWidget.swift in Sources */,
+				B92C68A6EC06ACA21048C7F5 /* KPIWidget.swift in Sources */,
+				7956F1C942F0EEC6E17ACFE9 /* LockScreenWidget.swift in Sources */,
+				768E25DC84A88666B09A2363 /* SolennixLiveActivityAttributes.swift in Sources */,
+				D295D991799955D364C735AD /* SolennixLiveActivityView.swift in Sources */,
+				9D545715DA05F6C817070AAD /* SolennixWidgets.swift in Sources */,
+				66F6F5DFE0E5D087760F1B6A /* UpcomingEventsWidget.swift in Sources */,
+				B58301ACDCAB10C078D350D3 /* WidgetModels.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		CDD123BCBEF8360ED5D4DF64 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 533502EEC4678D63921D71A6 /* SolennixWidgetExtension */;
+			targetProxy = A962FEEC67EFD3D78CBB6A5A /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		085956F172900AF3EE5DEC1E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = SolennixWidgetExtension/SolennixWidgetExtension.entitlements;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = SolennixWidgetExtension/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.solennix.app.widgets;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		5ABF96BD0FCADBD3CD3ECE04 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Debug;
+		};
+		84E94B331EFD53E14D97D6BF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = SolennixWidgetExtension/SolennixWidgetExtension.entitlements;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = SolennixWidgetExtension/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.solennix.app.widgets;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		9B0E870F709C46F6B79C8B4B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Release;
+		};
+		A6D48A7343376DF9B1D6D76B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Solennix/Solennix.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Solennix/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.solennix.app;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		CCDA5D753663E9770B1F60B8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Solennix/Solennix.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Solennix/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.solennix.app;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		70310F7E6A776E4EB5633230 /* Build configuration list for PBXProject "Solennix" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5ABF96BD0FCADBD3CD3ECE04 /* Debug */,
+				9B0E870F709C46F6B79C8B4B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		AFB13B9F7652FF17B532BF3A /* Build configuration list for PBXNativeTarget "Solennix" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A6D48A7343376DF9B1D6D76B /* Debug */,
+				CCDA5D753663E9770B1F60B8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		B6CCD6CA107B4B9D9C46CAD8 /* Build configuration list for PBXNativeTarget "SolennixWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				085956F172900AF3EE5DEC1E /* Debug */,
+				84E94B331EFD53E14D97D6BF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		54D10EE33C2832E939E4C2DF /* XCLocalSwiftPackageReference "Packages/SolennixNetwork" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/SolennixNetwork;
+		};
+		69A02BF1E2CB4A997972DEFF /* XCLocalSwiftPackageReference "Packages/SolennixDesign" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/SolennixDesign;
+		};
+		A6C2F7E662A8160E4391E47E /* XCLocalSwiftPackageReference "Packages/SolennixCore" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/SolennixCore;
+		};
+		E93AFF29772B74ADC5A5E97C /* XCLocalSwiftPackageReference "Packages/SolennixFeatures" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/SolennixFeatures;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		15FA5790BF9FBB377C754173 /* SolennixFeatures */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = SolennixFeatures;
+		};
+		218818B9682EEA80A5555EF5 /* SolennixCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = SolennixCore;
+		};
+		43F2AB059D2E23826CAEE699 /* SolennixDesign */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = SolennixDesign;
+		};
+		5ED55B2A557A9FD74159614F /* SolennixNetwork */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = SolennixNetwork;
+		};
+		B6C6823DFAB04CC472F37EAE /* SolennixCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = SolennixCore;
+		};
+		DC521897BBEAC6707453E470 /* SolennixNetwork */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = SolennixNetwork;
+		};
+		FE19AF27F762FD5C5E20E30D /* SolennixDesign */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = SolennixDesign;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 7A42FEFDAD7DC91F050D08CA /* Project object */;
+}

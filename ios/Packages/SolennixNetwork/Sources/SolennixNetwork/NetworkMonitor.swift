@@ -24,7 +24,7 @@ public final class NetworkMonitor {
 
     public init() {
         self.monitor = NWPathMonitor()
-        self.queue = DispatchQueue(label: "com.creapolis.solennix.networkMonitor", qos: .utility)
+        self.queue = DispatchQueue(label: "com.solennix.app.networkMonitor", qos: .utility)
 
         monitor.pathUpdateHandler = { [weak self] path in
             DispatchQueue.main.async {

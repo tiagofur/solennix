@@ -2,7 +2,6 @@ import Foundation
 import Observation
 import LocalAuthentication
 import SolennixCore
-import SolennixFeatures
 
 // MARK: - Auth State
 
@@ -72,6 +71,15 @@ private struct RefreshResponse: Decodable {
     }
 }
 
+// MARK: - User Tracking Delegate
+
+/// Protocol allowing the auth layer to report user identity changes
+/// without depending on concrete analytics/crash-reporting packages.
+public protocol UserTrackingDelegate: AnyObject, Sendable {
+    func setUser(id: String, email: String, name: String)
+    func clearUser()
+}
+
 // MARK: - Auth Manager
 
 /// Manages authentication state, token storage, and user session lifecycle.
@@ -107,6 +115,10 @@ public final class AuthManager {
     /// AuthManager uses this to make authenticated API calls (login, register, etc.).
     public var apiClient: APIClient?
 
+    /// Delegate for reporting user identity changes (e.g., to Sentry).
+    /// Set by the app layer after initialization.
+    public weak var userTrackingDelegate: UserTrackingDelegate?
+
     // MARK: - Init
 
     public init(keychain: KeychainHelper = .standard) {
@@ -133,7 +145,7 @@ public final class AuthManager {
             let user: User = try await client.get(Endpoint.me)
             currentUser = user
             authState = .authenticated(user)
-            SentryHelper.setUser(id: user.id, email: user.email, name: user.name)
+            userTrackingDelegate?.setUser(id: user.id, email: user.email, name: user.name)
         } catch {
             // Token might be expired; try refresh
             let refreshed = try? await refreshToken()
@@ -143,7 +155,7 @@ public final class AuthManager {
                    let user: User = try? await client.get(Endpoint.me) {
                     currentUser = user
                     authState = .authenticated(user)
-                    SentryHelper.setUser(id: user.id, email: user.email, name: user.name)
+                    userTrackingDelegate?.setUser(id: user.id, email: user.email, name: user.name)
                 } else {
                     clearTokens()
                     authState = .unauthenticated
@@ -174,7 +186,7 @@ public final class AuthManager {
         storeTokens(access: response.accessToken, refresh: response.refreshToken)
         currentUser = response.user
         authState = .authenticated(response.user)
-        SentryHelper.setUser(id: response.user.id, email: response.user.email, name: response.user.name)
+        userTrackingDelegate?.setUser(id: response.user.id, email: response.user.email, name: response.user.name)
         return response.user
     }
 
@@ -197,7 +209,7 @@ public final class AuthManager {
         storeTokens(access: response.accessToken, refresh: response.refreshToken)
         currentUser = response.user
         authState = .authenticated(response.user)
-        SentryHelper.setUser(id: response.user.id, email: response.user.email, name: response.user.name)
+        userTrackingDelegate?.setUser(id: response.user.id, email: response.user.email, name: response.user.name)
         return response.user
     }
 
@@ -216,7 +228,7 @@ public final class AuthManager {
         clearTokens()
         currentUser = nil
         authState = .unauthenticated
-        SentryHelper.clearUser()
+        userTrackingDelegate?.clearUser()
     }
 
     // MARK: - Token Refresh
@@ -292,7 +304,7 @@ public final class AuthManager {
     public func clearTokens() {
         keychain.delete(for: KeychainHelper.Keys.accessToken)
         keychain.delete(for: KeychainHelper.Keys.refreshToken)
-        SentryHelper.clearUser()
+        userTrackingDelegate?.clearUser()
     }
 
     // MARK: - Private Helpers

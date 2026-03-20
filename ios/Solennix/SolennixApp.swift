@@ -57,10 +57,6 @@ struct SolennixApp: App {
         let limits = PlanLimitsManager(apiClient: client)
         limits.setAuthManager(auth)
 
-        // Use Task to set auth manager on the actor after init
-        let authRef = auth
-        Task { await client.setAuthManager(authRef) }
-
         _authManager = State(initialValue: auth)
         _planLimitsManager = State(initialValue: limits)
         self.apiClient = client
@@ -99,7 +95,8 @@ struct SolennixApp: App {
                 }
                 .environment(cacheManager)
                 .task {
-                    // Start checking for auth tokens
+                    // Ensure auth manager is set on the actor before checking auth
+                    await apiClient.setAuthManager(authManager)
                     await authManager.checkAuth()
                 }
                 .task {

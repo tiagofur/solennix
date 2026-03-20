@@ -5,6 +5,33 @@ import SwiftUI
 import SolennixCore
 import SolennixNetwork
 
+// MARK: - Product Form Request Bodies
+
+private struct ProductBody: Encodable {
+    let name: String
+    let category: String
+    let basePrice: Double
+    let isActive: Bool
+    let imageUrl: String?
+
+    enum CodingKeys: String, CodingKey {
+        case name, category
+        case basePrice = "base_price"
+        case isActive = "is_active"
+        case imageUrl = "image_url"
+    }
+}
+
+private struct RecipeIngredientBody: Encodable {
+    let inventoryId: String
+    let quantityRequired: Double
+
+    enum CodingKeys: String, CodingKey {
+        case inventoryId = "inventory_id"
+        case quantityRequired = "quantity_required"
+    }
+}
+
 // MARK: - Recipe Item
 
 public struct RecipeItem: Identifiable, Hashable {
@@ -306,22 +333,22 @@ public final class ProductFormViewModel {
             }
 
             // Prepare product data
-            let productData: [String: Any] = [
-                "name": name.trimmingCharacters(in: .whitespacesAndNewlines),
-                "category": category.trimmingCharacters(in: .whitespacesAndNewlines),
-                "base_price": basePrice,
-                "is_active": isActive,
-                "image_url": finalImageUrl as Any
-            ]
+            let productData = ProductBody(
+                name: name.trimmingCharacters(in: .whitespacesAndNewlines),
+                category: category.trimmingCharacters(in: .whitespacesAndNewlines),
+                basePrice: basePrice,
+                isActive: isActive,
+                imageUrl: finalImageUrl
+            )
 
             // Prepare recipe data
             let allRecipeItems = ingredients + equipment + supplies
             let validRecipeItems = allRecipeItems.filter { !$0.inventoryId.isEmpty }
             let recipeData = validRecipeItems.map { item in
-                [
-                    "inventory_id": item.inventoryId,
-                    "quantity_required": item.quantityRequired
-                ] as [String: Any]
+                RecipeIngredientBody(
+                    inventoryId: item.inventoryId,
+                    quantityRequired: item.quantityRequired
+                )
             }
 
             if isEditing, let id = productId {

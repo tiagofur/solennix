@@ -1,14 +1,23 @@
 import Foundation
 
 public struct EventProduct: Codable, Identifiable, Sendable, Hashable {
-    public let id: String
-    public let eventId: String
-    public let productId: String
-    public let quantity: Int
-    public let unitPrice: Double
-    public let discount: Double
+    public var id: String
+    public var eventId: String
+    public var productId: String
+    public var quantity: Int
+    public var unitPrice: Double
+    public var discount: Double
     public var totalPrice: Double?
-    public let createdAt: String
+    public var createdAt: String
+
+    public init(
+        id: String, eventId: String, productId: String, quantity: Int,
+        unitPrice: Double, discount: Double, totalPrice: Double? = nil, createdAt: String
+    ) {
+        self.id = id; self.eventId = eventId; self.productId = productId
+        self.quantity = quantity; self.unitPrice = unitPrice; self.discount = discount
+        self.totalPrice = totalPrice; self.createdAt = createdAt
+    }
 
     enum CodingKeys: String, CodingKey {
         case id

@@ -2,31 +2,27 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>CFBundleName</key>
-	<string>Solennix</string>
-	<key>CFBundleDisplayName</key>
-	<string>Solennix</string>
-	<key>CFBundleIdentifier</key>
-	<string>com.creapolis.solennix</string>
-	<key>CFBundleVersion</key>
-	<string>1</string>
-	<key>CFBundleShortVersionString</key>
-	<string>1.0.0</string>
-	<key>CFBundlePackageType</key>
-	<string>APPL</string>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
-	<key>LSRequiresIPhoneOS</key>
-	<true/>
-	<key>UILaunchStoryboardName</key>
-	<string>LaunchScreen</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.0</string>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+	<key>UILaunchScreen</key>
+	<dict/>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
@@ -35,22 +31,20 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Usa Face ID para acceder a tu cuenta de forma segura.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Toma fotos de tus eventos y productos.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Selecciona imágenes para tus eventos y productos.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
-			<key>CFBundleURLName</key>
-			<string>com.creapolis.solennix</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>solennix</string>
 			</array>
 		</dict>
 	</array>
-	<key>NSFaceIDUsageDescription</key>
-	<string>Solennix utiliza Face ID para proteger tu cuenta y permitir un inicio de sesion seguro.</string>
-	<key>NSCameraUsageDescription</key>
-	<string>Solennix necesita acceso a la camara para tomar fotos de eventos y productos.</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Solennix necesita acceso a tu biblioteca de fotos para seleccionar imagenes de eventos y productos.</string>
 </dict>
 </plist>

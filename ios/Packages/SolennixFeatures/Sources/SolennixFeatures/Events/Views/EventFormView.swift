@@ -171,16 +171,16 @@ public struct EventFormView: View {
                 ) {
                     Task {
                         do {
-                            let isNewEvent = viewModel.eventId == nil
+                            let isNewEvent = !viewModel.isEdit
                             try await viewModel.save()
-                            
+
                             if isNewEvent {
                                 StoreReviewHelper.recordEventCreated()
                             }
-                            
+
                             dismiss()
                         } catch {
-                            viewModel.errorMessage = "Error al guardar el evento. Intenta de nuevo."
+                            viewModel.errorMessage = error.localizedDescription
                         }
                     }
                 }

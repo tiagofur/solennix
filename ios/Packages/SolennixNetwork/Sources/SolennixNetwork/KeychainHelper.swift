@@ -13,8 +13,8 @@ public final class KeychainHelper: Sendable {
     // MARK: - Keychain Keys
 
     public enum Keys {
-        public static let accessToken = "com.creapolis.solennix.accessToken"
-        public static let refreshToken = "com.creapolis.solennix.refreshToken"
+        public static let accessToken = "com.solennix.app.accessToken"
+        public static let refreshToken = "com.solennix.app.refreshToken"
     }
 
     // MARK: - Init

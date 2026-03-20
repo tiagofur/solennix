@@ -1,5 +1,6 @@
 import SwiftUI
 import CoreSpotlight
+import SolennixCore
 import SolennixNetwork
 import SolennixDesign
 import SolennixFeatures
@@ -53,7 +54,7 @@ struct ContentView: View {
             handleDeepLink(url)
         }
         .onReceive(NotificationCenter.default.publisher(for: .spotlightNavigationRequested)) { notification in
-            guard authManager.authState == .authenticated,
+            guard authManager.isAuthenticated,
                   let route = notification.userInfo?["route"] as? Route else { return }
             pendingSpotlightRoute = route
         }

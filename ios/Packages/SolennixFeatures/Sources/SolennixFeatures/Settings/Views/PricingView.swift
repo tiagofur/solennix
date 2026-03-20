@@ -352,7 +352,7 @@ public struct PricingView: View {
 
     // MARK: - Handle Purchase
 
-    private func handlePurchase(_ product: Product) async {
+    private func handlePurchase(_ product: StoreKit.Product) async {
         do {
             try await subscriptionManager.purchase(product)
         } catch let error as SubscriptionError {

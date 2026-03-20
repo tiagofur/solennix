@@ -33,23 +33,23 @@ public final class QuickQuoteViewModel {
     // PDF
     public var pdfData: Data?
     public var showShareSheet: Bool = false
-    
+
     public init(apiClient: APIClient) {
         self.apiClient = apiClient
     }
-    
+
     @MainActor
     public func loadData() async {
         isLoading = true
         do {
-            let products = try await apiClient.getProducts()
+            let products: [Product] = try await apiClient.get(Endpoint.products)
             availableProducts = products.filter { $0.isActive }
         } catch {
             print("Error loading products for quick quote: \(error)")
         }
         isLoading = false
     }
-    
+
     // Handlers
     public func addProduct() {
         if let first = availableProducts.first {
@@ -58,21 +58,20 @@ public final class QuickQuoteViewModel {
                 eventId: "quick-quote",
                 productId: first.id,
                 quantity: 1,
-                price: first.basePrice,
+                unitPrice: first.basePrice,
                 discount: 0,
-                notes: nil,
-                product: first
+                createdAt: ""
             ))
             Task {
                 await fetchIngredientCost(for: first.id)
             }
         }
     }
-    
+
     public func removeProduct(at offsets: IndexSet) {
         selectedProducts.remove(atOffsets: offsets)
     }
-    
+
     public func addExtra() {
         extras.append(EventExtra(
             id: UUID().uuidString,
@@ -80,30 +79,31 @@ public final class QuickQuoteViewModel {
             description: "",
             cost: 0,
             price: 0,
-            excludeUtility: false
+            excludeUtility: false,
+            createdAt: ""
         ))
     }
-    
+
     public func removeExtra(at offsets: IndexSet) {
         extras.remove(atOffsets: offsets)
     }
-    
+
     @MainActor
     private func fetchIngredientCost(for productId: String) async {
         if productUnitCosts[productId] != nil { return }
         do {
-            let ingredients = try await apiClient.getProductIngredients(productId: productId)
+            let ingredients: [ProductIngredient] = try await apiClient.get(Endpoint.productIngredients(productId))
             let cost = ingredients
                 .filter { $0.type == .ingredient }
                 .reduce(0.0) { sum, ing in
-                    sum + (Double(ing.quantityRequired) * (ing.ingredient?.unitCost ?? 0.0))
+                    sum + (ing.quantityRequired * (ing.unitCost ?? 0.0))
                 }
             productUnitCosts[productId] = cost
         } catch {
             print("Error fetching ingredient costs: \(error)")
         }
     }
-    
+
     public func updateCostsForCurrentProducts() {
         for product in selectedProducts {
             Task {
@@ -111,46 +111,46 @@ public final class QuickQuoteViewModel {
             }
         }
     }
-    
+
     // Financial calculations
     public var financials: FinancialSummary {
-        let productsSubtotal = selectedProducts.reduce(0) { sum, item in
-            sum + ((item.price - (item.discount ?? 0)) * Double(item.quantity))
+        let productsSubtotal = selectedProducts.reduce(0.0) { sum, item in
+            sum + ((item.unitPrice - item.discount) * Double(item.quantity))
         }
-        
-        let normalExtrasTotal = extras.filter { !$0.excludeUtility }.reduce(0) { $0 + $1.price }
-        let passThroughExtrasTotal = extras.filter { $0.excludeUtility }.reduce(0) { $0 + $1.price }
-        let extrasTotal = extras.reduce(0) { $0 + $1.price }
-        
+
+        let normalExtrasTotal = extras.filter { !$0.excludeUtility }.reduce(0.0) { $0 + $1.price }
+        let passThroughExtrasTotal = extras.filter { $0.excludeUtility }.reduce(0.0) { $0 + $1.price }
+        let extrasTotal = extras.reduce(0.0) { $0 + $1.price }
+
         let discountableBase = productsSubtotal + normalExtrasTotal
-        
+
         let discountAmount: Double
         if discountType == .percent {
             discountAmount = discountableBase * (discountValue / 100)
         } else {
             discountAmount = min(discountValue, discountableBase)
         }
-        
+
         let discountedBase = discountableBase - discountAmount
         let baseTotal = discountedBase + passThroughExtrasTotal
-        
+
         let taxAmount = requiresInvoice ? baseTotal * (taxRate / 100) : 0
         let total = baseTotal + taxAmount
-        
+
         // Costs
-        let productCost = selectedProducts.reduce(0) { sum, p in
+        let productCost = selectedProducts.reduce(0.0) { sum, p in
             sum + ((productUnitCosts[p.productId] ?? 0) * Double(p.quantity))
         }
-        let extrasCost = extras.reduce(0) { $0 + $1.cost }
+        let extrasCost = extras.reduce(0.0) { $0 + $1.cost }
         let totalCost = productCost + extrasCost
-        
+
         let revenue = total - (requiresInvoice ? taxAmount : 0)
         let profit = revenue - totalCost
-        
+
         let passThroughRevenue = passThroughExtrasTotal
         let adjustedRevenue = revenue - passThroughRevenue
         let margin = adjustedRevenue > 0 ? (profit / adjustedRevenue) * 100 : 0
-        
+
         return FinancialSummary(
             productsSubtotal: productsSubtotal,
             extrasTotal: extrasTotal,
@@ -227,4 +227,3 @@ public struct FinancialSummary {
     public let profit: Double
     public let margin: Double
 }
-

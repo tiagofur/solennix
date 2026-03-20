@@ -1,4 +1,5 @@
 import SwiftUI
+import SolennixCore
 import SolennixDesign
 import SolennixFeatures
 import SolennixNetwork

@@ -146,7 +146,7 @@ public struct QuickQuoteView: View {
             }
             .onChange(of: product.productId.wrappedValue) { _, newValue in
                 if let p = viewModel.availableProducts.first(where: { $0.id == newValue }) {
-                    product.wrappedValue.price = p.basePrice
+                    product.wrappedValue.unitPrice = p.basePrice
                     product.wrappedValue.discount = 0
                 }
             }
@@ -159,7 +159,7 @@ public struct QuickQuoteView: View {
                 
                 Spacer()
                 
-                Text(product.wrappedValue.price.asMXN)
+                Text(product.wrappedValue.unitPrice.asMXN)
                     .foregroundStyle(SolennixColors.textSecondary)
             }
         }

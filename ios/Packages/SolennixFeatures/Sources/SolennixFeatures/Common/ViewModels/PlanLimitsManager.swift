@@ -39,7 +39,7 @@ public final class PlanLimitsManager {
 
     public var isBasicPlan: Bool {
         guard let user = authManager?.currentUser else { return true }
-        return user.plan == "basic" || user.plan == nil || user.plan?.isEmpty == true
+        return user.plan == .basic
     }
 
     public var canCreateEvent: Bool {

@@ -210,18 +210,25 @@ struct Step4SuppliesEquipmentView: View {
                     }
                     .pickerStyle(.segmented)
                     .frame(width: 140)
+                    .onChange(of: viewModel.selectedSupplies[index].source) { _, newSource in
+                        if newSource == .purchase {
+                            viewModel.selectedSupplies[index].excludeCost = false
+                        }
+                    }
                 }
 
                 Spacer()
             }
 
-            // Exclude cost toggle
-            Toggle(isOn: $viewModel.selectedSupplies[index].excludeCost) {
-                Text("Excluir del costo")
-                    .font(.caption)
-                    .foregroundStyle(SolennixColors.textSecondary)
+            // Exclude cost toggle — only for stock supplies (reused/leftover)
+            if viewModel.selectedSupplies[index].source == .stock {
+                Toggle(isOn: $viewModel.selectedSupplies[index].excludeCost) {
+                    Text("Sin costo (reaprovechado)")
+                        .font(.caption)
+                        .foregroundStyle(SolennixColors.textSecondary)
+                }
+                .tint(SolennixColors.primary)
             }
-            .tint(SolennixColors.primary)
         }
         .padding(Spacing.md)
         .background(SolennixColors.card)

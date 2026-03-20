@@ -38,6 +38,7 @@ struct MarkEventCompleteIntent: AppIntent {
 
 // MARK: - Quick Add Payment Intent
 
+@available(iOS 18.0, *)
 struct QuickAddPaymentIntent: AppIntent {
     static var title: LocalizedStringResource = "Agregar Pago Rapido"
     static var description = IntentDescription("Abre la app para agregar un pago")
@@ -216,22 +217,24 @@ struct InteractiveEventWidgetView: View {
 
                     Spacer()
 
-                    // Quick payment button
-                    Button(intent: QuickAddPaymentIntent(eventId: event.id)) {
-                        HStack(spacing: 4) {
-                            Image(systemName: "dollarsign")
-                                .font(.caption2)
-                            Text("Pago")
-                                .font(.caption)
-                                .fontWeight(.medium)
+                    // Quick payment button (requires iOS 18+ for OpenURLIntent)
+                    if #available(iOS 18.0, *) {
+                        Button(intent: QuickAddPaymentIntent(eventId: event.id)) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "dollarsign")
+                                    .font(.caption2)
+                                Text("Pago")
+                                    .font(.caption)
+                                    .fontWeight(.medium)
+                            }
+                            .foregroundStyle(.blue)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(Color.blue.opacity(0.15))
+                            .clipShape(Capsule())
                         }
-                        .foregroundStyle(.blue)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(Color.blue.opacity(0.15))
-                        .clipShape(Capsule())
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
                 }
             }
             .padding()

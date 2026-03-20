@@ -1,3 +1,4 @@
+#if canImport(ActivityKit)
 import ActivityKit
 import Foundation
 import SolennixCore
@@ -199,3 +200,4 @@ public final class LiveActivityManager {
         return Activity<SolennixEventAttributes>.activities.contains { $0.id == activityId }
     }
 }
+#endif

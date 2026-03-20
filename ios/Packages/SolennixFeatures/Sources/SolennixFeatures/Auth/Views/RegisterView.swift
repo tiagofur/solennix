@@ -339,5 +339,4 @@ private struct FeaturePill: View {
         RegisterView()
     }
     .environment(AuthManager())
-    .previewDevice("iPad Pro (11-inch) (4th generation)")
 }

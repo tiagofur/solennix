@@ -132,9 +132,7 @@ public final class InventoryListViewModel {
         }
 
         do {
-            let body: [String: Any] = [
-                "current_stock": adjustmentQuantity
-            ]
+            let body = ["current_stock": adjustmentQuantity]
             let _: InventoryItem = try await apiClient.put(Endpoint.inventoryItem(item.id), body: body)
 
             // Update local state

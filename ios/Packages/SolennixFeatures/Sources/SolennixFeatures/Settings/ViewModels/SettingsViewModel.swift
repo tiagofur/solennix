@@ -70,7 +70,7 @@ public final class SettingsViewModel {
         }
 
         let emailRegex = #"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"#
-        if !editEmail.range(of: emailRegex, options: .regularExpression).map({ _ in true }) ?? false {
+        if !(editEmail.range(of: emailRegex, options: .regularExpression).map({ _ in true }) ?? false) {
             emailError = "Por favor ingresa un email valido"
         }
 
@@ -87,7 +87,7 @@ public final class SettingsViewModel {
         errorMessage = nil
 
         do {
-            let body: [String: Any] = [
+            let body: [String: String] = [
                 "name": editName.trimmingCharacters(in: .whitespacesAndNewlines),
                 "email": editEmail.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
             ]
@@ -135,7 +135,7 @@ public final class SettingsViewModel {
         passwordSuccess = false
 
         do {
-            let body: [String: Any] = [
+            let body: [String: String] = [
                 "current_password": currentPassword,
                 "new_password": newPassword
             ]
@@ -160,7 +160,7 @@ public final class SettingsViewModel {
     @MainActor
     public func logout() async {
         do {
-            let _: EmptyResponse = try await apiClient.post(Endpoint.logout, body: [:])
+            let _: EmptyResponse = try await apiClient.post(Endpoint.logout, body: [String: String]())
         } catch {
             // Ignore logout errors - clear local state anyway
         }

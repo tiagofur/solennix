@@ -3,6 +3,26 @@ import Observation
 import SolennixCore
 import SolennixNetwork
 
+// MARK: - Inventory Form Request Body
+
+private struct InventoryFormBody: Encodable {
+    let ingredientName: String
+    let type: String
+    let currentStock: Double
+    let minimumStock: Double
+    let unit: String
+    let unitCost: Double?
+
+    enum CodingKeys: String, CodingKey {
+        case ingredientName = "ingredient_name"
+        case type
+        case currentStock = "current_stock"
+        case minimumStock = "minimum_stock"
+        case unit
+        case unitCost = "unit_cost"
+    }
+}
+
 // MARK: - Inventory Form View Model
 
 @Observable
@@ -121,14 +141,14 @@ public final class InventoryFormViewModel {
         errorMessage = nil
 
         do {
-            let body: [String: Any] = [
-                "ingredient_name": ingredientName.trimmingCharacters(in: .whitespacesAndNewlines),
-                "type": type.rawValue,
-                "current_stock": currentStock,
-                "minimum_stock": minimumStock,
-                "unit": unit,
-                "unit_cost": unitCost as Any
-            ]
+            let body = InventoryFormBody(
+                ingredientName: ingredientName.trimmingCharacters(in: .whitespacesAndNewlines),
+                type: type.rawValue,
+                currentStock: currentStock,
+                minimumStock: minimumStock,
+                unit: unit,
+                unitCost: unitCost
+            )
 
             if isEditing, let id = itemId {
                 let _: InventoryItem = try await apiClient.put(Endpoint.inventoryItem(id), body: body)

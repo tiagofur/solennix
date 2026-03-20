@@ -66,6 +66,13 @@ struct Step1GeneralView: View {
             QuickClientSheet(apiClient: viewModel.apiClient) { client in
                 viewModel.clientId = client.id
                 viewModel.clientName = client.name
+                // Auto-fill location/city from client if event fields are empty
+                if viewModel.location.isEmpty, let address = client.address, !address.isEmpty {
+                    viewModel.location = address
+                }
+                if viewModel.city.isEmpty, let city = client.city, !city.isEmpty {
+                    viewModel.city = city
+                }
                 if !viewModel.clients.contains(where: { $0.id == client.id }) {
                     viewModel.clients.append(client)
                 }
@@ -123,6 +130,13 @@ struct Step1GeneralView: View {
                     Button {
                         viewModel.clientId = client.id
                         viewModel.clientName = client.name
+                        // Auto-fill location/city from client if event fields are empty
+                        if viewModel.location.isEmpty, let address = client.address, !address.isEmpty {
+                            viewModel.location = address
+                        }
+                        if viewModel.city.isEmpty, let city = client.city, !city.isEmpty {
+                            viewModel.city = city
+                        }
                         showClientPicker = false
                     } label: {
                         HStack(spacing: Spacing.sm) {

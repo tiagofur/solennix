@@ -245,7 +245,7 @@ public final class EventFormViewModel {
             clients = loadedClients
             products = loadedProducts.filter { $0.isActive }
             equipmentInventory = loadedInventory.filter { $0.type == .equipment }
-            supplyInventory = loadedInventory.filter { $0.type == .supply || $0.type == .ingredient }
+            supplyInventory = loadedInventory.filter { $0.type == .supply }
         } catch {
             errorMessage = mapError(error)
         }

@@ -122,7 +122,7 @@ public struct InventoryDetailView: View {
         guard var currentItem = item else { return }
 
         do {
-            let body: [String: Any] = ["current_stock": adjustmentQuantity]
+            let body = ["current_stock": adjustmentQuantity]
             let updated: InventoryItem = try await apiClient.put(Endpoint.inventoryItem(itemId), body: body)
             item = updated
             showStockAdjustment = false

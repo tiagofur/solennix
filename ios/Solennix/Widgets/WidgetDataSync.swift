@@ -10,7 +10,7 @@ final class WidgetDataSync {
 
     static let shared = WidgetDataSync()
 
-    private let appGroupId = "group.com.creapolis.solennix"
+    private let appGroupId = "group.com.solennix.app"
 
     private var userDefaults: UserDefaults? {
         UserDefaults(suiteName: appGroupId)

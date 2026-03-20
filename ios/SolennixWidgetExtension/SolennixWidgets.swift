@@ -10,13 +10,14 @@ struct SolennixWidgets: WidgetBundle {
         KPIWidget()
         LockScreenWidget()
         InteractiveEventWidget()
+        SolennixLiveActivity()
     }
 }
 
 // MARK: - App Group Constants
 
 enum AppGroup {
-    static let identifier = "group.com.creapolis.solennix"
+    static let identifier = "group.com.solennix.app"
 
     static var userDefaults: UserDefaults? {
         UserDefaults(suiteName: identifier)

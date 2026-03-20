@@ -39,8 +39,9 @@ public actor APIClient {
     /// Task that guards concurrent refresh attempts — only one refresh runs at a time.
     private var refreshTask: Task<Bool, Error>?
     
-    /// Global toast manager to display networking errors automatically to the user.
-    private weak var toastManager: ToastManager?
+    /// Callback invoked on the main actor when an API error should be shown to the user.
+    /// The network layer delegates UI concerns (e.g., toasts) to the caller via this closure.
+    private var onError: (@MainActor @Sendable (String) -> Void)?
 
     // MARK: - Init
 
@@ -72,8 +73,11 @@ public actor APIClient {
         self._authManager = manager
     }
     
-    public func setToastManager(_ manager: ToastManager) {
-        self.toastManager = manager
+    /// Set a callback to be invoked when a user-facing error occurs.
+    /// This allows the UI layer to display toasts without the network layer
+    /// depending on UI packages.
+    public func setErrorHandler(_ handler: @escaping @MainActor @Sendable (String) -> Void) {
+        self.onError = handler
     }
 
     // MARK: - Public HTTP Methods
@@ -184,7 +188,7 @@ public actor APIClient {
         do {
             data = try await perform(request, isRetry: isRetry)
         } catch let urlError as URLError {
-            let err = APIError.networkError(urlError)
+            let err = APIError.networkError(urlError.localizedDescription)
             showErrorToast(for: err)
             throw err
         } catch {
@@ -205,6 +209,33 @@ public actor APIClient {
         } catch {
             throw APIError.decodingError
         }
+    }
+
+    // MARK: - Perform Request
+
+    /// Executes the URLRequest, validates the HTTP response, and handles 401 retry via token refresh.
+    private func perform(_ request: URLRequest, isRetry: Bool) async throws -> Data {
+        let (data, response) = try await session.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.unknown
+        }
+
+        // On 401 and not already a retry, attempt token refresh then retry once
+        if httpResponse.statusCode == 401, !isRetry {
+            let refreshed = await attemptRefresh()
+            if refreshed {
+                // Rebuild request with new token
+                var retryRequest = request
+                if let token = keychainHelper.readString(for: KeychainHelper.Keys.accessToken) {
+                    retryRequest.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+                }
+                return try await perform(retryRequest, isRetry: true)
+            }
+        }
+
+        try validateResponse(httpResponse, data: data)
+        return data
     }
 
     // MARK: - Token Refresh
@@ -276,9 +307,9 @@ public actor APIClient {
             // Silently fail auth; let AuthManager redirect to login
             break
         default:
-            let message = error.userFriendlyMessage
-            Task { @MainActor in
-                toastManager?.show(message: message, type: .error)
+            let message = error.errorDescription ?? "Ocurrio un error desconocido."
+            Task { @MainActor [onError] in
+                onError?(message)
             }
         }
     }
