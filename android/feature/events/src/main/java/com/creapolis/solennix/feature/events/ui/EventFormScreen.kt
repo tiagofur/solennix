@@ -108,6 +108,19 @@ fun EventFormScreen(
     if (viewModel.saveSuccess) {
         LaunchedEffect(Unit) { onNavigateBack() }
     }
+
+    viewModel.saveError?.let { error ->
+        AlertDialog(
+            onDismissRequest = { viewModel.saveError = null },
+            title = { Text("Error") },
+            text = { Text(error) },
+            confirmButton = {
+                TextButton(onClick = { viewModel.saveError = null }) {
+                    Text("OK")
+                }
+            }
+        )
+    }
 }
 
 @Composable
@@ -301,23 +314,96 @@ fun StepGeneralInfo(viewModel: EventFormViewModel) {
             Spacer(modifier = Modifier.height(16.dp))
 
             // Time pickers row
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                SolennixTextField(
-                    value = viewModel.startTime,
-                    onValueChange = { viewModel.startTime = it },
-                    label = "Hora Inicio",
-                    placeholder = "HH:MM",
-                    leadingIcon = Icons.Default.Schedule,
-                    modifier = Modifier.weight(1f)
-                )
+            var showStartTimePicker by remember { mutableStateOf(false) }
+            var showEndTimePicker by remember { mutableStateOf(false) }
+            val primaryTextColor = SolennixTheme.colors.primaryText
+            val mutedColor = SolennixTheme.colors.secondaryText
 
-                SolennixTextField(
-                    value = viewModel.endTime,
-                    onValueChange = { viewModel.endTime = it },
-                    label = "Hora Fin",
-                    placeholder = "HH:MM",
-                    leadingIcon = Icons.Default.Schedule,
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                OutlinedCard(
+                    onClick = { showStartTimePicker = true },
                     modifier = Modifier.weight(1f)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(Icons.Default.Schedule, contentDescription = null, tint = mutedColor)
+                        Column {
+                            Text("Hora Inicio", style = MaterialTheme.typography.labelSmall, color = mutedColor)
+                            Text(
+                                viewModel.startTime.ifBlank { "Opcional" },
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = if (viewModel.startTime.isBlank()) mutedColor else primaryTextColor
+                            )
+                        }
+                    }
+                }
+
+                OutlinedCard(
+                    onClick = { showEndTimePicker = true },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(Icons.Default.Schedule, contentDescription = null, tint = mutedColor)
+                        Column {
+                            Text("Hora Fin", style = MaterialTheme.typography.labelSmall, color = mutedColor)
+                            Text(
+                                viewModel.endTime.ifBlank { "Opcional" },
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = if (viewModel.endTime.isBlank()) mutedColor else primaryTextColor
+                            )
+                        }
+                    }
+                }
+            }
+
+            if (showStartTimePicker) {
+                val startState = rememberTimePickerState(
+                    initialHour = viewModel.startTime.split(":").getOrNull(0)?.toIntOrNull() ?: 12,
+                    initialMinute = viewModel.startTime.split(":").getOrNull(1)?.toIntOrNull() ?: 0,
+                    is24Hour = true
+                )
+                AlertDialog(
+                    onDismissRequest = { showStartTimePicker = false },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            viewModel.startTime = "%02d:%02d".format(startState.hour, startState.minute)
+                            showStartTimePicker = false
+                        }) { Text("OK") }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showStartTimePicker = false }) { Text("Cancelar") }
+                    },
+                    title = { Text("Hora Inicio") },
+                    text = { TimePicker(state = startState) }
+                )
+            }
+
+            if (showEndTimePicker) {
+                val endState = rememberTimePickerState(
+                    initialHour = viewModel.endTime.split(":").getOrNull(0)?.toIntOrNull() ?: 12,
+                    initialMinute = viewModel.endTime.split(":").getOrNull(1)?.toIntOrNull() ?: 0,
+                    is24Hour = true
+                )
+                AlertDialog(
+                    onDismissRequest = { showEndTimePicker = false },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            viewModel.endTime = "%02d:%02d".format(endState.hour, endState.minute)
+                            showEndTimePicker = false
+                        }) { Text("OK") }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showEndTimePicker = false }) { Text("Cancelar") }
+                    },
+                    title = { Text("Hora Fin") },
+                    text = { TimePicker(state = endState) }
                 )
             }
 
@@ -576,7 +662,6 @@ fun StepProducts(viewModel: EventFormViewModel) {
                         availableProducts = viewModel.availableProducts.value,
                         onQuantityChange = { viewModel.updateProductQuantity(item.productId, it) },
                         onDiscountChange = { viewModel.updateProductDiscount(item.productId, it) },
-                        onSetNumPeople = { viewModel.setProductQuantityToNumPeople(item.productId) },
                         onRemove = { viewModel.removeProduct(item.productId) }
                     )
                 }
@@ -602,7 +687,6 @@ fun ProductSelectionItem(
     availableProducts: List<com.creapolis.solennix.core.model.Product>,
     onQuantityChange: (Double) -> Unit,
     onDiscountChange: (Double) -> Unit,
-    onSetNumPeople: () -> Unit,
     onRemove: () -> Unit
 ) {
     val product = availableProducts.find { it.id == item.productId } ?: return
@@ -629,10 +713,6 @@ fun ProductSelectionItem(
                     Text(item.quantity.toInt().toString(), style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(horizontal = 4.dp))
                     IconButton(onClick = { onQuantityChange(item.quantity + 1.0) }) {
                         Icon(Icons.Default.Add, contentDescription = "Mas", modifier = Modifier.size(18.dp))
-                    }
-                    // Set quantity to num_people button (Gap 3)
-                    IconButton(onClick = onSetNumPeople, modifier = Modifier.size(32.dp)) {
-                        Icon(Icons.Default.People, contentDescription = "Usar num. personas", tint = SolennixTheme.colors.info, modifier = Modifier.size(18.dp))
                     }
                 }
 
@@ -682,7 +762,7 @@ fun StepExtras(viewModel: EventFormViewModel) {
     var extraExcludeUtility by remember { mutableStateOf(false) }
 
     Column(modifier = Modifier.padding(24.dp)) {
-        Text("Extras y Descuentos", style = MaterialTheme.typography.headlineSmall)
+        Text("Extras", style = MaterialTheme.typography.headlineSmall)
         Spacer(modifier = Modifier.height(24.dp))
 
         if (showAddExtra) {

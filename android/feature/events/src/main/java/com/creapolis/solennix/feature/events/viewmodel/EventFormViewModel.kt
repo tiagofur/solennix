@@ -143,6 +143,13 @@ class EventFormViewModel @Inject constructor(
         selectedClient = client
         clientEventCount = client.totalEvents
         clientTotalSpent = client.totalSpent
+        // Auto-fill location/city from client if event fields are empty
+        if (location.isBlank() && !client.address.isNullOrBlank()) {
+            location = client.address!!
+        }
+        if (city.isBlank() && !client.city.isNullOrBlank()) {
+            city = client.city!!
+        }
     }
 
     // Product Unit Costs (for profitability)
@@ -196,7 +203,7 @@ class EventFormViewModel @Inject constructor(
         (_productUnitCosts[p.productId] ?: 0.0) * p.quantity
     }
     val costExtras: Double get() = eventExtras.sumOf { it.cost }
-    val costSupplies: Double get() = selectedSupplies.sumOf { it.unitCost * it.quantity }
+    val costSupplies: Double get() = selectedSupplies.filter { !it.excludeCost }.sumOf { it.unitCost * it.quantity }
     val totalCosts: Double get() = costProducts + costExtras + costSupplies
     val netProfit: Double get() {
         val revenue = total - (if (requiresInvoice) taxAmount else 0.0)
@@ -212,6 +219,7 @@ class EventFormViewModel @Inject constructor(
 
     var isLoading by mutableStateOf(false)
     var saveSuccess by mutableStateOf(false)
+    var saveError by mutableStateOf<String?>(null)
     var dateUnavailableWarning by mutableStateOf<String?>(null)
 
     private var _unavailableDates = mutableStateListOf<UnavailableDate>()
@@ -259,7 +267,7 @@ class EventFormViewModel @Inject constructor(
             inventoryRepository.getInventoryItems().collect { items ->
                 _availableEquipment.value = items.filter { it.type == InventoryType.EQUIPMENT }
                 _availableSupplies.value = items.filter {
-                    it.type == InventoryType.SUPPLY || it.type == InventoryType.INGREDIENT
+                    it.type == InventoryType.SUPPLY
                 }
             }
         }
@@ -616,9 +624,21 @@ class EventFormViewModel @Inject constructor(
     }
 
     fun saveEvent() {
-        val client = selectedClient ?: return
+        val client = selectedClient ?: run {
+            saveError = "Selecciona un cliente"
+            return
+        }
+        if ((numPeople.toIntOrNull() ?: 0) < 1) {
+            saveError = "Mínimo 1 persona"
+            return
+        }
+        if (serviceType.isBlank()) {
+            saveError = "Agrega el tipo de servicio"
+            return
+        }
         viewModelScope.launch {
             isLoading = true
+            saveError = null
             try {
                 val eventData = Event(
                     id = eventId ?: UUID.randomUUID().toString(),
@@ -673,7 +693,7 @@ class EventFormViewModel @Inject constructor(
 
                 saveSuccess = true
             } catch (e: Exception) {
-                // Handle error
+                saveError = e.message ?: "Error al guardar evento"
             } finally {
                 isLoading = false
             }
