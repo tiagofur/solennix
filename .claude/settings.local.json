@@ -217,7 +217,8 @@
       "Bash(./gradlew clean:*)",
       "Bash(./gradlew :feature:calendar:compileDebugKotlin)",
       "Bash(grep -r TopLevelDestination.CALENDAR /c/Users/tfurt/source/repos/eventosapp/android --include=*.kt)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(find /c/Users/tfurt/source/repos/eventosapp -type f \\\\\\(-name *.swift -o -name *.swiftui -o -name *.kt -o -name *.xml \\\\\\))"
     ]
   }
 }

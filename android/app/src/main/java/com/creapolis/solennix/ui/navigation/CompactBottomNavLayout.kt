@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.creapolis.solennix.core.designsystem.theme.SolennixElevation
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
@@ -43,6 +44,9 @@ import com.creapolis.solennix.feature.settings.ui.TermsScreen
 fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
     var selectedDestination by remember { mutableStateOf(TopLevelDestination.HOME) }
     val navController = rememberNavController()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+    val isAtTopLevel = TopLevelDestination.entries.any { it.route == currentRoute }
 
     // Navegar al deep link despues de que el NavHost se haya inicializado
     LaunchedEffect(initialDeepLinkRoute) {
@@ -59,7 +63,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                 TopLevelDestination.entries.forEach { destination ->
                     NavigationBarItem(
                         selected = selectedDestination == destination,
-                        onClick = { 
+                        onClick = {
                             selectedDestination = destination
                             navController.navigate(destination.route) {
                                 popUpTo(navController.graph.startDestinationId) {
@@ -87,14 +91,17 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
             }
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { navController.navigate("event_form?eventId=") },
-                containerColor = SolennixTheme.colors.primary,
-                elevation = FloatingActionButtonDefaults.elevation(
-                    defaultElevation = SolennixElevation.fab
-                )
-            ) {
-                Icon(Icons.Filled.Add, "Nuevo Evento", tint = Color.White)
+            // Only show FAB on top-level destinations
+            if (isAtTopLevel) {
+                FloatingActionButton(
+                    onClick = { navController.navigate("event_form?eventId=") },
+                    containerColor = SolennixTheme.colors.primary,
+                    elevation = FloatingActionButtonDefaults.elevation(
+                        defaultElevation = SolennixElevation.fab
+                    )
+                ) {
+                    Icon(Icons.Filled.Add, "Nuevo Evento", tint = Color.White)
+                }
             }
         },
         floatingActionButtonPosition = FabPosition.Center

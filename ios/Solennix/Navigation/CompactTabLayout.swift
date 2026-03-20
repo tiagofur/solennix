@@ -75,14 +75,16 @@ struct CompactTabLayout: View {
             }
             .tint(SolennixColors.tabBarActive)
 
-            // FAB overlay
-            NewEventFAB(isDisabled: !planLimitsManager.canCreateEvent) {
-                if planLimitsManager.canCreateEvent {
-                    selectedTab = .home
-                    homePath.append(Route.eventForm())
+            // FAB overlay — hidden when navigated into any detail screen
+            if currentTabPathCount == 0 {
+                NewEventFAB(isDisabled: !planLimitsManager.canCreateEvent) {
+                    if planLimitsManager.canCreateEvent {
+                        selectedTab = .home
+                        homePath.append(Route.eventForm())
+                    }
                 }
+                .padding(.bottom, 54) // Position above the tab bar
             }
-            .padding(.bottom, 54) // Position above the tab bar
         }
         .onChange(of: pendingSpotlightRoute) { _, newRoute in
             guard let route = newRoute else { return }
@@ -93,6 +95,17 @@ struct CompactTabLayout: View {
                 homePath.append(route)
             }
             pendingSpotlightRoute = nil
+        }
+    }
+
+    /// Number of items in the active tab's navigation stack.
+    /// Used to hide the FAB when the user has navigated into a detail screen.
+    private var currentTabPathCount: Int {
+        switch selectedTab {
+        case .home: return homePath.count
+        case .calendar: return calendarPath.count
+        case .clients: return clientsPath.count
+        case .more: return morePath.count
         }
     }
 }
