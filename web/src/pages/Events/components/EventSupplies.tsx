@@ -150,7 +150,12 @@ export const EventSupplies: React.FC<EventSuppliesProps> = ({
                 <select
                   id={`supply-source-${index}`}
                   value={item.source}
-                  onChange={(e) => onSupplyChange(index, 'source', e.target.value)}
+                  onChange={(e) => {
+                    onSupplyChange(index, 'source', e.target.value);
+                    if (e.target.value === 'purchase') {
+                      onSupplyChange(index, 'exclude_cost', false);
+                    }
+                  }}
                   className="block w-full text-sm border-border rounded-xl shadow-xs transition-shadow focus:ring-2 focus:ring-primary/20 bg-card text-text p-2 border"
                 >
                   <option value="purchase">Compra nueva</option>
@@ -158,6 +163,7 @@ export const EventSupplies: React.FC<EventSuppliesProps> = ({
                 </select>
               </div>
 
+              {item.source === 'stock' && (
               <div className="w-full sm:w-auto flex items-center gap-2 sm:pt-5">
                 <input
                   id={`supply-exclude-cost-${index}`}
@@ -173,6 +179,7 @@ export const EventSupplies: React.FC<EventSuppliesProps> = ({
                   Sin costo
                 </label>
               </div>
+              )}
 
               <div className="w-full sm:w-1/4 text-right sm:pt-5">
                 <span className={`text-sm font-semibold ${
