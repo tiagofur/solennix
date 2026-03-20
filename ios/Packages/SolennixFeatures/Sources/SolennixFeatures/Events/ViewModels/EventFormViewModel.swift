@@ -181,7 +181,7 @@ public final class EventFormViewModel {
 
     public var productsSubtotal: Double {
         selectedProducts.reduce(0) { sum, item in
-            sum + (item.quantity * item.unitPrice * (1 - item.discount / 100))
+            sum + (item.quantity * (item.unitPrice - item.discount))
         }
     }
 
@@ -189,29 +189,42 @@ public final class EventFormViewModel {
         extras.reduce(0) { $0 + $1.price }
     }
 
+    public var normalExtrasSubtotal: Double {
+        extras.filter { !$0.excludeUtility }.reduce(0) { $0 + $1.price }
+    }
+
+    public var passThroughExtrasSubtotal: Double {
+        extras.filter { $0.excludeUtility }.reduce(0) { $0 + $1.price }
+    }
+
     public var subtotal: Double {
         productsSubtotal + extrasSubtotal
+    }
+
+    public var discountableBase: Double {
+        productsSubtotal + normalExtrasSubtotal
     }
 
     public var discountAmount: Double {
         switch discountType {
         case .percent:
-            return subtotal * discount / 100
+            return discountableBase * discount / 100
         case .fixed:
-            return discount
+            return min(discount, discountableBase)
         }
     }
 
     public var afterDiscount: Double {
-        max(subtotal - discountAmount, 0)
+        max(discountableBase - discountAmount, 0)
     }
 
     public var taxAmount: Double {
-        requiresInvoice ? afterDiscount * taxRate / 100 : 0
+        let baseTotal = afterDiscount + passThroughExtrasSubtotal
+        return requiresInvoice ? baseTotal * taxRate / 100 : 0
     }
 
     public var total: Double {
-        afterDiscount + taxAmount
+        afterDiscount + passThroughExtrasSubtotal + taxAmount
     }
 
     public var depositAmount: Double {

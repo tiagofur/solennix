@@ -868,31 +868,6 @@ fun StepExtras(viewModel: EventFormViewModel) {
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        Text("Descuento", style = MaterialTheme.typography.titleSmall)
-        Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            SolennixTextField(
-                value = viewModel.discount,
-                onValueChange = { viewModel.discount = it },
-                label = "Valor",
-                modifier = Modifier.weight(1f),
-                keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-            SingleChoiceSegmentedButtonRow(modifier = Modifier.weight(1f)) {
-                SegmentedButton(
-                    selected = viewModel.discountType == com.creapolis.solennix.core.model.DiscountType.PERCENT,
-                    onClick = { viewModel.discountType = com.creapolis.solennix.core.model.DiscountType.PERCENT },
-                    shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
-                ) { Text("%") }
-                SegmentedButton(
-                    selected = viewModel.discountType == com.creapolis.solennix.core.model.DiscountType.FIXED,
-                    onClick = { viewModel.discountType = com.creapolis.solennix.core.model.DiscountType.FIXED },
-                    shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
-                ) { Text("$") }
-            }
-        }
     }
 }
 
