@@ -386,10 +386,15 @@ func (r *EventRepo) UpdateEventItems(ctx context.Context, eventID uuid.UUID,
 			return err
 		}
 		for _, s := range *supplies {
+			// Purchases always have a cost — force exclude_cost=false
+			excludeCost := s.ExcludeCost
+			if s.Source == "purchase" {
+				excludeCost = false
+			}
 			_, err := tx.Exec(ctx,
 				`INSERT INTO event_supplies (event_id, inventory_id, quantity, unit_cost, source, exclude_cost)
 				VALUES ($1, $2, $3, $4, $5, $6)`,
-				eventID, s.InventoryID, s.Quantity, s.UnitCost, s.Source, s.ExcludeCost)
+				eventID, s.InventoryID, s.Quantity, s.UnitCost, s.Source, excludeCost)
 			if err != nil {
 				return err
 			}
