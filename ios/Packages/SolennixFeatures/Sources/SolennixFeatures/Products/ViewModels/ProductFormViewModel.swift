@@ -20,6 +20,10 @@ private struct RecipeIngredientBody: Encodable {
     let quantityRequired: Double
 }
 
+private struct RecipeIngredientsWrapper: Encodable {
+    let ingredients: [RecipeIngredientBody]
+}
+
 // MARK: - Recipe Item
 
 public struct RecipeItem: Identifiable, Hashable {
@@ -344,21 +348,21 @@ public final class ProductFormViewModel {
                 let _: Product = try await apiClient.put(Endpoint.product(id), body: productData)
 
                 // Update recipe
-                if !validRecipeItems.isEmpty {
-                    let _: [ProductIngredient] = try await apiClient.put(
-                        Endpoint.productIngredients(id),
-                        body: recipeData
-                    )
-                }
+                let recipeBody = RecipeIngredientsWrapper(ingredients: recipeData)
+                let _: [ProductIngredient] = try await apiClient.put(
+                    Endpoint.productIngredients(id),
+                    body: recipeBody
+                )
             } else {
                 // Create new product
                 let newProduct: Product = try await apiClient.post(Endpoint.products, body: productData)
 
                 // Add recipe if any
                 if !validRecipeItems.isEmpty {
+                    let recipeBody = RecipeIngredientsWrapper(ingredients: recipeData)
                     let _: [ProductIngredient] = try await apiClient.put(
                         Endpoint.productIngredients(newProduct.id),
-                        body: recipeData
+                        body: recipeBody
                     )
                 }
             }
