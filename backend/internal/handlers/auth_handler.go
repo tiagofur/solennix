@@ -16,9 +16,12 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unicode"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/jackc/pgx/v5/pgconn"
+	"golang.org/x/crypto/bcrypt"
+
 	"github.com/tiagofur/solennix-backend/internal/config"
 	"github.com/tiagofur/solennix-backend/internal/middleware"
 	"github.com/tiagofur/solennix-backend/internal/models"
@@ -27,12 +30,16 @@ import (
 
 var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
 
+// dummyHash is a pre-computed bcrypt hash used to normalize timing on login attempts
+// with non-existent emails, preventing user enumeration via timing side-channels.
+var dummyHash, _ = bcrypt.GenerateFromPassword([]byte("dummy-timing-normalization"), bcrypt.DefaultCost)
+
 // resetTokenBlacklist stores SHA-256 hashes of used password reset tokens.
 // Key: hex-encoded SHA-256 hash, Value: token expiry time (for cleanup).
 var resetTokenBlacklist sync.Map
 
 func init() {
-	// Periodically clean expired entries from the reset token blacklist
+	// Periodically clean expired entries from both token blacklists
 	go func() {
 		ticker := time.NewTicker(10 * time.Minute)
 		defer ticker.Stop()
@@ -41,6 +48,12 @@ func init() {
 			resetTokenBlacklist.Range(func(key, value any) bool {
 				if expiry, ok := value.(time.Time); ok && now.After(expiry) {
 					resetTokenBlacklist.Delete(key)
+				}
+				return true
+			})
+			middleware.AccessTokenBlacklist.Range(func(key, value any) bool {
+				if expiry, ok := value.(time.Time); ok && now.After(expiry) {
+					middleware.AccessTokenBlacklist.Delete(key)
 				}
 				return true
 			})
@@ -63,6 +76,32 @@ func isResetTokenBlacklisted(token string) bool {
 // blacklistResetToken adds a reset token to the blacklist with its expiry time.
 func blacklistResetToken(token string, expiry time.Time) {
 	resetTokenBlacklist.Store(hashToken(token), expiry)
+}
+
+// validatePasswordStrength checks that a password meets minimum complexity requirements:
+// at least 8 characters, one uppercase letter, one lowercase letter, and one digit.
+func validatePasswordStrength(password string) error {
+	if len(password) < 8 {
+		return fmt.Errorf("Password must be at least 8 characters and contain at least one uppercase letter, one lowercase letter, and one digit")
+	}
+	if len(password) > 128 {
+		return fmt.Errorf("Password must not exceed 128 characters")
+	}
+	var hasUpper, hasLower, hasDigit bool
+	for _, ch := range password {
+		switch {
+		case unicode.IsUpper(ch):
+			hasUpper = true
+		case unicode.IsLower(ch):
+			hasLower = true
+		case unicode.IsDigit(ch):
+			hasDigit = true
+		}
+	}
+	if !hasUpper || !hasLower || !hasDigit {
+		return fmt.Errorf("Password must be at least 8 characters and contain at least one uppercase letter, one lowercase letter, and one digit")
+	}
+	return nil
 }
 
 // isUniqueViolation checks if a database error is a PostgreSQL unique constraint violation (23505).
@@ -128,20 +167,18 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(req.Password) < 6 {
-		writeError(w, http.StatusBadRequest, "Password must be at least 6 characters")
+	if err := validatePasswordStrength(req.Password); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	if len(req.Password) > 128 {
-		writeError(w, http.StatusBadRequest, "Password must not exceed 128 characters")
-		return
-	}
-
-	// Check if user already exists
+	// Check if user already exists — return identical response to prevent email enumeration
 	existing, _ := h.userRepo.GetByEmail(r.Context(), req.Email)
 	if existing != nil {
-		writeError(w, http.StatusConflict, "Email already registered")
+		slog.Info("Registration attempt with existing email", "email", req.Email)
+		writeJSON(w, http.StatusCreated, map[string]interface{}{
+			"message": "Account created successfully. Please check your email to verify your account.",
+		})
 		return
 	}
 
@@ -210,6 +247,9 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	// Find user
 	user, err := h.userRepo.GetByEmail(r.Context(), req.Email)
 	if err != nil || user == nil {
+		// Perform dummy bcrypt comparison to normalize response timing,
+		// preventing user enumeration via timing side-channels.
+		_ = bcrypt.CompareHashAndPassword(dummyHash, []byte(req.Password))
 		writeError(w, http.StatusUnauthorized, "Invalid email or password")
 		return
 	}
@@ -303,8 +343,34 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, tokens)
 }
 
-// Logout handles POST /api/auth/logout - Clears httpOnly cookie
+// Logout handles POST /api/auth/logout - Clears httpOnly cookie and blacklists access token
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
+	// Extract and blacklist the access token so it cannot be reused via Authorization header
+	var token string
+	if cookie, err := r.Cookie("auth_token"); err == nil {
+		token = cookie.Value
+	}
+	if token == "" {
+		authHeader := r.Header.Get("Authorization")
+		if authHeader != "" {
+			parts := strings.SplitN(authHeader, " ", 2)
+			if len(parts) == 2 && strings.EqualFold(parts[0], "bearer") {
+				token = parts[1]
+			}
+		}
+	}
+	if token != "" {
+		// Parse token to get expiry for cleanup, then blacklist it
+		claims, err := h.authService.ValidateToken(token)
+		if err == nil {
+			expiry := time.Now().Add(24 * time.Hour) // Default: JWT expiry window
+			if claims.ExpiresAt != nil {
+				expiry = claims.ExpiresAt.Time
+			}
+			middleware.AccessTokenBlacklist.Store(hashToken(token), expiry)
+		}
+	}
+
 	// Clear the auth cookie by setting MaxAge to -1
 	http.SetCookie(w, &http.Cookie{
 		Name:     "auth_token",
@@ -375,13 +441,8 @@ func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(req.NewPassword) < 6 {
-		writeError(w, http.StatusBadRequest, "Password must be at least 6 characters")
-		return
-	}
-
-	if len(req.NewPassword) > 128 {
-		writeError(w, http.StatusBadRequest, "Password must not exceed 128 characters")
+	if err := validatePasswordStrength(req.NewPassword); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -448,13 +509,8 @@ func (h *AuthHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(req.NewPassword) < 6 {
-		writeError(w, http.StatusBadRequest, "New password must be at least 6 characters")
-		return
-	}
-
-	if len(req.NewPassword) > 128 {
-		writeError(w, http.StatusBadRequest, "New password must not exceed 128 characters")
+	if err := validatePasswordStrength(req.NewPassword); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -787,11 +843,10 @@ func validateGoogleIDToken(_ context.Context, idToken string, allowedClientIDs [
 		jwt.WithValidMethods([]string{"RS256"}),
 	}
 
-	// Add audience verification if configured
-	if len(allowedClientIDs) > 0 {
-		// jwt.WithAudience checks a single value; we check manually below for multiple
-	} else {
-		slog.Warn("Google Client IDs not configured — skipping audience verification (set GOOGLE_CLIENT_IDS in production)")
+	// Audience verification is mandatory — reject if client IDs are not configured
+	if len(allowedClientIDs) == 0 {
+		slog.Error("Google Client IDs not configured — rejecting token (set GOOGLE_CLIENT_IDS env var)")
+		return nil, fmt.Errorf("server misconfiguration: Google audience verification not configured")
 	}
 
 	parser := jwt.NewParser(parserOpts...)
@@ -1147,16 +1202,16 @@ func validateAppleIDToken(identityToken string, appleBundleID string) (*AppleIDT
 		jwt.WithIssuer("https://appleid.apple.com"),
 	)
 
-	// Add audience verification if configured
-	if appleBundleID != "" {
-		parser = jwt.NewParser(
-			jwt.WithValidMethods([]string{"RS256"}),
-			jwt.WithIssuer("https://appleid.apple.com"),
-			jwt.WithAudience(appleBundleID),
-		)
-	} else {
-		slog.Warn("Apple Bundle ID not configured — skipping audience verification (set APPLE_BUNDLE_ID in production)")
+	// Audience verification is mandatory — reject if bundle ID is not configured
+	if appleBundleID == "" {
+		slog.Error("Apple Bundle ID not configured — rejecting token (set APPLE_BUNDLE_ID env var)")
+		return nil, fmt.Errorf("server misconfiguration: Apple audience verification not configured")
 	}
+	parser = jwt.NewParser(
+		jwt.WithValidMethods([]string{"RS256"}),
+		jwt.WithIssuer("https://appleid.apple.com"),
+		jwt.WithAudience(appleBundleID),
+	)
 
 	var appleClaims struct {
 		jwt.RegisteredClaims

@@ -2,13 +2,21 @@ package middleware
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"net/http"
 	"strings"
+	"sync"
 
 	"github.com/google/uuid"
 	"github.com/tiagofur/solennix-backend/internal/services"
 )
+
+// AccessTokenBlacklist stores SHA-256 hashes of revoked access tokens (e.g., on logout).
+// Key: hex-encoded SHA-256 hash, Value: token expiry time (for cleanup).
+// Used by handlers to blacklist tokens and by Auth middleware to reject them.
+var AccessTokenBlacklist sync.Map
 
 type contextKey string
 
@@ -44,6 +52,13 @@ func Auth(authService *services.AuthService) func(http.Handler) http.Handler {
 				return
 			}
 
+			// Check if token has been revoked (e.g., by logout)
+			tokenHash := sha256Hex(token)
+			if _, revoked := AccessTokenBlacklist.Load(tokenHash); revoked {
+				writeAuthError(w, http.StatusUnauthorized, "Token has been revoked")
+				return
+			}
+
 			// Validate token
 			claims, err := authService.ValidateToken(token)
 			if err != nil {
@@ -57,6 +72,12 @@ func Auth(authService *services.AuthService) func(http.Handler) http.Handler {
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
+}
+
+// sha256Hex returns the hex-encoded SHA-256 hash of a string.
+func sha256Hex(s string) string {
+	h := sha256.Sum256([]byte(s))
+	return hex.EncodeToString(h[:])
 }
 
 func writeAuthError(w http.ResponseWriter, status int, message string) {

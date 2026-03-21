@@ -36,7 +36,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 
 		// Auth routes (public) — rate limited to prevent brute-force attacks
 		r.Route("/auth", func(r chi.Router) {
-			r.Use(mw.RateLimit(10, 1*time.Minute))
+			r.Use(mw.RateLimit(5, 1*time.Minute))
 			r.Post("/register", authHandler.Register)
 			r.Post("/login", authHandler.Login)
 			r.Post("/logout", authHandler.Logout) // Clear httpOnly cookie
