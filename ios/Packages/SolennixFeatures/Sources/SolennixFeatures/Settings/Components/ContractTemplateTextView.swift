@@ -43,12 +43,14 @@ struct ContractTemplateTextView: UIViewRepresentable {
         if textView.text != text {
             let selectedRange = textView.selectedRange
             let savedOffset = textView.contentOffset
+            textView.isScrollEnabled = false
             textView.text = text
             context.coordinator.applyAttributedStyling(to: textView)
             // Restore cursor position if valid
             if selectedRange.location + selectedRange.length <= (textView.text as NSString).length {
                 textView.selectedRange = selectedRange
             }
+            textView.isScrollEnabled = true
             textView.contentOffset = savedOffset
         }
 
@@ -90,9 +92,11 @@ struct ContractTemplateTextView: UIViewRepresentable {
             text.wrappedValue = textView.text
             applyAttributedStyling(to: textView)
 
-            // Move cursor after inserted text and restore scroll position
+            // Move cursor after inserted text; disable scroll to prevent jump
             let newPosition = currentRange.location + (insertText as NSString).length
+            textView.isScrollEnabled = false
             textView.selectedRange = NSRange(location: newPosition, length: 0)
+            textView.isScrollEnabled = true
             textView.contentOffset = savedOffset
         }
 
@@ -134,8 +138,12 @@ struct ContractTemplateTextView: UIViewRepresentable {
                 ], range: range)
             }
 
+            // Disable scrolling to prevent UITextView from auto-scrolling
+            // when attributedText is set (it triggers async scroll-to-visible)
             let savedOffset = textView.contentOffset
+            textView.isScrollEnabled = false
             textView.attributedText = attributedString
+            textView.isScrollEnabled = true
             textView.contentOffset = savedOffset
         }
     }
