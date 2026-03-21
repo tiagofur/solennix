@@ -29,6 +29,7 @@ type Config struct {
 	StripeProPriceID        string
 	StripePortalConfigID    string // Billing Portal configuration ID (optional)
 	RevenueCatWebhookSecret string // RevenueCat v2 webhook authorization header secret
+	RevenueCatAPIKey        string // RevenueCat secret API key for server-to-server calls
 
 	UploadDir           string // Directory for uploaded files (default: "./uploads")
 	BootstrapAdminEmail string // Email to automatically promote to admin on startup
@@ -52,6 +53,7 @@ func Load() (*Config, error) {
 		StripeProPriceID:        os.Getenv("STRIPE_PRO_PRICE_ID"),
 		StripePortalConfigID:    os.Getenv("STRIPE_PORTAL_CONFIG_ID"),
 		RevenueCatWebhookSecret: os.Getenv("REVENUECAT_WEBHOOK_SECRET"),
+		RevenueCatAPIKey:        os.Getenv("REVENUECAT_API_KEY"),
 		UploadDir:               getEnv("UPLOAD_DIR", "./uploads"),
 		BootstrapAdminEmail:     os.Getenv("BOOTSTRAP_ADMIN_EMAIL"),
 		TrustProxy:              getEnv("TRUST_PROXY", "false") == "true",

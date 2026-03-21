@@ -16,18 +16,20 @@ import (
 	"github.com/tiagofur/solennix-backend/internal/config"
 	"github.com/tiagofur/solennix-backend/internal/middleware"
 	"github.com/tiagofur/solennix-backend/internal/models"
+	"github.com/tiagofur/solennix-backend/internal/services"
 )
 
 // SubscriptionHandler handles SaaS subscription flows for both
 // web (Stripe) and mobile (Apple/Google via RevenueCat).
 // Also handles event payment webhooks.
 type SubscriptionHandler struct {
-	userRepo    UserRepository
-	subRepo     SubscriptionRepository
-	eventRepo   EventRepository
+	userRepo  UserRepository
+	subRepo   SubscriptionRepository
+	eventRepo EventRepository
 	paymentRepo PaymentRepository
-	stripe      StripeService
-	cfg         *config.Config
+	stripe    StripeService
+	rcService *services.RevenueCatService
+	cfg       *config.Config
 }
 
 func NewSubscriptionHandler(
@@ -36,6 +38,7 @@ func NewSubscriptionHandler(
 	eventRepo EventRepository,
 	paymentRepo PaymentRepository,
 	stripeService StripeService,
+	rcService *services.RevenueCatService,
 	cfg *config.Config,
 ) *SubscriptionHandler {
 	stripe.Key = cfg.StripeSecretKey
@@ -45,6 +48,7 @@ func NewSubscriptionHandler(
 		eventRepo:   eventRepo,
 		paymentRepo: paymentRepo,
 		stripe:      stripeService,
+		rcService:   rcService,
 		cfg:         cfg,
 	}
 }
@@ -213,6 +217,23 @@ func (h *SubscriptionHandler) StripeWebhook(w http.ResponseWriter, r *http.Reque
 				slog.Error("Failed to update user plan after checkout", "error", err)
 			} else {
 				slog.Info("User upgraded to pro via Stripe checkout", "user_id", userID)
+
+				// Sync to RevenueCat so mobile apps see the entitlement
+				if h.rcService != nil {
+					duration := "monthly" // default
+					if s.Subscription != nil {
+						// Try to determine duration from the subscription interval
+						if subData, err := h.stripe.GetSubscription(s.Subscription.ID, nil); err == nil && len(subData.Items.Data) > 0 {
+							interval := subData.Items.Data[0].Price.Recurring.Interval
+							if interval == "year" {
+								duration = "yearly"
+							}
+						}
+					}
+					if err := h.rcService.GrantPromotionalEntitlement(r.Context(), userID.String(), "pro_access", duration); err != nil {
+						slog.Error("Failed to grant RevenueCat entitlement after Stripe checkout", "user_id", userID, "error", err)
+					}
+				}
 			}
 
 			// Upsert subscription record
@@ -274,6 +295,13 @@ func (h *SubscriptionHandler) StripeWebhook(w http.ResponseWriter, r *http.Reque
 			// Downgrade to basic
 			if err := h.userRepo.UpdatePlanByStripeCustomerID(r.Context(), sub.Customer.ID, "basic"); err != nil {
 				slog.Error("Failed to downgrade user after unpaid subscription", "error", err)
+			} else if h.rcService != nil {
+				// Revoke RevenueCat entitlement
+				if user, err := h.userRepo.GetByStripeCustomerID(r.Context(), sub.Customer.ID); err == nil {
+					if err := h.rcService.RevokePromotionalEntitlement(r.Context(), user.ID.String(), "pro_access"); err != nil {
+						slog.Error("Failed to revoke RevenueCat entitlement after unpaid", "error", err)
+					}
+				}
 			}
 			if h.subRepo != nil {
 				if err := h.subRepo.UpdateStatusByProviderSubID(r.Context(), sub.ID, "canceled", nil, nil); err != nil {
@@ -292,6 +320,16 @@ func (h *SubscriptionHandler) StripeWebhook(w http.ResponseWriter, r *http.Reque
 			slog.Error("Failed to downgrade user after subscription deletion", "error", err)
 		} else {
 			slog.Info("User downgraded to basic after Stripe subscription cancellation", "customer_id", sub.Customer.ID)
+
+			// Revoke RevenueCat entitlement so mobile apps lose premium
+			if h.rcService != nil {
+				// Look up user ID from stripe customer ID to revoke RC entitlement
+				if user, err := h.userRepo.GetByStripeCustomerID(r.Context(), sub.Customer.ID); err == nil {
+					if err := h.rcService.RevokePromotionalEntitlement(r.Context(), user.ID.String(), "pro_access"); err != nil {
+						slog.Error("Failed to revoke RevenueCat entitlement after Stripe deletion", "error", err)
+					}
+				}
+			}
 		}
 		if h.subRepo != nil {
 			if err := h.subRepo.UpdateStatusByProviderSubID(r.Context(), sub.ID, "canceled", nil, nil); err != nil {
@@ -325,14 +363,27 @@ func (h *SubscriptionHandler) StripeWebhook(w http.ResponseWriter, r *http.Reque
 // See: https://www.revenuecat.com/docs/webhooks
 type revenueCatEvent struct {
 	Event struct {
-		Type           string     `json:"type"`
-		AppUserID      string     `json:"app_user_id"`
-		ProductID      string     `json:"product_id"`
-		Store          string     `json:"store"`       // APP_STORE | PLAY_STORE | STRIPE
-		PeriodType     string     `json:"period_type"` // NORMAL | TRIAL | INTRO
-		ExpirationAtMS *int64     `json:"-"`
-		ExpireAt       *time.Time `json:"expiration_at_ms_epoch"`
+		Type           string `json:"type"`
+		AppUserID      string `json:"app_user_id"`
+		ProductID      string `json:"product_id"`
+		Store          string `json:"store"`             // APP_STORE | PLAY_STORE | STRIPE
+		PeriodType     string `json:"period_type"`       // NORMAL | TRIAL | INTRO
+		ExpirationAtMS *int64 `json:"expiration_at_ms"`  // Expiration timestamp in milliseconds
 	} `json:"event"`
+}
+
+// rcStoreToProvider maps RevenueCat store names to our provider strings.
+func rcStoreToProvider(store string) string {
+	switch store {
+	case "APP_STORE":
+		return "apple"
+	case "PLAY_STORE":
+		return "google"
+	case "STRIPE":
+		return "stripe"
+	default:
+		return store
+	}
 }
 
 func (h *SubscriptionHandler) RevenueCatWebhook(w http.ResponseWriter, r *http.Request) {
@@ -376,6 +427,8 @@ func (h *SubscriptionHandler) RevenueCatWebhook(w http.ResponseWriter, r *http.R
 		return
 	}
 
+	provider := rcStoreToProvider(evt.Store)
+
 	switch evt.Type {
 	case "INITIAL_PURCHASE", "RENEWAL", "UNCANCELLATION":
 		// User has an active subscription — upgrade to pro
@@ -383,6 +436,25 @@ func (h *SubscriptionHandler) RevenueCatWebhook(w http.ResponseWriter, r *http.R
 			slog.Error("Failed to upgrade user plan via RevenueCat", "user_id", userID, "error", err)
 		} else {
 			slog.Info("User upgraded to pro via RevenueCat", "user_id", userID, "store", evt.Store)
+		}
+
+		// Upsert subscription record
+		if h.subRepo != nil {
+			rcUserID := evt.AppUserID
+			subRecord := &models.Subscription{
+				UserID:              userID,
+				Provider:            provider,
+				RevenueCatAppUserID: &rcUserID,
+				Plan:                "pro",
+				Status:              "active",
+			}
+			if evt.ExpirationAtMS != nil {
+				expTime := time.UnixMilli(*evt.ExpirationAtMS)
+				subRecord.CurrentPeriodEnd = &expTime
+			}
+			if err := h.subRepo.Upsert(r.Context(), subRecord); err != nil {
+				slog.Error("Failed to upsert subscription via RevenueCat", "user_id", userID, "error", err)
+			}
 		}
 
 	case "CANCELLATION", "EXPIRATION", "BILLING_ISSUE":
@@ -393,8 +465,20 @@ func (h *SubscriptionHandler) RevenueCatWebhook(w http.ResponseWriter, r *http.R
 			slog.Info("User downgraded to basic via RevenueCat", "user_id", userID, "event", evt.Type)
 		}
 
+		// Update subscription record status
+		if h.subRepo != nil {
+			status := "canceled"
+			if evt.Type == "BILLING_ISSUE" {
+				status = "past_due"
+			}
+			if err := h.subRepo.UpdateStatusByUserID(r.Context(), userID, status); err != nil {
+				slog.Error("Failed to update subscription status via RevenueCat", "user_id", userID, "error", err)
+			}
+		}
+
 	case "PRODUCT_CHANGE":
-		slog.Info("RevenueCat product change event received (plan change)", "user_id", userID)
+		// Product change — still pro, just a different product
+		slog.Info("RevenueCat product change event received", "user_id", userID, "product_id", evt.ProductID)
 	}
 
 	w.WriteHeader(http.StatusOK)

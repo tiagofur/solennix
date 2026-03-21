@@ -12,6 +12,7 @@ import (
 // This interface allows us to use mocks in tests while using the real repository in production.
 type UserRepository interface {
 	GetByID(ctx context.Context, id uuid.UUID) (*models.User, error)
+	GetByStripeCustomerID(ctx context.Context, stripeCustomerID string) (*models.User, error)
 	UpdatePlanAndStripeID(ctx context.Context, id uuid.UUID, plan string, stripeCustomerID *string) error
 	UpdatePlanByStripeCustomerID(ctx context.Context, stripeCustomerID string, plan string) error
 }

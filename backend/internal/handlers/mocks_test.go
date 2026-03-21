@@ -37,6 +37,14 @@ func (m *MockFullUserRepo) UpdatePlanByStripeCustomerID(ctx context.Context, str
 	return args.Error(0)
 }
 
+func (m *MockFullUserRepo) GetByStripeCustomerID(ctx context.Context, stripeCustomerID string) (*models.User, error) {
+	args := m.Called(ctx, stripeCustomerID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.User), args.Error(1)
+}
+
 func (m *MockFullUserRepo) GetByEmail(ctx context.Context, email string) (*models.User, error) {
 	args := m.Called(ctx, email)
 	if args.Get(0) == nil {

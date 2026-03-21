@@ -131,6 +131,27 @@ func (r *UserRepo) UpdatePlanByStripeCustomerID(ctx context.Context, stripeCusto
 	return nil
 }
 
+// GetByStripeCustomerID retrieves a user by their Stripe Customer ID.
+// Used to look up user ID for RevenueCat entitlement sync on Stripe webhook events.
+func (r *UserRepo) GetByStripeCustomerID(ctx context.Context, stripeCustomerID string) (*models.User, error) {
+	user := &models.User{}
+	query := `SELECT id, email, password_hash, name, business_name, logo_url, brand_color, show_business_name_in_pdf,
+		default_deposit_percent, default_cancellation_days, default_refund_percent,
+		contract_template,
+		plan, role, stripe_customer_id, created_at, updated_at
+		FROM users WHERE stripe_customer_id = $1`
+	err := r.pool.QueryRow(ctx, query, stripeCustomerID).Scan(
+		&user.ID, &user.Email, &user.PasswordHash, &user.Name, &user.BusinessName, &user.LogoURL, &user.BrandColor, &user.ShowBusinessNameInPdf,
+		&user.DefaultDepositPercent, &user.DefaultCancellationDays, &user.DefaultRefundPercent,
+		&user.ContractTemplate,
+		&user.Plan, &user.Role, &user.StripeCustomerID, &user.CreatedAt, &user.UpdatedAt,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("user not found by stripe_customer_id: %w", err)
+	}
+	return user, nil
+}
+
 // UpdatePassword updates a user's password hash
 func (r *UserRepo) UpdatePassword(ctx context.Context, userID uuid.UUID, passwordHash string) error {
 	query := `
