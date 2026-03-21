@@ -12,6 +12,7 @@ import com.creapolis.solennix.core.model.extensions.isValidEmail
 import com.creapolis.solennix.core.network.ApiService
 import com.creapolis.solennix.core.network.AuthManager
 import com.creapolis.solennix.core.network.Endpoints
+import com.creapolis.solennix.core.network.runCatchingApi
 import com.revenuecat.purchases.Purchases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -58,20 +59,18 @@ class AuthViewModel @Inject constructor(
             isLoading = true
             errorMessage = null
             try {
-                val response: AuthResponse = apiService.post<AuthResponse>(
-                    Endpoints.LOGIN,
-                    mapOf("email" to loginEmail, "password" to loginPassword)
-                )
+                val response: AuthResponse = runCatchingApi {
+                    apiService.post<AuthResponse>(
+                        Endpoints.LOGIN,
+                        mapOf("email" to loginEmail, "password" to loginPassword)
+                    )
+                }
                 authManager.storeTokens(response.accessToken, response.refreshToken)
                 authManager.storeUser(response.user)
                 syncRevenueCat(response.user.id)
                 _loginSuccess.tryEmit(Unit)
-            } catch (e: Exception) {
-                errorMessage = when {
-                    e.message?.contains("401") == true -> "Email o contrasena incorrectos"
-                    e.message?.contains("404") == true -> "Error de configuracion del servidor (404)"
-                    else -> "Error de conexion: ${e.localizedMessage}"
-                }
+            } catch (e: ApiError) {
+                errorMessage = e.userMessage(context = ErrorContext.LOGIN)
             } finally {
                 isLoading = false
             }
@@ -83,9 +82,9 @@ class AuthViewModel @Inject constructor(
     var registerEmail by mutableStateOf("")
     var registerPassword by mutableStateOf("")
     var registerConfirmPassword by mutableStateOf("")
-    val isRegisterValid: Boolean get() = registerName.length >= 2 && 
-            registerEmail.isValidEmail() && 
-            registerPassword.length >= 6 && 
+    val isRegisterValid: Boolean get() = registerName.length >= 2 &&
+            registerEmail.isValidEmail() &&
+            registerPassword.length >= 6 &&
             registerPassword == registerConfirmPassword
 
     fun register() {
@@ -94,20 +93,22 @@ class AuthViewModel @Inject constructor(
             isLoading = true
             errorMessage = null
             try {
-                val response: AuthResponse = apiService.post<AuthResponse>(
-                    Endpoints.REGISTER,
-                    mapOf(
-                        "name" to registerName,
-                        "email" to registerEmail,
-                        "password" to registerPassword
+                val response: AuthResponse = runCatchingApi {
+                    apiService.post<AuthResponse>(
+                        Endpoints.REGISTER,
+                        mapOf(
+                            "name" to registerName,
+                            "email" to registerEmail,
+                            "password" to registerPassword
+                        )
                     )
-                )
+                }
                 authManager.storeTokens(response.accessToken, response.refreshToken)
                 authManager.storeUser(response.user)
                 syncRevenueCat(response.user.id)
                 _loginSuccess.tryEmit(Unit)
-            } catch (e: Exception) {
-                errorMessage = "Error al crear la cuenta. Intenta de nuevo."
+            } catch (e: ApiError) {
+                errorMessage = e.userMessage(context = ErrorContext.REGISTER)
             } finally {
                 isLoading = false
             }
@@ -124,10 +125,12 @@ class AuthViewModel @Inject constructor(
             isLoading = true
             errorMessage = null
             try {
-                apiService.post<Unit>(Endpoints.FORGOT_PASSWORD, mapOf("email" to forgotEmail))
+                runCatchingApi {
+                    apiService.post<Unit>(Endpoints.FORGOT_PASSWORD, mapOf("email" to forgotEmail))
+                }
                 forgotSuccess = true
-            } catch (e: Exception) {
-                errorMessage = "Error al enviar el enlace. Revisa el correo."
+            } catch (e: ApiError) {
+                errorMessage = e.userMessage(context = ErrorContext.FORGOT_PASSWORD)
             } finally {
                 isLoading = false
             }
@@ -146,13 +149,15 @@ class AuthViewModel @Inject constructor(
             isLoading = true
             errorMessage = null
             try {
-                apiService.post<Unit>(
-                    Endpoints.RESET_PASSWORD,
-                    mapOf("token" to resetToken, "password" to newPassword)
-                )
+                runCatchingApi {
+                    apiService.post<Unit>(
+                        Endpoints.RESET_PASSWORD,
+                        mapOf("token" to resetToken, "password" to newPassword)
+                    )
+                }
                 resetSuccess = true
-            } catch (e: Exception) {
-                errorMessage = "Error al restablecer la contrasena. Enlace invalido o expirado."
+            } catch (e: ApiError) {
+                errorMessage = e.userMessage(context = ErrorContext.RESET_PASSWORD)
             } finally {
                 isLoading = false
             }
@@ -177,19 +182,50 @@ class AuthViewModel @Inject constructor(
             isLoading = true
             errorMessage = null
             try {
-                val response: AuthResponse = apiService.post<AuthResponse>(
-                    Endpoints.GOOGLE_AUTH,
-                    mapOf("id_token" to idToken, "full_name" to fullName)
-                )
+                val response: AuthResponse = runCatchingApi {
+                    apiService.post<AuthResponse>(
+                        Endpoints.GOOGLE_AUTH,
+                        mapOf("id_token" to idToken, "full_name" to fullName)
+                    )
+                }
                 authManager.storeTokens(response.accessToken, response.refreshToken)
                 authManager.storeUser(response.user)
                 syncRevenueCat(response.user.id)
                 _loginSuccess.tryEmit(Unit)
-            } catch (e: Exception) {
-                errorMessage = "Error al iniciar sesion con Google"
+            } catch (e: ApiError) {
+                errorMessage = e.userMessage(context = ErrorContext.SOCIAL_LOGIN)
             } finally {
                 isLoading = false
             }
         }
     }
+}
+
+/** Context-specific error messages for auth operations */
+private enum class ErrorContext {
+    LOGIN,
+    REGISTER,
+    FORGOT_PASSWORD,
+    RESET_PASSWORD,
+    SOCIAL_LOGIN
+}
+
+/** Maps [ApiError] to a user-facing Spanish message depending on the auth operation context. */
+private fun ApiError.userMessage(context: ErrorContext): String = when (this) {
+    is ApiError.Unauthorized -> when (context) {
+        ErrorContext.LOGIN -> "Email o contraseña incorrectos"
+        ErrorContext.RESET_PASSWORD -> "Enlace inválido o expirado"
+        else -> "Sesión expirada. Iniciá sesión de nuevo."
+    }
+    is ApiError.Conflict -> when (context) {
+        ErrorContext.REGISTER -> "Ya existe una cuenta con este email"
+        else -> "Conflicto con los datos enviados. Intentá de nuevo."
+    }
+    is ApiError.Forbidden -> "No tenés permisos para realizar esta acción."
+    is ApiError.NotFound -> "Servicio no disponible. Intentá más tarde."
+    is ApiError.ValidationError -> "Datos inválidos. Revisá los campos e intentá de nuevo."
+    is ApiError.NetworkError -> "Error de conexión. Verificá tu internet."
+    is ApiError.ServerError -> "Error del servidor. Intentá más tarde."
+    is ApiError.DecodingError -> "Error inesperado. Intentá de nuevo."
+    is ApiError.Unknown -> "Error inesperado. Intentá de nuevo."
 }
