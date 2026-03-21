@@ -63,6 +63,21 @@ public actor APIClient {
         self.encoder.keyEncodingStrategy = .convertToSnakeCase
     }
 
+    /// Resolves a relative API path (e.g. `/api/uploads/...`) to an absolute URL.
+    /// If the path is already absolute (has a scheme), returns it as-is.
+    public func resolveURL(_ path: String) -> URL? {
+        Self.resolveURL(path, baseURL: baseURL)
+    }
+
+    /// Static URL resolver using the default base URL.
+    /// Use this when you don't have access to an APIClient instance.
+    public static func resolveURL(_ path: String, baseURL: URL = URL(string: "https://api.solennix.com")!) -> URL? {
+        if path.hasPrefix("http://") || path.hasPrefix("https://") {
+            return URL(string: path)
+        }
+        return URL(string: path, relativeTo: baseURL)
+    }
+
     /// Set the auth manager reference after both objects are initialized.
     public func setAuthManager(_ manager: AuthManager) {
         self._authManager = manager

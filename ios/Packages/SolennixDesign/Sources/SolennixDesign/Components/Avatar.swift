@@ -12,8 +12,10 @@ public struct Avatar: View {
         self.size = size
     }
 
+    private static let apiBaseURL = URL(string: "https://api.solennix.com")!
+
     public var body: some View {
-        if let photoURL, let url = URL(string: photoURL) {
+        if let photoURL, let url = Self.resolveURL(photoURL) {
             AsyncImage(url: url) { phase in
                 switch phase {
                 case .success(let image):
@@ -61,6 +63,13 @@ public struct Avatar: View {
             let last = String(parts[parts.count - 1].prefix(1)).uppercased()
             return first + last
         }
+    }
+
+    private static func resolveURL(_ path: String) -> URL? {
+        if path.hasPrefix("http://") || path.hasPrefix("https://") {
+            return URL(string: path)
+        }
+        return URL(string: path, relativeTo: apiBaseURL)
     }
 
     private var avatarColor: Color {

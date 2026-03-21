@@ -119,7 +119,7 @@ public struct ProductFormView: View {
                             .resizable()
                             .aspectRatio(contentMode: .fill)
                     } else if let imageUrl = viewModel.imageUrl,
-                              let url = URL(string: imageUrl) {
+                              let url = APIClient.resolveURL(imageUrl) {
                         AsyncImage(url: url) { image in
                             image
                                 .resizable()

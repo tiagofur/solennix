@@ -143,7 +143,7 @@ public struct ProductListView: View {
             HStack(spacing: Spacing.md) {
                 // Product image or icon
                 if let imageUrl = product.imageUrl, !imageUrl.isEmpty {
-                    AsyncImage(url: URL(string: imageUrl)) { image in
+                    AsyncImage(url: APIClient.resolveURL(imageUrl)) { image in
                         image
                             .resizable()
                             .aspectRatio(contentMode: .fill)

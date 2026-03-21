@@ -194,7 +194,7 @@ public struct ProductDetailView: View {
         VStack(spacing: Spacing.md) {
             // Product image
             if let imageUrl = product.imageUrl, !imageUrl.isEmpty,
-               let url = URL(string: imageUrl) {
+               let url = APIClient.resolveURL(imageUrl) {
                 AsyncImage(url: url) { image in
                     image
                         .resizable()

@@ -558,7 +558,7 @@ public struct EventDetailView: View {
 
             LazyVGrid(columns: columns, spacing: Spacing.sm) {
                 ForEach(Array(viewModel.eventPhotos.enumerated()), id: \.offset) { index, url in
-                    AsyncImage(url: URL(string: url)) { image in
+                    AsyncImage(url: APIClient.resolveURL(url)) { image in
                         image
                             .resizable()
                             .scaledToFill()

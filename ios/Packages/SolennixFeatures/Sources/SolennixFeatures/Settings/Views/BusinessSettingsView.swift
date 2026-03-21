@@ -50,7 +50,7 @@ public struct BusinessSettingsView: View {
 
                     VStack(spacing: Spacing.md) {
                         // Logo preview
-                        if let logoUrl = viewModel.logoUrl, let url = URL(string: logoUrl) {
+                        if let logoUrl = viewModel.logoUrl, let url = APIClient.resolveURL(logoUrl) {
                             AsyncImage(url: url) { phase in
                                 switch phase {
                                 case .success(let image):
