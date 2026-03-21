@@ -31,6 +31,12 @@ type Config struct {
 	RevenueCatWebhookSecret string // RevenueCat v2 webhook authorization header secret
 	RevenueCatAPIKey        string // RevenueCat secret API key for server-to-server calls
 
+	// Google OAuth Client IDs for audience verification
+	GoogleClientIDs []string // Allowed Google OAuth client IDs (iOS, Android, Web)
+
+	// Apple Sign In configuration
+	AppleBundleID string // Apple Bundle ID for audience verification
+
 	UploadDir           string // Directory for uploaded files (default: "./uploads")
 	BootstrapAdminEmail string // Email to automatically promote to admin on startup
 	TrustProxy          bool   // Trust X-Forwarded-For header for client IP (only enable behind a reverse proxy)
@@ -54,6 +60,7 @@ func Load() (*Config, error) {
 		StripePortalConfigID:    os.Getenv("STRIPE_PORTAL_CONFIG_ID"),
 		RevenueCatWebhookSecret: os.Getenv("REVENUECAT_WEBHOOK_SECRET"),
 		RevenueCatAPIKey:        os.Getenv("REVENUECAT_API_KEY"),
+		AppleBundleID:           os.Getenv("APPLE_BUNDLE_ID"),
 		UploadDir:               getEnv("UPLOAD_DIR", "./uploads"),
 		BootstrapAdminEmail:     os.Getenv("BOOTSTRAP_ADMIN_EMAIL"),
 		TrustProxy:              getEnv("TRUST_PROXY", "false") == "true",
@@ -75,6 +82,17 @@ func Load() (*Config, error) {
 
 	origins := getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:5173")
 	cfg.CORSAllowedOrigins = strings.Split(origins, ",")
+
+	// Parse Google Client IDs (comma-separated: iOS,Android,Web)
+	googleIDs := os.Getenv("GOOGLE_CLIENT_IDS")
+	if googleIDs != "" {
+		for _, id := range strings.Split(googleIDs, ",") {
+			id = strings.TrimSpace(id)
+			if id != "" {
+				cfg.GoogleClientIDs = append(cfg.GoogleClientIDs, id)
+			}
+		}
+	}
 
 	return cfg, nil
 }

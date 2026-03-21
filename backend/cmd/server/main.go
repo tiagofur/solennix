@@ -79,7 +79,7 @@ func main() {
 	// Initialize handlers
 	stripeService := &handlers.DefaultStripeService{}
 	rcService := services.NewRevenueCatService(cfg.RevenueCatAPIKey)
-	authHandler := handlers.NewAuthHandler(userRepo, authService, emailService)
+	authHandler := handlers.NewAuthHandler(userRepo, authService, emailService, cfg)
 	crudHandler := handlers.NewCRUDHandler(clientRepo, eventRepo, productRepo, inventoryRepo, paymentRepo, userRepo, unavailRepo)
 	subHandler := handlers.NewSubscriptionHandler(userRepo, subscriptionRepo, eventRepo, paymentRepo, stripeService, rcService, cfg)
 	searchHandler := handlers.NewSearchHandler(clientRepo, productRepo, inventoryRepo, eventRepo)

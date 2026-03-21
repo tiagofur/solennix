@@ -12,6 +12,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/tiagofur/solennix-backend/internal/database"
+	"github.com/tiagofur/solennix-backend/internal/config"
 	"github.com/tiagofur/solennix-backend/internal/handlers"
 	"github.com/tiagofur/solennix-backend/internal/repository"
 	"github.com/tiagofur/solennix-backend/internal/services"
@@ -24,7 +25,7 @@ func TestAPIIntegrationCoreFlows(t *testing.T) {
 
 	authService := services.NewAuthService("test-secret", 24)
 	userRepo := repository.NewUserRepo(pool)
-	authHandler := handlers.NewAuthHandler(userRepo, authService, nil)
+	authHandler := handlers.NewAuthHandler(userRepo, authService, nil, &config.Config{})
 	crudHandler := handlers.NewCRUDHandler(
 		repository.NewClientRepo(pool),
 		repository.NewEventRepo(pool),
@@ -172,7 +173,7 @@ func TestAPIContractMatrixAuthenticatedValidationErrors(t *testing.T) {
 
 	authService := services.NewAuthService("test-secret", 24)
 	userRepo := repository.NewUserRepo(pool)
-	authHandler := handlers.NewAuthHandler(userRepo, authService, nil)
+	authHandler := handlers.NewAuthHandler(userRepo, authService, nil, &config.Config{})
 	crudHandler := handlers.NewCRUDHandler(
 		repository.NewClientRepo(pool),
 		repository.NewEventRepo(pool),
@@ -295,7 +296,7 @@ func TestAPIContractMatrixSuccessShapes(t *testing.T) {
 
 	authService := services.NewAuthService("test-secret", 24)
 	userRepo := repository.NewUserRepo(pool)
-	authHandler := handlers.NewAuthHandler(userRepo, authService, nil)
+	authHandler := handlers.NewAuthHandler(userRepo, authService, nil, &config.Config{})
 	crudHandler := handlers.NewCRUDHandler(
 		repository.NewClientRepo(pool),
 		repository.NewEventRepo(pool),
@@ -602,7 +603,7 @@ func TestGoldenContractsV1(t *testing.T) {
 
 	authService := services.NewAuthService("test-secret", 24)
 	userRepo := repository.NewUserRepo(pool)
-	authHandler := handlers.NewAuthHandler(userRepo, authService, nil)
+	authHandler := handlers.NewAuthHandler(userRepo, authService, nil, &config.Config{})
 	crudHandler := handlers.NewCRUDHandler(
 		repository.NewClientRepo(pool),
 		repository.NewEventRepo(pool),

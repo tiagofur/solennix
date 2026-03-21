@@ -219,7 +219,7 @@ func TestAuthHandlerErrorBranchesWithClosedRepo(t *testing.T) {
 }
 
 func TestNewAuthHandler(t *testing.T) {
-	h := NewAuthHandler(nil, nil, nil)
+	h := NewAuthHandler(nil, nil, nil, nil)
 	if h == nil {
 		t.Fatal("NewAuthHandler returned nil")
 	}

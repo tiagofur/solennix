@@ -2,15 +2,20 @@ package handlers
 
 import (
 	"context"
+	"crypto/rsa"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"math/big"
 	"net/http"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/tiagofur/solennix-backend/internal/config"
 	"github.com/tiagofur/solennix-backend/internal/middleware"
 	"github.com/tiagofur/solennix-backend/internal/models"
 	"github.com/tiagofur/solennix-backend/internal/services"
@@ -22,13 +27,15 @@ type AuthHandler struct {
 	userRepo     FullUserRepository
 	authService  *services.AuthService
 	emailService *services.EmailService
+	cfg          *config.Config
 }
 
-func NewAuthHandler(userRepo FullUserRepository, authService *services.AuthService, emailService *services.EmailService) *AuthHandler {
+func NewAuthHandler(userRepo FullUserRepository, authService *services.AuthService, emailService *services.EmailService, cfg *config.Config) *AuthHandler {
 	return &AuthHandler{
 		userRepo:     userRepo,
 		authService:  authService,
 		emailService: emailService,
+		cfg:          cfg,
 	}
 }
 
@@ -491,7 +498,7 @@ func (h *AuthHandler) GoogleSignIn(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validate Google ID token
-	claims, err := validateGoogleIDToken(r.Context(), req.IDToken)
+	claims, err := validateGoogleIDToken(r.Context(), req.IDToken, h.cfg.GoogleClientIDs)
 	if err != nil {
 		slog.Warn("Invalid Google ID token", "error", err)
 		writeError(w, http.StatusUnauthorized, "Invalid Google ID token")
@@ -580,8 +587,10 @@ type GoogleIDTokenClaims struct {
 	Name    string `json:"name"`
 }
 
-// validateGoogleIDToken validates a Google ID token and returns the claims
-func validateGoogleIDToken(ctx context.Context, idToken string) (*GoogleIDTokenClaims, error) {
+// validateGoogleIDToken validates a Google ID token and returns the claims.
+// allowedClientIDs are the Google OAuth client IDs for this app (iOS, Android, Web).
+// If empty, audience verification is skipped (development mode).
+func validateGoogleIDToken(ctx context.Context, idToken string, allowedClientIDs []string) (*GoogleIDTokenClaims, error) {
 	// Call Google's tokeninfo endpoint to validate the token
 	url := fmt.Sprintf("https://oauth2.googleapis.com/tokeninfo?id_token=%s", idToken)
 
@@ -625,6 +634,22 @@ func validateGoogleIDToken(ctx context.Context, idToken string) (*GoogleIDTokenC
 		return nil, fmt.Errorf("invalid token issuer")
 	}
 
+	// Verify audience (client ID) — prevents tokens from other apps being accepted
+	if len(allowedClientIDs) > 0 {
+		audValid := false
+		for _, allowed := range allowedClientIDs {
+			if result.Aud == allowed {
+				audValid = true
+				break
+			}
+		}
+		if !audValid {
+			return nil, fmt.Errorf("invalid token audience: %s", result.Aud)
+		}
+	} else {
+		slog.Warn("Google Client IDs not configured — skipping audience verification (set GOOGLE_CLIENT_IDS in production)")
+	}
+
 	return &GoogleIDTokenClaims{
 		Subject: result.Sub,
 		Email:   result.Email,
@@ -652,7 +677,7 @@ func (h *AuthHandler) AppleSignIn(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validate Apple identity token
-	claims, err := validateAppleIDToken(req.IdentityToken)
+	claims, err := validateAppleIDToken(req.IdentityToken, h.cfg.AppleBundleID)
 	if err != nil {
 		slog.Warn("Invalid Apple identity token", "error", err)
 		writeError(w, http.StatusUnauthorized, "Invalid Apple identity token")
@@ -754,54 +779,186 @@ type AppleIDTokenClaims struct {
 	Email   string `json:"email"`
 }
 
-// validateAppleIDToken validates an Apple identity token by decoding its JWT claims
-func validateAppleIDToken(identityToken string) (*AppleIDTokenClaims, error) {
-	// Decode the JWT to get claims
+// appleJWKS caches Apple's public keys for JWT signature verification
+var (
+	appleJWKSCache    []appleJWK
+	appleJWKSCacheMu  sync.RWMutex
+	appleJWKSCachedAt time.Time
+	appleJWKSCacheTTL = 24 * time.Hour
+)
+
+type appleJWK struct {
+	Kty string `json:"kty"`
+	Kid string `json:"kid"`
+	Use string `json:"use"`
+	Alg string `json:"alg"`
+	N   string `json:"n"`
+	E   string `json:"e"`
+}
+
+type appleJWKSResponse struct {
+	Keys []appleJWK `json:"keys"`
+}
+
+// fetchApplePublicKeys fetches Apple's JWKS (with caching)
+func fetchApplePublicKeys() ([]appleJWK, error) {
+	appleJWKSCacheMu.RLock()
+	if len(appleJWKSCache) > 0 && time.Since(appleJWKSCachedAt) < appleJWKSCacheTTL {
+		keys := appleJWKSCache
+		appleJWKSCacheMu.RUnlock()
+		return keys, nil
+	}
+	appleJWKSCacheMu.RUnlock()
+
+	appleJWKSCacheMu.Lock()
+	defer appleJWKSCacheMu.Unlock()
+
+	// Double-check after acquiring write lock
+	if len(appleJWKSCache) > 0 && time.Since(appleJWKSCachedAt) < appleJWKSCacheTTL {
+		return appleJWKSCache, nil
+	}
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Get("https://appleid.apple.com/auth/keys")
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch Apple JWKS: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("Apple JWKS endpoint returned status %d", resp.StatusCode)
+	}
+
+	var jwks appleJWKSResponse
+	if err := json.NewDecoder(resp.Body).Decode(&jwks); err != nil {
+		return nil, fmt.Errorf("failed to decode Apple JWKS: %w", err)
+	}
+
+	appleJWKSCache = jwks.Keys
+	appleJWKSCachedAt = time.Now()
+	return jwks.Keys, nil
+}
+
+// jwkToRSAPublicKey converts a JWK to an *rsa.PublicKey
+func jwkToRSAPublicKey(jwk appleJWK) (*rsa.PublicKey, error) {
+	nBytes, err := base64.RawURLEncoding.DecodeString(jwk.N)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode modulus: %w", err)
+	}
+
+	eBytes, err := base64.RawURLEncoding.DecodeString(jwk.E)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode exponent: %w", err)
+	}
+
+	n := new(big.Int).SetBytes(nBytes)
+	e := 0
+	for _, b := range eBytes {
+		e = e<<8 + int(b)
+	}
+
+	return &rsa.PublicKey{N: n, E: e}, nil
+}
+
+// validateAppleIDToken validates an Apple identity token by verifying its JWT
+// signature against Apple's public keys and checking standard claims.
+// appleBundleID is used for audience verification; if empty, aud check is skipped (dev mode).
+func validateAppleIDToken(identityToken string, appleBundleID string) (*AppleIDTokenClaims, error) {
+	// Fetch Apple's public keys
+	keys, err := fetchApplePublicKeys()
+	if err != nil {
+		// Fallback: if we can't fetch keys, log error but still try to decode claims
+		// This prevents outages if Apple's JWKS endpoint is temporarily down
+		slog.Error("Failed to fetch Apple JWKS, falling back to unverified decode", "error", err)
+		return validateAppleIDTokenFallback(identityToken, appleBundleID)
+	}
+
+	// Parse the JWT header to find the kid
+	parser := jwt.NewParser(
+		jwt.WithValidMethods([]string{"RS256"}),
+		jwt.WithIssuer("https://appleid.apple.com"),
+	)
+
+	// Add audience verification if configured
+	if appleBundleID != "" {
+		parser = jwt.NewParser(
+			jwt.WithValidMethods([]string{"RS256"}),
+			jwt.WithIssuer("https://appleid.apple.com"),
+			jwt.WithAudience(appleBundleID),
+		)
+	} else {
+		slog.Warn("Apple Bundle ID not configured — skipping audience verification (set APPLE_BUNDLE_ID in production)")
+	}
+
+	var appleClaims struct {
+		jwt.RegisteredClaims
+		Email         string `json:"email"`
+		EmailVerified any    `json:"email_verified"`
+	}
+
+	token, err := parser.ParseWithClaims(identityToken, &appleClaims, func(token *jwt.Token) (interface{}, error) {
+		kid, ok := token.Header["kid"].(string)
+		if !ok {
+			return nil, fmt.Errorf("missing kid in token header")
+		}
+
+		for _, key := range keys {
+			if key.Kid == kid {
+				return jwkToRSAPublicKey(key)
+			}
+		}
+		return nil, fmt.Errorf("no matching key found for kid: %s", kid)
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("token verification failed: %w", err)
+	}
+
+	if !token.Valid {
+		return nil, fmt.Errorf("invalid token")
+	}
+
+	return &AppleIDTokenClaims{
+		Subject: appleClaims.Subject,
+		Email:   appleClaims.Email,
+	}, nil
+}
+
+// validateAppleIDTokenFallback decodes Apple JWT claims without signature verification.
+// Used only when Apple's JWKS endpoint is unreachable.
+func validateAppleIDTokenFallback(identityToken string, appleBundleID string) (*AppleIDTokenClaims, error) {
 	parts := strings.Split(identityToken, ".")
 	if len(parts) != 3 {
 		return nil, fmt.Errorf("invalid token format")
 	}
 
-	// Decode payload (second part) using URL-safe base64
-	payload := parts[1]
-	// Add padding if needed
-	switch len(payload) % 4 {
-	case 2:
-		payload += "=="
-	case 3:
-		payload += "="
-	}
-
-	decoded, err := base64.URLEncoding.DecodeString(payload)
+	decoded, err := base64.RawURLEncoding.DecodeString(parts[1])
 	if err != nil {
-		// Try with RawURLEncoding (no padding)
-		decoded, err = base64.RawURLEncoding.DecodeString(parts[1])
-		if err != nil {
-			return nil, fmt.Errorf("failed to decode payload: %w", err)
-		}
+		return nil, fmt.Errorf("failed to decode payload: %w", err)
 	}
 
 	var claims struct {
-		Iss           string `json:"iss"`
-		Sub           string `json:"sub"`
-		Aud           string `json:"aud"`
-		Exp           int64  `json:"exp"`
-		Email         string `json:"email"`
-		EmailVerified any    `json:"email_verified"` // Can be bool or string
+		Iss   string `json:"iss"`
+		Sub   string `json:"sub"`
+		Aud   string `json:"aud"`
+		Exp   int64  `json:"exp"`
+		Email string `json:"email"`
 	}
 
 	if err := json.Unmarshal(decoded, &claims); err != nil {
 		return nil, fmt.Errorf("failed to parse claims: %w", err)
 	}
 
-	// Verify issuer
 	if claims.Iss != "https://appleid.apple.com" {
 		return nil, fmt.Errorf("invalid token issuer: %s", claims.Iss)
 	}
 
-	// Verify expiration
 	if time.Now().Unix() > claims.Exp {
 		return nil, fmt.Errorf("token expired")
+	}
+
+	if appleBundleID != "" && claims.Aud != appleBundleID {
+		return nil, fmt.Errorf("invalid token audience: %s", claims.Aud)
 	}
 
 	return &AppleIDTokenClaims{

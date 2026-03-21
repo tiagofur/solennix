@@ -35,7 +35,7 @@ func TestAuthHandlerIntegration(t *testing.T) {
 		FrontendURL:     "http://localhost:5173",
 	}
 	emailService := services.NewEmailService(testCfg)
-	h := NewAuthHandler(userRepo, authService, emailService)
+	h := NewAuthHandler(userRepo, authService, emailService, nil)
 
 	status, body := performHandlerJSONRequest(t, http.MethodPost, "/api/auth/register", map[string]interface{}{
 		"email":    "handlers.auth@test.dev",
