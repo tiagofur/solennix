@@ -21,6 +21,7 @@ public struct ClientListView: View {
     public var body: some View {
         content
         .navigationTitle("Clientes")
+        .navigationBarTitleDisplayMode(.inline)
         .searchable(text: $viewModel.searchText, prompt: "Buscar clientes...")
         .refreshable { await viewModel.loadClients() }
         .toolbar {
