@@ -57,13 +57,17 @@ struct SolennixApp: App {
         let limits = PlanLimitsManager(apiClient: client)
         limits.setAuthManager(auth)
 
+        let subManager = SubscriptionManager()
+        subManager.configure(apiKey: "appl_YOUR_API_KEY") // TODO: Replace with RevenueCat iOS public API key
+
         _authManager = State(initialValue: auth)
         _planLimitsManager = State(initialValue: limits)
+        _subscriptionManager = State(initialValue: subManager)
         self.apiClient = client
-        
+
         // Configure TipKit for Onboarding
         TipsHelper.configure()
-        
+
         // Configure Sentry
         SentryHelper.configure()
 
@@ -98,12 +102,21 @@ struct SolennixApp: App {
                     // Ensure auth manager is set on the actor before checking auth
                     await apiClient.setAuthManager(authManager)
                     await authManager.checkAuth()
+
+                    // Login to RevenueCat with user ID so entitlements are synced
+                    if let user = authManager.currentUser {
+                        await subscriptionManager.login(userID: user.id)
+                        // If backend says pro but RC doesn't know yet (web purchase),
+                        // force premium status locally
+                        if user.plan != .basic {
+                            subscriptionManager.setBackendPremiumStatus(true)
+                        }
+                    }
                 }
                 .task {
-                    // Iniciar escucha de transacciones de StoreKit
-                    subscriptionManager.startTransactionListener()
-                    await subscriptionManager.loadProducts()
-                    await subscriptionManager.updateSubscriptionStatus()
+                    // Load RevenueCat offerings (products with prices)
+                    await subscriptionManager.loadOfferings()
+                    await subscriptionManager.checkEntitlementStatus()
                 }
                 .onContinueUserActivity(CSSearchableItemActionType) { userActivity in
                     // Manejar resultado de búsqueda de Core Spotlight

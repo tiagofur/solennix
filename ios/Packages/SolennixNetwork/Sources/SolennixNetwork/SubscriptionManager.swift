@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import RevenueCat
 import StoreKit
 import UIKit
 
@@ -34,36 +35,32 @@ public enum SubscriptionError: LocalizedError, Sendable {
 
 // MARK: - Subscription Manager
 
-/// Administra las suscripciones de la app usando StoreKit 2.
+/// Administra las suscripciones de la app usando RevenueCat.
 ///
-/// Carga productos, maneja compras, verifica transacciones y
-/// escucha actualizaciones de transacciones en segundo plano.
+/// RevenueCat unifica Apple/Google purchases y se sincroniza con el backend
+/// via webhooks. El backend es la fuente de verdad del plan del usuario.
 /// Inyectar via `@Environment(SubscriptionManager.self)`.
 @Observable
 public final class SubscriptionManager {
 
-    // MARK: - Product IDs
+    // MARK: - Constants
 
-    /// Identificadores de productos de StoreKit.
-    public enum ProductID {
-        public static let monthlyPremium = "com.solennix.premium.monthly"
-        public static let yearlyPremium = "com.solennix.premium.yearly"
-
-        static let all: [String] = [monthlyPremium, yearlyPremium]
-    }
+    /// RevenueCat entitlement identifier for pro access.
+    private static let proEntitlementID = "pro_access"
 
     // MARK: - Properties
 
-    /// Productos disponibles cargados de StoreKit.
-    public private(set) var products: [Product] = []
-
-    /// Indica si el usuario tiene una suscripcion premium activa.
+    /// Indica si el usuario tiene una suscripcion premium activa
+    /// (via RevenueCat entitlement o plan del backend).
     public private(set) var isPremium: Bool = false
 
-    /// La suscripcion activa actual, si existe.
-    public private(set) var currentSubscription: Product.SubscriptionInfo.Status?
+    /// Offerings actuales de RevenueCat (contiene packages con precios).
+    public private(set) var currentOffering: RevenueCat.Offering?
 
-    /// Indica si se estan cargando los productos.
+    /// Customer info de RevenueCat.
+    public private(set) var customerInfo: RevenueCat.CustomerInfo?
+
+    /// Indica si se estan cargando los offerings.
     public private(set) var isLoading: Bool = false
 
     /// Indica si se esta procesando una compra.
@@ -72,195 +69,144 @@ public final class SubscriptionManager {
     /// Error mas reciente para mostrar al usuario.
     public var errorMessage: String?
 
-    /// Tarea de escucha de actualizaciones de transacciones.
-    private var transactionListenerTask: Task<Void, Never>?
+    // MARK: - Computed Properties
+
+    /// Obtiene el package mensual del offering actual.
+    public var monthlyPackage: RevenueCat.Package? {
+        currentOffering?.monthly
+    }
+
+    /// Obtiene el package anual del offering actual.
+    public var yearlyPackage: RevenueCat.Package? {
+        currentOffering?.annual
+    }
 
     // MARK: - Init
 
     public init() {}
 
-    deinit {
-        transactionListenerTask?.cancel()
+    // MARK: - Configure
+
+    /// Configura RevenueCat SDK. Debe llamarse una vez al inicio de la app.
+    public func configure(apiKey: String) {
+        Purchases.logLevel = .warn
+        Purchases.configure(withAPIKey: apiKey)
     }
 
-    // MARK: - Cargar Productos
+    // MARK: - Login / Logout
 
-    /// Carga los productos de suscripcion desde StoreKit.
+    /// Identifica al usuario en RevenueCat usando su UUID del backend.
+    /// Esto sincroniza cualquier receipt existente con el usuario correcto.
     @MainActor
-    public func loadProducts() async {
+    public func login(userID: String) async {
+        do {
+            let (customerInfo, _) = try await Purchases.shared.logIn(userID)
+            self.customerInfo = customerInfo
+            updatePremiumStatus(from: customerInfo)
+
+            // Sync existing purchases from StoreKit (migration from direct StoreKit 2)
+            try? await Purchases.shared.syncPurchases()
+        } catch {
+            // Non-fatal: user can still use the app, premium status from backend
+        }
+    }
+
+    /// Desloguea al usuario de RevenueCat.
+    @MainActor
+    public func logout() async {
+        do {
+            let customerInfo = try await Purchases.shared.logOut()
+            self.customerInfo = customerInfo
+            isPremium = false
+        } catch {
+            // Non-fatal
+        }
+    }
+
+    // MARK: - Load Offerings
+
+    /// Carga los offerings (productos con precios) desde RevenueCat.
+    @MainActor
+    public func loadOfferings() async {
         isLoading = true
         defer { isLoading = false }
 
         do {
-            let storeProducts = try await Product.products(for: ProductID.all)
-            // Ordenar: mensual primero, anual despues
-            products = storeProducts.sorted { product1, _ in
-                product1.id == ProductID.monthlyPremium
-            }
+            let offerings = try await Purchases.shared.offerings()
+            currentOffering = offerings.current
         } catch {
             errorMessage = "No se pudieron cargar los planes. Verifica tu conexion e intenta de nuevo."
         }
     }
 
-    // MARK: - Comprar Producto
+    // MARK: - Purchase
 
-    /// Inicia la compra de un producto de suscripcion.
-    /// - Parameter product: El producto a comprar.
+    /// Inicia la compra de un package de RevenueCat.
+    /// - Parameter package: El package a comprar (monthly o annual).
     /// - Throws: `SubscriptionError` si la compra falla.
     @MainActor
-    public func purchase(_ product: Product) async throws {
+    public func purchase(_ package: RevenueCat.Package) async throws {
         isPurchasing = true
         defer { isPurchasing = false }
 
         do {
-            let result = try await product.purchase()
+            let result = try await Purchases.shared.purchase(package: package)
 
-            switch result {
-            case .success(let verification):
-                let transaction = try checkVerification(verification)
-                await transaction.finish()
-                await updateSubscriptionStatus()
-                await syncWithRevenueCat()
-
-            case .userCancelled:
+            if result.userCancelled {
                 throw SubscriptionError.userCancelled
-
-            case .pending:
-                throw SubscriptionError.pending
-
-            @unknown default:
-                throw SubscriptionError.unknown
             }
+
+            customerInfo = result.customerInfo
+            updatePremiumStatus(from: result.customerInfo)
+
         } catch let error as SubscriptionError {
             if case .userCancelled = error {
-                // No mostrar error si el usuario cancelo voluntariamente
                 throw error
             }
             errorMessage = error.localizedDescription
             throw error
-        } catch is StoreKit.Product.PurchaseError {
-            let subError = SubscriptionError.purchaseFailed("No se pudo completar la compra.")
-            errorMessage = subError.localizedDescription
-            throw subError
         } catch {
+            if (error as NSError).code == 1 { // User cancelled in RevenueCat
+                throw SubscriptionError.userCancelled
+            }
             let subError = SubscriptionError.purchaseFailed(error.localizedDescription)
             errorMessage = subError.localizedDescription
             throw subError
         }
     }
 
-    // MARK: - Restaurar Compras
+    // MARK: - Restore Purchases
 
-    /// Restaura compras anteriores del usuario.
+    /// Restaura compras anteriores del usuario via RevenueCat.
     @MainActor
     public func restorePurchases() async {
         isLoading = true
         defer { isLoading = false }
 
         do {
-            try await AppStore.sync()
-            await updateSubscriptionStatus()
+            let customerInfo = try await Purchases.shared.restorePurchases()
+            self.customerInfo = customerInfo
+            updatePremiumStatus(from: customerInfo)
         } catch {
             errorMessage = "No se pudieron restaurar las compras. Intenta de nuevo."
         }
     }
 
-    // MARK: - Verificar Estado de Suscripcion
+    // MARK: - Check Entitlement Status
 
-    /// Actualiza el estado de suscripcion verificando los entitlements actuales.
+    /// Actualiza el estado de suscripcion consultando RevenueCat.
     @MainActor
-    public func updateSubscriptionStatus() async {
-        var hasActiveSubscription = false
-
-        for productID in ProductID.all {
-            guard let result = await Transaction.currentEntitlement(for: productID) else {
-                continue
-            }
-
-            if let transaction = try? checkVerification(result) {
-                // Verificar que la suscripcion no haya expirado
-                if let expirationDate = transaction.expirationDate,
-                   expirationDate > Date() {
-                    hasActiveSubscription = true
-                    break
-                } else if transaction.expirationDate == nil {
-                    // Transacciones sin fecha de expiracion (lifetime)
-                    hasActiveSubscription = true
-                    break
-                }
-            }
-        }
-
-        isPremium = hasActiveSubscription
-    }
-
-    // MARK: - Escuchar Actualizaciones de Transacciones
-
-    /// Inicia la escucha de actualizaciones de transacciones en segundo plano.
-    ///
-    /// Debe llamarse al inicio de la app para detectar renovaciones,
-    /// cancelaciones y compras realizadas en otros dispositivos.
-    public func startTransactionListener() {
-        transactionListenerTask?.cancel()
-        transactionListenerTask = Task(priority: .background) { [weak self] in
-            for await result in Transaction.updates {
-                guard let self else { return }
-                if let transaction = try? self.checkVerification(result) {
-                    await transaction.finish()
-                    await MainActor.run {
-                        Task {
-                            await self.updateSubscriptionStatus()
-                        }
-                    }
-                }
-            }
+    public func checkEntitlementStatus() async {
+        do {
+            let customerInfo = try await Purchases.shared.customerInfo()
+            self.customerInfo = customerInfo
+            updatePremiumStatus(from: customerInfo)
+        } catch {
+            // Non-fatal: rely on backend plan status
         }
     }
 
-    // MARK: - Sincronizacion con RevenueCat
-
-    /// Sincroniza el recibo de la App Store con el backend (RevenueCat).
-    ///
-    /// - Note: Placeholder para integracion futura con RevenueCat.
-    ///   Cuando se implemente, debe enviar el recibo al backend para
-    ///   validacion server-side y actualizacion del plan del usuario.
-    @MainActor
-    public func syncWithRevenueCat() async {
-        // TODO: Implementar sincronizacion con RevenueCat
-        // 1. Obtener el recibo de la App Store
-        // 2. Enviar al backend via APIClient: POST /subscriptions/verify-receipt
-        // 3. Actualizar el plan del usuario en el backend
-        // 4. Refrescar el estado local del usuario
-    }
-
-    // MARK: - Helpers
-
-    /// Verifica la firma criptografica de una transaccion de StoreKit.
-    /// - Parameter result: El resultado de verificacion de StoreKit.
-    /// - Returns: La transaccion verificada.
-    /// - Throws: `SubscriptionError.verificationFailed` si la verificacion falla.
-    private func checkVerification<T>(_ result: VerificationResult<T>) throws -> T {
-        switch result {
-        case .unverified:
-            throw SubscriptionError.verificationFailed
-        case .verified(let safe):
-            return safe
-        }
-    }
-
-    // MARK: - Producto por ID
-
-    /// Obtiene el producto mensual, si esta disponible.
-    public var monthlyProduct: Product? {
-        products.first { $0.id == ProductID.monthlyPremium }
-    }
-
-    /// Obtiene el producto anual, si esta disponible.
-    public var yearlyProduct: Product? {
-        products.first { $0.id == ProductID.yearlyPremium }
-    }
-
-    // MARK: - Administrar Suscripcion
+    // MARK: - Manage Subscription
 
     /// Abre la pagina de administracion de suscripciones del App Store.
     @MainActor
@@ -273,6 +219,23 @@ public final class SubscriptionManager {
             try await AppStore.showManageSubscriptions(in: windowScene)
         } catch {
             errorMessage = "No se pudo abrir la administracion de suscripciones."
+        }
+    }
+
+    // MARK: - Helpers
+
+    /// Actualiza `isPremium` basado en el CustomerInfo de RevenueCat.
+    private func updatePremiumStatus(from customerInfo: RevenueCat.CustomerInfo) {
+        isPremium = customerInfo.entitlements[Self.proEntitlementID]?.isActive == true
+    }
+
+    /// Permite al parent (que conoce user.plan del backend) forzar premium status.
+    /// Usado cuando el backend confirma pro pero RevenueCat aun no lo refleja
+    /// (ej. compra via Stripe web).
+    @MainActor
+    public func setBackendPremiumStatus(_ isPro: Bool) {
+        if isPro && !isPremium {
+            isPremium = true
         }
     }
 }

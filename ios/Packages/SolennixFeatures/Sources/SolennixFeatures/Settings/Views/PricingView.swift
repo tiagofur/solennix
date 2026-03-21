@@ -2,7 +2,7 @@ import SwiftUI
 import SolennixCore
 import SolennixDesign
 import SolennixNetwork
-import StoreKit
+import RevenueCat
 
 // MARK: - Pricing View
 
@@ -50,8 +50,8 @@ public struct PricingView: View {
             if let user = viewModel.user {
                 selectedPlan = user.plan
             }
-            await subscriptionManager.loadProducts()
-            await subscriptionManager.updateSubscriptionStatus()
+            await subscriptionManager.loadOfferings()
+            await subscriptionManager.checkEntitlementStatus()
         }
         .alert("Error", isPresented: $showError) {
             Button("Aceptar", role: .cancel) {}
@@ -132,7 +132,7 @@ public struct PricingView: View {
                     "Soporte prioritario",
                     "Sin marca de agua en PDFs"
                 ],
-                isCurrentPlan: viewModel.user?.plan == .premium || subscriptionManager.isPremium,
+                isCurrentPlan: viewModel.user?.plan == .premium || viewModel.user?.plan == .pro || subscriptionManager.isPremium,
                 isRecommended: true
             )
         }
@@ -140,10 +140,10 @@ public struct PricingView: View {
 
     // MARK: - Formatted Premium Price
 
-    /// Muestra el precio del producto mensual de StoreKit, o el precio por defecto.
+    /// Muestra el precio del package mensual de RevenueCat, o el precio por defecto.
     private var formattedPremiumPrice: String {
-        if let monthly = subscriptionManager.monthlyProduct {
-            return "\(monthly.displayPrice)/mes"
+        if let monthly = subscriptionManager.monthlyPackage {
+            return "\(monthly.storeProduct.localizedPriceString)/mes"
         }
         return "$199 MXN/mes"
     }
@@ -184,8 +184,8 @@ public struct PricingView: View {
                         .foregroundStyle(SolennixColors.primary)
 
                     // Mostrar precio anual si esta disponible
-                    if plan == .premium, let yearly = subscriptionManager.yearlyProduct {
-                        Text("\(yearly.displayPrice)/ano")
+                    if plan == .premium, let yearly = subscriptionManager.yearlyPackage {
+                        Text("\(yearly.storeProduct.localizedPriceString)/ano")
                             .font(.caption)
                             .foregroundStyle(SolennixColors.textSecondary)
                     }
@@ -240,7 +240,7 @@ public struct PricingView: View {
     private var purchaseButtonsSection: some View {
         VStack(spacing: Spacing.sm) {
             // Boton mensual
-            if let monthly = subscriptionManager.monthlyProduct {
+            if let monthly = subscriptionManager.monthlyPackage {
                 Button {
                     Task { await handlePurchase(monthly) }
                 } label: {
@@ -249,7 +249,7 @@ public struct PricingView: View {
                             ProgressView()
                                 .tint(.white)
                         }
-                        Text("Suscribirse Mensual - \(monthly.displayPrice)")
+                        Text("Suscribirse Mensual - \(monthly.storeProduct.localizedPriceString)")
                             .font(.subheadline)
                             .fontWeight(.semibold)
                     }
@@ -264,7 +264,7 @@ public struct PricingView: View {
             }
 
             // Boton anual
-            if let yearly = subscriptionManager.yearlyProduct {
+            if let yearly = subscriptionManager.yearlyPackage {
                 Button {
                     Task { await handlePurchase(yearly) }
                 } label: {
@@ -273,7 +273,7 @@ public struct PricingView: View {
                             ProgressView()
                                 .tint(SolennixColors.primary)
                         }
-                        Text("Suscribirse Anual - \(yearly.displayPrice)")
+                        Text("Suscribirse Anual - \(yearly.storeProduct.localizedPriceString)")
                             .font(.subheadline)
                             .fontWeight(.semibold)
                     }
@@ -287,10 +287,10 @@ public struct PricingView: View {
                 .disabled(subscriptionManager.isPurchasing)
             }
 
-            // Fallback si los productos no se cargaron
-            if subscriptionManager.products.isEmpty && !subscriptionManager.isLoading {
+            // Fallback si los offerings no se cargaron
+            if subscriptionManager.currentOffering == nil && !subscriptionManager.isLoading {
                 Button {
-                    Task { await subscriptionManager.loadProducts() }
+                    Task { await subscriptionManager.loadOfferings() }
                 } label: {
                     Text("Actualizar a Premium")
                         .font(.subheadline)
@@ -352,12 +352,11 @@ public struct PricingView: View {
 
     // MARK: - Handle Purchase
 
-    private func handlePurchase(_ product: StoreKit.Product) async {
+    private func handlePurchase(_ package: RevenueCat.Package) async {
         do {
-            try await subscriptionManager.purchase(product)
+            try await subscriptionManager.purchase(package)
         } catch let error as SubscriptionError {
             if case .userCancelled = error {
-                // No mostrar error si el usuario cancelo voluntariamente
                 return
             }
             purchaseErrorMessage = error.localizedDescription

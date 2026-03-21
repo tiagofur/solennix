@@ -10,10 +10,16 @@ let package = Package(
     dependencies: [
         .package(path: "../SolennixCore"),
         .package(path: "../SolennixNetwork"),
-        .package(path: "../SolennixDesign")
+        .package(path: "../SolennixDesign"),
+        .package(url: "https://github.com/RevenueCat/purchases-ios-spm.git", from: "5.0.0"),
     ],
     targets: [
         .target(name: "SolennixFeatures",
-                dependencies: ["SolennixCore", "SolennixNetwork", "SolennixDesign"])
+                dependencies: [
+                    "SolennixCore",
+                    "SolennixNetwork",
+                    "SolennixDesign",
+                    .product(name: "RevenueCat", package: "purchases-ios-spm"),
+                ])
     ]
 )
