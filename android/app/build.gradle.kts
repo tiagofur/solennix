@@ -76,6 +76,9 @@ dependencies {
     implementation(libs.lifecycle.runtime.compose)
     implementation(libs.navigation.compose)
 
+    // RevenueCat
+    implementation(libs.revenuecat)
+
     // WorkManager for background sync
     implementation(libs.work.runtime)
     implementation(libs.hilt.work)

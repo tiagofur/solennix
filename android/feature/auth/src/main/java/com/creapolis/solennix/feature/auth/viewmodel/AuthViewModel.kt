@@ -12,6 +12,7 @@ import com.creapolis.solennix.core.model.extensions.isValidEmail
 import com.creapolis.solennix.core.network.ApiService
 import com.creapolis.solennix.core.network.AuthManager
 import com.creapolis.solennix.core.network.Endpoints
+import com.revenuecat.purchases.Purchases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -63,6 +64,12 @@ class AuthViewModel @Inject constructor(
                 )
                 authManager.storeTokens(response.accessToken, response.refreshToken)
                 authManager.storeUser(response.user)
+                // Sync RevenueCat user identity for cross-platform subscription recognition
+                Purchases.sharedInstance.logInWith(
+                    appUserID = response.user.id,
+                    onError = { /* non-fatal */ },
+                    onSuccess = { _, _ -> }
+                )
                 _loginSuccess.tryEmit(Unit)
             } catch (e: Exception) {
                 errorMessage = when {
@@ -102,6 +109,7 @@ class AuthViewModel @Inject constructor(
                 )
                 authManager.storeTokens(response.accessToken, response.refreshToken)
                 authManager.storeUser(response.user)
+                // TODO: Call Purchases.sharedInstance.logInWith(response.user.id) for RevenueCat.
                 _loginSuccess.tryEmit(Unit)
             } catch (e: Exception) {
                 errorMessage = "Error al crear la cuenta. Intenta de nuevo."
@@ -167,6 +175,7 @@ class AuthViewModel @Inject constructor(
                 )
                 authManager.storeTokens(response.accessToken, response.refreshToken)
                 authManager.storeUser(response.user)
+                // TODO: Call Purchases.sharedInstance.logInWith(response.user.id) for RevenueCat.
                 _loginSuccess.tryEmit(Unit)
             } catch (e: Exception) {
                 errorMessage = "Error al iniciar sesion con Google"

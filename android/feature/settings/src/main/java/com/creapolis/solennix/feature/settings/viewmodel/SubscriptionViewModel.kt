@@ -3,12 +3,11 @@ package com.creapolis.solennix.feature.settings.viewmodel
 import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.android.billingclient.api.ProductDetails
+import com.revenuecat.purchases.Package
 import com.creapolis.solennix.core.network.AuthManager
 import com.creapolis.solennix.feature.settings.billing.BillingManager
 import com.creapolis.solennix.feature.settings.billing.BillingState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -17,9 +16,9 @@ import javax.inject.Inject
 
 data class SubscriptionUiState(
     val billingState: BillingState = BillingState.NotReady,
-    val proProducts: List<ProductDetails> = emptyList(),
-    val premiumProducts: List<ProductDetails> = emptyList(),
-    val currentPlanName: String = "Básico",
+    val proPackages: List<Package> = emptyList(),
+    val premiumPackages: List<Package> = emptyList(),
+    val currentPlanName: String = "Basico",
     val hasActiveSubscription: Boolean = false,
     val isLoading: Boolean = false
 )
@@ -32,28 +31,31 @@ class SubscriptionViewModel @Inject constructor(
 
     val uiState: StateFlow<SubscriptionUiState> = combine(
         billingManager.billingState,
-        billingManager.products,
-        billingManager.currentSubscription,
+        billingManager.packages,
+        billingManager.customerInfo,
         authManager.currentUser
-    ) { billingState, products, subscription, user ->
-        val proProducts = products.filter {
-            it.productId.contains("pro")
+    ) { billingState, packages, customerInfo, user ->
+        val proPackages = packages.filter {
+            it.identifier.contains("pro", ignoreCase = true)
         }
-        val premiumProducts = products.filter {
-            it.productId.contains("premium")
+        val premiumPackages = packages.filter {
+            it.identifier.contains("premium", ignoreCase = true)
         }
 
-        val hasSubscription = subscription != null
+        val hasPremium = billingManager.hasPremiumAccess()
+        val hasPro = billingManager.hasProAccess()
+        val hasSubscription = hasPro || hasPremium
+
         val currentPlan = when {
-            subscription?.products?.any { it.contains("premium") } == true -> "Premium"
-            subscription?.products?.any { it.contains("pro") } == true -> "Pro"
-            else -> user?.plan?.name?.replaceFirstChar { it.uppercase() } ?: "Básico"
+            hasPremium -> "Premium"
+            hasPro -> "Pro"
+            else -> user?.plan?.name?.replaceFirstChar { it.uppercase() } ?: "Basico"
         }
 
         SubscriptionUiState(
             billingState = billingState,
-            proProducts = proProducts,
-            premiumProducts = premiumProducts,
+            proPackages = proPackages,
+            premiumPackages = premiumPackages,
             currentPlanName = currentPlan,
             hasActiveSubscription = hasSubscription
         )
@@ -67,16 +69,8 @@ class SubscriptionViewModel @Inject constructor(
         billingManager.initialize()
     }
 
-    fun launchPurchase(activity: Activity, productDetails: ProductDetails) {
-        billingManager.launchPurchaseFlow(activity, productDetails)
-    }
-
-    fun getFormattedPrice(productDetails: ProductDetails): String {
-        return billingManager.getFormattedPrice(productDetails)
-    }
-
-    fun hasActiveSubscription(productId: String): Boolean {
-        return billingManager.hasActiveSubscription(productId)
+    fun launchPurchase(activity: Activity, rcPackage: Package) {
+        billingManager.purchase(activity, rcPackage)
     }
 
     override fun onCleared() {

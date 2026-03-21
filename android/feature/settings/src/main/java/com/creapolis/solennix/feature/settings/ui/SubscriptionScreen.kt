@@ -1,7 +1,6 @@
 package com.creapolis.solennix.feature.settings.ui
 
 import android.app.Activity
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -15,17 +14,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.android.billingclient.api.ProductDetails
+import com.revenuecat.purchases.Package
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
-import com.creapolis.solennix.feature.settings.billing.BillingManager
 import com.creapolis.solennix.feature.settings.billing.BillingState
 import com.creapolis.solennix.feature.settings.viewmodel.SubscriptionViewModel
 
@@ -46,10 +41,10 @@ fun SubscriptionScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Planes y Suscripción") },
+                title = { Text("Planes y Suscripcion") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atras")
                     }
                 }
             )
@@ -121,14 +116,14 @@ fun SubscriptionScreen(
             // Basic Plan (Free)
             item {
                 PlanCard(
-                    planName = "Básico",
+                    planName = "Basico",
                     price = "Gratis",
                     period = "",
                     features = listOf(
                         PlanFeature("3 eventos por mes", true),
                         PlanFeature("50 clientes", true),
                         PlanFeature("20 productos", true),
-                        PlanFeature("Reportes básicos", true),
+                        PlanFeature("Reportes basicos", true),
                         PlanFeature("Marca personalizada", false),
                         PlanFeature("Soporte prioritario", false)
                     ),
@@ -138,14 +133,15 @@ fun SubscriptionScreen(
                 )
             }
 
-            // Pro Plans
-            items(uiState.proProducts) { product ->
-                val price = viewModel.getFormattedPrice(product)
-                val isYearly = product.productId.contains("yearly")
+            // Pro Packages
+            items(uiState.proPackages) { rcPackage ->
+                val price = rcPackage.product.price.formatted
+                val isYearly = rcPackage.identifier.contains("annual", ignoreCase = true) ||
+                        rcPackage.identifier.contains("yearly", ignoreCase = true)
                 PlanCard(
                     planName = "Pro",
                     price = price,
-                    period = if (isYearly) "/año" else "/mes",
+                    period = if (isYearly) "/ano" else "/mes",
                     features = listOf(
                         PlanFeature("20 eventos por mes", true),
                         PlanFeature("500 clientes", true),
@@ -154,23 +150,24 @@ fun SubscriptionScreen(
                         PlanFeature("Marca personalizada", true),
                         PlanFeature("Soporte prioritario", false)
                     ),
-                    isCurrentPlan = viewModel.hasActiveSubscription(product.productId),
+                    isCurrentPlan = uiState.currentPlanName == "Pro",
                     isRecommended = isYearly,
                     savingsText = if (isYearly) "Ahorra 20%" else null,
                     onClick = {
-                        activity?.let { viewModel.launchPurchase(it, product) }
+                        activity?.let { viewModel.launchPurchase(it, rcPackage) }
                     }
                 )
             }
 
-            // Premium Plans
-            items(uiState.premiumProducts) { product ->
-                val price = viewModel.getFormattedPrice(product)
-                val isYearly = product.productId.contains("yearly")
+            // Premium Packages
+            items(uiState.premiumPackages) { rcPackage ->
+                val price = rcPackage.product.price.formatted
+                val isYearly = rcPackage.identifier.contains("annual", ignoreCase = true) ||
+                        rcPackage.identifier.contains("yearly", ignoreCase = true)
                 PlanCard(
                     planName = "Premium",
                     price = price,
-                    period = if (isYearly) "/año" else "/mes",
+                    period = if (isYearly) "/ano" else "/mes",
                     features = listOf(
                         PlanFeature("Eventos ilimitados", true),
                         PlanFeature("Clientes ilimitados", true),
@@ -179,11 +176,11 @@ fun SubscriptionScreen(
                         PlanFeature("Marca personalizada", true),
                         PlanFeature("Soporte prioritario", true)
                     ),
-                    isCurrentPlan = viewModel.hasActiveSubscription(product.productId),
+                    isCurrentPlan = uiState.currentPlanName == "Premium",
                     isRecommended = false,
                     savingsText = if (isYearly) "Ahorra 20%" else null,
                     onClick = {
-                        activity?.let { viewModel.launchPurchase(it, product) }
+                        activity?.let { viewModel.launchPurchase(it, rcPackage) }
                     }
                 )
             }
@@ -201,22 +198,22 @@ fun SubscriptionScreen(
 
             item {
                 FaqItem(
-                    question = "¿Puedo cancelar en cualquier momento?",
-                    answer = "Sí, puedes cancelar tu suscripción cuando quieras desde la configuración de tu cuenta de Google Play."
+                    question = "Puedo cancelar en cualquier momento?",
+                    answer = "Si, puedes cancelar tu suscripcion cuando quieras desde la configuracion de tu cuenta de Google Play."
                 )
             }
 
             item {
                 FaqItem(
-                    question = "¿Qué pasa con mis datos si cancelo?",
-                    answer = "Tus datos se mantienen, pero tendrás acceso limitado según el plan básico."
+                    question = "Que pasa con mis datos si cancelo?",
+                    answer = "Tus datos se mantienen, pero tendras acceso limitado segun el plan basico."
                 )
             }
 
             item {
                 FaqItem(
-                    question = "¿Puedo cambiar de plan?",
-                    answer = "Sí, puedes actualizar o degradar tu plan en cualquier momento."
+                    question = "Puedo cambiar de plan?",
+                    answer = "Si, puedes actualizar o degradar tu plan en cualquier momento."
                 )
             }
 

@@ -1,9 +1,15 @@
 package com.creapolis.solennix.feature.settings.billing
 
 import android.app.Activity
-import android.content.Context
-import com.android.billingclient.api.*
-import dagger.hilt.android.qualifiers.ApplicationContext
+import com.revenuecat.purchases.CustomerInfo
+import com.revenuecat.purchases.Offerings
+import com.revenuecat.purchases.Package
+import com.revenuecat.purchases.Purchases
+import com.revenuecat.purchases.getCustomerInfoWith
+import com.revenuecat.purchases.getOfferingsWith
+import com.revenuecat.purchases.logInWith
+import com.revenuecat.purchases.logOutWith
+import com.revenuecat.purchases.purchaseWith
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -11,217 +17,157 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Manages in-app purchases and subscriptions using Google Play Billing.
+ * Manages in-app purchases and subscriptions using RevenueCat.
  */
 @Singleton
-class BillingManager @Inject constructor(
-    @ApplicationContext private val context: Context
-) : PurchasesUpdatedListener {
+class BillingManager @Inject constructor() {
 
     companion object {
-        // Product IDs - these should match the ones defined in Play Console
-        const val PRODUCT_PRO_MONTHLY = "solennix_pro_monthly"
-        const val PRODUCT_PRO_YEARLY = "solennix_pro_yearly"
-        const val PRODUCT_PREMIUM_MONTHLY = "solennix_premium_monthly"
-        const val PRODUCT_PREMIUM_YEARLY = "solennix_premium_yearly"
-
-        val ALL_PRODUCTS = listOf(
-            PRODUCT_PRO_MONTHLY,
-            PRODUCT_PRO_YEARLY,
-            PRODUCT_PREMIUM_MONTHLY,
-            PRODUCT_PREMIUM_YEARLY
-        )
+        // RevenueCat entitlement identifier
+        const val ENTITLEMENT_PRO = "pro_access"
+        const val ENTITLEMENT_PREMIUM = "premium_access"
     }
-
-    private var billingClient: BillingClient? = null
 
     private val _billingState = MutableStateFlow<BillingState>(BillingState.NotReady)
     val billingState: StateFlow<BillingState> = _billingState.asStateFlow()
 
-    private val _products = MutableStateFlow<List<ProductDetails>>(emptyList())
-    val products: StateFlow<List<ProductDetails>> = _products.asStateFlow()
+    private val _packages = MutableStateFlow<List<Package>>(emptyList())
+    val packages: StateFlow<List<Package>> = _packages.asStateFlow()
 
-    private val _currentSubscription = MutableStateFlow<Purchase?>(null)
-    val currentSubscription: StateFlow<Purchase?> = _currentSubscription.asStateFlow()
+    private val _customerInfo = MutableStateFlow<CustomerInfo?>(null)
+    val customerInfo: StateFlow<CustomerInfo?> = _customerInfo.asStateFlow()
 
     /**
-     * Initialize the billing client.
+     * Initialize by fetching offerings and customer info from RevenueCat.
      */
     fun initialize() {
-        billingClient = BillingClient.newBuilder(context)
-            .setListener(this)
-            .enablePendingPurchases()
-            .build()
+        fetchOfferings()
+        fetchCustomerInfo()
+    }
 
-        billingClient?.startConnection(object : BillingClientStateListener {
-            override fun onBillingSetupFinished(result: BillingResult) {
-                if (result.responseCode == BillingClient.BillingResponseCode.OK) {
-                    _billingState.value = BillingState.Ready
-                    queryProducts()
-                    queryPurchases()
-                } else {
+    /**
+     * Fetch available offerings (products/packages) from RevenueCat.
+     */
+    private fun fetchOfferings() {
+        Purchases.sharedInstance.getOfferingsWith(
+            onError = { error ->
+                _billingState.value = BillingState.Error(
+                    "Error al cargar planes: ${error.message}"
+                )
+            },
+            onSuccess = { offerings ->
+                val allPackages = offerings.current?.availablePackages ?: emptyList()
+                _packages.value = allPackages
+                _billingState.value = BillingState.Ready
+            }
+        )
+    }
+
+    /**
+     * Fetch the current customer info (entitlements, active subscriptions).
+     */
+    private fun fetchCustomerInfo() {
+        Purchases.sharedInstance.getCustomerInfoWith(
+            onError = { error ->
+                // Don't override billing state if offerings already loaded
+                if (_billingState.value is BillingState.NotReady) {
                     _billingState.value = BillingState.Error(
-                        "Billing setup failed: ${result.debugMessage}"
+                        "Error al verificar suscripcion: ${error.message}"
                     )
                 }
+            },
+            onSuccess = { info ->
+                _customerInfo.value = info
             }
-
-            override fun onBillingServiceDisconnected() {
-                _billingState.value = BillingState.NotReady
-            }
-        })
-    }
-
-    /**
-     * Query available products/subscriptions.
-     */
-    private fun queryProducts() {
-        val productList = ALL_PRODUCTS.map { productId ->
-            QueryProductDetailsParams.Product.newBuilder()
-                .setProductId(productId)
-                .setProductType(BillingClient.ProductType.SUBS)
-                .build()
-        }
-
-        val params = QueryProductDetailsParams.newBuilder()
-            .setProductList(productList)
-            .build()
-
-        billingClient?.queryProductDetailsAsync(params) { result, productDetailsList ->
-            if (result.responseCode == BillingClient.BillingResponseCode.OK) {
-                _products.value = productDetailsList
-            }
-        }
-    }
-
-    /**
-     * Query existing purchases/subscriptions.
-     */
-    private fun queryPurchases() {
-        val params = QueryPurchasesParams.newBuilder()
-            .setProductType(BillingClient.ProductType.SUBS)
-            .build()
-
-        billingClient?.queryPurchasesAsync(params) { result, purchases ->
-            if (result.responseCode == BillingClient.BillingResponseCode.OK) {
-                val activePurchase = purchases.firstOrNull { purchase ->
-                    purchase.purchaseState == Purchase.PurchaseState.PURCHASED
-                }
-                _currentSubscription.value = activePurchase
-
-                // Acknowledge any unacknowledged purchases
-                purchases.filter { !it.isAcknowledged }.forEach { purchase ->
-                    acknowledgePurchase(purchase)
-                }
-            }
-        }
-    }
-
-    /**
-     * Launch the purchase flow for a product.
-     */
-    fun launchPurchaseFlow(activity: Activity, productDetails: ProductDetails): BillingResult? {
-        val offerToken = productDetails.subscriptionOfferDetails?.firstOrNull()?.offerToken
-            ?: return null
-
-        val productDetailsParamsList = listOf(
-            BillingFlowParams.ProductDetailsParams.newBuilder()
-                .setProductDetails(productDetails)
-                .setOfferToken(offerToken)
-                .build()
         )
-
-        val billingFlowParams = BillingFlowParams.newBuilder()
-            .setProductDetailsParamsList(productDetailsParamsList)
-            .build()
-
-        return billingClient?.launchBillingFlow(activity, billingFlowParams)
     }
 
     /**
-     * Acknowledge a purchase.
+     * Launch the purchase flow for a RevenueCat package.
      */
-    private fun acknowledgePurchase(purchase: Purchase) {
-        if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED && !purchase.isAcknowledged) {
-            val params = AcknowledgePurchaseParams.newBuilder()
-                .setPurchaseToken(purchase.purchaseToken)
-                .build()
-
-            billingClient?.acknowledgePurchase(params) { result ->
-                if (result.responseCode == BillingClient.BillingResponseCode.OK) {
-                    queryPurchases() // Refresh purchases
+    fun purchase(activity: Activity, rcPackage: Package) {
+        Purchases.sharedInstance.purchaseWith(
+            purchaseParams = com.revenuecat.purchases.PurchaseParams.Builder(activity, rcPackage).build(),
+            onError = { error, userCancelled ->
+                if (!userCancelled) {
+                    _billingState.value = BillingState.Error(
+                        "Error en la compra: ${error.message}"
+                    )
                 }
+            },
+            onSuccess = { _, info ->
+                _customerInfo.value = info
             }
-        }
+        )
     }
 
     /**
-     * Called when a purchase is updated.
+     * Identify the user in RevenueCat after login.
      */
-    override fun onPurchasesUpdated(result: BillingResult, purchases: List<Purchase>?) {
-        when (result.responseCode) {
-            BillingClient.BillingResponseCode.OK -> {
-                purchases?.forEach { purchase ->
-                    if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED) {
-                        acknowledgePurchase(purchase)
-                        _currentSubscription.value = purchase
-                    }
-                }
+    fun login(userId: String) {
+        Purchases.sharedInstance.logInWith(
+            appUserID = userId,
+            onError = { error ->
+                // Log but don't block — purchases still work with anonymous ID
+                android.util.Log.w("BillingManager", "RevenueCat login failed: ${error.message}")
+            },
+            onSuccess = { info, _ ->
+                _customerInfo.value = info
             }
-            BillingClient.BillingResponseCode.USER_CANCELED -> {
-                // User cancelled the purchase
-            }
-            else -> {
-                _billingState.value = BillingState.Error(
-                    "Purchase failed: ${result.debugMessage}"
-                )
-            }
-        }
+        )
     }
 
     /**
-     * Get the formatted price for a product.
+     * Reset RevenueCat user on logout (creates anonymous user).
      */
-    fun getFormattedPrice(productDetails: ProductDetails): String {
-        return productDetails.subscriptionOfferDetails
-            ?.firstOrNull()
-            ?.pricingPhases
-            ?.pricingPhaseList
-            ?.firstOrNull()
-            ?.formattedPrice
-            ?: ""
+    fun logout() {
+        Purchases.sharedInstance.logOutWith(
+            onError = { error ->
+                android.util.Log.w("BillingManager", "RevenueCat logout failed: ${error.message}")
+            },
+            onSuccess = { info ->
+                _customerInfo.value = info
+            }
+        )
     }
 
     /**
-     * Check if user has an active subscription for a specific plan.
+     * Check if user has an active "pro_access" entitlement.
      */
-    fun hasActiveSubscription(productId: String): Boolean {
-        val purchase = _currentSubscription.value ?: return false
-        return purchase.products.contains(productId) &&
-                purchase.purchaseState == Purchase.PurchaseState.PURCHASED
+    fun hasProAccess(): Boolean {
+        return _customerInfo.value
+            ?.entitlements
+            ?.get(ENTITLEMENT_PRO)
+            ?.isActive == true
     }
 
     /**
-     * Check if user has any active Pro or Premium subscription.
+     * Check if user has an active "premium_access" entitlement.
+     */
+    fun hasPremiumAccess(): Boolean {
+        return _customerInfo.value
+            ?.entitlements
+            ?.get(ENTITLEMENT_PREMIUM)
+            ?.isActive == true
+    }
+
+    /**
+     * Check if user has any active paid subscription (Pro or Premium).
      */
     fun hasProOrPremium(): Boolean {
-        return hasActiveSubscription(PRODUCT_PRO_MONTHLY) ||
-                hasActiveSubscription(PRODUCT_PRO_YEARLY) ||
-                hasActiveSubscription(PRODUCT_PREMIUM_MONTHLY) ||
-                hasActiveSubscription(PRODUCT_PREMIUM_YEARLY)
+        return hasProAccess() || hasPremiumAccess()
     }
 
     /**
-     * Clean up billing client.
+     * Clean up — no-op for RevenueCat (SDK manages its own lifecycle).
      */
     fun cleanup() {
-        billingClient?.endConnection()
-        billingClient = null
+        // RevenueCat manages its own connection lifecycle.
     }
 }
 
 /**
- * State of the billing client.
+ * State of the billing system.
  */
 sealed class BillingState {
     data object NotReady : BillingState()

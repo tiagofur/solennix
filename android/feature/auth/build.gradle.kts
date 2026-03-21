@@ -59,4 +59,7 @@ dependencies {
     implementation(libs.credentials)
     implementation(libs.credentials.play)
     implementation(libs.google.id)
+
+    // RevenueCat (for login/logout sync)
+    implementation(libs.revenuecat)
 }
