@@ -48,20 +48,24 @@ public enum AppleSignInError: LocalizedError {
 
 /// Handles the Sign in with Apple authorization flow using the coordinator pattern.
 ///
+/// The class is confined to `@MainActor` because `ASAuthorizationController`
+/// delivers its delegate callbacks on the main thread and the continuation
+/// property must be accessed from a single isolation domain for thread safety.
+///
 /// Usage:
 /// ```swift
 /// let service = AppleSignInService()
 /// let result = try await service.signIn()
 /// // Send result.identityToken and result.authorizationCode to your backend
 /// ```
-public final class AppleSignInService: NSObject, @unchecked Sendable {
+@MainActor
+public final class AppleSignInService: NSObject, Sendable {
 
     private var continuation: CheckedContinuation<AppleSignInResult, Error>?
 
     /// Perform the Sign in with Apple authorization flow.
     /// - Returns: An `AppleSignInResult` containing the identity token, authorization code,
     ///   and optionally the user's name and email.
-    @MainActor
     public func signIn() async throws -> AppleSignInResult {
         try await withCheckedThrowingContinuation { continuation in
             self.continuation = continuation
@@ -80,7 +84,7 @@ public final class AppleSignInService: NSObject, @unchecked Sendable {
 
 // MARK: - ASAuthorizationControllerDelegate
 
-extension AppleSignInService: ASAuthorizationControllerDelegate {
+extension AppleSignInService: @preconcurrency ASAuthorizationControllerDelegate {
 
     public func authorizationController(
         controller: ASAuthorizationController,
@@ -133,7 +137,7 @@ extension AppleSignInService: ASAuthorizationControllerDelegate {
 
 // MARK: - ASAuthorizationControllerPresentationContextProviding
 
-extension AppleSignInService: ASAuthorizationControllerPresentationContextProviding {
+extension AppleSignInService: @preconcurrency ASAuthorizationControllerPresentationContextProviding {
 
     public func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
         // Return the first window scene's key window

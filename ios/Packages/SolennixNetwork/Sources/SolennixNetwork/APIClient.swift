@@ -252,22 +252,30 @@ public actor APIClient {
 
     /// Attempt to refresh the access token. Uses `refreshTask` to coalesce
     /// concurrent refresh attempts into a single network call.
+    ///
+    /// Because `APIClient` is an `actor`, synchronous code between suspension
+    /// points is mutually exclusive. This guarantees that only one caller can
+    /// see `refreshTask == nil` and create a new `Task`; all subsequent callers
+    /// that enter while the refresh is in-flight will observe the existing task
+    /// and await its result. `defer` ensures `refreshTask` is cleared even if
+    /// the task is cancelled or throws.
     private func attemptRefresh() async -> Bool {
-        // If a refresh is already in progress, wait for it
+        // If a refresh is already in progress, coalesce by waiting for it
         if let existingTask = refreshTask {
             return (try? await existingTask.value) ?? false
         }
 
+        // No suspension point between the nil-check above and the assignment
+        // below, so the actor guarantees exclusive access here.
         let task = Task<Bool, Error> { [weak _authManager] in
             guard let authManager = _authManager else { return false }
             return (try? await authManager.refreshToken()) ?? false
         }
 
         refreshTask = task
+        defer { refreshTask = nil }
 
-        let result = (try? await task.value) ?? false
-        refreshTask = nil
-        return result
+        return (try? await task.value) ?? false
     }
 
     // MARK: - Response Validation
