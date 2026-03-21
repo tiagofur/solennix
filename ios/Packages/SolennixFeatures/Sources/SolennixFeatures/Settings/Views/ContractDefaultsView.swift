@@ -9,6 +9,7 @@ public struct ContractDefaultsView: View {
 
     @State private var viewModel: BusinessSettingsViewModel
     @State private var showVariablePicker = false
+    @State private var templateCoordinator: ContractTemplateTextView.Coordinator?
     @Environment(\.dismiss) private var dismiss
 
     public init(apiClient: APIClient) {
@@ -33,7 +34,7 @@ public struct ContractDefaultsView: View {
         }
         .sheet(isPresented: $showVariablePicker) {
             ContractVariablePickerSheet { variable in
-                viewModel.contractTemplate += "[\(variable.label)]"
+                templateCoordinator?.insertVariable(variable.label)
                 showVariablePicker = false
             }
             .presentationDetents([.medium, .large])
@@ -128,8 +129,14 @@ public struct ContractDefaultsView: View {
                     }
                     .buttonStyle(.plain)
 
-                    TextEditor(text: $viewModel.contractTemplate)
-                        .frame(minHeight: 200)
+                    ContractTemplateTextView(
+                        text: $viewModel.contractTemplate,
+                        onCoordinatorReady: { coordinator in
+                            templateCoordinator = coordinator
+                        }
+                    )
+                    .frame(height: 250)
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm))
                 }
             } header: {
                 Text("Plantilla del Contrato")
