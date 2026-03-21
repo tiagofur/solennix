@@ -135,7 +135,7 @@ public struct ContractDefaultsView: View {
                             templateCoordinator = coordinator
                         }
                     )
-                    .frame(height: 250)
+                    .frame(height: 375)
                     .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm))
                 }
             } header: {
