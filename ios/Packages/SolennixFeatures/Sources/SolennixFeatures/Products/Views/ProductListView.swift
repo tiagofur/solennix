@@ -15,16 +15,22 @@ public struct ProductListView: View {
     }
 
     public var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            content
-            fabButton
-        }
+        content
         .navigationTitle("Productos")
         .searchable(text: $viewModel.searchText, prompt: "Buscar productos...")
         .refreshable { await viewModel.loadProducts() }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                sortMenu
+                HStack(spacing: Spacing.sm) {
+                    NavigationLink(value: Route.productForm()) {
+                        Image(systemName: "plus.circle")
+                            .font(.body)
+                            .foregroundStyle(planLimitsManager.canCreateCatalogItem ? SolennixColors.primary : SolennixColors.textTertiary)
+                    }
+                    .disabled(!planLimitsManager.canCreateCatalogItem)
+
+                    sortMenu
+                }
             }
         }
         .confirmationDialog(
@@ -263,20 +269,6 @@ public struct ProductListView: View {
 
     // MARK: - FAB
 
-    private var fabButton: some View {
-        NavigationLink(value: Route.productForm()) {
-            Image(systemName: "plus")
-                .font(.title2)
-                .fontWeight(.semibold)
-                .foregroundStyle(planLimitsManager.canCreateCatalogItem ? Color.white : SolennixColors.textTertiary)
-                .frame(width: 56, height: 56)
-                .background(planLimitsManager.canCreateCatalogItem ? AnyShapeStyle(SolennixGradient.premium) : AnyShapeStyle(SolennixColors.surfaceAlt))
-                .clipShape(Circle())
-                .shadowFab()
-        }
-        .padding(Spacing.lg)
-        .disabled(!planLimitsManager.canCreateCatalogItem)
-    }
 }
 
 // MARK: - Preview

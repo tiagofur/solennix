@@ -15,16 +15,20 @@ public struct InventoryListView: View {
     }
 
     public var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            content
-            fabButton
-        }
+        content
         .navigationTitle("Inventario")
         .searchable(text: $viewModel.searchText, prompt: "Buscar en inventario...")
         .refreshable { await viewModel.loadItems() }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 HStack(spacing: Spacing.sm) {
+                    NavigationLink(value: Route.inventoryForm()) {
+                        Image(systemName: "plus.circle")
+                            .font(.body)
+                            .foregroundStyle(planLimitsManager.canCreateCatalogItem ? SolennixColors.primary : SolennixColors.textTertiary)
+                    }
+                    .disabled(!planLimitsManager.canCreateCatalogItem)
+
                     lowStockToggle
                     sortMenu
                 }
@@ -376,20 +380,6 @@ public struct InventoryListView: View {
 
     // MARK: - FAB
 
-    private var fabButton: some View {
-        NavigationLink(value: Route.inventoryForm()) {
-            Image(systemName: "plus")
-                .font(.title2)
-                .fontWeight(.semibold)
-                .foregroundStyle(planLimitsManager.canCreateCatalogItem ? Color.white : SolennixColors.textTertiary)
-                .frame(width: 56, height: 56)
-                .background(planLimitsManager.canCreateCatalogItem ? AnyShapeStyle(SolennixGradient.premium) : AnyShapeStyle(SolennixColors.surfaceAlt))
-                .clipShape(Circle())
-                .shadowFab()
-        }
-        .padding(Spacing.lg)
-        .disabled(!planLimitsManager.canCreateCatalogItem)
-    }
 }
 
 // MARK: - Preview

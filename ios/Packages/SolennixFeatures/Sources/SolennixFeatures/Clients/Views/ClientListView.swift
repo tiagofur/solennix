@@ -19,10 +19,7 @@ public struct ClientListView: View {
     }
 
     public var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            content
-            fabButton
-        }
+        content
         .navigationTitle("Clientes")
         .searchable(text: $viewModel.searchText, prompt: "Buscar clientes...")
         .refreshable { await viewModel.loadClients() }
@@ -36,6 +33,14 @@ public struct ClientListView: View {
                             .font(.body)
                             .foregroundStyle(SolennixColors.primary)
                     }
+
+                    NavigationLink(value: Route.clientForm()) {
+                        Image(systemName: "plus.circle")
+                            .font(.body)
+                            .foregroundStyle(planLimitsManager.canCreateClient ? SolennixColors.primary : SolennixColors.textTertiary)
+                    }
+                    .disabled(!planLimitsManager.canCreateClient)
+
                     sortMenu
                 }
             }
@@ -269,22 +274,6 @@ public struct ClientListView: View {
         }
     }
 
-    // MARK: - FAB
-
-    private var fabButton: some View {
-        NavigationLink(value: Route.clientForm()) {
-            Image(systemName: "plus")
-                .font(.title2)
-                .fontWeight(.semibold)
-                .foregroundStyle(planLimitsManager.canCreateClient ? Color.white : SolennixColors.textTertiary)
-                .frame(width: 56, height: 56)
-                .background(planLimitsManager.canCreateClient ? AnyShapeStyle(SolennixGradient.premium) : AnyShapeStyle(SolennixColors.surfaceAlt))
-                .clipShape(Circle())
-                .shadowFab()
-        }
-        .disabled(!planLimitsManager.canCreateClient)
-        .padding(Spacing.lg)
-    }
 }
 
 // MARK: - Preview

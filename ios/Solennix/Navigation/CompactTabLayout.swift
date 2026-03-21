@@ -9,8 +9,7 @@ import SolennixNetwork
 /// The main tab-based layout for compact (iPhone) horizontal size class.
 ///
 /// Contains four tabs, each with its own `NavigationStack` and independent
-/// navigation path. A floating action button (FAB) overlays the tab bar
-/// for quick event creation.
+/// navigation path.
 struct CompactTabLayout: View {
 
     @Binding var pendingSpotlightRoute: Route?
@@ -21,72 +20,58 @@ struct CompactTabLayout: View {
     @State private var clientsPath = NavigationPath()
     @State private var morePath = NavigationPath()
     @Environment(\.apiClient) private var apiClient
-    @Environment(PlanLimitsManager.self) private var planLimitsManager
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            TabView(selection: $selectedTab) {
-                // Home Tab
-                NavigationStack(path: $homePath) {
-                    HomeRootView()
-                        .navigationDestination(for: Route.self) { route in
-                            RouteDestination(route: route)
-                        }
-                }
-                .tabItem {
-                    Label(Tab.home.title, systemImage: Tab.home.iconName)
-                }
-                .tag(Tab.home)
-
-                // Calendar Tab
-                NavigationStack(path: $calendarPath) {
-                    CalendarRootView()
-                        .navigationDestination(for: Route.self) { route in
-                            RouteDestination(route: route)
-                        }
-                }
-                .tabItem {
-                    Label(Tab.calendar.title, systemImage: Tab.calendar.iconName)
-                }
-                .tag(Tab.calendar)
-
-                // Clients Tab
-                NavigationStack(path: $clientsPath) {
-                    ClientsRootView()
-                        .navigationDestination(for: Route.self) { route in
-                            RouteDestination(route: route)
-                        }
-                }
-                .tabItem {
-                    Label(Tab.clients.title, systemImage: Tab.clients.iconName)
-                }
-                .tag(Tab.clients)
-
-                // More Tab
-                NavigationStack(path: $morePath) {
-                    MoreMenuView()
-                        .navigationDestination(for: Route.self) { route in
-                            RouteDestination(route: route)
-                        }
-                }
-                .tabItem {
-                    Label(Tab.more.title, systemImage: Tab.more.iconName)
-                }
-                .tag(Tab.more)
-            }
-            .tint(SolennixColors.tabBarActive)
-
-            // FAB overlay — hidden when navigated into any detail screen
-            if currentTabPathCount == 0 {
-                NewEventFAB(isDisabled: !planLimitsManager.canCreateEvent) {
-                    if planLimitsManager.canCreateEvent {
-                        selectedTab = .home
-                        homePath.append(Route.eventForm())
+        TabView(selection: $selectedTab) {
+            // Home Tab
+            NavigationStack(path: $homePath) {
+                HomeRootView()
+                    .navigationDestination(for: Route.self) { route in
+                        RouteDestination(route: route)
                     }
-                }
-                .padding(.bottom, 54) // Position above the tab bar
             }
+            .tabItem {
+                Label(Tab.home.title, systemImage: Tab.home.iconName)
+            }
+            .tag(Tab.home)
+
+            // Calendar Tab
+            NavigationStack(path: $calendarPath) {
+                CalendarRootView()
+                    .navigationDestination(for: Route.self) { route in
+                        RouteDestination(route: route)
+                    }
+            }
+            .tabItem {
+                Label(Tab.calendar.title, systemImage: Tab.calendar.iconName)
+            }
+            .tag(Tab.calendar)
+
+            // Clients Tab
+            NavigationStack(path: $clientsPath) {
+                ClientsRootView()
+                    .navigationDestination(for: Route.self) { route in
+                        RouteDestination(route: route)
+                    }
+            }
+            .tabItem {
+                Label(Tab.clients.title, systemImage: Tab.clients.iconName)
+            }
+            .tag(Tab.clients)
+
+            // More Tab
+            NavigationStack(path: $morePath) {
+                MoreMenuView()
+                    .navigationDestination(for: Route.self) { route in
+                        RouteDestination(route: route)
+                    }
+            }
+            .tabItem {
+                Label(Tab.more.title, systemImage: Tab.more.iconName)
+            }
+            .tag(Tab.more)
         }
+        .tint(SolennixColors.tabBarActive)
         .onChange(of: pendingSpotlightRoute) { _, newRoute in
             guard let route = newRoute else { return }
             // Navegar desde la pestaña Home para rutas de Spotlight
@@ -97,43 +82,6 @@ struct CompactTabLayout: View {
             }
             pendingSpotlightRoute = nil
         }
-    }
-
-    /// Number of items in the active tab's navigation stack.
-    /// Used to hide the FAB when the user has navigated into a detail screen.
-    private var currentTabPathCount: Int {
-        switch selectedTab {
-        case .home: return homePath.count
-        case .calendar: return calendarPath.count
-        case .clients: return clientsPath.count
-        case .more: return morePath.count
-        }
-    }
-}
-
-// MARK: - New Event FAB
-
-/// Circular floating action button with premium gradient for creating new events.
-private struct NewEventFAB: View {
-
-    let isDisabled: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            ZStack {
-                Circle()
-                    .fill(isDisabled ? AnyShapeStyle(SolennixColors.surfaceAlt) : AnyShapeStyle(SolennixGradient.premium))
-                    .frame(width: 56, height: 56)
-
-                Image(systemName: "plus")
-                    .font(.system(size: 24, weight: .semibold))
-                    .foregroundStyle(isDisabled ? SolennixColors.textTertiary : SolennixColors.textInverse)
-            }
-        }
-        .disabled(isDisabled)
-        .shadowFab()
-        .accessibilityLabel("Nuevo Evento")
     }
 }
 
@@ -152,8 +100,6 @@ private struct CalendarRootView: View {
 
     var body: some View {
         CalendarView(viewModel: CalendarViewModel(apiClient: apiClient))
-            .navigationTitle("Calendario")
-            .navigationBarTitleDisplayMode(.inline)
     }
 }
 

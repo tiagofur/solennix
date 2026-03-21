@@ -1,6 +1,7 @@
 import SwiftUI
 import SolennixCore
 import SolennixDesign
+import SolennixNetwork
 
 // MARK: - Calendar View
 
@@ -14,6 +15,9 @@ public struct CalendarView: View {
     @State private var showUnblockAlert = false
     @State private var longPressedDate: Date?
     @State private var blockReason: String = ""
+    @State private var showQuickQuote = false
+    @Environment(PlanLimitsManager.self) private var planLimitsManager
+    @Environment(\.apiClient) private var apiClient
 
     // MARK: - Init
 
@@ -44,6 +48,32 @@ public struct CalendarView: View {
             }
         }
         .background(SolennixColors.surfaceGrouped)
+        .navigationTitle("Calendario")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                HStack(spacing: Spacing.sm) {
+                    Button {
+                        showQuickQuote = true
+                    } label: {
+                        Image(systemName: "doc.text.magnifyingglass")
+                            .font(.body)
+                            .foregroundStyle(SolennixColors.primary)
+                    }
+
+                    NavigationLink(value: Route.eventForm(date: viewModel.selectedDate)) {
+                        Image(systemName: "plus.circle")
+                            .font(.body)
+                            .foregroundStyle(planLimitsManager.canCreateEvent ? SolennixColors.primary : SolennixColors.textTertiary)
+                    }
+                    .disabled(!planLimitsManager.canCreateEvent)
+                }
+            }
+        }
+        .sheet(isPresented: $showQuickQuote) {
+            QuickQuoteView(apiClient: apiClient)
+                .presentationDetents([.large])
+        }
         .refreshable {
             await viewModel.loadEvents()
         }
