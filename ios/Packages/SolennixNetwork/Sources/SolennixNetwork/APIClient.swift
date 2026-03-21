@@ -198,7 +198,7 @@ public actor APIClient {
         do {
             data = try await perform(request, isRetry: isRetry)
         } catch let urlError as URLError {
-            let err = APIError.networkError(urlError.localizedDescription)
+            let err = APIError.networkError(APIError.userFacingMessage(for: urlError))
             showErrorToast(for: err)
             throw err
         } catch {
@@ -325,7 +325,7 @@ public actor APIClient {
             // Silently fail auth; let AuthManager redirect to login
             break
         default:
-            let message = error.errorDescription ?? "Ocurrio un error desconocido."
+            let message = error.userFacingMessage
             Task { @MainActor [onError] in
                 onError?(message)
             }

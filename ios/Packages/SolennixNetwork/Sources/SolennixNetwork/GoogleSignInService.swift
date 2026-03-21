@@ -82,10 +82,12 @@ public final class GoogleSignInService: GoogleSignInServiceProtocol, Sendable {
                 fullName: result.user.profile?.name,
                 email: result.user.profile?.email
             )
-        } catch let error as NSError {
-            if error.domain == "com.google.GIDSignIn" && error.code == -5 {
-                throw GoogleSignInError.cancelled
-            }
+        } catch let error as GIDSignInError where error.code == .canceled {
+            throw GoogleSignInError.cancelled
+        } catch let error as GIDSignInError where error.code == .hasNoAuthInKeychain {
+            // No saved auth session — treat as needing fresh sign-in, not a failure
+            throw GoogleSignInError.cancelled
+        } catch {
             throw GoogleSignInError.failed(error)
         }
     }
