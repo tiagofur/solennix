@@ -3,7 +3,9 @@ package handlers
 import (
 	"context"
 	"crypto/rsa"
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -24,6 +26,44 @@ import (
 )
 
 var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
+
+// resetTokenBlacklist stores SHA-256 hashes of used password reset tokens.
+// Key: hex-encoded SHA-256 hash, Value: token expiry time (for cleanup).
+var resetTokenBlacklist sync.Map
+
+func init() {
+	// Periodically clean expired entries from the reset token blacklist
+	go func() {
+		ticker := time.NewTicker(10 * time.Minute)
+		defer ticker.Stop()
+		for range ticker.C {
+			now := time.Now()
+			resetTokenBlacklist.Range(func(key, value any) bool {
+				if expiry, ok := value.(time.Time); ok && now.After(expiry) {
+					resetTokenBlacklist.Delete(key)
+				}
+				return true
+			})
+		}
+	}()
+}
+
+// hashToken returns the hex-encoded SHA-256 hash of a token string.
+func hashToken(token string) string {
+	h := sha256.Sum256([]byte(token))
+	return hex.EncodeToString(h[:])
+}
+
+// isResetTokenBlacklisted checks if a reset token has already been used.
+func isResetTokenBlacklisted(token string) bool {
+	_, found := resetTokenBlacklist.Load(hashToken(token))
+	return found
+}
+
+// blacklistResetToken adds a reset token to the blacklist with its expiry time.
+func blacklistResetToken(token string, expiry time.Time) {
+	resetTokenBlacklist.Store(hashToken(token), expiry)
+}
 
 // isUniqueViolation checks if a database error is a PostgreSQL unique constraint violation (23505).
 func isUniqueViolation(err error) bool {
@@ -345,6 +385,12 @@ func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Check if token has already been used
+	if isResetTokenBlacklisted(req.Token) {
+		writeError(w, http.StatusUnauthorized, "Reset token has already been used")
+		return
+	}
+
 	// Validate reset token (must be valid and have subject="password-reset")
 	claims, err := h.authService.ValidateResetToken(req.Token)
 	if err != nil {
@@ -373,6 +419,9 @@ func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "Failed to update password")
 		return
 	}
+
+	// Blacklist the token so it cannot be reused
+	blacklistResetToken(req.Token, time.Now().Add(1*time.Hour))
 
 	slog.Info("Password reset successful", "user_id", user.ID)
 
@@ -630,73 +679,193 @@ type GoogleIDTokenClaims struct {
 	Name    string `json:"name"`
 }
 
-// validateGoogleIDToken validates a Google ID token and returns the claims.
-// allowedClientIDs are the Google OAuth client IDs for this app (iOS, Android, Web).
-// If empty, audience verification is skipped (development mode).
-func validateGoogleIDToken(ctx context.Context, idToken string, allowedClientIDs []string) (*GoogleIDTokenClaims, error) {
-	// Call Google's tokeninfo endpoint to validate the token
-	url := fmt.Sprintf("https://oauth2.googleapis.com/tokeninfo?id_token=%s", idToken)
+// googleJWKS caches Google's public keys for JWT signature verification
+var (
+	googleJWKSCache    []googleJWK
+	googleJWKSCacheMu  sync.RWMutex
+	googleJWKSCachedAt time.Time
+	googleJWKSCacheTTL = 24 * time.Hour
+)
 
-	client := &http.Client{Timeout: 10 * time.Second}
-	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
+type googleJWK struct {
+	Kty string `json:"kty"`
+	Kid string `json:"kid"`
+	Use string `json:"use"`
+	Alg string `json:"alg"`
+	N   string `json:"n"`
+	E   string `json:"e"`
+}
+
+type googleJWKSResponse struct {
+	Keys []googleJWK `json:"keys"`
+}
+
+// fetchGooglePublicKeys fetches Google's JWKS (with caching)
+func fetchGooglePublicKeys() ([]googleJWK, error) {
+	googleJWKSCacheMu.RLock()
+	if len(googleJWKSCache) > 0 && time.Since(googleJWKSCachedAt) < googleJWKSCacheTTL {
+		keys := googleJWKSCache
+		googleJWKSCacheMu.RUnlock()
+		return keys, nil
+	}
+	googleJWKSCacheMu.RUnlock()
+
+	googleJWKSCacheMu.Lock()
+	defer googleJWKSCacheMu.Unlock()
+
+	// Double-check after acquiring write lock
+	if len(googleJWKSCache) > 0 && time.Since(googleJWKSCachedAt) < googleJWKSCacheTTL {
+		return googleJWKSCache, nil
 	}
 
-	resp, err := client.Do(req)
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Get("https://www.googleapis.com/oauth2/v3/certs")
 	if err != nil {
-		return nil, fmt.Errorf("failed to validate token: %w", err)
+		if len(googleJWKSCache) > 0 {
+			slog.Warn("Google JWKS fetch failed, using stale cached keys", "error", err, "cached_at", googleJWKSCachedAt)
+			return googleJWKSCache, nil
+		}
+		return nil, fmt.Errorf("failed to fetch Google JWKS and no cached keys available: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("token validation failed with status %d", resp.StatusCode)
+		if len(googleJWKSCache) > 0 {
+			slog.Warn("Google JWKS endpoint returned non-200, using stale cached keys", "status", resp.StatusCode, "cached_at", googleJWKSCachedAt)
+			return googleJWKSCache, nil
+		}
+		return nil, fmt.Errorf("Google JWKS endpoint returned status %d and no cached keys available", resp.StatusCode)
 	}
 
-	var result struct {
-		Sub           string `json:"sub"`
-		Email         string `json:"email"`
-		EmailVerified string `json:"email_verified"`
-		Name          string `json:"name"`
-		Aud           string `json:"aud"`
-		Iss           string `json:"iss"`
-		Exp           string `json:"exp"`
+	var jwks googleJWKSResponse
+	if err := json.NewDecoder(resp.Body).Decode(&jwks); err != nil {
+		if len(googleJWKSCache) > 0 {
+			slog.Warn("Failed to decode Google JWKS response, using stale cached keys", "error", err, "cached_at", googleJWKSCachedAt)
+			return googleJWKSCache, nil
+		}
+		return nil, fmt.Errorf("failed to decode Google JWKS and no cached keys available: %w", err)
 	}
 
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return nil, fmt.Errorf("failed to decode token response: %w", err)
+	googleJWKSCache = jwks.Keys
+	googleJWKSCachedAt = time.Now()
+	return jwks.Keys, nil
+}
+
+// googleJWKToRSAPublicKey converts a Google JWK to an *rsa.PublicKey
+func googleJWKToRSAPublicKey(jwk googleJWK) (*rsa.PublicKey, error) {
+	nBytes, err := base64.RawURLEncoding.DecodeString(jwk.N)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode modulus: %w", err)
 	}
 
-	// Verify email is verified
-	if result.EmailVerified != "true" {
-		return nil, fmt.Errorf("email not verified")
+	eBytes, err := base64.RawURLEncoding.DecodeString(jwk.E)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode exponent: %w", err)
 	}
 
-	// Verify issuer
-	if result.Iss != "https://accounts.google.com" && result.Iss != "accounts.google.com" {
-		return nil, fmt.Errorf("invalid token issuer")
+	n := new(big.Int).SetBytes(nBytes)
+	e := 0
+	for _, b := range eBytes {
+		e = e<<8 + int(b)
 	}
 
-	// Verify audience (client ID) — prevents tokens from other apps being accepted
+	return &rsa.PublicKey{N: n, E: e}, nil
+}
+
+// validateGoogleIDToken validates a Google ID token offline using JWKS.
+// allowedClientIDs are the Google OAuth client IDs for this app (iOS, Android, Web).
+// If empty, audience verification is skipped (development mode).
+func validateGoogleIDToken(_ context.Context, idToken string, allowedClientIDs []string) (*GoogleIDTokenClaims, error) {
+	// Fetch Google's public keys (uses 24h cache, falls back to stale cache if fetch fails)
+	keys, err := fetchGooglePublicKeys()
+	if err != nil {
+		return nil, fmt.Errorf("failed to obtain Google public keys for signature verification: %w", err)
+	}
+
+	// Build parser options
+	parserOpts := []jwt.ParserOption{
+		jwt.WithValidMethods([]string{"RS256"}),
+	}
+
+	// Add audience verification if configured
 	if len(allowedClientIDs) > 0 {
-		audValid := false
-		for _, allowed := range allowedClientIDs {
-			if result.Aud == allowed {
-				audValid = true
-				break
-			}
-		}
-		if !audValid {
-			return nil, fmt.Errorf("invalid token audience: %s", result.Aud)
-		}
+		// jwt.WithAudience checks a single value; we check manually below for multiple
 	} else {
 		slog.Warn("Google Client IDs not configured — skipping audience verification (set GOOGLE_CLIENT_IDS in production)")
 	}
 
+	parser := jwt.NewParser(parserOpts...)
+
+	var googleClaims struct {
+		jwt.RegisteredClaims
+		Email         string `json:"email"`
+		EmailVerified bool   `json:"email_verified"`
+		Name          string `json:"name"`
+	}
+
+	token, err := parser.ParseWithClaims(idToken, &googleClaims, func(token *jwt.Token) (interface{}, error) {
+		kid, ok := token.Header["kid"].(string)
+		if !ok {
+			return nil, fmt.Errorf("missing kid in token header")
+		}
+
+		for _, key := range keys {
+			if key.Kid == kid {
+				return googleJWKToRSAPublicKey(key)
+			}
+		}
+		return nil, fmt.Errorf("no matching key found for kid: %s", kid)
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("token verification failed: %w", err)
+	}
+
+	if !token.Valid {
+		return nil, fmt.Errorf("invalid token")
+	}
+
+	// Verify issuer
+	iss, _ := googleClaims.GetIssuer()
+	if iss != "https://accounts.google.com" && iss != "accounts.google.com" {
+		return nil, fmt.Errorf("invalid token issuer: %s", iss)
+	}
+
+	// Verify email is verified
+	if !googleClaims.EmailVerified {
+		return nil, fmt.Errorf("email not verified")
+	}
+
+	// Verify audience (client ID) — prevents tokens from other apps being accepted
+	if len(allowedClientIDs) > 0 {
+		aud, _ := googleClaims.GetAudience()
+		audValid := false
+		for _, tokenAud := range aud {
+			for _, allowed := range allowedClientIDs {
+				if tokenAud == allowed {
+					audValid = true
+					break
+				}
+			}
+			if audValid {
+				break
+			}
+		}
+		if !audValid {
+			return nil, fmt.Errorf("invalid token audience: %v", aud)
+		}
+	}
+
+	// Verify expiration
+	exp, _ := googleClaims.GetExpirationTime()
+	if exp != nil && exp.Before(time.Now()) {
+		return nil, fmt.Errorf("token has expired")
+	}
+
 	return &GoogleIDTokenClaims{
-		Subject: result.Sub,
-		Email:   result.Email,
-		Name:    result.Name,
+		Subject: googleClaims.Subject,
+		Email:   googleClaims.Email,
+		Name:    googleClaims.Name,
 	}, nil
 }
 
@@ -744,6 +913,11 @@ func (h *AuthHandler) AppleSignIn(w http.ResponseWriter, r *http.Request) {
 		name = "Usuario Apple"
 	}
 
+	// Helper to detect Apple Private Relay emails
+	isPrivateRelay := func(e string) bool {
+		return strings.HasSuffix(e, "@privaterelay.appleid.com")
+	}
+
 	// Try to find user by Apple ID first
 	user, err := h.userRepo.GetByAppleUserID(r.Context(), appleUserID)
 	if err == nil && user != nil {
@@ -755,8 +929,9 @@ func (h *AuthHandler) AppleSignIn(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		writeJSON(w, http.StatusOK, map[string]interface{}{
-			"user":   user,
-			"tokens": tokens,
+			"user":                  user,
+			"tokens":                tokens,
+			"email_is_private_relay": isPrivateRelay(user.Email),
 		})
 		return
 	}
@@ -775,8 +950,9 @@ func (h *AuthHandler) AppleSignIn(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 				writeJSON(w, http.StatusOK, map[string]interface{}{
-					"user":   user,
-					"tokens": tokens,
+					"user":                  user,
+					"tokens":                tokens,
+					"email_is_private_relay": isPrivateRelay(user.Email),
 				})
 				return
 			}
@@ -821,8 +997,9 @@ func (h *AuthHandler) AppleSignIn(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 				writeJSON(w, http.StatusOK, map[string]interface{}{
-					"user":   existingUser,
-					"tokens": tokens,
+					"user":                  existingUser,
+					"tokens":                tokens,
+					"email_is_private_relay": isPrivateRelay(existingUser.Email),
 				})
 				return
 			}
@@ -846,8 +1023,9 @@ func (h *AuthHandler) AppleSignIn(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusCreated, map[string]interface{}{
-		"user":   newUser,
-		"tokens": tokens,
+		"user":                  newUser,
+		"tokens":                tokens,
+		"email_is_private_relay": isPrivateRelay(newUser.Email),
 	})
 }
 

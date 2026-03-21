@@ -74,6 +74,10 @@ func Load() (*Config, error) {
 		return nil, fmt.Errorf("JWT_SECRET is required")
 	}
 
+	if len(cfg.JWTSecret) < 32 {
+		return nil, fmt.Errorf("JWT_SECRET must be at least 32 bytes for HMAC-SHA256 security")
+	}
+
 	jwtExpiry, err := strconv.Atoi(getEnv("JWT_EXPIRY_HOURS", "24"))
 	if err != nil {
 		return nil, fmt.Errorf("JWT_EXPIRY_HOURS must be a number: %w", err)
