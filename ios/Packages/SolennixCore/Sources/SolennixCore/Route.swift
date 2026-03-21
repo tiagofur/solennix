@@ -18,12 +18,18 @@ public enum Route: Hashable {
     case quickQuote
 
     // MARK: Products
+    case productList
     case productDetail(id: String)
     case productForm(id: String? = nil)
 
     // MARK: Inventory
+    case inventoryList
     case inventoryDetail(id: String)
     case inventoryForm(id: String? = nil)
+
+    // MARK: Tools
+    case search
+    case settings
 
     // MARK: Settings Sub-Routes
     case editProfile

@@ -34,16 +34,26 @@ struct RouteDestination: View {
             QuickQuoteView(apiClient: apiClient)
 
         // Products
+        case .productList:
+            ProductListView(apiClient: apiClient)
         case .productDetail(let id):
             ProductDetailView(apiClient: apiClient, productId: id)
         case .productForm(let id):
             ProductFormView(apiClient: apiClient, productId: id)
 
         // Inventory
+        case .inventoryList:
+            InventoryListView(apiClient: apiClient)
         case .inventoryDetail(let id):
             InventoryDetailView(apiClient: apiClient, itemId: id)
         case .inventoryForm(let id):
             InventoryFormView(apiClient: apiClient, itemId: id)
+
+        // Tools
+        case .search:
+            SearchView()
+        case .settings:
+            SettingsView(apiClient: apiClient)
 
         // Settings
         case .editProfile:

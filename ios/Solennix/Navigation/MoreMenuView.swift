@@ -1,4 +1,5 @@
 import SwiftUI
+import SolennixCore
 import SolennixDesign
 import SolennixFeatures
 import SolennixNetwork
@@ -7,19 +8,15 @@ import SolennixNetwork
 
 /// Root view for the "Más" tab on iPhone.
 ///
-/// Provides access to Products, Inventory, Search, and Settings —
-/// mirroring the drawer navigation from the React Native app.
+/// Uses value-based NavigationLinks (Route enum) instead of destination-based
+/// links to prevent SwiftUI from popping detail views when the parent re-renders.
 struct MoreMenuView: View {
-
-    @Environment(\.apiClient) private var apiClient
 
     var body: some View {
         List {
             // Events section
             Section {
-                NavigationLink {
-                    EventListView(apiClient: apiClient)
-                } label: {
+                NavigationLink(value: Route.eventList) {
                     menuRow(
                         icon: "calendar.badge.clock",
                         title: "Eventos",
@@ -36,9 +33,7 @@ struct MoreMenuView: View {
 
             // Catalog section
             Section {
-                NavigationLink {
-                    ProductListView(apiClient: apiClient)
-                } label: {
+                NavigationLink(value: Route.productList) {
                     menuRow(
                         icon: "shippingbox.fill",
                         title: "Productos",
@@ -47,9 +42,7 @@ struct MoreMenuView: View {
                     )
                 }
 
-                NavigationLink {
-                    InventoryListView(apiClient: apiClient)
-                } label: {
+                NavigationLink(value: Route.inventoryList) {
                     menuRow(
                         icon: "archivebox.fill",
                         title: "Inventario",
@@ -66,9 +59,7 @@ struct MoreMenuView: View {
 
             // Tools section
             Section {
-                NavigationLink {
-                    SearchView()
-                } label: {
+                NavigationLink(value: Route.search) {
                     menuRow(
                         icon: "magnifyingglass",
                         title: "Buscar",
@@ -85,9 +76,7 @@ struct MoreMenuView: View {
 
             // Settings section
             Section {
-                NavigationLink {
-                    SettingsView(apiClient: apiClient)
-                } label: {
+                NavigationLink(value: Route.settings) {
                     menuRow(
                         icon: "gearshape.fill",
                         title: "Ajustes",
