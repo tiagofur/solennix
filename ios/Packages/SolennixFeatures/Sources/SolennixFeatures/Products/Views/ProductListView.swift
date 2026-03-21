@@ -17,6 +17,7 @@ public struct ProductListView: View {
     public var body: some View {
         content
         .navigationTitle("Productos")
+        .navigationBarTitleDisplayMode(.inline)
         .searchable(text: $viewModel.searchText, prompt: "Buscar productos...")
         .refreshable { await viewModel.loadProducts() }
         .toolbar {

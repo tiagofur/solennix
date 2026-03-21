@@ -17,6 +17,7 @@ public struct InventoryListView: View {
     public var body: some View {
         content
         .navigationTitle("Inventario")
+        .navigationBarTitleDisplayMode(.inline)
         .searchable(text: $viewModel.searchText, prompt: "Buscar en inventario...")
         .refreshable { await viewModel.loadItems() }
         .toolbar {
