@@ -42,12 +42,14 @@ struct ContractTemplateTextView: UIViewRepresentable {
         // Only update if the text actually changed (avoid cursor reset)
         if textView.text != text {
             let selectedRange = textView.selectedRange
+            let savedOffset = textView.contentOffset
             textView.text = text
             context.coordinator.applyAttributedStyling(to: textView)
             // Restore cursor position if valid
             if selectedRange.location + selectedRange.length <= (textView.text as NSString).length {
                 textView.selectedRange = selectedRange
             }
+            textView.contentOffset = savedOffset
         }
 
         onCoordinatorReady?(context.coordinator)
@@ -71,6 +73,7 @@ struct ContractTemplateTextView: UIViewRepresentable {
 
             let insertText = "[\(variable)]"
             let currentRange = textView.selectedRange
+            let savedOffset = textView.contentOffset
 
             // Insert at cursor position
             if let textRange = textView.textRange(
@@ -87,9 +90,10 @@ struct ContractTemplateTextView: UIViewRepresentable {
             text.wrappedValue = textView.text
             applyAttributedStyling(to: textView)
 
-            // Move cursor after inserted text
+            // Move cursor after inserted text and restore scroll position
             let newPosition = currentRange.location + (insertText as NSString).length
             textView.selectedRange = NSRange(location: newPosition, length: 0)
+            textView.contentOffset = savedOffset
         }
 
         func textViewDidChange(_ textView: UITextView) {
@@ -130,7 +134,9 @@ struct ContractTemplateTextView: UIViewRepresentable {
                 ], range: range)
             }
 
+            let savedOffset = textView.contentOffset
             textView.attributedText = attributedString
+            textView.contentOffset = savedOffset
         }
     }
 }
