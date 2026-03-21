@@ -20,12 +20,4 @@ public struct UnavailableDate: Codable, Identifiable, Sendable, Hashable {
         self.endDate = endDate
         self.reason = reason
     }
-
-    enum CodingKeys: String, CodingKey {
-        case id
-        case userId = "user_id"
-        case startDate = "start_date"
-        case endDate = "end_date"
-        case reason
-    }
 }

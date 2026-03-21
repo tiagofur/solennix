@@ -13,18 +13,4 @@ public struct ProductIngredient: Codable, Identifiable, Sendable, Hashable {
     public var unit: String?
     public var unitCost: Double?
     public var type: InventoryType?
-
-    enum CodingKeys: String, CodingKey {
-        case id
-        case productId = "product_id"
-        case inventoryId = "inventory_id"
-        case quantityRequired = "quantity_required"
-        case capacity
-        case bringToEvent = "bring_to_event"
-        case createdAt = "created_at"
-        case ingredientName = "ingredient_name"
-        case unit
-        case unitCost = "unit_cost"
-        case type
-    }
 }

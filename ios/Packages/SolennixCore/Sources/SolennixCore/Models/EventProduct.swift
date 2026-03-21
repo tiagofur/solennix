@@ -18,15 +18,4 @@ public struct EventProduct: Codable, Identifiable, Sendable, Hashable {
         self.quantity = quantity; self.unitPrice = unitPrice; self.discount = discount
         self.totalPrice = totalPrice; self.createdAt = createdAt
     }
-
-    enum CodingKeys: String, CodingKey {
-        case id
-        case eventId = "event_id"
-        case productId = "product_id"
-        case quantity
-        case unitPrice = "unit_price"
-        case discount
-        case totalPrice = "total_price"
-        case createdAt = "created_at"
-    }
 }

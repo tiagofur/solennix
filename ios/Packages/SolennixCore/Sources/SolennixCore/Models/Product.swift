@@ -37,17 +37,4 @@ public struct Product: Codable, Identifiable, Sendable, Hashable {
         self.createdAt = createdAt
         self.updatedAt = updatedAt
     }
-
-    enum CodingKeys: String, CodingKey {
-        case id
-        case userId = "user_id"
-        case name
-        case category
-        case basePrice = "base_price"
-        case recipe
-        case imageUrl = "image_url"
-        case isActive = "is_active"
-        case createdAt = "created_at"
-        case updatedAt = "updated_at"
-    }
 }

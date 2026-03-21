@@ -46,20 +46,4 @@ public struct Client: Codable, Identifiable, Sendable, Hashable {
         self.createdAt = createdAt
         self.updatedAt = updatedAt
     }
-
-    enum CodingKeys: String, CodingKey {
-        case id
-        case userId = "user_id"
-        case name
-        case phone
-        case email
-        case address
-        case city
-        case notes
-        case photoUrl = "photo_url"
-        case totalEvents = "total_events"
-        case totalSpent = "total_spent"
-        case createdAt = "created_at"
-        case updatedAt = "updated_at"
-    }
 }

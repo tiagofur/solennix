@@ -22,18 +22,4 @@ public struct EventSupply: Codable, Identifiable, Sendable, Hashable {
     public var supplyName: String?
     public var unit: String?
     public var currentStock: Double?
-
-    enum CodingKeys: String, CodingKey {
-        case id
-        case eventId = "event_id"
-        case inventoryId = "inventory_id"
-        case quantity
-        case unitCost = "unit_cost"
-        case source
-        case excludeCost = "exclude_cost"
-        case createdAt = "created_at"
-        case supplyName = "supply_name"
-        case unit
-        case currentStock = "current_stock"
-    }
 }

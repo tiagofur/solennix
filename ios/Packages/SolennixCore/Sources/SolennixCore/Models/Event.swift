@@ -97,31 +97,4 @@ public struct Event: Codable, Identifiable, Sendable, Hashable {
         self.createdAt = createdAt
         self.updatedAt = updatedAt
     }
-
-    enum CodingKeys: String, CodingKey {
-        case id
-        case userId = "user_id"
-        case clientId = "client_id"
-        case eventDate = "event_date"
-        case startTime = "start_time"
-        case endTime = "end_time"
-        case serviceType = "service_type"
-        case numPeople = "num_people"
-        case status
-        case discount
-        case discountType = "discount_type"
-        case requiresInvoice = "requires_invoice"
-        case taxRate = "tax_rate"
-        case taxAmount = "tax_amount"
-        case totalAmount = "total_amount"
-        case location
-        case city
-        case depositPercent = "deposit_percent"
-        case cancellationDays = "cancellation_days"
-        case refundPercent = "refund_percent"
-        case notes
-        case photos
-        case createdAt = "created_at"
-        case updatedAt = "updated_at"
-    }
 }

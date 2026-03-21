@@ -42,16 +42,4 @@ public struct InventoryItem: Codable, Identifiable, Sendable, Hashable {
         self.lastUpdated = lastUpdated
         self.type = type
     }
-
-    enum CodingKeys: String, CodingKey {
-        case id
-        case userId = "user_id"
-        case ingredientName = "ingredient_name"
-        case currentStock = "current_stock"
-        case minimumStock = "minimum_stock"
-        case unit
-        case unitCost = "unit_cost"
-        case lastUpdated = "last_updated"
-        case type
-    }
 }

@@ -17,14 +17,4 @@ public struct EventExtra: Codable, Identifiable, Sendable, Hashable {
         self.cost = cost; self.price = price; self.excludeUtility = excludeUtility
         self.createdAt = createdAt
     }
-
-    enum CodingKeys: String, CodingKey {
-        case id
-        case eventId = "event_id"
-        case description
-        case cost
-        case price
-        case excludeUtility = "exclude_utility"
-        case createdAt = "created_at"
-    }
 }
