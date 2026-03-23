@@ -19,6 +19,31 @@ export const COLORS = {
 
 export const PREMIUM_GRADIENT = 'linear-gradient(135deg, #C4A265 0%, #D4B87A 100%)';
 
+// ── Social Media Brand Colors ──
+export const SOCIAL_COLORS = {
+  navy: '#1B2A4A',
+  navyLight: '#2A3A5A',
+  navyDark: '#0F1A2E',
+  gold: '#C4A265',
+  goldLight: '#D4B87A',
+  goldDark: '#B8965A',
+  cream: '#F5F0E8',
+  creamWarm: '#FAF6F0',
+  textMuted: '#6B7B8D',
+  white: '#FFFFFF',
+} as const;
+
+export const SOCIAL_NAVY_GRADIENT = 'linear-gradient(135deg, #1B2A4A 0%, #0F1A2E 100%)';
+export const SOCIAL_GOLD_GRADIENT = 'linear-gradient(135deg, #C4A265 0%, #D4B87A 100%)';
+
+// ── Social Media Formats ──
+export const SOCIAL_FORMATS = {
+  REEL: { width: 1080, height: 1920 },  // 9:16 — Instagram Reels, TikTok, Stories
+  FEED: { width: 1080, height: 1080 },  // 1:1  — Instagram Feed, Facebook
+} as const;
+
+export const SOCIAL_FPS = 30;
+
 export const FPS = 30;
 export const DURATION_FRAMES = 1060; // ~35 seconds
 
