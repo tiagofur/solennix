@@ -35,6 +35,10 @@ interface EventRepository {
     fun getEventExtras(eventId: String): Flow<List<EventExtra>>
     suspend fun syncEventItems(eventId: String)
 
+    // Direct API access (bypasses Room cache)
+    suspend fun getEventsFromApi(): List<Event>
+    suspend fun getEventProductsFromApi(eventId: String): List<EventProduct>
+
     // Equipment and Supplies
     suspend fun getEquipmentConflicts(
         eventDate: String,
@@ -138,6 +142,12 @@ class OfflineFirstEventRepository @Inject constructor(
         eventItemDao.insertProducts(response.products.map { it.asEntity() })
         eventItemDao.insertExtras(response.extras.map { it.asEntity() })
     }
+
+    override suspend fun getEventsFromApi(): List<Event> =
+        apiService.get(Endpoints.EVENTS)
+
+    override suspend fun getEventProductsFromApi(eventId: String): List<EventProduct> =
+        apiService.get(Endpoints.eventProducts(eventId))
 
     override suspend fun getEquipmentConflicts(
         eventDate: String,

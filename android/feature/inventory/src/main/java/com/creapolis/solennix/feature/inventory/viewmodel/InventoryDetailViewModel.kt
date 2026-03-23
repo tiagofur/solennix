@@ -96,7 +96,7 @@ class InventoryDetailViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val today = LocalDate.now().toString()
-                val events = eventRepository.getEvents().first()
+                val events = eventRepository.getEventsFromApi()
                 val upcomingEvents = events.filter {
                     it.eventDate >= today && it.status == EventStatus.CONFIRMED
                 }
@@ -105,7 +105,7 @@ class InventoryDetailViewModel @Inject constructor(
                 val item = _uiState.value.item ?: return@launch
 
                 for (event in upcomingEvents) {
-                    val eventProducts = eventRepository.getEventProducts(event.id).first()
+                    val eventProducts = eventRepository.getEventProductsFromApi(event.id)
                     var eventDemand = 0.0
 
                     for (ep in eventProducts) {

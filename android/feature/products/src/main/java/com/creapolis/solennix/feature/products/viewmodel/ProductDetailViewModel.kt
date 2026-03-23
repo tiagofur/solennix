@@ -96,13 +96,13 @@ class ProductDetailViewModel @Inject constructor(
             try {
                 val today = LocalDate.now().toString()
 
-                val events = eventRepository.getEvents().first()
+                val events = eventRepository.getEventsFromApi()
                 val upcomingEvents = events.filter { it.eventDate >= today && it.status == com.creapolis.solennix.core.model.EventStatus.CONFIRMED }
 
                 val demandPoints = mutableListOf<DemandDataPoint>()
 
                 for (event in upcomingEvents) {
-                    val eventProducts = eventRepository.getEventProducts(event.id).first()
+                    val eventProducts = eventRepository.getEventProductsFromApi(event.id)
                     val matchingProduct = eventProducts.find { it.productId == productId }
 
                     if (matchingProduct != null) {
