@@ -1,13 +1,36 @@
-import { AbsoluteFill, useCurrentFrame, interpolate } from 'remotion';
+import React from 'react';
+import { AbsoluteFill, useCurrentFrame, interpolate, useVideoConfig } from 'remotion';
 import { loadFont } from '@remotion/google-fonts/Inter';
-import { COLORS } from '../constants';
+import { COLORS, PREMIUM_GRADIENT } from '../constants';
 import { ClientTutorialProps } from '../schema';
 import { MockSidebar } from '../components/MockSidebar';
+import { MockTopbar } from '../components/MockTopbar';
 import { MockFormInput } from '../components/MockFormInput';
 import { MockButton } from '../components/MockButton';
-import { Cursor } from '../components/Cursor';
+import { ClickHighlight } from '../components/ClickHighlight';
 
 const { fontFamily } = loadFont();
+
+const ArrowLeftIcon: React.FC = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+    <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const CameraIcon: React.FC = () => (
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+    <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" stroke={COLORS.textTertiary} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <circle cx="12" cy="13" r="4" stroke={COLORS.textTertiary} strokeWidth="1.5" />
+  </svg>
+);
+
+const SaveIcon: React.FC = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+    <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <polyline points="17,21 17,13 7,13 7,21" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <polyline points="7,3 7,8 15,8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
 
 export const FormFillScene: React.FC<ClientTutorialProps> = ({
   clientName,
@@ -15,6 +38,7 @@ export const FormFillScene: React.FC<ClientTutorialProps> = ({
   clientEmail,
 }) => {
   const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
 
   const cardOpacity = interpolate(frame, [20, 30], [0, 1], {
     extrapolateLeft: 'clamp',
@@ -31,7 +55,7 @@ export const FormFillScene: React.FC<ClientTutorialProps> = ({
     extrapolateRight: 'clamp',
   });
 
-  // Determine which field is currently focused
+  // Focus states for each field
   const nameIsFocused = frame >= 40 && frame < 120;
   const phoneIsFocused = frame >= 120 && frame < 190;
   const emailIsFocused = frame >= 190 && frame < 260;
@@ -41,210 +65,220 @@ export const FormFillScene: React.FC<ClientTutorialProps> = ({
       <div style={{ display: 'flex', height: '100%' }}>
         <MockSidebar activeItem="Clientes" />
 
-        <div
-          style={{
+        {/* Content area */}
+        <div style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          minWidth: 0,
+          overflow: 'hidden',
+          padding: '8px 8px 8px 0',
+        }}>
+          {/* Panel */}
+          <div style={{
             flex: 1,
-            margin: 16,
-            marginLeft: 0,
-            backgroundColor: COLORS.card,
+            backgroundColor: COLORS.surface,
             borderRadius: 48,
-            padding: 48,
+            border: `1px solid ${COLORS.border}`,
+            boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)',
             display: 'flex',
             flexDirection: 'column',
+            overflow: 'hidden',
             opacity: cardOpacity,
             transform: `translateY(${cardSlide}px)`,
-          }}
-        >
-          {/* Header */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 12,
-              marginBottom: 32,
-            }}
-          >
-            <span
-              style={{
-                fontSize: 24,
-                color: COLORS.textSecondary,
-                cursor: 'pointer',
-              }}
-            >
-              ←
-            </span>
-            <span
-              style={{
-                fontSize: 24,
-                fontWeight: 'bold',
-                color: COLORS.text,
-                fontFamily,
-              }}
-            >
-              Nuevo Cliente
-            </span>
-          </div>
+          }}>
+            <MockTopbar />
 
-          {/* Photo upload placeholder */}
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              marginBottom: 32,
-            }}
-          >
-            <div
-              style={{
-                width: 96,
-                height: 96,
-                borderRadius: 48,
-                backgroundColor: COLORS.surfaceAlt,
-                border: `2px dashed ${COLORS.border}`,
+            {/* Scrollable content area — px-10 pb-10 */}
+            <div style={{ flex: 1, padding: '0 40px 40px', overflow: 'auto' }}>
+              {/* Header: back button + title */}
+              <div style={{
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 32,
-                color: COLORS.textTertiary,
-              }}
-            >
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-                <rect
-                  x="2"
-                  y="5"
-                  width="20"
-                  height="14"
-                  rx="3"
-                  stroke={COLORS.textTertiary}
-                  strokeWidth="1.5"
-                />
-                <circle
-                  cx="12"
-                  cy="12"
-                  r="3.5"
-                  stroke={COLORS.textTertiary}
-                  strokeWidth="1.5"
-                />
-                <circle cx="17" cy="8" r="1" fill={COLORS.textTertiary} />
-              </svg>
-            </div>
-          </div>
-
-          {/* Form fields */}
-          <div style={{ maxWidth: 600, alignSelf: 'center', width: '100%' }}>
-            <MockFormInput
-              label="Nombre Completo"
-              value={clientName}
-              required
-              typingStartFrame={50}
-              isFocused={nameIsFocused}
-            />
-
-            <MockFormInput
-              label="Teléfono"
-              value={clientPhone}
-              required
-              typingStartFrame={130}
-              isFocused={phoneIsFocused}
-            />
-
-            <MockFormInput
-              label="Correo Electrónico"
-              value={clientEmail}
-              typingStartFrame={200}
-              isFocused={emailIsFocused}
-            />
-
-            {/* Address and City - pre-filled, fade in */}
-            <div style={{ opacity: addressOpacity }}>
-              <div style={{ marginBottom: 16 }}>
-                <label
-                  style={{
-                    display: 'block',
-                    fontSize: 14,
-                    fontWeight: 500,
-                    color: COLORS.textSecondary,
-                    marginBottom: 6,
-                    fontFamily,
-                  }}
-                >
-                  Dirección
-                </label>
-                <div
-                  style={{
-                    padding: '12px 16px',
-                    borderRadius: 12,
-                    border: `1px solid ${COLORS.border}`,
-                    backgroundColor: COLORS.card,
-                    fontSize: 16,
-                    color: COLORS.text,
-                    fontFamily,
-                  }}
-                >
-                  Av. Reforma 234
+                gap: 12,
+                marginBottom: 32,
+              }}>
+                {/* Back button — p-2 rounded-full hover:bg-surface-alt */}
+                <div style={{
+                  padding: 8,
+                  borderRadius: 9999,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: COLORS.textSecondary,
+                }}>
+                  <ArrowLeftIcon />
                 </div>
+                <h1 style={{
+                  fontSize: 24,
+                  fontWeight: 700,
+                  color: COLORS.text,
+                  margin: 0,
+                }}>
+                  Nuevo Cliente
+                </h1>
               </div>
 
-              <div style={{ marginBottom: 16 }}>
-                <label
-                  style={{
-                    display: 'block',
-                    fontSize: 14,
-                    fontWeight: 500,
-                    color: COLORS.textSecondary,
-                    marginBottom: 6,
-                    fontFamily,
-                  }}
-                >
-                  Ciudad
-                </label>
-                <div
-                  style={{
-                    padding: '12px 16px',
-                    borderRadius: 12,
-                    border: `1px solid ${COLORS.border}`,
-                    backgroundColor: COLORS.card,
-                    fontSize: 16,
-                    color: COLORS.text,
-                    fontFamily,
-                  }}
-                >
-                  Ciudad de México
+              {/* Form card — bg-card shadow-sm border border-border px-4 py-8 rounded-3xl sm:p-10 */}
+              <div style={{
+                backgroundColor: COLORS.card,
+                boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                border: `1px solid ${COLORS.border}`,
+                borderRadius: 24,
+                padding: 40,
+              }}>
+                {/* space-y-6 equivalent */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+                  {/* Photo upload — centered */}
+                  <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    <div style={{
+                      width: 96,
+                      height: 96,
+                      borderRadius: 48,
+                      backgroundColor: COLORS.surfaceAlt,
+                      border: `2px solid ${COLORS.border}`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}>
+                      <CameraIcon />
+                    </div>
+                  </div>
+
+                  {/* Form grid — grid grid-cols-1 gap-y-6 gap-x-6 sm:grid-cols-6 */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(6, 1fr)',
+                    gap: 24,
+                  }}>
+                    {/* Nombre Completo — sm:col-span-6 */}
+                    <div style={{ gridColumn: 'span 6' }}>
+                      <MockFormInput
+                        label="Nombre Completo"
+                        value={clientName}
+                        placeholder="Nombre del cliente"
+                        required
+                        typingStartFrame={50}
+                        isFocused={nameIsFocused}
+                      />
+                    </div>
+
+                    {/* Email — sm:col-span-3 (comes first in the real form) */}
+                    <div style={{ gridColumn: 'span 3' }}>
+                      <MockFormInput
+                        label="Correo Electrónico"
+                        value={clientEmail}
+                        placeholder="ejemplo@correo.com"
+                        typingStartFrame={200}
+                        isFocused={emailIsFocused}
+                      />
+                    </div>
+
+                    {/* Teléfono — sm:col-span-3 */}
+                    <div style={{ gridColumn: 'span 3' }}>
+                      <MockFormInput
+                        label="Teléfono"
+                        value={clientPhone}
+                        placeholder="00 0000 0000"
+                        required
+                        typingStartFrame={130}
+                        isFocused={phoneIsFocused}
+                      />
+                    </div>
+
+                    {/* Address + City — pre-filled, fade in */}
+                    <div style={{ gridColumn: 'span 4', opacity: addressOpacity }}>
+                      <div style={{ marginBottom: 0 }}>
+                        <label style={{
+                          display: 'block',
+                          fontSize: 14,
+                          fontWeight: 500,
+                          color: COLORS.textSecondary,
+                          marginBottom: 6,
+                        }}>
+                          Dirección
+                        </label>
+                        <div style={{
+                          padding: '12px 16px',
+                          borderRadius: 12,
+                          border: `1px solid ${COLORS.border}`,
+                          backgroundColor: COLORS.card,
+                          fontSize: 16,
+                          color: COLORS.text,
+                        }}>
+                          Av. Reforma 234, Col. Centro
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ gridColumn: 'span 2', opacity: addressOpacity }}>
+                      <div style={{ marginBottom: 0 }}>
+                        <label style={{
+                          display: 'block',
+                          fontSize: 14,
+                          fontWeight: 500,
+                          color: COLORS.textSecondary,
+                          marginBottom: 6,
+                        }}>
+                          Ciudad
+                        </label>
+                        <div style={{
+                          padding: '12px 16px',
+                          borderRadius: 12,
+                          border: `1px solid ${COLORS.border}`,
+                          backgroundColor: COLORS.card,
+                          fontSize: 16,
+                          color: COLORS.text,
+                        }}>
+                          Ciudad de México
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer — border-t border-border + flex justify-end gap-3 pt-6 */}
+                  <div style={{
+                    borderTop: `1px solid ${COLORS.border}`,
+                    paddingTop: 24,
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    gap: 12,
+                  }}>
+                    {/* Cancel button */}
+                    <MockButton
+                      label="Cancelar"
+                      variant="outline"
+                      style={{
+                        padding: '10px 24px',
+                        borderRadius: 12,
+                        fontSize: 14,
+                        fontWeight: 500,
+                        color: COLORS.textSecondary,
+                      }}
+                    />
+
+                    {/* Save button */}
+                    <MockButton
+                      label="Guardar Cliente"
+                      variant="primary"
+                      pressAtFrame={320}
+                      icon={<SaveIcon />}
+                      style={{
+                        padding: '10px 32px',
+                        borderRadius: 12,
+                        fontSize: 14,
+                        fontWeight: 500,
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-
-            {/* Save button */}
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'flex-end',
-                marginTop: 24,
-              }}
-            >
-              <MockButton
-                label="Guardar Cliente"
-                variant="primary"
-                pressAtFrame={320}
-              />
             </div>
           </div>
         </div>
       </div>
 
-      <Cursor
-        positions={[
-          { frame: 40, x: 700, y: 380 },
-          { frame: 50, x: 720, y: 380 },
-          { frame: 110, x: 720, y: 460 },
-          { frame: 120, x: 720, y: 460 },
-          { frame: 180, x: 720, y: 540 },
-          { frame: 190, x: 720, y: 540 },
-          { frame: 260, x: 720, y: 620 },
-          { frame: 300, x: 1050, y: 780 },
-          { frame: 320, x: 1050, y: 780 },
-        ]}
-        clickAtFrames={[50, 130, 200, 320]}
-      />
+      <ClickHighlight x={1050} y={780} clickFrame={320} />
     </AbsoluteFill>
   );
 };
