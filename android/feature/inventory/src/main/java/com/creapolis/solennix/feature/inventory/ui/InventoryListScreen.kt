@@ -1,26 +1,28 @@
 package com.creapolis.solennix.feature.inventory.ui
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Kitchen
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.ShoppingBasket
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.outlined.Build
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.InventoryItem
-import com.creapolis.solennix.core.model.InventoryType
 import com.creapolis.solennix.feature.inventory.viewmodel.InventoryListViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -37,8 +39,22 @@ fun InventoryListScreen(
             TopAppBar(
                 title = { Text("Inventario") },
                 actions = {
+                    // Low stock filter
+                    FilterChip(
+                        selected = uiState.lowStockOnly,
+                        onClick = { viewModel.onLowStockToggle(!uiState.lowStockOnly) },
+                        label = { Text("Stock bajo") },
+                        leadingIcon = if (uiState.lowStockOnly) {
+                            { Icon(Icons.Default.Warning, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                        } else null,
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = SolennixTheme.colors.error.copy(alpha = 0.1f),
+                            selectedLabelColor = SolennixTheme.colors.error
+                        ),
+                        modifier = Modifier.height(32.dp)
+                    )
                     IconButton(onClick = onAddItemClick) {
-                        Icon(Icons.Default.Add, contentDescription = "Add Item")
+                        Icon(Icons.Default.Add, contentDescription = "Agregar item")
                     }
                 }
             )
@@ -64,81 +80,69 @@ fun InventoryListScreen(
                     singleLine = true
                 )
 
-                // Type filter chips
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState())
-                        .padding(horizontal = 16.dp, vertical = 4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    FilterChip(
-                        selected = uiState.selectedType == null,
-                        onClick = { viewModel.onTypeFilterChange(null) },
-                        label = { Text("Todos") },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = SolennixTheme.colors.primaryLight,
-                            selectedLabelColor = SolennixTheme.colors.primary
-                        )
-                    )
-                    FilterChip(
-                        selected = uiState.selectedType == InventoryType.INGREDIENT,
-                        onClick = { viewModel.onTypeFilterChange(InventoryType.INGREDIENT) },
-                        label = { Text("Ingredientes") },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = SolennixTheme.colors.primaryLight,
-                            selectedLabelColor = SolennixTheme.colors.primary
-                        )
-                    )
-                    FilterChip(
-                        selected = uiState.selectedType == InventoryType.EQUIPMENT,
-                        onClick = { viewModel.onTypeFilterChange(InventoryType.EQUIPMENT) },
-                        label = { Text("Equipo") },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = SolennixTheme.colors.primaryLight,
-                            selectedLabelColor = SolennixTheme.colors.primary
-                        )
-                    )
-                    FilterChip(
-                        selected = uiState.selectedType == InventoryType.SUPPLY,
-                        onClick = { viewModel.onTypeFilterChange(InventoryType.SUPPLY) },
-                        label = { Text("Insumos") },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = SolennixTheme.colors.primaryLight,
-                            selectedLabelColor = SolennixTheme.colors.primary
-                        )
-                    )
+                val hasItems = uiState.ingredientItems.isNotEmpty() ||
+                    uiState.equipmentItems.isNotEmpty() ||
+                    uiState.supplyItems.isNotEmpty()
 
-                    FilterChip(
-                        selected = uiState.lowStockOnly,
-                        onClick = { viewModel.onLowStockToggle(!uiState.lowStockOnly) },
-                        label = { Text("Solo bajo stock") },
-                        leadingIcon = if (uiState.lowStockOnly) {
-                            { Icon(Icons.Default.Warning, contentDescription = null, modifier = Modifier.size(18.dp)) }
-                        } else null,
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = SolennixTheme.colors.error.copy(alpha = 0.1f),
-                            selectedLabelColor = SolennixTheme.colors.error
-                        )
-                    )
-                }
-
-                if (uiState.isLoading && uiState.items.isEmpty()) {
+                if (uiState.isLoading && !hasItems) {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator()
                     }
+                } else if (!hasItems) {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(
+                            text = if (uiState.searchQuery.isNotBlank() || uiState.lowStockOnly)
+                                "Sin resultados" else "Sin inventario",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = SolennixTheme.colors.secondaryText
+                        )
+                    }
                 } else {
-                    LazyColumn(modifier = Modifier.fillMaxSize()) {
-                        items(uiState.items) { item ->
-                            InventoryListItem(
-                                item = item,
-                                onClick = { onItemClick(item.id) }
-                            )
-                            HorizontalDivider(
-                                modifier = Modifier.padding(horizontal = 16.dp),
-                                color = SolennixTheme.colors.divider.copy(alpha = 0.5f)
-                            )
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        // Consumibles section
+                        if (uiState.ingredientItems.isNotEmpty()) {
+                            item {
+                                InventorySection(
+                                    title = "Consumibles",
+                                    icon = Icons.Default.ShoppingBasket,
+                                    itemCount = uiState.ingredientItems.size,
+                                    items = uiState.ingredientItems,
+                                    onItemClick = onItemClick
+                                )
+                            }
                         }
+
+                        // Insumos por Evento section
+                        if (uiState.supplyItems.isNotEmpty()) {
+                            item {
+                                InventorySection(
+                                    title = "Insumos por Evento",
+                                    icon = Icons.Default.Kitchen,
+                                    itemCount = uiState.supplyItems.size,
+                                    items = uiState.supplyItems,
+                                    onItemClick = onItemClick
+                                )
+                            }
+                        }
+
+                        // Equipos section
+                        if (uiState.equipmentItems.isNotEmpty()) {
+                            item {
+                                InventorySection(
+                                    title = "Equipos",
+                                    icon = Icons.Outlined.Build,
+                                    itemCount = uiState.equipmentItems.size,
+                                    items = uiState.equipmentItems,
+                                    onItemClick = onItemClick
+                                )
+                            }
+                        }
+
+                        item { Spacer(modifier = Modifier.height(16.dp)) }
                     }
                 }
             }
@@ -147,16 +151,85 @@ fun InventoryListScreen(
 }
 
 @Composable
-fun InventoryListItem(
+private fun InventorySection(
+    title: String,
+    icon: ImageVector,
+    itemCount: Int,
+    items: List<InventoryItem>,
+    onItemClick: (String) -> Unit
+) {
+    Surface(
+        shape = MaterialTheme.shapes.medium,
+        color = SolennixTheme.colors.card,
+        tonalElevation = 1.dp
+    ) {
+        Column {
+            // Section header
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    tint = SolennixTheme.colors.primary
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = SolennixTheme.colors.primaryText
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Surface(
+                    shape = MaterialTheme.shapes.extraSmall,
+                    color = SolennixTheme.colors.primary.copy(alpha = 0.1f)
+                ) {
+                    Text(
+                        text = "$itemCount",
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = SolennixTheme.colors.primary,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            HorizontalDivider(color = SolennixTheme.colors.divider.copy(alpha = 0.3f))
+
+            // Items
+            items.forEachIndexed { index, item ->
+                InventoryListItem(
+                    item = item,
+                    onClick = { onItemClick(item.id) }
+                )
+                if (index < items.lastIndex) {
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        color = SolennixTheme.colors.divider.copy(alpha = 0.2f)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun InventoryListItem(
     item: InventoryItem,
     onClick: () -> Unit
 ) {
     val isLowStock = item.currentStock <= item.minimumStock
 
     Row(
-        modifier = Modifier.clickable(onClick = onClick)
+        modifier = Modifier
+            .clickable(onClick = onClick)
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
@@ -171,7 +244,7 @@ fun InventoryListItem(
                 color = if (isLowStock) SolennixTheme.colors.error else SolennixTheme.colors.secondaryText
             )
         }
-        
+
         if (isLowStock) {
             Surface(
                 color = SolennixTheme.colors.error.copy(alpha = 0.1f),
@@ -182,7 +255,7 @@ fun InventoryListItem(
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                     color = SolennixTheme.colors.error,
                     style = MaterialTheme.typography.labelSmall,
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                    fontWeight = FontWeight.Bold
                 )
             }
         }

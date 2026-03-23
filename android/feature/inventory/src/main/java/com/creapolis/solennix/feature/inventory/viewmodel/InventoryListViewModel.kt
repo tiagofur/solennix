@@ -11,11 +11,12 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class InventoryListUiState(
-    val items: List<InventoryItem> = emptyList(),
+    val ingredientItems: List<InventoryItem> = emptyList(),
+    val equipmentItems: List<InventoryItem> = emptyList(),
+    val supplyItems: List<InventoryItem> = emptyList(),
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
     val searchQuery: String = "",
-    val selectedType: InventoryType? = null,
     val lowStockOnly: Boolean = false
 )
 
@@ -25,32 +26,28 @@ class InventoryListViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
-    private val _selectedType = MutableStateFlow<InventoryType?>(null)
     private val _lowStockOnly = MutableStateFlow(false)
     private val _isRefreshing = MutableStateFlow(false)
 
     val uiState: StateFlow<InventoryListUiState> = combine(
         inventoryRepository.getInventoryItems(),
         _searchQuery,
-        _selectedType,
         _lowStockOnly,
         _isRefreshing
-    ) { items, query, type, lowStock, refreshing ->
+    ) { items, query, lowStock, refreshing ->
         var filtered = items
         if (query.isNotBlank()) {
             filtered = filtered.filter { it.ingredientName.contains(query, ignoreCase = true) }
-        }
-        if (type != null) {
-            filtered = filtered.filter { it.type == type }
         }
         if (lowStock) {
             filtered = filtered.filter { it.currentStock <= it.minimumStock }
         }
         InventoryListUiState(
-            items = filtered,
+            ingredientItems = filtered.filter { it.type == InventoryType.INGREDIENT },
+            equipmentItems = filtered.filter { it.type == InventoryType.EQUIPMENT },
+            supplyItems = filtered.filter { it.type == InventoryType.SUPPLY },
             isRefreshing = refreshing,
             searchQuery = query,
-            selectedType = type,
             lowStockOnly = lowStock
         )
     }.stateIn(
@@ -65,10 +62,6 @@ class InventoryListViewModel @Inject constructor(
 
     fun onSearchQueryChange(query: String) {
         _searchQuery.value = query
-    }
-
-    fun onTypeFilterChange(type: InventoryType?) {
-        _selectedType.value = type
     }
 
     fun onLowStockToggle(enabled: Boolean) {
