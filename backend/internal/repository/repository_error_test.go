@@ -212,6 +212,37 @@ func TestRepositoryMethodsWithClosedPool(t *testing.T) {
 	if err := NewUserRepo(pool).UpdatePassword(ctx, id, "newhash"); err == nil {
 		t.Fatalf("UserRepo.UpdatePassword() expected error with closed pool")
 	}
+
+	// --- UserRepo: GetByGoogleUserID, GetByAppleUserID, CreateWithOAuth, LinkGoogleAccount, LinkAppleAccount, GetByStripeCustomerID ---
+	if _, err := NewUserRepo(pool).GetByGoogleUserID(ctx, "google-uid-123"); err == nil {
+		t.Fatalf("UserRepo.GetByGoogleUserID() expected error with closed pool")
+	}
+	if _, err := NewUserRepo(pool).GetByAppleUserID(ctx, "apple-uid-123"); err == nil {
+		t.Fatalf("UserRepo.GetByAppleUserID() expected error with closed pool")
+	}
+	if err := NewUserRepo(pool).CreateWithOAuth(ctx, &models.User{Email: "oauth@test.dev", Name: "OAuth User"}); err == nil {
+		t.Fatalf("UserRepo.CreateWithOAuth() expected error with closed pool")
+	}
+	if err := NewUserRepo(pool).LinkGoogleAccount(ctx, id, "google-uid-123"); err == nil {
+		t.Fatalf("UserRepo.LinkGoogleAccount() expected error with closed pool")
+	}
+	if err := NewUserRepo(pool).LinkAppleAccount(ctx, id, "apple-uid-123"); err == nil {
+		t.Fatalf("UserRepo.LinkAppleAccount() expected error with closed pool")
+	}
+	if _, err := NewUserRepo(pool).GetByStripeCustomerID(ctx, "cus_test123"); err == nil {
+		t.Fatalf("UserRepo.GetByStripeCustomerID() expected error with closed pool")
+	}
+
+	// --- EventRepo: GetSupplies, GetSupplySuggestionsFromProducts, DeductSupplyStock ---
+	if _, err := NewEventRepo(pool).GetSupplies(ctx, id); err == nil {
+		t.Fatalf("EventRepo.GetSupplies() expected error with closed pool")
+	}
+	if _, err := NewEventRepo(pool).GetSupplySuggestionsFromProducts(ctx, userID, []ProductQuantity{{ID: id, Quantity: 1}}); err == nil {
+		t.Fatalf("EventRepo.GetSupplySuggestionsFromProducts() expected error with closed pool")
+	}
+	if err := NewEventRepo(pool).DeductSupplyStock(ctx, id); err == nil {
+		t.Fatalf("EventRepo.DeductSupplyStock() expected error with closed pool")
+	}
 }
 
 func TestAdminRepoWithClosedPool(t *testing.T) {
@@ -272,6 +303,97 @@ func TestSubscriptionRepoWithClosedPool(t *testing.T) {
 	}
 	if err := repo.UpdateStatusByUserID(ctx, userID, "canceled"); err == nil {
 		t.Fatal("SubscriptionRepo.UpdateStatusByUserID() expected error with closed pool")
+	}
+}
+
+func TestDeviceRepoWithClosedPool(t *testing.T) {
+	pool := closedPool(t)
+
+	ctx := context.Background()
+	userID := uuid.New()
+
+	repo := NewDeviceRepo(pool)
+
+	if _, err := repo.Register(ctx, userID, "device-token-abc", "ios"); err == nil {
+		t.Fatal("DeviceRepo.Register() expected error with closed pool")
+	}
+	if err := repo.Unregister(ctx, userID, "device-token-abc"); err == nil {
+		t.Fatal("DeviceRepo.Unregister() expected error with closed pool")
+	}
+	if _, err := repo.GetByUserID(ctx, userID); err == nil {
+		t.Fatal("DeviceRepo.GetByUserID() expected error with closed pool")
+	}
+	if err := repo.UnregisterAllForUser(ctx, userID); err == nil {
+		t.Fatal("DeviceRepo.UnregisterAllForUser() expected error with closed pool")
+	}
+}
+
+// TestUpdateEventItemsWithSupplies tests UpdateEventItems with supplies slice provided.
+func TestUpdateEventItemsWithSupplies(t *testing.T) {
+	pool := closedPool(t)
+
+	ctx := context.Background()
+	eventID := uuid.New()
+	invID := uuid.New()
+
+	repo := NewEventRepo(pool)
+
+	// With non-nil supplies list (stock source)
+	supplies := []models.EventSupply{{InventoryID: invID, Quantity: 5, UnitCost: 2.5, Source: "stock"}}
+	if err := repo.UpdateEventItems(ctx, eventID, nil, nil, nil, &supplies); err == nil {
+		t.Fatal("EventRepo.UpdateEventItems(with supplies) expected error with closed pool")
+	}
+
+	// With purchase source (tests the exclude_cost override branch)
+	purchaseSupplies := []models.EventSupply{{InventoryID: invID, Quantity: 3, UnitCost: 5.0, Source: "purchase", ExcludeCost: true}}
+	if err := repo.UpdateEventItems(ctx, eventID, nil, nil, nil, &purchaseSupplies); err == nil {
+		t.Fatal("EventRepo.UpdateEventItems(purchase supplies) expected error with closed pool")
+	}
+
+	// With all four item types populated
+	products := []models.EventProduct{{ProductID: uuid.New(), Quantity: 1, UnitPrice: 50}}
+	extras := []models.EventExtra{{Description: "Balloons", Cost: 10, Price: 20}}
+	equipment := []models.EventEquipment{{InventoryID: uuid.New(), Quantity: 2}}
+	allSupplies := []models.EventSupply{{InventoryID: invID, Quantity: 10, UnitCost: 1.0, Source: "stock"}}
+	if err := repo.UpdateEventItems(ctx, eventID, products, extras, &equipment, &allSupplies); err == nil {
+		t.Fatal("EventRepo.UpdateEventItems(all four types) expected error with closed pool")
+	}
+}
+
+// TestUserRepoCreateWithOAuthDefaults tests CreateWithOAuth default values for role and plan.
+func TestUserRepoCreateWithOAuthDefaults(t *testing.T) {
+	pool := closedPool(t)
+
+	ctx := context.Background()
+	user := &models.User{
+		Email: "oauth-defaults@test.dev",
+		Name:  "OAuth Defaults",
+		Role:  "",  // triggers default role = "user"
+		Plan:  "",  // triggers default plan = "basic"
+	}
+	if err := NewUserRepo(pool).CreateWithOAuth(ctx, user); err == nil {
+		t.Fatal("UserRepo.CreateWithOAuth(defaults) expected error with closed pool")
+	}
+	// Verify defaults were set before the pool call
+	if user.Role != "user" {
+		t.Fatalf("expected role to be set to 'user', got %q", user.Role)
+	}
+	if user.Plan != "basic" {
+		t.Fatalf("expected plan to be set to 'basic', got %q", user.Plan)
+	}
+}
+
+// TestGetSupplySuggestionsFromProductsEmpty tests GetSupplySuggestionsFromProducts with empty list returns early.
+func TestGetSupplySuggestionsFromProductsEmpty(t *testing.T) {
+	ctx := context.Background()
+	userID := uuid.New()
+
+	suggestions, err := NewEventRepo(nil).GetSupplySuggestionsFromProducts(ctx, userID, []ProductQuantity{})
+	if err != nil {
+		t.Fatalf("EventRepo.GetSupplySuggestionsFromProducts(empty) expected no error, got: %v", err)
+	}
+	if suggestions != nil {
+		t.Fatalf("EventRepo.GetSupplySuggestionsFromProducts(empty) expected nil, got %d items", len(suggestions))
 	}
 }
 
