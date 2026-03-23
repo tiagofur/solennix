@@ -53,7 +53,6 @@ fun DashboardScreen(
                 )
             )
         },
-        containerColor = SolennixTheme.colors.surfaceGrouped
     ) { padding ->
         PullToRefreshBox(
             isRefreshing = uiState.isRefreshing,
