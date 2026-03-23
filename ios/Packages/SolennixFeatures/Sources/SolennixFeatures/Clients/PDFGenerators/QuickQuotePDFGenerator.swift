@@ -40,7 +40,10 @@ struct QuickQuotePDFGenerator {
         discountLabel: String,
         taxAmount: Double,
         taxRate: Double,
-        total: Double
+        total: Double,
+        clientName: String? = nil,
+        clientPhone: String? = nil,
+        clientEmail: String? = nil
     ) -> Data {
         let renderer = UIGraphicsPDFRenderer(bounds: PDFConstants.pageRect)
 
@@ -60,7 +63,16 @@ struct QuickQuotePDFGenerator {
                 ("Fecha:", todayStr),
                 ("Personas:", "\(numPeople)")
             ]
-            let rightItems: [(String, String)] = []
+            var rightItems: [(String, String)] = []
+            if let name = clientName, !name.isEmpty {
+                rightItems.append(("Cliente:", name))
+            }
+            if let phone = clientPhone, !phone.isEmpty {
+                rightItems.append(("Tel:", phone))
+            }
+            if let email = clientEmail, !email.isEmpty {
+                rightItems.append(("Email:", email))
+            }
             y = PDFConstants.drawInfoGrid(context: context, y: y, leftItems: leftItems, rightItems: rightItems)
             y += 8
 

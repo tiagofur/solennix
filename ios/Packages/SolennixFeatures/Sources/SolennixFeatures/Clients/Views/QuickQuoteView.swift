@@ -8,9 +8,11 @@ public struct QuickQuoteView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.apiClient) private var apiClient
     @State private var viewModel: QuickQuoteViewModel
-    
-    public init(apiClient: APIClient) {
+    var onConvertToEvent: (() -> Void)?
+
+    public init(apiClient: APIClient, onConvertToEvent: (() -> Void)? = nil) {
         _viewModel = State(initialValue: QuickQuoteViewModel(apiClient: apiClient))
+        self.onConvertToEvent = onConvertToEvent
     }
     
     public var body: some View {
@@ -21,6 +23,20 @@ public struct QuickQuoteView: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     Form {
+                        Section {
+                            DisclosureGroup("Datos del cliente (opcional, para el PDF)", isExpanded: $viewModel.showClientInfo) {
+                                TextField("Nombre del cliente", text: $viewModel.clientName)
+                                    .textContentType(.name)
+                                TextField("Teléfono", text: $viewModel.clientPhone)
+                                    .keyboardType(.phonePad)
+                                    .textContentType(.telephoneNumber)
+                                TextField("Email", text: $viewModel.clientEmail)
+                                    .keyboardType(.emailAddress)
+                                    .textContentType(.emailAddress)
+                                    .textInputAutocapitalization(.never)
+                            }
+                        }
+
                         Section("Datos Básicos") {
                             HStack {
                                 Image(systemName: "person.2")
@@ -95,6 +111,29 @@ public struct QuickQuoteView: View {
                                     .foregroundStyle(SolennixColors.primary)
                             }
                         }
+
+                        if viewModel.financials.totalCost > 0 {
+                            Section("Métricas de Rentabilidad (Interno)") {
+                                let profitFin = viewModel.financials
+                                SummaryRow(label: "Costo Productos", value: profitFin.productCost)
+                                SummaryRow(label: "Costo Extras", value: profitFin.extrasCost)
+                                SummaryRow(label: "Costo Total", value: profitFin.totalCost)
+                                HStack {
+                                    Text("Utilidad Neta")
+                                        .foregroundStyle(SolennixColors.textSecondary)
+                                    Spacer()
+                                    Text(profitFin.profit.asMXN)
+                                        .foregroundStyle(profitFin.profit >= 0 ? SolennixColors.success : .red)
+                                }
+                                HStack {
+                                    Text("Margen")
+                                        .foregroundStyle(SolennixColors.textSecondary)
+                                    Spacer()
+                                    Text(String(format: "%.1f%%", profitFin.margin))
+                                        .foregroundStyle(profitFin.margin >= 0 ? SolennixColors.success : .red)
+                                }
+                            }
+                        }
                         
                         Section("Exportar") {
                             Button {
@@ -117,10 +156,25 @@ public struct QuickQuoteView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("A Evento") {
-                        // Pass data to EventForm
+                        let transferData = QuickQuoteTransferData(
+                            products: viewModel.selectedProducts.map { p in
+                                let name = viewModel.availableProducts.first(where: { $0.id == p.productId })?.name ?? "Producto"
+                                return (productId: p.productId, productName: name, quantity: p.quantity, unitPrice: p.unitPrice)
+                            },
+                            extras: viewModel.extras.map { e in
+                                (description: e.description, cost: e.cost, price: e.price, excludeUtility: e.excludeUtility)
+                            },
+                            discountType: viewModel.discountType,
+                            discountValue: viewModel.discountValue,
+                            requiresInvoice: viewModel.requiresInvoice,
+                            numPeople: viewModel.numPeople
+                        )
+                        QuickQuoteDataHolder.shared.pendingData = transferData
+                        onConvertToEvent?()
                         dismiss()
                     }
                     .fontWeight(.bold)
+                    .disabled(viewModel.selectedProducts.isEmpty && viewModel.extras.isEmpty)
                 }
             }
             .task {

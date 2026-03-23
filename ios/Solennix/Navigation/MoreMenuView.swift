@@ -67,6 +67,15 @@ struct MoreMenuView: View {
                         color: SolennixColors.info
                     )
                 }
+
+                NavigationLink(value: Route.quickQuote) {
+                    menuRow(
+                        icon: "doc.text",
+                        title: "Cotización Rápida",
+                        subtitle: "Sin registrar cliente ni fecha",
+                        color: SolennixColors.primary
+                    )
+                }
             } header: {
                 Text("Herramientas")
                     .font(.caption)

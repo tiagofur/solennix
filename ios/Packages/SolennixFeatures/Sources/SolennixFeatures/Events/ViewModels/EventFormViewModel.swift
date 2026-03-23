@@ -241,7 +241,41 @@ public final class EventFormViewModel {
             errorMessage = mapError(error)
         }
 
+        // Check for Quick Quote transfer data
+        if let transferData = QuickQuoteDataHolder.shared.pendingData {
+            applyQuickQuoteData(transferData)
+            QuickQuoteDataHolder.shared.pendingData = nil
+        }
+
         isLoading = false
+    }
+
+    // MARK: - Apply Quick Quote Data
+
+    private func applyQuickQuoteData(_ data: QuickQuoteTransferData) {
+        numPeople = data.numPeople
+        discountType = data.discountType
+        discount = data.discountValue
+        requiresInvoice = data.requiresInvoice
+
+        selectedProducts = data.products.map { item in
+            SelectedProduct(
+                productId: item.productId,
+                product: products.first(where: { $0.id == item.productId }),
+                quantity: Double(item.quantity),
+                unitPrice: item.unitPrice,
+                discount: 0
+            )
+        }
+
+        extras = data.extras.map { item in
+            SelectedExtra(
+                description: item.description,
+                cost: item.cost,
+                price: item.price,
+                excludeUtility: item.excludeUtility
+            )
+        }
     }
 
     // MARK: - Load Event for Editing

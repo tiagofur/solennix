@@ -58,7 +58,11 @@ data class QuickQuoteUiState(
     val isLoading: Boolean = false,
     val isGeneratingPdf: Boolean = false,
     val errorMessage: String? = null,
-    val generatedPdfFile: File? = null
+    val generatedPdfFile: File? = null,
+    val clientName: String = "",
+    val clientPhone: String = "",
+    val clientEmail: String = "",
+    val showClientInfo: Boolean = false
 ) {
     val subtotalProducts: Double
         get() = selectedItems.sumOf { it.subtotal }
@@ -316,6 +320,22 @@ class QuickQuoteViewModel @Inject constructor(
         _uiState.update { it.copy(discountType = type) }
     }
 
+    fun updateClientName(value: String) {
+        _uiState.update { it.copy(clientName = value) }
+    }
+
+    fun updateClientPhone(value: String) {
+        _uiState.update { it.copy(clientPhone = value) }
+    }
+
+    fun updateClientEmail(value: String) {
+        _uiState.update { it.copy(clientEmail = value) }
+    }
+
+    fun toggleClientInfo() {
+        _uiState.update { it.copy(showClientInfo = !it.showClientInfo) }
+    }
+
     private fun fetchProductCosts(productId: String) {
         if (_uiState.value.productUnitCosts.containsKey(productId)) return
         viewModelScope.launch {
@@ -378,7 +398,10 @@ class QuickQuoteViewModel @Inject constructor(
                     taxRate = state.taxRate.toDoubleOrNull() ?: 0.0,
                     taxAmount = state.taxAmount,
                     total = state.total,
-                    user = user
+                    user = user,
+                    clientName = state.clientName.takeIf { state.client == null },
+                    clientPhone = state.clientPhone.takeIf { state.client == null },
+                    clientEmail = state.clientEmail.takeIf { state.client == null }
                 )
                 _uiState.update { it.copy(generatedPdfFile = file, isGeneratingPdf = false) }
             } catch (e: Exception) {

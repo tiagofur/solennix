@@ -293,8 +293,62 @@ class EventFormViewModel @Inject constructor(
                 val plan = authManager.currentUser.value?.plan ?: Plan.BASIC
                 limitCheckResult = planLimitsManager.canCreateEvent(plan)
             }
+            // Load data from QuickQuote if available
+            loadFromQuickQuote()
         }
         loadUnavailableDates()
+    }
+
+    private fun loadFromQuickQuote() {
+        val data = QuickQuoteDataHolder.pendingData ?: return
+        QuickQuoteDataHolder.pendingData = null
+
+        // Map products
+        data.products.forEach { transferProduct ->
+            val eventProduct = EventProduct(
+                id = UUID.randomUUID().toString(),
+                eventId = "",
+                productId = transferProduct.productId,
+                quantity = transferProduct.quantity.toDouble(),
+                unitPrice = transferProduct.unitPrice,
+                discount = 0.0,
+                totalPrice = transferProduct.unitPrice * transferProduct.quantity,
+                createdAt = "",
+                productName = transferProduct.productName
+            )
+            selectedProducts.add(eventProduct)
+        }
+
+        // Map extras
+        data.extras.forEach { transferExtra ->
+            val extra = EventExtra(
+                id = UUID.randomUUID().toString(),
+                eventId = "",
+                description = transferExtra.description,
+                cost = transferExtra.cost,
+                price = transferExtra.price,
+                excludeUtility = transferExtra.excludeUtility,
+                createdAt = ""
+            )
+            eventExtras.add(extra)
+        }
+
+        // Set discount
+        discountType = when (data.discountType) {
+            "fixed" -> DiscountType.FIXED
+            else -> DiscountType.PERCENT
+        }
+        discount = if (data.discountValue > 0) data.discountValue.toString() else "0"
+
+        // Set num people
+        if (data.numPeople > 0) {
+            numPeople = data.numPeople.toString()
+        }
+
+        // Set invoice
+        requiresInvoice = data.requiresInvoice
+
+        fetchProductCosts()
     }
 
     private fun loadExistingEvent(id: String) {

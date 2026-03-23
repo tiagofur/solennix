@@ -209,7 +209,10 @@ public final class QuickQuoteViewModel {
             discountLabel: discountLabel,
             taxAmount: fin.taxAmount,
             taxRate: taxRate,
-            total: fin.total
+            total: fin.total,
+            clientName: clientName.isEmpty ? nil : clientName,
+            clientPhone: clientPhone.isEmpty ? nil : clientPhone,
+            clientEmail: clientEmail.isEmpty ? nil : clientEmail
         )
         showShareSheet = true
     }

@@ -72,7 +72,10 @@ object QuickQuotePdfGenerator {
         taxRate: Double,
         taxAmount: Double,
         total: Double,
-        user: User?
+        user: User?,
+        clientName: String? = null,
+        clientPhone: String? = null,
+        clientEmail: String? = null
     ): File {
         val document = PdfDocument()
         val manager = PageManager(document)
@@ -97,6 +100,12 @@ object QuickQuotePdfGenerator {
             client.email?.takeIf { it.isNotBlank() }?.let { manager.drawLabelValue("Email:", it) }
             manager.drawLabelValue("Telefono:", client.phone)
             client.address?.takeIf { it.isNotBlank() }?.let { manager.drawLabelValue("Direccion:", it) }
+            manager.moveDown(PARAGRAPH_SPACING)
+        } else if (!clientName.isNullOrBlank()) {
+            manager.drawSectionHeader("CLIENTE")
+            manager.drawLabelValue("Nombre:", clientName)
+            clientEmail?.takeIf { it.isNotBlank() }?.let { manager.drawLabelValue("Email:", it) }
+            clientPhone?.takeIf { it.isNotBlank() }?.let { manager.drawLabelValue("Telefono:", it) }
             manager.moveDown(PARAGRAPH_SPACING)
         }
 

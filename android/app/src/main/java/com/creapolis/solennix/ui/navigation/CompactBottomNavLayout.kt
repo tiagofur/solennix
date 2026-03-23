@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -245,7 +246,8 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                     onProductsClick = { navController.navigate("products") },
                     onInventoryClick = { navController.navigate("inventory") },
                     onSettingsClick = { navController.navigate("settings") },
-                    onSearchClick = { navController.navigate("search") }
+                    onSearchClick = { navController.navigate("search") },
+                    onQuickQuoteClick = { navController.navigate("quick_quote") }
                 )
             }
 
@@ -402,7 +404,16 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
             composable("quick_quote?clientId={clientId}") {
                 QuickQuoteScreen(
                     viewModel = hiltViewModel(),
-                    onNavigateBack = { navController.popBackStack() }
+                    onNavigateBack = { navController.popBackStack() },
+                    onConvertToEvent = { navController.navigate("event_form?eventId=") }
+                )
+            }
+
+            composable("quick_quote") {
+                QuickQuoteScreen(
+                    viewModel = hiltViewModel(),
+                    onNavigateBack = { navController.popBackStack() },
+                    onConvertToEvent = { navController.navigate("event_form?eventId=") }
                 )
             }
 
@@ -440,7 +451,8 @@ fun MoreMenuScreen(
     onProductsClick: () -> Unit,
     onInventoryClick: () -> Unit,
     onSettingsClick: () -> Unit,
-    onSearchClick: () -> Unit
+    onSearchClick: () -> Unit,
+    onQuickQuoteClick: () -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -458,6 +470,17 @@ fun MoreMenuScreen(
             MenuCard(title = "Productos", subtitle = "Servicios y artículos que ofreces", icon = Icons.AutoMirrored.Filled.List, onClick = onProductsClick)
             MenuCard(title = "Inventario", subtitle = "Control de equipos e insumos", icon = Icons.Default.Build, onClick = onInventoryClick)
             MenuCard(title = "Búsqueda Global", subtitle = "Busca en toda la app", icon = Icons.Default.Search, onClick = onSearchClick)
+
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Herramientas",
+                style = MaterialTheme.typography.titleSmall,
+                color = SolennixTheme.colors.secondaryText,
+                modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
+            )
+            MenuCard(title = "Cotización Rápida", subtitle = "Arma una cotización sin registrar cliente", icon = Icons.Outlined.Description, onClick = onQuickQuoteClick)
+
+            Spacer(modifier = Modifier.height(8.dp))
             MenuCard(title = "Ajustes", subtitle = "Cuenta, negocio y suscripción", icon = Icons.Default.Settings, onClick = onSettingsClick)
         }
     }

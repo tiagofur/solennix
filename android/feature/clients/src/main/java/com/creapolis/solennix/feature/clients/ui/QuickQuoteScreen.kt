@@ -1,12 +1,15 @@
 package com.creapolis.solennix.feature.clients.ui
 
 import android.content.Intent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -21,6 +24,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.DiscountType
 import com.creapolis.solennix.core.model.Product
+import com.creapolis.solennix.core.model.QuickQuoteDataHolder
+import com.creapolis.solennix.core.model.QuickQuoteTransferData
+import com.creapolis.solennix.core.model.QuoteTransferExtra
+import com.creapolis.solennix.core.model.QuoteTransferProduct
 import com.creapolis.solennix.core.model.extensions.asMXN
 import com.creapolis.solennix.feature.clients.viewmodel.QuickQuoteViewModel
 import com.creapolis.solennix.feature.clients.viewmodel.QuoteExtra
@@ -30,7 +37,8 @@ import com.creapolis.solennix.feature.clients.viewmodel.QuoteItem
 @Composable
 fun QuickQuoteScreen(
     viewModel: QuickQuoteViewModel,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onConvertToEvent: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -89,7 +97,7 @@ fun QuickQuoteScreen(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Client info (if available)
+                // Client info
                 if (uiState.client != null) {
                     val client = uiState.client!!
                     Card(
@@ -117,6 +125,74 @@ fun QuickQuoteScreen(
                                     style = MaterialTheme.typography.bodySmall,
                                     color = SolennixTheme.colors.secondaryText
                                 )
+                            }
+                        }
+                    }
+                } else {
+                    // Ad-hoc client info (collapsible, optional)
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { viewModel.toggleClientInfo() },
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
+                                    Text(
+                                        text = "Datos del cliente (opcional)",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        color = SolennixTheme.colors.primaryText
+                                    )
+                                    Text(
+                                        text = "Para incluir en el PDF",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = SolennixTheme.colors.secondaryText
+                                    )
+                                }
+                                Icon(
+                                    imageVector = if (uiState.showClientInfo) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                    contentDescription = if (uiState.showClientInfo) "Colapsar" else "Expandir",
+                                    tint = SolennixTheme.colors.secondaryText
+                                )
+                            }
+
+                            AnimatedVisibility(visible = uiState.showClientInfo) {
+                                Column(
+                                    modifier = Modifier.padding(top = 12.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    OutlinedTextField(
+                                        value = uiState.clientName,
+                                        onValueChange = viewModel::updateClientName,
+                                        label = { Text("Nombre") },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
+                                        singleLine = true
+                                    )
+                                    OutlinedTextField(
+                                        value = uiState.clientPhone,
+                                        onValueChange = viewModel::updateClientPhone,
+                                        label = { Text("Teléfono") },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null) },
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                                        singleLine = true
+                                    )
+                                    OutlinedTextField(
+                                        value = uiState.clientEmail,
+                                        onValueChange = viewModel::updateClientEmail,
+                                        label = { Text("Email") },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                                        singleLine = true
+                                    )
+                                }
                             }
                         }
                     }
@@ -407,6 +483,53 @@ fun QuickQuoteScreen(
                         Spacer(Modifier.width(8.dp))
                         Text("Generar Cotizacion", style = MaterialTheme.typography.titleMedium)
                     }
+                }
+
+                // Convert to Event button
+                val hasContent = uiState.selectedItems.any { it.productId.isNotEmpty() } ||
+                    uiState.extras.any { it.description.isNotBlank() }
+                OutlinedButton(
+                    onClick = {
+                        val transferData = QuickQuoteTransferData(
+                            products = uiState.selectedItems
+                                .filter { it.productId.isNotEmpty() }
+                                .map { item ->
+                                    QuoteTransferProduct(
+                                        productId = item.productId,
+                                        productName = item.productName,
+                                        quantity = item.quantity,
+                                        unitPrice = item.unitPrice
+                                    )
+                                },
+                            extras = uiState.extras
+                                .filter { it.description.isNotBlank() }
+                                .map { extra ->
+                                    QuoteTransferExtra(
+                                        description = extra.description,
+                                        cost = extra.cost,
+                                        price = extra.price,
+                                        excludeUtility = extra.excludeUtility
+                                    )
+                                },
+                            discountType = when (uiState.discountType) {
+                                DiscountType.PERCENT -> "percent"
+                                DiscountType.FIXED -> "fixed"
+                            },
+                            discountValue = uiState.discount.toDoubleOrNull() ?: 0.0,
+                            requiresInvoice = uiState.requiresInvoice,
+                            numPeople = uiState.numPeople.toIntOrNull() ?: 0
+                        )
+                        QuickQuoteDataHolder.pendingData = transferData
+                        onConvertToEvent()
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    enabled = hasContent
+                ) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text("Convertir a Evento", style = MaterialTheme.typography.titleMedium)
                 }
 
                 Spacer(Modifier.height(32.dp))
