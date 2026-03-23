@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.InventoryItem
+import com.creapolis.solennix.core.model.extensions.asMXN
 import com.creapolis.solennix.feature.inventory.viewmodel.InventoryListViewModel
 import com.creapolis.solennix.feature.inventory.viewmodel.InventorySortKey
 
@@ -293,6 +294,15 @@ private fun InventoryListItem(
                 text = "Stock: ${item.currentStock} ${item.unit}",
                 style = MaterialTheme.typography.bodySmall,
                 color = if (isLowStock) SolennixTheme.colors.error else SolennixTheme.colors.secondaryText
+            )
+        }
+
+        if (item.unitCost != null && item.unitCost!! > 0) {
+            Text(
+                text = item.unitCost!!.asMXN(),
+                style = MaterialTheme.typography.bodySmall,
+                color = SolennixTheme.colors.secondaryText,
+                modifier = Modifier.padding(end = 8.dp)
             )
         }
 
