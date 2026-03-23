@@ -52,7 +52,7 @@ export const InventoryDetails: React.FC = () => {
       setLoading(true);
       const itemData = await inventoryService.getById(itemId);
       setItem(itemData);
-      loadDemandForecast(itemId);
+      loadDemandForecast(itemId, itemData);
     } catch (err) {
       logError("Error fetching inventory item details", err);
       setError("Error al cargar los datos del ítem.");
@@ -61,7 +61,7 @@ export const InventoryDetails: React.FC = () => {
     }
   };
 
-  const loadDemandForecast = async (itemId: string) => {
+  const loadDemandForecast = async (itemId: string, currentItem: InventoryItem) => {
     try {
       setDemandLoading(true);
 
@@ -124,7 +124,7 @@ export const InventoryDetails: React.FC = () => {
         let eventDemand = 0;
         for (const ep of products) {
           const perUnit = productDemandMap[ep.productId] || 0;
-          if (item.type === 'supply') {
+          if (currentItem.type === 'supply') {
             // Per-event supplies: fixed quantity, not scaled by product qty
             eventDemand += perUnit;
           } else {
