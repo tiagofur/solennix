@@ -52,7 +52,7 @@ func TestValidateEvent(t *testing.T) {
 				Status:      "quoted",
 			},
 			wantErr: true,
-			errMsg:  "discount: must be between 0 and 100",
+			errMsg:  "discount: must be greater than or equal to 0",
 		},
 		{
 			name: "discount above 100",
@@ -64,7 +64,7 @@ func TestValidateEvent(t *testing.T) {
 				Status:      "quoted",
 			},
 			wantErr: true,
-			errMsg:  "discount: must be between 0 and 100",
+			errMsg:  "discount: must be between 0 and 100 for percentage discounts",
 		},
 		{
 			name: "tax_rate below 0",
@@ -277,14 +277,13 @@ func TestValidateEventProduct(t *testing.T) {
 			errMsg:  "unit_price: must be greater than or equal to 0",
 		},
 		{
-			name: "discount above 100",
+			name: "discount above 100 is valid for fixed amount",
 			product: &models.EventProduct{
 				Quantity:  1,
 				UnitPrice: 100.0,
 				Discount:  150.0,
 			},
-			wantErr: true,
-			errMsg:  "discount: must be between 0 and 100",
+			wantErr: false,
 		},
 	}
 
@@ -742,7 +741,7 @@ func TestValidateEventProduct_DiscountBelowZero(t *testing.T) {
 	if err == nil {
 		t.Fatal("ValidateEventProduct() expected error for discount below 0")
 	}
-	expected := "discount: must be between 0 and 100"
+	expected := "discount: must be greater than or equal to 0"
 	if err.Error() != expected {
 		t.Errorf("ValidateEventProduct() error = %q, want %q", err.Error(), expected)
 	}

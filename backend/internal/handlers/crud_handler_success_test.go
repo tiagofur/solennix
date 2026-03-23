@@ -78,8 +78,8 @@ func TestCreateClient_BasicUser_AtLimit_Forbidden(t *testing.T) {
 	if rr.Code != http.StatusForbidden {
 		t.Fatalf("status = %d, want %d, body=%s", rr.Code, http.StatusForbidden, rr.Body.String())
 	}
-	if !strings.Contains(rr.Body.String(), "Client limits") {
-		t.Fatalf("body = %q, expected to contain 'Client limits'", rr.Body.String())
+	if !strings.Contains(rr.Body.String(), "plan_limit_exceeded") {
+		t.Fatalf("body = %q, expected to contain 'plan_limit_exceeded'", rr.Body.String())
 	}
 }
 
@@ -191,8 +191,8 @@ func TestCreateEvent_BasicUser_AtLimit_Forbidden(t *testing.T) {
 	if rr.Code != http.StatusForbidden {
 		t.Fatalf("status = %d, want %d, body=%s", rr.Code, http.StatusForbidden, rr.Body.String())
 	}
-	if !strings.Contains(rr.Body.String(), "Event limits") {
-		t.Fatalf("body = %q, expected to contain 'Event limits'", rr.Body.String())
+	if !strings.Contains(rr.Body.String(), "plan_limit_exceeded") {
+		t.Fatalf("body = %q, expected to contain 'plan_limit_exceeded'", rr.Body.String())
 	}
 }
 
@@ -533,8 +533,8 @@ func TestCreateProduct_BasicUser_AtCatalogLimit_Forbidden(t *testing.T) {
 	if rr.Code != http.StatusForbidden {
 		t.Fatalf("status = %d, want %d, body=%s", rr.Code, http.StatusForbidden, rr.Body.String())
 	}
-	if !strings.Contains(rr.Body.String(), "Catalog limits") {
-		t.Fatalf("body = %q, expected to contain 'Catalog limits'", rr.Body.String())
+	if !strings.Contains(rr.Body.String(), "plan_limit_exceeded") {
+		t.Fatalf("body = %q, expected to contain 'plan_limit_exceeded'", rr.Body.String())
 	}
 }
 

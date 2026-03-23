@@ -650,7 +650,7 @@ func TestCreateEventValidation(t *testing.T) {
 		{
 			name:     "DiscountOver100",
 			body:     `{"client_id":"` + clientID + `","event_date":"2026-01-01","service_type":"catering","num_people":10,"status":"quoted","discount":101,"tax_rate":16,"tax_amount":0,"total_amount":0}`,
-			wantBody: "discount: must be between 0 and 100",
+			wantBody: "discount: must be between 0 and 100 for percentage discounts",
 		},
 		{
 			name:     "NegativeTaxRate",
@@ -701,7 +701,7 @@ func TestUpdateEventValidation(t *testing.T) {
 		{
 			name:     "NegativeDiscount",
 			body:     `{"client_id":"` + clientID + `","event_date":"2026-01-01","service_type":"catering","num_people":10,"status":"quoted","discount":-5,"tax_rate":16,"tax_amount":0,"total_amount":0}`,
-			wantBody: "discount: must be between 0 and 100",
+			wantBody: "discount: must be greater than or equal to 0",
 		},
 		{
 			name:     "NegativeTotalAmount",
@@ -929,14 +929,11 @@ func TestUpdateEventItemsValidation(t *testing.T) {
 		}
 	})
 
-	t.Run("ValidateEventProduct_DiscountOver100", func(t *testing.T) {
+	t.Run("ValidateEventProduct_DiscountOver100_ValidForFixedAmount", func(t *testing.T) {
 		ep := &models.EventProduct{Quantity: 1, UnitPrice: 10, Discount: 101}
 		err := ValidateEventProduct(ep)
-		if err == nil {
-			t.Fatal("expected error for discount over 100")
-		}
-		if !strings.Contains(err.Error(), "discount") {
-			t.Fatalf("error = %q, expected to mention discount", err.Error())
+		if err != nil {
+			t.Fatalf("expected no error for fixed amount discount over 100, got %v", err)
 		}
 	})
 
