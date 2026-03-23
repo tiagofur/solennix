@@ -57,18 +57,13 @@ export const InventoryFormFillScene: React.FC<InventoryTutorialProps> = ({
 
               <div style={{ backgroundColor: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: 24, padding: 40 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-                  <div style={{ display: 'flex', justifyContent: 'center' }}>
-                    <div style={{ width: 96, height: 96, borderRadius: 48, backgroundColor: COLORS.surfaceAlt, border: `2px solid ${COLORS.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <BoxIcon />
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 20 }}>
+                    {/* Fila 1 */}
+                    <div style={{ gridColumn: 'span 8' }}>
+                      <MockFormInput label="Nombre del Ítem *" value={itemName} placeholder="Ej. Hielo" required typingStartFrame={50} isFocused={nameIsFocused} />
                     </div>
-                  </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 24 }}>
-                    <div style={{ gridColumn: 'span 4' }}>
-                      <MockFormInput label="Nombre del Ítem" value={itemName} placeholder="Ej. Hielo" required typingStartFrame={50} isFocused={nameIsFocused} />
-                    </div>
-                    <div style={{ gridColumn: 'span 2', position: 'relative' }}>
-                      <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: COLORS.textSecondary, marginBottom: 8 }}>Categoría *</label>
+                    <div style={{ gridColumn: 'span 4', position: 'relative' }}>
+                      <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: COLORS.textSecondary, marginBottom: 8 }}>Tipo *</label>
                       <div style={{
                         width: '100%',
                         padding: '12px 16px',
@@ -126,17 +121,74 @@ export const InventoryFormFillScene: React.FC<InventoryTutorialProps> = ({
                         </div>
                       )}
                     </div>
-                    <div style={{ gridColumn: 'span 3' }}>
-                      <MockFormInput label="Unidad de Medida" value={itemUnit} placeholder="Bolsas, Kg, Litros" typingStartFrame={190} isFocused={unitIsFocused} />
+
+                    {/* Fila 2 */}
+                    <div style={{ gridColumn: 'span 6', position: 'relative' }}>
+                      <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: COLORS.textSecondary, marginBottom: 8 }}>Unidad (kg, l, pza, etc.) *</label>
+                      <div style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        borderRadius: 12,
+                        border: `1px solid ${unitIsFocused ? COLORS.primary : COLORS.border}`,
+                        backgroundColor: COLORS.card,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        cursor: 'pointer',
+                        boxShadow: unitIsFocused ? `0 0 0 4px ${COLORS.primary}20` : 'none',
+                        transition: 'all 0.2s',
+                        height: 45,
+                      }}>
+                        <span style={{ fontSize: 14, color: COLORS.text }}>{frame >= 210 ? itemUnit : "Selecciona una unidad"}</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ transform: unitIsFocused && frame >= 195 && frame < 250 ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', color: COLORS.textSecondary }}>
+                          <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </div>
+
+                      {unitIsFocused && frame >= 195 && frame < 250 && (
+                        <div style={{
+                          position: 'absolute',
+                          top: '100%',
+                          left: 0,
+                          right: 0,
+                          marginTop: 4,
+                          backgroundColor: COLORS.card,
+                          border: `1px solid ${COLORS.border}`,
+                          borderRadius: 12,
+                          boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)',
+                          zIndex: 50,
+                          maxHeight: 230,
+                          overflow: 'hidden',
+                        }}>
+                          {["Selecciona una unidad", "Pieza (pza)", "Kilogramos (kg)", "Gramos (g)", "Litros (l)", "Mililitros (ml)", "Caja", "Paquete", "Servicio"].map((opt, i) => {
+                            const isSelected = i === 1; 
+                            const rowHighlight = frame >= 200 && isSelected;
+                            return (
+                              <div key={opt} style={{
+                                padding: '10px 16px',
+                                fontSize: 13,
+                                color: i === 0 ? COLORS.textSecondary : COLORS.text,
+                                backgroundColor: rowHighlight ? '#4242421a' : 'transparent', // Gris sutil parecido a captura
+                                cursor: 'pointer',
+                                transition: 'all 0.1s',
+                              }}>
+                                {opt}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                     <div style={{ gridColumn: 'span 3' }}>
-                      <MockFormInput label="Costo por Unidad" value={itemCost} placeholder="0.00" typingStartFrame={260} isFocused={costIsFocused} />
+                      <MockFormInput label="Stock Actual *" value={itemStock} placeholder="0" typingStartFrame={330} isFocused={stockIsFocused} />
                     </div>
                     <div style={{ gridColumn: 'span 3' }}>
-                      <MockFormInput label="Stock Actual" value={itemStock} placeholder="0" typingStartFrame={330} isFocused={stockIsFocused} />
+                      <MockFormInput label="Stock Mínimo *" value={itemMinStock} placeholder="0" typingStartFrame={400} isFocused={minStockIsFocused} />
                     </div>
-                    <div style={{ gridColumn: 'span 3' }}>
-                      <MockFormInput label="Stock Mínimo" value={itemMinStock} placeholder="0" typingStartFrame={400} isFocused={minStockIsFocused} />
+
+                    {/* Fila 3 */}
+                    <div style={{ gridColumn: 'span 4' }}>
+                      <MockFormInput label="Costo Unitario ($)" value={itemCost} placeholder="0.00" typingStartFrame={260} isFocused={costIsFocused} />
                     </div>
                   </div>
 
@@ -150,7 +202,7 @@ export const InventoryFormFillScene: React.FC<InventoryTutorialProps> = ({
           </div>
         </div>
       </div>
-      <ClickHighlight x={1750} y={660} clickFrame={470} />
+      <ClickHighlight x={1750} y={540} clickFrame={470} />
     </AbsoluteFill>
   );
 };
