@@ -1831,3 +1831,524 @@ func TestSubscriptionHandler_GetSubscriptionStatusWithSubRepo(t *testing.T) {
 	})
 }
 
+// ---------------------------------------------------------------------------
+// RevenueCat Webhook — with SubscriptionRepo interactions
+// ---------------------------------------------------------------------------
+
+func TestSubscriptionHandler_RevenueCatWebhook_WithSubRepo(t *testing.T) {
+	cfg := &config.Config{
+		RevenueCatWebhookSecret: "rc_secret_123",
+	}
+
+	t.Run("INITIAL_PURCHASE_UpsertsSubscriptionRecord", func(t *testing.T) {
+		mockRepo := new(MockUserRepo)
+		mockSubRepo := new(MockSubscriptionRepo)
+		handler := NewSubscriptionHandler(mockRepo, mockSubRepo, nil, nil, new(MockStripeService), nil, cfg)
+
+		userID := uuid.New()
+		expMs := time.Date(2026, 6, 1, 0, 0, 0, 0, time.UTC).UnixMilli()
+		payload := fmt.Sprintf(`{
+			"event": {
+				"type": "INITIAL_PURCHASE",
+				"app_user_id": "%s",
+				"product_id": "pro_monthly",
+				"store": "APP_STORE",
+				"period_type": "NORMAL",
+				"expiration_at_ms": %d
+			}
+		}`, userID.String(), expMs)
+
+		mockRepo.On("UpdatePlanAndStripeID", mock.Anything, userID, "pro", (*string)(nil)).Return(nil)
+		mockSubRepo.On("Upsert", mock.Anything, mock.MatchedBy(func(s *models.Subscription) bool {
+			return s.UserID == userID &&
+				s.Provider == "apple" &&
+				s.Plan == "pro" &&
+				s.Status == "active" &&
+				s.CurrentPeriodEnd != nil
+		})).Return(nil)
+
+		req := httptest.NewRequest("POST", "/api/subscriptions/webhook/revenuecat", bytes.NewReader([]byte(payload)))
+		req.Header.Set("Authorization", "rc_secret_123")
+		w := httptest.NewRecorder()
+
+		handler.RevenueCatWebhook(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		mockRepo.AssertExpectations(t)
+		mockSubRepo.AssertExpectations(t)
+	})
+
+	t.Run("RENEWAL_UpsertsSubscriptionRecord_PlayStore", func(t *testing.T) {
+		mockRepo := new(MockUserRepo)
+		mockSubRepo := new(MockSubscriptionRepo)
+		handler := NewSubscriptionHandler(mockRepo, mockSubRepo, nil, nil, new(MockStripeService), nil, cfg)
+
+		userID := uuid.New()
+		payload := fmt.Sprintf(`{
+			"event": {
+				"type": "RENEWAL",
+				"app_user_id": "%s",
+				"product_id": "pro_monthly",
+				"store": "PLAY_STORE",
+				"period_type": "NORMAL"
+			}
+		}`, userID.String())
+
+		mockRepo.On("UpdatePlanAndStripeID", mock.Anything, userID, "pro", (*string)(nil)).Return(nil)
+		mockSubRepo.On("Upsert", mock.Anything, mock.MatchedBy(func(s *models.Subscription) bool {
+			return s.UserID == userID &&
+				s.Provider == "google" &&
+				s.Plan == "pro" &&
+				s.Status == "active" &&
+				s.CurrentPeriodEnd == nil // no expiration_at_ms in payload
+		})).Return(nil)
+
+		req := httptest.NewRequest("POST", "/api/subscriptions/webhook/revenuecat", bytes.NewReader([]byte(payload)))
+		req.Header.Set("Authorization", "rc_secret_123")
+		w := httptest.NewRecorder()
+
+		handler.RevenueCatWebhook(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		mockRepo.AssertExpectations(t)
+		mockSubRepo.AssertExpectations(t)
+	})
+
+	t.Run("CANCELLATION_UpdatesSubStatusToCanceled", func(t *testing.T) {
+		mockRepo := new(MockUserRepo)
+		mockSubRepo := new(MockSubscriptionRepo)
+		handler := NewSubscriptionHandler(mockRepo, mockSubRepo, nil, nil, new(MockStripeService), nil, cfg)
+
+		userID := uuid.New()
+		payload := fmt.Sprintf(`{
+			"event": {
+				"type": "CANCELLATION",
+				"app_user_id": "%s",
+				"product_id": "pro_monthly",
+				"store": "APP_STORE",
+				"period_type": "NORMAL"
+			}
+		}`, userID.String())
+
+		mockRepo.On("UpdatePlanAndStripeID", mock.Anything, userID, "basic", (*string)(nil)).Return(nil)
+		mockSubRepo.On("UpdateStatusByUserID", mock.Anything, userID, "canceled").Return(nil)
+
+		req := httptest.NewRequest("POST", "/api/subscriptions/webhook/revenuecat", bytes.NewReader([]byte(payload)))
+		req.Header.Set("Authorization", "rc_secret_123")
+		w := httptest.NewRecorder()
+
+		handler.RevenueCatWebhook(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		mockRepo.AssertExpectations(t)
+		mockSubRepo.AssertExpectations(t)
+	})
+
+	t.Run("EXPIRATION_UpdatesSubStatusToCanceled", func(t *testing.T) {
+		mockRepo := new(MockUserRepo)
+		mockSubRepo := new(MockSubscriptionRepo)
+		handler := NewSubscriptionHandler(mockRepo, mockSubRepo, nil, nil, new(MockStripeService), nil, cfg)
+
+		userID := uuid.New()
+		payload := fmt.Sprintf(`{
+			"event": {
+				"type": "EXPIRATION",
+				"app_user_id": "%s",
+				"product_id": "pro_monthly",
+				"store": "APP_STORE",
+				"period_type": "NORMAL"
+			}
+		}`, userID.String())
+
+		mockRepo.On("UpdatePlanAndStripeID", mock.Anything, userID, "basic", (*string)(nil)).Return(nil)
+		mockSubRepo.On("UpdateStatusByUserID", mock.Anything, userID, "canceled").Return(nil)
+
+		req := httptest.NewRequest("POST", "/api/subscriptions/webhook/revenuecat", bytes.NewReader([]byte(payload)))
+		req.Header.Set("Authorization", "rc_secret_123")
+		w := httptest.NewRecorder()
+
+		handler.RevenueCatWebhook(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		mockRepo.AssertExpectations(t)
+		mockSubRepo.AssertExpectations(t)
+	})
+
+	t.Run("BILLING_ISSUE_UpdatesSubStatusToPastDue", func(t *testing.T) {
+		mockRepo := new(MockUserRepo)
+		mockSubRepo := new(MockSubscriptionRepo)
+		handler := NewSubscriptionHandler(mockRepo, mockSubRepo, nil, nil, new(MockStripeService), nil, cfg)
+
+		userID := uuid.New()
+		payload := fmt.Sprintf(`{
+			"event": {
+				"type": "BILLING_ISSUE",
+				"app_user_id": "%s",
+				"product_id": "pro_monthly",
+				"store": "PLAY_STORE",
+				"period_type": "NORMAL"
+			}
+		}`, userID.String())
+
+		mockRepo.On("UpdatePlanAndStripeID", mock.Anything, userID, "basic", (*string)(nil)).Return(nil)
+		// BILLING_ISSUE should use "past_due" instead of "canceled"
+		mockSubRepo.On("UpdateStatusByUserID", mock.Anything, userID, "past_due").Return(nil)
+
+		req := httptest.NewRequest("POST", "/api/subscriptions/webhook/revenuecat", bytes.NewReader([]byte(payload)))
+		req.Header.Set("Authorization", "rc_secret_123")
+		w := httptest.NewRecorder()
+
+		handler.RevenueCatWebhook(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		mockRepo.AssertExpectations(t)
+		mockSubRepo.AssertExpectations(t)
+	})
+
+	t.Run("UnknownEventType_StillReturns200_NoRepoInteraction", func(t *testing.T) {
+		mockRepo := new(MockUserRepo)
+		mockSubRepo := new(MockSubscriptionRepo)
+		handler := NewSubscriptionHandler(mockRepo, mockSubRepo, nil, nil, new(MockStripeService), nil, cfg)
+
+		userID := uuid.New()
+		payload := fmt.Sprintf(`{
+			"event": {
+				"type": "SUBSCRIBER_ALIAS",
+				"app_user_id": "%s",
+				"product_id": "pro_monthly",
+				"store": "APP_STORE",
+				"period_type": "NORMAL"
+			}
+		}`, userID.String())
+
+		req := httptest.NewRequest("POST", "/api/subscriptions/webhook/revenuecat", bytes.NewReader([]byte(payload)))
+		req.Header.Set("Authorization", "rc_secret_123")
+		w := httptest.NewRecorder()
+
+		handler.RevenueCatWebhook(w, req)
+
+		// Unknown event type should still return 200 and not call any repo methods
+		assert.Equal(t, http.StatusOK, w.Code)
+		mockRepo.AssertNotCalled(t, "UpdatePlanAndStripeID")
+		mockSubRepo.AssertNotCalled(t, "Upsert")
+		mockSubRepo.AssertNotCalled(t, "UpdateStatusByUserID")
+	})
+
+	t.Run("SubRepoUpsertError_StillReturns200", func(t *testing.T) {
+		mockRepo := new(MockUserRepo)
+		mockSubRepo := new(MockSubscriptionRepo)
+		handler := NewSubscriptionHandler(mockRepo, mockSubRepo, nil, nil, new(MockStripeService), nil, cfg)
+
+		userID := uuid.New()
+		payload := fmt.Sprintf(`{
+			"event": {
+				"type": "INITIAL_PURCHASE",
+				"app_user_id": "%s",
+				"product_id": "pro_monthly",
+				"store": "APP_STORE",
+				"period_type": "NORMAL"
+			}
+		}`, userID.String())
+
+		mockRepo.On("UpdatePlanAndStripeID", mock.Anything, userID, "pro", (*string)(nil)).Return(nil)
+		mockSubRepo.On("Upsert", mock.Anything, mock.Anything).Return(assert.AnError)
+
+		req := httptest.NewRequest("POST", "/api/subscriptions/webhook/revenuecat", bytes.NewReader([]byte(payload)))
+		req.Header.Set("Authorization", "rc_secret_123")
+		w := httptest.NewRecorder()
+
+		handler.RevenueCatWebhook(w, req)
+
+		// Upsert failure should not cause an error response
+		assert.Equal(t, http.StatusOK, w.Code)
+		mockRepo.AssertExpectations(t)
+		mockSubRepo.AssertExpectations(t)
+	})
+
+	t.Run("SubRepoUpdateStatusError_StillReturns200", func(t *testing.T) {
+		mockRepo := new(MockUserRepo)
+		mockSubRepo := new(MockSubscriptionRepo)
+		handler := NewSubscriptionHandler(mockRepo, mockSubRepo, nil, nil, new(MockStripeService), nil, cfg)
+
+		userID := uuid.New()
+		payload := fmt.Sprintf(`{
+			"event": {
+				"type": "CANCELLATION",
+				"app_user_id": "%s",
+				"product_id": "pro_monthly",
+				"store": "APP_STORE",
+				"period_type": "NORMAL"
+			}
+		}`, userID.String())
+
+		mockRepo.On("UpdatePlanAndStripeID", mock.Anything, userID, "basic", (*string)(nil)).Return(nil)
+		mockSubRepo.On("UpdateStatusByUserID", mock.Anything, userID, "canceled").Return(assert.AnError)
+
+		req := httptest.NewRequest("POST", "/api/subscriptions/webhook/revenuecat", bytes.NewReader([]byte(payload)))
+		req.Header.Set("Authorization", "rc_secret_123")
+		w := httptest.NewRecorder()
+
+		handler.RevenueCatWebhook(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		mockRepo.AssertExpectations(t)
+		mockSubRepo.AssertExpectations(t)
+	})
+}
+
+// ---------------------------------------------------------------------------
+// rcStoreToProvider unit tests
+// ---------------------------------------------------------------------------
+
+func TestRcStoreToProvider(t *testing.T) {
+	tests := []struct {
+		store    string
+		expected string
+	}{
+		{"APP_STORE", "apple"},
+		{"PLAY_STORE", "google"},
+		{"STRIPE", "stripe"},
+		{"UNKNOWN_STORE", "UNKNOWN_STORE"},
+		{"", ""},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.store, func(t *testing.T) {
+			assert.Equal(t, tc.expected, rcStoreToProvider(tc.store))
+		})
+	}
+}
+
+// ---------------------------------------------------------------------------
+// GetSubscriptionStatus — Stripe cache behavior
+// ---------------------------------------------------------------------------
+
+func TestSubscriptionHandler_GetSubscriptionStatus_StripeCacheHit(t *testing.T) {
+	// When the cache has a recent entry for the subscription, GetSubscription should NOT be called.
+	mockUserRepo := new(MockUserRepo)
+	mockSubRepo := new(MockSubscriptionRepo)
+	mockStripe := new(MockStripeService)
+	cfg := &config.Config{}
+
+	userID := uuid.New()
+	customerID := "cus_cached"
+	user := &models.User{
+		ID:               userID,
+		Plan:             "pro",
+		StripeCustomerID: &customerID,
+	}
+
+	providerSubID := "sub_cached_test"
+	periodEnd := time.Date(2026, 7, 1, 0, 0, 0, 0, time.UTC)
+	sub := &models.Subscription{
+		UserID:           userID,
+		Provider:         "stripe",
+		ProviderSubID:    &providerSubID,
+		Status:           "active",
+		Plan:             "pro",
+		CurrentPeriodEnd: &periodEnd,
+	}
+
+	mockUserRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
+	mockSubRepo.On("GetByUserID", mock.Anything, userID).Return(sub, nil)
+
+	// Seed the cache with a recent entry
+	stripeSubCache.mu.Lock()
+	stripeSubCache.entries[providerSubID] = &stripeSubCacheEntry{
+		cancelAtPeriodEnd: true,
+		currentPeriodEnd:  periodEnd.Unix(),
+		fetchedAt:         time.Now(), // fresh
+	}
+	stripeSubCache.mu.Unlock()
+
+	handler := NewSubscriptionHandler(mockUserRepo, mockSubRepo, nil, nil, mockStripe, nil, cfg)
+
+	req := httptest.NewRequest("GET", "/api/subscriptions/status", nil)
+	w := httptest.NewRecorder()
+	ctx := context.WithValue(req.Context(), middleware.UserIDKey, userID)
+	req = req.WithContext(ctx)
+
+	handler.GetSubscriptionStatus(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response map[string]interface{}
+	json.Unmarshal(w.Body.Bytes(), &response)
+	subInfo := response["subscription"].(map[string]interface{})
+	// cancel_at_period_end should come from cache (true)
+	assert.Equal(t, true, subInfo["cancel_at_period_end"])
+
+	// GetSubscription should NOT have been called (cache hit)
+	mockStripe.AssertNotCalled(t, "GetSubscription")
+
+	mockUserRepo.AssertExpectations(t)
+	mockSubRepo.AssertExpectations(t)
+
+	// Clean up cache
+	stripeSubCache.mu.Lock()
+	delete(stripeSubCache.entries, providerSubID)
+	stripeSubCache.mu.Unlock()
+}
+
+// ---------------------------------------------------------------------------
+// CreateCheckoutSession — Stripe retry logic
+// ---------------------------------------------------------------------------
+
+func TestSubscriptionHandler_CreateCheckoutSession_RetryOnStaleCustomerID(t *testing.T) {
+	// When first call with customer ID fails, handler retries with email only.
+	mockRepo := new(MockUserRepo)
+	mockStripe := new(MockStripeService)
+	cfg := &config.Config{
+		StripeSecretKey:  "sk_test_fake",
+		StripeProPriceID: "price_fake",
+		FrontendURL:      "http://localhost:5173",
+	}
+
+	userID := uuid.New()
+	customerID := "cus_stale"
+	user := &models.User{
+		ID:               userID,
+		Email:            "retry@example.com",
+		StripeCustomerID: &customerID,
+	}
+	mockRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
+
+	// First call with customer ID fails
+	mockStripe.On("NewCheckoutSession", mock.MatchedBy(func(p *stripe.CheckoutSessionParams) bool {
+		return p.Customer != nil && *p.Customer == customerID
+	})).Return(nil, assert.AnError).Once()
+
+	// Retry without customer ID succeeds
+	mockStripe.On("NewCheckoutSession", mock.MatchedBy(func(p *stripe.CheckoutSessionParams) bool {
+		return p.Customer == nil && p.CustomerEmail != nil && *p.CustomerEmail == "retry@example.com"
+	})).Return(&stripe.CheckoutSession{URL: "https://stripe.com/retry_session"}, nil).Once()
+
+	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, mockStripe, nil, cfg)
+
+	req := httptest.NewRequest("POST", "/api/subscriptions/checkout-session", nil)
+	w := httptest.NewRecorder()
+	ctx := context.WithValue(req.Context(), middleware.UserIDKey, userID)
+	req = req.WithContext(ctx)
+
+	handler.CreateCheckoutSession(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), "retry_session")
+	mockRepo.AssertExpectations(t)
+	mockStripe.AssertExpectations(t)
+}
+
+func TestSubscriptionHandler_CreateCheckoutSession_RetryAlsoFails(t *testing.T) {
+	// When both attempts fail, should return 500.
+	mockRepo := new(MockUserRepo)
+	mockStripe := new(MockStripeService)
+	cfg := &config.Config{
+		StripeSecretKey:  "sk_test_fake",
+		StripeProPriceID: "price_fake",
+		FrontendURL:      "http://localhost:5173",
+	}
+
+	userID := uuid.New()
+	customerID := "cus_stale"
+	user := &models.User{
+		ID:               userID,
+		Email:            "fail@example.com",
+		StripeCustomerID: &customerID,
+	}
+	mockRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
+
+	// Both calls fail
+	mockStripe.On("NewCheckoutSession", mock.Anything).Return(nil, assert.AnError)
+
+	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, mockStripe, nil, cfg)
+
+	req := httptest.NewRequest("POST", "/api/subscriptions/checkout-session", nil)
+	w := httptest.NewRecorder()
+	ctx := context.WithValue(req.Context(), middleware.UserIDKey, userID)
+	req = req.WithContext(ctx)
+
+	handler.CreateCheckoutSession(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Contains(t, w.Body.String(), "Failed to create checkout session")
+	mockRepo.AssertExpectations(t)
+}
+
+// ---------------------------------------------------------------------------
+// CreatePortalSession — Stripe API error
+// ---------------------------------------------------------------------------
+
+func TestSubscriptionHandler_CreatePortalSession_StripeError(t *testing.T) {
+	mockRepo := new(MockUserRepo)
+	mockStripe := new(MockStripeService)
+	cfg := &config.Config{
+		StripeSecretKey: "sk_test_fake",
+		FrontendURL:     "http://localhost:5173",
+	}
+
+	userID := uuid.New()
+	customerID := "cus_test_portal_err"
+	user := &models.User{
+		ID:               userID,
+		Email:            "test@example.com",
+		StripeCustomerID: &customerID,
+	}
+	mockRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
+	mockStripe.On("NewBillingPortalSession", mock.Anything).Return(nil, assert.AnError)
+
+	handler := NewSubscriptionHandler(mockRepo, nil, nil, nil, mockStripe, nil, cfg)
+
+	req := httptest.NewRequest("POST", "/api/subscriptions/portal-session", nil)
+	w := httptest.NewRecorder()
+	ctx := context.WithValue(req.Context(), middleware.UserIDKey, userID)
+	req = req.WithContext(ctx)
+
+	handler.CreatePortalSession(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Contains(t, w.Body.String(), "Failed to create billing portal session")
+	mockRepo.AssertExpectations(t)
+	mockStripe.AssertExpectations(t)
+}
+
+// ---------------------------------------------------------------------------
+// RevenueCat Webhook — Store mapping in subscription records
+// ---------------------------------------------------------------------------
+
+func TestSubscriptionHandler_RevenueCatWebhook_StripeStore(t *testing.T) {
+	// When RC event comes from STRIPE store, provider should be "stripe"
+	cfg := &config.Config{
+		RevenueCatWebhookSecret: "rc_secret_123",
+	}
+
+	mockRepo := new(MockUserRepo)
+	mockSubRepo := new(MockSubscriptionRepo)
+	handler := NewSubscriptionHandler(mockRepo, mockSubRepo, nil, nil, new(MockStripeService), nil, cfg)
+
+	userID := uuid.New()
+	payload := fmt.Sprintf(`{
+		"event": {
+			"type": "INITIAL_PURCHASE",
+			"app_user_id": "%s",
+			"product_id": "pro_monthly",
+			"store": "STRIPE",
+			"period_type": "NORMAL"
+		}
+	}`, userID.String())
+
+	mockRepo.On("UpdatePlanAndStripeID", mock.Anything, userID, "pro", (*string)(nil)).Return(nil)
+	mockSubRepo.On("Upsert", mock.Anything, mock.MatchedBy(func(s *models.Subscription) bool {
+		return s.Provider == "stripe"
+	})).Return(nil)
+
+	req := httptest.NewRequest("POST", "/api/subscriptions/webhook/revenuecat", bytes.NewReader([]byte(payload)))
+	req.Header.Set("Authorization", "rc_secret_123")
+	w := httptest.NewRecorder()
+
+	handler.RevenueCatWebhook(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	mockRepo.AssertExpectations(t)
+	mockSubRepo.AssertExpectations(t)
+}
+
