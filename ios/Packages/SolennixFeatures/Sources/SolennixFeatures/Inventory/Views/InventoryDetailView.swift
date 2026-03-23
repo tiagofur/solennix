@@ -156,7 +156,12 @@ public struct InventoryDetailView: View {
                     do {
                         let ingredients: [ProductIngredient] = try await apiClient.get(Endpoint.productIngredients(ep.productId))
                         if let matching = ingredients.first(where: { $0.inventoryId == itemId }) {
-                            eventDemand += matching.quantityRequired * Double(ep.quantity)
+                            // Supplies have fixed per-event quantity, not scaled by product qty
+                            if item.type == .supply {
+                                eventDemand += matching.quantityRequired
+                            } else {
+                                eventDemand += matching.quantityRequired * Double(ep.quantity)
+                            }
                         }
                     } catch {
                         // Skip failed ingredient fetches

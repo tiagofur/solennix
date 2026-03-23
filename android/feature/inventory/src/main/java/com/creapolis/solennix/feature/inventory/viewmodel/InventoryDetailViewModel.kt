@@ -114,7 +114,12 @@ class InventoryDetailViewModel @Inject constructor(
                                 val ingredients = productRepository.getProductIngredients(ep.productId)
                                 val matching = ingredients.find { it.inventoryId == itemId }
                                 if (matching != null) {
-                                    eventDemand += matching.quantityRequired * ep.quantity
+                                    // Supplies have fixed per-event quantity, not scaled by product qty
+                                    eventDemand += if (item.type == InventoryType.SUPPLY) {
+                                        matching.quantityRequired
+                                    } else {
+                                        matching.quantityRequired * ep.quantity
+                                    }
                                 }
                             } catch (_: Exception) {
                                 // Skip failed ingredient fetches
