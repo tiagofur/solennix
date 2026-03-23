@@ -104,7 +104,7 @@ export const InventoryList: React.FC = () => {
 
   const lowStockItems = (items || []).filter(
     (item) =>
-      item.minimum_stock > 0 && item.current_stock <= item.minimum_stock,
+      item.minimum_stock > 0 && item.current_stock < item.minimum_stock,
   );
 
   const requestDelete = (id: string) => {
@@ -174,7 +174,7 @@ export const InventoryList: React.FC = () => {
       .includes(searchTerm.toLowerCase());
     const matchesLowStock =
       !showLowStockOnly ||
-      (item.minimum_stock > 0 && item.current_stock <= item.minimum_stock);
+      (item.minimum_stock > 0 && item.current_stock < item.minimum_stock);
     return matchesSearch && matchesLowStock;
   });
 
@@ -288,7 +288,7 @@ export const InventoryList: React.FC = () => {
           {sectionItems.map((item) => {
             const isLowStock =
               item.minimum_stock > 0 &&
-              item.current_stock <= item.minimum_stock;
+              item.current_stock < item.minimum_stock;
             return (
               <tr
                 key={item.id}

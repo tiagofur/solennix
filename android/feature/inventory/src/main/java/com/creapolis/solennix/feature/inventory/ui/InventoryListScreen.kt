@@ -274,7 +274,7 @@ private fun InventoryListItem(
     item: InventoryItem,
     onClick: () -> Unit
 ) {
-    val isLowStock = item.currentStock <= item.minimumStock
+    val isLowStock = item.minimumStock > 0 && item.currentStock < item.minimumStock
 
     Row(
         modifier = Modifier

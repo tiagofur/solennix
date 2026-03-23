@@ -48,7 +48,7 @@ class InventoryListViewModel @Inject constructor(
             filtered = filtered.filter { it.ingredientName.contains(query, ignoreCase = true) }
         }
         if (lowStock) {
-            filtered = filtered.filter { it.currentStock <= it.minimumStock }
+            filtered = filtered.filter { it.minimumStock > 0 && it.currentStock < it.minimumStock }
         }
         val sorted = when (sortKey) {
             InventorySortKey.NAME -> if (sortAscending) filtered.sortedBy { it.ingredientName.lowercase() }

@@ -119,8 +119,8 @@ public final class DashboardViewModel {
                 .filter { $0.status == .confirmed || $0.status == .completed }
                 .reduce(0) { $0 + $1.totalAmount }
 
-            // Low stock items = inventory where current_stock <= minimum_stock AND minimum_stock > 0
-            lowStockItems = inventory.filter { $0.minimumStock > 0 && $0.currentStock <= $0.minimumStock }
+            // Low stock items = inventory where current_stock < minimum_stock AND minimum_stock > 0
+            lowStockItems = inventory.filter { $0.minimumStock > 0 && $0.currentStock < $0.minimumStock }
             lowStockCount = lowStockItems.count
 
             // Cash collected = sum of payment amounts in current month

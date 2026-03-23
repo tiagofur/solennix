@@ -33,7 +33,7 @@ data class InventoryDetailUiState(
     val errorMessage: String? = null
 ) {
     val isLowStock: Boolean
-        get() = item?.let { it.currentStock <= it.minimumStock } ?: false
+        get() = item?.let { it.minimumStock > 0 && it.currentStock < it.minimumStock } ?: false
 
     val stockValue: Double
         get() = item?.let { (it.unitCost ?: 0.0) * it.currentStock } ?: 0.0

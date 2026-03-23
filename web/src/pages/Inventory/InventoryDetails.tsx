@@ -196,7 +196,7 @@ export const InventoryDetails: React.FC = () => {
     );
   }
 
-  const isLowStock = item.minimum_stock > 0 && item.current_stock <= item.minimum_stock;
+  const isLowStock = item.minimum_stock > 0 && item.current_stock < item.minimum_stock;
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);

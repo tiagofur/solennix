@@ -210,7 +210,7 @@ export const Dashboard: React.FC = () => {
     inventoryService
       .getAll()
       .then((data) => {
-        const items = (data || []).filter((item) => item.minimum_stock > 0 && item.current_stock <= item.minimum_stock);
+        const items = (data || []).filter((item) => item.minimum_stock > 0 && item.current_stock < item.minimum_stock);
         setLowStockCount(items.length);
         setLowStockItems(items.slice(0, 5));
       })

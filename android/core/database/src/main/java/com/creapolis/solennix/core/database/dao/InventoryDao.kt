@@ -9,7 +9,7 @@ interface InventoryDao {
     @Query("SELECT * FROM inventory ORDER BY ingredient_name ASC")
     fun getInventoryItems(): Flow<List<CachedInventoryItem>>
 
-    @Query("SELECT * FROM inventory WHERE current_stock <= minimum_stock ORDER BY ingredient_name ASC")
+    @Query("SELECT * FROM inventory WHERE minimum_stock > 0 AND current_stock < minimum_stock ORDER BY ingredient_name ASC")
     fun getLowStockItems(): Flow<List<CachedInventoryItem>>
 
     @Query("SELECT * FROM inventory WHERE id = :id")
