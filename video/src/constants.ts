@@ -20,14 +20,14 @@ export const COLORS = {
 export const PREMIUM_GRADIENT = 'linear-gradient(135deg, #C4A265 0%, #D4B87A 100%)';
 
 export const FPS = 30;
-export const DURATION_FRAMES = 900; // 30 seconds
+export const DURATION_FRAMES = 1060; // ~35 seconds
 
 // Scene durations (raw frames before transition overlap)
 export const SCENE_FRAMES = {
   intro: 130,
   navigation: 140,
   clientList: 120,
-  formFill: 340,
+  formFill: 500,
   save: 120,
   outro: 100,
 } as const;

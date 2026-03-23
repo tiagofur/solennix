@@ -36,6 +36,9 @@ export const FormFillScene: React.FC<ClientTutorialProps> = ({
   clientName,
   clientPhone,
   clientEmail,
+  clientAddress,
+  clientCity,
+  clientNotes,
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -50,15 +53,13 @@ export const FormFillScene: React.FC<ClientTutorialProps> = ({
     extrapolateRight: 'clamp',
   });
 
-  const addressOpacity = interpolate(frame, [260, 275], [0, 1], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-  });
-
   // Focus states for each field
-  const nameIsFocused = frame >= 40 && frame < 120;
-  const phoneIsFocused = frame >= 120 && frame < 190;
-  const emailIsFocused = frame >= 190 && frame < 260;
+  const nameIsFocused = frame >= 40 && frame < 110;
+  const phoneIsFocused = frame >= 110 && frame < 180;
+  const emailIsFocused = frame >= 180 && frame < 250;
+  const addressIsFocused = frame >= 250 && frame < 320;
+  const cityIsFocused = frame >= 320 && frame < 390;
+  const notesIsFocused = frame >= 390 && frame < 460;
 
   return (
     <AbsoluteFill style={{ backgroundColor: COLORS.bg, fontFamily }}>
@@ -169,7 +170,7 @@ export const FormFillScene: React.FC<ClientTutorialProps> = ({
                         label="Correo Electrónico"
                         value={clientEmail}
                         placeholder="ejemplo@correo.com"
-                        typingStartFrame={200}
+                        typingStartFrame={180}
                         isFocused={emailIsFocused}
                       />
                     </div>
@@ -181,58 +182,42 @@ export const FormFillScene: React.FC<ClientTutorialProps> = ({
                         value={clientPhone}
                         placeholder="00 0000 0000"
                         required
-                        typingStartFrame={130}
+                        typingStartFrame={110}
                         isFocused={phoneIsFocused}
                       />
                     </div>
 
-                    {/* Address + City — pre-filled, fade in */}
-                    <div style={{ gridColumn: 'span 4', opacity: addressOpacity }}>
-                      <div style={{ marginBottom: 0 }}>
-                        <label style={{
-                          display: 'block',
-                          fontSize: 14,
-                          fontWeight: 500,
-                          color: COLORS.textSecondary,
-                          marginBottom: 6,
-                        }}>
-                          Dirección
-                        </label>
-                        <div style={{
-                          padding: '12px 16px',
-                          borderRadius: 12,
-                          border: `1px solid ${COLORS.border}`,
-                          backgroundColor: COLORS.card,
-                          fontSize: 16,
-                          color: COLORS.text,
-                        }}>
-                          Av. Reforma 234, Col. Centro
-                        </div>
-                      </div>
+                    {/* Dirección — sm:col-span-4 */}
+                    <div style={{ gridColumn: 'span 4' }}>
+                      <MockFormInput
+                        label="Dirección"
+                        value={clientAddress}
+                        placeholder="Calle, Número, Colonia"
+                        typingStartFrame={250}
+                        isFocused={addressIsFocused}
+                      />
                     </div>
 
-                    <div style={{ gridColumn: 'span 2', opacity: addressOpacity }}>
-                      <div style={{ marginBottom: 0 }}>
-                        <label style={{
-                          display: 'block',
-                          fontSize: 14,
-                          fontWeight: 500,
-                          color: COLORS.textSecondary,
-                          marginBottom: 6,
-                        }}>
-                          Ciudad
-                        </label>
-                        <div style={{
-                          padding: '12px 16px',
-                          borderRadius: 12,
-                          border: `1px solid ${COLORS.border}`,
-                          backgroundColor: COLORS.card,
-                          fontSize: 16,
-                          color: COLORS.text,
-                        }}>
-                          Ciudad de México
-                        </div>
-                      </div>
+                    {/* Ciudad — sm:col-span-2 */}
+                    <div style={{ gridColumn: 'span 2' }}>
+                      <MockFormInput
+                        label="Ciudad"
+                        value={clientCity}
+                        placeholder="Ciudad"
+                        typingStartFrame={320}
+                        isFocused={cityIsFocused}
+                      />
+                    </div>
+
+                    {/* Notas — sm:col-span-6 */}
+                    <div style={{ gridColumn: 'span 6' }}>
+                      <MockFormInput
+                        label="Notas"
+                        value={clientNotes}
+                        placeholder="Notas opcionales"
+                        typingStartFrame={390}
+                        isFocused={notesIsFocused}
+                      />
                     </div>
                   </div>
 
@@ -261,7 +246,7 @@ export const FormFillScene: React.FC<ClientTutorialProps> = ({
                     <MockButton
                       label="Guardar Cliente"
                       variant="primary"
-                      pressAtFrame={320}
+                      pressAtFrame={470}
                       icon={<SaveIcon />}
                       style={{
                         padding: '10px 32px',
@@ -278,7 +263,7 @@ export const FormFillScene: React.FC<ClientTutorialProps> = ({
         </div>
       </div>
 
-      <ClickHighlight x={1050} y={780} clickFrame={320} />
+      <ClickHighlight x={1050} y={780} clickFrame={470} />
     </AbsoluteFill>
   );
 };

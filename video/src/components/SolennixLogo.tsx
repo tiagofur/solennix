@@ -35,28 +35,26 @@ export const SolennixLogo: React.FC<SolennixLogoProps> = ({
       }}
     >
       {/* Simple circle icon representing the Solennix logo */}
-      <div
-        style={{
-          width: size,
-          height: size,
-          borderRadius: size / 2,
-          background: COLORS.accent,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <span
-          style={{
-            color: COLORS.primary,
-            fontSize: size * 0.5,
-            fontWeight: 'bold',
-            fontFamily,
-          }}
-        >
-          S
-        </span>
-      </div>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" style={{ width: size, height: size }}>
+        <defs>
+          <linearGradient id="gT2" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#D4B87A"/>
+            <stop offset="45%" stopColor="#C4A265"/>
+            <stop offset="100%" stopColor="#B8965A"/>
+          </linearGradient>
+        </defs>
+        <path d="M66,34 Q58,65 66,88 Q78,116 100,122 Q122,116 134,88 Q142,65 134,34 Q100,42 66,34 Z" fill="url(#gT2)"/>
+        <path d="M76,38 Q72,58 76,82 Q85,104 100,112 L100,42 Q82,44 76,38 Z" fill="rgba(255,255,255,0.12)"/>
+        <ellipse cx="100" cy="124" rx="6" ry="3" fill="url(#gT2)"/>
+        <path d="M96,124 L96,150 Q96,156 84,159 L72,161 L72,164 A30,8 0 0,0 128,164 L128,161 L116,159 Q104,156 104,150 L104,124 Z" fill="url(#gT2)"/>
+        <g transform="translate(132,32)" opacity="0.65">
+          <line x1="0" y1="-8" x2="0" y2="8" stroke="#F5F0E8" strokeWidth="1.5" strokeLinecap="round"/>
+          <line x1="-8" y1="0" x2="8" y2="0" stroke="#F5F0E8" strokeWidth="1.5" strokeLinecap="round"/>
+          <line x1="-4" y1="-4" x2="4" y2="4" stroke="#F5F0E8" strokeWidth="0.8" strokeLinecap="round"/>
+          <line x1="4" y1="-4" x2="-4" y2="4" stroke="#F5F0E8" strokeWidth="0.8" strokeLinecap="round"/>
+          <circle cx="0" cy="0" r="2" fill="#F5F0E8" opacity="0.5"/>
+        </g>
+      </svg>
       <span
         style={{
           fontFamily,

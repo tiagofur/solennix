@@ -8,7 +8,13 @@ import { ClickHighlight } from '../components/ClickHighlight';
 
 const { fontFamily } = loadFont();
 
-export const NavigationScene: React.FC = () => {
+type NavigationSceneProps = {
+  targetItem?: string;
+};
+
+export const NavigationScene: React.FC<NavigationSceneProps> = ({
+  targetItem = 'Clientes',
+}) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
@@ -17,7 +23,7 @@ export const NavigationScene: React.FC = () => {
     extrapolateRight: 'clamp',
   });
 
-  const activeItem = frame >= 50 ? 'Clientes' : 'Dashboard';
+  const activeItem = frame >= 50 ? targetItem : 'Dashboard';
 
   const headingOpacity = interpolate(frame, [60, 80], [0, 1], {
     extrapolateLeft: 'clamp',
@@ -29,12 +35,18 @@ export const NavigationScene: React.FC = () => {
     extrapolateRight: 'clamp',
   });
 
+  const clickYMap: Record<string, number> = {
+    Clientes: 283,
+    Inventario: 410,
+  };
+  const clickY = clickYMap[targetItem] || 283;
+
   return (
     <AbsoluteFill style={{ backgroundColor: COLORS.bg, fontFamily, opacity: layoutOpacity }}>
       <div style={{ display: 'flex', height: '100%' }}>
         <MockSidebar activeItem={activeItem} highlightFrame={50} />
 
-        {/* Content area — matches Layout.tsx: flex-1 flex flex-col min-w-0 overflow-hidden lg:py-2 lg:pr-2 */}
+        {/* Content area */}
         <div style={{
           flex: 1,
           display: 'flex',
@@ -43,7 +55,7 @@ export const NavigationScene: React.FC = () => {
           overflow: 'hidden',
           padding: '8px 8px 8px 0',
         }}>
-          {/* Panel — bg-surface-grouped lg:rounded-[3rem] lg:border border-border lg:shadow-xl */}
+          {/* Panel */}
           <div style={{
             flex: 1,
             backgroundColor: COLORS.surface,
@@ -56,7 +68,7 @@ export const NavigationScene: React.FC = () => {
           }}>
             <MockTopbar />
 
-            {/* Scrollable content area — px-10 pb-10 */}
+            {/* Scrollable content area */}
             <div style={{ flex: 1, padding: '0 40px 40px' }}>
               <div style={{
                 opacity: headingOpacity,
@@ -66,14 +78,14 @@ export const NavigationScene: React.FC = () => {
                 color: COLORS.text,
                 letterSpacing: '-0.025em',
               }}>
-                Clientes
+                {targetItem}
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <ClickHighlight x={155} y={395} clickFrame={50} />
+      <ClickHighlight x={155} y={clickY} clickFrame={50} />
     </AbsoluteFill>
   );
 };

@@ -288,7 +288,7 @@ export const ClientListScene: React.FC = () => {
         }}
       />
 
-      <ClickHighlight x={1700} y={180} clickFrame={65} />
+      <ClickHighlight x={1782} y={130} clickFrame={65} />
     </AbsoluteFill>
   );
 };

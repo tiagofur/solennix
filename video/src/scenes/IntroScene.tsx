@@ -6,7 +6,13 @@ import { TypewriterText } from '../components/TypewriterText';
 
 const { fontFamily } = loadFont();
 
-export const IntroScene: React.FC = () => {
+type IntroSceneProps = {
+  title?: string;
+};
+
+export const IntroScene: React.FC<IntroSceneProps> = ({
+  title = "Cómo crear clientes",
+}) => {
   const frame = useCurrentFrame();
 
   const subtitleOpacity = interpolate(frame, [95, 115], [0, 1], {
@@ -35,7 +41,7 @@ export const IntroScene: React.FC = () => {
         <SolennixLogo size={72} animateIn />
 
         <TypewriterText
-          text="Cómo crear clientes"
+          text={title}
           startFrame={30}
           charFrames={3}
           showCursor

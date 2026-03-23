@@ -5,7 +5,13 @@ import { Checkmark } from '../components/Checkmark';
 
 const { fontFamily } = loadFont();
 
-export const SaveScene: React.FC = () => {
+type SaveSceneProps = {
+  successMessage?: string;
+};
+
+export const SaveScene: React.FC<SaveSceneProps> = ({
+  successMessage = "¡Cliente creado con éxito!",
+}) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
@@ -88,7 +94,7 @@ export const SaveScene: React.FC = () => {
             textAlign: 'center',
           }}
         >
-          ¡Cliente creado con éxito!
+          {successMessage}
         </div>
       </div>
     </AbsoluteFill>
