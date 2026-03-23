@@ -71,6 +71,37 @@ func (m *MockFullUserRepo) UpdatePassword(ctx context.Context, userID uuid.UUID,
 	return args.Error(0)
 }
 
+func (m *MockFullUserRepo) GetByGoogleUserID(ctx context.Context, googleUserID string) (*models.User, error) {
+	args := m.Called(ctx, googleUserID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.User), args.Error(1)
+}
+
+func (m *MockFullUserRepo) GetByAppleUserID(ctx context.Context, appleUserID string) (*models.User, error) {
+	args := m.Called(ctx, appleUserID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.User), args.Error(1)
+}
+
+func (m *MockFullUserRepo) CreateWithOAuth(ctx context.Context, user *models.User) error {
+	args := m.Called(ctx, user)
+	return args.Error(0)
+}
+
+func (m *MockFullUserRepo) LinkGoogleAccount(ctx context.Context, userID uuid.UUID, googleUserID string) error {
+	args := m.Called(ctx, userID, googleUserID)
+	return args.Error(0)
+}
+
+func (m *MockFullUserRepo) LinkAppleAccount(ctx context.Context, userID uuid.UUID, appleUserID string) error {
+	args := m.Called(ctx, userID, appleUserID)
+	return args.Error(0)
+}
+
 // ---------------------------------------------------------------------------
 // MockFullEventRepo — implements FullEventRepository
 // ---------------------------------------------------------------------------

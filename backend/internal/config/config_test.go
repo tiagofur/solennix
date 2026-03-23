@@ -9,7 +9,7 @@ import (
 func TestLoad_Success(t *testing.T) {
 	// Setup
 	os.Setenv("DATABASE_URL", "postgres://test")
-	os.Setenv("JWT_SECRET", "supersecret")
+	os.Setenv("JWT_SECRET", "supersecret-test-key-at-least-32bytes!")
 	os.Setenv("PORT", "9090")
 	os.Setenv("ENVIRONMENT", "test")
 	os.Setenv("RESEND_API_KEY", "re_test")
@@ -42,8 +42,8 @@ func TestLoad_Success(t *testing.T) {
 	if cfg.DatabaseURL != "postgres://test" {
 		t.Errorf("expected dp url postgres://test, got %s", cfg.DatabaseURL)
 	}
-	if cfg.JWTSecret != "supersecret" {
-		t.Errorf("expected secret supersecret, got %s", cfg.JWTSecret)
+	if cfg.JWTSecret != "supersecret-test-key-at-least-32bytes!" {
+		t.Errorf("expected secret supersecret-test-key-at-least-32bytes!, got %s", cfg.JWTSecret)
 	}
 	if cfg.ResendAPIKey != "re_test" {
 		t.Errorf("expected resend API re_test, got %s", cfg.ResendAPIKey)
@@ -83,7 +83,7 @@ func TestLoad_Success(t *testing.T) {
 func TestLoad_Defaults(t *testing.T) {
 	os.Clearenv()
 	os.Setenv("DATABASE_URL", "postgres://test")
-	os.Setenv("JWT_SECRET", "supersecret")
+	os.Setenv("JWT_SECRET", "supersecret-test-key-at-least-32bytes!")
 
 	cfg, err := Load()
 	if err != nil {
@@ -128,8 +128,15 @@ func TestLoad_Errors(t *testing.T) {
 		t.Errorf("expected missing jwt_secret error, got %v", err)
 	}
 
+	// JWT_SECRET too short
+	os.Setenv("JWT_SECRET", "short")
+	_, err = Load()
+	if err == nil || !strings.Contains(err.Error(), "JWT_SECRET must be at least 32 bytes") {
+		t.Errorf("expected JWT_SECRET too short error, got %v", err)
+	}
+
 	// Invalid JWT_EXPIRY_HOURS
-	os.Setenv("JWT_SECRET", "secret")
+	os.Setenv("JWT_SECRET", "supersecret-test-key-at-least-32bytes!")
 	os.Setenv("JWT_EXPIRY_HOURS", "invalid")
 	_, err = Load()
 	if err == nil || !strings.Contains(err.Error(), "JWT_EXPIRY_HOURS must be a number") {
