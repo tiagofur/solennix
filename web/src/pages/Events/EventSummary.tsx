@@ -546,15 +546,14 @@ export const EventSummary: React.FC = () => {
                           }
                           aggregated[key].quantity += (ing.quantity_required || 0) * qty;
                         });
-                      // Include stock supplies in checklist ingredients
-                      const stockSupplies = supplies
-                        .filter((s: any) => s.source === 'stock')
+                      // Include ALL per-event supplies in checklist (stock + purchase)
+                      const allEventSupplies = supplies
                         .map((s: any) => ({
                           name: s.supply_name || 'Insumo',
                           quantity: s.quantity,
                           unit: s.unit || 'und',
                         }));
-                      generateChecklistPDF(event, profile as any, products, equipment, [...Object.values(aggregated), ...stockSupplies], extras);
+                      generateChecklistPDF(event, profile as any, products, equipment, [...Object.values(aggregated), ...allEventSupplies], extras);
                     } catch (err) {
                       logError("Error generating checklist", err);
                       addToast("Error al generar checklist.", "error");
