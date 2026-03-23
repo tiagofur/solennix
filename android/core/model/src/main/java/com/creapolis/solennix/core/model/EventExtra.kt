@@ -11,5 +11,5 @@ data class EventExtra(
     val cost: Double,
     val price: Double,
     @SerialName("exclude_utility") val excludeUtility: Boolean = false,
-    @SerialName("created_at") val createdAt: String
+    @SerialName("created_at") val createdAt: String = ""
 )

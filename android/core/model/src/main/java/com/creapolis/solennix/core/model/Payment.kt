@@ -12,5 +12,5 @@ data class Payment(
     @SerialName("payment_date") val paymentDate: String,
     @SerialName("payment_method") val paymentMethod: String,
     val notes: String? = null,
-    @SerialName("created_at") val createdAt: String
+    @SerialName("created_at") val createdAt: String = ""
 )

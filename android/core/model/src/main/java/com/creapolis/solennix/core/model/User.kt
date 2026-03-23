@@ -18,8 +18,8 @@ data class User(
     @SerialName("contract_template") val contractTemplate: String? = null,
     val plan: Plan = Plan.BASIC,
     @SerialName("stripe_customer_id") val stripeCustomerId: String? = null,
-    @SerialName("created_at") val createdAt: String,
-    @SerialName("updated_at") val updatedAt: String
+    @SerialName("created_at") val createdAt: String = "",
+    @SerialName("updated_at") val updatedAt: String = ""
 )
 
 @Serializable

@@ -10,5 +10,5 @@ data class EventPhoto(
     val url: String,
     @SerialName("thumbnail_url") val thumbnailUrl: String? = null,
     val caption: String? = null,
-    @SerialName("created_at") val createdAt: String
+    @SerialName("created_at") val createdAt: String = ""
 )

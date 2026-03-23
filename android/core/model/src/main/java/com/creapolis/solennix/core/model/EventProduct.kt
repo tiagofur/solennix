@@ -12,5 +12,5 @@ data class EventProduct(
     @SerialName("unit_price") val unitPrice: Double,
     val discount: Double = 0.0,
     @SerialName("total_price") val totalPrice: Double? = null,
-    @SerialName("created_at") val createdAt: String
+    @SerialName("created_at") val createdAt: String = ""
 )

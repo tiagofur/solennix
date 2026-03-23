@@ -16,6 +16,6 @@ data class Client(
     @SerialName("photo_url") val photoUrl: String? = null,
     @SerialName("total_events") val totalEvents: Int? = null,
     @SerialName("total_spent") val totalSpent: Double? = null,
-    @SerialName("created_at") val createdAt: String,
-    @SerialName("updated_at") val updatedAt: String
+    @SerialName("created_at") val createdAt: String = "",
+    @SerialName("updated_at") val updatedAt: String = ""
 )
