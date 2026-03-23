@@ -1766,5 +1766,68 @@ func TestSubscriptionHandler_GetSubscriptionStatusWithSubRepo(t *testing.T) {
 		mockUserRepo.AssertExpectations(t)
 		mockSubRepo.AssertExpectations(t)
 	})
+
+	t.Run("StripeError_StillReturnsBasicStatus", func(t *testing.T) {
+		// When Stripe GetSubscription fails, the response should still include
+		// the subscription info from the DB (without Stripe-enriched fields).
+		mockUserRepo := new(MockUserRepo)
+		mockSubRepo := new(MockSubscriptionRepo)
+		mockStripe := new(MockStripeService)
+		cfg := &config.Config{}
+
+		userID := uuid.New()
+		customerID := "cus_test_stripe_err"
+		user := &models.User{
+			ID:               userID,
+			Plan:             "pro",
+			StripeCustomerID: &customerID,
+		}
+
+		providerSubID := "sub_will_fail"
+		periodEnd := time.Date(2026, 5, 1, 0, 0, 0, 0, time.UTC)
+		sub := &models.Subscription{
+			UserID:           userID,
+			Provider:         "stripe",
+			ProviderSubID:    &providerSubID,
+			Status:           "active",
+			Plan:             "pro",
+			CurrentPeriodEnd: &periodEnd,
+		}
+
+		mockUserRepo.On("GetByID", mock.Anything, userID).Return(user, nil)
+		mockSubRepo.On("GetByUserID", mock.Anything, userID).Return(sub, nil)
+		mockStripe.On("GetSubscription", providerSubID, mock.Anything).Return(nil, assert.AnError)
+
+		handler := NewSubscriptionHandler(mockUserRepo, mockSubRepo, nil, nil, mockStripe, nil, cfg)
+
+		// Clear the cache to force a Stripe call
+		stripeSubCache.mu.Lock()
+		delete(stripeSubCache.entries, providerSubID)
+		stripeSubCache.mu.Unlock()
+
+		req := httptest.NewRequest("GET", "/api/subscriptions/status", nil)
+		w := httptest.NewRecorder()
+		ctx := context.WithValue(req.Context(), middleware.UserIDKey, userID)
+		req = req.WithContext(ctx)
+
+		handler.GetSubscriptionStatus(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		var response map[string]interface{}
+		json.Unmarshal(w.Body.Bytes(), &response)
+		assert.Equal(t, "pro", response["plan"])
+		assert.Equal(t, true, response["has_stripe_account"])
+
+		subInfo := response["subscription"].(map[string]interface{})
+		assert.Equal(t, "active", subInfo["status"])
+		assert.Equal(t, "stripe", subInfo["provider"])
+		// Should still have period end from DB even though Stripe call failed
+		assert.NotNil(t, subInfo["current_period_end"])
+
+		mockUserRepo.AssertExpectations(t)
+		mockSubRepo.AssertExpectations(t)
+		mockStripe.AssertExpectations(t)
+	})
 }
 
