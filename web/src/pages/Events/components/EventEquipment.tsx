@@ -108,7 +108,7 @@ export const EventEquipment: React.FC<EventEquipmentProps> = ({
             <button
               type="button"
               onClick={() => onRemoveEquipment(index)}
-              className="absolute top-1 right-1 text-text-secondary hover:text-error transition-colors"
+              className="absolute top-2 right-2 text-text-secondary hover:text-error transition-colors"
               aria-label={`Eliminar equipo ${index + 1}`}
             >
               <Trash2 className="h-4 w-4" />
