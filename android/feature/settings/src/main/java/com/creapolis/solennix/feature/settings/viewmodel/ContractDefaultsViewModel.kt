@@ -11,7 +11,17 @@ import com.creapolis.solennix.core.network.AuthManager
 import com.creapolis.solennix.core.network.Endpoints
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import javax.inject.Inject
+
+@Serializable
+private data class ContractDefaultsPayload(
+    @SerialName("default_deposit_percent") val defaultDepositPercent: Double,
+    @SerialName("default_cancellation_days") val defaultCancellationDays: Double,
+    @SerialName("default_refund_percent") val defaultRefundPercent: Double,
+    @SerialName("contract_template") val contractTemplate: String
+)
 
 @HiltViewModel
 class ContractDefaultsViewModel @Inject constructor(
@@ -66,11 +76,11 @@ class ContractDefaultsViewModel @Inject constructor(
             isSaving = true
             errorMessage = null
             try {
-                val payload = mapOf(
-                    "default_deposit_percent" to depositPercent.toDouble(),
-                    "default_cancellation_days" to cancellationDays.toDouble(),
-                    "default_refund_percent" to refundPercent.toDouble(),
-                    "contract_template" to contractTemplate.trim()
+                val payload = ContractDefaultsPayload(
+                    defaultDepositPercent = depositPercent.toDouble(),
+                    defaultCancellationDays = cancellationDays.toDouble(),
+                    defaultRefundPercent = refundPercent.toDouble(),
+                    contractTemplate = contractTemplate.trim()
                 )
                 val updatedUser: User = apiService.put(Endpoints.UPDATE_PROFILE, payload)
                 authManager.storeUser(updatedUser)

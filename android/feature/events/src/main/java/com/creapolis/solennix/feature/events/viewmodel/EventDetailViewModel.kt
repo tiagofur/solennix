@@ -214,6 +214,14 @@ class EventDetailViewModel @Inject constructor(
     }
 
     fun addPayment(amount: Double, method: String, notes: String?, date: String? = null) {
+        if (amount <= 0) {
+            _errorMessage.value = "El monto debe ser mayor a 0"
+            return
+        }
+        if (method.isBlank()) {
+            _errorMessage.value = "Selecciona un método de pago"
+            return
+        }
         viewModelScope.launch {
             try {
                 val currentEvent = _event.value

@@ -11,7 +11,16 @@ import com.creapolis.solennix.core.network.AuthManager
 import com.creapolis.solennix.core.network.Endpoints
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import javax.inject.Inject
+
+@Serializable
+private data class BusinessSettingsPayload(
+    @SerialName("business_name") val businessName: String,
+    @SerialName("show_business_name_in_pdf") val showBusinessNameInPdf: Boolean,
+    @SerialName("brand_color") val brandColor: String
+)
 
 @HiltViewModel
 class BusinessSettingsViewModel @Inject constructor(
@@ -67,10 +76,10 @@ class BusinessSettingsViewModel @Inject constructor(
             isSaving = true
             errorMessage = null
             try {
-                val payload = mapOf(
-                    "business_name" to businessName.trim(),
-                    "show_business_name_in_pdf" to showBusinessNameInPdf,
-                    "brand_color" to brandColor
+                val payload = BusinessSettingsPayload(
+                    businessName = businessName.trim(),
+                    showBusinessNameInPdf = showBusinessNameInPdf,
+                    brandColor = brandColor
                 )
                 val updatedUser: User = apiService.put(Endpoints.UPDATE_PROFILE, payload)
                 authManager.storeUser(updatedUser)

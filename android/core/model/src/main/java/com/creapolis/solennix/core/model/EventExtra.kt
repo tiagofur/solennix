@@ -5,8 +5,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class EventExtra(
-    val id: String,
-    @SerialName("event_id") val eventId: String,
+    val id: String = "",
+    @SerialName("event_id") val eventId: String = "",
     val description: String,
     val cost: Double,
     val price: Double,

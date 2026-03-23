@@ -5,8 +5,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class EventProduct(
-    val id: String,
-    @SerialName("event_id") val eventId: String,
+    val id: String = "",
+    @SerialName("event_id") val eventId: String = "",
     @SerialName("product_id") val productId: String,
     val quantity: Double,
     @SerialName("unit_price") val unitPrice: Double,

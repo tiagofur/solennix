@@ -5,14 +5,14 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class InventoryItem(
-    val id: String,
-    @SerialName("user_id") val userId: String,
+    val id: String = "",
+    @SerialName("user_id") val userId: String = "",
     @SerialName("ingredient_name") val ingredientName: String,
     @SerialName("current_stock") val currentStock: Double,
     @SerialName("minimum_stock") val minimumStock: Double,
     val unit: String,
     @SerialName("unit_cost") val unitCost: Double? = null,
-    @SerialName("last_updated") val lastUpdated: String,
+    @SerialName("last_updated") val lastUpdated: String = "",
     val type: InventoryType
 )
 

@@ -5,9 +5,9 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class Payment(
-    val id: String,
-    @SerialName("event_id") val eventId: String,
-    @SerialName("user_id") val userId: String,
+    val id: String = "",
+    @SerialName("event_id") val eventId: String = "",
+    @SerialName("user_id") val userId: String = "",
     val amount: Double,
     @SerialName("payment_date") val paymentDate: String,
     @SerialName("payment_method") val paymentMethod: String,
