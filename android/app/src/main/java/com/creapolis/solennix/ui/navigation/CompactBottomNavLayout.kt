@@ -387,8 +387,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                     viewModel = hiltViewModel(),
                     onNavigateBack = { navController.popBackStack() },
                     onEditClick = { id -> navController.navigate("client_form?clientId=$id") },
-                    onEventClick = { id -> navController.navigate("event_detail/$id") },
-                    onQuickQuoteClick = { id -> navController.navigate("quick_quote?clientId=$id") }
+                    onEventClick = { id -> navController.navigate("event_detail/$id") }
                 )
             }
             
@@ -402,14 +401,6 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
             }
 
             composable("quick_quote?clientId={clientId}") {
-                QuickQuoteScreen(
-                    viewModel = hiltViewModel(),
-                    onNavigateBack = { navController.popBackStack() },
-                    onConvertToEvent = { navController.navigate("event_form?eventId=") }
-                )
-            }
-
-            composable("quick_quote") {
                 QuickQuoteScreen(
                     viewModel = hiltViewModel(),
                     onNavigateBack = { navController.popBackStack() },
