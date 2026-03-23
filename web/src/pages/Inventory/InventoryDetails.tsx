@@ -15,11 +15,13 @@ import {
   Calendar,
   TrendingDown,
   CheckCircle,
+  Settings2,
 } from "lucide-react";
 import { logError } from "../../lib/errorHandler";
 import { Breadcrumb } from "../../components/Breadcrumb";
 import { useToast } from "../../hooks/useToast";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
+import { Modal } from "../../components/Modal";
 import { SkeletonCard } from "../../components/Skeleton";
 import clsx from "clsx";
 
@@ -32,6 +34,9 @@ export const InventoryDetails: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [adjustOpen, setAdjustOpen] = useState(false);
+  const [adjustValue, setAdjustValue] = useState(0);
+  const [adjustSaving, setAdjustSaving] = useState(false);
   const [demandForecast, setDemandForecast] = useState<DemandEntry[]>([]);
   const [demandLoading, setDemandLoading] = useState(false);
   const { addToast } = useToast();
@@ -153,6 +158,29 @@ export const InventoryDetails: React.FC = () => {
     }
   };
 
+  const openAdjustModal = () => {
+    if (item) {
+      setAdjustValue(item.current_stock);
+      setAdjustOpen(true);
+    }
+  };
+
+  const handleAdjustStock = async () => {
+    if (!id || !item || adjustValue < 0) return;
+    setAdjustSaving(true);
+    try {
+      await inventoryService.update(id, { ...item, current_stock: adjustValue });
+      setItem((prev) => prev ? { ...prev, current_stock: adjustValue } : prev);
+      addToast("Stock actualizado correctamente.", "success");
+      setAdjustOpen(false);
+    } catch (err) {
+      logError("Error adjusting stock", err);
+      addToast("Error al actualizar el stock.", "error");
+    } finally {
+      setAdjustSaving(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -229,6 +257,86 @@ export const InventoryDetails: React.FC = () => {
         onCancel={() => setConfirmDeleteOpen(false)}
       />
 
+      {/* Stock Adjustment Modal */}
+      <Modal
+        isOpen={adjustOpen}
+        onClose={() => setAdjustOpen(false)}
+        title="Ajustar Stock"
+        maxWidth="sm"
+      >
+        <div className="space-y-5">
+          <div className="text-center">
+            <p className="text-sm text-text-secondary mb-1">
+              {item.ingredient_name}
+            </p>
+            <p className="text-xs text-text-secondary">
+              Stock actual: <strong className="text-text">{item.current_stock} {item.unit}</strong>
+            </p>
+          </div>
+
+          <div>
+            <label htmlFor="adjust-stock" className="block text-sm font-medium text-text-secondary mb-1.5">
+              Nuevo stock
+            </label>
+            <input
+              id="adjust-stock"
+              type="number"
+              min="0"
+              step="any"
+              value={adjustValue}
+              onChange={(e) => setAdjustValue(Math.max(0, Number(e.target.value)))}
+              className="w-full rounded-xl border border-border bg-card text-text text-center text-2xl font-bold py-3 focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
+              autoFocus
+            />
+          </div>
+
+          <div className="flex justify-center gap-2">
+            {[-10, -1, 1, 10].map((delta) => (
+              <button
+                key={delta}
+                type="button"
+                onClick={() => setAdjustValue((prev) => Math.max(0, prev + delta))}
+                className={clsx(
+                  "px-4 py-2 text-sm font-bold rounded-xl border transition-colors",
+                  delta > 0
+                    ? "border-success/30 bg-success/5 text-success hover:bg-success/10"
+                    : "border-error/30 bg-error/5 text-error hover:bg-error/10",
+                )}
+              >
+                {delta > 0 ? `+${delta}` : delta}
+              </button>
+            ))}
+          </div>
+
+          {adjustValue !== item.current_stock && (
+            <p className="text-center text-xs text-text-secondary">
+              Cambio:{" "}
+              <span className={clsx("font-semibold", adjustValue > item.current_stock ? "text-success" : "text-error")}>
+                {adjustValue > item.current_stock ? "+" : ""}{adjustValue - item.current_stock} {item.unit}
+              </span>
+            </p>
+          )}
+
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => setAdjustOpen(false)}
+              className="flex-1 px-4 py-2.5 text-sm font-medium rounded-xl border border-border bg-card text-text-secondary hover:bg-surface-alt transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={handleAdjustStock}
+              disabled={adjustSaving || adjustValue === item.current_stock}
+              className="flex-1 px-4 py-2.5 text-sm font-bold rounded-xl text-white premium-gradient shadow-md shadow-primary/20 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            >
+              {adjustSaving ? "Guardando..." : "Guardar"}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
       <Breadcrumb items={[{ label: 'Inventario', href: '/inventory' }, { label: item.ingredient_name }]} />
 
       {/* Header */}
@@ -259,6 +367,13 @@ export const InventoryDetails: React.FC = () => {
           </div>
         </div>
         <div className="flex gap-2">
+          <button
+            onClick={openAdjustModal}
+            className="inline-flex items-center px-4 py-2 text-sm font-bold rounded-xl text-white premium-gradient shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all hover:scale-[1.02]"
+          >
+            <Settings2 className="h-4 w-4 mr-2" />
+            Ajustar Stock
+          </button>
           <Link
             to={`/inventory/${id}/edit`}
             className="inline-flex items-center px-4 py-2 border border-border rounded-xl bg-card text-sm font-medium text-text-secondary hover:bg-surface-alt transition-colors"
