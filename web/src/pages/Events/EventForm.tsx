@@ -142,6 +142,7 @@ export const EventForm: React.FC = () => {
       cost: number;
       price: number;
       exclude_utility: boolean;
+      include_in_checklist: boolean;
     }[]
   >([]);
 
@@ -324,6 +325,7 @@ export const EventForm: React.FC = () => {
               cost: e.cost,
               price: e.price,
               exclude_utility: e.exclude_utility || false,
+              include_in_checklist: e.include_in_checklist !== false,
             })),
           );
         }
@@ -514,7 +516,7 @@ export const EventForm: React.FC = () => {
   const handleAddExtra = () => {
     setExtras([
       ...extras,
-      { description: "", cost: 0, price: 0, exclude_utility: false },
+      { description: "", cost: 0, price: 0, exclude_utility: false, include_in_checklist: true },
     ]);
   };
 

@@ -712,7 +712,7 @@ export const generateChecklistPDF = (
       startY: currentY,
       margin: { left: 20, right: 20 },
       head: [['\u2610', 'Producto', 'Cantidad']],
-      body: products.map(p => [checkboxCol, p.products?.name || 'Producto', String(p.quantity)]),
+      body: products.map(p => [checkboxCol, (p as any).product_name || p.products?.name || 'Producto', String(p.quantity)]),
       headStyles: { fillColor: [245, 245, 245], textColor: brandColor },
       styles: { fontSize: 10 },
       columnStyles: { 0: { cellWidth: 12, halign: 'center' } },
@@ -764,7 +764,7 @@ export const generateChecklistPDF = (
   }
 
   // Section: EXTRAS
-  const physicalExtras = extras.filter(e => e.description);
+  const physicalExtras = extras.filter(e => e.description && e.include_in_checklist !== false);
   if (physicalExtras.length > 0) {
     doc.setFontSize(12);
     doc.setTextColor(brandColor);

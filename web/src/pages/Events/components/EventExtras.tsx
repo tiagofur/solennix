@@ -1,11 +1,12 @@
 import React from 'react';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, ClipboardCheck } from 'lucide-react';
 
 interface SelectedExtra {
   description: string;
   cost: number;
   price: number;
   exclude_utility: boolean;
+  include_in_checklist: boolean;
 }
 
 interface EventExtrasProps {
@@ -49,18 +50,34 @@ export const EventExtras: React.FC<EventExtrasProps> = ({
             />
           </div>
 
-          <div className="flex items-center mb-2">
-            <input
-              id={`extra-exclude-utility-${index}`}
-              type="checkbox"
-              checked={item.exclude_utility || false}
-              onChange={(e) => onExtraChange(index, 'exclude_utility', e.target.checked)}
-              className="h-4 w-4 text-primary focus:ring-primary border-border rounded-sm bg-card"
-              aria-describedby={`extra-exclude-utility-label-${index}`}
-            />
-            <label id={`extra-exclude-utility-label-${index}`} htmlFor={`extra-exclude-utility-${index}`} className="ml-2 text-xs text-text-secondary">
-              Solo cobrar costo (Sin utilidad)
-            </label>
+          <div className="flex items-center gap-4 mb-2 flex-wrap">
+            <div className="flex items-center">
+              <input
+                id={`extra-exclude-utility-${index}`}
+                type="checkbox"
+                checked={item.exclude_utility || false}
+                onChange={(e) => onExtraChange(index, 'exclude_utility', e.target.checked)}
+                className="h-4 w-4 text-primary focus:ring-primary border-border rounded-sm bg-card"
+                aria-describedby={`extra-exclude-utility-label-${index}`}
+              />
+              <label id={`extra-exclude-utility-label-${index}`} htmlFor={`extra-exclude-utility-${index}`} className="ml-2 text-xs text-text-secondary">
+                Solo cobrar costo (Sin utilidad)
+              </label>
+            </div>
+            <div className="flex items-center">
+              <input
+                id={`extra-include-checklist-${index}`}
+                type="checkbox"
+                checked={item.include_in_checklist !== false}
+                onChange={(e) => onExtraChange(index, 'include_in_checklist', e.target.checked)}
+                className="h-4 w-4 text-primary focus:ring-primary border-border rounded-sm bg-card"
+                aria-describedby={`extra-include-checklist-label-${index}`}
+              />
+              <label id={`extra-include-checklist-label-${index}`} htmlFor={`extra-include-checklist-${index}`} className="ml-2 text-xs text-text-secondary flex items-center gap-1">
+                <ClipboardCheck className="h-3 w-3" aria-hidden="true" />
+                Incluir en checklist
+              </label>
+            </div>
           </div>
 
           <div className="flex gap-2">

@@ -162,6 +162,7 @@ export interface EventExtra {
     cost: number
     price: number
     exclude_utility: boolean
+    include_in_checklist?: boolean
     created_at: string
 }
 

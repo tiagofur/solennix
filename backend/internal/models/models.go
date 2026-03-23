@@ -115,13 +115,14 @@ type EventProduct struct {
 }
 
 type EventExtra struct {
-	ID             uuid.UUID `json:"id"`
-	EventID        uuid.UUID `json:"event_id"`
-	Description    string    `json:"description"`
-	Cost           float64   `json:"cost"`
-	Price          float64   `json:"price"`
-	ExcludeUtility bool      `json:"exclude_utility"`
-	CreatedAt      time.Time `json:"created_at"`
+	ID                 uuid.UUID `json:"id"`
+	EventID            uuid.UUID `json:"event_id"`
+	Description        string    `json:"description"`
+	Cost               float64   `json:"cost"`
+	Price              float64   `json:"price"`
+	ExcludeUtility     bool      `json:"exclude_utility"`
+	IncludeInChecklist bool      `json:"include_in_checklist"`
+	CreatedAt          time.Time `json:"created_at"`
 }
 
 type EventEquipment struct {

@@ -50,7 +50,7 @@ export const eventService = {
   async updateItems(
     eventId: string,
     products: { productId: string; quantity: number; unitPrice: number; discount?: number }[],
-    extras: { description: string; cost: number; price: number; exclude_utility?: boolean }[],
+    extras: { description: string; cost: number; price: number; exclude_utility?: boolean; include_in_checklist?: boolean }[],
     equipment?: { inventoryId: string; quantity: number; notes?: string }[],
     supplies?: { inventoryId: string; quantity: number; unitCost: number; source: 'stock' | 'purchase'; excludeCost?: boolean }[],
   ) {
@@ -67,7 +67,8 @@ export const eventService = {
       description: e.description,
       cost: e.cost,
       price: e.price,
-      exclude_utility: e.exclude_utility || false
+      exclude_utility: e.exclude_utility || false,
+      include_in_checklist: e.include_in_checklist !== false
     }));
 
     const payload: Record<string, unknown> = {
@@ -147,7 +148,8 @@ export const eventService = {
       description: e.description,
       cost: e.cost,
       price: e.price,
-      exclude_utility: e.exclude_utility
+      exclude_utility: e.exclude_utility,
+      include_in_checklist: e.include_in_checklist
     }));
 
     return this.updateItems(eventId, merged, extrasMapped);
@@ -160,12 +162,13 @@ export const eventService = {
       description: e.description,
       cost: e.cost,
       price: e.price,
-      exclude_utility: e.exclude_utility
+      exclude_utility: e.exclude_utility,
+      include_in_checklist: e.include_in_checklist
     }));
     return this.updateItems(eventId, products, extrasMapped);
   },
 
-  async updateExtras(eventId: string, extras: { description: string, cost: number, price: number, exclude_utility?: boolean }[]) {
+  async updateExtras(eventId: string, extras: { description: string, cost: number, price: number, exclude_utility?: boolean; include_in_checklist?: boolean }[]) {
     // Just update extras, keep products
     const products = await this.getProducts(eventId);
     const productsMapped = products.map((p: any) => ({

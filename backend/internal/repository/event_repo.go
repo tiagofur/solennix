@@ -300,7 +300,7 @@ func (r *EventRepo) GetProducts(ctx context.Context, eventID uuid.UUID) ([]model
 }
 
 func (r *EventRepo) GetExtras(ctx context.Context, eventID uuid.UUID) ([]models.EventExtra, error) {
-	query := `SELECT id, event_id, description, cost, price, exclude_utility, created_at
+	query := `SELECT id, event_id, description, cost, price, exclude_utility, include_in_checklist, created_at
 		FROM event_extras WHERE event_id = $1`
 	rows, err := r.pool.Query(ctx, query, eventID)
 	if err != nil {
@@ -312,7 +312,7 @@ func (r *EventRepo) GetExtras(ctx context.Context, eventID uuid.UUID) ([]models.
 	for rows.Next() {
 		var ee models.EventExtra
 		if err := rows.Scan(&ee.ID, &ee.EventID, &ee.Description, &ee.Cost,
-			&ee.Price, &ee.ExcludeUtility, &ee.CreatedAt); err != nil {
+			&ee.Price, &ee.ExcludeUtility, &ee.IncludeInChecklist, &ee.CreatedAt); err != nil {
 			return nil, err
 		}
 		extras = append(extras, ee)
@@ -356,9 +356,9 @@ func (r *EventRepo) UpdateEventItems(ctx context.Context, eventID uuid.UUID,
 	// Insert extras
 	for _, e := range extras {
 		_, err := tx.Exec(ctx,
-			`INSERT INTO event_extras (event_id, description, cost, price, exclude_utility)
-			VALUES ($1, $2, $3, $4, $5)`,
-			eventID, e.Description, e.Cost, e.Price, e.ExcludeUtility)
+			`INSERT INTO event_extras (event_id, description, cost, price, exclude_utility, include_in_checklist)
+			VALUES ($1, $2, $3, $4, $5, $6)`,
+			eventID, e.Description, e.Cost, e.Price, e.ExcludeUtility, e.IncludeInChecklist)
 		if err != nil {
 			return err
 		}
