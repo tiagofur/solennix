@@ -144,6 +144,118 @@ func TestLoad_Errors(t *testing.T) {
 	}
 }
 
+func TestLoad_GoogleClientIDs(t *testing.T) {
+	os.Clearenv()
+	os.Setenv("DATABASE_URL", "postgres://test")
+	os.Setenv("JWT_SECRET", "supersecret-test-key-at-least-32bytes!")
+	os.Setenv("GOOGLE_CLIENT_IDS", "ios-client-id, android-client-id ,web-client-id")
+
+	cfg, err := Load()
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if len(cfg.GoogleClientIDs) != 3 {
+		t.Fatalf("expected 3 Google client IDs, got %d: %v", len(cfg.GoogleClientIDs), cfg.GoogleClientIDs)
+	}
+	if cfg.GoogleClientIDs[0] != "ios-client-id" {
+		t.Errorf("expected ios-client-id, got %s", cfg.GoogleClientIDs[0])
+	}
+	if cfg.GoogleClientIDs[1] != "android-client-id" {
+		t.Errorf("expected android-client-id, got %s", cfg.GoogleClientIDs[1])
+	}
+	if cfg.GoogleClientIDs[2] != "web-client-id" {
+		t.Errorf("expected web-client-id, got %s", cfg.GoogleClientIDs[2])
+	}
+}
+
+func TestLoad_GoogleClientIDs_Empty(t *testing.T) {
+	os.Clearenv()
+	os.Setenv("DATABASE_URL", "postgres://test")
+	os.Setenv("JWT_SECRET", "supersecret-test-key-at-least-32bytes!")
+
+	cfg, err := Load()
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if len(cfg.GoogleClientIDs) != 0 {
+		t.Errorf("expected no Google client IDs, got %v", cfg.GoogleClientIDs)
+	}
+}
+
+func TestLoad_GoogleClientIDs_WithEmptyEntries(t *testing.T) {
+	os.Clearenv()
+	os.Setenv("DATABASE_URL", "postgres://test")
+	os.Setenv("JWT_SECRET", "supersecret-test-key-at-least-32bytes!")
+	os.Setenv("GOOGLE_CLIENT_IDS", "id1,,id2, ,id3")
+
+	cfg, err := Load()
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if len(cfg.GoogleClientIDs) != 3 {
+		t.Fatalf("expected 3 Google client IDs (empty entries filtered), got %d: %v", len(cfg.GoogleClientIDs), cfg.GoogleClientIDs)
+	}
+}
+
+func TestLoad_TrustProxy(t *testing.T) {
+	os.Clearenv()
+	os.Setenv("DATABASE_URL", "postgres://test")
+	os.Setenv("JWT_SECRET", "supersecret-test-key-at-least-32bytes!")
+	os.Setenv("TRUST_PROXY", "true")
+
+	cfg, err := Load()
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !cfg.TrustProxy {
+		t.Error("expected TrustProxy to be true")
+	}
+}
+
+func TestLoad_TrustProxy_Default(t *testing.T) {
+	os.Clearenv()
+	os.Setenv("DATABASE_URL", "postgres://test")
+	os.Setenv("JWT_SECRET", "supersecret-test-key-at-least-32bytes!")
+
+	cfg, err := Load()
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if cfg.TrustProxy {
+		t.Error("expected TrustProxy to be false by default")
+	}
+}
+
+func TestLoad_AppleBundleID(t *testing.T) {
+	os.Clearenv()
+	os.Setenv("DATABASE_URL", "postgres://test")
+	os.Setenv("JWT_SECRET", "supersecret-test-key-at-least-32bytes!")
+	os.Setenv("APPLE_BUNDLE_ID", "com.solennix.app")
+
+	cfg, err := Load()
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if cfg.AppleBundleID != "com.solennix.app" {
+		t.Errorf("expected com.solennix.app, got %s", cfg.AppleBundleID)
+	}
+}
+
+func TestLoad_RevenueCatAPIKey(t *testing.T) {
+	os.Clearenv()
+	os.Setenv("DATABASE_URL", "postgres://test")
+	os.Setenv("JWT_SECRET", "supersecret-test-key-at-least-32bytes!")
+	os.Setenv("REVENUECAT_API_KEY", "rc_api_test")
+
+	cfg, err := Load()
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if cfg.RevenueCatAPIKey != "rc_api_test" {
+		t.Errorf("expected rc_api_test, got %s", cfg.RevenueCatAPIKey)
+	}
+}
+
 func TestGetEnv(t *testing.T) {
 	os.Clearenv()
 
