@@ -71,7 +71,7 @@ object ContractPdfGenerator {
             products.forEach { product ->
                 val total = product.totalPrice ?: (product.quantity * product.unitPrice)
                 manager.drawText(
-                    "• ${product.productId} - Cantidad: ${product.quantity} - ${PdfConstants.formatCurrency(total)}",
+                    "• ${product.productName ?: "Producto"} - Cantidad: ${product.quantity} - ${PdfConstants.formatCurrency(total)}",
                     PdfConstants.bodyPaint()
                 )
             }

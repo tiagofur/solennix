@@ -57,7 +57,7 @@ object ChecklistPdfGenerator {
             products.forEach { product ->
                 drawChecklistItem(
                     manager,
-                    text = "${product.productId} x${product.quantity}",
+                    text = "${product.productName ?: "Producto"} x${product.quantity}",
                     notes = null
                 )
             }

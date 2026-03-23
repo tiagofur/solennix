@@ -77,7 +77,7 @@ object BudgetPdfGenerator {
 
                 manager.drawTableRow(
                     listOf(
-                        product.productId.take(30) to colWidths[0], // Ideally show product name
+                        (product.productName ?: "Producto").take(30) to colWidths[0],
                         product.quantity.toString() to colWidths[1],
                         PdfConstants.formatCurrency(unitPrice) to colWidths[2],
                         "${discount.toInt()}%" to colWidths[3],
