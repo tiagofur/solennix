@@ -2,12 +2,12 @@ import { Folder, Composition } from 'remotion';
 import { ClientTutorial } from './tutorials/ClientTutorial';
 import { InventoryTutorial } from './tutorials/InventoryTutorial';
 import { ProductTutorial } from './tutorials/ProductTutorial';
-import { EventTutorial } from './tutorials/EventTutorial';
+import { CotizacionTutorial } from './tutorials/CotizacionTutorial';
 import {
   ClientTutorialSchema,
   InventoryTutorialSchema,
   ProductTutorialSchema,
-  EventTutorialSchema,
+  CotizacionTutorialSchema,
   BrandIntroSchema,
   PainPointsSchema,
   BeforeAfterSchema,
@@ -18,7 +18,7 @@ import {
   TestimonialTemplateSchema,
   CountdownLaunchSchema,
 } from './schema';
-import { FPS, DURATION_FRAMES, EVENT_DURATION_FRAMES, SOCIAL_FPS, SOCIAL_FORMATS } from './constants';
+import { FPS, DURATION_FRAMES, COTIZACION_DURATION_FRAMES, SOCIAL_FPS, SOCIAL_FORMATS } from './constants';
 import { BrandIntro } from './social/BrandIntro';
 import { PainPoints } from './social/PainPoints';
 import { BeforeAfter } from './social/BeforeAfter';
@@ -83,23 +83,27 @@ export const RemotionRoot = () => {
           }}
         />
         <Composition
-          id="EventTutorial"
-          component={EventTutorial}
-          schema={EventTutorialSchema}
-          durationInFrames={EVENT_DURATION_FRAMES}
+          id="CotizacionTutorial"
+          component={CotizacionTutorial}
+          schema={CotizacionTutorialSchema}
+          durationInFrames={COTIZACION_DURATION_FRAMES}
           fps={FPS}
           width={1920}
           height={1080}
           defaultProps={{
-            eventClient: 'Ana González',
+            clientName: 'Ana González',
             eventDate: '28/03/2026',
-            eventStartTime: '18:00',
-            eventServiceType: 'Decoración y Banquete',
-            eventNumPeople: '100',
-            eventLocation: 'Salón Los Arcos, Monterrey',
-            eventProductName: 'Decoración Completa',
-            eventProductQty: '100',
-            eventProductPrice: '$2,500.00',
+            startTime: '18:00',
+            endTime: '23:00',
+            serviceType: 'Decoración y Banquete',
+            numPeople: '150',
+            productName: 'Decoración Completa',
+            productQty: '1',
+            productPrice: '$8,000.00',
+            productTotal: '$8,000.00',
+            discountValue: '5',
+            totalAmount: '$8,816.00',
+            depositAmount: '$4,408.00',
           }}
         />
       </Folder>

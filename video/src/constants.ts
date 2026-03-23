@@ -57,15 +57,16 @@ export const SCENE_FRAMES = {
   outro: 100,
 } as const;
 
-// Event tutorial needs longer duration for multi-step form
-export const EVENT_DURATION_FRAMES = 1300; // ~43 seconds
-export const EVENT_SCENE_FRAMES = {
-  intro: 130,
-  navigation: 140,
-  eventList: 120,
-  formFill: 720,   // multi-step: step 1 (general info) + step 2 (products)
-  save: 120,
-  outro: 100,
+// Cotización tutorial: longer duration for multi-step form, no list scene
+// (clicking Cotización goes directly to the form)
+export const COTIZACION_DURATION_FRAMES = 1300; // ~43 seconds
+export const COTIZACION_SCENE_FRAMES = {
+  intro: 120,
+  navigation: 130,
+  // NO list scene — sidebar click goes directly to form
+  formFill: 900,   // 3 key steps: General Info → Products → Financials
+  save: 110,
+  outro: 90,
 } as const;
 
 export const TRANSITION_FRAMES = 10;

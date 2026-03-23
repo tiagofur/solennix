@@ -30,19 +30,26 @@ export const ProductTutorialSchema = z.object({
 
 export type ProductTutorialProps = z.infer<typeof ProductTutorialSchema>;
 
-export const EventTutorialSchema = z.object({
-  eventClient: z.string().default('Ana González'),
+export const CotizacionTutorialSchema = z.object({
+  // Step 1: General Info
+  clientName: z.string().default('Ana González'),
   eventDate: z.string().default('28/03/2026'),
-  eventStartTime: z.string().default('18:00'),
-  eventServiceType: z.string().default('Decoración y Banquete'),
-  eventNumPeople: z.string().default('100'),
-  eventLocation: z.string().default('Salón Los Arcos, Monterrey'),
-  eventProductName: z.string().default('Decoración Completa'),
-  eventProductQty: z.string().default('100'),
-  eventProductPrice: z.string().default('$2,500.00'),
+  startTime: z.string().default('18:00'),
+  endTime: z.string().default('23:00'),
+  serviceType: z.string().default('Decoración y Banquete'),
+  numPeople: z.string().default('150'),
+  // Step 2: Products
+  productName: z.string().default('Decoración Completa'),
+  productQty: z.string().default('1'),
+  productPrice: z.string().default('$8,000.00'),
+  productTotal: z.string().default('$8,000.00'),
+  // Step 5: Financials
+  discountValue: z.string().default('5'),
+  totalAmount: z.string().default('$8,816.00'),
+  depositAmount: z.string().default('$4,408.00'),
 });
 
-export type EventTutorialProps = z.infer<typeof EventTutorialSchema>;
+export type CotizacionTutorialProps = z.infer<typeof CotizacionTutorialSchema>;
 
 // ── Social Media Video Schemas ──
 
