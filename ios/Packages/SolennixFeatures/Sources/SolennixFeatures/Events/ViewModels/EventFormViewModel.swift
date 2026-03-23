@@ -507,6 +507,8 @@ public final class EventFormViewModel {
             "discount_type": discountType.rawValue,
             "requires_invoice": requiresInvoice,
             "tax_rate": taxRate,
+            "tax_amount": taxAmount,
+            "total_amount": total,
             "deposit_percent": depositPercent,
             "cancellation_days": cancellationDays,
             "refund_percent": refundPercent,
