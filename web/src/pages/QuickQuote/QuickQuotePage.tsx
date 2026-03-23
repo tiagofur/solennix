@@ -34,6 +34,7 @@ interface SelectedExtra {
   cost: number;
   price: number;
   exclude_utility: boolean;
+  include_in_checklist?: boolean;
 }
 
 export const QuickQuotePage: React.FC = () => {

@@ -1,12 +1,12 @@
 import React from 'react';
 import { Plus, Trash2, ClipboardCheck } from 'lucide-react';
 
-interface SelectedExtra {
+export interface SelectedExtra {
   description: string;
   cost: number;
   price: number;
   exclude_utility: boolean;
-  include_in_checklist: boolean;
+  include_in_checklist?: boolean;
 }
 
 interface EventExtrasProps {
