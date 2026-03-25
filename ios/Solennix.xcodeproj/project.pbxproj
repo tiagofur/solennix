@@ -12,6 +12,7 @@
 		175AB50ACB86012043B58889 /* CompactTabLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FD390257381E93F0922F9DF /* CompactTabLayout.swift */; };
 		1DEF87BFAF9F63670363B09B /* SolennixNetwork in Frameworks */ = {isa = PBXBuildFile; productRef = DC521897BBEAC6707453E470 /* SolennixNetwork */; };
 		26314057AB37187F042BCE2E /* MoreMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F34A685767D81C0E207E6AA /* MoreMenuView.swift */; };
+		33E491C06B9349361609BD21 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1F3752A818448EDDCFD8813A /* Assets.xcassets */; };
 		38157680A3287F18EA61BD48 /* SolennixFeatures in Frameworks */ = {isa = PBXBuildFile; productRef = 15FA5790BF9FBB377C754173 /* SolennixFeatures */; };
 		40A6DAE581CB68D9CD746D87 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BD8FAF4B7299793724BA9DF /* NotificationManager.swift */; };
 		463241C8CE37DF4EA6D1A2B6 /* ShowMonthlyRevenueIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A639BA04B2C90E8F96B85CB /* ShowMonthlyRevenueIntent.swift */; };
@@ -74,6 +75,7 @@
 		0FAD0D0C832A899350E8ED0C /* SolennixCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = SolennixCore; path = Packages/SolennixCore; sourceTree = SOURCE_ROOT; };
 		1A639BA04B2C90E8F96B85CB /* ShowMonthlyRevenueIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowMonthlyRevenueIntent.swift; sourceTree = "<group>"; };
 		1EF7A9FBEE935FF6D1DCCF98 /* SolennixDesign */ = {isa = PBXFileReference; lastKnownFileType = folder; name = SolennixDesign; path = Packages/SolennixDesign; sourceTree = SOURCE_ROOT; };
+		1F3752A818448EDDCFD8813A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		20FD5F115715FD819AE007D8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		26D154F9FACF2A74B9D23331 /* SolennixShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolennixShortcuts.swift; sourceTree = "<group>"; };
 		2A362069977C87D34D5E51A2 /* DeepLinkHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepLinkHandler.swift; sourceTree = "<group>"; };
@@ -189,6 +191,7 @@
 				73400EA7AD4B877E7DA7CFD4 /* Navigation */,
 				D8EE45DD926AA88AD01D9995 /* Notifications */,
 				6C92B91AEB6A0E5ACE33DA18 /* Widgets */,
+				1F3752A818448EDDCFD8813A /* Assets.xcassets */,
 				C051B91E5F738A07F4A1E176 /* AuthFlowView.swift */,
 				81690A3205045775059AB12D /* ContentView.swift */,
 				20FD5F115715FD819AE007D8 /* Info.plist */,
@@ -296,6 +299,7 @@
 			buildConfigurationList = AFB13B9F7652FF17B532BF3A /* Build configuration list for PBXNativeTarget "Solennix" */;
 			buildPhases = (
 				6A20AA2A96B628371764A49B /* Sources */,
+				3EF537AF4D96FE0146D24668 /* Resources */,
 				AA71D4EF266A91EDA4F8ECD9 /* Frameworks */,
 				479609D689A5500F868887A8 /* Embed Foundation Extensions */,
 			);
@@ -378,6 +382,17 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		3EF537AF4D96FE0146D24668 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				33E491C06B9349361609BD21 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		6A20AA2A96B628371764A49B /* Sources */ = {
