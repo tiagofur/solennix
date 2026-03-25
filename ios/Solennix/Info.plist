@@ -45,6 +45,14 @@
 				<string>solennix</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.43149798972-0nn6jdl55fau93m4knb6pts1k2eikan8</string>
+			</array>
+		</dict>
 	</array>
 </dict>
 </plist>

@@ -18,6 +18,7 @@ struct SidebarSplitLayout: View {
     @State private var selectedSection: SidebarSection? = .dashboard
     @State private var detailPath = NavigationPath()
     @Environment(\.apiClient) private var apiClient
+    @Environment(AuthManager.self) private var authManager
 
     var body: some View {
         NavigationSplitView {
@@ -123,7 +124,7 @@ struct SidebarSplitLayout: View {
             SearchView()
                 .navigationTitle(section.title)
         case .settings:
-            SettingsView(apiClient: apiClient)
+            SettingsView(apiClient: apiClient, authManager: authManager)
                 .navigationTitle(section.title)
         }
     }

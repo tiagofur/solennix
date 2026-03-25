@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import CoreSpotlight
+import GoogleSignIn
 import SolennixCore
 import SolennixNetwork
 import SolennixDesign
@@ -64,6 +65,9 @@ struct SolennixApp: App {
         _planLimitsManager = State(initialValue: limits)
         _subscriptionManager = State(initialValue: subManager)
         self.apiClient = client
+
+        // Configure Google Sign-In
+        GIDSignIn.sharedInstance.configuration = GIDConfiguration(clientID: "43149798972-0nn6jdl55fau93m4knb6pts1k2eikan8.apps.googleusercontent.com")
 
         // Configure TipKit for Onboarding
         TipsHelper.configure()

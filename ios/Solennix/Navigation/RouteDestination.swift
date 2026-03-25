@@ -10,6 +10,7 @@ struct RouteDestination: View {
 
     let route: Route
     @Environment(\.apiClient) private var apiClient
+    @Environment(AuthManager.self) private var authManager
 
     var body: some View {
         switch route {
@@ -53,19 +54,19 @@ struct RouteDestination: View {
         case .search:
             SearchView()
         case .settings:
-            SettingsView(apiClient: apiClient)
+            SettingsView(apiClient: apiClient, authManager: authManager)
 
         // Settings
         case .editProfile:
-            EditProfileView(apiClient: apiClient)
+            EditProfileView(apiClient: apiClient, authManager: authManager)
         case .changePassword:
-            ChangePasswordView(apiClient: apiClient)
+            ChangePasswordView(apiClient: apiClient, authManager: authManager)
         case .businessSettings:
             BusinessSettingsView(apiClient: apiClient)
         case .contractDefaults:
             ContractDefaultsView(apiClient: apiClient)
         case .pricing:
-            PricingView(apiClient: apiClient)
+            PricingView(apiClient: apiClient, authManager: authManager)
         case .about:
             AboutView()
         case .privacy:

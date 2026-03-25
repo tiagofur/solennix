@@ -10,8 +10,8 @@ public struct EditProfileView: View {
     @State private var viewModel: SettingsViewModel
     @Environment(\.dismiss) private var dismiss
 
-    public init(apiClient: APIClient) {
-        _viewModel = State(initialValue: SettingsViewModel(apiClient: apiClient))
+    public init(apiClient: APIClient, authManager: AuthManager) {
+        _viewModel = State(initialValue: SettingsViewModel(apiClient: apiClient, authManager: authManager))
     }
 
     public var body: some View {
@@ -108,6 +108,6 @@ public struct EditProfileView: View {
 
 #Preview("Edit Profile") {
     NavigationStack {
-        EditProfileView(apiClient: APIClient())
+        EditProfileView(apiClient: APIClient(), authManager: AuthManager(keychain: KeychainHelper.standard))
     }
 }

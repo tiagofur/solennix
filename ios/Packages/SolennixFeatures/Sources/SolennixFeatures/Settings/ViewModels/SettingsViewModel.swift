@@ -32,11 +32,13 @@ public final class SettingsViewModel {
     // MARK: - Dependencies
 
     private let apiClient: APIClient
+    private let authManager: AuthManager
 
     // MARK: - Init
 
-    public init(apiClient: APIClient) {
+    public init(apiClient: APIClient, authManager: AuthManager) {
         self.apiClient = apiClient
+        self.authManager = authManager
     }
 
     // MARK: - Load User
@@ -159,11 +161,7 @@ public final class SettingsViewModel {
 
     @MainActor
     public func logout() async {
-        do {
-            let _: EmptyResponse = try await apiClient.post(Endpoint.logout, body: [String: String]())
-        } catch {
-            // Ignore logout errors - clear local state anyway
-        }
+        await authManager.signOut()
         user = nil
     }
 

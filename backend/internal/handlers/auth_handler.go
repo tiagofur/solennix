@@ -712,11 +712,22 @@ func (h *AuthHandler) GoogleSignIn(w http.ResponseWriter, r *http.Request) {
 			})
 			return
 		}
-		// Account exists but Google is NOT linked — do NOT auto-link (account takeover risk)
-		slog.Warn("auth.event", "action", "google_login_blocked", "email", email, "reason", "email_exists_different_provider", "ip", clientIP(r))
-		writeJSON(w, http.StatusConflict, map[string]interface{}{
-			"error":   "email_exists_different_provider",
-			"message": "An account with this email already exists. Please sign in with your email and password first, then link your social account from settings.",
+		// Account exists but Google is NOT linked — auto-link since Google verified the email
+		if err := h.userRepo.LinkGoogleAccount(r.Context(), user.ID, googleUserID); err != nil {
+			slog.Error("Failed to link Google account", "error", err, "user_id", user.ID)
+			writeError(w, http.StatusInternalServerError, "Failed to link Google account")
+			return
+		}
+		tokens, err := h.authService.GenerateTokenPair(user.ID, user.Email)
+		if err != nil {
+			slog.Error("Failed to generate tokens", "error", err)
+			writeError(w, http.StatusInternalServerError, "Internal server error")
+			return
+		}
+		slog.Info("auth.event", "action", "google_link_and_login", "user_id", user.ID, "email", email, "ip", clientIP(r))
+		writeJSON(w, http.StatusOK, map[string]interface{}{
+			"user":   user,
+			"tokens": tokens,
 		})
 		return
 	}
@@ -752,10 +763,22 @@ func (h *AuthHandler) GoogleSignIn(w http.ResponseWriter, r *http.Request) {
 				})
 				return
 			}
-			// Existing user doesn't have Google linked — same conflict rule applies
-			writeJSON(w, http.StatusConflict, map[string]interface{}{
-				"error":   "email_exists_different_provider",
-				"message": "An account with this email already exists. Please sign in with your email and password first, then link your social account from settings.",
+			// Existing user doesn't have Google linked — auto-link
+			if linkErr := h.userRepo.LinkGoogleAccount(r.Context(), existingUser.ID, googleUserID); linkErr != nil {
+				slog.Error("Failed to link Google account on race recovery", "error", linkErr)
+				writeError(w, http.StatusInternalServerError, "Failed to link Google account")
+				return
+			}
+			tokens, tokenErr := h.authService.GenerateTokenPair(existingUser.ID, existingUser.Email)
+			if tokenErr != nil {
+				slog.Error("Failed to generate tokens", "error", tokenErr)
+				writeError(w, http.StatusInternalServerError, "Internal server error")
+				return
+			}
+			slog.Info("auth.event", "action", "google_link_and_login_race", "user_id", existingUser.ID, "email", email, "ip", clientIP(r))
+			writeJSON(w, http.StatusOK, map[string]interface{}{
+				"user":   existingUser,
+				"tokens": tokens,
 			})
 			return
 		}
@@ -1064,11 +1087,23 @@ func (h *AuthHandler) AppleSignIn(w http.ResponseWriter, r *http.Request) {
 				})
 				return
 			}
-			// Account exists but Apple is NOT linked — do NOT auto-link (account takeover risk)
-			slog.Warn("auth.event", "action", "apple_login_blocked", "email", email, "reason", "email_exists_different_provider", "ip", clientIP(r))
-			writeJSON(w, http.StatusConflict, map[string]interface{}{
-				"error":   "email_exists_different_provider",
-				"message": "An account with this email already exists. Please sign in with your email and password first, then link your social account from settings.",
+			// Account exists but Apple is NOT linked — auto-link since Apple verified the email
+			if err := h.userRepo.LinkAppleAccount(r.Context(), user.ID, appleUserID); err != nil {
+				slog.Error("Failed to link Apple account", "error", err, "user_id", user.ID)
+				writeError(w, http.StatusInternalServerError, "Failed to link Apple account")
+				return
+			}
+			tokens, err := h.authService.GenerateTokenPair(user.ID, user.Email)
+			if err != nil {
+				slog.Error("Failed to generate tokens", "error", err)
+				writeError(w, http.StatusInternalServerError, "Internal server error")
+				return
+			}
+			slog.Info("auth.event", "action", "apple_link_and_login", "user_id", user.ID, "email", email, "ip", clientIP(r))
+			writeJSON(w, http.StatusOK, map[string]interface{}{
+				"user":                  user,
+				"tokens":                tokens,
+				"email_is_private_relay": isPrivateRelay(user.Email),
 			})
 			return
 		}
@@ -1111,10 +1146,23 @@ func (h *AuthHandler) AppleSignIn(w http.ResponseWriter, r *http.Request) {
 				})
 				return
 			}
-			// Existing user doesn't have Apple linked — same conflict rule applies
-			writeJSON(w, http.StatusConflict, map[string]interface{}{
-				"error":   "email_exists_different_provider",
-				"message": "An account with this email already exists. Please sign in with your email and password first, then link your social account from settings.",
+			// Existing user doesn't have Apple linked — auto-link
+			if linkErr := h.userRepo.LinkAppleAccount(r.Context(), existingUser.ID, appleUserID); linkErr != nil {
+				slog.Error("Failed to link Apple account on race recovery", "error", linkErr)
+				writeError(w, http.StatusInternalServerError, "Failed to link Apple account")
+				return
+			}
+			tokens, tokenErr := h.authService.GenerateTokenPair(existingUser.ID, existingUser.Email)
+			if tokenErr != nil {
+				slog.Error("Failed to generate tokens", "error", tokenErr)
+				writeError(w, http.StatusInternalServerError, "Internal server error")
+				return
+			}
+			slog.Info("auth.event", "action", "apple_link_and_login_race", "user_id", existingUser.ID, "email", email, "ip", clientIP(r))
+			writeJSON(w, http.StatusOK, map[string]interface{}{
+				"user":                  existingUser,
+				"tokens":                tokens,
+				"email_is_private_relay": isPrivateRelay(existingUser.Email),
 			})
 			return
 		}

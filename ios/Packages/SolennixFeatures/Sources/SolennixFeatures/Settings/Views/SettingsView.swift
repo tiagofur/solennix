@@ -10,8 +10,8 @@ public struct SettingsView: View {
     @State private var viewModel: SettingsViewModel
     @State private var showLogoutConfirm: Bool = false
 
-    public init(apiClient: APIClient) {
-        _viewModel = State(initialValue: SettingsViewModel(apiClient: apiClient))
+    public init(apiClient: APIClient, authManager: AuthManager) {
+        _viewModel = State(initialValue: SettingsViewModel(apiClient: apiClient, authManager: authManager))
     }
 
     public var body: some View {
@@ -199,6 +199,6 @@ extension Bundle {
 
 #Preview("Settings") {
     NavigationStack {
-        SettingsView(apiClient: APIClient())
+        SettingsView(apiClient: APIClient(), authManager: AuthManager(keychain: KeychainHelper.standard))
     }
 }

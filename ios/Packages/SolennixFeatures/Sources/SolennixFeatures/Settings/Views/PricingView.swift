@@ -14,8 +14,8 @@ public struct PricingView: View {
     @State private var purchaseErrorMessage: String = ""
     @Environment(SubscriptionManager.self) private var subscriptionManager
 
-    public init(apiClient: APIClient) {
-        _viewModel = State(initialValue: SettingsViewModel(apiClient: apiClient))
+    public init(apiClient: APIClient, authManager: AuthManager) {
+        _viewModel = State(initialValue: SettingsViewModel(apiClient: apiClient, authManager: authManager))
     }
 
     public var body: some View {
@@ -471,7 +471,7 @@ public struct PricingView: View {
 
 #Preview("Pricing") {
     NavigationStack {
-        PricingView(apiClient: APIClient())
+        PricingView(apiClient: APIClient(), authManager: AuthManager(keychain: KeychainHelper.standard))
             .environment(SubscriptionManager())
     }
 }

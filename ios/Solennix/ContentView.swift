@@ -1,5 +1,6 @@
 import SwiftUI
 import CoreSpotlight
+import GoogleSignIn
 import SolennixCore
 import SolennixNetwork
 import SolennixDesign
@@ -51,6 +52,7 @@ struct ContentView: View {
             OnboardingView()
         }
         .onOpenURL { url in
+            GIDSignIn.sharedInstance.handle(url)
             handleDeepLink(url)
         }
         .onReceive(NotificationCenter.default.publisher(for: .spotlightNavigationRequested)) { notification in

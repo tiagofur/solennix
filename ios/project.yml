@@ -35,6 +35,9 @@ targets:
           - "Info.plist"
     entitlements:
       path: Solennix/Solennix.entitlements
+      properties:
+        com.apple.developer.applesignin:
+          - Default
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.solennix.app
