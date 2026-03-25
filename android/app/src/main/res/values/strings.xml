@@ -15,7 +15,7 @@
     <string name="nav_more">Mas</string>
     
     <!-- Google Sign-In: Replace with your Web Client ID from Google Cloud Console -->
-    <string name="google_web_client_id">YOUR_GOOGLE_WEB_CLIENT_ID.apps.googleusercontent.com</string>
+    <string name="google_web_client_id">43149798972-vt94megos248oc0r6h0fp7hbls0mauu4.apps.googleusercontent.com</string>
 
     <!-- General -->
     <string name="ok">Aceptar</string>
