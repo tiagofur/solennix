@@ -199,6 +199,29 @@ class AuthViewModel @Inject constructor(
             }
         }
     }
+
+    fun loginWithApple(identityToken: String, fullName: String?) {
+        viewModelScope.launch {
+            isLoading = true
+            errorMessage = null
+            try {
+                val response: AuthResponse = runCatchingApi {
+                    apiService.post<AuthResponse>(
+                        Endpoints.APPLE_AUTH,
+                        mapOf("identity_token" to identityToken, "full_name" to fullName)
+                    )
+                }
+                authManager.storeTokens(response.accessToken, response.refreshToken)
+                authManager.storeUser(response.user)
+                syncRevenueCat(response.user.id)
+                _loginSuccess.tryEmit(Unit)
+            } catch (e: ApiError) {
+                errorMessage = e.userMessage(context = ErrorContext.SOCIAL_LOGIN)
+            } finally {
+                isLoading = false
+            }
+        }
+    }
 }
 
 /** Context-specific error messages for auth operations */

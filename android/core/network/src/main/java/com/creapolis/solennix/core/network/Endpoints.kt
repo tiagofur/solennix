@@ -11,6 +11,7 @@ object Endpoints {
     const val ME = "auth/me"
     const val CHANGE_PASSWORD = "auth/change-password"
     const val GOOGLE_AUTH = "auth/google"
+    const val APPLE_AUTH = "auth/apple"
 
     // Clients
     const val CLIENTS = "clients"

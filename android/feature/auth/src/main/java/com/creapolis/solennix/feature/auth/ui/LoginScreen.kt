@@ -170,6 +170,17 @@ fun LoginScreen(
             }
         )
 
+        Spacer(modifier = Modifier.height(12.dp))
+
+        AppleSignInButton(
+            onSuccess = { identityToken, fullName ->
+                viewModel.loginWithApple(identityToken, fullName)
+            },
+            onError = { error ->
+                viewModel.errorMessage = error
+            }
+        )
+
         Spacer(modifier = Modifier.height(32.dp))
 
         Row(

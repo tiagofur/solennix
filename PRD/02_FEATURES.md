@@ -269,7 +269,7 @@ Sistema completo de autenticacion con multiples proveedores y gestion segura de 
 |--------|---------|------------|
 | Email + Password | Registro y login con email y contrasena hasheada | [Todas] |
 | Google Sign-In | OAuth 2.0 con Google | [Todas] |
-| Apple Sign-In | Sign In with Apple | [iOS] [Web] |
+| Apple Sign-In | Sign In with Apple | [Todas] |
 | Refresh Tokens | Renovacion automatica de tokens JWT | [Todas] |
 
 #### Flujos soportados
@@ -729,7 +729,7 @@ Sistema de upload de imagenes para fotos de eventos, productos y logos de negoci
 |---------|-----|---------|-----|---------|-------|
 | Email + Password | ✅ | ✅ | ✅ | ✅ | |
 | Google Sign-In | ✅ | ✅ | ✅ | ✅ | |
-| Apple Sign-In | ✅ | ⬜ | ⬜ | ✅ | Backend soporta, falta UI en Android y Web |
+| Apple Sign-In | ✅ | ✅ | ✅ | ✅ | WebView OAuth flow en Android, Apple JS SDK en Web |
 | Refresh tokens | ✅ | ✅ | ✅ | ✅ | |
 | Forgot / Reset Password | ✅ | ✅ | ✅ | ✅ | |
 | Change Password | ✅ | ✅ | ✅ | ✅ | |

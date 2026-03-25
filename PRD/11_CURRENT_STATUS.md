@@ -315,6 +315,8 @@
 ### Autenticacion
 - ✅ Login (LoginScreen)
 - ✅ Registro (RegisterScreen)
+- ✅ Google Sign-In (GoogleSignInButton — Credential Manager)
+- ✅ Apple Sign-In (AppleSignInButton — WebView OAuth flow)
 - ✅ Biometric gate (BiometricGateScreen)
 - ✅ Forgot password (ForgotPasswordScreen)
 - ✅ Reset password (ResetPasswordScreen)
@@ -484,7 +486,7 @@
 | Forgot password | ✅ | ✅ | ✅ | ✅ | |
 | Reset password | ✅ | ✅ | ✅ | ✅ | |
 | Google Sign-In | ✅ | ✅ | ✅ | ✅ | iOS: GoogleSignIn SDK, Android: Credential Manager, Web: GSI |
-| Apple Sign-In | ✅ | ➖ | ➖ | ✅ | iOS: AppleSignInService wired a LoginView/RegisterView |
+| Apple Sign-In | ✅ | ✅ | ✅ | ✅ | iOS: AuthenticationServices, Android: WebView OAuth, Web: Apple JS SDK |
 | Biometric gate | ✅ | ✅ | ➖ | ➖ | Solo movil |
 | Refresh token | ✅ | ✅ | ✅ | ✅ | |
 
@@ -634,7 +636,7 @@
 | Modo offline incompleto en movil | iOS, Android | Sin funcionalidad sin conexion | 20-30h | P1 |
 | ~~StoreKit 2 flujo incompleto~~ | ✅ | Reemplazado por RevenueCat SDK | 0h | ✅ |
 | Notificaciones email limitadas | Backend | Solo reset de contrasena; sin recordatorios | 10-15h | P1 |
-| ~~Google/Apple Sign-In sin UI~~ | ✅ | Implementado en iOS (Apple+Google), Android (Google), Web (Google) | 0h | ✅ |
+| ~~Google/Apple Sign-In sin UI~~ | ✅ | Implementado en todas las plataformas: iOS (Apple+Google), Android (Google+Apple), Web (Google+Apple) | 0h | ✅ |
 | ~~Cotizacion rapida falta en Android~~ | ✅ | QuickQuoteScreen + QuickQuoteViewModel + QuickQuotePdfGenerator | 0h | ✅ |
 | Fotos de evento falta en Android y Web | Android, Web | Solo iOS tiene galeria de fotos | 10-15h | P2 |
 | Panel admin solo en web | iOS, Android | Administracion solo desde navegador | ➖ | P3 (aceptable) |

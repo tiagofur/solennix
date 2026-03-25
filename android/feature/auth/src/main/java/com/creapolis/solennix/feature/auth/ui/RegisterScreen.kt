@@ -157,8 +157,19 @@ fun RegisterScreen(
             Spacer(modifier = Modifier.height(24.dp))
             
             GoogleSignInButton(
-                onSuccess = { idToken, fullName -> 
+                onSuccess = { idToken, fullName ->
                     viewModel.loginWithGoogle(idToken, fullName)
+                }
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            AppleSignInButton(
+                onSuccess = { identityToken, fullName ->
+                    viewModel.loginWithApple(identityToken, fullName)
+                },
+                onError = { error ->
+                    viewModel.errorMessage = error
                 }
             )
         }
