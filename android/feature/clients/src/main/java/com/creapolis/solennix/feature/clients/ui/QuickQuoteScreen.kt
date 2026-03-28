@@ -21,6 +21,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.creapolis.solennix.core.designsystem.theme.LocalIsWideScreen
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.DiscountType
 import com.creapolis.solennix.core.model.Product
@@ -43,6 +44,7 @@ fun QuickQuoteScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val scrollState = rememberScrollState()
+    val isWideScreen = LocalIsWideScreen.current
 
     // Share PDF when generated
     LaunchedEffect(uiState.generatedPdfFile) {
@@ -166,32 +168,66 @@ fun QuickQuoteScreen(
                                     modifier = Modifier.padding(top = 12.dp),
                                     verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
-                                    OutlinedTextField(
-                                        value = uiState.clientName,
-                                        onValueChange = viewModel::updateClientName,
-                                        label = { Text("Nombre") },
-                                        modifier = Modifier.fillMaxWidth(),
-                                        leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
-                                        singleLine = true
-                                    )
-                                    OutlinedTextField(
-                                        value = uiState.clientPhone,
-                                        onValueChange = viewModel::updateClientPhone,
-                                        label = { Text("Teléfono") },
-                                        modifier = Modifier.fillMaxWidth(),
-                                        leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null) },
-                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                                        singleLine = true
-                                    )
-                                    OutlinedTextField(
-                                        value = uiState.clientEmail,
-                                        onValueChange = viewModel::updateClientEmail,
-                                        label = { Text("Email") },
-                                        modifier = Modifier.fillMaxWidth(),
-                                        leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
-                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                                        singleLine = true
-                                    )
+                                    if (isWideScreen) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                        ) {
+                                            OutlinedTextField(
+                                                value = uiState.clientName,
+                                                onValueChange = viewModel::updateClientName,
+                                                label = { Text("Nombre") },
+                                                modifier = Modifier.weight(1f),
+                                                leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
+                                                singleLine = true
+                                            )
+                                            OutlinedTextField(
+                                                value = uiState.clientPhone,
+                                                onValueChange = viewModel::updateClientPhone,
+                                                label = { Text("Teléfono") },
+                                                modifier = Modifier.weight(1f),
+                                                leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null) },
+                                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                                                singleLine = true
+                                            )
+                                        }
+                                        OutlinedTextField(
+                                            value = uiState.clientEmail,
+                                            onValueChange = viewModel::updateClientEmail,
+                                            label = { Text("Email") },
+                                            modifier = Modifier.fillMaxWidth(),
+                                            leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
+                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                                            singleLine = true
+                                        )
+                                    } else {
+                                        OutlinedTextField(
+                                            value = uiState.clientName,
+                                            onValueChange = viewModel::updateClientName,
+                                            label = { Text("Nombre") },
+                                            modifier = Modifier.fillMaxWidth(),
+                                            leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
+                                            singleLine = true
+                                        )
+                                        OutlinedTextField(
+                                            value = uiState.clientPhone,
+                                            onValueChange = viewModel::updateClientPhone,
+                                            label = { Text("Teléfono") },
+                                            modifier = Modifier.fillMaxWidth(),
+                                            leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null) },
+                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                                            singleLine = true
+                                        )
+                                        OutlinedTextField(
+                                            value = uiState.clientEmail,
+                                            onValueChange = viewModel::updateClientEmail,
+                                            label = { Text("Email") },
+                                            modifier = Modifier.fillMaxWidth(),
+                                            leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
+                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                                            singleLine = true
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -214,16 +250,42 @@ fun QuickQuoteScreen(
                     onAddClick = viewModel::addItem
                 )
 
-                uiState.selectedItems.forEach { item ->
-                    ProductItemCard(
-                        item = item,
-                        products = uiState.products,
-                        onProductSelected = { product -> viewModel.updateItemProduct(item.id, product) },
-                        onQuantityChanged = { qty -> viewModel.updateItemQuantity(item.id, qty) },
-                        onPriceChanged = { price -> viewModel.updateItemPrice(item.id, price) },
-                        onRemove = { viewModel.removeItem(item.id) },
-                        canRemove = uiState.selectedItems.size > 1
-                    )
+                if (isWideScreen) {
+                    uiState.selectedItems.chunked(2).forEach { rowItems ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            rowItems.forEach { item ->
+                                Box(modifier = Modifier.weight(1f)) {
+                                    ProductItemCard(
+                                        item = item,
+                                        products = uiState.products,
+                                        onProductSelected = { product -> viewModel.updateItemProduct(item.id, product) },
+                                        onQuantityChanged = { qty -> viewModel.updateItemQuantity(item.id, qty) },
+                                        onPriceChanged = { price -> viewModel.updateItemPrice(item.id, price) },
+                                        onRemove = { viewModel.removeItem(item.id) },
+                                        canRemove = uiState.selectedItems.size > 1
+                                    )
+                                }
+                            }
+                            if (rowItems.size == 1) {
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
+                        }
+                    }
+                } else {
+                    uiState.selectedItems.forEach { item ->
+                        ProductItemCard(
+                            item = item,
+                            products = uiState.products,
+                            onProductSelected = { product -> viewModel.updateItemProduct(item.id, product) },
+                            onQuantityChanged = { qty -> viewModel.updateItemQuantity(item.id, qty) },
+                            onPriceChanged = { price -> viewModel.updateItemPrice(item.id, price) },
+                            onRemove = { viewModel.removeItem(item.id) },
+                            canRemove = uiState.selectedItems.size > 1
+                        )
+                    }
                 }
 
                 // Extras section
@@ -241,101 +303,221 @@ fun QuickQuoteScreen(
                     )
                 }
 
-                uiState.extras.forEach { extra ->
-                    ExtraItemCard(
-                        extra = extra,
-                        onDescriptionChanged = { desc -> viewModel.updateExtraDescription(extra.id, desc) },
-                        onCostChanged = { cost -> viewModel.updateExtraCost(extra.id, cost) },
-                        onPriceChanged = { price -> viewModel.updateExtraPrice(extra.id, price) },
-                        onExcludeUtilityChanged = { value -> viewModel.updateExtraExcludeUtility(extra.id, value) },
-                        onRemove = { viewModel.removeExtra(extra.id) }
-                    )
-                }
-
-                // Invoice toggle
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
+                if (isWideScreen) {
+                    uiState.extras.chunked(2).forEach { rowExtras ->
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            Text(
-                                text = "Incluir factura (IVA)",
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = SolennixTheme.colors.primaryText
-                            )
-                            Switch(
-                                checked = uiState.requiresInvoice,
-                                onCheckedChange = viewModel::updateRequiresInvoice,
-                                colors = SwitchDefaults.colors(
-                                    checkedThumbColor = SolennixTheme.colors.primary,
-                                    checkedTrackColor = SolennixTheme.colors.primaryLight
-                                )
-                            )
+                            rowExtras.forEach { extra ->
+                                Box(modifier = Modifier.weight(1f)) {
+                                    ExtraItemCard(
+                                        extra = extra,
+                                        onDescriptionChanged = { desc -> viewModel.updateExtraDescription(extra.id, desc) },
+                                        onCostChanged = { cost -> viewModel.updateExtraCost(extra.id, cost) },
+                                        onPriceChanged = { price -> viewModel.updateExtraPrice(extra.id, price) },
+                                        onExcludeUtilityChanged = { value -> viewModel.updateExtraExcludeUtility(extra.id, value) },
+                                        onRemove = { viewModel.removeExtra(extra.id) }
+                                    )
+                                }
+                            }
+                            if (rowExtras.size == 1) {
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
+                        }
+                    }
+                } else {
+                    uiState.extras.forEach { extra ->
+                        ExtraItemCard(
+                            extra = extra,
+                            onDescriptionChanged = { desc -> viewModel.updateExtraDescription(extra.id, desc) },
+                            onCostChanged = { cost -> viewModel.updateExtraCost(extra.id, cost) },
+                            onPriceChanged = { price -> viewModel.updateExtraPrice(extra.id, price) },
+                            onExcludeUtilityChanged = { value -> viewModel.updateExtraExcludeUtility(extra.id, value) },
+                            onRemove = { viewModel.removeExtra(extra.id) }
+                        )
+                    }
+                }
+
+                // Invoice toggle & Discount section
+                if (isWideScreen) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        // Invoice toggle
+                        Card(
+                            modifier = Modifier.weight(1f),
+                            colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card)
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "Incluir factura (IVA)",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = SolennixTheme.colors.primaryText
+                                    )
+                                    Switch(
+                                        checked = uiState.requiresInvoice,
+                                        onCheckedChange = viewModel::updateRequiresInvoice,
+                                        colors = SwitchDefaults.colors(
+                                            checkedThumbColor = SolennixTheme.colors.primary,
+                                            checkedTrackColor = SolennixTheme.colors.primaryLight
+                                        )
+                                    )
+                                }
+
+                                if (uiState.requiresInvoice) {
+                                    Spacer(Modifier.height(8.dp))
+                                    OutlinedTextField(
+                                        value = uiState.taxRate,
+                                        onValueChange = viewModel::updateTaxRate,
+                                        label = { Text("Tasa de IVA (%)") },
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
+                            }
                         }
 
-                        if (uiState.requiresInvoice) {
+                        // Discount section
+                        Card(
+                            modifier = Modifier.weight(1f),
+                            colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card)
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text(
+                                    text = "Descuento",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = SolennixTheme.colors.primaryText
+                                )
+                                Spacer(Modifier.height(8.dp))
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    FilterChip(
+                                        selected = uiState.discountType == DiscountType.PERCENT,
+                                        onClick = { viewModel.updateDiscountType(DiscountType.PERCENT) },
+                                        label = { Text("Porcentaje") },
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    FilterChip(
+                                        selected = uiState.discountType == DiscountType.FIXED,
+                                        onClick = { viewModel.updateDiscountType(DiscountType.FIXED) },
+                                        label = { Text("Monto fijo") },
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
+
+                                Spacer(Modifier.height(8.dp))
+
+                                OutlinedTextField(
+                                    value = uiState.discount,
+                                    onValueChange = viewModel::updateDiscount,
+                                    label = {
+                                        Text(
+                                            if (uiState.discountType == DiscountType.PERCENT) "Descuento (%)"
+                                            else "Descuento ($)"
+                                        )
+                                    },
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    // Invoice toggle
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Incluir factura (IVA)",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = SolennixTheme.colors.primaryText
+                                )
+                                Switch(
+                                    checked = uiState.requiresInvoice,
+                                    onCheckedChange = viewModel::updateRequiresInvoice,
+                                    colors = SwitchDefaults.colors(
+                                        checkedThumbColor = SolennixTheme.colors.primary,
+                                        checkedTrackColor = SolennixTheme.colors.primaryLight
+                                    )
+                                )
+                            }
+
+                            if (uiState.requiresInvoice) {
+                                Spacer(Modifier.height(8.dp))
+                                OutlinedTextField(
+                                    value = uiState.taxRate,
+                                    onValueChange = viewModel::updateTaxRate,
+                                    label = { Text("Tasa de IVA (%)") },
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        }
+                    }
+
+                    // Discount section
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                text = "Descuento",
+                                style = MaterialTheme.typography.titleSmall,
+                                color = SolennixTheme.colors.primaryText
+                            )
                             Spacer(Modifier.height(8.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                FilterChip(
+                                    selected = uiState.discountType == DiscountType.PERCENT,
+                                    onClick = { viewModel.updateDiscountType(DiscountType.PERCENT) },
+                                    label = { Text("Porcentaje") },
+                                    modifier = Modifier.weight(1f)
+                                )
+                                FilterChip(
+                                    selected = uiState.discountType == DiscountType.FIXED,
+                                    onClick = { viewModel.updateDiscountType(DiscountType.FIXED) },
+                                    label = { Text("Monto fijo") },
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+
+                            Spacer(Modifier.height(8.dp))
+
                             OutlinedTextField(
-                                value = uiState.taxRate,
-                                onValueChange = viewModel::updateTaxRate,
-                                label = { Text("Tasa de IVA (%)") },
+                                value = uiState.discount,
+                                onValueChange = viewModel::updateDiscount,
+                                label = {
+                                    Text(
+                                        if (uiState.discountType == DiscountType.PERCENT) "Descuento (%)"
+                                        else "Descuento ($)"
+                                    )
+                                },
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
-                    }
-                }
-
-                // Discount section
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            text = "Descuento",
-                            style = MaterialTheme.typography.titleSmall,
-                            color = SolennixTheme.colors.primaryText
-                        )
-                        Spacer(Modifier.height(8.dp))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            FilterChip(
-                                selected = uiState.discountType == DiscountType.PERCENT,
-                                onClick = { viewModel.updateDiscountType(DiscountType.PERCENT) },
-                                label = { Text("Porcentaje") },
-                                modifier = Modifier.weight(1f)
-                            )
-                            FilterChip(
-                                selected = uiState.discountType == DiscountType.FIXED,
-                                onClick = { viewModel.updateDiscountType(DiscountType.FIXED) },
-                                label = { Text("Monto fijo") },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-
-                        Spacer(Modifier.height(8.dp))
-
-                        OutlinedTextField(
-                            value = uiState.discount,
-                            onValueChange = viewModel::updateDiscount,
-                            label = {
-                                Text(
-                                    if (uiState.discountType == DiscountType.PERCENT) "Descuento (%)"
-                                    else "Descuento ($)"
-                                )
-                            },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                            modifier = Modifier.fillMaxWidth()
-                        )
                     }
                 }
 
@@ -462,74 +644,151 @@ fun QuickQuoteScreen(
                     }
                 }
 
-                // Generate PDF button
-                Button(
-                    onClick = { viewModel.generatePdf(context) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = SolennixTheme.colors.primary
-                    ),
-                    enabled = !uiState.isGeneratingPdf
-                ) {
-                    if (uiState.isGeneratingPdf) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
-                    } else {
-                        Icon(Icons.Default.PictureAsPdf, contentDescription = null)
-                        Spacer(Modifier.width(8.dp))
-                        Text("Generar Cotizacion", style = MaterialTheme.typography.titleMedium)
-                    }
-                }
-
-                // Convert to Event button
+                // Action buttons
                 val hasContent = uiState.selectedItems.any { it.productId.isNotEmpty() } ||
                     uiState.extras.any { it.description.isNotBlank() }
-                OutlinedButton(
-                    onClick = {
-                        val transferData = QuickQuoteTransferData(
-                            products = uiState.selectedItems
-                                .filter { it.productId.isNotEmpty() }
-                                .map { item ->
-                                    QuoteTransferProduct(
-                                        productId = item.productId,
-                                        productName = item.productName,
-                                        quantity = item.quantity,
-                                        unitPrice = item.unitPrice
-                                    )
-                                },
-                            extras = uiState.extras
-                                .filter { it.description.isNotBlank() }
-                                .map { extra ->
-                                    QuoteTransferExtra(
-                                        description = extra.description,
-                                        cost = extra.cost,
-                                        price = extra.price,
-                                        excludeUtility = extra.excludeUtility
-                                    )
-                                },
-                            discountType = when (uiState.discountType) {
-                                DiscountType.PERCENT -> "percent"
-                                DiscountType.FIXED -> "fixed"
+
+                if (isWideScreen) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        // Generate PDF button
+                        Button(
+                            onClick = { viewModel.generatePdf(context) },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(56.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = SolennixTheme.colors.primary
+                            ),
+                            enabled = !uiState.isGeneratingPdf
+                        ) {
+                            if (uiState.isGeneratingPdf) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    color = MaterialTheme.colorScheme.onPrimary
+                                )
+                            } else {
+                                Icon(Icons.Default.PictureAsPdf, contentDescription = null)
+                                Spacer(Modifier.width(8.dp))
+                                Text("Generar Cotizacion", style = MaterialTheme.typography.titleMedium)
+                            }
+                        }
+
+                        // Convert to Event button
+                        OutlinedButton(
+                            onClick = {
+                                val transferData = QuickQuoteTransferData(
+                                    products = uiState.selectedItems
+                                        .filter { it.productId.isNotEmpty() }
+                                        .map { item ->
+                                            QuoteTransferProduct(
+                                                productId = item.productId,
+                                                productName = item.productName,
+                                                quantity = item.quantity,
+                                                unitPrice = item.unitPrice
+                                            )
+                                        },
+                                    extras = uiState.extras
+                                        .filter { it.description.isNotBlank() }
+                                        .map { extra ->
+                                            QuoteTransferExtra(
+                                                description = extra.description,
+                                                cost = extra.cost,
+                                                price = extra.price,
+                                                excludeUtility = extra.excludeUtility
+                                            )
+                                        },
+                                    discountType = when (uiState.discountType) {
+                                        DiscountType.PERCENT -> "percent"
+                                        DiscountType.FIXED -> "fixed"
+                                    },
+                                    discountValue = uiState.discount.toDoubleOrNull() ?: 0.0,
+                                    requiresInvoice = uiState.requiresInvoice,
+                                    numPeople = uiState.numPeople.toIntOrNull() ?: 0
+                                )
+                                QuickQuoteDataHolder.pendingData = transferData
+                                onConvertToEvent()
                             },
-                            discountValue = uiState.discount.toDoubleOrNull() ?: 0.0,
-                            requiresInvoice = uiState.requiresInvoice,
-                            numPeople = uiState.numPeople.toIntOrNull() ?: 0
-                        )
-                        QuickQuoteDataHolder.pendingData = transferData
-                        onConvertToEvent()
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp),
-                    enabled = hasContent
-                ) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
-                    Text("Convertir a Evento", style = MaterialTheme.typography.titleMedium)
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(56.dp),
+                            enabled = hasContent
+                        ) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null)
+                            Spacer(Modifier.width(8.dp))
+                            Text("Convertir a Evento", style = MaterialTheme.typography.titleMedium)
+                        }
+                    }
+                } else {
+                    // Generate PDF button
+                    Button(
+                        onClick = { viewModel.generatePdf(context) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = SolennixTheme.colors.primary
+                        ),
+                        enabled = !uiState.isGeneratingPdf
+                    ) {
+                        if (uiState.isGeneratingPdf) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                        } else {
+                            Icon(Icons.Default.PictureAsPdf, contentDescription = null)
+                            Spacer(Modifier.width(8.dp))
+                            Text("Generar Cotizacion", style = MaterialTheme.typography.titleMedium)
+                        }
+                    }
+
+                    // Convert to Event button
+                    OutlinedButton(
+                        onClick = {
+                            val transferData = QuickQuoteTransferData(
+                                products = uiState.selectedItems
+                                    .filter { it.productId.isNotEmpty() }
+                                    .map { item ->
+                                        QuoteTransferProduct(
+                                            productId = item.productId,
+                                            productName = item.productName,
+                                            quantity = item.quantity,
+                                            unitPrice = item.unitPrice
+                                        )
+                                    },
+                                extras = uiState.extras
+                                    .filter { it.description.isNotBlank() }
+                                    .map { extra ->
+                                        QuoteTransferExtra(
+                                            description = extra.description,
+                                            cost = extra.cost,
+                                            price = extra.price,
+                                            excludeUtility = extra.excludeUtility
+                                        )
+                                    },
+                                discountType = when (uiState.discountType) {
+                                    DiscountType.PERCENT -> "percent"
+                                    DiscountType.FIXED -> "fixed"
+                                },
+                                discountValue = uiState.discount.toDoubleOrNull() ?: 0.0,
+                                requiresInvoice = uiState.requiresInvoice,
+                                numPeople = uiState.numPeople.toIntOrNull() ?: 0
+                            )
+                            QuickQuoteDataHolder.pendingData = transferData
+                            onConvertToEvent()
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp),
+                        enabled = hasContent
+                    ) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text("Convertir a Evento", style = MaterialTheme.typography.titleMedium)
+                    }
                 }
 
                 Spacer(Modifier.height(32.dp))
