@@ -94,13 +94,6 @@ fun CalendarScreen(
                 onModeChange = { viewModel.onViewModeChange(it) }
             )
 
-            // Status Filter Chips
-            StatusFilterRow(
-                filters = uiState.statusFilters,
-                selectedStatus = uiState.selectedStatus,
-                onFilterSelected = { viewModel.onStatusFilterChange(it) }
-            )
-
             when (uiState.viewMode) {
                 CalendarViewMode.CALENDAR -> {
                     CalendarViewContent(
@@ -122,6 +115,12 @@ fun CalendarScreen(
                     )
                 }
                 CalendarViewMode.LIST -> {
+                    // Status filters only in list view (saves space for calendar grid)
+                    StatusFilterRow(
+                        filters = uiState.statusFilters,
+                        selectedStatus = uiState.selectedStatus,
+                        onFilterSelected = { viewModel.onStatusFilterChange(it) }
+                    )
                     ListViewContent(
                         uiState = uiState,
                         isWideScreen = isWideScreen,
