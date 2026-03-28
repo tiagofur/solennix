@@ -84,13 +84,22 @@ struct ContentView: View {
 
     // MARK: - Main Layout
 
-    /// Adaptive layout: compact (iPhone) uses tabs, regular (iPad/Mac) uses sidebar.
+    /// Adaptive layout:
+    /// - iPhone (compact): always tabs
+    /// - iPad portrait: tabs (like iPhone)
+    /// - iPad landscape: sidebar split
     @ViewBuilder
     private var mainLayout: some View {
         if sizeClass == .compact {
             CompactTabLayout(pendingSpotlightRoute: $pendingSpotlightRoute)
         } else {
-            SidebarSplitLayout(pendingSpotlightRoute: $pendingSpotlightRoute)
+            GeometryReader { geo in
+                if geo.size.width > geo.size.height {
+                    SidebarSplitLayout(pendingSpotlightRoute: $pendingSpotlightRoute)
+                } else {
+                    CompactTabLayout(pendingSpotlightRoute: $pendingSpotlightRoute)
+                }
+            }
         }
     }
 
