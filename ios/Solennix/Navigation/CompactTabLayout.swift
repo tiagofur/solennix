@@ -21,8 +21,21 @@ struct CompactTabLayout: View {
     @State private var morePath = NavigationPath()
     @Environment(\.apiClient) private var apiClient
 
+    /// Custom binding that detects same-tab re-taps for pop-to-root.
+    private var tabSelection: Binding<Tab> {
+        Binding(
+            get: { selectedTab },
+            set: { newTab in
+                if newTab == selectedTab {
+                    resetPath(for: newTab)
+                }
+                selectedTab = newTab
+            }
+        )
+    }
+
     var body: some View {
-        TabView(selection: $selectedTab) {
+        TabView(selection: tabSelection) {
             // Home Tab
             NavigationStack(path: $homePath) {
                 HomeRootView()
@@ -72,6 +85,9 @@ struct CompactTabLayout: View {
             .tag(Tab.more)
         }
         .tint(SolennixColors.tabBarActive)
+        .onChange(of: selectedTab) { oldTab, _ in
+            resetPath(for: oldTab)
+        }
         .onChange(of: pendingSpotlightRoute) { _, newRoute in
             guard let route = newRoute else { return }
             // Navegar desde la pestaña Home para rutas de Spotlight
@@ -81,6 +97,15 @@ struct CompactTabLayout: View {
                 homePath.append(route)
             }
             pendingSpotlightRoute = nil
+        }
+    }
+
+    private func resetPath(for tab: Tab) {
+        switch tab {
+        case .home:     homePath = NavigationPath()
+        case .calendar: calendarPath = NavigationPath()
+        case .clients:  clientsPath = NavigationPath()
+        case .more:     morePath = NavigationPath()
         }
     }
 }
