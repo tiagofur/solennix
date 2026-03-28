@@ -41,6 +41,7 @@ fun DashboardScreen(
     onUpgradeClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val isWideScreen = LocalIsWideScreen.current
 
     Scaffold(
         topBar = {
@@ -84,8 +85,7 @@ fun DashboardScreen(
 
                 // KPI Cards
                 item {
-                    val isWide = LocalIsWideScreen.current
-                    if (isWide) {
+                    if (isWideScreen) {
                         // Tablet: grid layout (4 columns like web)
                         val kpiItems = listOf(
                             Triple("Ventas del Mes", uiState.revenueThisMonth.asMXN(), Triple(Icons.Default.AttachMoney, SolennixTheme.colors.kpiGreen, null as String?)),
@@ -156,7 +156,7 @@ fun DashboardScreen(
                 }
 
                 // On tablet: show status + pending events side by side
-                if (LocalIsWideScreen.current && (uiState.statusDistribution.isNotEmpty() || uiState.pendingEvents.isNotEmpty())) {
+                if (isWideScreen && (uiState.statusDistribution.isNotEmpty() || uiState.pendingEvents.isNotEmpty())) {
                     item {
                         Spacer(modifier = Modifier.height(24.dp))
                         Row(
@@ -217,7 +217,7 @@ fun DashboardScreen(
                 }
 
                 // On tablet: upcoming events and inventory alerts side by side
-                if (LocalIsWideScreen.current && (uiState.upcomingEvents.isNotEmpty() || uiState.lowStockItems.isNotEmpty())) {
+                if (isWideScreen && (uiState.upcomingEvents.isNotEmpty() || uiState.lowStockItems.isNotEmpty())) {
                     item {
                         Spacer(modifier = Modifier.height(24.dp))
                         Row(
