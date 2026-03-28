@@ -12,6 +12,7 @@ public struct KPICardView: View {
     let iconColor: Color
     let iconBgColor: Color
     var subtitle: String?
+    var flexible: Bool
 
     public init(
         title: String,
@@ -19,7 +20,8 @@ public struct KPICardView: View {
         icon: String,
         iconColor: Color,
         iconBgColor: Color,
-        subtitle: String? = nil
+        subtitle: String? = nil,
+        flexible: Bool = false
     ) {
         self.title = title
         self.value = value
@@ -27,6 +29,7 @@ public struct KPICardView: View {
         self.iconColor = iconColor
         self.iconBgColor = iconBgColor
         self.subtitle = subtitle
+        self.flexible = flexible
     }
 
     public var body: some View {
@@ -61,7 +64,8 @@ public struct KPICardView: View {
                     .lineLimit(1)
             }
         }
-        .frame(width: 155)
+        .frame(width: flexible ? nil : 155)
+        .frame(maxWidth: flexible ? .infinity : nil)
         .padding(.vertical, Spacing.md)
         .padding(.horizontal, Spacing.sm)
         .background(SolennixColors.card)

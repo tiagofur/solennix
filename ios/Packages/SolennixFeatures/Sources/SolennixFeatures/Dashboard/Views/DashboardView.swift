@@ -11,9 +11,12 @@ public struct DashboardView: View {
     @Environment(AuthManager.self) private var authManager
     @Environment(PlanLimitsManager.self) private var planLimitsManager
     @Environment(\.apiClient) private var apiClient
+    @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var viewModel: DashboardViewModel?
     @State private var showSearch = false
     @State private var showQuickQuote = false
+
+    private var isIPad: Bool { sizeClass == .regular }
 
     public init() {}
 
@@ -24,24 +27,7 @@ public struct DashboardView: View {
                 headerSection
 
                 // Plan Limits Banner
-                if !planLimitsManager.canCreateEvent {
-                    UpgradeBannerView(
-                        type: .limitReached,
-                        resource: "Eventos",
-                        currentUsage: planLimitsManager.eventsThisMonth,
-                        limit: PlanLimitsManager.freePlanEventLimit
-                    ) {
-                        // Action to go to Pricing — will be implemented via navigation
-                    }
-                    .padding(.horizontal, Spacing.md)
-                } else if planLimitsManager.isBasicPlan {
-                    UpgradeBannerView(
-                        type: .upsell
-                    ) {
-                        // Action to go to Pricing
-                    }
-                    .padding(.horizontal, Spacing.md)
-                }
+                planLimitsBanner
 
                 // Quick Actions
                 quickActionsSection
@@ -49,19 +35,36 @@ public struct DashboardView: View {
                 // KPI Cards
                 kpiCardsSection
 
-                // Event Status Chart
-                if let vm = viewModel, !vm.eventsThisMonth.isEmpty {
-                    EventStatusChart(statusCounts: vm.eventStatusCounts)
-                        .padding(.horizontal, Spacing.md)
+                if isIPad {
+                    // iPad: Status chart + Upcoming events side-by-side
+                    HStack(alignment: .top, spacing: Spacing.md) {
+                        // Event Status Chart
+                        if let vm = viewModel, !vm.eventsThisMonth.isEmpty {
+                            EventStatusChart(statusCounts: vm.eventStatusCounts)
+                                .frame(maxWidth: .infinity)
+                        }
+
+                        // Upcoming Events
+                        upcomingEventsSection
+                            .frame(maxWidth: .infinity)
+                    }
+                    .padding(.horizontal, Spacing.md)
+                } else {
+                    // iPhone: stacked vertically
+                    // Event Status Chart
+                    if let vm = viewModel, !vm.eventsThisMonth.isEmpty {
+                        EventStatusChart(statusCounts: vm.eventStatusCounts)
+                            .padding(.horizontal, Spacing.md)
+                    }
+
+                    // Upcoming Events
+                    upcomingEventsSection
                 }
 
                 // Low Stock Alerts
                 if let vm = viewModel, !vm.lowStockItems.isEmpty {
                     lowStockSection(items: vm.lowStockItems)
                 }
-
-                // Upcoming Events
-                upcomingEventsSection
 
                 Spacer(minLength: Spacing.xxl)
             }
@@ -95,6 +98,30 @@ public struct DashboardView: View {
             }
             
             PendingEventsModalView(apiClient: apiClient)
+        }
+    }
+
+    // MARK: - Plan Limits Banner
+
+    @ViewBuilder
+    private var planLimitsBanner: some View {
+        if !planLimitsManager.canCreateEvent {
+            UpgradeBannerView(
+                type: .limitReached,
+                resource: "Eventos",
+                currentUsage: planLimitsManager.eventsThisMonth,
+                limit: PlanLimitsManager.freePlanEventLimit
+            ) {
+                // Action to go to Pricing — will be implemented via navigation
+            }
+            .padding(.horizontal, Spacing.md)
+        } else if planLimitsManager.isBasicPlan {
+            UpgradeBannerView(
+                type: .upsell
+            ) {
+                // Action to go to Pricing
+            }
+            .padding(.horizontal, Spacing.md)
         }
     }
 
@@ -166,38 +193,83 @@ public struct DashboardView: View {
     // MARK: - Quick Actions
 
     private var quickActionsSection: some View {
-        HStack(spacing: Spacing.md) {
-            Button {
-                HapticsHelper.play(.light)
-            } label: {
-                if planLimitsManager.canCreateEvent {
-                    NavigationLink(value: Route.eventForm()) {
-                        quickActionButton(icon: "plus.circle.fill", label: "Nuevo Evento", color: SolennixColors.primary)
-                    }
-                } else {
-                    quickActionButton(icon: "plus.circle.fill", label: "Nuevo Evento", color: SolennixColors.textTertiary)
-                        .opacity(0.6)
-                }
-            }
-            .buttonStyle(.plain)
+        Group {
+            if isIPad {
+                // iPad: expanded grid with all actions
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 160), spacing: Spacing.md)], spacing: Spacing.md) {
+                    quickActionItem(
+                        icon: "plus.circle.fill",
+                        label: "Nuevo Evento",
+                        color: planLimitsManager.canCreateEvent ? SolennixColors.primary : SolennixColors.textTertiary,
+                        enabled: planLimitsManager.canCreateEvent,
+                        destination: Route.eventForm()
+                    )
 
-            Button {
-                HapticsHelper.play(.light)
-            } label: {
-                if planLimitsManager.canCreateClient {
-                    NavigationLink(value: Route.clientForm()) {
-                        quickActionButton(icon: "person.badge.plus", label: "Nuevo Cliente", color: SolennixColors.statusConfirmed)
+                    quickActionItem(
+                        icon: "person.badge.plus",
+                        label: "Nuevo Cliente",
+                        color: planLimitsManager.canCreateClient ? SolennixColors.statusConfirmed : SolennixColors.textTertiary,
+                        enabled: planLimitsManager.canCreateClient,
+                        destination: Route.clientForm()
+                    )
+
+                    Button {
+                        HapticsHelper.play(.light)
+                        showQuickQuote = true
+                    } label: {
+                        quickActionButton(icon: "doc.text.magnifyingglass", label: "Cotizacion Rapida", color: SolennixColors.kpiBlue)
                     }
-                } else {
-                    quickActionButton(icon: "person.badge.plus", label: "Nuevo Cliente", color: SolennixColors.textTertiary)
-                        .opacity(0.6)
+                    .buttonStyle(.plain)
+
+                    Button {
+                        HapticsHelper.play(.light)
+                        showSearch = true
+                    } label: {
+                        quickActionButton(icon: "magnifyingglass", label: "Buscar", color: SolennixColors.kpiOrange)
+                    }
+                    .buttonStyle(.plain)
+                }
+            } else {
+                // iPhone: original 2-button layout
+                HStack(spacing: Spacing.md) {
+                    quickActionItem(
+                        icon: "plus.circle.fill",
+                        label: "Nuevo Evento",
+                        color: planLimitsManager.canCreateEvent ? SolennixColors.primary : SolennixColors.textTertiary,
+                        enabled: planLimitsManager.canCreateEvent,
+                        destination: Route.eventForm()
+                    )
+
+                    quickActionItem(
+                        icon: "person.badge.plus",
+                        label: "Nuevo Cliente",
+                        color: planLimitsManager.canCreateClient ? SolennixColors.statusConfirmed : SolennixColors.textTertiary,
+                        enabled: planLimitsManager.canCreateClient,
+                        destination: Route.clientForm()
+                    )
                 }
             }
-            .buttonStyle(.plain)
         }
         .padding(.horizontal, Spacing.md)
         .popoverTip(NewEventTip(), arrowEdge: .bottom)
         .popoverTip(QuickQuoteTip(), arrowEdge: .top)
+    }
+
+    @ViewBuilder
+    private func quickActionItem(icon: String, label: String, color: Color, enabled: Bool, destination: Route) -> some View {
+        Button {
+            HapticsHelper.play(.light)
+        } label: {
+            if enabled {
+                NavigationLink(value: destination) {
+                    quickActionButton(icon: icon, label: label, color: color)
+                }
+            } else {
+                quickActionButton(icon: icon, label: label, color: color)
+                    .opacity(0.6)
+            }
+        }
+        .buttonStyle(.plain)
     }
 
     private func quickActionButton(icon: String, label: String, color: Color) -> some View {
@@ -221,78 +293,102 @@ public struct DashboardView: View {
     // MARK: - KPI Cards
 
     private var kpiCardsSection: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: Spacing.md) {
-                KPICardView(
-                    title: "Ventas Netas",
-                    value: viewModel?.netSalesThisMonth.asMXN ?? "$0",
-                    icon: "dollarsign.circle",
-                    iconColor: SolennixColors.kpiGreen,
-                    iconBgColor: SolennixColors.kpiGreenBg
-                )
-
-                KPICardView(
-                    title: "Cobrado",
-                    value: viewModel?.cashCollectedThisMonth.asMXN ?? "$0",
-                    icon: "banknote",
-                    iconColor: SolennixColors.kpiOrange,
-                    iconBgColor: SolennixColors.kpiOrangeBg
-                )
-
-                KPICardView(
-                    title: "IVA Cobrado",
-                    value: viewModel?.vatCollectedThisMonth.asMXN ?? "$0",
-                    icon: "percent",
-                    iconColor: SolennixColors.kpiBlue,
-                    iconBgColor: SolennixColors.kpiBlueBg
-                )
-
-                KPICardView(
-                    title: "IVA Pendiente",
-                    value: viewModel?.vatOutstandingThisMonth.asMXN ?? "$0",
-                    icon: "exclamationmark.circle",
-                    iconColor: SolennixColors.kpiBlue,
-                    iconBgColor: SolennixColors.kpiBlueBg
-                )
-
-                KPICardView(
-                    title: "Eventos del Mes",
-                    value: "\(viewModel?.eventsThisMonth.count ?? 0)",
-                    icon: "calendar",
-                    iconColor: SolennixColors.kpiOrange,
-                    iconBgColor: SolennixColors.kpiOrangeBg
-                )
-
-                KPICardView(
-                    title: "Stock Bajo",
-                    value: "\(viewModel?.lowStockCount ?? 0)",
-                    icon: "archivebox",
-                    iconColor: (viewModel?.lowStockCount ?? 0) > 0
-                        ? SolennixColors.kpiOrange
-                        : SolennixColors.kpiGreen,
-                    iconBgColor: (viewModel?.lowStockCount ?? 0) > 0
-                        ? SolennixColors.kpiOrangeBg
-                        : SolennixColors.kpiGreenBg
-                )
-
-                KPICardView(
-                    title: "Clientes",
-                    value: "\(viewModel?.totalClients ?? 0)",
-                    icon: "person.2",
-                    iconColor: SolennixColors.kpiBlue,
-                    iconBgColor: SolennixColors.kpiBlueBg
-                )
-
-                KPICardView(
-                    title: "Cotizaciones",
-                    value: "\(viewModel?.pendingQuotes ?? 0)",
-                    icon: "doc.text.badge.clock",
-                    iconColor: SolennixColors.kpiOrange,
-                    iconBgColor: SolennixColors.kpiOrangeBg
-                )
+        Group {
+            if isIPad {
+                // iPad: multi-column grid showing all KPI cards at once
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 160), spacing: Spacing.md)], spacing: Spacing.md) {
+                    kpiCardItems(flexible: true)
+                }
+                .padding(.horizontal, Spacing.md)
+            } else {
+                // iPhone: horizontal scrollable strip
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: Spacing.md) {
+                        kpiCardItems(flexible: false)
+                    }
+                    .padding(.horizontal, Spacing.md)
+                }
             }
-            .padding(.horizontal, Spacing.md)
         }
+    }
+
+    @ViewBuilder
+    private func kpiCardItems(flexible: Bool) -> some View {
+        KPICardView(
+            title: "Ventas Netas",
+            value: viewModel?.netSalesThisMonth.asMXN ?? "$0",
+            icon: "dollarsign.circle",
+            iconColor: SolennixColors.kpiGreen,
+            iconBgColor: SolennixColors.kpiGreenBg,
+            flexible: flexible
+        )
+
+        KPICardView(
+            title: "Cobrado",
+            value: viewModel?.cashCollectedThisMonth.asMXN ?? "$0",
+            icon: "banknote",
+            iconColor: SolennixColors.kpiOrange,
+            iconBgColor: SolennixColors.kpiOrangeBg,
+            flexible: flexible
+        )
+
+        KPICardView(
+            title: "IVA Cobrado",
+            value: viewModel?.vatCollectedThisMonth.asMXN ?? "$0",
+            icon: "percent",
+            iconColor: SolennixColors.kpiBlue,
+            iconBgColor: SolennixColors.kpiBlueBg,
+            flexible: flexible
+        )
+
+        KPICardView(
+            title: "IVA Pendiente",
+            value: viewModel?.vatOutstandingThisMonth.asMXN ?? "$0",
+            icon: "exclamationmark.circle",
+            iconColor: SolennixColors.kpiBlue,
+            iconBgColor: SolennixColors.kpiBlueBg,
+            flexible: flexible
+        )
+
+        KPICardView(
+            title: "Eventos del Mes",
+            value: "\(viewModel?.eventsThisMonth.count ?? 0)",
+            icon: "calendar",
+            iconColor: SolennixColors.kpiOrange,
+            iconBgColor: SolennixColors.kpiOrangeBg,
+            flexible: flexible
+        )
+
+        KPICardView(
+            title: "Stock Bajo",
+            value: "\(viewModel?.lowStockCount ?? 0)",
+            icon: "archivebox",
+            iconColor: (viewModel?.lowStockCount ?? 0) > 0
+                ? SolennixColors.kpiOrange
+                : SolennixColors.kpiGreen,
+            iconBgColor: (viewModel?.lowStockCount ?? 0) > 0
+                ? SolennixColors.kpiOrangeBg
+                : SolennixColors.kpiGreenBg,
+            flexible: flexible
+        )
+
+        KPICardView(
+            title: "Clientes",
+            value: "\(viewModel?.totalClients ?? 0)",
+            icon: "person.2",
+            iconColor: SolennixColors.kpiBlue,
+            iconBgColor: SolennixColors.kpiBlueBg,
+            flexible: flexible
+        )
+
+        KPICardView(
+            title: "Cotizaciones",
+            value: "\(viewModel?.pendingQuotes ?? 0)",
+            icon: "doc.text.badge.clock",
+            iconColor: SolennixColors.kpiOrange,
+            iconBgColor: SolennixColors.kpiOrangeBg,
+            flexible: flexible
+        )
     }
 
     // MARK: - Low Stock Section
@@ -308,34 +404,50 @@ public struct DashboardView: View {
             }
             .padding(.horizontal, Spacing.md)
 
-            VStack(spacing: Spacing.sm) {
-                ForEach(items) { item in
-                    HStack {
-                        VStack(alignment: .leading, spacing: Spacing.xs) {
-                            Text(item.ingredientName)
-                                .font(.subheadline)
-                                .fontWeight(.medium)
-                                .foregroundStyle(SolennixColors.text)
-
-                            Text("Stock: \(Int(item.currentStock))/\(Int(item.minimumStock)) \(item.unit)")
-                                .font(.caption)
-                                .foregroundStyle(SolennixColors.textSecondary)
+            Group {
+                if isIPad {
+                    // iPad: 2-column grid for stock alerts
+                    LazyVGrid(columns: [GridItem(.flexible(), spacing: Spacing.sm), GridItem(.flexible(), spacing: Spacing.sm)], spacing: Spacing.sm) {
+                        ForEach(items) { item in
+                            lowStockCard(item: item)
                         }
-
-                        Spacer()
-
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundStyle(SolennixColors.warning)
-                            .font(.body)
                     }
-                    .padding(Spacing.md)
-                    .background(SolennixColors.card)
-                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
-                    .shadowSm()
+                } else {
+                    // iPhone: single column
+                    VStack(spacing: Spacing.sm) {
+                        ForEach(items) { item in
+                            lowStockCard(item: item)
+                        }
+                    }
                 }
             }
             .padding(.horizontal, Spacing.md)
         }
+    }
+
+    private func lowStockCard(item: InventoryItem) -> some View {
+        HStack {
+            VStack(alignment: .leading, spacing: Spacing.xs) {
+                Text(item.ingredientName)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundStyle(SolennixColors.text)
+
+                Text("Stock: \(Int(item.currentStock))/\(Int(item.minimumStock)) \(item.unit)")
+                    .font(.caption)
+                    .foregroundStyle(SolennixColors.textSecondary)
+            }
+
+            Spacer()
+
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundStyle(SolennixColors.warning)
+                .font(.body)
+        }
+        .padding(Spacing.md)
+        .background(SolennixColors.card)
+        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
+        .shadowSm()
     }
 
     // MARK: - Upcoming Events Section
@@ -345,7 +457,7 @@ public struct DashboardView: View {
             Text("Proximos Eventos")
                 .font(.headline)
                 .foregroundStyle(SolennixColors.text)
-                .padding(.horizontal, Spacing.md)
+                .padding(.horizontal, isIPad ? 0 : Spacing.md)
 
             if let vm = viewModel, !vm.upcomingEvents.isEmpty {
                 VStack(spacing: Spacing.sm) {
@@ -356,10 +468,10 @@ public struct DashboardView: View {
                         .buttonStyle(.plain)
                     }
                 }
-                .padding(.horizontal, Spacing.md)
+                .padding(.horizontal, isIPad ? 0 : Spacing.md)
             } else if viewModel?.isLoading == false {
                 emptyEventsState
-                    .padding(.horizontal, Spacing.md)
+                    .padding(.horizontal, isIPad ? 0 : Spacing.md)
             }
         }
     }
