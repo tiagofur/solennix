@@ -18,10 +18,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.creapolis.solennix.core.designsystem.theme.LocalIsWideScreen
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.creapolis.solennix.core.designsystem.theme.SolennixElevation
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.designsystem.theme.SolennixTitle
@@ -66,6 +68,16 @@ fun AdaptiveNavigationRailLayout(initialDeepLinkRoute: String? = null) {
             navController.navigate(route) {
                 launchSingleTop = true
             }
+        }
+    }
+
+    // Sync selectedSection with actual navigation to prevent desync
+    LaunchedEffect(currentRoute) {
+        val matchingSection = SidebarSection.entries.find { section ->
+            currentRoute == section.route || currentRoute?.startsWith(section.route + "/") == true
+        }
+        if (matchingSection != null && matchingSection != selectedSection) {
+            selectedSection = matchingSection
         }
     }
 
@@ -306,7 +318,10 @@ fun AdaptiveNavigationRailLayout(initialDeepLinkRoute: String? = null) {
                         onNavigateBack = { navController.popBackStack() }
                     )
                 }
-                composable("event_detail/{eventId}") {
+                composable(
+                    "event_detail/{eventId}",
+                    arguments = listOf(navArgument("eventId") { type = NavType.StringType })
+                ) {
                     EventDetailScreen(
                         viewModel = hiltViewModel(),
                         onNavigateBack = { navController.popBackStack() },
@@ -314,13 +329,19 @@ fun AdaptiveNavigationRailLayout(initialDeepLinkRoute: String? = null) {
                         onChecklistClick = { id -> navController.navigate("event_checklist/$id") }
                     )
                 }
-                composable("event_form?eventId={eventId}") {
+                composable(
+                    "event_form?eventId={eventId}",
+                    arguments = listOf(navArgument("eventId") { type = NavType.StringType; nullable = true; defaultValue = null })
+                ) {
                     EventFormScreen(
                         viewModel = hiltViewModel(),
                         onNavigateBack = { navController.popBackStack() }
                     )
                 }
-                composable("event_checklist/{eventId}") {
+                composable(
+                    "event_checklist/{eventId}",
+                    arguments = listOf(navArgument("eventId") { type = NavType.StringType })
+                ) {
                     EventChecklistScreen(
                         viewModel = hiltViewModel(),
                         onNavigateBack = { navController.popBackStack() }
@@ -328,7 +349,10 @@ fun AdaptiveNavigationRailLayout(initialDeepLinkRoute: String? = null) {
                 }
 
                 // ── Clients ──
-                composable("client_detail/{clientId}") {
+                composable(
+                    "client_detail/{clientId}",
+                    arguments = listOf(navArgument("clientId") { type = NavType.StringType })
+                ) {
                     ClientDetailScreen(
                         viewModel = hiltViewModel(),
                         onNavigateBack = { navController.popBackStack() },
@@ -336,7 +360,10 @@ fun AdaptiveNavigationRailLayout(initialDeepLinkRoute: String? = null) {
                         onEventClick = { id -> navController.navigate("event_detail/$id") }
                     )
                 }
-                composable("client_form?clientId={clientId}") {
+                composable(
+                    "client_form?clientId={clientId}",
+                    arguments = listOf(navArgument("clientId") { type = NavType.StringType; nullable = true; defaultValue = null })
+                ) {
                     ClientFormScreen(
                         viewModel = hiltViewModel(),
                         onNavigateBack = { navController.popBackStack() }
@@ -344,14 +371,20 @@ fun AdaptiveNavigationRailLayout(initialDeepLinkRoute: String? = null) {
                 }
 
                 // ── Products ──
-                composable("product_detail/{productId}") {
+                composable(
+                    "product_detail/{productId}",
+                    arguments = listOf(navArgument("productId") { type = NavType.StringType })
+                ) {
                     ProductDetailScreen(
                         viewModel = hiltViewModel(),
                         onNavigateBack = { navController.popBackStack() },
                         onEditClick = { id -> navController.navigate("product_form?productId=$id") }
                     )
                 }
-                composable("product_form?productId={productId}") {
+                composable(
+                    "product_form?productId={productId}",
+                    arguments = listOf(navArgument("productId") { type = NavType.StringType; nullable = true; defaultValue = null })
+                ) {
                     ProductFormScreen(
                         viewModel = hiltViewModel(),
                         onNavigateBack = { navController.popBackStack() }
@@ -359,14 +392,20 @@ fun AdaptiveNavigationRailLayout(initialDeepLinkRoute: String? = null) {
                 }
 
                 // ── Inventory ──
-                composable("inventory_detail/{itemId}") {
+                composable(
+                    "inventory_detail/{itemId}",
+                    arguments = listOf(navArgument("itemId") { type = NavType.StringType })
+                ) {
                     InventoryDetailScreen(
                         viewModel = hiltViewModel(),
                         onNavigateBack = { navController.popBackStack() },
                         onEditClick = { id -> navController.navigate("inventory_form?itemId=$id") }
                     )
                 }
-                composable("inventory_form?itemId={itemId}") {
+                composable(
+                    "inventory_form?itemId={itemId}",
+                    arguments = listOf(navArgument("itemId") { type = NavType.StringType; nullable = true; defaultValue = null })
+                ) {
                     InventoryFormScreen(
                         viewModel = hiltViewModel(),
                         onNavigateBack = { navController.popBackStack() }
@@ -421,7 +460,10 @@ fun AdaptiveNavigationRailLayout(initialDeepLinkRoute: String? = null) {
                 }
 
                 // ── Quick Quote ──
-                composable("quick_quote?clientId={clientId}") {
+                composable(
+                    "quick_quote?clientId={clientId}",
+                    arguments = listOf(navArgument("clientId") { type = NavType.StringType; nullable = true; defaultValue = null })
+                ) {
                     QuickQuoteScreen(
                         viewModel = hiltViewModel(),
                         onNavigateBack = { navController.popBackStack() },

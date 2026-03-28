@@ -429,9 +429,8 @@ private fun InventoryGridCard(
     val isLowStock = item.minimumStock > 0 && item.currentStock < item.minimumStock
 
     Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.medium,
         color = SolennixTheme.colors.card,
         tonalElevation = 1.dp

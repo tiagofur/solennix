@@ -174,6 +174,7 @@ fun ClientListScreen(
                     ) {
                         items(uiState.clients) { client ->
                             Card(
+                                onClick = { onClientClick(client.id) },
                                 modifier = Modifier.fillMaxWidth(),
                                 colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
                                 shape = MaterialTheme.shapes.medium

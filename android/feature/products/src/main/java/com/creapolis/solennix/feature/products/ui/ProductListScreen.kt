@@ -236,9 +236,8 @@ fun ProductGridItem(
     onClick: () -> Unit
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
         shape = MaterialTheme.shapes.medium
     ) {

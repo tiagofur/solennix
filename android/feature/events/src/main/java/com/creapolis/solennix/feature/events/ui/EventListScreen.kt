@@ -241,10 +241,10 @@ private fun EventListItem(
     val eventDate = parseFlexibleDate(event.eventDate)?.format(dateFormatter) ?: event.eventDate
 
     Card(
+        onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp)
-            .clickable(onClick = onClick),
+            .padding(horizontal = 16.dp, vertical = 4.dp),
         colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
         shape = MaterialTheme.shapes.medium
     ) {
