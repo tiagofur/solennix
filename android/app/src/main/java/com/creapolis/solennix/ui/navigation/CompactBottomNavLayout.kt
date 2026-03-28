@@ -10,9 +10,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -242,12 +241,12 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
             }
             composable(TopLevelDestination.MORE.route) {
                 MoreMenuScreen(
-                    onEventsClick = { navController.navigate("events") },
+                    onQuoteClick = { navController.navigate("event_form?eventId=") },
+                    onQuickQuoteClick = { navController.navigate("quick_quote") },
                     onProductsClick = { navController.navigate("products") },
                     onInventoryClick = { navController.navigate("inventory") },
-                    onSettingsClick = { navController.navigate("settings") },
                     onSearchClick = { navController.navigate("search") },
-                    onQuickQuoteClick = { navController.navigate("quick_quote") }
+                    onSettingsClick = { navController.navigate("settings") }
                 )
             }
 
@@ -438,12 +437,12 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MoreMenuScreen(
-    onEventsClick: () -> Unit,
+    onQuoteClick: () -> Unit,
+    onQuickQuoteClick: () -> Unit,
     onProductsClick: () -> Unit,
     onInventoryClick: () -> Unit,
-    onSettingsClick: () -> Unit,
     onSearchClick: () -> Unit,
-    onQuickQuoteClick: () -> Unit = {}
+    onSettingsClick: () -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -457,22 +456,22 @@ fun MoreMenuScreen(
                 .padding(horizontal = 16.dp)
         ) {
             Spacer(modifier = Modifier.height(8.dp))
-            MenuCard(title = "Eventos", subtitle = "Gestiona tus celebraciones", icon = Icons.Default.Event, onClick = onEventsClick)
-            MenuCard(title = "Productos", subtitle = "Servicios y artículos que ofreces", icon = Icons.AutoMirrored.Filled.List, onClick = onProductsClick)
-            MenuCard(title = "Inventario", subtitle = "Control de equipos e insumos", icon = Icons.Default.Build, onClick = onInventoryClick)
-            MenuCard(title = "Búsqueda Global", subtitle = "Busca en toda la app", icon = Icons.Default.Search, onClick = onSearchClick)
+            MenuCard(title = "Cotización", subtitle = "Crea un nuevo evento con cotización", icon = Icons.Default.Receipt, onClick = onQuoteClick)
+            MenuCard(title = "Cotización Rápida", subtitle = "Arma una cotización sin registrar cliente", icon = Icons.Default.Bolt, onClick = onQuickQuoteClick)
 
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Herramientas",
+                text = "Catálogo",
                 style = MaterialTheme.typography.titleSmall,
                 color = SolennixTheme.colors.secondaryText,
                 modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
             )
-            MenuCard(title = "Cotización Rápida", subtitle = "Arma una cotización sin registrar cliente", icon = Icons.Outlined.Description, onClick = onQuickQuoteClick)
+            MenuCard(title = "Productos", subtitle = "Servicios y artículos que ofreces", icon = Icons.Default.Inventory2, onClick = onProductsClick)
+            MenuCard(title = "Inventario", subtitle = "Control de equipos e insumos", icon = Icons.Default.Widgets, onClick = onInventoryClick)
 
             Spacer(modifier = Modifier.height(8.dp))
-            MenuCard(title = "Ajustes", subtitle = "Cuenta, negocio y suscripción", icon = Icons.Default.Settings, onClick = onSettingsClick)
+            MenuCard(title = "Buscar", subtitle = "Busca en toda la app", icon = Icons.Default.Search, onClick = onSearchClick)
+            MenuCard(title = "Configuración", subtitle = "Cuenta, negocio y suscripción", icon = Icons.Default.Settings, onClick = onSettingsClick)
         }
     }
 }
