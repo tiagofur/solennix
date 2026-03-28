@@ -9,11 +9,13 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.creapolis.solennix.core.designsystem.component.PremiumButton
 import com.creapolis.solennix.core.designsystem.component.SolennixTextField
+import com.creapolis.solennix.core.designsystem.theme.LocalIsWideScreen
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.feature.settings.viewmodel.ChangePasswordViewModel
 
@@ -24,6 +26,7 @@ fun ChangePasswordScreen(
     onNavigateBack: () -> Unit
 ) {
     val scrollState = rememberScrollState()
+    val isWideScreen = LocalIsWideScreen.current
 
     LaunchedEffect(viewModel.saveSuccess) {
         if (viewModel.saveSuccess) {
@@ -48,8 +51,16 @@ fun ChangePasswordScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(scrollState)
-                .padding(16.dp)
+                .padding(16.dp),
+            horizontalAlignment = if (isWideScreen) Alignment.CenterHorizontally else Alignment.Start
         ) {
+            val contentModifier = if (isWideScreen) {
+                Modifier.widthIn(max = 500.dp).fillMaxWidth()
+            } else {
+                Modifier.fillMaxWidth()
+            }
+
+            Column(modifier = contentModifier) {
             Text(
                 text = "Seguridad",
                 style = MaterialTheme.typography.labelLarge,
@@ -122,6 +133,7 @@ fun ChangePasswordScreen(
                 isLoading = viewModel.isSaving,
                 enabled = !viewModel.isSaving
             )
+            } // end contentModifier Column
         }
     }
 }

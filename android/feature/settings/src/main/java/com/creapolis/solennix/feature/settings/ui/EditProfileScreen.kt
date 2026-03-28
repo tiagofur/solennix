@@ -16,6 +16,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.creapolis.solennix.core.designsystem.component.PremiumButton
 import com.creapolis.solennix.core.designsystem.component.SolennixTextField
+import com.creapolis.solennix.core.designsystem.theme.LocalIsWideScreen
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.feature.settings.viewmodel.EditProfileViewModel
 
@@ -26,6 +27,7 @@ fun EditProfileScreen(
     onNavigateBack: () -> Unit
 ) {
     val scrollState = rememberScrollState()
+    val isWideScreen = LocalIsWideScreen.current
 
     LaunchedEffect(viewModel.saveSuccess) {
         if (viewModel.saveSuccess) {
@@ -76,23 +78,50 @@ fun EditProfileScreen(
                     tonalElevation = 1.dp
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        SolennixTextField(
-                            value = viewModel.name,
-                            onValueChange = { viewModel.name = it },
-                            label = "Nombre *",
-                            leadingIcon = Icons.Default.Person,
-                            errorMessage = viewModel.nameError
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
+                        if (isWideScreen) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                Box(modifier = Modifier.weight(1f)) {
+                                    SolennixTextField(
+                                        value = viewModel.name,
+                                        onValueChange = { viewModel.name = it },
+                                        label = "Nombre *",
+                                        leadingIcon = Icons.Default.Person,
+                                        errorMessage = viewModel.nameError
+                                    )
+                                }
+                                Box(modifier = Modifier.weight(1f)) {
+                                    SolennixTextField(
+                                        value = viewModel.email,
+                                        onValueChange = { viewModel.email = it },
+                                        label = "Correo Electrónico *",
+                                        leadingIcon = Icons.Default.Email,
+                                        keyboardType = KeyboardType.Email,
+                                        errorMessage = viewModel.emailError
+                                    )
+                                }
+                            }
+                        } else {
+                            SolennixTextField(
+                                value = viewModel.name,
+                                onValueChange = { viewModel.name = it },
+                                label = "Nombre *",
+                                leadingIcon = Icons.Default.Person,
+                                errorMessage = viewModel.nameError
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
 
-                        SolennixTextField(
-                            value = viewModel.email,
-                            onValueChange = { viewModel.email = it },
-                            label = "Correo Electrónico *",
-                            leadingIcon = Icons.Default.Email,
-                            keyboardType = KeyboardType.Email,
-                            errorMessage = viewModel.emailError
-                        )
+                            SolennixTextField(
+                                value = viewModel.email,
+                                onValueChange = { viewModel.email = it },
+                                label = "Correo Electrónico *",
+                                leadingIcon = Icons.Default.Email,
+                                keyboardType = KeyboardType.Email,
+                                errorMessage = viewModel.emailError
+                            )
+                        }
                     }
                 }
 

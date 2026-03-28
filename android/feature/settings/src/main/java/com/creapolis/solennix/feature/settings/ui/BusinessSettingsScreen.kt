@@ -37,6 +37,7 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.creapolis.solennix.core.designsystem.component.PremiumButton
 import com.creapolis.solennix.core.designsystem.component.SolennixTextField
+import com.creapolis.solennix.core.designsystem.theme.LocalIsWideScreen
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.network.UrlResolver
 import com.creapolis.solennix.feature.settings.viewmodel.BusinessSettingsViewModel
@@ -49,6 +50,7 @@ fun BusinessSettingsScreen(
 ) {
     val scrollState = rememberScrollState()
     val context = LocalContext.current
+    val isWideScreen = LocalIsWideScreen.current
 
     LaunchedEffect(viewModel.saveSuccess) {
         if (viewModel.saveSuccess) {
@@ -190,122 +192,264 @@ fun BusinessSettingsScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Business Name Section
-                Text(
-                    text = "Nombre del Negocio",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = SolennixTheme.colors.primary,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
+                // Business Name & Brand Color — 2-column on tablet
+                var showColorPicker by remember { mutableStateOf(false) }
 
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = MaterialTheme.shapes.medium,
-                    color = SolennixTheme.colors.card,
-                    tonalElevation = 1.dp
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        SolennixTextField(
-                            value = viewModel.businessName,
-                            onValueChange = { viewModel.businessName = it },
-                            label = "Nombre del negocio",
-                            leadingIcon = Icons.Default.Business
-                        )
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
+                if (isWideScreen) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        // Business Name Section
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Mostrar en PDFs",
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = SolennixTheme.colors.primaryText
+                                text = "Nombre del Negocio",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = SolennixTheme.colors.primary,
+                                modifier = Modifier.padding(bottom = 8.dp)
                             )
-                            Switch(
-                                checked = viewModel.showBusinessNameInPdf,
-                                onCheckedChange = { viewModel.showBusinessNameInPdf = it },
-                                colors = SwitchDefaults.colors(
-                                    checkedTrackColor = SolennixTheme.colors.primary
-                                )
+
+                            Surface(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = MaterialTheme.shapes.medium,
+                                color = SolennixTheme.colors.card,
+                                tonalElevation = 1.dp
+                            ) {
+                                Column(modifier = Modifier.padding(16.dp)) {
+                                    SolennixTextField(
+                                        value = viewModel.businessName,
+                                        onValueChange = { viewModel.businessName = it },
+                                        label = "Nombre del negocio",
+                                        leadingIcon = Icons.Default.Business
+                                    )
+
+                                    Spacer(modifier = Modifier.height(16.dp))
+
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "Mostrar en PDFs",
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            color = SolennixTheme.colors.primaryText
+                                        )
+                                        Switch(
+                                            checked = viewModel.showBusinessNameInPdf,
+                                            onCheckedChange = { viewModel.showBusinessNameInPdf = it },
+                                            colors = SwitchDefaults.colors(
+                                                checkedTrackColor = SolennixTheme.colors.primary
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Text(
+                                text = "Si activas esta opcion, tu nombre comercial aparecera en los documentos en lugar de tu nombre personal.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = SolennixTheme.colors.secondaryText,
+                                modifier = Modifier.padding(horizontal = 4.dp)
+                            )
+                        }
+
+                        // Brand Color Section
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Identidad Visual",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = SolennixTheme.colors.primary,
+                                modifier = Modifier.padding(bottom = 8.dp)
+                            )
+
+                            Surface(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = MaterialTheme.shapes.medium,
+                                color = SolennixTheme.colors.card,
+                                tonalElevation = 1.dp
+                            ) {
+                                Column(modifier = Modifier.padding(16.dp)) {
+                                    Text(
+                                        text = "Color de marca",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = SolennixTheme.colors.primaryText,
+                                        modifier = Modifier.padding(bottom = 12.dp)
+                                    )
+
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(32.dp)
+                                                .clip(CircleShape)
+                                                .background(parseHexColor(viewModel.brandColor))
+                                                .border(
+                                                    1.dp,
+                                                    SolennixTheme.colors.secondaryText.copy(alpha = 0.3f),
+                                                    CircleShape
+                                                )
+                                        )
+
+                                        Spacer(modifier = Modifier.width(12.dp))
+
+                                        Text(
+                                            text = viewModel.brandColor.uppercase(),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontFamily = FontFamily.Monospace,
+                                            color = SolennixTheme.colors.secondaryText
+                                        )
+
+                                        Spacer(modifier = Modifier.weight(1f))
+
+                                        TextButton(onClick = { showColorPicker = true }) {
+                                            Text(
+                                                text = "Personalizar",
+                                                color = SolennixTheme.colors.primary
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Text(
+                                text = "Este color se usara como acento en los documentos PDF que generes.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = SolennixTheme.colors.secondaryText,
+                                modifier = Modifier.padding(horizontal = 4.dp)
                             )
                         }
                     }
-                }
+                } else {
+                    // Business Name Section
+                    Text(
+                        text = "Nombre del Negocio",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = SolennixTheme.colors.primary,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = "Si activas esta opcion, tu nombre comercial aparecera en los documentos en lugar de tu nombre personal.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = SolennixTheme.colors.secondaryText,
-                    modifier = Modifier.padding(horizontal = 4.dp)
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Brand Color Section
-                Text(
-                    text = "Identidad Visual",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = SolennixTheme.colors.primary,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-
-                var showColorPicker by remember { mutableStateOf(false) }
-
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = MaterialTheme.shapes.medium,
-                    color = SolennixTheme.colors.card,
-                    tonalElevation = 1.dp
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            text = "Color de marca",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = SolennixTheme.colors.primaryText,
-                            modifier = Modifier.padding(bottom = 12.dp)
-                        )
-
-                        // Color selector row
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(32.dp)
-                                    .clip(CircleShape)
-                                    .background(parseHexColor(viewModel.brandColor))
-                                    .border(
-                                        1.dp,
-                                        SolennixTheme.colors.secondaryText.copy(alpha = 0.3f),
-                                        CircleShape
-                                    )
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.medium,
+                        color = SolennixTheme.colors.card,
+                        tonalElevation = 1.dp
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            SolennixTextField(
+                                value = viewModel.businessName,
+                                onValueChange = { viewModel.businessName = it },
+                                label = "Nombre del negocio",
+                                leadingIcon = Icons.Default.Business
                             )
 
-                            Spacer(modifier = Modifier.width(12.dp))
+                            Spacer(modifier = Modifier.height(16.dp))
 
-                            Text(
-                                text = viewModel.brandColor.uppercase(),
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontFamily = FontFamily.Monospace,
-                                color = SolennixTheme.colors.secondaryText
-                            )
-
-                            Spacer(modifier = Modifier.weight(1f))
-
-                            TextButton(onClick = { showColorPicker = true }) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
                                 Text(
-                                    text = "Personalizar",
-                                    color = SolennixTheme.colors.primary
+                                    text = "Mostrar en PDFs",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = SolennixTheme.colors.primaryText
+                                )
+                                Switch(
+                                    checked = viewModel.showBusinessNameInPdf,
+                                    onCheckedChange = { viewModel.showBusinessNameInPdf = it },
+                                    colors = SwitchDefaults.colors(
+                                        checkedTrackColor = SolennixTheme.colors.primary
+                                    )
                                 )
                             }
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = "Si activas esta opcion, tu nombre comercial aparecera en los documentos en lugar de tu nombre personal.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = SolennixTheme.colors.secondaryText,
+                        modifier = Modifier.padding(horizontal = 4.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // Brand Color Section
+                    Text(
+                        text = "Identidad Visual",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = SolennixTheme.colors.primary,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.medium,
+                        color = SolennixTheme.colors.card,
+                        tonalElevation = 1.dp
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                text = "Color de marca",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = SolennixTheme.colors.primaryText,
+                                modifier = Modifier.padding(bottom = 12.dp)
+                            )
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .clip(CircleShape)
+                                        .background(parseHexColor(viewModel.brandColor))
+                                        .border(
+                                            1.dp,
+                                            SolennixTheme.colors.secondaryText.copy(alpha = 0.3f),
+                                            CircleShape
+                                        )
+                                )
+
+                                Spacer(modifier = Modifier.width(12.dp))
+
+                                Text(
+                                    text = viewModel.brandColor.uppercase(),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontFamily = FontFamily.Monospace,
+                                    color = SolennixTheme.colors.secondaryText
+                                )
+
+                                Spacer(modifier = Modifier.weight(1f))
+
+                                TextButton(onClick = { showColorPicker = true }) {
+                                    Text(
+                                        text = "Personalizar",
+                                        color = SolennixTheme.colors.primary
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = "Este color se usara como acento en los documentos PDF que generes.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = SolennixTheme.colors.secondaryText,
+                        modifier = Modifier.padding(horizontal = 4.dp)
+                    )
                 }
 
                 if (showColorPicker) {
@@ -318,15 +462,6 @@ fun BusinessSettingsScreen(
                         }
                     )
                 }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = "Este color se usara como acento en los documentos PDF que generes.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = SolennixTheme.colors.secondaryText,
-                    modifier = Modifier.padding(horizontal = 4.dp)
-                )
 
                 Spacer(modifier = Modifier.height(24.dp))
 
