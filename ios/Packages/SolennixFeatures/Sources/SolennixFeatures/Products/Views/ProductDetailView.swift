@@ -151,6 +151,7 @@ public struct ProductDetailView: View {
 
     @State private var viewModel: ProductDetailViewModel
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     public init(apiClient: APIClient, productId: String) {
         _viewModel = State(initialValue: ProductDetailViewModel(apiClient: apiClient, productId: productId))
@@ -220,59 +221,55 @@ public struct ProductDetailView: View {
     private func detailContent(_ product: Product) -> some View {
         ScrollView {
             VStack(spacing: Spacing.md) {
-                // Header with image
-                headerSection(product)
+                AdaptiveDetailLayout {
+                    // Left: Product info, image, KPI cards
+                    headerSection(product)
+                    kpiSection(product)
+                    smartAlertSection(product)
+                    generalInfoSection(product)
+                } right: {
+                    // Right: Ingredients/recipe, cost breakdown
+                    if !viewModel.ingredientItems.isEmpty {
+                        compositionSection(
+                            title: "Composicion / Insumos",
+                            icon: "square.stack.3d.up.fill",
+                            iconColor: SolennixColors.primary,
+                            items: viewModel.ingredientItems,
+                            showCost: true,
+                            totalLabel: "Costo Total por Unidad",
+                            totalValue: viewModel.unitCost
+                        )
+                    }
 
-                // KPI Cards
-                kpiSection(product)
+                    if !viewModel.supplyItems.isEmpty {
+                        compositionSection(
+                            title: "Insumos por Evento",
+                            icon: "flame.fill",
+                            iconColor: .orange,
+                            items: viewModel.supplyItems,
+                            showCost: true,
+                            badge: "Costo fijo por evento",
+                            badgeColor: .orange,
+                            totalLabel: "Costo por Evento",
+                            totalValue: viewModel.perEventCost,
+                            totalColor: .orange
+                        )
+                    }
 
-                // Smart alert
-                smartAlertSection(product)
-
-                // General info
-                generalInfoSection(product)
-
-                // Composition tables
-                if !viewModel.ingredientItems.isEmpty {
-                    compositionSection(
-                        title: "Composicion / Insumos",
-                        icon: "square.stack.3d.up.fill",
-                        iconColor: SolennixColors.primary,
-                        items: viewModel.ingredientItems,
-                        showCost: true,
-                        totalLabel: "Costo Total por Unidad",
-                        totalValue: viewModel.unitCost
-                    )
+                    if !viewModel.equipmentItems.isEmpty {
+                        compositionSection(
+                            title: "Equipo Necesario",
+                            icon: "wrench.and.screwdriver.fill",
+                            iconColor: .blue,
+                            items: viewModel.equipmentItems,
+                            showCost: false,
+                            badge: "Sin costo - Reutilizable",
+                            badgeColor: .blue
+                        )
+                    }
                 }
 
-                if !viewModel.supplyItems.isEmpty {
-                    compositionSection(
-                        title: "Insumos por Evento",
-                        icon: "flame.fill",
-                        iconColor: .orange,
-                        items: viewModel.supplyItems,
-                        showCost: true,
-                        badge: "Costo fijo por evento",
-                        badgeColor: .orange,
-                        totalLabel: "Costo por Evento",
-                        totalValue: viewModel.perEventCost,
-                        totalColor: .orange
-                    )
-                }
-
-                if !viewModel.equipmentItems.isEmpty {
-                    compositionSection(
-                        title: "Equipo Necesario",
-                        icon: "wrench.and.screwdriver.fill",
-                        iconColor: .blue,
-                        items: viewModel.equipmentItems,
-                        showCost: false,
-                        badge: "Sin costo - Reutilizable",
-                        badgeColor: .blue
-                    )
-                }
-
-                // Demand forecast
+                // Demand forecast (full-width below)
                 DemandForecastChart(
                     dataPoints: viewModel.demandData,
                     productName: product.name,

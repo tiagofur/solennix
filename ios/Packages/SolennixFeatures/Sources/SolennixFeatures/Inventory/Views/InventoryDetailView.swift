@@ -26,6 +26,7 @@ public struct InventoryDetailView: View {
     @State private var adjustmentQuantity: Double = 0
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     private let apiClient: APIClient
     private let itemId: String
@@ -225,25 +226,19 @@ public struct InventoryDetailView: View {
     private func detailContent(_ item: InventoryItem) -> some View {
         ScrollView {
             VStack(spacing: Spacing.md) {
-                // Stock status card
-                stockStatusCard(item)
+                AdaptiveDetailLayout {
+                    // Left: Item info, KPI cards
+                    stockStatusCard(item)
+                    kpiSection(item)
+                    smartAlertSection(item)
+                    infoCard(item)
+                } right: {
+                    // Right: Stock health, demand forecast
+                    stockHealthBars(item)
+                    demandForecastSection(item)
+                }
 
-                // KPI Cards
-                kpiSection(item)
-
-                // Smart alert
-                smartAlertSection(item)
-
-                // Stock health bars
-                stockHealthBars(item)
-
-                // Demand forecast
-                demandForecastSection(item)
-
-                // Info card
-                infoCard(item)
-
-                // Last updated
+                // Last updated (full-width below)
                 HStack {
                     Image(systemName: "clock")
                         .foregroundStyle(SolennixColors.textTertiary)

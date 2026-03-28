@@ -13,6 +13,7 @@ public struct EventDetailView: View {
     @State private var viewModel: EventDetailViewModel
     @State private var selectedPhotos: [PhotosPickerItem] = []
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     public init(eventId: String, apiClient: APIClient) {
         self.eventId = eventId
@@ -95,9 +96,21 @@ public struct EventDetailView: View {
     private func scrollContent(_ event: Event) -> some View {
         ScrollView {
             VStack(spacing: Spacing.lg) {
-                headerCard(event)
-                detailsSection(event)
+                AdaptiveDetailLayout {
+                    // Left: Event info, client, status, details
+                    headerCard(event)
+                    detailsSection(event)
+                    if let notes = event.notes, !notes.isEmpty {
+                        notesSection(notes)
+                    }
+                } right: {
+                    // Right: Financial summary, payments
+                    financesCard(event)
+                    paymentsCard(event)
+                    actionButtonsRow1(event)
+                }
 
+                // Full-width below: Products, Equipment, Supplies, Extras, Photos, Actions
                 if !viewModel.products.isEmpty {
                     productsSection
                 }
@@ -114,16 +127,8 @@ public struct EventDetailView: View {
                     equipmentSection
                 }
 
-                financesCard(event)
-                paymentsCard(event)
-
-                if let notes = event.notes, !notes.isEmpty {
-                    notesSection(notes)
-                }
-
                 photosSection
 
-                actionButtonsRow1(event)
                 liveActivityButton
                 actionButtonsRow2
                 actionButtonsRow3

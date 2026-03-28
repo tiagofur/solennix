@@ -16,6 +16,7 @@ public struct ClientDetailView: View {
     @State private var showDeleteConfirm: Bool = false
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     private let apiClient: APIClient
 
@@ -68,9 +69,16 @@ public struct ClientDetailView: View {
         ScrollView {
             VStack(spacing: Spacing.lg) {
                 headerCard(client)
-                contactSection(client)
+
+                AdaptiveDetailLayout {
+                    // Left: Contact info, notes
+                    contactSection(client)
+                } right: {
+                    // Right: Stats (in header), recent events
+                    eventHistorySection
+                }
+
                 actionButtons
-                eventHistorySection
             }
             .padding(.horizontal, Spacing.md)
             .padding(.vertical, Spacing.lg)
