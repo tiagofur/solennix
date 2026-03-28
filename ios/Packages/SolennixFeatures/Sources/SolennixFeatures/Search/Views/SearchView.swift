@@ -8,6 +8,7 @@ import SolennixNetwork
 public struct SearchView: View {
 
     @Environment(AuthManager.self) private var authManager
+    @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var viewModel: SearchViewModel?
 
     public init() {}
@@ -120,6 +121,122 @@ public struct SearchView: View {
 
     @ViewBuilder
     private func resultsContent(results: SearchResults) -> some View {
+        if sizeClass == .regular {
+            iPadResultsGrid(results: results)
+        } else {
+            iPhoneResultsList(results: results)
+        }
+    }
+
+    // MARK: - iPad Results Grid (2x2)
+
+    @ViewBuilder
+    private func iPadResultsGrid(results: SearchResults) -> some View {
+        Section {
+            LazyVGrid(
+                columns: [
+                    GridItem(.flexible(), spacing: Spacing.md),
+                    GridItem(.flexible(), spacing: Spacing.md)
+                ],
+                spacing: Spacing.md
+            ) {
+                if !results.clients.isEmpty {
+                    resultGridCard(
+                        title: "Clientes",
+                        icon: "person.2.fill",
+                        count: results.clients.count,
+                        items: results.clients
+                    ) { item in Route.clientDetail(id: item.id) }
+                }
+
+                if !results.events.isEmpty {
+                    resultGridCard(
+                        title: "Eventos",
+                        icon: "calendar",
+                        count: results.events.count,
+                        items: results.events
+                    ) { item in Route.eventDetail(id: item.id) }
+                }
+
+                if !results.products.isEmpty {
+                    resultGridCard(
+                        title: "Productos",
+                        icon: "shippingbox.fill",
+                        count: results.products.count,
+                        items: results.products
+                    ) { item in Route.productDetail(id: item.id) }
+                }
+
+                if !results.inventory.isEmpty {
+                    resultGridCard(
+                        title: "Inventario",
+                        icon: "archivebox.fill",
+                        count: results.inventory.count,
+                        items: results.inventory
+                    ) { item in Route.inventoryDetail(id: item.id) }
+                }
+            }
+            .listRowInsets(EdgeInsets(top: Spacing.sm, leading: Spacing.sm, bottom: Spacing.sm, trailing: Spacing.sm))
+            .listRowBackground(Color.clear)
+        }
+    }
+
+    private func resultGridCard(
+        title: String,
+        icon: String,
+        count: Int,
+        items: [SearchResultItem],
+        routeBuilder: @escaping (SearchResultItem) -> Route
+    ) -> some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            // Header
+            HStack(spacing: Spacing.sm) {
+                Image(systemName: icon)
+                    .font(.caption)
+                    .foregroundStyle(SolennixColors.primary)
+
+                Text(title)
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(SolennixColors.text)
+
+                Spacer()
+
+                Text("\(count)")
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .foregroundStyle(SolennixColors.textTertiary)
+                    .padding(.horizontal, Spacing.sm)
+                    .padding(.vertical, Spacing.xxs)
+                    .background(SolennixColors.surfaceAlt)
+                    .clipShape(Capsule())
+            }
+
+            Divider()
+
+            // Items
+            ForEach(items.prefix(5)) { item in
+                NavigationLink(value: routeBuilder(item)) {
+                    resultRow(item: item)
+                }
+            }
+
+            if items.count > 5 {
+                Text("+ \(items.count - 5) mas")
+                    .font(.caption)
+                    .foregroundStyle(SolennixColors.primary)
+                    .padding(.top, Spacing.xxs)
+            }
+        }
+        .padding(Spacing.md)
+        .background(SolennixColors.card)
+        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+    }
+
+    // MARK: - iPhone Results List
+
+    @ViewBuilder
+    private func iPhoneResultsList(results: SearchResults) -> some View {
         if !results.clients.isEmpty {
             resultSection(
                 title: "Clientes",

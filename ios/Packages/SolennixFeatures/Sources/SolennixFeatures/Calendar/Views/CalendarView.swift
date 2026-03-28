@@ -18,6 +18,7 @@ public struct CalendarView: View {
     @State private var showQuickQuote = false
     @Environment(PlanLimitsManager.self) private var planLimitsManager
     @Environment(\.apiClient) private var apiClient
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     // MARK: - Init
 
@@ -42,7 +43,11 @@ public struct CalendarView: View {
             // Content based on view mode
             switch viewModel.viewMode {
             case .calendar:
-                calendarModeContent
+                if sizeClass == .regular {
+                    iPadCalendarContent
+                } else {
+                    calendarModeContent
+                }
             case .list:
                 listModeContent
             }
@@ -127,6 +132,84 @@ public struct CalendarView: View {
             } else {
                 Text("Esta accion habilitara la fecha nuevamente.")
             }
+        }
+    }
+
+    // MARK: - iPad Calendar Mode
+
+    private var iPadCalendarContent: some View {
+        HStack(spacing: 0) {
+            // Left: Calendar grid (~60%)
+            ScrollView {
+                VStack(spacing: Spacing.md) {
+                    monthHeader
+
+                    CalendarGridView(
+                        days: viewModel.daysInMonth,
+                        eventDotsForDay: viewModel.eventDotsForDay,
+                        isDateBlocked: viewModel.isDateBlocked,
+                        selectedDate: viewModel.selectedDate,
+                        onSelectDate: viewModel.selectDate,
+                        onLongPressDate: { date in
+                            longPressedDate = date
+                            blockReason = ""
+                            if viewModel.isDateBlocked(date) {
+                                showUnblockAlert = true
+                            } else {
+                                showBlockAlert = true
+                            }
+                        }
+                    )
+                    .padding(.horizontal, Spacing.sm)
+                }
+                .padding(.bottom, Spacing.xxl)
+            }
+            .frame(maxWidth: .infinity)
+
+            Divider()
+
+            // Right: Selected day's events (~40%)
+            ScrollView {
+                VStack(alignment: .leading, spacing: Spacing.sm) {
+                    if viewModel.selectedDate != nil {
+                        Text(viewModel.formattedSelectedDate())
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(SolennixColors.text)
+                            .padding(.horizontal, Spacing.md)
+                            .padding(.top, Spacing.md)
+
+                        let dayEvents = viewModel.eventsForSelectedDate
+
+                        if dayEvents.isEmpty {
+                            emptyDayView
+                        } else {
+                            ForEach(dayEvents) { event in
+                                NavigationLink(value: Route.eventDetail(id: event.id)) {
+                                    eventCard(event)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    } else {
+                        VStack(spacing: Spacing.md) {
+                            Image(systemName: "hand.tap")
+                                .font(.system(size: 40))
+                                .foregroundStyle(SolennixColors.textTertiary)
+
+                            Text("Selecciona un dia para ver sus eventos")
+                                .font(.subheadline)
+                                .foregroundStyle(SolennixColors.textSecondary)
+                                .multilineTextAlignment(.center)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, Spacing.xxxl)
+                    }
+                }
+                .padding(.bottom, Spacing.xxl)
+            }
+            .frame(width: UIScreen.main.bounds.width * 0.4)
+            .background(SolennixColors.card)
         }
     }
 

@@ -7,6 +7,7 @@ import SolennixNetwork
 public struct ResetPasswordView: View {
 
     @Environment(AuthManager.self) private var authManager
+    @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.dismiss) private var dismiss
 
     @State private var viewModel: AuthViewModel?
@@ -18,6 +19,26 @@ public struct ResetPasswordView: View {
     }
 
     public var body: some View {
+        Group {
+            if sizeClass == .regular {
+                iPadLayout
+            } else {
+                iPhoneLayout
+            }
+        }
+        .background(SolennixColors.background.ignoresSafeArea())
+        .navigationTitle("Nueva Contrasena")
+        .navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+            if viewModel == nil {
+                viewModel = AuthViewModel(authManager: authManager)
+            }
+        }
+    }
+
+    // MARK: - iPhone Layout
+
+    private var iPhoneLayout: some View {
         ScrollView {
             VStack(spacing: Spacing.xl) {
                 if viewModel?.showSuccess == true {
@@ -29,14 +50,86 @@ public struct ResetPasswordView: View {
             .padding(.horizontal, Spacing.xl)
             .padding(.vertical, Spacing.xxl)
         }
-        .background(SolennixColors.background.ignoresSafeArea())
-        .navigationTitle("Nueva Contrasena")
-        .navigationBarTitleDisplayMode(.inline)
         .scrollDismissesKeyboard(.interactively)
-        .onAppear {
-            if viewModel == nil {
-                viewModel = AuthViewModel(authManager: authManager)
+    }
+
+    // MARK: - iPad Layout
+
+    private var iPadLayout: some View {
+        HStack(spacing: 0) {
+            // Left brand panel (40%)
+            brandPanel
+                .frame(maxWidth: .infinity)
+                .frame(width: UIScreen.main.bounds.width * 0.4)
+
+            // Right form panel (60%)
+            ScrollView {
+                VStack(spacing: Spacing.xl) {
+                    Spacer(minLength: Spacing.xxxl)
+
+                    if viewModel?.showSuccess == true {
+                        successState
+                            .frame(maxWidth: 440)
+                    } else {
+                        formState
+                            .frame(maxWidth: 440)
+                    }
+
+                    Spacer(minLength: Spacing.xxxl)
+                }
+                .padding(.horizontal, Spacing.xxxl)
+                .frame(maxWidth: .infinity)
             }
+            .scrollDismissesKeyboard(.interactively)
+        }
+    }
+
+    // MARK: - Brand Panel (iPad)
+
+    private var brandPanel: some View {
+        ZStack {
+            SolennixGradient.premium
+                .ignoresSafeArea()
+
+            VStack(alignment: .leading, spacing: Spacing.xl) {
+                Text("Solennix")
+                    .font(.solennixTitle)
+                    .foregroundStyle(.white)
+
+                Text("Crea una nueva contrasena segura")
+                    .font(.body)
+                    .foregroundStyle(.white.opacity(0.85))
+
+                VStack(alignment: .leading, spacing: Spacing.md) {
+                    HStack(spacing: Spacing.sm) {
+                        Image(systemName: "key.fill")
+                            .font(.body)
+                            .foregroundStyle(.white)
+                            .frame(width: 36, height: 36)
+                            .background(.white.opacity(0.2))
+                            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+
+                        Text("Minimo 8 caracteres")
+                            .font(.body)
+                            .foregroundStyle(.white)
+                    }
+
+                    HStack(spacing: Spacing.sm) {
+                        Image(systemName: "checkmark.shield.fill")
+                            .font(.body)
+                            .foregroundStyle(.white)
+                            .frame(width: 36, height: 36)
+                            .background(.white.opacity(0.2))
+                            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+
+                        Text("Mayusculas, minusculas y numeros")
+                            .font(.body)
+                            .foregroundStyle(.white)
+                    }
+                }
+                .padding(.top, Spacing.sm)
+            }
+            .padding(.horizontal, Spacing.xxxl)
         }
     }
 

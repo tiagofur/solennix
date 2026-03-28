@@ -132,6 +132,7 @@ struct SplashView: View {
 struct BiometricGateView: View {
 
     @Environment(AuthManager.self) private var authManager
+    @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var showError = false
     @State private var failureCount = 0
 
@@ -142,15 +143,15 @@ struct BiometricGateView: View {
             Spacer()
 
             Image(systemName: "faceid")
-                .font(.system(size: 64))
+                .font(.system(size: sizeClass == .regular ? 96 : 64))
                 .foregroundStyle(SolennixColors.primary)
 
             Text("SOLENNIX")
-                .font(.title)
+                .font(sizeClass == .regular ? .largeTitle : .title)
                 .fontWeight(.bold)
 
             Text("Desbloquea para continuar")
-                .font(.subheadline)
+                .font(sizeClass == .regular ? .body : .subheadline)
                 .foregroundStyle(SolennixColors.textSecondary)
 
             if showError {
@@ -164,6 +165,7 @@ struct BiometricGateView: View {
             }
             .buttonStyle(.borderedProminent)
             .tint(SolennixColors.primary)
+            .controlSize(sizeClass == .regular ? .large : .regular)
 
             Spacer()
 
@@ -176,7 +178,8 @@ struct BiometricGateView: View {
                 .padding(.bottom, 32)
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(maxWidth: sizeClass == .regular ? 500 : .infinity, maxHeight: .infinity)
+        .frame(maxWidth: .infinity)
         .background(SolennixColors.background)
         .task {
             await authenticate()
