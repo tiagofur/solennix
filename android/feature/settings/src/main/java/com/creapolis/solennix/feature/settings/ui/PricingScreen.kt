@@ -18,6 +18,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.component.PremiumButton
+import com.creapolis.solennix.core.designsystem.theme.LocalIsWideScreen
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.feature.settings.viewmodel.SettingsViewModel
 
@@ -28,6 +29,7 @@ fun PricingScreen(
     onNavigateBack: () -> Unit
 ) {
     val user by viewModel.currentUser.collectAsStateWithLifecycle()
+    val isWideScreen = LocalIsWideScreen.current
     val scrollState = rememberScrollState()
     val isPremium = user?.plan?.name == "PREMIUM"
 
@@ -48,7 +50,8 @@ fun PricingScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(scrollState)
-                .padding(16.dp)
+                .padding(16.dp),
+            horizontalAlignment = if (isWideScreen) Alignment.CenterHorizontally else Alignment.Start
         ) {
             // Current Plan
             if (isPremium) {
@@ -85,37 +88,76 @@ fun PricingScreen(
                 Spacer(modifier = Modifier.height(24.dp))
             }
 
-            // Basic Plan Card
-            PlanCard(
-                title = "Básico",
-                price = "Gratis",
-                features = listOf(
-                    "20 productos",
-                    "50 clientes",
-                    "Generación de contratos",
-                    "Calendario de eventos"
-                ),
-                isCurrentPlan = !isPremium,
-                isPremium = false
-            )
+            // Plan Cards
+            if (isWideScreen) {
+                Row(
+                    modifier = Modifier.widthIn(max = 900.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Box(modifier = Modifier.weight(1f)) {
+                        PlanCard(
+                            title = "Básico",
+                            price = "Gratis",
+                            features = listOf(
+                                "20 productos",
+                                "50 clientes",
+                                "Generación de contratos",
+                                "Calendario de eventos"
+                            ),
+                            isCurrentPlan = !isPremium,
+                            isPremium = false
+                        )
+                    }
+                    Box(modifier = Modifier.weight(1f)) {
+                        PlanCard(
+                            title = "Premium",
+                            price = "$199 MXN/mes",
+                            features = listOf(
+                                "Productos ilimitados",
+                                "Clientes ilimitados",
+                                "Widgets para pantalla de inicio",
+                                "Comandos de voz con Siri",
+                                "Soporte prioritario",
+                                "Sin marca de agua en PDFs"
+                            ),
+                            isCurrentPlan = isPremium,
+                            isPremium = true
+                        )
+                    }
+                }
+            } else {
+                // Basic Plan Card
+                PlanCard(
+                    title = "Básico",
+                    price = "Gratis",
+                    features = listOf(
+                        "20 productos",
+                        "50 clientes",
+                        "Generación de contratos",
+                        "Calendario de eventos"
+                    ),
+                    isCurrentPlan = !isPremium,
+                    isPremium = false
+                )
 
-            Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-            // Premium Plan Card
-            PlanCard(
-                title = "Premium",
-                price = "$199 MXN/mes",
-                features = listOf(
-                    "Productos ilimitados",
-                    "Clientes ilimitados",
-                    "Widgets para pantalla de inicio",
-                    "Comandos de voz con Siri",
-                    "Soporte prioritario",
-                    "Sin marca de agua en PDFs"
-                ),
-                isCurrentPlan = isPremium,
-                isPremium = true
-            )
+                // Premium Plan Card
+                PlanCard(
+                    title = "Premium",
+                    price = "$199 MXN/mes",
+                    features = listOf(
+                        "Productos ilimitados",
+                        "Clientes ilimitados",
+                        "Widgets para pantalla de inicio",
+                        "Comandos de voz con Siri",
+                        "Soporte prioritario",
+                        "Sin marca de agua en PDFs"
+                    ),
+                    isCurrentPlan = isPremium,
+                    isPremium = true
+                )
+            }
 
             if (!isPremium) {
                 Spacer(modifier = Modifier.height(24.dp))
@@ -128,6 +170,9 @@ fun PricingScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             // FAQ Section
+            Column(
+                modifier = if (isWideScreen) Modifier.widthIn(max = 600.dp) else Modifier.fillMaxWidth()
+            ) {
             Text(
                 text = "Preguntas Frecuentes",
                 style = MaterialTheme.typography.labelLarge,
@@ -149,6 +194,7 @@ fun PricingScreen(
                 question = "¿Hay descuento por pago anual?",
                 answer = "Sí, el plan anual tiene un descuento del 20% comparado con el pago mensual."
             )
+            } // end FAQ Column
 
             Spacer(modifier = Modifier.height(32.dp))
         }

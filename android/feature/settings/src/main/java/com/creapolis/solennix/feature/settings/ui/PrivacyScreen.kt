@@ -7,9 +7,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.creapolis.solennix.core.designsystem.theme.LocalIsWideScreen
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -17,6 +19,7 @@ import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 fun PrivacyScreen(
     onNavigateBack: () -> Unit
 ) {
+    val isWideScreen = LocalIsWideScreen.current
     val scrollState = rememberScrollState()
 
     Scaffold(
@@ -31,10 +34,17 @@ fun PrivacyScreen(
             )
         }
     ) { padding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
+                .padding(padding),
+            contentAlignment = if (isWideScreen) Alignment.TopCenter else Alignment.TopStart
+        ) {
+        Column(
+            modifier = Modifier
+                .then(
+                    if (isWideScreen) Modifier.widthIn(max = 680.dp) else Modifier.fillMaxWidth()
+                )
                 .verticalScroll(scrollState)
                 .padding(16.dp)
         ) {
@@ -86,6 +96,7 @@ fun PrivacyScreen(
             )
 
             Spacer(modifier = Modifier.height(32.dp))
+        }
         }
     }
 }

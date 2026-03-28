@@ -18,6 +18,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.creapolis.solennix.core.designsystem.theme.LocalIsWideScreen
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -25,6 +26,7 @@ import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 fun AboutScreen(
     onNavigateBack: () -> Unit
 ) {
+    val isWideScreen = LocalIsWideScreen.current
     val scrollState = rememberScrollState()
     val context = LocalContext.current
 
@@ -40,10 +42,17 @@ fun AboutScreen(
             )
         }
     ) { padding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
+                .padding(padding),
+            contentAlignment = if (isWideScreen) Alignment.TopCenter else Alignment.TopStart
+        ) {
+        Column(
+            modifier = Modifier
+                .then(
+                    if (isWideScreen) Modifier.widthIn(max = 600.dp) else Modifier.fillMaxWidth()
+                )
                 .verticalScroll(scrollState)
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -169,6 +178,7 @@ fun AboutScreen(
             )
 
             Spacer(modifier = Modifier.height(16.dp))
+        }
         }
     }
 }
