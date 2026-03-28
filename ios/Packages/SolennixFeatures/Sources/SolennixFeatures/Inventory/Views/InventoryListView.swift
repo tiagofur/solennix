@@ -7,6 +7,7 @@ import SolennixNetwork
 
 public struct InventoryListView: View {
 
+    @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(PlanLimitsManager.self) private var planLimitsManager
     @State private var viewModel: InventoryListViewModel
 
@@ -103,7 +104,116 @@ public struct InventoryListView: View {
 
     // MARK: - Inventory List
 
+    @ViewBuilder
     private var inventoryList: some View {
+        if sizeClass == .regular {
+            inventoryGrid
+        } else {
+            inventoryListCompact
+        }
+    }
+
+    private var inventoryGrid: some View {
+        ScrollView {
+            LazyVStack(alignment: .leading, spacing: Spacing.lg) {
+                if !viewModel.ingredientItems.isEmpty {
+                    inventoryGridSection(title: "Ingredientes", items: viewModel.ingredientItems)
+                }
+                if !viewModel.equipmentItems.isEmpty {
+                    inventoryGridSection(title: "Equipo", items: viewModel.equipmentItems)
+                }
+                if !viewModel.supplyItems.isEmpty {
+                    inventoryGridSection(title: "Insumos", items: viewModel.supplyItems)
+                }
+            }
+            .padding(.horizontal, Spacing.md)
+            .padding(.bottom, Spacing.xxl)
+        }
+        .background(SolennixColors.surfaceGrouped)
+    }
+
+    private func inventoryGridSection(title: String, items: [InventoryItem]) -> some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            Text(title)
+                .font(.headline)
+                .foregroundStyle(SolennixColors.textSecondary)
+                .textCase(.uppercase)
+                .padding(.horizontal, Spacing.xs)
+
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 250))], spacing: Spacing.sm) {
+                ForEach(items) { item in
+                    NavigationLink(value: Route.inventoryDetail(id: item.id)) {
+                        inventoryCardRow(item)
+                    }
+                    .buttonStyle(.plain)
+                    .contextMenu {
+                        NavigationLink(value: Route.inventoryForm(id: item.id)) {
+                            Label("Editar", systemImage: "pencil")
+                        }
+                        Button {
+                            viewModel.prepareAdjustment(for: item)
+                        } label: {
+                            Label("Ajustar Stock", systemImage: "plusminus")
+                        }
+                        NavigationLink(value: Route.inventoryDetail(id: item.id)) {
+                            Label("Ver Detalle", systemImage: "eye")
+                        }
+                        Divider()
+                        Button(role: .destructive) {
+                            viewModel.deleteTarget = item
+                            viewModel.showDeleteConfirm = true
+                        } label: {
+                            Label("Eliminar", systemImage: "trash")
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func inventoryCardRow(_ item: InventoryItem) -> some View {
+        HStack(spacing: Spacing.md) {
+            stockIndicator(item)
+
+            VStack(alignment: .leading, spacing: Spacing.xs) {
+                Text(item.ingredientName)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundStyle(SolennixColors.text)
+                    .lineLimit(1)
+
+                HStack(spacing: Spacing.sm) {
+                    Text("\(Int(item.currentStock)) \(item.unit)")
+                        .font(.caption)
+                        .foregroundStyle(
+                            item.currentStock < item.minimumStock
+                                ? SolennixColors.error
+                                : SolennixColors.textSecondary
+                        )
+
+                    if item.currentStock < item.minimumStock {
+                        Text("(min: \(Int(item.minimumStock)))")
+                            .font(.caption2)
+                            .foregroundStyle(SolennixColors.textTertiary)
+                    }
+                }
+            }
+
+            Spacer()
+
+            if let cost = item.unitCost, cost > 0 {
+                Text(cost.formatted(.currency(code: "MXN")))
+                    .font(.caption)
+                    .foregroundStyle(SolennixColors.textSecondary)
+            }
+        }
+        .padding(Spacing.md)
+        .background(SolennixColors.card)
+        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+        .shadowSm()
+    }
+
+    private var inventoryListCompact: some View {
         List {
             // Ingredients section
             if !viewModel.ingredientItems.isEmpty {

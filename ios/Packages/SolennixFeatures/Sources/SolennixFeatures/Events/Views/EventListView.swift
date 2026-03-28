@@ -10,6 +10,7 @@ public struct EventListView: View {
 
     // MARK: - Properties
 
+    @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var viewModel: EventListViewModel
     @State private var showShareSheet = false
     @State private var csvFileURL: URL?
@@ -163,25 +164,44 @@ public struct EventListView: View {
             emptyState
         } else {
             ScrollView {
-                LazyVStack(spacing: Spacing.sm) {
-                    ForEach(filtered) { event in
-                        NavigationLink(value: Route.eventDetail(id: event.id)) {
-                            eventCard(event)
-                        }
-                        .buttonStyle(.plain)
-                        .contextMenu {
-                            NavigationLink(value: Route.eventForm(id: event.id)) {
-                                Label("Editar", systemImage: "pencil")
+                if sizeClass == .regular {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 300))], spacing: Spacing.sm) {
+                        ForEach(filtered) { event in
+                            NavigationLink(value: Route.eventDetail(id: event.id)) {
+                                eventCard(event)
                             }
-                            NavigationLink(value: Route.eventChecklist(id: event.id)) {
-                                Label("Checklist", systemImage: "checklist")
+                            .buttonStyle(.plain)
+                            .contextMenu {
+                                NavigationLink(value: Route.eventForm(id: event.id)) {
+                                    Label("Editar", systemImage: "pencil")
+                                }
+                                NavigationLink(value: Route.eventChecklist(id: event.id)) {
+                                    Label("Checklist", systemImage: "checklist")
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    LazyVStack(spacing: Spacing.sm) {
+                        ForEach(filtered) { event in
+                            NavigationLink(value: Route.eventDetail(id: event.id)) {
+                                eventCard(event)
+                            }
+                            .buttonStyle(.plain)
+                            .contextMenu {
+                                NavigationLink(value: Route.eventForm(id: event.id)) {
+                                    Label("Editar", systemImage: "pencil")
+                                }
+                                NavigationLink(value: Route.eventChecklist(id: event.id)) {
+                                    Label("Checklist", systemImage: "checklist")
+                                }
                             }
                         }
                     }
                 }
-                .padding(.horizontal, Spacing.md)
-                .padding(.bottom, Spacing.xxl)
             }
+            .padding(.horizontal, Spacing.md)
+            .padding(.bottom, Spacing.xxl)
         }
     }
 

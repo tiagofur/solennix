@@ -7,6 +7,7 @@ import SolennixNetwork
 
 public struct ProductListView: View {
 
+    @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var viewModel: ProductListViewModel
     @Environment(PlanLimitsManager.self) private var planLimitsManager
 
@@ -110,7 +111,51 @@ public struct ProductListView: View {
 
     // MARK: - Product List
 
+    @ViewBuilder
     private var productList: some View {
+        if sizeClass == .regular {
+            productGrid
+        } else {
+            productListCompact
+        }
+    }
+
+    private var productGrid: some View {
+        ScrollView {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 250))], spacing: Spacing.sm) {
+                ForEach(viewModel.filteredProducts) { product in
+                    NavigationLink(value: Route.productDetail(id: product.id)) {
+                        ProductRow(product: product)
+                            .padding(Spacing.md)
+                            .background(SolennixColors.card)
+                            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+                            .shadowSm()
+                    }
+                    .buttonStyle(.plain)
+                    .contextMenu {
+                        NavigationLink(value: Route.productForm(id: product.id)) {
+                            Label("Editar", systemImage: "pencil")
+                        }
+                        NavigationLink(value: Route.productDetail(id: product.id)) {
+                            Label("Ver Detalle", systemImage: "eye")
+                        }
+                        Divider()
+                        Button(role: .destructive) {
+                            viewModel.deleteTarget = product
+                            viewModel.showDeleteConfirm = true
+                        } label: {
+                            Label("Eliminar", systemImage: "trash")
+                        }
+                    }
+                }
+            }
+            .padding(.horizontal, Spacing.md)
+            .padding(.bottom, Spacing.xxl)
+        }
+        .background(SolennixColors.surfaceGrouped)
+    }
+
+    private var productListCompact: some View {
         List(viewModel.filteredProducts) { product in
             NavigationLink(value: Route.productDetail(id: product.id)) {
                 ProductRow(product: product)

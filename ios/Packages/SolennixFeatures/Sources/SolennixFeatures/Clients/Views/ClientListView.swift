@@ -8,6 +8,7 @@ import TipKit
 
 public struct ClientListView: View {
 
+    @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var viewModel: ClientListViewModel
     @Environment(\.openURL) private var openURL
     @Environment(PlanLimitsManager.self) private var planLimitsManager
@@ -101,7 +102,83 @@ public struct ClientListView: View {
 
     // MARK: - Client List
 
+    @ViewBuilder
     private var clientList: some View {
+        if sizeClass == .regular {
+            clientGrid
+        } else {
+            clientListCompact
+        }
+    }
+
+    private var clientGrid: some View {
+        ScrollView {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 300))], spacing: Spacing.sm) {
+                ForEach(viewModel.paginatedClients) { client in
+                    NavigationLink(value: Route.clientDetail(id: client.id)) {
+                        clientRow(client)
+                            .padding(Spacing.md)
+                            .background(SolennixColors.card)
+                            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+                            .shadowSm()
+                    }
+                    .buttonStyle(.plain)
+                    .contextMenu {
+                        NavigationLink(value: Route.clientForm(id: client.id)) {
+                            Label("Editar", systemImage: "pencil")
+                        }
+                        if !client.phone.isEmpty {
+                            Button {
+                                if let url = URL(string: "tel:\(client.phone)") {
+                                    openURL(url)
+                                }
+                                HapticsHelper.play(.success)
+                            } label: {
+                                Label("Llamar", systemImage: "phone")
+                            }
+                        }
+                        if let email = client.email, !email.isEmpty {
+                            Button {
+                                if let url = URL(string: "mailto:\(email)") {
+                                    openURL(url)
+                                }
+                                HapticsHelper.play(.success)
+                            } label: {
+                                Label("Email", systemImage: "envelope")
+                            }
+                        }
+                        Divider()
+                        Button(role: .destructive) {
+                            HapticsHelper.play(.warning)
+                            viewModel.deleteTarget = client
+                            viewModel.showDeleteConfirm = true
+                        } label: {
+                            Label("Eliminar", systemImage: "trash")
+                        }
+                    }
+                    .onAppear {
+                        if client == viewModel.paginatedClients.last {
+                            viewModel.loadMore()
+                        }
+                    }
+                }
+            }
+            .padding(.horizontal, Spacing.md)
+            .padding(.bottom, Spacing.xxl)
+
+            if viewModel.hasMorePages {
+                HStack {
+                    Spacer()
+                    ProgressView()
+                    Spacer()
+                }
+                .padding(.vertical, Spacing.md)
+            }
+        }
+        .background(SolennixColors.surfaceGrouped)
+    }
+
+    private var clientListCompact: some View {
         List {
             ForEach(viewModel.paginatedClients) { client in
                 NavigationLink(value: Route.clientDetail(id: client.id)) {
@@ -183,7 +260,7 @@ public struct ClientListView: View {
                     }
                 }
             }
-            
+
             if viewModel.hasMorePages {
                 HStack {
                     Spacer()
