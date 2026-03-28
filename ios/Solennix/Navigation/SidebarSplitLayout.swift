@@ -4,19 +4,20 @@ import SolennixDesign
 import SolennixFeatures
 import SolennixNetwork
 
-// MARK: - Sidebar Split Layout (iPad / Mac)
+// MARK: - Sidebar Split Layout (iPad Landscape)
 
-/// The main navigation layout for regular (iPad/Mac) horizontal size class.
+/// Two-column layout for iPad landscape: sidebar + content with push navigation.
 ///
-/// Uses `NavigationSplitView` with a sidebar listing all sections,
-/// a content column for section-specific lists, and a detail column
-/// for item-level views.
+/// Uses a two-column `NavigationSplitView` with a sidebar listing all sections
+/// and a content column that shows section-specific views. Detail navigation
+/// pushes within the content column (like iPhone) instead of using a separate
+/// detail column, giving each view the full content width.
 struct SidebarSplitLayout: View {
 
     @Binding var pendingSpotlightRoute: Route?
 
     @State private var selectedSection: SidebarSection? = .dashboard
-    @State private var detailPath = NavigationPath()
+    @State private var contentPath = NavigationPath()
     @Environment(\.apiClient) private var apiClient
     @Environment(AuthManager.self) private var authManager
 
@@ -27,41 +28,37 @@ struct SidebarSplitLayout: View {
                 .toolbar {
                     ToolbarItem(placement: .primaryAction) {
                         Button {
-                            detailPath.append(Route.eventForm())
+                            contentPath.append(Route.eventForm())
                         } label: {
                             Image(systemName: "plus")
                         }
                         .accessibilityLabel("Nuevo Evento")
                     }
                 }
-        } content: {
-            if let section = selectedSection {
-                sectionListView(for: section)
-            } else {
-                ContentUnavailableView(
-                    "Selecciona una seccion",
-                    systemImage: "sidebar.left",
-                    description: Text("Elige una seccion del menu lateral.")
-                )
-            }
         } detail: {
-            NavigationStack(path: $detailPath) {
-                ContentUnavailableView(
-                    "Selecciona un elemento",
-                    systemImage: "doc.text.magnifyingglass",
-                    description: Text("Elige un elemento de la lista para ver los detalles.")
-                )
-                .navigationDestination(for: Route.self) { route in
-                    RouteDestination(route: route)
+            NavigationStack(path: $contentPath) {
+                if let section = selectedSection {
+                    sectionListView(for: section)
+                } else {
+                    ContentUnavailableView(
+                        "Selecciona una seccion",
+                        systemImage: "sidebar.left",
+                        description: Text("Elige una seccion del menu lateral.")
+                    )
                 }
             }
+            .navigationDestination(for: Route.self) { route in
+                RouteDestination(route: route)
+            }
+        }
+        .onChange(of: selectedSection) { _, _ in
+            contentPath = NavigationPath()
         }
         .onChange(of: pendingSpotlightRoute) { _, newRoute in
             guard let route = newRoute else { return }
-            // Navegar al detalle desde la ruta de Spotlight
-            detailPath = NavigationPath()
+            contentPath = NavigationPath()
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                detailPath.append(route)
+                contentPath.append(route)
             }
             pendingSpotlightRoute = nil
         }
