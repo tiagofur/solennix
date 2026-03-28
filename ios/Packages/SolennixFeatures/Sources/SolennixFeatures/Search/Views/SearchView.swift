@@ -10,6 +10,7 @@ public struct SearchView: View {
     @Environment(AuthManager.self) private var authManager
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var viewModel: SearchViewModel?
+    @FocusState private var isSearchFocused: Bool
 
     public init() {}
 
@@ -29,33 +30,74 @@ public struct SearchView: View {
             if viewModel == nil, let client = authManager.apiClient {
                 viewModel = SearchViewModel(apiClient: client)
             }
+            isSearchFocused = true
         }
     }
 
     @ViewBuilder
     private func searchContent(vm: SearchViewModel) -> some View {
-        List {
-            if vm.isLoading {
-                loadingSection
-            } else if vm.hasSearched && vm.isEmpty {
-                noResultsSection
-            } else if let results = vm.results, !results.isEmpty {
-                resultsContent(results: results)
-            } else {
-                initialStateSection
+        VStack(spacing: 0) {
+            // Always-visible search field
+            searchField(vm: vm)
+
+            // Results
+            List {
+                if vm.isLoading {
+                    loadingSection
+                } else if vm.hasSearched && vm.isEmpty {
+                    noResultsSection
+                } else if let results = vm.results, !results.isEmpty {
+                    resultsContent(results: results)
+                } else if !vm.hasSearched {
+                    initialStateSection
+                }
+            }
+            .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
+            .background(SolennixColors.surfaceGrouped)
+        }
+    }
+
+    // MARK: - Search Field
+
+    private func searchField(vm: SearchViewModel) -> some View {
+        HStack(spacing: Spacing.sm) {
+            Image(systemName: "magnifyingglass")
+                .font(.body)
+                .foregroundStyle(SolennixColors.textTertiary)
+
+            TextField(
+                "Clientes, eventos, productos...",
+                text: Binding(
+                    get: { vm.query },
+                    set: { newValue in
+                        vm.query = newValue
+                        Task { await vm.search() }
+                    }
+                )
+            )
+            .font(.body)
+            .foregroundStyle(SolennixColors.text)
+            .autocorrectionDisabled()
+            .textInputAutocapitalization(.never)
+            .focused($isSearchFocused)
+
+            if !vm.query.isEmpty {
+                Button {
+                    vm.clearSearch()
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.body)
+                        .foregroundStyle(SolennixColors.textTertiary)
+                }
             }
         }
-        .listStyle(.insetGrouped)
-        .searchable(
-            text: Binding(
-                get: { vm.query },
-                set: { vm.query = $0 }
-            ),
-            prompt: "Clientes, eventos, productos..."
-        )
-        .onChange(of: vm.query) {
-            Task { await vm.search() }
-        }
+        .padding(Spacing.md)
+        .background(SolennixColors.card)
+        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
+        .shadowSm()
+        .padding(.horizontal, Spacing.md)
+        .padding(.vertical, Spacing.sm)
     }
 
     // MARK: - Loading
@@ -102,7 +144,7 @@ public struct SearchView: View {
     private var initialStateSection: some View {
         Section {
             VStack(spacing: Spacing.md) {
-                Image(systemName: "magnifyingglass")
+                Image(systemName: "text.magnifyingglass")
                     .font(.system(size: 40))
                     .foregroundStyle(SolennixColors.textTertiary)
 
