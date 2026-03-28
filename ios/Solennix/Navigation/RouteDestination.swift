@@ -67,6 +67,8 @@ struct RouteDestination: View {
             ContractDefaultsView(apiClient: apiClient)
         case .pricing:
             PricingView(apiClient: apiClient, authManager: authManager)
+        case .subscription:
+            SubscriptionView(apiClient: apiClient, authManager: authManager)
         case .about:
             AboutView()
         case .privacy:

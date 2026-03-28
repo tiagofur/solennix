@@ -37,6 +37,7 @@ public enum Route: Hashable {
     case businessSettings
     case contractDefaults
     case pricing
+    case subscription
     case about
     case privacy
     case terms

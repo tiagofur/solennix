@@ -53,8 +53,9 @@ public struct SettingsView: View {
                         }
                         .frame(maxWidth: .infinity)
 
-                        // Right column: Business + Legal
+                        // Right column: Subscription + Business + Legal
                         VStack(spacing: 0) {
+                            subscriptionContent
                             businessContent
                             legalContent
                         }
@@ -69,6 +70,10 @@ public struct SettingsView: View {
 
                 Section("Cuenta") {
                     accountContent
+                }
+
+                Section("Suscripcion") {
+                    subscriptionContent
                 }
 
                 Section("Negocio") {
@@ -144,6 +149,13 @@ public struct SettingsView: View {
     }
 
     @ViewBuilder
+    private var subscriptionContent: some View {
+        NavigationLink(value: Route.subscription) {
+            planRow
+        }
+    }
+
+    @ViewBuilder
     private var businessContent: some View {
         NavigationLink(value: Route.businessSettings) {
             Label("Ajustes del Negocio", systemImage: "building.2")
@@ -151,10 +163,6 @@ public struct SettingsView: View {
 
         NavigationLink(value: Route.contractDefaults) {
             Label("Valores del Contrato", systemImage: "doc.text")
-        }
-
-        NavigationLink(value: Route.pricing) {
-            planRow
         }
     }
 
@@ -220,7 +228,7 @@ public struct SettingsView: View {
 
     private var planRow: some View {
         HStack {
-            Label("Plan", systemImage: "creditcard")
+            Label("Gestionar Plan", systemImage: "star")
 
             Spacer()
 

@@ -1,0 +1,266 @@
+import SwiftUI
+import SolennixCore
+import SolennixDesign
+import SolennixNetwork
+
+// MARK: - Subscription View
+
+/// Displays the user's current subscription plan, status, and included features.
+/// Provides a way to upgrade or manage the subscription via the full PricingView.
+public struct SubscriptionView: View {
+
+    @State private var viewModel: SettingsViewModel
+    @Environment(SubscriptionManager.self) private var subscriptionManager
+    @Environment(\.horizontalSizeClass) private var sizeClass
+
+    public init(apiClient: APIClient, authManager: AuthManager) {
+        _viewModel = State(initialValue: SettingsViewModel(apiClient: apiClient, authManager: authManager))
+    }
+
+    public var body: some View {
+        ScrollView {
+            VStack(spacing: Spacing.lg) {
+                // Current plan card
+                currentPlanCard
+
+                // Plan status
+                if subscriptionManager.isPremium {
+                    activeStatusBanner
+                }
+
+                // Features included in current plan
+                featuresSection
+
+                // Actions
+                actionsSection
+            }
+            .padding(Spacing.lg)
+            .frame(maxWidth: sizeClass == .regular ? 600 : .infinity)
+            .frame(maxWidth: .infinity)
+        }
+        .background(SolennixColors.surfaceGrouped)
+        .navigationTitle("Suscripcion")
+        .navigationBarTitleDisplayMode(.inline)
+        .task {
+            await viewModel.loadUser()
+            await subscriptionManager.checkEntitlementStatus()
+        }
+    }
+
+    // MARK: - Current Plan Card
+
+    private var currentPlanCard: some View {
+        VStack(spacing: Spacing.md) {
+            HStack {
+                VStack(alignment: .leading, spacing: Spacing.xs) {
+                    Text("Plan actual")
+                        .font(.subheadline)
+                        .foregroundStyle(SolennixColors.primary)
+
+                    Text(currentPlanName)
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundStyle(SolennixColors.text)
+                }
+
+                Spacer()
+
+                if let user = viewModel.user {
+                    PlanBadge(plan: user.plan)
+                }
+            }
+        }
+        .padding(Spacing.lg)
+        .background(SolennixColors.primary.opacity(0.08))
+        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+    }
+
+    // MARK: - Active Status Banner
+
+    private var activeStatusBanner: some View {
+        HStack {
+            Image(systemName: "crown.fill")
+                .foregroundStyle(SolennixColors.warning)
+
+            Text("Suscripcion activa")
+                .font(.subheadline)
+                .fontWeight(.semibold)
+
+            Spacer()
+
+            HStack(spacing: Spacing.xs) {
+                Image(systemName: "checkmark.seal.fill")
+                    .foregroundStyle(SolennixColors.success)
+
+                Text("Activo")
+                    .font(.caption)
+                    .fontWeight(.bold)
+                    .foregroundStyle(SolennixColors.success)
+            }
+            .padding(.horizontal, Spacing.sm)
+            .padding(.vertical, 4)
+            .background(SolennixColors.success.opacity(0.15))
+            .clipShape(Capsule())
+        }
+        .padding(Spacing.md)
+        .background(SolennixColors.success.opacity(0.08))
+        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+    }
+
+    // MARK: - Features Section
+
+    private var featuresSection: some View {
+        VStack(alignment: .leading, spacing: Spacing.md) {
+            Text("Funciones incluidas")
+                .font(.headline)
+                .foregroundStyle(SolennixColors.text)
+
+            VStack(spacing: 0) {
+                ForEach(currentPlanFeatures, id: \.self) { feature in
+                    HStack(spacing: Spacing.sm) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.subheadline)
+                            .foregroundStyle(SolennixColors.success)
+
+                        Text(feature)
+                            .font(.subheadline)
+                            .foregroundStyle(SolennixColors.text)
+
+                        Spacer()
+                    }
+                    .padding(.vertical, Spacing.sm)
+                    .padding(.horizontal, Spacing.md)
+
+                    if feature != currentPlanFeatures.last {
+                        Divider()
+                            .padding(.leading, 44)
+                    }
+                }
+            }
+            .background(SolennixColors.card)
+            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+        }
+    }
+
+    // MARK: - Actions Section
+
+    private var actionsSection: some View {
+        VStack(spacing: Spacing.md) {
+            if !isPremiumUser {
+                // Upgrade button
+                NavigationLink(value: Route.pricing) {
+                    HStack {
+                        Image(systemName: "arrow.up.circle.fill")
+                        Text("Mejorar plan")
+                            .fontWeight(.semibold)
+                    }
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, Spacing.md)
+                    .background(SolennixGradient.premium)
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                }
+                .buttonStyle(.plain)
+            }
+
+            // View all plans
+            NavigationLink(value: Route.pricing) {
+                HStack {
+                    Image(systemName: "list.bullet.rectangle")
+                    Text("Ver todos los planes")
+                }
+                .font(.subheadline)
+                .foregroundStyle(SolennixColors.primary)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, Spacing.md)
+                .background(SolennixColors.primary.opacity(0.08))
+                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+            }
+            .buttonStyle(.plain)
+
+            // Manage subscription (only if premium)
+            if subscriptionManager.isPremium {
+                Button {
+                    Task { await subscriptionManager.openSubscriptionManagement() }
+                } label: {
+                    HStack {
+                        Image(systemName: "gearshape")
+                        Text("Administrar suscripcion")
+                    }
+                    .font(.subheadline)
+                    .foregroundStyle(SolennixColors.textSecondary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, Spacing.sm)
+                }
+                .buttonStyle(.plain)
+            }
+
+            // Restore purchases
+            Button {
+                Task { await subscriptionManager.restorePurchases() }
+            } label: {
+                HStack {
+                    Image(systemName: "arrow.clockwise")
+                    Text("Restaurar compras")
+                }
+                .font(.subheadline)
+                .foregroundStyle(SolennixColors.textSecondary)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, Spacing.sm)
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    // MARK: - Computed Properties
+
+    private var currentPlanName: String {
+        if subscriptionManager.isPremium {
+            return "Premium"
+        }
+        guard let user = viewModel.user else { return "Basico" }
+        switch user.plan {
+        case .premium: return "Premium"
+        case .pro: return "Pro"
+        case .business: return "Business"
+        case .basic: return "Basico"
+        }
+    }
+
+    private var isPremiumUser: Bool {
+        subscriptionManager.isPremium || viewModel.user?.plan == .premium || viewModel.user?.plan == .pro
+    }
+
+    private var currentPlanFeatures: [String] {
+        if isPremiumUser {
+            return [
+                "Productos ilimitados",
+                "Clientes ilimitados",
+                "Eventos ilimitados",
+                "Widgets de iOS",
+                "Comandos de Siri",
+                "Soporte prioritario",
+                "Sin marca de agua en PDFs",
+                "Marca personalizada"
+            ]
+        } else {
+            return [
+                "Hasta 20 productos",
+                "Hasta 50 clientes",
+                "Hasta 3 eventos por mes",
+                "Generacion de contratos",
+                "Calendario de eventos",
+                "Reportes basicos"
+            ]
+        }
+    }
+}
+
+// MARK: - Preview
+
+#Preview("Subscription") {
+    NavigationStack {
+        SubscriptionView(apiClient: APIClient(), authManager: AuthManager(keychain: KeychainHelper.standard))
+            .environment(SubscriptionManager())
+    }
+}
