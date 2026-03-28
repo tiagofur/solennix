@@ -23,6 +23,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.component.*
+import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveCenteredContent
+import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveFormRow
 import com.creapolis.solennix.core.designsystem.theme.LocalIsWideScreen
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.Client
@@ -180,6 +182,8 @@ fun StepGeneralInfo(viewModel: EventFormViewModel) {
 
     LazyColumn(modifier = Modifier.padding(24.dp)) {
         item {
+            AdaptiveCenteredContent(maxWidth = 800.dp) {
+            Column {
             Text("Información General", style = MaterialTheme.typography.headlineSmall)
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -555,45 +559,26 @@ fun StepGeneralInfo(viewModel: EventFormViewModel) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Tablet: Location + City side by side
-            if (isWideScreen) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Box(modifier = Modifier.weight(1f)) {
-                        SolennixTextField(
-                            value = viewModel.location,
-                            onValueChange = { viewModel.location = it },
-                            label = "Lugar del Evento",
-                            leadingIcon = Icons.Default.LocationOn,
-                            placeholder = "Nombre del salón o dirección"
-                        )
-                    }
-                    Box(modifier = Modifier.weight(1f)) {
-                        SolennixTextField(
-                            value = viewModel.city,
-                            onValueChange = { viewModel.city = it },
-                            label = "Ciudad",
-                            leadingIcon = Icons.Default.LocationCity
-                        )
-                    }
+            // Location + City side by side on tablet
+            AdaptiveFormRow(
+                left = {
+                    SolennixTextField(
+                        value = viewModel.location,
+                        onValueChange = { viewModel.location = it },
+                        label = "Lugar del Evento",
+                        leadingIcon = Icons.Default.LocationOn,
+                        placeholder = "Nombre del salón o dirección"
+                    )
+                },
+                right = {
+                    SolennixTextField(
+                        value = viewModel.city,
+                        onValueChange = { viewModel.city = it },
+                        label = "Ciudad",
+                        leadingIcon = Icons.Default.LocationCity
+                    )
                 }
-            } else {
-                SolennixTextField(
-                    value = viewModel.location,
-                    onValueChange = { viewModel.location = it },
-                    label = "Lugar del Evento",
-                    leadingIcon = Icons.Default.LocationOn,
-                    placeholder = "Nombre del salón o dirección"
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                SolennixTextField(
-                    value = viewModel.city,
-                    onValueChange = { viewModel.city = it },
-                    label = "Ciudad",
-                    leadingIcon = Icons.Default.LocationCity
-                )
-            }
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -637,6 +622,8 @@ fun StepGeneralInfo(viewModel: EventFormViewModel) {
                     cursorColor = SolennixTheme.colors.primary
                 )
             )
+            }
+            }
         }
     }
 
@@ -806,6 +793,7 @@ fun StepProducts(viewModel: EventFormViewModel) {
     var showProductPicker by remember { mutableStateOf(false) }
     val isWideScreen = LocalIsWideScreen.current
 
+    AdaptiveCenteredContent(maxWidth = 800.dp) {
     Column(modifier = Modifier.padding(24.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("Productos y Menú", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.weight(1f))
@@ -868,6 +856,7 @@ fun StepProducts(viewModel: EventFormViewModel) {
                 }
             }
         }
+    }
     }
 
     if (showProductPicker) {
@@ -963,6 +952,7 @@ fun StepExtras(viewModel: EventFormViewModel) {
     var extraExcludeUtility by remember { mutableStateOf(false) }
     val isWideScreen = LocalIsWideScreen.current
 
+    AdaptiveCenteredContent(maxWidth = 800.dp) {
     Column(modifier = Modifier.padding(24.dp)) {
         Text("Extras", style = MaterialTheme.typography.headlineSmall)
         Spacer(modifier = Modifier.height(24.dp))
@@ -1070,6 +1060,7 @@ fun StepExtras(viewModel: EventFormViewModel) {
 
     }
 }
+}
 
 @Composable
 private fun ExtraCard(
@@ -1108,6 +1099,7 @@ fun StepEquipment(viewModel: EventFormViewModel) {
     val equipmentConflicts by viewModel.equipmentConflicts.collectAsStateWithLifecycle()
     val isWideScreen = LocalIsWideScreen.current
 
+    AdaptiveCenteredContent(maxWidth = 800.dp) {
     LazyColumn(modifier = Modifier.padding(24.dp)) {
         item {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1239,6 +1231,7 @@ fun StepEquipment(viewModel: EventFormViewModel) {
             }
         }
     }
+    }
 
     if (showEquipmentPicker) {
         EquipmentPickerSheet(
@@ -1319,6 +1312,7 @@ fun StepSupplies(viewModel: EventFormViewModel) {
     val stockSupplies = viewModel.selectedSupplies.filter { it.source == SupplySource.STOCK }
     val purchaseSupplies = viewModel.selectedSupplies.filter { it.source == SupplySource.PURCHASE }
 
+    AdaptiveCenteredContent(maxWidth = 800.dp) {
     LazyColumn(modifier = Modifier.padding(24.dp)) {
         item {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1482,6 +1476,7 @@ fun StepSupplies(viewModel: EventFormViewModel) {
         }
 
     }
+    }
 
     if (showSupplyPicker) {
         SupplyPickerSheet(
@@ -1607,6 +1602,7 @@ fun SupplySelectionItem(
 fun StepSummary(viewModel: EventFormViewModel, isEditMode: Boolean = false) {
     val isWideScreen = LocalIsWideScreen.current
 
+    AdaptiveCenteredContent(maxWidth = 800.dp) {
     LazyColumn(modifier = Modifier.padding(24.dp)) {
         item {
             Text("Resumen y Finanzas", style = MaterialTheme.typography.headlineSmall)
@@ -1910,6 +1906,7 @@ fun StepSummary(viewModel: EventFormViewModel, isEditMode: Boolean = false) {
                 }
             }
         }
+    }
     }
 }
 

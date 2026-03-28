@@ -3,12 +3,9 @@ package com.creapolis.solennix.feature.inventory.ui
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -31,7 +28,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.creapolis.solennix.core.designsystem.theme.LocalIsWideScreen
+import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveCardGrid
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.InventoryItem
 import com.creapolis.solennix.core.model.extensions.asMXN
@@ -47,7 +44,6 @@ fun InventoryListScreen(
     onAddItemClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val isWideScreen = LocalIsWideScreen.current
 
     Scaffold(
         topBar = {
@@ -162,8 +158,7 @@ fun InventoryListScreen(
                             color = SolennixTheme.colors.secondaryText
                         )
                     }
-                } else if (isWideScreen) {
-                    // Tablet: grid layout with adaptive columns
+                } else {
                     val allSections = buildList {
                         if (uiState.ingredientItems.isNotEmpty()) {
                             add(Triple("Consumibles", Icons.Default.ShoppingBasket, uiState.ingredientItems))
@@ -176,83 +171,73 @@ fun InventoryListScreen(
                         }
                     }
 
-                    LazyVerticalGrid(
-                        columns = GridCells.Adaptive(minSize = 300.dp),
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        allSections.forEach { (title, icon, sectionItems) ->
+                    AdaptiveCardGrid(
+                        gridContent = {
+                            allSections.forEach { (title, icon, sectionItems) ->
+                                item(span = { GridItemSpan(maxLineSpan) }) {
+                                    InventorySectionHeader(
+                                        title = title,
+                                        icon = icon,
+                                        itemCount = sectionItems.size
+                                    )
+                                }
+                                items(
+                                    items = sectionItems,
+                                    key = { it.id }
+                                ) { item ->
+                                    InventoryGridCard(
+                                        item = item,
+                                        onClick = { onItemClick(item.id) }
+                                    )
+                                }
+                            }
                             item(span = { GridItemSpan(maxLineSpan) }) {
-                                InventorySectionHeader(
-                                    title = title,
-                                    icon = icon,
-                                    itemCount = sectionItems.size
-                                )
+                                Spacer(modifier = Modifier.height(16.dp))
                             }
-                            items(
-                                items = sectionItems,
-                                key = { it.id }
-                            ) { item ->
-                                InventoryGridCard(
-                                    item = item,
-                                    onClick = { onItemClick(item.id) }
-                                )
+                        },
+                        listContent = {
+                            // Consumibles section
+                            if (uiState.ingredientItems.isNotEmpty()) {
+                                item {
+                                    InventorySection(
+                                        title = "Consumibles",
+                                        icon = Icons.Default.ShoppingBasket,
+                                        itemCount = uiState.ingredientItems.size,
+                                        items = uiState.ingredientItems,
+                                        onItemClick = onItemClick
+                                    )
+                                }
                             }
-                        }
-                        item(span = { GridItemSpan(maxLineSpan) }) {
-                            Spacer(modifier = Modifier.height(16.dp))
-                        }
-                    }
-                } else {
-                    // Phone: single-column list
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        // Consumibles section
-                        if (uiState.ingredientItems.isNotEmpty()) {
-                            item {
-                                InventorySection(
-                                    title = "Consumibles",
-                                    icon = Icons.Default.ShoppingBasket,
-                                    itemCount = uiState.ingredientItems.size,
-                                    items = uiState.ingredientItems,
-                                    onItemClick = onItemClick
-                                )
-                            }
-                        }
 
-                        // Insumos por Evento section
-                        if (uiState.supplyItems.isNotEmpty()) {
-                            item {
-                                InventorySection(
-                                    title = "Insumos por Evento",
-                                    icon = Icons.Default.Kitchen,
-                                    itemCount = uiState.supplyItems.size,
-                                    items = uiState.supplyItems,
-                                    onItemClick = onItemClick
-                                )
+                            // Insumos por Evento section
+                            if (uiState.supplyItems.isNotEmpty()) {
+                                item {
+                                    InventorySection(
+                                        title = "Insumos por Evento",
+                                        icon = Icons.Default.Kitchen,
+                                        itemCount = uiState.supplyItems.size,
+                                        items = uiState.supplyItems,
+                                        onItemClick = onItemClick
+                                    )
+                                }
                             }
-                        }
 
-                        // Equipos section
-                        if (uiState.equipmentItems.isNotEmpty()) {
-                            item {
-                                InventorySection(
-                                    title = "Equipos",
-                                    icon = Icons.Outlined.Build,
-                                    itemCount = uiState.equipmentItems.size,
-                                    items = uiState.equipmentItems,
-                                    onItemClick = onItemClick
-                                )
+                            // Equipos section
+                            if (uiState.equipmentItems.isNotEmpty()) {
+                                item {
+                                    InventorySection(
+                                        title = "Equipos",
+                                        icon = Icons.Outlined.Build,
+                                        itemCount = uiState.equipmentItems.size,
+                                        items = uiState.equipmentItems,
+                                        onItemClick = onItemClick
+                                    )
+                                }
                             }
-                        }
 
-                        item { Spacer(modifier = Modifier.height(16.dp)) }
-                    }
+                            item { Spacer(modifier = Modifier.height(16.dp)) }
+                        }
+                    )
                 }
             }
         }

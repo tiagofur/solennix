@@ -21,6 +21,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveCenteredContent
+import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveFormRow
 import com.creapolis.solennix.core.designsystem.theme.LocalIsWideScreen
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.DiscountType
@@ -91,6 +93,7 @@ fun QuickQuoteScreen(
                 CircularProgressIndicator(color = SolennixTheme.colors.primary)
             }
         } else {
+            AdaptiveCenteredContent(maxWidth = 800.dp) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -168,66 +171,39 @@ fun QuickQuoteScreen(
                                     modifier = Modifier.padding(top = 12.dp),
                                     verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
-                                    if (isWideScreen) {
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                        ) {
+                                    AdaptiveFormRow(
+                                        spacing = 12.dp,
+                                        left = {
                                             OutlinedTextField(
                                                 value = uiState.clientName,
                                                 onValueChange = viewModel::updateClientName,
                                                 label = { Text("Nombre") },
-                                                modifier = Modifier.weight(1f),
+                                                modifier = Modifier.fillMaxWidth(),
                                                 leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
                                                 singleLine = true
                                             )
+                                        },
+                                        right = {
                                             OutlinedTextField(
                                                 value = uiState.clientPhone,
                                                 onValueChange = viewModel::updateClientPhone,
                                                 label = { Text("Teléfono") },
-                                                modifier = Modifier.weight(1f),
+                                                modifier = Modifier.fillMaxWidth(),
                                                 leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null) },
                                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                                                 singleLine = true
                                             )
                                         }
-                                        OutlinedTextField(
-                                            value = uiState.clientEmail,
-                                            onValueChange = viewModel::updateClientEmail,
-                                            label = { Text("Email") },
-                                            modifier = Modifier.fillMaxWidth(),
-                                            leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
-                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                                            singleLine = true
-                                        )
-                                    } else {
-                                        OutlinedTextField(
-                                            value = uiState.clientName,
-                                            onValueChange = viewModel::updateClientName,
-                                            label = { Text("Nombre") },
-                                            modifier = Modifier.fillMaxWidth(),
-                                            leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
-                                            singleLine = true
-                                        )
-                                        OutlinedTextField(
-                                            value = uiState.clientPhone,
-                                            onValueChange = viewModel::updateClientPhone,
-                                            label = { Text("Teléfono") },
-                                            modifier = Modifier.fillMaxWidth(),
-                                            leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null) },
-                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                                            singleLine = true
-                                        )
-                                        OutlinedTextField(
-                                            value = uiState.clientEmail,
-                                            onValueChange = viewModel::updateClientEmail,
-                                            label = { Text("Email") },
-                                            modifier = Modifier.fillMaxWidth(),
-                                            leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
-                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                                            singleLine = true
-                                        )
-                                    }
+                                    )
+                                    OutlinedTextField(
+                                        value = uiState.clientEmail,
+                                        onValueChange = viewModel::updateClientEmail,
+                                        label = { Text("Email") },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                                        singleLine = true
+                                    )
                                 }
                             }
                         }
@@ -792,6 +768,7 @@ fun QuickQuoteScreen(
                 }
 
                 Spacer(Modifier.height(32.dp))
+            }
             }
         }
     }

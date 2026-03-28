@@ -22,7 +22,7 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.creapolis.solennix.core.designsystem.component.PremiumButton
-import com.creapolis.solennix.core.designsystem.theme.LocalIsWideScreen
+import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveCenteredContent
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.feature.settings.viewmodel.ContractDefaultsViewModel
 import kotlin.math.roundToInt
@@ -34,7 +34,6 @@ fun ContractDefaultsScreen(
     onNavigateBack: () -> Unit
 ) {
     val scrollState = rememberScrollState()
-    val isWideScreen = LocalIsWideScreen.current
 
     LaunchedEffect(viewModel.saveSuccess) {
         if (viewModel.saveSuccess) {
@@ -64,21 +63,14 @@ fun ContractDefaultsScreen(
                 CircularProgressIndicator(color = SolennixTheme.colors.primary)
             }
         } else {
+            AdaptiveCenteredContent(maxWidth = 700.dp) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
                     .verticalScroll(scrollState)
-                    .padding(16.dp),
-                horizontalAlignment = if (isWideScreen) Alignment.CenterHorizontally else Alignment.Start
+                    .padding(16.dp)
             ) {
-                val contentModifier = if (isWideScreen) {
-                    Modifier.widthIn(max = 680.dp).fillMaxWidth()
-                } else {
-                    Modifier.fillMaxWidth()
-                }
-
-                Column(modifier = contentModifier) {
                 // Deposit Section
                 Text(
                     text = "Anticipo",
@@ -449,7 +441,7 @@ fun ContractDefaultsScreen(
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
-                } // end contentModifier Column
+            }
             }
         }
     }

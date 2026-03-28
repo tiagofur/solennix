@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.component.Avatar
+import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveCenteredContent
 import com.creapolis.solennix.core.designsystem.theme.LocalIsWideScreen
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.ThemeConfig
@@ -67,6 +68,7 @@ fun SettingsScreen(
             )
         }
     ) { padding ->
+        AdaptiveCenteredContent(maxWidth = 700.dp) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -172,6 +174,7 @@ fun SettingsScreen(
             }
 
             Spacer(modifier = Modifier.height(32.dp))
+        }
         }
     }
 }

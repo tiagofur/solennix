@@ -18,6 +18,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.component.PremiumButton
+import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveCenteredContent
 import com.creapolis.solennix.core.designsystem.theme.LocalIsWideScreen
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.feature.settings.viewmodel.SettingsViewModel
@@ -45,13 +46,13 @@ fun PricingScreen(
             )
         }
     ) { padding ->
+        AdaptiveCenteredContent(maxWidth = 900.dp) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(scrollState)
-                .padding(16.dp),
-            horizontalAlignment = if (isWideScreen) Alignment.CenterHorizontally else Alignment.Start
+                .padding(16.dp)
         ) {
             // Current Plan
             if (isPremium) {
@@ -91,7 +92,7 @@ fun PricingScreen(
             // Plan Cards
             if (isWideScreen) {
                 Row(
-                    modifier = Modifier.widthIn(max = 900.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     Box(modifier = Modifier.weight(1f)) {
@@ -170,9 +171,7 @@ fun PricingScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             // FAQ Section
-            Column(
-                modifier = if (isWideScreen) Modifier.widthIn(max = 600.dp) else Modifier.fillMaxWidth()
-            ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
             Text(
                 text = "Preguntas Frecuentes",
                 style = MaterialTheme.typography.labelLarge,
@@ -197,6 +196,7 @@ fun PricingScreen(
             } // end FAQ Column
 
             Spacer(modifier = Modifier.height(32.dp))
+        }
         }
     }
 }

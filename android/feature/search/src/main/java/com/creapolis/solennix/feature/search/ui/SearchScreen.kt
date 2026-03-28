@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.component.StatusBadge
+import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveCenteredContent
 import com.creapolis.solennix.core.designsystem.theme.LocalIsWideScreen
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.Event
@@ -58,7 +59,11 @@ fun SearchScreen(
             )
         }
     ) { padding ->
-        Column(modifier = Modifier.padding(padding)) {
+        AdaptiveCenteredContent(
+            modifier = Modifier.padding(padding),
+            maxWidth = 800.dp
+        ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
             OutlinedTextField(
                 value = uiState.query,
                 onValueChange = { viewModel.onQueryChange(it) },
@@ -260,6 +265,7 @@ fun SearchScreen(
                     }
                 }
             }
+        }
         }
     }
 }

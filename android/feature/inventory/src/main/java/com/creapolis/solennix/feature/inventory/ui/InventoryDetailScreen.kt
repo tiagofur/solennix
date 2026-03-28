@@ -21,7 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.creapolis.solennix.core.designsystem.theme.LocalIsWideScreen
+import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveDetailLayout
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.extensions.asMXN
 import com.creapolis.solennix.feature.inventory.viewmodel.InventoryDetailViewModel
@@ -130,7 +130,6 @@ fun InventoryDetailScreen(
             }
         } else if (uiState.item != null) {
             val item = uiState.item ?: return@Scaffold
-            val isWideScreen = LocalIsWideScreen.current
 
             val typeBadgeColor = when (item.type.name) {
                 "EQUIPMENT" -> Color(0xFF9C27B0)
@@ -164,17 +163,10 @@ fun InventoryDetailScreen(
                     )
                 }
 
-                if (isWideScreen) {
-                    // Tablet: 2-column layout
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        // Left column: Item info KPI cards
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
+                AdaptiveDetailLayout(
+                    left = {
+                        // KPI cards
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             InventoryKpiCard(
                                 icon = Icons.Default.Inventory2,
                                 iconColor = stockColor,
@@ -183,181 +175,90 @@ fun InventoryDetailScreen(
                                 subtitle = item.unit,
                                 valueColor = stockColor,
                                 extraLabel = if (uiState.isLowStock) "Bajo mínimo" else null,
-                                extraColor = colors.error
+                                extraColor = colors.error,
+                                modifier = Modifier.weight(1f)
                             )
                             InventoryKpiCard(
                                 icon = Icons.Default.TrendingDown,
                                 iconColor = colors.secondaryText,
                                 label = "Stock Mínimo",
                                 value = "${item.minimumStock.let { if (it == it.toLong().toDouble()) it.toLong().toString() else "%.1f".format(it) }}",
-                                subtitle = item.unit
+                                subtitle = item.unit,
+                                modifier = Modifier.weight(1f)
                             )
+                        }
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             InventoryKpiCard(
                                 icon = Icons.Default.AttachMoney,
                                 iconColor = colors.primary,
                                 label = "Costo Unitario",
                                 value = item.unitCost?.asMXN() ?: "—",
-                                subtitle = "por ${item.unit}"
+                                subtitle = "por ${item.unit}",
+                                modifier = Modifier.weight(1f)
                             )
                             InventoryKpiCard(
                                 icon = Icons.Default.Assessment,
                                 iconColor = colors.primary,
                                 label = "Valor en Stock",
                                 value = if (item.unitCost != null) uiState.stockValue.asMXN() else "—",
-                                subtitle = "valor total"
-                            )
-
-                            // Stock Health Bars
-                            StockHealthBars(
-                                currentStock = item.currentStock,
-                                minimumStock = item.minimumStock,
-                                demand7Days = uiState.demand7Days,
-                                isLowStock = uiState.isLowStock,
-                                stockAfter7Days = uiState.stockAfter7Days,
-                                unit = item.unit,
-                                colors = colors
+                                subtitle = "valor total",
+                                modifier = Modifier.weight(1f)
                             )
                         }
 
-                        // Right column: Alerts + Demand Forecast
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        // Stock Health Bars
+                        StockHealthBars(
+                            currentStock = item.currentStock,
+                            minimumStock = item.minimumStock,
+                            demand7Days = uiState.demand7Days,
+                            isLowStock = uiState.isLowStock,
+                            stockAfter7Days = uiState.stockAfter7Days,
+                            unit = item.unit,
+                            colors = colors
+                        )
+                    },
+                    right = {
+                        // Smart Alert
+                        SmartStockAlert(
+                            demand7Days = uiState.demand7Days,
+                            stockAfter7Days = uiState.stockAfter7Days,
+                            isLowStock = uiState.isLowStock,
+                            currentStock = item.currentStock,
+                            minimumStock = item.minimumStock,
+                            unit = item.unit,
+                            hasDemand = uiState.demandEntries.isNotEmpty(),
+                            colors = colors
+                        )
+
+                        // Demand Forecast
+                        DemandForecastCard(
+                            entries = uiState.demandEntries,
+                            currentStock = item.currentStock,
+                            unit = item.unit,
+                            colors = colors
+                        )
+
+                        // Adjust stock button
+                        Button(
+                            onClick = {
+                                adjustmentValue = item.currentStock.let {
+                                    if (it == it.toLong().toDouble()) it.toLong().toString() else "%.1f".format(it)
+                                }
+                                showAdjustSheet = true
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = colors.primary.copy(alpha = 0.1f),
+                                contentColor = colors.primary
+                            )
                         ) {
-                            // Smart Alert
-                            SmartStockAlert(
-                                demand7Days = uiState.demand7Days,
-                                stockAfter7Days = uiState.stockAfter7Days,
-                                isLowStock = uiState.isLowStock,
-                                currentStock = item.currentStock,
-                                minimumStock = item.minimumStock,
-                                unit = item.unit,
-                                hasDemand = uiState.demandEntries.isNotEmpty(),
-                                colors = colors
-                            )
-
-                            // Demand Forecast
-                            DemandForecastCard(
-                                entries = uiState.demandEntries,
-                                currentStock = item.currentStock,
-                                unit = item.unit,
-                                colors = colors
-                            )
-
-                            // Adjust stock button
-                            Button(
-                                onClick = {
-                                    adjustmentValue = item.currentStock.let {
-                                        if (it == it.toLong().toDouble()) it.toLong().toString() else "%.1f".format(it)
-                                    }
-                                    showAdjustSheet = true
-                                },
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(12.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = colors.primary.copy(alpha = 0.1f),
-                                    contentColor = colors.primary
-                                )
-                            ) {
-                                Icon(Icons.Default.Tune, contentDescription = null, modifier = Modifier.size(18.dp))
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("Ajustar Stock", fontWeight = FontWeight.SemiBold)
-                            }
+                            Icon(Icons.Default.Tune, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Ajustar Stock", fontWeight = FontWeight.SemiBold)
                         }
                     }
-                } else {
-                    // Phone: single column layout (unchanged)
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        InventoryKpiCard(
-                            icon = Icons.Default.Inventory2,
-                            iconColor = stockColor,
-                            label = "Stock Actual",
-                            value = "${item.currentStock.let { if (it == it.toLong().toDouble()) it.toLong().toString() else "%.1f".format(it) }}",
-                            subtitle = item.unit,
-                            valueColor = stockColor,
-                            extraLabel = if (uiState.isLowStock) "Bajo mínimo" else null,
-                            extraColor = colors.error,
-                            modifier = Modifier.weight(1f)
-                        )
-                        InventoryKpiCard(
-                            icon = Icons.Default.TrendingDown,
-                            iconColor = colors.secondaryText,
-                            label = "Stock Mínimo",
-                            value = "${item.minimumStock.let { if (it == it.toLong().toDouble()) it.toLong().toString() else "%.1f".format(it) }}",
-                            subtitle = item.unit,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        InventoryKpiCard(
-                            icon = Icons.Default.AttachMoney,
-                            iconColor = colors.primary,
-                            label = "Costo Unitario",
-                            value = item.unitCost?.asMXN() ?: "—",
-                            subtitle = "por ${item.unit}",
-                            modifier = Modifier.weight(1f)
-                        )
-                        InventoryKpiCard(
-                            icon = Icons.Default.Assessment,
-                            iconColor = colors.primary,
-                            label = "Valor en Stock",
-                            value = if (item.unitCost != null) uiState.stockValue.asMXN() else "—",
-                            subtitle = "valor total",
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-
-                    // Smart Alert
-                    SmartStockAlert(
-                        demand7Days = uiState.demand7Days,
-                        stockAfter7Days = uiState.stockAfter7Days,
-                        isLowStock = uiState.isLowStock,
-                        currentStock = item.currentStock,
-                        minimumStock = item.minimumStock,
-                        unit = item.unit,
-                        hasDemand = uiState.demandEntries.isNotEmpty(),
-                        colors = colors
-                    )
-
-                    // Stock Health Bars
-                    StockHealthBars(
-                        currentStock = item.currentStock,
-                        minimumStock = item.minimumStock,
-                        demand7Days = uiState.demand7Days,
-                        isLowStock = uiState.isLowStock,
-                        stockAfter7Days = uiState.stockAfter7Days,
-                        unit = item.unit,
-                        colors = colors
-                    )
-
-                    // Demand Forecast
-                    DemandForecastCard(
-                        entries = uiState.demandEntries,
-                        currentStock = item.currentStock,
-                        unit = item.unit,
-                        colors = colors
-                    )
-
-                    // Adjust stock button
-                    Button(
-                        onClick = {
-                            adjustmentValue = item.currentStock.let {
-                                if (it == it.toLong().toDouble()) it.toLong().toString() else "%.1f".format(it)
-                            }
-                            showAdjustSheet = true
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = colors.primary.copy(alpha = 0.1f),
-                            contentColor = colors.primary
-                        )
-                    ) {
-                        Icon(Icons.Default.Tune, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Ajustar Stock", fontWeight = FontWeight.SemiBold)
-                    }
-                }
+                )
 
                 Spacer(modifier = Modifier.height(8.dp))
             }

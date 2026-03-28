@@ -22,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.component.*
+import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveDetailLayout
 import com.creapolis.solennix.core.designsystem.theme.LocalIsWideScreen
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.Event
@@ -155,35 +156,28 @@ fun DashboardScreen(
                     }
                 }
 
-                // On tablet: show status + pending events side by side
-                if (isWideScreen && (uiState.statusDistribution.isNotEmpty() || uiState.pendingEvents.isNotEmpty())) {
+                // Status Distribution + Pending Events
+                if (uiState.statusDistribution.isNotEmpty() || uiState.pendingEvents.isNotEmpty()) {
                     item {
                         Spacer(modifier = Modifier.height(24.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            // Left column: Status Distribution
-                            Column(modifier = Modifier.weight(1f)) {
+                        AdaptiveDetailLayout(
+                            left = {
                                 if (uiState.statusDistribution.isNotEmpty()) {
                                     Text(
                                         text = "Estado de Eventos",
                                         style = MaterialTheme.typography.titleMedium,
                                         color = SolennixTheme.colors.primaryText
                                     )
-                                    Spacer(modifier = Modifier.height(8.dp))
                                     EventStatusDistributionCard(statusCounts = uiState.statusDistribution)
                                 }
-                            }
-                            // Right column: Pending Events
-                            Column(modifier = Modifier.weight(1f)) {
+                            },
+                            right = {
                                 if (uiState.pendingEvents.isNotEmpty()) {
                                     Text(
                                         text = "Eventos Pendientes",
                                         style = MaterialTheme.typography.titleMedium,
                                         color = SolennixTheme.colors.primaryText
                                     )
-                                    Spacer(modifier = Modifier.height(8.dp))
                                     uiState.pendingEvents.forEach { pendingEvent ->
                                         PendingEventItem(
                                             pendingEvent = pendingEvent,
@@ -192,78 +186,32 @@ fun DashboardScreen(
                                     }
                                 }
                             }
-                        }
-                    }
-                } else {
-                    // Phone: single column
-                    if (uiState.statusDistribution.isNotEmpty()) {
-                        item {
-                            Spacer(modifier = Modifier.height(24.dp))
-                            Text(text = "Estado de Eventos", style = MaterialTheme.typography.titleMedium, color = SolennixTheme.colors.primaryText)
-                            Spacer(modifier = Modifier.height(8.dp))
-                            EventStatusDistributionCard(statusCounts = uiState.statusDistribution)
-                        }
-                    }
-                    if (uiState.pendingEvents.isNotEmpty()) {
-                        item {
-                            Spacer(modifier = Modifier.height(24.dp))
-                            Text(text = "Eventos Pendientes", style = MaterialTheme.typography.titleMedium, color = SolennixTheme.colors.primaryText)
-                            Spacer(modifier = Modifier.height(8.dp))
-                        }
-                        items(uiState.pendingEvents) { pendingEvent ->
-                            PendingEventItem(pendingEvent = pendingEvent, onClick = { onEventClick(pendingEvent.event.id) })
-                        }
+                        )
                     }
                 }
 
-                // On tablet: upcoming events and inventory alerts side by side
-                if (isWideScreen && (uiState.upcomingEvents.isNotEmpty() || uiState.lowStockItems.isNotEmpty())) {
+                // Upcoming Events + Inventory Alerts
+                if (uiState.upcomingEvents.isNotEmpty() || uiState.lowStockItems.isNotEmpty()) {
                     item {
                         Spacer(modifier = Modifier.height(24.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
+                        AdaptiveDetailLayout(
+                            left = {
                                 if (uiState.upcomingEvents.isNotEmpty()) {
                                     Text(text = "Proximos Eventos", style = MaterialTheme.typography.titleMedium, color = SolennixTheme.colors.primaryText)
-                                    Spacer(modifier = Modifier.height(8.dp))
                                     uiState.upcomingEvents.forEach { event ->
                                         EventListItem(event = event, onClick = { onEventClick(event.id) })
                                     }
                                 }
-                            }
-                            Column(modifier = Modifier.weight(1f)) {
+                            },
+                            right = {
                                 if (uiState.lowStockItems.isNotEmpty()) {
                                     Text(text = "Alertas de Inventario", style = MaterialTheme.typography.titleMedium, color = SolennixTheme.colors.primaryText)
-                                    Spacer(modifier = Modifier.height(8.dp))
                                     uiState.lowStockItems.forEach { item ->
                                         InventoryAlertItem(item = item, onClick = { onInventoryClick(item.id) })
                                     }
                                 }
                             }
-                        }
-                    }
-                } else {
-                    if (uiState.upcomingEvents.isNotEmpty()) {
-                        item {
-                            Spacer(modifier = Modifier.height(24.dp))
-                            Text(text = "Proximos Eventos", style = MaterialTheme.typography.titleMedium, color = SolennixTheme.colors.primaryText)
-                            Spacer(modifier = Modifier.height(8.dp))
-                        }
-                        items(uiState.upcomingEvents) { event ->
-                            EventListItem(event = event, onClick = { onEventClick(event.id) })
-                        }
-                    }
-                    if (uiState.lowStockItems.isNotEmpty()) {
-                        item {
-                            Spacer(modifier = Modifier.height(24.dp))
-                            Text(text = "Alertas de Inventario", style = MaterialTheme.typography.titleMedium, color = SolennixTheme.colors.primaryText)
-                            Spacer(modifier = Modifier.height(8.dp))
-                        }
-                        items(uiState.lowStockItems) { item ->
-                            InventoryAlertItem(item = item, onClick = { onInventoryClick(item.id) })
-                        }
+                        )
                     }
                 }
 

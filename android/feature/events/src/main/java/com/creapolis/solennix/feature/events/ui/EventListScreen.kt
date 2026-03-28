@@ -6,10 +6,6 @@ import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -30,7 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.component.StatusBadge
-import com.creapolis.solennix.core.designsystem.theme.LocalIsWideScreen
+import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveCardGrid
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.Client
 import com.creapolis.solennix.core.model.Event
@@ -73,7 +69,6 @@ fun EventListScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    val isWideScreen = LocalIsWideScreen.current
 
     Scaffold(
         topBar = {
@@ -196,35 +191,30 @@ fun EventListScreen(
                             )
                         }
                     }
-                } else if (isWideScreen) {
-                    LazyVerticalGrid(
-                        columns = GridCells.Adaptive(minSize = 300.dp),
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(vertical = 8.dp)
-                    ) {
-                        items(uiState.events) { event ->
-                            val client = uiState.clientMap[event.clientId]
-                            EventListItem(
-                                event = event,
-                                clientName = client?.name,
-                                onClick = { onEventClick(event.id) }
-                            )
-                        }
-                    }
                 } else {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(vertical = 8.dp)
-                    ) {
-                        items(uiState.events) { event ->
-                            val client = uiState.clientMap[event.clientId]
-                            EventListItem(
-                                event = event,
-                                clientName = client?.name,
-                                onClick = { onEventClick(event.id) }
-                            )
+                    AdaptiveCardGrid(
+                        contentPadding = PaddingValues(vertical = 8.dp),
+                        gridContent = {
+                            items(uiState.events, key = { it.id }) { event ->
+                                val client = uiState.clientMap[event.clientId]
+                                EventListItem(
+                                    event = event,
+                                    clientName = client?.name,
+                                    onClick = { onEventClick(event.id) }
+                                )
+                            }
+                        },
+                        listContent = {
+                            items(uiState.events, key = { it.id }) { event ->
+                                val client = uiState.clientMap[event.clientId]
+                                EventListItem(
+                                    event = event,
+                                    clientName = client?.name,
+                                    onClick = { onEventClick(event.id) }
+                                )
+                            }
                         }
-                    }
+                    )
                 }
             }
         }

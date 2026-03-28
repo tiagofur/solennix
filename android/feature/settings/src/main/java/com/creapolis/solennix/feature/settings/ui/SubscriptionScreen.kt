@@ -20,7 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.revenuecat.purchases.Package
-import com.creapolis.solennix.core.designsystem.theme.LocalIsWideScreen
+import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveCenteredContent
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.feature.settings.billing.BillingState
 import com.creapolis.solennix.feature.settings.viewmodel.SubscriptionViewModel
@@ -32,7 +32,6 @@ fun SubscriptionScreen(
     onNavigateBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val isWideScreen = LocalIsWideScreen.current
     val context = LocalContext.current
     val activity = context as? Activity
 
@@ -52,31 +51,24 @@ fun SubscriptionScreen(
             )
         }
     ) { padding ->
+        AdaptiveCenteredContent(maxWidth = 700.dp) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalAlignment = if (isWideScreen) Alignment.CenterHorizontally else Alignment.Start
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // Current Plan Header
             item(key = "current_plan") {
-                Box(
-                    modifier = if (isWideScreen) Modifier.widthIn(max = 600.dp) else Modifier.fillMaxWidth()
-                ) {
-                    CurrentPlanCard(
-                        planName = uiState.currentPlanName,
-                        isActive = uiState.hasActiveSubscription
-                    )
-                }
+                CurrentPlanCard(
+                    planName = uiState.currentPlanName,
+                    isActive = uiState.hasActiveSubscription
+                )
             }
 
             // Billing State
             item {
-                Box(
-                    modifier = if (isWideScreen) Modifier.widthIn(max = 600.dp) else Modifier.fillMaxWidth()
-                ) {
                 when (val state = uiState.billingState) {
                     is BillingState.NotReady -> {
                         LinearProgressIndicator(
@@ -111,28 +103,20 @@ fun SubscriptionScreen(
                         // Plans are ready
                     }
                 }
-                }
             }
 
             // Plan Cards
             item {
-                Box(
-                    modifier = if (isWideScreen) Modifier.widthIn(max = 600.dp) else Modifier.fillMaxWidth()
-                ) {
                 Text(
                     text = "Elige tu plan",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = SolennixTheme.colors.primaryText
                 )
-                }
             }
 
             // Basic Plan (Free)
             item {
-                Box(
-                    modifier = if (isWideScreen) Modifier.widthIn(max = 600.dp) else Modifier.fillMaxWidth()
-                ) {
                 PlanCard(
                     planName = "Basico",
                     price = "Gratis",
@@ -149,7 +133,6 @@ fun SubscriptionScreen(
                     isRecommended = false,
                     onClick = { /* Free plan, no action */ }
                 )
-                }
             }
 
             // Pro Packages
@@ -157,9 +140,6 @@ fun SubscriptionScreen(
                 val price = rcPackage.product.price.formatted
                 val isYearly = rcPackage.identifier.contains("annual", ignoreCase = true) ||
                         rcPackage.identifier.contains("yearly", ignoreCase = true)
-                Box(
-                    modifier = if (isWideScreen) Modifier.widthIn(max = 600.dp) else Modifier.fillMaxWidth()
-                ) {
                 PlanCard(
                     planName = "Pro",
                     price = price,
@@ -179,7 +159,6 @@ fun SubscriptionScreen(
                         activity?.let { viewModel.launchPurchase(it, rcPackage) }
                     }
                 )
-                }
             }
 
             // Premium Packages
@@ -187,9 +166,6 @@ fun SubscriptionScreen(
                 val price = rcPackage.product.price.formatted
                 val isYearly = rcPackage.identifier.contains("annual", ignoreCase = true) ||
                         rcPackage.identifier.contains("yearly", ignoreCase = true)
-                Box(
-                    modifier = if (isWideScreen) Modifier.widthIn(max = 600.dp) else Modifier.fillMaxWidth()
-                ) {
                 PlanCard(
                     planName = "Premium",
                     price = price,
@@ -209,60 +185,46 @@ fun SubscriptionScreen(
                         activity?.let { viewModel.launchPurchase(it, rcPackage) }
                     }
                 )
-                }
             }
 
             // FAQ Section
             item {
-                Column(
-                    modifier = if (isWideScreen) Modifier.widthIn(max = 600.dp) else Modifier.fillMaxWidth()
-                ) {
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = "Preguntas frecuentes",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = SolennixTheme.colors.primaryText
-                )
+                Column {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "Preguntas frecuentes",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = SolennixTheme.colors.primaryText
+                    )
                 }
             }
 
             item {
-                Box(
-                    modifier = if (isWideScreen) Modifier.widthIn(max = 600.dp) else Modifier.fillMaxWidth()
-                ) {
                 FaqItem(
                     question = "Puedo cancelar en cualquier momento?",
                     answer = "Si, puedes cancelar tu suscripcion cuando quieras desde la configuracion de tu cuenta de Google Play."
                 )
-                }
             }
 
             item {
-                Box(
-                    modifier = if (isWideScreen) Modifier.widthIn(max = 600.dp) else Modifier.fillMaxWidth()
-                ) {
                 FaqItem(
                     question = "Que pasa con mis datos si cancelo?",
                     answer = "Tus datos se mantienen, pero tendras acceso limitado segun el plan basico."
                 )
-                }
             }
 
             item {
-                Box(
-                    modifier = if (isWideScreen) Modifier.widthIn(max = 600.dp) else Modifier.fillMaxWidth()
-                ) {
                 FaqItem(
                     question = "Puedo cambiar de plan?",
                     answer = "Si, puedes actualizar o degradar tu plan en cualquier momento."
                 )
-                }
             }
 
             item {
                 Spacer(modifier = Modifier.height(32.dp))
             }
+        }
         }
     }
 }

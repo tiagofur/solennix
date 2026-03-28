@@ -6,9 +6,6 @@ import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -33,7 +30,7 @@ import com.creapolis.solennix.core.designsystem.component.Avatar
 import com.creapolis.solennix.core.designsystem.component.UpgradeBanner
 import com.creapolis.solennix.core.designsystem.component.UpgradeBannerStyle
 import com.creapolis.solennix.core.designsystem.component.UpgradePlanDialog
-import com.creapolis.solennix.core.designsystem.theme.LocalIsWideScreen
+import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveCardGrid
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.Client
 import com.creapolis.solennix.core.model.extensions.asMXN
@@ -72,7 +69,6 @@ fun ClientListScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    val isWideScreen = LocalIsWideScreen.current
     var showLimitDialog by remember { mutableStateOf(false) }
 
     // Show limit reached dialog
@@ -164,41 +160,36 @@ fun ClientListScreen(
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator()
                     }
-                } else if (isWideScreen) {
-                    LazyVerticalGrid(
-                        columns = GridCells.Adaptive(minSize = 300.dp),
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        items(uiState.clients) { client ->
-                            Card(
-                                onClick = { onClientClick(client.id) },
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
-                                shape = MaterialTheme.shapes.medium
-                            ) {
+                } else {
+                    AdaptiveCardGrid(
+                        gridContent = {
+                            items(uiState.clients, key = { it.id }) { client ->
+                                Card(
+                                    onClick = { onClientClick(client.id) },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
+                                    shape = MaterialTheme.shapes.medium
+                                ) {
+                                    ClientListItem(
+                                        client = client,
+                                        onClick = { onClientClick(client.id) }
+                                    )
+                                }
+                            }
+                        },
+                        listContent = {
+                            items(uiState.clients, key = { it.id }) { client ->
                                 ClientListItem(
                                     client = client,
                                     onClick = { onClientClick(client.id) }
                                 )
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(horizontal = 16.dp),
+                                    color = SolennixTheme.colors.divider.copy(alpha = 0.5f)
+                                )
                             }
                         }
-                    }
-                } else {
-                    LazyColumn(modifier = Modifier.fillMaxSize()) {
-                        items(uiState.clients) { client ->
-                            ClientListItem(
-                                client = client,
-                                onClick = { onClientClick(client.id) }
-                            )
-                            HorizontalDivider(
-                                modifier = Modifier.padding(horizontal = 16.dp),
-                                color = SolennixTheme.colors.divider.copy(alpha = 0.5f)
-                            )
-                        }
-                    }
+                    )
                 }
             }
         }

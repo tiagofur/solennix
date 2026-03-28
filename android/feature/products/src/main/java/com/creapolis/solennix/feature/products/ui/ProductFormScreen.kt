@@ -30,7 +30,8 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.creapolis.solennix.core.designsystem.component.PremiumButton
 import com.creapolis.solennix.core.designsystem.component.SolennixTextField
-import com.creapolis.solennix.core.designsystem.theme.LocalIsWideScreen
+import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveCenteredContent
+import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveFormRow
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.InventoryItem
 import com.creapolis.solennix.core.model.InventoryType
@@ -77,6 +78,7 @@ fun ProductFormScreen(
                 CircularProgressIndicator()
             }
         } else {
+            AdaptiveCenteredContent(maxWidth = 800.dp) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -186,127 +188,65 @@ fun ProductFormScreen(
                 }
 
                 // Basic info fields
-                val isWideScreen = LocalIsWideScreen.current
-
-                if (isWideScreen) {
-                    // Tablet: 2-column layout for related fields
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        Box(modifier = Modifier.weight(1f)) {
-                            SolennixTextField(
-                                value = viewModel.name,
-                                onValueChange = { viewModel.name = it },
-                                label = "Nombre *",
-                                leadingIcon = Icons.Default.ShoppingCart
-                            )
-                        }
-                        Box(modifier = Modifier.weight(1f)) {
-                            SolennixTextField(
-                                value = viewModel.category,
-                                onValueChange = { viewModel.category = it },
-                                label = "Categoría *",
-                                leadingIcon = Icons.Default.Category
-                            )
-                        }
-                    }
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        Box(modifier = Modifier.weight(1f)) {
-                            SolennixTextField(
-                                value = viewModel.basePrice,
-                                onValueChange = { viewModel.basePrice = it },
-                                label = "Precio Base *",
-                                leadingIcon = Icons.Default.AttachMoney,
-                                keyboardType = KeyboardType.Decimal
-                            )
-                        }
-                        Box(modifier = Modifier.weight(1f)) {
-                            // Active toggle alongside price on tablet
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column {
-                                    Text(
-                                        text = "Producto activo",
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        color = SolennixTheme.colors.primaryText
-                                    )
-                                    Text(
-                                        text = "Visible en cotizaciones",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = SolennixTheme.colors.secondaryText
-                                    )
-                                }
-                                Switch(
-                                    checked = viewModel.isActive,
-                                    onCheckedChange = { viewModel.isActive = it },
-                                    colors = SwitchDefaults.colors(
-                                        checkedThumbColor = SolennixTheme.colors.primary,
-                                        checkedTrackColor = SolennixTheme.colors.primaryLight
-                                    )
-                                )
-                            }
-                        }
-                    }
-                } else {
-                    // Phone: single-column layout
-                    SolennixTextField(
-                        value = viewModel.name,
-                        onValueChange = { viewModel.name = it },
-                        label = "Nombre *",
-                        leadingIcon = Icons.Default.ShoppingCart
-                    )
-
-                    SolennixTextField(
-                        value = viewModel.category,
-                        onValueChange = { viewModel.category = it },
-                        label = "Categoría *",
-                        leadingIcon = Icons.Default.Category
-                    )
-
-                    SolennixTextField(
-                        value = viewModel.basePrice,
-                        onValueChange = { viewModel.basePrice = it },
-                        label = "Precio Base *",
-                        leadingIcon = Icons.Default.AttachMoney,
-                        keyboardType = KeyboardType.Decimal
-                    )
-
-                    // Active toggle
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column {
-                            Text(
-                                text = "Producto activo",
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = SolennixTheme.colors.primaryText
-                            )
-                            Text(
-                                text = "Visible en cotizaciones",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = SolennixTheme.colors.secondaryText
-                            )
-                        }
-                        Switch(
-                            checked = viewModel.isActive,
-                            onCheckedChange = { viewModel.isActive = it },
-                            colors = SwitchDefaults.colors(
-                                checkedThumbColor = SolennixTheme.colors.primary,
-                                checkedTrackColor = SolennixTheme.colors.primaryLight
-                            )
+                AdaptiveFormRow(
+                    left = {
+                        SolennixTextField(
+                            value = viewModel.name,
+                            onValueChange = { viewModel.name = it },
+                            label = "Nombre *",
+                            leadingIcon = Icons.Default.ShoppingCart
+                        )
+                    },
+                    right = {
+                        SolennixTextField(
+                            value = viewModel.category,
+                            onValueChange = { viewModel.category = it },
+                            label = "Categoría *",
+                            leadingIcon = Icons.Default.Category
                         )
                     }
-                }
+                )
+
+                AdaptiveFormRow(
+                    left = {
+                        SolennixTextField(
+                            value = viewModel.basePrice,
+                            onValueChange = { viewModel.basePrice = it },
+                            label = "Precio Base *",
+                            leadingIcon = Icons.Default.AttachMoney,
+                            keyboardType = KeyboardType.Decimal
+                        )
+                    },
+                    right = {
+                        // Active toggle
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text(
+                                    text = "Producto activo",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = SolennixTheme.colors.primaryText
+                                )
+                                Text(
+                                    text = "Visible en cotizaciones",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = SolennixTheme.colors.secondaryText
+                                )
+                            }
+                            Switch(
+                                checked = viewModel.isActive,
+                                onCheckedChange = { viewModel.isActive = it },
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = SolennixTheme.colors.primary,
+                                    checkedTrackColor = SolennixTheme.colors.primaryLight
+                                )
+                            )
+                        }
+                    }
+                )
 
                 // Recipe sections
                 RecipeSectionCard(
@@ -373,6 +313,7 @@ fun ProductFormScreen(
                     enabled = viewModel.isFormValid
                 )
                 Spacer(modifier = Modifier.height(32.dp))
+            }
             }
         }
     }

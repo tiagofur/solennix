@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.component.*
-import com.creapolis.solennix.core.designsystem.theme.LocalIsWideScreen
+import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveDetailLayout
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.Client
 import com.creapolis.solennix.core.model.DiscountType
@@ -63,8 +63,6 @@ fun EventDetailScreen(
     var paymentInitialAmount by remember { mutableStateOf<Double?>(null) }
     var showPhotoGallery by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
-
-    val isWideScreen = LocalIsWideScreen.current
 
     val windowInfoTracker = WindowInfoTracker.getOrCreate(context)
     val windowLayoutInfo by windowInfoTracker.windowLayoutInfo(context as android.app.Activity)
@@ -125,261 +123,129 @@ fun EventDetailScreen(
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    if (isWideScreen) {
-                        // Tablet: 2-column layout for info + financial sections
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            // Left column: Event info, Client info, Status
-                            Column(
-                                modifier = Modifier.weight(1f),
-                                verticalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
-                                // B. Event Info Card
-                                EventInfoCard(event = event)
+                    // Info + Financial: side by side on tablet
+                    AdaptiveDetailLayout(
+                        left = {
+                            // B. Event Info Card
+                            EventInfoCard(event = event)
 
-                                // A. Client Info Header
-                                ClientInfoHeader(
-                                    client = uiState.client,
-                                    onPhoneClick = { phone ->
-                                        val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$phone"))
-                                        context.startActivity(intent)
+                            // A. Client Info Header
+                            ClientInfoHeader(
+                                client = uiState.client,
+                                onPhoneClick = { phone ->
+                                    val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$phone"))
+                                    context.startActivity(intent)
+                                },
+                                onEmailClick = { email ->
+                                    val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:$email"))
+                                    context.startActivity(intent)
+                                }
+                            )
+
+                            // Status Change Section
+                            StatusChangeSection(
+                                currentStatus = event.status,
+                                onStatusChange = { newStatus -> viewModel.updateEventStatus(newStatus) }
+                            )
+                        },
+                        right = {
+                            // G. Financial Breakdown Card
+                            FinancialBreakdownCard(
+                                event = event,
+                                products = uiState.products,
+                                extras = uiState.extras,
+                                totalPaid = uiState.totalPaid
+                            )
+
+                            // Action Buttons
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                PremiumButton(
+                                    text = "Registrar Pago",
+                                    onClick = {
+                                        paymentInitialAmount = null
+                                        showPaymentModal = true
                                     },
-                                    onEmailClick = { email ->
-                                        val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:$email"))
-                                        context.startActivity(intent)
-                                    }
+                                    modifier = Modifier.weight(1f),
+                                    icon = Icons.Default.Add
                                 )
 
-                                // Status Change Section
-                                StatusChangeSection(
-                                    currentStatus = event.status,
-                                    onStatusChange = { newStatus -> viewModel.updateEventStatus(newStatus) }
-                                )
-                            }
-
-                            // Right column: Financial summary, Payment progress, Action buttons
-                            Column(
-                                modifier = Modifier.weight(1f),
-                                verticalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
-                                // G. Financial Breakdown Card
-                                FinancialBreakdownCard(
-                                    event = event,
-                                    products = uiState.products,
-                                    extras = uiState.extras,
-                                    totalPaid = uiState.totalPaid
-                                )
-
-                                // Action Buttons
-                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    PremiumButton(
-                                        text = "Registrar Pago",
-                                        onClick = {
-                                            paymentInitialAmount = null
-                                            showPaymentModal = true
-                                        },
-                                        modifier = Modifier.weight(1f),
-                                        icon = Icons.Default.Add
-                                    )
-
-                                    // Anticipo (deposit) quick-pay button
-                                    val depositPct = event.depositPercent
-                                    if (depositPct != null && depositPct > 0) {
-                                        val depositTarget = event.totalAmount * depositPct / 100
-                                        val depositRemaining = (depositTarget - uiState.totalPaid).coerceAtLeast(0.0)
-                                        if (depositRemaining > 0) {
-                                            OutlinedButton(
-                                                onClick = {
-                                                    paymentInitialAmount = depositRemaining
-                                                    showPaymentModal = true
-                                                },
-                                                modifier = Modifier.weight(1f),
-                                                shape = MaterialTheme.shapes.medium
-                                            ) {
-                                                Icon(
-                                                    Icons.Default.Savings,
-                                                    contentDescription = null,
-                                                    modifier = Modifier.size(18.dp)
-                                                )
-                                                Spacer(modifier = Modifier.width(4.dp))
-                                                Text("Anticipo")
-                                            }
+                                // Anticipo (deposit) quick-pay button
+                                val depositPct = event.depositPercent
+                                if (depositPct != null && depositPct > 0) {
+                                    val depositTarget = event.totalAmount * depositPct / 100
+                                    val depositRemaining = (depositTarget - uiState.totalPaid).coerceAtLeast(0.0)
+                                    if (depositRemaining > 0) {
+                                        OutlinedButton(
+                                            onClick = {
+                                                paymentInitialAmount = depositRemaining
+                                                showPaymentModal = true
+                                            },
+                                            modifier = Modifier.weight(1f),
+                                            shape = MaterialTheme.shapes.medium
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Savings,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                            Text("Anticipo")
                                         }
                                     }
                                 }
+                            }
 
-                                // H. Payments Section
-                                if (uiState.payments.isNotEmpty()) {
-                                    PaymentsSection(
-                                        uiState = uiState,
-                                        onDeletePayment = { paymentId -> viewModel.deletePayment(paymentId) }
-                                    )
-                                }
+                            // H. Payments Section
+                            if (uiState.payments.isNotEmpty()) {
+                                PaymentsSection(
+                                    uiState = uiState,
+                                    onDeletePayment = { paymentId -> viewModel.deletePayment(paymentId) }
+                                )
                             }
                         }
+                    )
 
-                        // Full-width sections below the 2-column layout
-                        // C. Products Section
-                        if (uiState.products.isNotEmpty()) {
-                            ProductsSection(
-                                products = uiState.products,
-                                productNames = uiState.productNames
-                            )
-                        }
-
-                        // D. Extras Section
-                        if (uiState.extras.isNotEmpty()) {
-                            ExtrasSection(extras = uiState.extras)
-                        }
-
-                        // E. Equipment Section
-                        if (uiState.equipment.isNotEmpty()) {
-                            EquipmentSection(equipment = uiState.equipment)
-                        }
-
-                        // F. Supplies Section
-                        if (uiState.supplies.isNotEmpty()) {
-                            SuppliesSection(supplies = uiState.supplies)
-                        }
-
-                        // I. Checklist link
-                        ChecklistButton(onClick = { onChecklistClick(event.id) })
-
-                        // J. Documents/PDFs
-                        Text("Generar Documentos", style = MaterialTheme.typography.titleMedium)
-                        DocumentActionsGrid(
-                            uiState = uiState,
-                            context = context,
-                            onSharePdf = { file ->
-                                sharePdfFile(context, file)
-                            },
-                            onChecklistClick = { onChecklistClick(event.id) },
-                            onPhotosClick = {
-                                viewModel.loadPhotos()
-                                showPhotoGallery = true
-                            }
-                        )
-                    } else {
-                        // Phone: single-column layout (original)
-                        // A. Client Info Header
-                        ClientInfoHeader(
-                            client = uiState.client,
-                            onPhoneClick = { phone ->
-                                val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$phone"))
-                                context.startActivity(intent)
-                            },
-                            onEmailClick = { email ->
-                                val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:$email"))
-                                context.startActivity(intent)
-                            }
-                        )
-
-                        // B. Event Info Card
-                        EventInfoCard(event = event)
-
-                        // Status Change Section
-                        StatusChangeSection(
-                            currentStatus = event.status,
-                            onStatusChange = { newStatus -> viewModel.updateEventStatus(newStatus) }
-                        )
-
-                        // C. Products Section
-                        if (uiState.products.isNotEmpty()) {
-                            ProductsSection(
-                                products = uiState.products,
-                                productNames = uiState.productNames
-                            )
-                        }
-
-                        // D. Extras Section
-                        if (uiState.extras.isNotEmpty()) {
-                            ExtrasSection(extras = uiState.extras)
-                        }
-
-                        // E. Equipment Section
-                        if (uiState.equipment.isNotEmpty()) {
-                            EquipmentSection(equipment = uiState.equipment)
-                        }
-
-                        // F. Supplies Section
-                        if (uiState.supplies.isNotEmpty()) {
-                            SuppliesSection(supplies = uiState.supplies)
-                        }
-
-                        // G. Financial Breakdown Card
-                        FinancialBreakdownCard(
-                            event = event,
+                    // Full-width sections below the 2-column layout
+                    // C. Products Section
+                    if (uiState.products.isNotEmpty()) {
+                        ProductsSection(
                             products = uiState.products,
-                            extras = uiState.extras,
-                            totalPaid = uiState.totalPaid
-                        )
-
-                        // Action Buttons
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            PremiumButton(
-                                text = "Registrar Pago",
-                                onClick = {
-                                    paymentInitialAmount = null
-                                    showPaymentModal = true
-                                },
-                                modifier = Modifier.weight(1f),
-                                icon = Icons.Default.Add
-                            )
-
-                            // Anticipo (deposit) quick-pay button
-                            val depositPct = event.depositPercent
-                            if (depositPct != null && depositPct > 0) {
-                                val depositTarget = event.totalAmount * depositPct / 100
-                                val depositRemaining = (depositTarget - uiState.totalPaid).coerceAtLeast(0.0)
-                                if (depositRemaining > 0) {
-                                    OutlinedButton(
-                                        onClick = {
-                                            paymentInitialAmount = depositRemaining
-                                            showPaymentModal = true
-                                        },
-                                        modifier = Modifier.weight(1f),
-                                        shape = MaterialTheme.shapes.medium
-                                    ) {
-                                        Icon(
-                                            Icons.Default.Savings,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(18.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Text("Anticipo")
-                                    }
-                                }
-                            }
-                        }
-
-                        // H. Payments Section (existing)
-                        if (uiState.payments.isNotEmpty()) {
-                            PaymentsSection(
-                                uiState = uiState,
-                                onDeletePayment = { paymentId -> viewModel.deletePayment(paymentId) }
-                            )
-                        }
-
-                        // I. Checklist link
-                        ChecklistButton(onClick = { onChecklistClick(event.id) })
-
-                        // J. Documents/PDFs (existing)
-                        Text("Generar Documentos", style = MaterialTheme.typography.titleMedium)
-                        DocumentActionsGrid(
-                            uiState = uiState,
-                            context = context,
-                            onSharePdf = { file ->
-                                sharePdfFile(context, file)
-                            },
-                            onChecklistClick = { onChecklistClick(event.id) },
-                            onPhotosClick = {
-                                viewModel.loadPhotos()
-                                showPhotoGallery = true
-                            }
+                            productNames = uiState.productNames
                         )
                     }
+
+                    // D. Extras Section
+                    if (uiState.extras.isNotEmpty()) {
+                        ExtrasSection(extras = uiState.extras)
+                    }
+
+                    // E. Equipment Section
+                    if (uiState.equipment.isNotEmpty()) {
+                        EquipmentSection(equipment = uiState.equipment)
+                    }
+
+                    // F. Supplies Section
+                    if (uiState.supplies.isNotEmpty()) {
+                        SuppliesSection(supplies = uiState.supplies)
+                    }
+
+                    // I. Checklist link
+                    ChecklistButton(onClick = { onChecklistClick(event.id) })
+
+                    // J. Documents/PDFs
+                    Text("Generar Documentos", style = MaterialTheme.typography.titleMedium)
+                    DocumentActionsGrid(
+                        uiState = uiState,
+                        context = context,
+                        onSharePdf = { file ->
+                            sharePdfFile(context, file)
+                        },
+                        onChecklistClick = { onChecklistClick(event.id) },
+                        onPhotosClick = {
+                            viewModel.loadPhotos()
+                            showPhotoGallery = true
+                        }
+                    )
 
                     // Bottom spacing
                     Spacer(modifier = Modifier.height(32.dp))
