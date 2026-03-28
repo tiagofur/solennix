@@ -315,7 +315,8 @@ fun CalendarViewContent(
                     events = uiState.events,
                     unavailableDates = uiState.unavailableDates,
                     selectedStatus = uiState.selectedStatus,
-                    isWideScreen = true
+                    isWideScreen = true,
+                    modifier = Modifier.weight(1f)
                 )
             }
 
@@ -586,7 +587,8 @@ fun CalendarGrid(
     events: List<Event>,
     unavailableDates: List<UnavailableDate> = emptyList(),
     selectedStatus: EventStatus? = null,
-    isWideScreen: Boolean = false
+    isWideScreen: Boolean = false,
+    modifier: Modifier = Modifier
 ) {
     val daysInMonth = currentMonth.lengthOfMonth()
     val firstDayOfMonth = currentMonth.atDay(1).dayOfWeek.value % 7 // Sunday = 0
@@ -621,7 +623,9 @@ fun CalendarGrid(
 
         LazyVerticalGrid(
             columns = GridCells.Fixed(7),
-            modifier = Modifier.height(if (isWideScreen) 300.dp else 280.dp)
+            modifier = modifier.then(
+                if (modifier == Modifier) Modifier.height(280.dp) else Modifier
+            )
         ) {
             items(allDays) { day ->
                 if (day != null) {
