@@ -15,6 +15,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.creapolis.solennix.core.designsystem.component.PremiumButton
 import com.creapolis.solennix.core.designsystem.component.SolennixTextField
+import com.creapolis.solennix.core.designsystem.theme.LocalIsWideScreen
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.InventoryType
 import com.creapolis.solennix.feature.inventory.viewmodel.InventoryFormViewModel
@@ -57,112 +58,232 @@ fun InventoryFormScreen(
                     .verticalScroll(scrollState)
                     .padding(16.dp)
             ) {
-                SolennixTextField(
-                    value = viewModel.ingredientName,
-                    onValueChange = { viewModel.ingredientName = it },
-                    label = "Nombre del Item *",
-                    leadingIcon = Icons.Default.Archive
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Type selector
-                Text(
-                    text = "Tipo *",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = SolennixTheme.colors.secondaryText
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                    val types = listOf(
-                        InventoryType.INGREDIENT to "Ingrediente",
-                        InventoryType.EQUIPMENT to "Equipo",
-                        InventoryType.SUPPLY to "Insumo"
-                    )
-                    types.forEachIndexed { index, (type, label) ->
-                        SegmentedButton(
-                            shape = SegmentedButtonDefaults.itemShape(index = index, count = types.size),
-                            onClick = { viewModel.type = type },
-                            selected = viewModel.type == type
-                        ) {
-                            Text(label)
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    SolennixTextField(
-                        value = viewModel.currentStock,
-                        onValueChange = { viewModel.currentStock = it },
-                        label = "Stock Actual *",
-                        keyboardType = KeyboardType.Decimal,
-                        modifier = Modifier.weight(1f)
-                    )
-                    SolennixTextField(
-                        value = viewModel.minimumStock,
-                        onValueChange = { viewModel.minimumStock = it },
-                        label = "Stock Mínimo *",
-                        keyboardType = KeyboardType.Decimal,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Unit dropdown with common options
+                // Form fields — 2-column on tablet, single column on phone
+                val isWide = LocalIsWideScreen.current
                 val commonUnits = listOf("pieza", "kg", "g", "l", "ml", "caja", "paquete")
                 var unitExpanded by remember { mutableStateOf(false) }
 
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    ExposedDropdownMenuBox(
-                        expanded = unitExpanded,
-                        onExpandedChange = { unitExpanded = it },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        OutlinedTextField(
-                            value = viewModel.unit,
-                            onValueChange = { viewModel.unit = it },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .menuAnchor(MenuAnchorType.PrimaryEditable),
-                            label = { Text("Unidad *") },
-                            leadingIcon = { Icon(Icons.Default.Scale, contentDescription = null) },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = unitExpanded) },
-                            shape = MaterialTheme.shapes.small,
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = SolennixTheme.colors.primary,
-                                focusedLabelColor = SolennixTheme.colors.primary,
-                                cursorColor = SolennixTheme.colors.primary
-                            ),
-                            singleLine = true
-                        )
-                        val filteredUnits = commonUnits.filter {
-                            it.contains(viewModel.unit, ignoreCase = true)
+                if (isWide) {
+                    // Row 1: Name + Type selector
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        Box(modifier = Modifier.weight(1f)) {
+                            SolennixTextField(
+                                value = viewModel.ingredientName,
+                                onValueChange = { viewModel.ingredientName = it },
+                                label = "Nombre del Item *",
+                                leadingIcon = Icons.Default.Archive
+                            )
                         }
-                        if (filteredUnits.isNotEmpty()) {
-                            ExposedDropdownMenu(
-                                expanded = unitExpanded,
-                                onDismissRequest = { unitExpanded = false }
-                            ) {
-                                filteredUnits.forEach { unitOption ->
-                                    DropdownMenuItem(
-                                        text = { Text(unitOption) },
-                                        onClick = {
-                                            viewModel.unit = unitOption
-                                            unitExpanded = false
-                                        }
+                        Box(modifier = Modifier.weight(1f)) {
+                            Column {
+                                Text(
+                                    text = "Tipo *",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = SolennixTheme.colors.secondaryText
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                                    val types = listOf(
+                                        InventoryType.INGREDIENT to "Ingrediente",
+                                        InventoryType.EQUIPMENT to "Equipo",
+                                        InventoryType.SUPPLY to "Insumo"
                                     )
+                                    types.forEachIndexed { index, (type, label) ->
+                                        SegmentedButton(
+                                            shape = SegmentedButtonDefaults.itemShape(index = index, count = types.size),
+                                            onClick = { viewModel.type = type },
+                                            selected = viewModel.type == type
+                                        ) {
+                                            Text(label)
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Row 2: Current stock + Minimum stock
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        Box(modifier = Modifier.weight(1f)) {
+                            SolennixTextField(
+                                value = viewModel.currentStock,
+                                onValueChange = { viewModel.currentStock = it },
+                                label = "Stock Actual *",
+                                keyboardType = KeyboardType.Decimal
+                            )
+                        }
+                        Box(modifier = Modifier.weight(1f)) {
+                            SolennixTextField(
+                                value = viewModel.minimumStock,
+                                onValueChange = { viewModel.minimumStock = it },
+                                label = "Stock Mínimo *",
+                                keyboardType = KeyboardType.Decimal
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Row 3: Unit + Cost
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        Box(modifier = Modifier.weight(1f)) {
+                            ExposedDropdownMenuBox(
+                                expanded = unitExpanded,
+                                onExpandedChange = { unitExpanded = it }
+                            ) {
+                                OutlinedTextField(
+                                    value = viewModel.unit,
+                                    onValueChange = { viewModel.unit = it },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .menuAnchor(MenuAnchorType.PrimaryEditable),
+                                    label = { Text("Unidad *") },
+                                    leadingIcon = { Icon(Icons.Default.Scale, contentDescription = null) },
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = unitExpanded) },
+                                    shape = MaterialTheme.shapes.small,
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedBorderColor = SolennixTheme.colors.primary,
+                                        focusedLabelColor = SolennixTheme.colors.primary,
+                                        cursorColor = SolennixTheme.colors.primary
+                                    ),
+                                    singleLine = true
+                                )
+                                val filteredUnits = commonUnits.filter {
+                                    it.contains(viewModel.unit, ignoreCase = true)
+                                }
+                                if (filteredUnits.isNotEmpty()) {
+                                    ExposedDropdownMenu(
+                                        expanded = unitExpanded,
+                                        onDismissRequest = { unitExpanded = false }
+                                    ) {
+                                        filteredUnits.forEach { unitOption ->
+                                            DropdownMenuItem(
+                                                text = { Text(unitOption) },
+                                                onClick = {
+                                                    viewModel.unit = unitOption
+                                                    unitExpanded = false
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        Box(modifier = Modifier.weight(1f)) {
+                            SolennixTextField(
+                                value = viewModel.unitCost,
+                                onValueChange = { viewModel.unitCost = it },
+                                label = "Costo Unitario",
+                                leadingIcon = Icons.Default.AttachMoney,
+                                keyboardType = KeyboardType.Decimal
+                            )
+                        }
+                    }
+                } else {
+                    // Phone: single-column layout
                     SolennixTextField(
-                        value = viewModel.unitCost,
-                        onValueChange = { viewModel.unitCost = it },
-                        label = "Costo Unitario",
-                        leadingIcon = Icons.Default.AttachMoney,
-                        keyboardType = KeyboardType.Decimal,
-                        modifier = Modifier.weight(1f)
+                        value = viewModel.ingredientName,
+                        onValueChange = { viewModel.ingredientName = it },
+                        label = "Nombre del Item *",
+                        leadingIcon = Icons.Default.Archive
                     )
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Type selector
+                    Text(
+                        text = "Tipo *",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = SolennixTheme.colors.secondaryText
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                        val types = listOf(
+                            InventoryType.INGREDIENT to "Ingrediente",
+                            InventoryType.EQUIPMENT to "Equipo",
+                            InventoryType.SUPPLY to "Insumo"
+                        )
+                        types.forEachIndexed { index, (type, label) ->
+                            SegmentedButton(
+                                shape = SegmentedButtonDefaults.itemShape(index = index, count = types.size),
+                                onClick = { viewModel.type = type },
+                                selected = viewModel.type == type
+                            ) {
+                                Text(label)
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        SolennixTextField(
+                            value = viewModel.currentStock,
+                            onValueChange = { viewModel.currentStock = it },
+                            label = "Stock Actual *",
+                            keyboardType = KeyboardType.Decimal,
+                            modifier = Modifier.weight(1f)
+                        )
+                        SolennixTextField(
+                            value = viewModel.minimumStock,
+                            onValueChange = { viewModel.minimumStock = it },
+                            label = "Stock Mínimo *",
+                            keyboardType = KeyboardType.Decimal,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        ExposedDropdownMenuBox(
+                            expanded = unitExpanded,
+                            onExpandedChange = { unitExpanded = it },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            OutlinedTextField(
+                                value = viewModel.unit,
+                                onValueChange = { viewModel.unit = it },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .menuAnchor(MenuAnchorType.PrimaryEditable),
+                                label = { Text("Unidad *") },
+                                leadingIcon = { Icon(Icons.Default.Scale, contentDescription = null) },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = unitExpanded) },
+                                shape = MaterialTheme.shapes.small,
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = SolennixTheme.colors.primary,
+                                    focusedLabelColor = SolennixTheme.colors.primary,
+                                    cursorColor = SolennixTheme.colors.primary
+                                ),
+                                singleLine = true
+                            )
+                            val filteredUnits = commonUnits.filter {
+                                it.contains(viewModel.unit, ignoreCase = true)
+                            }
+                            if (filteredUnits.isNotEmpty()) {
+                                ExposedDropdownMenu(
+                                    expanded = unitExpanded,
+                                    onDismissRequest = { unitExpanded = false }
+                                ) {
+                                    filteredUnits.forEach { unitOption ->
+                                        DropdownMenuItem(
+                                            text = { Text(unitOption) },
+                                            onClick = {
+                                                viewModel.unit = unitOption
+                                                unitExpanded = false
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        SolennixTextField(
+                            value = viewModel.unitCost,
+                            onValueChange = { viewModel.unitCost = it },
+                            label = "Costo Unitario",
+                            leadingIcon = Icons.Default.AttachMoney,
+                            keyboardType = KeyboardType.Decimal,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
                 }
                 Spacer(modifier = Modifier.height(32.dp))
 
