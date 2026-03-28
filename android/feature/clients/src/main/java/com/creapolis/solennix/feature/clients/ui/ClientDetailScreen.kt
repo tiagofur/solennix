@@ -119,7 +119,7 @@ fun ClientDetailScreen(
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
-                            shape = MaterialTheme.shapes.large
+                            shape = MaterialTheme.shapes.medium
                         ) {
                             Column(modifier = Modifier.padding(20.dp)) {
                                 Text(text = "Informacion de Contacto", style = MaterialTheme.typography.titleMedium, color = SolennixTheme.colors.primaryText)
@@ -145,7 +145,7 @@ fun ClientDetailScreen(
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
                                 colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
-                                shape = MaterialTheme.shapes.large
+                                shape = MaterialTheme.shapes.medium
                             ) {
                                 Column(modifier = Modifier.padding(20.dp)) {
                                     Text(text = "Notas", style = MaterialTheme.typography.titleMedium, color = SolennixTheme.colors.primaryText)

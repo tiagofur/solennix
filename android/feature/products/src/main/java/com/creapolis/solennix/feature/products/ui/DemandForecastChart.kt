@@ -51,7 +51,7 @@ fun DemandForecastChart(
 
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = colors.card),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
@@ -279,7 +279,7 @@ private fun DemandEventRow(
     val revenue = if (point.unitPrice > 0) point.revenue else point.quantity * basePrice
 
     Surface(
-        shape = RoundedCornerShape(12.dp),
+        shape = MaterialTheme.shapes.medium,
         color = bgColor,
         modifier = Modifier.fillMaxWidth()
     ) {

@@ -280,7 +280,7 @@ private fun InventoryKpiCard(
 ) {
     Card(
         modifier = modifier,
-        shape = RoundedCornerShape(16.dp),
+        shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
@@ -327,7 +327,7 @@ private fun SmartStockAlert(
     }
 
     Surface(
-        shape = RoundedCornerShape(16.dp),
+        shape = MaterialTheme.shapes.medium,
         color = bgColor as Color,
         border = androidx.compose.foundation.BorderStroke(1.dp, borderColor as Color),
         modifier = Modifier.fillMaxWidth()
@@ -376,7 +376,7 @@ private fun StockHealthBars(
     val maxBar = maxOf(currentStock, minimumStock, demand7Days, 1.0)
 
     Card(
-        shape = RoundedCornerShape(16.dp),
+        shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = colors.card),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
@@ -444,7 +444,7 @@ private fun DemandForecastCard(
     colors: com.creapolis.solennix.core.designsystem.theme.SolennixColorScheme
 ) {
     Card(
-        shape = RoundedCornerShape(16.dp),
+        shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = colors.card),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {

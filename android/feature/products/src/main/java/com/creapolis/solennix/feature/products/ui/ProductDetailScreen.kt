@@ -319,7 +319,7 @@ private fun KpiCard(
 ) {
     Card(
         modifier = modifier,
-        shape = RoundedCornerShape(16.dp),
+        shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
@@ -375,7 +375,7 @@ private fun SmartAlertSection(
     val borderColor = if (isHighDemand) colors.primary.copy(alpha = 0.2f) else colors.divider
 
     Surface(
-        shape = RoundedCornerShape(16.dp),
+        shape = MaterialTheme.shapes.medium,
         color = bgColor,
         border = androidx.compose.foundation.BorderStroke(1.dp, borderColor),
         modifier = Modifier.fillMaxWidth()
@@ -429,7 +429,7 @@ private fun GeneralInfoCard(
     colors: com.creapolis.solennix.core.designsystem.theme.SolennixColorScheme
 ) {
     Card(
-        shape = RoundedCornerShape(16.dp),
+        shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = colors.card),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
@@ -486,7 +486,7 @@ private fun CompositionSection(
     colors: com.creapolis.solennix.core.designsystem.theme.SolennixColorScheme
 ) {
     Card(
-        shape = RoundedCornerShape(16.dp),
+        shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = colors.card),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {

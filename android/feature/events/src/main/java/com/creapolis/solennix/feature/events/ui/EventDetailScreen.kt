@@ -332,7 +332,7 @@ private fun ClientInfoHeader(
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
-        shape = MaterialTheme.shapes.large
+        shape = MaterialTheme.shapes.medium
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -416,7 +416,7 @@ private fun EventInfoCard(event: com.creapolis.solennix.core.model.Event) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
-        shape = MaterialTheme.shapes.large
+        shape = MaterialTheme.shapes.medium
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -561,7 +561,7 @@ private fun ProductsSection(
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
-        shape = MaterialTheme.shapes.large
+        shape = MaterialTheme.shapes.medium
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Row(
@@ -679,7 +679,7 @@ private fun ExtrasSection(extras: List<EventExtra>) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
-        shape = MaterialTheme.shapes.large
+        shape = MaterialTheme.shapes.medium
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Row(
@@ -773,7 +773,7 @@ private fun EquipmentSection(equipment: List<EventEquipment>) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
-        shape = MaterialTheme.shapes.large
+        shape = MaterialTheme.shapes.medium
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Row(
@@ -852,7 +852,7 @@ private fun SuppliesSection(supplies: List<EventSupply>) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
-        shape = MaterialTheme.shapes.large
+        shape = MaterialTheme.shapes.medium
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Row(
@@ -941,7 +941,7 @@ private fun FinancialBreakdownCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
-        shape = MaterialTheme.shapes.large
+        shape = MaterialTheme.shapes.medium
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1124,7 +1124,8 @@ private fun PaymentsSection(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 4.dp),
-            colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.surface)
+            colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.surface),
+            shape = MaterialTheme.shapes.medium
         ) {
             Row(
                 modifier = Modifier.padding(16.dp).fillMaxWidth(),
@@ -1232,7 +1233,8 @@ fun StatusChangeSection(
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card)
+        colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
+        shape = MaterialTheme.shapes.medium
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text("Estado del Evento", style = MaterialTheme.typography.titleMedium)
