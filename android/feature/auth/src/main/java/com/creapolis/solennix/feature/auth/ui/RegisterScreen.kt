@@ -106,100 +106,45 @@ private fun RegisterFormContent(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // On wide screens, show name + email side by side
-            if (isWideScreen) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Box(modifier = Modifier.weight(1f)) {
-                        SolennixTextField(
-                            value = viewModel.registerName,
-                            onValueChange = { viewModel.registerName = it },
-                            label = "Nombre Completo",
-                            placeholder = "Juan Perez",
-                            leadingIcon = Icons.Default.Person
-                        )
-                    }
-                    Box(modifier = Modifier.weight(1f)) {
-                        SolennixTextField(
-                            value = viewModel.registerEmail,
-                            onValueChange = { viewModel.registerEmail = it },
-                            label = "Correo Electronico",
-                            placeholder = "ejemplo@correo.com",
-                            leadingIcon = Icons.Default.Email,
-                            keyboardType = KeyboardType.Email
-                        )
-                    }
-                }
+            SolennixTextField(
+                value = viewModel.registerName,
+                onValueChange = { viewModel.registerName = it },
+                label = "Nombre Completo",
+                placeholder = "Juan Perez",
+                leadingIcon = Icons.Default.Person
+            )
 
-                Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Box(modifier = Modifier.weight(1f)) {
-                        SolennixTextField(
-                            value = viewModel.registerPassword,
-                            onValueChange = { viewModel.registerPassword = it },
-                            label = "Contrasena",
-                            leadingIcon = Icons.Default.Lock,
-                            isPassword = true
-                        )
-                    }
-                    Box(modifier = Modifier.weight(1f)) {
-                        SolennixTextField(
-                            value = viewModel.registerConfirmPassword,
-                            onValueChange = { viewModel.registerConfirmPassword = it },
-                            label = "Confirmar Contrasena",
-                            leadingIcon = Icons.Default.Lock,
-                            isPassword = true,
-                            imeAction = ImeAction.Done
-                        )
-                    }
-                }
-            } else {
-                SolennixTextField(
-                    value = viewModel.registerName,
-                    onValueChange = { viewModel.registerName = it },
-                    label = "Nombre Completo",
-                    placeholder = "Juan Perez",
-                    leadingIcon = Icons.Default.Person
-                )
+            SolennixTextField(
+                value = viewModel.registerEmail,
+                onValueChange = { viewModel.registerEmail = it },
+                label = "Correo Electronico",
+                placeholder = "ejemplo@correo.com",
+                leadingIcon = Icons.Default.Email,
+                keyboardType = KeyboardType.Email
+            )
 
-                Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-                SolennixTextField(
-                    value = viewModel.registerEmail,
-                    onValueChange = { viewModel.registerEmail = it },
-                    label = "Correo Electronico",
-                    placeholder = "ejemplo@correo.com",
-                    leadingIcon = Icons.Default.Email,
-                    keyboardType = KeyboardType.Email
-                )
+            SolennixTextField(
+                value = viewModel.registerPassword,
+                onValueChange = { viewModel.registerPassword = it },
+                label = "Contrasena",
+                leadingIcon = Icons.Default.Lock,
+                isPassword = true
+            )
 
-                Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-                SolennixTextField(
-                    value = viewModel.registerPassword,
-                    onValueChange = { viewModel.registerPassword = it },
-                    label = "Contrasena",
-                    leadingIcon = Icons.Default.Lock,
-                    isPassword = true
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                SolennixTextField(
-                    value = viewModel.registerConfirmPassword,
-                    onValueChange = { viewModel.registerConfirmPassword = it },
-                    label = "Confirmar Contrasena",
-                    leadingIcon = Icons.Default.Lock,
-                    isPassword = true,
-                    imeAction = ImeAction.Done
-                )
-            }
+            SolennixTextField(
+                value = viewModel.registerConfirmPassword,
+                onValueChange = { viewModel.registerConfirmPassword = it },
+                label = "Confirmar Contrasena",
+                leadingIcon = Icons.Default.Lock,
+                isPassword = true,
+                imeAction = ImeAction.Done
+            )
 
             Spacer(modifier = Modifier.height(32.dp))
 

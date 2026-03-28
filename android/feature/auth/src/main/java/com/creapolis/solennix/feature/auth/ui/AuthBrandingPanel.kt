@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.creapolis.solennix.core.designsystem.theme.SolennixGold
 import com.creapolis.solennix.core.designsystem.theme.SolennixGoldDark
+import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.designsystem.theme.SolennixTitle
 
 /**
@@ -145,7 +146,8 @@ fun AdaptiveAuthLayout(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .weight(1f),
+                    .weight(1f)
+                    .background(SolennixTheme.colors.background),
                 contentAlignment = Alignment.Center
             ) {
                 Box(modifier = Modifier.widthIn(max = 480.dp)) {
