@@ -72,8 +72,6 @@ struct CompactTabLayout: View {
             .tag(Tab.more)
         }
         .tint(SolennixColors.tabBarActive)
-        .toolbarBackground(SolennixColors.tabBarBackground, for: .tabBar)
-        .toolbarBackground(.visible, for: .tabBar)
         .onChange(of: pendingSpotlightRoute) { _, newRoute in
             guard let route = newRoute else { return }
             // Navegar desde la pestaña Home para rutas de Spotlight

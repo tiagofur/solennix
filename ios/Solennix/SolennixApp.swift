@@ -69,6 +69,13 @@ struct SolennixApp: App {
         // Configure Google Sign-In
         GIDSignIn.sharedInstance.configuration = GIDConfiguration(clientID: "43149798972-0nn6jdl55fau93m4knb6pts1k2eikan8.apps.googleusercontent.com")
 
+        // Configure Tab Bar appearance globally
+        let tabBarAppearance = UITabBarAppearance()
+        tabBarAppearance.configureWithOpaqueBackground()
+        tabBarAppearance.backgroundColor = UIColor(SolennixColors.tabBarBackground)
+        UITabBar.appearance().standardAppearance = tabBarAppearance
+        UITabBar.appearance().scrollEdgeAppearance = tabBarAppearance
+
         // Configure TipKit for Onboarding
         TipsHelper.configure()
 
