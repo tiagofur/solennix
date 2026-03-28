@@ -21,7 +21,14 @@ packages:
 settings:
   base:
     SWIFT_VERSION: "5.9"
-    DEVELOPMENT_TEAM: ""
+    DEVELOPMENT_TEAM: "T5SKULSP2M"
+  configs:
+    Debug:
+      CODE_SIGN_IDENTITY: "Apple Development"
+      CODE_SIGN_STYLE: Automatic
+    Release:
+      CODE_SIGN_IDENTITY: "Apple Distribution"
+      CODE_SIGN_STYLE: Automatic
 
 targets:
   Solennix:
@@ -33,6 +40,8 @@ targets:
       - path: SolennixIntents
         excludes:
           - "Info.plist"
+    resources:
+      - path: Solennix/PrivacyInfo.xcprivacy
     entitlements:
       path: Solennix/Solennix.entitlements
       properties:
