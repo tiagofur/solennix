@@ -9,6 +9,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import androidx.compose.ui.unit.dp
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
@@ -84,9 +85,9 @@ fun GoogleSignInButton(
             .height(50.dp),
         shape = MaterialTheme.shapes.small,
         colors = ButtonDefaults.outlinedButtonColors(
-            contentColor = Color.Black
+            contentColor = SolennixTheme.colors.primaryText
         ),
-        border = BorderStroke(1.dp, Color.LightGray),
+        border = BorderStroke(1.dp, SolennixTheme.colors.divider),
         enabled = !isLoading
     ) {
         if (isLoading) {
