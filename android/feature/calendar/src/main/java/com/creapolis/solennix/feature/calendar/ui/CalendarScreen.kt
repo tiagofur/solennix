@@ -294,12 +294,13 @@ fun CalendarViewContent(
     val dateFormatter = DateTimeFormatter.ofPattern("EEEE d 'de' MMMM", Locale("es", "MX"))
 
     if (isWideScreen) {
-        // Tablet: vertical stack with constrained width and scroll
-        AdaptiveCenteredContent(maxWidth = 900.dp) {
+        // Tablet: compact calendar (left, max 480dp) + events panel (right)
+        Row(modifier = Modifier.fillMaxSize()) {
+            // Left panel: Calendar — constrained width so cells stay small
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
+                    .widthIn(max = 480.dp)
+                    .fillMaxHeight()
             ) {
                 CalendarHeader(
                     currentMonth = uiState.currentMonth,
@@ -317,13 +318,17 @@ fun CalendarViewContent(
                     selectedStatus = uiState.selectedStatus,
                     isWideScreen = true
                 )
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Selected day's events
+            // Right panel: Selected day's events — takes remaining space
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+            ) {
                 Text(
                     text = uiState.selectedDate.format(dateFormatter).replaceFirstChar { it.uppercase() },
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp),
                     style = MaterialTheme.typography.titleMedium,
                     color = SolennixTheme.colors.primaryText
                 )
@@ -332,7 +337,7 @@ fun CalendarViewContent(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 32.dp),
+                            .weight(1f),
                         contentAlignment = Alignment.Center
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -350,12 +355,15 @@ fun CalendarViewContent(
                         }
                     }
                 } else {
-                    uiState.eventsForSelectedDate.forEach { event ->
-                        CalendarEventItem(event = event, onClick = { onEventClick(event.id) })
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(bottom = 16.dp)
+                    ) {
+                        items(uiState.eventsForSelectedDate) { event ->
+                            CalendarEventItem(event = event, onClick = { onEventClick(event.id) })
+                        }
                     }
                 }
-
-                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     } else {
@@ -614,7 +622,7 @@ fun CalendarGrid(
 
         LazyVerticalGrid(
             columns = GridCells.Fixed(7),
-            modifier = Modifier.height(if (isWideScreen) 340.dp else 280.dp)
+            modifier = Modifier.height(if (isWideScreen) 300.dp else 280.dp)
         ) {
             items(allDays) { day ->
                 if (day != null) {
