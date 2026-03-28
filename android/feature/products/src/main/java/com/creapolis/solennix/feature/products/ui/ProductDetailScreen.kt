@@ -19,6 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import com.creapolis.solennix.core.designsystem.theme.LocalIsWideScreen
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.InventoryType
 import com.creapolis.solennix.core.model.ProductIngredient
@@ -107,6 +108,7 @@ fun ProductDetailScreen(
             val scrollState = rememberScrollState()
             val demandData by viewModel.demandData.collectAsStateWithLifecycle()
             val colors = SolennixTheme.colors
+            val isWideScreen = LocalIsWideScreen.current
 
             Column(
                 modifier = Modifier
@@ -114,187 +116,389 @@ fun ProductDetailScreen(
                     .padding(padding)
                     .verticalScroll(scrollState)
             ) {
-                // Product image
-                if (product.imageUrl != null) {
-                    AsyncImage(
-                        model = UrlResolver.resolve(product.imageUrl),
-                        contentDescription = product.name,
+                if (isWideScreen) {
+                    // Tablet: 2-column layout
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(250.dp),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(250.dp),
-                        contentAlignment = Alignment.Center
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Text(
-                            text = product.name.take(1).uppercase(),
-                            style = MaterialTheme.typography.displayLarge,
-                            color = colors.primary
-                        )
-                    }
-                }
-
-                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    // Name + Category
-                    Text(
-                        text = product.name,
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = colors.primaryText
-                    )
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Surface(
-                            shape = RoundedCornerShape(16.dp),
-                            color = colors.primary.copy(alpha = 0.1f)
+                        // Left column: Product info
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
+                            // Product image
+                            if (product.imageUrl != null) {
+                                AsyncImage(
+                                    model = UrlResolver.resolve(product.imageUrl),
+                                    contentDescription = product.name,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(250.dp),
+                                    contentScale = ContentScale.Crop
+                                )
+                            } else {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(250.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = product.name.take(1).uppercase(),
+                                        style = MaterialTheme.typography.displayLarge,
+                                        color = colors.primary
+                                    )
+                                }
+                            }
+
+                            // Name + Category
                             Text(
-                                text = product.category,
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = colors.primary,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                                text = product.name,
+                                style = MaterialTheme.typography.headlineMedium,
+                                color = colors.primaryText
+                            )
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Surface(
+                                    shape = RoundedCornerShape(16.dp),
+                                    color = colors.primary.copy(alpha = 0.1f)
+                                ) {
+                                    Text(
+                                        text = product.category,
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = colors.primary,
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                                    )
+                                }
+                                if (!product.isActive) {
+                                    Surface(
+                                        shape = RoundedCornerShape(16.dp),
+                                        color = colors.error.copy(alpha = 0.1f)
+                                    ) {
+                                        Text(
+                                            text = "Inactivo",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = colors.error,
+                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                                        )
+                                    }
+                                }
+                            }
+
+                            // KPI Cards
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                KpiCard(
+                                    icon = Icons.Default.AttachMoney,
+                                    iconColor = colors.primary,
+                                    label = "Precio Base",
+                                    value = product.basePrice.asMXN(),
+                                    subtitle = "por unidad",
+                                    modifier = Modifier.weight(1f)
+                                )
+                                KpiCard(
+                                    icon = Icons.Default.Layers,
+                                    iconColor = colors.secondaryText,
+                                    label = "Costo / Unidad",
+                                    value = uiState.unitCost.asMXN(),
+                                    subtitle = "en insumos",
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                val marginColor = when {
+                                    uiState.margin >= 50 -> Color(0xFF4CAF50)
+                                    uiState.margin >= 20 -> colors.primaryText
+                                    else -> Color(0xFFFF9800)
+                                }
+                                KpiCard(
+                                    icon = Icons.Default.TrendingUp,
+                                    iconColor = marginColor,
+                                    label = "Margen Est.",
+                                    value = "%.1f%%".format(uiState.margin),
+                                    subtitle = "utilidad estimada",
+                                    valueColor = marginColor,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                KpiCard(
+                                    icon = Icons.Default.CalendarMonth,
+                                    iconColor = colors.primary,
+                                    label = "Próx. Eventos",
+                                    value = "${demandData.size}",
+                                    subtitle = "confirmados",
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+
+                            // Smart Alert
+                            SmartAlertSection(
+                                demandData = demandData,
+                                basePrice = product.basePrice,
+                                colors = colors
+                            )
+
+                            // General Info Card
+                            GeneralInfoCard(
+                                category = product.category,
+                                basePrice = product.basePrice,
+                                ingredientCount = uiState.ingredientItems.size,
+                                supplyCount = uiState.supplyItems.size,
+                                equipmentCount = uiState.equipmentItems.size,
+                                colors = colors
                             )
                         }
-                        if (!product.isActive) {
+
+                        // Right column: Ingredients, cost breakdown, margin, demand
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            // Composition / Ingredients table
+                            if (uiState.ingredientItems.isNotEmpty()) {
+                                CompositionSection(
+                                    title = "Composición / Insumos",
+                                    icon = Icons.Default.Layers,
+                                    iconColor = colors.primary,
+                                    items = uiState.ingredientItems,
+                                    showCost = true,
+                                    totalLabel = "Costo Total por Unidad",
+                                    totalValue = uiState.unitCost,
+                                    colors = colors
+                                )
+                            }
+
+                            // Per-event supplies table
+                            if (uiState.supplyItems.isNotEmpty()) {
+                                CompositionSection(
+                                    title = "Insumos por Evento",
+                                    icon = Icons.Default.LocalGasStation,
+                                    iconColor = Color(0xFFFF9800),
+                                    items = uiState.supplyItems,
+                                    showCost = true,
+                                    badge = "Costo fijo por evento",
+                                    badgeColor = Color(0xFFFF9800),
+                                    totalLabel = "Costo por Evento",
+                                    totalValue = uiState.perEventCost,
+                                    totalValueColor = Color(0xFFFF9800),
+                                    colors = colors
+                                )
+                            }
+
+                            // Equipment table
+                            if (uiState.equipmentItems.isNotEmpty()) {
+                                CompositionSection(
+                                    title = "Equipo Necesario",
+                                    icon = Icons.Default.Build,
+                                    iconColor = Color(0xFF2196F3),
+                                    items = uiState.equipmentItems,
+                                    showCost = false,
+                                    badge = "Sin costo - Reutilizable",
+                                    badgeColor = Color(0xFF2196F3),
+                                    colors = colors
+                                )
+                            }
+
+                            // Demand Forecast Chart
+                            DemandForecastChart(
+                                dataPoints = demandData,
+                                productName = product.name,
+                                basePrice = product.basePrice
+                            )
+                        }
+                    }
+                } else {
+                    // Phone: single-column layout (unchanged)
+                    // Product image
+                    if (product.imageUrl != null) {
+                        AsyncImage(
+                            model = UrlResolver.resolve(product.imageUrl),
+                            contentDescription = product.name,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(250.dp),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(250.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = product.name.take(1).uppercase(),
+                                style = MaterialTheme.typography.displayLarge,
+                                color = colors.primary
+                            )
+                        }
+                    }
+
+                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        // Name + Category
+                        Text(
+                            text = product.name,
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = colors.primaryText
+                        )
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Surface(
                                 shape = RoundedCornerShape(16.dp),
-                                color = colors.error.copy(alpha = 0.1f)
+                                color = colors.primary.copy(alpha = 0.1f)
                             ) {
                                 Text(
-                                    text = "Inactivo",
+                                    text = product.category,
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = colors.error,
+                                    color = colors.primary,
                                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                                 )
                             }
+                            if (!product.isActive) {
+                                Surface(
+                                    shape = RoundedCornerShape(16.dp),
+                                    color = colors.error.copy(alpha = 0.1f)
+                                ) {
+                                    Text(
+                                        text = "Inactivo",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = colors.error,
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                                    )
+                                }
+                            }
                         }
-                    }
 
-                    // KPI Cards
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        KpiCard(
-                            icon = Icons.Default.AttachMoney,
-                            iconColor = colors.primary,
-                            label = "Precio Base",
-                            value = product.basePrice.asMXN(),
-                            subtitle = "por unidad",
-                            modifier = Modifier.weight(1f)
-                        )
-                        KpiCard(
-                            icon = Icons.Default.Layers,
-                            iconColor = colors.secondaryText,
-                            label = "Costo / Unidad",
-                            value = uiState.unitCost.asMXN(),
-                            subtitle = "en insumos",
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        val marginColor = when {
-                            uiState.margin >= 50 -> Color(0xFF4CAF50) // success
-                            uiState.margin >= 20 -> colors.primaryText
-                            else -> Color(0xFFFF9800) // warning
+                        // KPI Cards
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            KpiCard(
+                                icon = Icons.Default.AttachMoney,
+                                iconColor = colors.primary,
+                                label = "Precio Base",
+                                value = product.basePrice.asMXN(),
+                                subtitle = "por unidad",
+                                modifier = Modifier.weight(1f)
+                            )
+                            KpiCard(
+                                icon = Icons.Default.Layers,
+                                iconColor = colors.secondaryText,
+                                label = "Costo / Unidad",
+                                value = uiState.unitCost.asMXN(),
+                                subtitle = "en insumos",
+                                modifier = Modifier.weight(1f)
+                            )
                         }
-                        KpiCard(
-                            icon = Icons.Default.TrendingUp,
-                            iconColor = marginColor,
-                            label = "Margen Est.",
-                            value = "%.1f%%".format(uiState.margin),
-                            subtitle = "utilidad estimada",
-                            valueColor = marginColor,
-                            modifier = Modifier.weight(1f)
-                        )
-                        KpiCard(
-                            icon = Icons.Default.CalendarMonth,
-                            iconColor = colors.primary,
-                            label = "Próx. Eventos",
-                            value = "${demandData.size}",
-                            subtitle = "confirmados",
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            val marginColor = when {
+                                uiState.margin >= 50 -> Color(0xFF4CAF50) // success
+                                uiState.margin >= 20 -> colors.primaryText
+                                else -> Color(0xFFFF9800) // warning
+                            }
+                            KpiCard(
+                                icon = Icons.Default.TrendingUp,
+                                iconColor = marginColor,
+                                label = "Margen Est.",
+                                value = "%.1f%%".format(uiState.margin),
+                                subtitle = "utilidad estimada",
+                                valueColor = marginColor,
+                                modifier = Modifier.weight(1f)
+                            )
+                            KpiCard(
+                                icon = Icons.Default.CalendarMonth,
+                                iconColor = colors.primary,
+                                label = "Próx. Eventos",
+                                value = "${demandData.size}",
+                                subtitle = "confirmados",
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
 
-                    // Smart Alert
-                    SmartAlertSection(
-                        demandData = demandData,
-                        basePrice = product.basePrice,
-                        colors = colors
-                    )
-
-                    // General Info Card
-                    GeneralInfoCard(
-                        category = product.category,
-                        basePrice = product.basePrice,
-                        ingredientCount = uiState.ingredientItems.size,
-                        supplyCount = uiState.supplyItems.size,
-                        equipmentCount = uiState.equipmentItems.size,
-                        colors = colors
-                    )
-
-                    // Composition / Ingredients table
-                    if (uiState.ingredientItems.isNotEmpty()) {
-                        CompositionSection(
-                            title = "Composición / Insumos",
-                            icon = Icons.Default.Layers,
-                            iconColor = colors.primary,
-                            items = uiState.ingredientItems,
-                            showCost = true,
-                            totalLabel = "Costo Total por Unidad",
-                            totalValue = uiState.unitCost,
+                        // Smart Alert
+                        SmartAlertSection(
+                            demandData = demandData,
+                            basePrice = product.basePrice,
                             colors = colors
                         )
-                    }
 
-                    // Per-event supplies table
-                    if (uiState.supplyItems.isNotEmpty()) {
-                        CompositionSection(
-                            title = "Insumos por Evento",
-                            icon = Icons.Default.LocalGasStation,
-                            iconColor = Color(0xFFFF9800),
-                            items = uiState.supplyItems,
-                            showCost = true,
-                            badge = "Costo fijo por evento",
-                            badgeColor = Color(0xFFFF9800),
-                            totalLabel = "Costo por Evento",
-                            totalValue = uiState.perEventCost,
-                            totalValueColor = Color(0xFFFF9800),
+                        // General Info Card
+                        GeneralInfoCard(
+                            category = product.category,
+                            basePrice = product.basePrice,
+                            ingredientCount = uiState.ingredientItems.size,
+                            supplyCount = uiState.supplyItems.size,
+                            equipmentCount = uiState.equipmentItems.size,
                             colors = colors
                         )
-                    }
 
-                    // Equipment table
-                    if (uiState.equipmentItems.isNotEmpty()) {
-                        CompositionSection(
-                            title = "Equipo Necesario",
-                            icon = Icons.Default.Build,
-                            iconColor = Color(0xFF2196F3),
-                            items = uiState.equipmentItems,
-                            showCost = false,
-                            badge = "Sin costo - Reutilizable",
-                            badgeColor = Color(0xFF2196F3),
-                            colors = colors
+                        // Composition / Ingredients table
+                        if (uiState.ingredientItems.isNotEmpty()) {
+                            CompositionSection(
+                                title = "Composición / Insumos",
+                                icon = Icons.Default.Layers,
+                                iconColor = colors.primary,
+                                items = uiState.ingredientItems,
+                                showCost = true,
+                                totalLabel = "Costo Total por Unidad",
+                                totalValue = uiState.unitCost,
+                                colors = colors
+                            )
+                        }
+
+                        // Per-event supplies table
+                        if (uiState.supplyItems.isNotEmpty()) {
+                            CompositionSection(
+                                title = "Insumos por Evento",
+                                icon = Icons.Default.LocalGasStation,
+                                iconColor = Color(0xFFFF9800),
+                                items = uiState.supplyItems,
+                                showCost = true,
+                                badge = "Costo fijo por evento",
+                                badgeColor = Color(0xFFFF9800),
+                                totalLabel = "Costo por Evento",
+                                totalValue = uiState.perEventCost,
+                                totalValueColor = Color(0xFFFF9800),
+                                colors = colors
+                            )
+                        }
+
+                        // Equipment table
+                        if (uiState.equipmentItems.isNotEmpty()) {
+                            CompositionSection(
+                                title = "Equipo Necesario",
+                                icon = Icons.Default.Build,
+                                iconColor = Color(0xFF2196F3),
+                                items = uiState.equipmentItems,
+                                showCost = false,
+                                badge = "Sin costo - Reutilizable",
+                                badgeColor = Color(0xFF2196F3),
+                                colors = colors
+                            )
+                        }
+
+                        // Demand Forecast Chart
+                        DemandForecastChart(
+                            dataPoints = demandData,
+                            productName = product.name,
+                            basePrice = product.basePrice
                         )
+
+                        Spacer(modifier = Modifier.height(16.dp))
                     }
-
-                    // Demand Forecast Chart
-                    DemandForecastChart(
-                        dataPoints = demandData,
-                        productName = product.name,
-                        basePrice = product.basePrice
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
                 }
             }
         }
