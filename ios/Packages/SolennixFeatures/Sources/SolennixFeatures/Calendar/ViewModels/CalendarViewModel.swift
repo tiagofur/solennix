@@ -15,32 +15,6 @@ public struct DateDay: Identifiable, Hashable {
     public let isSelected: Bool
 }
 
-/// Toggle between calendar grid and event list.
-public enum ViewMode: String, CaseIterable {
-    case calendar = "Calendario"
-    case list = "Lista"
-}
-
-/// Filter events by status.
-public enum StatusFilter: String, CaseIterable {
-    case all = "Todos"
-    case quoted = "Cotizado"
-    case confirmed = "Confirmado"
-    case completed = "Completado"
-    case cancelled = "Cancelado"
-
-    /// The corresponding `EventStatus`, if any.
-    public var eventStatus: EventStatus? {
-        switch self {
-        case .all: return nil
-        case .quoted: return .quoted
-        case .confirmed: return .confirmed
-        case .completed: return .completed
-        case .cancelled: return .cancelled
-        }
-    }
-}
-
 // MARK: - Calendar View Model
 
 @Observable
@@ -52,9 +26,6 @@ public final class CalendarViewModel {
     public var events: [Event] = []
     public var unavailableDates: [UnavailableDate] = []
     public var selectedDate: Date?
-    public var viewMode: ViewMode = .calendar
-    public var searchText: String = ""
-    public var statusFilter: StatusFilter = .all
     public var isLoading: Bool = false
     public var isBlockingDate: Bool = false
     public var errorMessage: String?
@@ -83,13 +54,6 @@ public final class CalendarViewModel {
         return f
     }()
 
-    private static let timeFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.locale = Locale(identifier: "es_MX")
-        f.dateFormat = "HH:mm"
-        return f
-    }()
-
     private static let apiDateFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateFormat = "yyyy-MM-dd"
@@ -100,7 +64,6 @@ public final class CalendarViewModel {
 
     public init(apiClient: APIClient) {
         self.apiClient = apiClient
-        // Start on the current month
         let now = Date()
         let components = Calendar.current.dateComponents([.year, .month], from: now)
         self.currentMonth = Calendar.current.date(from: components) ?? now
@@ -108,47 +71,13 @@ public final class CalendarViewModel {
 
     // MARK: - Computed Properties
 
-    /// Count of events grouped by status.
-    public var statusCounts: [EventStatus: Int] {
-        Dictionary(grouping: events, by: { $0.status }).mapValues { $0.count }
-    }
-
-    /// Total number of events (all statuses).
-    public var totalEventCount: Int {
-        events.count
-    }
-
-    /// Events matching the selected date.
+    /// Events matching the selected date, sorted by start time.
     public var eventsForSelectedDate: [Event] {
         guard let selected = selectedDate else { return [] }
         let selectedStr = Self.apiDateFormatter.string(from: selected)
         return events
             .filter { $0.eventDate == selectedStr }
             .sorted { ($0.startTime ?? "") < ($1.startTime ?? "") }
-    }
-
-    /// Events filtered by search text and status, sorted by event_date desc.
-    public var filteredEvents: [Event] {
-        var result = events
-
-        // Status filter
-        if let status = statusFilter.eventStatus {
-            result = result.filter { $0.status == status }
-        }
-
-        // Search filter: client name, service type, location
-        if !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            let query = searchText.lowercased()
-            result = result.filter { event in
-                let clientName = clientMap[event.clientId]?.name.lowercased() ?? ""
-                return clientName.contains(query)
-                    || event.serviceType.lowercased().contains(query)
-                    || (event.location?.lowercased().contains(query) ?? false)
-            }
-        }
-
-        // Sort by event_date descending
-        return result.sorted { $0.eventDate > $1.eventDate }
     }
 
     /// Array of `DateDay` structs for the current month grid, with leading
@@ -160,7 +89,6 @@ public final class CalendarViewModel {
         else { return [] }
 
         let firstWeekday = calendar.component(.weekday, from: firstOfMonth)
-        // Sunday = 1, so offset = firstWeekday - 1 (0-based, Sunday-start)
         let leadingBlanks = firstWeekday - 1
 
         let today = Date()
@@ -171,7 +99,6 @@ public final class CalendarViewModel {
 
         var days: [DateDay] = []
 
-        // Leading blank days (from previous month)
         if leadingBlanks > 0 {
             guard let lastDayPrev = calendar.date(byAdding: .day, value: -1, to: firstOfMonth) else {
                 return []
@@ -191,7 +118,6 @@ public final class CalendarViewModel {
             }
         }
 
-        // Current month days
         for day in range {
             var dayComponents = components
             dayComponents.day = day
@@ -222,7 +148,6 @@ public final class CalendarViewModel {
     public func eventDotsForDay(_ date: Date) -> [EventStatus] {
         let dateStr = Self.apiDateFormatter.string(from: date)
         let dayEvents = events.filter { $0.eventDate == dateStr }
-        // Return unique statuses, up to 3
         var seen: Set<EventStatus> = []
         var dots: [EventStatus] = []
         for event in dayEvents {
@@ -254,7 +179,6 @@ public final class CalendarViewModel {
     /// Format a time string like "14:00:00" to "14:00".
     public func formattedTime(_ time: String?) -> String? {
         guard let time else { return nil }
-        // Time comes as "HH:mm:ss" or "HH:mm" from the API
         let parts = time.split(separator: ":")
         guard parts.count >= 2 else { return time }
         return "\(parts[0]):\(parts[1])"
@@ -271,21 +195,18 @@ public final class CalendarViewModel {
 
     // MARK: - Actions
 
-    /// Navigate to the previous month.
     public func previousMonth() {
         if let newMonth = calendar.date(byAdding: .month, value: -1, to: currentMonth) {
             currentMonth = newMonth
         }
     }
 
-    /// Navigate to the next month.
     public func nextMonth() {
         if let newMonth = calendar.date(byAdding: .month, value: 1, to: currentMonth) {
             currentMonth = newMonth
         }
     }
 
-    /// Jump to today's month and select today.
     public func goToToday() {
         let now = Date()
         let components = calendar.dateComponents([.year, .month], from: now)
@@ -293,45 +214,40 @@ public final class CalendarViewModel {
         selectedDate = now
     }
 
-    /// Select a specific date.
     public func selectDate(_ date: Date) {
         selectedDate = date
     }
 
     // MARK: - Unavailable Dates
 
-    /// Check if a date falls within any unavailable date range.
     public func isDateBlocked(_ date: Date) -> Bool {
         let dateStr = Self.apiDateFormatter.string(from: date)
         return unavailableDates.contains { $0.startDate <= dateStr && dateStr <= $0.endDate }
     }
 
-    /// Return the `UnavailableDate` that covers this date, if any.
     public func unavailableDateFor(_ date: Date) -> UnavailableDate? {
         let dateStr = Self.apiDateFormatter.string(from: date)
         return unavailableDates.first { $0.startDate <= dateStr && dateStr <= $0.endDate }
     }
 
-    /// Toggle the blocked state of a date. If blocked, unblock it; if not, block it.
+    /// Block a date range, or unblock if it is already blocked.
     @MainActor
-    public func toggleDateBlock(date: Date, reason: String?) async {
+    public func toggleDateBlock(startDate: Date, endDate: Date, reason: String?) async {
         isBlockingDate = true
         do {
-            if let existing = unavailableDateFor(date) {
-                // Unblock: DELETE the unavailable date
+            if let existing = unavailableDateFor(startDate) {
                 try await apiClient.delete(Endpoint.unavailableDate(existing.id))
             } else {
-                // Block: POST a new unavailable date
-                let dateStr = Self.apiDateFormatter.string(from: date)
+                let startStr = Self.apiDateFormatter.string(from: startDate)
+                let endStr = Self.apiDateFormatter.string(from: endDate)
                 struct BlockRequest: Encodable {
                     let startDate: String
                     let endDate: String
                     let reason: String?
                 }
-                let body = BlockRequest(startDate: dateStr, endDate: dateStr, reason: reason)
+                let body = BlockRequest(startDate: startStr, endDate: endStr, reason: reason)
                 let _: UnavailableDate = try await apiClient.post(Endpoint.unavailableDates, body: body)
             }
-            // Reload unavailable dates
             await loadUnavailableDates()
         } catch {
             if let apiError = error as? APIError {
@@ -343,7 +259,23 @@ public final class CalendarViewModel {
         isBlockingDate = false
     }
 
-    /// Load unavailable dates for the visible range.
+    /// Delete a specific blocked date entry by ID.
+    @MainActor
+    public func deleteBlock(_ entry: UnavailableDate) async {
+        isBlockingDate = true
+        do {
+            try await apiClient.delete(Endpoint.unavailableDate(entry.id))
+            await loadUnavailableDates()
+        } catch {
+            if let apiError = error as? APIError {
+                errorMessage = apiError.errorDescription ?? "Error eliminando bloqueo"
+            } else {
+                errorMessage = "Error eliminando bloqueo"
+            }
+        }
+        isBlockingDate = false
+    }
+
     @MainActor
     public func loadUnavailableDates() async {
         let now = Date()
@@ -367,8 +299,6 @@ public final class CalendarViewModel {
 
     // MARK: - Data Loading
 
-    /// Load events within a 12-month window (6 months back, 6 months forward)
-    /// and the full client list for name resolution.
     @MainActor
     public func loadEvents() async {
         isLoading = true
@@ -421,7 +351,6 @@ public final class CalendarViewModel {
 
 #if DEBUG
 extension CalendarViewModel {
-    /// Create a view model with mock data for previews.
     static var preview: CalendarViewModel {
         let vm = CalendarViewModel(apiClient: APIClient())
         vm.events = [
