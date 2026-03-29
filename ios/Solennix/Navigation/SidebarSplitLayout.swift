@@ -105,15 +105,12 @@ struct SidebarSplitLayout: View {
 
     private var sidebarBrandingHeader: some View {
         HStack(spacing: 10) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(SolennixGradient.premium)
-                    .frame(width: 36, height: 36)
-
-                Image(systemName: "sparkles")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(.white)
-            }
+            Image("SolennixLogoIcon")
+                .resizable()
+                .interpolation(.high)
+                .scaledToFit()
+                .frame(width: 36, height: 36)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
 
             Text("Solennix")
                 .font(.title2)
