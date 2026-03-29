@@ -40,6 +40,8 @@ public enum SidebarSection: String, Hashable, CaseIterable {
     case dashboard
     case calendar
     case events
+    case quote
+    case quickQuote
     case clients
     case products
     case inventory
@@ -49,28 +51,32 @@ public enum SidebarSection: String, Hashable, CaseIterable {
     /// The SF Symbol icon name for this sidebar section.
     public var iconName: String {
         switch self {
-        case .dashboard: return "house.fill"
-        case .calendar:  return "calendar"
-        case .events:    return "calendar.badge.clock"
-        case .clients:   return "person.2.fill"
-        case .products:  return "shippingbox.fill"
-        case .inventory: return "archivebox.fill"
-        case .search:    return "magnifyingglass"
-        case .settings:  return "gearshape.fill"
+        case .dashboard:  return "house.fill"
+        case .calendar:   return "calendar"
+        case .events:     return "calendar.badge.clock"
+        case .quote:      return "doc.text.badge.plus"
+        case .quickQuote: return "bolt.fill"
+        case .clients:    return "person.2.fill"
+        case .products:   return "shippingbox.fill"
+        case .inventory:  return "archivebox.fill"
+        case .search:     return "magnifyingglass"
+        case .settings:   return "gearshape.fill"
         }
     }
 
     /// The localized title for this sidebar section.
     public var title: String {
         switch self {
-        case .dashboard: return "Inicio"
-        case .calendar:  return "Calendario"
-        case .events:    return "Eventos"
-        case .clients:   return "Clientes"
-        case .products:  return "Productos"
-        case .inventory: return "Inventario"
-        case .search:    return "Buscar"
-        case .settings:  return "Ajustes"
+        case .dashboard:  return "Inicio"
+        case .calendar:   return "Calendario"
+        case .events:     return "Eventos"
+        case .quote:      return "Cotización"
+        case .quickQuote: return "Cotización Rápida"
+        case .clients:    return "Clientes"
+        case .products:   return "Productos"
+        case .inventory:  return "Inventario"
+        case .search:     return "Buscar"
+        case .settings:   return "Ajustes"
         }
     }
 }
