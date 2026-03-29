@@ -124,6 +124,12 @@ class ProductListViewModel @Inject constructor(
         }
     }
 
+    fun deleteProduct(id: String) {
+        viewModelScope.launch {
+            try { productRepository.deleteProduct(id) } catch (_: Exception) {}
+        }
+    }
+
     fun refresh() {
         viewModelScope.launch {
             _isRefreshing.value = true

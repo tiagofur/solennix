@@ -191,6 +191,7 @@ fun ProductFormScreen(
                 }
 
                 // Basic info fields
+                var categoryExpanded by remember { mutableStateOf(false) }
                 AdaptiveFormRow(
                     left = {
                         SolennixTextField(
@@ -201,12 +202,47 @@ fun ProductFormScreen(
                         )
                     },
                     right = {
-                        SolennixTextField(
-                            value = viewModel.category,
-                            onValueChange = { viewModel.category = it },
-                            label = "Categoría *",
-                            leadingIcon = Icons.Default.Category
-                        )
+                        val filteredCategories = viewModel.existingCategories.filter {
+                            it.contains(viewModel.category, ignoreCase = true) && it != viewModel.category
+                        }
+                        ExposedDropdownMenuBox(
+                            expanded = categoryExpanded && filteredCategories.isNotEmpty(),
+                            onExpandedChange = { categoryExpanded = it }
+                        ) {
+                            OutlinedTextField(
+                                value = viewModel.category,
+                                onValueChange = {
+                                    viewModel.category = it
+                                    categoryExpanded = true
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .menuAnchor(MenuAnchorType.PrimaryEditable),
+                                label = { Text("Categoría *") },
+                                leadingIcon = { Icon(Icons.Default.Category, contentDescription = null) },
+                                shape = MaterialTheme.shapes.small,
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = SolennixTheme.colors.primary,
+                                    focusedLabelColor = SolennixTheme.colors.primary,
+                                    cursorColor = SolennixTheme.colors.primary
+                                ),
+                                singleLine = true
+                            )
+                            ExposedDropdownMenu(
+                                expanded = categoryExpanded && filteredCategories.isNotEmpty(),
+                                onDismissRequest = { categoryExpanded = false }
+                            ) {
+                                filteredCategories.forEach { cat ->
+                                    DropdownMenuItem(
+                                        text = { Text(cat) },
+                                        onClick = {
+                                            viewModel.category = cat
+                                            categoryExpanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
                     }
                 )
 

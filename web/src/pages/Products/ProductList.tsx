@@ -341,7 +341,7 @@ export const ProductList: React.FC = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+                      <div className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
                         <RowActionMenu items={[
                           { label: 'Ver Detalle', icon: Eye, onClick: () => navigate(`/products/${product.id}`) },
                           { label: 'Editar', icon: Edit, onClick: () => navigate(`/products/${product.id}/edit`) },

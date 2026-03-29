@@ -273,6 +273,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                     viewModel = hiltViewModel(),
                     onProductClick = { id -> navController.navigate("product_detail/$id") },
                     onAddProductClick = { navController.navigate("product_form") },
+                    onEditProduct = { id -> navController.navigate("product_form?productId=$id") },
                     onSearchClick = { navController.navigate(buildSearchRoute()) },
                     onNavigateBack = { navController.popBackStack() }
                 )
