@@ -98,6 +98,14 @@ struct CompactTabLayout: View {
             .tag(Tab.more)
         }
         .tint(SolennixColors.tabBarActive)
+        .overlay {
+            if showsFAB {
+                QuickActionsFAB(
+                    onNewEvent: { appendToCurrentPath(Route.eventForm()) },
+                    onQuickQuote: { appendToCurrentPath(Route.quickQuote) }
+                )
+            }
+        }
         .onChange(of: selectedTab) { oldTab, _ in
             resetPath(for: oldTab)
         }
@@ -110,6 +118,25 @@ struct CompactTabLayout: View {
                 homePath.append(route)
             }
             pendingSpotlightRoute = nil
+        }
+    }
+
+    /// Tabs where the FAB should be visible.
+    private var showsFAB: Bool {
+        switch selectedTab {
+        case .home, .calendar, .events, .clients: return true
+        case .more: return false
+        }
+    }
+
+    /// Pushes a route onto the currently selected tab's NavigationPath.
+    private func appendToCurrentPath(_ route: Route) {
+        switch selectedTab {
+        case .home:     homePath.append(route)
+        case .calendar: calendarPath.append(route)
+        case .events:   eventsPath.append(route)
+        case .clients:  clientsPath.append(route)
+        case .more:     morePath.append(route)
         }
     }
 
