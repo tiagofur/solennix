@@ -125,8 +125,9 @@ class DashboardViewModel @Inject constructor(
 
         val pendingQuotes = data.allEvents.count { it.status == EventStatus.QUOTED }
 
-        // Pending events: upcoming within 7 days not fully paid + past-date events still quoted/confirmed
+        // Pending events: upcoming within 7 days not fully paid + past-date events still quoted/confirmed + unconfirmed within 14 days
         val sevenDaysFromNow = now.plusDays(7)
+        val fourteenDaysFromNow = now.plusDays(14)
         val pendingEvents = mutableListOf<PendingEvent>()
 
         data.allEvents.forEach { event ->
@@ -137,17 +138,20 @@ class DashboardViewModel @Inject constructor(
                     .sumOf { it.amount }
                 val isFullyPaid = totalPaid >= event.totalAmount
 
-                // Upcoming within 7 days but not fully paid
                 if (!eventDate.isBefore(now) && !eventDate.isAfter(sevenDaysFromNow) &&
                     !isFullyPaid && event.status != EventStatus.COMPLETED && event.status != EventStatus.CANCELLED
                 ) {
                     pendingEvents.add(PendingEvent(event, "Pago pendiente"))
                 }
-                // Past date but still quoted or confirmed
                 else if (eventDate.isBefore(now) &&
                     (event.status == EventStatus.QUOTED || event.status == EventStatus.CONFIRMED)
                 ) {
                     pendingEvents.add(PendingEvent(event, "Evento vencido"))
+                }
+                else if (!eventDate.isBefore(now) && !eventDate.isAfter(fourteenDaysFromNow) &&
+                    event.status == EventStatus.QUOTED
+                ) {
+                    pendingEvents.add(PendingEvent(event, "Sin confirmar"))
                 }
             } catch (_: Exception) { }
         }
