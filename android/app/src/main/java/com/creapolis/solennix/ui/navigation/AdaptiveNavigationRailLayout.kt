@@ -228,10 +228,8 @@ fun AdaptiveNavigationRailLayout(
         // Content area with NavHost
         Scaffold(
             floatingActionButton = {
-                // QuickActionsFAB on section-level routes (except calendar, events, and settings)
-                // Events gets contextual toolbar buttons on tablet
+                // QuickActionsFAB on section-level routes (except events and settings)
                 val showQuickActions = isAtSectionLevel
-                    && currentRoute != "calendar"
                     && currentRoute != "events"
                     && currentRoute != "settings"
 
@@ -240,19 +238,6 @@ fun AdaptiveNavigationRailLayout(
                         onNewEventClick = { navController.navigate("event_form?eventId=") },
                         onQuickQuoteClick = { navController.navigate("quick_quote") }
                     )
-                }
-
-                // FAB for Calendar — Nuevo Evento (block dates is in the TopAppBar)
-                if (currentRoute == "calendar") {
-                    FloatingActionButton(
-                        onClick = { navController.navigate("event_form?eventId=") },
-                        containerColor = SolennixTheme.colors.primary,
-                        elevation = FloatingActionButtonDefaults.elevation(
-                            defaultElevation = SolennixElevation.fab
-                        )
-                    ) {
-                        Icon(Icons.Filled.Add, contentDescription = "Nuevo Evento", tint = Color.White)
-                    }
                 }
             },
             floatingActionButtonPosition = FabPosition.End

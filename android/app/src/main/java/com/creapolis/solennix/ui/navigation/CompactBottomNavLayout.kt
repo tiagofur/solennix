@@ -101,28 +101,13 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
             }
         },
         floatingActionButton = {
-            // QuickActionsFAB on Home, Events, and Clients
-            val showQuickActions = isAtTopLevel
-                && currentRoute != TopLevelDestination.MORE.route
-                && currentRoute != TopLevelDestination.CALENDAR.route
+            // QuickActionsFAB on all top-level routes except MORE
+            val showQuickActions = isAtTopLevel && currentRoute != TopLevelDestination.MORE.route
             if (showQuickActions) {
                 QuickActionsFAB(
                     onNewEventClick = { navController.navigate("event_form?eventId=") },
                     onQuickQuoteClick = { navController.navigate("quick_quote") }
                 )
-            }
-
-            // FAB for Calendar — Nuevo Evento (block dates is in the TopAppBar)
-            if (currentRoute == TopLevelDestination.CALENDAR.route) {
-                FloatingActionButton(
-                    onClick = { navController.navigate("event_form?eventId=") },
-                    containerColor = SolennixTheme.colors.primary,
-                    elevation = FloatingActionButtonDefaults.elevation(
-                        defaultElevation = SolennixElevation.fab
-                    )
-                ) {
-                    Icon(Icons.Filled.Add, contentDescription = "Nuevo Evento", tint = Color.White)
-                }
             }
         },
         floatingActionButtonPosition = FabPosition.End
