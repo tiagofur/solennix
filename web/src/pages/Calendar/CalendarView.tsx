@@ -10,6 +10,7 @@ import { UnavailableDatesModal } from "./components/UnavailableDatesModal";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Calendar,
+  CalendarDays,
   Users,
   Clock,
   MapPin,
@@ -232,8 +233,10 @@ export const CalendarView: React.FC = () => {
           <button
             type="button"
             onClick={goToToday}
-            className="inline-flex items-center justify-center px-4 py-2 border border-border text-sm font-medium rounded-xl text-text-secondary bg-card hover:bg-surface-alt shadow-sm transition-colors"
+            className="inline-flex items-center justify-center px-4 py-2 text-sm font-bold rounded-xl text-white premium-gradient shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all hover:scale-[1.02]"
+            aria-label="Ir a hoy"
           >
+            <CalendarDays className="h-4 w-4 mr-2" aria-hidden="true" />
             Hoy
           </button>
         </div>
