@@ -38,7 +38,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
+import com.creapolis.solennix.core.designsystem.component.SolennixSectionTopAppBar
 import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveCenteredContent
 import com.creapolis.solennix.core.designsystem.theme.LocalIsWideScreen
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
@@ -62,6 +62,7 @@ import java.util.*
 fun CalendarScreen(
     viewModel: CalendarViewModel,
     onEventClick: (String) -> Unit,
+    onSearchClick: () -> Unit = {},
     onBlockDatesRequested: Boolean = false,
     onBlockDatesConsumed: () -> Unit = {}
 ) {
@@ -83,8 +84,9 @@ fun CalendarScreen(
 
     Scaffold(
         topBar = {
-            SolennixTopAppBar(
-                title = { Text("Calendario") }
+            SolennixSectionTopAppBar(
+                title = "Calendario",
+                onSearchClick = onSearchClick
             )
         }
     ) { padding ->

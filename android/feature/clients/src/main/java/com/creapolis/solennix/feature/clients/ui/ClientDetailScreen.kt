@@ -31,6 +31,7 @@ fun ClientDetailScreen(
     viewModel: ClientDetailViewModel,
     onNavigateBack: () -> Unit,
     onEditClick: (String) -> Unit,
+    onSearchClick: () -> Unit = {},
     onEventClick: (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -48,6 +49,7 @@ fun ClientDetailScreen(
         topBar = {
             SolennixTopAppBar(
                 title = { Text("Detalle del Cliente") },
+                onSearchClick = onSearchClick,
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")

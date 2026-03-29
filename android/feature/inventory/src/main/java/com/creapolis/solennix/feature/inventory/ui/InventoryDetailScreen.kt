@@ -37,6 +37,7 @@ import java.util.Locale
 fun InventoryDetailScreen(
     viewModel: InventoryDetailViewModel,
     onNavigateBack: () -> Unit,
+    onSearchClick: () -> Unit = {},
     onEditClick: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -93,6 +94,7 @@ fun InventoryDetailScreen(
         topBar = {
             SolennixTopAppBar(
                 title = { Text("Detalle de Inventario") },
+                onSearchClick = onSearchClick,
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")

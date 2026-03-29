@@ -44,6 +44,7 @@ import com.creapolis.solennix.feature.clients.viewmodel.ClientFormViewModel
 @Composable
 fun ClientFormScreen(
     viewModel: ClientFormViewModel,
+    onSearchClick: () -> Unit = {},
     onNavigateBack: () -> Unit
 ) {
     val scrollState = rememberScrollState()
@@ -65,6 +66,7 @@ fun ClientFormScreen(
         topBar = {
             SolennixTopAppBar(
                 title = { Text("Cliente") },
+                onSearchClick = onSearchClick,
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")

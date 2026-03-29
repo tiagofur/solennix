@@ -45,6 +45,7 @@ import com.creapolis.solennix.feature.products.viewmodel.RecipeItem
 @Composable
 fun ProductFormScreen(
     viewModel: ProductFormViewModel,
+    onSearchClick: () -> Unit = {},
     onNavigateBack: () -> Unit
 ) {
     val scrollState = rememberScrollState()
@@ -66,6 +67,7 @@ fun ProductFormScreen(
         topBar = {
             SolennixTopAppBar(
                 title = { Text("Producto") },
+                onSearchClick = onSearchClick,
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")

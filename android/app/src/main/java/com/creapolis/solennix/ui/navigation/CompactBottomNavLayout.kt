@@ -239,6 +239,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                 CalendarScreen(
                     viewModel = hiltViewModel(),
                     onEventClick = { id -> navController.navigate("event_detail/$id") },
+                    onSearchClick = { navController.navigate(buildSearchRoute()) },
                     onBlockDatesRequested = calendarBlockDatesRequested,
                     onBlockDatesConsumed = { calendarBlockDatesRequested = false }
                 )
@@ -247,6 +248,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                 ClientListScreen(
                     viewModel = hiltViewModel(), 
                     onClientClick = { id -> navController.navigate("client_detail/$id") },
+                    onSearchClick = { navController.navigate(buildSearchRoute()) },
                     onAddClientClick = { navController.navigate("client_form") }
                 )
             }
@@ -271,6 +273,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                     viewModel = hiltViewModel(),
                     onProductClick = { id -> navController.navigate("product_detail/$id") },
                     onAddProductClick = { navController.navigate("product_form") },
+                    onSearchClick = { navController.navigate(buildSearchRoute()) },
                     onNavigateBack = { navController.popBackStack() }
                 )
             }
@@ -279,6 +282,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                 val productId = backStackEntry.arguments?.getString("productId")
                 com.creapolis.solennix.feature.products.ui.ProductDetailScreen(
                     viewModel = hiltViewModel(),
+                    onSearchClick = { navController.navigate(buildSearchRoute()) },
                     onNavigateBack = { navController.popBackStack() },
                     onEditClick = { id -> navController.navigate("product_form?productId=$id") }
                 )
@@ -288,6 +292,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                 val productId = backStackEntry.arguments?.getString("productId")
                 com.creapolis.solennix.feature.products.ui.ProductFormScreen(
                     viewModel = hiltViewModel(),
+                    onSearchClick = { navController.navigate(buildSearchRoute()) },
                     onNavigateBack = { navController.popBackStack() }
                 )
             }
@@ -296,6 +301,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                     viewModel = hiltViewModel(),
                     onItemClick = { id -> navController.navigate("inventory_detail/$id") },
                     onAddItemClick = { navController.navigate("inventory_form") },
+                    onSearchClick = { navController.navigate(buildSearchRoute()) },
                     onNavigateBack = { navController.popBackStack() }
                 )
             }
@@ -304,6 +310,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                 val itemId = backStackEntry.arguments?.getString("itemId")
                 com.creapolis.solennix.feature.inventory.ui.InventoryDetailScreen(
                     viewModel = hiltViewModel(),
+                    onSearchClick = { navController.navigate(buildSearchRoute()) },
                     onNavigateBack = { navController.popBackStack() },
                     onEditClick = { id -> navController.navigate("inventory_form?itemId=$id") }
                 )
@@ -313,6 +320,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                 val itemId = backStackEntry.arguments?.getString("itemId")
                 com.creapolis.solennix.feature.inventory.ui.InventoryFormScreen(
                     viewModel = hiltViewModel(),
+                    onSearchClick = { navController.navigate(buildSearchRoute()) },
                     onNavigateBack = { navController.popBackStack() }
                 )
             }
@@ -327,6 +335,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                     onAbout = { navController.navigate("about") },
                     onPrivacy = { navController.navigate("privacy") },
                     onTerms = { navController.navigate("terms") },
+                    onSearchClick = { navController.navigate(buildSearchRoute()) },
                     onNavigateBack = { navController.popBackStack() }
                 )
             }
@@ -404,6 +413,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                     viewModel = hiltViewModel(),
                     onNavigateBack = { navController.popBackStack() },
                     onEditClick = { id -> navController.navigate("client_form?clientId=$id") },
+                    onSearchClick = { navController.navigate(buildSearchRoute()) },
                     onEventClick = { id -> navController.navigate("event_detail/$id") }
                 )
             }
@@ -413,6 +423,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                 // Pass it to the ViewModel via SavedStateHandle, handled by Hilt
                 com.creapolis.solennix.feature.clients.ui.ClientFormScreen(
                     viewModel = hiltViewModel(),
+                    onSearchClick = { navController.navigate(buildSearchRoute()) },
                     onNavigateBack = { navController.popBackStack() }
                 )
             }
@@ -421,6 +432,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                 QuickQuoteScreen(
                     viewModel = hiltViewModel(),
                     onNavigateBack = { navController.popBackStack() },
+                    onSearchClick = { navController.navigate(buildSearchRoute()) },
                     onConvertToEvent = { navController.navigate("event_form?eventId=") }
                 )
             }
@@ -430,6 +442,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                     viewModel = hiltViewModel(),
                     onNavigateBack = { navController.popBackStack() },
                     onEditClick = { id -> navController.navigate("event_form?eventId=$id") },
+                    onSearchClick = { navController.navigate(buildSearchRoute()) },
                     onChecklistClick = { id -> navController.navigate("event_checklist/$id") }
                 )
             }
@@ -437,6 +450,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
             composable("event_checklist/{eventId}") {
                 EventChecklistScreen(
                     viewModel = hiltViewModel(),
+                    onSearchClick = { navController.navigate(buildSearchRoute()) },
                     onNavigateBack = { navController.popBackStack() }
                 )
             }
@@ -445,6 +459,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                 val eventId = backStackEntry.arguments?.getString("eventId")
                 EventFormScreen(
                     viewModel = hiltViewModel(),
+                    onSearchClick = { navController.navigate(buildSearchRoute()) },
                     onNavigateBack = { navController.popBackStack() }
                 )
             }

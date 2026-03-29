@@ -42,6 +42,7 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun EventFormScreen(
     viewModel: EventFormViewModel,
+    onSearchClick: () -> Unit = {},
     onNavigateBack: () -> Unit
 ) {
     val pagerState = rememberPagerState(pageCount = { 6 })
@@ -59,6 +60,7 @@ fun EventFormScreen(
         topBar = {
             SolennixTopAppBar(
                 title = { Text(if (viewModel.isEditMode) "Editar Evento" else "Nuevo Evento") },
+                onSearchClick = onSearchClick,
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")

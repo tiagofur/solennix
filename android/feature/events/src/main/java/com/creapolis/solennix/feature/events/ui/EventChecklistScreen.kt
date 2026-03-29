@@ -34,6 +34,7 @@ import com.creapolis.solennix.feature.events.viewmodel.EventChecklistViewModel
 @Composable
 fun EventChecklistScreen(
     viewModel: EventChecklistViewModel,
+    onSearchClick: () -> Unit = {},
     onNavigateBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -43,6 +44,7 @@ fun EventChecklistScreen(
         topBar = {
             SolennixTopAppBar(
                 title = { Text("Checklist") },
+                onSearchClick = onSearchClick,
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")

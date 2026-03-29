@@ -11,16 +11,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Description
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.creapolis.solennix.core.designsystem.theme.LocalIsWideScreen
@@ -68,7 +63,6 @@ fun AdaptiveNavigationRailLayout(initialDeepLinkRoute: String? = null) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     var calendarBlockDatesRequested by remember { mutableStateOf(false) }
-    var searchQuery by rememberSaveable { mutableStateOf("") }
 
     // Navigate to deep link after NavHost is initialized
     LaunchedEffect(initialDeepLinkRoute) {
@@ -132,19 +126,6 @@ fun AdaptiveNavigationRailLayout(initialDeepLinkRoute: String? = null) {
 
         // Content area with NavHost
         Scaffold(
-            topBar = {
-                AdaptiveSearchTopBar(
-                    sectionTitle = selectedSection.label,
-                    query = searchQuery,
-                    onQueryChange = { searchQuery = it },
-                    onSubmit = {
-                        navController.navigate(buildSearchRoute(searchQuery))
-                    },
-                    onRefreshClick = {
-                        navController.navigate(buildSearchRoute(searchQuery))
-                    }
-                )
-            },
             floatingActionButton = {
                 // QuickActionsFAB on section-level routes (except calendar, events, and settings)
                 // Events gets contextual toolbar buttons on tablet
@@ -284,6 +265,7 @@ fun AdaptiveNavigationRailLayout(initialDeepLinkRoute: String? = null) {
                     CalendarScreen(
                         viewModel = hiltViewModel(),
                         onEventClick = { id -> navController.navigate("event_detail/$id") },
+                        onSearchClick = { navController.navigate(buildSearchRoute()) },
                         onBlockDatesRequested = calendarBlockDatesRequested,
                         onBlockDatesConsumed = { calendarBlockDatesRequested = false }
                     )
@@ -292,6 +274,7 @@ fun AdaptiveNavigationRailLayout(initialDeepLinkRoute: String? = null) {
                     ClientListScreen(
                         viewModel = hiltViewModel(),
                         onClientClick = { id -> navController.navigate("client_detail/$id") },
+                        onSearchClick = { navController.navigate(buildSearchRoute()) },
                         onAddClientClick = { navController.navigate("client_form") }
                     )
                 }
@@ -300,6 +283,7 @@ fun AdaptiveNavigationRailLayout(initialDeepLinkRoute: String? = null) {
                         viewModel = hiltViewModel(),
                         onProductClick = { id -> navController.navigate("product_detail/$id") },
                         onAddProductClick = { navController.navigate("product_form") },
+                        onSearchClick = { navController.navigate(buildSearchRoute()) },
                         onNavigateBack = { navController.popBackStack() }
                     )
                 }
@@ -308,6 +292,7 @@ fun AdaptiveNavigationRailLayout(initialDeepLinkRoute: String? = null) {
                         viewModel = hiltViewModel(),
                         onItemClick = { id -> navController.navigate("inventory_detail/$id") },
                         onAddItemClick = { navController.navigate("inventory_form") },
+                        onSearchClick = { navController.navigate(buildSearchRoute()) },
                         onNavigateBack = { navController.popBackStack() }
                     )
                 }
@@ -342,6 +327,7 @@ fun AdaptiveNavigationRailLayout(initialDeepLinkRoute: String? = null) {
                         onAbout = { navController.navigate("about") },
                         onPrivacy = { navController.navigate("privacy") },
                         onTerms = { navController.navigate("terms") },
+                        onSearchClick = { navController.navigate(buildSearchRoute()) },
                         onNavigateBack = { navController.popBackStack() }
                     )
                 }
@@ -366,6 +352,7 @@ fun AdaptiveNavigationRailLayout(initialDeepLinkRoute: String? = null) {
                         viewModel = hiltViewModel(),
                         onNavigateBack = { navController.popBackStack() },
                         onEditClick = { id -> navController.navigate("event_form?eventId=$id") },
+                        onSearchClick = { navController.navigate(buildSearchRoute()) },
                         onChecklistClick = { id -> navController.navigate("event_checklist/$id") }
                     )
                 }
@@ -375,6 +362,7 @@ fun AdaptiveNavigationRailLayout(initialDeepLinkRoute: String? = null) {
                 ) {
                     EventFormScreen(
                         viewModel = hiltViewModel(),
+                        onSearchClick = { navController.navigate(buildSearchRoute()) },
                         onNavigateBack = { navController.popBackStack() }
                     )
                 }
@@ -384,6 +372,7 @@ fun AdaptiveNavigationRailLayout(initialDeepLinkRoute: String? = null) {
                 ) {
                     EventChecklistScreen(
                         viewModel = hiltViewModel(),
+                        onSearchClick = { navController.navigate(buildSearchRoute()) },
                         onNavigateBack = { navController.popBackStack() }
                     )
                 }
@@ -397,6 +386,7 @@ fun AdaptiveNavigationRailLayout(initialDeepLinkRoute: String? = null) {
                         viewModel = hiltViewModel(),
                         onNavigateBack = { navController.popBackStack() },
                         onEditClick = { id -> navController.navigate("client_form?clientId=$id") },
+                        onSearchClick = { navController.navigate(buildSearchRoute()) },
                         onEventClick = { id -> navController.navigate("event_detail/$id") }
                     )
                 }
@@ -406,6 +396,7 @@ fun AdaptiveNavigationRailLayout(initialDeepLinkRoute: String? = null) {
                 ) {
                     ClientFormScreen(
                         viewModel = hiltViewModel(),
+                        onSearchClick = { navController.navigate(buildSearchRoute()) },
                         onNavigateBack = { navController.popBackStack() }
                     )
                 }
@@ -417,6 +408,7 @@ fun AdaptiveNavigationRailLayout(initialDeepLinkRoute: String? = null) {
                 ) {
                     ProductDetailScreen(
                         viewModel = hiltViewModel(),
+                        onSearchClick = { navController.navigate(buildSearchRoute()) },
                         onNavigateBack = { navController.popBackStack() },
                         onEditClick = { id -> navController.navigate("product_form?productId=$id") }
                     )
@@ -427,6 +419,7 @@ fun AdaptiveNavigationRailLayout(initialDeepLinkRoute: String? = null) {
                 ) {
                     ProductFormScreen(
                         viewModel = hiltViewModel(),
+                        onSearchClick = { navController.navigate(buildSearchRoute()) },
                         onNavigateBack = { navController.popBackStack() }
                     )
                 }
@@ -439,6 +432,7 @@ fun AdaptiveNavigationRailLayout(initialDeepLinkRoute: String? = null) {
                     InventoryDetailScreen(
                         viewModel = hiltViewModel(),
                         onNavigateBack = { navController.popBackStack() },
+                        onSearchClick = { navController.navigate(buildSearchRoute()) },
                         onEditClick = { id -> navController.navigate("inventory_form?itemId=$id") }
                     )
                 }
@@ -448,6 +442,7 @@ fun AdaptiveNavigationRailLayout(initialDeepLinkRoute: String? = null) {
                 ) {
                     InventoryFormScreen(
                         viewModel = hiltViewModel(),
+                        onSearchClick = { navController.navigate(buildSearchRoute()) },
                         onNavigateBack = { navController.popBackStack() }
                     )
                 }
@@ -507,6 +502,7 @@ fun AdaptiveNavigationRailLayout(initialDeepLinkRoute: String? = null) {
                     QuickQuoteScreen(
                         viewModel = hiltViewModel(),
                         onNavigateBack = { navController.popBackStack() },
+                        onSearchClick = { navController.navigate(buildSearchRoute()) },
                         onConvertToEvent = { navController.navigate("event_form?eventId=") }
                     )
                 }
@@ -516,88 +512,6 @@ fun AdaptiveNavigationRailLayout(initialDeepLinkRoute: String? = null) {
     } // CompositionLocalProvider
 }
 
-@Composable
-private fun AdaptiveSearchTopBar(
-    sectionTitle: String,
-    query: String,
-    onQueryChange: (String) -> Unit,
-    onSubmit: () -> Unit,
-    onRefreshClick: () -> Unit
-) {
-    val keyboardController = LocalSoftwareKeyboardController.current
-
-    Surface(
-        color = SolennixTheme.colors.surfaceAlt,
-        shadowElevation = 1.dp
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp)
-                .padding(horizontal = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Text(
-                text = sectionTitle,
-                style = MaterialTheme.typography.labelMedium,
-                color = SolennixTheme.colors.secondaryText
-            )
-            Spacer(modifier = Modifier.weight(1f))
-            OutlinedTextField(
-                value = query,
-                onValueChange = onQueryChange,
-                modifier = Modifier
-                    .width(280.dp)
-                    .height(40.dp),
-                placeholder = {
-                    Text(
-                        text = "Buscar eventos, clientes...",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                },
-                leadingIcon = {
-                    Icon(Icons.Default.Search, contentDescription = null)
-                },
-                singleLine = true,
-                shape = MaterialTheme.shapes.medium,
-                textStyle = MaterialTheme.typography.bodySmall,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(
-                    onSearch = {
-                        keyboardController?.hide()
-                        onSubmit()
-                    },
-                    onDone = {
-                        keyboardController?.hide()
-                        onSubmit()
-                    }
-                ),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = SolennixTheme.colors.card,
-                    unfocusedContainerColor = SolennixTheme.colors.card,
-                    focusedTextColor = SolennixTheme.colors.primaryText,
-                    unfocusedTextColor = SolennixTheme.colors.primaryText,
-                    focusedBorderColor = SolennixTheme.colors.primary,
-                    unfocusedBorderColor = SolennixTheme.colors.secondaryText.copy(alpha = 0.3f),
-                    focusedLeadingIconColor = SolennixTheme.colors.secondaryText,
-                    unfocusedLeadingIconColor = SolennixTheme.colors.secondaryText,
-                    focusedPlaceholderColor = SolennixTheme.colors.secondaryText,
-                    unfocusedPlaceholderColor = SolennixTheme.colors.secondaryText,
-                    cursorColor = SolennixTheme.colors.primary
-                )
-            )
-            IconButton(onClick = onRefreshClick) {
-                Icon(
-                    imageVector = Icons.Default.Refresh,
-                    contentDescription = "Actualizar",
-                    tint = SolennixTheme.colors.secondaryText
-                )
-            }
-        }
-    }
-}
-
 private fun buildSearchRoute(query: String? = null): String {
-    return "search?query=${Uri.encode(query.orEmpty())}"
+    return if (query.isNullOrBlank()) "search?query=" else "search?query=$query"
 }

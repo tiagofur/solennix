@@ -81,6 +81,7 @@ fun EventListScreen(
         topBar = {
             SolennixTopAppBar(
                 title = { Text("Eventos") },
+                onSearchClick = onSearchClick,
                 navigationIcon = {
                     if (showBackButton) {
                         IconButton(onClick = onNavigateBack) {
@@ -89,13 +90,6 @@ fun EventListScreen(
                     }
                 },
                 actions = {
-                    // Global search icon (phone)
-                    if (onSearchClick != null && !isWideScreen) {
-                        IconButton(onClick = onSearchClick) {
-                            Icon(Icons.Default.Search, contentDescription = "Buscar")
-                        }
-                    }
-                    // Contextual buttons for tablet
                     if (isWideScreen) {
                         if (onQuickQuoteClick != null) {
                             OutlinedButton(
@@ -146,7 +140,7 @@ fun EventListScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 8.dp),
-                    placeholder = { Text("Buscar por tipo de servicio o cliente...") },
+                    placeholder = { Text("Filtrar eventos por servicio o cliente...") },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                     trailingIcon = {
                         if (uiState.searchQuery.isNotEmpty()) {
@@ -225,7 +219,7 @@ fun EventListScreen(
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
                                 text = if (uiState.searchQuery.isNotEmpty())
-                                    "No se encontraron eventos"
+                                    "No se encontraron eventos con ese filtro"
                                 else
                                     "No hay eventos",
                                 color = SolennixTheme.colors.secondaryText

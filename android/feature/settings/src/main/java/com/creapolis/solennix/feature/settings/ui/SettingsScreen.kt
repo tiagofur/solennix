@@ -38,6 +38,7 @@ fun SettingsScreen(
     onAbout: () -> Unit,
     onPrivacy: () -> Unit,
     onTerms: () -> Unit,
+    onSearchClick: () -> Unit = {},
     onNavigateBack: () -> Unit
 ) {
     val user by viewModel.currentUser.collectAsStateWithLifecycle()
@@ -61,6 +62,7 @@ fun SettingsScreen(
         topBar = {
             SolennixTopAppBar(
                 title = { Text("Ajustes") },
+                onSearchClick = onSearchClick,
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")

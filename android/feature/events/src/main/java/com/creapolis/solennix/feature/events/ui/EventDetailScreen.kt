@@ -55,6 +55,7 @@ fun EventDetailScreen(
     viewModel: EventDetailViewModel,
     onNavigateBack: () -> Unit,
     onEditClick: (String) -> Unit,
+    onSearchClick: () -> Unit = {},
     onChecklistClick: (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -87,6 +88,7 @@ fun EventDetailScreen(
         topBar = {
             SolennixTopAppBar(
                 title = { Text("Detalle del Evento") },
+                onSearchClick = onSearchClick,
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")

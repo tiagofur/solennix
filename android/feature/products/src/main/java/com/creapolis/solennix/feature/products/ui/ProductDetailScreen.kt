@@ -35,6 +35,7 @@ import java.time.temporal.ChronoUnit
 fun ProductDetailScreen(
     viewModel: ProductDetailViewModel,
     onNavigateBack: () -> Unit,
+    onSearchClick: () -> Unit = {},
     onEditClick: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -74,6 +75,7 @@ fun ProductDetailScreen(
         topBar = {
             SolennixTopAppBar(
                 title = { Text("Detalle del Producto") },
+                onSearchClick = onSearchClick,
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")

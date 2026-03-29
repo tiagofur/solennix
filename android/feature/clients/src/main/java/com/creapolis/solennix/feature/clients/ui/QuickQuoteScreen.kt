@@ -42,6 +42,7 @@ import com.creapolis.solennix.feature.clients.viewmodel.QuoteItem
 fun QuickQuoteScreen(
     viewModel: QuickQuoteViewModel,
     onNavigateBack: () -> Unit,
+    onSearchClick: () -> Unit = {},
     onConvertToEvent: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -80,6 +81,7 @@ fun QuickQuoteScreen(
         topBar = {
             SolennixTopAppBar(
                 title = { Text("Cotizacion Rapida") },
+                onSearchClick = onSearchClick,
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")

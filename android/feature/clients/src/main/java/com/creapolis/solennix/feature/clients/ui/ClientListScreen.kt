@@ -66,6 +66,7 @@ fun ClientListScreen(
     viewModel: ClientListViewModel,
     onClientClick: (String) -> Unit,
     onAddClientClick: () -> Unit,
+    onSearchClick: () -> Unit = {},
     onUpgradeClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -88,6 +89,7 @@ fun ClientListScreen(
         topBar = {
             SolennixTopAppBar(
                 title = { Text("Clientes") },
+                onSearchClick = onSearchClick,
                 actions = {
                     IconButton(onClick = {
                         val csv = viewModel.generateCsvContent()
@@ -130,7 +132,7 @@ fun ClientListScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp),
-                    placeholder = { Text("Buscar clientes...") },
+                    placeholder = { Text("Filtrar clientes por nombre o teléfono...") },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                     shape = MaterialTheme.shapes.medium,
                     singleLine = true

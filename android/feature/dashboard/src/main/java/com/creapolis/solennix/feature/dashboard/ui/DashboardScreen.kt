@@ -26,7 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.component.*
-import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
+import com.creapolis.solennix.core.designsystem.component.SolennixSectionTopAppBar
 import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveDetailLayout
 import com.creapolis.solennix.core.designsystem.theme.LocalIsWideScreen
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
@@ -56,20 +56,16 @@ fun DashboardScreen(
 
     Scaffold(
         topBar = {
-            if (!isWideScreen) {
-                SolennixTopAppBar(
-                    title = { Text("Dashboard", style = MaterialTheme.typography.titleLarge) },
-                    actions = {
-                        IconButton(onClick = { onSearchClick() }) {
-                            Icon(Icons.Default.Search, contentDescription = "Buscar")
-                        }
-                        IconButton(onClick = { viewModel.refresh() }) {
-                            Icon(Icons.Default.Refresh, contentDescription = "Actualizar")
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors()
-                )
-            }
+            SolennixSectionTopAppBar(
+                title = "Inicio",
+                onSearchClick = onSearchClick,
+                actions = {
+                    IconButton(onClick = { viewModel.refresh() }) {
+                        Icon(Icons.Default.Refresh, contentDescription = "Actualizar")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors()
+            )
         },
     ) { padding ->
         PullToRefreshBox(

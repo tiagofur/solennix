@@ -45,6 +45,7 @@ fun ProductListScreen(
     onNavigateBack: () -> Unit,
     onProductClick: (String) -> Unit,
     onAddProductClick: () -> Unit,
+    onSearchClick: () -> Unit = {},
     onUpgradeClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -66,6 +67,7 @@ fun ProductListScreen(
         topBar = {
             SolennixTopAppBar(
                 title = { Text("Productos") },
+                onSearchClick = onSearchClick,
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
@@ -107,7 +109,7 @@ fun ProductListScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp),
-                    placeholder = { Text("Buscar productos...") },
+                    placeholder = { Text("Filtrar productos por nombre o categoría...") },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                     shape = MaterialTheme.shapes.medium,
                     singleLine = true

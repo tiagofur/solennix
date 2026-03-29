@@ -26,6 +26,7 @@ import com.creapolis.solennix.feature.inventory.viewmodel.InventoryFormViewModel
 @Composable
 fun InventoryFormScreen(
     viewModel: InventoryFormViewModel,
+    onSearchClick: () -> Unit = {},
     onNavigateBack: () -> Unit
 ) {
     val scrollState = rememberScrollState()
@@ -40,6 +41,7 @@ fun InventoryFormScreen(
         topBar = {
             SolennixTopAppBar(
                 title = { Text("Item de Inventario") },
+                onSearchClick = onSearchClick,
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")

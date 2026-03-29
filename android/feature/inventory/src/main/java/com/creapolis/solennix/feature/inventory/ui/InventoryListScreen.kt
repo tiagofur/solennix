@@ -42,6 +42,7 @@ fun InventoryListScreen(
     viewModel: InventoryListViewModel,
     onNavigateBack: () -> Unit,
     onItemClick: (String) -> Unit,
+    onSearchClick: () -> Unit = {},
     onAddItemClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -50,6 +51,7 @@ fun InventoryListScreen(
         topBar = {
             SolennixTopAppBar(
                 title = { Text("Inventario") },
+                onSearchClick = onSearchClick,
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
@@ -91,7 +93,7 @@ fun InventoryListScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp),
-                    placeholder = { Text("Buscar en inventario...") },
+                    placeholder = { Text("Filtrar inventario por nombre...") },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                     shape = MaterialTheme.shapes.medium,
                     singleLine = true
@@ -154,7 +156,7 @@ fun InventoryListScreen(
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(
                             text = if (uiState.searchQuery.isNotBlank() || uiState.lowStockOnly)
-                                "Sin resultados" else "Sin inventario",
+                                "Sin resultados para el filtro" else "Sin inventario",
                             style = MaterialTheme.typography.bodyLarge,
                             color = SolennixTheme.colors.secondaryText
                         )
