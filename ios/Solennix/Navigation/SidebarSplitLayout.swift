@@ -78,13 +78,6 @@ struct SidebarSplitLayout: View {
                 }
             }
 
-            // Utility sections
-            Section("Herramientas") {
-                ForEach(SidebarSection.utilitySections, id: \.self) { section in
-                    sidebarLabel(for: section)
-                }
-            }
-
             // Settings at the bottom
             Section {
                 sidebarLabel(for: .settings)
@@ -114,12 +107,6 @@ struct SidebarSplitLayout: View {
         case .events:
             EventListView(apiClient: apiClient)
                 .navigationTitle(section.title)
-        case .quote:
-            EventFormView(apiClient: apiClient)
-                .navigationTitle(section.title)
-        case .quickQuote:
-            QuickQuoteView(apiClient: apiClient)
-                .navigationTitle(section.title)
         case .clients:
             ClientListView(apiClient: apiClient)
                 .navigationTitle(section.title)
@@ -128,9 +115,6 @@ struct SidebarSplitLayout: View {
                 .navigationTitle(section.title)
         case .inventory:
             InventoryListView(apiClient: apiClient)
-                .navigationTitle(section.title)
-        case .search:
-            SearchView()
                 .navigationTitle(section.title)
         case .settings:
             SettingsView(apiClient: apiClient, authManager: authManager)
@@ -146,12 +130,7 @@ extension SidebarSection {
 
     /// Main navigation sections (displayed first in the sidebar).
     static let mainSections: [SidebarSection] = [
-        .dashboard, .calendar, .events, .quote, .quickQuote, .clients, .products, .inventory
-    ]
-
-    /// Utility sections (search, etc.).
-    static let utilitySections: [SidebarSection] = [
-        .search
+        .dashboard, .calendar, .events, .clients, .products, .inventory
     ]
 }
 

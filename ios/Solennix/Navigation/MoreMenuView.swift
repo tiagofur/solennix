@@ -14,23 +14,6 @@ struct MoreMenuView: View {
 
     var body: some View {
         List {
-            // Events section
-            Section {
-                NavigationLink(value: Route.eventList) {
-                    menuRow(
-                        icon: "calendar.badge.clock",
-                        title: "Eventos",
-                        subtitle: "Lista completa de eventos",
-                        color: SolennixColors.statusConfirmed
-                    )
-                }
-            } header: {
-                Text("Eventos")
-                    .font(.caption)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(SolennixColors.textSecondary)
-            }
-
             // Catalog section
             Section {
                 NavigationLink(value: Route.productList) {
@@ -52,32 +35,6 @@ struct MoreMenuView: View {
                 }
             } header: {
                 Text("Catálogo")
-                    .font(.caption)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(SolennixColors.textSecondary)
-            }
-
-            // Tools section
-            Section {
-                NavigationLink(value: Route.search) {
-                    menuRow(
-                        icon: "magnifyingglass",
-                        title: "Buscar",
-                        subtitle: "Clientes, eventos, productos",
-                        color: SolennixColors.info
-                    )
-                }
-
-                NavigationLink(value: Route.quickQuote) {
-                    menuRow(
-                        icon: "doc.text",
-                        title: "Cotización Rápida",
-                        subtitle: "Sin registrar cliente ni fecha",
-                        color: SolennixColors.primary
-                    )
-                }
-            } header: {
-                Text("Herramientas")
                     .font(.caption)
                     .fontWeight(.semibold)
                     .foregroundStyle(SolennixColors.textSecondary)
