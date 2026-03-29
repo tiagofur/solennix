@@ -238,7 +238,10 @@
       "Bash(xcodebuild build:*)",
       "Bash(rm -rf ~/Library/Developer/Xcode/DerivedData/*)",
       "Bash(rm -rf ~/Library/Caches/org.swift.swiftpm/)",
-      "Bash(npx -p typescript tsc --noEmit)"
+      "Bash(npx -p typescript tsc --noEmit)",
+      "Bash(xcodebuild -project Solennix.xcodeproj -scheme Solennix -destination 'platform=iOS Simulator,name=iPad Pro 11-inch \\(M5\\)' -derivedDataPath build build)",
+      "Bash(export PATH=\"$PATH:/Users/tiagofur/Library/Android/sdk/platform-tools\")",
+      "Bash(./gradlew installDebug)"
     ]
   }
 }
