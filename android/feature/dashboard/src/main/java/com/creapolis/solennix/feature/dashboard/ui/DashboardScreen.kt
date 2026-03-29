@@ -45,7 +45,6 @@ fun DashboardScreen(
     onUpgradeClick: () -> Unit = {},
     onNewEventClick: () -> Unit = {},
     onNewClientClick: () -> Unit = {},
-    onQuickQuoteClick: () -> Unit = {},
     onSearchClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -87,15 +86,9 @@ fun DashboardScreen(
                         .padding(horizontal = 16.dp)
                 ) {
                 item {
-                    if (isWideScreen) {
-                        DashboardGreetingHeader(
-                            userName = uiState.userName,
-                            onQuickQuoteClick = onQuickQuoteClick,
-                            onSearchClick = onSearchClick
-                        )
-                    } else {
-                        Spacer(modifier = Modifier.height(8.dp))
-                    }
+                    DashboardGreetingHeader(
+                        userName = uiState.userName
+                    )
                 }
 
                 // KPI Cards
@@ -161,20 +154,10 @@ fun DashboardScreen(
 
                 // Quick Action Buttons
                 item {
-                    if (isWideScreen) {
-                        Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            QuickActionButton("Nuevo Evento", Icons.Default.Event, SolennixTheme.colors.primary, onNewEventClick, Modifier.weight(1f))
-                            QuickActionButton("Nuevo Cliente", Icons.Default.PersonAdd, SolennixTheme.colors.kpiBlue, onNewClientClick, Modifier.weight(1f))
-                            QuickActionButton("Cotización Rápida", Icons.Default.RequestQuote, SolennixTheme.colors.kpiBlue, onQuickQuoteClick, Modifier.weight(1f))
-                            QuickActionButton("Buscar", Icons.Default.Search, SolennixTheme.colors.kpiOrange, onSearchClick, Modifier.weight(1f))
-                        }
-                    } else {
-                        Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            QuickActionButton("Nuevo Evento", Icons.Default.Event, SolennixTheme.colors.primary, onNewEventClick, Modifier.weight(1f))
-                            QuickActionButton("Nuevo Cliente", Icons.Default.PersonAdd, SolennixTheme.colors.kpiBlue, onNewClientClick, Modifier.weight(1f))
-                        }
+                    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        QuickActionButton("Nuevo Evento", Icons.Default.Event, SolennixTheme.colors.primary, onNewEventClick, Modifier.weight(1f))
+                        QuickActionButton("Nuevo Cliente", Icons.Default.PersonAdd, SolennixTheme.colors.kpiBlue, onNewClientClick, Modifier.weight(1f))
                     }
                 }
 
@@ -450,8 +433,6 @@ fun EventListItem(event: Event, clientName: String? = null, onClick: () -> Unit 
 @Composable
 private fun DashboardGreetingHeader(
     userName: String,
-    onQuickQuoteClick: () -> Unit,
-    onSearchClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val today = remember {
@@ -476,30 +457,6 @@ private fun DashboardGreetingHeader(
                 style = MaterialTheme.typography.bodyMedium,
                 color = SolennixTheme.colors.secondaryText
             )
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Surface(
-                modifier = Modifier.size(44.dp),
-                shape = RoundedCornerShape(22.dp),
-                color = SolennixTheme.colors.primaryLight,
-                onClick = onQuickQuoteClick
-            ) {
-                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                    Icon(Icons.Default.RequestQuote, contentDescription = "Cotización Rápida",
-                        tint = SolennixTheme.colors.primary, modifier = Modifier.size(22.dp))
-                }
-            }
-            Surface(
-                modifier = Modifier.size(44.dp),
-                shape = RoundedCornerShape(22.dp),
-                color = SolennixTheme.colors.primaryLight,
-                onClick = onSearchClick
-            ) {
-                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                    Icon(Icons.Default.Search, contentDescription = "Buscar",
-                        tint = SolennixTheme.colors.primary, modifier = Modifier.size(22.dp))
-                }
-            }
         }
     }
 }

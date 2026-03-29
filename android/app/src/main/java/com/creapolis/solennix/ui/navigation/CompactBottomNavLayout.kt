@@ -223,7 +223,6 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                     onUpgradeClick = { navController.navigate("pricing") },
                     onNewEventClick = { navController.navigate("event_form?eventId=") },
                     onNewClientClick = { navController.navigate("client_form") },
-                    onQuickQuoteClick = { navController.navigate("quick_quote") },
                     onSearchClick = { navController.navigate("search") }
                 )
             }
