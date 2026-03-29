@@ -22,7 +22,7 @@ public struct ClientListView: View {
         content
         .navigationTitle("Clientes")
         .navigationBarTitleDisplayMode(.inline)
-        .searchable(text: $viewModel.searchText, prompt: "Buscar clientes...")
+        .searchable(text: $viewModel.searchText, prompt: "Filtrar clientes...")
         .refreshable { await viewModel.loadClients() }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {

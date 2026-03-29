@@ -52,9 +52,12 @@ struct SidebarSplitLayout: View {
                 .navigationDestination(for: Route.self) { route in
                     RouteDestination(route: route)
                 }
-                .searchable(text: $searchText, prompt: "Buscar eventos, clientes...")
+                .navigationBarTitleDisplayMode(.inline)
+                .searchable(text: $searchText, prompt: globalSearchPrompt)
                 .onSubmit(of: .search) {
                     let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+                    guard !query.isEmpty else { return }
+                    searchText = query
                     contentPath.append(Route.search(query: query))
                 }
             }
@@ -99,6 +102,10 @@ struct SidebarSplitLayout: View {
             .tag(section)
     }
 
+    private var globalSearchPrompt: String {
+        "Buscar clientes, eventos, productos o inventario..."
+    }
+
     // MARK: - Section List Views
 
     @ViewBuilder
@@ -106,25 +113,18 @@ struct SidebarSplitLayout: View {
         switch section {
         case .dashboard:
             DashboardView()
-                .navigationTitle(section.title)
         case .calendar:
             CalendarView(viewModel: CalendarViewModel(apiClient: apiClient))
-                .navigationTitle(section.title)
         case .events:
             EventListView(apiClient: apiClient)
-                .navigationTitle(section.title)
         case .clients:
             ClientListView(apiClient: apiClient)
-                .navigationTitle(section.title)
         case .products:
             ProductListView(apiClient: apiClient)
-                .navigationTitle(section.title)
         case .inventory:
             InventoryListView(apiClient: apiClient)
-                .navigationTitle(section.title)
         case .settings:
             SettingsView(apiClient: apiClient, authManager: authManager)
-                .navigationTitle(section.title)
         }
     }
 

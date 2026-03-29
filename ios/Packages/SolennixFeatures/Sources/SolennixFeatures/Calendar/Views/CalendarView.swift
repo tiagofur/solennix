@@ -400,7 +400,7 @@ public struct CalendarView: View {
                 Image(systemName: "magnifyingglass")
                     .foregroundStyle(SolennixColors.textTertiary)
 
-                TextField("Buscar por cliente o servicio...", text: $viewModel.searchText)
+                TextField("Filtrar por cliente o servicio...", text: $viewModel.searchText)
                     .textFieldStyle(.plain)
                     .font(.body)
 

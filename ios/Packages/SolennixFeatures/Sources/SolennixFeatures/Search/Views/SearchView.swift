@@ -27,7 +27,7 @@ public struct SearchView: View {
             }
         }
         .navigationTitle("Buscar")
-        .navigationBarTitleDisplayMode(.large)
+        .navigationBarTitleDisplayMode(.inline)
         .background(SolennixColors.surfaceGrouped.ignoresSafeArea())
         .onAppear {
             if viewModel == nil, let client = authManager.apiClient {

@@ -20,8 +20,11 @@ struct CompactTabLayout: View {
     @State private var eventsPath = NavigationPath()
     @State private var clientsPath = NavigationPath()
     @State private var morePath = NavigationPath()
-    @State private var searchText = ""
-    @Environment(\.apiClient) private var apiClient
+    @State private var homeSearchText = ""
+    @State private var calendarSearchText = ""
+    @State private var eventsSearchText = ""
+    @State private var clientsSearchText = ""
+    @State private var moreSearchText = ""
 
     /// Custom binding that detects same-tab re-taps for pop-to-root.
     private var tabSelection: Binding<Tab> {
@@ -44,10 +47,9 @@ struct CompactTabLayout: View {
                     .navigationDestination(for: Route.self) { route in
                         RouteDestination(route: route)
                     }
-                    .searchable(text: $searchText, prompt: "Buscar eventos, clientes...")
+                    .searchable(text: $homeSearchText, prompt: globalSearchPrompt)
                     .onSubmit(of: .search) {
-                        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-                        homePath.append(Route.search(query: query))
+                        appendSearchRoute(query: &homeSearchText, to: &homePath)
                     }
             }
             .tabItem {
@@ -61,10 +63,9 @@ struct CompactTabLayout: View {
                     .navigationDestination(for: Route.self) { route in
                         RouteDestination(route: route)
                     }
-                    .searchable(text: $searchText, prompt: "Buscar eventos, clientes...")
+                    .searchable(text: $calendarSearchText, prompt: globalSearchPrompt)
                     .onSubmit(of: .search) {
-                        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-                        calendarPath.append(Route.search(query: query))
+                        appendSearchRoute(query: &calendarSearchText, to: &calendarPath)
                     }
             }
             .tabItem {
@@ -78,6 +79,10 @@ struct CompactTabLayout: View {
                     .navigationDestination(for: Route.self) { route in
                         RouteDestination(route: route)
                     }
+                    .searchable(text: $eventsSearchText, prompt: globalSearchPrompt)
+                    .onSubmit(of: .search) {
+                        appendSearchRoute(query: &eventsSearchText, to: &eventsPath)
+                    }
             }
             .tabItem {
                 Label(Tab.events.title, systemImage: Tab.events.iconName)
@@ -90,6 +95,10 @@ struct CompactTabLayout: View {
                     .navigationDestination(for: Route.self) { route in
                         RouteDestination(route: route)
                     }
+                    .searchable(text: $clientsSearchText, prompt: globalSearchPrompt)
+                    .onSubmit(of: .search) {
+                        appendSearchRoute(query: &clientsSearchText, to: &clientsPath)
+                    }
             }
             .tabItem {
                 Label(Tab.clients.title, systemImage: Tab.clients.iconName)
@@ -101,6 +110,10 @@ struct CompactTabLayout: View {
                 MoreMenuView()
                     .navigationDestination(for: Route.self) { route in
                         RouteDestination(route: route)
+                    }
+                    .searchable(text: $moreSearchText, prompt: globalSearchPrompt)
+                    .onSubmit(of: .search) {
+                        appendSearchRoute(query: &moreSearchText, to: &morePath)
                     }
             }
             .tabItem {
@@ -116,9 +129,6 @@ struct CompactTabLayout: View {
                     onQuickQuote: { appendToCurrentPath(Route.quickQuote) }
                 )
             }
-        }
-        .onChange(of: selectedTab) { oldTab, _ in
-            resetPath(for: oldTab)
         }
         .onChange(of: pendingSpotlightRoute) { _, newRoute in
             guard let route = newRoute else { return }
@@ -140,6 +150,10 @@ struct CompactTabLayout: View {
         }
     }
 
+    private var globalSearchPrompt: String {
+        "Buscar clientes, eventos, productos o inventario..."
+    }
+
     /// Pushes a route onto the currently selected tab's NavigationPath.
     private func appendToCurrentPath(_ route: Route) {
         switch selectedTab {
@@ -159,6 +173,13 @@ struct CompactTabLayout: View {
         case .clients:  clientsPath = NavigationPath()
         case .more:     morePath = NavigationPath()
         }
+    }
+
+    private func appendSearchRoute(query: inout String, to path: inout NavigationPath) {
+        let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedQuery.isEmpty else { return }
+        query = trimmedQuery
+        path.append(Route.search(query: trimmedQuery))
     }
 }
 

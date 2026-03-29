@@ -92,7 +92,7 @@ public struct EventListView: View {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(SolennixColors.textTertiary)
 
-            TextField("Buscar por cliente, servicio o lugar...", text: $viewModel.searchQuery)
+            TextField("Filtrar por cliente, servicio o lugar...", text: $viewModel.searchQuery)
                 .textFieldStyle(.plain)
                 .font(.body)
 

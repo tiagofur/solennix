@@ -19,7 +19,7 @@ public struct ProductListView: View {
         content
         .navigationTitle("Productos")
         .navigationBarTitleDisplayMode(.inline)
-        .searchable(text: $viewModel.searchText, prompt: "Buscar productos...")
+        .searchable(text: $viewModel.searchText, prompt: "Filtrar productos...")
         .refreshable { await viewModel.loadProducts() }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {

@@ -111,6 +111,7 @@ public struct SettingsView: View {
         .scrollContentBackground(.hidden)
         .background(SolennixColors.surfaceGrouped)
         .navigationTitle("Ajustes")
+        .navigationBarTitleDisplayMode(.inline)
         .confirmationDialog(
             "Cerrar Sesion",
             isPresented: $showLogoutConfirm

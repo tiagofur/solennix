@@ -61,7 +61,7 @@ struct MoreMenuView: View {
         .scrollContentBackground(.hidden)
         .background(SolennixColors.surfaceGrouped)
         .navigationTitle("Más")
-        .navigationBarTitleDisplayMode(.large)
+        .navigationBarTitleDisplayMode(.inline)
     }
 
     // MARK: - Menu Row
