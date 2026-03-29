@@ -3,6 +3,63 @@ import Observation
 import SolennixCore
 import SolennixNetwork
 
+// MARK: - Dashboard Attention Events
+
+public enum DashboardAttentionEventKind: String, Sendable, Hashable {
+    case overdueEvent
+    case pendingPayment
+    case unconfirmedEvent
+
+    public var title: String {
+        switch self {
+        case .pendingPayment:
+            return "Pago pendiente"
+        case .overdueEvent:
+            return "Evento vencido"
+        case .unconfirmedEvent:
+            return "Sin confirmar"
+        }
+    }
+
+    fileprivate var sortPriority: Int {
+        switch self {
+        case .overdueEvent:
+            return 0
+        case .pendingPayment:
+            return 1
+        case .unconfirmedEvent:
+            return 2
+        }
+    }
+}
+
+public struct DashboardAttentionEvent: Identifiable, Sendable, Hashable {
+    public let id: String
+    public let event: Event
+    public let kind: DashboardAttentionEventKind
+    public let clientName: String
+    public let totalPaid: Double
+    public let outstandingAmount: Double
+    public let daysFromToday: Int
+
+    public init(
+        event: Event,
+        kind: DashboardAttentionEventKind,
+        clientName: String,
+        totalPaid: Double,
+        outstandingAmount: Double,
+        daysFromToday: Int
+    ) {
+        self.id = "\(kind.rawValue)-\(event.id)"
+        self.event = event
+        self.kind = kind
+        self.clientName = clientName
+        self.totalPaid = totalPaid
+        self.outstandingAmount = outstandingAmount
+        self.daysFromToday = daysFromToday
+    }
+}
+
 // MARK: - Dashboard View Model
 
 @Observable
@@ -22,6 +79,7 @@ public final class DashboardViewModel {
     public var totalEvents: Int = 0
     public var isLoading: Bool = false
     public var errorMessage: String?
+    public var attentionEvents: [DashboardAttentionEvent] = []
 
     /// Map of client ID -> Client for joining event data with client names.
     public var clientMap: [String: Client] = [:]
@@ -98,10 +156,11 @@ public final class DashboardViewModel {
             async let allEventsResult: [Event] = apiClient.get(Endpoint.events)
             async let inventoryResult: [InventoryItem] = apiClient.get(Endpoint.inventory)
             async let productsResult: [Product] = apiClient.get(Endpoint.products)
-            async let paymentsResult: [Payment] = apiClient.get(
+            async let monthPaymentsResult: [Payment] = apiClient.get(
                 Endpoint.payments,
                 params: ["start_date": startStr, "end_date": endStr]
             )
+            async let allPaymentsResult: [Payment] = apiClient.get(Endpoint.payments)
 
             let clients = try await clientsResult
             let monthEvents = try await monthEventsResult
@@ -109,7 +168,8 @@ public final class DashboardViewModel {
             let allEvents = try await allEventsResult
             let inventory = try await inventoryResult
             let products = try await productsResult
-            let payments = try await paymentsResult
+            let monthPayments = try await monthPaymentsResult
+            let allPayments = try await allPaymentsResult
 
             // Build client map
             clientMap = Dictionary(uniqueKeysWithValues: clients.map { ($0.id, $0) })
@@ -133,8 +193,16 @@ public final class DashboardViewModel {
             totalProducts = products.count
             totalEvents = allEvents.count
 
+            // Attention events for dashboard alerts/cards.
+            attentionEvents = Self.makeAttentionEvents(
+                events: allEvents,
+                payments: allPayments,
+                clientMap: clientMap,
+                now: now
+            )
+
             // Cash collected = sum of payment amounts in current month
-            cashCollectedThisMonth = payments.reduce(0) { $0 + $1.amount }
+            cashCollectedThisMonth = monthPayments.reduce(0) { $0 + $1.amount }
 
             // VAT calculation based on payment ratio
             let totalEventAmount = monthEvents
@@ -168,6 +236,107 @@ public final class DashboardViewModel {
     public func refresh() async {
         await loadDashboard()
     }
+
+    private static func makeAttentionEvents(
+        events: [Event],
+        payments: [Payment],
+        clientMap: [String: Client],
+        now: Date,
+        calendar: Calendar = .current
+    ) -> [DashboardAttentionEvent] {
+        let startOfToday = calendar.startOfDay(for: now)
+        guard let next7Days = calendar.date(byAdding: .day, value: 7, to: startOfToday),
+              let next14Days = calendar.date(byAdding: .day, value: 14, to: startOfToday)
+        else {
+            return []
+        }
+
+        let paymentsByEventId = Dictionary(grouping: payments, by: \.eventId)
+
+        return events.compactMap { event in
+            guard let eventDate = Self.dashboardDateFormatter.date(from: String(event.eventDate.prefix(10))) else {
+                return nil
+            }
+
+            let normalizedEventDate = calendar.startOfDay(for: eventDate)
+            let daysFromToday = calendar.dateComponents([.day], from: startOfToday, to: normalizedEventDate).day ?? 0
+            let totalPaid = paymentsByEventId[event.id, default: []].reduce(0) { $0 + $1.amount }
+            let outstandingAmount = max(event.totalAmount - totalPaid, 0)
+
+            let kind: DashboardAttentionEventKind?
+
+            if normalizedEventDate < startOfToday,
+               (event.status == .quoted || event.status == .confirmed) {
+                kind = .overdueEvent
+            } else if event.status == .confirmed,
+                      normalizedEventDate >= startOfToday,
+                      normalizedEventDate <= next7Days,
+                      outstandingAmount > 0.01 {
+                kind = .pendingPayment
+            } else if event.status == .quoted,
+                      normalizedEventDate >= startOfToday,
+                      normalizedEventDate <= next14Days {
+                kind = .unconfirmedEvent
+            } else {
+                kind = nil
+            }
+
+            guard let kind else {
+                return nil
+            }
+
+            return DashboardAttentionEvent(
+                event: event,
+                kind: kind,
+                clientName: clientMap[event.clientId]?.name ?? "Cliente",
+                totalPaid: totalPaid,
+                outstandingAmount: outstandingAmount,
+                daysFromToday: daysFromToday
+            )
+        }
+        .sorted(by: Self.compareAttentionEvents)
+    }
+
+    private static func compareAttentionEvents(
+        lhs: DashboardAttentionEvent,
+        rhs: DashboardAttentionEvent
+    ) -> Bool {
+        if lhs.kind.sortPriority != rhs.kind.sortPriority {
+            return lhs.kind.sortPriority < rhs.kind.sortPriority
+        }
+
+        if lhs.daysFromToday != rhs.daysFromToday {
+            return lhs.daysFromToday < rhs.daysFromToday
+        }
+
+        let lhsDate = dashboardDateFormatter.date(from: String(lhs.event.eventDate.prefix(10))) ?? .distantFuture
+        let rhsDate = dashboardDateFormatter.date(from: String(rhs.event.eventDate.prefix(10))) ?? .distantFuture
+
+        if lhsDate != rhsDate {
+            return lhsDate < rhsDate
+        }
+
+        let clientComparison = lhs.clientName.localizedCaseInsensitiveCompare(rhs.clientName)
+        if clientComparison != .orderedSame {
+            return clientComparison == .orderedAscending
+        }
+
+        let serviceComparison = lhs.event.serviceType.localizedCaseInsensitiveCompare(rhs.event.serviceType)
+        if serviceComparison != .orderedSame {
+            return serviceComparison == .orderedAscending
+        }
+
+        return lhs.event.id < rhs.event.id
+    }
+
+    private static let dashboardDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.calendar = Calendar(identifier: .gregorian)
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter
+    }()
 }
 
 // MARK: - Currency Formatting
