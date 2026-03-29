@@ -12,16 +12,16 @@ val SolennixSecondary = Color(0xFF6B7B8D)
 val SolennixSecondaryDM = Color(0xFF94A3B8)
 
 // Status
-val StatusQuoted = Color(0xFF6B7B8D)
-val StatusConfirmed = Color(0xFFC4A265)
-val StatusCompleted = Color(0xFF2E7D32)
-val StatusCancelled = Color(0xFFC62828)
+val StatusQuoted = Color(0xFFD97706)
+val StatusConfirmed = Color(0xFF007AFF)
+val StatusCompleted = Color(0xFF2D6A4F)
+val StatusCancelled = Color(0xFFFF3B30)
 
 // KPI
-val KPIBlue = Color(0xFF1976D2)
-val KPIGreen = Color(0xFF388E3C)
-val KPIOrange = Color(0xFFF57C00)
-val KPIRed = Color(0xFFD32F2F)
+val KPIBlue = Color(0xFF007AFF)
+val KPIGreen = Color(0xFF34C759)
+val KPIOrange = Color(0xFFD97706)
+val KPIRed = Color(0xFFFF3B30)
 
 // Avatar Palette
 val AvatarPalette = listOf(
@@ -52,10 +52,10 @@ val LightSolennixColors = SolennixColorScheme(
     border = Color(0xFFE5E2DD),
     borderLight = Color(0xFFF0EFEC),
     divider = Color(0xFFE5E2DD),
-    success = Color(0xFF2E7D32),
-    warning = Color(0xFFF57C00),
-    error = Color(0xFFD32F2F),
-    info = Color(0xFF1976D2),
+    success = Color(0xFF2D6A4F),
+    warning = Color(0xFFFF9500),
+    error = Color(0xFFFF3B30),
+    info = Color(0xFF007AFF),
     statusQuoted = StatusQuoted,
     statusConfirmed = StatusConfirmed,
     statusCompleted = StatusCompleted,
@@ -87,18 +87,18 @@ val DarkSolennixColors = SolennixColorScheme(
     border = Color(0xFF2A3040),
     borderLight = Color(0xFF1A2030),
     divider = Color(0xFF2A3040),
-    success = Color(0xFF4CAF50),
-    warning = Color(0xFFFF9800),
-    error = Color(0xFFF44336),
-    info = Color(0xFF2196F3),
+    success = Color(0xFF30D158),
+    warning = Color(0xFFFF9F0A),
+    error = Color(0xFFFF453A),
+    info = Color(0xFF0A84FF),
     statusQuoted = StatusQuoted,
     statusConfirmed = StatusConfirmed,
     statusCompleted = StatusCompleted,
     statusCancelled = StatusCancelled,
-    kpiBlue = Color(0xFF42A5F5),
-    kpiGreen = Color(0xFF66BB6A),
-    kpiOrange = Color(0xFFFFA726),
-    kpiRed = Color(0xFFEF5350),
+    kpiBlue = Color(0xFF0A84FF),
+    kpiGreen = Color(0xFF30D158),
+    kpiOrange = Color(0xFFFF9F0A),
+    kpiRed = Color(0xFFFF453A),
     tabBarBg = Color(0xFF111722),
     tabBarActive = SolennixGold,
     tabBarInactive = Color(0xFF9A9590),
