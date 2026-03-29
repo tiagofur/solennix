@@ -58,9 +58,6 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val isAtTopLevel = TopLevelDestination.entries.any { it.route == currentRoute }
-    var calendarBlockDatesRequested by remember { mutableStateOf(false) }
-    val calendarBlockDatesAction: () -> Unit = { calendarBlockDatesRequested = true }
-
     // Navegar al deep link despues de que el NavHost se haya inicializado
     LaunchedEffect(initialDeepLinkRoute) {
         initialDeepLinkRoute?.let { route ->
@@ -115,98 +112,16 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                 )
             }
 
-            // Expandable FAB for Calendar
+            // FAB for Calendar — Nuevo Evento (block dates is in the TopAppBar)
             if (currentRoute == TopLevelDestination.CALENDAR.route) {
-                var expanded by remember { mutableStateOf(false) }
-
-                Column(
-                    horizontalAlignment = Alignment.End,
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                FloatingActionButton(
+                    onClick = { navController.navigate("event_form?eventId=") },
+                    containerColor = SolennixTheme.colors.primary,
+                    elevation = FloatingActionButtonDefaults.elevation(
+                        defaultElevation = SolennixElevation.fab
+                    )
                 ) {
-                    // Sub-options (visible when expanded)
-                    AnimatedVisibility(
-                        visible = expanded,
-                        enter = fadeIn() + slideInVertically(initialOffsetY = { it }),
-                        exit = fadeOut() + slideOutVertically(targetOffsetY = { it })
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.End,
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            // Block dates option
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Surface(
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = SolennixTheme.colors.card,
-                                    shadowElevation = 2.dp
-                                ) {
-                                    Text(
-                                        "Bloquear Fechas",
-                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = SolennixTheme.colors.primaryText
-                                    )
-                                }
-                                SmallFloatingActionButton(
-                                    onClick = {
-                                        expanded = false
-                                        calendarBlockDatesAction()
-                                    },
-                                    containerColor = SolennixTheme.colors.primary,
-                                    contentColor = Color.White
-                                ) {
-                                    Icon(Icons.Default.Block, contentDescription = "Bloquear Fechas")
-                                }
-                            }
-
-                            // New event option
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Surface(
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = SolennixTheme.colors.card,
-                                    shadowElevation = 2.dp
-                                ) {
-                                    Text(
-                                        "Nuevo Evento",
-                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = SolennixTheme.colors.primaryText
-                                    )
-                                }
-                                SmallFloatingActionButton(
-                                    onClick = {
-                                        expanded = false
-                                        navController.navigate("event_form?eventId=")
-                                    },
-                                    containerColor = SolennixTheme.colors.primary,
-                                    contentColor = Color.White
-                                ) {
-                                    Icon(Icons.Filled.Add, contentDescription = "Nuevo Evento")
-                                }
-                            }
-                        }
-                    }
-
-                    // Main FAB (toggle)
-                    FloatingActionButton(
-                        onClick = { expanded = !expanded },
-                        containerColor = SolennixTheme.colors.primary,
-                        elevation = FloatingActionButtonDefaults.elevation(
-                            defaultElevation = SolennixElevation.fab
-                        )
-                    ) {
-                        Icon(
-                            if (expanded) Icons.Default.Close else Icons.Filled.Add,
-                            contentDescription = if (expanded) "Cerrar menú" else "Opciones",
-                            tint = Color.White
-                        )
-                    }
+                    Icon(Icons.Filled.Add, contentDescription = "Nuevo Evento", tint = Color.White)
                 }
             }
         },
@@ -239,9 +154,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                 CalendarScreen(
                     viewModel = hiltViewModel(),
                     onEventClick = { id -> navController.navigate("event_detail/$id") },
-                    onSearchClick = { navController.navigate(buildSearchRoute()) },
-                    onBlockDatesRequested = calendarBlockDatesRequested,
-                    onBlockDatesConsumed = { calendarBlockDatesRequested = false }
+                    onSearchClick = { navController.navigate(buildSearchRoute()) }
                 )
             }
             composable(TopLevelDestination.CLIENTS.route) { 
