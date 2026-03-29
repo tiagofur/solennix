@@ -222,7 +222,11 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                     viewModel = hiltViewModel(),
                     onEventClick = { id -> navController.navigate("event_detail/$id") },
                     onInventoryClick = { id -> navController.navigate("inventory_detail/$id") },
-                    onUpgradeClick = { navController.navigate("pricing") }
+                    onUpgradeClick = { navController.navigate("pricing") },
+                    onNewEventClick = { navController.navigate("event_form?eventId=") },
+                    onNewClientClick = { navController.navigate("client_form") },
+                    onQuickQuoteClick = { navController.navigate("quick_quote") },
+                    onSearchClick = { navController.navigate("search") }
                 )
             }
             composable(TopLevelDestination.CALENDAR.route) {

@@ -14,6 +14,7 @@ import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,6 +31,7 @@ import com.creapolis.solennix.core.model.Event
 import com.creapolis.solennix.core.model.EventStatus
 import com.creapolis.solennix.core.model.InventoryItem
 import com.creapolis.solennix.core.model.extensions.asMXN
+import com.creapolis.solennix.core.model.extensions.parseFlexibleDate
 import com.creapolis.solennix.feature.dashboard.viewmodel.DashboardViewModel
 import com.creapolis.solennix.feature.dashboard.viewmodel.PendingEvent
 import com.creapolis.solennix.feature.dashboard.viewmodel.StatusCount
@@ -40,22 +42,31 @@ fun DashboardScreen(
     viewModel: DashboardViewModel,
     onEventClick: (String) -> Unit = {},
     onInventoryClick: (String) -> Unit = {},
-    onUpgradeClick: () -> Unit = {}
+    onUpgradeClick: () -> Unit = {},
+    onNewEventClick: () -> Unit = {},
+    onNewClientClick: () -> Unit = {},
+    onQuickQuoteClick: () -> Unit = {},
+    onSearchClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isWideScreen = LocalIsWideScreen.current
 
     Scaffold(
         topBar = {
-            SolennixTopAppBar(
-                title = { Text("Dashboard", style = MaterialTheme.typography.titleLarge) },
-                actions = {
-                    IconButton(onClick = { viewModel.refresh() }) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Refresh")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors()
-            )
+            if (!isWideScreen) {
+                SolennixTopAppBar(
+                    title = { Text("Dashboard", style = MaterialTheme.typography.titleLarge) },
+                    actions = {
+                        IconButton(onClick = { onSearchClick() }) {
+                            Icon(Icons.Default.Search, contentDescription = "Buscar")
+                        }
+                        IconButton(onClick = { viewModel.refresh() }) {
+                            Icon(Icons.Default.Refresh, contentDescription = "Actualizar")
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors()
+                )
+            }
         },
     ) { padding ->
         PullToRefreshBox(
@@ -76,13 +87,15 @@ fun DashboardScreen(
                         .padding(horizontal = 16.dp)
                 ) {
                 item {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = "Resumen del Mes",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = SolennixTheme.colors.primaryText
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
+                    if (isWideScreen) {
+                        DashboardGreetingHeader(
+                            userName = uiState.userName,
+                            onQuickQuoteClick = onQuickQuoteClick,
+                            onSearchClick = onSearchClick
+                        )
+                    } else {
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
                 }
 
                 // KPI Cards
@@ -146,6 +159,25 @@ fun DashboardScreen(
                     }
                 }
 
+                // Quick Action Buttons
+                item {
+                    if (isWideScreen) {
+                        Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            QuickActionButton("Nuevo Evento", Icons.Default.Event, SolennixTheme.colors.primary, onNewEventClick, Modifier.weight(1f))
+                            QuickActionButton("Nuevo Cliente", Icons.Default.PersonAdd, SolennixTheme.colors.kpiBlue, onNewClientClick, Modifier.weight(1f))
+                            QuickActionButton("Cotización Rápida", Icons.Default.RequestQuote, SolennixTheme.colors.kpiBlue, onQuickQuoteClick, Modifier.weight(1f))
+                            QuickActionButton("Buscar", Icons.Default.Search, SolennixTheme.colors.kpiOrange, onSearchClick, Modifier.weight(1f))
+                        }
+                    } else {
+                        Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            QuickActionButton("Nuevo Evento", Icons.Default.Event, SolennixTheme.colors.primary, onNewEventClick, Modifier.weight(1f))
+                            QuickActionButton("Nuevo Cliente", Icons.Default.PersonAdd, SolennixTheme.colors.kpiBlue, onNewClientClick, Modifier.weight(1f))
+                        }
+                    }
+                }
+
                 // Upgrade Banner for basic plan users
                 if (uiState.isBasicPlan) {
                     item {
@@ -157,62 +189,81 @@ fun DashboardScreen(
                     }
                 }
 
-                // Status Distribution + Pending Events
-                if (uiState.statusDistribution.isNotEmpty() || uiState.pendingEvents.isNotEmpty()) {
+                // Pending Events Banner
+                if (uiState.pendingEvents.isNotEmpty()) {
+                    item {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.warning.copy(alpha = 0.1f)),
+                            shape = MaterialTheme.shapes.medium
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text(
+                                    text = "Eventos Pendientes (${uiState.pendingEvents.size})",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = SolennixTheme.colors.warning,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                uiState.pendingEvents.forEach { pendingEvent ->
+                                    PendingEventItem(
+                                        pendingEvent = pendingEvent,
+                                        onClick = { onEventClick(pendingEvent.event.id) }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Status Distribution + Financial Comparison
+                if (uiState.statusDistribution.isNotEmpty()) {
                     item {
                         Spacer(modifier = Modifier.height(24.dp))
                         AdaptiveDetailLayout(
                             left = {
-                                if (uiState.statusDistribution.isNotEmpty()) {
-                                    Text(
-                                        text = "Estado de Eventos",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        color = SolennixTheme.colors.primaryText
-                                    )
-                                    EventStatusDistributionCard(statusCounts = uiState.statusDistribution)
-                                }
+                                Text(
+                                    text = "Estado de Eventos",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = SolennixTheme.colors.primaryText
+                                )
+                                EventStatusDistributionCard(statusCounts = uiState.statusDistribution)
                             },
                             right = {
-                                if (uiState.pendingEvents.isNotEmpty()) {
-                                    Text(
-                                        text = "Eventos Pendientes",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        color = SolennixTheme.colors.primaryText
-                                    )
-                                    uiState.pendingEvents.forEach { pendingEvent ->
-                                        PendingEventItem(
-                                            pendingEvent = pendingEvent,
-                                            onClick = { onEventClick(pendingEvent.event.id) }
-                                        )
-                                    }
-                                }
+                                FinancialComparisonCard(
+                                    revenueThisMonth = uiState.revenueThisMonth,
+                                    cashCollected = uiState.cashCollected,
+                                    vatOutstanding = uiState.vatOutstanding
+                                )
                             }
                         )
                     }
                 }
 
-                // Upcoming Events + Inventory Alerts
-                if (uiState.upcomingEvents.isNotEmpty() || uiState.lowStockItems.isNotEmpty()) {
+                // Low Stock Alerts
+                if (uiState.lowStockItems.isNotEmpty()) {
                     item {
                         Spacer(modifier = Modifier.height(24.dp))
-                        AdaptiveDetailLayout(
-                            left = {
-                                if (uiState.upcomingEvents.isNotEmpty()) {
-                                    Text(text = "Proximos Eventos", style = MaterialTheme.typography.titleMedium, color = SolennixTheme.colors.primaryText)
-                                    uiState.upcomingEvents.forEach { event ->
-                                        EventListItem(event = event, onClick = { onEventClick(event.id) })
-                                    }
-                                }
-                            },
-                            right = {
-                                if (uiState.lowStockItems.isNotEmpty()) {
-                                    Text(text = "Alertas de Inventario", style = MaterialTheme.typography.titleMedium, color = SolennixTheme.colors.primaryText)
-                                    uiState.lowStockItems.forEach { item ->
-                                        InventoryAlertItem(item = item, onClick = { onInventoryClick(item.id) })
-                                    }
-                                }
-                            }
-                        )
+                        Text(text = "Alertas de Inventario", style = MaterialTheme.typography.titleMedium, color = SolennixTheme.colors.primaryText)
+                        uiState.lowStockItems.forEach { item ->
+                            InventoryAlertItem(item = item, onClick = { onInventoryClick(item.id) })
+                        }
+                    }
+                }
+
+                // Upcoming Events
+                if (uiState.upcomingEvents.isNotEmpty()) {
+                    item {
+                        Spacer(modifier = Modifier.height(24.dp))
+                        Text(text = "Próximos Eventos", style = MaterialTheme.typography.titleMedium, color = SolennixTheme.colors.primaryText)
+                        uiState.upcomingEvents.forEach { event ->
+                            EventListItem(
+                                event = event,
+                                clientName = uiState.clientMap[event.clientId],
+                                onClick = { onEventClick(event.id) }
+                            )
+                        }
                     }
                 }
 
@@ -362,7 +413,7 @@ fun PendingEventItem(pendingEvent: PendingEvent, onClick: () -> Unit = {}) {
 }
 
 @Composable
-fun EventListItem(event: Event, onClick: () -> Unit = {}) {
+fun EventListItem(event: Event, clientName: String? = null, onClick: () -> Unit = {}) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -375,19 +426,162 @@ fun EventListItem(event: Event, onClick: () -> Unit = {}) {
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            DateBox(dateString = event.eventDate)
+            Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
+                if (!clientName.isNullOrEmpty()) {
+                    Text(
+                        text = clientName,
+                        style = MaterialTheme.typography.titleSmall,
+                        color = SolennixTheme.colors.primaryText
+                    )
+                }
                 Text(
                     text = event.serviceType,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = SolennixTheme.colors.primaryText
-                )
-                Text(
-                    text = event.eventDate,
                     style = MaterialTheme.typography.bodySmall,
                     color = SolennixTheme.colors.secondaryText
                 )
             }
             StatusBadge(status = event.status.name)
+        }
+    }
+}
+
+@Composable
+private fun DashboardGreetingHeader(
+    userName: String,
+    onQuickQuoteClick: () -> Unit,
+    onSearchClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val today = remember {
+        val now = java.time.LocalDate.now()
+        val formatter = java.time.format.DateTimeFormatter
+            .ofPattern("EEEE d 'de' MMMM", java.util.Locale("es", "MX"))
+        now.format(formatter).replaceFirstChar { it.uppercase() }
+    }
+    Row(
+        modifier = modifier.fillMaxWidth().padding(vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = if (userName.isNotEmpty()) "Hola, $userName" else "Hola",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = SolennixTheme.colors.primaryText
+            )
+            Text(
+                text = today,
+                style = MaterialTheme.typography.bodyMedium,
+                color = SolennixTheme.colors.secondaryText
+            )
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Surface(
+                modifier = Modifier.size(44.dp),
+                shape = RoundedCornerShape(22.dp),
+                color = SolennixTheme.colors.primaryLight,
+                onClick = onQuickQuoteClick
+            ) {
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                    Icon(Icons.Default.RequestQuote, contentDescription = "Cotización Rápida",
+                        tint = SolennixTheme.colors.primary, modifier = Modifier.size(22.dp))
+                }
+            }
+            Surface(
+                modifier = Modifier.size(44.dp),
+                shape = RoundedCornerShape(22.dp),
+                color = SolennixTheme.colors.primaryLight,
+                onClick = onSearchClick
+            ) {
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                    Icon(Icons.Default.Search, contentDescription = "Buscar",
+                        tint = SolennixTheme.colors.primary, modifier = Modifier.size(22.dp))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun QuickActionButton(
+    label: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    containerColor: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Button(
+        onClick = onClick,
+        modifier = modifier.height(52.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = containerColor),
+        shape = RoundedCornerShape(12.dp),
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+    ) {
+        Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color.White)
+        Spacer(modifier = Modifier.width(6.dp))
+        Text(label, style = MaterialTheme.typography.labelMedium, color = Color.White, maxLines = 1)
+    }
+}
+
+@Composable
+private fun DateBox(dateString: String, modifier: Modifier = Modifier) {
+    val (month, day) = remember(dateString) {
+        val parsed = try {
+            parseFlexibleDate(dateString)
+        } catch (_: Exception) { null }
+        if (parsed != null) {
+            val monthAbbr = parsed.month.getDisplayName(
+                java.time.format.TextStyle.SHORT, java.util.Locale("es", "MX")
+            ).replaceFirstChar { it.uppercase() }
+            monthAbbr to parsed.dayOfMonth.toString()
+        } else "" to ""
+    }
+    Box(modifier = modifier.size(48.dp).clip(RoundedCornerShape(10.dp))
+        .background(SolennixTheme.colors.primaryLight),
+        contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(month, style = MaterialTheme.typography.labelSmall,
+                color = SolennixTheme.colors.primary, fontWeight = FontWeight.SemiBold)
+            Text(day, style = MaterialTheme.typography.titleMedium,
+                color = SolennixTheme.colors.primary, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@Composable
+private fun FinancialComparisonCard(
+    revenueThisMonth: Double, cashCollected: Double, vatOutstanding: Double,
+    modifier: Modifier = Modifier
+) {
+    val maxValue = maxOf(revenueThisMonth, cashCollected, vatOutstanding, 1.0)
+    Card(modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
+        shape = MaterialTheme.shapes.large) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text("Comparativa Financiera", style = MaterialTheme.typography.titleSmall,
+                color = SolennixTheme.colors.primaryText, fontWeight = FontWeight.SemiBold)
+            FinancialBar("Ventas Netas", revenueThisMonth, maxValue, SolennixTheme.colors.kpiGreen)
+            FinancialBar("Cobrado Real", cashCollected, maxValue, SolennixTheme.colors.primary)
+            FinancialBar("IVA por Cobrar", vatOutstanding, maxValue, SolennixTheme.colors.kpiRed)
+        }
+    }
+}
+
+@Composable
+private fun FinancialBar(label: String, value: Double, maxValue: Double, barColor: Color) {
+    val fraction = (value / maxValue).coerceIn(0.0, 1.0).toFloat()
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Text(label, style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.secondaryText)
+            Text(value.asMXN(), style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.Medium, color = SolennixTheme.colors.primaryText)
+        }
+        Box(modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp))
+            .background(SolennixTheme.colors.surfaceAlt)) {
+            Box(modifier = Modifier.fillMaxWidth(fraction).fillMaxHeight()
+                .clip(RoundedCornerShape(4.dp)).background(barColor))
         }
     }
 }

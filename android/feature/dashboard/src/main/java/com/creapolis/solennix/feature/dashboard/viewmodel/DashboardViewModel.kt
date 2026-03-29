@@ -53,7 +53,9 @@ data class DashboardUiState(
     val lowStockCount: Int = 0,
     val isBasicPlan: Boolean = true,
     val pendingEvents: List<PendingEvent> = emptyList(),
-    val statusDistribution: List<StatusCount> = emptyList()
+    val statusDistribution: List<StatusCount> = emptyList(),
+    val userName: String = "",
+    val clientMap: Map<String, String> = emptyMap()
 )
 
 @HiltViewModel
@@ -163,6 +165,10 @@ class DashboardViewModel @Inject constructor(
 
         val currentPlan = authManager.currentUser.value?.plan ?: Plan.BASIC
 
+        val currentUser = authManager.currentUser.value
+        val firstName = currentUser?.name?.split(" ")?.firstOrNull() ?: ""
+        val clientMap = data.allClients.associate { it.id to it.name }
+
         DashboardUiState(
             upcomingEvents = data.upcoming,
             lowStockItems = data.lowStock,
@@ -178,7 +184,9 @@ class DashboardViewModel @Inject constructor(
             pendingQuotes = pendingQuotes,
             isBasicPlan = currentPlan == Plan.BASIC,
             pendingEvents = pendingEvents,
-            statusDistribution = statusDistribution
+            statusDistribution = statusDistribution,
+            userName = firstName,
+            clientMap = clientMap
         )
     }.stateIn(
         scope = viewModelScope,
