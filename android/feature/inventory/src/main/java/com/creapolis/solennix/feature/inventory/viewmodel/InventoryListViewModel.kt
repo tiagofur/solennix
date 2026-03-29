@@ -109,4 +109,23 @@ class InventoryListViewModel @Inject constructor(
             }
         }
     }
+
+    fun deleteItem(id: String) {
+        viewModelScope.launch {
+            try {
+                inventoryRepository.deleteInventoryItem(id)
+            } catch (_: Exception) {
+                // Item will be re-fetched from cache
+            }
+        }
+    }
+
+    fun adjustStock(item: InventoryItem, delta: Double) {
+        viewModelScope.launch {
+            try {
+                val updated = item.copy(currentStock = (item.currentStock + delta).coerceAtLeast(0.0))
+                inventoryRepository.updateInventoryItem(updated)
+            } catch (_: Exception) {}
+        }
+    }
 }

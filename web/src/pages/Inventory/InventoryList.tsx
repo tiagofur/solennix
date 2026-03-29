@@ -218,6 +218,40 @@ export const InventoryList: React.FC = () => {
     }));
   };
 
+  const renderMobileSortBar = (
+    sort: { key: SortKey; order: SortOrder },
+    setSort: React.Dispatch<React.SetStateAction<{ key: SortKey; order: SortOrder }>>,
+  ) => {
+    const sortLabels: Record<SortKey, string> = {
+      ingredient_name: "Nombre",
+      current_stock: "Stock Actual",
+      minimum_stock: "Stock Mínimo",
+      unit_cost: "Costo Unitario",
+    };
+    const sortKeys = Object.keys(sortLabels) as SortKey[];
+    return (
+      <div className="flex items-center gap-2 px-4 py-2 border-b border-border sm:hidden">
+        <span className="text-xs text-text-secondary font-medium whitespace-nowrap">Ordenar:</span>
+        <select
+          className="flex-1 text-xs bg-surface-alt border border-border rounded-lg px-2 py-1.5 text-text focus:outline-none focus:ring-2 focus:ring-primary/30"
+          value={`${sort.key}-${sort.order}`}
+          onChange={(e) => {
+            const [key, order] = e.target.value.split("-") as [SortKey, SortOrder];
+            setSort({ key, order });
+          }}
+          aria-label="Ordenar ítems"
+        >
+          {sortKeys.map((key) => (
+            <React.Fragment key={key}>
+              <option value={`${key}-asc`}>{sortLabels[key]} ↑</option>
+              <option value={`${key}-desc`}>{sortLabels[key]} ↓</option>
+            </React.Fragment>
+          ))}
+        </select>
+      </div>
+    );
+  };
+
   const renderSortIcon = (
     key: SortKey,
     sort: { key: SortKey; order: SortOrder },
@@ -515,7 +549,10 @@ export const InventoryList: React.FC = () => {
                   .
                 </div>
               ) : (
-                renderTable(ingredients, ingredientSort, handleIngredientSort)
+                <>
+                  {renderMobileSortBar(ingredientSort, setIngredientSort)}
+                  {renderTable(ingredients, ingredientSort, handleIngredientSort)}
+                </>
               )}
             </div>
           </section>
@@ -547,7 +584,10 @@ export const InventoryList: React.FC = () => {
                   .
                 </div>
               ) : (
-                renderTable(supplies, supplySort, handleSupplySort)
+                <>
+                  {renderMobileSortBar(supplySort, setSupplySort)}
+                  {renderTable(supplies, supplySort, handleSupplySort)}
+                </>
               )}
             </div>
           </section>
@@ -579,7 +619,10 @@ export const InventoryList: React.FC = () => {
                   .
                 </div>
               ) : (
-                renderTable(equipment, equipmentSort, handleEquipmentSort)
+                <>
+                  {renderMobileSortBar(equipmentSort, setEquipmentSort)}
+                  {renderTable(equipment, equipmentSort, handleEquipmentSort)}
+                </>
               )}
             </div>
           </section>

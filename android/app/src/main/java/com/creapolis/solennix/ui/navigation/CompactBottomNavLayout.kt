@@ -300,6 +300,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                 InventoryListScreen(
                     viewModel = hiltViewModel(),
                     onItemClick = { id -> navController.navigate("inventory_detail/$id") },
+                    onEditItem = { id -> navController.navigate("inventory_form?itemId=$id") },
                     onAddItemClick = { navController.navigate("inventory_form") },
                     onSearchClick = { navController.navigate(buildSearchRoute()) },
                     onNavigateBack = { navController.popBackStack() }
