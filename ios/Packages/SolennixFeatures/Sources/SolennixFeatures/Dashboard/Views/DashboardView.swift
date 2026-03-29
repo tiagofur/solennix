@@ -25,9 +25,6 @@ public struct DashboardView: View {
                 // Header
                 headerSection
 
-                // Plan Limits Banner
-                planLimitsBanner
-
                 // Onboarding Checklist
                 if let vm = viewModel, !hasCompletedOnboarding {
                     OnboardingChecklistView(
@@ -42,54 +39,31 @@ public struct DashboardView: View {
                     )
                 }
 
+                // Plan Limits Banner
+                planLimitsBanner
+
+                // Attention Events
+                if let vm = viewModel, !vm.attentionEvents.isEmpty {
+                    AttentionEventsCard(events: vm.attentionEvents)
+                        .padding(.horizontal, Spacing.md)
+                }
+
+                // KPI Cards
+                kpiCardsSection
+
                 // Quick Actions
                 quickActionsSection
+
+                // Charts
+                chartsSection
 
                 // Low Stock Alerts
                 if let vm = viewModel, !vm.lowStockItems.isEmpty {
                     lowStockSection(items: vm.lowStockItems)
                 }
 
-                // KPI Cards
-                kpiCardsSection
-
-                if isIPad {
-                    // iPad: Status chart + Financial chart side-by-side
-                    HStack(alignment: .top, spacing: Spacing.md) {
-                        if let vm = viewModel, !vm.eventsThisMonth.isEmpty {
-                            EventStatusChart(statusCounts: vm.eventStatusCounts)
-                                .frame(maxWidth: .infinity)
-                        }
-
-                        FinancialComparisonChart(
-                            netSales: viewModel?.netSalesThisMonth ?? 0,
-                            cashCollected: viewModel?.cashCollectedThisMonth ?? 0,
-                            vatOutstanding: viewModel?.vatOutstandingThisMonth ?? 0
-                        )
-                        .frame(maxWidth: .infinity)
-                    }
-                    .padding(.horizontal, Spacing.md)
-
-                    // Upcoming Events - full width
-                    upcomingEventsSection
-                        .padding(.horizontal, Spacing.md)
-                } else {
-                    // iPhone: stacked vertically
-                    if let vm = viewModel, !vm.eventsThisMonth.isEmpty {
-                        EventStatusChart(statusCounts: vm.eventStatusCounts)
-                            .padding(.horizontal, Spacing.md)
-                    }
-
-                    FinancialComparisonChart(
-                        netSales: viewModel?.netSalesThisMonth ?? 0,
-                        cashCollected: viewModel?.cashCollectedThisMonth ?? 0,
-                        vatOutstanding: viewModel?.vatOutstandingThisMonth ?? 0
-                    )
-                    .padding(.horizontal, Spacing.md)
-
-                    // Upcoming Events
-                    upcomingEventsSection
-                }
+                // Upcoming Events
+                upcomingEventsSection
 
                 Spacer(minLength: Spacing.xxl)
             }
@@ -358,6 +332,44 @@ public struct DashboardView: View {
             iconBgColor: SolennixColors.kpiOrangeBg,
             flexible: flexible
         )
+    }
+
+    // MARK: - Charts Section
+
+    private var chartsSection: some View {
+        Group {
+            if isIPad {
+                // iPad: keep charts side-by-side while moving them after quick actions
+                HStack(alignment: .top, spacing: Spacing.md) {
+                    if let vm = viewModel, !vm.eventsThisMonth.isEmpty {
+                        EventStatusChart(statusCounts: vm.eventStatusCounts)
+                            .frame(maxWidth: .infinity)
+                    }
+
+                    FinancialComparisonChart(
+                        netSales: viewModel?.netSalesThisMonth ?? 0,
+                        cashCollected: viewModel?.cashCollectedThisMonth ?? 0,
+                        vatOutstanding: viewModel?.vatOutstandingThisMonth ?? 0
+                    )
+                    .frame(maxWidth: .infinity)
+                }
+                .padding(.horizontal, Spacing.md)
+            } else {
+                // iPhone: keep charts stacked vertically
+                VStack(spacing: Spacing.lg) {
+                    if let vm = viewModel, !vm.eventsThisMonth.isEmpty {
+                        EventStatusChart(statusCounts: vm.eventStatusCounts)
+                    }
+
+                    FinancialComparisonChart(
+                        netSales: viewModel?.netSalesThisMonth ?? 0,
+                        cashCollected: viewModel?.cashCollectedThisMonth ?? 0,
+                        vatOutstanding: viewModel?.vatOutstandingThisMonth ?? 0
+                    )
+                }
+                .padding(.horizontal, Spacing.md)
+            }
+        }
     }
 
     // MARK: - Low Stock Section
