@@ -289,3 +289,8 @@ input, select, textarea {
     scrollbar-color: var(--color-border-strong) transparent;
   }
 }
+
+/* ── SAFE AREA (mobile bottom tab bar) ── */
+@utility safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}

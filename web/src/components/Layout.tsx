@@ -25,6 +25,8 @@ import clsx from 'clsx';
 import { ToastContainer } from './ToastContainer';
 import { Logo } from './Logo';
 import { CommandPalette } from './CommandPalette';
+import { BottomTabBar } from './BottomTabBar';
+import { QuickActionsFAB } from './QuickActionsFAB';
 
 export const Layout: React.FC = () => {
   const { signOut, user } = useAuth();
@@ -260,12 +262,14 @@ export const Layout: React.FC = () => {
           </div>
 
           {/* Scrollable Page Content */}
-          <main className="flex-1 overflow-y-auto px-6 lg:px-10 pb-10">
+          <main className="flex-1 overflow-y-auto px-6 lg:px-10 pb-28 lg:pb-10">
             <Outlet />
           </main>
         </div>
       </div>
 
+      <BottomTabBar />
+      <QuickActionsFAB />
       <ToastContainer />
       <CommandPalette isOpen={isCommandPaletteOpen} onClose={() => setIsCommandPaletteOpen(false)} />
     </div>
