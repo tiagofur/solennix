@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.creapolis.solennix.core.designsystem.component.PremiumButton
+import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.component.SolennixTextField
 import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveCenteredContent
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
@@ -34,7 +35,7 @@ fun ChangePasswordScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
+            SolennixTopAppBar(
                 title = { Text("Cambiar Contraseña") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {

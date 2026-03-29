@@ -25,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.component.StatusBadge
 import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveCardGrid
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
@@ -72,7 +73,7 @@ fun EventListScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
+            SolennixTopAppBar(
                 title = { Text("Eventos") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {

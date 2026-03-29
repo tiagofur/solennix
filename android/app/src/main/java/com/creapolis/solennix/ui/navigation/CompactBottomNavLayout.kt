@@ -23,6 +23,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.theme.SolennixElevation
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.feature.calendar.ui.CalendarScreen
@@ -446,7 +447,7 @@ fun MoreMenuScreen(
 ) {
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Más") })
+            SolennixTopAppBar(title = { Text("Más") })
         }
     ) { padding ->
         Column(

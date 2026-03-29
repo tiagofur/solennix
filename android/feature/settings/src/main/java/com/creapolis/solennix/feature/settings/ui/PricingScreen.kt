@@ -18,6 +18,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.component.PremiumButton
+import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveCenteredContent
 import com.creapolis.solennix.core.designsystem.theme.LocalIsWideScreen
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
@@ -36,7 +37,7 @@ fun PricingScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
+            SolennixTopAppBar(
                 title = { Text("Plan y Precios") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {

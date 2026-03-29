@@ -17,6 +17,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.creapolis.solennix.core.designsystem.component.PremiumButton
+import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.component.SolennixTextField
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.feature.auth.viewmodel.AuthViewModel
@@ -56,7 +57,7 @@ private fun RegisterFormContent(
     Scaffold(
         topBar = {
             if (!isWideScreen) {
-                TopAppBar(
+                SolennixTopAppBar(
                     title = { Text("Crear Cuenta", style = MaterialTheme.typography.titleLarge) },
                     navigationIcon = {
                         IconButton(onClick = onNavigateBack) {

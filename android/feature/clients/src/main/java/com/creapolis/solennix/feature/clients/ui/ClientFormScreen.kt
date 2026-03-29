@@ -33,6 +33,7 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.creapolis.solennix.core.network.UrlResolver
 import com.creapolis.solennix.core.designsystem.component.PremiumButton
+import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.component.SolennixTextField
 import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveCenteredContent
 import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveFormRow
@@ -62,7 +63,7 @@ fun ClientFormScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
+            SolennixTopAppBar(
                 title = { Text("Cliente") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {

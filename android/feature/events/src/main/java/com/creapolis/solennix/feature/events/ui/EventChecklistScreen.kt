@@ -20,6 +20,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.component.EmptyState
+import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveCenteredContent
 import com.creapolis.solennix.core.designsystem.theme.LocalIsWideScreen
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
@@ -40,7 +41,7 @@ fun EventChecklistScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
+            SolennixTopAppBar(
                 title = { Text("Checklist") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
