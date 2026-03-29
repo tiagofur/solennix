@@ -101,8 +101,8 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
             }
         },
         floatingActionButton = {
-            // Simple FAB on top-level destinations (except More and Calendar)
-            val showSimpleFab = isAtTopLevel && currentRoute != TopLevelDestination.MORE.route && currentRoute != TopLevelDestination.CALENDAR.route
+            // Simple FAB on top-level destinations (except More, Calendar, and Events — Events gets QuickActionsFAB later)
+            val showSimpleFab = isAtTopLevel && currentRoute != TopLevelDestination.MORE.route && currentRoute != TopLevelDestination.CALENDAR.route && currentRoute != TopLevelDestination.EVENTS.route
             if (showSimpleFab) {
                 FloatingActionButton(
                     onClick = { navController.navigate("event_form?eventId=") },
@@ -244,23 +244,18 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                     onAddClientClick = { navController.navigate("client_form") }
                 )
             }
-            composable(TopLevelDestination.MORE.route) {
-                MoreMenuScreen(
-                    onQuoteClick = { navController.navigate("event_form?eventId=") },
-                    onQuickQuoteClick = { navController.navigate("quick_quote") },
-                    onProductsClick = { navController.navigate("products") },
-                    onInventoryClick = { navController.navigate("inventory") },
-                    onSearchClick = { navController.navigate("search") },
-                    onSettingsClick = { navController.navigate("settings") }
-                )
-            }
-
-            // More Menu Destinations
-            composable("events") {
+            composable(TopLevelDestination.EVENTS.route) {
                 EventListScreen(
                     viewModel = hiltViewModel(),
                     onEventClick = { id -> navController.navigate("event_detail/$id") },
                     onNavigateBack = { navController.popBackStack() }
+                )
+            }
+            composable(TopLevelDestination.MORE.route) {
+                MoreMenuScreen(
+                    onProductsClick = { navController.navigate("products") },
+                    onInventoryClick = { navController.navigate("inventory") },
+                    onSettingsClick = { navController.navigate("settings") }
                 )
             }
             composable("products") {
@@ -442,11 +437,8 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MoreMenuScreen(
-    onQuoteClick: () -> Unit,
-    onQuickQuoteClick: () -> Unit,
     onProductsClick: () -> Unit,
     onInventoryClick: () -> Unit,
-    onSearchClick: () -> Unit,
     onSettingsClick: () -> Unit
 ) {
     Scaffold(
@@ -461,10 +453,6 @@ fun MoreMenuScreen(
                 .padding(horizontal = 16.dp)
         ) {
             Spacer(modifier = Modifier.height(8.dp))
-            MenuCard(title = "Cotización", subtitle = "Crea un nuevo evento con cotización", icon = Icons.Default.Receipt, onClick = onQuoteClick)
-            MenuCard(title = "Cotización Rápida", subtitle = "Arma una cotización sin registrar cliente", icon = Icons.Default.Bolt, onClick = onQuickQuoteClick)
-
-            Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = "Catálogo",
                 style = MaterialTheme.typography.titleSmall,
@@ -474,8 +462,7 @@ fun MoreMenuScreen(
             MenuCard(title = "Productos", subtitle = "Servicios y artículos que ofreces", icon = Icons.Default.Inventory2, onClick = onProductsClick)
             MenuCard(title = "Inventario", subtitle = "Control de equipos e insumos", icon = Icons.Default.Widgets, onClick = onInventoryClick)
 
-            Spacer(modifier = Modifier.height(8.dp))
-            MenuCard(title = "Buscar", subtitle = "Busca en toda la app", icon = Icons.Default.Search, onClick = onSearchClick)
+            Spacer(modifier = Modifier.height(16.dp))
             MenuCard(title = "Configuración", subtitle = "Cuenta, negocio y suscripción", icon = Icons.Default.Settings, onClick = onSettingsClick)
         }
     }
