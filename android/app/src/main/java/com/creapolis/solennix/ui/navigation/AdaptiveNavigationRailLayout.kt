@@ -138,6 +138,7 @@ fun AdaptiveNavigationRailLayout(
                 .width(drawerWidth)
                 .fillMaxHeight()
                 .background(SolennixTheme.colors.card)
+                .statusBarsPadding()
         ) {
             // Branding header
             Row(
