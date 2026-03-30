@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { DayPicker, type DayButtonProps } from "react-day-picker";
 import "react-day-picker/style.css";
 import { eventService } from "../../services/eventService";
@@ -11,6 +11,9 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   Calendar,
   CalendarDays,
+  CalendarPlus,
+  FileSearch,
+  ChevronDown,
   Users,
   Clock,
   MapPin,
@@ -87,6 +90,8 @@ export const CalendarView: React.FC = () => {
   const [isManagingBlocks, setIsManagingBlocks] = useState(false);
   const [isConfirmingUnblock, setIsConfirmingUnblock] = useState(false);
   const [contextMenuDate, setContextMenuDate] = useState<string | undefined>();
+  const [showCreateMenu, setShowCreateMenu] = useState(false);
+  const createMenuRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
   const [isFetching, setIsFetching] = useState(false);
 
@@ -213,11 +218,82 @@ export const CalendarView: React.FC = () => {
     [handleContextMenu, getDots],
   );
 
+  useEffect(() => {
+    if (!showCreateMenu) return;
+    const handler = (e: MouseEvent) => {
+      if (createMenuRef.current && !createMenuRef.current.contains(e.target as Node)) {
+        setShowCreateMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showCreateMenu]);
+
+  const createMenuDate = selectedDate
+    ? format(selectedDate, "yyyy-MM-dd")
+    : format(new Date(), "yyyy-MM-dd");
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h1 className="text-2xl font-bold text-text">Calendario</h1>
         <div className="flex items-center gap-3">
+          {/* Create event / quick quote dropdown — mirrors iOS Menu(+) */}
+          <div ref={createMenuRef} className="relative">
+            <button
+              type="button"
+              onClick={() => setShowCreateMenu((v) => !v)}
+              className="inline-flex items-center justify-center px-4 py-2 text-sm font-bold rounded-xl text-white premium-gradient shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all hover:scale-[1.02]"
+              aria-haspopup="menu"
+              aria-expanded={showCreateMenu}
+              aria-label="Crear nuevo evento o cotización"
+            >
+              <CalendarPlus className="h-4 w-4 mr-2" aria-hidden="true" />
+              Nuevo
+              <ChevronDown
+                className={`h-3.5 w-3.5 ml-1.5 transition-transform duration-200 ${showCreateMenu ? "rotate-180" : ""}`}
+                aria-hidden="true"
+              />
+            </button>
+
+            {showCreateMenu && (
+              <div
+                role="menu"
+                className="absolute right-0 mt-2 w-52 bg-card border border-border rounded-2xl shadow-xl z-20 overflow-hidden fade-in"
+              >
+                <Link
+                  to={`/events/new?date=${createMenuDate}`}
+                  role="menuitem"
+                  onClick={() => setShowCreateMenu(false)}
+                  className="flex items-center gap-3 px-4 py-3 text-sm text-text hover:bg-surface-alt transition-colors"
+                >
+                  <CalendarPlus className="h-4 w-4 text-primary shrink-0" aria-hidden="true" />
+                  <span>
+                    <span className="font-medium block">Nuevo Evento</span>
+                    <span className="text-xs text-text-secondary">
+                      {selectedDate
+                        ? format(selectedDate, "d 'de' MMMM", { locale: es })
+                        : "Selecciona una fecha"}
+                    </span>
+                  </span>
+                </Link>
+                <div className="border-t border-border" />
+                <Link
+                  to="/cotizacion-rapida"
+                  role="menuitem"
+                  onClick={() => setShowCreateMenu(false)}
+                  className="flex items-center gap-3 px-4 py-3 text-sm text-text hover:bg-surface-alt transition-colors"
+                >
+                  <FileSearch className="h-4 w-4 text-primary shrink-0" aria-hidden="true" />
+                  <span>
+                    <span className="font-medium block">Cotización Rápida</span>
+                    <span className="text-xs text-text-secondary">Sin crear evento</span>
+                  </span>
+                </Link>
+              </div>
+            )}
+          </div>
+
           <button
             type="button"
             onClick={() => {
