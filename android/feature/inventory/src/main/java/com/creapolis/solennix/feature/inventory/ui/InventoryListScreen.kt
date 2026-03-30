@@ -17,6 +17,7 @@ import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -165,7 +166,8 @@ fun InventoryListScreen(
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Agregar item")
             }
-        }
+        },
+        contentWindowInsets = WindowInsets(0)
     ) { padding ->
         PullToRefreshBox(
             isRefreshing = uiState.isRefreshing,
