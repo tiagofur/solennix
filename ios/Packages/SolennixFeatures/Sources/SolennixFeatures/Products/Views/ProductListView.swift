@@ -20,6 +20,7 @@ public struct ProductListView: View {
             filterBar
             content
         }
+        .background(SolennixColors.surfaceGrouped)
         .navigationTitle("Productos")
         .navigationBarTitleDisplayMode(.large)
         .refreshable { await viewModel.loadProducts() }

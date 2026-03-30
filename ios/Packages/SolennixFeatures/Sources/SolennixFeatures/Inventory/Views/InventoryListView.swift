@@ -20,6 +20,7 @@ public struct InventoryListView: View {
             filterBar
             content
         }
+        .background(SolennixColors.surfaceGrouped)
         .navigationTitle("Inventario")
         .navigationBarTitleDisplayMode(.large)
         .refreshable { await viewModel.loadItems() }
