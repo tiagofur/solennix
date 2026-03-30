@@ -228,10 +228,8 @@ fun AdaptiveNavigationRailLayout(
         // Content area with NavHost
         Scaffold(
             floatingActionButton = {
-                // QuickActionsFAB on section-level routes (except events and settings)
-                val showQuickActions = isAtSectionLevel
-                    && currentRoute != "events"
-                    && currentRoute != "settings"
+                // QuickActionsFAB on all section-level routes except settings
+                val showQuickActions = isAtSectionLevel && currentRoute != "settings"
 
                 if (showQuickActions) {
                     QuickActionsFAB(
@@ -343,8 +341,6 @@ fun AdaptiveNavigationRailLayout(
                         viewModel = hiltViewModel(),
                         onEventClick = { id -> navController.navigate("event_detail/$id") },
                         onNavigateBack = { navController.popBackStack() },
-                        onNewEventClick = { navController.navigate("event_form?eventId=") },
-                        onQuickQuoteClick = { navController.navigate("quick_quote") },
                         onSearchClick = { navController.navigate(buildSearchRoute()) },
                         showBackButton = false
                     )
