@@ -115,6 +115,9 @@
     --color-status-completed: #52B788;
     --color-status-cancelled: #ff453a;
 
+    /* Navy selected container (matches Android drawer dark mode) */
+    --color-primary-light: #1B2A4A;
+
     color-scheme: dark;
   }
 }

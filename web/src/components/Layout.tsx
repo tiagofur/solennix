@@ -150,7 +150,7 @@ export const Layout: React.FC = () => {
                       "flex items-center text-sm font-semibold rounded-2xl transition-all duration-200",
                       isCollapsed ? "lg:justify-center lg:p-3 px-4 py-3" : "px-4 py-3",
                       isActive
-                        ? "bg-primary text-white shadow-md shadow-primary/20"
+                        ? "bg-[var(--color-primary-light)] text-primary"
                         : "text-text-secondary hover:bg-surface-alt hover:text-text"
                     )}
                     onClick={() => setIsSidebarOpen(false)}
