@@ -171,6 +171,16 @@ struct SidebarSplitLayout: View {
             .foregroundStyle(isActive ? SolennixColors.primary : SolennixColors.textSecondary)
             .fontWeight(isActive ? .semibold : .regular)
             .tag(section)
+            // Suppress system tint overlay and draw our own pill background
+            .tint(Color.clear)
+            .listRowBackground(
+                isActive
+                    ? RoundedRectangle(cornerRadius: 10)
+                        .fill(SolennixColors.primaryLight)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 2)
+                    : nil
+            )
     }
 
     private var globalSearchPrompt: String {
