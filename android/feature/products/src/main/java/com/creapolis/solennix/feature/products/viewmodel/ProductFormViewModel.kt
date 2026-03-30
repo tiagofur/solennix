@@ -98,8 +98,12 @@ class ProductFormViewModel @Inject constructor(
         viewModelScope.launch {
             isLoading = true
             try {
-                // Load inventory items
-                inventoryRepository.syncInventory()
+                // Sync inventory from network (non-blocking: use cache if sync fails)
+                try {
+                    inventoryRepository.syncInventory()
+                } catch (_: Exception) {
+                    // Sync failed (e.g. expired token), fall back to cached data
+                }
                 allInventoryItems = inventoryRepository.getInventoryItems().first()
 
                 // Load existing categories from products

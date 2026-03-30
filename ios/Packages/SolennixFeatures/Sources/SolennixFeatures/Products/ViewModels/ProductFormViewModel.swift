@@ -138,12 +138,17 @@ public final class ProductFormViewModel {
         errorMessage = nil
 
         do {
-            // Load inventory items and existing products (for categories) in parallel
-            async let inventoryTask: [InventoryItem] = apiClient.get(Endpoint.inventory)
-            async let productsTask: [Product] = apiClient.get(Endpoint.products)
+            // Load inventory (non-blocking: if it fails, continue with empty list)
+            do {
+                let inventory: [InventoryItem] = try await apiClient.get(Endpoint.inventory)
+                inventoryItems = inventory
+            } catch {
+                // Inventory sync failed (e.g. expired token), continue with empty list
+                inventoryItems = []
+            }
 
-            let (inventory, products) = try await (inventoryTask, productsTask)
-            inventoryItems = inventory
+            // Load existing products for categories
+            let products: [Product] = try await apiClient.get(Endpoint.products)
 
             // Extract unique categories
             let cats = Set(products.map { $0.category }.filter { !$0.isEmpty })
