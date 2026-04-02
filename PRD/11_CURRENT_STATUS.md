@@ -1,7 +1,7 @@
 # Estado Actual del Proyecto — Solennix
 
-**Fecha:** Marzo 2026
-**Version:** 1.0
+**Fecha:** Abril 2026
+**Version:** 1.1
 
 ---
 
@@ -12,7 +12,7 @@
 | Backend (Go) | Funcional ✅ | API completa, 27 migraciones, auth multi-proveedor, Stripe, RevenueCat + sync bidireccional |
 | Web (React) | Funcional ✅ | Todas las paginas principales, panel admin, cotizacion rapida |
 | iOS (SwiftUI) | En desarrollo 🔄 | Features principales + widgets (4 tipos) + Live Activity + 7 generadores PDF |
-| Android (Jetpack Compose) | En desarrollo 🔄 | Features principales, arquitectura modular multi-feature |
+| Android (Jetpack Compose) | En desarrollo 🔄 | Features principales, arquitectura modular multi-feature, 8 generadores PDF, RevenueCat billing |
 
 ---
 
@@ -209,7 +209,15 @@
 
 ### Eventos
 - ✅ Lista de eventos (EventListView)
-- ✅ Detalle de evento (EventDetailView)
+- ✅ Detalle de evento — Hub con cards de navegacion (EventDetailView)
+  - ✅ Sub-pantalla: Finanzas (EventFinancesDetailView) — 9 metricas financieras
+  - ✅ Sub-pantalla: Pagos (EventPaymentsDetailView) — KPIs, historial, registro de pagos
+  - ✅ Sub-pantalla: Productos (EventProductsDetailView) — lista con cantidades y precios
+  - ✅ Sub-pantalla: Extras (EventExtrasDetailView) — lista con descripciones y precios
+  - ✅ Sub-pantalla: Insumos (EventSuppliesDetailView) — KPIs, badges almacen/compra
+  - ✅ Sub-pantalla: Equipo (EventEquipmentDetailView) — lista con cantidades
+  - ✅ Sub-pantalla: Lista de compras (EventShoppingListView) — comparacion con stock actual
+  - ✅ Sub-pantalla: Fotos (EventPhotosDetailView) — galeria con upload y lightbox
 - ✅ Formulario de evento 5 pasos (EventFormView):
   - ✅ Step 1: Informacion general (Step1GeneralView)
   - ✅ Step 2: Productos (Step2ProductsView)
@@ -241,9 +249,14 @@
 
 ### Dashboard
 - ✅ Dashboard principal (DashboardView)
-- ✅ Tarjetas KPI (KPICardView)
+- ✅ Tarjetas KPI — 8 KPIs (KPICardView)
 - ✅ Grafico de estado de eventos (EventStatusChart)
-- ✅ Modal de eventos pendientes (PendingEventsModalView)
+- ✅ Grafico de comparativa financiera (FinancialComparisonChart)
+- ✅ Alertas de Atencion (AttentionEventsCard) — 3 tipos: vencido, pago pendiente, sin confirmar
+- ✅ Quick Actions — 2 botones: Nuevo Evento + Nuevo Cliente
+- ✅ Alertas de Stock Bajo
+- ✅ Proximos Eventos con dropdown de estado
+- ✅ Onboarding Checklist (OnboardingChecklistView)
 
 ### Configuracion
 - ✅ Pantalla de configuracion (SettingsView)
@@ -314,10 +327,10 @@
 ### Pendiente iOS
 | Item | Prioridad | Notas |
 |------|-----------|-------|
-| Modo offline completo | P1 | SwiftData existe pero falta sincronizacion offline-first completa |
-| Push notifications | P1 | Device tokens se registran pero no hay manejo de notificaciones entrantes |
+| Push notifications | P1 | Device tokens se registran pero backend no envia. Falta manejo de notificaciones entrantes |
+| Contract preview interactivo | P2 | Solo genera PDF. Web tiene preview inline con gating de anticipo |
 | ~~StoreKit 2 flujo de compra completo~~ | ✅ | Reemplazado por RevenueCat SDK — flujo completo implementado |
-| Feature gating enforcement | P0 | Limites de plan definidos pero no enforced en todas las vistas |
+| ~~Feature gating enforcement~~ | ✅ | PlanLimitsManager implementado y wired en vistas principales |
 | ~~Apple Sign-In en UI~~ | ✅ | Wired AppleSignInService a LoginView y RegisterView |
 | ~~Google Sign-In en UI~~ | ✅ | GoogleSignIn SDK integrado con GoogleSignInService |
 
@@ -336,7 +349,15 @@
 
 ### Eventos
 - ✅ Lista de eventos (EventListScreen)
-- ✅ Detalle de evento (EventDetailScreen)
+- ✅ Detalle de evento — Hub con cards de navegacion (EventDetailScreen)
+  - ✅ Sub-pantalla: Finanzas (EventFinancesScreen) — 9 metricas financieras
+  - ✅ Sub-pantalla: Pagos (EventPaymentsScreen) — KPIs, historial, registro de pagos
+  - ✅ Sub-pantalla: Productos (EventProductsScreen) — lista con cantidades y precios
+  - ✅ Sub-pantalla: Extras (EventExtrasScreen) — lista con descripciones y precios
+  - ✅ Sub-pantalla: Insumos (EventSuppliesScreen) — KPIs, badges almacen/compra
+  - ✅ Sub-pantalla: Equipo (EventEquipmentScreen) — lista con cantidades
+  - ✅ Sub-pantalla: Lista de compras (EventShoppingListScreen) — comparacion con stock
+  - ✅ Sub-pantalla: Fotos (EventPhotosScreen) — galeria con upload y lightbox
 - ✅ Formulario de evento 6 pasos (EventFormScreen):
   - ✅ StepGeneralInfo
   - ✅ StepProducts
@@ -367,7 +388,25 @@
 
 ### Dashboard
 - ✅ Dashboard principal (DashboardScreen)
+- ✅ Tarjetas KPI — 8 KPIs
+- ✅ Alertas de Atencion (PendingEventsBanner) — 3 tipos: vencido, pago pendiente, sin confirmar
+- ✅ Quick Actions — 2 botones: Nuevo Evento + Nuevo Cliente
+- ✅ Grafico de estado de eventos + Comparativa financiera
+- ✅ Alertas de Inventario
+- ✅ Proximos Eventos
+- ✅ Onboarding Checklist inline
+- ✅ Saludo "Hola, nombre" + fecha
 - ✅ Onboarding (OnboardingScreen)
+
+### Generacion de PDF (8 tipos)
+- ✅ Presupuesto (BudgetPdfGenerator)
+- ✅ Contrato (ContractPdfGenerator)
+- ✅ Lista de compras (ShoppingListPdfGenerator)
+- ✅ Checklist (ChecklistPdfGenerator)
+- ✅ Reporte de pagos (PaymentReportPdfGenerator)
+- ✅ Factura (InvoicePdfGenerator)
+- ✅ Lista de equipamiento (EquipmentListPdfGenerator)
+- ✅ Cotizacion rapida (QuickQuotePdfGenerator)
 
 ### Configuracion
 - ✅ Pantalla de configuracion (SettingsScreen)
@@ -412,17 +451,17 @@
 | Item | Prioridad | Notas |
 |------|-----------|-------|
 | ~~Widgets (Glance)~~ | ✅ | QuickActionsWidget implementado con eventos del dia + acciones rapidas |
-| Generacion de PDF | P1 | No implementado (excepto QuickQuotePdfGenerator) |
+| ~~Generacion de PDF~~ | ✅ | 8 generadores implementados: Budget, Contract, Shopping, Checklist, PaymentReport, Invoice, Equipment, QuickQuote |
 | ~~Play Billing~~ | ✅ | Implementado via RevenueCat SDK |
 | ~~Google Sign-In mock~~ | ✅ | Reemplazado mock con Credential Manager real |
 | ~~RevenueCat sync en register/Google~~ | ✅ | Agregado logInWith despues de register y Google sign-in |
-| Push notifications (FCM) | P1 | No implementado |
+| Push notifications (FCM) | P1 | SolennixMessagingService esta comentado. Device tokens se registran pero backend no envia |
+| Contract preview interactivo | P2 | Solo genera PDF. Web tiene preview inline con gating de anticipo |
 | Deep linking completo | P2 | Parcial |
 | Navigation Rail (tablets) | P2 | Parcialmente implementado via AdaptiveNavigationRailLayout — falta completar refactor de sidebar |
 | Live Activity equivalente (notificacion persistente) | P2 | No implementado |
 | ~~Cotizacion rapida (Quick Quote)~~ | ✅ | QuickQuoteScreen + QuickQuoteViewModel + QuickQuotePdfGenerator |
 | ~~Feature gating enforcement~~ | ✅ | PlanLimitsManager wired into EventForm, ClientForm, ProductForm + UpgradePlanDialog |
-| Offline mode (Room + sync) | P1 | No implementado |
 
 ---
 
@@ -441,11 +480,16 @@
 | Suministros en evento | ✅ | ✅ | ✅ | ✅ | |
 | Conflictos de equipamiento | ✅ | ✅ | ✅ | ✅ | |
 | Sugerencias de equipamiento | ✅ | ✅ | ✅ | ✅ | |
-| Fotos de evento | ✅ | ⬜ | ⬜ | ✅ | Solo iOS tiene UI de fotos |
+| Fotos de evento | ✅ | ✅ | ⬜ | ✅ | iOS y Android tienen galeria con upload/lightbox |
 | Checklist de evento | ✅ | ✅ | ⬜ | ➖ | Cliente-side |
-| Pago de evento (Stripe) | ⬜ | ⬜ | ✅ | ✅ | Solo web tiene checkout |
+| Pago de evento (Stripe) | ⬜ | ⬜ | ✅ | ✅ | Solo web tiene checkout Stripe |
+| Registro de pagos en detalle | ✅ | ✅ | ✅ | ✅ | iOS y Android: sub-pantalla de pagos con historial y registro |
 | Eventos proximos | ✅ | ✅ | ✅ | ✅ | |
 | Quick client en evento | ✅ | ⬜ | ✅ | ✅ | |
+| Detalle evento: Hub con cards | ✅ | ✅ | ✅ (tabs) | ✅ | Mobile: cards navegables. Web: tabs |
+| Detalle evento: Sub-pantalla finanzas (9 KPIs) | ✅ | ✅ | ✅ | ✅ | |
+| Detalle evento: Lista de compras con stock | ✅ | ✅ | ✅ | ✅ | |
+| Detalle evento: Contract preview interactivo | ⬜ | ⬜ | ✅ | ✅ | Solo web tiene preview con gating de anticipo |
 
 ### Clientes
 
@@ -493,7 +537,7 @@
 |---------|-----|---------|-----|---------|-------|
 | Vista mensual (unica vista) | ✅ | ✅ | ✅ | ✅ | Vista lista ELIMINADA — migrada a seccion Eventos |
 | Fechas no disponibles (long-press) | ✅ | ✅ | 🔄 | ✅ | Web: pendiente agregar right-click. iOS: pendiente rangos en long-press |
-| Gestion centralizada de bloqueos | 🔄 | ✅ | 🔄 | ✅ | iOS: crear BlockedDatesSheet. Web: expandir modal. Android: ya tiene BottomSheet |
+| Gestion centralizada de bloqueos | ✅ | ✅ | 🔄 | ✅ | iOS: BlockedDatesSheet implementado. Web: expandir modal. Android: BottomSheet |
 | Toolbar simplificado | 🔄 | 🔄 | 🔄 | ➖ | Refactor pendiente: solo "Gestionar Bloqueos" + "Hoy" |
 | Panel de dia seleccionado | ✅ | ✅ | ✅ | ➖ | Split view en tablet/desktop |
 
@@ -515,36 +559,37 @@
 | Feature | iOS | Android | Web | Backend | Notas |
 |---------|-----|---------|-----|---------|-------|
 | Dashboard principal | ✅ | ✅ | ✅ | ✅ | |
-| Header (saludo + fecha) | ✅ | 🔄 | ✅ | ➖ | Android Phone: pendiente agregar saludo |
-| KPI cards (8) | ✅ | ✅ | ✅ | ✅ | Pendiente unificar nombre "Ventas Netas" en Android |
-| Alertas de Atencion | 🔄 | ✅ | 🔄 | ✅ | NUEVO. iOS y Web: pendiente crear. Android: expandir con criterio "sin confirmar 14 dias" |
-| Quick Actions (2) | 🔄 | 🔄 | 🔄 | ➖ | Pendiente reducir de 4 a 2 en tablet/desktop |
+| Header (saludo + fecha) | ✅ | ✅ | ✅ | ➖ | Todas las plataformas tienen saludo + fecha |
+| KPI cards (8) | ✅ | ✅ | ✅ | ✅ | Labels consistentes. Web: "Cobrado (mes)" vs mobile: "Cobrado" (menor) |
+| Alertas de Atencion | ✅ | ✅ | ✅ | ✅ | 3 tipos: vencido, pago pendiente, sin confirmar. Implementado en las 3 plataformas |
+| Quick Actions (2) | ✅ | ✅ | ✅ | ➖ | Nuevo Evento + Nuevo Cliente en las 3 plataformas |
 | Chart: Distribucion estados | ✅ | ✅ | ✅ | ➖ | |
 | Chart: Comparacion financiera | ✅ | ✅ | ✅ | ➖ | |
 | Stock Bajo | ✅ | ✅ | ✅ | ➖ | |
-| Proximos Eventos | ✅ | ✅ | ✅ | ✅ | iOS: pendiente agregar dropdown cambio estado inline |
-| Onboarding Checklist | ✅ | 🔄 | ✅ | ➖ | Android: pendiente agregar inline en Dashboard |
-| Orden alertas primero | 🔄 | 🔄 | 🔄 | ➖ | Pendiente reordenar en las 3 plataformas |
+| Proximos Eventos | ✅ | ✅ | ✅ | ✅ | |
+| Onboarding Checklist | ✅ | ✅ | ✅ | ➖ | Inline en las 3 plataformas |
+| Orden secciones | ✅ | ✅ | ✅ | ➖ | Saludo → Onboarding → Banner → Alertas → KPIs → Actions → Charts → Stock → Eventos |
 
 ### Pagos
 
 | Feature | iOS | Android | Web | Backend | Notas |
 |---------|-----|---------|-----|---------|-------|
-| Lista de pagos | ⬜ | ⬜ | ✅ | ✅ | Solo web |
-| Crear pago | ⬜ | ⬜ | ✅ | ✅ | Solo web |
-| Pago de evento (Stripe) | ⬜ | ⬜ | ✅ | ✅ | Solo web |
+| Registro de pagos en evento | ✅ | ✅ | ✅ | ✅ | iOS/Android: sub-pantalla de pagos con historial y modal de registro |
+| Historial de pagos por evento | ✅ | ✅ | ✅ | ✅ | Con KPIs (Total, Pagado, Saldo) y barra de progreso |
+| Pago de evento (Stripe checkout) | ⬜ | ⬜ | ✅ | ✅ | Solo web tiene checkout Stripe directo |
 
 ### PDFs
 
 | Feature | iOS | Android | Web | Backend | Notas |
 |---------|-----|---------|-----|---------|-------|
-| Presupuesto PDF | ✅ | ⬜ | ⬜ | ➖ | Solo iOS |
-| Contrato PDF | ✅ | ⬜ | ⬜ | ➖ | Solo iOS |
-| Lista de compras PDF | ✅ | ⬜ | ⬜ | ➖ | Solo iOS |
-| Checklist PDF | ✅ | ⬜ | ⬜ | ➖ | Solo iOS |
-| Reporte de pagos PDF | ✅ | ⬜ | ⬜ | ➖ | Solo iOS |
-| Factura PDF | ✅ | ⬜ | ⬜ | ➖ | Solo iOS |
-| Lista de equipamiento PDF | ✅ | ⬜ | ⬜ | ➖ | Solo iOS |
+| Presupuesto PDF | ✅ | ✅ | ⬜ | ➖ | iOS: Core Graphics, Android: PdfDocument API |
+| Contrato PDF | ✅ | ✅ | ⬜ | ➖ | Con template de tokens personalizables |
+| Lista de compras PDF | ✅ | ✅ | ⬜ | ➖ | |
+| Checklist PDF | ✅ | ✅ | ⬜ | ➖ | |
+| Reporte de pagos PDF | ✅ | ✅ | ⬜ | ➖ | |
+| Factura PDF | ✅ | ✅ | ⬜ | ➖ | |
+| Lista de equipamiento PDF | ✅ | ✅ | ⬜ | ➖ | |
+| Cotizacion rapida PDF | ✅ | ✅ | ⬜ | ➖ | |
 
 ### Busqueda
 
@@ -570,7 +615,7 @@
 | Ver estado de suscripcion | ✅ | ✅ | ✅ | ✅ | |
 | Flujo de compra | ✅ | ✅ | ✅ (Stripe) | ✅ | iOS y Android via RevenueCat SDK, Web via Stripe |
 | Portal de gestion | ⬜ | ⬜ | ✅ (Stripe) | ✅ | Solo web |
-| Feature gating | 🔄 | 🔄 | 🔄 | ✅ | Backend enforced (403 structured), iOS PlanLimitsManager, Android PlanLimitsManager + UpgradePlanDialog, Web usePlanLimits |
+| Feature gating | ✅ | ✅ | 🔄 | ✅ | Backend enforced (403). iOS: PlanLimitsManager. Android: PlanLimitsManager + UpgradePlanDialog. Web: usePlanLimits (parcial) |
 | Webhook Stripe | ➖ | ➖ | ➖ | ✅ | |
 | Webhook RevenueCat | ➖ | ➖ | ➖ | ✅ | |
 
@@ -670,17 +715,17 @@ Refactors planificados para lograr paridad total entre las 6 plataformas (iPhone
 
 ### 8.2 Refactor de Dashboard (DASHBOARD_REFACTOR_PLAN.md)
 
-**Estado:** Planificado — pendiente implementacion.
+**Estado:** ✅ Completado — todos los items implementados.
 
 | Cambio | iOS | Android | Web | Descripcion |
 |--------|-----|---------|-----|-------------|
-| Remover botones accion del header | 🔄 | 🔄 | 🔄 | Quick Quote, Search, Refresh → ya viven en FAB y topbar |
-| Reducir Quick Actions de 4 a 2 | 🔄 | 🔄 | 🔄 | Solo Nuevo Evento + Nuevo Cliente |
-| Crear widget Alertas de Atencion | 🔄 | ✅ (parcial) | 🔄 | Eventos con pago pendiente, vencidos, sin confirmar |
-| Reordenar secciones | 🔄 | 🔄 | 🔄 | Alertas → KPIs → Actions → Charts → Stock → Eventos |
-| Saludo en Android Phone | ➖ | 🔄 | ➖ | Agregar saludo (solo estaba en tablet) |
-| Onboarding inline en Android | ➖ | 🔄 | ➖ | Agregar checklist como iOS y Web |
-| Unificar nombre "Ventas Netas" | ✅ | 🔄 | ✅ | Android decia "Ventas del Mes" |
+| ~~Remover botones accion del header~~ | ✅ | ✅ | ✅ | Quick Quote, Search, Refresh movidos a FAB y topbar |
+| ~~Reducir Quick Actions de 4 a 2~~ | ✅ | ✅ | ✅ | Solo Nuevo Evento + Nuevo Cliente |
+| ~~Crear widget Alertas de Atencion~~ | ✅ | ✅ | ✅ | 3 tipos en las 3 plataformas |
+| ~~Reordenar secciones~~ | ✅ | ✅ | ✅ | Saludo → Onboarding → Banner → Alertas → KPIs → Actions → Charts → Stock → Eventos |
+| ~~Saludo en Android Phone~~ | ➖ | ✅ | ➖ | Saludo presente en phone y tablet |
+| ~~Onboarding inline en Android~~ | ➖ | ✅ | ➖ | Checklist inline implementado |
+| ~~Unificar nombre "Ventas Netas"~~ | ✅ | ✅ | ✅ | Consistente en las 3 plataformas |
 
 ### 8.3 Refactor de Calendario (CALENDAR_REFACTOR_PLAN.md)
 
@@ -698,25 +743,27 @@ Refactors planificados para lograr paridad total entre las 6 plataformas (iPhone
 
 ---
 
-## 9. Resumen de Brechas Criticas
+## 9. Resumen de Brechas Criticas (Abril 2026)
 
 | Brecha | Plataformas Afectadas | Impacto | Esfuerzo Estimado | Prioridad |
 |--------|----------------------|---------|-------------------|-----------|
-| Feature gating no enforced | iOS, Web | Backend enforced (403 structured), Android PlanLimitsManager done, iOS y Web necesitan completar enforcement | 6-10h | P0 |
-| ~~Play Billing no implementado~~ | ✅ | Implementado via RevenueCat SDK | 0h | ✅ |
-| Push notifications no implementadas | iOS, Android | Sin engagement ni recordatorios de eventos | 15-20h | P1 |
-| Generacion de PDF falta en Android | Android | Usuarios Android no pueden generar documentos | 20-25h | P1 |
-| ~~Widgets falta en Android~~ | ✅ | QuickActionsWidget implementado (Glance) | 0h | ✅ |
-| Modo offline incompleto en movil | iOS, Android | Sin funcionalidad sin conexion | 20-30h | P1 |
-| ~~StoreKit 2 flujo incompleto~~ | ✅ | Reemplazado por RevenueCat SDK | 0h | ✅ |
-| Notificaciones email limitadas | Backend | Solo reset de contrasena; sin recordatorios | 10-15h | P1 |
-| ~~Google/Apple Sign-In sin UI~~ | ✅ | Implementado en todas las plataformas | 0h | ✅ |
-| ~~Cotizacion rapida falta en Android~~ | ✅ | QuickQuoteScreen + QuickQuoteViewModel + QuickQuotePdfGenerator | 0h | ✅ |
-| Fotos de evento falta en Android y Web | Android, Web | Solo iOS tiene galeria de fotos | 10-15h | P2 |
-| Panel admin solo en web | iOS, Android | Administracion solo desde navegador | ➖ | P3 (aceptable) |
+| Push notifications no implementadas | iOS, Android, Backend | Tokens registrados pero backend NO envia. Sin engagement ni recordatorios | 15-20h | P1 |
+| Contract preview interactivo en mobile | iOS, Android | Web tiene preview inline con gating de anticipo. Mobile solo genera PDF | 8-12h | P2 |
+| Notificaciones email limitadas | Backend | Solo reset de contrasena; sin recordatorios de eventos/pagos | 10-15h | P1 |
 | Deep linking incompleto en Android | Android | Navegacion desde URLs externas limitada | 4-6h | P2 |
 | Live Activity equivalente en Android | Android | Sin notificacion persistente durante eventos | 6-8h | P2 |
-| ~~Graficos de estado en Dashboard~~ | ✅ | Implementado en las 3 plataformas (EventStatusChart + FinancialComparisonChart) | 0h | ✅ |
-| Refactor Dashboard: Alertas de Atencion | iOS, Web | Widget critico para organizadores — Android tiene PendingEventsBanner, falta en iOS y Web | 6-8h | P1 |
-| Refactor Calendario: Gestion de bloqueos | iOS, Web | Falta panel centralizado de gestion de bloqueos (Android tiene BottomSheet) | 4-6h | P1 |
-| Refactor Calendario: Eliminar vista lista | iOS, Android, Web | Vista lista del calendario es redundante con nueva seccion Eventos | 2-4h | P1 |
+| Refactor Calendario: Toolbar simplificado | iOS, Android, Web | Toolbar pendiente: solo "Gestionar Bloqueos" + "Hoy" | 2-4h | P2 |
+| Web: Calendar right-click bloqueo | Web | Falta right-click para bloqueo rapido de fechas | 2-3h | P2 |
+| Web: Defaults de contrato en settings | Web | iOS y Android lo tienen, Web no | 2-3h | P2 |
+| Panel admin solo en web | iOS, Android | Administracion solo desde navegador | ➖ | P3 (aceptable) |
+| ~~Feature gating no enforced~~ | ✅ | PlanLimitsManager implementado en iOS y Android. Web parcial | 0h | ✅ |
+| ~~Play Billing no implementado~~ | ✅ | Implementado via RevenueCat SDK | 0h | ✅ |
+| ~~Generacion de PDF falta en Android~~ | ✅ | 8 generadores implementados con PdfDocument API | 0h | ✅ |
+| ~~Widgets falta en Android~~ | ✅ | QuickActionsWidget implementado (Glance) | 0h | ✅ |
+| ~~StoreKit 2 flujo incompleto~~ | ✅ | Reemplazado por RevenueCat SDK | 0h | ✅ |
+| ~~Google/Apple Sign-In sin UI~~ | ✅ | Implementado en todas las plataformas | 0h | ✅ |
+| ~~Cotizacion rapida falta en Android~~ | ✅ | QuickQuoteScreen completo | 0h | ✅ |
+| ~~Fotos de evento falta en Android~~ | ✅ | EventPhotosScreen implementado con galeria/upload/lightbox | 0h | ✅ |
+| ~~Dashboard: Alertas de Atencion~~ | ✅ | Implementado en las 3 plataformas | 0h | ✅ |
+| ~~Dashboard: Quick Actions 4→2~~ | ✅ | Ya son 2 en las 3 plataformas | 0h | ✅ |
+| ~~Calendario: BlockedDatesSheet iOS~~ | ✅ | Implementado con CRUD completo | 0h | ✅ |

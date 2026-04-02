@@ -18,6 +18,7 @@ public enum Route: Hashable {
     case eventEquipment(id: String)
     case eventShoppingList(id: String)
     case eventPhotos(id: String)
+    case eventContractPreview(id: String)
 
     // Clients
     case clientList

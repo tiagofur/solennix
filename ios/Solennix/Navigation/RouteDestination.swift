@@ -39,6 +39,8 @@ struct RouteDestination: View {
             EventShoppingListView(eventId: id, apiClient: apiClient)
         case .eventPhotos(let id):
             EventPhotosDetailView(eventId: id, apiClient: apiClient)
+        case .eventContractPreview(let id):
+            EventContractPreviewView(eventId: id, apiClient: apiClient)
 
         // Clients
         case .clientList:

@@ -4,9 +4,11 @@ import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -35,7 +37,14 @@ import com.creapolis.solennix.core.model.EventProduct
 import com.creapolis.solennix.core.model.EventStatus
 import com.creapolis.solennix.core.model.EventSupply
 import com.creapolis.solennix.core.model.SupplySource
+import com.creapolis.solennix.core.model.EventPhoto
 import com.creapolis.solennix.core.model.extensions.asMXN
+import com.creapolis.solennix.core.network.UrlResolver
+import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.request.crossfade
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import com.creapolis.solennix.feature.events.pdf.BudgetPdfGenerator
 import com.creapolis.solennix.feature.events.pdf.ChecklistPdfGenerator
 import com.creapolis.solennix.feature.events.pdf.ContractPdfGenerator
@@ -64,7 +73,8 @@ fun EventDetailScreen(
     onEquipmentClick: (String) -> Unit = {},
     onSuppliesClick: (String) -> Unit = {},
     onShoppingListClick: (String) -> Unit = {},
-    onPhotosClick: (String) -> Unit = {}
+    onPhotosClick: (String) -> Unit = {},
+    onContractPreviewClick: (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
@@ -168,6 +178,14 @@ fun EventDetailScreen(
                                 onShoppingListClick = { onShoppingListClick(event.id) },
                                 onPhotosClick = { onPhotosClick(event.id) }
                             )
+
+                            // Photos preview strip (first 4 photos)
+                            if (uiState.photos.isNotEmpty()) {
+                                PhotosPreviewCard(
+                                    photos = uiState.photos,
+                                    onClick = { onPhotosClick(event.id) }
+                                )
+                            }
                         },
                         right = {
                             // Finance Summary Card (navigable)
@@ -222,6 +240,9 @@ fun EventDetailScreen(
 
                             // Checklist link
                             ChecklistButton(onClick = { onChecklistClick(event.id) })
+
+                            // Contract preview link
+                            ContractPreviewButton(onClick = { onContractPreviewClick(event.id) })
 
                             // Status Change
                             StatusChangeSection(
@@ -1214,6 +1235,24 @@ private fun ChecklistButton(onClick: () -> Unit) {
     }
 }
 
+@Composable
+private fun ContractPreviewButton(onClick: () -> Unit) {
+    OutlinedButton(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        colors = ButtonDefaults.outlinedButtonColors(contentColor = SolennixTheme.colors.info)
+    ) {
+        Icon(
+            Icons.AutoMirrored.Filled.Article,
+            contentDescription = null,
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text("Ver Contrato")
+    }
+}
+
 // ==================== Status Change Section ====================
 
 @Composable
@@ -1954,6 +1993,102 @@ private fun ContentCardsGrid(
                 onClick = onPhotosClick,
                 modifier = Modifier.weight(1f)
             )
+        }
+    }
+}
+
+@Composable
+private fun PhotosPreviewCard(
+    photos: List<EventPhoto>,
+    onClick: () -> Unit
+) {
+    val context = LocalContext.current
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
+        shape = MaterialTheme.shapes.medium
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    "Fotos",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = SolennixTheme.colors.text
+                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "${photos.size}",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = SolennixTheme.colors.primary
+                    )
+                    Icon(
+                        Icons.Default.ChevronRight,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = SolennixTheme.colors.textTertiary
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                photos.take(4).forEachIndexed { index, photo ->
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .aspectRatio(1.2f)
+                            .clip(RoundedCornerShape(8.dp))
+                    ) {
+                        AsyncImage(
+                            model = ImageRequest.Builder(context)
+                                .data(UrlResolver.resolve(photo.url))
+                                .crossfade(true)
+                                .build(),
+                            contentDescription = photo.caption,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                        // "+N" overlay on last photo if more than 4
+                        if (index == 3 && photos.size > 4) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(
+                                        color = androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.5f),
+                                        shape = RoundedCornerShape(8.dp)
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    "+${photos.size - 4}",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = androidx.compose.ui.graphics.Color.White
+                                )
+                            }
+                        }
+                    }
+                }
+                // Fill remaining slots if < 4 photos to keep uniform sizing
+                repeat(maxOf(0, 4 - photos.size)) {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+            }
         }
     }
 }

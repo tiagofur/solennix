@@ -43,6 +43,7 @@ import com.creapolis.solennix.feature.events.ui.EventExtrasScreen
 import com.creapolis.solennix.feature.events.ui.EventEquipmentScreen
 import com.creapolis.solennix.feature.events.ui.EventSuppliesScreen
 import com.creapolis.solennix.feature.events.ui.EventShoppingListScreen
+import com.creapolis.solennix.feature.events.ui.EventContractPreviewScreen
 import com.creapolis.solennix.feature.events.ui.EventPhotosScreen
 import com.creapolis.solennix.feature.events.ui.EventFormScreen
 import com.creapolis.solennix.feature.events.ui.EventListScreen
@@ -361,7 +362,8 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                     onEquipmentClick = { id -> navController.navigate("event_equipment/$id") },
                     onSuppliesClick = { id -> navController.navigate("event_supplies/$id") },
                     onShoppingListClick = { id -> navController.navigate("event_shopping/$id") },
-                    onPhotosClick = { id -> navController.navigate("event_photos/$id") }
+                    onPhotosClick = { id -> navController.navigate("event_photos/$id") },
+                    onContractPreviewClick = { id -> navController.navigate("event_contract/$id") }
                 )
             }
 
@@ -388,6 +390,9 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
             }
             composable("event_photos/{eventId}") {
                 EventPhotosScreen(viewModel = hiltViewModel(), onNavigateBack = { navController.popBackStack() })
+            }
+            composable("event_contract/{eventId}") {
+                EventContractPreviewScreen(viewModel = hiltViewModel(), onNavigateBack = { navController.popBackStack() })
             }
 
             composable("event_checklist/{eventId}") {

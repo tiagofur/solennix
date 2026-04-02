@@ -111,6 +111,7 @@ public struct EventDetailView: View {
                     paymentSummaryCard(event)
                     actionButtonsRow1(event)
                     checklistCard
+                    contractPreviewCard
                     actionButtonsRow3
                 }
 
@@ -638,6 +639,28 @@ public struct EventDetailView: View {
             .padding(Spacing.md)
             .frame(maxWidth: .infinity)
             .background(SolennixColors.primaryLight)
+            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var contractPreviewCard: some View {
+        NavigationLink(value: Route.eventContractPreview(id: eventId)) {
+            HStack {
+                Image(systemName: "doc.richtext")
+                    .font(.body)
+                Text("Ver Contrato")
+                    .font(.body)
+                    .fontWeight(.medium)
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundStyle(SolennixColors.textTertiary)
+            }
+            .foregroundStyle(SolennixColors.info)
+            .padding(Spacing.md)
+            .frame(maxWidth: .infinity)
+            .background(SolennixColors.info.opacity(0.1))
             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
         }
         .buttonStyle(.plain)

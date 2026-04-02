@@ -808,6 +808,379 @@ fun EventShoppingListScreen(
     }
 }
 
+// ==================== Contract Preview Screen ====================
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun EventContractPreviewScreen(
+    viewModel: EventDetailViewModel,
+    onNavigateBack: () -> Unit
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    Scaffold(
+        topBar = {
+            SolennixTopAppBar(
+                title = "Contrato",
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver")
+                    }
+                },
+                actions = {
+                    val event = uiState.event
+                    val user = uiState.currentUser
+                    if (event != null) {
+                        IconButton(onClick = {
+                            val client = uiState.client ?: return@IconButton
+                            val file = com.creapolis.solennix.feature.events.pdf.ContractPdfGenerator.generate(
+                                context = context,
+                                event = event,
+                                client = client,
+                                products = uiState.products,
+                                extras = uiState.extras,
+                                user = user
+                            )
+                            val uri = androidx.core.content.FileProvider.getUriForFile(
+                                context, "${context.packageName}.fileprovider", file
+                            )
+                            val shareIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                                type = "application/pdf"
+                                putExtra(android.content.Intent.EXTRA_STREAM, uri)
+                                addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            }
+                            context.startActivity(android.content.Intent.createChooser(shareIntent, "Compartir Contrato"))
+                        }) {
+                            Icon(Icons.Default.Share, contentDescription = "Compartir PDF")
+                        }
+                    }
+                }
+            )
+        }
+    ) { padding ->
+        val event = uiState.event
+        if (event == null) {
+            Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+            return@Scaffold
+        }
+
+        val user = uiState.currentUser
+        val totalPaid = uiState.totalPaid
+        val depositPercent = event.depositPercent ?: user?.defaultDepositPercent ?: 0.0
+        val depositAmount = event.totalAmount * (depositPercent / 100)
+        val isDepositMet = depositPercent == 0.0 || totalPaid >= depositAmount
+
+        if (!isDepositMet) {
+            // Deposit gate
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    Icons.Default.Lock,
+                    contentDescription = null,
+                    modifier = Modifier.size(64.dp),
+                    tint = SolennixTheme.colors.warning
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+                Text(
+                    "ANTICIPO REQUERIDO",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Black,
+                    color = SolennixTheme.colors.text
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    "Para visualizar y generar el contrato, es necesario cubrir el anticipo mínimo del ${depositPercent.toInt()}%",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = SolennixTheme.colors.textSecondary,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                val remaining = maxOf(depositAmount - totalPaid, 0.0)
+                Text(
+                    "Faltan ${remaining.asMXN} por cobrar.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = SolennixTheme.colors.warning
+                )
+            }
+        } else {
+            // Render contract template
+            val result = renderContractTemplate(event, uiState.client, user, uiState.products, totalPaid)
+
+            if (result.missingTokens.isNotEmpty()) {
+                // Missing fields
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding)
+                        .padding(32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        Icons.Default.Warning,
+                        contentDescription = null,
+                        modifier = Modifier.size(64.dp),
+                        tint = SolennixTheme.colors.error
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        "Faltan datos para el contrato",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = SolennixTheme.colors.text
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        "Completa estos campos en el evento o cliente:",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = SolennixTheme.colors.textSecondary,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            result.missingTokens.forEach { token ->
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(vertical = 2.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.Cancel,
+                                        contentDescription = null,
+                                        tint = SolennixTheme.colors.error,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(token, style = MaterialTheme.typography.bodySmall)
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                // Contract preview
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding)
+                        .padding(12.dp)
+                ) {
+                    Card(
+                        modifier = Modifier.fillMaxSize(),
+                        colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
+                        shape = MaterialTheme.shapes.large,
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .verticalScroll(rememberScrollState())
+                                .padding(20.dp)
+                        ) {
+                            val paragraphs = result.text.split("\n")
+                            paragraphs.forEach { paragraph ->
+                                val trimmed = paragraph.trim()
+                                if (trimmed.isEmpty()) {
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                } else if (isContractHeading(trimmed)) {
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Text(
+                                        trimmed,
+                                        style = MaterialTheme.typography.labelLarge,
+                                        fontWeight = FontWeight.Bold,
+                                        color = SolennixTheme.colors.text
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                } else {
+                                    Text(
+                                        trimmed,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = SolennixTheme.colors.text,
+                                        lineHeight = MaterialTheme.typography.bodySmall.lineHeight * 1.4
+                                    )
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                }
+                            }
+
+                            // Signature boxes
+                            Spacer(modifier = Modifier.height(40.dp))
+                            Row(modifier = Modifier.fillMaxWidth()) {
+                                Column(
+                                    modifier = Modifier.weight(1f),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Spacer(modifier = Modifier.height(32.dp))
+                                    HorizontalDivider()
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        user?.businessName ?: user?.name ?: "EL PROVEEDOR",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text("Firma", style = MaterialTheme.typography.labelSmall, color = SolennixTheme.colors.textTertiary)
+                                }
+                                Spacer(modifier = Modifier.width(24.dp))
+                                Column(
+                                    modifier = Modifier.weight(1f),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Spacer(modifier = Modifier.height(32.dp))
+                                    HorizontalDivider()
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        uiState.client?.name ?: "EL CLIENTE",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text("Firma de EL CLIENTE", style = MaterialTheme.typography.labelSmall, color = SolennixTheme.colors.textTertiary)
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(24.dp))
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+private data class ContractRenderResult(val text: String, val missingTokens: List<String>)
+
+private fun renderContractTemplate(
+    event: com.creapolis.solennix.core.model.Event,
+    client: com.creapolis.solennix.core.model.Client?,
+    user: com.creapolis.solennix.core.model.User?,
+    products: List<com.creapolis.solennix.core.model.EventProduct>,
+    totalPaid: Double
+): ContractRenderResult {
+    val template = user?.contractTemplate?.takeIf { it.isNotBlank() } ?: DEFAULT_CONTRACT_TEMPLATE
+
+    val depositPercent = event.depositPercent ?: user?.defaultDepositPercent ?: 0.0
+    val depositAmount = event.totalAmount * (depositPercent / 100)
+    val cancellationDays = event.cancellationDays ?: user?.defaultCancellationDays ?: 0.0
+    val refundPercent = event.refundPercent ?: user?.defaultRefundPercent ?: 0.0
+    val discountValue = if (event.discountType == DiscountType.PERCENT) {
+        event.totalAmount * (event.discount / 100) / maxOf(1 - event.discount / 100 + event.taxRate / 100, 0.01)
+    } else {
+        event.discount
+    }
+
+    val eventDate = try {
+        val sdf = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale("es", "MX"))
+        val display = java.text.SimpleDateFormat("d 'de' MMMM, yyyy", java.util.Locale("es", "MX"))
+        val date = sdf.parse(event.eventDate.take(10))
+        if (date != null) display.format(date) else event.eventDate
+    } catch (_: Exception) { event.eventDate }
+
+    val today = java.text.SimpleDateFormat("d 'de' MMMM, yyyy", java.util.Locale("es", "MX")).format(java.util.Date())
+
+    val servicesList = if (products.isNotEmpty()) {
+        products.joinToString(", ") { "${it.quantity} ${it.productName ?: "Producto"}" }
+    } else null
+
+    val tokens: List<Pair<String, String?>> = listOf(
+        "[Nombre del cliente]" to client?.name,
+        "[Teléfono del cliente]" to client?.phone,
+        "[Email del cliente]" to client?.email,
+        "[Dirección del cliente]" to client?.address,
+        "[Ciudad del cliente]" to client?.city,
+        "[Fecha del evento]" to eventDate,
+        "[Hora de inicio]" to event.startTime,
+        "[Hora de fin]" to event.endTime,
+        "[Horario del evento]" to run {
+            val s = event.startTime; val e = event.endTime
+            if (s != null && e != null) "$s - $e" else s ?: e
+        },
+        "[Tipo de servicio]" to event.serviceType,
+        "[Número de personas]" to event.numPeople.toString(),
+        "[Ubicación del evento]" to event.location,
+        "[Lugar del evento]" to event.location,
+        "[Ciudad del evento]" to event.city,
+        "[Monto total del evento]" to event.totalAmount.asMXN,
+        "[Subtotal del evento]" to (event.totalAmount - event.taxAmount + discountValue).asMXN,
+        "[Descuento del evento]" to discountValue.asMXN,
+        "[IVA del evento]" to event.taxAmount.asMXN,
+        "[Porcentaje de anticipo]" to "${depositPercent.toInt()}%",
+        "[Monto de anticipo]" to depositAmount.asMXN,
+        "[Total pagado]" to totalPaid.asMXN,
+        "[Días de cancelación]" to "${cancellationDays.toInt()}",
+        "[Porcentaje de reembolso]" to "${refundPercent.toInt()}%",
+        "[Nombre del negocio]" to (user?.businessName ?: user?.name),
+        "[Nombre comercial del proveedor]" to (user?.businessName ?: user?.name),
+        "[Nombre del proveedor]" to user?.name,
+        "[Email del proveedor]" to user?.email,
+        "[Fecha actual]" to today,
+        "[Ciudad del contrato]" to (event.city ?: client?.city),
+        "[Notas del evento]" to event.notes,
+        "[Servicios del evento]" to servicesList,
+    )
+
+    var result = template
+    val missingTokens = mutableListOf<String>()
+
+    tokens.forEach { (token, value) ->
+        if (value != null && value.isNotEmpty()) {
+            result = result.replace(token, value)
+        } else if (template.contains(token)) {
+            missingTokens.add(token)
+        }
+    }
+
+    return ContractRenderResult(result, missingTokens)
+}
+
+private fun isContractHeading(text: String): Boolean {
+    val upper = text.uppercase()
+    return (text == upper && text.length in 4..79) ||
+        text.startsWith("PRIMERA") ||
+        text.startsWith("SEGUNDA") ||
+        text.startsWith("TERCERA") ||
+        text.startsWith("CUARTA") ||
+        text.startsWith("QUINTA") ||
+        text.startsWith("SEXTA") ||
+        text.startsWith("CLÁUSULA")
+}
+
+private const val DEFAULT_CONTRACT_TEMPLATE = """CONTRATO DE PRESTACIÓN DE SERVICIOS
+
+En la ciudad de [Ciudad del evento], a [Fecha actual], comparecen por una parte [Nombre del negocio], en lo sucesivo "EL PROVEEDOR", y por otra parte [Nombre del cliente], en lo sucesivo "EL CLIENTE".
+
+DECLARACIONES
+
+EL PROVEEDOR declara que cuenta con la capacidad y experiencia para proporcionar servicios de [Tipo de servicio].
+
+EL CLIENTE declara que requiere los servicios de EL PROVEEDOR para el evento a celebrarse el día [Fecha del evento] en [Ubicación del evento].
+
+CLÁUSULAS
+
+PRIMERA. OBJETO DEL CONTRATO
+EL PROVEEDOR se compromete a prestar servicios de [Tipo de servicio] para [Número de personas] personas el día [Fecha del evento], con horario de [Hora de inicio] a [Hora de fin].
+
+SEGUNDA. PRECIO Y FORMA DE PAGO
+El precio total de los servicios será de [Monto total del evento]. EL CLIENTE deberá cubrir un anticipo del [Porcentaje de anticipo] ([Monto de anticipo]) al momento de la firma del presente contrato. El saldo restante deberá cubrirse a más tardar el día del evento.
+
+TERCERA. CANCELACIÓN
+En caso de cancelación por parte de EL CLIENTE con menos de [Días de cancelación] días de anticipación, EL PROVEEDOR reembolsará el [Porcentaje de reembolso] del anticipo.
+
+CUARTA. OBLIGACIONES DEL PROVEEDOR
+EL PROVEEDOR se obliga a proporcionar los servicios pactados en tiempo y forma, conforme a las especificaciones acordadas.
+
+QUINTA. OBLIGACIONES DEL CLIENTE
+EL CLIENTE se obliga a realizar los pagos en los plazos acordados y a proporcionar las facilidades necesarias para la prestación del servicio.
+
+Leído el presente contrato, ambas partes lo firman de conformidad."""
+
 // ==================== Utility ====================
 
 private fun Double.formatQty(): String {

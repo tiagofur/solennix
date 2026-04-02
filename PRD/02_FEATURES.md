@@ -1,7 +1,7 @@
 # Solennix — Documento Unificado de Features
 
-**Version:** 1.0
-**Fecha:** 2026-03-20
+**Version:** 1.1
+**Fecha:** 2026-04-02
 **Plataformas:** iOS (iPhone/iPad), Android (Phone/Tablet), Web (React SPA), Backend (Go/PostgreSQL)
 **Autor:** Tiago David + Claude Code
 **Estado:** Borrador
@@ -818,7 +818,16 @@ Sistema de upload de imagenes para fotos de eventos, productos y logos de negoci
 | Extras (cargos adicionales) | ✅ | ✅ | ✅ | ✅ | |
 | Deposito y cancelacion | ✅ | ✅ | ✅ | ✅ | |
 | Lista de eventos | ✅ | ✅ | ✅ | ✅ | Web: EventList page con filtros (Todos/Proximos/Pasados/Borradores) |
-| Detalle de evento | ✅ | ✅ | ✅ | ✅ | Web: EventSummary |
+| Detalle de evento (Hub con cards) | ✅ | ✅ | ✅ | ✅ | Mobile: cards navegables a sub-pantallas. Web: tabs |
+| Sub-pantalla: Finanzas (9 KPIs) | ✅ | ✅ | ✅ | ✅ | Total, Bruta, IVA, Anticipo, Descuento, Costos, Utilidad, Margen, Pagado |
+| Sub-pantalla: Pagos (historial + registro) | ✅ | ✅ | ✅ | ✅ | KPIs, progress bar, deposito, historial completo |
+| Sub-pantalla: Productos | ✅ | ✅ | ✅ | ✅ | Lista con cantidades y precios |
+| Sub-pantalla: Extras | ✅ | ✅ | ✅ | ✅ | |
+| Sub-pantalla: Insumos | ✅ | ✅ | ✅ | ✅ | Con badges almacen/compra |
+| Sub-pantalla: Equipo | ✅ | ✅ | ✅ | ✅ | |
+| Sub-pantalla: Lista de compras (con stock) | ✅ | ✅ | ✅ | ✅ | Comparacion con stock actual via batch ingredients API |
+| Sub-pantalla: Fotos | ✅ | ✅ | ⬜ | ✅ | Galeria con upload y lightbox. Web: pendiente |
+| Contract preview interactivo | ⬜ | ⬜ | ✅ | ✅ | Web: preview inline con gating de anticipo. Mobile: solo PDF |
 | Checklist del evento | ✅ | ✅ | ⬜ | ➖ | Generado localmente en mobile |
 
 ### Clientes
@@ -867,7 +876,7 @@ Sistema de upload de imagenes para fotos de eventos, productos y logos de negoci
 | Vista mensual (unica vista) | ✅ | ✅ | ✅ | ✅ | Vista lista ELIMINADA — migrada a seccion Eventos |
 | Navegacion por mes | ✅ | ✅ | ✅ | ➖ | |
 | Fechas no disponibles (long-press) | ✅ | ✅ | 🔄 | ✅ | Web: agregar right-click/long-press. iOS: agregar soporte de rangos |
-| Gestion centralizada de bloqueos | 🔄 | ✅ | 🔄 | ✅ | iOS: crear BlockedDatesSheet. Web: expandir modal. Android: ya tiene BottomSheet |
+| Gestion centralizada de bloqueos | ✅ | ✅ | 🔄 | ✅ | iOS: BlockedDatesSheet. Android: BottomSheet. Web: expandir modal |
 | Indicadores de eventos (dots) | ✅ | ✅ | ✅ | ➖ | Dots de colores por status |
 | Panel de dia seleccionado | ✅ | ✅ | ✅ | ➖ | Phone: abajo. Tablet: panel lateral |
 | Toolbar simplificado | 🔄 | 🔄 | 🔄 | ➖ | Solo "Gestionar Bloqueos" + "Hoy". Removidos: toggle vista, crear evento, CSV |
@@ -889,16 +898,16 @@ Sistema de upload de imagenes para fotos de eventos, productos y logos de negoci
 
 | Feature | iOS | Android | Web | Backend | Notas |
 |---------|-----|---------|-----|---------|-------|
-| Header (saludo + fecha) | ✅ | 🔄 | ✅ | ➖ | Android Phone: agregar saludo (solo tenia en tablet) |
-| KPI Cards (8) | ✅ | ✅ | ✅ | ✅ | Nombres unificados: "Ventas Netas" en todas |
-| Alertas de Atencion | 🔄 | ✅ | 🔄 | ✅ | NUEVO widget. iOS y Web: crear. Android: expandir con "sin confirmar 14 dias" |
-| Quick Actions (2) | 🔄 | 🔄 | 🔄 | ➖ | Reducido de 4 a 2: solo Nuevo Evento + Nuevo Cliente |
+| Header (saludo + fecha) | ✅ | ✅ | ✅ | ➖ | Presente en las 3 plataformas |
+| KPI Cards (8) | ✅ | ✅ | ✅ | ✅ | Nombres unificados. Web: "Cobrado (mes)" vs mobile: "Cobrado" (menor) |
+| Alertas de Atencion | ✅ | ✅ | ✅ | ✅ | 3 tipos: vencido, pago pendiente, sin confirmar. Implementado en las 3 |
+| Quick Actions (2) | ✅ | ✅ | ✅ | ➖ | Nuevo Evento + Nuevo Cliente |
 | Chart: Distribucion estados | ✅ | ✅ | ✅ | ➖ | Barra horizontal segmentada |
 | Chart: Comparacion financiera | ✅ | ✅ | ✅ | ➖ | Barras: Ventas Netas, Cobrado, IVA pendiente |
 | Stock Bajo | ✅ | ✅ | ✅ | ➖ | Solo se muestra si hay items con stock bajo |
 | Proximos Eventos (5) | ✅ | ✅ | ✅ | ✅ | Con status inline editable (dropdown) |
-| Onboarding Checklist | ✅ | 🔄 | ✅ | ➖ | Android: agregar inline en Dashboard |
-| Orden: alertas primero | 🔄 | 🔄 | 🔄 | ➖ | Nuevo orden: Alertas → KPIs → Actions → Charts → Stock → Eventos |
+| Onboarding Checklist | ✅ | ✅ | ✅ | ➖ | Inline en las 3 plataformas |
+| Orden secciones | ✅ | ✅ | ✅ | ➖ | Saludo → Onboarding → Banner → Alertas → KPIs → Actions → Charts → Stock → Eventos |
 
 ### Pagos
 
