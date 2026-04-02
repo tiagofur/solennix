@@ -12,8 +12,6 @@ import {
   FileCheck,
   Download,
   DollarSign,
-  Pencil,
-  ChevronDown,
   Trash2,
   MoreVertical,
   Building,
@@ -29,6 +27,11 @@ import {
   CheckSquare,
   Square,
   Package,
+  Edit,
+  Calendar,
+  Clock,
+  Users,
+  Receipt,
 } from "lucide-react";
 import { useToast } from "@/hooks/useToast";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
@@ -45,7 +48,8 @@ import { logError } from "@/lib/errorHandler";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { getEventTotalCharged, getEventTaxAmount, getEventNetSales } from "@/lib/finance";
 import { Payments } from "./components/Payments";
-import { EventStatus } from "@/components/StatusDropdown";
+import { StatusDropdown, EventStatus } from "@/components/StatusDropdown";
+import { SkeletonLine } from "@/components/Skeleton";
 
 import clsx from "clsx";
 import { ContractTemplateError, renderContractTemplate } from "@/lib/contractTemplate";
@@ -53,42 +57,6 @@ import { renderFormattedReact } from "@/lib/inlineFormatting";
 
 type ViewMode = "summary" | "ingredients" | "contract" | "payments" | "photos" | "checklist";
 
-const STATUS_CONFIG: Record<
-  EventStatus,
-  { label: string; color: string; bg: string; dot: string }
-> = {
-  quoted: {
-    label: "Cotizado",
-    color: "text-status-quoted",
-    bg: "bg-status-quoted/10 border-status-quoted/30",
-    dot: "bg-status-quoted",
-  },
-  confirmed: {
-    label: "Confirmado",
-    color: "text-status-confirmed",
-    bg: "bg-status-confirmed/10 border-status-confirmed/30",
-    dot: "bg-status-confirmed",
-  },
-  completed: {
-    label: "Completado",
-    color: "text-status-completed",
-    bg: "bg-status-completed/10 border-status-completed/30",
-    dot: "bg-status-completed",
-  },
-  cancelled: {
-    label: "Cancelado",
-    color: "text-status-cancelled",
-    bg: "bg-status-cancelled/10 border-status-cancelled/30",
-    dot: "bg-status-cancelled",
-  },
-};
-
-const ALL_STATUSES: EventStatus[] = [
-  "quoted",
-  "confirmed",
-  "completed",
-  "cancelled",
-];
 
 export const EventSummary: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -103,9 +71,7 @@ export const EventSummary: React.FC = () => {
   const [payments, setPayments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>("summary");
-  const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
   const [actionsDropdownOpen, setActionsDropdownOpen] = useState(false);
-  const [updatingStatus, setUpdatingStatus] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const { addToast } = useToast();
   const [eventPhotos, setEventPhotos] = useState<string[]>([]);
@@ -283,29 +249,16 @@ export const EventSummary: React.FC = () => {
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = () => {
-      setStatusDropdownOpen(false);
       setActionsDropdownOpen(false);
     };
-    if (statusDropdownOpen || actionsDropdownOpen) {
+    if (actionsDropdownOpen) {
       document.addEventListener("click", handleClickOutside);
     }
     return () => document.removeEventListener("click", handleClickOutside);
-  }, [statusDropdownOpen, actionsDropdownOpen]);
+  }, [actionsDropdownOpen]);
 
-  const handleStatusChange = async (newStatus: EventStatus) => {
-    if (!id || !event || newStatus === event.status) return;
-    try {
-      setUpdatingStatus(true);
-      await eventService.update(id, { status: newStatus });
-      setEvent((prev: any) => ({ ...prev, status: newStatus }));
-      addToast(`Estado actualizado a ${STATUS_CONFIG[newStatus].label}`, "success");
-    } catch (error) {
-      logError("Error updating status", error);
-      addToast("Error al actualizar el estado.", "error");
-    } finally {
-      setUpdatingStatus(false);
-      setStatusDropdownOpen(false);
-    }
+  const handleStatusChange = (newStatus: EventStatus) => {
+    setEvent((prev: any) => ({ ...prev, status: newStatus }));
   };
 
   const toggleChecklistItem = useCallback((itemId: string) => {
@@ -396,8 +349,38 @@ export const EventSummary: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64" role="status" aria-live="polite">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" aria-hidden="true"></div>
+      <div className="space-y-6 max-w-5xl mx-auto px-4 sm:px-8 py-8" role="status" aria-live="polite">
+        <SkeletonLine className="h-4 w-48" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <SkeletonLine className="h-10 w-10 rounded-full" />
+            <SkeletonLine className="h-7 w-64" />
+          </div>
+          <div className="flex gap-2">
+            <SkeletonLine className="h-9 w-20 rounded-xl" />
+            <SkeletonLine className="h-9 w-24 rounded-xl" />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="bg-card rounded-3xl border border-border p-5">
+              <SkeletonLine className="h-3 w-20 mb-2" />
+              <SkeletonLine className="h-7 w-28" />
+            </div>
+          ))}
+        </div>
+        <div className="bg-card rounded-3xl border border-border p-6">
+          <SkeletonLine className="h-5 w-48 mb-2" />
+          <SkeletonLine className="h-3 w-64 mb-6" />
+          <div className="grid grid-cols-2 gap-4">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i}>
+                <SkeletonLine className="h-3 w-16 mb-1" />
+                <SkeletonLine className="h-5 w-32" />
+              </div>
+            ))}
+          </div>
+        </div>
         <span className="sr-only">Cargando resumen del evento...</span>
       </div>
     );
@@ -405,8 +388,20 @@ export const EventSummary: React.FC = () => {
 
   if (!event) {
     return (
-      <div className="flex justify-center items-center h-64" role="alert">
-        <p className="text-text-secondary">Evento no encontrado</p>
+      <div className="flex flex-col items-center justify-center h-64 space-y-4" role="alert">
+        <div className="bg-surface-alt p-4 rounded-full">
+          <Calendar className="h-10 w-10 text-text-tertiary" />
+        </div>
+        <p className="text-lg font-semibold text-text">Evento no encontrado</p>
+        <p className="text-sm text-text-secondary">El evento que buscas no existe o fue eliminado.</p>
+        <button
+          type="button"
+          onClick={() => navigate("/events")}
+          className="mt-2 inline-flex items-center px-4 py-2 text-sm font-medium text-primary hover:text-primary-dark transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Volver a Eventos
+        </button>
       </div>
     );
   }
@@ -445,215 +440,224 @@ export const EventSummary: React.FC = () => {
   }
 
   const currentStatus = (event.status || "quoted") as EventStatus;
-  const statusCfg = STATUS_CONFIG[currentStatus] || STATUS_CONFIG.quoted;
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto px-4 sm:px-8 py-8 transition-colors">
-      <Breadcrumb items={[{ label: 'Dashboard', href: '/dashboard' }, { label: event?.service_type || 'Evento' }]} />
-      <div className="print:hidden mb-8 space-y-4">
-        {/* Action bar */}
-        <div className="flex items-center justify-between gap-4">
+      <Breadcrumb items={[{ label: 'Eventos', href: '/events' }, { label: `${event.client?.name || ''} — ${event?.service_type || 'Evento'}` }]} />
+
+      {/* Header: Back + Title + StatusDropdown + Actions */}
+      <div className="print:hidden flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center">
           <button
             type="button"
-            onClick={() => navigate(-1)}
-            className="flex items-center text-text-secondary hover:text-text transition-colors shrink-0"
-            aria-label="Volver a la página anterior"
+            onClick={() => navigate("/events")}
+            className="mr-4 p-2 rounded-full hover:bg-surface-alt text-text-secondary transition-colors"
+            aria-label="Volver a la lista de eventos"
           >
-            <ArrowLeft className="h-5 w-5 mr-1" aria-hidden="true" />
-            <span className="font-medium hidden sm:inline">Volver</span>
+            <ArrowLeft className="h-5 w-5" aria-hidden="true" />
           </button>
-
-          <div className="flex items-center gap-2">
-            {/* Secondary Actions Dropdown */}
-            <div className="relative shrink-0" onClick={(e) => e.stopPropagation()}>
-              <button
-                type="button"
-                onClick={() => setActionsDropdownOpen(!actionsDropdownOpen)}
-                className="h-10 w-10 sm:h-9 sm:w-9 flex items-center justify-center rounded-xl border border-border bg-surface hover:bg-surface-alt transition-colors text-text-secondary hover:text-text"
-                aria-label="Más acciones"
-                aria-expanded={actionsDropdownOpen}
-                aria-haspopup="menu"
-              >
-                <MoreVertical className="h-4 w-4" aria-hidden="true" />
-              </button>
-              {actionsDropdownOpen && (
-                <div className="absolute right-0 mt-1 w-56 sm:w-72 bg-card border border-border rounded-xl shadow-lg z-50 overflow-hidden py-1" role="menu">
-                  <p className="px-4 py-2 text-xs font-semibold text-text-tertiary uppercase tracking-wider border-b border-border mb-1">
-                    Exportar PDF
-                  </p>
+          <h1 className="text-2xl font-black tracking-tight text-text">
+            {event.service_type}
+          </h1>
+          {id && (
+            <div className="ml-3">
+              <StatusDropdown
+                eventId={id}
+                currentStatus={currentStatus}
+                onStatusChange={handleStatusChange}
+              />
+            </div>
+          )}
+        </div>
+        <div className="flex items-center space-x-2">
+          {/* Actions Dropdown (PDFs) */}
+          <div className="relative shrink-0" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              onClick={() => setActionsDropdownOpen(!actionsDropdownOpen)}
+              className="h-10 w-10 sm:h-9 sm:w-9 flex items-center justify-center rounded-xl border border-border bg-card hover:bg-surface-alt transition-colors text-text-secondary hover:text-text"
+              aria-label="Más acciones"
+              aria-expanded={actionsDropdownOpen}
+              aria-haspopup="menu"
+            >
+              <MoreVertical className="h-4 w-4" aria-hidden="true" />
+            </button>
+            {actionsDropdownOpen && (
+              <div className="absolute right-0 mt-1 w-56 sm:w-72 bg-card border border-border rounded-xl shadow-lg z-50 overflow-hidden py-1" role="menu">
+                <p className="px-4 py-2 text-xs font-semibold text-text-tertiary uppercase tracking-wider border-b border-border mb-1">
+                  Exportar PDF
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    generateBudgetPDF(event, profile as any, products, extras);
+                    setActionsDropdownOpen(false);
+                  }}
+                  className="w-full flex items-center px-4 py-2.5 text-sm text-text hover:bg-surface-alt dark:hover:bg-surface transition-colors"
+                  role="menuitem"
+                >
+                  <Download className="h-5 w-5 mr-3 text-text-secondary" />
+                  Presupuesto
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    generateInvoicePDF(event, profile as any, products, extras);
+                    setActionsDropdownOpen(false);
+                  }}
+                  className="w-full flex items-center px-4 py-2.5 text-sm text-text hover:bg-surface-alt dark:hover:bg-surface transition-colors"
+                  role="menuitem"
+                >
+                  <FileText className="h-5 w-5 mr-3 text-text-secondary" />
+                  Generar Factura
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const purchaseSupplies = supplies
+                      .filter((s: any) => s.source === 'purchase')
+                      .map((s: any) => ({
+                        name: s.supply_name || 'Insumo',
+                        quantity: s.quantity,
+                        unit: s.unit || 'und',
+                      }));
+                    generateShoppingListPDF(event, profile as any, [...ingredients, ...purchaseSupplies]);
+                    setActionsDropdownOpen(false);
+                  }}
+                  className="w-full flex items-center px-4 py-2.5 text-sm text-text hover:bg-surface-alt dark:hover:bg-surface transition-colors"
+                  role="menuitem"
+                >
+                  <ShoppingCart className="h-5 w-5 mr-3 text-text-secondary" />
+                  Lista de Insumos
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      const productIds = products.map((p: any) => p.product_id).filter(Boolean);
+                      const productQuantities = new Map<string, number>();
+                      products.forEach((p: any) => productQuantities.set(p.product_id, p.quantity || 0));
+                      const allIngredients = productIds.length > 0
+                        ? await productService.getIngredientsForProducts(productIds)
+                        : [];
+                      const aggregated: Record<string, { name: string; quantity: number; unit: string }> = {};
+                      (allIngredients || [])
+                        .filter((ing: any) => ing.type === 'ingredient' && ing.bring_to_event)
+                        .forEach((ing: any) => {
+                          const key = ing.inventory_id;
+                          const qty = productQuantities.get(ing.product_id) || 0;
+                          if (!aggregated[key]) {
+                            aggregated[key] = { name: ing.ingredient_name || 'Insumo', unit: ing.unit || '', quantity: 0 };
+                          }
+                          aggregated[key].quantity += (ing.quantity_required || 0) * qty;
+                        });
+                      const allEventSupplies = supplies
+                        .map((s: any) => ({
+                          name: s.supply_name || 'Insumo',
+                          quantity: s.quantity,
+                          unit: s.unit || 'und',
+                        }));
+                      generateChecklistPDF(event, profile as any, products, equipment, [...Object.values(aggregated), ...allEventSupplies], extras);
+                    } catch (err) {
+                      logError("Error generating checklist", err);
+                      addToast("Error al generar checklist.", "error");
+                    }
+                    setActionsDropdownOpen(false);
+                  }}
+                  className="w-full flex items-center px-4 py-2.5 text-sm text-text hover:bg-surface-alt dark:hover:bg-surface transition-colors"
+                  role="menuitem"
+                >
+                  <ClipboardList className="h-5 w-5 mr-3 text-text-secondary" />
+                  Checklist de Carga
+                </button>
+                <button
+                  type="button"
+                  disabled={!isDownpaymentMet}
+                  onClick={() => {
+                    try {
+                      generateContractPDF(event, profile as any, undefined, products, payments);
+                    } catch (error) {
+                      const message =
+                        error instanceof ContractTemplateError
+                          ? `Faltan datos del contrato: ${error.missingTokens.map((t) => `[${t}]`).join(", ")}`
+                          : "Error al generar contrato.";
+                      addToast(message, "error");
+                      return;
+                    }
+                    setActionsDropdownOpen(false);
+                  }}
+                  className={clsx(
+                    "w-full flex items-center px-4 py-2.5 text-sm transition-colors",
+                    !isDownpaymentMet
+                      ? "text-text-tertiary cursor-not-allowed bg-surface-alt/50"
+                      : "text-text hover:bg-surface-alt dark:hover:bg-surface"
+                  )}
+                  role="menuitem"
+                >
+                  <FileCheck className={clsx("h-5 w-5 mr-3", !isDownpaymentMet ? "text-warning/50" : "text-text-secondary")} />
+                  Contrato {!isDownpaymentMet && "(Saldar Anticipo)"}
+                </button>
+                {viewMode === "payments" && payments.length > 0 && (
                   <button
                     type="button"
                     onClick={() => {
-                      generateBudgetPDF(event, profile as any, products, extras);
+                      generatePaymentReportPDF(event, profile as any, payments);
                       setActionsDropdownOpen(false);
                     }}
                     className="w-full flex items-center px-4 py-2.5 text-sm text-text hover:bg-surface-alt dark:hover:bg-surface transition-colors"
                     role="menuitem"
                   >
                     <Download className="h-5 w-5 mr-3 text-text-secondary" />
-                    Presupuesto
+                    Reporte de Pagos
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      generateInvoicePDF(event, profile as any, products, extras);
-                      setActionsDropdownOpen(false);
-                    }}
-                    className="w-full flex items-center px-4 py-2.5 text-sm text-text hover:bg-surface-alt dark:hover:bg-surface transition-colors"
-                    role="menuitem"
-                  >
-                    <FileText className="h-5 w-5 mr-3 text-text-secondary" />
-                    Generar Factura
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      // Include purchase supplies in shopping list
-                      const purchaseSupplies = supplies
-                        .filter((s: any) => s.source === 'purchase')
-                        .map((s: any) => ({
-                          name: s.supply_name || 'Insumo',
-                          quantity: s.quantity,
-                          unit: s.unit || 'und',
-                        }));
-                      generateShoppingListPDF(event, profile as any, [...ingredients, ...purchaseSupplies]);
-                      setActionsDropdownOpen(false);
-                    }}
-                    className="w-full flex items-center px-4 py-2.5 text-sm text-text hover:bg-surface-alt dark:hover:bg-surface transition-colors"
-                    role="menuitem"
-                  >
-                    <ShoppingCart className="h-5 w-5 mr-3 text-text-secondary" />
-                    Lista de Insumos
-                  </button>
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      try {
-                        const productIds = products.map((p: any) => p.product_id).filter(Boolean);
-                        const productQuantities = new Map<string, number>();
-                        products.forEach((p: any) => productQuantities.set(p.product_id, p.quantity || 0));
-                        const allIngredients = productIds.length > 0
-                          ? await productService.getIngredientsForProducts(productIds)
-                          : [];
-                        const aggregated: Record<string, { name: string; quantity: number; unit: string }> = {};
-                        (allIngredients || [])
-                          .filter((ing: any) => ing.type === 'ingredient' && ing.bring_to_event)
-                          .forEach((ing: any) => {
-                            const key = ing.inventory_id;
-                            const qty = productQuantities.get(ing.product_id) || 0;
-                            if (!aggregated[key]) {
-                              aggregated[key] = { name: ing.ingredient_name || 'Insumo', unit: ing.unit || '', quantity: 0 };
-                            }
-                            aggregated[key].quantity += (ing.quantity_required || 0) * qty;
-                          });
-                        // Include ALL per-event supplies in checklist (stock + purchase)
-                        const allEventSupplies = supplies
-                          .map((s: any) => ({
-                            name: s.supply_name || 'Insumo',
-                            quantity: s.quantity,
-                            unit: s.unit || 'und',
-                          }));
-                        generateChecklistPDF(event, profile as any, products, equipment, [...Object.values(aggregated), ...allEventSupplies], extras);
-                      } catch (err) {
-                        logError("Error generating checklist", err);
-                        addToast("Error al generar checklist.", "error");
-                      }
-                      setActionsDropdownOpen(false);
-                    }}
-                    className="w-full flex items-center px-4 py-2.5 text-sm text-text hover:bg-surface-alt dark:hover:bg-surface transition-colors"
-                    role="menuitem"
-                  >
-                    <ClipboardList className="h-5 w-5 mr-3 text-text-secondary" />
-                    Checklist de Carga
-                  </button>
-                  <button
-                    type="button"
-                    disabled={!isDownpaymentMet}
-                    onClick={() => {
-                      try {
-                        generateContractPDF(event, profile as any, undefined, products, payments);
-                      } catch (error) {
-                        const message =
-                          error instanceof ContractTemplateError
-                            ? `Faltan datos del contrato: ${error.missingTokens.map((t) => `[${t}]`).join(", ")}`
-                            : "Error al generar contrato.";
-                        addToast(message, "error");
-                        return;
-                      }
-                      setActionsDropdownOpen(false);
-                    }}
-                    className={clsx(
-                      "w-full flex items-center px-4 py-2.5 text-sm transition-colors",
-                      !isDownpaymentMet
-                        ? "text-text-tertiary cursor-not-allowed bg-surface-alt/50"
-                        : "text-text hover:bg-surface-alt dark:hover:bg-surface"
-                    )}
-                    role="menuitem"
-                  >
-                    <FileCheck className={clsx("h-5 w-5 mr-3", !isDownpaymentMet ? "text-warning/50" : "text-text-secondary")} />
-                    Contrato {!isDownpaymentMet && "(Saldar Anticipo)"}
-                  </button>
-                  {viewMode === "payments" && payments.length > 0 && (
+                )}
+                {remainingValue > 0 && currentStatus !== "cancelled" && (
+                  <>
+                    <div className="my-1 border-t border-border"></div>
+                    <p className="px-4 py-2 text-xs font-semibold text-text-tertiary uppercase tracking-wider">
+                      Cobro en Línea
+                    </p>
                     <button
                       type="button"
                       onClick={() => {
-                        generatePaymentReportPDF(event, profile as any, payments);
+                        handlePayOnline();
                         setActionsDropdownOpen(false);
                       }}
                       className="w-full flex items-center px-4 py-2.5 text-sm text-text hover:bg-surface-alt dark:hover:bg-surface transition-colors"
                       role="menuitem"
                     >
-                      <Download className="h-5 w-5 mr-3 text-text-secondary" />
-                      Reporte de Pagos
+                      <CreditCard className="h-5 w-5 mr-3 text-text-secondary" />
+                      Pagar con Stripe
                     </button>
-                  )}
-                  {remainingValue > 0 && currentStatus !== "cancelled" && (
-                    <>
-                      <div className="my-1 border-t border-border"></div>
-                      <p className="px-4 py-2 text-xs font-semibold text-text-tertiary uppercase tracking-wider">
-                        Cobro en Línea
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          handlePayOnline();
-                          setActionsDropdownOpen(false);
-                        }}
-                        className="w-full flex items-center px-4 py-2.5 text-sm text-text hover:bg-surface-alt dark:hover:bg-surface transition-colors"
-                        role="menuitem"
-                      >
-                        <CreditCard className="h-5 w-5 mr-3 text-text-secondary" />
-                        Pagar con Stripe
-                      </button>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-            {/* Edit */}
-            <button
-              type="button"
-              onClick={() => navigate(`/events/${id}/edit`)}
-              className="inline-flex items-center gap-2 px-3 py-2 border border-border rounded-xl bg-card text-sm font-medium text-text-secondary hover:bg-surface-alt transition-colors"
-              aria-label="Editar este evento"
-            >
-              <Pencil className="h-4 w-4" aria-hidden="true" />
-              <span className="hidden sm:inline">Editar</span>
-            </button>
-            {/* Delete */}
-            <button
-              type="button"
-              onClick={() => setConfirmDeleteOpen(true)}
-              className="inline-flex items-center gap-2 px-3 py-2 border border-error/20 rounded-xl bg-error/5 text-sm font-medium text-error hover:bg-error/10 transition-colors"
-              aria-label="Eliminar este evento"
-            >
-              <Trash2 className="h-4 w-4" aria-hidden="true" />
-              <span className="hidden sm:inline">Eliminar</span>
-            </button>
+                  </>
+                )}
+              </div>
+            )}
           </div>
+          {/* Edit */}
+          <Link
+            to={`/events/${id}/edit`}
+            className="inline-flex items-center px-4 py-2 border border-border rounded-xl shadow-sm text-sm font-medium text-text-secondary bg-card hover:bg-surface-alt transition-colors"
+            aria-label="Editar información del evento"
+          >
+            <Edit className="h-5 w-5 mr-2" aria-hidden="true" />
+            Editar
+          </Link>
+          {/* Delete */}
+          <button
+            type="button"
+            onClick={() => setConfirmDeleteOpen(true)}
+            className="inline-flex items-center px-4 py-2 border border-error/20 text-sm font-medium rounded-xl text-error bg-error/5 hover:bg-error/10 transition-colors"
+            aria-label="Eliminar evento permanentemente"
+          >
+            <Trash2 className="h-5 w-5 mr-2" aria-hidden="true" />
+            Eliminar
+          </button>
         </div>
+      </div>
 
-        {/* Tab bar */}
+      {/* Tab bar */}
+      <div className="print:hidden">
         <div className="flex bg-surface-alt dark:bg-surface-alt/50 rounded-2xl p-1.5 overflow-x-auto no-scrollbar shadow-sm" role="group" aria-label="Modos de visualización del evento">
           <button
             type="button"
@@ -779,110 +783,113 @@ export const EventSummary: React.FC = () => {
 
       {viewMode === "summary" && (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="bg-card shadow-sm rounded-3xl p-6 sm:p-8 border border-border">
-            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 border-b border-border pb-6">
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-text break-words line-clamp-2">
-                {event.client?.name} - {event.service_type}
-              </h1>
+          {/* KPI Cards */}
+          <div className="bg-card shadow-sm overflow-hidden rounded-3xl border border-border">
+            <div className="grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-border">
+              <div className="px-4 py-4 text-center">
+                <p className="text-2xl font-black text-primary">
+                  ${totalCharged.toLocaleString("es-MX", { minimumFractionDigits: 0 })}
+                </p>
+                <p className="text-xs text-text-secondary mt-0.5">Total Cobrado</p>
+              </div>
+              <div className="px-4 py-4 text-center">
+                <p className={clsx("text-2xl font-black", remainingValue > 0 ? "text-warning" : "text-success")}>
+                  ${totalPaid.toLocaleString("es-MX", { minimumFractionDigits: 0 })}
+                </p>
+                <p className="text-xs text-text-secondary mt-0.5">Pagado</p>
+              </div>
+              <div className="px-4 py-4 text-center">
+                <p className={clsx("text-2xl font-black", margin >= 30 ? "text-success" : margin >= 15 ? "text-warning" : "text-error")}>
+                  {margin.toFixed(0)}%
+                </p>
+                <p className="text-xs text-text-secondary mt-0.5">Margen</p>
+              </div>
+              <div className="px-4 py-4 text-center">
+                <p className="text-2xl font-black text-text">
+                  {event.num_people}
+                </p>
+                <p className="text-xs text-text-secondary mt-0.5">Personas</p>
+              </div>
+            </div>
+          </div>
 
-              {/* Status Badge + Dropdown */}
-              <div
-                className="relative shrink-0"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <button
-                  type="button"
-                  onClick={() => setStatusDropdownOpen((prev) => !prev)}
-                  disabled={updatingStatus}
-                  className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-semibold transition-all ${statusCfg.bg} ${statusCfg.color} ${updatingStatus ? "opacity-60 cursor-not-allowed" : "hover:opacity-80 cursor-pointer"}`}
-                  aria-label={`Estado del evento: ${statusCfg.label}. Click para cambiar`}
-                  aria-expanded={statusDropdownOpen}
-                  aria-haspopup="menu"
-                >
-                  <span
-                    className={`w-2 h-2 rounded-full shrink-0 ${statusCfg.dot}`}
-                    aria-hidden="true"
-                  />
-                  {statusCfg.label}
-                  <ChevronDown
-                    className={`h-3.5 w-3.5 transition-transform ${statusDropdownOpen ? "rotate-180" : ""}`}
-                    aria-hidden="true"
-                  />
-                </button>
-
-                {statusDropdownOpen && (
-                  <div className="absolute right-0 mt-1 w-40 sm:w-44 bg-card border border-border rounded-lg shadow-lg z-50 overflow-hidden" role="menu" aria-label="Cambiar estado del evento">
-                    {ALL_STATUSES.map((s) => {
-                      const cfg = STATUS_CONFIG[s];
-                      return (
-                        <button
-                          key={s}
-                          type="button"
-                          onClick={() => handleStatusChange(s)}
-                          className={`w-full flex items-center gap-2 px-3 py-2.5 text-sm text-left transition-colors hover:bg-surface-alt ${
-                            s === currentStatus
-                              ? "font-semibold " + cfg.color
-                              : "text-text"
-                          }`}
-                          role="menuitem"
-                          aria-label={`Cambiar estado a ${cfg.label}`}
-                          aria-current={s === currentStatus ? "true" : undefined}
-                        >
-                          <span
-                            className={`w-2 h-2 rounded-full shrink-0 ${cfg.dot}`}
-                            aria-hidden="true"
-                          />
-                          {cfg.label}
-                          {s === currentStatus && (
-                            <span className="ml-auto text-xs opacity-60" aria-hidden="true">
-                              ✓
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })}
+          {/* Information Card */}
+          <div className="bg-card shadow-sm overflow-hidden rounded-3xl border border-border">
+            <div className="px-4 py-5 sm:px-6">
+              <h3 className="text-lg leading-6 font-semibold text-text">
+                Información del Evento
+              </h3>
+              <p className="mt-1 max-w-2xl text-sm text-text-secondary">
+                Detalles del servicio y logística.
+              </p>
+            </div>
+            <div className="border-t border-border px-4 py-5 sm:px-6">
+              <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
+                <div>
+                  <dt className="text-xs font-bold text-text-tertiary uppercase tracking-wider flex items-center gap-1.5">
+                    <Calendar className="h-3.5 w-3.5" /> Fecha
+                  </dt>
+                  <dd className="mt-1 font-bold text-text">{new Date(event.event_date + "T12:00:00").toLocaleDateString("es-MX", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-bold text-text-tertiary uppercase tracking-wider flex items-center gap-1.5">
+                    <Clock className="h-3.5 w-3.5" /> Horario
+                  </dt>
+                  <dd className="mt-1 font-bold text-text">{event.start_time && event.end_time ? `${event.start_time.slice(0, 5)} — ${event.end_time.slice(0, 5)}` : "No definido"}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-bold text-text-tertiary uppercase tracking-wider flex items-center gap-1.5">
+                    <Users className="h-3.5 w-3.5" /> Cliente
+                  </dt>
+                  <dd className="mt-1 font-bold text-text">
+                    {event.client?.id ? (
+                      <Link to={`/clients/${event.client.id}`} className="text-primary hover:text-primary-dark transition-colors">
+                        {event.client.name}
+                      </Link>
+                    ) : (
+                      event.client?.name || "Sin cliente"
+                    )}
+                    {event.client?.phone && (
+                      <span className="text-sm text-text-secondary ml-2">• {event.client.phone}</span>
+                    )}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-bold text-text-tertiary uppercase tracking-wider flex items-center gap-1.5">
+                    <Building className="h-3.5 w-3.5" /> Ubicación
+                  </dt>
+                  <dd className="mt-1 font-bold text-text">{event.location || "Sin ubicación"}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-bold text-text-tertiary uppercase tracking-wider flex items-center gap-1.5">
+                    <Receipt className="h-3.5 w-3.5" /> Factura
+                  </dt>
+                  <dd className="mt-1 font-bold text-text">
+                    {event.requires_invoice ? `Requiere factura (IVA ${event.tax_rate || 16}%)` : "No requiere factura"}
+                  </dd>
+                </div>
+                {event.deposit_percent > 0 && (
+                  <div>
+                    <dt className="text-xs font-bold text-text-tertiary uppercase tracking-wider flex items-center gap-1.5">
+                      <DollarSign className="h-3.5 w-3.5" /> Anticipo
+                    </dt>
+                    <dd className="mt-1 font-bold text-text">
+                      {event.deposit_percent}% — ${depositAmount.toLocaleString("es-MX", { minimumFractionDigits: 2 })}
+                      {isDownpaymentMet ? (
+                        <span className="ml-2 text-xs text-success font-semibold">Cubierto</span>
+                      ) : (
+                        <span className="ml-2 text-xs text-warning font-semibold">Pendiente</span>
+                      )}
+                    </dd>
                   </div>
                 )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 mt-8">
-              <div className="space-y-1">
-                <p className="text-xs font-bold text-text-tertiary uppercase tracking-wider">Fecha</p>
-                <p className="font-bold text-text">{new Date(event.event_date + "T12:00:00").toLocaleDateString()}</p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-xs font-bold text-text-tertiary uppercase tracking-wider">Horario</p>
-                <p className="font-bold text-text">{event.start_time && event.end_time ? `${event.start_time.slice(0, 5)} - ${event.end_time.slice(0, 5)}` : "No definido"}</p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-xs font-bold text-text-tertiary uppercase tracking-wider">Personas</p>
-                <p className="font-bold text-text">{event.num_people} PAX</p>
-              </div>
-              <div className="space-y-1 text-right">
-                <p className="text-xs font-bold text-text-tertiary uppercase tracking-wider">Estado</p>
-                <p className={clsx("font-bold", statusCfg.color.replace('text-', 'text-'))}>{statusCfg.label}</p>
-              </div>
-            </div>
-
-            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8 border-t border-border pt-8">
-              <div className="space-y-2">
-                <p className="text-xs font-bold text-text-tertiary uppercase tracking-wider">Cliente / Ubicación</p>
-                <p className="font-bold text-lg text-text">{event.client?.name}</p>
-                {event.location && (
-                  <p className="text-sm text-text-secondary flex items-baseline gap-2">
-                    <Building className="h-3.5 w-3.5 text-primary" />
-                    {event.location}
-                  </p>
+                {event.notes && (
+                  <div className="sm:col-span-2">
+                    <dt className="text-xs font-bold text-text-tertiary uppercase tracking-wider">Notas</dt>
+                    <dd className="mt-1 text-sm text-text-secondary">{event.notes}</dd>
+                  </div>
                 )}
-              </div>
-              <div className="space-y-2 md:text-right">
-                <p className="text-xs font-bold text-text-tertiary uppercase tracking-wider">Contacto / Factura</p>
-                <p className="font-bold text-text">{event.client?.phone || "Sin teléfono"}</p>
-                <p className="text-sm text-text-secondary">
-                  {event.requires_invoice ? `Requiere factura (IVA ${event.tax_rate || 16}%)` : "No requiere factura"}
-                </p>
-              </div>
+              </dl>
             </div>
           </div>
 
@@ -1031,55 +1038,36 @@ export const EventSummary: React.FC = () => {
             </div>
           )}
 
-          <div className="mt-8 border-t border-border pt-2 print:hidden">
+          <div className="print:hidden">
             <div className="bg-card shadow-lg rounded-3xl p-6 sm:p-8 border border-border overflow-hidden relative">
               <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
                 <DollarSign className="h-32 w-32 text-primary" />
               </div>
-              <h2 className="text-xl font-black mb-8 text-text tracking-tight uppercase">
-                Resumen Financiero <span className="text-text-tertiary font-medium">Interno</span>
+              <h2 className="text-lg font-bold mb-6 flex items-center gap-2 text-text">
+                <DollarSign className="h-5 w-5 text-primary" />
+                Resumen Financiero
               </h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-8 relative z-10">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 relative z-10">
                 <div className="space-y-1">
-                  <p className="text-[10px] font-black text-text-tertiary uppercase tracking-tighter">Venta Bruta</p>
-                  <p className="text-2xl font-black text-text">${netSales.toFixed(2)}</p>
+                  <p className="text-xs font-bold text-text-tertiary uppercase tracking-wider">Venta Neta</p>
+                  <p className="text-xl font-black text-text">${netSales.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-[10px] font-black text-text-tertiary uppercase tracking-tighter">IVA</p>
-                  <p className="text-2xl font-black text-text">${taxAmount.toFixed(2)}</p>
+                  <p className="text-xs font-bold text-text-tertiary uppercase tracking-wider">IVA</p>
+                  <p className="text-xl font-black text-text">${taxAmount.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-[10px] font-black text-text-tertiary uppercase tracking-tighter">Total Cobrado</p>
-                  <p className="text-2xl font-black text-primary">${totalCharged.toFixed(2)}</p>
-                </div>
-                {event.deposit_percent > 0 && (
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-black text-warning uppercase tracking-tighter">Cobrar Anticipo ({event.deposit_percent}%)</p>
-                    <p className={clsx("text-2xl font-black", isDownpaymentMet ? "text-text" : "text-warning")}>
-                      ${depositAmount.toFixed(2)}
-                    </p>
-                  </div>
-                )}
-                <div className="space-y-1">
-                  <p className="text-[10px] font-black text-text-tertiary uppercase tracking-tighter">Utilidad Neta</p>
-                  <p className="text-2xl font-black text-success">${profit.toFixed(2)}</p>
+                  <p className="text-xs font-bold text-text-tertiary uppercase tracking-wider">Costos</p>
+                  <p className="text-xl font-black text-error">${totalCost.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-[10px] font-black text-text-tertiary uppercase tracking-tighter">Margen</p>
-                  <p className="text-2xl font-black text-info">{margin.toFixed(1)}%</p>
+                  <p className="text-xs font-bold text-text-tertiary uppercase tracking-wider">Utilidad Neta</p>
+                  <p className="text-xl font-black text-success">${profit.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-[10px] font-black text-text-tertiary uppercase tracking-tighter">Costos</p>
-                  <p className="text-2xl font-black text-error">${totalCost.toFixed(2)}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-[10px] font-black text-text-tertiary uppercase tracking-tighter">Pagado</p>
-                  <p className="text-2xl font-black text-success">${totalPaid.toFixed(2)}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-[10px] font-black text-text-tertiary uppercase tracking-tighter">Pendiente</p>
-                  <p className={clsx("text-2xl font-black", remainingValue > 0 ? "text-error" : "text-text")}>
-                    ${remainingValue.toFixed(2)}
+                  <p className="text-xs font-bold text-text-tertiary uppercase tracking-wider">Pendiente</p>
+                  <p className={clsx("text-xl font-black", remainingValue > 0 ? "text-warning" : "text-success")}>
+                    ${remainingValue.toLocaleString("es-MX", { minimumFractionDigits: 2 })}
                   </p>
                 </div>
               </div>
