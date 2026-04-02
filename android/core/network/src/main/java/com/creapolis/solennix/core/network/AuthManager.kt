@@ -5,7 +5,6 @@ import android.content.SharedPreferences
 import android.util.Log
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
-import com.creapolis.solennix.core.model.AuthResponse
 import com.creapolis.solennix.core.model.TokenPair
 import com.creapolis.solennix.core.model.User
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -121,7 +120,7 @@ class AuthManager @Inject constructor(
             val refreshToken = encryptedPrefs.getString(KEY_REFRESH_TOKEN, null) ?: return null
 
             try {
-                val response: AuthResponse = refreshHttpClient.post(BuildConfig.API_BASE_URL + Endpoints.REFRESH) {
+                val response: TokenPair = refreshHttpClient.post(BuildConfig.API_BASE_URL + Endpoints.REFRESH) {
                     contentType(ContentType.Application.Json)
                     setBody(mapOf("refresh_token" to refreshToken))
                 }.body()
