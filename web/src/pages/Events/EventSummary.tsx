@@ -42,14 +42,13 @@ import { logError } from "@/lib/errorHandler";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { getEventTotalCharged, getEventTaxAmount, getEventNetSales } from "@/lib/finance";
 import { Payments } from "./components/Payments";
+import { EventStatus } from "@/components/StatusDropdown";
 
 import clsx from "clsx";
 import { ContractTemplateError, renderContractTemplate } from "@/lib/contractTemplate";
 import { renderFormattedReact } from "@/lib/inlineFormatting";
 
 type ViewMode = "summary" | "ingredients" | "contract" | "payments" | "photos";
-
-type EventStatus = "quoted" | "confirmed" | "completed" | "cancelled";
 
 const STATUS_CONFIG: Record<
   EventStatus,
@@ -352,292 +351,291 @@ export const EventSummary: React.FC = () => {
   return (
     <div className="space-y-6 max-w-5xl mx-auto px-4 sm:px-8 py-8 transition-colors">
       <Breadcrumb items={[{ label: 'Dashboard', href: '/dashboard' }, { label: event?.service_type || 'Evento' }]} />
-      <div className="flex items-center gap-2 print:hidden mb-8">
-        <div className="flex items-center gap-2 flex-1 min-w-0">
+      <div className="print:hidden mb-8 space-y-4">
+        {/* Action bar */}
+        <div className="flex items-center justify-between gap-4">
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="flex items-center text-text-secondary hover:text-text transition-colors shrink-0 mr-2"
+            className="flex items-center text-text-secondary hover:text-text transition-colors shrink-0"
             aria-label="Volver a la página anterior"
           >
             <ArrowLeft className="h-5 w-5 mr-1" aria-hidden="true" />
             <span className="font-medium">Volver</span>
           </button>
-
-          <div className="flex bg-surface-alt dark:bg-surface-alt/50 rounded-2xl p-1.5 flex-1 min-w-0 overflow-x-auto no-scrollbar shadow-sm" role="group" aria-label="Modos de visualización del evento">
-            <button
-              type="button"
-              onClick={() => setViewMode("summary")}
-              className={clsx(
-                "px-4 py-2 rounded-xl text-sm font-bold flex items-center transition-all whitespace-nowrap",
-                viewMode === "summary"
-                  ? "bg-card text-primary shadow-sm"
-                  : "text-text-secondary hover:text-text hover:bg-surface-alt"
-              )}
-              aria-pressed={viewMode === "summary"}
-              aria-label="Ver resumen del evento"
-            >
-              <FileText className="h-4 w-4 mr-2" aria-hidden="true" />
-              Resumen
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode("payments")}
-              className={clsx(
-                "px-4 py-2 rounded-xl text-sm font-bold flex items-center transition-all whitespace-nowrap",
-                viewMode === "payments"
-                  ? "bg-card text-primary shadow-sm"
-                  : "text-text-secondary hover:text-text hover:bg-surface-alt"
-              )}
-              aria-pressed={viewMode === "payments"}
-              aria-label="Ver pagos del evento"
-            >
-              <DollarSign className="h-4 w-4 mr-2" aria-hidden="true" />
-              Pagos
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode("ingredients")}
-              className={clsx(
-                "px-4 py-2 rounded-xl text-sm font-bold flex items-center transition-all whitespace-nowrap",
-                viewMode === "ingredients"
-                  ? "bg-card text-primary shadow-sm"
-                  : "text-text-secondary hover:text-text hover:bg-surface-alt"
-              )}
-              aria-pressed={viewMode === "ingredients"}
-              aria-label="Ver lista de insumos"
-            >
-              <ShoppingCart className="h-4 w-4 mr-2" aria-hidden="true" />
-              Compras
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode("contract")}
-              className={clsx(
-                "px-4 py-2 rounded-xl text-sm font-bold flex items-center transition-all whitespace-nowrap",
-                viewMode === "contract"
-                  ? "bg-card text-primary shadow-sm"
-                  : "text-text-secondary hover:text-text hover:bg-surface-alt",
-                !isDownpaymentMet && "opacity-50 grayscale-[0.5]"
-              )}
-              aria-pressed={viewMode === "contract"}
-              aria-label="Ver contrato del evento"
-            >
-              <FileCheck className={clsx("h-4 w-4 mr-2", !isDownpaymentMet && "text-warning")} aria-hidden="true" />
-              Contrato
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode("photos")}
-              className={clsx(
-                "px-4 py-2 rounded-xl text-sm font-bold flex items-center transition-all whitespace-nowrap",
-                viewMode === "photos"
-                  ? "bg-card text-primary shadow-sm"
-                  : "text-text-secondary hover:text-text hover:bg-surface-alt"
-              )}
-              aria-pressed={viewMode === "photos"}
-              aria-label="Ver fotos del evento"
-            >
-              <Camera className="h-4 w-4 mr-2" aria-hidden="true" />
-              Fotos
-              {eventPhotos.length > 0 && (
-                <span className="ml-1.5 bg-primary/10 text-primary text-xs font-bold rounded-full px-1.5 py-0.5">
-                  {eventPhotos.length}
-                </span>
-              )}
-            </button>
-          </div>
-        </div>
-
-        {/* Edit icon button */}
-        <button
-          type="button"
-          onClick={() => navigate(`/events/${id}/edit`)}
-          className="h-9 w-9 flex items-center justify-center rounded-xl border border-border bg-surface hover:bg-surface-alt transition-colors text-text-secondary hover:text-text shrink-0"
-          aria-label="Editar este evento"
-        >
-          <Pencil className="h-4 w-4" aria-hidden="true" />
-        </button>
-
-        {/* Secondary Actions Dropdown */}
-        <div className="relative shrink-0" onClick={(e) => e.stopPropagation()}>
-          <button
-            type="button"
-            onClick={() => setActionsDropdownOpen(!actionsDropdownOpen)}
-            className="h-9 w-9 flex items-center justify-center rounded-xl border border-border bg-surface hover:bg-surface-alt transition-colors text-text-secondary hover:text-text"
-            aria-label="Más acciones"
-            aria-expanded={actionsDropdownOpen}
-            aria-haspopup="menu"
-          >
-            <MoreVertical className="h-4 w-4" aria-hidden="true" />
-          </button>
-
-          {actionsDropdownOpen && (
-            <div className="absolute right-0 mt-1 w-72 bg-card border border-border rounded-xl shadow-lg z-50 overflow-hidden py-1" role="menu">
-              <p className="px-4 py-2 text-xs font-semibold text-text-tertiary uppercase tracking-wider border-b border-border mb-1">
-                Exportar PDF
-              </p>
+          <div className="flex items-center gap-2 shrink-0">
+            {/* PDF / Stripe Dropdown */}
+            <div className="relative" onClick={(e) => e.stopPropagation()}>
               <button
                 type="button"
-                onClick={() => {
-                  generateBudgetPDF(event, profile as any, products, extras);
-                  setActionsDropdownOpen(false);
-                }}
-                className="w-full flex items-center px-4 py-2.5 text-sm text-text hover:bg-surface-alt dark:hover:bg-surface transition-colors"
-                role="menuitem"
+                onClick={() => setActionsDropdownOpen(!actionsDropdownOpen)}
+                className="h-9 w-9 flex items-center justify-center rounded-xl border border-border bg-surface hover:bg-surface-alt transition-colors text-text-secondary hover:text-text"
+                aria-label="Más acciones"
+                aria-expanded={actionsDropdownOpen}
+                aria-haspopup="menu"
               >
-                <Download className="h-5 w-5 mr-3 text-text-secondary" />
-                Presupuesto
+                <MoreVertical className="h-4 w-4" aria-hidden="true" />
               </button>
-              <button
-                type="button"
-                onClick={() => {
-                  generateInvoicePDF(event, profile as any, products, extras);
-                  setActionsDropdownOpen(false);
-                }}
-                className="w-full flex items-center px-4 py-2.5 text-sm text-text hover:bg-surface-alt dark:hover:bg-surface transition-colors"
-                role="menuitem"
-              >
-                <FileText className="h-5 w-5 mr-3 text-text-secondary" />
-                Generar Factura
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  // Include purchase supplies in shopping list
-                  const purchaseSupplies = supplies
-                    .filter((s: any) => s.source === 'purchase')
-                    .map((s: any) => ({
-                      name: s.supply_name || 'Insumo',
-                      quantity: s.quantity,
-                      unit: s.unit || 'und',
-                    }));
-                  generateShoppingListPDF(event, profile as any, [...ingredients, ...purchaseSupplies]);
-                  setActionsDropdownOpen(false);
-                }}
-                className="w-full flex items-center px-4 py-2.5 text-sm text-text hover:bg-surface-alt dark:hover:bg-surface transition-colors"
-                role="menuitem"
-              >
-                <ShoppingCart className="h-5 w-5 mr-3 text-text-secondary" />
-                Lista de Insumos
-              </button>
-              <button
-                type="button"
-                onClick={async () => {
-                  try {
-                    const productIds = products.map((p: any) => p.product_id).filter(Boolean);
-                    const productQuantities = new Map<string, number>();
-                    products.forEach((p: any) => productQuantities.set(p.product_id, p.quantity || 0));
-                    const allIngredients = productIds.length > 0
-                      ? await productService.getIngredientsForProducts(productIds)
-                      : [];
-                    const aggregated: Record<string, { name: string; quantity: number; unit: string }> = {};
-                    (allIngredients || [])
-                      .filter((ing: any) => ing.type === 'ingredient' && ing.bring_to_event)
-                      .forEach((ing: any) => {
-                        const key = ing.inventory_id;
-                        const qty = productQuantities.get(ing.product_id) || 0;
-                        if (!aggregated[key]) {
-                          aggregated[key] = { name: ing.ingredient_name || 'Insumo', unit: ing.unit || '', quantity: 0 };
-                        }
-                        aggregated[key].quantity += (ing.quantity_required || 0) * qty;
-                      });
-                    // Include ALL per-event supplies in checklist (stock + purchase)
-                    const allEventSupplies = supplies
-                      .map((s: any) => ({
-                        name: s.supply_name || 'Insumo',
-                        quantity: s.quantity,
-                        unit: s.unit || 'und',
-                      }));
-                    generateChecklistPDF(event, profile as any, products, equipment, [...Object.values(aggregated), ...allEventSupplies], extras);
-                  } catch (err) {
-                    logError("Error generating checklist", err);
-                    addToast("Error al generar checklist.", "error");
-                  }
-                  setActionsDropdownOpen(false);
-                }}
-                className="w-full flex items-center px-4 py-2.5 text-sm text-text hover:bg-surface-alt dark:hover:bg-surface transition-colors"
-                role="menuitem"
-              >
-                <ClipboardList className="h-5 w-5 mr-3 text-text-secondary" />
-                Checklist de Carga
-              </button>
-              <button
-                type="button"
-                disabled={!isDownpaymentMet}
-                onClick={() => {
-                  try {
-                    generateContractPDF(event, profile as any, undefined, products, payments);
-                  } catch (error) {
-                    const message =
-                      error instanceof ContractTemplateError
-                        ? `Faltan datos del contrato: ${error.missingTokens.map((t) => `[${t}]`).join(", ")}`
-                        : "Error al generar contrato.";
-                    addToast(message, "error");
-                    return;
-                  }
-                  setActionsDropdownOpen(false);
-                }}
-                className={clsx(
-                  "w-full flex items-center px-4 py-2.5 text-sm transition-colors",
-                  !isDownpaymentMet
-                    ? "text-text-tertiary cursor-not-allowed bg-surface-alt/50"
-                    : "text-text hover:bg-surface-alt dark:hover:bg-surface"
-                )}
-                role="menuitem"
-              >
-                <FileCheck className={clsx("h-5 w-5 mr-3", !isDownpaymentMet ? "text-warning/50" : "text-text-secondary")} />
-                Contrato {!isDownpaymentMet && "(Saldar Anticipo)"}
-              </button>
-              {viewMode === "payments" && payments.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    generatePaymentReportPDF(event, profile as any, payments);
-                    setActionsDropdownOpen(false);
-                  }}
-                  className="w-full flex items-center px-4 py-2.5 text-sm text-text hover:bg-surface-alt dark:hover:bg-surface transition-colors"
-                  role="menuitem"
-                >
-                  <Download className="h-5 w-5 mr-3 text-text-secondary" />
-                  Reporte de Pagos
-                </button>
-              )}
-              {remainingValue > 0 && currentStatus !== "cancelled" && (
-                <>
-                  <div className="my-1 border-t border-border"></div>
-                  <p className="px-4 py-2 text-xs font-semibold text-text-tertiary uppercase tracking-wider">
-                    Cobro en Línea
+              {actionsDropdownOpen && (
+                <div className="absolute right-0 mt-1 w-72 bg-card border border-border rounded-xl shadow-lg z-50 overflow-hidden py-1" role="menu">
+                  <p className="px-4 py-2 text-xs font-semibold text-text-tertiary uppercase tracking-wider border-b border-border mb-1">
+                    Exportar PDF
                   </p>
                   <button
                     type="button"
                     onClick={() => {
-                      handlePayOnline();
+                      generateBudgetPDF(event, profile as any, products, extras);
                       setActionsDropdownOpen(false);
                     }}
                     className="w-full flex items-center px-4 py-2.5 text-sm text-text hover:bg-surface-alt dark:hover:bg-surface transition-colors"
                     role="menuitem"
                   >
-                    <CreditCard className="h-5 w-5 mr-3 text-text-secondary" />
-                    Pagar con Stripe
+                    <Download className="h-5 w-5 mr-3 text-text-secondary" />
+                    Presupuesto
                   </button>
-                </>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      generateInvoicePDF(event, profile as any, products, extras);
+                      setActionsDropdownOpen(false);
+                    }}
+                    className="w-full flex items-center px-4 py-2.5 text-sm text-text hover:bg-surface-alt dark:hover:bg-surface transition-colors"
+                    role="menuitem"
+                  >
+                    <FileText className="h-5 w-5 mr-3 text-text-secondary" />
+                    Generar Factura
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // Include purchase supplies in shopping list
+                      const purchaseSupplies = supplies
+                        .filter((s: any) => s.source === 'purchase')
+                        .map((s: any) => ({
+                          name: s.supply_name || 'Insumo',
+                          quantity: s.quantity,
+                          unit: s.unit || 'und',
+                        }));
+                      generateShoppingListPDF(event, profile as any, [...ingredients, ...purchaseSupplies]);
+                      setActionsDropdownOpen(false);
+                    }}
+                    className="w-full flex items-center px-4 py-2.5 text-sm text-text hover:bg-surface-alt dark:hover:bg-surface transition-colors"
+                    role="menuitem"
+                  >
+                    <ShoppingCart className="h-5 w-5 mr-3 text-text-secondary" />
+                    Lista de Insumos
+                  </button>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        const productIds = products.map((p: any) => p.product_id).filter(Boolean);
+                        const productQuantities = new Map<string, number>();
+                        products.forEach((p: any) => productQuantities.set(p.product_id, p.quantity || 0));
+                        const allIngredients = productIds.length > 0
+                          ? await productService.getIngredientsForProducts(productIds)
+                          : [];
+                        const aggregated: Record<string, { name: string; quantity: number; unit: string }> = {};
+                        (allIngredients || [])
+                          .filter((ing: any) => ing.type === 'ingredient' && ing.bring_to_event)
+                          .forEach((ing: any) => {
+                            const key = ing.inventory_id;
+                            const qty = productQuantities.get(ing.product_id) || 0;
+                            if (!aggregated[key]) {
+                              aggregated[key] = { name: ing.ingredient_name || 'Insumo', unit: ing.unit || '', quantity: 0 };
+                            }
+                            aggregated[key].quantity += (ing.quantity_required || 0) * qty;
+                          });
+                        // Include ALL per-event supplies in checklist (stock + purchase)
+                        const allEventSupplies = supplies
+                          .map((s: any) => ({
+                            name: s.supply_name || 'Insumo',
+                            quantity: s.quantity,
+                            unit: s.unit || 'und',
+                          }));
+                        generateChecklistPDF(event, profile as any, products, equipment, [...Object.values(aggregated), ...allEventSupplies], extras);
+                      } catch (err) {
+                        logError("Error generating checklist", err);
+                        addToast("Error al generar checklist.", "error");
+                      }
+                      setActionsDropdownOpen(false);
+                    }}
+                    className="w-full flex items-center px-4 py-2.5 text-sm text-text hover:bg-surface-alt dark:hover:bg-surface transition-colors"
+                    role="menuitem"
+                  >
+                    <ClipboardList className="h-5 w-5 mr-3 text-text-secondary" />
+                    Checklist de Carga
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!isDownpaymentMet}
+                    onClick={() => {
+                      try {
+                        generateContractPDF(event, profile as any, undefined, products, payments);
+                      } catch (error) {
+                        const message =
+                          error instanceof ContractTemplateError
+                            ? `Faltan datos del contrato: ${error.missingTokens.map((t) => `[${t}]`).join(", ")}`
+                            : "Error al generar contrato.";
+                        addToast(message, "error");
+                        return;
+                      }
+                      setActionsDropdownOpen(false);
+                    }}
+                    className={clsx(
+                      "w-full flex items-center px-4 py-2.5 text-sm transition-colors",
+                      !isDownpaymentMet
+                        ? "text-text-tertiary cursor-not-allowed bg-surface-alt/50"
+                        : "text-text hover:bg-surface-alt dark:hover:bg-surface"
+                    )}
+                    role="menuitem"
+                  >
+                    <FileCheck className={clsx("h-5 w-5 mr-3", !isDownpaymentMet ? "text-warning/50" : "text-text-secondary")} />
+                    Contrato {!isDownpaymentMet && "(Saldar Anticipo)"}
+                  </button>
+                  {viewMode === "payments" && payments.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        generatePaymentReportPDF(event, profile as any, payments);
+                        setActionsDropdownOpen(false);
+                      }}
+                      className="w-full flex items-center px-4 py-2.5 text-sm text-text hover:bg-surface-alt dark:hover:bg-surface transition-colors"
+                      role="menuitem"
+                    >
+                      <Download className="h-5 w-5 mr-3 text-text-secondary" />
+                      Reporte de Pagos
+                    </button>
+                  )}
+                  {remainingValue > 0 && currentStatus !== "cancelled" && (
+                    <>
+                      <div className="my-1 border-t border-border"></div>
+                      <p className="px-4 py-2 text-xs font-semibold text-text-tertiary uppercase tracking-wider">
+                        Cobro en Línea
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handlePayOnline();
+                          setActionsDropdownOpen(false);
+                        }}
+                        className="w-full flex items-center px-4 py-2.5 text-sm text-text hover:bg-surface-alt dark:hover:bg-surface transition-colors"
+                        role="menuitem"
+                      >
+                        <CreditCard className="h-5 w-5 mr-3 text-text-secondary" />
+                        Pagar con Stripe
+                      </button>
+                    </>
+                  )}
+                </div>
               )}
-              <div className="my-1 border-t border-border"></div>
-              <button
-                type="button"
-                onClick={() => {
-                  setConfirmDeleteOpen(true);
-                  setActionsDropdownOpen(false);
-                }}
-                className="w-full flex items-center px-4 py-2.5 text-sm text-error hover:bg-error/10 transition-colors"
-                role="menuitem"
-              >
-                <Trash2 className="h-5 w-5 mr-3" />
-                Eliminar Evento
-              </button>
             </div>
-          )}
+            {/* Edit */}
+            <button
+              type="button"
+              onClick={() => navigate(`/events/${id}/edit`)}
+              className="inline-flex items-center gap-2 px-3 py-2 border border-border rounded-xl bg-card text-sm font-medium text-text-secondary hover:bg-surface-alt transition-colors"
+              aria-label="Editar este evento"
+            >
+              <Pencil className="h-4 w-4" aria-hidden="true" />
+              Editar
+            </button>
+            {/* Delete */}
+            <button
+              type="button"
+              onClick={() => setConfirmDeleteOpen(true)}
+              className="inline-flex items-center gap-2 px-3 py-2 border border-error/20 rounded-xl bg-error/5 text-sm font-medium text-error hover:bg-error/10 transition-colors"
+              aria-label="Eliminar este evento"
+            >
+              <Trash2 className="h-4 w-4" aria-hidden="true" />
+              Eliminar
+            </button>
+          </div>
+        </div>
+
+        {/* Tab bar */}
+        <div className="flex bg-surface-alt dark:bg-surface-alt/50 rounded-2xl p-1.5 overflow-x-auto no-scrollbar shadow-sm" role="group" aria-label="Modos de visualización del evento">
+          <button
+            type="button"
+            onClick={() => setViewMode("summary")}
+            className={clsx(
+              "px-4 py-2 rounded-xl text-sm font-bold flex items-center transition-all whitespace-nowrap",
+              viewMode === "summary"
+                ? "bg-card text-primary shadow-sm"
+                : "text-text-secondary hover:text-text hover:bg-surface-alt"
+            )}
+            aria-pressed={viewMode === "summary"}
+            aria-label="Ver resumen del evento"
+          >
+            <FileText className="h-4 w-4 mr-2" aria-hidden="true" />
+            Resumen
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode("payments")}
+            className={clsx(
+              "px-4 py-2 rounded-xl text-sm font-bold flex items-center transition-all whitespace-nowrap",
+              viewMode === "payments"
+                ? "bg-card text-primary shadow-sm"
+                : "text-text-secondary hover:text-text hover:bg-surface-alt"
+            )}
+            aria-pressed={viewMode === "payments"}
+            aria-label="Ver pagos del evento"
+          >
+            <DollarSign className="h-4 w-4 mr-2" aria-hidden="true" />
+            Pagos
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode("ingredients")}
+            className={clsx(
+              "px-4 py-2 rounded-xl text-sm font-bold flex items-center transition-all whitespace-nowrap",
+              viewMode === "ingredients"
+                ? "bg-card text-primary shadow-sm"
+                : "text-text-secondary hover:text-text hover:bg-surface-alt"
+            )}
+            aria-pressed={viewMode === "ingredients"}
+            aria-label="Ver lista de insumos"
+          >
+            <ShoppingCart className="h-4 w-4 mr-2" aria-hidden="true" />
+            Compras
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode("contract")}
+            className={clsx(
+              "px-4 py-2 rounded-xl text-sm font-bold flex items-center transition-all whitespace-nowrap",
+              viewMode === "contract"
+                ? "bg-card text-primary shadow-sm"
+                : "text-text-secondary hover:text-text hover:bg-surface-alt",
+              !isDownpaymentMet && "opacity-50 grayscale-[0.5]"
+            )}
+            aria-pressed={viewMode === "contract"}
+            aria-label="Ver contrato del evento"
+          >
+            <FileCheck className={clsx("h-4 w-4 mr-2", !isDownpaymentMet && "text-warning")} aria-hidden="true" />
+            Contrato
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode("photos")}
+            className={clsx(
+              "px-4 py-2 rounded-xl text-sm font-bold flex items-center transition-all whitespace-nowrap",
+              viewMode === "photos"
+                ? "bg-card text-primary shadow-sm"
+                : "text-text-secondary hover:text-text hover:bg-surface-alt"
+            )}
+            aria-pressed={viewMode === "photos"}
+            aria-label="Ver fotos del evento"
+          >
+            <Camera className="h-4 w-4 mr-2" aria-hidden="true" />
+            Fotos
+            {eventPhotos.length > 0 && (
+              <span className="ml-1.5 bg-primary/10 text-primary text-xs font-bold rounded-full px-1.5 py-0.5">
+                {eventPhotos.length}
+              </span>
+            )}
+          </button>
         </div>
       </div>
 
@@ -1052,7 +1050,7 @@ export const EventSummary: React.FC = () => {
                 {ingredients.map((ing) => {
                   const needsMore = ing.quantity > (ing.currentStock || 0);
                   return (
-                    <tr key={ing.name} className="hover:bg-surface-alt/50 transition-colors">
+                    <tr key={`${ing.name}-${ing.unit}`} className="hover:bg-surface-alt/50 transition-colors">
                       <td className="py-3 font-medium text-text">
                         {ing.name}
                         <div className="text-[10px] text-text-secondary uppercase tracking-tight">{ing.unit}</div>

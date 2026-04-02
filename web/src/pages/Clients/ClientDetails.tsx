@@ -23,41 +23,9 @@ import { useToast } from "@/hooks/useToast";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { StatusDropdown, EventStatus } from "@/components/StatusDropdown";
 
-const STATUS_MAP: Record<string, { label: string; className: string }> = {
-  quoted: {
-    label: "Cotizado",
-    className: "bg-status-quoted/10 text-status-quoted border-status-quoted/20",
-  },
-  confirmed: {
-    label: "Confirmado",
-    className:
-      "bg-status-confirmed/10 text-status-confirmed border-status-confirmed/20",
-  },
-  completed: {
-    label: "Completado",
-    className:
-      "bg-status-completed/10 text-status-completed border-status-completed/20",
-  },
-  cancelled: {
-    label: "Cancelado",
-    className:
-      "bg-status-cancelled/10 text-status-cancelled border-status-cancelled/20",
-  },
-};
-
-const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
-  const cfg = STATUS_MAP[status] ?? STATUS_MAP.quoted;
-  return (
-    <span
-      className={`px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full border ${cfg.className}`}
-    >
-      {cfg.label}
-    </span>
-  );
-};
 
 export const ClientDetails: React.FC = () => {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [client, setClient] = useState<Client | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
@@ -186,7 +154,7 @@ export const ClientDetails: React.FC = () => {
           <button
             type="button"
             onClick={() => setConfirmDeleteOpen(true)}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-xl text-white bg-error hover:bg-error/90 shadow-sm transition-colors"
+            className="inline-flex items-center px-4 py-2 border border-error/20 text-sm font-medium rounded-xl text-error bg-error/5 hover:bg-error/10 transition-colors"
             aria-label="Eliminar cliente permanentemente"
           >
             <Trash2 className="h-5 w-5 mr-2" aria-hidden="true" />
