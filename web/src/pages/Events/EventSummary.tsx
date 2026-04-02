@@ -463,187 +463,13 @@ export const EventSummary: React.FC = () => {
             <span className="font-medium hidden sm:inline">Volver</span>
           </button>
 
-          <div className="flex bg-surface-alt dark:bg-surface-alt/50 rounded-2xl p-1.5 flex-1 min-w-0 overflow-x-auto no-scrollbar shadow-sm" role="group" aria-label="Modos de visualización del evento">
-            <button
-              type="button"
-              onClick={() => setViewMode("summary")}
-              className={clsx(
-                "px-4 py-2 rounded-xl text-sm font-bold flex items-center transition-all whitespace-nowrap",
-                viewMode === "summary"
-                  ? "bg-card text-primary shadow-sm"
-                  : "text-text-secondary hover:text-text hover:bg-surface-alt"
-              )}
-              aria-pressed={viewMode === "summary"}
-              aria-label="Ver resumen del evento"
-            >
-              <FileText className="h-4 w-4 sm:mr-2" aria-hidden="true" />
-              <span className="hidden sm:inline">Resumen</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode("payments")}
-              className={clsx(
-                "px-4 py-2 rounded-xl text-sm font-bold flex items-center transition-all whitespace-nowrap",
-                viewMode === "payments"
-                  ? "bg-card text-primary shadow-sm"
-                  : "text-text-secondary hover:text-text hover:bg-surface-alt"
-              )}
-              aria-pressed={viewMode === "payments"}
-              aria-label="Ver pagos del evento"
-            >
-              <DollarSign className="h-4 w-4 sm:mr-2" aria-hidden="true" />
-              <span className="hidden sm:inline">Pagos</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode("ingredients")}
-              className={clsx(
-                "px-4 py-2 rounded-xl text-sm font-bold flex items-center transition-all whitespace-nowrap",
-                viewMode === "ingredients"
-                  ? "bg-card text-primary shadow-sm"
-                  : "text-text-secondary hover:text-text hover:bg-surface-alt"
-              )}
-              aria-pressed={viewMode === "ingredients"}
-              aria-label="Ver lista de insumos"
-            >
-              <ShoppingCart className="h-4 w-4 sm:mr-2" aria-hidden="true" />
-              <span className="hidden sm:inline">Compras</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode("contract")}
-              className={clsx(
-                "px-4 py-2 rounded-xl text-sm font-bold flex items-center transition-all whitespace-nowrap",
-                viewMode === "contract"
-                  ? "bg-card text-primary shadow-sm"
-                  : "text-text-secondary hover:text-text hover:bg-surface-alt",
-                !isDownpaymentMet && "opacity-50 grayscale-[0.5]"
-              )}
-              aria-pressed={viewMode === "contract"}
-              aria-label="Ver contrato del evento"
-            >
-              <FileCheck className={clsx("h-4 w-4 sm:mr-2", !isDownpaymentMet && "text-warning")} aria-hidden="true" />
-              <span className="hidden sm:inline">Contrato</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode("photos")}
-              className={clsx(
-                "px-4 py-2 rounded-xl text-sm font-bold flex items-center transition-all whitespace-nowrap",
-                viewMode === "photos"
-                  ? "bg-card text-primary shadow-sm"
-                  : "text-text-secondary hover:text-text hover:bg-surface-alt"
-              )}
-              aria-pressed={viewMode === "photos"}
-              aria-label="Ver fotos del evento"
-            >
-              <Camera className="h-4 w-4 sm:mr-2" aria-hidden="true" />
-              <span className="hidden sm:inline">Fotos</span>
-              {eventPhotos.length > 0 && (
-                <span className="ml-1.5 bg-primary/10 text-primary text-xs font-bold rounded-full px-1.5 py-0.5">
-                  {eventPhotos.length}
-                </span>
-              )}
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode("checklist")}
-              className={clsx(
-                "px-4 py-2 rounded-xl text-sm font-bold flex items-center transition-all whitespace-nowrap",
-                viewMode === "checklist"
-                  ? "bg-card text-primary shadow-sm"
-                  : "text-text-secondary hover:text-text hover:bg-surface-alt"
-              )}
-              aria-pressed={viewMode === "checklist"}
-              aria-label="Ver checklist de carga"
-            >
-              <ClipboardList className="h-4 w-4 sm:mr-2" aria-hidden="true" />
-              <span className="hidden sm:inline">Checklist</span>
-              {checklistItems.length > 0 && (
-                <span className="ml-1.5 bg-primary/10 text-primary text-xs font-bold rounded-full px-1.5 py-0.5">
-                  {Math.round(checklistProgress * 100)}%
-                </span>
-              )}
-            </button>
-          </div>
-        </div>
-
-        {/* Edit icon button */}
-        <button
-          type="button"
-          onClick={() => navigate(`/events/${id}/edit`)}
-          className="h-10 w-10 sm:h-9 sm:w-9 flex items-center justify-center rounded-xl border border-border bg-surface hover:bg-surface-alt transition-colors text-text-secondary hover:text-text shrink-0"
-          aria-label="Editar este evento"
-        >
-          <Pencil className="h-4 w-4" aria-hidden="true" />
-        </button>
-
-        {/* Secondary Actions Dropdown */}
-        <div className="relative shrink-0" onClick={(e) => e.stopPropagation()}>
-          <button
-            type="button"
-            onClick={() => setActionsDropdownOpen(!actionsDropdownOpen)}
-            className="h-10 w-10 sm:h-9 sm:w-9 flex items-center justify-center rounded-xl border border-border bg-surface hover:bg-surface-alt transition-colors text-text-secondary hover:text-text"
-            aria-label="Más acciones"
-            aria-expanded={actionsDropdownOpen}
-            aria-haspopup="menu"
-          >
-            <MoreVertical className="h-4 w-4" aria-hidden="true" />
-          </button>
-
-          {actionsDropdownOpen && (
-            <div className="absolute right-0 mt-1 w-56 sm:w-72 bg-card border border-border rounded-xl shadow-lg z-50 overflow-hidden py-1" role="menu">
-              <p className="px-4 py-2 text-xs font-semibold text-text-tertiary uppercase tracking-wider border-b border-border mb-1">
-                Exportar PDF
-              </p>
-              <button
-                type="button"
-                onClick={() => {
-                  generateBudgetPDF(event, profile as any, products, extras);
-                  setActionsDropdownOpen(false);
-                }}
-                className="w-full flex items-center px-4 py-2.5 text-sm text-text hover:bg-surface-alt dark:hover:bg-surface transition-colors"
-                role="menuitem"
-              >
-                <Download className="h-5 w-5 mr-3 text-text-secondary" />
-                Presupuesto
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  generateInvoicePDF(event, profile as any, products, extras);
-                  setActionsDropdownOpen(false);
-                }}
-                className="w-full flex items-center px-4 py-2.5 text-sm text-text hover:bg-surface-alt dark:hover:bg-surface transition-colors"
-                role="menuitem"
-              >
-                <FileText className="h-5 w-5 mr-3 text-text-secondary" />
-                Generar Factura
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  // Include purchase supplies in shopping list
-                  const purchaseSupplies = supplies
-                    .filter((s: any) => s.source === 'purchase')
-                    .map((s: any) => ({
-                      name: s.supply_name || 'Insumo',
-                      quantity: s.quantity,
-                      unit: s.unit || 'und',
-                    }));
-                  generateShoppingListPDF(event, profile as any, [...ingredients, ...purchaseSupplies]);
-                  setActionsDropdownOpen(false);
-                }}
-                className="w-full flex items-center px-4 py-2.5 text-sm text-text hover:bg-surface-alt dark:hover:bg-surface transition-colors"
-                role="menuitem"
-              >
-                <ShoppingCart className="h-5 w-5 mr-3 text-text-secondary" />
-                Lista de Insumos
-              </button>
+          <div className="flex items-center gap-2">
+            {/* Secondary Actions Dropdown */}
+            <div className="relative shrink-0" onClick={(e) => e.stopPropagation()}>
               <button
                 type="button"
                 onClick={() => setActionsDropdownOpen(!actionsDropdownOpen)}
-                className="h-9 w-9 flex items-center justify-center rounded-xl border border-border bg-surface hover:bg-surface-alt transition-colors text-text-secondary hover:text-text"
+                className="h-10 w-10 sm:h-9 sm:w-9 flex items-center justify-center rounded-xl border border-border bg-surface hover:bg-surface-alt transition-colors text-text-secondary hover:text-text"
                 aria-label="Más acciones"
                 aria-expanded={actionsDropdownOpen}
                 aria-haspopup="menu"
@@ -651,7 +477,7 @@ export const EventSummary: React.FC = () => {
                 <MoreVertical className="h-4 w-4" aria-hidden="true" />
               </button>
               {actionsDropdownOpen && (
-                <div className="absolute right-0 mt-1 w-72 bg-card border border-border rounded-xl shadow-lg z-50 overflow-hidden py-1" role="menu">
+                <div className="absolute right-0 mt-1 w-56 sm:w-72 bg-card border border-border rounded-xl shadow-lg z-50 overflow-hidden py-1" role="menu">
                   <p className="px-4 py-2 text-xs font-semibold text-text-tertiary uppercase tracking-wider border-b border-border mb-1">
                     Exportar PDF
                   </p>
@@ -812,7 +638,7 @@ export const EventSummary: React.FC = () => {
               aria-label="Editar este evento"
             >
               <Pencil className="h-4 w-4" aria-hidden="true" />
-              Editar
+              <span className="hidden sm:inline">Editar</span>
             </button>
             {/* Delete */}
             <button
@@ -822,7 +648,7 @@ export const EventSummary: React.FC = () => {
               aria-label="Eliminar este evento"
             >
               <Trash2 className="h-4 w-4" aria-hidden="true" />
-              Eliminar
+              <span className="hidden sm:inline">Eliminar</span>
             </button>
           </div>
         </div>
@@ -841,8 +667,8 @@ export const EventSummary: React.FC = () => {
             aria-pressed={viewMode === "summary"}
             aria-label="Ver resumen del evento"
           >
-            <FileText className="h-4 w-4 mr-2" aria-hidden="true" />
-            Resumen
+            <FileText className="h-4 w-4 sm:mr-2" aria-hidden="true" />
+            <span className="hidden sm:inline">Resumen</span>
           </button>
           <button
             type="button"
@@ -856,8 +682,8 @@ export const EventSummary: React.FC = () => {
             aria-pressed={viewMode === "payments"}
             aria-label="Ver pagos del evento"
           >
-            <DollarSign className="h-4 w-4 mr-2" aria-hidden="true" />
-            Pagos
+            <DollarSign className="h-4 w-4 sm:mr-2" aria-hidden="true" />
+            <span className="hidden sm:inline">Pagos</span>
           </button>
           <button
             type="button"
@@ -871,8 +697,8 @@ export const EventSummary: React.FC = () => {
             aria-pressed={viewMode === "ingredients"}
             aria-label="Ver lista de insumos"
           >
-            <ShoppingCart className="h-4 w-4 mr-2" aria-hidden="true" />
-            Compras
+            <ShoppingCart className="h-4 w-4 sm:mr-2" aria-hidden="true" />
+            <span className="hidden sm:inline">Compras</span>
           </button>
           <button
             type="button"
@@ -887,8 +713,8 @@ export const EventSummary: React.FC = () => {
             aria-pressed={viewMode === "contract"}
             aria-label="Ver contrato del evento"
           >
-            <FileCheck className={clsx("h-4 w-4 mr-2", !isDownpaymentMet && "text-warning")} aria-hidden="true" />
-            Contrato
+            <FileCheck className={clsx("h-4 w-4 sm:mr-2", !isDownpaymentMet && "text-warning")} aria-hidden="true" />
+            <span className="hidden sm:inline">Contrato</span>
           </button>
           <button
             type="button"
@@ -902,11 +728,31 @@ export const EventSummary: React.FC = () => {
             aria-pressed={viewMode === "photos"}
             aria-label="Ver fotos del evento"
           >
-            <Camera className="h-4 w-4 mr-2" aria-hidden="true" />
-            Fotos
+            <Camera className="h-4 w-4 sm:mr-2" aria-hidden="true" />
+            <span className="hidden sm:inline">Fotos</span>
             {eventPhotos.length > 0 && (
               <span className="ml-1.5 bg-primary/10 text-primary text-xs font-bold rounded-full px-1.5 py-0.5">
                 {eventPhotos.length}
+              </span>
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode("checklist")}
+            className={clsx(
+              "px-4 py-2 rounded-xl text-sm font-bold flex items-center transition-all whitespace-nowrap",
+              viewMode === "checklist"
+                ? "bg-card text-primary shadow-sm"
+                : "text-text-secondary hover:text-text hover:bg-surface-alt"
+            )}
+            aria-pressed={viewMode === "checklist"}
+            aria-label="Ver checklist de carga"
+          >
+            <ClipboardList className="h-4 w-4 sm:mr-2" aria-hidden="true" />
+            <span className="hidden sm:inline">Checklist</span>
+            {checklistItems.length > 0 && (
+              <span className="ml-1.5 bg-primary/10 text-primary text-xs font-bold rounded-full px-1.5 py-0.5">
+                {Math.round(checklistProgress * 100)}%
               </span>
             )}
           </button>
