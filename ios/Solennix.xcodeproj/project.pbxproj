@@ -17,6 +17,7 @@
 		40A6DAE581CB68D9CD746D87 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BD8FAF4B7299793724BA9DF /* NotificationManager.swift */; };
 		463241C8CE37DF4EA6D1A2B6 /* ShowMonthlyRevenueIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A639BA04B2C90E8F96B85CB /* ShowMonthlyRevenueIntent.swift */; };
 		4B8444FA9F8DD556DA2AC5BD /* CheckLowStockIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37AD23CC5B1391CBA9558C1C /* CheckLowStockIntent.swift */; };
+		51879ACC60875F07D9A3C06D /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 1D5FE68FCA472E277CBF66FD /* PrivacyInfo.xcprivacy */; };
 		5F007783634178490F0F2104 /* SolennixCore in Frameworks */ = {isa = PBXBuildFile; productRef = B6C6823DFAB04CC472F37EAE /* SolennixCore */; };
 		66F6F5DFE0E5D087760F1B6A /* UpcomingEventsWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 451A5953A5F61726A9FA40A8 /* UpcomingEventsWidget.swift */; };
 		681F97FBFBFEAAB745539523 /* SidebarSplitLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFD6B263EC4549ED0AE7340A /* SidebarSplitLayout.swift */; };
@@ -74,6 +75,7 @@
 		0DB0E0FDAE4DCB607FD61386 /* SolennixWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SolennixWidgetExtension.entitlements; sourceTree = "<group>"; };
 		0FAD0D0C832A899350E8ED0C /* SolennixCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = SolennixCore; path = Packages/SolennixCore; sourceTree = SOURCE_ROOT; };
 		1A639BA04B2C90E8F96B85CB /* ShowMonthlyRevenueIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowMonthlyRevenueIntent.swift; sourceTree = "<group>"; };
+		1D5FE68FCA472E277CBF66FD /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		1EF7A9FBEE935FF6D1DCCF98 /* SolennixDesign */ = {isa = PBXFileReference; lastKnownFileType = folder; name = SolennixDesign; path = Packages/SolennixDesign; sourceTree = SOURCE_ROOT; };
 		1F3752A818448EDDCFD8813A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		20FD5F115715FD819AE007D8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -195,6 +197,7 @@
 				C051B91E5F738A07F4A1E176 /* AuthFlowView.swift */,
 				81690A3205045775059AB12D /* ContentView.swift */,
 				20FD5F115715FD819AE007D8 /* Info.plist */,
+				1D5FE68FCA472E277CBF66FD /* PrivacyInfo.xcprivacy */,
 				3EDE477D65F41F57F76457B4 /* Solennix.entitlements */,
 				A3B0FFA9AF756AB9C85E856D /* SolennixApp.swift */,
 			);
@@ -350,10 +353,12 @@
 				LastUpgradeCheck = 1500;
 				TargetAttributes = {
 					14FD8C2D317599754E5758B8 = {
-						DevelopmentTeam = "";
+						DevelopmentTeam = T5SKULSP2M;
+						ProvisioningStyle = Automatic;
 					};
 					533502EEC4678D63921D71A6 = {
-						DevelopmentTeam = "";
+						DevelopmentTeam = T5SKULSP2M;
+						ProvisioningStyle = Automatic;
 					};
 				};
 			};
@@ -389,6 +394,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				33E491C06B9349361609BD21 /* Assets.xcassets in Resources */,
+				51879ACC60875F07D9A3C06D /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -499,9 +505,11 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = T5SKULSP2M;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -583,9 +591,11 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Apple Distribution";
+				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = T5SKULSP2M;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
