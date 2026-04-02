@@ -4,9 +4,11 @@ import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -35,7 +37,14 @@ import com.creapolis.solennix.core.model.EventProduct
 import com.creapolis.solennix.core.model.EventStatus
 import com.creapolis.solennix.core.model.EventSupply
 import com.creapolis.solennix.core.model.SupplySource
+import com.creapolis.solennix.core.model.EventPhoto
 import com.creapolis.solennix.core.model.extensions.asMXN
+import com.creapolis.solennix.core.network.UrlResolver
+import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.request.crossfade
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import com.creapolis.solennix.feature.events.pdf.BudgetPdfGenerator
 import com.creapolis.solennix.feature.events.pdf.ChecklistPdfGenerator
 import com.creapolis.solennix.feature.events.pdf.ContractPdfGenerator
@@ -56,7 +65,16 @@ fun EventDetailScreen(
     onNavigateBack: () -> Unit,
     onEditClick: (String) -> Unit,
     onSearchClick: () -> Unit = {},
-    onChecklistClick: (String) -> Unit = {}
+    onChecklistClick: (String) -> Unit = {},
+    onFinancesClick: (String) -> Unit = {},
+    onPaymentsClick: (String) -> Unit = {},
+    onProductsClick: (String) -> Unit = {},
+    onExtrasClick: (String) -> Unit = {},
+    onEquipmentClick: (String) -> Unit = {},
+    onSuppliesClick: (String) -> Unit = {},
+    onShoppingListClick: (String) -> Unit = {},
+    onPhotosClick: (String) -> Unit = {},
+    onContractPreviewClick: (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
@@ -126,13 +144,13 @@ fun EventDetailScreen(
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    // Info + Financial: side by side on tablet
+                    // Hub layout: Info + Financial cards side by side on tablet
                     AdaptiveDetailLayout(
                         left = {
-                            // B. Event Info Card
+                            // Event Info Card (header)
                             EventInfoCard(event = event)
 
-                            // A. Client Info Header
+                            // Client Info
                             ClientInfoHeader(
                                 client = uiState.client,
                                 onPhoneClick = { phone ->
@@ -145,108 +163,105 @@ fun EventDetailScreen(
                                 }
                             )
 
-                            // Status Change Section
-                            StatusChangeSection(
-                                currentStatus = event.status,
-                                onStatusChange = { newStatus -> viewModel.updateEventStatus(newStatus) }
+                            // Content navigation cards grid
+                            ContentCardsGrid(
+                                productsCount = uiState.products.size,
+                                extrasCount = uiState.extras.size,
+                                suppliesCount = uiState.supplies.size,
+                                equipmentCount = uiState.equipment.size,
+                                purchaseSuppliesCount = uiState.supplies.count { it.source == SupplySource.PURCHASE },
+                                photosCount = uiState.photos.size,
+                                onProductsClick = { onProductsClick(event.id) },
+                                onExtrasClick = { onExtrasClick(event.id) },
+                                onSuppliesClick = { onSuppliesClick(event.id) },
+                                onEquipmentClick = { onEquipmentClick(event.id) },
+                                onShoppingListClick = { onShoppingListClick(event.id) },
+                                onPhotosClick = { onPhotosClick(event.id) }
                             )
+
+                            // Photos preview strip (first 4 photos)
+                            if (uiState.photos.isNotEmpty()) {
+                                PhotosPreviewCard(
+                                    photos = uiState.photos,
+                                    onClick = { onPhotosClick(event.id) }
+                                )
+                            }
                         },
                         right = {
-                            // G. Financial Breakdown Card
-                            FinancialBreakdownCard(
+                            // Finance Summary Card (navigable)
+                            FinanceSummaryCard(
                                 event = event,
-                                products = uiState.products,
-                                extras = uiState.extras,
-                                totalPaid = uiState.totalPaid
+                                supplyCost = uiState.supplies.sumOf { it.quantity * it.unitCost },
+                                onClick = { onFinancesClick(event.id) }
+                            )
+
+                            // Payment Summary Card (navigable)
+                            PaymentSummaryCard(
+                                event = event,
+                                totalPaid = uiState.totalPaid,
+                                paymentsCount = uiState.payments.size,
+                                onClick = { onPaymentsClick(event.id) }
                             )
 
                             // Action Buttons
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                PremiumButton(
-                                    text = "Registrar Pago",
-                                    onClick = {
-                                        paymentInitialAmount = null
-                                        showPaymentModal = true
-                                    },
-                                    modifier = Modifier.weight(1f),
-                                    icon = Icons.Default.Add
-                                )
+                            if (remaining > 0.01) {
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    PremiumButton(
+                                        text = "Registrar Pago",
+                                        onClick = {
+                                            paymentInitialAmount = null
+                                            showPaymentModal = true
+                                        },
+                                        modifier = Modifier.weight(1f),
+                                        icon = Icons.Default.Add
+                                    )
 
-                                // Anticipo (deposit) quick-pay button
-                                val depositPct = event.depositPercent
-                                if (depositPct != null && depositPct > 0) {
-                                    val depositTarget = event.totalAmount * depositPct / 100
-                                    val depositRemaining = (depositTarget - uiState.totalPaid).coerceAtLeast(0.0)
-                                    if (depositRemaining > 0) {
-                                        OutlinedButton(
-                                            onClick = {
-                                                paymentInitialAmount = depositRemaining
-                                                showPaymentModal = true
-                                            },
-                                            modifier = Modifier.weight(1f),
-                                            shape = MaterialTheme.shapes.medium
-                                        ) {
-                                            Icon(
-                                                Icons.Default.Savings,
-                                                contentDescription = null,
-                                                modifier = Modifier.size(18.dp)
-                                            )
-                                            Spacer(modifier = Modifier.width(4.dp))
-                                            Text("Anticipo")
+                                    val depositPct = event.depositPercent
+                                    if (depositPct != null && depositPct > 0) {
+                                        val depositTarget = event.totalAmount * depositPct / 100
+                                        val depositRemaining = (depositTarget - uiState.totalPaid).coerceAtLeast(0.0)
+                                        if (depositRemaining > 0) {
+                                            OutlinedButton(
+                                                onClick = {
+                                                    paymentInitialAmount = depositRemaining
+                                                    showPaymentModal = true
+                                                },
+                                                modifier = Modifier.weight(1f),
+                                                shape = MaterialTheme.shapes.medium
+                                            ) {
+                                                Icon(Icons.Default.Savings, contentDescription = null, modifier = Modifier.size(18.dp))
+                                                Spacer(modifier = Modifier.width(4.dp))
+                                                Text("Anticipo")
+                                            }
                                         }
                                     }
                                 }
                             }
 
-                            // H. Payments Section
-                            if (uiState.payments.isNotEmpty()) {
-                                PaymentsSection(
-                                    uiState = uiState,
-                                    onDeletePayment = { paymentId -> viewModel.deletePayment(paymentId) }
-                                )
-                            }
-                        }
-                    )
+                            // Checklist link
+                            ChecklistButton(onClick = { onChecklistClick(event.id) })
 
-                    // Full-width sections below the 2-column layout
-                    // C. Products Section
-                    if (uiState.products.isNotEmpty()) {
-                        ProductsSection(
-                            products = uiState.products,
-                            productNames = uiState.productNames
-                        )
-                    }
+                            // Contract preview link
+                            ContractPreviewButton(onClick = { onContractPreviewClick(event.id) })
 
-                    // D. Extras Section
-                    if (uiState.extras.isNotEmpty()) {
-                        ExtrasSection(extras = uiState.extras)
-                    }
+                            // Status Change
+                            StatusChangeSection(
+                                currentStatus = event.status,
+                                onStatusChange = { newStatus -> viewModel.updateEventStatus(newStatus) }
+                            )
 
-                    // E. Equipment Section
-                    if (uiState.equipment.isNotEmpty()) {
-                        EquipmentSection(equipment = uiState.equipment)
-                    }
-
-                    // F. Supplies Section
-                    if (uiState.supplies.isNotEmpty()) {
-                        SuppliesSection(supplies = uiState.supplies)
-                    }
-
-                    // I. Checklist link
-                    ChecklistButton(onClick = { onChecklistClick(event.id) })
-
-                    // J. Documents/PDFs
-                    Text("Generar Documentos", style = MaterialTheme.typography.titleMedium)
-                    DocumentActionsGrid(
-                        uiState = uiState,
-                        context = context,
-                        onSharePdf = { file ->
-                            sharePdfFile(context, file)
-                        },
-                        onChecklistClick = { onChecklistClick(event.id) },
-                        onPhotosClick = {
-                            viewModel.loadPhotos()
-                            showPhotoGallery = true
+                            // Documents/PDFs
+                            Text("Generar Documentos", style = MaterialTheme.typography.titleMedium)
+                            DocumentActionsGrid(
+                                uiState = uiState,
+                                context = context,
+                                onSharePdf = { file -> sharePdfFile(context, file) },
+                                onChecklistClick = { onChecklistClick(event.id) },
+                                onPhotosClick = {
+                                    viewModel.loadPhotos()
+                                    showPhotoGallery = true
+                                }
+                            )
                         }
                     )
 
@@ -1220,6 +1235,24 @@ private fun ChecklistButton(onClick: () -> Unit) {
     }
 }
 
+@Composable
+private fun ContractPreviewButton(onClick: () -> Unit) {
+    OutlinedButton(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        colors = ButtonDefaults.outlinedButtonColors(contentColor = SolennixTheme.colors.info)
+    ) {
+        Icon(
+            Icons.AutoMirrored.Filled.Article,
+            contentDescription = null,
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text("Ver Contrato")
+    }
+}
+
 // ==================== Status Change Section ====================
 
 @Composable
@@ -1644,6 +1677,477 @@ fun PaymentModal(
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(32.dp))
+        }
+    }
+}
+
+// ==================== Hub Summary Cards ====================
+
+@Composable
+private fun FinanceSummaryCard(
+    event: com.creapolis.solennix.core.model.Event,
+    supplyCost: Double,
+    onClick: () -> Unit
+) {
+    val netSales = event.totalAmount - event.taxAmount
+    val profit = netSales - supplyCost
+    val margin = if (netSales > 0) (profit / netSales) * 100 else 0.0
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
+        shape = MaterialTheme.shapes.medium
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Default.BarChart,
+                    contentDescription = null,
+                    tint = SolennixTheme.colors.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    "Finanzas",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Icon(
+                    Icons.Default.ChevronRight,
+                    contentDescription = "Ver detalle",
+                    tint = SolennixTheme.colors.secondaryText,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+            HorizontalDivider(color = SolennixTheme.colors.secondaryText.copy(alpha = 0.2f))
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        "TOTAL",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = SolennixTheme.colors.secondaryText
+                    )
+                    Text(
+                        event.totalAmount.asMXN(),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = SolennixTheme.colors.primary
+                    )
+                }
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        "UTILIDAD",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = SolennixTheme.colors.secondaryText
+                    )
+                    Text(
+                        "${margin.toInt()}%",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = SolennixTheme.colors.success
+                    )
+                }
+            }
+
+            if (event.discount > 0) {
+                Spacer(modifier = Modifier.height(4.dp))
+                val discountLabel = if (event.discountType == DiscountType.PERCENT) {
+                    "Descuento ${event.discount.toInt()}%"
+                } else "Descuento"
+                Text(discountLabel, style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.error)
+            }
+
+            if (event.requiresInvoice) {
+                Text(
+                    "IVA ${event.taxRate.toInt()}%",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = SolennixTheme.colors.secondaryText
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun PaymentSummaryCard(
+    event: com.creapolis.solennix.core.model.Event,
+    totalPaid: Double,
+    paymentsCount: Int,
+    onClick: () -> Unit
+) {
+    val remaining = (event.totalAmount - totalPaid).coerceAtLeast(0.0)
+    val progress = if (event.totalAmount > 0) (totalPaid / event.totalAmount).coerceIn(0.0, 1.0) else 0.0
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
+        shape = MaterialTheme.shapes.medium
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Default.Payments,
+                    contentDescription = null,
+                    tint = SolennixTheme.colors.success,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    "Pagos",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                if (paymentsCount > 0) {
+                    Surface(
+                        shape = MaterialTheme.shapes.small,
+                        color = SolennixTheme.colors.primary.copy(alpha = 0.1f)
+                    ) {
+                        Text(
+                            "$paymentsCount",
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = SolennixTheme.colors.primary
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(4.dp))
+                }
+                Icon(
+                    Icons.Default.ChevronRight,
+                    contentDescription = "Ver detalle",
+                    tint = SolennixTheme.colors.secondaryText,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+            HorizontalDivider(color = SolennixTheme.colors.secondaryText.copy(alpha = 0.2f))
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Mini KPIs
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                MiniKpi(
+                    label = "Pagado",
+                    value = totalPaid.asMXN(),
+                    color = SolennixTheme.colors.success,
+                    modifier = Modifier.weight(1f)
+                )
+                MiniKpi(
+                    label = "Saldo",
+                    value = remaining.asMXN(),
+                    color = if (remaining <= 0.01) SolennixTheme.colors.success else SolennixTheme.colors.error,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            // Progress bar
+            Spacer(modifier = Modifier.height(8.dp))
+            LinearProgressIndicator(
+                progress = { progress.toFloat() },
+                modifier = Modifier.fillMaxWidth().height(6.dp),
+                color = SolennixTheme.colors.primary,
+                trackColor = SolennixTheme.colors.secondaryText.copy(alpha = 0.15f),
+                strokeCap = androidx.compose.ui.graphics.StrokeCap.Round
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                "${(progress * 100).toInt()}%",
+                style = MaterialTheme.typography.labelSmall,
+                color = SolennixTheme.colors.secondaryText,
+                modifier = Modifier.align(Alignment.End)
+            )
+
+            // Deposit status
+            val depositPct = event.depositPercent
+            if (depositPct != null && depositPct > 0) {
+                val depositAmount = event.totalAmount * depositPct / 100
+                val isDepositMet = totalPaid >= (depositAmount - 0.1)
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        if (isDepositMet) Icons.Default.CheckCircle else Icons.Default.Warning,
+                        contentDescription = null,
+                        tint = if (isDepositMet) SolennixTheme.colors.success else SolennixTheme.colors.warning,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        "Anticipo ${depositPct.toInt()}%: ${depositAmount.asMXN()}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (isDepositMet) SolennixTheme.colors.success else SolennixTheme.colors.warning
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MiniKpi(
+    label: String,
+    value: String,
+    color: androidx.compose.ui.graphics.Color,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier,
+        shape = MaterialTheme.shapes.small,
+        color = color.copy(alpha = 0.1f)
+    ) {
+        Column(
+            modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                value,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = color,
+                maxLines = 1
+            )
+            Text(
+                label,
+                style = MaterialTheme.typography.labelSmall,
+                color = SolennixTheme.colors.secondaryText
+            )
+        }
+    }
+}
+
+@Composable
+private fun ContentCardsGrid(
+    productsCount: Int,
+    extrasCount: Int,
+    suppliesCount: Int,
+    equipmentCount: Int,
+    purchaseSuppliesCount: Int,
+    photosCount: Int,
+    onProductsClick: () -> Unit,
+    onExtrasClick: () -> Unit,
+    onSuppliesClick: () -> Unit,
+    onEquipmentClick: () -> Unit,
+    onShoppingListClick: () -> Unit,
+    onPhotosClick: () -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            SummaryNavCard(
+                icon = Icons.Default.ShoppingBag,
+                title = "Productos",
+                count = productsCount,
+                color = SolennixTheme.colors.primary,
+                onClick = onProductsClick,
+                modifier = Modifier.weight(1f)
+            )
+            SummaryNavCard(
+                icon = Icons.Default.AddCircleOutline,
+                title = "Extras",
+                count = extrasCount,
+                color = SolennixTheme.colors.info,
+                onClick = onExtrasClick,
+                modifier = Modifier.weight(1f)
+            )
+        }
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            SummaryNavCard(
+                icon = Icons.Default.LocalGroceryStore,
+                title = "Insumos",
+                count = suppliesCount,
+                color = SolennixTheme.colors.warning,
+                onClick = onSuppliesClick,
+                modifier = Modifier.weight(1f)
+            )
+            SummaryNavCard(
+                icon = Icons.Default.Inventory2,
+                title = "Equipo",
+                count = equipmentCount,
+                color = SolennixTheme.colors.success,
+                onClick = onEquipmentClick,
+                modifier = Modifier.weight(1f)
+            )
+        }
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            SummaryNavCard(
+                icon = Icons.Default.ShoppingCart,
+                title = "Compras",
+                subtitle = if (purchaseSuppliesCount > 0) "$purchaseSuppliesCount por comprar" else null,
+                color = SolennixTheme.colors.error,
+                onClick = onShoppingListClick,
+                modifier = Modifier.weight(1f)
+            )
+            SummaryNavCard(
+                icon = Icons.Default.PhotoLibrary,
+                title = "Fotos",
+                count = photosCount,
+                color = SolennixTheme.colors.primary,
+                onClick = onPhotosClick,
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun PhotosPreviewCard(
+    photos: List<EventPhoto>,
+    onClick: () -> Unit
+) {
+    val context = LocalContext.current
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
+        shape = MaterialTheme.shapes.medium
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    "Fotos",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = SolennixTheme.colors.text
+                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "${photos.size}",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = SolennixTheme.colors.primary
+                    )
+                    Icon(
+                        Icons.Default.ChevronRight,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = SolennixTheme.colors.textTertiary
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                photos.take(4).forEachIndexed { index, photo ->
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .aspectRatio(1.2f)
+                            .clip(RoundedCornerShape(8.dp))
+                    ) {
+                        AsyncImage(
+                            model = ImageRequest.Builder(context)
+                                .data(UrlResolver.resolve(photo.url))
+                                .crossfade(true)
+                                .build(),
+                            contentDescription = photo.caption,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                        // "+N" overlay on last photo if more than 4
+                        if (index == 3 && photos.size > 4) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(
+                                        color = androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.5f),
+                                        shape = RoundedCornerShape(8.dp)
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    "+${photos.size - 4}",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = androidx.compose.ui.graphics.Color.White
+                                )
+                            }
+                        }
+                    }
+                }
+                // Fill remaining slots if < 4 photos to keep uniform sizing
+                repeat(maxOf(0, 4 - photos.size)) {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SummaryNavCard(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    count: Int? = null,
+    subtitle: String? = null,
+    color: androidx.compose.ui.graphics.Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.clickable { onClick() },
+        colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
+        shape = MaterialTheme.shapes.medium
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(20.dp))
+                Spacer(modifier = Modifier.weight(1f))
+                if (count != null && count > 0) {
+                    Surface(
+                        shape = MaterialTheme.shapes.small,
+                        color = color.copy(alpha = 0.1f)
+                    ) {
+                        Text(
+                            "$count",
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = color
+                        )
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                title,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = SolennixTheme.colors.primaryText
+            )
+            if (subtitle != null) {
+                Text(
+                    subtitle,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = SolennixTheme.colors.secondaryText
+                )
+            } else {
+                Icon(
+                    Icons.Default.ChevronRight,
+                    contentDescription = null,
+                    tint = SolennixTheme.colors.secondaryText,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
         }
     }
 }

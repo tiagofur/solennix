@@ -36,6 +36,15 @@ import com.creapolis.solennix.feature.clients.ui.QuickQuoteScreen
 import com.creapolis.solennix.feature.dashboard.ui.DashboardScreen
 import com.creapolis.solennix.feature.events.ui.EventChecklistScreen
 import com.creapolis.solennix.feature.events.ui.EventDetailScreen
+import com.creapolis.solennix.feature.events.ui.EventFinancesScreen
+import com.creapolis.solennix.feature.events.ui.EventPaymentsScreen
+import com.creapolis.solennix.feature.events.ui.EventProductsScreen
+import com.creapolis.solennix.feature.events.ui.EventExtrasScreen
+import com.creapolis.solennix.feature.events.ui.EventEquipmentScreen
+import com.creapolis.solennix.feature.events.ui.EventSuppliesScreen
+import com.creapolis.solennix.feature.events.ui.EventShoppingListScreen
+import com.creapolis.solennix.feature.events.ui.EventContractPreviewScreen
+import com.creapolis.solennix.feature.events.ui.EventPhotosScreen
 import com.creapolis.solennix.feature.events.ui.EventFormScreen
 import com.creapolis.solennix.feature.events.ui.EventListScreen
 import com.creapolis.solennix.feature.inventory.ui.InventoryListScreen
@@ -345,8 +354,45 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                     onNavigateBack = { navController.popBackStack() },
                     onEditClick = { id -> navController.navigate("event_form?eventId=$id") },
                     onSearchClick = { navController.navigate(buildSearchRoute()) },
-                    onChecklistClick = { id -> navController.navigate("event_checklist/$id") }
+                    onChecklistClick = { id -> navController.navigate("event_checklist/$id") },
+                    onFinancesClick = { id -> navController.navigate("event_finances/$id") },
+                    onPaymentsClick = { id -> navController.navigate("event_payments/$id") },
+                    onProductsClick = { id -> navController.navigate("event_products/$id") },
+                    onExtrasClick = { id -> navController.navigate("event_extras/$id") },
+                    onEquipmentClick = { id -> navController.navigate("event_equipment/$id") },
+                    onSuppliesClick = { id -> navController.navigate("event_supplies/$id") },
+                    onShoppingListClick = { id -> navController.navigate("event_shopping/$id") },
+                    onPhotosClick = { id -> navController.navigate("event_photos/$id") },
+                    onContractPreviewClick = { id -> navController.navigate("event_contract/$id") }
                 )
+            }
+
+            composable("event_finances/{eventId}") {
+                EventFinancesScreen(viewModel = hiltViewModel(), onNavigateBack = { navController.popBackStack() })
+            }
+            composable("event_payments/{eventId}") {
+                EventPaymentsScreen(viewModel = hiltViewModel(), onNavigateBack = { navController.popBackStack() })
+            }
+            composable("event_products/{eventId}") {
+                EventProductsScreen(viewModel = hiltViewModel(), onNavigateBack = { navController.popBackStack() })
+            }
+            composable("event_extras/{eventId}") {
+                EventExtrasScreen(viewModel = hiltViewModel(), onNavigateBack = { navController.popBackStack() })
+            }
+            composable("event_equipment/{eventId}") {
+                EventEquipmentScreen(viewModel = hiltViewModel(), onNavigateBack = { navController.popBackStack() })
+            }
+            composable("event_supplies/{eventId}") {
+                EventSuppliesScreen(viewModel = hiltViewModel(), onNavigateBack = { navController.popBackStack() })
+            }
+            composable("event_shopping/{eventId}") {
+                EventShoppingListScreen(viewModel = hiltViewModel(), onNavigateBack = { navController.popBackStack() })
+            }
+            composable("event_photos/{eventId}") {
+                EventPhotosScreen(viewModel = hiltViewModel(), onNavigateBack = { navController.popBackStack() })
+            }
+            composable("event_contract/{eventId}") {
+                EventContractPreviewScreen(viewModel = hiltViewModel(), onNavigateBack = { navController.popBackStack() })
             }
 
             composable("event_checklist/{eventId}") {

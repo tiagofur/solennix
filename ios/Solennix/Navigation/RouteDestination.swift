@@ -23,6 +23,24 @@ struct RouteDestination: View {
             EventFormView(eventId: id, apiClient: apiClient)
         case .eventChecklist(let id):
             EventChecklistView(eventId: id, apiClient: apiClient)
+        case .eventFinances(let id):
+            EventFinancesDetailView(eventId: id, apiClient: apiClient)
+        case .eventPayments(let id):
+            EventPaymentsDetailView(eventId: id, apiClient: apiClient)
+        case .eventProducts(let id):
+            EventProductsDetailView(eventId: id, apiClient: apiClient)
+        case .eventExtras(let id):
+            EventExtrasDetailView(eventId: id, apiClient: apiClient)
+        case .eventSupplies(let id):
+            EventSuppliesDetailView(eventId: id, apiClient: apiClient)
+        case .eventEquipment(let id):
+            EventEquipmentDetailView(eventId: id, apiClient: apiClient)
+        case .eventShoppingList(let id):
+            EventShoppingListView(eventId: id, apiClient: apiClient)
+        case .eventPhotos(let id):
+            EventPhotosDetailView(eventId: id, apiClient: apiClient)
+        case .eventContractPreview(let id):
+            EventContractPreviewView(eventId: id, apiClient: apiClient)
 
         // Clients
         case .clientList:
