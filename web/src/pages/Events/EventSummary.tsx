@@ -460,7 +460,7 @@ export const EventSummary: React.FC = () => {
             aria-label="Volver a la página anterior"
           >
             <ArrowLeft className="h-5 w-5 mr-1" aria-hidden="true" />
-            <span className="font-medium">Volver</span>
+            <span className="font-medium hidden sm:inline">Volver</span>
           </button>
 
           <div className="flex bg-surface-alt dark:bg-surface-alt/50 rounded-2xl p-1.5 flex-1 min-w-0 overflow-x-auto no-scrollbar shadow-sm" role="group" aria-label="Modos de visualización del evento">
@@ -476,8 +476,8 @@ export const EventSummary: React.FC = () => {
               aria-pressed={viewMode === "summary"}
               aria-label="Ver resumen del evento"
             >
-              <FileText className="h-4 w-4 mr-2" aria-hidden="true" />
-              Resumen
+              <FileText className="h-4 w-4 sm:mr-2" aria-hidden="true" />
+              <span className="hidden sm:inline">Resumen</span>
             </button>
             <button
               type="button"
@@ -491,8 +491,8 @@ export const EventSummary: React.FC = () => {
               aria-pressed={viewMode === "payments"}
               aria-label="Ver pagos del evento"
             >
-              <DollarSign className="h-4 w-4 mr-2" aria-hidden="true" />
-              Pagos
+              <DollarSign className="h-4 w-4 sm:mr-2" aria-hidden="true" />
+              <span className="hidden sm:inline">Pagos</span>
             </button>
             <button
               type="button"
@@ -506,8 +506,8 @@ export const EventSummary: React.FC = () => {
               aria-pressed={viewMode === "ingredients"}
               aria-label="Ver lista de insumos"
             >
-              <ShoppingCart className="h-4 w-4 mr-2" aria-hidden="true" />
-              Compras
+              <ShoppingCart className="h-4 w-4 sm:mr-2" aria-hidden="true" />
+              <span className="hidden sm:inline">Compras</span>
             </button>
             <button
               type="button"
@@ -522,8 +522,8 @@ export const EventSummary: React.FC = () => {
               aria-pressed={viewMode === "contract"}
               aria-label="Ver contrato del evento"
             >
-              <FileCheck className={clsx("h-4 w-4 mr-2", !isDownpaymentMet && "text-warning")} aria-hidden="true" />
-              Contrato
+              <FileCheck className={clsx("h-4 w-4 sm:mr-2", !isDownpaymentMet && "text-warning")} aria-hidden="true" />
+              <span className="hidden sm:inline">Contrato</span>
             </button>
             <button
               type="button"
@@ -537,8 +537,8 @@ export const EventSummary: React.FC = () => {
               aria-pressed={viewMode === "photos"}
               aria-label="Ver fotos del evento"
             >
-              <Camera className="h-4 w-4 mr-2" aria-hidden="true" />
-              Fotos
+              <Camera className="h-4 w-4 sm:mr-2" aria-hidden="true" />
+              <span className="hidden sm:inline">Fotos</span>
               {eventPhotos.length > 0 && (
                 <span className="ml-1.5 bg-primary/10 text-primary text-xs font-bold rounded-full px-1.5 py-0.5">
                   {eventPhotos.length}
@@ -557,8 +557,8 @@ export const EventSummary: React.FC = () => {
               aria-pressed={viewMode === "checklist"}
               aria-label="Ver checklist de carga"
             >
-              <ClipboardList className="h-4 w-4 mr-2" aria-hidden="true" />
-              Checklist
+              <ClipboardList className="h-4 w-4 sm:mr-2" aria-hidden="true" />
+              <span className="hidden sm:inline">Checklist</span>
               {checklistItems.length > 0 && (
                 <span className="ml-1.5 bg-primary/10 text-primary text-xs font-bold rounded-full px-1.5 py-0.5">
                   {Math.round(checklistProgress * 100)}%
@@ -572,7 +572,7 @@ export const EventSummary: React.FC = () => {
         <button
           type="button"
           onClick={() => navigate(`/events/${id}/edit`)}
-          className="h-9 w-9 flex items-center justify-center rounded-xl border border-border bg-surface hover:bg-surface-alt transition-colors text-text-secondary hover:text-text shrink-0"
+          className="h-10 w-10 sm:h-9 sm:w-9 flex items-center justify-center rounded-xl border border-border bg-surface hover:bg-surface-alt transition-colors text-text-secondary hover:text-text shrink-0"
           aria-label="Editar este evento"
         >
           <Pencil className="h-4 w-4" aria-hidden="true" />
@@ -583,7 +583,7 @@ export const EventSummary: React.FC = () => {
           <button
             type="button"
             onClick={() => setActionsDropdownOpen(!actionsDropdownOpen)}
-            className="h-9 w-9 flex items-center justify-center rounded-xl border border-border bg-surface hover:bg-surface-alt transition-colors text-text-secondary hover:text-text"
+            className="h-10 w-10 sm:h-9 sm:w-9 flex items-center justify-center rounded-xl border border-border bg-surface hover:bg-surface-alt transition-colors text-text-secondary hover:text-text"
             aria-label="Más acciones"
             aria-expanded={actionsDropdownOpen}
             aria-haspopup="menu"
@@ -592,7 +592,7 @@ export const EventSummary: React.FC = () => {
           </button>
 
           {actionsDropdownOpen && (
-            <div className="absolute right-0 mt-1 w-72 bg-card border border-border rounded-xl shadow-lg z-50 overflow-hidden py-1" role="menu">
+            <div className="absolute right-0 mt-1 w-56 sm:w-72 bg-card border border-border rounded-xl shadow-lg z-50 overflow-hidden py-1" role="menu">
               <p className="px-4 py-2 text-xs font-semibold text-text-tertiary uppercase tracking-wider border-b border-border mb-1">
                 Exportar PDF
               </p>
@@ -935,7 +935,7 @@ export const EventSummary: React.FC = () => {
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="bg-card shadow-sm rounded-3xl p-6 sm:p-8 border border-border">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 border-b border-border pb-6">
-              <h1 className="text-3xl font-bold text-text">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-text break-words line-clamp-2">
                 {event.client?.name} - {event.service_type}
               </h1>
 
@@ -965,7 +965,7 @@ export const EventSummary: React.FC = () => {
                 </button>
 
                 {statusDropdownOpen && (
-                  <div className="absolute right-0 mt-1 w-44 bg-card border border-border rounded-lg shadow-lg z-50 overflow-hidden" role="menu" aria-label="Cambiar estado del evento">
+                  <div className="absolute right-0 mt-1 w-40 sm:w-44 bg-card border border-border rounded-lg shadow-lg z-50 overflow-hidden" role="menu" aria-label="Cambiar estado del evento">
                     {ALL_STATUSES.map((s) => {
                       const cfg = STATUS_CONFIG[s];
                       return (
@@ -1000,7 +1000,7 @@ export const EventSummary: React.FC = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-8">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 mt-8">
               <div className="space-y-1">
                 <p className="text-xs font-bold text-text-tertiary uppercase tracking-wider">Fecha</p>
                 <p className="font-bold text-text">{new Date(event.event_date + "T12:00:00").toLocaleDateString()}</p>
