@@ -23,6 +23,8 @@ import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.DiscountType
 import com.creapolis.solennix.core.model.SupplySource
 import com.creapolis.solennix.core.model.extensions.asMXN
+import com.creapolis.solennix.core.model.extensions.formatQuantity
+import com.creapolis.solennix.core.model.extensions.toPaymentMethodLabel
 import com.creapolis.solennix.feature.events.viewmodel.EventDetailViewModel
 
 // ==================== Finances Detail Screen ====================
@@ -325,13 +327,7 @@ fun EventPaymentsScreen(
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(payment.paymentDate, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
                                         Text(
-                                            when (payment.paymentMethod) {
-                                                "cash", "efectivo" -> "Efectivo"
-                                                "transfer", "transferencia" -> "Transferencia"
-                                                "card", "tarjeta" -> "Tarjeta"
-                                                "check", "cheque" -> "Cheque"
-                                                else -> payment.paymentMethod.replaceFirstChar { it.uppercase() }
-                                            },
+                                            payment.paymentMethod.toPaymentMethodLabel(),
                                             style = MaterialTheme.typography.bodySmall,
                                             color = SolennixTheme.colors.secondaryText
                                         )
@@ -452,7 +448,7 @@ fun EventProductsScreen(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
-                                Text("${product.quantity.formatQty()} x ${product.unitPrice.asMXN()}", style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.secondaryText)
+                                Text("${product.quantity.formatQuantity()} x ${product.unitPrice.asMXN()}", style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.secondaryText)
                             }
                             Text(total.asMXN(), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
                         }
@@ -605,7 +601,7 @@ fun EventSuppliesScreen(
                             }
                             Column(horizontalAlignment = Alignment.End) {
                                 Text((supply.quantity * supply.unitCost).asMXN(), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
-                                Text("${supply.quantity.formatQty()} x ${supply.unitCost.asMXN()}", style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.secondaryText)
+                                Text("${supply.quantity.formatQuantity()} x ${supply.unitCost.asMXN()}", style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.secondaryText)
                             }
                         }
                     }
@@ -762,7 +758,7 @@ fun EventShoppingListScreen(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(supply.supplyName ?: "Insumo", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
-                                Text("${supply.quantity.formatQty()} ${supply.unit ?: "und"}", style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.secondaryText)
+                                Text("${supply.quantity.formatQuantity()} ${supply.unit ?: "und"}", style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.secondaryText)
                             }
                             Text(
                                 (supply.quantity * supply.unitCost).asMXN(),
@@ -789,7 +785,7 @@ fun EventShoppingListScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(supply.supplyName ?: "Insumo", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
-                            Text("x${supply.quantity.formatQty()}", style = MaterialTheme.typography.bodyMedium, color = SolennixTheme.colors.success, fontWeight = FontWeight.Medium)
+                            Text("x${supply.quantity.formatQuantity()}", style = MaterialTheme.typography.bodyMedium, color = SolennixTheme.colors.success, fontWeight = FontWeight.Medium)
                         }
                     }
                 }
@@ -1181,12 +1177,3 @@ EL CLIENTE se obliga a realizar los pagos en los plazos acordados y a proporcion
 
 Leído el presente contrato, ambas partes lo firman de conformidad."""
 
-// ==================== Utility ====================
-
-private fun Double.formatQty(): String {
-    return if (this == this.toLong().toDouble()) {
-        this.toLong().toString()
-    } else {
-        "%.1f".format(this)
-    }
-}

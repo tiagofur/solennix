@@ -25,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.creapolis.solennix.core.designsystem.component.EmptyState
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.component.StatusBadge
 import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveCardGrid
@@ -176,27 +177,14 @@ fun EventListScreen(
                         CircularProgressIndicator(color = SolennixTheme.colors.primary)
                     }
                 } else if (uiState.events.isEmpty()) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(
-                                Icons.Default.EventBusy,
-                                contentDescription = null,
-                                modifier = Modifier.size(64.dp),
-                                tint = SolennixTheme.colors.secondaryText
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Text(
-                                text = if (uiState.searchQuery.isNotEmpty())
-                                    "No se encontraron eventos con ese filtro"
-                                else
-                                    "No hay eventos",
-                                color = SolennixTheme.colors.secondaryText
-                            )
-                        }
-                    }
+                    EmptyState(
+                        icon = Icons.Default.EventBusy,
+                        title = if (uiState.searchQuery.isNotEmpty()) "Sin resultados" else "Sin eventos",
+                        message = if (uiState.searchQuery.isNotEmpty())
+                            "No se encontraron eventos con ese filtro"
+                        else
+                            "Crea tu primer evento para comenzar"
+                    )
                 } else {
                     AdaptiveCardGrid(
                         contentPadding = PaddingValues(vertical = 8.dp),

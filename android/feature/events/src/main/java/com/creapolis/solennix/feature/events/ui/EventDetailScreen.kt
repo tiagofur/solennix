@@ -39,6 +39,8 @@ import com.creapolis.solennix.core.model.EventSupply
 import com.creapolis.solennix.core.model.SupplySource
 import com.creapolis.solennix.core.model.EventPhoto
 import com.creapolis.solennix.core.model.extensions.asMXN
+import com.creapolis.solennix.core.model.extensions.formatQuantity
+import com.creapolis.solennix.core.model.extensions.toPaymentMethodLabel
 import com.creapolis.solennix.core.network.UrlResolver
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
@@ -1153,13 +1155,7 @@ private fun PaymentsSection(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(payment.paymentDate, style = MaterialTheme.typography.bodySmall)
                     Text(
-                        when (payment.paymentMethod) {
-                            "cash", "efectivo" -> "Efectivo"
-                            "transfer", "transferencia" -> "Transferencia"
-                            "card", "tarjeta" -> "Tarjeta"
-                            "check", "cheque" -> "Cheque"
-                            else -> payment.paymentMethod.replaceFirstChar { it.uppercase() }
-                        },
+                        payment.paymentMethod.toPaymentMethodLabel(),
                         style = MaterialTheme.typography.labelMedium
                     )
                     if (!payment.notes.isNullOrEmpty()) {
@@ -2152,12 +2148,3 @@ private fun SummaryNavCard(
     }
 }
 
-// ==================== Utility ====================
-
-private fun Double.formatQuantity(): String {
-    return if (this == this.toLong().toDouble()) {
-        this.toLong().toString()
-    } else {
-        "%.1f".format(this)
-    }
-}

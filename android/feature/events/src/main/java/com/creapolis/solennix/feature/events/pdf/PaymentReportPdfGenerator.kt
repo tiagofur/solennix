@@ -6,6 +6,7 @@ import com.creapolis.solennix.core.model.Client
 import com.creapolis.solennix.core.model.Event
 import com.creapolis.solennix.core.model.Payment
 import com.creapolis.solennix.core.model.User
+import com.creapolis.solennix.core.model.extensions.toPaymentMethodLabel
 import java.io.File
 import java.io.FileOutputStream
 
@@ -161,12 +162,6 @@ object PaymentReportPdfGenerator {
     }
 
     private fun formatPaymentMethod(method: String): String {
-        return when (method.lowercase()) {
-            "cash" -> "Efectivo"
-            "card" -> "Tarjeta"
-            "transfer" -> "Transferencia"
-            "check" -> "Cheque"
-            else -> method
-        }
+        return method.toPaymentMethodLabel()
     }
 }
