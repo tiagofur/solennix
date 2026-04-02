@@ -153,7 +153,8 @@
   - ✅ Suministros (EventSupplies)
   - ✅ Finanzas (EventFinancials)
   - ✅ Pagos (Payments)
-- ✅ Resumen de evento (EventSummary)
+- ✅ Resumen de evento (EventSummary) con tabs: Resumen, Pagos, Compras, Contrato, Fotos, Checklist
+- ✅ Checklist de carga interactivo (tab en EventSummary) con secciones: Equipo, Insumos Stock, Insumos Compra, Extras
 - ✅ Pago exitoso de evento (EventPaymentSuccess)
 - ✅ Modal de cliente rapido (QuickClientModal)
 - ✅ Modal de fechas no disponibles (UnavailableDatesModal)
@@ -328,7 +329,7 @@
 | Item | Prioridad | Notas |
 |------|-----------|-------|
 | Push notifications | P1 | Device tokens se registran pero backend no envia. Falta manejo de notificaciones entrantes |
-| Contract preview interactivo | P2 | Solo genera PDF. Web tiene preview inline con gating de anticipo |
+| ~~Contract preview interactivo~~ | ✅ | EventContractPreviewView implementado con gating de anticipo y campos faltantes |
 | ~~StoreKit 2 flujo de compra completo~~ | ✅ | Reemplazado por RevenueCat SDK — flujo completo implementado |
 | ~~Feature gating enforcement~~ | ✅ | PlanLimitsManager implementado y wired en vistas principales |
 | ~~Apple Sign-In en UI~~ | ✅ | Wired AppleSignInService a LoginView y RegisterView |
@@ -456,7 +457,7 @@
 | ~~Google Sign-In mock~~ | ✅ | Reemplazado mock con Credential Manager real |
 | ~~RevenueCat sync en register/Google~~ | ✅ | Agregado logInWith despues de register y Google sign-in |
 | Push notifications (FCM) | P1 | SolennixMessagingService esta comentado. Device tokens se registran pero backend no envia |
-| Contract preview interactivo | P2 | Solo genera PDF. Web tiene preview inline con gating de anticipo |
+| ~~Contract preview interactivo~~ | ✅ | EventContractPreviewScreen implementado con gating de anticipo y campos faltantes |
 | Deep linking completo | P2 | Parcial |
 | Navigation Rail (tablets) | P2 | Parcialmente implementado via AdaptiveNavigationRailLayout — falta completar refactor de sidebar |
 | Live Activity equivalente (notificacion persistente) | P2 | No implementado |
@@ -480,8 +481,8 @@
 | Suministros en evento | ✅ | ✅ | ✅ | ✅ | |
 | Conflictos de equipamiento | ✅ | ✅ | ✅ | ✅ | |
 | Sugerencias de equipamiento | ✅ | ✅ | ✅ | ✅ | |
-| Fotos de evento | ✅ | ✅ | ⬜ | ✅ | iOS y Android tienen galeria con upload/lightbox |
-| Checklist de evento | ✅ | ✅ | ⬜ | ➖ | Cliente-side |
+| Fotos de evento | ✅ | ✅ | ✅ | ✅ | Galeria con upload, lightbox y eliminacion en las 3 plataformas |
+| Checklist de evento | ✅ | ✅ | ✅ | ➖ | Cliente-side, interactivo con progreso en las 3 plataformas |
 | Pago de evento (Stripe) | ⬜ | ⬜ | ✅ | ✅ | Solo web tiene checkout Stripe |
 | Registro de pagos en detalle | ✅ | ✅ | ✅ | ✅ | iOS y Android: sub-pantalla de pagos con historial y registro |
 | Eventos proximos | ✅ | ✅ | ✅ | ✅ | |
@@ -489,7 +490,7 @@
 | Detalle evento: Hub con cards | ✅ | ✅ | ✅ (tabs) | ✅ | Mobile: cards navegables. Web: tabs |
 | Detalle evento: Sub-pantalla finanzas (9 KPIs) | ✅ | ✅ | ✅ | ✅ | |
 | Detalle evento: Lista de compras con stock | ✅ | ✅ | ✅ | ✅ | |
-| Detalle evento: Contract preview interactivo | ⬜ | ⬜ | ✅ | ✅ | Solo web tiene preview con gating de anticipo |
+| Detalle evento: Contract preview interactivo | ✅ | ✅ | ✅ | ✅ | Preview con gating de anticipo y deteccion de campos faltantes en las 3 plataformas |
 
 ### Clientes
 
@@ -582,14 +583,14 @@
 
 | Feature | iOS | Android | Web | Backend | Notas |
 |---------|-----|---------|-----|---------|-------|
-| Presupuesto PDF | ✅ | ✅ | ⬜ | ➖ | iOS: Core Graphics, Android: PdfDocument API |
-| Contrato PDF | ✅ | ✅ | ⬜ | ➖ | Con template de tokens personalizables |
-| Lista de compras PDF | ✅ | ✅ | ⬜ | ➖ | |
-| Checklist PDF | ✅ | ✅ | ⬜ | ➖ | |
-| Reporte de pagos PDF | ✅ | ✅ | ⬜ | ➖ | |
-| Factura PDF | ✅ | ✅ | ⬜ | ➖ | |
-| Lista de equipamiento PDF | ✅ | ✅ | ⬜ | ➖ | |
-| Cotizacion rapida PDF | ✅ | ✅ | ⬜ | ➖ | |
+| Presupuesto PDF | ✅ | ✅ | ✅ | ➖ | Web: generateBudgetPDF en pdfGenerator.ts |
+| Contrato PDF | ✅ | ✅ | ✅ | ➖ | Con template de tokens personalizables |
+| Lista de compras PDF | ✅ | ✅ | ✅ | ➖ | Web: generateShoppingListPDF |
+| Checklist PDF | ✅ | ✅ | ✅ | ➖ | Web: generateChecklistPDF |
+| Reporte de pagos PDF | ✅ | ✅ | ✅ | ➖ | Web: generatePaymentReportPDF |
+| Factura PDF | ✅ | ✅ | ✅ | ➖ | Web: generateInvoicePDF |
+| Lista de equipamiento PDF | ✅ | ✅ | ⬜ | ➖ | Web pendiente |
+| Cotizacion rapida PDF | ✅ | ✅ | ⬜ | ➖ | Web pendiente |
 
 ### Busqueda
 
@@ -748,13 +749,13 @@ Refactors planificados para lograr paridad total entre las 6 plataformas (iPhone
 | Brecha | Plataformas Afectadas | Impacto | Esfuerzo Estimado | Prioridad |
 |--------|----------------------|---------|-------------------|-----------|
 | Push notifications no implementadas | iOS, Android, Backend | Tokens registrados pero backend NO envia. Sin engagement ni recordatorios | 15-20h | P1 |
-| Contract preview interactivo en mobile | iOS, Android | Web tiene preview inline con gating de anticipo. Mobile solo genera PDF | 8-12h | P2 |
+| ~~Contract preview interactivo en mobile~~ | ✅ | Implementado en iOS y Android con gating de anticipo + deteccion de campos faltantes | 0h | ✅ |
 | Notificaciones email limitadas | Backend | Solo reset de contrasena; sin recordatorios de eventos/pagos | 10-15h | P1 |
 | Deep linking incompleto en Android | Android | Navegacion desde URLs externas limitada | 4-6h | P2 |
 | Live Activity equivalente en Android | Android | Sin notificacion persistente durante eventos | 6-8h | P2 |
 | Refactor Calendario: Toolbar simplificado | iOS, Android, Web | Toolbar pendiente: solo "Gestionar Bloqueos" + "Hoy" | 2-4h | P2 |
 | Web: Calendar right-click bloqueo | Web | Falta right-click para bloqueo rapido de fechas | 2-3h | P2 |
-| Web: Defaults de contrato en settings | Web | iOS y Android lo tienen, Web no | 2-3h | P2 |
+| ~~Web: Defaults de contrato en settings~~ | ✅ | Settings.tsx tiene ContractTemplateEditor con validacion de tokens | 0h | ✅ |
 | Panel admin solo en web | iOS, Android | Administracion solo desde navegador | ➖ | P3 (aceptable) |
 | ~~Feature gating no enforced~~ | ✅ | PlanLimitsManager implementado en iOS y Android. Web parcial | 0h | ✅ |
 | ~~Play Billing no implementado~~ | ✅ | Implementado via RevenueCat SDK | 0h | ✅ |
@@ -767,3 +768,5 @@ Refactors planificados para lograr paridad total entre las 6 plataformas (iPhone
 | ~~Dashboard: Alertas de Atencion~~ | ✅ | Implementado en las 3 plataformas | 0h | ✅ |
 | ~~Dashboard: Quick Actions 4→2~~ | ✅ | Ya son 2 en las 3 plataformas | 0h | ✅ |
 | ~~Calendario: BlockedDatesSheet iOS~~ | ✅ | Implementado con CRUD completo | 0h | ✅ |
+| ~~Web: Fotos de evento~~ | ✅ | Tab de fotos con galeria, upload, lightbox y eliminacion | 0h | ✅ |
+| ~~Web: Checklist interactivo~~ | ✅ | Tab de checklist con secciones, checkboxes y progreso | 0h | ✅ |

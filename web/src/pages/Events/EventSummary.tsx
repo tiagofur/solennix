@@ -26,6 +26,9 @@ import {
   ClipboardList,
   AlertCircle,
   Fuel,
+  CheckSquare,
+  Square,
+  Package,
 } from "lucide-react";
 import { useToast } from "@/hooks/useToast";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
@@ -47,7 +50,7 @@ import clsx from "clsx";
 import { ContractTemplateError, renderContractTemplate } from "@/lib/contractTemplate";
 import { renderFormattedReact } from "@/lib/inlineFormatting";
 
-type ViewMode = "summary" | "ingredients" | "contract" | "payments" | "photos";
+type ViewMode = "summary" | "ingredients" | "contract" | "payments" | "photos" | "checklist";
 
 type EventStatus = "quoted" | "confirmed" | "completed" | "cancelled";
 
@@ -112,6 +115,8 @@ export const EventSummary: React.FC = () => {
   const photoInputRef = React.useRef<HTMLInputElement>(null);
   const [autoOpenPayment, setAutoOpenPayment] = useState(false);
   const [paymentInitialAmount, setPaymentInitialAmount] = useState(0);
+  const [checklistItems, setChecklistItems] = useState<{ id: string; name: string; quantity: number; unit: string; section: "equipment" | "stock" | "purchase" | "extra" }[]>([]);
+  const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
 
   const aggregateProductIngredients = useCallback(async (productIds: string[], productQuantities: Map<string, number>) => {
     try {
@@ -184,6 +189,85 @@ export const EventSummary: React.FC = () => {
       });
       const productIds = Array.from(productQuantities.keys());
       await aggregateProductIngredients(productIds, productQuantities);
+
+      // Build checklist items from equipment, ingredients (bring_to_event), supplies, and extras
+      const clItems: typeof checklistItems = [];
+
+      // Equipment
+      (equipmentData || []).forEach((eq: any) => {
+        clItems.push({
+          id: `eq_${eq.id}`,
+          name: eq.equipment_name || "Equipo",
+          quantity: eq.quantity || 1,
+          unit: eq.unit || "pza",
+          section: "equipment",
+        });
+      });
+
+      // Product ingredients with bring_to_event
+      try {
+        if (productIds.length > 0) {
+          const allIngredients = await productService.getIngredientsForProducts(productIds);
+          const aggregated: Record<string, { name: string; quantity: number; unit: string }> = {};
+          (allIngredients || [])
+            .filter((ing: any) => ing.type === "ingredient" && ing.bring_to_event)
+            .forEach((ing: any) => {
+              const key = ing.inventory_id;
+              const qty = productQuantities.get(ing.product_id) || 0;
+              if (!aggregated[key]) {
+                aggregated[key] = { name: ing.ingredient_name || "Insumo", unit: ing.unit || "", quantity: 0 };
+              }
+              aggregated[key].quantity += (ing.quantity_required || 0) * qty;
+            });
+          Object.entries(aggregated).forEach(([invId, info]) => {
+            clItems.push({
+              id: `ing_${invId}`,
+              name: info.name,
+              quantity: info.quantity,
+              unit: info.unit,
+              section: "stock",
+            });
+          });
+        }
+      } catch {
+        // Skip ingredient aggregation on error
+      }
+
+      // Supplies
+      (suppliesData || []).forEach((s: any) => {
+        clItems.push({
+          id: `sup_${s.id}`,
+          name: s.supply_name || "Insumo",
+          quantity: s.quantity || 1,
+          unit: s.unit || "und",
+          section: s.source === "stock" ? "stock" : "purchase",
+        });
+      });
+
+      // Extras with include_in_checklist
+      (extrasData || []).filter((e: any) => e.include_in_checklist !== false && e.description).forEach((e: any) => {
+        clItems.push({
+          id: `ext_${e.id}`,
+          name: e.description,
+          quantity: 1,
+          unit: "pza",
+          section: "extra",
+        });
+      });
+
+      setChecklistItems(clItems);
+
+      // Restore checked state from localStorage
+      const savedChecked = localStorage.getItem(`event_checklist_${eventId}`);
+      if (savedChecked) {
+        try {
+          setCheckedIds(new Set(JSON.parse(savedChecked)));
+        } catch {
+          setCheckedIds(new Set());
+        }
+      } else {
+        setCheckedIds(new Set());
+      }
     } catch (error) {
       logError("Error loading summary", error);
     } finally {
@@ -224,6 +308,21 @@ export const EventSummary: React.FC = () => {
       setStatusDropdownOpen(false);
     }
   };
+
+  const toggleChecklistItem = useCallback((itemId: string) => {
+    setCheckedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(itemId)) {
+        next.delete(itemId);
+      } else {
+        next.add(itemId);
+      }
+      localStorage.setItem(`event_checklist_${id}`, JSON.stringify(Array.from(next)));
+      return next;
+    });
+  }, [id]);
+
+  const checklistProgress = checklistItems.length > 0 ? checkedIds.size / checklistItems.length : 0;
 
   const handleDeleteEvent = async () => {
     if (!id) return;
@@ -443,6 +542,26 @@ export const EventSummary: React.FC = () => {
               {eventPhotos.length > 0 && (
                 <span className="ml-1.5 bg-primary/10 text-primary text-xs font-bold rounded-full px-1.5 py-0.5">
                   {eventPhotos.length}
+                </span>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("checklist")}
+              className={clsx(
+                "px-4 py-2 rounded-xl text-sm font-bold flex items-center transition-all whitespace-nowrap",
+                viewMode === "checklist"
+                  ? "bg-card text-primary shadow-sm"
+                  : "text-text-secondary hover:text-text hover:bg-surface-alt"
+              )}
+              aria-pressed={viewMode === "checklist"}
+              aria-label="Ver checklist de carga"
+            >
+              <ClipboardList className="h-4 w-4 mr-2" aria-hidden="true" />
+              Checklist
+              {checklistItems.length > 0 && (
+                <span className="ml-1.5 bg-primary/10 text-primary text-xs font-bold rounded-full px-1.5 py-0.5">
+                  {Math.round(checklistProgress * 100)}%
                 </span>
               )}
             </button>
@@ -1320,6 +1439,209 @@ export const EventSummary: React.FC = () => {
                   </button>
                 </div>
               ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {viewMode === "checklist" && (
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {/* Header card */}
+          <div className="bg-card shadow-sm rounded-3xl p-6 sm:p-8 border border-border">
+            <h1 className="text-2xl font-black text-text uppercase tracking-tight mb-2">
+              Checklist de Carga
+            </h1>
+            <p className="text-text-secondary text-sm flex items-center gap-2">
+              <ClipboardList className="h-4 w-4 text-primary" />
+              {event.service_type} • {new Date(event.event_date + "T12:00:00").toLocaleDateString()}
+            </p>
+
+            {checklistItems.length > 0 && (
+              <div className="mt-4">
+                <div className="flex items-center justify-between text-sm mb-2">
+                  <span className="text-text-secondary">
+                    {checkedIds.size} de {checklistItems.length} completados
+                  </span>
+                  <span className="font-bold text-primary">
+                    {Math.round(checklistProgress * 100)}%
+                  </span>
+                </div>
+                <div className="w-full bg-surface-alt rounded-full h-3 overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-500 ease-out premium-gradient"
+                    style={{ width: `${Math.round(checklistProgress * 100)}%` }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {checklistItems.length === 0 ? (
+            <div className="bg-card shadow-sm rounded-3xl border border-border p-8 text-center">
+              <ClipboardList className="mx-auto h-12 w-12 text-text-secondary mb-3" aria-hidden="true" />
+              <p className="text-text-secondary">No hay elementos para el checklist.</p>
+              <p className="text-sm text-text-secondary mt-1">
+                Agrega productos, equipo o insumos al evento para generar el checklist.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Equipment section */}
+              {checklistItems.filter((i) => i.section === "equipment").length > 0 && (
+                <div className="bg-card shadow-sm rounded-3xl p-6 sm:p-8 border border-border">
+                  <h2 className="text-sm font-black text-text uppercase tracking-tight mb-4 flex items-center gap-2">
+                    <Wrench className="h-4 w-4 text-primary" aria-hidden="true" />
+                    Equipo
+                  </h2>
+                  <div className="space-y-1">
+                    {checklistItems.filter((i) => i.section === "equipment").map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => toggleChecklistItem(item.id)}
+                        className={clsx(
+                          "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-left",
+                          checkedIds.has(item.id)
+                            ? "bg-success/5 hover:bg-success/10"
+                            : "hover:bg-surface-alt"
+                        )}
+                      >
+                        {checkedIds.has(item.id) ? (
+                          <CheckSquare className="h-5 w-5 text-success shrink-0" />
+                        ) : (
+                          <Square className="h-5 w-5 text-text-secondary shrink-0" />
+                        )}
+                        <span className={clsx(
+                          "flex-1 text-sm font-medium",
+                          checkedIds.has(item.id) ? "line-through text-text-secondary" : "text-text"
+                        )}>
+                          {item.name}
+                        </span>
+                        <span className="text-xs text-text-secondary shrink-0">
+                          {item.quantity} {item.unit}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Stock supplies section */}
+              {checklistItems.filter((i) => i.section === "stock").length > 0 && (
+                <div className="bg-card shadow-sm rounded-3xl p-6 sm:p-8 border border-border">
+                  <h2 className="text-sm font-black text-text uppercase tracking-tight mb-4 flex items-center gap-2">
+                    <Package className="h-4 w-4 text-primary" aria-hidden="true" />
+                    Insumos de Almacén
+                  </h2>
+                  <div className="space-y-1">
+                    {checklistItems.filter((i) => i.section === "stock").map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => toggleChecklistItem(item.id)}
+                        className={clsx(
+                          "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-left",
+                          checkedIds.has(item.id)
+                            ? "bg-success/5 hover:bg-success/10"
+                            : "hover:bg-surface-alt"
+                        )}
+                      >
+                        {checkedIds.has(item.id) ? (
+                          <CheckSquare className="h-5 w-5 text-success shrink-0" />
+                        ) : (
+                          <Square className="h-5 w-5 text-text-secondary shrink-0" />
+                        )}
+                        <span className={clsx(
+                          "flex-1 text-sm font-medium",
+                          checkedIds.has(item.id) ? "line-through text-text-secondary" : "text-text"
+                        )}>
+                          {item.name}
+                        </span>
+                        <span className="text-xs text-text-secondary shrink-0">
+                          {item.quantity.toFixed(2)} {item.unit}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Purchase supplies section */}
+              {checklistItems.filter((i) => i.section === "purchase").length > 0 && (
+                <div className="bg-card shadow-sm rounded-3xl p-6 sm:p-8 border border-border">
+                  <h2 className="text-sm font-black text-text uppercase tracking-tight mb-4 flex items-center gap-2">
+                    <ShoppingCart className="h-4 w-4 text-warning" aria-hidden="true" />
+                    Insumos a Comprar
+                  </h2>
+                  <div className="space-y-1">
+                    {checklistItems.filter((i) => i.section === "purchase").map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => toggleChecklistItem(item.id)}
+                        className={clsx(
+                          "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-left",
+                          checkedIds.has(item.id)
+                            ? "bg-success/5 hover:bg-success/10"
+                            : "hover:bg-surface-alt"
+                        )}
+                      >
+                        {checkedIds.has(item.id) ? (
+                          <CheckSquare className="h-5 w-5 text-success shrink-0" />
+                        ) : (
+                          <Square className="h-5 w-5 text-text-secondary shrink-0" />
+                        )}
+                        <span className={clsx(
+                          "flex-1 text-sm font-medium",
+                          checkedIds.has(item.id) ? "line-through text-text-secondary" : "text-text"
+                        )}>
+                          {item.name}
+                        </span>
+                        <span className="text-xs text-text-secondary shrink-0">
+                          {item.quantity} {item.unit}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Extras section */}
+              {checklistItems.filter((i) => i.section === "extra").length > 0 && (
+                <div className="bg-card shadow-sm rounded-3xl p-6 sm:p-8 border border-border">
+                  <h2 className="text-sm font-black text-text uppercase tracking-tight mb-4 flex items-center gap-2">
+                    <Zap className="h-4 w-4 text-primary" aria-hidden="true" />
+                    Extras
+                  </h2>
+                  <div className="space-y-1">
+                    {checklistItems.filter((i) => i.section === "extra").map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => toggleChecklistItem(item.id)}
+                        className={clsx(
+                          "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-left",
+                          checkedIds.has(item.id)
+                            ? "bg-success/5 hover:bg-success/10"
+                            : "hover:bg-surface-alt"
+                        )}
+                      >
+                        {checkedIds.has(item.id) ? (
+                          <CheckSquare className="h-5 w-5 text-success shrink-0" />
+                        ) : (
+                          <Square className="h-5 w-5 text-text-secondary shrink-0" />
+                        )}
+                        <span className={clsx(
+                          "flex-1 text-sm font-medium",
+                          checkedIds.has(item.id) ? "line-through text-text-secondary" : "text-text"
+                        )}>
+                          {item.name}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

@@ -826,9 +826,9 @@ Sistema de upload de imagenes para fotos de eventos, productos y logos de negoci
 | Sub-pantalla: Insumos | ✅ | ✅ | ✅ | ✅ | Con badges almacen/compra |
 | Sub-pantalla: Equipo | ✅ | ✅ | ✅ | ✅ | |
 | Sub-pantalla: Lista de compras (con stock) | ✅ | ✅ | ✅ | ✅ | Comparacion con stock actual via batch ingredients API |
-| Sub-pantalla: Fotos | ✅ | ✅ | ⬜ | ✅ | Galeria con upload y lightbox. Web: pendiente |
-| Contract preview interactivo | ⬜ | ⬜ | ✅ | ✅ | Web: preview inline con gating de anticipo. Mobile: solo PDF |
-| Checklist del evento | ✅ | ✅ | ⬜ | ➖ | Generado localmente en mobile |
+| Sub-pantalla: Fotos | ✅ | ✅ | ✅ | ✅ | Galeria con upload, lightbox y eliminacion en las 3 plataformas |
+| Contract preview interactivo | ✅ | ✅ | ✅ | ✅ | Preview con gating de anticipo y deteccion de campos faltantes |
+| Checklist del evento | ✅ | ✅ | ✅ | ➖ | Interactivo con secciones y progreso en las 3 plataformas |
 
 ### Clientes
 
@@ -926,9 +926,9 @@ Sistema de upload de imagenes para fotos de eventos, productos y logos de negoci
 | Cotizacion/Factura | ✅ | ✅ | ✅ | ➖ | Generado en cliente |
 | Contrato | ✅ | ✅ | ✅ | ➖ | Con plantilla personalizable |
 | Presupuesto | ✅ | ✅ | ✅ | ➖ | |
-| Checklist | ✅ | ✅ | ⬜ | ➖ | |
-| Lista de compras | ✅ | ✅ | ⬜ | ➖ | |
-| Lista de equipo | ✅ | ✅ | ⬜ | ➖ | |
+| Checklist | ✅ | ✅ | ✅ | ➖ | |
+| Lista de compras | ✅ | ✅ | ✅ | ➖ | |
+| Lista de equipo | ✅ | ✅ | ⬜ | ➖ | Web pendiente |
 | Reporte de pagos | ✅ | ✅ | ✅ | ➖ | |
 
 ### Busqueda
