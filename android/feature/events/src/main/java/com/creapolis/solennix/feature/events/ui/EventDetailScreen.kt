@@ -1581,7 +1581,7 @@ fun PaymentModal(
                 TextButton(onClick = {
                     datePickerState.selectedDateMillis?.let { millis ->
                         val instant = java.time.Instant.ofEpochMilli(millis)
-                        val localDate = instant.atZone(java.time.ZoneId.systemDefault()).toLocalDate()
+                        val localDate = instant.atZone(java.time.ZoneOffset.UTC).toLocalDate()
                         paymentDate = localDate.toString()
                     }
                     showDatePicker = false

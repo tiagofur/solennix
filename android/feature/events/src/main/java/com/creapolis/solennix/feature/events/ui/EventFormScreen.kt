@@ -656,7 +656,7 @@ fun StepGeneralInfo(viewModel: EventFormViewModel) {
                 TextButton(onClick = {
                     datePickerState.selectedDateMillis?.let {
                         val newDate = java.time.Instant.ofEpochMilli(it)
-                            .atZone(java.time.ZoneId.systemDefault()).toLocalDate()
+                            .atZone(java.time.ZoneOffset.UTC).toLocalDate()
                         viewModel.eventDate = newDate
                         viewModel.checkDateAvailability(newDate)
                     }
