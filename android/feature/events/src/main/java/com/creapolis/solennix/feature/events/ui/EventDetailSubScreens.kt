@@ -818,7 +818,7 @@ fun EventContractPreviewScreen(
     Scaffold(
         topBar = {
             SolennixTopAppBar(
-                title = "Contrato",
+                title = { Text("Contrato") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver")
@@ -890,19 +890,19 @@ fun EventContractPreviewScreen(
                     "ANTICIPO REQUERIDO",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Black,
-                    color = SolennixTheme.colors.text
+                    color = SolennixTheme.colors.primaryText
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     "Para visualizar y generar el contrato, es necesario cubrir el anticipo mínimo del ${depositPercent.toInt()}%",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = SolennixTheme.colors.textSecondary,
+                    color = SolennixTheme.colors.secondaryText,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 val remaining = maxOf(depositAmount - totalPaid, 0.0)
                 Text(
-                    "Faltan ${remaining.asMXN} por cobrar.",
+                    "Faltan ${remaining.asMXN()} por cobrar.",
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     color = SolennixTheme.colors.warning
@@ -933,13 +933,13 @@ fun EventContractPreviewScreen(
                         "Faltan datos para el contrato",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = SolennixTheme.colors.text
+                        color = SolennixTheme.colors.primaryText
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         "Completa estos campos en el evento o cliente:",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = SolennixTheme.colors.textSecondary,
+                        color = SolennixTheme.colors.secondaryText,
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
                     Spacer(modifier = Modifier.height(16.dp))
@@ -995,14 +995,14 @@ fun EventContractPreviewScreen(
                                         trimmed,
                                         style = MaterialTheme.typography.labelLarge,
                                         fontWeight = FontWeight.Bold,
-                                        color = SolennixTheme.colors.text
+                                        color = SolennixTheme.colors.primaryText
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
                                 } else {
                                     Text(
                                         trimmed,
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = SolennixTheme.colors.text,
+                                        color = SolennixTheme.colors.primaryText,
                                         lineHeight = MaterialTheme.typography.bodySmall.lineHeight * 1.4
                                     )
                                     Spacer(modifier = Modifier.height(2.dp))
@@ -1024,7 +1024,7 @@ fun EventContractPreviewScreen(
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = FontWeight.Bold
                                     )
-                                    Text("Firma", style = MaterialTheme.typography.labelSmall, color = SolennixTheme.colors.textTertiary)
+                                    Text("Firma", style = MaterialTheme.typography.labelSmall, color = SolennixTheme.colors.tertiaryText)
                                 }
                                 Spacer(modifier = Modifier.width(24.dp))
                                 Column(
@@ -1039,7 +1039,7 @@ fun EventContractPreviewScreen(
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = FontWeight.Bold
                                     )
-                                    Text("Firma de EL CLIENTE", style = MaterialTheme.typography.labelSmall, color = SolennixTheme.colors.textTertiary)
+                                    Text("Firma de EL CLIENTE", style = MaterialTheme.typography.labelSmall, color = SolennixTheme.colors.tertiaryText)
                                 }
                             }
                             Spacer(modifier = Modifier.height(24.dp))
@@ -1103,13 +1103,13 @@ private fun renderContractTemplate(
         "[Ubicación del evento]" to event.location,
         "[Lugar del evento]" to event.location,
         "[Ciudad del evento]" to event.city,
-        "[Monto total del evento]" to event.totalAmount.asMXN,
-        "[Subtotal del evento]" to (event.totalAmount - event.taxAmount + discountValue).asMXN,
-        "[Descuento del evento]" to discountValue.asMXN,
-        "[IVA del evento]" to event.taxAmount.asMXN,
+        "[Monto total del evento]" to event.totalAmount.asMXN(),
+        "[Subtotal del evento]" to (event.totalAmount - event.taxAmount + discountValue).asMXN(),
+        "[Descuento del evento]" to discountValue.asMXN(),
+        "[IVA del evento]" to event.taxAmount.asMXN(),
         "[Porcentaje de anticipo]" to "${depositPercent.toInt()}%",
-        "[Monto de anticipo]" to depositAmount.asMXN,
-        "[Total pagado]" to totalPaid.asMXN,
+        "[Monto de anticipo]" to depositAmount.asMXN(),
+        "[Total pagado]" to totalPaid.asMXN(),
         "[Días de cancelación]" to "${cancellationDays.toInt()}",
         "[Porcentaje de reembolso]" to "${refundPercent.toInt()}%",
         "[Nombre del negocio]" to (user?.businessName ?: user?.name),

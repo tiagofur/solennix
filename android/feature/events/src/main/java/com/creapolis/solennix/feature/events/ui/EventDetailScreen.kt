@@ -2016,7 +2016,7 @@ private fun PhotosPreviewCard(
                     "Fotos",
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
-                    color = SolennixTheme.colors.text
+                    color = SolennixTheme.colors.primaryText
                 )
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -2032,7 +2032,7 @@ private fun PhotosPreviewCard(
                         Icons.Default.ChevronRight,
                         contentDescription = null,
                         modifier = Modifier.size(16.dp),
-                        tint = SolennixTheme.colors.textTertiary
+                        tint = SolennixTheme.colors.tertiaryText
                     )
                 }
             }
