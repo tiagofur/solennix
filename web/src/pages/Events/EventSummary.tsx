@@ -657,8 +657,8 @@ export const EventSummary: React.FC = () => {
       </div>
 
       {/* Tab bar */}
-      <div className="print:hidden">
-        <div className="flex bg-surface-alt dark:bg-surface-alt/50 rounded-2xl p-1.5 overflow-x-auto no-scrollbar shadow-sm" role="group" aria-label="Modos de visualización del evento">
+      <div className="print:hidden flex justify-center">
+        <div className="inline-flex bg-surface-alt dark:bg-surface-alt/50 rounded-2xl p-1.5 overflow-x-auto no-scrollbar shadow-sm" role="group" aria-label="Modos de visualización del evento">
           <button
             type="button"
             onClick={() => setViewMode("summary")}
