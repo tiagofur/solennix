@@ -162,7 +162,7 @@ fun DashboardScreen(
                         Column(modifier = Modifier.padding(vertical = 8.dp)) {
                             kpiItems.chunked(4).forEach { rowItems ->
                                 Row(
-                                    modifier = Modifier.fillMaxWidth(),
+                                    modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Max),
                                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                                 ) {
                                     rowItems.forEach { (title, value, iconInfo) ->
@@ -173,7 +173,7 @@ fun DashboardScreen(
                                             icon = icon,
                                             iconColor = color,
                                             subtitle = subtitle,
-                                            modifier = Modifier.weight(1f)
+                                            modifier = Modifier.weight(1f).fillMaxHeight()
                                         )
                                     }
                                     repeat(4 - rowItems.size) {
@@ -219,11 +219,6 @@ fun DashboardScreen(
                         Spacer(modifier = Modifier.height(24.dp))
                         AdaptiveDetailLayout(
                             left = {
-                                Text(
-                                    text = "Estado de Eventos",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = SolennixTheme.colors.primaryText
-                                )
                                 EventStatusDistributionCard(statusCounts = uiState.statusDistribution)
                             },
                             right = {
@@ -288,6 +283,12 @@ fun EventStatusDistributionCard(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            Text(
+                "Estado de Eventos",
+                style = MaterialTheme.typography.titleSmall,
+                color = SolennixTheme.colors.primaryText,
+                fontWeight = FontWeight.SemiBold
+            )
             // Horizontal stacked bar
             Row(
                 modifier = Modifier
