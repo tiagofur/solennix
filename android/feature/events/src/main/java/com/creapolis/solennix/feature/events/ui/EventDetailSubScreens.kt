@@ -222,6 +222,7 @@ fun EventPaymentsScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var showPaymentModal by remember { mutableStateOf(false) }
+    var paymentInitialAmount by remember { mutableStateOf<Double?>(null) }
 
     Scaffold(
         topBar = {
@@ -286,10 +287,33 @@ fun EventPaymentsScreen(
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     PremiumButton(
                         text = "Registrar Pago",
-                        onClick = { showPaymentModal = true },
+                        onClick = {
+                            paymentInitialAmount = null
+                            showPaymentModal = true
+                        },
                         modifier = Modifier.weight(1f),
                         icon = Icons.Default.Add
                     )
+
+                    val depositPct = event.depositPercent
+                    if (depositPct != null && depositPct > 0) {
+                        val depositTarget = event.totalAmount * depositPct / 100
+                        val depositRemaining = (depositTarget - totalPaid).coerceAtLeast(0.0)
+                        if (depositRemaining > 0) {
+                            OutlinedButton(
+                                onClick = {
+                                    paymentInitialAmount = depositRemaining
+                                    showPaymentModal = true
+                                },
+                                modifier = Modifier.weight(1f),
+                                shape = MaterialTheme.shapes.medium
+                            ) {
+                                Icon(Icons.Default.Savings, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Anticipo")
+                            }
+                        }
+                    }
                 }
             }
 
@@ -354,10 +378,15 @@ fun EventPaymentsScreen(
         if (showPaymentModal) {
             PaymentModal(
                 remaining = remaining,
-                onDismiss = { showPaymentModal = false },
+                initialAmount = paymentInitialAmount,
+                onDismiss = {
+                    showPaymentModal = false
+                    paymentInitialAmount = null
+                },
                 onConfirm = { amount, method, notes, date ->
                     viewModel.addPayment(amount, method, notes, date)
                     showPaymentModal = false
+                    paymentInitialAmount = null
                     Toast.makeText(context, "Pago registrado", Toast.LENGTH_SHORT).show()
                 }
             )
