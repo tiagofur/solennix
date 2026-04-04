@@ -31,6 +31,13 @@ type PlanFilter = 'all' | 'basic' | 'pro' | 'premium';
 type SortField = 'name' | 'plan' | 'activity' | 'created_at';
 type SortDir = 'asc' | 'desc';
 
+const SortIcon = ({ field, sortField, sortDir }: { field: SortField; sortField: SortField; sortDir: SortDir }) => {
+  if (sortField !== field) return <ArrowUpDown className="h-3.5 w-3.5 text-text-secondary/50 ml-1" />;
+  return sortDir === 'asc'
+    ? <ArrowUp className="h-3.5 w-3.5 text-primary ml-1" />
+    : <ArrowDown className="h-3.5 w-3.5 text-primary ml-1" />;
+};
+
 interface GiftState {
   user: AdminUser;
   plan: 'pro' | 'premium';
@@ -254,13 +261,6 @@ export const AdminUsers: React.FC = () => {
         {plan.charAt(0).toUpperCase() + plan.slice(1)}
       </span>
     );
-  };
-
-  const SortIcon = ({ field }: { field: SortField }) => {
-    if (sortField !== field) return <ArrowUpDown className="h-3.5 w-3.5 text-text-secondary/50 ml-1" />;
-    return sortDir === 'asc'
-      ? <ArrowUp className="h-3.5 w-3.5 text-primary ml-1" />
-      : <ArrowDown className="h-3.5 w-3.5 text-primary ml-1" />;
   };
 
   return (
@@ -488,12 +488,12 @@ export const AdminUsers: React.FC = () => {
               <tr>
                 <th className="px-6 py-4 text-left">
                   <button type="button" onClick={() => handleSort('name')} className="flex items-center text-xs font-medium text-text-secondary uppercase tracking-wider hover:text-text transition-colors">
-                    Usuario <SortIcon field="name" />
+                    Usuario <SortIcon field="name" sortField={sortField} sortDir={sortDir} />
                   </button>
                 </th>
                 <th className="px-6 py-4 text-left">
                   <button type="button" onClick={() => handleSort('plan')} className="flex items-center text-xs font-medium text-text-secondary uppercase tracking-wider hover:text-text transition-colors">
-                    Plan <SortIcon field="plan" />
+                    Plan <SortIcon field="plan" sortField={sortField} sortDir={sortDir} />
                   </button>
                 </th>
                 <th className="px-6 py-4 text-center text-xs font-medium text-text-secondary uppercase tracking-wider hidden md:table-cell">Eventos</th>
@@ -501,12 +501,12 @@ export const AdminUsers: React.FC = () => {
                 <th className="px-6 py-4 text-center text-xs font-medium text-text-secondary uppercase tracking-wider hidden lg:table-cell">Productos</th>
                 <th className="px-6 py-4 text-center hidden lg:table-cell">
                   <button type="button" onClick={() => handleSort('activity')} className="flex items-center mx-auto text-xs font-medium text-text-secondary uppercase tracking-wider hover:text-text transition-colors">
-                    Actividad <SortIcon field="activity" />
+                    Actividad <SortIcon field="activity" sortField={sortField} sortDir={sortDir} />
                   </button>
                 </th>
                 <th className="px-6 py-4 text-left hidden lg:table-cell">
                   <button type="button" onClick={() => handleSort('created_at')} className="flex items-center text-xs font-medium text-text-secondary uppercase tracking-wider hover:text-text transition-colors">
-                    Registro <SortIcon field="created_at" />
+                    Registro <SortIcon field="created_at" sortField={sortField} sortDir={sortDir} />
                   </button>
                 </th>
                 <th className="px-6 py-4 text-right text-xs font-medium text-text-secondary uppercase tracking-wider">Acciones</th>

@@ -32,6 +32,22 @@ interface PreviewEvent {
 interface PreviewProfile { name: string; business_name: string; email: string; }
 interface PreviewProduct { products: { name: string } | null; }
 
+// ─── Preview mock data ────────────────────────────────────────────
+const PREVIEW_EVENT: PreviewEvent = {
+  event_date: "2026-06-15", start_time: "14:00", end_time: "22:00",
+  service_type: "Banquete", num_people: 150, total_amount: 45000,
+  location: "Salón Los Arcos", city: "Ciudad de México",
+  deposit_percent: 50, cancellation_days: 15, refund_percent: 80,
+  client: { name: "María García López", phone: "555-123-4567", email: "maria@ejemplo.com", address: "Av. Reforma 123", city: "Ciudad de México" },
+};
+const PREVIEW_PROFILE: PreviewProfile = { name: "Juan Eventos", business_name: "Mi Empresa de Eventos", email: "info@mieventos.com" };
+const PREVIEW_PRODUCTS: PreviewProduct[] = [
+  { products: { name: "Paquete Premium" } },
+  { products: { name: "Iluminación" } },
+  { products: { name: "Decoración Floral" } },
+];
+const PREVIEW_PAYMENTS = [{ amount: 15000 }, { amount: 7500 }];
+
 // ─── Constants ────────────────────────────────────────────────────
 const CHIP_MARKER = "\uFEFF"; // zero-width no-break space used for chip detection
 const CHIP_CLASSES =
@@ -269,20 +285,6 @@ export const ContractTemplateEditor: React.FC<ContractTemplateEditorProps> = ({
   }, []);
 
   // ─── Preview rendering ────────────────────────────────────────
-  const PREVIEW_EVENT: PreviewEvent = {
-    event_date: "2026-06-15", start_time: "14:00", end_time: "22:00",
-    service_type: "Banquete", num_people: 150, total_amount: 45000,
-    location: "Salón Los Arcos", city: "Ciudad de México",
-    deposit_percent: 50, cancellation_days: 15, refund_percent: 80,
-    client: { name: "María García López", phone: "555-123-4567", email: "maria@ejemplo.com", address: "Av. Reforma 123", city: "Ciudad de México" },
-  };
-  const PREVIEW_PROFILE: PreviewProfile = { name: "Juan Eventos", business_name: "Mi Empresa de Eventos", email: "info@mieventos.com" };
-  const PREVIEW_PRODUCTS: PreviewProduct[] = [
-    { products: { name: "Paquete Premium" } },
-    { products: { name: "Iluminación" } },
-    { products: { name: "Decoración Floral" } },
-  ];
-
   let previewText: string;
   try {
     previewText = renderContractTemplate({
@@ -291,7 +293,7 @@ export const ContractTemplateEditor: React.FC<ContractTemplateEditorProps> = ({
       template,
       strict: false,
       products: PREVIEW_PRODUCTS as unknown as EventProduct[],
-      payments: [{ amount: 15000 }, { amount: 7500 }],
+      payments: PREVIEW_PAYMENTS,
     });
   } catch {
     previewText = template;
@@ -512,8 +514,8 @@ export const ContractTemplateEditor: React.FC<ContractTemplateEditorProps> = ({
             </p>
           </div>
           <div className="space-y-3 text-justify text-sm whitespace-pre-line">
-            {previewParagraphs.map((paragraph) => (
-              <p key={paragraph.slice(0, 40)}>{renderFormattedReact(paragraph)}</p>
+            {previewParagraphs.map((paragraph, i) => (
+              <p key={`${i}-${paragraph.length}`}>{renderFormattedReact(paragraph)}</p>
             ))}
           </div>
         </div>
