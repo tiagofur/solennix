@@ -24,4 +24,7 @@ interface PaymentDao {
 
     @Delete
     suspend fun deletePayment(payment: CachedPayment)
+
+    @Query("DELETE FROM payments")
+    suspend fun deleteAll()
 }

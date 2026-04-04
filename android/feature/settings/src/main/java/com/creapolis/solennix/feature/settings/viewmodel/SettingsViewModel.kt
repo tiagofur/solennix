@@ -2,6 +2,7 @@ package com.creapolis.solennix.feature.settings.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.creapolis.solennix.core.data.LocalCacheManager
 import com.creapolis.solennix.core.data.repository.SettingsRepository
 import com.creapolis.solennix.core.model.ThemeConfig
 import com.creapolis.solennix.core.model.User
@@ -18,7 +19,8 @@ import javax.inject.Inject
 class SettingsViewModel @Inject constructor(
     private val authManager: AuthManager,
     private val billingManager: BillingManager,
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    private val localCacheManager: LocalCacheManager
 ) : ViewModel() {
 
     val currentUser: StateFlow<User?> = authManager.currentUser
@@ -40,6 +42,7 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             billingManager.logout()
             authManager.logout()
+            localCacheManager.clearAll()
         }
     }
 }

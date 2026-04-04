@@ -27,4 +27,10 @@ interface EventItemDao {
 
     @Query("DELETE FROM event_extras WHERE event_id = :eventId")
     suspend fun deleteExtrasByEventId(eventId: String)
+
+    @Query("DELETE FROM event_products")
+    suspend fun deleteAllProducts()
+
+    @Query("DELETE FROM event_extras")
+    suspend fun deleteAllExtras()
 }
