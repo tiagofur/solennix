@@ -8,6 +8,7 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
 
 val LocalSolennixColors = staticCompositionLocalOf { LightSolennixColors }
+val LocalDarkTheme = staticCompositionLocalOf { false }
 
 @Composable
 fun SolennixTheme(
@@ -17,7 +18,8 @@ fun SolennixTheme(
     val colors = if (darkTheme) DarkSolennixColors else LightSolennixColors
 
     CompositionLocalProvider(
-        LocalSolennixColors provides colors
+        LocalSolennixColors provides colors,
+        LocalDarkTheme provides darkTheme
     ) {
         MaterialTheme(
             colorScheme = colors.toMaterialColorScheme(),

@@ -33,6 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.creapolis.solennix.core.designsystem.theme.LocalDarkTheme
 import com.creapolis.solennix.core.designsystem.theme.LocalIsWideScreen
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -155,8 +156,12 @@ fun AdaptiveNavigationRailLayout(
                     .padding(horizontal = 16.dp, vertical = 16.dp)
                     .height(48.dp)
             ) {
+                val isDark = LocalDarkTheme.current
                 Image(
-                    painter = painterResource(id = R.drawable.ic_solennix_logo),
+                    painter = painterResource(
+                        id = if (isDark) R.drawable.ic_solennix_logo_dark
+                             else R.drawable.ic_solennix_logo_light
+                    ),
                     contentDescription = "Solennix",
                     modifier = Modifier
                         .size(36.dp)
