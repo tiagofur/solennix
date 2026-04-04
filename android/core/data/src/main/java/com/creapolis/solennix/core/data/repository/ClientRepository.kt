@@ -1,6 +1,7 @@
 package com.creapolis.solennix.core.data.repository
 
 import com.creapolis.solennix.core.database.dao.ClientDao
+import com.creapolis.solennix.core.database.dao.EventDao
 import com.creapolis.solennix.core.database.entity.asEntity
 import com.creapolis.solennix.core.database.entity.asExternalModel
 import com.creapolis.solennix.core.model.Client
@@ -24,6 +25,7 @@ interface ClientRepository {
 @Singleton
 class OfflineFirstClientRepository @Inject constructor(
     private val clientDao: ClientDao,
+    private val eventDao: EventDao,
     private val apiService: ApiService
 ) : ClientRepository {
 
@@ -52,6 +54,7 @@ class OfflineFirstClientRepository @Inject constructor(
 
     override suspend fun deleteClient(id: String) {
         apiService.delete(Endpoints.client(id))
+        eventDao.deleteEventsByClientId(id)
         val cached = clientDao.getClient(id)
         if (cached != null) {
             clientDao.deleteClient(cached)

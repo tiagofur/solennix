@@ -21,6 +21,9 @@ interface EventDao {
     @Delete
     suspend fun deleteEvent(event: CachedEvent)
 
+    @Query("DELETE FROM events WHERE client_id = :clientId")
+    suspend fun deleteEventsByClientId(clientId: String)
+
     @Query("DELETE FROM events")
     suspend fun deleteAll()
 }
