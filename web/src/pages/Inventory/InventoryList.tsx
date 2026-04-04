@@ -598,9 +598,9 @@ export const InventoryList: React.FC = () => {
           {/* Equipos Section */}
           <section>
             <div className="flex items-center gap-3 mb-3">
-              <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-purple-500/10">
+              <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-info/10">
                 <Wrench
-                  className="h-5 w-5 text-purple-500"
+                  className="h-5 w-5 text-info"
                   aria-hidden="true"
                 />
               </div>

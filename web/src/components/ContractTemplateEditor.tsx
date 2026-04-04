@@ -19,11 +19,23 @@ import {
   TOKEN_REGEX,
 } from "@/lib/contractTemplate";
 import { renderFormattedReact } from "@/lib/inlineFormatting";
+import type { Event, Client, User, EventProduct } from "@/types/entities";
+
+// ─── Types ────────────────────────────────────────────────────────
+interface PreviewEvent {
+  event_date: string; start_time: string; end_time: string;
+  service_type: string; num_people: number; total_amount: number;
+  location: string; city: string; deposit_percent: number;
+  cancellation_days: number; refund_percent: number;
+  client?: { name: string; phone: string; email: string; address: string; city: string } | null;
+}
+interface PreviewProfile { name: string; business_name: string; email: string; }
+interface PreviewProduct { products: { name: string } | null; }
 
 // ─── Constants ────────────────────────────────────────────────────
 const CHIP_MARKER = "\uFEFF"; // zero-width no-break space used for chip detection
 const CHIP_CLASSES =
-  "inline-flex items-center px-2.5 py-0.5 mx-0.5 bg-linear-to-br from-blue-100 to-violet-100 border border-blue-300 rounded-lg text-xs font-semibold font-sans text-blue-700 cursor-default select-all align-baseline leading-relaxed whitespace-nowrap transition-all hover:from-blue-200 hover:to-violet-200 hover:border-blue-400 hover:-translate-y-px hover:shadow-sm dark:from-blue-900/40 dark:to-violet-900/30 dark:border-blue-500 dark:text-blue-300 dark:hover:from-blue-900/60 dark:hover:to-violet-900/50 dark:hover:border-blue-400";
+  "inline-flex items-center px-2.5 py-0.5 mx-0.5 bg-primary/10 border border-primary/30 rounded-lg text-xs font-semibold font-sans text-primary cursor-default select-all align-baseline leading-relaxed whitespace-nowrap transition-all hover:bg-primary/20 hover:border-primary/50 hover:-translate-y-px hover:shadow-sm dark:bg-primary/15 dark:border-primary/40 dark:text-primary";
 
 // ─── Helpers ──────────────────────────────────────────────────────
 
@@ -257,41 +269,28 @@ export const ContractTemplateEditor: React.FC<ContractTemplateEditorProps> = ({
   }, []);
 
   // ─── Preview rendering ────────────────────────────────────────
+  const PREVIEW_EVENT: PreviewEvent = {
+    event_date: "2026-06-15", start_time: "14:00", end_time: "22:00",
+    service_type: "Banquete", num_people: 150, total_amount: 45000,
+    location: "Salón Los Arcos", city: "Ciudad de México",
+    deposit_percent: 50, cancellation_days: 15, refund_percent: 80,
+    client: { name: "María García López", phone: "555-123-4567", email: "maria@ejemplo.com", address: "Av. Reforma 123", city: "Ciudad de México" },
+  };
+  const PREVIEW_PROFILE: PreviewProfile = { name: "Juan Eventos", business_name: "Mi Empresa de Eventos", email: "info@mieventos.com" };
+  const PREVIEW_PRODUCTS: PreviewProduct[] = [
+    { products: { name: "Paquete Premium" } },
+    { products: { name: "Iluminación" } },
+    { products: { name: "Decoración Floral" } },
+  ];
+
   let previewText: string;
   try {
     previewText = renderContractTemplate({
-      event: {
-        event_date: "2026-06-15",
-        start_time: "14:00",
-        end_time: "22:00",
-        service_type: "Banquete",
-        num_people: 150,
-        total_amount: 45000,
-        location: "Salón Los Arcos",
-        city: "Ciudad de México",
-        deposit_percent: 50,
-        cancellation_days: 15,
-        refund_percent: 80,
-        client: {
-          name: "María García López",
-          phone: "555-123-4567",
-          email: "maria@ejemplo.com",
-          address: "Av. Reforma 123",
-          city: "Ciudad de México",
-        },
-      } as any,
-      profile: {
-        name: "Juan Eventos",
-        business_name: "Mi Empresa de Eventos",
-        email: "info@mieventos.com",
-      } as any,
+      event: PREVIEW_EVENT as unknown as Event & { client?: Client | null },
+      profile: PREVIEW_PROFILE as unknown as User,
       template,
       strict: false,
-      products: [
-        { products: { name: "Paquete Premium" } },
-        { products: { name: "Iluminación" } },
-        { products: { name: "Decoración Floral" } },
-      ] as any,
+      products: PREVIEW_PRODUCTS as unknown as EventProduct[],
       payments: [{ amount: 15000 }, { amount: 7500 }],
     });
   } catch {
@@ -303,10 +302,10 @@ export const ContractTemplateEditor: React.FC<ContractTemplateEditorProps> = ({
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
+        <h3 className="text-lg font-bold text-text mb-1">
           Plantilla del Contrato
         </h3>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
+        <p className="text-sm text-text-secondary">
           Personaliza el texto de tus contratos. Haz clic en una variable para
           insertarla donde está tu cursor.
         </p>
@@ -314,22 +313,22 @@ export const ContractTemplateEditor: React.FC<ContractTemplateEditorProps> = ({
 
       {isBasicPlan && (
         <div className="relative">
-          <div className="bg-linear-to-r from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 border border-orange-200 dark:border-orange-800 rounded-2xl p-5 flex items-center gap-4">
-            <div className="bg-orange-100 dark:bg-orange-800/40 rounded-xl p-3">
-              <Lock className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+          <div className="bg-primary/5 border border-primary/20 rounded-2xl p-5 flex items-center gap-4">
+            <div className="bg-primary/10 rounded-xl p-3">
+              <Lock className="h-5 w-5 text-primary" />
             </div>
             <div className="flex-1">
-              <p className="font-bold text-gray-900 dark:text-white text-sm">
+              <p className="font-bold text-text text-sm">
                 Función exclusiva del plan Pro
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+              <p className="text-xs text-text-secondary mt-0.5">
                 Personaliza tus contratos con tu propio texto y variables
                 dinámicas.
               </p>
             </div>
             <Link
               to="/pricing"
-              className="bg-primary text-white font-medium px-4 py-2 rounded-lg text-sm hover:bg-orange-600 transition-colors whitespace-nowrap"
+              className="bg-primary text-white font-medium px-4 py-2 rounded-lg text-sm hover:bg-primary-dark transition-colors whitespace-nowrap"
             >
               Subir a Pro
             </Link>
@@ -340,14 +339,14 @@ export const ContractTemplateEditor: React.FC<ContractTemplateEditorProps> = ({
       {/* Mode Toggle + Format Buttons + Actions */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <div className="flex gap-1 bg-surface-alt dark:bg-gray-800/50 rounded-xl p-1">
+          <div className="flex gap-1 bg-surface-alt rounded-xl p-1">
             <button
               type="button"
               onClick={() => setIsPreview(false)}
               className={clsx(
                 "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
                 !isPreview
-                  ? "bg-white dark:bg-gray-700 text-brand-orange shadow-sm"
+                  ? "bg-card text-primary shadow-sm"
                   : "text-text-secondary hover:text-text",
               )}
             >
@@ -360,7 +359,7 @@ export const ContractTemplateEditor: React.FC<ContractTemplateEditorProps> = ({
               className={clsx(
                 "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
                 isPreview
-                  ? "bg-white dark:bg-gray-700 text-brand-orange shadow-sm"
+                  ? "bg-card text-primary shadow-sm"
                   : "text-text-secondary hover:text-text",
               )}
             >
@@ -372,14 +371,14 @@ export const ContractTemplateEditor: React.FC<ContractTemplateEditorProps> = ({
           {!isPreview && (
             <div
               className={clsx(
-                "flex gap-1 bg-surface-alt dark:bg-gray-800/50 rounded-xl p-1",
+                "flex gap-1 bg-surface-alt rounded-xl p-1",
                 isBasicPlan && "opacity-50 pointer-events-none",
               )}
             >
               <button
                 type="button"
                 onClick={() => wrapSelectionWith("**", "**")}
-                className="p-1.5 rounded-lg text-text-secondary hover:text-text hover:bg-white dark:hover:bg-gray-700 transition-all"
+                className="p-1.5 rounded-lg text-text-secondary hover:text-text hover:bg-card transition-all"
                 title="Negrita (**texto**)"
               >
                 <Bold className="h-3.5 w-3.5" />
@@ -387,7 +386,7 @@ export const ContractTemplateEditor: React.FC<ContractTemplateEditorProps> = ({
               <button
                 type="button"
                 onClick={() => wrapSelectionWith("*", "*")}
-                className="p-1.5 rounded-lg text-text-secondary hover:text-text hover:bg-white dark:hover:bg-gray-700 transition-all"
+                className="p-1.5 rounded-lg text-text-secondary hover:text-text hover:bg-card transition-all"
                 title="Cursiva (*texto*)"
               >
                 <Italic className="h-3.5 w-3.5" />
@@ -395,7 +394,7 @@ export const ContractTemplateEditor: React.FC<ContractTemplateEditorProps> = ({
               <button
                 type="button"
                 onClick={() => wrapSelectionWith("__", "__")}
-                className="p-1.5 rounded-lg text-text-secondary hover:text-text hover:bg-white dark:hover:bg-gray-700 transition-all"
+                className="p-1.5 rounded-lg text-text-secondary hover:text-text hover:bg-card transition-all"
                 title="Subrayado (__texto__)"
               >
                 <Underline className="h-3.5 w-3.5" />
@@ -421,7 +420,7 @@ export const ContractTemplateEditor: React.FC<ContractTemplateEditorProps> = ({
           <button
             type="button"
             onClick={onSave}
-            className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold bg-primary text-white rounded-lg hover:bg-orange-600 transition-colors"
+            className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
           >
             <Save className="h-3.5 w-3.5" />
             Guardar
@@ -446,7 +445,7 @@ export const ContractTemplateEditor: React.FC<ContractTemplateEditorProps> = ({
             className={clsx(
               "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all border",
               variablePanelOpen
-                ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700"
+                ? "bg-primary/10 text-primary border-primary/30"
                 : "bg-surface-alt hover:bg-surface border-border text-text-secondary hover:text-text",
             )}
           >
@@ -455,7 +454,7 @@ export const ContractTemplateEditor: React.FC<ContractTemplateEditorProps> = ({
           </button>
 
           {variablePanelOpen && (
-            <div className="absolute z-20 top-full mt-2 left-0 w-full sm:w-[480px] bg-white dark:bg-gray-800 border border-border rounded-2xl shadow-xl p-4 animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="absolute z-20 top-full mt-2 left-0 w-full sm:w-[480px] bg-card border border-border rounded-2xl shadow-xl p-4 animate-in fade-in slide-in-from-top-2 duration-200">
               <p className="text-xs font-medium text-text-secondary mb-3">
                 Haz clic en una variable para insertarla en tu contrato
               </p>
@@ -465,7 +464,7 @@ export const ContractTemplateEditor: React.FC<ContractTemplateEditorProps> = ({
                     key={token}
                     type="button"
                     onClick={() => insertVariable(label)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 rounded-lg text-xs font-medium hover:bg-blue-100 dark:hover:bg-blue-900/40 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary border border-primary/20 rounded-lg text-xs font-medium hover:bg-primary/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
                   >
                     {label}
                   </button>
@@ -493,7 +492,7 @@ export const ContractTemplateEditor: React.FC<ContractTemplateEditorProps> = ({
           onKeyUp={saveSelection}
           onKeyDown={handleKeyDown}
           className={clsx(
-            "w-full min-h-[400px] bg-surface-alt border border-border rounded-2xl px-5 py-4 text-sm leading-relaxed resize-y focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none overflow-auto whitespace-pre-wrap empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400 empty:before:pointer-events-none",
+            "w-full min-h-[400px] bg-surface-alt border border-border rounded-2xl px-5 py-4 text-sm leading-relaxed resize-y focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none overflow-auto whitespace-pre-wrap empty:before:content-[attr(data-placeholder)] empty:before:text-text-tertiary empty:before:pointer-events-none",
             isBasicPlan && "opacity-60 cursor-not-allowed",
           )}
           data-placeholder="Escribe la plantilla de tu contrato aquí..."
@@ -501,7 +500,7 @@ export const ContractTemplateEditor: React.FC<ContractTemplateEditorProps> = ({
       ) : (
         <div
           key="template-preview"
-          className="bg-white dark:bg-gray-900 border border-border rounded-2xl p-8 min-h-[400px] font-serif text-text leading-relaxed"
+          className="bg-card border border-border rounded-2xl p-8 min-h-[400px] font-serif text-text leading-relaxed"
         >
           <div className="text-center mb-8">
             <h2 className="text-base font-bold text-text">
@@ -513,8 +512,8 @@ export const ContractTemplateEditor: React.FC<ContractTemplateEditorProps> = ({
             </p>
           </div>
           <div className="space-y-3 text-justify text-sm whitespace-pre-line">
-            {previewParagraphs.map((paragraph, i) => (
-              <p key={i}>{renderFormattedReact(paragraph)}</p>
+            {previewParagraphs.map((paragraph) => (
+              <p key={paragraph.slice(0, 40)}>{renderFormattedReact(paragraph)}</p>
             ))}
           </div>
         </div>

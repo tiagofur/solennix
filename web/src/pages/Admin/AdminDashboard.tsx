@@ -133,7 +133,7 @@ export const AdminDashboard: React.FC = () => {
     const styles: Record<string, string> = {
       basic: "bg-surface-alt text-text-secondary",
       pro: "bg-primary/10 text-primary",
-      premium: "bg-purple-500/10 text-purple-500",
+      premium: "bg-primary/15 text-primary-dark",
     };
     return (
       <span
@@ -279,7 +279,7 @@ export const AdminDashboard: React.FC = () => {
         {/* Clientes / Productos */}
         <div className="bg-card rounded-2xl border border-border p-5 shadow-sm">
           <div className="flex items-center gap-2 mb-2">
-            <ShoppingBag className="h-4 w-4 text-purple-500" />
+            <ShoppingBag className="h-4 w-4 text-primary" />
             <p className="text-xs text-text-secondary uppercase tracking-wide">
               Clientes / Productos
             </p>
@@ -552,7 +552,7 @@ export const AdminDashboard: React.FC = () => {
                     {
                       name: "Stripe",
                       count: subs.stripe_count,
-                      color: "bg-purple-500",
+                      color: "bg-info",
                     },
                     {
                       name: "Apple",

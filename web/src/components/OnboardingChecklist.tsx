@@ -159,13 +159,13 @@ export const OnboardingChecklist: React.FC = () => {
               `}
             >
               <div className="flex items-center justify-between mb-3">
-                <div className={`p-2 rounded-md ${step.isCompleted ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400' : 'bg-primary-light text-primary dark:bg-primary/10'}`}>
+                <div className={`p-2 rounded-md ${step.isCompleted ? 'bg-success/10 text-success' : 'bg-primary-light text-primary dark:bg-primary/10'}`}>
                   {step.icon}
                 </div>
                 {step.isCompleted ? (
-                   <CheckCircle2 className="h-6 w-6 text-green-500" aria-hidden="true" />
+                   <CheckCircle2 className="h-6 w-6 text-success" aria-hidden="true" />
                 ) : (
-                   <Circle className="h-6 w-6 text-gray-300 dark:text-gray-500 group-hover:text-primary/50 transition-colors" aria-hidden="true" />
+                   <Circle className="h-6 w-6 text-text-tertiary group-hover:text-primary/50 transition-colors" aria-hidden="true" />
                 )}
               </div>
 

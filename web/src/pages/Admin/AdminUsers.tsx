@@ -246,7 +246,7 @@ export const AdminUsers: React.FC = () => {
     const styles: Record<string, string> = {
       basic: 'bg-surface-alt text-text-secondary',
       pro: 'bg-primary/10 text-primary',
-      premium: 'bg-purple-500/10 text-purple-500',
+      premium: 'bg-primary/15 text-primary-dark',
     };
     return (
       <span className={clsx('inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold', styles[plan] || styles.basic)}>

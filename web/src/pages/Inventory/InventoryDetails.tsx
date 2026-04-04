@@ -84,7 +84,7 @@ export const InventoryDetails: React.FC = () => {
         upcomingConfirmed.map(async (event) => {
           try {
             const products = await eventService.getProducts(event.id);
-            eventProductsMap[event.id] = (products || []).map((p: any) => ({
+            eventProductsMap[event.id] = (products || []).map((p: { product_id: string; quantity: number }) => ({
               productId: p.product_id,
               quantity: p.quantity,
             }));
@@ -363,10 +363,10 @@ export const InventoryDetails: React.FC = () => {
               className={clsx(
                 "px-2.5 py-0.5 mt-1 inline-flex text-xs font-semibold rounded-full border",
                 item.type === "equipment"
-                  ? "bg-purple-500/10 text-purple-500 border-purple-500/20"
+                  ? "bg-info/10 text-info border-info/20"
                   : item.type === "supply"
                   ? "bg-warning/10 text-warning border-warning/20"
-                  : "bg-primary/10 text-primary border-primary/20",
+                  : "bg-success/10 text-success border-success/20",
               )}
             >
               {item.type === "equipment" ? "Activo / Equipo" : item.type === "supply" ? "Insumo por Evento" : "Insumo Consumible"}
