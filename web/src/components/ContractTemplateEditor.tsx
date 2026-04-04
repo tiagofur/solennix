@@ -472,7 +472,7 @@ export const ContractTemplateEditor: React.FC<ContractTemplateEditorProps> = ({
                   </button>
                 ))}
               </div>
-              <p className="text-[10px] text-text-secondary mt-3 italic">
+              <p className="text-xs text-text-secondary mt-3 italic">
                 Las variables se reemplazan automáticamente con los datos del
                 evento al generar el contrato.
               </p>

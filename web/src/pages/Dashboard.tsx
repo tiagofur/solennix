@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { eventService } from "../services/eventService";
 import { inventoryService } from "../services/inventoryService";
@@ -131,7 +131,7 @@ function KpiCard({ icon: Icon, iconBg, iconColor, label, value, sub, compact = f
           <Icon className={`h-3.5 w-3.5 ${iconColor}`} aria-hidden="true" />
         </div>
         <div className="flex-1 min-w-0">
-          <dt className="text-[11px] font-medium text-text-secondary leading-none mb-1 truncate">{label}</dt>
+          <dt className="text-xs font-medium text-text-secondary leading-none mb-1 truncate">{label}</dt>
           <dd className="text-sm font-bold text-text truncate">{value}</dd>
         </div>
       </div>
@@ -239,7 +239,7 @@ function UpcomingEventCard({ event, onStatusChange }: {
       onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/events/${event.id}/summary`); }}>
       <div className="w-11 h-11 rounded-xl flex flex-col items-center justify-center shrink-0"
         style={{ backgroundColor: "var(--color-primary-light)" }}>
-        <span className="text-[10px] font-semibold uppercase text-primary leading-none">{format(dateObj, "MMM", { locale: es })}</span>
+        <span className="text-xs font-semibold uppercase text-primary leading-none">{format(dateObj, "MMM", { locale: es })}</span>
         <span className="text-lg font-bold text-primary leading-tight">{format(dateObj, "d")}</span>
       </div>
       <div className="flex-1 min-w-0">
@@ -307,7 +307,7 @@ function DashboardAttentionSection({ alerts }: { alerts: DashboardAttentionAlert
                   <p className="text-sm font-semibold text-text">{alert.title}</p>
                   <p className="text-xs text-text-secondary mt-0.5">{alert.description}</p>
                 </div>
-                <span className={`shrink-0 text-[11px] font-semibold px-2 py-0.5 rounded-full ${styles.badge}`}>
+                <span className={`shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full ${styles.badge}`}>
                   {alert.items.length}
                 </span>
               </div>
@@ -324,7 +324,7 @@ function DashboardAttentionSection({ alerts }: { alerts: DashboardAttentionAlert
                         <p className="text-sm font-semibold text-text truncate">{getDashboardEventClientName(event)}</p>
                         <p className="text-xs text-text-secondary truncate mt-0.5">{event.service_type}</p>
                       </div>
-                      <span className="shrink-0 text-[11px] text-text-secondary whitespace-nowrap">
+                      <span className="shrink-0 text-xs text-text-secondary whitespace-nowrap">
                         {format(parseDashboardEventDate(event.event_date), "d MMM", { locale: es })}
                       </span>
                     </div>
@@ -377,7 +377,7 @@ export const Dashboard: React.FC = () => {
   const [attentionPaidByEvent, setAttentionPaidByEvent] = useState<Record<string, number>>({});
   const [error, setError] = useState<string | null>(null);
 
-  const loadDashboardData = () => {
+  const loadDashboardData = useCallback(() => {
     setError(null);
     setLoadingMonth(true);
     setLoadingUpcoming(true);
@@ -495,9 +495,9 @@ export const Dashboard: React.FC = () => {
       .then((data) => setClientCount((data || []).length))
       .catch((err) => logError("Error loading clients", err))
       .finally(() => setLoadingClients(false));
-  };
+  }, []);
 
-  useEffect(() => { loadDashboardData(); }, []);
+  useEffect(() => { loadDashboardData(); }, [loadDashboardData]);
 
   useEffect(() => {
     if (searchParams.has("session_id")) {

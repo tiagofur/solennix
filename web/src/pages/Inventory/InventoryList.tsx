@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { inventoryService } from "../../services/inventoryService";
 import { InventoryItem } from "../../types/entities";
@@ -90,12 +90,7 @@ export const InventoryList: React.FC = () => {
     order: SortOrder;
   }>({ key: "ingredient_name", order: "asc" });
 
-  useEffect(() => {
-    fetchInventory();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const fetchInventory = async () => {
+  const fetchInventory = useCallback(async () => {
     try {
       const data = await inventoryService.getAll();
       setItems(data || []);
@@ -105,7 +100,11 @@ export const InventoryList: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [addToast]);
+
+  useEffect(() => {
+    fetchInventory();
+  }, [fetchInventory]);
 
   const lowStockItems = (items || []).filter(
     (item) =>
@@ -400,7 +399,7 @@ export const InventoryList: React.FC = () => {
         }}
       />
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1 className="text-2xl font-bold text-text">Inventario</h1>
+        <h1 className="text-2xl font-bold text-text tracking-tight">Inventario</h1>
         <div className="flex flex-wrap items-center gap-2">
           {items.length > 0 && (
             <button

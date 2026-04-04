@@ -295,7 +295,7 @@ export const EventSummary: React.FC = () => {
   }, [actionsDropdownOpen]);
 
   const handleStatusChange = (newStatus: EventStatus) => {
-    setEvent((prev: any) => ({ ...prev, status: newStatus }));
+    setEvent((prev: EventWithClient | null) => prev ? { ...prev, status: newStatus } : prev);
   };
 
   const toggleChecklistItem = useCallback((itemId: string) => {
@@ -807,7 +807,7 @@ export const EventSummary: React.FC = () => {
           userId={user.id}
           eventStatus={currentStatus}
           onStatusChange={handleStatusChange}
-          eventData={event}
+          eventData={event as unknown as { deposit_percent?: number | null; [key: string]: unknown }}
           initialAmount={paymentInitialAmount}
           autoOpenAdd={autoOpenPayment}
           onPaymentAdded={async () => {
@@ -862,19 +862,19 @@ export const EventSummary: React.FC = () => {
             <div className="border-t border-border px-4 py-5 sm:px-6">
               <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
                 <div>
-                  <dt className="text-xs font-bold text-text-tertiary uppercase tracking-wider flex items-center gap-1.5">
+                  <dt className="text-xs font-semibold text-text-tertiary uppercase tracking-wide flex items-center gap-1.5">
                     <Calendar className="h-3.5 w-3.5" /> Fecha
                   </dt>
                   <dd className="mt-1 font-bold text-text">{new Date(event.event_date + "T12:00:00").toLocaleDateString("es-MX", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</dd>
                 </div>
                 <div>
-                  <dt className="text-xs font-bold text-text-tertiary uppercase tracking-wider flex items-center gap-1.5">
+                  <dt className="text-xs font-semibold text-text-tertiary uppercase tracking-wide flex items-center gap-1.5">
                     <Clock className="h-3.5 w-3.5" /> Horario
                   </dt>
                   <dd className="mt-1 font-bold text-text">{event.start_time && event.end_time ? `${event.start_time.slice(0, 5)} — ${event.end_time.slice(0, 5)}` : "No definido"}</dd>
                 </div>
                 <div>
-                  <dt className="text-xs font-bold text-text-tertiary uppercase tracking-wider flex items-center gap-1.5">
+                  <dt className="text-xs font-semibold text-text-tertiary uppercase tracking-wide flex items-center gap-1.5">
                     <Users className="h-3.5 w-3.5" /> Cliente
                   </dt>
                   <dd className="mt-1 font-bold text-text">
@@ -891,13 +891,13 @@ export const EventSummary: React.FC = () => {
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-xs font-bold text-text-tertiary uppercase tracking-wider flex items-center gap-1.5">
+                  <dt className="text-xs font-semibold text-text-tertiary uppercase tracking-wide flex items-center gap-1.5">
                     <Building className="h-3.5 w-3.5" /> Ubicación
                   </dt>
                   <dd className="mt-1 font-bold text-text">{event.location || "Sin ubicación"}</dd>
                 </div>
                 <div>
-                  <dt className="text-xs font-bold text-text-tertiary uppercase tracking-wider flex items-center gap-1.5">
+                  <dt className="text-xs font-semibold text-text-tertiary uppercase tracking-wide flex items-center gap-1.5">
                     <Receipt className="h-3.5 w-3.5" /> Factura
                   </dt>
                   <dd className="mt-1 font-bold text-text">
@@ -906,7 +906,7 @@ export const EventSummary: React.FC = () => {
                 </div>
                 {event.deposit_percent > 0 && (
                   <div>
-                    <dt className="text-xs font-bold text-text-tertiary uppercase tracking-wider flex items-center gap-1.5">
+                    <dt className="text-xs font-semibold text-text-tertiary uppercase tracking-wide flex items-center gap-1.5">
                       <DollarSign className="h-3.5 w-3.5" /> Anticipo
                     </dt>
                     <dd className="mt-1 font-bold text-text">
@@ -921,7 +921,7 @@ export const EventSummary: React.FC = () => {
                 )}
                 {event.notes && (
                   <div className="sm:col-span-2">
-                    <dt className="text-xs font-bold text-text-tertiary uppercase tracking-wider">Notas</dt>
+                    <dt className="text-xs font-semibold text-text-tertiary uppercase tracking-wide">Notas</dt>
                     <dd className="mt-1 text-sm text-text-secondary">{event.notes}</dd>
                   </div>
                 )}
@@ -938,10 +938,10 @@ export const EventSummary: React.FC = () => {
               <table className="w-full text-sm" aria-label="Productos incluidos en el evento">
                 <thead>
                   <tr className="text-left text-text-tertiary border-b border-border">
-                    <th className="pb-3 px-1 font-bold uppercase tracking-wider text-[10px]">Producto</th>
-                    <th className="pb-3 px-1 text-right font-bold uppercase tracking-wider text-[10px]">Cant.</th>
-                    <th className="pb-3 px-1 text-right font-bold uppercase tracking-wider text-[10px]">Precio</th>
-                    <th className="pb-3 px-1 text-right font-bold uppercase tracking-wider text-[10px]">Total</th>
+                    <th className="pb-3 px-1 font-semibold uppercase tracking-wide text-xs">Producto</th>
+                    <th className="pb-3 px-1 text-right font-semibold uppercase tracking-wide text-xs">Cant.</th>
+                    <th className="pb-3 px-1 text-right font-semibold uppercase tracking-wide text-xs">Precio</th>
+                    <th className="pb-3 px-1 text-right font-semibold uppercase tracking-wide text-xs">Total</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -973,8 +973,8 @@ export const EventSummary: React.FC = () => {
               <table className="w-full text-sm" aria-label="Extras adicionales del evento">
                 <thead>
                   <tr className="text-left text-text-tertiary border-b border-border">
-                    <th className="pb-3 px-1 font-bold uppercase tracking-wider text-[10px]">Descripción</th>
-                    <th className="pb-3 px-1 text-right font-bold uppercase tracking-wider text-[10px]">Precio</th>
+                    <th className="pb-3 px-1 font-semibold uppercase tracking-wide text-xs">Descripción</th>
+                    <th className="pb-3 px-1 text-right font-semibold uppercase tracking-wide text-xs">Precio</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -1085,23 +1085,23 @@ export const EventSummary: React.FC = () => {
               </h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6 relative z-10">
                 <div className="space-y-1">
-                  <p className="text-xs font-bold text-text-tertiary uppercase tracking-wider">Venta Neta</p>
+                  <p className="text-xs font-semibold text-text-tertiary uppercase tracking-wide">Venta Neta</p>
                   <p className="text-xl font-black text-text">${netSales.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-xs font-bold text-text-tertiary uppercase tracking-wider">IVA</p>
+                  <p className="text-xs font-semibold text-text-tertiary uppercase tracking-wide">IVA</p>
                   <p className="text-xl font-black text-text">${taxAmount.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-xs font-bold text-text-tertiary uppercase tracking-wider">Costos</p>
+                  <p className="text-xs font-semibold text-text-tertiary uppercase tracking-wide">Costos</p>
                   <p className="text-xl font-black text-error">${totalCost.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-xs font-bold text-text-tertiary uppercase tracking-wider">Utilidad Neta</p>
+                  <p className="text-xs font-semibold text-text-tertiary uppercase tracking-wide">Utilidad Neta</p>
                   <p className="text-xl font-black text-success">${profit.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-xs font-bold text-text-tertiary uppercase tracking-wider">Pendiente</p>
+                  <p className="text-xs font-semibold text-text-tertiary uppercase tracking-wide">Pendiente</p>
                   <p className={clsx("text-xl font-black", remainingValue > 0 ? "text-warning" : "text-success")}>
                     ${remainingValue.toLocaleString("es-MX", { minimumFractionDigits: 2 })}
                   </p>
@@ -1112,7 +1112,7 @@ export const EventSummary: React.FC = () => {
               {totalCharged > 0 && (
                 <div className="mt-8 pt-6 border-t border-border relative z-10">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-bold text-text-tertiary uppercase tracking-wider">Progreso de Cobro</span>
+                    <span className="text-xs font-semibold text-text-tertiary uppercase tracking-wide">Progreso de Cobro</span>
                     <span className="text-sm font-bold text-text">
                       {Math.min(100, ((totalPaid / totalCharged) * 100)).toFixed(0)}%
                     </span>
@@ -1197,7 +1197,7 @@ export const EventSummary: React.FC = () => {
                     <tr key={`${ing.name}-${ing.unit}`} className="hover:bg-surface-alt/50 transition-colors">
                       <td className="py-3 font-medium text-text">
                         {ing.name}
-                        <div className="text-[10px] text-text-secondary uppercase tracking-tight">{ing.unit}</div>
+                        <div className="text-xs text-text-secondary uppercase tracking-tight">{ing.unit}</div>
                       </td>
                       <td className="py-3 text-right text-text font-bold">
                         {ing.quantity.toFixed(2)}
@@ -1261,7 +1261,7 @@ export const EventSummary: React.FC = () => {
                     <tr key={s.id} className="hover:bg-surface-alt/50 transition-colors">
                       <td className="py-3 font-medium text-text">
                         {s.supply_name || 'Insumo'}
-                        <div className="text-[10px] text-text-secondary uppercase tracking-tight">{s.unit || 'und'}</div>
+                        <div className="text-xs text-text-secondary uppercase tracking-tight">{s.unit || 'und'}</div>
                       </td>
                       <td className="py-3 text-right text-text font-bold">{s.quantity}</td>
                       <td className="py-3 text-right text-text-secondary">
@@ -1298,7 +1298,7 @@ export const EventSummary: React.FC = () => {
                       <tr key={s.id} className="hover:bg-surface-alt/50 transition-colors">
                         <td className="py-3 font-medium text-text">
                           {s.supply_name || 'Insumo'}
-                          <div className="text-[10px] text-text-secondary uppercase tracking-tight">{s.unit || 'und'}</div>
+                          <div className="text-xs text-text-secondary uppercase tracking-tight">{s.unit || 'und'}</div>
                         </td>
                         <td className="py-3 text-right text-text font-bold">{s.quantity}</td>
                         <td className="py-3 text-right">

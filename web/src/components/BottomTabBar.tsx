@@ -109,7 +109,7 @@ export const BottomTabBar: React.FC = () => {
                   className={clsx('h-5 w-5 mb-1', active && 'drop-shadow-sm')}
                   aria-hidden="true"
                 />
-                <span className={clsx('text-[10px] font-semibold', active && 'font-bold')}>
+                <span className={clsx('text-xs font-semibold', active && 'font-bold')}>
                   {tab.name}
                 </span>
               </Link>
@@ -132,7 +132,7 @@ export const BottomTabBar: React.FC = () => {
             />
             <span
               className={clsx(
-                'text-[10px] font-semibold',
+                'text-xs font-semibold',
                 (moreOpen || isMoreActive) && 'font-bold',
               )}
             >

@@ -9,13 +9,20 @@ import { Modal } from "../../../components/Modal";
 import { useToast } from "../../../hooks/useToast";
 import clsx from "clsx";
 
+interface PaymentFormData {
+  amount: number;
+  payment_date: string;
+  payment_method: string;
+  notes: string;
+}
+
 interface PaymentsProps {
   eventId: string;
   totalAmount: number;
   userId: string;
   eventStatus?: string;
   onStatusChange?: (newStatus: "quoted" | "confirmed" | "completed" | "cancelled") => void;
-  eventData?: any;
+  eventData?: { deposit_percent?: number | null; [key: string]: unknown };
   initialAmount?: number;
   autoOpenAdd?: boolean;
   onPaymentAdded?: () => void;
@@ -89,7 +96,7 @@ export const Payments: React.FC<PaymentsProps> = ({
     loadPayments();
   }, [loadPayments]);
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: PaymentFormData) => {
     try {
       const newPaymentAmount = Number(data.amount);
       await paymentService.create({
@@ -218,17 +225,17 @@ export const Payments: React.FC<PaymentsProps> = ({
 
         <div className={clsx("grid gap-6 mb-8", depositPercent > 0 ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4" : "grid-cols-1 md:grid-cols-3")}>
           <div className="bg-surface-alt/50 p-6 rounded-2xl border border-border/50">
-             <p className="text-[10px] font-black text-text-tertiary uppercase tracking-tighter mb-1">Total del Evento</p>
+             <p className="text-xs font-black text-text-tertiary uppercase tracking-tighter mb-1">Total del Evento</p>
              <p className="text-2xl font-black text-text">${totalAmount.toFixed(2)}</p>
           </div>
           {depositPercent > 0 && (
             <div className="bg-warning/5 p-6 rounded-2xl border border-warning/20">
-              <p className="text-[10px] font-black text-warning/70 uppercase tracking-tighter mb-1">Anticipo ({depositPercent}%)</p>
+              <p className="text-xs font-black text-warning/70 uppercase tracking-tighter mb-1">Anticipo ({depositPercent}%)</p>
               <p className="text-2xl font-black text-warning">${depositAmount.toFixed(2)}</p>
             </div>
           )}
           <div className="bg-success/5 p-6 rounded-2xl border border-success/10">
-             <p className="text-[10px] font-black text-success/70 uppercase tracking-tighter mb-1">Total Pagado</p>
+             <p className="text-xs font-black text-success/70 uppercase tracking-tighter mb-1">Total Pagado</p>
              <p className="text-2xl font-black text-success">${totalPaid.toFixed(2)}</p>
           </div>
           <div className={clsx(
@@ -238,7 +245,7 @@ export const Payments: React.FC<PaymentsProps> = ({
               : "bg-info/5 border-info/10"
           )}>
              <p className={clsx(
-               "text-[10px] font-black uppercase tracking-tighter mb-1",
+               "text-xs font-black uppercase tracking-tighter mb-1",
                balance > 0.01 ? "text-error/70" : "text-info/70"
              )}>
                {balance > 0.01 ? 'Saldo Pendiente' : 'Saldo Liquidado'}
@@ -262,7 +269,7 @@ export const Payments: React.FC<PaymentsProps> = ({
             role="progressbar"
           />
           <div className="absolute inset-0 flex items-center justify-center">
-             <span className="text-[9px] font-black text-white mix-blend-difference uppercase tracking-widest">
+             <span className="text-xs font-black text-white mix-blend-difference uppercase tracking-widest">
                {Math.min(progress, 100).toFixed(0)}% Completado
              </span>
           </div>
@@ -271,7 +278,7 @@ export const Payments: React.FC<PaymentsProps> = ({
         <div className="bg-surface-alt/30 rounded-2xl border border-border overflow-hidden">
           <table className="min-w-full text-sm" aria-label="Historial de pagos">
             <thead>
-              <tr className="text-left text-[10px] font-black text-text-tertiary uppercase tracking-wider border-b border-border bg-surface-alt/50">
+              <tr className="text-left text-xs font-black text-text-tertiary uppercase tracking-wider border-b border-border bg-surface-alt/50">
                 <th scope="col" className="py-4 px-6">Fecha</th>
                 <th scope="col" className="py-4 px-6">Método</th>
                 <th scope="col" className="py-4 px-6">Nota</th>
@@ -287,7 +294,7 @@ export const Payments: React.FC<PaymentsProps> = ({
                     {new Date(payment.payment_date).toLocaleDateString()}
                   </td>
                   <td className="py-4 px-6">
-                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-card border border-border text-[10px] font-black uppercase tracking-tight text-text-secondary">
+                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-card border border-border text-xs font-black uppercase tracking-tight text-text-secondary">
                       {getMethodIcon(payment.payment_method)}
                       {payment.payment_method === 'cash' ? 'Efectivo' :
                        payment.payment_method === 'transfer' ? 'Transferencia' :
@@ -343,7 +350,7 @@ export const Payments: React.FC<PaymentsProps> = ({
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
                 <div>
-                  <label htmlFor="payment-amount" className="block text-[10px] font-black text-text-tertiary uppercase tracking-widest mb-2">Monto *</label>
+                  <label htmlFor="payment-amount" className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">Monto *</label>
                   <div className="relative group">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-tertiary font-bold">$</span>
                     <input
@@ -358,17 +365,17 @@ export const Payments: React.FC<PaymentsProps> = ({
                       <button
                         type="button"
                         onClick={() => setValue("amount", parseFloat(balance.toFixed(2)))}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 text-[9px] font-black bg-success text-white rounded-md hover:bg-success/90 transition-colors uppercase"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 text-xs font-black bg-success text-white rounded-md hover:bg-success/90 transition-colors uppercase"
                       >
                         Saldo
                       </button>
                     )}
                   </div>
-                  {errors.amount && <p className="text-[10px] text-error font-bold mt-1 uppercase tracking-tighter">{errors.amount.message as string}</p>}
+                  {errors.amount && <p className="text-xs text-error font-bold mt-1 uppercase tracking-tighter">{errors.amount.message as string}</p>}
                 </div>
 
                 <div>
-                  <label htmlFor="payment-date" className="block text-[10px] font-black text-text-tertiary uppercase tracking-widest mb-2">Fecha *</label>
+                  <label htmlFor="payment-date" className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">Fecha *</label>
                   <input
                     id="payment-date"
                     type="date"
@@ -378,7 +385,7 @@ export const Payments: React.FC<PaymentsProps> = ({
                 </div>
 
                 <div>
-                  <label htmlFor="payment-method" className="block text-[10px] font-black text-text-tertiary uppercase tracking-widest mb-2">Método *</label>
+                  <label htmlFor="payment-method" className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">Método *</label>
                   <select
                     id="payment-method"
                     {...register("payment_method")}
@@ -393,7 +400,7 @@ export const Payments: React.FC<PaymentsProps> = ({
                 </div>
 
                 <div>
-                  <label htmlFor="payment-notes" className="block text-[10px] font-black text-text-tertiary uppercase tracking-widest mb-2">Nota</label>
+                  <label htmlFor="payment-notes" className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">Nota</label>
                   <input
                     id="payment-notes"
                     type="text"

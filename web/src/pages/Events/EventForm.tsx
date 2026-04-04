@@ -40,6 +40,10 @@ import {
   EquipmentSuggestion,
   SupplySuggestion,
   InventoryItem,
+  EventProduct,
+  EventExtra,
+  EventEquipment as EventEquipmentEntity,
+  EventSupply,
 } from "@/types/entities";
 import { UpgradeBanner } from "@/components/UpgradeBanner";
 import { unavailableDatesService } from "@/services/unavailableDatesService";
@@ -318,7 +322,7 @@ export const EventForm: React.FC = () => {
 
         if (eventProducts) {
           setSelectedProducts(
-            eventProducts.map((ep: any) => ({
+            eventProducts.map((ep: EventProduct) => ({
               product_id: ep.product_id,
               quantity: ep.quantity,
               price: ep.unit_price,
@@ -329,7 +333,7 @@ export const EventForm: React.FC = () => {
 
         if (eventExtras) {
           setExtras(
-            eventExtras.map((e: any) => ({
+            eventExtras.map((e: EventExtra) => ({
               description: e.description,
               cost: e.cost,
               price: e.price,
@@ -341,7 +345,7 @@ export const EventForm: React.FC = () => {
 
         if (eventEquipment) {
           setSelectedEquipment(
-            eventEquipment.map((eq: any) => ({
+            eventEquipment.map((eq: EventEquipmentEntity) => ({
               inventory_id: eq.inventory_id,
               quantity: eq.quantity,
               notes: eq.notes || "",
@@ -351,7 +355,7 @@ export const EventForm: React.FC = () => {
 
         if (eventSupplies) {
           setSelectedSupplies(
-            eventSupplies.map((s: any) => ({
+            eventSupplies.map((s: EventSupply) => ({
               inventory_id: s.inventory_id,
               quantity: s.quantity,
               unit_cost: s.unit_cost,
@@ -863,7 +867,7 @@ export const EventForm: React.FC = () => {
           >
             <ArrowLeft className="h-5 w-5" aria-hidden="true" />
           </button>
-          <h1 className="text-2xl font-black tracking-tight text-text">
+          <h1 className="text-2xl font-bold tracking-tight text-text">
             {id ? "Editar Evento" : "Nuevo Evento"}
           </h1>
         </div>

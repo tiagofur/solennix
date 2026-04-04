@@ -25,7 +25,7 @@ const forgotPasswordSchema = z.object({
 
 type ForgotPasswordForm = z.infer<typeof forgotPasswordSchema>;
 
-const sideSteps = [
+const SIDE_STEPS = [
   { icon: Mail, label: 'Ingresa tu email', desc: 'El que usaste al registrarte' },
   { icon: KeyRound, label: 'Revisa tu bandeja', desc: 'Te enviamos un enlace seguro' },
   { icon: Lock, label: 'Crea una nueva contraseña', desc: 'El enlace expira en 24 horas' },
@@ -79,13 +79,13 @@ export function ForgotPassword() {
             </p>
 
             <ol className="space-y-6">
-              {sideSteps.map(({ icon: Icon, label, desc }, i) => (
+              {SIDE_STEPS.map(({ icon: Icon, label, desc }, i) => (
                 <li key={label} className="flex items-start gap-4">
                   <div className="relative shrink-0">
                     <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-sm">
                       <Icon className="h-4 w-4 text-white" />
                     </div>
-                    <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-white/40 flex items-center justify-center text-[9px] font-black text-white">
+                    <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-white/40 flex items-center justify-center text-xs font-black text-white">
                       {i + 1}
                     </div>
                   </div>

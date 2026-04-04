@@ -196,7 +196,7 @@ export const InventoryForm: React.FC = () => {
           >
             <ArrowLeft className="h-5 w-5" aria-hidden="true" />
           </button>
-          <h1 className="text-2xl font-bold text-text">
+          <h1 className="text-2xl font-bold text-text tracking-tight">
             {id ? "Editar Ítem" : "Nuevo Ítem"}
           </h1>
         </div>

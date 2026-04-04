@@ -558,12 +558,12 @@ export const CalendarView: React.FC = () => {
                         <h3 className="text-sm font-bold text-text group-hover:text-primary transition-colors truncate">
                           {event.client?.name}
                         </h3>
-                        <p className="text-[10px] text-text-secondary font-medium uppercase tracking-tight">
+                        <p className="text-xs text-text-secondary font-medium uppercase tracking-tight">
                           {event.service_type}
                         </p>
                       </div>
                       <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded-lg text-[9px] font-semibold shrink-0 ${
+                        className={`inline-flex items-center px-2 py-0.5 rounded-lg text-xs font-semibold shrink-0 ${
                           event.status === "confirmed"
                             ? "bg-status-confirmed/10 text-status-confirmed"
                             : event.status === "completed"
@@ -585,7 +585,7 @@ export const CalendarView: React.FC = () => {
 
                     <div className="space-y-2.5 mt-auto">
                       <div className="grid grid-cols-2 gap-2">
-                        <div className="flex items-center text-[11px] text-text-secondary">
+                        <div className="flex items-center text-xs text-text-secondary">
                           <Clock
                             className="h-3.5 w-3.5 mr-1.5 text-primary opacity-70"
                             aria-hidden="true"
@@ -596,7 +596,7 @@ export const CalendarView: React.FC = () => {
                             {event.end_time || ""}
                           </span>
                         </div>
-                        <div className="flex items-center text-[11px] text-text-secondary">
+                        <div className="flex items-center text-xs text-text-secondary">
                           <Users
                             className="h-3.5 w-3.5 mr-1.5 text-primary opacity-70"
                             aria-hidden="true"
@@ -606,7 +606,7 @@ export const CalendarView: React.FC = () => {
                       </div>
 
                       {event.location && (
-                        <div className="flex items-start text-[11px] text-text-secondary">
+                        <div className="flex items-start text-xs text-text-secondary">
                           <MapPin
                             className="h-3.5 w-3.5 mr-1.5 mt-0.5 text-primary opacity-70 shrink-0"
                             aria-hidden="true"
@@ -616,7 +616,7 @@ export const CalendarView: React.FC = () => {
                       )}
 
                       <div className="flex items-center justify-between pt-2 border-t border-border">
-                        <div className="flex items-center text-[11px] text-text-secondary">
+                        <div className="flex items-center text-xs text-text-secondary">
                           <Phone
                             className="h-3 w-3 mr-1"
                             aria-hidden="true"

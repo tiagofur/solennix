@@ -148,6 +148,33 @@
   }
 }
 
+/*
+ * ── TYPE SCALE (app UI — fixed rem, not fluid) ─────────────────────────────
+ *
+ * text-xs    (0.75rem / 12px)  — Metadata, unit labels, badges, captions
+ * text-sm    (0.875rem / 14px) — Table body, secondary descriptions, form hints
+ * text-base  (1rem / 16px)     — Primary body text, card descriptions
+ * text-lg    (1.125rem / 18px) — Section headings (H2), card subtitles
+ * text-xl    (1.25rem / 20px)  — Sub-page headings, dialog titles
+ * text-2xl   (1.5rem / 24px)   — Page titles (H1) — always with tracking-tight
+ * text-3xl+  (1.875rem+)       — Marketing / hero headings (Landing only)
+ *
+ * WEIGHTS:
+ * font-medium    — Labels, captions, secondary UI text
+ * font-semibold  — Table headers, section labels, H3 card titles
+ * font-bold      — Page titles (H1), H2 section headings, strong emphasis
+ * font-black     — Hero headings only (Landing/auth large displays)
+ *
+ * LETTER-SPACING:
+ * tracking-tight   — Large headings (text-2xl+)
+ * tracking-normal  — Body, most labels
+ * tracking-wide    — Small uppercase labels (text-xs uppercase)
+ * tracking-wider   — Section dividers only; avoid on inline text < text-sm
+ * tracking-widest  — Reserved for decorative badges/pills only
+ *
+ * NEVER use custom text-[Npx] values — use the scale above.
+ */
+
 :root {
   font-family:
     -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica,

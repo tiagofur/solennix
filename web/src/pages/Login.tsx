@@ -32,7 +32,7 @@ const loginSchema = z.object({
 
 type LoginForm = z.infer<typeof loginSchema>;
 
-const sideFeatures = [
+const SIDE_FEATURES = [
   { icon: Calendar, text: "Calendario inteligente de eventos" },
   { icon: Users, text: "CRM integrado para tus clientes" },
   { icon: BarChart3, text: "Reportes y analíticas en tiempo real" },
@@ -96,7 +96,7 @@ export const Login: React.FC = () => {
             </p>
 
             <ul className="space-y-4">
-              {sideFeatures.map(({ icon: Icon, text }) => (
+              {SIDE_FEATURES.map(({ icon: Icon, text }) => (
                 <li
                   key={text}
                   className="flex items-center gap-3 text-white/90"
@@ -117,7 +117,7 @@ export const Login: React.FC = () => {
                 {["MG", "CM", "AR", "JL"].map((initials, i) => (
                   <div
                     key={i}
-                    className="w-8 h-8 rounded-full border-2 border-white/30 flex items-center justify-center text-[10px] font-bold text-white"
+                    className="w-8 h-8 rounded-full border-2 border-white/30 flex items-center justify-center text-xs font-bold text-white"
                     style={{
                       backgroundColor: [
                         "var(--color-error)",
