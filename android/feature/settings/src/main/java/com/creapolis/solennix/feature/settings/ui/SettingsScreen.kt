@@ -124,6 +124,7 @@ fun SettingsScreen(
                             SettingsItem(icon = Icons.Default.Lock, label = "Cambiar Contraseña", onClick = onChangePassword)
                             SettingsItem(icon = Icons.Default.Business, label = "Ajustes del Negocio", onClick = onBusinessSettings)
                             SettingsItem(icon = Icons.Default.Receipt, label = "Valores del Contrato", onClick = onContractDefaults)
+                            LogoutItem(onClick = { viewModel.logout() })
                         }
                     }
                     Column(modifier = Modifier.weight(1f)) {
@@ -151,6 +152,7 @@ fun SettingsScreen(
                     SettingsItem(icon = Icons.Default.Lock, label = "Cambiar Contraseña", onClick = onChangePassword)
                     SettingsItem(icon = Icons.Default.Business, label = "Ajustes del Negocio", onClick = onBusinessSettings)
                     SettingsItem(icon = Icons.Default.Receipt, label = "Valores del Contrato", onClick = onContractDefaults)
+                    LogoutItem(onClick = { viewModel.logout() })
                 }
                 SettingsSection(title = "Suscripción") {
                     SettingsItem(icon = Icons.Default.Star, label = "Gestionar Plan", onClick = onPricing)
@@ -160,20 +162,6 @@ fun SettingsScreen(
                     SettingsItem(icon = Icons.Default.Shield, label = "Política de Privacidad", onClick = onPrivacy)
                     SettingsItem(icon = Icons.Default.Description, label = "Términos y Condiciones", onClick = onTerms)
                 }
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            TextButton(
-                onClick = { viewModel.logout() },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                colors = ButtonDefaults.textButtonColors(contentColor = SolennixTheme.colors.error)
-            ) {
-                Icon(Icons.Default.Logout, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Cerrar Sesion")
             }
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -226,6 +214,19 @@ fun SettingsItemValue(
         modifier = Modifier.clickable(onClick = onClick)
     )
     HorizontalDivider(modifier = Modifier.padding(start = 56.dp), color = SolennixTheme.colors.divider.copy(alpha = 0.5f))
+}
+
+@Composable
+fun LogoutItem(onClick: () -> Unit) {
+    ListItem(
+        headlineContent = {
+            Text("Cerrar Sesión", color = SolennixTheme.colors.error)
+        },
+        leadingContent = {
+            Icon(Icons.Default.Logout, contentDescription = null, tint = SolennixTheme.colors.error)
+        },
+        modifier = Modifier.clickable(onClick = onClick)
+    )
 }
 
 @Composable
