@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
 import {
   Users,
@@ -16,14 +16,10 @@ import {
   Percent,
   XCircle,
 } from "lucide-react";
-import {
-  adminService,
-  PlatformStats,
-  SubscriptionOverview,
-  AdminUser,
-} from "@/services/adminService";
-import { logError } from "@/lib/errorHandler";
 import clsx from "clsx";
+import { useQueryClient } from "@tanstack/react-query";
+import { useAdminStats, useAdminSubscriptions, useAdminUsers } from "@/hooks/queries/useAdminQueries";
+import { queryKeys } from "@/hooks/queries/queryKeys";
 import {
   PieChart,
   Pie,
@@ -38,42 +34,22 @@ import {
 } from "recharts";
 
 export const AdminDashboard: React.FC = () => {
-  const [stats, setStats] = useState<PlatformStats | null>(null);
-  const [subs, setSubs] = useState<SubscriptionOverview | null>(null);
-  const [topUsers, setTopUsers] = useState<AdminUser[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const qc = useQueryClient();
+  const { data: stats = null, isLoading: statsLoading, error: statsError } = useAdminStats();
+  const { data: subs = null } = useAdminSubscriptions();
+  const { data: usersData = [] } = useAdminUsers();
 
-  const loadData = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const [statsData, subsData, usersData] = await Promise.all([
-        adminService.getStats(),
-        adminService.getSubscriptions(),
-        adminService.getUsers(),
-      ]);
-      setStats(statsData);
-      setSubs(subsData);
-      const sorted = [...(usersData || [])].sort(
-        (a, b) =>
-          b.events_count +
-          b.clients_count +
-          b.products_count -
-          (a.events_count + a.clients_count + a.products_count),
-      );
-      setTopUsers(sorted.slice(0, 5));
-    } catch (err) {
-      logError("Admin: failed to load stats", err);
-      setError("Error al cargar las estadísticas. Intenta recargar.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const loading = statsLoading;
+  const error = statsError ? "Error al cargar las estadísticas. Intenta recargar." : null;
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  const topUsers = useMemo(() => {
+    const sorted = [...usersData].sort(
+      (a, b) =>
+        b.events_count + b.clients_count + b.products_count -
+        (a.events_count + a.clients_count + a.products_count),
+    );
+    return sorted.slice(0, 5);
+  }, [usersData]);
 
   // Derived metrics
   const paidUsers = (stats?.pro_users ?? 0) + (stats?.premium_users ?? 0);
@@ -176,7 +152,7 @@ export const AdminDashboard: React.FC = () => {
           </Link>
           <button
             type="button"
-            onClick={loadData}
+            onClick={() => qc.invalidateQueries({ queryKey: queryKeys.admin.stats })}
             className="p-2 text-text-secondary hover:text-primary transition-colors"
             aria-label="Recargar estadísticas"
           >

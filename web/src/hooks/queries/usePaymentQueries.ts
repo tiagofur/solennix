@@ -15,6 +15,22 @@ export function usePaymentsByEvent(eventId: string | undefined) {
   });
 }
 
+export function usePaymentsByEventIds(eventIds: string[]) {
+  return useQuery({
+    queryKey: ['payments', 'byEventIds', ...eventIds.sort()] as const,
+    queryFn: () => paymentService.getByEventIds(eventIds),
+    enabled: eventIds.length > 0,
+  });
+}
+
+export function usePaymentsByDateRange(start: string, end: string) {
+  return useQuery({
+    queryKey: queryKeys.payments.byDateRange(start, end),
+    queryFn: () => paymentService.getByPaymentDateRange(start, end),
+    enabled: !!start && !!end,
+  });
+}
+
 // ── Mutations ──
 
 export function useCreatePayment() {

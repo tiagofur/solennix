@@ -1,8 +1,5 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { eventService } from "../services/eventService";
-import { inventoryService } from "../services/inventoryService";
-import { paymentService } from "../services/paymentService";
 import { Event, Payment, InventoryItem } from "../types/entities";
 import { addDays, differenceInCalendarDays, endOfMonth, format, startOfMonth } from "date-fns";
 import { es } from "date-fns/locale";
@@ -23,8 +20,11 @@ import {
   FileText,
   Zap,
 } from "lucide-react";
-import { clientService } from "../services/clientService";
 import { logError } from "../lib/errorHandler";
+import { useEvents, useUpcomingEvents, useEventsByDateRange } from "../hooks/queries/useEventQueries";
+import { useClients } from "../hooks/queries/useClientQueries";
+import { useInventoryItems } from "../hooks/queries/useInventoryQueries";
+import { usePaymentsByDateRange, usePaymentsByEventIds } from "../hooks/queries/usePaymentQueries";
 import {
   getEventNetSales,
   getEventTaxAmount,
@@ -227,10 +227,7 @@ function EventStatusBar({ data, loading }: { data: StatusSegment[]; loading: boo
 }
 
 // ── Upcoming Event Card ─────────────────────────────────────────
-function UpcomingEventCard({ event, onStatusChange }: {
-  event: DashboardEvent;
-  onStatusChange: (id: string, status: EventStatus) => void;
-}) {
+function UpcomingEventCard({ event }: { event: DashboardEvent }) {
   const navigate = useNavigate();
   const dateObj = new Date(event.event_date + "T12:00:00");
   return (
@@ -247,8 +244,7 @@ function UpcomingEventCard({ event, onStatusChange }: {
         <p className="text-xs text-text-secondary truncate mt-0.5">{event.service_type} · {event.num_people} pax</p>
       </div>
       <div onClick={(e) => e.stopPropagation()}>
-        <StatusDropdown eventId={event.id} currentStatus={event.status as EventStatus}
-          onStatusChange={(newStatus) => onStatusChange(event.id, newStatus)} />
+        <StatusDropdown eventId={event.id} currentStatus={event.status as EventStatus} />
       </div>
     </div>
   );
@@ -358,146 +354,97 @@ export const Dashboard: React.FC = () => {
 
   const { isBasicPlan, canCreateEvent, eventsThisMonth, limit } = usePlanLimits();
 
-  const [eventsThisMonthList, setEventsThisMonthList] = useState<DashboardEvent[]>([]);
-  const [upcomingEvents, setUpcomingEvents] = useState<DashboardEvent[]>([]);
-  const [lowStockItems, setLowStockItems] = useState<InventoryItem[]>([]);
-  const [netSalesThisMonth, setNetSalesThisMonth] = useState(0);
-  const [cashCollectedThisMonth, setCashCollectedThisMonth] = useState(0);
-  const [vatCollectedThisMonth, setVatCollectedThisMonth] = useState(0);
-  const [vatOutstandingThisMonth, setVatOutstandingThisMonth] = useState(0);
-  const [lowStockCount, setLowStockCount] = useState(0);
+  // ── Date range for current month ──
+  const today = useMemo(() => new Date(), []);
+  const monthStart = useMemo(() => format(startOfMonth(today), "yyyy-MM-dd"), [today]);
+  const monthEnd = useMemo(() => format(endOfMonth(today), "yyyy-MM-dd"), [today]);
 
-  const [clientCount, setClientCount] = useState(0);
-  const [loadingClients, setLoadingClients] = useState(true);
-  const [loadingMonth, setLoadingMonth] = useState(true);
-  const [loadingUpcoming, setLoadingUpcoming] = useState(true);
-  const [loadingAttention, setLoadingAttention] = useState(true);
-  const [loadingInventory, setLoadingInventory] = useState(true);
-  const [attentionEvents, setAttentionEvents] = useState<DashboardEvent[]>([]);
-  const [attentionPaidByEvent, setAttentionPaidByEvent] = useState<Record<string, number>>({});
-  const [error, setError] = useState<string | null>(null);
+  // ── Queries via React Query (cached, parallel, automatic) ──
+  const { data: eventsThisMonthList = [], isLoading: loadingMonth } = useEventsByDateRange(monthStart, monthEnd);
+  const { data: upcomingEvents = [], isLoading: loadingUpcoming } = useUpcomingEvents(5);
+  const { data: allEvents = [], isLoading: loadingAttention } = useEvents();
+  const { data: inventoryData = [], isLoading: loadingInventory } = useInventoryItems();
+  const { data: clients = [], isLoading: loadingClients } = useClients();
+  const { data: paymentsInMonth = [] } = usePaymentsByDateRange(monthStart, monthEnd);
 
-  const loadDashboardData = useCallback(() => {
-    setError(null);
-    setLoadingMonth(true);
-    setLoadingUpcoming(true);
-    setLoadingAttention(true);
-    setLoadingInventory(true);
+  const attentionEvents = allEvents as DashboardEvent[];
+  const clientCount = clients.length;
+  const error: string | null = null;
 
-    const today = new Date();
-    const start = format(startOfMonth(today), "yyyy-MM-dd");
-    const end = format(endOfMonth(today), "yyyy-MM-dd");
+  // ── Derived: low stock items ──
+  const lowStockItems = useMemo(
+    () => inventoryData.filter((item) => item.minimum_stock > 0 && item.current_stock <= item.minimum_stock),
+    [inventoryData],
+  );
+  const lowStockCount = lowStockItems.length;
 
-    // 1. Load Month Events
-    eventService
-      .getByDateRange(start, end)
-      .then(async (data) => {
-        setEventsThisMonthList(data || []);
+  // ── Derived: realized event IDs for payment query ──
+  const realizedEvents = useMemo(
+    () => eventsThisMonthList.filter((e) => e.status === "confirmed" || e.status === "completed"),
+    [eventsThisMonthList],
+  );
+  const realizedEventIds = useMemo(() => realizedEvents.map((e) => e.id), [realizedEvents]);
+  const { data: eventPayments = [] } = usePaymentsByEventIds(realizedEventIds);
 
-        const realized = (data || []).filter(
-          (e) => e.status === "confirmed" || e.status === "completed",
-        );
-        const netSales = realized.reduce((sum, event) => sum + getEventNetSales(event), 0);
-        setNetSalesThisMonth(netSales);
-
-        const eventIds = realized.map((e) => e.id);
-        const payments = await paymentService.getByEventIds(eventIds);
-        const paidByEvent: Record<string, number> = {};
-        payments.forEach((p: Payment) => {
-          paidByEvent[p.event_id] = (paidByEvent[p.event_id] || 0) + Number(p.amount || 0);
-        });
-
-        const paymentsInMonth = await paymentService.getByPaymentDateRange(start, end);
-        const cashInMonth = (paymentsInMonth || []).reduce(
-          (sum: number, p: Payment) => sum + Number(p.amount || 0), 0,
-        );
-        setCashCollectedThisMonth(cashInMonth);
-
-        const vatCollected = realized.reduce((sum, event) => {
-          const totalCharged = getEventTotalCharged(event);
-          const paid = paidByEvent[event.id] || 0;
-          const ratio = totalCharged > 0 ? Math.min(paid / totalCharged, 1) : 0;
-          return sum + getEventTaxAmount(event) * ratio;
-        }, 0);
-        setVatCollectedThisMonth(vatCollected);
-
-        const vatOutstanding = realized.reduce((sum, event) => {
-          const totalCharged = getEventTotalCharged(event);
-          const paid = paidByEvent[event.id] || 0;
-          const ratio = totalCharged > 0 ? Math.min(paid / totalCharged, 1) : 0;
-          const vat = getEventTaxAmount(event);
-          return sum + (vat - vat * ratio);
-        }, 0);
-        setVatOutstandingThisMonth(vatOutstanding);
+  // ── Derived: attention event IDs for payment query ──
+  const attentionCandidateIds = useMemo(() => {
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const confirmedCutoff = addDays(todayStart, 7);
+    return attentionEvents
+      .filter((event) => {
+        const eventDate = parseDashboardEventDate(event.event_date);
+        return event.status === "confirmed" && eventDate >= todayStart && eventDate <= confirmedCutoff;
       })
-      .catch((err) => {
-        logError("Error loading month events", err);
-        setError("Error al cargar los datos del mes. Intenta recargar.");
-      })
-      .finally(() => setLoadingMonth(false));
+      .map((event) => event.id);
+  }, [attentionEvents]);
+  const { data: attentionPayments = [] } = usePaymentsByEventIds(attentionCandidateIds);
 
-    // 2. Load Upcoming Events
-    eventService
-      .getUpcoming(5)
-      .then((data) => setUpcomingEvents(data || []))
-      .catch((err) => {
-        logError("Error loading upcoming events", err);
-        setError("Error de conexión o permisos. Verifica tu sesión o intenta más tarde.");
-      })
-      .finally(() => setLoadingUpcoming(false));
+  // ── Derived: financial metrics (pure computation from cached data) ──
+  const netSalesThisMonth = useMemo(
+    () => realizedEvents.reduce((sum, event) => sum + getEventNetSales(event), 0),
+    [realizedEvents],
+  );
 
-    // 2.5. Load attention alerts data
-    eventService
-      .getAll()
-      .then(async (data) => {
-        const events = data || [];
-        setAttentionEvents(events);
+  const cashCollectedThisMonth = useMemo(
+    () => (paymentsInMonth || []).reduce((sum: number, p: Payment) => sum + Number(p.amount || 0), 0),
+    [paymentsInMonth],
+  );
 
-        const todayStart = new Date();
-        todayStart.setHours(0, 0, 0, 0);
-        const confirmedCutoff = addDays(todayStart, 7);
+  const paidByEvent = useMemo(() => {
+    const map: Record<string, number> = {};
+    eventPayments.forEach((p: Payment) => {
+      map[p.event_id] = (map[p.event_id] || 0) + Number(p.amount || 0);
+    });
+    return map;
+  }, [eventPayments]);
 
-        const candidateIds = events
-          .filter((event) => {
-            const eventDate = parseDashboardEventDate(event.event_date);
-            return event.status === "confirmed" && eventDate >= todayStart && eventDate <= confirmedCutoff;
-          })
-          .map((event) => event.id);
+  const vatCollectedThisMonth = useMemo(() =>
+    realizedEvents.reduce((sum, event) => {
+      const totalCharged = getEventTotalCharged(event);
+      const paid = paidByEvent[event.id] || 0;
+      const ratio = totalCharged > 0 ? Math.min(paid / totalCharged, 1) : 0;
+      return sum + getEventTaxAmount(event) * ratio;
+    }, 0),
+  [realizedEvents, paidByEvent]);
 
-        const payments = await paymentService.getByEventIds(candidateIds);
-        const paidByEvent: Record<string, number> = {};
-        payments.forEach((payment: Payment) => {
-          paidByEvent[payment.event_id] = (paidByEvent[payment.event_id] || 0) + Number(payment.amount || 0);
-        });
-        setAttentionPaidByEvent(paidByEvent);
-      })
-      .catch((err) => {
-        logError("Error loading dashboard attention events", err);
-        setAttentionEvents([]);
-        setAttentionPaidByEvent({});
-      })
-      .finally(() => setLoadingAttention(false));
+  const vatOutstandingThisMonth = useMemo(() =>
+    realizedEvents.reduce((sum, event) => {
+      const totalCharged = getEventTotalCharged(event);
+      const paid = paidByEvent[event.id] || 0;
+      const ratio = totalCharged > 0 ? Math.min(paid / totalCharged, 1) : 0;
+      const vat = getEventTaxAmount(event);
+      return sum + (vat - vat * ratio);
+    }, 0),
+  [realizedEvents, paidByEvent]);
 
-    // 3. Load Inventory Alerts
-    inventoryService
-      .getAll()
-      .then((data) => {
-        const items = (data || []).filter((item) => item.minimum_stock > 0 && item.current_stock <= item.minimum_stock);
-        setLowStockCount(items.length);
-        setLowStockItems(items.slice(0, 5));
-      })
-      .catch((err) => logError("Error loading inventory", err))
-      .finally(() => setLoadingInventory(false));
-
-    // 4. Load Client Count
-    setLoadingClients(true);
-    clientService.getAll()
-      .then((data) => setClientCount((data || []).length))
-      .catch((err) => logError("Error loading clients", err))
-      .finally(() => setLoadingClients(false));
-  }, []);
-
-  useEffect(() => { loadDashboardData(); }, [loadDashboardData]);
+  const attentionPaidByEvent = useMemo(() => {
+    const map: Record<string, number> = {};
+    attentionPayments.forEach((payment: Payment) => {
+      map[payment.event_id] = (map[payment.event_id] || 0) + Number(payment.amount || 0);
+    });
+    return map;
+  }, [attentionPayments]);
 
   useEffect(() => {
     if (searchParams.has("session_id")) {
@@ -641,7 +588,7 @@ export const Dashboard: React.FC = () => {
           <div className="flex-1 text-sm">{error}</div>
           <button
             type="button"
-            onClick={loadDashboardData}
+            onClick={() => window.location.reload()}
             className="text-xs font-bold underline underline-offset-2 shrink-0"
           >
             Recargar
@@ -845,11 +792,7 @@ export const Dashboard: React.FC = () => {
         ) : upcomingEvents.length > 0 ? (
           <div className="p-4 space-y-3">
             {upcomingEvents.map((event) => (
-              <UpcomingEventCard key={event.id} event={event}
-                onStatusChange={(id, newStatus) => {
-                  setUpcomingEvents((prev) => prev.map((ev) => (ev.id === id ? { ...ev, status: newStatus } : ev)));
-                  setAttentionEvents((prev) => prev.map((ev) => (ev.id === id ? { ...ev, status: newStatus } : ev)));
-                }} />
+              <UpcomingEventCard key={event.id} event={event} />
             ))}
           </div>
         ) : (

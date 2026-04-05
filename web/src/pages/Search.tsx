@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   Search as SearchIcon,
@@ -10,8 +10,7 @@ import {
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import Empty from "../components/Empty";
-import { logError } from "../lib/errorHandler";
-import { SearchResults, searchService } from "../services/searchService";
+import { useSearch } from "../hooks/queries/useSearchQueries";
 
 const STATUS_LABELS: Record<string, string> = {
   quoted: "Cotizado",
@@ -31,55 +30,19 @@ const formatEventDate = (value: string) => {
 export const SearchPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const query = (searchParams.get("q") || "").trim();
-  const [results, setResults] = useState<SearchResults>({
-    client: [],
-    event: [],
-    product: [],
-    inventory: [],
-  });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let isMounted = true;
-
-    const runSearch = async () => {
-      if (!query) {
-        setResults({ client: [], event: [], product: [], inventory: [] });
-        return;
-      }
-
-      setLoading(true);
-      setError(null);
-
-      try {
-        const data = await searchService.searchAll(query);
-        if (isMounted) setResults(data);
-      } catch (err) {
-        logError("Error running global search", err);
-        if (isMounted) {
-          setError("No pudimos completar la búsqueda. Intenta de nuevo.");
-        }
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    };
-
-    runSearch();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [query]);
+  const { data: results, isLoading: loading, error: searchError } = useSearch(query);
+  const safeResults = results ?? { client: [], event: [], product: [], inventory: [] };
+  const error = searchError ? "No pudimos completar la búsqueda. Intenta de nuevo." : null;
 
   const totalResults = useMemo(() => {
     return (
-      (results.client?.length || 0) +
-      (results.event?.length || 0) +
-      (results.product?.length || 0) +
-      (results.inventory?.length || 0)
+      (safeResults.client?.length || 0) +
+      (safeResults.event?.length || 0) +
+      (safeResults.product?.length || 0) +
+      (safeResults.inventory?.length || 0)
     );
-  }, [results]);
+  }, [safeResults]);
 
   if (!query) {
     return (
@@ -142,16 +105,16 @@ export const SearchPage: React.FC = () => {
         </div>
       </div>
 
-      {results.client.length > 0 && (
+      {safeResults.client.length > 0 && (
         <section className="bg-card rounded-lg shadow-xs border border-border overflow-hidden mt-6">
           <div className="px-4 py-3 border-b border-border bg-surface-alt flex items-center justify-between">
             <h2 className="font-semibold text-text flex items-center">
               <Users className="h-4 w-4 mr-2 text-info" aria-hidden="true" />
-              Clientes ({results.client.length})
+              Clientes ({safeResults.client.length})
             </h2>
           </div>
           <ul className="divide-y divide-border">
-            {results.client.map((client) => (
+            {safeResults.client.map((client) => (
               <li key={client.id}>
                 <Link
                   to={client.href}
@@ -180,11 +143,11 @@ export const SearchPage: React.FC = () => {
         </section>
       )}
 
-      {results.event.length > 0 && (
+      {safeResults.event.length > 0 && (
         <section className="space-y-3">
           <h2 className="text-lg font-semibold text-text">Eventos</h2>
           <div className="grid gap-3 md:grid-cols-2">
-            {results.event.map((event) => (
+            {safeResults.event.map((event) => (
               <Link
                 key={event.id}
                 to={event.href}
@@ -209,11 +172,11 @@ export const SearchPage: React.FC = () => {
         </section>
       )}
 
-      {results.product.length > 0 && (
+      {safeResults.product.length > 0 && (
         <section className="space-y-3">
           <h2 className="text-lg font-semibold text-text">Productos</h2>
           <div className="grid gap-3 md:grid-cols-2">
-            {results.product.map((product) => (
+            {safeResults.product.map((product) => (
               <Link
                 key={product.id}
                 to={product.href}
@@ -236,11 +199,11 @@ export const SearchPage: React.FC = () => {
         </section>
       )}
 
-      {results.inventory.length > 0 && (
+      {safeResults.inventory.length > 0 && (
         <section className="space-y-3">
           <h2 className="text-lg font-semibold text-text">Inventario</h2>
           <div className="grid gap-3 md:grid-cols-2">
-            {results.inventory.map((item) => (
+            {safeResults.inventory.map((item) => (
               <Link
                 key={item.id}
                 to={item.href}

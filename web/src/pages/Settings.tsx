@@ -18,7 +18,8 @@ import { Link, useSearchParams } from "react-router-dom";
 import clsx from "clsx";
 import { logError } from "@/lib/errorHandler";
 import { api, getAssetUrl } from "@/lib/api";
-import { subscriptionService, SubscriptionStatus } from "@/services/subscriptionService";
+import { subscriptionService } from "@/services/subscriptionService";
+import { useSubscriptionStatus } from "@/hooks/queries/useSubscriptionQueries";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { useToast } from "@/hooks/useToast";
 import { useTheme } from "@/hooks/useTheme";
@@ -87,7 +88,7 @@ export const Settings: React.FC = () => {
     profile?.brand_color || "#C4A265"
   );
   const [isPortalLoading, setIsPortalLoading] = useState(false);
-  const [subStatus, setSubStatus] = useState<SubscriptionStatus | null>(null);
+  const { data: subStatus = null } = useSubscriptionStatus();
   const [showBusinessNameInPdf, setShowBusinessNameInPdf] = useState(
     profile?.show_business_name_in_pdf ?? true,
   );
@@ -117,11 +118,6 @@ export const Settings: React.FC = () => {
     }
   }, [profile]);
 
-  useEffect(() => {
-    if (activeTab === "subscription") {
-      subscriptionService.getStatus().then(setSubStatus).catch(() => {});
-    }
-  }, [activeTab]);
 
 
   const handleUpdateBusinessName = async () => {

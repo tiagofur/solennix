@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Users,
@@ -19,13 +19,15 @@ import {
   X,
   Calendar,
 } from 'lucide-react';
-import { adminService, AdminUser } from '@/services/adminService';
-import { logError } from '@/lib/errorHandler';
+import { AdminUser } from '@/services/adminService';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { useToast } from '@/hooks/useToast';
 import clsx from 'clsx';
 import { format, parseISO, differenceInDays, isPast } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { useQueryClient } from '@tanstack/react-query';
+import { useAdminUsers, useUpgradeUser } from '@/hooks/queries/useAdminQueries';
+import { queryKeys } from '@/hooks/queries/queryKeys';
 
 type PlanFilter = 'all' | 'basic' | 'pro' | 'premium';
 type SortField = 'name' | 'plan' | 'activity' | 'created_at';
@@ -81,35 +83,19 @@ const minGiftDate = () => {
 };
 
 export const AdminUsers: React.FC = () => {
-  const [users, setUsers] = useState<AdminUser[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const qc = useQueryClient();
+  const { data: users = [], isLoading: loading, error: usersError } = useAdminUsers();
+  const upgradeUser = useUpgradeUser();
+  const error = usersError ? 'Error al cargar usuarios.' : null;
   const [searchQuery, setSearchQuery] = useState('');
   const [planFilter, setPlanFilter] = useState<PlanFilter>('all');
-  const [saving, setSaving] = useState<string | null>(null);
   const [sortField, setSortField] = useState<SortField>('created_at');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [gift, setGift] = useState<GiftState | null>(null);
   const [downgradeTarget, setDowngradeTarget] = useState<AdminUser | null>(null);
   const { addToast } = useToast();
 
-  const loadUsers = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await adminService.getUsers();
-      setUsers(data);
-    } catch (err) {
-      logError('Admin: failed to load users', err);
-      setError('Error al cargar usuarios.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadUsers();
-  }, []);
+  const saving = upgradeUser.isPending ? (upgradeUser.variables?.id ?? null) : null;
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -129,61 +115,44 @@ export const AdminUsers: React.FC = () => {
     });
   };
 
-  const handleGiftConfirm = async () => {
+  const handleGiftConfirm = () => {
     if (!gift!.noExpiry && !gift!.expiresAt) {
       addToast('Selecciona una fecha de vencimiento o marca "Sin vencimiento".', 'error');
       return;
     }
 
-    setSaving(gift!.user.id);
-    try {
-      const expiresAt = gift!.noExpiry ? null : gift!.expiresAt;
-      const updated = await adminService.upgradeUser(gift!.user.id, gift!.plan, expiresAt);
-      setUsers((prev) =>
-        prev.map((u) =>
-          u.id === gift!.user.id
-            ? { ...u, plan: updated.plan, plan_expires_at: updated.plan_expires_at }
-            : u,
-        ),
-      );
-      const label = gift!.noExpiry
-        ? `${gift!.user.name} ahora tiene plan ${gift!.plan} (permanente) ✓`
-        : `${gift!.user.name} tiene plan ${gift!.plan} hasta ${format(parseISO(gift!.expiresAt!), 'd MMM yyyy', { locale: es })} ✓`;
-      addToast(label, 'success');
-      setGift(null);
-    } catch (err: unknown) {
-      logError('Admin: failed to gift plan', err);
-      addToast(err instanceof Error ? err.message : 'Error al asignar el plan.', 'error');
-    } finally {
-      setSaving(null);
-    }
+    const expiresAt = gift!.noExpiry ? null : gift!.expiresAt;
+    const userName = gift!.user.name;
+    const plan = gift!.plan;
+
+    upgradeUser.mutate(
+      { id: gift!.user.id, plan, expiresAt },
+      {
+        onSuccess: () => {
+          const label = gift!.noExpiry
+            ? `${userName} ahora tiene plan ${plan} (permanente)`
+            : `${userName} tiene plan ${plan} hasta ${format(parseISO(gift!.expiresAt!), 'd MMM yyyy', { locale: es })}`;
+          addToast(label, 'success');
+          setGift(null);
+        },
+      },
+    );
   };
 
   const handleDowngrade = (user: AdminUser) => {
     setDowngradeTarget(user);
   };
 
-  const handleDowngradeConfirm = async () => {
+  const handleDowngradeConfirm = () => {
     if (!downgradeTarget) return;
     const user = downgradeTarget;
     setDowngradeTarget(null);
-    setSaving(user.id);
-    try {
-      const updated = await adminService.upgradeUser(user.id, 'basic', null);
-      setUsers((prev) =>
-        prev.map((u) =>
-          u.id === user.id
-            ? { ...u, plan: updated.plan, plan_expires_at: null }
-            : u,
-        ),
-      );
-      addToast(`${user.name} ahora tiene plan Basic ✓`, 'success');
-    } catch (err: unknown) {
-      logError('Admin: failed to downgrade user', err);
-      addToast(err instanceof Error ? err.message : 'Error al actualizar el plan.', 'error');
-    } finally {
-      setSaving(null);
-    }
+    upgradeUser.mutate(
+      { id: user.id, plan: 'basic', expiresAt: null },
+      {
+        onSuccess: () => addToast(`${user.name} ahora tiene plan Basic`, 'success'),
+      },
+    );
   };
 
   const exportCSV = () => {
@@ -410,7 +379,7 @@ export const AdminUsers: React.FC = () => {
           </button>
           <button
             type="button"
-            onClick={loadUsers}
+            onClick={() => qc.invalidateQueries({ queryKey: queryKeys.admin.users })}
             className="p-2 text-text-secondary hover:text-primary transition-colors"
             aria-label="Recargar usuarios"
           >
