@@ -14,19 +14,16 @@
 
 ### 1.1 React Query / TanStack Query
 
-> [!done] Fundación completada — 2026-04-04
-> Instalación, QueryClient, queryKeys, provider, devtools, y dominio Clientes migrado completo.
+> [!done] Clients + Products + Inventory migrados — 2026-04-04
+> Foundation completa. 3 de 4 dominios core migrados. 17 hooks creados, 9 páginas migradas.
 
 - [x] Instalar `@tanstack/react-query` + devtools
 - [x] Crear `queryClient.ts` con error handling global (logError + toast)
 - [x] Crear `queryKeys.ts` — key factory centralizada para todos los dominios
 - [x] Wiring `QueryClientProvider` + `ReactQueryDevtools` en `App.tsx`
-- [x] Migrar `clientService` → `useClientQueries.ts` (6 hooks)
-- [x] Migrar `ClientList.tsx` → `useClients()` + `useDeleteClient()`
-- [x] Migrar `ClientForm.tsx` → `useClient()` + create/update mutations
-- [x] Migrar `ClientDetails.tsx` → queries paralelos + delete mutation
-- [ ] Migrar `productService` → `useProductQueries.ts` + ProductList, ProductForm, ProductDetails
-- [ ] Migrar `inventoryService` → `useInventoryQueries.ts` + InventoryList, InventoryForm, InventoryDetails
+- [x] Migrar `clientService` → `useClientQueries.ts` (6 hooks) + ClientList, ClientForm, ClientDetails
+- [x] Migrar `productService` → `useProductQueries.ts` (6 hooks) + ProductList, ProductForm, ProductDetails
+- [x] Migrar `inventoryService` → `useInventoryQueries.ts` (5 hooks) + InventoryList, InventoryForm, InventoryDetails
 - [ ] Migrar `eventService` (completar) → EventList, EventForm, EventSummary
 - [ ] Migrar `paymentService`, `searchService`, `adminService`, `subscriptionService`
 - [ ] Migrar componentes compartidos: StatusDropdown, OnboardingChecklist, PendingEventsModal
