@@ -590,10 +590,7 @@ describe('EventForm', () => {
     await waitFor(() => {
       expect(productService.getIngredients).toHaveBeenCalledWith('p1');
     });
-
-    await waitFor(() => {
-      expect(logError).toHaveBeenCalledWith('Error fetching ingredients for products', error);
-    });
+    // Error is handled by React Query's global error handler, not inline logError
   });
 
   it('saves items with updated products and extras', async () => {
