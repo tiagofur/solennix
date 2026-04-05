@@ -62,6 +62,59 @@ function sortItems(
   });
 }
 
+const InlineStockCell: React.FC<{
+  item: InventoryItem;
+  isLowStock: boolean;
+  onSave: (newStock: number) => void;
+}> = ({ item, isLowStock, onSave }) => {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(String(item.current_stock));
+
+  const handleSave = () => {
+    setEditing(false);
+    const newStock = Math.max(0, Number(value) || 0);
+    if (newStock !== item.current_stock) {
+      onSave(newStock);
+    }
+  };
+
+  if (editing) {
+    return (
+      <input
+        type="number"
+        min="0"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onBlur={handleSave}
+        onKeyDown={(e) => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') setEditing(false); }}
+        className="w-20 text-sm border border-primary rounded-lg px-2 py-1 bg-card text-text focus:ring-2 focus:ring-primary/20 focus:outline-none"
+        autoFocus
+        aria-label={`Editar stock de ${item.ingredient_name}`}
+      />
+    );
+  }
+
+  return (
+    <div className="flex items-center">
+      <button
+        type="button"
+        onClick={() => { setValue(String(item.current_stock)); setEditing(true); }}
+        className={clsx(
+          "text-sm font-medium hover:underline hover:text-primary transition-colors cursor-text",
+          isLowStock ? "text-error font-bold" : "text-text",
+        )}
+        aria-label={`Click para editar stock de ${item.ingredient_name}: ${item.current_stock}`}
+        title="Click para editar"
+      >
+        {item.current_stock}
+      </button>
+      {isLowStock && (
+        <AlertTriangle className="h-4 w-4 text-error ml-2" aria-hidden="true" />
+      )}
+    </div>
+  );
+};
+
 export const InventoryList: React.FC = () => {
   const navigate = useNavigate();
   const { data: items = [], isLoading: loading } = useInventoryItems();
@@ -310,23 +363,26 @@ export const InventoryList: React.FC = () => {
                     Unidad: {item.unit}
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <span
-                      className={clsx(
-                        "text-sm font-medium",
-                        isLowStock ? "text-error font-bold" : "text-text",
-                      )}
-                    >
-                      {item.current_stock}
-                    </span>
-                    {isLowStock && (
-                      <AlertTriangle
-                        className="h-4 w-4 text-error ml-2"
-                        aria-hidden="true"
-                      />
-                    )}
-                  </div>
+                <td className="px-6 py-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                  <InlineStockCell
+                    item={item}
+                    isLowStock={isLowStock}
+                    onSave={(newStock) => {
+                      updateItem.mutate({
+                        id: item.id,
+                        data: {
+                          ingredient_name: item.ingredient_name,
+                          current_stock: newStock,
+                          minimum_stock: item.minimum_stock,
+                          unit: item.unit,
+                          unit_cost: item.unit_cost,
+                          type: item.type,
+                        },
+                      }, {
+                        onSuccess: () => addToast(`Stock de ${item.ingredient_name} actualizado.`, "success"),
+                      });
+                    }}
+                  />
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
                   {item.minimum_stock}
