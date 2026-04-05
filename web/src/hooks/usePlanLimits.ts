@@ -1,11 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { eventService } from '../services/eventService';
-import { clientService } from '../services/clientService';
-import { productService } from '../services/productService';
-import { inventoryService } from '../services/inventoryService';
 import { startOfMonth, endOfMonth, format } from 'date-fns';
-import { logError } from '../lib/errorHandler';
+import { useEventsByDateRange } from './queries/useEventQueries';
+import { useClients } from './queries/useClientQueries';
+import { useProducts } from './queries/useProductQueries';
+import { useInventoryItems } from './queries/useInventoryQueries';
 
 const FREE_PLAN_LIMIT = 3;
 const CLIENT_LIMIT = 50;
@@ -13,59 +12,29 @@ const CATALOG_LIMIT = 20;
 
 export function usePlanLimits() {
   const { user } = useAuth();
-  const [eventsThisMonth, setEventsThisMonth] = useState(0);
-  const [clientsCount, setClientsCount] = useState(0);
-  const [catalogCount, setCatalogCount] = useState(0);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function checkLimits() {
-      if (!user) {
-        setLoading(false);
-        return;
-      }
-      
-      try {
-        setLoading(true);
-        // Calculate current month date range
-        const now = new Date();
-        const start = format(startOfMonth(now), 'yyyy-MM-dd');
-        const end = format(endOfMonth(now), 'yyyy-MM-dd');
-        
-        const isBasic = user.plan === 'basic' || !user.plan;
-
-        if (isBasic) {
-          const [events, clients, products, inventory] = await Promise.all([
-            eventService.getByDateRange(start, end).catch(() => []),
-            clientService.getAll().catch(() => []),
-            productService.getAll().catch(() => []),
-            inventoryService.getAll().catch(() => [])
-          ]);
-          setEventsThisMonth(events?.length || 0);
-          setClientsCount(clients?.length || 0);
-          setCatalogCount((products?.length || 0) + (inventory?.length || 0));
-        } else {
-          // Pro plan: just need events maybe for stats, but no hard limits block
-          const events = await eventService.getByDateRange(start, end).catch(() => []);
-          setEventsThisMonth(events?.length || 0);
-        }
-
-      } catch (error) {
-        logError("Error fetching plan limits", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    checkLimits();
-  }, [user]);
-
   const isBasicPlan = user?.plan === 'basic' || !user?.plan;
-  
+
+  const now = useMemo(() => new Date(), []);
+  const start = useMemo(() => format(startOfMonth(now), 'yyyy-MM-dd'), [now]);
+  const end = useMemo(() => format(endOfMonth(now), 'yyyy-MM-dd'), [now]);
+
+  // These queries share cache with list pages — zero additional requests
+  // if Dashboard, EventList, ClientList, etc. have already fetched them
+  const { data: monthEvents = [], isLoading: eventsLoading } = useEventsByDateRange(start, end);
+  const { data: clients = [], isLoading: clientsLoading } = useClients();
+  const { data: products = [], isLoading: productsLoading } = useProducts();
+  const { data: inventory = [], isLoading: inventoryLoading } = useInventoryItems();
+
+  const eventsThisMonth = monthEvents.length;
+  const clientsCount = clients.length;
+  const catalogCount = products.length + inventory.length;
+
+  const loading = eventsLoading || (isBasicPlan && (clientsLoading || productsLoading || inventoryLoading));
+
   const canCreateEvent = !isBasicPlan || eventsThisMonth < FREE_PLAN_LIMIT;
   const canCreateClient = !isBasicPlan || clientsCount < CLIENT_LIMIT;
   const canCreateCatalogItem = !isBasicPlan || catalogCount < CATALOG_LIMIT;
-  
+
   return {
     isBasicPlan,
     eventsThisMonth,
@@ -77,6 +46,6 @@ export function usePlanLimits() {
     canCreateEvent,
     canCreateClient,
     canCreateCatalogItem,
-    loading
+    loading,
   };
 }
