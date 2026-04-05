@@ -1,15 +1,14 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useForm, Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { inventoryService } from "../../services/inventoryService";
 import { useAuth } from "../../contexts/AuthContext";
 import { ArrowLeft, Save } from "lucide-react";
 import { Breadcrumb } from "../../components/Breadcrumb";
-import { logError } from "../../lib/errorHandler";
 import { usePlanLimits } from "../../hooks/usePlanLimits";
 import { UpgradeBanner } from "../../components/UpgradeBanner";
+import { useInventoryItem, useCreateInventoryItem, useUpdateInventoryItem } from "../../hooks/queries/useInventoryQueries";
 
 const COMMON_UNITS = [
   { value: "pieza", label: "Pieza (pza)" },
@@ -46,7 +45,6 @@ export const InventoryForm: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isCustomUnit, setIsCustomUnit] = useState(false);
 
@@ -56,6 +54,12 @@ export const InventoryForm: React.FC = () => {
     catalogLimit,
     loading: limitsLoading,
   } = usePlanLimits();
+
+  const { data: existingItem, isLoading: isLoadingItem } = useInventoryItem(id);
+  const createItem = useCreateInventoryItem();
+  const updateItemMutation = useUpdateInventoryItem();
+
+  const isLoading = isLoadingItem || createItem.isPending || updateItemMutation.isPending;
 
   const {
     register,
@@ -75,71 +79,43 @@ export const InventoryForm: React.FC = () => {
     },
   });
 
-  const loadItem = useCallback(async (itemId: string) => {
-    try {
-      setIsLoading(true);
-      const item = await inventoryService.getById(itemId);
-      if (!item) {
-        throw new Error("Item no encontrado");
-      }
-
-      const isCommon = COMMON_UNITS.some((u) => u.value === item.unit);
-      if (item.unit && !isCommon) {
-        setIsCustomUnit(true);
-      } else {
-        setIsCustomUnit(false);
-      }
+  useEffect(() => {
+    if (existingItem) {
+      const isCommon = COMMON_UNITS.some((u) => u.value === existingItem.unit);
+      setIsCustomUnit(existingItem.unit ? !isCommon : false);
 
       reset({
-        ingredient_name: item.ingredient_name || "",
+        ingredient_name: existingItem.ingredient_name || "",
         type:
-          (item.type as "ingredient" | "equipment" | "supply") || "ingredient",
-        current_stock: item.current_stock || 0,
-        minimum_stock: item.minimum_stock || 0,
-        unit: item.unit || "",
-        unit_cost: item.unit_cost || 0,
+          (existingItem.type as "ingredient" | "equipment" | "supply") || "ingredient",
+        current_stock: existingItem.current_stock || 0,
+        minimum_stock: existingItem.minimum_stock || 0,
+        unit: existingItem.unit || "",
+        unit_cost: existingItem.unit_cost || 0,
       });
-    } catch (err) {
-      logError("Error loading item", err);
-      setError("Error al cargar el ítem");
-    } finally {
-      setIsLoading(false);
     }
-  }, [reset]);
+  }, [existingItem, reset]);
 
-  useEffect(() => {
-    if (id) {
-      loadItem(id);
-    }
-  }, [id, loadItem]);
-
-  const onSubmit = async (data: InventoryFormData) => {
+  const onSubmit = (data: InventoryFormData) => {
     if (!user) return;
-
-    setIsLoading(true);
     setError(null);
 
-    try {
-      if (id) {
-        await inventoryService.update(id, {
-          ...data,
-          type: data.type || "ingredient",
-          unit_cost: data.unit_cost || null,
-        });
-      } else {
-        await inventoryService.create({
-          ...data,
-          user_id: user.id,
-          type: data.type || "ingredient",
-          unit_cost: data.unit_cost || null,
-        });
-      }
-      navigate("/inventory");
-    } catch (err: unknown) {
-      logError("Error saving item", err);
-      setError(err instanceof Error ? err.message : "Error al guardar el ítem");
-    } finally {
-      setIsLoading(false);
+    const payload = {
+      ...data,
+      type: data.type || "ingredient",
+      unit_cost: data.unit_cost || null,
+    };
+
+    if (id) {
+      updateItemMutation.mutate(
+        { id, data: payload },
+        { onSuccess: () => navigate("/inventory") },
+      );
+    } else {
+      createItem.mutate(
+        { ...payload, user_id: user.id },
+        { onSuccess: () => navigate("/inventory") },
+      );
     }
   };
 

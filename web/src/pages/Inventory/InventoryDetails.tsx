@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { inventoryService } from "../../services/inventoryService";
 import { eventService } from "../../services/eventService";
 import { productService } from "../../services/productService";
 import { InventoryItem } from "../../types/entities";
@@ -24,42 +23,31 @@ import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { Modal } from "../../components/Modal";
 import { SkeletonCard } from "../../components/Skeleton";
 import clsx from "clsx";
+import { useInventoryItem, useDeleteInventoryItem, useUpdateInventoryItem } from "../../hooks/queries/useInventoryQueries";
 
 type DemandEntry = { date: string; quantity: number };
 
 export const InventoryDetails: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [item, setItem] = useState<InventoryItem | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: item, isLoading: itemLoading, error: itemError } = useInventoryItem(id);
+  const deleteItemMutation = useDeleteInventoryItem();
+  const updateItemMutation = useUpdateInventoryItem();
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [adjustOpen, setAdjustOpen] = useState(false);
   const [adjustValue, setAdjustValue] = useState(0);
-  const [adjustSaving, setAdjustSaving] = useState(false);
   const [demandForecast, setDemandForecast] = useState<DemandEntry[]>([]);
   const [demandLoading, setDemandLoading] = useState(false);
   const { addToast } = useToast();
 
-  useEffect(() => {
-    if (id) {
-      loadItem(id);
-    }
-  }, [id]);
+  const loading = itemLoading;
+  const error = itemError ? "Error al cargar los datos del ítem." : null;
 
-  const loadItem = async (itemId: string) => {
-    try {
-      setLoading(true);
-      const itemData = await inventoryService.getById(itemId);
-      setItem(itemData);
-      loadDemandForecast(itemId, itemData);
-    } catch (err) {
-      logError("Error fetching inventory item details", err);
-      setError("Error al cargar los datos del ítem.");
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (id && item) {
+      loadDemandForecast(id, item);
     }
-  };
+  }, [id, item]);
 
   const loadDemandForecast = async (itemId: string, currentItem: InventoryItem) => {
     try {
@@ -149,18 +137,12 @@ export const InventoryDetails: React.FC = () => {
     }
   };
 
-  const handleDeleteItem = async () => {
+  const handleDeleteItem = () => {
     if (!id) return;
-    try {
-      await inventoryService.delete(id);
-      addToast("Ítem eliminado correctamente.", "success");
-      navigate("/inventory");
-    } catch (err) {
-      logError("Error deleting inventory item", err);
-      addToast("Error al eliminar el ítem de inventario.", "error");
-    } finally {
-      setConfirmDeleteOpen(false);
-    }
+    deleteItemMutation.mutate(id, {
+      onSuccess: () => navigate("/inventory"),
+      onSettled: () => setConfirmDeleteOpen(false),
+    });
   };
 
   const openAdjustModal = () => {
@@ -170,20 +152,17 @@ export const InventoryDetails: React.FC = () => {
     }
   };
 
-  const handleAdjustStock = async () => {
+  const handleAdjustStock = () => {
     if (!id || !item || adjustValue < 0) return;
-    setAdjustSaving(true);
-    try {
-      await inventoryService.update(id, { ...item, current_stock: adjustValue });
-      setItem((prev) => prev ? { ...prev, current_stock: adjustValue } : prev);
-      addToast("Stock actualizado correctamente.", "success");
-      setAdjustOpen(false);
-    } catch (err) {
-      logError("Error adjusting stock", err);
-      addToast("Error al actualizar el stock.", "error");
-    } finally {
-      setAdjustSaving(false);
-    }
+    updateItemMutation.mutate(
+      { id, data: { ...item, current_stock: adjustValue } },
+      {
+        onSuccess: () => {
+          addToast("Stock actualizado correctamente.", "success");
+          setAdjustOpen(false);
+        },
+      },
+    );
   };
 
   if (loading) {
@@ -334,10 +313,10 @@ export const InventoryDetails: React.FC = () => {
             <button
               type="button"
               onClick={handleAdjustStock}
-              disabled={adjustSaving || adjustValue === item.current_stock}
+              disabled={updateItemMutation.isPending || adjustValue === item.current_stock}
               className="flex-1 px-4 py-2.5 text-sm font-bold rounded-xl text-white premium-gradient shadow-md shadow-primary/20 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
-              {adjustSaving ? "Guardando..." : "Guardar"}
+              {updateItemMutation.isPending ? "Guardando..." : "Guardar"}
             </button>
           </div>
         </div>

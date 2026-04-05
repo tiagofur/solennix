@@ -1,6 +1,5 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { inventoryService } from "../../services/inventoryService";
 import { InventoryItem } from "../../types/entities";
 import {
   Plus,
@@ -22,11 +21,11 @@ import { RowActionMenu } from "../../components/RowActionMenu";
 import { exportToCsv } from "../../lib/exportCsv";
 import clsx from "clsx";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
-import { logError } from "../../lib/errorHandler";
 import Empty from "../../components/Empty";
 import { useToast } from "../../hooks/useToast";
 import { SkeletonTable } from "../../components/Skeleton";
 import { Modal } from "../../components/Modal";
+import { useInventoryItems, useDeleteInventoryItem, useUpdateInventoryItem } from "../../hooks/queries/useInventoryQueries";
 
 type SortKey =
   | "ingredient_name"
@@ -65,8 +64,9 @@ function sortItems(
 
 export const InventoryList: React.FC = () => {
   const navigate = useNavigate();
-  const [items, setItems] = useState<InventoryItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: items = [], isLoading: loading } = useInventoryItems();
+  const deleteItem = useDeleteInventoryItem();
+  const updateItem = useUpdateInventoryItem();
   const [searchTerm, setSearchTerm] = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
@@ -90,22 +90,6 @@ export const InventoryList: React.FC = () => {
     order: SortOrder;
   }>({ key: "ingredient_name", order: "asc" });
 
-  const fetchInventory = useCallback(async () => {
-    try {
-      const data = await inventoryService.getAll();
-      setItems(data || []);
-    } catch (error) {
-      logError("Error fetching inventory", error);
-      addToast("Error al cargar el inventario.", "error");
-    } finally {
-      setLoading(false);
-    }
-  }, [addToast]);
-
-  useEffect(() => {
-    fetchInventory();
-  }, [fetchInventory]);
-
   const lowStockItems = (items || []).filter(
     (item) =>
       item.minimum_stock > 0 && item.current_stock < item.minimum_stock,
@@ -116,23 +100,15 @@ export const InventoryList: React.FC = () => {
     setConfirmOpen(true);
   };
 
-  const confirmDelete = async () => {
+  const confirmDelete = () => {
     if (!pendingDeleteId) return;
     const id = pendingDeleteId;
     setConfirmOpen(false);
     setPendingDeleteId(null);
-
-    try {
-      await inventoryService.delete(id);
-      setItems((prev) => prev.filter((i) => i.id !== id));
-      addToast("Ítem de inventario eliminado correctamente.", "success");
-    } catch (error) {
-      logError("Error deleting item", error);
-      addToast("Error al eliminar el ítem de inventario.", "error");
-    }
+    deleteItem.mutate(id);
   };
 
-  const handleAdjustStock = async () => {
+  const handleAdjustStock = () => {
     if (!adjustingItem || !adjustmentValue) return;
 
     const change = parseFloat(adjustmentValue);
@@ -141,35 +117,27 @@ export const InventoryList: React.FC = () => {
       return;
     }
 
-    try {
-      const newStock = Math.max(0, adjustingItem.current_stock + change);
-      await inventoryService.update(adjustingItem.id, {
-        ingredient_name: adjustingItem.ingredient_name,
-        current_stock: newStock,
-        minimum_stock: adjustingItem.minimum_stock,
-        unit: adjustingItem.unit,
-        unit_cost: adjustingItem.unit_cost,
-        type: adjustingItem.type,
-      });
-
-      setItems((prev) =>
-        prev.map((item) =>
-          item.id === adjustingItem.id
-            ? { ...item, current_stock: newStock }
-            : item,
-        ),
-      );
-
-      addToast(
-        `Stock de ${adjustingItem.ingredient_name} actualizado.`,
-        "success",
-      );
-      setAdjustingItem(null);
-      setAdjustmentValue("");
-    } catch (error) {
-      logError("Error adjusting stock", error);
-      addToast("Error al actualizar el stock.", "error");
-    }
+    const newStock = Math.max(0, adjustingItem.current_stock + change);
+    updateItem.mutate(
+      {
+        id: adjustingItem.id,
+        data: {
+          ingredient_name: adjustingItem.ingredient_name,
+          current_stock: newStock,
+          minimum_stock: adjustingItem.minimum_stock,
+          unit: adjustingItem.unit,
+          unit_cost: adjustingItem.unit_cost,
+          type: adjustingItem.type,
+        },
+      },
+      {
+        onSuccess: () => {
+          addToast(`Stock de ${adjustingItem.ingredient_name} actualizado.`, "success");
+          setAdjustingItem(null);
+          setAdjustmentValue("");
+        },
+      },
+    );
   };
 
   const filteredItems = (items || []).filter((item) => {
