@@ -1,13 +1,13 @@
 import React from "react";
 
 /**
- * Base shimmer block — a single rounded rectangle with animate-pulse.
+ * Base shimmer block — a single rounded rectangle with animate-shimmer.
  */
 export const SkeletonLine: React.FC<{
   className?: string;
 }> = ({ className = "h-4 w-full" }) => (
   <div
-    className={`animate-pulse rounded-md bg-surface-alt ${className}`}
+    className={`animate-shimmer rounded-md bg-surface-alt ${className}`}
     aria-hidden="true"
   />
 );
@@ -20,7 +20,7 @@ export const SkeletonCard: React.FC<{
 }> = ({ rows = 5 }) => (
   <div role="status" aria-label="Cargando..." className="space-y-4 p-6">
     {Array.from({ length: rows }).map((_, i) => (
-      <div key={i} className="flex items-center space-x-4 animate-pulse">
+      <div key={i} className="flex items-center space-x-4 animate-shimmer">
         <div className="h-10 w-10 rounded-full bg-surface-alt shrink-0" />
         <div className="flex-1 space-y-2">
           <div className="h-4 w-3/4 rounded-md bg-surface-alt" />
@@ -66,7 +66,7 @@ export const SkeletonTable: React.FC<{
     <div className="bg-surface-alt px-6 py-3 flex items-center gap-6 border-b border-border">
       {columns.map((col, i) => (
         <div key={i} className={`${col.width} shrink-0`}>
-          <div className="h-3 w-2/3 rounded-md bg-surface-alt animate-pulse" />
+          <div className="h-3 w-2/3 rounded-md bg-surface-alt animate-shimmer" />
         </div>
       ))}
     </div>
@@ -80,7 +80,7 @@ export const SkeletonTable: React.FC<{
         {columns.map((col, colIdx) => (
           <div key={colIdx} className={`${col.width} shrink-0`}>
             {col.avatar ? (
-              <div className="flex items-center space-x-3 animate-pulse">
+              <div className="flex items-center space-x-3 animate-shimmer">
                 <div className="h-10 w-10 rounded-full bg-surface-alt shrink-0" />
                 <div className="flex-1 space-y-2">
                   <div className="h-4 w-3/4 rounded-md bg-surface-alt" />
@@ -88,11 +88,11 @@ export const SkeletonTable: React.FC<{
                 </div>
               </div>
             ) : col.badge ? (
-              <div className="animate-pulse">
+              <div className="animate-shimmer">
                 <div className="h-5 w-16 rounded-full bg-surface-alt" />
               </div>
             ) : (
-              <div className="animate-pulse">
+              <div className="animate-shimmer">
                 <div className="h-4 w-full rounded-md bg-surface-alt" />
               </div>
             )}

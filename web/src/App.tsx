@@ -51,7 +51,7 @@ const AdminUsers = React.lazy(() => import("@/pages/Admin/AdminUsers").then((m) 
 // ── Loading fallback ──
 function PageFallback() {
   return (
-    <div className="flex justify-center items-center h-64" role="status" aria-live="polite">
+    <div className="flex justify-center items-center h-64 animate-fade-in" role="status" aria-live="polite">
       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" aria-hidden="true" />
       <span className="sr-only">Cargando página...</span>
     </div>
