@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useCallback, useEffect, useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { productService } from "../../services/productService";
 import { Product } from "../../types/entities";
@@ -35,22 +35,22 @@ export const ProductList: React.FC = () => {
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const { addToast } = useToast();
 
-  useEffect(() => {
-    fetchProducts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
+    setLoading(true);
     try {
       const data = await productService.getAll();
       setProducts(data || []);
     } catch (error) {
       logError("Error fetching products", error);
-      addToast("Error al cargar los productos.", "error");
+      addToast("Error al cargar los productos. Verifica tu conexión y recarga la página.", "error");
     } finally {
       setLoading(false);
     }
-  };
+  }, [addToast]);
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
 
   const requestDelete = (id: string) => {
     setPendingDeleteId(id);
@@ -325,9 +325,6 @@ export const ProductList: React.FC = () => {
                                 Inactivo
                               </span>
                             )}
-                          </div>
-                          <div className="text-sm text-text-secondary">
-                            {product.category}
                           </div>
                         </div>
                       </div>

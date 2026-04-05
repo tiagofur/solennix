@@ -250,7 +250,7 @@ export const Layout: React.FC = () => {
           <div className="shrink-0 px-6 lg:px-10 py-4 lg:py-6 flex items-center justify-between gap-4">
             <div className="flex-1 max-w-2xl" role="search">
               <div className="relative group">
-                <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" aria-hidden="true" />
+                <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-text-secondary group-focus-within:text-primary transition-colors" aria-hidden="true" />
                 <button
                   type="button"
                   onClick={() => setIsCommandPaletteOpen(true)}

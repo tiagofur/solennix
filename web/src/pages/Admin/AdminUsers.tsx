@@ -40,7 +40,7 @@ const SortIcon = ({ field, sortField, sortDir }: { field: SortField; sortField: 
 
 interface GiftState {
   user: AdminUser;
-  plan: 'pro' | 'premium';
+  plan: 'pro';
   expiresAt: string; // YYYY-MM-DD
   noExpiry: boolean;
 }
@@ -437,7 +437,7 @@ export const AdminUsers: React.FC = () => {
             { label: 'Planes regalo activos', value: users.filter((u) => u.plan_expires_at && !isPast(parseISO(u.plan_expires_at))).length, cls: 'bg-warning/10 text-warning border-warning/20' },
           ].map((chip) => (
             <div key={chip.label} className={clsx('inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border', chip.cls)}>
-              <span className="font-black text-sm">{chip.value}</span>
+              <span className="font-bold text-sm">{chip.value}</span>
               {chip.label}
             </div>
           ))}

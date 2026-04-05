@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { clientService } from "../../services/clientService";
 import { Client } from "../../types/entities";
@@ -34,21 +34,22 @@ export const ClientList: React.FC = () => {
   const navigate = useNavigate();
   const { addToast } = useToast();
 
-  useEffect(() => {
-    fetchClients();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const fetchClients = async () => {
+  const fetchClients = useCallback(async () => {
+    setLoading(true);
     try {
       const data = await clientService.getAll();
       setClients(data || []);
     } catch (error) {
       logError("Error fetching clients", error);
+      addToast("Error al cargar los clientes. Verifica tu conexión y recarga la página.", "error");
     } finally {
       setLoading(false);
     }
-  };
+  }, [addToast]);
+
+  useEffect(() => {
+    fetchClients();
+  }, [fetchClients]);
 
   const requestDelete = (id: string) => {
     setPendingDeleteId(id);

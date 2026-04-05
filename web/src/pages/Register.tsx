@@ -45,7 +45,7 @@ const registerSchema = z
 
 type RegisterForm = z.infer<typeof registerSchema>;
 
-const sidePerks = [
+const SIDE_PERKS = [
   {
     icon: Zap,
     label: "Gratis para siempre",
@@ -63,7 +63,7 @@ const sidePerks = [
   },
 ];
 
-const testimonial = {
+const TESTIMONIAL = {
   text: '"En 2 semanas recuperé el tiempo que perdía en hojas de cálculo."',
   name: "María González",
   role: "Organizadora de bodas · CDMX",
@@ -98,8 +98,8 @@ export const Register: React.FC = () => {
       });
       await checkAuth();
       navigate("/dashboard");
-    } catch (err: any) {
-      setError(err.message || "Error al registrarse");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Error al registrarse");
     } finally {
       setIsLoading(false);
     }
@@ -134,7 +134,7 @@ export const Register: React.FC = () => {
             </p>
 
             <ul className="space-y-5">
-              {sidePerks.map(({ icon: Icon, label, desc }) => (
+              {SIDE_PERKS.map(({ icon: Icon, label, desc }) => (
                 <li key={label} className="flex items-start gap-4">
                   <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center shrink-0 backdrop-blur-sm mt-0.5">
                     <Icon className="h-4 w-4 text-white" />
@@ -154,24 +154,24 @@ export const Register: React.FC = () => {
               {Array.from({ length: 5 }).map((_, i) => (
                 <Star
                   key={i}
-                  className="h-4 w-4 fill-yellow-400 text-yellow-400"
+                  className="h-4 w-4 fill-primary text-primary"
                 />
               ))}
             </div>
             <p className="text-white/90 text-sm italic leading-relaxed mb-4">
-              {testimonial.text}
+              {TESTIMONIAL.text}
             </p>
             <div className="flex items-center gap-3">
               <div
-                className={`${testimonial.avatarColor} w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-xs shrink-0`}
+                className={`${TESTIMONIAL.avatarColor} w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-xs shrink-0`}
               >
-                {testimonial.avatar}
+                {TESTIMONIAL.avatar}
               </div>
               <div>
                 <div className="text-white font-bold text-sm">
-                  {testimonial.name}
+                  {TESTIMONIAL.name}
                 </div>
-                <div className="text-white/60 text-xs">{testimonial.role}</div>
+                <div className="text-white/60 text-xs">{TESTIMONIAL.role}</div>
               </div>
             </div>
           </div>

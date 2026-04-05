@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   User,
@@ -24,6 +27,19 @@ import {
   validateContractTemplate,
 } from "@/lib/contractTemplate";
 import { ContractTemplateEditor } from "@/components/ContractTemplateEditor";
+
+const passwordSchema = z
+  .object({
+    currentPassword: z.string().min(1, "Ingresa tu contraseña actual"),
+    newPassword: z.string().min(8, "La nueva contraseña debe tener al menos 8 caracteres"),
+    confirmPassword: z.string().min(1, "Confirma tu nueva contraseña"),
+  })
+  .refine((d) => d.newPassword === d.confirmPassword, {
+    message: "Las contraseñas no coinciden",
+    path: ["confirmPassword"],
+  });
+
+type PasswordFormData = z.infer<typeof passwordSchema>;
 
 const formatSubDate = (dateStr?: string) => {
   if (!dateStr) return null;
@@ -79,9 +95,13 @@ export const Settings: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"profile" | "business" | "subscription" | "contracts">(initialTab);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const {
+    register: registerPassword,
+    handleSubmit: handlePasswordSubmit,
+    reset: resetPassword,
+    formState: { errors: passwordErrors },
+  } = useForm<PasswordFormData>({ resolver: zodResolver(passwordSchema) });
 
   useEffect(() => {
     if (profile) {
@@ -174,39 +194,25 @@ export const Settings: React.FC = () => {
     }
   };
 
-  const handleChangePassword = async () => {
-    if (!currentPassword || !newPassword) {
-      addToast("Completa todos los campos", "error");
-      return;
-    }
-    if (newPassword.length < 6) {
-      addToast("La nueva contraseña debe tener al menos 6 caracteres", "error");
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      addToast("Las contraseñas no coinciden", "error");
-      return;
-    }
+  const handleChangePassword = handlePasswordSubmit(async (data: PasswordFormData) => {
     setIsChangingPassword(true);
     try {
       await api.post("/auth/change-password", {
-        current_password: currentPassword,
-        new_password: newPassword,
+        current_password: data.currentPassword,
+        new_password: data.newPassword,
       });
       addToast("Contraseña actualizada correctamente", "success");
       setShowPasswordForm(false);
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-    } catch (error: any) {
-      const msg = error?.message?.includes("incorrect")
+      resetPassword();
+    } catch (error: unknown) {
+      const msg = error instanceof Error && error.message.includes("incorrect")
         ? "La contraseña actual es incorrecta"
         : "Error al cambiar la contraseña";
       addToast(msg, "error");
     } finally {
       setIsChangingPassword(false);
     }
-  };
+  });
 
   const handleManageSubscription = async () => {
     try {
@@ -294,6 +300,7 @@ export const Settings: React.FC = () => {
                 {!showPasswordForm ? (
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <button
+                      type="button"
                       onClick={() => setShowPasswordForm(true)}
                       className="flex items-center gap-2 text-primary font-bold hover:gap-3 transition-all"
                     >
@@ -303,29 +310,45 @@ export const Settings: React.FC = () => {
                 ) : (
                   <div className="space-y-4 max-w-md">
                     <h4 className="font-bold text-text">Cambiar contraseña</h4>
-                    <input
-                      type="password"
-                      placeholder="Contraseña actual"
-                      value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
-                      className="w-full bg-surface border border-border rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
-                    />
-                    <input
-                      type="password"
-                      placeholder="Nueva contraseña (mín. 6 caracteres)"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      className="w-full bg-surface border border-border rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
-                    />
-                    <input
-                      type="password"
-                      placeholder="Confirmar nueva contraseña"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="w-full bg-surface border border-border rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
-                    />
+                    <div>
+                      <input
+                        type="password"
+                        placeholder="Contraseña actual"
+                        {...registerPassword("currentPassword")}
+                        className="w-full bg-surface border border-border rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+                        aria-invalid={passwordErrors.currentPassword ? "true" : "false"}
+                      />
+                      {passwordErrors.currentPassword && (
+                        <p className="mt-1 text-xs text-error" role="alert">{passwordErrors.currentPassword.message}</p>
+                      )}
+                    </div>
+                    <div>
+                      <input
+                        type="password"
+                        placeholder="Nueva contraseña (mín. 8 caracteres)"
+                        {...registerPassword("newPassword")}
+                        className="w-full bg-surface border border-border rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+                        aria-invalid={passwordErrors.newPassword ? "true" : "false"}
+                      />
+                      {passwordErrors.newPassword && (
+                        <p className="mt-1 text-xs text-error" role="alert">{passwordErrors.newPassword.message}</p>
+                      )}
+                    </div>
+                    <div>
+                      <input
+                        type="password"
+                        placeholder="Confirmar nueva contraseña"
+                        {...registerPassword("confirmPassword")}
+                        className="w-full bg-surface border border-border rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+                        aria-invalid={passwordErrors.confirmPassword ? "true" : "false"}
+                      />
+                      {passwordErrors.confirmPassword && (
+                        <p className="mt-1 text-xs text-error" role="alert">{passwordErrors.confirmPassword.message}</p>
+                      )}
+                    </div>
                     <div className="flex gap-3">
                       <button
+                        type="button"
                         onClick={handleChangePassword}
                         disabled={isChangingPassword}
                         className="bg-primary text-white font-medium px-4 py-2 rounded-md hover:bg-primary-dark transition-colors shadow-sm disabled:opacity-50"
@@ -333,11 +356,10 @@ export const Settings: React.FC = () => {
                         {isChangingPassword ? "Guardando..." : "Guardar"}
                       </button>
                       <button
+                        type="button"
                         onClick={() => {
                           setShowPasswordForm(false);
-                          setCurrentPassword("");
-                          setNewPassword("");
-                          setConfirmPassword("");
+                          resetPassword();
                         }}
                         className="bg-surface-alt text-text font-bold px-4 py-2 rounded-xl border border-border hover:bg-border transition-all"
                       >
@@ -399,12 +421,14 @@ export const Settings: React.FC = () => {
                     />
                     <div className="flex gap-2">
                       <button
+                        type="button"
                         onClick={handleUpdateBusinessName}
                         className="bg-primary text-white font-medium px-4 py-2 rounded-md hover:bg-primary-dark transition-colors shadow-sm"
                       >
                         Guardar
                       </button>
                       <button
+                        type="button"
                         onClick={() => setIsEditingBusiness(false)}
                         className="bg-surface-alt text-text font-bold px-6 py-3 rounded-xl border border-border hover:bg-border transition-all"
                       >
@@ -418,6 +442,7 @@ export const Settings: React.FC = () => {
                       {profile?.business_name || "No configurado"}
                     </span>
                     <button
+                      type="button"
                       onClick={() => setIsEditingBusiness(true)}
                       className="text-primary font-bold text-sm bg-primary/10 px-4 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
                     >
@@ -527,7 +552,7 @@ export const Settings: React.FC = () => {
                         onChange={(e) => setContractSettings({...contractSettings, deposit: Number(e.target.value)})}
                         className="w-full bg-surface-alt border border-border rounded-xl px-4 py-3 font-bold text-xl"
                       />
-                      <span className="text-2xl font-black text-text-secondary">%</span>
+                      <span className="text-2xl font-bold text-text-secondary">%</span>
                     </div>
                   </div>
                   <div className="space-y-2">
@@ -551,7 +576,7 @@ export const Settings: React.FC = () => {
                         onChange={(e) => setContractSettings({...contractSettings, refund: Number(e.target.value)})}
                         className="w-full bg-surface-alt border border-border rounded-xl px-4 py-3 font-bold text-xl"
                       />
-                      <span className="text-2xl font-black text-text-secondary">%</span>
+                      <span className="text-2xl font-bold text-text-secondary">%</span>
                     </div>
                   </div>
                 </div>
@@ -622,6 +647,7 @@ export const Settings: React.FC = () => {
                     )}
                     {(profile?.stripe_customer_id || subStatus?.has_stripe_account) && (
                       <button
+                        type="button"
                         onClick={handleManageSubscription}
                         disabled={isPortalLoading}
                         className="bg-card border border-border text-text-secondary px-6 py-3 rounded-md font-medium hover:bg-surface-alt transition-colors flex items-center justify-center gap-2"
@@ -676,10 +702,10 @@ export const Settings: React.FC = () => {
         {/* ── LEGAL LINKS ── */}
         <div className="bg-card shadow-sm rounded-2xl p-6 sm:p-8 border border-border">
           <h3 className="text-lg font-bold text-text mb-1">
-            Informacion Legal
+            Información Legal
           </h3>
           <p className="text-sm text-text-secondary mb-4">
-            Conoce mas sobre Solennix y nuestras politicas.
+            Conoce más sobre Solennix y nuestras políticas.
           </p>
           <div className="flex flex-col sm:flex-row gap-3">
             <Link
@@ -694,14 +720,14 @@ export const Settings: React.FC = () => {
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-surface-alt/50 text-text hover:bg-border transition-colors text-sm font-medium"
             >
               <FileText className="h-4 w-4 text-primary" />
-              Terminos y Condiciones
+              Términos y Condiciones
             </Link>
             <Link
               to="/privacy"
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-surface-alt/50 text-text hover:bg-border transition-colors text-sm font-medium"
             >
               <Shield className="h-4 w-4 text-primary" />
-              Politica de Privacidad
+              Política de Privacidad
             </Link>
           </div>
         </div>

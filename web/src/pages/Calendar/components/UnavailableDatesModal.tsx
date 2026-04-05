@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { X, Calendar as CalendarIcon, Plus, Trash2, Lock } from 'lucide-react';
 import { useToast } from '../../../hooks/useToast';
 import { unavailableDatesService, UnavailableDate } from '../../../services/unavailableDatesService';
 import clsx from 'clsx';
+import { logError } from '../../../lib/errorHandler';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -39,26 +40,26 @@ export const UnavailableDatesModal: React.FC<UnavailableDatesModalProps> = ({
     reason: '',
   });
 
+  const fetchBlocks = useCallback(async () => {
+    setFetchingBlocks(true);
+    try {
+      const data = await unavailableDatesService.getDates('2020-01-01', '2035-12-31');
+      setBlocks(data);
+    } catch (error) {
+      logError('Failed to fetch unavailable date blocks', error);
+      // silently ignore — calendar still works without the list
+    } finally {
+      setFetchingBlocks(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (!isOpen) return;
     const prefill = initialDate ?? today;
     setFormData({ start_date: prefill, end_date: prefill, reason: '' });
     setShowForm(!!initialDate);
     fetchBlocks();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, initialDate]);
-
-  const fetchBlocks = async () => {
-    setFetchingBlocks(true);
-    try {
-      const data = await unavailableDatesService.getDates('2020-01-01', '2035-12-31');
-      setBlocks(data);
-    } catch {
-      // silently ignore — calendar still works without the list
-    } finally {
-      setFetchingBlocks(false);
-    }
-  };
+  }, [isOpen, initialDate, today, fetchBlocks]);
 
   const handleDelete = async (id: string) => {
     setDeletingId(id);
@@ -67,7 +68,8 @@ export const UnavailableDatesModal: React.FC<UnavailableDatesModalProps> = ({
       setBlocks((prev) => prev.filter((b) => b.id !== id));
       onDelete(id);
       addToast('Bloqueo eliminado', 'success');
-    } catch {
+    } catch (error) {
+      logError('Error deleting date block', error);
       addToast('Error al eliminar el bloqueo', 'error');
     } finally {
       setDeletingId(null);
@@ -85,7 +87,7 @@ export const UnavailableDatesModal: React.FC<UnavailableDatesModalProps> = ({
       setFormData({ start_date: today, end_date: today, reason: '' });
       setShowForm(false);
     } catch (error) {
-      console.error(error);
+      logError('Error blocking dates', error);
       addToast('Error al bloquear las fechas', 'error');
     } finally {
       setLoading(false);
@@ -112,6 +114,7 @@ export const UnavailableDatesModal: React.FC<UnavailableDatesModalProps> = ({
             Fechas Bloqueadas
           </h2>
           <button
+            type="button"
             onClick={onClose}
             className="text-text-secondary hover:text-text transition-colors p-2 hover:bg-surface rounded-full"
             aria-label="Cerrar"
