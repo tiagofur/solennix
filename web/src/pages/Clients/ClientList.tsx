@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Client } from "../../types/entities";
+import { Client } from "@/types/entities";
 import {
   Plus,
   Search,
@@ -14,14 +14,14 @@ import {
   ArrowUp,
   ArrowDown,
 } from "lucide-react";
-import { RowActionMenu } from "../../components/RowActionMenu";
-import { exportToCsv } from "../../lib/exportCsv";
-import { ConfirmDialog } from "../../components/ConfirmDialog";
-import Empty from "../../components/Empty";
-import { usePagination } from "../../hooks/usePagination";
-import { Pagination } from "../../components/Pagination";
-import { SkeletonTable } from "../../components/Skeleton";
-import { useClients, useDeleteClient } from "../../hooks/queries/useClientQueries";
+import { RowActionMenu } from "@/components/RowActionMenu";
+import { exportToCsv } from "@/lib/exportCsv";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
+import Empty from "@/components/Empty";
+import { usePagination } from "@/hooks/usePagination";
+import { Pagination } from "@/components/Pagination";
+import { SkeletonTable } from "@/components/Skeleton";
+import { useClients, useDeleteClient } from "@/hooks/queries/useClientQueries";
 
 export const ClientList: React.FC = () => {
   const { data: clients = [], isLoading: loading } = useClients();
@@ -259,6 +259,7 @@ export const ClientList: React.FC = () => {
                           <img
                             src={client.photo_url}
                             alt=""
+                            loading="lazy"
                             className="h-10 w-10 rounded-full object-cover"
                           />
                         ) : (
@@ -319,7 +320,7 @@ export const ClientList: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-text">
                       $
-                      {client.total_spent.toLocaleString("es-MX", {
+                      {(client.total_spent ?? 0).toLocaleString("es-MX", {
                         minimumFractionDigits: 2,
                       })}
                     </td>

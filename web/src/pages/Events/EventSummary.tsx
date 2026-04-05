@@ -518,9 +518,8 @@ export const EventSummary: React.FC = () => {
                       const productIds = products.map((p: EventProductWithDetails) => p.product_id).filter(Boolean);
                       const productQuantities = new Map<string, number>();
                       products.forEach((p: EventProductWithDetails) => productQuantities.set(p.product_id, p.quantity || 0));
-                      const allIngredients = productIds.length > 0
-                        ? await productService.getIngredientsForProducts(productIds)
-                        : [];
+                      // Use cached ingredients from React Query instead of refetching
+                      const allIngredients = allProdIngredients || [];
                       const aggregated: Record<string, { name: string; quantity: number; unit: string }> = {};
                       (allIngredients || [])
                         .filter((ing: ProductIngredientWithInventory) => ing.type === 'ingredient' && ing.bring_to_event)
@@ -1394,6 +1393,7 @@ export const EventSummary: React.FC = () => {
                   <img
                     src={url}
                     alt={`Foto ${idx + 1} del evento`}
+                    loading="lazy"
                     className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
                     onClick={() => setLightboxPhoto(url)}
                   />

@@ -97,6 +97,7 @@ export const ClientDetails: React.FC = () => {
             <img
               src={client.photo_url}
               alt={client.name}
+              loading="lazy"
               className="h-10 w-10 rounded-full object-cover mr-3"
             />
           ) : (

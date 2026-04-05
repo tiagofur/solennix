@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Product } from "../../types/entities";
+import { Product } from "@/types/entities";
 import {
   Plus,
   Search,
@@ -14,14 +14,14 @@ import {
   ArrowUp,
   ArrowDown,
 } from "lucide-react";
-import { RowActionMenu } from "../../components/RowActionMenu";
-import { exportToCsv } from "../../lib/exportCsv";
-import { ConfirmDialog } from "../../components/ConfirmDialog";
-import Empty from "../../components/Empty";
-import { usePagination } from "../../hooks/usePagination";
-import { Pagination } from "../../components/Pagination";
-import { SkeletonTable } from "../../components/Skeleton";
-import { useProducts, useDeleteProduct } from "../../hooks/queries/useProductQueries";
+import { RowActionMenu } from "@/components/RowActionMenu";
+import { exportToCsv } from "@/lib/exportCsv";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
+import Empty from "@/components/Empty";
+import { usePagination } from "@/hooks/usePagination";
+import { Pagination } from "@/components/Pagination";
+import { SkeletonTable } from "@/components/Skeleton";
+import { useProducts, useDeleteProduct } from "@/hooks/queries/useProductQueries";
 
 export const ProductList: React.FC = () => {
   const navigate = useNavigate();
@@ -279,6 +279,7 @@ export const ProductList: React.FC = () => {
                             <img
                               className="h-10 w-10 rounded-lg object-cover"
                               src={product.image_url}
+                              loading="lazy"
                               alt=""
                             />
                           ) : (

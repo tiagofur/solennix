@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { eventService } from "../../services/eventService";
+import { eventService } from "@/services/eventService";
 import {
   ArrowLeft,
   Edit,
@@ -17,12 +17,28 @@ import {
   Users,
   Fuel,
 } from "lucide-react";
-import { logError } from "../../lib/errorHandler";
-import { Breadcrumb } from "../../components/Breadcrumb";
-import { ConfirmDialog } from "../../components/ConfirmDialog";
-import { SkeletonCard } from "../../components/Skeleton";
+import { logError } from "@/lib/errorHandler";
+import { Breadcrumb } from "@/components/Breadcrumb";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { SkeletonCard } from "@/components/Skeleton";
 import clsx from "clsx";
-import { useProduct, useProductIngredients, useDeleteProduct } from "../../hooks/queries/useProductQueries";
+import { useProduct, useProductIngredients, useDeleteProduct } from "@/hooks/queries/useProductQueries";
+
+type ProductIngredientRow = {
+  id: string;
+  product_id: string;
+  inventory_id: string;
+  quantity_required: number;
+  capacity: number | null;
+  bring_to_event: boolean;
+  ingredient_name: string;
+  unit: string;
+  unit_cost: number;
+  type: 'ingredient' | 'equipment' | 'supply';
+  inventory?: { ingredient_name?: string; unit?: string; unit_cost?: number; current_stock?: number } | null;
+};
+
+type EventWithClientName = { clients?: { name: string } | null };
 
 type DemandEntry = {
   date: string;
@@ -75,14 +91,14 @@ export const ProductDetails: React.FC = () => {
           try {
             const products = await eventService.getProducts(event.id);
             const match = (products || []).find(
-              (p: any) => p.product_id === productId,
+              (p: { product_id: string; quantity: number }) => p.product_id === productId,
             );
             if (match) {
               entries.push({
                 date: event.event_date.slice(0, 10),
                 eventId: event.id,
-                eventName: (event as any).clients?.name
-                  ? `Evento - ${(event as any).clients.name}`
+                eventName: (event as EventWithClientName).clients?.name
+                  ? `Evento - ${(event as EventWithClientName).clients.name}`
                   : event.service_type || "Evento",
                 quantity: match.quantity,
                 numPeople: event.num_people || 0,
@@ -158,9 +174,9 @@ export const ProductDetails: React.FC = () => {
   }
 
   const unitCost = ingredients
-    .filter((i: any) => i.type === "ingredient")
+    .filter((i: ProductIngredientRow) => i.type === "ingredient")
     .reduce(
-      (sum: number, ing: any) =>
+      (sum: number, ing: ProductIngredientRow) =>
         sum + ing.quantity_required * (ing.unit_cost || 0),
       0,
     );
@@ -335,6 +351,7 @@ export const ProductDetails: React.FC = () => {
               <img
                 src={product.image_url}
                 alt={product.name}
+                loading="lazy"
                 className="w-full h-40 object-cover rounded-2xl mb-4"
               />
             )}
@@ -374,16 +391,16 @@ export const ProductDetails: React.FC = () => {
                   <p className="text-xs text-text-secondary">Composición</p>
                   <p className="text-sm font-medium text-text">
                     {
-                      ingredients.filter((i: any) => i.type === "ingredient")
+                      ingredients.filter((i: ProductIngredientRow) => i.type === "ingredient")
                         .length
                     }{" "}
                     insumos
-                    {ingredients.filter((i: any) => i.type === "supply")
+                    {ingredients.filter((i: ProductIngredientRow) => i.type === "supply")
                       .length > 0 &&
-                      `, ${ingredients.filter((i: any) => i.type === "supply").length} insumo(s) por evento`}
-                    {ingredients.filter((i: any) => i.type === "equipment")
+                      `, ${ingredients.filter((i: ProductIngredientRow) => i.type === "supply").length} insumo(s) por evento`}
+                    {ingredients.filter((i: ProductIngredientRow) => i.type === "equipment")
                       .length > 0 &&
-                      `, ${ingredients.filter((i: any) => i.type === "equipment").length} equipo(s)`}
+                      `, ${ingredients.filter((i: ProductIngredientRow) => i.type === "equipment").length} equipo(s)`}
                   </p>
                 </div>
               </div>
@@ -607,7 +624,7 @@ export const ProductDetails: React.FC = () => {
               </div>
             </div>
 
-            {ingredients.filter((i: any) => i.type === "ingredient").length ===
+            {ingredients.filter((i: ProductIngredientRow) => i.type === "ingredient").length ===
             0 ? (
               <div className="p-12 text-center">
                 <Package className="h-12 w-12 text-text-secondary mx-auto mb-4 opacity-20" />
@@ -639,8 +656,8 @@ export const ProductDetails: React.FC = () => {
                   </thead>
                   <tbody className="divide-y divide-border">
                     {ingredients
-                      .filter((i: any) => i.type === "ingredient")
-                      .map((ing: any) => (
+                      .filter((i: ProductIngredientRow) => i.type === "ingredient")
+                      .map((ing: ProductIngredientRow) => (
                         <tr
                           key={ing.inventory_id}
                           className="hover:bg-surface-alt/50 transition-colors"
@@ -685,7 +702,7 @@ export const ProductDetails: React.FC = () => {
           </div>
 
           {/* Insumos por Evento */}
-          {ingredients.filter((i: any) => i.type === "supply").length > 0 && (
+          {ingredients.filter((i: ProductIngredientRow) => i.type === "supply").length > 0 && (
             <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
               <div className="p-6 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-2">
@@ -714,8 +731,8 @@ export const ProductDetails: React.FC = () => {
                 </thead>
                 <tbody className="divide-y divide-border">
                   {ingredients
-                    .filter((i: any) => i.type === "supply")
-                    .map((ing: any) => (
+                    .filter((i: ProductIngredientRow) => i.type === "supply")
+                    .map((ing: ProductIngredientRow) => (
                       <tr
                         key={ing.inventory_id}
                         className="hover:bg-surface-alt/50 transition-colors"
@@ -751,9 +768,9 @@ export const ProductDetails: React.FC = () => {
                 <span className="text-lg font-bold text-warning">
                   $
                   {ingredients
-                    .filter((i: any) => i.type === "supply")
+                    .filter((i: ProductIngredientRow) => i.type === "supply")
                     .reduce(
-                      (sum: number, ing: any) =>
+                      (sum: number, ing: ProductIngredientRow) =>
                         sum + ing.quantity_required * (ing.unit_cost || 0),
                       0,
                     )
@@ -764,7 +781,7 @@ export const ProductDetails: React.FC = () => {
           )}
 
           {/* Maquinaria / Equipo Necesario */}
-          {ingredients.filter((i: any) => i.type === "equipment").length >
+          {ingredients.filter((i: ProductIngredientRow) => i.type === "equipment").length >
             0 && (
             <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
               <div className="p-6 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -791,8 +808,8 @@ export const ProductDetails: React.FC = () => {
                 </thead>
                 <tbody className="divide-y divide-border">
                   {ingredients
-                    .filter((i: any) => i.type === "equipment")
-                    .map((ing: any) => (
+                    .filter((i: ProductIngredientRow) => i.type === "equipment")
+                    .map((ing: ProductIngredientRow) => (
                       <tr
                         key={ing.inventory_id}
                         className="hover:bg-surface-alt/50 transition-colors"
