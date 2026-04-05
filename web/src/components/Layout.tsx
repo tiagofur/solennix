@@ -27,6 +27,8 @@ import { Logo } from './Logo';
 import { CommandPalette } from './CommandPalette';
 import { BottomTabBar } from './BottomTabBar';
 import { QuickActionsFAB } from './QuickActionsFAB';
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
+import { KeyboardShortcutsHelp } from './KeyboardShortcutsHelp';
 
 export const Layout: React.FC = () => {
   const { signOut, user } = useAuth();
@@ -35,6 +37,7 @@ export const Layout: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(() => localStorage.getItem('sidebar-collapsed') === 'true');
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const { shortcuts, helpOpen, setHelpOpen, currentSection } = useKeyboardShortcuts();
 
   const firstName = user?.name ? user.name.split(' ')[0] : "Usuario";
   const avatarInitial = user?.name ? user.name.charAt(0).toUpperCase() : 'U';
@@ -274,6 +277,7 @@ export const Layout: React.FC = () => {
       <QuickActionsFAB />
       <ToastContainer />
       <CommandPalette isOpen={isCommandPaletteOpen} onClose={() => setIsCommandPaletteOpen(false)} />
+      <KeyboardShortcutsHelp open={helpOpen} onClose={() => setHelpOpen(false)} shortcuts={shortcuts} currentSection={currentSection} />
     </div>
   );
 };
