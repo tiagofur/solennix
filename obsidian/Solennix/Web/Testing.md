@@ -30,20 +30,36 @@ web/src/
 │           └── EventEquipment.test.tsx
 ```
 
-## Tests Existentes
+## Estado de Tests — 2026-04-05
 
-> [!warning] Cobertura Parcial
-> La cobertura de tests es limitada. Hay tests para algunos componentes pero no para todos los servicios ni pages.
+### Tests nuevos (todos pasan)
 
-### Tests conocidos:
-- `ToastContainer.test.tsx` — Rendering y tipos de toast
-- `EventEquipment.test.tsx` — Selección de equipamiento, conflictos
+| Archivo | Tests | Cobertura |
+|---------|-------|-----------|
+| `usePagination.test.ts` | 8 | Paginación, sorting, toggle, empty data |
+| `queryKeys.test.ts` | 13 | Key factories, hierarchical invalidation |
+| `finance.test.ts` | 8 | Tax, total, net sales, never-negative |
+| `EventEquipment.test.tsx` | 31 | Selección, conflictos, sugerencias, drag |
+| **Total nuevos** | **60** | **Todos pasando** |
+
+### Tests pre-existentes (necesitan migración)
+
+> [!warning] 304 tests rotos por migración a React Query
+> Los componentes migraron de `useState` + `useEffect` a React Query hooks. Los tests esperan el patrón anterior:
+> - `logError` inline en vez de `QueryCache.onError`
+> - `setItems(filter)` en vez de cache invalidation
+> - Loading via `useState` en vez de `isLoading` del hook
+
+**Wrapper disponible**: `tests/customRender.tsx` provee `QueryClientProvider` — los tests ya lo importan pero necesitan actualizar sus assertions.
 
 ## Ejecutar Tests
 
 ```bash
-# Unit tests
-cd web && npx vitest
+# Unit tests (todos)
+cd web && npx vitest run
+
+# Solo tests nuevos (garantizado que pasan)
+cd web && npx vitest run src/hooks/ src/lib/finance.test.ts
 
 # E2E tests
 cd web && npx playwright test
@@ -52,4 +68,4 @@ cd web && npx playwright test
 ## Relaciones
 
 - [[Arquitectura General]] — Herramientas del stack
-- [[Roadmap Web]] — Mejorar cobertura de tests es una tarea pendiente
+- [[Roadmap Web]] — Deuda técnica de tests documentada

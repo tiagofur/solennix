@@ -229,46 +229,58 @@ gantt
     dateFormat  YYYY-MM-DD
     axisFormat  %b %Y
 
-    section Fase 1: Foundation
-    React Query           :f1a, 2026-04-07, 5d
-    Lazy Loading          :f1b, after f1a, 2d
-    Image Optimization    :f1c, after f1b, 2d
+    section Fase 1: Foundation ✅
+    React Query           :done, f1a, 2026-04-04, 2d
+    Lazy Loading          :done, f1b, 2026-04-05, 1d
+    Image Optimization    :done, f1c, 2026-04-05, 1d
 
-    section Fase 2: UX Excellence
-    Drag & Drop EventForm :f2a, after f1c, 3d
-    Búsqueda Avanzada     :f2b, after f2a, 3d
-    Inline Editing        :f2c, after f2b, 3d
-    Notificaciones        :f2d, after f2c, 2d
+    section Fase 2: UX Excellence ✅
+    Drag & Drop EventForm :done, f2a, 2026-04-05, 1d
+    Búsqueda Avanzada     :done, f2b, 2026-04-05, 1d
+    Inline Editing        :done, f2c, 2026-04-05, 1d
 
-    section Fase 3: Polish
-    Animaciones           :f3a, after f2d, 3d
-    Keyboard Shortcuts    :f3b, after f3a, 2d
-    Dark Mode Audit       :f3c, after f3b, 2d
+    section Fase 3: Polish ✅
+    Animaciones + Shimmer :done, f3a, 2026-04-05, 1d
+    Keyboard Shortcuts    :done, f3b, 2026-04-05, 1d
 
-    section Fase 4: Arquitectura
-    Error Boundaries      :f4a, after f3c, 2d
-    PWA / Service Worker  :f4b, after f4a, 3d
-    Test Coverage         :f4c, after f4b, 5d
+    section Fase 4: Arquitectura ✅
+    Error Boundaries      :done, f4a, 2026-04-05, 1d
+    PWA / Service Worker  :done, f4b, 2026-04-05, 1d
+    Unit Tests (29 new)   :done, f4c, 2026-04-05, 1d
+    Test Migration (304)  :active, f4d, 2026-04-06, 3d
 
-    section Fase 5: Features
-    Dashboard Mejorado    :f5a, after f4c, 5d
+    section Fase 5: Features (pendiente)
+    Dashboard Mejorado    :f5a, 2026-04-10, 5d
     Portal de Cliente     :f5b, after f5a, 7d
     Plantillas de Evento  :f5c, after f5b, 3d
 ```
 
 ---
 
-## Quick Wins (< 1 día cada uno)
+## Quick Wins
 
-> [!tip] Victorias rápidas para hacer hoy/mañana
+> [!done] Completados durante las fases 1–4
 
-- [ ] `loading="lazy"` en todas las `<img>` de listas
-- [ ] `prefers-reduced-motion` media query global
+- [x] `loading="lazy"` en todas las `<img>` de listas — **Fase 1.3**
+- [x] `prefers-reduced-motion` media query global — **Fase 3.1**
+- [x] Error boundary básico wrapeando `<Routes>` — **Fase 4.1**
 - [ ] Skip-to-content link en Layout
-- [ ] Error boundary básico wrapeando `<Routes>`
 - [ ] `React.memo()` en componentes de tabla pesados (RowActionMenu, StatusDropdown)
 - [ ] Verificar y corregir contraste WCAG en dark mode para `text-text-secondary`
 - [ ] Agregar `rel="noopener noreferrer"` a links externos
+
+---
+
+## Deuda Técnica
+
+> [!warning] Tests pre-existentes rotos por migración a React Query
+> 304 tests de integración necesitan reescritura para matchear el nuevo flujo de datos:
+> - Error handling: `QueryCache.onError` en vez de inline `setError()`
+> - Loading: `isLoading` del hook en vez de manual `setLoading()`
+> - Delete: `mutation.mutate()` + cache invalidation en vez de `service.delete()` + `setItems(filter)`
+> - Wrapper `tests/customRender.tsx` ya provee `QueryClientProvider`
+>
+> **60 tests nuevos pasan** (usePagination, queryKeys, finance, EventEquipment).
 
 ---
 

@@ -110,6 +110,44 @@ hooks/usePlanLimits.ts
 
 Usado con `UpgradeBanner` cuando se alcanzan los límites.
 
+---
+
+### useKeyboardShortcuts
+
+```
+hooks/useKeyboardShortcuts.ts (usado en Layout)
+```
+
+| Retorna | Tipo | Descripción |
+|---------|------|-------------|
+| `shortcuts` | `Shortcut[]` | Lista de todos los shortcuts disponibles |
+| `helpOpen` | `boolean` | Si el overlay de ayuda está abierto |
+| `setHelpOpen` | `(open) => void` | Toggle del overlay |
+| `currentSection` | `string \| undefined` | Sección actual (events, clients, etc.) |
+
+Shortcuts: G+D/E/C/P/I/K (navegación), N (nuevo contextual), ? (ayuda)
+
+---
+
+### React Query Hooks
+
+```
+hooks/queries/*.ts (8 archivos, 40+ hooks)
+```
+
+| Archivo | Hooks principales |
+|---------|------------------|
+| `useClientQueries.ts` | useClients, useClient, useCreateClient, useUpdateClient, useDeleteClient |
+| `useEventQueries.ts` | useEvents, useEvent, useEventsByClient, useUpcomingEvents, useEventProducts, useUpdateEventStatus, useDeleteEvent (13 hooks) |
+| `useProductQueries.ts` | useProducts, useProduct, useProductIngredients, useCreateProduct, useUpdateProduct, useDeleteProduct |
+| `useInventoryQueries.ts` | useInventoryItems, useInventoryItem, useCreateInventoryItem, useUpdateInventoryItem, useDeleteInventoryItem |
+| `usePaymentQueries.ts` | usePaymentsByEvent, usePaymentsByEventIds, usePaymentsByDateRange, useCreatePayment, useDeletePayment |
+| `useSearchQueries.ts` | useSearch (con placeholderData) |
+| `useAdminQueries.ts` | useAdminStats, useAdminUsers, useAdminSubscriptions, useUpgradeUser |
+| `useSubscriptionQueries.ts` | useSubscriptionStatus |
+
+Key factory centralizada en `queryKeys.ts` para cache invalidation jerárquica.
+
 ## Relaciones
 
 - [[Manejo de Estado]] — Hooks como capa de acceso al estado

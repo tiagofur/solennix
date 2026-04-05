@@ -22,6 +22,8 @@
 | Gráficos | Recharts | 3.7 |
 | PDFs | jsPDF + autoTable | 4.2 |
 | Iconos | Lucide React | 0.575 |
+| Drag & Drop | @dnd-kit | 6.3 / 10.0 |
+| PWA | vite-plugin-pwa + Workbox | 1.2 |
 | Testing | Vitest + Playwright + MSW | — |
 
 ## Diagrama de Capas

@@ -69,6 +69,19 @@
 |-----------|---------|---------|
 | **ProtectedRoute** | `ProtectedRoute.tsx` | Requiere autenticación |
 | **AdminRoute** | `AdminRoute.tsx` | Requiere rol admin |
+| **ErrorBoundary** | `ErrorBoundary.tsx` | Captura errores de render con retry UI y reporting |
+
+## Drag & Drop
+
+| Componente | Archivo | Función |
+|-----------|---------|---------|
+| **SortableItem** | `SortableItem.tsx` | Wrapper de @dnd-kit con drag handle (GripVertical) |
+
+## Keyboard Shortcuts
+
+| Componente | Archivo | Función |
+|-----------|---------|---------|
+| **KeyboardShortcutsHelp** | `KeyboardShortcutsHelp.tsx` | Overlay de ayuda con lista de shortcuts (`?` para abrir) |
 
 ## Relaciones
 

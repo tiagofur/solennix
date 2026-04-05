@@ -23,13 +23,21 @@
 | **Focus visible** | `focus:ring-2 focus:ring-primary/20` en inputs y botones |
 | **Keyboard nav** | `onKeyDown` handlers en elementos clickeables no-nativos |
 
-## Áreas de Mejora
+## Mejoras Implementadas — 2026-04-05
+
+| Mejora | Estado |
+|--------|--------|
+| **`prefers-reduced-motion`** | ✅ Media query global — desactiva TODAS las animaciones |
+| **Keyboard shortcuts** | ✅ `useKeyboardShortcuts` hook + `?` help overlay |
+| **Error boundary** | ✅ `ErrorBoundary` con retry UI accesible |
+| **Drag & drop a11y** | ✅ `KeyboardSensor` en @dnd-kit para reordenar sin mouse |
+
+## Áreas de Mejora Restantes
 
 > [!warning] Pendientes
-> - **Skip to content** link faltante
+> - **Skip to content** link faltante en Layout
 > - **Focus trap** en modales (parcial — Modal.tsx podría mejorar)
-> - **Reduced motion** — No hay `prefers-reduced-motion` media query
-> - **Color contrast** — Verificar ratios WCAG AA en todas las combinaciones
+> - **Color contrast** — Verificar ratios WCAG AA en dark mode
 > - **Announce route changes** — React Router no anuncia cambios a screen readers
 > - **Error summary** — Los formularios muestran errores inline pero no hay resumen al top
 
