@@ -1,0 +1,359 @@
+#ios #roadmap #mejoras
+
+# Roadmap iOS — Hacia la Paridad y Más Allá
+
+> [!tip] Filosofía
+> Priorizado por **impacto en usuario** × **esfuerzo técnico**. Alineado con [[Roadmap Web]] y [[Roadmap Android]] para paridad cross-platform. iOS es la plataforma más madura — el foco está en pulir, completar integraciones, y testing.
+
+---
+
+## Estado de Paridad Cross-Platform
+
+| Feature | Web | Android | iOS | Gap iOS |
+|---------|-----|---------|-----|---------|
+| CRUD Eventos | ✅ | ✅ | ✅ | — |
+| CRUD Clientes | ✅ | ✅ | ✅ | — |
+| CRUD Productos | ✅ | ✅ | ✅ | — |
+| CRUD Inventario | ✅ | ✅ | ✅ | — |
+| Registro de pagos | ✅ | ✅ | ✅ | — |
+| Calendario | ✅ | ✅ | ✅ | — |
+| Dashboard con KPIs | ✅ | ✅ | ✅ | — |
+| Generación de PDFs | ✅ | ⚠️ Sin librería | ✅ 8 tipos | iOS adelante |
+| Pagos online (Stripe) | ✅ | ❌ | ❌ | Fase 3 |
+| Onboarding checklist | ✅ | ✅ | ✅ + TipKit | iOS adelante |
+| Cotización rápida + PDF | ✅ | ✅ | ✅ | — |
+| Conflictos equipo | ✅ | ✅ | ✅ | — |
+| Sugerencias equipo | ✅ | ✅ | ✅ | — |
+| Búsqueda global | ✅ | ✅ + App Search | ✅ + Spotlight | — |
+| Dark mode | ✅ | ✅ | ✅ | — |
+| Auth biométrica | ❌ | ✅ | ✅ Face/Touch ID | — |
+| Widgets | ❌ | ✅ Glance | ✅ WidgetKit | — |
+| Live Activities | ❌ | ❌ | ✅ Dynamic Island | iOS adelante |
+| Siri Shortcuts | ❌ | ❌ | ✅ AppIntents | iOS adelante |
+| Deep links | ❌ | ✅ | ✅ + Spotlight | — |
+| Offline caché | ❌ | ✅ Room | ✅ SwiftData | — |
+| Background sync | ❌ | ✅ WorkManager | ❌ | **P1** |
+| Push notifications | ❌ | ⚠️ Stub | ❌ | **P1** |
+| React Query / cache | 🔄 | N/A | N/A | — |
+| iPad / Mac support | N/A | Tablet | ✅ Split layout | iOS adelante |
+| Test coverage | ❌ 0% | ❌ 0% | ❌ 0% | Todos |
+| i18n | ❌ | ❌ | ❌ | Todos |
+| Analytics | ❌ | ❌ | ❌ | Todos |
+| Suscripciones | ❌ | ⚠️ RevenueCat stub | ⚠️ API key placeholder | **P0** |
+
+---
+
+## Fase 0: Blockers Críticos (Pre-Release)
+
+> [!success] Impacto: Crítico | Esfuerzo: Bajo
+> Sin esto, la app NO puede publicarse en App Store.
+
+### 0.1 RevenueCat API Key
+
+- [ ] Reemplazar `appl_YOUR_API_KEY` placeholder en `SolennixApp.swift`
+- [ ] Configurar offerings y packages en RevenueCat dashboard
+- [ ] Verificar flujo de compra completo en sandbox
+- [ ] Testear restore purchases
+
+**Por qué**: Sin API key real, `SubscriptionManager.configure()` falla silenciosamente. No hay monetización.
+
+### 0.2 Live Activities — Completar Wiring
+
+- [ ] Conectar actualizaciones de Live Activity con datos reales del evento
+- [ ] Implementar push-to-update para Live Activities (APNs)
+- [ ] Testear en dispositivos reales (Dynamic Island solo en iPhone 14 Pro+)
+
+**Por qué**: La infraestructura existe pero el mecanismo de actualización no está completo.
+
+### 0.3 Privacy Manifest Review
+
+- [ ] Verificar `PrivacyInfo.xcprivacy` cubre todos los APIs usados
+- [ ] Declarar uso de Keychain, CoreSpotlight, NetworkMonitor
+- [ ] Asegurar compliance con App Store requirements 2024+
+
+**Por qué**: Apple rechaza apps sin privacy manifest completo.
+
+---
+
+## Fase 1: Foundation (Estabilidad)
+
+> [!success] Impacto: Alto | Esfuerzo: Medio
+> Base sólida para crecimiento.
+
+### 1.1 Test Coverage Mínimo
+
+- [ ] Setup: Swift Testing framework + XCTest
+- [ ] Tests para `AuthManager` (state machine, tokens, biometric)
+- [ ] Tests para `APIClient` (retry, token injection, error mapping)
+- [ ] Tests para `KeychainHelper` (save, read, delete)
+- [ ] Tests para ViewModels clave (Dashboard, EventForm, EventDetail)
+- [ ] Tests para PDF generators (output válido)
+- [ ] Target: 40% coverage en SolennixNetwork + SolennixCore
+
+**Por qué**: Sin tests, cada cambio es un riesgo. Network y Core son la base de todo.
+
+### 1.2 Background App Refresh
+
+- [ ] Implementar `BGAppRefreshTask` para sync periódico
+- [ ] Sincronizar eventos, clientes, productos en background
+- [ ] Actualizar widget timelines post-sync
+- [ ] Actualizar Spotlight index post-sync
+
+**Por qué**: Alineado con Android (WorkManager). Sin esto, datos pueden estar stale al abrir la app.
+
+### 1.3 Error Handling Robusto
+
+- [ ] Retry con exponential backoff para errores transitorios
+- [ ] UI de error con botón "Reintentar" contextual
+- [ ] Sentry/Crashlytics integration (SentryHelper está referenciado)
+- [ ] Offline-first: queue de operaciones pendientes
+
+**Por qué**: Actualmente errores de red muestran mensaje genérico. El usuario no sabe qué hacer.
+
+### 1.4 Caché Completo
+
+- [ ] Agregar `CachedInventoryItem` a SwiftData
+- [ ] Agregar `CachedPayment` a SwiftData
+- [ ] Implementar invalidación de caché por timestamp
+- [ ] Mostrar indicador "datos cacheados" en UI
+
+**Por qué**: Solo Client, Event y Product se cachean. Faltan Inventory y Payment.
+
+---
+
+## Fase 2: UX Excellence (Alineado con Web)
+
+> [!success] Impacto: Alto | Esfuerzo: Medio-Alto
+> De "funcional" a "un placer de usar".
+
+### 2.1 Push Notifications (APNs)
+
+- [ ] Registrar device token con backend
+- [ ] Notificaciones de eventos próximos
+- [ ] Notificaciones de pagos recibidos
+- [ ] Rich notifications con imagen del evento
+- [ ] Deep links desde notificaciones
+- [ ] Notification categories con acciones (confirmar, ver detalle)
+
+**Por qué**: Alineado con [[Roadmap Web]] Fase 2.5 y [[Roadmap Android]] Fase 2.1.
+
+### 2.2 Búsqueda Avanzada
+
+- [ ] Filtros combinables en EventList (fecha + status + cliente)
+- [ ] Búsqueda por rango de fechas
+- [ ] Filtros persistentes en URL/state
+- [ ] Suggestions en SearchView
+
+**Por qué**: Alineado con [[Roadmap Web]] Fase 2.3.
+
+### 2.3 Drag & Drop
+
+- [ ] Reordenar productos en EventForm (Step 2)
+- [ ] Reordenar extras (Step 3)
+- [ ] `.draggable()` + `.dropDestination()` nativo de SwiftUI
+
+**Por qué**: Alineado con [[Roadmap Web]] Fase 2.1.
+
+### 2.4 Undo/Redo
+
+- [ ] Swipe-to-delete con undo toast (30 segundos soft delete)
+- [ ] `.onDelete` con confirmación y periodo de gracia
+
+**Por qué**: Alineado con [[Roadmap Web]] Fase 2.2.
+
+---
+
+## Fase 3: Polish Premium
+
+> [!success] Impacto: Medio | Esfuerzo: Bajo-Medio
+> Detalles premium.
+
+### 3.1 Animaciones y Transiciones
+
+- [ ] `.matchedGeometryEffect` para transiciones lista → detalle
+- [ ] `.transition(.asymmetric())` en modales y sheets
+- [ ] Stagger en listas con `.animation(.spring(), value:)`
+- [ ] Respetar `@Environment(\.accessibilityReduceMotion)`
+
+**Por qué**: Alineado con [[Roadmap Web]] Fase 3.1 y [[Roadmap Android]] Fase 3.1.
+
+### 3.2 Accesibilidad Audit
+
+- [ ] `.accessibilityLabel()` en todos los componentes custom
+- [ ] Auditar contraste WCAG AA con paleta dorado/navy
+- [ ] Testear con VoiceOver
+- [ ] Verificar Dynamic Type con fuente Cinzel
+- [ ] Soportar `accessibilityReduceMotion`
+
+### 3.3 Dark Mode Polish
+
+- [ ] Auditar 100+ colores en dark mode
+- [ ] Verificar contraste en StatusBadge, KPI cards, formularios
+- [ ] PDFs respetando tema del usuario
+
+### 3.4 iPad/Mac Polish
+
+- [ ] Optimizar SidebarSplitLayout para productividad
+- [ ] Keyboard shortcuts para acciones frecuentes
+- [ ] Hover effects en Mac Catalyst
+- [ ] Multi-window support
+
+---
+
+## Fase 4: Arquitectura Avanzada
+
+> [!success] Impacto: Medio-Alto | Esfuerzo: Alto
+> Escalar.
+
+### 4.1 i18n
+
+- [ ] Extraer strings a `Localizable.strings`
+- [ ] Soportar español (default) e inglés
+- [ ] Formateo de moneda/fechas por locale con `FormatStyle`
+- [ ] String Catalogs (Xcode 15+)
+
+**Por qué**: Alineado con Web Fase 4.3 y Android Fase 4.1.
+
+### 4.2 Analytics
+
+- [ ] Firebase Analytics o Posthog
+- [ ] Tracking de eventos clave
+- [ ] Crashlytics / Sentry para error tracking
+- [ ] Performance monitoring con MetricKit
+
+**Por qué**: Alineado con Web Fase 4.5 y Android Fase 4.2.
+
+### 4.3 Test Coverage Completo
+
+- [ ] XCUITest para flujos críticos
+- [ ] Snapshot tests con swift-snapshot-testing
+- [ ] Widget tests
+- [ ] Target: 70%+ coverage total
+
+### 4.4 SwiftData Migrations
+
+- [ ] Schema versioning para evolución del modelo
+- [ ] Migration plans para updates sin data loss
+- [ ] Testear migraciones en dispositivos reales
+
+---
+
+## Fase 5: Features Avanzadas (Paridad con Web)
+
+> [!success] Impacto: Alto | Esfuerzo: Alto
+> Features diferenciadoras.
+
+### 5.1 Dashboard Mejorado
+
+- [ ] Swift Charts mejorados: revenue por mes, top clientes
+- [ ] Comparativas mes a mes
+- [ ] Forecast basado en eventos confirmados
+
+**Por qué**: Alineado con Web Fase 5.1.
+
+### 5.2 Plantillas de Evento
+
+- [ ] Guardar evento como plantilla
+- [ ] Crear evento desde plantilla
+- [ ] Biblioteca por tipo de evento
+
+**Por qué**: Alineado con Web Fase 5.5 y Android Fase 5.2.
+
+### 5.3 Timeline de Evento
+
+- [ ] Vista hora por hora del día del evento
+- [ ] Agregar actividades a la timeline
+- [ ] Compartir via ShareSheet
+
+**Por qué**: Alineado con Web Fase 5.2.
+
+### 5.4 Colaboración
+
+- [ ] Invitar miembros al equipo
+- [ ] Roles y permisos
+- [ ] Activity log
+- [ ] SharePlay para planificación en vivo (stretch goal)
+
+### 5.5 Apple Calendar Sync
+
+- [ ] Exportar eventos a Apple Calendar
+- [ ] Sync bidireccional con EventKit
+- [ ] Colores de estado en Calendar
+
+**Por qué**: Feature nativa que iOS puede ofrecer mejor que Web.
+
+### 5.6 Apple Watch Companion (Stretch Goal)
+
+- [ ] Complication con próximo evento
+- [ ] Notificaciones en muñeca
+- [ ] Quick check-in desde reloj
+
+---
+
+## Prioridad Visual
+
+```mermaid
+gantt
+    title Roadmap iOS — Hacia la Paridad
+    dateFormat  YYYY-MM-DD
+    axisFormat  %b %Y
+
+    section Fase 0: Blockers
+    RevenueCat API Key      :f0a, 2026-04-07, 1d
+    Live Activities Wiring  :f0b, after f0a, 2d
+    Privacy Manifest        :f0c, after f0b, 1d
+
+    section Fase 1: Foundation
+    Test Coverage Mínimo    :f1a, after f0c, 5d
+    Background Refresh      :f1b, after f1a, 3d
+    Error Handling          :f1c, after f1b, 3d
+    Caché Completo          :f1d, after f1c, 2d
+
+    section Fase 2: UX Excellence
+    Push Notifications      :f2a, after f1d, 4d
+    Búsqueda Avanzada       :f2b, after f2a, 3d
+    Drag & Drop             :f2c, after f2b, 2d
+    Undo/Redo               :f2d, after f2c, 2d
+
+    section Fase 3: Polish
+    Animaciones             :f3a, after f2d, 3d
+    Accesibilidad Audit     :f3b, after f3a, 2d
+    Dark Mode Polish        :f3c, after f3b, 2d
+    iPad/Mac Polish         :f3d, after f3c, 3d
+
+    section Fase 4: Arquitectura
+    i18n                    :f4a, after f3d, 3d
+    Analytics               :f4b, after f4a, 2d
+    Test Coverage 70%       :f4c, after f4b, 5d
+
+    section Fase 5: Features
+    Dashboard Mejorado      :f5a, after f4c, 4d
+    Plantillas de Evento    :f5b, after f5a, 3d
+    Apple Calendar Sync     :f5c, after f5b, 3d
+    Colaboración            :f5d, after f5c, 5d
+```
+
+---
+
+## Quick Wins (< 1 día cada uno)
+
+> [!tip] Victorias rápidas
+
+- [ ] `.accessibilityLabel()` en todos los `Image(systemName:)` de navegación
+- [ ] Verificar contraste WCAG de StatusBadge en dark mode
+- [ ] `@Environment(\.accessibilityReduceMotion)` en animaciones existentes
+- [ ] `.refreshable` en todas las listas (pull-to-refresh)
+- [ ] `.searchable(placement: .toolbar)` consistente en todas las listas
+- [ ] Agregar `.sensoryFeedback()` (iOS 17) en acciones de save/delete
+- [ ] Verificar Privacy Manifest tiene todas las declaraciones
+
+---
+
+## Relaciones
+
+- [[iOS MOC]] — Hub principal
+- [[Testing]] — estado de tests
+- [[Performance]] — oportunidades
+- [[Accesibilidad]] — gaps
+- [[Caché y Offline]] — gaps de sync
+- [[Módulo Settings]] — RevenueCat placeholder
