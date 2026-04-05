@@ -14,8 +14,8 @@
 
 ### 1.1 React Query / TanStack Query
 
-> [!done] Clients + Products + Inventory migrados — 2026-04-04
-> Foundation completa. 3 de 4 dominios core migrados. 17 hooks creados, 9 páginas migradas.
+> [!done] 4 dominios core + todas las listas migradas — 2026-04-04
+> Foundation completa. 30+ hooks creados, 10 páginas migradas, 4 dominios con hooks completos.
 
 - [x] Instalar `@tanstack/react-query` + devtools
 - [x] Crear `queryClient.ts` con error handling global (logError + toast)
@@ -24,7 +24,8 @@
 - [x] Migrar `clientService` → `useClientQueries.ts` (6 hooks) + ClientList, ClientForm, ClientDetails
 - [x] Migrar `productService` → `useProductQueries.ts` (6 hooks) + ProductList, ProductForm, ProductDetails
 - [x] Migrar `inventoryService` → `useInventoryQueries.ts` (5 hooks) + InventoryList, InventoryForm, InventoryDetails
-- [ ] Migrar `eventService` (completar) → EventList, EventForm, EventSummary
+- [x] Migrar `eventService` → `useEventQueries.ts` (13 hooks) + EventList
+- [ ] Migrar EventForm, EventSummary (páginas complejas del dominio Events)
 - [ ] Migrar `paymentService`, `searchService`, `adminService`, `subscriptionService`
 - [ ] Migrar componentes compartidos: StatusDropdown, OnboardingChecklist, PendingEventsModal
 - [ ] Rewrite `usePlanLimits` para usar query hooks (mayor win de cache sharing)
