@@ -338,6 +338,7 @@ export const Payments: React.FC<PaymentsProps> = ({
           onClose={() => setIsAdding(false)}
           title={modalTitle}
           maxWidth="2xl"
+          titleId="payment-modal-title"
         >
           <div className="animate-in zoom-in-95 fade-in duration-300">
             <form 
