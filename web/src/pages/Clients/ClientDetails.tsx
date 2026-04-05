@@ -1,8 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { clientService } from "@/services/clientService";
-import { eventService } from "@/services/eventService";
-import { Client, Event } from "@/types/entities";
 import {
   ArrowLeft,
   Edit,
@@ -18,57 +15,29 @@ import {
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { logError } from "@/lib/errorHandler";
-import { useToast } from "@/hooks/useToast";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { StatusDropdown, EventStatus } from "@/components/StatusDropdown";
+import { useClient, useDeleteClient } from "@/hooks/queries/useClientQueries";
+import { useEventsByClient } from "@/hooks/queries/useEventQueries";
 
 
 export const ClientDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [client, setClient] = useState<Client | null>(null);
-  const [events, setEvents] = useState<Event[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: client, isLoading: clientLoading, error: clientError } = useClient(id);
+  const { data: events = [] } = useEventsByClient(id);
+  const deleteClient = useDeleteClient();
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
-  const { addToast } = useToast();
 
-  useEffect(() => {
-    if (id) {
-      loadClient(id);
-    }
-  }, [id]);
+  const loading = clientLoading;
+  const error = clientError ? "Error al cargar los datos del cliente." : null;
 
-  const loadClient = async (clientId: string) => {
-    try {
-      setLoading(true);
-      const [clientData, eventsData] = await Promise.all([
-        clientService.getById(clientId),
-        eventService.getByClientId(clientId),
-      ]);
-      setClient(clientData);
-      setEvents(eventsData || []);
-    } catch (err) {
-      logError("Error fetching client details", err);
-      setError("Error al cargar los datos del cliente.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDeleteClient = async () => {
+  const handleDeleteClient = () => {
     if (!id) return;
-    try {
-      await clientService.delete(id);
-      addToast("Cliente eliminado correctamente.", "success");
-      navigate("/clients");
-    } catch (error) {
-      logError("Error deleting client", error);
-      addToast("Error al eliminar el cliente.", "error");
-    } finally {
-      setConfirmDeleteOpen(false);
-    }
+    deleteClient.mutate(id, {
+      onSuccess: () => navigate("/clients"),
+      onSettled: () => setConfirmDeleteOpen(false),
+    });
   };
 
   if (loading) {
@@ -386,13 +355,6 @@ export const ClientDetails: React.FC = () => {
                         <StatusDropdown
                           eventId={event.id}
                           currentStatus={event.status as EventStatus}
-                          onStatusChange={(newStatus) => {
-                            setEvents((prev) =>
-                              prev.map((ev) =>
-                                ev.id === event.id ? { ...ev, status: newStatus } : ev,
-                              ),
-                            );
-                          }}
                         />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-text">

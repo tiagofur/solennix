@@ -1,6 +1,5 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { clientService } from "../../services/clientService";
 import { Client } from "../../types/entities";
 import {
   Plus,
@@ -18,58 +17,31 @@ import {
 import { RowActionMenu } from "../../components/RowActionMenu";
 import { exportToCsv } from "../../lib/exportCsv";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
-import { logError } from "../../lib/errorHandler";
 import Empty from "../../components/Empty";
-import { useToast } from "../../hooks/useToast";
 import { usePagination } from "../../hooks/usePagination";
 import { Pagination } from "../../components/Pagination";
 import { SkeletonTable } from "../../components/Skeleton";
+import { useClients, useDeleteClient } from "../../hooks/queries/useClientQueries";
 
 export const ClientList: React.FC = () => {
-  const [clients, setClients] = useState<Client[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: clients = [], isLoading: loading } = useClients();
+  const deleteClient = useDeleteClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { addToast } = useToast();
-
-  const fetchClients = useCallback(async () => {
-    setLoading(true);
-    try {
-      const data = await clientService.getAll();
-      setClients(data || []);
-    } catch (error) {
-      logError("Error fetching clients", error);
-      addToast("Error al cargar los clientes. Verifica tu conexión y recarga la página.", "error");
-    } finally {
-      setLoading(false);
-    }
-  }, [addToast]);
-
-  useEffect(() => {
-    fetchClients();
-  }, [fetchClients]);
 
   const requestDelete = (id: string) => {
     setPendingDeleteId(id);
     setConfirmOpen(true);
   };
 
-  const confirmDelete = async () => {
+  const confirmDelete = () => {
     if (!pendingDeleteId) return;
     const id = pendingDeleteId;
     setConfirmOpen(false);
     setPendingDeleteId(null);
-
-    try {
-      await clientService.delete(id);
-      setClients((prev) => prev.filter((c) => c.id !== id));
-      addToast("Cliente eliminado correctamente.", "success");
-    } catch (error) {
-      logError("Error deleting client", error);
-      addToast("Error al eliminar el cliente.", "error");
-    }
+    deleteClient.mutate(id);
   };
 
   const filteredClients = (clients || []).filter(

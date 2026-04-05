@@ -1,15 +1,15 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { clientService } from "../../services/clientService";
 import { useAuth } from "../../contexts/AuthContext";
 import { ArrowLeft, Save, Camera, X } from "lucide-react";
 import { Breadcrumb } from "../../components/Breadcrumb";
 import { logError } from "../../lib/errorHandler";
 import { usePlanLimits } from "../../hooks/usePlanLimits";
 import { UpgradeBanner } from "../../components/UpgradeBanner";
+import { useClient, useCreateClient, useUpdateClient, useUploadClientPhoto } from "../../hooks/queries/useClientQueries";
 
 const clientSchema = z.object({
   name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
@@ -26,14 +26,19 @@ export const ClientForm: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { canCreateClient, clientsCount, clientLimit, loading: limitsLoading } = usePlanLimits();
+
+  const { data: existingClient, isLoading: isLoadingClient } = useClient(id);
+  const createClient = useCreateClient();
+  const updateClient = useUpdateClient();
+  const uploadPhoto = useUploadClientPhoto();
+
+  const isLoading = isLoadingClient || createClient.isPending || updateClient.isPending;
 
   const {
     register,
@@ -45,40 +50,24 @@ export const ClientForm: React.FC = () => {
     resolver: zodResolver(clientSchema),
   });
 
-  const loadClient = useCallback(async (clientId: string) => {
-    try {
-      setIsLoading(true);
-      const client = await clientService.getById(clientId);
-      if (!client) {
-        throw new Error('Cliente no encontrado');
-      }
-      reset({
-        name: client.name || "",
-        phone: client.phone || "",
-        email: client.email || "",
-        address: client.address || "",
-        city: client.city || "",
-        notes: client.notes || "",
-      });
-      if (client.photo_url) {
-        setPhotoUrl(client.photo_url);
-        setPhotoPreview(client.photo_url);
-      }
-    } catch (err) {
-      logError("Error loading client", err);
-      setError("Error al cargar el cliente");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [reset]);
-
   useEffect(() => {
-    if (id) {
-      loadClient(id);
+    if (existingClient) {
+      reset({
+        name: existingClient.name || "",
+        phone: existingClient.phone || "",
+        email: existingClient.email || "",
+        address: existingClient.address || "",
+        city: existingClient.city || "",
+        notes: existingClient.notes || "",
+      });
+      if (existingClient.photo_url) {
+        setPhotoUrl(existingClient.photo_url);
+        setPhotoPreview(existingClient.photo_url);
+      }
     }
-  }, [id, loadClient]);
+  }, [existingClient, reset]);
 
-  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -92,17 +81,14 @@ export const ClientForm: React.FC = () => {
     reader.onloadend = () => setPhotoPreview(reader.result as string);
     reader.readAsDataURL(file);
 
-    try {
-      setIsUploadingPhoto(true);
-      const result = await clientService.uploadPhoto(file);
-      setPhotoUrl(result.url);
-    } catch (err) {
-      logError("Error uploading photo", err);
-      setError("Error al subir la foto.");
-      setPhotoPreview(photoUrl); // revert preview
-    } finally {
-      setIsUploadingPhoto(false);
-    }
+    uploadPhoto.mutate(file, {
+      onSuccess: (result) => setPhotoUrl(result.url),
+      onError: (err) => {
+        logError("Error uploading photo", err);
+        setError("Error al subir la foto.");
+        setPhotoPreview(photoUrl); // revert preview
+      },
+    });
   };
 
   const removePhoto = () => {
@@ -111,33 +97,26 @@ export const ClientForm: React.FC = () => {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const onSubmit = async (data: ClientFormData) => {
+  const onSubmit = (data: ClientFormData) => {
     if (!user) return;
-
-    setIsLoading(true);
     setError(null);
 
-    try {
-      if (id) {
-        await clientService.update(id, {
-          ...data,
-          email: data.email || null,
-          photo_url: photoUrl || null,
-        });
-      } else {
-        await clientService.create({
-          ...data,
-          user_id: user.id,
-          email: data.email || null,
-          photo_url: photoUrl || null,
-        });
-      }
-      navigate("/clients");
-    } catch (err: unknown) {
-      logError("Error saving client", err);
-      setError(err instanceof Error ? err.message : "Error al guardar el cliente");
-    } finally {
-      setIsLoading(false);
+    const payload = {
+      ...data,
+      email: data.email || null,
+      photo_url: photoUrl || null,
+    };
+
+    if (id) {
+      updateClient.mutate(
+        { id, data: payload },
+        { onSuccess: () => navigate("/clients") },
+      );
+    } else {
+      createClient.mutate(
+        { ...payload, user_id: user.id },
+        { onSuccess: () => navigate("/clients") },
+      );
     }
   };
 
@@ -216,7 +195,7 @@ export const ClientForm: React.FC = () => {
                   ) : (
                     <Camera className="h-8 w-8 text-text-secondary" aria-hidden="true" />
                   )}
-                  {isUploadingPhoto && (
+                  {uploadPhoto.isPending && (
                     <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center">
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white" />
                     </div>
