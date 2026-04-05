@@ -1,8 +1,7 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { eventService } from "../../services/eventService";
 import { Event } from "../../types/entities";
 import {
   Search,
@@ -20,13 +19,12 @@ import {
 import { RowActionMenu } from "../../components/RowActionMenu";
 import { exportToCsv } from "../../lib/exportCsv";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
-import { logError } from "../../lib/errorHandler";
 import Empty from "../../components/Empty";
-import { useToast } from "../../hooks/useToast";
 import { usePagination } from "../../hooks/usePagination";
 import { Pagination } from "../../components/Pagination";
 import { SkeletonTable } from "../../components/Skeleton";
 import { StatusDropdown, EventStatus } from "../../components/StatusDropdown";
+import { useEvents, useDeleteEvent } from "../../hooks/queries/useEventQueries";
 
 type EventWithClient = Event & { clients?: { name: string } | null };
 
@@ -42,56 +40,24 @@ const STATUS_CHIPS: { label: string; value: StatusFilter }[] = [
 
 export const EventList: React.FC = () => {
   const navigate = useNavigate();
-  const [events, setEvents] = useState<EventWithClient[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: events = [], isLoading: loading } = useEvents();
+  const deleteEvent = useDeleteEvent();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
-  const { addToast } = useToast();
-
-  const fetchEvents = useCallback(async () => {
-    setLoading(true);
-    try {
-      const data = await eventService.getAll();
-      setEvents(data || []);
-    } catch (error) {
-      logError("Error fetching events", error);
-      addToast("Error al cargar los eventos. Verifica tu conexión y recarga la página.", "error");
-    } finally {
-      setLoading(false);
-    }
-  }, [addToast]);
-
-  useEffect(() => {
-    fetchEvents();
-  }, [fetchEvents]);
 
   const requestDelete = (id: string) => {
     setPendingDeleteId(id);
     setConfirmOpen(true);
   };
 
-  const confirmDelete = async () => {
+  const confirmDelete = () => {
     if (!pendingDeleteId) return;
     const id = pendingDeleteId;
     setConfirmOpen(false);
     setPendingDeleteId(null);
-
-    try {
-      await eventService.delete(id);
-      setEvents((prev) => prev.filter((e) => e.id !== id));
-      addToast("Evento eliminado correctamente.", "success");
-    } catch (error) {
-      logError("Error deleting event", error);
-      addToast("Error al eliminar el evento.", "error");
-    }
-  };
-
-  const handleStatusChange = (eventId: string, newStatus: EventStatus) => {
-    setEvents((prev) =>
-      prev.map((e) => (e.id === eventId ? { ...e, status: newStatus } : e)),
-    );
+    deleteEvent.mutate(id);
   };
 
   const filteredEvents = (events || []).filter((event) => {
@@ -405,9 +371,6 @@ export const EventList: React.FC = () => {
                       <StatusDropdown
                         eventId={event.id}
                         currentStatus={event.status as EventStatus}
-                        onStatusChange={(newStatus) =>
-                          handleStatusChange(event.id, newStatus)
-                        }
                       />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-text">
