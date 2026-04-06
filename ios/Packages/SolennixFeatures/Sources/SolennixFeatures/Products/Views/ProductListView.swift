@@ -9,6 +9,7 @@ public struct ProductListView: View {
 
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(CacheManager.self) private var cacheManager: CacheManager?
+    @Environment(ToastManager.self) private var toastManager
     @State private var viewModel: ProductListViewModel
     @Environment(PlanLimitsManager.self) private var planLimitsManager
 
@@ -49,11 +50,22 @@ public struct ProductListView: View {
             presenting: viewModel.deleteTarget
         ) { product in
             Button("Eliminar", role: .destructive) {
-                Task { await viewModel.deleteProduct(product) }
+                HapticsHelper.play(.success)
+                guard let removed = viewModel.softDeleteProduct(product) else { return }
+                toastManager.showUndo(
+                    message: "\(product.name) eliminado",
+                    onUndo: {
+                        viewModel.restoreProduct(removed.product, at: removed.index)
+                        HapticsHelper.play(.success)
+                    },
+                    onExpire: {
+                        Task { await viewModel.confirmDeleteProduct(removed.product) }
+                    }
+                )
             }
             Button("Cancelar", role: .cancel) {}
         } message: { product in
-            Text("Estas seguro de que quieres eliminar \"\(product.name)\"? Esta accion no se puede deshacer.")
+            Text("Se eliminara \"\(product.name)\". Podras deshacer durante unos segundos.")
         }
         .task {
             viewModel.setCacheManager(cacheManager)

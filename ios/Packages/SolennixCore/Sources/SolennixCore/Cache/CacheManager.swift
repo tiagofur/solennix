@@ -15,11 +15,21 @@ public final class CacheManager {
     // MARK: - Properties
 
     private let modelContext: ModelContext
+    private let userDefaults: UserDefaults
+
+    private enum CacheDomain: String, CaseIterable {
+        case clients
+        case events
+        case products
+        case inventory
+        case payments
+    }
 
     // MARK: - Init
 
-    public init(modelContext: ModelContext) {
+    public init(modelContext: ModelContext, userDefaults: UserDefaults = .standard) {
         self.modelContext = modelContext
+        self.userDefaults = userDefaults
     }
 
     // MARK: - Clients
@@ -31,10 +41,12 @@ public final class CacheManager {
             modelContext.insert(CachedClient(from: client))
         }
         try modelContext.save()
+        markCacheUpdated(.clients)
     }
 
     /// Returns all cached clients, converted to `Client` value types.
-    public func getCachedClients() throws -> [Client] {
+    public func getCachedClients(maxAge: TimeInterval? = nil) throws -> [Client] {
+        guard isCacheFresh(.clients, maxAge: maxAge) else { return [] }
         let descriptor = FetchDescriptor<CachedClient>(
             sortBy: [SortDescriptor(\.name)]
         )
@@ -51,10 +63,12 @@ public final class CacheManager {
             modelContext.insert(CachedEvent(from: event))
         }
         try modelContext.save()
+        markCacheUpdated(.events)
     }
 
     /// Returns all cached events, converted to `Event` value types.
-    public func getCachedEvents() throws -> [Event] {
+    public func getCachedEvents(maxAge: TimeInterval? = nil) throws -> [Event] {
+        guard isCacheFresh(.events, maxAge: maxAge) else { return [] }
         let descriptor = FetchDescriptor<CachedEvent>(
             sortBy: [SortDescriptor(\.eventDate, order: .reverse)]
         )
@@ -71,10 +85,12 @@ public final class CacheManager {
             modelContext.insert(CachedProduct(from: product))
         }
         try modelContext.save()
+        markCacheUpdated(.products)
     }
 
     /// Returns all cached products, converted to `Product` value types.
-    public func getCachedProducts() throws -> [Product] {
+    public func getCachedProducts(maxAge: TimeInterval? = nil) throws -> [Product] {
+        guard isCacheFresh(.products, maxAge: maxAge) else { return [] }
         let descriptor = FetchDescriptor<CachedProduct>(
             sortBy: [SortDescriptor(\.name)]
         )
@@ -91,10 +107,12 @@ public final class CacheManager {
             modelContext.insert(CachedInventoryItem(from: item))
         }
         try modelContext.save()
+        markCacheUpdated(.inventory)
     }
 
     /// Returns all cached inventory items, converted to `InventoryItem` value types.
-    public func getCachedInventoryItems() throws -> [InventoryItem] {
+    public func getCachedInventoryItems(maxAge: TimeInterval? = nil) throws -> [InventoryItem] {
+        guard isCacheFresh(.inventory, maxAge: maxAge) else { return [] }
         let descriptor = FetchDescriptor<CachedInventoryItem>(
             sortBy: [SortDescriptor(\.ingredientName)]
         )
@@ -111,10 +129,12 @@ public final class CacheManager {
             modelContext.insert(CachedPayment(from: payment))
         }
         try modelContext.save()
+        markCacheUpdated(.payments)
     }
 
     /// Returns cached payments for a specific event.
-    public func getCachedPayments(eventId: String) throws -> [Payment] {
+    public func getCachedPayments(eventId: String, maxAge: TimeInterval? = nil) throws -> [Payment] {
+        guard isCacheFresh(.payments, maxAge: maxAge) else { return [] }
         var descriptor = FetchDescriptor<CachedPayment>(
             sortBy: [SortDescriptor(\.paymentDate, order: .reverse)]
         )
@@ -133,11 +153,34 @@ public final class CacheManager {
         try deleteAll(CachedInventoryItem.self)
         try deleteAll(CachedPayment.self)
         try modelContext.save()
+        clearCacheTimestamps()
     }
 
     // MARK: - Helpers
 
     private func deleteAll<T: PersistentModel>(_ type: T.Type) throws {
         try modelContext.delete(model: type)
+    }
+
+    private func timestampKey(for domain: CacheDomain) -> String {
+        "solennix.cache.updatedAt.\(domain.rawValue)"
+    }
+
+    private func markCacheUpdated(_ domain: CacheDomain) {
+        userDefaults.set(Date(), forKey: timestampKey(for: domain))
+    }
+
+    private func isCacheFresh(_ domain: CacheDomain, maxAge: TimeInterval?) -> Bool {
+        guard let maxAge else { return true }
+        guard let lastUpdate = userDefaults.object(forKey: timestampKey(for: domain)) as? Date else {
+            return false
+        }
+        return Date().timeIntervalSince(lastUpdate) <= maxAge
+    }
+
+    private func clearCacheTimestamps() {
+        for domain in CacheDomain.allCases {
+            userDefaults.removeObject(forKey: timestampKey(for: domain))
+        }
     }
 }

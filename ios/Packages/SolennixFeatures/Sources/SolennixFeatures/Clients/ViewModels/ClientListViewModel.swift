@@ -72,6 +72,7 @@ public final class ClientListViewModel {
 
     private let apiClient: APIClient
     private var cacheManager: CacheManager?
+    private let cacheMaxAge: TimeInterval = 30 * 60
 
     // MARK: - Init
 
@@ -104,7 +105,7 @@ public final class ClientListViewModel {
         errorMessage = nil
 
         // Show cached data immediately while fetching from network
-        if clients.isEmpty, let cached = try? cacheManager?.getCachedClients(), !cached.isEmpty {
+        if clients.isEmpty, let cached = try? cacheManager?.getCachedClients(maxAge: cacheMaxAge), !cached.isEmpty {
             clients = cached
             isShowingCachedData = true
             applyFilters()
@@ -149,7 +150,7 @@ public final class ClientListViewModel {
             try? cacheManager?.cacheClients(clients)
         } catch {
             // If we have no data at all, try cache as fallback
-            if clients.isEmpty, let cached = try? cacheManager?.getCachedClients(), !cached.isEmpty {
+            if clients.isEmpty, let cached = try? cacheManager?.getCachedClients(maxAge: cacheMaxAge), !cached.isEmpty {
                 clients = cached
                 isShowingCachedData = true
                 applyFilters()

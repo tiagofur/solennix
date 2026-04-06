@@ -9,6 +9,7 @@ public struct InventoryListView: View {
 
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(CacheManager.self) private var cacheManager: CacheManager?
+    @Environment(ToastManager.self) private var toastManager
     @Environment(PlanLimitsManager.self) private var planLimitsManager
     @State private var viewModel: InventoryListViewModel
 
@@ -50,11 +51,22 @@ public struct InventoryListView: View {
             presenting: viewModel.deleteTarget
         ) { item in
             Button("Eliminar", role: .destructive) {
-                Task { await viewModel.deleteItem(item) }
+                HapticsHelper.play(.success)
+                guard let removed = viewModel.softDeleteItem(item) else { return }
+                toastManager.showUndo(
+                    message: "\(item.ingredientName) eliminado",
+                    onUndo: {
+                        viewModel.restoreItem(removed.item, at: removed.index)
+                        HapticsHelper.play(.success)
+                    },
+                    onExpire: {
+                        Task { await viewModel.confirmDeleteItem(removed.item) }
+                    }
+                )
             }
             Button("Cancelar", role: .cancel) {}
         } message: { item in
-            Text("Estas seguro de que quieres eliminar \"\(item.ingredientName)\"? Esta accion no se puede deshacer.")
+            Text("Se eliminara \"\(item.ingredientName)\". Podras deshacer durante unos segundos.")
         }
         .sheet(isPresented: $viewModel.showStockAdjustment) {
             stockAdjustmentSheet

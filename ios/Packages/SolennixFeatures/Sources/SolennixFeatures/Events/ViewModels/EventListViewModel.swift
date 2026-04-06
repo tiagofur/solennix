@@ -20,6 +20,8 @@ public final class EventListViewModel {
     public var isLoading: Bool = false
     public var errorMessage: String? = nil
     public var showAdvancedFilters: Bool = false
+    public var deleteTarget: Event?
+    public var showDeleteConfirm: Bool = false
 
     // MARK: - Pagination
 
@@ -36,6 +38,7 @@ public final class EventListViewModel {
 
     private let apiClient: APIClient
     private var cacheManager: CacheManager?
+    private let cacheMaxAge: TimeInterval = 30 * 60
 
     // MARK: - Init
 
@@ -145,7 +148,7 @@ public final class EventListViewModel {
         errorMessage = nil
 
         // Show cached data immediately while fetching
-        if events.isEmpty, let cached = try? cacheManager?.getCachedEvents(), !cached.isEmpty {
+        if events.isEmpty, let cached = try? cacheManager?.getCachedEvents(maxAge: cacheMaxAge), !cached.isEmpty {
             events = cached
             isShowingCachedData = true
         }
@@ -185,7 +188,7 @@ public final class EventListViewModel {
             // Update cache with fresh data
             try? cacheManager?.cacheEvents(events)
         } catch {
-            if events.isEmpty, let cached = try? cacheManager?.getCachedEvents(), !cached.isEmpty {
+            if events.isEmpty, let cached = try? cacheManager?.getCachedEvents(maxAge: cacheMaxAge), !cached.isEmpty {
                 events = cached
                 isShowingCachedData = true
             } else {
@@ -235,6 +238,31 @@ public final class EventListViewModel {
     public func refresh() async {
         currentPage = 1
         await loadEvents()
+    }
+
+    // MARK: - Delete
+
+    @MainActor
+    public func softDeleteEvent(_ event: Event) -> (event: Event, index: Int)? {
+        guard let index = events.firstIndex(where: { $0.id == event.id }) else { return nil }
+        let removed = events.remove(at: index)
+        return (removed, index)
+    }
+
+    @MainActor
+    public func restoreEvent(_ event: Event, at index: Int) {
+        let safeIndex = min(index, events.count)
+        events.insert(event, at: safeIndex)
+    }
+
+    @MainActor
+    public func confirmDeleteEvent(_ event: Event) async {
+        do {
+            try await apiClient.delete(Endpoint.event(event.id))
+        } catch {
+            events.append(event)
+            errorMessage = "Error al eliminar el evento"
+        }
     }
 
     // MARK: - CSV Export

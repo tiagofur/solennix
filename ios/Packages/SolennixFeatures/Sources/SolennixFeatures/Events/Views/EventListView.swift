@@ -12,6 +12,7 @@ public struct EventListView: View {
 
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(CacheManager.self) private var cacheManager: CacheManager?
+    @Environment(ToastManager.self) private var toastManager
     @State private var viewModel: EventListViewModel
     @State private var showShareSheet = false
     @State private var csvFileURL: URL?
@@ -78,6 +79,29 @@ public struct EventListView: View {
             if let url = csvFileURL {
                 ShareSheet(items: [url])
             }
+        }
+        .confirmationDialog(
+            "Eliminar evento",
+            isPresented: $viewModel.showDeleteConfirm,
+            presenting: viewModel.deleteTarget
+        ) { event in
+            Button("Eliminar", role: .destructive) {
+                HapticsHelper.play(.success)
+                guard let removed = viewModel.softDeleteEvent(event) else { return }
+                toastManager.showUndo(
+                    message: "\(event.serviceType) eliminado",
+                    onUndo: {
+                        viewModel.restoreEvent(removed.event, at: removed.index)
+                        HapticsHelper.play(.success)
+                    },
+                    onExpire: {
+                        Task { await viewModel.confirmDeleteEvent(removed.event) }
+                    }
+                )
+            }
+            Button("Cancelar", role: .cancel) {}
+        } message: { event in
+            Text("Se eliminara \"\(event.serviceType)\". Podras deshacer durante unos segundos.")
         }
         .overlay {
             if viewModel.isLoading && viewModel.events.isEmpty {
@@ -343,6 +367,14 @@ public struct EventListView: View {
                                 NavigationLink(value: Route.eventChecklist(id: event.id)) {
                                     Label("Checklist", systemImage: "checklist")
                                 }
+                                Divider()
+                                Button(role: .destructive) {
+                                    HapticsHelper.play(.warning)
+                                    viewModel.deleteTarget = event
+                                    viewModel.showDeleteConfirm = true
+                                } label: {
+                                    Label("Eliminar", systemImage: "trash")
+                                }
                             }
                         }
                     }
@@ -359,6 +391,14 @@ public struct EventListView: View {
                                 }
                                 NavigationLink(value: Route.eventChecklist(id: event.id)) {
                                     Label("Checklist", systemImage: "checklist")
+                                }
+                                Divider()
+                                Button(role: .destructive) {
+                                    HapticsHelper.play(.warning)
+                                    viewModel.deleteTarget = event
+                                    viewModel.showDeleteConfirm = true
+                                } label: {
+                                    Label("Eliminar", systemImage: "trash")
                                 }
                             }
                         }

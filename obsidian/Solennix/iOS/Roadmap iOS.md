@@ -114,7 +114,7 @@
 
 - [x] Agregar `CachedInventoryItem` a SwiftData — ✅ 2026-04-05
 - [x] Agregar `CachedPayment` a SwiftData — ✅ 2026-04-05
-- [ ] Implementar invalidación de caché por timestamp
+- [x] Implementar invalidación de caché por timestamp — ✅ 2026-04-06 (TTL 30 min por dominio en CacheManager: clients/events/products/inventory/payments)
 - [x] Mostrar indicador "datos cacheados" en UI — ✅ 2026-04-05 (CachedDataBanner en 4 vistas)
 - [x] Cache-first loading en ViewModels — ✅ 2026-04-05 (Client, Event, Product, Inventory)
 
@@ -143,7 +143,7 @@
 - [x] Filtros combinables en EventList (fecha + status + cliente) — ✅ 2026-04-05
 - [x] Búsqueda por rango de fechas — ✅ 2026-04-05 (DatePicker from/to)
 - [ ] Filtros persistentes en URL/state
-- [ ] Suggestions en SearchView
+- [x] Suggestions en SearchView — ✅ 2026-04-06 (historial local de búsquedas + sugerencias tap-to-search)
 
 **Por qué**: Alineado con [[Roadmap Web]] Fase 2.3.
 
@@ -159,7 +159,7 @@
 
 - [x] Swipe-to-delete con undo toast (5 segundos soft delete) — ✅ 2026-04-05 (ClientListView)
 - [x] `.onDelete` con confirmación y periodo de gracia — ✅ 2026-04-05 (ToastManager.showUndo)
-- [ ] Extender undo a Product, Inventory, Event deletes
+- [x] Extender undo a Product, Inventory, Event deletes — ✅ 2026-04-06 (soft delete + restore + confirm-delete diferido)
 
 **Por qué**: Alineado con [[Roadmap Web]] Fase 2.2.
 

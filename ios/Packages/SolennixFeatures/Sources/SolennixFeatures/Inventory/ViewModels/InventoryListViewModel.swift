@@ -92,6 +92,7 @@ public final class InventoryListViewModel {
 
     private let apiClient: APIClient
     private var cacheManager: CacheManager?
+    private let cacheMaxAge: TimeInterval = 30 * 60
 
     // MARK: - Init
 
@@ -117,7 +118,7 @@ public final class InventoryListViewModel {
         errorMessage = nil
 
         // Show cached data immediately while fetching
-        if items.isEmpty, let cached = try? cacheManager?.getCachedInventoryItems(), !cached.isEmpty {
+        if items.isEmpty, let cached = try? cacheManager?.getCachedInventoryItems(maxAge: cacheMaxAge), !cached.isEmpty {
             items = cached
             isShowingCachedData = true
             applyFilters()
@@ -159,7 +160,7 @@ public final class InventoryListViewModel {
             // Update cache with fresh data
             try? cacheManager?.cacheInventoryItems(items)
         } catch {
-            if items.isEmpty, let cached = try? cacheManager?.getCachedInventoryItems(), !cached.isEmpty {
+            if items.isEmpty, let cached = try? cacheManager?.getCachedInventoryItems(maxAge: cacheMaxAge), !cached.isEmpty {
                 items = cached
                 isShowingCachedData = true
                 applyFilters()
@@ -223,6 +224,35 @@ public final class InventoryListViewModel {
             items.removeAll { $0.id == item.id }
             applyFilters()
         } catch {
+            errorMessage = mapError(error)
+        }
+    }
+
+    /// Remove the item from the local list immediately (for undo pattern).
+    @MainActor
+    public func softDeleteItem(_ item: InventoryItem) -> (item: InventoryItem, index: Int)? {
+        guard let index = items.firstIndex(where: { $0.id == item.id }) else { return nil }
+        let removed = items.remove(at: index)
+        applyFilters()
+        return (removed, index)
+    }
+
+    /// Restore a previously soft-deleted item.
+    @MainActor
+    public func restoreItem(_ item: InventoryItem, at index: Int) {
+        let safeIndex = min(index, items.count)
+        items.insert(item, at: safeIndex)
+        applyFilters()
+    }
+
+    /// Permanently delete an item via API (called after undo grace period).
+    @MainActor
+    public func confirmDeleteItem(_ item: InventoryItem) async {
+        do {
+            try await apiClient.delete(Endpoint.inventoryItem(item.id))
+        } catch {
+            items.append(item)
+            applyFilters()
             errorMessage = mapError(error)
         }
     }

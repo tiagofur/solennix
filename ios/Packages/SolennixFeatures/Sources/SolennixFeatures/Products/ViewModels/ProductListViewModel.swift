@@ -87,6 +87,7 @@ public final class ProductListViewModel {
 
     private let apiClient: APIClient
     private var cacheManager: CacheManager?
+    private let cacheMaxAge: TimeInterval = 30 * 60
 
     // MARK: - Init
 
@@ -112,7 +113,7 @@ public final class ProductListViewModel {
         errorMessage = nil
 
         // Show cached data immediately while fetching
-        if products.isEmpty, let cached = try? cacheManager?.getCachedProducts(), !cached.isEmpty {
+        if products.isEmpty, let cached = try? cacheManager?.getCachedProducts(maxAge: cacheMaxAge), !cached.isEmpty {
             products = cached
             isShowingCachedData = true
             applyFilters()
@@ -153,7 +154,7 @@ public final class ProductListViewModel {
             // Update cache with fresh data
             try? cacheManager?.cacheProducts(products)
         } catch {
-            if products.isEmpty, let cached = try? cacheManager?.getCachedProducts(), !cached.isEmpty {
+            if products.isEmpty, let cached = try? cacheManager?.getCachedProducts(maxAge: cacheMaxAge), !cached.isEmpty {
                 products = cached
                 isShowingCachedData = true
                 applyFilters()
@@ -216,6 +217,35 @@ public final class ProductListViewModel {
             products.removeAll { $0.id == product.id }
             applyFilters()
         } catch {
+            errorMessage = mapError(error)
+        }
+    }
+
+    /// Remove the product from the local list immediately (for undo pattern).
+    @MainActor
+    public func softDeleteProduct(_ product: Product) -> (product: Product, index: Int)? {
+        guard let index = products.firstIndex(where: { $0.id == product.id }) else { return nil }
+        let removed = products.remove(at: index)
+        applyFilters()
+        return (removed, index)
+    }
+
+    /// Restore a previously soft-deleted product.
+    @MainActor
+    public func restoreProduct(_ product: Product, at index: Int) {
+        let safeIndex = min(index, products.count)
+        products.insert(product, at: safeIndex)
+        applyFilters()
+    }
+
+    /// Permanently delete a product via API (called after undo grace period).
+    @MainActor
+    public func confirmDeleteProduct(_ product: Product) async {
+        do {
+            try await apiClient.delete(Endpoint.product(product.id))
+        } catch {
+            products.append(product)
+            applyFilters()
             errorMessage = mapError(error)
         }
     }

@@ -68,16 +68,20 @@ public final class SearchViewModel {
     public var results: SearchResults?
     public var isLoading: Bool = false
     public var hasSearched: Bool = false
+    public var recentQueries: [String] = []
 
     // MARK: - Dependencies
 
     private let apiClient: APIClient
     private var searchTask: Task<Void, Never>?
+    private let recentQueriesKey = "solennix.search.recentQueries"
+    private let maxRecentQueries = 6
 
     // MARK: - Init
 
     public init(apiClient: APIClient) {
         self.apiClient = apiClient
+        self.recentQueries = UserDefaults.standard.stringArray(forKey: recentQueriesKey) ?? []
     }
 
     // MARK: - Computed
@@ -88,6 +92,14 @@ public final class SearchViewModel {
 
     public var isEmpty: Bool {
         results?.isEmpty ?? true
+    }
+
+    public var querySuggestions: [String] {
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty {
+            return recentQueries
+        }
+        return recentQueries.filter { $0.localizedCaseInsensitiveContains(trimmed) }
     }
 
     // MARK: - Search
@@ -176,6 +188,7 @@ public final class SearchViewModel {
 
                 results = searchResults
                 hasSearched = true
+                saveRecentQuery(trimmed)
             } catch {
                 guard !Task.isCancelled else { return }
                 results = SearchResults()
@@ -198,6 +211,15 @@ public final class SearchViewModel {
         isLoading = false
     }
 
+    public func clearRecentQueries() {
+        recentQueries = []
+        UserDefaults.standard.removeObject(forKey: recentQueriesKey)
+    }
+
+    public func applySuggestion(_ suggestion: String) {
+        query = suggestion
+    }
+
     // MARK: - Helpers
 
     private func formatEventDate(_ dateString: String) -> String {
@@ -214,5 +236,17 @@ public final class SearchViewModel {
 
     private func formatCurrency(_ value: Double) -> String {
         value.asMXN
+    }
+
+    private func saveRecentQuery(_ query: String) {
+        let normalized = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard normalized.count >= 2 else { return }
+
+        recentQueries.removeAll { $0.caseInsensitiveCompare(normalized) == .orderedSame }
+        recentQueries.insert(normalized, at: 0)
+        if recentQueries.count > maxRecentQueries {
+            recentQueries = Array(recentQueries.prefix(maxRecentQueries))
+        }
+        UserDefaults.standard.set(recentQueries, forKey: recentQueriesKey)
     }
 }

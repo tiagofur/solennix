@@ -59,6 +59,8 @@ public struct SearchView: View {
                     noResultsSection
                 } else if let results = vm.results, !results.isEmpty {
                     resultsContent(results: results)
+                } else if !vm.querySuggestions.isEmpty {
+                    suggestionsSection(vm: vm)
                 } else if !vm.hasSearched {
                     initialStateSection
                 }
@@ -167,6 +169,39 @@ public struct SearchView: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, Spacing.xxl)
             .listRowBackground(SolennixColors.card)
+        }
+    }
+
+    private func suggestionsSection(vm: SearchViewModel) -> some View {
+        Section {
+            ForEach(vm.querySuggestions, id: \.self) { suggestion in
+                Button {
+                    vm.applySuggestion(suggestion)
+                    Task { await vm.search() }
+                } label: {
+                    HStack(spacing: Spacing.sm) {
+                        Image(systemName: "clock.arrow.circlepath")
+                            .font(.caption)
+                            .foregroundStyle(SolennixColors.textTertiary)
+                        Text(suggestion)
+                            .font(.subheadline)
+                            .foregroundStyle(SolennixColors.text)
+                        Spacer()
+                    }
+                }
+                .listRowBackground(SolennixColors.card)
+            }
+        } header: {
+            HStack {
+                Text("Sugerencias")
+                Spacer()
+                if !vm.recentQueries.isEmpty {
+                    Button("Limpiar") {
+                        vm.clearRecentQueries()
+                    }
+                    .font(.caption)
+                }
+            }
         }
     }
 
