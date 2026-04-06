@@ -144,7 +144,7 @@ public final class InventoryListViewModel {
                     "sort": sortParam,
                     "order": sortAscending ? "asc" : "desc"
                 ]
-                let paginated: PaginatedResponse<InventoryItem> = try await apiClient.get(Endpoint.inventory, params: params)
+                let paginated: PaginatedResponse<InventoryItem> = try await apiClient.getPaginated(Endpoint.inventory, params: params)
                 if currentPage == 1 {
                     items = paginated.data
                 } else {
@@ -192,7 +192,7 @@ public final class InventoryListViewModel {
                 "sort": sortParam,
                 "order": sortAscending ? "asc" : "desc"
             ]
-            let paginated: PaginatedResponse<InventoryItem> = try await apiClient.get(Endpoint.inventory, params: params)
+            let paginated: PaginatedResponse<InventoryItem> = try await apiClient.getPaginated(Endpoint.inventory, params: params)
             items.append(contentsOf: paginated.data)
             totalPages = paginated.totalPages
             totalItems = paginated.total

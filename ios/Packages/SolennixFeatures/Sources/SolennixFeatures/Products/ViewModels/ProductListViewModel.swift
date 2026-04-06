@@ -138,7 +138,7 @@ public final class ProductListViewModel {
                     "sort": sortParam,
                     "order": sortAscending ? "asc" : "desc"
                 ]
-                let paginated: PaginatedResponse<Product> = try await apiClient.get(Endpoint.products, params: params)
+                let paginated: PaginatedResponse<Product> = try await apiClient.getPaginated(Endpoint.products, params: params)
                 if currentPage == 1 {
                     products = paginated.data
                 } else {
@@ -185,7 +185,7 @@ public final class ProductListViewModel {
                 "sort": sortParam,
                 "order": sortAscending ? "asc" : "desc"
             ]
-            let paginated: PaginatedResponse<Product> = try await apiClient.get(Endpoint.products, params: params)
+            let paginated: PaginatedResponse<Product> = try await apiClient.getPaginated(Endpoint.products, params: params)
             products.append(contentsOf: paginated.data)
             totalPages = paginated.totalPages
             totalItems = paginated.total

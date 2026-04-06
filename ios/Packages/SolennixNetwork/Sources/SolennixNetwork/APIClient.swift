@@ -110,6 +110,24 @@ public actor APIClient {
         return try await execute(request)
     }
 
+    /// Fetch a paginated response, with fallback to plain array.
+    /// Use this for list views that expect PaginatedResponse but the backend may return a plain array.
+    public func getPaginated<T: Decodable>(
+        _ endpoint: String,
+        params: [String: String]? = nil
+    ) async throws -> PaginatedResponse<T> {
+        let request = try buildRequest(endpoint, method: "GET", params: params)
+        let data = try await performRaw(request)
+
+        // Try paginated format first
+        if let paginated = try? decoder.decode(PaginatedResponse<T>.self, from: data) {
+            return paginated
+        }
+        // Fall back: wrap plain array as a single-page PaginatedResponse
+        let array = try decoder.decode([T].self, from: data)
+        return PaginatedResponse<T>(data: array, total: array.count, page: 1, limit: array.count, totalPages: 1)
+    }
+
     /// Fetch all items from a paginated endpoint by requesting a high limit.
     /// Handles both paginated (`{ "data": [...] }`) and plain array responses.
     public func getAll<T: Decodable>(

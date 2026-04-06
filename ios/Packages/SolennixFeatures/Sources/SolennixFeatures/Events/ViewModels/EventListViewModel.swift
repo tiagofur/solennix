@@ -166,7 +166,7 @@ public final class EventListViewModel {
                     "sort": "event_date",
                     "order": "desc"
                 ]
-                async let paginatedResult: PaginatedResponse<Event> = apiClient.get(Endpoint.events, params: params)
+                async let paginatedResult: PaginatedResponse<Event> = apiClient.getPaginated(Endpoint.events, params: params)
                 async let clientsResult: [Client] = apiClient.getAll(Endpoint.clients)
 
                 let paginated = try await paginatedResult
@@ -209,7 +209,7 @@ public final class EventListViewModel {
                 "sort": "event_date",
                 "order": "desc"
             ]
-            let paginated: PaginatedResponse<Event> = try await apiClient.get(Endpoint.events, params: params)
+            let paginated: PaginatedResponse<Event> = try await apiClient.getPaginated(Endpoint.events, params: params)
             events.append(contentsOf: paginated.data)
             totalPages = paginated.totalPages
             totalItems = paginated.total

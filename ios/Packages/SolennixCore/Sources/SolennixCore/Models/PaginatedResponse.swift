@@ -17,4 +17,12 @@ public struct PaginatedResponse<T: Decodable>: Decodable {
         case data, total, page, limit
         case totalPages = "total_pages"
     }
+
+    public init(data: [T], total: Int, page: Int, limit: Int, totalPages: Int) {
+        self.data = data
+        self.total = total
+        self.page = page
+        self.limit = limit
+        self.totalPages = totalPages
+    }
 }

@@ -206,10 +206,11 @@ public final class DashboardViewModel {
             recalculateMonthlyMetrics()
 
         } catch {
+            NSLog("[Dashboard] ❌ loadDashboard failed: %@", String(describing: error))
             if let apiError = error as? APIError {
                 errorMessage = apiError.errorDescription ?? "Error cargando el dashboard"
             } else {
-                errorMessage = "Error cargando el dashboard"
+                errorMessage = "Error cargando el dashboard: \(error.localizedDescription)"
             }
         }
 

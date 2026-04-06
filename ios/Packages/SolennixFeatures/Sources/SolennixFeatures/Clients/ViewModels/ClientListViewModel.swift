@@ -133,7 +133,7 @@ public final class ClientListViewModel {
                     "sort": sortParam,
                     "order": sortAscending ? "asc" : "desc"
                 ]
-                let paginated: PaginatedResponse<Client> = try await apiClient.get(Endpoint.clients, params: params)
+                let paginated: PaginatedResponse<Client> = try await apiClient.getPaginated(Endpoint.clients, params: params)
                 if currentPage == 1 {
                     clients = paginated.data
                 } else {
@@ -183,7 +183,7 @@ public final class ClientListViewModel {
                 "sort": sortParam,
                 "order": sortAscending ? "asc" : "desc"
             ]
-            let paginated: PaginatedResponse<Client> = try await apiClient.get(Endpoint.clients, params: params)
+            let paginated: PaginatedResponse<Client> = try await apiClient.getPaginated(Endpoint.clients, params: params)
             clients.append(contentsOf: paginated.data)
             totalPages = paginated.totalPages
             totalItems = paginated.total
