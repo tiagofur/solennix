@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -24,7 +24,7 @@ import { usePagination } from "../../hooks/usePagination";
 import { Pagination } from "../../components/Pagination";
 import { SkeletonTable } from "../../components/Skeleton";
 import { StatusDropdown, EventStatus } from "../../components/StatusDropdown";
-import { useEvents, useDeleteEvent } from "../../hooks/queries/useEventQueries";
+import { useEvents, useEventsPaginated, useDeleteEvent } from "../../hooks/queries/useEventQueries";
 
 type EventWithClient = Event & { clients?: { name: string } | null };
 
@@ -38,22 +38,46 @@ const STATUS_CHIPS: { label: string; value: StatusFilter }[] = [
   { label: "Cancelado", value: "cancelled" },
 ];
 
+const ITEMS_PER_PAGE = 10;
+
 export const EventList: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { data: events = [], isLoading: loading } = useEvents();
   const deleteEvent = useDeleteEvent();
 
-  // Read filters from URL (persistent, shareable)
+  // Read filters & pagination from URL (persistent, shareable)
   const searchTerm = searchParams.get("q") || "";
   const statusFilter = (searchParams.get("status") || "all") as StatusFilter;
   const dateFrom = searchParams.get("from") || "";
   const dateTo = searchParams.get("to") || "";
+  const urlPage = Math.max(1, parseInt(searchParams.get("page") || "1", 10) || 1);
+  const urlSort = searchParams.get("sort") || "event_date";
+  const urlOrder = (searchParams.get("order") || "desc") as "asc" | "desc";
+
+  // Determine if client-side filters are active (backend doesn't support these yet)
+  const hasFilters = !!(searchTerm || statusFilter !== "all" || dateFrom || dateTo);
+
+  // Server-side paginated query (used when no filters active)
+  const paginatedQuery = useEventsPaginated({
+    page: urlPage,
+    limit: ITEMS_PER_PAGE,
+    sort: urlSort,
+    order: urlOrder,
+  });
+
+  // Full fetch (fallback when filters are active)
+  const allEventsQuery = useEvents();
+
+  // Pick the right loading state
+  const loading = hasFilters ? allEventsQuery.isLoading : paginatedQuery.isLoading;
+
+  // All events (for CSV export & header count)
+  const allEvents: EventWithClient[] = allEventsQuery.data ?? [];
 
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
-  const updateFilter = (key: string, value: string) => {
+  const updateFilter = useCallback((key: string, value: string) => {
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
       if (!value || value === "all") {
@@ -61,9 +85,13 @@ export const EventList: React.FC = () => {
       } else {
         next.set(key, value);
       }
+      // Reset to page 1 when changing filters (not when changing page itself)
+      if (key !== "page") {
+        next.delete("page");
+      }
       return next;
     }, { replace: true });
-  };
+  }, [setSearchParams]);
 
   const requestDelete = (id: string) => {
     setPendingDeleteId(id);
@@ -78,35 +106,73 @@ export const EventList: React.FC = () => {
     deleteEvent.mutate(id);
   };
 
-  const filteredEvents = (events || []).filter((event) => {
-    const clientName = event.clients?.name ?? "";
-    const matchesSearch =
-      !searchTerm ||
-      clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      event.service_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (event.city ?? "").toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus =
-      statusFilter === "all" || event.status === statusFilter;
-    const matchesDateFrom = !dateFrom || event.event_date >= dateFrom;
-    const matchesDateTo = !dateTo || event.event_date <= dateTo;
-    return matchesSearch && matchesStatus && matchesDateFrom && matchesDateTo;
-  });
+  // Client-side filtering (only used when filters are active)
+  const filteredEvents = useMemo(() => {
+    if (!hasFilters) return [];
+    return (allEvents || []).filter((event) => {
+      const clientName = event.clients?.name ?? "";
+      const matchesSearch =
+        !searchTerm ||
+        clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        event.service_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (event.city ?? "").toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus =
+        statusFilter === "all" || event.status === statusFilter;
+      const matchesDateFrom = !dateFrom || event.event_date >= dateFrom;
+      const matchesDateTo = !dateTo || event.event_date <= dateTo;
+      return matchesSearch && matchesStatus && matchesDateFrom && matchesDateTo;
+    });
+  }, [hasFilters, allEvents, searchTerm, statusFilter, dateFrom, dateTo]);
 
-  const {
-    currentData: paginatedEvents,
-    currentPage,
-    totalPages,
-    totalItems,
-    handlePageChange,
-    handleSort,
-    sortKey,
-    sortOrder,
-  } = usePagination({
+  // Client-side pagination (only used when filters are active)
+  const clientPagination = usePagination({
     data: filteredEvents,
-    itemsPerPage: 10,
+    itemsPerPage: ITEMS_PER_PAGE,
     initialSortKey: "event_date",
     initialSortOrder: "desc",
   });
+
+  // Unified pagination values
+  const paginatedEvents: EventWithClient[] = hasFilters
+    ? clientPagination.currentData
+    : paginatedQuery.data?.data ?? [];
+
+  const currentPage = hasFilters ? clientPagination.currentPage : urlPage;
+  const totalPages = hasFilters
+    ? clientPagination.totalPages
+    : paginatedQuery.data?.total_pages ?? 1;
+  const totalItems = hasFilters
+    ? clientPagination.totalItems
+    : paginatedQuery.data?.total ?? 0;
+
+  // For the header count, show total from server when no filters
+  const headerCount = hasFilters ? filteredEvents.length : (paginatedQuery.data?.total ?? allEvents.length);
+
+  const sortKey = hasFilters ? clientPagination.sortKey : urlSort;
+  const sortOrder = hasFilters ? clientPagination.sortOrder : urlOrder;
+
+  const handlePageChange = useCallback((page: number) => {
+    if (hasFilters) {
+      clientPagination.handlePageChange(page);
+    } else {
+      updateFilter("page", page === 1 ? "" : String(page));
+    }
+  }, [hasFilters, clientPagination, updateFilter]);
+
+  const handleSort = useCallback((key: keyof EventWithClient) => {
+    if (hasFilters) {
+      clientPagination.handleSort(key);
+    } else {
+      const newOrder = urlSort === String(key) && urlOrder === "asc" ? "desc" : "asc";
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        next.set("sort", String(key));
+        next.set("order", newOrder);
+        next.delete("page"); // reset to page 1 on sort change
+        return next;
+      }, { replace: true });
+    }
+  }, [hasFilters, clientPagination, urlSort, urlOrder, setSearchParams]);
 
   const renderSortIcon = (key: keyof EventWithClient) => {
     if (sortKey !== key) return null;
@@ -155,14 +221,14 @@ export const EventList: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h1 className="text-2xl font-bold text-text tracking-tight">
           Eventos{" "}
-          {!loading && events.length > 0 && (
+          {!loading && headerCount > 0 && (
             <span className="text-base font-semibold text-text-secondary">
-              ({events.length})
+              ({headerCount})
             </span>
           )}
         </h1>
         <div className="flex flex-wrap items-center gap-2">
-          {events.length > 0 && (
+          {allEvents.length > 0 && (
             <button
               type="button"
               onClick={() =>
@@ -177,7 +243,7 @@ export const EventList: React.FC = () => {
                     "Total",
                     "Ciudad",
                   ],
-                  events.map((e) => [
+                  allEvents.map((e) => [
                     formatDate(e.event_date),
                     e.clients?.name ?? "",
                     e.service_type,
@@ -304,7 +370,7 @@ export const EventList: React.FC = () => {
               { width: "w-20" },
             ]}
           />
-        ) : filteredEvents.length === 0 ? (
+        ) : paginatedEvents.length === 0 ? (
           <Empty
             icon={CalendarDays}
             title={
@@ -463,12 +529,12 @@ export const EventList: React.FC = () => {
             </table>
           </div>
         )}
-        {!loading && filteredEvents.length > 0 && (
+        {!loading && paginatedEvents.length > 0 && (
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
             totalItems={totalItems}
-            itemsPerPage={10}
+            itemsPerPage={ITEMS_PER_PAGE}
             onPageChange={handlePageChange}
           />
         )}
