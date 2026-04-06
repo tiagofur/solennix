@@ -80,6 +80,7 @@ func main() {
 	unavailRepo := repository.NewUnavailableDateRepo(pool)
 	deviceRepo := repository.NewDeviceRepo(pool)
 	revokedTokenRepo := repository.NewRevokedTokenRepo(pool)
+	refreshTokenRepo := repository.NewRefreshTokenRepo(pool)
 
 	// Set persistent token blacklist (replaces in-memory sync.Map)
 	mw.SetTokenBlacklist(revokedTokenRepo)
@@ -91,6 +92,7 @@ func main() {
 	stripeService := &handlers.DefaultStripeService{}
 	rcService := services.NewRevenueCatService(cfg.RevenueCatAPIKey)
 	authHandler := handlers.NewAuthHandler(userRepo, authService, emailService, cfg)
+	authHandler.SetRefreshTokenRepo(refreshTokenRepo)
 	crudHandler := handlers.NewCRUDHandler(clientRepo, eventRepo, productRepo, inventoryRepo, paymentRepo, userRepo, unavailRepo)
 	crudHandler.SetNotifier(notificationService)
 	crudHandler.SetEmailService(emailService)
@@ -159,7 +161,7 @@ func main() {
 		}
 	}()
 
-	// Background job: clean expired revoked tokens.
+	// Background job: clean expired revoked tokens and refresh token families.
 	// Runs once at startup then every hour.
 	go func() {
 		cleanup := func() {
@@ -168,6 +170,13 @@ func main() {
 				slog.Error("Failed to cleanup expired tokens", "error", err)
 			} else if count > 0 {
 				slog.Info("Cleaned up expired revoked tokens", "count", count)
+			}
+
+			refreshCount, refreshErr := refreshTokenRepo.CleanupExpired(context.Background())
+			if refreshErr != nil {
+				slog.Error("Failed to cleanup expired refresh token families", "error", refreshErr)
+			} else if refreshCount > 0 {
+				slog.Info("Cleaned up expired refresh token families", "count", refreshCount)
 			}
 		}
 		cleanup()

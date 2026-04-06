@@ -15,8 +15,9 @@ type AuthService struct {
 }
 
 type TokenClaims struct {
-	UserID uuid.UUID `json:"user_id"`
-	Email  string    `json:"email"`
+	UserID   uuid.UUID `json:"user_id"`
+	Email    string    `json:"email"`
+	FamilyID uuid.UUID `json:"family_id,omitempty"` // For refresh token rotation
 	jwt.RegisteredClaims
 }
 
@@ -47,8 +48,14 @@ func (s *AuthService) CheckPassword(password, hash string) bool {
 	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)) == nil
 }
 
-// GenerateTokenPair creates an access token and a refresh token.
+// GenerateTokenPair creates an access token and a refresh token with a new family.
 func (s *AuthService) GenerateTokenPair(userID uuid.UUID, email string) (*TokenPair, error) {
+	return s.GenerateTokenPairWithFamily(userID, email, uuid.New())
+}
+
+// GenerateTokenPairWithFamily creates an access token and a refresh token with a specific family ID.
+// The familyID is embedded in the refresh token for rotation tracking.
+func (s *AuthService) GenerateTokenPairWithFamily(userID uuid.UUID, email string, familyID uuid.UUID) (*TokenPair, error) {
 	now := time.Now()
 	expiresAt := now.Add(time.Duration(s.jwtExpiryHours) * time.Hour)
 
@@ -69,10 +76,11 @@ func (s *AuthService) GenerateTokenPair(userID uuid.UUID, email string) (*TokenP
 		return nil, fmt.Errorf("failed to sign access token: %w", err)
 	}
 
-	// Refresh token lasts 7 days
+	// Refresh token lasts 7 days and includes familyID for rotation
 	refreshClaims := TokenClaims{
-		UserID: userID,
-		Email:  email,
+		UserID:   userID,
+		Email:    email,
+		FamilyID: familyID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(now.Add(7 * 24 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(now),

@@ -19,6 +19,7 @@ import (
 	"unicode"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgconn"
 	"golang.org/x/crypto/bcrypt"
 
@@ -99,10 +100,11 @@ func isUniqueViolation(err error) bool {
 }
 
 type AuthHandler struct {
-	userRepo     FullUserRepository
-	authService  *services.AuthService
-	emailService *services.EmailService
-	cfg          *config.Config
+	userRepo         FullUserRepository
+	authService      *services.AuthService
+	emailService     *services.EmailService
+	cfg              *config.Config
+	refreshTokenRepo RefreshTokenRepository
 }
 
 func NewAuthHandler(userRepo FullUserRepository, authService *services.AuthService, emailService *services.EmailService, cfg *config.Config) *AuthHandler {
@@ -112,6 +114,37 @@ func NewAuthHandler(userRepo FullUserRepository, authService *services.AuthServi
 		emailService: emailService,
 		cfg:          cfg,
 	}
+}
+
+// SetRefreshTokenRepo configures refresh token rotation. If not set, old behavior is used.
+func (h *AuthHandler) SetRefreshTokenRepo(repo RefreshTokenRepository) {
+	h.refreshTokenRepo = repo
+}
+
+// setAuthCookie sets the httpOnly auth cookie for the access token.
+func setAuthCookie(w http.ResponseWriter, r *http.Request, token string) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     "auth_token",
+		Value:    token,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https",
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   24 * 60 * 60, // 24 hours
+	})
+}
+
+// storeRefreshToken stores a refresh token in the family table if rotation is enabled.
+func (h *AuthHandler) storeRefreshToken(ctx context.Context, refreshToken string, userID uuid.UUID) {
+	if h.refreshTokenRepo == nil {
+		return
+	}
+	tokenHash := hashToken(refreshToken)
+	refreshClaims, err := h.authService.ValidateRefreshToken(refreshToken)
+	if err != nil {
+		return
+	}
+	h.refreshTokenRepo.Store(ctx, userID, refreshClaims.FamilyID, tokenHash, time.Now().Add(7*24*time.Hour))
 }
 
 type registerRequest struct {
@@ -209,16 +242,11 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Store initial refresh token in family table for rotation
+	h.storeRefreshToken(r.Context(), tokens.RefreshToken, user.ID)
+
 	// Set httpOnly cookie for auth token (SECURE)
-	http.SetCookie(w, &http.Cookie{
-		Name:     "auth_token",
-		Value:    tokens.AccessToken,
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https", // True in production
-		SameSite: http.SameSiteLaxMode,
-		MaxAge:   24 * 60 * 60, // 24 hours
-	})
+	setAuthCookie(w, r, tokens.AccessToken)
 
 	slog.Info("auth.event", "action", "register", "user_id", user.ID, "email", user.Email, "ip", clientIP(r))
 
@@ -269,16 +297,11 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Store initial refresh token in family table for rotation
+	h.storeRefreshToken(r.Context(), tokens.RefreshToken, user.ID)
+
 	// Set httpOnly cookie for auth token (SECURE)
-	http.SetCookie(w, &http.Cookie{
-		Name:     "auth_token",
-		Value:    tokens.AccessToken,
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https", // True in production
-		SameSite: http.SameSiteLaxMode,
-		MaxAge:   24 * 60 * 60, // 24 hours
-	})
+	setAuthCookie(w, r, tokens.AccessToken)
 
 	slog.Info("auth.event", "action", "login_success", "user_id", user.ID, "email", user.Email, "method", "email", "ip", clientIP(r))
 
@@ -326,6 +349,40 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// --- ROTATION LOGIC ---
+	if h.refreshTokenRepo != nil {
+		tokenHash := hashToken(req.RefreshToken)
+		familyID, userID, consumeErr := h.refreshTokenRepo.Consume(r.Context(), tokenHash)
+		if consumeErr != nil {
+			if strings.Contains(consumeErr.Error(), "reuse detected") {
+				// COMPROMISE: revoke entire family
+				slog.Warn("auth.event", "action", "refresh_token_reuse_detected", "family_id", familyID, "user_id", userID, "ip", clientIP(r))
+				h.refreshTokenRepo.RevokeFamily(r.Context(), familyID)
+			}
+			writeError(w, http.StatusUnauthorized, "Invalid or expired token")
+			return
+		}
+
+		// Generate new pair with SAME family
+		tokens, err := h.authService.GenerateTokenPairWithFamily(claims.UserID, claims.Email, familyID)
+		if err != nil {
+			slog.Error("Failed to generate tokens", "error", err)
+			writeError(w, http.StatusInternalServerError, "Internal server error")
+			return
+		}
+
+		// Store the new refresh token in the family
+		newTokenHash := hashToken(tokens.RefreshToken)
+		refreshExpiry := time.Now().Add(7 * 24 * time.Hour)
+		h.refreshTokenRepo.Store(r.Context(), claims.UserID, familyID, newTokenHash, refreshExpiry)
+
+		setAuthCookie(w, r, tokens.AccessToken)
+		slog.Info("auth.event", "action", "token_refresh", "user_id", claims.UserID, "family_id", familyID, "ip", clientIP(r))
+		writeJSON(w, http.StatusOK, tokens)
+		return
+	}
+
+	// Fallback: no rotation (backward compatible)
 	tokens, err := h.authService.GenerateTokenPair(claims.UserID, claims.Email)
 	if err != nil {
 		slog.Error("Failed to generate tokens", "error", err)
@@ -333,20 +390,8 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Set httpOnly cookie for new access token (SECURE)
-	http.SetCookie(w, &http.Cookie{
-		Name:     "auth_token",
-		Value:    tokens.AccessToken,
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https",
-		SameSite: http.SameSiteLaxMode,
-		MaxAge:   24 * 60 * 60, // 24 hours
-	})
-
+	setAuthCookie(w, r, tokens.AccessToken)
 	slog.Info("auth.event", "action", "token_refresh", "user_id", claims.UserID, "ip", clientIP(r))
-
-	// Also return tokens in response for backward compatibility
 	writeJSON(w, http.StatusOK, tokens)
 }
 
@@ -378,6 +423,11 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 				expiry = claims.ExpiresAt.Time
 			}
 			_ = middleware.GetTokenBlacklist().Revoke(context.Background(), hashToken(token), expiry)
+
+			// Revoke all refresh token families for this user
+			if h.refreshTokenRepo != nil {
+				h.refreshTokenRepo.RevokeAllForUser(r.Context(), claims.UserID)
+			}
 		}
 	}
 
@@ -513,6 +563,11 @@ func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	// Blacklist the token so it cannot be reused
 	blacklistResetToken(req.Token, time.Now().Add(1*time.Hour))
 
+	// Revoke all refresh token families on password reset
+	if h.refreshTokenRepo != nil {
+		h.refreshTokenRepo.RevokeAllForUser(r.Context(), user.ID)
+	}
+
 	slog.Info("auth.event", "action", "password_reset", "user_id", user.ID, "ip", clientIP(r))
 
 	writeJSON(w, http.StatusOK, map[string]string{
@@ -571,6 +626,11 @@ func (h *AuthHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 		slog.Error("Failed to update password", "error", err)
 		writeError(w, http.StatusInternalServerError, "Failed to update password")
 		return
+	}
+
+	// Revoke all refresh token families on password change
+	if h.refreshTokenRepo != nil {
+		h.refreshTokenRepo.RevokeAllForUser(r.Context(), userID)
 	}
 
 	slog.Info("auth.event", "action", "password_changed", "user_id", userID, "ip", clientIP(r))
@@ -669,6 +729,7 @@ func (h *AuthHandler) GoogleSignIn(w http.ResponseWriter, r *http.Request) {
 			writeError(w, http.StatusInternalServerError, "Internal server error")
 			return
 		}
+		h.storeRefreshToken(r.Context(), tokens.RefreshToken, user.ID)
 		slog.Info("auth.event", "action", "google_login", "user_id", user.ID, "email", email, "ip", clientIP(r))
 		writeJSON(w, http.StatusOK, map[string]interface{}{
 			"user":   user,
@@ -689,6 +750,7 @@ func (h *AuthHandler) GoogleSignIn(w http.ResponseWriter, r *http.Request) {
 				writeError(w, http.StatusInternalServerError, "Internal server error")
 				return
 			}
+			h.storeRefreshToken(r.Context(), tokens.RefreshToken, user.ID)
 			slog.Info("auth.event", "action", "google_login", "user_id", user.ID, "email", email, "ip", clientIP(r))
 			writeJSON(w, http.StatusOK, map[string]interface{}{
 				"user":   user,
@@ -708,6 +770,7 @@ func (h *AuthHandler) GoogleSignIn(w http.ResponseWriter, r *http.Request) {
 			writeError(w, http.StatusInternalServerError, "Internal server error")
 			return
 		}
+		h.storeRefreshToken(r.Context(), tokens.RefreshToken, user.ID)
 		slog.Info("auth.event", "action", "google_link_and_login", "user_id", user.ID, "email", email, "ip", clientIP(r))
 		writeJSON(w, http.StatusOK, map[string]interface{}{
 			"user":   user,
@@ -741,6 +804,7 @@ func (h *AuthHandler) GoogleSignIn(w http.ResponseWriter, r *http.Request) {
 					writeError(w, http.StatusInternalServerError, "Internal server error")
 					return
 				}
+				h.storeRefreshToken(r.Context(), tokens.RefreshToken, existingUser.ID)
 				writeJSON(w, http.StatusOK, map[string]interface{}{
 					"user":   existingUser,
 					"tokens": tokens,
@@ -759,6 +823,7 @@ func (h *AuthHandler) GoogleSignIn(w http.ResponseWriter, r *http.Request) {
 				writeError(w, http.StatusInternalServerError, "Internal server error")
 				return
 			}
+			h.storeRefreshToken(r.Context(), tokens.RefreshToken, existingUser.ID)
 			slog.Info("auth.event", "action", "google_link_and_login_race", "user_id", existingUser.ID, "email", email, "ip", clientIP(r))
 			writeJSON(w, http.StatusOK, map[string]interface{}{
 				"user":   existingUser,
@@ -778,6 +843,7 @@ func (h *AuthHandler) GoogleSignIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	h.storeRefreshToken(r.Context(), tokens.RefreshToken, newUser.ID)
 	slog.Info("auth.event", "action", "google_register", "user_id", newUser.ID, "email", newUser.Email, "ip", clientIP(r))
 
 	writeJSON(w, http.StatusCreated, map[string]interface{}{
@@ -1041,6 +1107,7 @@ func (h *AuthHandler) AppleSignIn(w http.ResponseWriter, r *http.Request) {
 			writeError(w, http.StatusInternalServerError, "Internal server error")
 			return
 		}
+		h.storeRefreshToken(r.Context(), tokens.RefreshToken, user.ID)
 		slog.Info("auth.event", "action", "apple_login", "user_id", user.ID, "email", user.Email, "ip", clientIP(r))
 		writeJSON(w, http.StatusOK, map[string]interface{}{
 			"user":                  user,
@@ -1063,6 +1130,7 @@ func (h *AuthHandler) AppleSignIn(w http.ResponseWriter, r *http.Request) {
 					writeError(w, http.StatusInternalServerError, "Internal server error")
 					return
 				}
+				h.storeRefreshToken(r.Context(), tokens.RefreshToken, user.ID)
 				slog.Info("auth.event", "action", "apple_login", "user_id", user.ID, "email", email, "ip", clientIP(r))
 				writeJSON(w, http.StatusOK, map[string]interface{}{
 					"user":                  user,
@@ -1083,6 +1151,7 @@ func (h *AuthHandler) AppleSignIn(w http.ResponseWriter, r *http.Request) {
 				writeError(w, http.StatusInternalServerError, "Internal server error")
 				return
 			}
+			h.storeRefreshToken(r.Context(), tokens.RefreshToken, user.ID)
 			slog.Info("auth.event", "action", "apple_link_and_login", "user_id", user.ID, "email", email, "ip", clientIP(r))
 			writeJSON(w, http.StatusOK, map[string]interface{}{
 				"user":                  user,
@@ -1123,6 +1192,7 @@ func (h *AuthHandler) AppleSignIn(w http.ResponseWriter, r *http.Request) {
 					writeError(w, http.StatusInternalServerError, "Internal server error")
 					return
 				}
+				h.storeRefreshToken(r.Context(), tokens.RefreshToken, existingUser.ID)
 				writeJSON(w, http.StatusOK, map[string]interface{}{
 					"user":                  existingUser,
 					"tokens":                tokens,
@@ -1142,6 +1212,7 @@ func (h *AuthHandler) AppleSignIn(w http.ResponseWriter, r *http.Request) {
 				writeError(w, http.StatusInternalServerError, "Internal server error")
 				return
 			}
+			h.storeRefreshToken(r.Context(), tokens.RefreshToken, existingUser.ID)
 			slog.Info("auth.event", "action", "apple_link_and_login_race", "user_id", existingUser.ID, "email", email, "ip", clientIP(r))
 			writeJSON(w, http.StatusOK, map[string]interface{}{
 				"user":                  existingUser,
@@ -1161,6 +1232,7 @@ func (h *AuthHandler) AppleSignIn(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "Internal server error")
 		return
 	}
+	h.storeRefreshToken(r.Context(), tokens.RefreshToken, newUser.ID)
 
 	slog.Info("auth.event", "action", "apple_register", "user_id", newUser.ID, "email", newUser.Email, "ip", clientIP(r))
 

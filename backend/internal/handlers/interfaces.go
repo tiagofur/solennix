@@ -25,6 +25,14 @@ type FullUserRepository interface {
 	LinkAppleAccount(ctx context.Context, userID uuid.UUID, appleUserID string) error
 }
 
+// RefreshTokenRepository defines refresh token family operations for token rotation.
+type RefreshTokenRepository interface {
+	Store(ctx context.Context, userID, familyID uuid.UUID, tokenHash string, expiresAt time.Time) error
+	Consume(ctx context.Context, tokenHash string) (uuid.UUID, uuid.UUID, error)
+	RevokeFamily(ctx context.Context, familyID uuid.UUID) error
+	RevokeAllForUser(ctx context.Context, userID uuid.UUID) error
+}
+
 // FullEventRepository is the complete interface for event repo operations.
 type FullEventRepository interface {
 	EventRepository // existing: GetByID(id, userID), Update
