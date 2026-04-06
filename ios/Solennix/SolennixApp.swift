@@ -57,6 +57,7 @@ struct SolennixApp: App {
         let client = APIClient(baseURL: baseURL, keychainHelper: keychain)
         let auth = AuthManager(keychain: keychain)
         auth.apiClient = client
+        auth.userTrackingDelegate = SentryUserTrackingDelegate.shared
 
         let limits = PlanLimitsManager(apiClient: client)
         limits.setAuthManager(auth)
@@ -90,7 +91,11 @@ struct SolennixApp: App {
         TipsHelper.configure()
 
         // Configure Sentry
-        SentryHelper.configure()
+        let info = Bundle.main.infoDictionary
+        let sentryDSN = info?["SENTRY_DSN"] as? String
+        let sentryEnvironment = (info?["SENTRY_ENVIRONMENT"] as? String) ?? "development"
+        let releaseName = "ios@\(Bundle.main.appVersion)+\(Bundle.main.buildNumber)"
+        SentryHelper.configure(dsn: sentryDSN, environment: sentryEnvironment, releaseName: releaseName)
 
         // Configure SwiftData for offline caching
         self.modelContainer = SolennixModelContainer.create()
@@ -188,6 +193,29 @@ struct SolennixApp: App {
         case "dark":  return .dark
         default:      return nil // system default
         }
+    }
+}
+
+private final class SentryUserTrackingDelegate: UserTrackingDelegate, @unchecked Sendable {
+    static let shared = SentryUserTrackingDelegate()
+    private init() {}
+
+    func setUser(id: String, email: String, name: String) {
+        SentryHelper.setUser(id: id, email: email, name: name)
+    }
+
+    func clearUser() {
+        SentryHelper.clearUser()
+    }
+}
+
+private extension Bundle {
+    var appVersion: String {
+        infoDictionary?["CFBundleShortVersionString"] as? String ?? "0"
+    }
+
+    var buildNumber: String {
+        infoDictionary?["CFBundleVersion"] as? String ?? "0"
     }
 }
 

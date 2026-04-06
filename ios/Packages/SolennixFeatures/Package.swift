@@ -12,6 +12,7 @@ let package = Package(
         .package(path: "../SolennixNetwork"),
         .package(path: "../SolennixDesign"),
         .package(url: "https://github.com/RevenueCat/purchases-ios-spm.git", from: "5.0.0"),
+        .package(url: "https://github.com/getsentry/sentry-cocoa.git", from: "8.43.0"),
     ],
     targets: [
         .target(name: "SolennixFeatures",
@@ -20,6 +21,7 @@ let package = Package(
                     "SolennixNetwork",
                     "SolennixDesign",
                     .product(name: "RevenueCat", package: "purchases-ios-spm"),
+                    .product(name: "Sentry", package: "sentry-cocoa"),
                 ])
     ]
 )

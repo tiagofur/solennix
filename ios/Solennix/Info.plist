@@ -41,6 +41,10 @@
 	<array>
 		<string>com.solennix.app.refresh</string>
 	</array>
+	<key>SENTRY_DSN</key>
+	<string>$(SENTRY_DSN)</string>
+	<key>SENTRY_ENVIRONMENT</key>
+	<string>$(SENTRY_ENVIRONMENT)</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
