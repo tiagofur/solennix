@@ -12,8 +12,10 @@ public struct SubscriptionView: View {
     @State private var viewModel: SettingsViewModel
     @Environment(SubscriptionManager.self) private var subscriptionManager
     @Environment(\.horizontalSizeClass) private var sizeClass
+    private let apiClient: APIClient
 
     public init(apiClient: APIClient, authManager: AuthManager) {
+        self.apiClient = apiClient
         _viewModel = State(initialValue: SettingsViewModel(apiClient: apiClient, authManager: authManager))
     }
 
@@ -26,6 +28,11 @@ public struct SubscriptionView: View {
                 // Plan status
                 if subscriptionManager.isPremium {
                     activeStatusBanner
+                }
+
+                // Provider badge + cross-platform cancel instructions
+                if let sub = subscriptionManager.subscriptionStatus?.subscription {
+                    providerSection(sub)
                 }
 
                 // Features included in current plan
@@ -44,6 +51,7 @@ public struct SubscriptionView: View {
         .task {
             await viewModel.loadUser()
             await subscriptionManager.checkEntitlementStatus()
+            await subscriptionManager.fetchBackendStatus(apiClient: apiClient)
         }
     }
 
@@ -142,6 +150,52 @@ public struct SubscriptionView: View {
         }
     }
 
+    // MARK: - Provider Section
+
+    private func providerSection(_ sub: SubscriptionInfo) -> some View {
+        VStack(spacing: Spacing.sm) {
+            // Provider badge
+            HStack(spacing: Spacing.sm) {
+                Image(systemName: providerIcon(sub.provider))
+                    .font(.subheadline)
+                    .foregroundStyle(SolennixColors.textSecondary)
+
+                Text(sub.provider.badge)
+                    .font(.subheadline)
+                    .foregroundStyle(SolennixColors.textSecondary)
+
+                Spacer()
+            }
+            .padding(Spacing.md)
+            .background(SolennixColors.surfaceAlt)
+            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+
+            // Cross-platform cancel instructions (only when provider != apple)
+            if !sub.provider.isCurrentPlatform {
+                HStack(alignment: .top, spacing: Spacing.sm) {
+                    Image(systemName: "info.circle.fill")
+                        .font(.subheadline)
+                        .foregroundStyle(SolennixColors.info)
+
+                    Text(sub.provider.cancelInstructions)
+                        .font(.caption)
+                        .foregroundStyle(SolennixColors.text)
+                }
+                .padding(Spacing.md)
+                .background(SolennixColors.info.opacity(0.08))
+                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+            }
+        }
+    }
+
+    private func providerIcon(_ provider: SubscriptionProvider) -> String {
+        switch provider {
+        case .apple: return "apple.logo"
+        case .google: return "play.rectangle.fill"
+        case .stripe: return "globe"
+        }
+    }
+
     // MARK: - Actions Section
 
     private var actionsSection: some View {
@@ -178,8 +232,9 @@ public struct SubscriptionView: View {
             }
             .buttonStyle(.plain)
 
-            // Manage subscription (only if premium)
-            if subscriptionManager.isPremium {
+            // Manage subscription (only if premium and subscribed via Apple or unknown provider)
+            if subscriptionManager.isPremium &&
+                (subscriptionManager.subscriptionStatus?.subscription?.provider.isCurrentPlatform ?? true) {
                 Button {
                     Task { await subscriptionManager.openSubscriptionManagement() }
                 } label: {

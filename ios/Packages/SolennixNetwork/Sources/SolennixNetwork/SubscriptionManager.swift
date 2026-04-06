@@ -1,6 +1,7 @@
 import Foundation
 import Observation
 import RevenueCat
+import SolennixCore
 import StoreKit
 import UIKit
 
@@ -65,6 +66,9 @@ public final class SubscriptionManager {
 
     /// Indica si se esta procesando una compra.
     public private(set) var isPurchasing: Bool = false
+
+    /// Backend subscription status (includes provider info).
+    public private(set) var subscriptionStatus: SubscriptionStatusResponse?
 
     /// Error mas reciente para mostrar al usuario.
     public var errorMessage: String?
@@ -237,6 +241,19 @@ public final class SubscriptionManager {
             try await AppStore.showManageSubscriptions(in: windowScene)
         } catch {
             errorMessage = "No se pudo abrir la administracion de suscripciones."
+        }
+    }
+
+    // MARK: - Backend Subscription Status
+
+    /// Fetches subscription status from backend to get provider info.
+    @MainActor
+    public func fetchBackendStatus(apiClient: APIClient) async {
+        do {
+            let response: SubscriptionStatusResponse = try await apiClient.get(Endpoint.subscriptionStatus)
+            subscriptionStatus = response
+        } catch {
+            // Non-fatal: provider info is informational
         }
     }
 
