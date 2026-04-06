@@ -1,5 +1,6 @@
 package com.creapolis.solennix.core.network
 
+import com.creapolis.solennix.core.model.PaginatedResponse
 import io.ktor.client.call.*
 import io.ktor.client.plugins.*
 import io.ktor.client.request.*
@@ -91,6 +92,20 @@ class ApiService @Inject constructor(
         client.httpClient.delete(endpoint)
     }
 
+    /**
+     * GET request that returns a [PaginatedResponse] envelope.
+     * The caller must supply pagination params (page, limit, sort, order) in [params].
+     */
+    suspend fun <T> getPaginated(
+        endpoint: String,
+        params: Map<String, String> = emptyMap(),
+        type: io.ktor.util.reflect.TypeInfo
+    ): PaginatedResponse<T> = wrapError {
+        client.httpClient.get(endpoint) {
+            params.forEach { (key, value) -> parameter(key, value) }
+        }.body(type)
+    }
+
     suspend fun upload(
         endpoint: String,
         fileBytes: ByteArray,
@@ -123,3 +138,9 @@ suspend inline fun <reified T> ApiService.put(
     endpoint: String,
     body: Any
 ): T = put(endpoint, body, io.ktor.util.reflect.typeInfo<T>())
+
+suspend inline fun <reified T> ApiService.getPaginated(
+    endpoint: String,
+    params: Map<String, String> = emptyMap()
+): com.creapolis.solennix.core.model.PaginatedResponse<T> =
+    getPaginated(endpoint, params, io.ktor.util.reflect.typeInfo<com.creapolis.solennix.core.model.PaginatedResponse<T>>())

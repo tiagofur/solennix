@@ -1,18 +1,21 @@
 package com.creapolis.solennix.core.data.repository
 
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import com.creapolis.solennix.core.data.paging.RemotePagingSource
 import com.creapolis.solennix.core.database.dao.ProductDao
 import com.creapolis.solennix.core.database.entity.asEntity
 import com.creapolis.solennix.core.database.entity.asExternalModel
+import com.creapolis.solennix.core.model.PaginatedResponse
 import com.creapolis.solennix.core.model.Product
 import com.creapolis.solennix.core.model.ProductIngredient
 import com.creapolis.solennix.core.network.ApiService
 import com.creapolis.solennix.core.network.get
 import com.creapolis.solennix.core.network.post
 import com.creapolis.solennix.core.network.put
-import com.creapolis.solennix.core.network.get
-import com.creapolis.solennix.core.network.post
-import com.creapolis.solennix.core.network.put
 import com.creapolis.solennix.core.network.Endpoints
+import io.ktor.util.reflect.typeInfo
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -27,6 +30,16 @@ interface ProductRepository {
     suspend fun deleteProduct(id: String)
     suspend fun getProductIngredients(productId: String): List<ProductIngredient>
     suspend fun updateProductIngredients(productId: String, ingredients: List<ProductIngredient>): List<ProductIngredient>
+
+    /**
+     * Returns a [PagingData] stream that loads product pages directly from
+     * the remote API using server-side pagination.
+     */
+    fun getProductsRemotePaging(
+        sort: String = "name",
+        order: String = "asc",
+        query: String = ""
+    ): Flow<PagingData<Product>>
 }
 
 @Singleton
@@ -71,4 +84,31 @@ class OfflineFirstProductRepository @Inject constructor(
         ingredients: List<ProductIngredient>
     ): List<ProductIngredient> =
         apiService.put(Endpoints.productIngredients(productId), ingredients)
+
+    override fun getProductsRemotePaging(
+        sort: String,
+        order: String,
+        query: String
+    ): Flow<PagingData<Product>> {
+        val params = buildMap {
+            put("sort", sort)
+            put("order", order)
+            if (query.isNotBlank()) put("q", query)
+        }
+        return Pager(
+            config = PagingConfig(
+                pageSize = 20,
+                enablePlaceholders = true
+            ),
+            pagingSourceFactory = {
+                RemotePagingSource<Product>(
+                    apiService = apiService,
+                    endpoint = Endpoints.PRODUCTS,
+                    params = params,
+                    typeInfo = typeInfo<PaginatedResponse<Product>>(),
+                    pageSize = 20
+                )
+            }
+        ).flow
+    }
 }
