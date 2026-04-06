@@ -18,17 +18,17 @@ fun StatusBadge(
     status: String,
     modifier: Modifier = Modifier
 ) {
-    val (backgroundColor, textColor) = getStatusColors(status)
+    val statusColor = getStatusColor(status)
 
     Surface(
         modifier = modifier,
-        color = backgroundColor.copy(alpha = 0.15f),
+        color = statusColor.copy(alpha = 0.15f),
         shape = RoundedCornerShape(6.dp)
     ) {
         Text(
             text = status.uppercase(),
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-            color = backgroundColor,
+            color = statusColor,
             style = MaterialTheme.typography.labelSmall.copy(
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 0.5.sp
@@ -38,13 +38,12 @@ fun StatusBadge(
 }
 
 @Composable
-private fun getStatusColors(status: String): Pair<Color, Color> {
-    val color = when (status.lowercase()) {
+private fun getStatusColor(status: String): Color {
+    return when (status.lowercase()) {
         "quoted" -> SolennixTheme.colors.statusQuoted
         "confirmed" -> SolennixTheme.colors.statusConfirmed
         "completed" -> SolennixTheme.colors.statusCompleted
         "cancelled" -> SolennixTheme.colors.statusCancelled
         else -> SolennixTheme.colors.secondaryText
     }
-    return color to Color.White
 }

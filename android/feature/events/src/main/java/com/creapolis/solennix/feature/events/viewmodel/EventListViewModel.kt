@@ -104,7 +104,7 @@ class EventListViewModel @Inject constructor(
             error = filters.error,
             statusFilters = statusFilters
         )
-    }.stateIn(
+    }.distinctUntilChanged().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = EventListUiState(isLoading = true)

@@ -5,13 +5,14 @@
 # directive in build.gradle.kts.
 
 # Keep Kotlin Serialization models
--keepattributes *Annotation*, EnclosingMethod, Signature
+-keepattributes *Annotation*, EnclosingMethod, Signature, InnerClasses
+-keep @kotlinx.serialization.Serializable class ** { *; }
 -keepclassmembers class **@kotlinx.serialization.Serializable {
     *** Companion;
+    *** Serializer;
 }
--keepclassmembers class **@kotlinx.serialization.Serializable {
-    *** Companion;
-}
+-keep class kotlinx.serialization.** { *; }
+-keepclassmembers class kotlinx.serialization.** { *; }
 -keep class com.creapolis.solennix.core.model.** { *; }
 
 # Keep Hilt
@@ -26,6 +27,13 @@
 -keepclassmembers class io.ktor.** { *; }
 -dontwarn io.ktor.**
 
+# Kotlin Coroutines
+-keepnames class kotlinx.coroutines.internal.MainDispatcherFactory {}
+-keepnames class kotlinx.coroutines.CoroutineExceptionHandler {}
+-keepclassmembers class kotlinx.coroutines.** {
+    volatile **;
+}
+
 # Coil image loading
 -keep class coil3.** { *; }
 -dontwarn coil3.**
@@ -34,6 +42,9 @@
 -dontwarn okhttp3.**
 -dontwarn okio.**
 -keep class okhttp3.** { *; }
+
+# Kotlin Reflect
+-dontwarn kotlin.reflect.**
 
 # App models - keep all serializable data classes
 -keepclassmembers class com.creapolis.solennix.core.model.** { *; }

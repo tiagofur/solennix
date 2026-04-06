@@ -317,12 +317,12 @@ gantt
 > [!tip] Victorias rápidas para hacer ya
 
 - [x] Agregar `contentDescription` a todos los `Icon()` de navegación
-- [ ] `distinctUntilChanged()` en los Flows más usados (EventList, ClientList)
+- [x] `distinctUntilChanged()` en los Flows más usados (EventList, ClientList)
 - [ ] Comprimir imágenes antes de upload (si hay image picker)
-- [ ] Agregar `loading` state en botón de guardar (evitar double-tap)
-- [ ] Verificar y corregir contraste de `StatusBadge` en dark mode
-- [ ] Agregar `windowSoftInputMode="adjustResize"` si falta en manifest
-- [ ] ProGuard rules para Ktor y Kotlinx Serialization (evitar runtime crashes)
+- [x] Agregar `loading` state en botón de guardar (evitar double-tap)
+- [x] Verificar y corregir contraste de `StatusBadge` en dark mode
+- [x] Agregar `windowSoftInputMode="adjustResize"` si falta en manifest
+- [x] ProGuard rules para Ktor y Kotlinx Serialization (evitar runtime crashes)
 
 ---
 
