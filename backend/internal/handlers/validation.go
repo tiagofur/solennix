@@ -2,9 +2,51 @@ package handlers
 
 import (
 	"fmt"
+	"html"
+	"strings"
 
 	"github.com/tiagofur/solennix-backend/internal/models"
 )
+
+const (
+	MaxNameLength        = 255
+	MaxDescriptionLength = 2000
+	MaxNotesLength       = 5000
+	MaxAddressLength     = 500
+	MaxCityLength        = 255
+	MaxPhoneLength       = 50
+	MaxEmailLength       = 320
+	MaxCategoryLength    = 255
+	MaxServiceTypeLength = 255
+	MaxLocationLength    = 500
+	MaxContractLength    = 50000
+)
+
+// sanitizeString strips HTML tags from user input to prevent XSS.
+// Uses html.EscapeString to neutralize any HTML entities.
+func sanitizeString(s string) string {
+	return strings.TrimSpace(html.EscapeString(s))
+}
+
+// sanitizeOptionalString sanitizes a *string pointer, returns nil if empty after sanitization.
+func sanitizeOptionalString(s *string) *string {
+	if s == nil {
+		return nil
+	}
+	sanitized := sanitizeString(*s)
+	if sanitized == "" {
+		return nil
+	}
+	return &sanitized
+}
+
+// validateStringLength checks that a string doesn't exceed max length.
+func validateStringLength(field, value string, maxLen int) error {
+	if len(value) > maxLen {
+		return ValidationError{Field: field, Message: fmt.Sprintf("must not exceed %d characters", maxLen)}
+	}
+	return nil
+}
 
 // ValidationError represents a business logic validation error
 type ValidationError struct {
@@ -73,6 +115,31 @@ func ValidateEvent(event *models.Event) error {
 		return ValidationError{Field: "status", Message: "must be one of: quoted, confirmed, completed, cancelled"}
 	}
 
+	// String length validation
+	if err := validateStringLength("service_type", event.ServiceType, MaxServiceTypeLength); err != nil {
+		return err
+	}
+	if event.Location != nil {
+		if err := validateStringLength("location", *event.Location, MaxLocationLength); err != nil {
+			return err
+		}
+	}
+	if event.City != nil {
+		if err := validateStringLength("city", *event.City, MaxCityLength); err != nil {
+			return err
+		}
+	}
+	if event.Notes != nil {
+		if err := validateStringLength("notes", *event.Notes, MaxNotesLength); err != nil {
+			return err
+		}
+	}
+
+	// Sanitize text fields
+	event.ServiceType = sanitizeString(event.ServiceType)
+	event.Notes = sanitizeOptionalString(event.Notes)
+	event.Location = sanitizeOptionalString(event.Location)
+
 	return nil
 }
 
@@ -86,6 +153,21 @@ func ValidatePayment(payment *models.Payment) error {
 	// Validate payment_method is not empty
 	if payment.PaymentMethod == "" {
 		return ValidationError{Field: "payment_method", Message: "is required"}
+	}
+
+	// Validate payment_method enum
+	validMethods := map[string]bool{
+		"cash": true, "transfer": true, "card": true, "check": true, "other": true,
+	}
+	if !validMethods[payment.PaymentMethod] {
+		return ValidationError{Field: "payment_method", Message: "must be one of: cash, transfer, card, check, other"}
+	}
+
+	if payment.Notes != nil {
+		if err := validateStringLength("notes", *payment.Notes, MaxNotesLength); err != nil {
+			return err
+		}
+		payment.Notes = sanitizeOptionalString(payment.Notes)
 	}
 
 	return nil
@@ -150,6 +232,38 @@ func ValidateClient(client *models.Client) error {
 		}
 	}
 
+	// String length validation
+	if client.Phone != "" {
+		if err := validateStringLength("phone", client.Phone, MaxPhoneLength); err != nil {
+			return err
+		}
+	}
+	if client.Email != nil {
+		if err := validateStringLength("email", *client.Email, MaxEmailLength); err != nil {
+			return err
+		}
+	}
+	if client.Address != nil {
+		if err := validateStringLength("address", *client.Address, MaxAddressLength); err != nil {
+			return err
+		}
+	}
+	if client.City != nil {
+		if err := validateStringLength("city", *client.City, MaxCityLength); err != nil {
+			return err
+		}
+	}
+	if client.Notes != nil {
+		if err := validateStringLength("notes", *client.Notes, MaxNotesLength); err != nil {
+			return err
+		}
+	}
+
+	// Sanitize text fields
+	client.Name = sanitizeString(client.Name)
+	client.Notes = sanitizeOptionalString(client.Notes)
+	client.Address = sanitizeOptionalString(client.Address)
+
 	return nil
 }
 
@@ -169,6 +283,18 @@ func ValidateProduct(product *models.Product) error {
 	if product.BasePrice < 0 {
 		return ValidationError{Field: "base_price", Message: "must be greater than or equal to 0"}
 	}
+
+	// String length validation
+	if err := validateStringLength("name", product.Name, MaxNameLength); err != nil {
+		return err
+	}
+	if err := validateStringLength("category", product.Category, MaxCategoryLength); err != nil {
+		return err
+	}
+
+	// Sanitize text fields
+	product.Name = sanitizeString(product.Name)
+	product.Category = sanitizeString(product.Category)
 
 	return nil
 }
@@ -211,6 +337,14 @@ func ValidateInventoryItem(item *models.InventoryItem) error {
 	if !validTypes[item.Type] {
 		return ValidationError{Field: "type", Message: "must be one of: ingredient, equipment, supply"}
 	}
+
+	// String length validation
+	if err := validateStringLength("ingredient_name", item.IngredientName, MaxNameLength); err != nil {
+		return err
+	}
+
+	// Sanitize text fields
+	item.IngredientName = sanitizeString(item.IngredientName)
 
 	return nil
 }

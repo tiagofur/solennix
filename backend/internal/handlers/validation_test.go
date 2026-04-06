@@ -747,6 +747,252 @@ func TestValidateEventProduct_DiscountBelowZero(t *testing.T) {
 	}
 }
 
+// --- Input Validation Enhancement Tests ---
+
+func TestSanitizeString(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		want  string
+	}{
+		{"plain text", "Hello World", "Hello World"},
+		{"html script tag", "<script>alert('xss')</script>", "&lt;script&gt;alert(&#39;xss&#39;)&lt;/script&gt;"},
+		{"html entities", "<b>bold</b>", "&lt;b&gt;bold&lt;/b&gt;"},
+		{"trims whitespace", "  hello  ", "hello"},
+		{"empty string", "", ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := sanitizeString(tt.input)
+			if got != tt.want {
+				t.Errorf("sanitizeString(%q) = %q, want %q", tt.input, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestSanitizeOptionalString(t *testing.T) {
+	t.Run("nil input", func(t *testing.T) {
+		if got := sanitizeOptionalString(nil); got != nil {
+			t.Errorf("expected nil, got %v", *got)
+		}
+	})
+	t.Run("empty after sanitize", func(t *testing.T) {
+		s := "   "
+		if got := sanitizeOptionalString(&s); got != nil {
+			t.Errorf("expected nil for whitespace-only, got %v", *got)
+		}
+	})
+	t.Run("html input", func(t *testing.T) {
+		s := "<b>test</b>"
+		got := sanitizeOptionalString(&s)
+		if got == nil {
+			t.Fatal("expected non-nil")
+		}
+		want := "&lt;b&gt;test&lt;/b&gt;"
+		if *got != want {
+			t.Errorf("got %q, want %q", *got, want)
+		}
+	})
+}
+
+func TestValidateStringLength(t *testing.T) {
+	t.Run("within limit", func(t *testing.T) {
+		if err := validateStringLength("name", "short", 255); err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
+	})
+	t.Run("exceeds limit", func(t *testing.T) {
+		long := make([]byte, 256)
+		for i := range long {
+			long[i] = 'a'
+		}
+		err := validateStringLength("name", string(long), 255)
+		if err == nil {
+			t.Fatal("expected error for exceeding length")
+		}
+		expected := "name: must not exceed 255 characters"
+		if err.Error() != expected {
+			t.Errorf("got %q, want %q", err.Error(), expected)
+		}
+	})
+	t.Run("exactly at limit", func(t *testing.T) {
+		exact := make([]byte, 255)
+		for i := range exact {
+			exact[i] = 'a'
+		}
+		if err := validateStringLength("name", string(exact), 255); err != nil {
+			t.Errorf("unexpected error at exact limit: %v", err)
+		}
+	})
+}
+
+func TestValidateEvent_StringLengthAndSanitization(t *testing.T) {
+	longString := make([]byte, MaxServiceTypeLength+1)
+	for i := range longString {
+		longString[i] = 'a'
+	}
+
+	t.Run("service_type too long", func(t *testing.T) {
+		event := &models.Event{
+			NumPeople:   10,
+			ServiceType: string(longString),
+			Status:      "quoted",
+		}
+		err := ValidateEvent(event)
+		if err == nil {
+			t.Fatal("expected error for long service_type")
+		}
+		ve, ok := err.(ValidationError)
+		if !ok || ve.Field != "service_type" {
+			t.Errorf("expected service_type field error, got: %v", err)
+		}
+	})
+
+	t.Run("notes sanitized", func(t *testing.T) {
+		notes := "<script>alert('xss')</script>"
+		event := &models.Event{
+			NumPeople:   10,
+			ServiceType: "Catering",
+			Status:      "quoted",
+			Notes:       &notes,
+		}
+		if err := ValidateEvent(event); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if event.Notes == nil || *event.Notes == notes {
+			t.Error("expected notes to be sanitized")
+		}
+	})
+}
+
+func TestValidateClient_StringLengthAndSanitization(t *testing.T) {
+	longPhone := make([]byte, MaxPhoneLength+1)
+	for i := range longPhone {
+		longPhone[i] = '1'
+	}
+
+	t.Run("phone too long", func(t *testing.T) {
+		client := &models.Client{
+			Name:  "Test",
+			Phone: string(longPhone),
+		}
+		err := ValidateClient(client)
+		if err == nil {
+			t.Fatal("expected error for long phone")
+		}
+		ve, ok := err.(ValidationError)
+		if !ok || ve.Field != "phone" {
+			t.Errorf("expected phone field error, got: %v", err)
+		}
+	})
+
+	t.Run("name sanitized", func(t *testing.T) {
+		client := &models.Client{
+			Name:  "<b>John</b>",
+			Phone: "555-1234",
+		}
+		if err := ValidateClient(client); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		want := "&lt;b&gt;John&lt;/b&gt;"
+		if client.Name != want {
+			t.Errorf("name not sanitized: got %q, want %q", client.Name, want)
+		}
+	})
+}
+
+func TestValidatePayment_MethodEnum(t *testing.T) {
+	validMethods := []string{"cash", "transfer", "card", "check", "other"}
+	for _, method := range validMethods {
+		t.Run("valid_"+method, func(t *testing.T) {
+			payment := &models.Payment{Amount: 100, PaymentMethod: method}
+			if err := ValidatePayment(payment); err != nil {
+				t.Errorf("unexpected error for method %q: %v", method, err)
+			}
+		})
+	}
+
+	t.Run("invalid method", func(t *testing.T) {
+		payment := &models.Payment{Amount: 100, PaymentMethod: "bitcoin"}
+		err := ValidatePayment(payment)
+		if err == nil {
+			t.Fatal("expected error for invalid payment method")
+		}
+		expected := "payment_method: must be one of: cash, transfer, card, check, other"
+		if err.Error() != expected {
+			t.Errorf("got %q, want %q", err.Error(), expected)
+		}
+	})
+
+	t.Run("notes sanitized", func(t *testing.T) {
+		notes := "<img onerror=alert(1)>"
+		payment := &models.Payment{Amount: 100, PaymentMethod: "cash", Notes: &notes}
+		if err := ValidatePayment(payment); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if payment.Notes == nil || *payment.Notes == notes {
+			t.Error("expected notes to be sanitized")
+		}
+	})
+}
+
+func TestValidateProduct_StringLengthAndSanitization(t *testing.T) {
+	longName := make([]byte, MaxNameLength+1)
+	for i := range longName {
+		longName[i] = 'a'
+	}
+
+	t.Run("name too long", func(t *testing.T) {
+		product := &models.Product{
+			Name:      string(longName),
+			Category:  "Test",
+			BasePrice: 100,
+		}
+		err := ValidateProduct(product)
+		if err == nil {
+			t.Fatal("expected error for long name")
+		}
+		ve, ok := err.(ValidationError)
+		if !ok || ve.Field != "name" {
+			t.Errorf("expected name field error, got: %v", err)
+		}
+	})
+
+	t.Run("name sanitized", func(t *testing.T) {
+		product := &models.Product{
+			Name:      "<script>evil</script>",
+			Category:  "Test",
+			BasePrice: 100,
+		}
+		if err := ValidateProduct(product); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if product.Name == "<script>evil</script>" {
+			t.Error("expected name to be sanitized")
+		}
+	})
+}
+
+func TestValidateInventoryItem_StringLengthAndSanitization(t *testing.T) {
+	t.Run("ingredient_name sanitized", func(t *testing.T) {
+		item := &models.InventoryItem{
+			IngredientName: "<b>Tomate</b>",
+			CurrentStock:   100,
+			MinimumStock:   10,
+			Unit:           "kg",
+			Type:           "ingredient",
+		}
+		if err := ValidateInventoryItem(item); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		want := "&lt;b&gt;Tomate&lt;/b&gt;"
+		if item.IngredientName != want {
+			t.Errorf("got %q, want %q", item.IngredientName, want)
+		}
+	})
+}
+
 func TestValidateProductIngredient(t *testing.T) {
 	tests := []struct {
 		name       string
