@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import CoreSpotlight
+import BackgroundTasks
 import GoogleSignIn
 import SolennixCore
 import SolennixNetwork
@@ -37,8 +38,10 @@ struct SolennixApp: App {
     @State private var toastManager = ToastManager()
     @State private var networkMonitor = NetworkMonitor()
     @State private var cacheManager: CacheManager?
+    @State private var backgroundTaskManager: BackgroundTaskManager?
 
     @AppStorage("appearance") private var appearance: String = "system"
+    @Environment(\.scenePhase) private var scenePhase
 
     /// The SwiftData model container for offline caching.
     private let modelContainer: ModelContainer
@@ -147,6 +150,20 @@ struct SolennixApp: App {
                                 subscriptionManager.setBackendPremiumStatus(true)
                             }
                         }
+                    }
+                }
+                .onChange(of: scenePhase) { _, newPhase in
+                    if newPhase == .background {
+                        backgroundTaskManager?.scheduleAppRefresh()
+                    }
+                }
+                .task {
+                    // Initialize BackgroundTaskManager after CacheManager is ready
+                    if backgroundTaskManager == nil {
+                        let manager = BackgroundTaskManager(apiClient: apiClient, cacheManager: cacheManager)
+                        manager.registerTasks()
+                        manager.scheduleAppRefresh()
+                        backgroundTaskManager = manager
                     }
                 }
                 .onContinueUserActivity(CSSearchableItemActionType) { userActivity in

@@ -43,6 +43,7 @@
 		D738B142D5858B5FCA5E737C /* DeepLinkHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A362069977C87D34D5E51A2 /* DeepLinkHandler.swift */; };
 		D82CBBD7D2E30D0A2EBB7A36 /* AuthFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C051B91E5F738A07F4A1E176 /* AuthFlowView.swift */; };
 		DC5AA5EFC61BF9A75FB47CD6 /* SolennixNetwork in Frameworks */ = {isa = PBXBuildFile; productRef = 5ED55B2A557A9FD74159614F /* SolennixNetwork */; };
+		EABBA848F8BC545C8C5B78E4 /* BackgroundTaskManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A18654763EF08D7510683BCA /* BackgroundTaskManager.swift */; };
 		FCBBA0F06BEA4DA4EBC599AE /* EventLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA4056B4B0E121CB1775005F /* EventLiveActivity.swift */; };
 /* End PBXBuildFile section */
 
@@ -98,6 +99,7 @@
 		8BD8FAF4B7299793724BA9DF /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
 		8C00F21C74E3F4FEFE8F1C50 /* KeyboardShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardShortcuts.swift; sourceTree = "<group>"; };
 		93621466CB78E70396E79E29 /* ShowUpcomingEventsIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowUpcomingEventsIntent.swift; sourceTree = "<group>"; };
+		A18654763EF08D7510683BCA /* BackgroundTaskManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundTaskManager.swift; sourceTree = "<group>"; };
 		A3B0FFA9AF756AB9C85E856D /* SolennixApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolennixApp.swift; sourceTree = "<group>"; };
 		AB69CCDF04807E01479F4939 /* WidgetModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetModels.swift; sourceTree = "<group>"; };
 		BC512DE1AC7C660755ECA909 /* RouteDestination.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteDestination.swift; sourceTree = "<group>"; };
@@ -195,6 +197,7 @@
 				6C92B91AEB6A0E5ACE33DA18 /* Widgets */,
 				1F3752A818448EDDCFD8813A /* Assets.xcassets */,
 				C051B91E5F738A07F4A1E176 /* AuthFlowView.swift */,
+				A18654763EF08D7510683BCA /* BackgroundTaskManager.swift */,
 				81690A3205045775059AB12D /* ContentView.swift */,
 				20FD5F115715FD819AE007D8 /* Info.plist */,
 				1D5FE68FCA472E277CBF66FD /* PrivacyInfo.xcprivacy */,
@@ -406,6 +409,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D82CBBD7D2E30D0A2EBB7A36 /* AuthFlowView.swift in Sources */,
+				EABBA848F8BC545C8C5B78E4 /* BackgroundTaskManager.swift in Sources */,
 				4B8444FA9F8DD556DA2AC5BD /* CheckLowStockIntent.swift in Sources */,
 				175AB50ACB86012043B58889 /* CompactTabLayout.swift in Sources */,
 				1479593905C36807BC5595A8 /* ContentView.swift in Sources */,

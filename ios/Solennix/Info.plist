@@ -37,6 +37,10 @@
 	<string>Toma fotos de tus eventos y productos.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Selecciona imágenes para tus eventos y productos.</string>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>com.solennix.app.refresh</string>
+	</array>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
