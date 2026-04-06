@@ -101,6 +101,17 @@ func (r *UserRepo) Update(ctx context.Context, id uuid.UUID, name, businessName,
 	return user, nil
 }
 
+// GetPlanByID returns just the subscription plan for a user by ID.
+// Used by the rate limiter to resolve plan-based limits without loading the full user.
+func (r *UserRepo) GetPlanByID(ctx context.Context, id uuid.UUID) (string, error) {
+	var plan string
+	err := r.pool.QueryRow(ctx, `SELECT plan FROM users WHERE id = $1`, id).Scan(&plan)
+	if err != nil {
+		return "", fmt.Errorf("user not found: %w", err)
+	}
+	return plan, nil
+}
+
 // UpdatePlanAndStripeID updates the user's plan and optionally their Stripe Customer ID
 func (r *UserRepo) UpdatePlanAndStripeID(ctx context.Context, id uuid.UUID, plan string, stripeCustomerID *string) error {
 	query := `

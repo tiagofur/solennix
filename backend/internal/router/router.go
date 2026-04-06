@@ -113,6 +113,8 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 	// Protected routes
 	apiRouter.Group(func(r chi.Router) {
 		r.Use(mw.Auth(authService))
+		planResolver := mw.NewCachedPlanResolver(userRepo, 5*time.Minute)
+		r.Use(mw.UserRateLimit(planResolver, 1*time.Minute))
 		r.Use(mw.Audit(auditRepo))
 
 		// Uploads (authenticated, rate limited)
