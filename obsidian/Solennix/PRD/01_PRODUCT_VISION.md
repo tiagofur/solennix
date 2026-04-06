@@ -169,8 +169,7 @@ Cada competidor cubre 1-2. **Solennix cubre los 6.** Ver [[03_COMPETITIVE_ANALYS
 | US-11 | Registrar pagos parciales con diferentes métodos | Todas |
 | US-12 | Generar PDF de cotización con branding del negocio | Todas |
 | US-13 | Generar contrato PDF con términos configurables | Todas |
-| US-14 | Que clientes paguen anticipo por Stripe | Web |
-| US-15 | Ver reporte de pagos por evento | Todas |
+| US-14 | Ver reporte de pagos por evento | Todas |
 
 ### Catálogo y Inventario
 

@@ -1,9 +1,9 @@
 # Módulo Pagos
 
-#web #pagos #dominio #stripe
+#web #pagos #dominio
 
 > [!abstract] Resumen
-> Sistema de registro de pagos vinculados a eventos. Integración con Stripe para checkout online. Soporte para pagos parciales con tracking de saldo pendiente.
+> Sistema de registro de pagos vinculados a eventos. Soporte para pagos parciales con tracking de saldo pendiente. La app no intermediar pagos entre organizadores y sus clientes — los pagos son registros manuales de lo cobrado fuera de la app. Stripe se usa exclusivamente para las suscripciones Pro.
 
 ---
 
@@ -12,7 +12,6 @@
 | Componente | Ubicación | Función |
 |-----------|-----------|---------|
 | **Payments** | `Events/components/Payments.tsx` | Formulario RHF+Zod para registrar pagos + lista de pagos existentes |
-| **EventPaymentSuccess** | `Events/EventPaymentSuccess.tsx` | Página de confirmación post-checkout Stripe |
 
 ## Entidad
 
@@ -31,7 +30,6 @@ interface Payment {
 ## Funcionalidades
 
 - **Registro manual** — Monto, fecha, método de pago, notas
-- **Stripe Checkout** — Link de pago online para el cliente
 - **Depósito sugerido** — Calcula automáticamente el % de depósito configurado
 - **Saldo pendiente** — Total del evento menos pagos realizados
 - **Historial** — Lista de todos los pagos con fecha y método
@@ -47,14 +45,7 @@ interface Payment {
 | `update(id, data)` | PUT /payments/:id | Actualizar pago |
 | `delete(id)` | DELETE /payments/:id | Eliminar pago |
 
-### eventPaymentService (Stripe)
-
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| `createCheckoutSession()` | POST /events/:id/checkout | Crear sesión de Stripe Checkout |
-| `getPaymentSession()` | GET /events/:id/payment-session | Verificar estado del pago |
-
-### subscriptionService (suscripciones)
+### subscriptionService (suscripciones — solo para plan Pro del usuario)
 
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
@@ -62,29 +53,7 @@ interface Payment {
 | `createCheckoutSession()` | POST /subscription/checkout | Iniciar pago de suscripción |
 | `createPortalSession()` | POST /subscription/portal | Abrir portal de gestión Stripe |
 
-## Flujo de Pago con Stripe
-
-```mermaid
-sequenceDiagram
-    participant O as Organizador
-    participant W as Web App
-    participant B as Backend
-    participant S as Stripe
-
-    O->>W: Click "Cobrar con Stripe"
-    W->>B: POST /events/:id/checkout
-    B->>S: Create Checkout Session
-    S-->>B: checkout_url
-    B-->>W: checkout_url
-    W->>S: Redirect al checkout
-    Note over S: Cliente paga
-    S-->>W: Redirect a /payment-success
-    W->>B: GET /events/:id/payment-session
-    B-->>W: Payment confirmed
-    W-->>O: Confirmación + actualizar saldo
-```
-
 ## Relaciones
 
 - [[Módulo Eventos]] — Pagos vinculados a eventos
-- [[Capa de Servicios]] — paymentService, eventPaymentService, subscriptionService
+- [[Capa de Servicios]] — paymentService, subscriptionService

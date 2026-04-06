@@ -53,7 +53,6 @@ graph TB
         SearchH["SearchHandler<br/>Búsqueda global"]
         UploadH["UploadHandler<br/>Imágenes + thumbnails"]
         AdminH["AdminHandler<br/>Stats, Users, Upgrades"]
-        EventPayH["EventPaymentHandler<br/>Checkout Stripe por evento"]
         UnavailH["UnavailableDateHandler<br/>Fechas bloqueadas"]
         DeviceH["DeviceHandler<br/>Push notification tokens"]
     end
@@ -151,7 +150,6 @@ backend/
 │   │   ├── search_handler.go          # Búsqueda global
 │   │   ├── upload_handler.go          # Imágenes + thumbnails
 │   │   ├── admin_handler.go           # Panel admin
-│   │   ├── event_payment_handler.go   # Pagos Stripe por evento
 │   │   ├── unavailable_date_handler.go # Fechas bloqueadas
 │   │   ├── device_handler.go          # Device tokens
 │   │   ├── interfaces.go              # Interfaces de repos (DI)

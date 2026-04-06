@@ -473,7 +473,7 @@ Cada alerta muestra: nombre del evento, fecha, razon (badge), monto pendiente. T
 ### 8. Pagos y Finanzas [Todas]
 
 > [!abstract] Resumen
-> Sistema de registro de pagos parciales y totales para eventos, con multiples metodos de pago y checkout online via Stripe.
+> Sistema de registro de pagos parciales y totales para eventos, con multiples metodos de pago. Los pagos son registros manuales que el organizador lleva para trackear lo cobrado — la app no procesa ni intermediar pagos entre organizadores y sus clientes.
 
 #### Campos del pago
 
@@ -493,13 +493,9 @@ Cada alerta muestra: nombre del evento, fecha, razon (badge), monto pendiente. T
 | Multiples metodos | Efectivo, transferencia, tarjeta, deposito, etc. |
 | Historial | Lista de pagos por evento con fechas y montos |
 | Balance | Calculo automatico de saldo pendiente (total - pagos) |
-| Checkout Stripe | Pago online del cliente via Stripe Checkout Session |
 
-#### Checkout online (Stripe)
-
-- `POST /api/events/{id}/checkout-session` — crea sesion de pago Stripe para el evento.
-- `GET /api/events/{id}/payment-session` — maneja el redirect de exito post-pago.
-- **[Web]**: `EventPaymentSuccess` — pagina de confirmacion post-pago.
+> [!warning] Solo registro manual
+> Solennix no intermediar pagos entre organizadores y sus clientes. Los pagos se registran como constancia de lo cobrado fuera de la app (efectivo, transferencia directa, etc.). Stripe se usa exclusivamente para las suscripciones Pro de los usuarios, no para pagos de clientes.
 
 **Endpoints Backend:**
 - `GET /api/payments` — listar pagos
@@ -507,7 +503,7 @@ Cada alerta muestra: nombre del evento, fecha, razon (badge), monto pendiente. T
 - `PUT /api/payments/{id}` — actualizar pago
 - `DELETE /api/payments/{id}` — eliminar pago
 
-**Tier:** FREE (registro manual) / PRO (checkout Stripe) — ver [[04_MONETIZATION|Monetización]]
+**Tier:** FREE — ver [[04_MONETIZATION|Monetización]]
 
 ---
 
@@ -989,10 +985,9 @@ Sistema de upload de imagenes para fotos de eventos, productos y logos de negoci
 
 | Feature | iOS | Android | Web | Backend | Notas |
 |---------|-----|---------|-----|---------|-------|
-| CRUD de pagos | ✅ | ✅ | ✅ | ✅ | |
+| CRUD de pagos | ✅ | ✅ | ✅ | ✅ | Solo registro manual |
 | Pagos parciales | ✅ | ✅ | ✅ | ✅ | |
 | Multiples metodos | ✅ | ✅ | ✅ | ✅ | |
-| Checkout Stripe | ➖ | ➖ | ✅ | ✅ | Solo Web (redirige a Stripe) |
 | Balance pendiente | ✅ | ✅ | ✅ | ✅ | |
 
 ### PDFs

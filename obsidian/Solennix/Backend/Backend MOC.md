@@ -18,11 +18,11 @@
 
 ## Módulos por Dominio
 
-- [[Módulo Eventos]] — CRUD, items (productos/extras/equipo/insumos), fotos, conflictos, sugerencias, pagos Stripe
+- [[Módulo Eventos]] — CRUD, items (productos/extras/equipo/insumos), fotos, conflictos, sugerencias
 - [[Módulo Clientes]] — CRUD, búsqueda, métricas calculadas
 - [[Módulo Productos]] — CRUD, ingredientes/recetas, batch, gestión de insumos
 - [[Módulo Inventario]] — CRUD, stock tracking, tipos (equipo/insumo/consumible)
-- [[Módulo Pagos]] — CRUD, registro manual, checkout Stripe para eventos
+- [[Módulo Pagos]] — CRUD, registro manual de pagos (sin intermediación de pagos de clientes)
 - [[Módulo Suscripciones]] — Stripe, RevenueCat, webhooks, sync bidireccional, billing
 - [[Módulos Auxiliares]] — Calendario (fechas bloqueadas), Búsqueda global, Uploads (imágenes), Dispositivos (push tokens)
 - [[Módulo Admin]] — Stats, gestión de usuarios, upgrades, suscripciones

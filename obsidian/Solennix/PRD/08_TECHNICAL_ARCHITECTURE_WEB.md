@@ -137,7 +137,6 @@ web/src/
 │   ├── Events/
 │   │   ├── EventForm.tsx             # Formulario de creacion/edicion de eventos (multi-paso)
 │   │   ├── EventSummary.tsx          # Resumen detallado del evento
-│   │   ├── EventPaymentSuccess.tsx   # Confirmacion de pago exitoso
 │   │   └── components/
 │   │       ├── EventGeneralInfo.tsx   # Paso 1: informacion general
 │   │       ├── EventProducts.tsx      # Paso 2: productos/servicios
@@ -200,10 +199,9 @@ web/src/
 ├── services/                         # Capa de servicios API
 │   ├── clientService.ts             # CRUD de clientes
 │   ├── eventService.ts              # CRUD de eventos
-│   ├── eventPaymentService.ts       # Pagos asociados a eventos
+│   ├── eventPaymentService.ts       # Pagos asociados a eventos (registro manual)
 │   ├── productService.ts            # CRUD de productos/servicios
 │   ├── inventoryService.ts          # CRUD de inventario
-│   ├── paymentService.ts            # Integracion con Stripe (checkout, portal)
 │   ├── searchService.ts             # Busqueda global multi-entidad
 │   ├── subscriptionService.ts       # Gestion de suscripciones (planes)
 │   ├── adminService.ts              # Endpoints de administracion
@@ -255,7 +253,6 @@ Todas envueltas en `<ProtectedRoute>` + `<Layout>` (sidebar, header, Outlet).
 | `/events/new` | `EventForm` | Crear nuevo evento (formulario multi-paso) |
 | `/events/:id/edit` | `EventForm` | Editar evento existente |
 | `/events/:id/summary` | `EventSummary` | Resumen completo del evento |
-| `/events/:id/payment-success` | `EventPaymentSuccess` | Confirmacion de pago recibido |
 | `/clients` | `ClientList` | Lista de clientes con busqueda y paginacion |
 | `/clients/new` | `ClientForm` | Crear nuevo cliente |
 | `/clients/:id` | `ClientDetails` | Detalle del cliente con eventos asociados |
@@ -299,12 +296,11 @@ Cada servicio encapsula las llamadas HTTP a un grupo de endpoints del backend. T
 |----------|---------|---------------|
 | **clientService** | `clientService.ts` | CRUD de clientes: listar (con paginacion/busqueda), crear, obtener por ID, actualizar, eliminar |
 | **eventService** | `eventService.ts` | CRUD de eventos: listar, crear, obtener por ID, actualizar, eliminar. Incluye productos, extras, insumos y equipo asociados al evento |
-| **eventPaymentService** | `eventPaymentService.ts` | Pagos de eventos: registrar pago, listar pagos de un evento, eliminar pago |
+| **eventPaymentService** | `eventPaymentService.ts` | Pagos de eventos: registrar pago manual, listar pagos de un evento, eliminar pago |
 | **productService** | `productService.ts` | CRUD de productos/servicios del catalogo: listar, crear, obtener, actualizar, eliminar |
 | **inventoryService** | `inventoryService.ts` | CRUD de inventario: listar items, crear, obtener, actualizar, eliminar. Verificacion de disponibilidad por fecha |
-| **paymentService** | `paymentService.ts` | Integracion con Stripe: crear sesion de checkout, obtener portal de facturacion del cliente |
+| **subscriptionService** | `subscriptionService.ts` | Gestion de suscripciones Pro: crear sesion de checkout en Stripe, obtener portal de facturacion, obtener plan actual, verificar limites |
 | **searchService** | `searchService.ts` | Busqueda global multi-entidad: buscar clientes, eventos y productos en una sola consulta |
-| **subscriptionService** | `subscriptionService.ts` | Gestion de suscripciones: obtener plan actual, verificar limites, cambiar plan |
 | **adminService** | `adminService.ts` | Operaciones administrativas: listar todos los usuarios, estadisticas globales, gestion de cuentas |
 | **unavailableDatesService** | `unavailableDatesService.ts` | Gestion de fechas no disponibles: listar, crear, eliminar fechas bloqueadas en el calendario |
 

@@ -3,7 +3,7 @@
 #web #eventos #dominio
 
 > [!abstract] Resumen
-> Módulo central de la app. CRUD completo de eventos con formulario multi-paso, cotización rápida, resumen detallado, generación de PDFs, y gestión de pagos integrada con Stripe.
+> Módulo central de la app. CRUD completo de eventos con formulario multi-paso, cotización rápida, resumen detallado, generación de PDFs, y registro manual de pagos.
 
 ---
 
@@ -14,7 +14,6 @@
 | **EventList** | `/events` | Tabla con status chips, búsqueda, sort, paginación, export CSV |
 | **EventForm** | `/events/new`, `/events/:id/edit` | Formulario multi-paso: general, productos, extras, equipo, insumos, financieros |
 | **EventSummary** | `/events/:id/summary` | Vista completa del evento con todos los line items, pagos, PDFs |
-| **EventPaymentSuccess** | `/events/:id/payment-success` | Confirmación post-pago Stripe |
 | **QuickQuotePage** | `/cotizacion-rapida` | Cotización rápida sin crear evento completo |
 
 ## Formulario Multi-Paso

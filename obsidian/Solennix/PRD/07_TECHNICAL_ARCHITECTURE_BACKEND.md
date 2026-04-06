@@ -116,7 +116,6 @@ backend/
 │   │   ├── crud_handler.go            # CRUD para clients, events, products, inventory, payments
 │   │   ├── subscription_handler.go    # Stripe checkout, webhooks, RevenueCat
 │   │   ├── search_handler.go          # Busqueda global multi-entidad
-│   │   ├── event_payment_handler.go   # Pagos de eventos via Stripe
 │   │   ├── upload_handler.go          # Subida de imagenes con thumbnails
 │   │   ├── admin_handler.go           # Panel de administracion (stats, usuarios)
 │   │   ├── unavailable_date_handler.go # Gestion de fechas no disponibles
@@ -607,8 +606,6 @@ Rate limit: **10 requests/minuto** por IP.
 | `POST` | `/api/events/equipment/suggestions` | `CRUDHandler.GetEquipmentSuggestions` | Sugerencias de equipo (POST para web) |
 | `GET` | `/api/events/supplies/suggestions` | `CRUDHandler.GetSupplySuggestionsGET` | Sugerencias de insumos (GET para mobile) |
 | `POST` | `/api/events/supplies/suggestions` | `CRUDHandler.GetSupplySuggestions` | Sugerencias de insumos (POST para web) |
-| `POST` | `/api/events/{id}/checkout-session` | `EventPaymentHandler.CreateEventCheckoutSession` | Crear sesion de pago Stripe para evento |
-| `GET` | `/api/events/{id}/payment-session` | `EventPaymentHandler.HandleEventPaymentSuccess` | Manejar retorno exitoso de pago Stripe |
 
 ### 6.9 Rutas Protegidas — Productos
 
@@ -878,12 +875,11 @@ El sistema usa **tres tipos de token**, todos firmados con HS256:
 
 ### 9.1 Stripe
 
-**Archivos:** `handlers/subscription_handler.go`, `handlers/event_payment_handler.go`, `handlers/stripe_service.go`
+**Archivos:** `handlers/subscription_handler.go`, `handlers/stripe_service.go`
 
 | Funcionalidad | Endpoint | Descripcion |
 |---------------|----------|-------------|
 | Checkout Session (suscripcion) | `POST /api/subscriptions/checkout-session` | Crea una sesion de Stripe Checkout para upgrade a plan Pro |
-| Checkout Session (evento) | `POST /api/events/{id}/checkout-session` | Crea una sesion de pago para un evento especifico |
 | Customer Portal | `POST /api/subscriptions/portal-session` | Redirige al portal de facturacion de Stripe |
 | Webhook | `POST /api/subscriptions/webhook/stripe` | Procesa eventos de Stripe (suscripcion creada, cancelada, etc.) |
 
@@ -949,7 +945,7 @@ El proyecto tiene tests en todas las capas:
 |------|----------|---------|
 | Config | `config_test.go` | Variables de entorno, defaults |
 | Middleware | `auth_test.go`, `cors_test.go`, `recovery_test.go`, `security_test.go`, `ratelimit_test.go`, `admin_test.go`, `logging_test.go` | Comportamiento de cada middleware |
-| Handlers | `auth_handler_test.go`, `crud_handler_test.go`, `crud_handler_success_test.go`, `crud_handler_error_test.go`, `crud_payment_test.go`, `subscription_handler_test.go`, `event_payment_handler_test.go`, `upload_handler_test.go`, `search_handler_test.go`, `helpers_test.go`, `validation_test.go`, `contract_template_test.go` | Mocks de repos, validacion de HTTP responses |
+| Handlers | `auth_handler_test.go`, `crud_handler_test.go`, `crud_handler_success_test.go`, `crud_handler_error_test.go`, `crud_payment_test.go`, `subscription_handler_test.go`, `upload_handler_test.go`, `search_handler_test.go`, `helpers_test.go`, `validation_test.go`, `contract_template_test.go` | Mocks de repos, validacion de HTTP responses |
 | Services | `auth_service_test.go`, `email_service_test.go` | JWT, bcrypt, templates de email |
 | Repository | `repository_integration_test.go`, `repository_error_test.go` | Tests de integracion con DB real |
 | Router | `router_test.go`, `router_api_integration_test.go` | Rutas registradas, integracion API |

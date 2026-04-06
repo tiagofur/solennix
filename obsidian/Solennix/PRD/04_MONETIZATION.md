@@ -53,12 +53,11 @@ El usuario obtiene una experiencia funcional y util en el tier gratuito — sufi
 | Dashboard basico | Disponible | KPIs basicos y vista general de eventos proximos |
 | Calendario de eventos | Disponible | Funcionalidad core necesaria para validar el producto |
 | Generacion de PDFs | Disponible (con marca de agua) | Cotizaciones, contratos y checklists funcionales pero con branding Solennix |
-| Gestion de pagos | Disponible | Registro basico de pagos recibidos por evento |
+| Gestion de pagos | Disponible | Registro manual de pagos recibidos por evento |
 | Widgets de iOS | NO disponible | Diferenciador premium de alto valor percibido |
 | Comandos de Siri | NO disponible | Feature aspiracional para power users |
 | Soporte prioritario | NO disponible | Incentivo adicional para conversion |
 | Reportes avanzados | NO disponible | Analytics y metricas detalladas solo para Premium |
-| Pago online (Stripe para clientes) | NO disponible | Feature de alto valor para cobros profesionales |
 
 ---
 
@@ -78,7 +77,6 @@ El usuario obtiene una experiencia funcional y util en el tier gratuito — sufi
 | Comandos de Siri | Disponibles |
 | Soporte prioritario | Respuesta en menos de 24 horas |
 | Reportes avanzados | Metricas de ingresos, analisis por cliente, tendencias |
-| Pago online (Stripe para clientes) | Disponible — cobrar anticipos/depositos via link de pago |
 | Live Activities (iOS) | Seguimiento en tiempo real de eventos en curso |
 
 ---

@@ -59,7 +59,7 @@ graph TB
 |------|----------|----------|---------|
 | **Config** | `config_test.go` | ~2 | Env vars, valores por defecto |
 | **Middleware** | `auth_test.go`, `cors_test.go`, `recovery_test.go`, `security_test.go`, `ratelimit_test.go`, `admin_test.go`, `logging_test.go` | ~14 | Comportamiento individual de cada middleware |
-| **Handlers** | `auth_handler_test.go`, `crud_handler_test.go`, `crud_handler_success_test.go`, `crud_handler_error_test.go`, `crud_payment_test.go`, `subscription_handler_test.go`, `event_payment_handler_test.go`, `upload_handler_test.go`, `search_handler_test.go`, `helpers_test.go`, `validation_test.go`, `contract_template_test.go`, `device_handler_test.go`, `handlers_integration_test.go` | ~14 archivos | Mock repos, validación de respuestas HTTP |
+| **Handlers** | `auth_handler_test.go`, `crud_handler_test.go`, `crud_handler_success_test.go`, `crud_handler_error_test.go`, `crud_payment_test.go`, `subscription_handler_test.go`, `upload_handler_test.go`, `search_handler_test.go`, `helpers_test.go`, `validation_test.go`, `contract_template_test.go`, `device_handler_test.go`, `handlers_integration_test.go` | ~13 archivos | Mock repos, validación de respuestas HTTP |
 | **Services** | `auth_service_test.go`, `email_service_test.go`, `revenuecat_service_test.go` | ~3 | JWT, bcrypt, templates de email |
 | **Repository** | `repository_integration_test.go`, `repository_error_test.go`, `repository_integration_full_test.go` | ~3 | Integración con DB real |
 | **Router** | `router_test.go`, `router_api_integration_test.go` | ~2 | Registro de rutas, integración API |

@@ -66,7 +66,7 @@ graph TB
 ## Stripe (Payments & Subscriptions)
 
 > [!abstract] Resumen
-> Stripe maneja tanto las suscripciones SaaS (plan Pro) como los pagos puntuales de eventos. Toda la comunicación es server-to-server vía la librería `stripe-go/v81`.
+> Stripe maneja las suscripciones SaaS (plan Pro). Toda la comunicación es server-to-server vía la librería `stripe-go/v81`. La app no intermediar pagos entre organizadores y sus clientes.
 
 ### Archivos
 
@@ -74,7 +74,6 @@ graph TB
 |---------|-----|
 | `handlers/stripe_service.go` | Wrapper sobre el SDK de Stripe (checkout sessions, billing portal, subscription lookups). Implementa la interfaz `StripeService` para testing. |
 | `handlers/subscription_handler.go` | Orquesta el flujo completo: checkout, portal, webhooks de Stripe y RevenueCat, status endpoint. |
-| `handlers/event_payment_handler.go` | Checkout sessions para pagos de eventos (one-time `mode=payment`). |
 
 ### Endpoints
 
@@ -84,8 +83,6 @@ graph TB
 | `POST` | `/api/subscriptions/portal-session` | Crea una sesión del Customer Portal |
 | `GET` | `/api/subscriptions/status` | Devuelve el plan actual y detalles de la suscripción |
 | `POST` | `/api/subscriptions/webhook/stripe` | Webhook de Stripe (sin auth — firma verificada) |
-| `POST` | `/api/events/{id}/checkout-session` | Checkout Session para pago de evento |
-| `GET` | `/api/events/{id}/payment-session` | Recupera estado de sesión post-pago |
 
 ### Flujo de Suscripción Web
 
@@ -108,30 +105,11 @@ sequenceDiagram
     Note over B: Si el customer ID estaba stale,<br/>reintenta sin customer ID
 ```
 
-### Flujo de Pago de Evento
-
-```mermaid
-sequenceDiagram
-    participant U as Usuario
-    participant B as Backend
-    participant S as Stripe
-
-    U->>B: POST /events/{id}/checkout-session
-    B->>B: Validar evento (no cancelado, monto > 0)
-    B->>S: Crear session (mode=payment, MXN)
-    S-->>B: Session URL
-    B-->>U: { session_id, url }
-    U->>S: Pago en Stripe
-    S-->>B: Webhook: checkout.session.completed<br/>metadata.type = "event_payment"
-    B->>B: Crear registro Payment
-    B->>B: Si status == "quoted" → "confirmed"
-```
-
 ### Eventos de Webhook Manejados
 
 | Evento Stripe | Acción |
 |---------------|--------|
-| `checkout.session.completed` | Si es suscripción: upgrade a Pro + sync RevenueCat + upsert subscription. Si es `event_payment`: crear registro de pago y confirmar evento. |
+| `checkout.session.completed` | Upgrade a Pro + sync RevenueCat + upsert subscription. |
 | `customer.subscription.updated` | Mapear status: `active` → mantener Pro, `past_due` → marcar subscription, `canceled` → marcar subscription, `unpaid` → downgrade a basic + revoke RC. |
 | `customer.subscription.deleted` | Downgrade a basic + revoke RevenueCat entitlement. |
 | `invoice.payment_failed` | Marcar subscription como `past_due`. |
@@ -369,7 +347,6 @@ graph TB
 
     subgraph Handler Layer
         SH[SubscriptionHandler]
-        EPH[EventPaymentHandler]
         UH[UploadHandler]
         AH[AuthHandler]
     end
@@ -395,7 +372,6 @@ graph TB
     RW --> SH
     SH --> SS
     SH --> RCS
-    EPH --> SS
     AH --> EMS
 
     SS --> STRIPE
@@ -403,7 +379,6 @@ graph TB
     EMS --> RESEND
 
     SH --> DB
-    EPH --> DB
     AH --> DB
     UH --> DISK
     UH --> DB

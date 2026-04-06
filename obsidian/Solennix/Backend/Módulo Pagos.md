@@ -10,7 +10,7 @@ updated: 2025-04-05
 # Módulo Pagos
 
 > [!abstract] Resumen
-> Sistema dual de pagos: registro manual de abonos vía `CRUDHandler` y checkout online vía Stripe con `EventPaymentHandler`. Permite trackear el balance de cada evento (total vs. pagado). Todos los endpoints filtran por `user_id` para aislamiento multi-tenant.
+> Sistema de registro manual de pagos vía `CRUDHandler`. Permite trackear el balance de cada evento (total vs. pagado). La app no intermediar pagos entre organizadores y sus clientes — los pagos son registros de lo cobrado fuera de la app. Todos los endpoints filtran por `user_id` para aislamiento multi-tenant.
 
 ## Relaciones
 
@@ -39,17 +39,16 @@ type Payment struct {
 
 ---
 
-## Arquitectura Dual
+## Arquitectura
 
-El módulo usa **dos handlers** con responsabilidades distintas:
+El módulo usa `CRUDHandler` para el CRUD manual de pagos (abonos, efectivo, transferencia):
 
 | Handler                  | Responsabilidad                                        | Archivo                          |
 |--------------------------|--------------------------------------------------------|----------------------------------|
 | `CRUDHandler`            | CRUD manual de pagos (abonos, efectivo, transferencia) | `crud_handler.go`                |
-| `EventPaymentHandler`    | Checkout online vía Stripe para eventos                | `event_payment_handler.go`       |
 
-> [!info] Separación de concerns
-> Los pagos manuales (abonos parciales, pagos en efectivo) van por `CRUDHandler` usando `FullPaymentRepository`. Los pagos online van por `EventPaymentHandler` que orquesta Stripe + el mismo repo.
+> [!info] Solo registro manual
+> Los pagos son registros manuales que el organizador lleva para trackear lo cobrado fuera de la app (efectivo, transferencia directa, etc.). Solennix no procesa ni intermediar pagos entre organizadores y sus clientes. Stripe se usa exclusivamente para las suscripciones Pro de los usuarios.
 
 ---
 
@@ -110,64 +109,6 @@ DELETE /api/payments/{id}
 ```
 
 Respuesta: `204 No Content`. Retorna `404` si el pago no existe o no pertenece al usuario.
-
----
-
-## Endpoints — Stripe Checkout
-
-### Crear sesión de checkout
-
-```
-POST /api/events/{id}/checkout-session
-```
-
-> [!warning] Requisitos previos
-> - `StripeSecretKey` debe estar configurada (sino retorna `503 Service Unavailable`)
-> - El evento NO puede estar cancelado
-> - `TotalAmount` debe ser > 0
-
-Flujo:
-
-1. Obtener evento y validar estado
-2. Calcular monto en centavos (`math.Round(total * 100)`) — Stripe usa la unidad más pequeña
-3. Crear `CheckoutSession` con metadata: `event_id`, `user_id`, `type: "event_payment"`
-4. Pre-fill email del cliente si está disponible
-5. Retornar `session_id` y `url` de Stripe
-
-```json
-{
-    "session_id": "cs_test_...",
-    "url": "https://checkout.stripe.com/..."
-}
-```
-
-> [!warning] Conversión a centavos
-> Se usa `math.Round(event.TotalAmount * 100)` para evitar errores de truncamiento float. Por ejemplo: `19.99 * 100 = 1998.999...` → `Round` → `1999`.
-
-> [!info] Moneda
-> El checkout usa **MXN** (pesos mexicanos). El `ProductData` incluye tipo de servicio y fecha del evento.
-
-### Confirmar pago exitoso
-
-```
-GET /api/events/{id}/payment-session?session_id=xxx
-```
-
-Verifica la sesión contra Stripe y retorna:
-
-```json
-{
-    "session_id": "cs_test_...",
-    "payment_status": "paid",
-    "amount_total": 1500.00,
-    "customer_email": "cliente@email.com"
-}
-```
-
-Validaciones de seguridad:
-- `session_id` es requerido
-- `metadata.event_id` debe coincidir con el `{id}` de la URL
-- `metadata.user_id` debe coincidir con el usuario autenticado
 
 ---
 
@@ -250,10 +191,6 @@ type StripeService interface {
 ├── POST   /              → CRUDHandler.CreatePayment
 ├── PUT    /{id}          → CRUDHandler.UpdatePayment
 └── DELETE /{id}          → CRUDHandler.DeletePayment
-
-/api/events/{id}
-├── POST   /checkout-session  → EventPaymentHandler.CreateEventCheckoutSession
-└── GET    /payment-session   → EventPaymentHandler.HandleEventPaymentSuccess
 ```
 
 Todas las rutas requieren autenticación (`mw.Auth`).

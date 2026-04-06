@@ -118,13 +118,6 @@ graph TB
 | `GET` | `/api/events/supplies/suggestions` | GetSupplySuggestionsGET | Para mobile (query params) |
 | `POST` | `/api/events/supplies/suggestions` | GetSupplySuggestions | Para web (JSON body) |
 
-### Pagos
-
-| Method | Route | Handler | Descripción |
-|--------|-------|---------|-------------|
-| `POST` | `/api/events/{id}/checkout-session` | CreateEventCheckoutSession | Sesión de pago Stripe |
-| `GET` | `/api/events/{id}/payment-session` | HandleEventPaymentSuccess | Confirmación de pago |
-
 ---
 
 ## Sub-items
@@ -393,28 +386,6 @@ sequenceDiagram
 ```
 
 ---
-
-## Pagos con Stripe
-
-```mermaid
-sequenceDiagram
-    participant Client
-    participant API as Solennix API
-    participant Stripe as Stripe API
-
-    Client->>API: POST /api/events/{id}/checkout-session
-    API->>Stripe: Crear Checkout Session
-    Stripe-->>API: session_url
-    API-->>Client: { url: session_url }
-
-    Note over Client: Usuario completa pago en Stripe
-
-    Client->>API: GET /api/events/{id}/payment-session?session_id=xxx
-    API->>Stripe: Verificar estado de sesión
-    Stripe-->>API: session status
-    API->>API: Actualizar estado del pago
-    API-->>Client: Payment confirmed
-```
 
 ---
 
