@@ -33,6 +33,11 @@ public actor APIClient {
 
     /// Task that guards concurrent refresh attempts — only one refresh runs at a time.
     private var refreshTask: Task<Bool, Error>?
+
+    /// Maximum number of automatic retries for transient errors (5xx, timeouts).
+    private let maxRetries = 2
+    /// Base delay between retries in seconds (exponential: 1s, 2s).
+    private let retryBaseDelay: TimeInterval = 1.0
     
     /// Callback invoked on the main actor when an API error should be shown to the user.
     /// The network layer delegates UI concerns (e.g., toasts) to the caller via this closure.
@@ -194,31 +199,79 @@ public actor APIClient {
         _ request: URLRequest,
         isRetry: Bool = false
     ) async throws -> T {
-        let data: Data
-        do {
-            data = try await perform(request, isRetry: isRetry)
-        } catch let urlError as URLError {
+        let isIdempotent = request.httpMethod == "GET"
+        var lastError: Error?
+
+        // Retry loop: attempt once + up to maxRetries for transient errors (GET only)
+        let attempts = isIdempotent ? (1 + maxRetries) : 1
+        for attempt in 0..<attempts {
+            // Exponential backoff delay before retries (not before first attempt)
+            if attempt > 0 {
+                let delay = retryBaseDelay * pow(2.0, Double(attempt - 1))
+                try await Task.sleep(for: .seconds(delay))
+            }
+
+            do {
+                let data = try await perform(request, isRetry: isRetry)
+
+                // Handle 204 No Content
+                if data.isEmpty {
+                    if let empty = EmptyResponse() as? T {
+                        return empty
+                    }
+                    throw APIError.decodingError
+                }
+
+                // Decode JSON response
+                do {
+                    return try decoder.decode(T.self, from: data)
+                } catch {
+                    throw APIError.decodingError
+                }
+            } catch let urlError as URLError where isIdempotent && isTransient(urlError) && attempt < attempts - 1 {
+                lastError = urlError
+                continue
+            } catch let apiError as APIError where isIdempotent && isTransientServer(apiError) && attempt < attempts - 1 {
+                lastError = apiError
+                continue
+            } catch let urlError as URLError {
+                let err = APIError.networkError(APIError.userFacingMessage(for: urlError))
+                showErrorToast(for: err)
+                throw err
+            } catch {
+                if let apiError = error as? APIError {
+                    showErrorToast(for: apiError)
+                }
+                throw error
+            }
+        }
+
+        // Should not reach here, but handle the final error
+        if let urlError = lastError as? URLError {
             let err = APIError.networkError(APIError.userFacingMessage(for: urlError))
             showErrorToast(for: err)
             throw err
-        } catch {
-            throw error
         }
+        throw lastError ?? APIError.unknown
+    }
 
-        // Handle 204 No Content
-        if data.isEmpty { // Assuming empty data for 204 No Content
-            if let empty = EmptyResponse() as? T {
-                return empty
-            }
-            throw APIError.decodingError
+    /// Whether a URLError is transient and worth retrying.
+    private func isTransient(_ error: URLError) -> Bool {
+        switch error.code {
+        case .timedOut, .networkConnectionLost, .notConnectedToInternet,
+             .cannotFindHost, .cannotConnectToHost, .dnsLookupFailed:
+            return true
+        default:
+            return false
         }
+    }
 
-        // Decode JSON response
-        do {
-            return try decoder.decode(T.self, from: data)
-        } catch {
-            throw APIError.decodingError
+    /// Whether an APIError represents a transient server error (5xx).
+    private func isTransientServer(_ error: APIError) -> Bool {
+        if case .serverError(let statusCode, _) = error, (500...599).contains(statusCode) {
+            return true
         }
+        return false
     }
 
     // MARK: - Perform Request

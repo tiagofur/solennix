@@ -88,7 +88,16 @@ public struct InventoryListView: View {
                 .padding(.top, Spacing.sm)
             }
 
-            if viewModel.isLoading && viewModel.items.isEmpty {
+            if let error = viewModel.errorMessage, viewModel.items.isEmpty, !viewModel.isLoading {
+                EmptyStateView(
+                    icon: "wifi.exclamationmark",
+                    title: "Error al cargar",
+                    message: error,
+                    actionTitle: "Reintentar"
+                ) {
+                    Task { await viewModel.loadItems() }
+                }
+            } else if viewModel.isLoading && viewModel.items.isEmpty {
                 skeletonList
             } else if viewModel.filteredItems.isEmpty && !viewModel.isLoading {
                 if viewModel.searchText.isEmpty && !viewModel.showLowStockOnly {

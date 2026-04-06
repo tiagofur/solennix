@@ -160,7 +160,17 @@ public struct EventListView: View {
     private var eventList: some View {
         let filtered = viewModel.filteredEvents
 
-        if filtered.isEmpty && !viewModel.isLoading {
+        if let error = viewModel.errorMessage, filtered.isEmpty, !viewModel.isLoading {
+            EmptyStateView(
+                icon: "wifi.exclamationmark",
+                title: "Error al cargar",
+                message: error,
+                actionTitle: "Reintentar"
+            ) {
+                Task { await viewModel.loadEvents() }
+            }
+            .frame(maxHeight: .infinity)
+        } else if filtered.isEmpty && !viewModel.isLoading {
             emptyState
         } else {
             ScrollView {

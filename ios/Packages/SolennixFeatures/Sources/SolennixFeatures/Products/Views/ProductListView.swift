@@ -70,7 +70,16 @@ public struct ProductListView: View {
 
     @ViewBuilder
     private var content: some View {
-        if viewModel.isLoading && viewModel.products.isEmpty {
+        if let error = viewModel.errorMessage, viewModel.products.isEmpty, !viewModel.isLoading {
+            EmptyStateView(
+                icon: "wifi.exclamationmark",
+                title: "Error al cargar",
+                message: error,
+                actionTitle: "Reintentar"
+            ) {
+                Task { await viewModel.loadProducts() }
+            }
+        } else if viewModel.isLoading && viewModel.products.isEmpty {
             skeletonList
         } else if viewModel.filteredProducts.isEmpty && !viewModel.isLoading {
             if viewModel.searchText.isEmpty && viewModel.selectedCategory == nil {

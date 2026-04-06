@@ -88,7 +88,16 @@ public struct ClientListView: View {
                 .padding(.top, Spacing.sm)
             }
 
-            if viewModel.isLoading && viewModel.clients.isEmpty {
+            if let error = viewModel.errorMessage, viewModel.clients.isEmpty, !viewModel.isLoading {
+                EmptyStateView(
+                    icon: "wifi.exclamationmark",
+                    title: "Error al cargar",
+                    message: error,
+                    actionTitle: "Reintentar"
+                ) {
+                    Task { await viewModel.loadClients() }
+                }
+            } else if viewModel.isLoading && viewModel.clients.isEmpty {
                 skeletonList
         } else if viewModel.filteredClients.isEmpty && !viewModel.isLoading {
             if viewModel.searchText.isEmpty {

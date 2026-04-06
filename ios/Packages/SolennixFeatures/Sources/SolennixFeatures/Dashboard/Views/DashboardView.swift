@@ -103,11 +103,20 @@ public struct DashboardView: View {
             }
         }
         .overlay {
-            if viewModel?.isLoading == true && viewModel?.eventsThisMonth.isEmpty == true {
+            if let error = viewModel?.errorMessage, viewModel?.eventsThisMonth.isEmpty == true, viewModel?.isLoading == false {
+                EmptyStateView(
+                    icon: "wifi.exclamationmark",
+                    title: "Error al cargar",
+                    message: error,
+                    actionTitle: "Reintentar"
+                ) {
+                    Task { await viewModel?.loadDashboard() }
+                }
+            } else if viewModel?.isLoading == true && viewModel?.eventsThisMonth.isEmpty == true {
                 ProgressView()
                     .tint(SolennixColors.primary)
             }
-            
+
             PendingEventsModalView(apiClient: apiClient)
         }
     }
