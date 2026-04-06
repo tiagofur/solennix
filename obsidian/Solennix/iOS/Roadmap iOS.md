@@ -94,10 +94,10 @@
 
 ### 1.2 Background App Refresh
 
-- [ ] Implementar `BGAppRefreshTask` para sync periódico
-- [ ] Sincronizar eventos, clientes, productos en background
-- [ ] Actualizar widget timelines post-sync
-- [ ] Actualizar Spotlight index post-sync
+- [x] Implementar `BGAppRefreshTask` para sync periódico — ✅ 2026-04-05 (BackgroundTaskManager, cada ~30 min)
+- [x] Sincronizar eventos, clientes, productos en background — ✅ 2026-04-05 (+ inventario, caché SwiftData completo)
+- [x] Actualizar widget timelines post-sync — ✅ 2026-04-05 (WidgetDataSync: events + KPIs)
+- [x] Actualizar Spotlight index post-sync — ✅ 2026-04-05 (SpotlightIndexer: clients, events, products)
 
 **Por qué**: Alineado con Android (WorkManager). Sin esto, datos pueden estar stale al abrir la app.
 
