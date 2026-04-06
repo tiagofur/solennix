@@ -287,7 +287,7 @@ public final class CalendarViewModel {
         let endStr = Self.apiDateFormatter.string(from: endDate)
 
         do {
-            let fetched: [UnavailableDate] = try await apiClient.get(
+            let fetched: [UnavailableDate] = try await apiClient.getAll(
                 Endpoint.unavailableDates,
                 params: ["start": startStr, "end": endStr]
             )
@@ -317,12 +317,12 @@ public final class CalendarViewModel {
             let startStr = Self.apiDateFormatter.string(from: startDate)
             let endStr = Self.apiDateFormatter.string(from: endDate)
 
-            async let eventsResult: [Event] = apiClient.get(
+            async let eventsResult: [Event] = apiClient.getAll(
                 Endpoint.events,
                 params: ["start_date": startStr, "end_date": endStr]
             )
-            async let clientsResult: [Client] = apiClient.get(Endpoint.clients)
-            async let unavailableResult: [UnavailableDate] = apiClient.get(
+            async let clientsResult: [Client] = apiClient.getAll(Endpoint.clients)
+            async let unavailableResult: [UnavailableDate] = apiClient.getAll(
                 Endpoint.unavailableDates,
                 params: ["start": startStr, "end": endStr]
             )

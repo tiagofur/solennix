@@ -92,7 +92,7 @@ final class ProductDetailViewModel {
     @MainActor
     private func loadDemandData() async {
         do {
-            let events: [Event] = try await apiClient.get(Endpoint.upcomingEvents)
+            let events: [Event] = try await apiClient.getAll(Endpoint.upcomingEvents)
 
             var demand: [DemandDataPoint] = []
             for event in events.prefix(10) {

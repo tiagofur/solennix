@@ -152,8 +152,8 @@ public final class EventListViewModel {
 
         do {
             if isFiltering {
-                async let eventsResult: [Event] = apiClient.get(Endpoint.events)
-                async let clientsResult: [Client] = apiClient.get(Endpoint.clients)
+                async let eventsResult: [Event] = apiClient.getAll(Endpoint.events)
+                async let clientsResult: [Client] = apiClient.getAll(Endpoint.clients)
                 events = try await eventsResult
                 clients = try await clientsResult
                 totalPages = 1
@@ -167,7 +167,7 @@ public final class EventListViewModel {
                     "order": "desc"
                 ]
                 async let paginatedResult: PaginatedResponse<Event> = apiClient.get(Endpoint.events, params: params)
-                async let clientsResult: [Client] = apiClient.get(Endpoint.clients)
+                async let clientsResult: [Client] = apiClient.getAll(Endpoint.clients)
 
                 let paginated = try await paginatedResult
                 clients = try await clientsResult

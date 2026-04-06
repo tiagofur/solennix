@@ -42,7 +42,7 @@ public final class QuickQuoteViewModel {
     public func loadData() async {
         isLoading = true
         do {
-            let products: [Product] = try await apiClient.get(Endpoint.products)
+            let products: [Product] = try await apiClient.getAll(Endpoint.products)
             availableProducts = products.filter { $0.isActive }
         } catch {
             print("Error loading products for quick quote: \(error)")

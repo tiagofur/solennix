@@ -140,7 +140,7 @@ public final class ProductFormViewModel {
         do {
             // Load inventory (non-blocking: if it fails, continue with empty list)
             do {
-                let inventory: [InventoryItem] = try await apiClient.get(Endpoint.inventory)
+                let inventory: [InventoryItem] = try await apiClient.getAll(Endpoint.inventory)
                 inventoryItems = inventory
             } catch {
                 // Inventory sync failed (e.g. expired token), continue with empty list
@@ -148,7 +148,7 @@ public final class ProductFormViewModel {
             }
 
             // Load existing products for categories
-            let products: [Product] = try await apiClient.get(Endpoint.products)
+            let products: [Product] = try await apiClient.getAll(Endpoint.products)
 
             // Extract unique categories
             let cats = Set(products.map { $0.category }.filter { !$0.isEmpty })

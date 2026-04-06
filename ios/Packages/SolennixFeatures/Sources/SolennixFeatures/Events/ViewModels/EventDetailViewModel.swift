@@ -130,12 +130,12 @@ public final class EventDetailViewModel {
                     }
                 }
                 group.addTask { [apiClient] in
-                    if let result: [Payment] = try? await apiClient.get(Endpoint.payments, params: ["event_id": eventId]) {
+                    if let result: [Payment] = try? await apiClient.getAll(Endpoint.payments, params: ["event_id": eventId]) {
                         await MainActor.run { self.payments = result }
                     }
                 }
                 group.addTask { [apiClient] in
-                    if let allProducts: [Product] = try? await apiClient.get(Endpoint.products) {
+                    if let allProducts: [Product] = try? await apiClient.getAll(Endpoint.products) {
                         await MainActor.run { self.productMap = Dictionary(uniqueKeysWithValues: allProducts.map { ($0.id, $0) }) }
                     }
                 }

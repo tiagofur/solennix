@@ -110,6 +110,26 @@ public actor APIClient {
         return try await execute(request)
     }
 
+    /// Fetch all items from a paginated endpoint by requesting a high limit.
+    /// Handles both paginated (`{ "data": [...] }`) and plain array responses.
+    public func getAll<T: Decodable>(
+        _ endpoint: String,
+        params: [String: String]? = nil
+    ) async throws -> [T] {
+        var allParams = params ?? [:]
+        allParams["page"] = "1"
+        allParams["limit"] = "10000"
+        let request = try buildRequest(endpoint, method: "GET", params: allParams)
+        // Try paginated response first, fall back to plain array
+        do {
+            let paginated: PaginatedResponse<T> = try await execute(request)
+            return paginated.data
+        } catch APIError.decodingError {
+            let rebuilt = try buildRequest(endpoint, method: "GET", params: allParams)
+            return try await execute(rebuilt)
+        }
+    }
+
     /// Perform a POST request with a JSON body.
     /// - Parameters:
     ///   - endpoint: The API endpoint path.

@@ -84,10 +84,10 @@ public final class PlanLimitsManager {
         do {
             if isBasicPlan {
                 // Fetch all to check limits
-                async let eventsTask: [Event] = apiClient.get(Endpoint.events, params: ["start_date": startStr, "end_date": endStr])
-                async let clientsTask: [Client] = apiClient.get(Endpoint.clients)
-                async let productsTask: [Product] = apiClient.get(Endpoint.products)
-                async let inventoryTask: [InventoryItem] = apiClient.get(Endpoint.inventory)
+                async let eventsTask: [Event] = apiClient.getAll(Endpoint.events, params: ["start_date": startStr, "end_date": endStr])
+                async let clientsTask: [Client] = apiClient.getAll(Endpoint.clients)
+                async let productsTask: [Product] = apiClient.getAll(Endpoint.products)
+                async let inventoryTask: [InventoryItem] = apiClient.getAll(Endpoint.inventory)
 
                 // Await all concurrently, falling back to empty on individual errors if needed,
                 // but here we wait for all to succeed. To match RN's `.catch(() => [])` we would:
@@ -101,7 +101,7 @@ public final class PlanLimitsManager {
                 catalogCount = products.count + inventory.count
             } else {
                 // Only need to count events this month
-                let events: [Event] = (try? await apiClient.get(Endpoint.events, params: ["start_date": startStr, "end_date": endStr])) ?? []
+                let events: [Event] = (try? await apiClient.getAll(Endpoint.events, params: ["start_date": startStr, "end_date": endStr])) ?? []
                 eventsThisMonth = events.count
             }
         }

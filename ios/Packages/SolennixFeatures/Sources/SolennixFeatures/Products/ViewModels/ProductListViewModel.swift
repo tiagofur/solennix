@@ -120,7 +120,7 @@ public final class ProductListViewModel {
 
         do {
             if isFiltering {
-                let result: [Product] = try await apiClient.get(Endpoint.products)
+                let result: [Product] = try await apiClient.getAll(Endpoint.products)
                 products = result
                 currentPage = 1
                 totalPages = 1

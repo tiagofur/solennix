@@ -429,7 +429,7 @@ public struct ClientDetailView: View {
 
         do {
             async let clientResult: Client = apiClient.get(Endpoint.client(clientId))
-            async let eventsResult: [Event] = apiClient.get(
+            async let eventsResult: [Event] = apiClient.getAll(
                 Endpoint.events,
                 params: ["client_id": clientId]
             )

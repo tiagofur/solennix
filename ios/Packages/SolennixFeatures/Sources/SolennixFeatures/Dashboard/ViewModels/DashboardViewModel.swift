@@ -147,23 +147,23 @@ public final class DashboardViewModel {
             let endStr = dateFormatter.string(from: endOfMonth)
 
             // Fetch all data concurrently
-            async let clientsResult: [Client] = apiClient.get(Endpoint.clients)
-            async let monthEventsResult: [Event] = apiClient.get(
+            async let clientsResult: [Client] = apiClient.getAll(Endpoint.clients)
+            async let monthEventsResult: [Event] = apiClient.getAll(
                 Endpoint.events,
                 params: ["start_date": startStr, "end_date": endStr]
             )
-            async let upcomingResult: [Event] = apiClient.get(
+            async let upcomingResult: [Event] = apiClient.getAll(
                 Endpoint.upcomingEvents,
                 params: ["limit": "5"]
             )
-            async let allEventsResult: [Event] = apiClient.get(Endpoint.events)
-            async let inventoryResult: [InventoryItem] = apiClient.get(Endpoint.inventory)
-            async let productsResult: [Product] = apiClient.get(Endpoint.products)
-            async let monthPaymentsResult: [Payment] = apiClient.get(
+            async let allEventsResult: [Event] = apiClient.getAll(Endpoint.events)
+            async let inventoryResult: [InventoryItem] = apiClient.getAll(Endpoint.inventory)
+            async let productsResult: [Product] = apiClient.getAll(Endpoint.products)
+            async let monthPaymentsResult: [Payment] = apiClient.getAll(
                 Endpoint.payments,
                 params: ["start_date": startStr, "end_date": endStr]
             )
-            async let allPaymentsResult: [Payment] = apiClient.get(Endpoint.payments)
+            async let allPaymentsResult: [Payment] = apiClient.getAll(Endpoint.payments)
 
             let clients = try await clientsResult
             let monthEvents = try await monthEventsResult

@@ -35,8 +35,8 @@ public final class PendingEventsViewModel {
     public func loadPendingEvents() async {
         isLoading = true
         do {
-            async let eventsResult: [Event] = apiClient.get(Endpoint.events)
-            async let paymentsResult: [Payment] = apiClient.get(Endpoint.payments)
+            async let eventsResult: [Event] = apiClient.getAll(Endpoint.events)
+            async let paymentsResult: [Payment] = apiClient.getAll(Endpoint.payments)
 
             let allEvents = try await eventsResult
             let allPayments = try await paymentsResult

@@ -147,7 +147,7 @@ public struct InventoryDetailView: View {
         guard let item else { return }
 
         do {
-            let events: [Event] = try await apiClient.get(Endpoint.upcomingEvents)
+            let events: [Event] = try await apiClient.getAll(Endpoint.upcomingEvents)
             var entries: [InventoryDemandEntry] = []
 
             for event in events.prefix(15) {

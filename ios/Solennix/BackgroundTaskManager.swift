@@ -76,10 +76,10 @@ final class BackgroundTaskManager {
     private func performRefresh() async -> Bool {
         do {
             // Fetch core data in parallel
-            async let eventsResult: [Event] = apiClient.get(Endpoint.events)
-            async let clientsResult: [Client] = apiClient.get(Endpoint.clients)
-            async let productsResult: [Product] = apiClient.get(Endpoint.products)
-            async let inventoryResult: [InventoryItem] = apiClient.get(Endpoint.inventory)
+            async let eventsResult: [Event] = apiClient.getAll(Endpoint.events)
+            async let clientsResult: [Client] = apiClient.getAll(Endpoint.clients)
+            async let productsResult: [Product] = apiClient.getAll(Endpoint.products)
+            async let inventoryResult: [InventoryItem] = apiClient.getAll(Endpoint.inventory)
 
             let events = try await eventsResult
             let clients = try await clientsResult

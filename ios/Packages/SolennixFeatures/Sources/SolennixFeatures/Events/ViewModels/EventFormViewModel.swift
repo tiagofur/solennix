@@ -227,9 +227,9 @@ public final class EventFormViewModel {
         errorMessage = nil
 
         do {
-            async let fetchClients: [Client] = apiClient.get(Endpoint.clients)
-            async let fetchProducts: [Product] = apiClient.get(Endpoint.products)
-            async let fetchInventory: [InventoryItem] = apiClient.get(Endpoint.inventory)
+            async let fetchClients: [Client] = apiClient.getAll(Endpoint.clients)
+            async let fetchProducts: [Product] = apiClient.getAll(Endpoint.products)
+            async let fetchInventory: [InventoryItem] = apiClient.getAll(Endpoint.inventory)
 
             let (loadedClients, loadedProducts, loadedInventory) = try await (fetchClients, fetchProducts, fetchInventory)
 

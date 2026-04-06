@@ -125,7 +125,7 @@ public final class InventoryListViewModel {
 
         do {
             if isFiltering {
-                let result: [InventoryItem] = try await apiClient.get(Endpoint.inventory)
+                let result: [InventoryItem] = try await apiClient.getAll(Endpoint.inventory)
                 items = result
                 currentPage = 1
                 totalPages = 1

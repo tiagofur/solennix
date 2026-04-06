@@ -113,7 +113,7 @@ public final class ClientListViewModel {
         do {
             if isFiltering {
                 // Fetch all clients for client-side search filtering.
-                let result: [Client] = try await apiClient.get(Endpoint.clients)
+                let result: [Client] = try await apiClient.getAll(Endpoint.clients)
                 clients = result
                 currentPage = 1
                 totalPages = 1
