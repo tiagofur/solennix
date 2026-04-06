@@ -130,7 +130,7 @@
 ### 2.1 Push Notifications (APNs)
 
 - [x] Registrar device token con backend — ✅ 2026-04-06 (APNs token -> `/devices/register` con retry por pending token)
-- [ ] Notificaciones de eventos próximos
+- [x] Notificaciones de eventos próximos — ✅ 2026-04-06 (sincronización automática de recordatorios locales para eventos confirmados al iniciar sesión, reconectar red y volver a foreground)
 - [ ] Notificaciones de pagos recibidos
 - [ ] Rich notifications con imagen del evento
 - [x] Deep links desde notificaciones — ✅ 2026-04-06 (tap/action navega a EventDetail/EventPayments/Inventory)

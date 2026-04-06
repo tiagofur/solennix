@@ -120,6 +120,12 @@ final class NotificationManager: NSObject, ObservableObject {
         eventDate: Date,
         reminderType: ReminderType
     ) async {
+        let triggerDate = Calendar.current.date(
+            byAdding: reminderType.offset,
+            to: eventDate
+        ) ?? eventDate
+        guard triggerDate > Date() else { return }
+
         let content = UNMutableNotificationContent()
         content.title = reminderType.title
         content.body = "\(clientName) - \(eventType)"
@@ -130,11 +136,6 @@ final class NotificationManager: NSObject, ObservableObject {
             "type": "event_reminder"
         ]
         content.categoryIdentifier = NotificationCategory.event.rawValue
-
-        let triggerDate = Calendar.current.date(
-            byAdding: reminderType.offset,
-            to: eventDate
-        ) ?? eventDate
 
         let components = Calendar.current.dateComponents(
             [.year, .month, .day, .hour, .minute],
@@ -171,10 +172,94 @@ final class NotificationManager: NSObject, ObservableObject {
         UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
     }
 
+    // MARK: - Sync Upcoming Event Reminders
+
+    func syncUpcomingEventReminders(events: [Event], clientNamesById: [String: String]) async {
+        guard isAuthorized else { return }
+
+        let pendingRequests = await UNUserNotificationCenter.current().pendingNotificationRequests()
+        let eventIds = Set(events.map(\.id))
+
+        let staleIdentifiers = pendingRequests
+            .filter {
+                guard let eventId = Self.extractEventId(fromIdentifier: $0.identifier) else { return false }
+                return !eventIds.contains(eventId)
+            }
+            .map(\.identifier)
+
+        if !staleIdentifiers.isEmpty {
+            UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: staleIdentifiers)
+        }
+
+        for event in events where event.status == .confirmed {
+            guard let eventDate = Self.resolveEventDate(for: event), eventDate > Date() else { continue }
+
+            let clientName = clientNamesById[event.clientId] ?? "Cliente"
+            cancelEventReminders(eventId: event.id)
+            for reminderType in ReminderType.allCases {
+                await scheduleEventReminder(
+                    eventId: event.id,
+                    clientName: clientName,
+                    eventType: event.serviceType,
+                    eventDate: eventDate,
+                    reminderType: reminderType
+                )
+            }
+        }
+    }
+
     // MARK: - Get Pending Notifications
 
     func getPendingNotifications() async -> [UNNotificationRequest] {
         await UNUserNotificationCenter.current().pendingNotificationRequests()
+    }
+
+    private static func extractEventId(fromIdentifier identifier: String) -> String? {
+        let suffix = "_\(ReminderType.oneDay.rawValue)"
+        if identifier.hasSuffix(suffix) {
+            return String(identifier.dropLast(suffix.count))
+        }
+        let suffixOneHour = "_\(ReminderType.oneHour.rawValue)"
+        if identifier.hasSuffix(suffixOneHour) {
+            return String(identifier.dropLast(suffixOneHour.count))
+        }
+        let suffixThirty = "_\(ReminderType.thirtyMinutes.rawValue)"
+        if identifier.hasSuffix(suffixThirty) {
+            return String(identifier.dropLast(suffixThirty.count))
+        }
+        return nil
+    }
+
+    private static func resolveEventDate(for event: Event) -> Date? {
+        let eventDatePrefix = String(event.eventDate.prefix(10))
+        let parts = eventDatePrefix.split(separator: "-")
+        guard parts.count == 3,
+              let year = Int(parts[0]),
+              let month = Int(parts[1]),
+              let day = Int(parts[2]) else {
+            return nil
+        }
+
+        var hour = 9
+        var minute = 0
+        if let startTime = event.startTime {
+            let normalized = String(startTime.prefix(5))
+            let timeParts = normalized.split(separator: ":")
+            if timeParts.count >= 2 {
+                hour = Int(timeParts[0]) ?? hour
+                minute = Int(timeParts[1]) ?? minute
+            }
+        }
+
+        var components = DateComponents()
+        components.calendar = Calendar.current
+        components.timeZone = TimeZone.current
+        components.year = year
+        components.month = month
+        components.day = day
+        components.hour = hour
+        components.minute = minute
+        return components.date
     }
 }
 

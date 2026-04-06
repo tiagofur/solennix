@@ -153,6 +153,7 @@ struct SolennixApp: App {
                 }
                 .task {
                     await processPendingDeviceTokenRegistration()
+                    await syncUpcomingEventNotifications()
                 }
                 .onChange(of: authManager.authState) { _, newState in
                     // Sync RevenueCat when user signs in (fresh login/register/social auth).
@@ -167,6 +168,7 @@ struct SolennixApp: App {
                             await ensurePushAuthorization()
                             await processPendingDeviceTokenRegistration()
                             await apiClient.flushQueuedMutations()
+                            await syncUpcomingEventNotifications()
                         }
                     }
                 }
@@ -174,6 +176,7 @@ struct SolennixApp: App {
                     guard isConnected, authManager.isAuthenticated else { return }
                     Task {
                         await apiClient.flushQueuedMutations()
+                        await syncUpcomingEventNotifications()
                     }
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .deviceTokenReceived)) { notification in
@@ -187,6 +190,10 @@ struct SolennixApp: App {
                 .onChange(of: scenePhase) { _, newPhase in
                     if newPhase == .background {
                         backgroundTaskManager?.scheduleAppRefresh()
+                    } else if newPhase == .active {
+                        Task {
+                            await syncUpcomingEventNotifications()
+                        }
                     }
                 }
                 .task {
@@ -250,6 +257,29 @@ struct SolennixApp: App {
             UserDefaults.standard.removeObject(forKey: "pendingDeviceToken")
         } catch {
             SentryHelper.capture(error: error, context: "push_register_device")
+        }
+    }
+
+    private func syncUpcomingEventNotifications() async {
+        guard authManager.isAuthenticated else { return }
+        await NotificationManager.shared.checkAuthorizationStatus()
+        guard NotificationManager.shared.isAuthorized else { return }
+
+        do {
+            async let upcomingEventsTask: [Event] = apiClient.getAll(
+                Endpoint.upcomingEvents,
+                params: ["limit": "50"]
+            )
+            async let clientsTask: [Client] = apiClient.getAll(Endpoint.clients)
+            let upcomingEvents = try await upcomingEventsTask
+            let clients = try await clientsTask
+            let clientNameById = Dictionary(uniqueKeysWithValues: clients.map { ($0.id, $0.name) })
+            await NotificationManager.shared.syncUpcomingEventReminders(
+                events: upcomingEvents,
+                clientNamesById: clientNameById
+            )
+        } catch {
+            SentryHelper.capture(error: error, context: "sync_upcoming_event_notifications")
         }
     }
 }
