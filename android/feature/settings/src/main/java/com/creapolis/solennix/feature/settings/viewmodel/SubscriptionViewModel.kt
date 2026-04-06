@@ -4,14 +4,20 @@ import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.revenuecat.purchases.Package
+import com.creapolis.solennix.core.model.SubscriptionProvider
+import com.creapolis.solennix.core.model.SubscriptionStatusResponse
+import com.creapolis.solennix.core.network.ApiService
 import com.creapolis.solennix.core.network.AuthManager
+import com.creapolis.solennix.core.network.Endpoints
 import com.creapolis.solennix.feature.settings.billing.BillingManager
 import com.creapolis.solennix.feature.settings.billing.BillingState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class SubscriptionUiState(
@@ -20,21 +26,32 @@ data class SubscriptionUiState(
     val premiumPackages: List<Package> = emptyList(),
     val currentPlanName: String = "Basico",
     val hasActiveSubscription: Boolean = false,
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val provider: SubscriptionProvider? = null
 )
 
 @HiltViewModel
 class SubscriptionViewModel @Inject constructor(
     private val billingManager: BillingManager,
-    private val authManager: AuthManager
+    private val authManager: AuthManager,
+    private val apiService: ApiService
 ) : ViewModel() {
+
+    private val _provider = MutableStateFlow<SubscriptionProvider?>(null)
 
     val uiState: StateFlow<SubscriptionUiState> = combine(
         billingManager.billingState,
         billingManager.packages,
         billingManager.customerInfo,
-        authManager.currentUser
-    ) { billingState, packages, customerInfo, user ->
+        authManager.currentUser,
+        _provider
+    ) { values ->
+        val billingState = values[0] as BillingState
+        @Suppress("UNCHECKED_CAST")
+        val packages = values[1] as List<Package>
+        val user = values[3] as? com.creapolis.solennix.core.model.User
+        val provider = values[4] as? SubscriptionProvider
+
         val proPackages = packages.filter {
             it.identifier.contains("pro", ignoreCase = true)
         }
@@ -57,7 +74,8 @@ class SubscriptionViewModel @Inject constructor(
             proPackages = proPackages,
             premiumPackages = premiumPackages,
             currentPlanName = currentPlan,
-            hasActiveSubscription = hasSubscription
+            hasActiveSubscription = hasSubscription,
+            provider = provider
         )
     }.stateIn(
         scope = viewModelScope,
@@ -67,6 +85,19 @@ class SubscriptionViewModel @Inject constructor(
 
     fun initBilling() {
         billingManager.initialize()
+        fetchBackendStatus()
+    }
+
+    private fun fetchBackendStatus() {
+        viewModelScope.launch {
+            try {
+                val response: SubscriptionStatusResponse =
+                    apiService.get(Endpoints.SUBSCRIPTION_STATUS)
+                _provider.value = response.subscription?.provider
+            } catch (_: Exception) {
+                // Non-fatal: provider info is informational
+            }
+        }
     }
 
     fun launchPurchase(activity: Activity, rcPackage: Package) {

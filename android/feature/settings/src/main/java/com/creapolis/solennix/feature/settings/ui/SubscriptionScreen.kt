@@ -22,6 +22,7 @@ import com.creapolis.solennix.core.designsystem.R as DesignSystemR
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveCenteredContent
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
+import com.creapolis.solennix.core.model.SubscriptionProvider
 import com.creapolis.solennix.feature.settings.billing.BillingState
 import com.creapolis.solennix.feature.settings.viewmodel.SubscriptionViewModel
 
@@ -77,6 +78,13 @@ fun SubscriptionScreen(
                     planName = uiState.currentPlanName,
                     isActive = uiState.hasActiveSubscription
                 )
+            }
+
+            // Provider badge + cross-platform cancel instructions
+            uiState.provider?.let { provider ->
+                item(key = "provider_info") {
+                    ProviderInfoSection(provider = provider)
+                }
             }
 
             // Billing State
@@ -214,9 +222,17 @@ fun SubscriptionScreen(
             }
 
             item {
+                val cancelAnswer = when (uiState.provider) {
+                    SubscriptionProvider.STRIPE ->
+                        "Si, puedes cancelar tu suscripcion cuando quieras. Como te suscribiste desde la web, ingresa a solennix.com > Configuracion > Suscripcion."
+                    SubscriptionProvider.APPLE ->
+                        "Si, puedes cancelar tu suscripcion cuando quieras. Como te suscribiste desde iOS, abri Configuracion > tu Apple ID > Suscripciones en tu iPhone o iPad."
+                    else ->
+                        "Si, puedes cancelar tu suscripcion cuando quieras desde la configuracion de tu cuenta de Google Play."
+                }
                 FaqItem(
                     question = "Puedo cancelar en cualquier momento?",
-                    answer = "Si, puedes cancelar tu suscripcion cuando quieras desde la configuracion de tu cuenta de Google Play."
+                    answer = cancelAnswer
                 )
             }
 
@@ -238,6 +254,68 @@ fun SubscriptionScreen(
                 Spacer(modifier = Modifier.height(32.dp))
             }
         }
+        }
+    }
+}
+
+@Composable
+fun ProviderInfoSection(provider: SubscriptionProvider) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        // Provider badge
+        Surface(
+            color = SolennixTheme.colors.card,
+            shape = MaterialTheme.shapes.medium
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    imageVector = when (provider) {
+                        SubscriptionProvider.APPLE -> Icons.Default.PhoneIphone
+                        SubscriptionProvider.GOOGLE -> Icons.Default.Shop
+                        SubscriptionProvider.STRIPE -> Icons.Default.Language
+                    },
+                    contentDescription = null,
+                    tint = SolennixTheme.colors.secondaryText,
+                    modifier = Modifier.size(20.dp)
+                )
+                Text(
+                    text = provider.badge,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = SolennixTheme.colors.secondaryText
+                )
+            }
+        }
+
+        // Cross-platform cancel instructions (only when provider != google)
+        if (!provider.isCurrentPlatform) {
+            Surface(
+                color = SolennixTheme.colors.info.copy(alpha = 0.1f),
+                shape = MaterialTheme.shapes.medium
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = null,
+                        tint = SolennixTheme.colors.info,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        text = provider.cancelInstructions,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = SolennixTheme.colors.primaryText
+                    )
+                }
+            }
         }
     }
 }
@@ -438,51 +516,6 @@ fun PlanCard(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Plan actual")
                 }
-            }
-        }
-    }
-}
-
-@Composable
-fun FaqItem(
-    question: String,
-    answer: String
-) {
-    var expanded by remember { mutableStateOf(false) }
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { expanded = !expanded },
-        colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
-        shape = MaterialTheme.shapes.medium
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = question,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium,
-                    color = SolennixTheme.colors.primaryText,
-                    modifier = Modifier.weight(1f)
-                )
-                Icon(
-                    imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                    contentDescription = null,
-                    tint = SolennixTheme.colors.secondaryText
-                )
-            }
-            if (expanded) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = answer,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = SolennixTheme.colors.secondaryText
-                )
             }
         }
     }
