@@ -140,8 +140,8 @@
 
 ### 2.2 Búsqueda Avanzada
 
-- [ ] Filtros combinables en EventList (fecha + status + cliente)
-- [ ] Búsqueda por rango de fechas
+- [x] Filtros combinables en EventList (fecha + status + cliente) — ✅ 2026-04-05
+- [x] Búsqueda por rango de fechas — ✅ 2026-04-05 (DatePicker from/to)
 - [ ] Filtros persistentes en URL/state
 - [ ] Suggestions en SearchView
 
