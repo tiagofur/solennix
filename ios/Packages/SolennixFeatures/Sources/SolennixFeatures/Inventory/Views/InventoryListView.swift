@@ -173,6 +173,7 @@ public struct InventoryListView: View {
                         }
                         Divider()
                         Button(role: .destructive) {
+                            HapticsHelper.play(.warning)
                             viewModel.deleteTarget = item
                             viewModel.showDeleteConfirm = true
                         } label: {
@@ -306,6 +307,7 @@ public struct InventoryListView: View {
         }
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
             Button(role: .destructive) {
+                HapticsHelper.play(.warning)
                 viewModel.deleteTarget = item
                 viewModel.showDeleteConfirm = true
             } label: {
@@ -339,6 +341,7 @@ public struct InventoryListView: View {
             }
             Divider()
             Button(role: .destructive) {
+                HapticsHelper.play(.warning)
                 viewModel.deleteTarget = item
                 viewModel.showDeleteConfirm = true
             } label: {

@@ -377,10 +377,10 @@ public enum SolennixColors {
         Color(uiColor: UIColor { traits in
             traits.userInterfaceStyle == .dark
                 ? UIColor(hex: "#FBBF24")
-                : UIColor(hex: "#D97706")
+                : UIColor(hex: "#B45309") // amber-700 — WCAG AA 4.77:1 on statusQuotedBg
         })
         #else
-        Color(hex: "#D97706")
+        Color(hex: "#B45309")
         #endif
     }
 
@@ -389,10 +389,10 @@ public enum SolennixColors {
         Color(uiColor: UIColor { traits in
             traits.userInterfaceStyle == .dark
                 ? UIColor(hex: "#0A84FF")
-                : UIColor(hex: "#007AFF")
+                : UIColor(hex: "#0055CC") // WCAG AA 6.00:1 on statusConfirmedBg
         })
         #else
-        Color(hex: "#007AFF")
+        Color(hex: "#0055CC")
         #endif
     }
 
@@ -413,10 +413,10 @@ public enum SolennixColors {
         Color(uiColor: UIColor { traits in
             traits.userInterfaceStyle == .dark
                 ? UIColor(hex: "#FF453A")
-                : UIColor(hex: "#FF3B30")
+                : UIColor(hex: "#CC2929") // WCAG AA 4.84:1 on statusCancelledBg
         })
         #else
-        Color(hex: "#FF3B30")
+        Color(hex: "#CC2929")
         #endif
     }
 
