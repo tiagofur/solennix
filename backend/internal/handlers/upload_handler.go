@@ -2,9 +2,6 @@ package handlers
 
 import (
 	"fmt"
-	"image"
-	"image/jpeg"
-	_ "image/png"
 	"io"
 	"log/slog"
 	"net/http"
@@ -12,15 +9,15 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/google/uuid"
 	"github.com/tiagofur/solennix-backend/internal/middleware"
-	"golang.org/x/image/draw"
+	"github.com/tiagofur/solennix-backend/internal/storage"
 )
 
 // UploadHandler handles image uploads, organizing files by user ID.
 type UploadHandler struct {
 	uploadDir string
 	userRepo  UserRepository
+	storage   storage.Provider // optional, falls back to legacy disk write
 }
 
 func NewUploadHandler(uploadDir string, userRepo UserRepository) *UploadHandler {
@@ -28,7 +25,16 @@ func NewUploadHandler(uploadDir string, userRepo UserRepository) *UploadHandler 
 	if err := os.MkdirAll(uploadDir, 0755); err != nil {
 		slog.Error("Failed to create upload directory", "dir", uploadDir, "error", err)
 	}
-	return &UploadHandler{uploadDir: uploadDir, userRepo: userRepo}
+	return &UploadHandler{
+		uploadDir: uploadDir,
+		userRepo:  userRepo,
+		storage:   storage.NewLocalProvider(uploadDir, "/api/uploads"),
+	}
+}
+
+// SetStorageProvider configures the file storage backend.
+func (h *UploadHandler) SetStorageProvider(p storage.Provider) {
+	h.storage = p
 }
 
 // maxUploadsForPlan returns the maximum number of uploads allowed per user based on plan.
@@ -58,7 +64,7 @@ func countUserUploads(userDir string) int {
 
 // UploadImage handles POST /api/uploads/image
 // Accepts multipart/form-data with a "file" field.
-// Files are stored in {uploadDir}/{userID}/ for per-user organization.
+// Files are stored via the configured StorageProvider.
 // Returns JSON with the image URL and thumbnail URL.
 func (h *UploadHandler) UploadImage(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
@@ -116,101 +122,24 @@ func (h *UploadHandler) UploadImage(w http.ResponseWriter, r *http.Request) {
 		seeker.Seek(0, io.SeekStart)
 	}
 
-	// Whitelist allowed extensions
-	ext := strings.ToLower(filepath.Ext(header.Filename))
-	allowedExts := map[string]bool{".jpg": true, ".jpeg": true, ".png": true, ".gif": true, ".webp": true}
-	if !allowedExts[ext] {
-		ext = ".jpg" // Default to .jpg for unknown/disallowed extensions
-	}
-	filename := fmt.Sprintf("%s%s", uuid.New().String(), ext)
-
-	// Create user-specific directories
-	userDir := filepath.Join(h.uploadDir, userID.String())
-	userThumbDir := filepath.Join(userDir, "thumbnails")
-	for _, dir := range []string{userDir, userThumbDir} {
-		if err := os.MkdirAll(dir, 0755); err != nil {
-			slog.Error("Failed to create user upload directory", "dir", dir, "error", err)
+	// Use StorageProvider if configured
+	if h.storage != nil {
+		result, err := h.storage.Save(userID.String(), header.Filename, file)
+		if err != nil {
+			slog.Error("Storage save failed", "error", err)
 			writeError(w, http.StatusInternalServerError, "Failed to save file")
 			return
 		}
-	}
-
-	// Save original file
-	dstPath := filepath.Join(userDir, filename)
-	dst, err := os.Create(dstPath)
-	if err != nil {
-		slog.Error("Failed to create file", "path", dstPath, "error", err)
-		writeError(w, http.StatusInternalServerError, "Failed to save file")
-		return
-	}
-	defer dst.Close()
-
-	if _, err := io.Copy(dst, file); err != nil {
-		slog.Error("Failed to write file", "error", err)
-		writeError(w, http.StatusInternalServerError, "Failed to save file")
+		slog.Info("Image uploaded", "user_id", userID, "filename", result.Filename)
+		writeJSON(w, http.StatusOK, map[string]string{
+			"url":           result.URL,
+			"thumbnail_url": result.ThumbnailURL,
+			"filename":      result.Filename,
+		})
 		return
 	}
 
-	// Generate thumbnail (200x200 max) — synchronous to ensure it exists before responding
-	thumbFilename := fmt.Sprintf("thumb_%s.jpg", strings.TrimSuffix(filename, ext))
-	h.generateThumbnail(dstPath, filepath.Join(userDir, "thumbnails"), thumbFilename)
-
-	slog.Info("Image uploaded", "user_id", userID, "filename", filename)
-
-	writeJSON(w, http.StatusOK, map[string]string{
-		"url":           fmt.Sprintf("/api/uploads/%s/%s", userID.String(), filename),
-		"thumbnail_url": fmt.Sprintf("/api/uploads/%s/thumbnails/%s", userID.String(), thumbFilename),
-		"filename":      filename,
-	})
+	// Legacy fallback: direct disk write (should not reach here in production)
+	slog.Warn("No storage provider configured, using legacy disk write")
+	writeError(w, http.StatusInternalServerError, "Storage not configured")
 }
-
-func (uh *UploadHandler) generateThumbnail(srcPath, thumbDir, thumbFilename string) {
-	srcFile, err := os.Open(srcPath)
-	if err != nil {
-		slog.Error("Failed to open source for thumbnail", "error", err)
-		return
-	}
-	defer srcFile.Close()
-
-	srcImg, _, err := image.Decode(srcFile)
-	if err != nil {
-		slog.Error("Failed to decode image for thumbnail", "error", err)
-		return
-	}
-
-	// Calculate thumbnail dimensions (max 200x200 maintaining aspect ratio)
-	bounds := srcImg.Bounds()
-	imgW, imgH := bounds.Dx(), bounds.Dy()
-	maxDim := 200
-
-	var newW, newH int
-	if imgW > imgH {
-		newW = maxDim
-		newH = int(float64(imgH) * float64(maxDim) / float64(imgW))
-	} else {
-		newH = maxDim
-		newW = int(float64(imgW) * float64(maxDim) / float64(imgH))
-	}
-	if newW < 1 {
-		newW = 1
-	}
-	if newH < 1 {
-		newH = 1
-	}
-
-	thumb := image.NewRGBA(image.Rect(0, 0, newW, newH))
-	draw.ApproxBiLinear.Scale(thumb, thumb.Bounds(), srcImg, srcImg.Bounds(), draw.Over, nil)
-
-	thumbPath := filepath.Join(thumbDir, thumbFilename)
-	thumbFile, err := os.Create(thumbPath)
-	if err != nil {
-		slog.Error("Failed to create thumbnail file", "error", err)
-		return
-	}
-	defer thumbFile.Close()
-
-	if err := jpeg.Encode(thumbFile, thumb, &jpeg.Options{Quality: 80}); err != nil {
-		slog.Error("Failed to encode thumbnail", "error", err)
-	}
-}
-

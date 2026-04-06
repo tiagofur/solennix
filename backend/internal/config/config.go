@@ -38,6 +38,12 @@ type Config struct {
 	AppleBundleID string // Apple Bundle ID for audience verification
 
 	UploadDir           string // Directory for uploaded files (default: "./uploads")
+	StorageProvider     string // "local" or "s3" (default: "local")
+	S3Bucket            string // S3 bucket name
+	S3Region            string // S3 region (default: "us-east-1")
+	S3Prefix            string // S3 key prefix (default: "uploads")
+	S3Endpoint          string // Custom S3 endpoint (for MinIO/DO Spaces)
+	S3CDNURL            string // CDN URL for serving S3 files
 	BootstrapAdminEmail string // Email to automatically promote to admin on startup
 	TrustProxy          bool   // Trust X-Forwarded-For header for client IP (only enable behind a reverse proxy)
 
@@ -70,6 +76,12 @@ func Load() (*Config, error) {
 		RevenueCatAPIKey:        os.Getenv("REVENUECAT_API_KEY"),
 		AppleBundleID:           os.Getenv("APPLE_BUNDLE_ID"),
 		UploadDir:               getEnv("UPLOAD_DIR", "./uploads"),
+		StorageProvider:         getEnv("STORAGE_PROVIDER", "local"),
+		S3Bucket:                os.Getenv("S3_BUCKET"),
+		S3Region:                getEnv("S3_REGION", "us-east-1"),
+		S3Prefix:                getEnv("S3_PREFIX", "uploads"),
+		S3Endpoint:              os.Getenv("S3_ENDPOINT"),
+		S3CDNURL:                os.Getenv("S3_CDN_URL"),
 		BootstrapAdminEmail:     os.Getenv("BOOTSTRAP_ADMIN_EMAIL"),
 		TrustProxy:              getEnv("TRUST_PROXY", "false") == "true",
 		FCMCredentialsJSON:      os.Getenv("FCM_CREDENTIALS_JSON"),

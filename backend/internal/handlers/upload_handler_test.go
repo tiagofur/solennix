@@ -17,6 +17,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/tiagofur/solennix-backend/internal/storage"
 	"github.com/tiagofur/solennix-backend/internal/middleware"
 )
 
@@ -228,14 +229,15 @@ func TestUploadImage_SuccessWithJpgExtension(t *testing.T) {
 
 func TestUploadImage_CreateFileFails(t *testing.T) {
 	// Use a valid temp dir for NewUploadHandler so it initializes,
-	// then swap uploadDir to a non-existent path so os.Create fails.
+	// then swap storage to a path where directory creation will fail.
 	dir := t.TempDir()
 	h := NewUploadHandler(dir, nil)
 	userID := uuid.New()
 
-	// Overwrite uploadDir to a path where directory creation will fail.
-	// Use a path component with invalid chars to ensure MkdirAll fails on both Windows and Linux.
-	h.uploadDir = filepath.Join(t.TempDir(), "invalid\x00path")
+	// Overwrite storage provider to use a path where MkdirAll fails.
+	invalidDir := filepath.Join(t.TempDir(), "invalid\x00path")
+	h.uploadDir = invalidDir
+	h.SetStorageProvider(storage.NewLocalProvider(invalidDir, "/api/uploads"))
 
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
@@ -441,7 +443,7 @@ func TestUploadImage_DisallowedExtension(t *testing.T) {
 
 func TestGenerateThumbnail(t *testing.T) {
 	dir := t.TempDir()
-	h := NewUploadHandler(dir, nil)
+	_ = NewUploadHandler(dir, nil)
 
 	t.Run("ValidImage", func(t *testing.T) {
 		// Create a test image file
@@ -458,7 +460,7 @@ func TestGenerateThumbnail(t *testing.T) {
 
 		thumbDir := filepath.Join(dir, "thumbnails")
 		os.MkdirAll(thumbDir, 0755)
-		h.generateThumbnail(imgPath, thumbDir, "thumb_test.jpg")
+		storage.GenerateThumbnail(imgPath, thumbDir, "thumb_test.jpg")
 
 		thumbPath := filepath.Join(dir, "thumbnails", "thumb_test.jpg")
 		if _, err := os.Stat(thumbPath); os.IsNotExist(err) {
@@ -475,7 +477,7 @@ func TestGenerateThumbnail(t *testing.T) {
 
 		thumbDir := filepath.Join(dir, "thumbnails")
 		os.MkdirAll(thumbDir, 0755)
-		h.generateThumbnail(imgPath, thumbDir, "thumb_portrait.jpg")
+		storage.GenerateThumbnail(imgPath, thumbDir, "thumb_portrait.jpg")
 		thumbPath := filepath.Join(dir, "thumbnails", "thumb_portrait.jpg")
 		if _, err := os.Stat(thumbPath); os.IsNotExist(err) {
 			t.Fatal("portrait thumbnail was not generated")
@@ -484,14 +486,14 @@ func TestGenerateThumbnail(t *testing.T) {
 
 	t.Run("NonExistentFile", func(t *testing.T) {
 		// Should not panic, just log error
-		h.generateThumbnail("/nonexistent/file.png", dir, "thumb.jpg")
+		storage.GenerateThumbnail("/nonexistent/file.png", dir, "thumb.jpg")
 	})
 
 	t.Run("InvalidImageFile", func(t *testing.T) {
 		invalidPath := filepath.Join(dir, "invalid.png")
 		os.WriteFile(invalidPath, []byte("not an image"), 0644)
 		// Should not panic
-		h.generateThumbnail(invalidPath, dir, "thumb_invalid.jpg")
+		storage.GenerateThumbnail(invalidPath, dir, "thumb_invalid.jpg")
 	})
 
 	t.Run("VeryWideImage", func(t *testing.T) {
@@ -505,7 +507,7 @@ func TestGenerateThumbnail(t *testing.T) {
 
 		thumbDir := filepath.Join(dir, "thumbnails")
 		os.MkdirAll(thumbDir, 0755)
-		h.generateThumbnail(imgPath, thumbDir, "thumb_wide.jpg")
+		storage.GenerateThumbnail(imgPath, thumbDir, "thumb_wide.jpg")
 		thumbPath := filepath.Join(dir, "thumbnails", "thumb_wide.jpg")
 		if _, err := os.Stat(thumbPath); os.IsNotExist(err) {
 			t.Fatal("wide thumbnail was not generated")
@@ -522,7 +524,7 @@ func TestGenerateThumbnail(t *testing.T) {
 
 		thumbDir := filepath.Join(dir, "thumbnails")
 		os.MkdirAll(thumbDir, 0755)
-		h.generateThumbnail(imgPath, thumbDir, "thumb_tall.jpg")
+		storage.GenerateThumbnail(imgPath, thumbDir, "thumb_tall.jpg")
 		thumbPath := filepath.Join(dir, "thumbnails", "thumb_tall.jpg")
 		if _, err := os.Stat(thumbPath); os.IsNotExist(err) {
 			t.Fatal("tall thumbnail was not generated")
@@ -538,7 +540,7 @@ func TestGenerateThumbnail(t *testing.T) {
 
 		thumbDir := filepath.Join(dir, "thumbnails")
 		os.MkdirAll(thumbDir, 0755)
-		h.generateThumbnail(imgPath, thumbDir, "thumb_square.jpg")
+		storage.GenerateThumbnail(imgPath, thumbDir, "thumb_square.jpg")
 		thumbPath := filepath.Join(dir, "thumbnails", "thumb_square.jpg")
 		if _, err := os.Stat(thumbPath); os.IsNotExist(err) {
 			t.Fatal("square thumbnail was not generated")

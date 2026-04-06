@@ -17,6 +17,7 @@ import (
 	"github.com/tiagofur/solennix-backend/internal/repository"
 	"github.com/tiagofur/solennix-backend/internal/router"
 	"github.com/tiagofur/solennix-backend/internal/services"
+	"github.com/tiagofur/solennix-backend/internal/storage"
 )
 
 func main() {
@@ -95,7 +96,29 @@ func main() {
 	subHandler.SetEmailService(emailService)
 	searchHandler := handlers.NewSearchHandler(clientRepo, productRepo, inventoryRepo, eventRepo)
 	eventPaymentHandler := handlers.NewEventPaymentHandler(eventRepo, paymentRepo, stripeService, cfg)
+	// Initialize storage provider
+	var storageProvider storage.Provider
+	switch cfg.StorageProvider {
+	case "s3":
+		s3Provider, err := storage.NewS3Provider(context.Background(), storage.S3Config{
+			Bucket:   cfg.S3Bucket,
+			Region:   cfg.S3Region,
+			Prefix:   cfg.S3Prefix,
+			Endpoint: cfg.S3Endpoint,
+			CDNURL:   cfg.S3CDNURL,
+		})
+		if err != nil {
+			slog.Error("Failed to initialize S3 storage, falling back to local", "error", err)
+			storageProvider = storage.NewLocalProvider(cfg.UploadDir, "/api/uploads")
+		} else {
+			storageProvider = s3Provider
+		}
+	default:
+		storageProvider = storage.NewLocalProvider(cfg.UploadDir, "/api/uploads")
+	}
+
 	uploadHandler := handlers.NewUploadHandler(cfg.UploadDir, userRepo)
+	uploadHandler.SetStorageProvider(storageProvider)
 	adminHandler := handlers.NewAdminHandler(adminRepo)
 	unavailHandler := handlers.NewUnavailableDateHandler(unavailRepo)
 	deviceHandler := handlers.NewDeviceHandler(deviceRepo)
