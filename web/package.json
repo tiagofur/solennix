@@ -28,6 +28,7 @@
     "@types/jest": "^30.0.0",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "firebase": "^12.11.0",
     "jspdf": "^4.2.0",
     "jspdf-autotable": "^5.0.7",
     "lucide-react": "^0.575.0",

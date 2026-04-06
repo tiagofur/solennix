@@ -47,6 +47,15 @@ export const Layout: React.FC = () => {
     localStorage.setItem('sidebar-collapsed', String(isCollapsed));
   }, [isCollapsed]);
 
+  // Initialize push notifications after login
+  useEffect(() => {
+    if (user) {
+      import('@/lib/notifications').then(({ initPushNotifications }) => {
+        initPushNotifications();
+      });
+    }
+  }, [user]);
+
   // Global Ctrl+K / Cmd+K handler
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
