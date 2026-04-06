@@ -103,8 +103,8 @@
 
 ### 1.3 Error Handling Robusto
 
-- [ ] Retry con exponential backoff para errores transitorios
-- [ ] UI de error con botón "Reintentar" contextual
+- [x] Retry con exponential backoff para errores transitorios — ✅ 2026-04-05 (2 retries, 1s/2s backoff, GET only, 5xx + timeouts + connection errors)
+- [x] UI de error con botón "Reintentar" contextual — ✅ 2026-04-05 (Dashboard, EventList, ClientList, ProductList, InventoryList)
 - [ ] Sentry/Crashlytics integration (SentryHelper está referenciado)
 - [ ] Offline-first: queue de operaciones pendientes
 
