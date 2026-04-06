@@ -15,13 +15,17 @@ func Logger(next http.Handler) http.Handler {
 		wrapped := &responseWriter{ResponseWriter: w, statusCode: http.StatusOK}
 		next.ServeHTTP(wrapped, r)
 
-		slog.Info("HTTP request",
+		attrs := []any{
 			"method", r.Method,
 			"path", r.URL.Path,
 			"status", wrapped.statusCode,
 			"duration", time.Since(start).String(),
 			"remote", r.RemoteAddr,
-		)
+		}
+		if reqID := GetRequestID(r.Context()); reqID != "" {
+			attrs = append(attrs, "request_id", reqID)
+		}
+		slog.Info("HTTP request", attrs...)
 	})
 }
 

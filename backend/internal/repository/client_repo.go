@@ -49,6 +49,38 @@ func (r *ClientRepo) GetAll(ctx context.Context, userID uuid.UUID) ([]models.Cli
 	return clients, nil
 }
 
+func (r *ClientRepo) GetAllPaginated(ctx context.Context, userID uuid.UUID, offset, limit int, sortCol, order string) ([]models.Client, int, error) {
+	var total int
+	countQuery := `SELECT COUNT(*) FROM clients WHERE user_id = $1`
+	if err := r.pool.QueryRow(ctx, countQuery, userID).Scan(&total); err != nil {
+		return nil, 0, fmt.Errorf("count clients: %w", err)
+	}
+
+	query := fmt.Sprintf(`SELECT id, user_id, name, phone, email, address, city, notes, photo_url,
+		total_events, total_spent, created_at, updated_at
+		FROM clients WHERE user_id = $1 ORDER BY %s %s LIMIT $2 OFFSET $3`, sortCol, order)
+	rows, err := r.pool.Query(ctx, query, userID, limit, offset)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer rows.Close()
+
+	var clients []models.Client
+	for rows.Next() {
+		var c models.Client
+		if err := rows.Scan(&c.ID, &c.UserID, &c.Name, &c.Phone, &c.Email,
+			&c.Address, &c.City, &c.Notes, &c.PhotoURL, &c.TotalEvents, &c.TotalSpent,
+			&c.CreatedAt, &c.UpdatedAt); err != nil {
+			return nil, 0, err
+		}
+		clients = append(clients, c)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, 0, fmt.Errorf("error iterating paginated clients: %w", err)
+	}
+	return clients, total, nil
+}
+
 func (r *ClientRepo) GetByID(ctx context.Context, id, userID uuid.UUID) (*models.Client, error) {
 	c := &models.Client{}
 	query := `SELECT id, user_id, name, phone, email, address, city, notes, photo_url,

@@ -131,6 +131,14 @@ func (m *MockFullEventRepo) GetAll(ctx context.Context, userID uuid.UUID) ([]mod
 	return args.Get(0).([]models.Event), args.Error(1)
 }
 
+func (m *MockFullEventRepo) GetAllPaginated(ctx context.Context, userID uuid.UUID, offset, limit int, sortCol, order string) ([]models.Event, int, error) {
+	args := m.Called(ctx, userID, offset, limit, sortCol, order)
+	if args.Get(0) == nil {
+		return nil, args.Int(1), args.Error(2)
+	}
+	return args.Get(0).([]models.Event), args.Int(1), args.Error(2)
+}
+
 func (m *MockFullEventRepo) GetByDateRange(ctx context.Context, userID uuid.UUID, start, end string) ([]models.Event, error) {
 	args := m.Called(ctx, userID, start, end)
 	if args.Get(0) == nil {
@@ -265,6 +273,14 @@ func (m *MockClientRepo) GetAll(ctx context.Context, userID uuid.UUID) ([]models
 	return args.Get(0).([]models.Client), args.Error(1)
 }
 
+func (m *MockClientRepo) GetAllPaginated(ctx context.Context, userID uuid.UUID, offset, limit int, sortCol, order string) ([]models.Client, int, error) {
+	args := m.Called(ctx, userID, offset, limit, sortCol, order)
+	if args.Get(0) == nil {
+		return nil, args.Int(1), args.Error(2)
+	}
+	return args.Get(0).([]models.Client), args.Int(1), args.Error(2)
+}
+
 func (m *MockClientRepo) GetByID(ctx context.Context, id, userID uuid.UUID) (*models.Client, error) {
 	args := m.Called(ctx, id, userID)
 	if args.Get(0) == nil {
@@ -315,6 +331,14 @@ func (m *MockProductRepo) GetAll(ctx context.Context, userID uuid.UUID) ([]model
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]models.Product), args.Error(1)
+}
+
+func (m *MockProductRepo) GetAllPaginated(ctx context.Context, userID uuid.UUID, offset, limit int, sortCol, order string) ([]models.Product, int, error) {
+	args := m.Called(ctx, userID, offset, limit, sortCol, order)
+	if args.Get(0) == nil {
+		return nil, args.Int(1), args.Error(2)
+	}
+	return args.Get(0).([]models.Product), args.Int(1), args.Error(2)
 }
 
 func (m *MockProductRepo) GetByID(ctx context.Context, id, userID uuid.UUID) (*models.Product, error) {
@@ -395,6 +419,14 @@ func (m *MockInventoryRepo) GetAll(ctx context.Context, userID uuid.UUID) ([]mod
 	return args.Get(0).([]models.InventoryItem), args.Error(1)
 }
 
+func (m *MockInventoryRepo) GetAllPaginated(ctx context.Context, userID uuid.UUID, offset, limit int, sortCol, order string) ([]models.InventoryItem, int, error) {
+	args := m.Called(ctx, userID, offset, limit, sortCol, order)
+	if args.Get(0) == nil {
+		return nil, args.Int(1), args.Error(2)
+	}
+	return args.Get(0).([]models.InventoryItem), args.Int(1), args.Error(2)
+}
+
 func (m *MockInventoryRepo) GetByID(ctx context.Context, id, userID uuid.UUID) (*models.InventoryItem, error) {
 	args := m.Called(ctx, id, userID)
 	if args.Get(0) == nil {
@@ -450,6 +482,14 @@ func (m *MockFullPaymentRepo) GetAll(ctx context.Context, userID uuid.UUID) ([]m
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]models.Payment), args.Error(1)
+}
+
+func (m *MockFullPaymentRepo) GetAllPaginated(ctx context.Context, userID uuid.UUID, offset, limit int, sortCol, order string) ([]models.Payment, int, error) {
+	args := m.Called(ctx, userID, offset, limit, sortCol, order)
+	if args.Get(0) == nil {
+		return nil, args.Int(1), args.Error(2)
+	}
+	return args.Get(0).([]models.Payment), args.Int(1), args.Error(2)
 }
 
 func (m *MockFullPaymentRepo) GetByEventID(ctx context.Context, userID, eventID uuid.UUID) ([]models.Payment, error) {

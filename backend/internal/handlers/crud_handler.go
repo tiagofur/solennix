@@ -50,8 +50,31 @@ func NewCRUDHandler(
 // CLIENTS
 // ===================
 
+var clientSortAllowlist = map[string]string{
+	"name":         "name",
+	"created_at":   "created_at",
+	"total_events": "total_events",
+	"total_spent":  "total_spent",
+}
+
 func (h *CRUDHandler) ListClients(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
+
+	params := parsePaginationParams(r, clientSortAllowlist, "name")
+	if params != nil {
+		offset := (params.Page - 1) * params.Limit
+		clients, total, err := h.clientRepo.GetAllPaginated(r.Context(), userID, offset, params.Limit, params.Sort, params.Order)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "Failed to fetch clients")
+			return
+		}
+		if clients == nil {
+			clients = []models.Client{}
+		}
+		writePaginatedJSON(w, http.StatusOK, clients, total, params)
+		return
+	}
+
 	clients, err := h.clientRepo.GetAll(r.Context(), userID)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Failed to fetch clients")
@@ -162,12 +185,21 @@ func (h *CRUDHandler) DeleteClient(w http.ResponseWriter, r *http.Request) {
 // EVENTS
 // ===================
 
+var eventSortAllowlist = map[string]string{
+	"event_date":   "e.event_date",
+	"created_at":   "e.created_at",
+	"total_amount": "e.total_amount",
+	"status":       "e.status",
+	"num_people":   "e.num_people",
+}
+
 func (h *CRUDHandler) ListEvents(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 	start := r.URL.Query().Get("start")
 	end := r.URL.Query().Get("end")
 	clientID := r.URL.Query().Get("client_id")
 
+	// Filtered queries don't support pagination (they return subsets already)
 	if clientID != "" {
 		cid, err := uuid.Parse(clientID)
 		if err != nil {
@@ -200,6 +232,22 @@ func (h *CRUDHandler) ListEvents(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		writeJSON(w, http.StatusOK, events)
+		return
+	}
+
+	// Unfiltered list: supports pagination
+	params := parsePaginationParams(r, eventSortAllowlist, "e.event_date")
+	if params != nil {
+		offset := (params.Page - 1) * params.Limit
+		events, total, err := h.eventRepo.GetAllPaginated(r.Context(), userID, offset, params.Limit, params.Sort, params.Order)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "Failed to fetch events")
+			return
+		}
+		if events == nil {
+			events = []models.Event{}
+		}
+		writePaginatedJSON(w, http.StatusOK, events, total, params)
 		return
 	}
 
@@ -963,8 +1011,31 @@ func parseEventPhotos(photosJSON *string) []models.EventPhoto {
 // PRODUCTS
 // ===================
 
+var productSortAllowlist = map[string]string{
+	"name":       "name",
+	"created_at": "created_at",
+	"base_price": "base_price",
+	"category":   "category",
+}
+
 func (h *CRUDHandler) ListProducts(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
+
+	params := parsePaginationParams(r, productSortAllowlist, "name")
+	if params != nil {
+		offset := (params.Page - 1) * params.Limit
+		products, total, err := h.productRepo.GetAllPaginated(r.Context(), userID, offset, params.Limit, params.Sort, params.Order)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "Failed to fetch products")
+			return
+		}
+		if products == nil {
+			products = []models.Product{}
+		}
+		writePaginatedJSON(w, http.StatusOK, products, total, params)
+		return
+	}
+
 	products, err := h.productRepo.GetAll(r.Context(), userID)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Failed to fetch products")
@@ -1178,8 +1249,32 @@ func (h *CRUDHandler) GetBatchProductIngredients(w http.ResponseWriter, r *http.
 // INVENTORY
 // ===================
 
+var inventorySortAllowlist = map[string]string{
+	"ingredient_name": "ingredient_name",
+	"current_stock":   "current_stock",
+	"unit_cost":       "unit_cost",
+	"type":            "type",
+	"last_updated":    "last_updated",
+}
+
 func (h *CRUDHandler) ListInventory(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
+
+	params := parsePaginationParams(r, inventorySortAllowlist, "ingredient_name")
+	if params != nil {
+		offset := (params.Page - 1) * params.Limit
+		items, total, err := h.inventoryRepo.GetAllPaginated(r.Context(), userID, offset, params.Limit, params.Sort, params.Order)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "Failed to fetch inventory")
+			return
+		}
+		if items == nil {
+			items = []models.InventoryItem{}
+		}
+		writePaginatedJSON(w, http.StatusOK, items, total, params)
+		return
+	}
+
 	items, err := h.inventoryRepo.GetAll(r.Context(), userID)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "Failed to fetch inventory")
@@ -1295,6 +1390,13 @@ func (h *CRUDHandler) DeleteInventoryItem(w http.ResponseWriter, r *http.Request
 // PAYMENTS
 // ===================
 
+var paymentSortAllowlist = map[string]string{
+	"payment_date":   "payment_date",
+	"created_at":     "created_at",
+	"amount":         "amount",
+	"payment_method": "payment_method",
+}
+
 func (h *CRUDHandler) ListPayments(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 	eventID := r.URL.Query().Get("event_id")
@@ -1302,6 +1404,7 @@ func (h *CRUDHandler) ListPayments(w http.ResponseWriter, r *http.Request) {
 	end := r.URL.Query().Get("end")
 	eventIDs := r.URL.Query().Get("event_ids")
 
+	// Filtered queries don't support pagination
 	if eventID != "" {
 		eid, err := uuid.Parse(eventID)
 		if err != nil {
@@ -1328,7 +1431,6 @@ func (h *CRUDHandler) ListPayments(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if eventIDs != "" {
-		// Parse comma-separated UUIDs
 		var ids []uuid.UUID
 		for _, s := range splitCSV(eventIDs) {
 			id, err := uuid.Parse(s)
@@ -1348,6 +1450,22 @@ func (h *CRUDHandler) ListPayments(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		writeJSON(w, http.StatusOK, payments)
+		return
+	}
+
+	// Unfiltered list: supports pagination
+	params := parsePaginationParams(r, paymentSortAllowlist, "payment_date")
+	if params != nil {
+		offset := (params.Page - 1) * params.Limit
+		payments, total, err := h.paymentRepo.GetAllPaginated(r.Context(), userID, offset, params.Limit, params.Sort, params.Order)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "Failed to fetch payments")
+			return
+		}
+		if payments == nil {
+			payments = []models.Payment{}
+		}
+		writePaginatedJSON(w, http.StatusOK, payments, total, params)
 		return
 	}
 

@@ -86,6 +86,36 @@ func (r *EventRepo) GetAll(ctx context.Context, userID uuid.UUID) ([]models.Even
 	return events, nil
 }
 
+func (r *EventRepo) GetAllPaginated(ctx context.Context, userID uuid.UUID, offset, limit int, sortCol, order string) ([]models.Event, int, error) {
+	var total int
+	countQuery := `SELECT COUNT(*) FROM events WHERE user_id = $1`
+	if err := r.pool.QueryRow(ctx, countQuery, userID).Scan(&total); err != nil {
+		return nil, 0, fmt.Errorf("count events: %w", err)
+	}
+
+	query := fmt.Sprintf(`SELECT %s, c.name as client_name, c.phone as client_phone
+		FROM events e LEFT JOIN clients c ON e.client_id = c.id
+		WHERE e.user_id = $1 ORDER BY e.%s %s LIMIT $2 OFFSET $3`, eventSelectFields, sortCol, order)
+	rows, err := r.pool.Query(ctx, query, userID, limit, offset)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer rows.Close()
+
+	var events []models.Event
+	for rows.Next() {
+		e, err := scanEventWithClient(rows)
+		if err != nil {
+			return nil, 0, err
+		}
+		events = append(events, e)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, 0, fmt.Errorf("error iterating paginated events: %w", err)
+	}
+	return events, total, nil
+}
+
 func (r *EventRepo) GetByDateRange(ctx context.Context, userID uuid.UUID, start, end string) ([]models.Event, error) {
 	query := fmt.Sprintf(`SELECT %s, c.name as client_name, c.phone as client_phone
 		FROM events e LEFT JOIN clients c ON e.client_id = c.id

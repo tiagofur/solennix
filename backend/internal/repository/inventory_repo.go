@@ -47,6 +47,36 @@ func (r *InventoryRepo) GetAll(ctx context.Context, userID uuid.UUID) ([]models.
 	return items, nil
 }
 
+func (r *InventoryRepo) GetAllPaginated(ctx context.Context, userID uuid.UUID, offset, limit int, sortCol, order string) ([]models.InventoryItem, int, error) {
+	var total int
+	countQuery := `SELECT COUNT(*) FROM inventory WHERE user_id = $1`
+	if err := r.pool.QueryRow(ctx, countQuery, userID).Scan(&total); err != nil {
+		return nil, 0, fmt.Errorf("count inventory: %w", err)
+	}
+
+	query := fmt.Sprintf(`SELECT id, user_id, ingredient_name, current_stock, minimum_stock, unit, unit_cost, type, last_updated
+		FROM inventory WHERE user_id = $1 ORDER BY %s %s LIMIT $2 OFFSET $3`, sortCol, order)
+	rows, err := r.pool.Query(ctx, query, userID, limit, offset)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer rows.Close()
+
+	var items []models.InventoryItem
+	for rows.Next() {
+		var i models.InventoryItem
+		if err := rows.Scan(&i.ID, &i.UserID, &i.IngredientName, &i.CurrentStock,
+			&i.MinimumStock, &i.Unit, &i.UnitCost, &i.Type, &i.LastUpdated); err != nil {
+			return nil, 0, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, 0, fmt.Errorf("error iterating paginated inventory: %w", err)
+	}
+	return items, total, nil
+}
+
 func (r *InventoryRepo) GetByID(ctx context.Context, id, userID uuid.UUID) (*models.InventoryItem, error) {
 	i := &models.InventoryItem{}
 	query := `SELECT id, user_id, ingredient_name, current_stock, minimum_stock, unit, unit_cost, type, last_updated

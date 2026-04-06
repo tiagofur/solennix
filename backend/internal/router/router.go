@@ -1,10 +1,12 @@
 package router
 
 import (
+	"context"
 	"net/http"
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/tiagofur/solennix-backend/internal/handlers"
 	mw "github.com/tiagofur/solennix-backend/internal/middleware"
 	"github.com/tiagofur/solennix-backend/internal/repository"
@@ -14,19 +16,32 @@ import (
 func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, subHandler *handlers.SubscriptionHandler,
 	searchHandler *handlers.SearchHandler, eventPaymentHandler *handlers.EventPaymentHandler, uploadHandler *handlers.UploadHandler,
 	adminHandler *handlers.AdminHandler, unavailHandler *handlers.UnavailableDateHandler, deviceHandler *handlers.DeviceHandler,
-	authService *services.AuthService, userRepo *repository.UserRepo, corsOrigins []string, uploadDir string) http.Handler {
+	authService *services.AuthService, userRepo *repository.UserRepo, pool *pgxpool.Pool, corsOrigins []string, uploadDir string) http.Handler {
 
 	r := chi.NewRouter()
 
 	// Global middleware
-	r.Use(mw.Recovery) // Panic recovery — must be first
+	r.Use(mw.Recovery)        // Panic recovery — must be first
+	r.Use(mw.RequestID)       // X-Request-ID for tracing
 	r.Use(mw.CORS(corsOrigins))
 	r.Use(mw.SecurityHeaders) // Security headers (X-Frame-Options, CSP, HSTS, etc.)
 	r.Use(mw.Logger)
 
-	// Health check
+	// Health check — verifies database connectivity
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
+		if pool != nil {
+			ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+			defer cancel()
+			if err := pool.Ping(ctx); err != nil {
+				w.WriteHeader(http.StatusServiceUnavailable)
+				w.Write([]byte(`{"status":"unhealthy","db":"disconnected"}`))
+				return
+			}
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(`{"status":"ok","db":"connected"}`))
+			return
+		}
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"status":"ok"}`))
 	})

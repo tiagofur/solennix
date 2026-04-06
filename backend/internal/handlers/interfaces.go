@@ -29,6 +29,7 @@ type FullUserRepository interface {
 type FullEventRepository interface {
 	EventRepository // existing: GetByID(id, userID), Update
 	GetAll(ctx context.Context, userID uuid.UUID) ([]models.Event, error)
+	GetAllPaginated(ctx context.Context, userID uuid.UUID, offset, limit int, sortCol, order string) ([]models.Event, int, error)
 	GetByDateRange(ctx context.Context, userID uuid.UUID, start, end string) ([]models.Event, error)
 	GetByClientID(ctx context.Context, userID, clientID uuid.UUID) ([]models.Event, error)
 	GetUpcoming(ctx context.Context, userID uuid.UUID, limit int) ([]models.Event, error)
@@ -51,6 +52,7 @@ type FullEventRepository interface {
 // ClientRepository defines client repo operations.
 type ClientRepository interface {
 	GetAll(ctx context.Context, userID uuid.UUID) ([]models.Client, error)
+	GetAllPaginated(ctx context.Context, userID uuid.UUID, offset, limit int, sortCol, order string) ([]models.Client, int, error)
 	GetByID(ctx context.Context, id, userID uuid.UUID) (*models.Client, error)
 	Create(ctx context.Context, c *models.Client) error
 	Update(ctx context.Context, c *models.Client) error
@@ -62,6 +64,7 @@ type ClientRepository interface {
 // ProductRepository defines product repo operations.
 type ProductRepository interface {
 	GetAll(ctx context.Context, userID uuid.UUID) ([]models.Product, error)
+	GetAllPaginated(ctx context.Context, userID uuid.UUID, offset, limit int, sortCol, order string) ([]models.Product, int, error)
 	GetByID(ctx context.Context, id, userID uuid.UUID) (*models.Product, error)
 	Create(ctx context.Context, p *models.Product) error
 	Update(ctx context.Context, p *models.Product) error
@@ -77,6 +80,7 @@ type ProductRepository interface {
 // InventoryRepository defines inventory repo operations.
 type InventoryRepository interface {
 	GetAll(ctx context.Context, userID uuid.UUID) ([]models.InventoryItem, error)
+	GetAllPaginated(ctx context.Context, userID uuid.UUID, offset, limit int, sortCol, order string) ([]models.InventoryItem, int, error)
 	GetByID(ctx context.Context, id, userID uuid.UUID) (*models.InventoryItem, error)
 	Create(ctx context.Context, i *models.InventoryItem) error
 	Update(ctx context.Context, i *models.InventoryItem) error
@@ -96,6 +100,7 @@ type UnavailableDateRepository interface {
 type FullPaymentRepository interface {
 	PaymentRepository // existing: Create
 	GetAll(ctx context.Context, userID uuid.UUID) ([]models.Payment, error)
+	GetAllPaginated(ctx context.Context, userID uuid.UUID, offset, limit int, sortCol, order string) ([]models.Payment, int, error)
 	GetByEventID(ctx context.Context, userID, eventID uuid.UUID) ([]models.Payment, error)
 	GetByDateRange(ctx context.Context, userID uuid.UUID, start, end string) ([]models.Payment, error)
 	GetByEventIDs(ctx context.Context, userID uuid.UUID, eventIDs []uuid.UUID) ([]models.Payment, error)

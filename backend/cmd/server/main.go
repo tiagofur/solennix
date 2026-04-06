@@ -90,7 +90,7 @@ func main() {
 	deviceHandler := handlers.NewDeviceHandler(deviceRepo)
 
 	// Create router
-	r := router.New(authHandler, crudHandler, subHandler, searchHandler, eventPaymentHandler, uploadHandler, adminHandler, unavailHandler, deviceHandler, authService, userRepo, cfg.CORSAllowedOrigins, cfg.UploadDir)
+	r := router.New(authHandler, crudHandler, subHandler, searchHandler, eventPaymentHandler, uploadHandler, adminHandler, unavailHandler, deviceHandler, authService, userRepo, pool, cfg.CORSAllowedOrigins, cfg.UploadDir)
 
 	// Background job: expire gifted plans that have passed their expiry date.
 	// Runs once at startup then every hour.

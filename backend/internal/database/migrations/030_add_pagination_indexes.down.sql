@@ -1,0 +1,12 @@
+DROP INDEX IF EXISTS idx_events_user_date;
+DROP INDEX IF EXISTS idx_events_user_created;
+DROP INDEX IF EXISTS idx_events_user_status;
+DROP INDEX IF EXISTS idx_clients_user_name;
+DROP INDEX IF EXISTS idx_clients_user_created;
+DROP INDEX IF EXISTS idx_products_user_created;
+DROP INDEX IF EXISTS idx_products_user_name;
+DROP INDEX IF EXISTS idx_inventory_user_name;
+DROP INDEX IF EXISTS idx_payments_event_id;
+DROP INDEX IF EXISTS idx_payments_user_date;
+DROP INDEX IF EXISTS idx_product_ingredients_product;
+DROP INDEX IF EXISTS idx_product_ingredients_inventory;

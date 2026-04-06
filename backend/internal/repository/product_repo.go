@@ -47,6 +47,36 @@ func (r *ProductRepo) GetAll(ctx context.Context, userID uuid.UUID) ([]models.Pr
 	return products, nil
 }
 
+func (r *ProductRepo) GetAllPaginated(ctx context.Context, userID uuid.UUID, offset, limit int, sortCol, order string) ([]models.Product, int, error) {
+	var total int
+	countQuery := `SELECT COUNT(*) FROM products WHERE user_id = $1`
+	if err := r.pool.QueryRow(ctx, countQuery, userID).Scan(&total); err != nil {
+		return nil, 0, fmt.Errorf("count products: %w", err)
+	}
+
+	query := fmt.Sprintf(`SELECT id, user_id, name, category, base_price, recipe, image_url, is_active, created_at, updated_at
+		FROM products WHERE user_id = $1 ORDER BY %s %s LIMIT $2 OFFSET $3`, sortCol, order)
+	rows, err := r.pool.Query(ctx, query, userID, limit, offset)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer rows.Close()
+
+	var products []models.Product
+	for rows.Next() {
+		var p models.Product
+		if err := rows.Scan(&p.ID, &p.UserID, &p.Name, &p.Category, &p.BasePrice,
+			&p.Recipe, &p.ImageURL, &p.IsActive, &p.CreatedAt, &p.UpdatedAt); err != nil {
+			return nil, 0, err
+		}
+		products = append(products, p)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, 0, fmt.Errorf("error iterating paginated products: %w", err)
+	}
+	return products, total, nil
+}
+
 func (r *ProductRepo) GetByID(ctx context.Context, id, userID uuid.UUID) (*models.Product, error) {
 	p := &models.Product{}
 	query := `SELECT id, user_id, name, category, base_price, recipe, image_url, is_active, created_at, updated_at
