@@ -176,38 +176,56 @@
 
 ---
 
-## Fase 3: Security Hardening
+## Fase 3: Security Hardening ✅
 
-> [!success] Impacto: Medio-Alto | Esfuerzo: Medio
-> Endurecer seguridad para producción.
+> [!done] FASE 3 COMPLETADA — 2026-04-06
+> CSRF, rate limiting por usuario, validación mejorada y refresh token rotation implementados. Todos los tests pasan.
 
-### 3.1 CSRF Protection
+### 3.1 CSRF Protection ✅
 
-- [ ] Double-submit cookie pattern para web
-- [ ] CSRF token en endpoints state-changing (POST, PUT, DELETE)
-- [ ] Excluir API clients (Bearer header) de CSRF
+- [x] Double-submit cookie pattern (`csrf_token` cookie, NOT httpOnly, SameSite=Strict)
+- [x] Validación `X-CSRF-Token` header en POST/PUT/DELETE
+- [x] Skip para Bearer auth (mobile/API clients)
+- [x] Skip para webhooks (verificados por firma)
+- [x] Skip para auth routes (públicos, sin sesión)
+- [x] Skip si no hay `auth_token` cookie (sin sesión web que proteger)
+
+**Archivos**: `middleware/csrf.go`, `middleware/csrf_test.go`
 
 **Por qué**: Cookie-based auth es vulnerable a CSRF sin protección.
 
-### 3.2 Rate Limiting por Usuario
+### 3.2 Rate Limiting por Usuario ✅
 
-- [ ] Rate limit por `userID` autenticado (no solo IP)
-- [ ] Diferentes límites por plan (basic vs pro)
-- [ ] Redis-backed para multi-instancia
+- [x] Rate limit por `userID` autenticado (básico: 60, pro: 200, premium: 500 req/min)
+- [x] `CachedPlanResolver` con sync.Map cache (TTL 5 min, evita hit DB por request)
+- [x] Headers `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `Retry-After`
+- [x] `GetPlanByID` en UserRepo (query optimizada, solo columna plan)
+- [ ] Redis-backed para multi-instancia (futuro, cuando haya horizontal scaling)
 
-### 3.3 Input Validation Mejorado
+**Archivos**: `middleware/user_ratelimit.go`, `middleware/plan_resolver.go`, `repository/user_repo.go`
 
-- [ ] Validar UUIDs en path params
-- [ ] Validar enums (status, type, method, plan)
-- [ ] Limitar tamaño de strings (nombre, descripción, notas)
-- [ ] Sanitizar HTML en campos de texto (notes, contract_template)
-- [ ] File type verification (magic bytes, no solo extensión)
+### 3.3 Input Validation Mejorado ✅
 
-### 3.4 Refresh Token Rotation
+- [x] Middleware `ValidateUUID("id", "photoId")` en rutas protegidas y admin
+- [x] Constantes de largo máximo: name(255), description(2000), notes(5000), address(500), etc.
+- [x] `sanitizeString()` / `sanitizeOptionalString()` con `html.EscapeString` (XSS prevention)
+- [x] Validación de largo en ValidateClient, ValidateEvent, ValidateProduct, ValidateInventoryItem
+- [x] Validación de enum `payment_method` (cash/transfer/card/check/other)
+- [x] File type verification via magic bytes (ya existía en upload_handler.go)
 
-- [ ] Al hacer refresh, invalidar refresh token anterior
-- [ ] Detectar reuso de refresh token (posible compromiso) → revocar toda la sesión
-- [ ] `refresh_tokens` table con `family` para tracking
+**Archivos**: `middleware/validate_uuid.go`, `handlers/validation.go` (extendido)
+
+### 3.4 Refresh Token Rotation ✅
+
+- [x] Tabla `refresh_token_families` con `family_id`, `token_hash`, `used` flag (migración 035)
+- [x] Al hacer refresh: consume token anterior (mark used), genera nuevo par con mismo family
+- [x] Detección de reuso: si un token `used=true` se presenta → revoca toda la familia
+- [x] Login/Register/OAuth almacenan refresh token inicial en la familia
+- [x] Logout/ChangePassword/ResetPassword revocan todas las familias del usuario
+- [x] Cleanup de tokens expirados en background job existente
+- [x] Backward compatible: si `refreshTokenRepo` es nil, usa comportamiento anterior
+
+**Archivos**: `migrations/035_add_refresh_token_families.up.sql`, `repository/refresh_token_repo.go`, `services/auth_service.go` (FamilyID en claims), `handlers/auth_handler.go` (rotation logic)
 
 ---
 
@@ -281,11 +299,11 @@ gantt
     API Versioning             :done, f2c, 2026-04-06, 1d
     Audit Logging              :done, f2d, 2026-04-06, 1d
 
-    section Fase 3: Security
-    CSRF Protection            :f3a, after f2d, 2d
-    Rate Limit por Usuario     :f3b, after f3a, 2d
-    Input Validation           :f3c, after f3b, 3d
-    Refresh Token Rotation     :f3d, after f3c, 2d
+    section Fase 3: Security ✅
+    CSRF Protection            :done, f3a, 2026-04-06, 1d
+    Rate Limit por Usuario     :done, f3b, 2026-04-06, 1d
+    Input Validation           :done, f3c, 2026-04-06, 1d
+    Refresh Token Rotation     :done, f3d, 2026-04-06, 1d
 
     section Fase 4: Features
     Event Templates            :f4a, after f3d, 4d

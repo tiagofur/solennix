@@ -19,14 +19,26 @@ func CSRF(next http.Handler) http.Handler {
 			return
 		}
 
-		// Skip if using Bearer auth (mobile/API clients)
-		if strings.HasPrefix(r.Header.Get("Authorization"), "Bearer ") {
+		// Skip if using Authorization header (mobile/API clients)
+		if r.Header.Get("Authorization") != "" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// Skip if no auth_token cookie exists (no web session to protect)
+		if _, err := r.Cookie("auth_token"); err != nil {
 			next.ServeHTTP(w, r)
 			return
 		}
 
 		// Skip webhook endpoints (verified by signature, no CSRF needed)
 		if isWebhookPath(r.URL.Path) {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// Skip auth endpoints (public, no session cookie to CSRF)
+		if isAuthPath(r.URL.Path) {
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -77,4 +89,10 @@ func generateCSRFToken() string {
 // these endpoints verify authenticity via request signatures, not CSRF.
 func isWebhookPath(path string) bool {
 	return strings.Contains(path, "/webhook/")
+}
+
+// isAuthPath returns true for public authentication endpoints that
+// don't have an existing session (register, login, refresh, etc.).
+func isAuthPath(path string) bool {
+	return strings.Contains(path, "/auth/")
 }

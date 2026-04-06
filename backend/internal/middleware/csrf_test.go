@@ -12,8 +12,9 @@ func TestCSRF(t *testing.T) {
 		method         string
 		authHeader     string
 		path           string
-		cookieValue    string
-		headerToken    string
+		cookieValue    string // csrf_token cookie
+		headerToken    string // X-CSRF-Token header
+		authCookie     bool   // whether to include auth_token cookie (simulates web session)
 		wantStatus     int
 		wantNextCalled bool
 		wantCookie     bool // expect csrf_token cookie in response
@@ -48,6 +49,7 @@ func TestCSRF(t *testing.T) {
 			name:           "GivenPOSTWithValidCSRF_WhenCookieMatchesHeader_ThenPass",
 			method:         http.MethodPost,
 			path:           "/api/v1/events",
+			authCookie:     true,
 			cookieValue:    "valid-csrf-token",
 			headerToken:    "valid-csrf-token",
 			wantStatus:     http.StatusAccepted,
@@ -58,6 +60,7 @@ func TestCSRF(t *testing.T) {
 			name:           "GivenPOSTWithNoCookie_WhenNoCSRFToken_ThenReturn403",
 			method:         http.MethodPost,
 			path:           "/api/v1/events",
+			authCookie:     true,
 			wantStatus:     http.StatusForbidden,
 			wantNextCalled: false,
 			wantCookie:     false,
@@ -66,6 +69,7 @@ func TestCSRF(t *testing.T) {
 			name:           "GivenPOSTWithMismatchedCSRF_WhenHeaderDiffers_ThenReturn403",
 			method:         http.MethodPost,
 			path:           "/api/v1/events",
+			authCookie:     true,
 			cookieValue:    "real-token",
 			headerToken:    "wrong-token",
 			wantStatus:     http.StatusForbidden,
@@ -76,10 +80,19 @@ func TestCSRF(t *testing.T) {
 			name:           "GivenPOSTWithCookieButNoHeader_WhenHeaderEmpty_ThenReturn403",
 			method:         http.MethodPost,
 			path:           "/api/v1/events",
+			authCookie:     true,
 			cookieValue:    "real-token",
 			headerToken:    "",
 			wantStatus:     http.StatusForbidden,
 			wantNextCalled: false,
+			wantCookie:     false,
+		},
+		{
+			name:           "GivenPOSTWithNoSession_WhenNoAuthCookie_ThenSkipCSRF",
+			method:         http.MethodPost,
+			path:           "/api/v1/events",
+			wantStatus:     http.StatusAccepted,
+			wantNextCalled: true,
 			wantCookie:     false,
 		},
 		{
@@ -94,6 +107,7 @@ func TestCSRF(t *testing.T) {
 			name:           "GivenDELETEWithValidCSRF_WhenCookieMatchesHeader_ThenPass",
 			method:         http.MethodDelete,
 			path:           "/api/v1/events/123",
+			authCookie:     true,
 			cookieValue:    "delete-token",
 			headerToken:    "delete-token",
 			wantStatus:     http.StatusAccepted,
@@ -101,9 +115,10 @@ func TestCSRF(t *testing.T) {
 			wantCookie:     false,
 		},
 		{
-			name:           "GivenPUTWithNoCSRF_WhenNoCookie_ThenReturn403",
+			name:           "GivenPUTWithNoCSRF_WhenSessionExists_ThenReturn403",
 			method:         http.MethodPut,
 			path:           "/api/v1/events/123",
+			authCookie:     true,
 			wantStatus:     http.StatusForbidden,
 			wantNextCalled: false,
 			wantCookie:     false,
@@ -139,6 +154,9 @@ func TestCSRF(t *testing.T) {
 
 			if tc.authHeader != "" {
 				req.Header.Set("Authorization", tc.authHeader)
+			}
+			if tc.authCookie {
+				req.AddCookie(&http.Cookie{Name: "auth_token", Value: "some-jwt"})
 			}
 			if tc.cookieValue != "" {
 				req.AddCookie(&http.Cookie{Name: "csrf_token", Value: tc.cookieValue})
