@@ -2,6 +2,8 @@ package com.creapolis.solennix.core.database.di
 
 import android.content.Context
 import androidx.room.Room
+import com.creapolis.solennix.core.database.DATABASE_NAME
+import com.creapolis.solennix.core.database.MIGRATION_4_5
 import com.creapolis.solennix.core.database.SolennixDatabase
 import com.creapolis.solennix.core.database.dao.ClientDao
 import com.creapolis.solennix.core.database.dao.EventDao
@@ -27,8 +29,10 @@ object DatabaseModule {
         return Room.databaseBuilder(
             context,
             SolennixDatabase::class.java,
-            "solennix-database"
-        ).fallbackToDestructiveMigration().build()
+            DATABASE_NAME
+        )
+            .addMigrations(MIGRATION_4_5)
+            .build()
     }
 
     @Provides

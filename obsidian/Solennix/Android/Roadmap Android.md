@@ -54,17 +54,17 @@
 
 **Por qué**: Resuelto usando la API nativa de Android para máxima ligereza.
 
-### 0.2 Migraciones de Room Incrementales
+### 0.2 Migraciones de Room Incrementales ✅
 
-- [ ] Reemplazar `fallbackToDestructiveMigration` por migraciones versionadas
-- [ ] Crear `Migration(4, 5)` como template
-- [ ] Documentar proceso de migración para futuros cambios de schema
+- [x] Reemplazar `fallbackToDestructiveMigration` por migraciones versionadas
+- [x] Crear `Migration(4, 5)` como template
+- [x] Documentar proceso de migración para futuros cambios de schema
 
-### 0.3 SSL Pinning
+### 0.3 SSL Pinning ✅
 
-- [ ] Configurar `CertificatePinner` en OkHttp/Ktor
-- [ ] Agregar pins para `api.solennix.com`
-- [ ] Manejar rotación de certificados
+- [x] Configurar `CertificatePinner` en OkHttp/Ktor
+- [x] Agregar pins para `api.solennix.com`
+- [x] Manejar rotación de certificados (backup pin)
 
 ---
 
