@@ -13,6 +13,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { Breadcrumb } from "@/components/Breadcrumb";
+import { OptimizedImage } from "@/components/OptimizedImage";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
@@ -94,11 +95,11 @@ export const ClientDetails: React.FC = () => {
             <ArrowLeft className="h-5 w-5" aria-hidden="true" />
           </button>
           {client.photo_url ? (
-            <img
+            <OptimizedImage
               src={client.photo_url}
               alt={client.name}
-              loading="lazy"
-              className="h-10 w-10 rounded-full object-cover mr-3"
+              className="h-10 w-10 rounded-full object-cover"
+              placeholderClassName="h-10 w-10 rounded-full mr-3"
             />
           ) : (
             <div

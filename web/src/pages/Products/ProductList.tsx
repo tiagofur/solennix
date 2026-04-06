@@ -15,6 +15,7 @@ import {
   ArrowDown,
 } from "lucide-react";
 import { RowActionMenu } from "@/components/RowActionMenu";
+import { OptimizedImage } from "@/components/OptimizedImage";
 import { exportToCsv } from "@/lib/exportCsv";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import Empty from "@/components/Empty";
@@ -276,10 +277,9 @@ export const ProductList: React.FC = () => {
                       <div className="flex items-center">
                         <div className="shrink-0 h-10 w-10">
                           {product.image_url ? (
-                            <img
+                            <OptimizedImage
                               className="h-10 w-10 rounded-lg object-cover"
                               src={product.image_url}
-                              loading="lazy"
                               alt=""
                             />
                           ) : (

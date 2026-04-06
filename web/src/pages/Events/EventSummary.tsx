@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/useToast";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { OptimizedImage } from "@/components/OptimizedImage";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   generateBudgetPDF,
@@ -1390,10 +1391,9 @@ export const EventSummary: React.FC = () => {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
               {eventPhotos.map((url, idx) => (
                 <div key={idx} className="relative group aspect-square rounded-xl overflow-hidden bg-surface-alt">
-                  <img
+                  <OptimizedImage
                     src={url}
                     alt={`Foto ${idx + 1} del evento`}
-                    loading="lazy"
                     className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
                     onClick={() => setLightboxPhoto(url)}
                   />

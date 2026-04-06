@@ -18,6 +18,7 @@ import {
   Fuel,
 } from "lucide-react";
 import { logError } from "@/lib/errorHandler";
+import { OptimizedImage } from "@/components/OptimizedImage";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { SkeletonCard } from "@/components/Skeleton";
@@ -348,10 +349,9 @@ export const ProductDetails: React.FC = () => {
         <div className="lg:col-span-1 space-y-6">
           <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
             {product.image_url && (
-              <img
+              <OptimizedImage
                 src={product.image_url}
                 alt={product.name}
-                loading="lazy"
                 className="w-full h-40 object-cover rounded-2xl mb-4"
               />
             )}
