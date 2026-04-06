@@ -4,6 +4,9 @@
 
 > [!tip] Filosofía
 > Priorizado por **impacto en usuario** × **esfuerzo técnico**. Alineado con [[Roadmap Web]] y [[Roadmap Android]] para paridad cross-platform. iOS es la plataforma más madura — el foco está en pulir, completar integraciones, y testing.
+>
+> [!warning] Ejecución pendiente
+> Los tests agregados el **2026-04-06** (APIClient, OfflineMutationQueue y NotificationManager) están implementados y pendientes de corrida local en máquina con Xcode/Swift.
 
 ---
 
