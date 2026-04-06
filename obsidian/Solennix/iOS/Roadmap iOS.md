@@ -67,8 +67,8 @@
 
 ### 0.3 Privacy Manifest Review
 
-- [ ] Verificar `PrivacyInfo.xcprivacy` cubre todos los APIs usados
-- [ ] Declarar uso de Keychain, CoreSpotlight, NetworkMonitor
+- [x] Verificar `PrivacyInfo.xcprivacy` cubre todos los APIs usados — ✅ 2026-04-05
+- [x] Declarar uso de Keychain, CoreSpotlight, NetworkMonitor — ✅ No son Required Reason APIs, no necesitan declaración
 - [ ] Asegurar compliance con App Store requirements 2024+
 
 **Por qué**: Apple rechaza apps sin privacy manifest completo.
@@ -339,13 +339,13 @@ gantt
 
 > [!tip] Victorias rápidas
 
-- [ ] `.accessibilityLabel()` en todos los `Image(systemName:)` de navegación
+- [x] `.accessibilityLabel()` en todos los `Image(systemName:)` de navegación — ✅ 2026-04-05 (14 instancias en 7 vistas)
 - [ ] Verificar contraste WCAG de StatusBadge en dark mode
-- [ ] `@Environment(\.accessibilityReduceMotion)` en animaciones existentes
-- [ ] `.refreshable` en todas las listas (pull-to-refresh)
-- [ ] `.searchable(placement: .toolbar)` consistente en todas las listas
+- [x] `@Environment(\.accessibilityReduceMotion)` en animaciones existentes — ✅ 2026-04-05 (7 vistas, 13 animaciones)
+- [x] `.refreshable` en todas las listas (pull-to-refresh) — ✅ Ya implementado (11 vistas)
+- [x] `.searchable(placement: .toolbar)` consistente en todas las listas — ✅ Listas principales usan InlineFilterBar (intencional), forms usan .searchable
 - [ ] Agregar `.sensoryFeedback()` (iOS 17) en acciones de save/delete
-- [ ] Verificar Privacy Manifest tiene todas las declaraciones
+- [x] Verificar Privacy Manifest tiene todas las declaraciones — ✅ 2026-04-05 (UserDefaults + FileTimestamp correctos, Keychain/CoreSpotlight/NWPathMonitor no requieren Required Reason API)
 
 ---
 
