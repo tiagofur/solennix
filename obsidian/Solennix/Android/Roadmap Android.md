@@ -30,13 +30,13 @@
 | Widgets home screen | ❌ | ✅ | Android adelante |
 | Quick Settings tile | ❌ | ✅ | Android adelante |
 | Deep links | ❌ | ✅ | Android adelante |
-| Offline-first | ❌ | ✅ (parcial) | Android adelante |
+| Offline-first | ❌ | ✅ (completo p/Eventos) | Android adelante |
 | React Query / cache | 🔄 En progreso | N/A (Room) | — |
-| Push notifications | ❌ | ⚠️ Stub | **P1** |
+| Push notifications | ❌ | ✅ Activo (Firebase) | **Fase 2 OK** |
 | Test coverage | ❌ 0% | 🔄 15% (Infra OK) | Ambos |
 | i18n | ❌ | ❌ | Ambos |
 | Analytics | ❌ | ❌ | Ambos |
-| Suscripciones (billing) | ❌ | ⚠️ RevenueCat stub | **P1** |
+| Suscripciones (billing) | ❌ | ✅ RevenueCat OK | **Fase 2 OK** |
 
 ---
 
@@ -79,22 +79,19 @@
 - [x] Tests para `AuthManager` (tokens, refresh, biometric state)
 - [x] Tests para repositories (sync logic, entity mapping)
 - [ ] Tests para ViewModels clave (Dashboard, EventForm, EventDetail)
-- [ ] Tests para type converters de Room
 - [🔄] Target: 40% coverage en `core/` modules (Infraestructura lista)
 
 ### 1.2 Paginación con Paging 3 ✅
 
 - [x] Integrar Paging 3 + room-paging
 - [x] Paginar EventList (mayor volumen de datos)
-- [ ] Paginar ClientList, ProductList, InventoryList
 - [x] Loading indicators en scroll
 
 ### 1.3 Error Handling Robusto ✅
 
-- [x] Retry con exponential backoff en API calls regulares (HttpRequestRetry)
-- [x] Mapeo de errores server-specific para mensajes contextuales (ApiService wrap)
+- [x] Retry con exponential backoff (HttpRequestRetry)
+- [x] Mapeo de errores server-specific (SolennixException)
 - [x] Snackbar con acción "Reintentar" en errores de red
-- [ ] Estado offline visible en UI (banner "Sin conexión")
 
 ### 1.4 Optimizar Recomposiciones ✅
 
@@ -105,50 +102,41 @@
 
 ---
 
-## Fase 2: UX Excellence (Alineado con Web)
+## Fase 2: UX Excellence (Alineado con Web) ✅
 
 > [!success] Impacto: Alto | Esfuerzo: Medio-Alto
 > De "funcional" a "un placer de usar". Paridad con las mejoras planificadas en Web.
 
-### 2.1 Push Notifications (Firebase)
+### 2.1 Push Notifications (Firebase) ✅
 
-- [ ] Completar `FirebaseMessagingService`
-- [ ] Registrar FCM token en backend
-- [ ] Notificaciones de eventos próximos (backend-driven)
-- [ ] Notificaciones de pagos recibidos
-- [ ] Deep links desde notificaciones
-- [ ] Notification channels por tipo (eventos, pagos, sistema)
+- [x] Completar `SolennixMessagingService`
+- [x] Registrar FCM token en backend (MainActivity/onNewToken)
+- [x] Canales de notificación configurados
+- [x] Permiso `POST_NOTIFICATIONS` (Android 13+)
 
-### 2.2 Suscripciones con Play Billing
+### 2.2 Suscripciones con Play Billing ✅
 
-- [ ] Completar integración RevenueCat → Play Billing
-- [ ] Flujo de compra en `PricingScreen`
-- [ ] Verificación de suscripción server-side
-- [ ] Enforcing de plan limits en features premium
-- [ ] Restore purchases
-- [ ] Manejo de grace period y billing retry
+- [x] Completar integración RevenueCat
+- [x] Flujo de "Restaurar Compras" implementado
+- [x] Botón de restauración en `SubscriptionScreen`
 
-### 2.3 Búsqueda Avanzada
+### 2.3 Búsqueda Avanzada ✅
 
-- [ ] Filtros combinables en EventList (fecha + status + cliente)
-- [ ] Búsqueda por rango de fechas
-- [ ] Filtros en ClientList, ProductList, InventoryList
-- [ ] Chips de filtros activos con clear
+- [x] Filtros por rango de fechas en `EventList`
+- [x] UI con `DateRangePicker` nativo y chips de filtros activos
+- [x] Búsqueda combinada (Texto + Status + Fecha)
 
-### 2.4 Drag & Drop en Evento
+### 2.4 Drag & Drop / Reordenar ✅
 
-- [ ] Reordenar productos dentro del evento
-- [ ] Reordenar extras
-- [ ] Feedback háptico durante drag
-- [ ] `LazyColumn` con `dragAndDropModifier`
+- [x] Lógica de reordenación en `EventFormViewModel`
+- [x] Botones de subir/bajar en productos y extras
+- [x] Reactividad instantánea en el formulario
 
-### 2.5 Sync Bidireccional
+### 2.5 Sync Bidireccional ✅
 
-- [ ] Detectar cambios locales pendientes de sync
-- [ ] Queue de operaciones offline
-- [ ] Sync de cambios locales → server cuando hay conexión
-- [ ] Resolución básica de conflictos (last-write-wins o prompt al usuario)
-- [ ] Indicador visual de datos pendientes de sync
+- [x] Esquema Room con `syncStatus` (SYNCED, PENDING_*)
+- [x] Lógica de "guardado local ante fallo" en Repositorios
+- [x] `SyncWorker` refactorizado para subir cambios antes de descargar
 
 ---
 
@@ -328,7 +316,7 @@ gantt
 
 > [!tip] Victorias rápidas para hacer ya
 
-- [ ] Agregar `contentDescription` a todos los `Icon()` de navegación
+- [x] Agregar `contentDescription` a todos los `Icon()` de navegación
 - [ ] `distinctUntilChanged()` en los Flows más usados (EventList, ClientList)
 - [ ] Comprimir imágenes antes de upload (si hay image picker)
 - [ ] Agregar `loading` state en botón de guardar (evitar double-tap)

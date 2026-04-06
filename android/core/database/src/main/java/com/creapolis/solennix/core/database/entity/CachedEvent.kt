@@ -7,6 +7,10 @@ import com.creapolis.solennix.core.model.DiscountType
 import com.creapolis.solennix.core.model.Event
 import com.creapolis.solennix.core.model.EventStatus
 
+enum class SyncStatus {
+    SYNCED, PENDING_INSERT, PENDING_UPDATE, PENDING_DELETE
+}
+
 @Entity(tableName = "events")
 data class CachedEvent(
     @PrimaryKey val id: String,
@@ -32,7 +36,8 @@ data class CachedEvent(
     val notes: String?,
     val photos: String?,
     @ColumnInfo(name = "created_at") val createdAt: String,
-    @ColumnInfo(name = "updated_at") val updatedAt: String
+    @ColumnInfo(name = "updated_at") val updatedAt: String,
+    @ColumnInfo(name = "sync_status") val syncStatus: SyncStatus = SyncStatus.SYNCED
 )
 
 fun CachedEvent.asExternalModel() = Event(
@@ -62,7 +67,7 @@ fun CachedEvent.asExternalModel() = Event(
     updatedAt = updatedAt
 )
 
-fun Event.asEntity() = CachedEvent(
+fun Event.asEntity(syncStatus: SyncStatus = SyncStatus.SYNCED) = CachedEvent(
     id = id,
     userId = userId,
     clientId = clientId,
@@ -86,5 +91,6 @@ fun Event.asEntity() = CachedEvent(
     notes = notes,
     photos = photos,
     createdAt = createdAt,
-    updatedAt = updatedAt
+    updatedAt = updatedAt,
+    syncStatus = syncStatus
 )

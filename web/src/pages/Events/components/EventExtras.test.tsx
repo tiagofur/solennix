@@ -47,7 +47,9 @@ describe('EventExtras', () => {
       />
     );
 
-    fireEvent.click(screen.getByRole('checkbox'));
+    const checkboxes = screen.getAllByRole('checkbox');
+    // First checkbox is exclude_utility
+    fireEvent.click(checkboxes[0]);
     expect(onExtraChange).toHaveBeenCalledWith(0, 'exclude_utility', true);
 
     fireEvent.change(screen.getByDisplayValue('50'), { target: { value: '60' } });

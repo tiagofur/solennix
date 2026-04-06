@@ -102,6 +102,25 @@ class BillingManager @Inject constructor() {
     }
 
     /**
+     * Restore previous purchases from the store.
+     */
+    fun restorePurchases() {
+        _billingState.value = BillingState.NotReady // Use as loading state
+        Purchases.sharedInstance.restorePurchases(object : com.revenuecat.purchases.interfaces.ReceiveCustomerInfoCallback {
+            override fun onError(error: com.revenuecat.purchases.PurchasesError) {
+                _billingState.value = BillingState.Error(
+                    "Error al restaurar compras: ${error.message}"
+                )
+            }
+
+            override fun onReceived(customerInfo: CustomerInfo) {
+                _customerInfo.value = customerInfo
+                _billingState.value = BillingState.Ready
+            }
+        })
+    }
+
+    /**
      * Identify the user in RevenueCat after login.
      */
     fun login(userId: String) {

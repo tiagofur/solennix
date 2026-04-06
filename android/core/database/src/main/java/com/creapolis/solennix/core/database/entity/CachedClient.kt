@@ -19,7 +19,8 @@ data class CachedClient(
     @ColumnInfo(name = "total_events") val totalEvents: Int?,
     @ColumnInfo(name = "total_spent") val totalSpent: Double?,
     @ColumnInfo(name = "created_at") val createdAt: String,
-    @ColumnInfo(name = "updated_at") val updatedAt: String
+    @ColumnInfo(name = "updated_at") val updatedAt: String,
+    @ColumnInfo(name = "sync_status") val syncStatus: SyncStatus = SyncStatus.SYNCED
 )
 
 fun CachedClient.asExternalModel() = Client(
@@ -38,7 +39,7 @@ fun CachedClient.asExternalModel() = Client(
     updatedAt = updatedAt
 )
 
-fun Client.asEntity() = CachedClient(
+fun Client.asEntity(syncStatus: SyncStatus = SyncStatus.SYNCED) = CachedClient(
     id = id,
     userId = userId,
     name = name,
@@ -51,5 +52,6 @@ fun Client.asEntity() = CachedClient(
     totalEvents = totalEvents,
     totalSpent = totalSpent,
     createdAt = createdAt,
-    updatedAt = updatedAt
+    updatedAt = updatedAt,
+    syncStatus = syncStatus
 )

@@ -100,6 +100,7 @@ describe('eventService', () => {
           cost: 50,
           price: 80,
           exclude_utility: true,
+          include_in_checklist: true,
         },
       ],
     });
@@ -125,7 +126,7 @@ describe('eventService', () => {
         { product_id: 'p2', quantity: 2, unit_price: 80, discount: 0 },
       ],
       extras: [
-        { description: 'Extra', cost: 10, price: 15, exclude_utility: false },
+        { description: 'Extra', cost: 10, price: 15, exclude_utility: false, include_in_checklist: true },
       ],
     });
   });
@@ -145,7 +146,7 @@ describe('eventService', () => {
         { product_id: 'p2', quantity: 2, unit_price: 80, discount: 0 },
       ],
       extras: [
-        { description: 'Extra', cost: 10, price: 15, exclude_utility: false },
+        { description: 'Extra', cost: 10, price: 15, exclude_utility: false, include_in_checklist: true },
       ],
     });
   });
@@ -165,7 +166,7 @@ describe('eventService', () => {
         { product_id: 'p1', quantity: 1, unit_price: 50, discount: 0 },
       ],
       extras: [
-        { description: 'Transporte', cost: 50, price: 80, exclude_utility: true },
+        { description: 'Transporte', cost: 50, price: 80, exclude_utility: true, include_in_checklist: true },
       ],
     });
   });
@@ -182,7 +183,7 @@ describe('eventService', () => {
 
     expect(api.put).toHaveBeenCalledWith('/events/event-1/items', {
       products: [{ product_id: 'p1', quantity: 1, unit_price: 100, discount: 0 }],
-      extras: [{ description: 'Extra', cost: 10, price: 20, exclude_utility: false }],
+      extras: [{ description: 'Extra', cost: 10, price: 20, exclude_utility: false, include_in_checklist: true }],
       equipment: [{ inventory_id: 'inv-1', quantity: 3, notes: 'fragile' }],
     });
   });

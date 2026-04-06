@@ -15,10 +15,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -127,29 +124,117 @@ fun EventListScreen(
                 .padding(padding)
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
-                // Search Field
-                OutlinedTextField(
-                    value = uiState.searchQuery,
-                    onValueChange = { viewModel.onSearchQueryChange(it) },
+                // Search and Filter Header
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 8.dp),
-                    placeholder = { Text("Filtrar eventos por servicio o cliente...") },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                    trailingIcon = {
-                        if (uiState.searchQuery.isNotEmpty()) {
-                            IconButton(onClick = { viewModel.onSearchQueryChange("") }) {
-                                Icon(Icons.Default.Clear, contentDescription = "Limpiar")
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = uiState.searchQuery,
+                        onValueChange = { viewModel.onSearchQueryChange(it) },
+                        modifier = Modifier.weight(1f),
+                        placeholder = { Text("Filtrar eventos...") },
+                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                        trailingIcon = {
+                            if (uiState.searchQuery.isNotEmpty()) {
+                                IconButton(onClick = { viewModel.onSearchQueryChange("") }) {
+                                    Icon(Icons.Default.Clear, contentDescription = "Limpiar")
+                                }
                             }
-                        }
-                    },
-                    singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = SolennixTheme.colors.primary,
-                        unfocusedBorderColor = SolennixTheme.colors.divider
+                        },
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = SolennixTheme.colors.primary,
+                            unfocusedBorderColor = SolennixTheme.colors.divider
+                        )
                     )
-                )
+                    
+                    Spacer(modifier = Modifier.width(8.dp))
+                    
+                    var showDateRangePicker by remember { mutableStateOf(false) }
+                    
+                    IconButton(
+                        onClick = { showDateRangePicker = true },
+                        colors = IconButtonDefaults.iconButtonColors(
+                            containerColor = if (uiState.startDate != null) 
+                                SolennixTheme.colors.primaryLight 
+                            else Color.Transparent
+                        )
+                    ) {
+                        Icon(
+                            Icons.Default.DateRange, 
+                            contentDescription = "Rango de fechas",
+                            tint = if (uiState.startDate != null) 
+                                SolennixTheme.colors.primary 
+                            else SolennixTheme.colors.secondaryText
+                        )
+                    }
+
+                    if (showDateRangePicker) {
+                        val dateRangePickerState = rememberDateRangePickerState()
+                        DatePickerDialog(
+                            onDismissRequest = { showDateRangePicker = false },
+                            confirmButton = {
+                                TextButton(onClick = {
+                                    val start = dateRangePickerState.selectedStartDateMillis?.let {
+                                        java.time.Instant.ofEpochMilli(it).atZone(java.time.ZoneId.systemDefault()).toLocalDate()
+                                    }
+                                    val end = dateRangePickerState.selectedEndDateMillis?.let {
+                                        java.time.Instant.ofEpochMilli(it).atZone(java.time.ZoneId.systemDefault()).toLocalDate()
+                                    }
+                                    viewModel.onDateRangeChange(start, end)
+                                    showDateRangePicker = false
+                                }) { Text("Aplicar") }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { showDateRangePicker = false }) { Text("Cancelar") }
+                            }
+                        ) {
+                            DateRangePicker(
+                                state = dateRangePickerState,
+                                modifier = Modifier.height(400.dp),
+                                title = { Text("Seleccioná el rango") },
+                                headline = { Text("Filtro de fechas") },
+                                showModeToggle = false,
+                                colors = DatePickerDefaults.colors(
+                                    selectedDayContainerColor = SolennixTheme.colors.primary,
+                                    todayContentColor = SolennixTheme.colors.primary,
+                                    todayDateBorderColor = SolennixTheme.colors.primary
+                                )
+                            )
+                        }
+                    }
+                }
+
+                // Active Filters Chips
+                if (uiState.startDate != null || uiState.selectedStatus != null) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState())
+                            .padding(horizontal = 16.dp, vertical = 4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        if (uiState.startDate != null) {
+                            val formatter = DateTimeFormatter.ofPattern("dd/MM", Locale("es", "MX"))
+                            val label = "${uiState.startDate!!.format(formatter)} - ${uiState.endDate?.format(formatter) ?: "..."}"
+                            FilterChip(
+                                selected = true,
+                                onClick = { viewModel.onDateRangeChange(null, null) },
+                                label = { Text(label) },
+                                trailingIcon = { Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                            )
+                        }
+                        
+                        TextButton(onClick = { viewModel.clearFilters() }) {
+                            Text("Limpiar todo", style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
+                }
 
                 // Status Filter Chips
                 Row(

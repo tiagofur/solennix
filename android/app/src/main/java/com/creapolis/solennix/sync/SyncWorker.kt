@@ -9,6 +9,8 @@ import com.creapolis.solennix.core.data.repository.InventoryRepository
 import com.creapolis.solennix.core.data.repository.ProductRepository
 import com.creapolis.solennix.core.data.search.AppSearchIndexer
 import com.creapolis.solennix.core.network.EventDayNotificationManager
+import com.creapolis.solennix.core.database.entity.asExternalModel
+import com.creapolis.solennix.core.database.entity.SyncStatus
 import kotlinx.coroutines.flow.first
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -31,7 +33,10 @@ class SyncWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result {
         return try {
-            // Sync all data in sequence
+            // 1. Sync local changes to remote (Upload)
+            syncPendingChanges()
+
+            // 2. Sync remote data to local (Download)
             syncEvents()
             syncClients()
             syncProducts()
@@ -50,6 +55,34 @@ class SyncWorker @AssistedInject constructor(
             } else {
                 Result.failure()
             }
+        }
+    }
+
+    private suspend fun syncPendingChanges() {
+        try {
+            // Eventos pendientes
+            val pendingEvents = eventRepository.getPendingEvents()
+            pendingEvents.forEach { cachedEvent ->
+                try {
+                    val event = cachedEvent.asExternalModel()
+                    when (cachedEvent.syncStatus) {
+                        SyncStatus.PENDING_INSERT -> {
+                            eventRepository.createEvent(event)
+                        }
+                        SyncStatus.PENDING_UPDATE -> {
+                            eventRepository.updateEvent(event)
+                        }
+                        SyncStatus.PENDING_DELETE -> {
+                            eventRepository.deleteEvent(event.id)
+                        }
+                        else -> {}
+                    }
+                } catch (e: Exception) {
+                    // Fail individual item but continue with others
+                }
+            }
+        } catch (e: Exception) {
+            // Log but don't fail the entire worker
         }
     }
 

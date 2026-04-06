@@ -77,7 +77,7 @@ describe('ResetPassword', () => {
 
     it('renders password inputs with correct placeholders', () => {
       renderWithToken('valid-token');
-      expect(screen.getByPlaceholderText('Mínimo 6 caracteres')).toBeInTheDocument();
+      expect(screen.getByPlaceholderText('Mínimo 8 caracteres')).toBeInTheDocument();
       expect(screen.getByPlaceholderText('Repite tu contraseña')).toBeInTheDocument();
     });
 
@@ -100,10 +100,10 @@ describe('ResetPassword', () => {
     it('shows error when password is too short', async () => {
       renderWithToken('valid-token');
       fireEvent.change(screen.getByLabelText('Nueva contraseña'), {
-        target: { value: '12345' },
+        target: { value: 'abc' },
       });
       fireEvent.change(screen.getByLabelText('Confirmar contraseña'), {
-        target: { value: '12345' },
+        target: { value: 'abc' },
       });
       fireEvent.click(
         screen.getByRole('button', { name: /restablecer contraseña/i })
@@ -111,7 +111,7 @@ describe('ResetPassword', () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText('La contraseña debe tener al menos 6 caracteres')
+          screen.getByText('La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número')
         ).toBeInTheDocument();
       });
       expect(api.post).not.toHaveBeenCalled();
@@ -120,10 +120,10 @@ describe('ResetPassword', () => {
     it('shows error when passwords do not match', async () => {
       renderWithToken('valid-token');
       fireEvent.change(screen.getByLabelText('Nueva contraseña'), {
-        target: { value: 'password123' },
+        target: { value: 'Password1' },
       });
       fireEvent.change(screen.getByLabelText('Confirmar contraseña'), {
-        target: { value: 'differentpassword' },
+        target: { value: 'Different1' },
       });
       fireEvent.click(
         screen.getByRole('button', { name: /restablecer contraseña/i })
@@ -145,7 +145,7 @@ describe('ResetPassword', () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText('La contraseña debe tener al menos 6 caracteres')
+          screen.getByText('La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número')
         ).toBeInTheDocument();
       });
       expect(api.post).not.toHaveBeenCalled();
@@ -160,10 +160,10 @@ describe('ResetPassword', () => {
       renderWithToken('my-reset-token');
 
       fireEvent.change(screen.getByLabelText('Nueva contraseña'), {
-        target: { value: 'newpassword123' },
+        target: { value: 'NewPass123' },
       });
       fireEvent.change(screen.getByLabelText('Confirmar contraseña'), {
-        target: { value: 'newpassword123' },
+        target: { value: 'NewPass123' },
       });
       fireEvent.click(
         screen.getByRole('button', { name: /restablecer contraseña/i })
@@ -172,7 +172,7 @@ describe('ResetPassword', () => {
       await waitFor(() => {
         expect(api.post).toHaveBeenCalledWith('/auth/reset-password', {
           token: 'my-reset-token',
-          new_password: 'newpassword123',
+          new_password: 'NewPass123',
         });
       });
     });
@@ -182,10 +182,10 @@ describe('ResetPassword', () => {
       renderWithToken('my-reset-token');
 
       fireEvent.change(screen.getByLabelText('Nueva contraseña'), {
-        target: { value: 'newpassword123' },
+        target: { value: 'NewPass123' },
       });
       fireEvent.change(screen.getByLabelText('Confirmar contraseña'), {
-        target: { value: 'newpassword123' },
+        target: { value: 'NewPass123' },
       });
       fireEvent.click(
         screen.getByRole('button', { name: /restablecer contraseña/i })
@@ -208,10 +208,10 @@ describe('ResetPassword', () => {
       renderWithToken('my-reset-token');
 
       fireEvent.change(screen.getByLabelText('Nueva contraseña'), {
-        target: { value: 'newpassword123' },
+        target: { value: 'NewPass123' },
       });
       fireEvent.change(screen.getByLabelText('Confirmar contraseña'), {
-        target: { value: 'newpassword123' },
+        target: { value: 'NewPass123' },
       });
       fireEvent.click(
         screen.getByRole('button', { name: /restablecer contraseña/i })
@@ -238,10 +238,10 @@ describe('ResetPassword', () => {
       renderWithToken('expired-token');
 
       fireEvent.change(screen.getByLabelText('Nueva contraseña'), {
-        target: { value: 'newpassword123' },
+        target: { value: 'NewPass123' },
       });
       fireEvent.change(screen.getByLabelText('Confirmar contraseña'), {
-        target: { value: 'newpassword123' },
+        target: { value: 'NewPass123' },
       });
       fireEvent.click(
         screen.getByRole('button', { name: /restablecer contraseña/i })
@@ -259,10 +259,10 @@ describe('ResetPassword', () => {
       renderWithToken('bad-token');
 
       fireEvent.change(screen.getByLabelText('Nueva contraseña'), {
-        target: { value: 'newpassword123' },
+        target: { value: 'NewPass123' },
       });
       fireEvent.change(screen.getByLabelText('Confirmar contraseña'), {
-        target: { value: 'newpassword123' },
+        target: { value: 'NewPass123' },
       });
       fireEvent.click(
         screen.getByRole('button', { name: /restablecer contraseña/i })
@@ -288,8 +288,8 @@ describe('ResetPassword', () => {
       });
 
       // First attempt - fails
-      fireEvent.change(passwordInput, { target: { value: 'newpassword123' } });
-      fireEvent.change(confirmInput, { target: { value: 'newpassword123' } });
+      fireEvent.change(passwordInput, { target: { value: 'NewPass123' } });
+      fireEvent.change(confirmInput, { target: { value: 'NewPass123' } });
       fireEvent.click(submitButton);
 
       await waitFor(() => {
@@ -297,8 +297,8 @@ describe('ResetPassword', () => {
       });
 
       // Second attempt - succeeds, error should be cleared
-      fireEvent.change(passwordInput, { target: { value: 'newpassword456' } });
-      fireEvent.change(confirmInput, { target: { value: 'newpassword456' } });
+      fireEvent.change(passwordInput, { target: { value: 'NewPass456' } });
+      fireEvent.change(confirmInput, { target: { value: 'NewPass456' } });
       fireEvent.click(submitButton);
 
       await waitFor(() => {
@@ -314,10 +314,10 @@ describe('ResetPassword', () => {
       renderWithToken('valid-token');
 
       fireEvent.change(screen.getByLabelText('Nueva contraseña'), {
-        target: { value: 'newpassword123' },
+        target: { value: 'NewPass123' },
       });
       fireEvent.change(screen.getByLabelText('Confirmar contraseña'), {
-        target: { value: 'newpassword123' },
+        target: { value: 'NewPass123' },
       });
       fireEvent.click(
         screen.getByRole('button', { name: /restablecer contraseña/i })
@@ -347,10 +347,10 @@ describe('ResetPassword', () => {
       renderWithToken('valid-token');
 
       fireEvent.change(screen.getByLabelText('Nueva contraseña'), {
-        target: { value: 'newpassword123' },
+        target: { value: 'NewPass123' },
       });
       fireEvent.change(screen.getByLabelText('Confirmar contraseña'), {
-        target: { value: 'newpassword123' },
+        target: { value: 'NewPass123' },
       });
       fireEvent.click(
         screen.getByRole('button', { name: /restablecer contraseña/i })
@@ -405,10 +405,10 @@ describe('ResetPassword', () => {
     it('sets aria-invalid on confirmPassword field when mismatch', async () => {
       renderWithToken('valid-token');
       fireEvent.change(screen.getByLabelText('Nueva contraseña'), {
-        target: { value: 'password123' },
+        target: { value: 'Password1' },
       });
       fireEvent.change(screen.getByLabelText('Confirmar contraseña'), {
-        target: { value: 'different' },
+        target: { value: 'Different1' },
       });
       fireEvent.click(
         screen.getByRole('button', { name: /restablecer contraseña/i })
@@ -427,10 +427,10 @@ describe('ResetPassword', () => {
       renderWithToken('valid-token');
 
       fireEvent.change(screen.getByLabelText('Nueva contraseña'), {
-        target: { value: 'newpassword123' },
+        target: { value: 'NewPass123' },
       });
       fireEvent.change(screen.getByLabelText('Confirmar contraseña'), {
-        target: { value: 'newpassword123' },
+        target: { value: 'NewPass123' },
       });
       fireEvent.click(
         screen.getByRole('button', { name: /restablecer contraseña/i })

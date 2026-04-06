@@ -79,9 +79,9 @@ describe('Pricing', () => {
       expect(
         screen.getByText('Todas las herramientas para escalar tu negocio sin límites.'),
       ).toBeInTheDocument();
-      expect(screen.getByText('$99')).toBeInTheDocument();
-      expect(screen.getByText('MXN/mes')).toBeInTheDocument();
-      expect(screen.getByText('$199')).toBeInTheDocument();
+      expect(screen.getByText('$1,499')).toBeInTheDocument();
+      expect(screen.getByText('MXN/año')).toBeInTheDocument();
+      expect(screen.getByText('$149')).toBeInTheDocument();
       expect(screen.getByText('Recomendado')).toBeInTheDocument();
 
       // Pro features
@@ -537,7 +537,7 @@ describe('Pricing', () => {
     it('displays the strikethrough original price', () => {
       renderPricing();
 
-      expect(screen.getByText('$199')).toBeInTheDocument();
+      expect(screen.getByText('$2,499')).toBeInTheDocument();
     });
   });
 });

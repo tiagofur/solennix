@@ -7,7 +7,7 @@ describe('Logo', () => {
     render(<Logo />);
     const img = screen.getByRole('img', { name: 'Solennix Logo' });
     expect(img).toBeInTheDocument();
-    expect(img).toHaveAttribute('src', '/favicon.svg');
+    expect(img).toHaveAttribute('src', '/icon-navy.svg');
     expect(img).toHaveAttribute('width', '32');
     expect(img).toHaveAttribute('height', '32');
     expect(screen.getByText('Solennix')).toBeInTheDocument();

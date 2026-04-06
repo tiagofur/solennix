@@ -26,6 +26,8 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
       onClose={onCancel}
       title={title}
       maxWidth="sm"
+      titleId="confirm-dialog-title"
+      descriptionId={description ? "dialog-description" : undefined}
     >
       <div className="space-y-6">
         {description && (

@@ -83,6 +83,10 @@ dependencies {
     // RevenueCat
     implementation(libs.revenuecat)
 
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
+
     // WorkManager for background sync
     implementation(libs.work.runtime)
     implementation(libs.hilt.work)

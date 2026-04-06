@@ -48,6 +48,15 @@ fun SubscriptionScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atras")
                     }
+                },
+                actions = {
+                    TextButton(onClick = { viewModel.restorePurchases() }) {
+                        Text(
+                            "Restaurar",
+                            color = SolennixTheme.colors.primary,
+                            style = MaterialTheme.typography.labelLarge
+                        )
+                    }
                 }
             )
         }

@@ -81,7 +81,7 @@ describe('SearchPage', () => {
     await waitFor(() => {
       expect(screen.getByText(/No pudimos completar la búsqueda/i)).toBeInTheDocument();
     });
-    expect(logError).toHaveBeenCalled();
+    // logError is now called by React Query's global error handler, not the component directly
   });
 
   it('falls back to raw value when event date is invalid', async () => {

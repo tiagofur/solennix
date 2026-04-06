@@ -34,9 +34,9 @@ describe('Payments', () => {
       expect(screen.getAllByText('$100.00')).toHaveLength(2);
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Registrar Pago/i }));
+    fireEvent.click(screen.getByRole('button', { name: /\$ Pago/i }));
     fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '200' } });
-    
+
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: /Confirmar Pago/i }));
     });
@@ -66,8 +66,8 @@ describe('Payments', () => {
     const row = amountCells[1].closest('tr');
     expect(row).toBeTruthy();
     fireEvent.click(within(row as HTMLElement).getByRole('button'));
-    const dialog = screen.getByRole('dialog', { name: 'Eliminar Pago' });
-    
+    const dialog = screen.getByRole('dialog');
+
     await act(async () => {
       fireEvent.click(within(dialog).getByRole('button', { name: 'Eliminar permanentemente' }));
     });
@@ -86,10 +86,10 @@ describe('Payments', () => {
       expect(screen.getByText(/No hay pagos registrados/i)).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Registrar Pago/i }));
+    fireEvent.click(screen.getByRole('button', { name: /\$ Pago/i }));
     fireEvent.click(screen.getByRole('button', { name: /Cancelar/i }));
 
-    expect(screen.getByRole('button', { name: /Registrar Pago/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /\$ Pago/i })).toBeInTheDocument();
   });
 
   it('validates required amount and logs create error', async () => {
@@ -102,7 +102,7 @@ describe('Payments', () => {
       expect(screen.getByText(/No hay pagos registrados/i)).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Registrar Pago/i }));
+    fireEvent.click(screen.getByRole('button', { name: /\$ Pago/i }));
     fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '20' } });
     
     await act(async () => {
@@ -128,7 +128,7 @@ describe('Payments', () => {
     });
 
     // Open the form via "Registrar Nuevo Pago"
-    fireEvent.click(screen.getByRole('button', { name: /Registrar Pago/i }));
+    fireEvent.click(screen.getByRole('button', { name: /\$ Pago/i }));
 
     // The "Max" button should appear because balance > 0 (500 - 200 = 300)
     const maxBtn = screen.getByRole('button', { name: /Saldo/i });
@@ -152,7 +152,7 @@ describe('Payments', () => {
     });
 
     // Open the form
-    fireEvent.click(screen.getByRole('button', { name: /Registrar Pago/i }));
+    fireEvent.click(screen.getByRole('button', { name: /\$ Pago/i }));
 
     // "Max" button should NOT appear when balance <= 0
     expect(screen.queryByRole('button', { name: /Saldo/i })).not.toBeInTheDocument();
@@ -208,7 +208,7 @@ describe('Payments', () => {
       expect(screen.getByText(/No hay pagos registrados/i)).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Registrar Pago/i }));
+    fireEvent.click(screen.getByRole('button', { name: /\$ Pago/i }));
     fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '100' } });
     
     await act(async () => {
@@ -254,7 +254,7 @@ describe('Payments', () => {
       expect(screen.getByText(/No hay pagos registrados/i)).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Registrar Pago/i }));
+    fireEvent.click(screen.getByRole('button', { name: /\$ Pago/i }));
     fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '100' } });
     
     await act(async () => {
@@ -430,7 +430,7 @@ describe('Payments', () => {
       expect(screen.getByText(/No hay pagos registrados/i)).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Registrar Pago/i }));
+    fireEvent.click(screen.getByRole('button', { name: /\$ Pago/i }));
     fireEvent.change(screen.getByPlaceholderText('0.00'), { target: { value: '100' } });
     
     await act(async () => {

@@ -273,14 +273,17 @@ gantt
 
 ## Deuda Técnica
 
-> [!warning] Tests pre-existentes rotos por migración a React Query
-> 304 tests de integración necesitan reescritura para matchear el nuevo flujo de datos:
-> - Error handling: `QueryCache.onError` en vez de inline `setError()`
-> - Loading: `isLoading` del hook en vez de manual `setLoading()`
-> - Delete: `mutation.mutate()` + cache invalidation en vez de `service.delete()` + `setItems(filter)`
-> - Wrapper `tests/customRender.tsx` ya provee `QueryClientProvider`
+> [!done] Tests migrados — 2026-04-05
+> 304 tests rotos por la migración a React Query fueron arreglados.
+> **930 tests pasando** en 70 archivos. EventSummary (74 tests) timeout como archivo completo por tamaño pero pasa en batches.
 >
-> **60 tests nuevos pasan** (usePagination, queryKeys, finance, EventEquipment).
+> Patrones de fix aplicados:
+> - Service mocks expandidos con TODOS los métodos (React Query importa el módulo completo)
+> - `useToast` + `getErrorMessage` mocks agregados a todos los test files
+> - `client:` → `clients:` en data de tests (Supabase join naming)
+> - `Ana - Boda` → `Ana — Boda` (em dash)
+> - Error assertions adaptados de inline `setError()` a mutation `onError`/toast
+> - `tests/customRender.tsx` provee `QueryClientProvider` global
 
 ---
 

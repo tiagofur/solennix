@@ -9,7 +9,7 @@ const mockToggleTheme = vi.fn();
 const mockNavigate = vi.fn();
 let mockLocation = { pathname: '/dashboard', search: '' };
 let mockTheme = 'light';
-let mockUser: { name: string; email: string } | null = { name: 'Ana', email: 'ana@example.com' };
+let mockUser: { name: string; email: string; role?: string } | null = { name: 'Ana', email: 'ana@example.com' };
 
 vi.mock('../contexts/AuthContext', () => ({
   useAuth: () => ({
@@ -38,6 +38,15 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
+// Mock child components that are not relevant to Layout tests
+vi.mock('./BottomTabBar', () => ({ BottomTabBar: () => <div data-testid="bottom-tab-bar" /> }));
+vi.mock('./QuickActionsFAB', () => ({ QuickActionsFAB: () => null }));
+vi.mock('./CommandPalette', () => ({ CommandPalette: ({ isOpen }: any) => isOpen ? <div data-testid="command-palette" /> : null }));
+vi.mock('./KeyboardShortcutsHelp', () => ({ KeyboardShortcutsHelp: () => null }));
+vi.mock('../hooks/useKeyboardShortcuts', () => ({
+  useKeyboardShortcuts: () => ({ shortcuts: [], helpOpen: false, setHelpOpen: vi.fn(), currentSection: 'global' }),
+}));
+
 const renderLayout = () =>
   render(
     <MemoryRouter>
@@ -59,8 +68,9 @@ describe('Layout', () => {
 
   it('renders navigation and user profile', () => {
     renderLayout();
-    expect(screen.getByText('Dashboard')).toBeInTheDocument();
-    expect(screen.getByText('Clientes')).toBeInTheDocument();
+    const sidebar = screen.getByRole('complementary', { name: /navegación principal/i });
+    expect(within(sidebar).getByText('Inicio')).toBeInTheDocument();
+    expect(within(sidebar).getByText('Clientes')).toBeInTheDocument();
     expect(screen.getByText('Ana')).toBeInTheDocument();
     expect(screen.getByText('ana@example.com')).toBeInTheDocument();
   });
@@ -123,80 +133,62 @@ describe('Layout', () => {
     const menuButton = container.querySelector('header button');
     fireEvent.click(menuButton as Element);
 
-    fireEvent.click(screen.getByText('Dashboard'));
+    const sidebar = screen.getByRole('complementary', { name: /navegación principal/i });
+    fireEvent.click(within(sidebar).getByText('Inicio'));
     expect(container.querySelector('.fixed.inset-0')).not.toBeInTheDocument();
   });
 
-  it('closes sidebar after search submit', () => {
+  it('closes sidebar after search button click', () => {
     const { container } = renderLayout();
     const menuButton = container.querySelector('header button');
     fireEvent.click(menuButton as Element);
 
-    fireEvent.change(screen.getByLabelText(/búsqueda global/i), {
-      target: { value: 'evento' },
-    });
-    fireEvent.submit(screen.getByLabelText(/búsqueda global/i).closest('form')!);
+    // Search is now a button that opens CommandPalette
+    const searchButton = screen.getByLabelText(/abrir búsqueda/i);
+    fireEvent.click(searchButton);
 
-    expect(container.querySelector('.fixed.inset-0')).not.toBeInTheDocument();
+    // CommandPalette should be shown
+    expect(screen.getByTestId('command-palette')).toBeInTheDocument();
   });
 
-  it('submits search and navigates', () => {
+  it('opens command palette via search button', () => {
     renderLayout();
-    fireEvent.change(screen.getByLabelText(/búsqueda global/i), {
-      target: { value: 'evento' },
-    });
-    fireEvent.submit(screen.getByLabelText(/búsqueda global/i).closest('form')!);
-    expect(mockNavigate).toHaveBeenCalledWith('/search?q=evento');
+    const searchButton = screen.getByLabelText(/abrir búsqueda/i);
+    fireEvent.click(searchButton);
+    expect(screen.getByTestId('command-palette')).toBeInTheDocument();
   });
 
-  it('ignores empty search submissions', () => {
+  it('opens command palette via Ctrl+K', () => {
     renderLayout();
-    fireEvent.change(screen.getByLabelText(/búsqueda global/i), {
-      target: { value: '   ' },
-    });
-    fireEvent.submit(screen.getByLabelText(/búsqueda global/i).closest('form')!);
-    expect(mockNavigate).not.toHaveBeenCalled();
+    fireEvent.keyDown(document, { key: 'k', metaKey: true });
+    expect(screen.getByTestId('command-palette')).toBeInTheDocument();
   });
 
-  it('hydrates search input from query params on search page', async () => {
-    mockLocation = { pathname: '/search', search: '?q=clientes' };
-    renderLayout();
-    await waitFor(() => {
-      expect(screen.getByLabelText(/búsqueda global/i)).toHaveValue('clientes');
-    });
-  });
-
-  // --- Overlay keyboard handler tests (covers lines 86-107) ---
+  // --- Overlay keyboard handler tests ---
 
   it('closes sidebar overlay when Enter key is pressed', () => {
     const { container } = renderLayout();
 
-    // Open the sidebar
     const menuButton = container.querySelector('header button');
     fireEvent.click(menuButton as Element);
 
-    // Verify overlay is visible
     const overlay = container.querySelector('.fixed.inset-0');
     expect(overlay).toBeInTheDocument();
 
-    // Press Enter on the overlay
     fireEvent.keyDown(overlay as Element, { key: 'Enter' });
 
-    // Overlay should be removed
     expect(container.querySelector('.fixed.inset-0')).not.toBeInTheDocument();
   });
 
   it('closes sidebar overlay when Space key is pressed', () => {
     const { container } = renderLayout();
 
-    // Open the sidebar
     const menuButton = container.querySelector('header button');
     fireEvent.click(menuButton as Element);
 
     const overlay = container.querySelector('.fixed.inset-0');
     expect(overlay).toBeInTheDocument();
 
-    // Press Space on the overlay
     fireEvent.keyDown(overlay as Element, { key: ' ' });
 
     expect(container.querySelector('.fixed.inset-0')).not.toBeInTheDocument();
@@ -205,32 +197,26 @@ describe('Layout', () => {
   it('does not close sidebar overlay on other key presses', () => {
     const { container } = renderLayout();
 
-    // Open the sidebar
     const menuButton = container.querySelector('header button');
     fireEvent.click(menuButton as Element);
 
     const overlay = container.querySelector('.fixed.inset-0');
     expect(overlay).toBeInTheDocument();
 
-    // Press a different key on the overlay
     fireEvent.keyDown(overlay as Element, { key: 'Escape' });
 
-    // Overlay should still be visible
     expect(container.querySelector('.fixed.inset-0')).toBeInTheDocument();
   });
 
   it('closes sidebar when X button in sidebar header is clicked', () => {
     const { container } = renderLayout();
 
-    // Open the sidebar
     const menuButton = container.querySelector('header button');
     fireEvent.click(menuButton as Element);
 
-    // Click the X close button inside the sidebar
     const closeButton = screen.getByRole('button', { name: /cerrar menú$/i });
     fireEvent.click(closeButton);
 
-    // Sidebar overlay should be removed
     expect(container.querySelector('.fixed.inset-0')).not.toBeInTheDocument();
   });
 
@@ -239,9 +225,6 @@ describe('Layout', () => {
   it('shows fallback name "Usuario" when user has no name', () => {
     mockUser = { name: '', email: 'test@example.com' };
     renderLayout();
-    // When name is empty string, split(' ')[0] returns '' and charAt(0) returns ''
-    // firstName = '' which is falsy, but the condition checks user?.name specifically
-    // Actually: user.name is '', which is falsy, so firstName = "Usuario"
     expect(screen.getByText('Usuario')).toBeInTheDocument();
   });
 
@@ -251,52 +234,32 @@ describe('Layout', () => {
     expect(screen.getByText('U')).toBeInTheDocument();
   });
 
-  it('does not set search value when not on search page', () => {
-    mockLocation = { pathname: '/dashboard', search: '?q=ignored' };
-    renderLayout();
-    expect(screen.getByLabelText(/búsqueda global/i)).toHaveValue('');
-  });
-
-  it('sets search value to empty string when on search page without q param', async () => {
-    mockLocation = { pathname: '/search', search: '' };
-    renderLayout();
-    await waitFor(() => {
-      expect(screen.getByLabelText(/búsqueda global/i)).toHaveValue('');
-    });
-  });
-
-  it('encodes special characters in search URL', () => {
-    renderLayout();
-    fireEvent.change(screen.getByLabelText(/búsqueda global/i), {
-      target: { value: 'boda & fiesta' },
-    });
-    fireEvent.submit(screen.getByLabelText(/búsqueda global/i).closest('form')!);
-    expect(mockNavigate).toHaveBeenCalledWith('/search?q=boda%20%26%20fiesta');
-  });
-
   it('renders all navigation items', () => {
     renderLayout();
-    expect(screen.getByText('Dashboard')).toBeInTheDocument();
-    expect(screen.getByText('Calendario')).toBeInTheDocument();
-    expect(screen.getByText('Cotización')).toBeInTheDocument();
-    expect(screen.getByText('Cotización Rápida')).toBeInTheDocument();
-    expect(screen.getByText('Clientes')).toBeInTheDocument();
-    expect(screen.getByText('Productos')).toBeInTheDocument();
-    expect(screen.getByText('Inventario')).toBeInTheDocument();
-    expect(screen.getByText('Configuración')).toBeInTheDocument();
+    const sidebar = screen.getByRole('complementary', { name: /navegación principal/i });
+    expect(within(sidebar).getByText('Inicio')).toBeInTheDocument();
+    expect(within(sidebar).getByText('Calendario')).toBeInTheDocument();
+    expect(within(sidebar).getByText('Eventos')).toBeInTheDocument();
+    expect(within(sidebar).getByText('Clientes')).toBeInTheDocument();
+    expect(within(sidebar).getByText('Productos')).toBeInTheDocument();
+    expect(within(sidebar).getByText('Inventario')).toBeInTheDocument();
+    expect(within(sidebar).getByText('Configuración')).toBeInTheDocument();
   });
 
   it('highlights active nav item based on current route', () => {
     mockLocation = { pathname: '/clients', search: '' };
     renderLayout();
-    const clientLink = screen.getByText('Clientes').closest('a');
-    expect(clientLink).toHaveClass('bg-primary');
+    const sidebar = screen.getByRole('complementary', { name: /navegación principal/i });
+    const clientLink = within(sidebar).getByText('Clientes').closest('a');
+    expect(clientLink?.className).toContain('bg-');
+    expect(clientLink?.className).toContain('text-primary');
   });
 
   it('does not highlight inactive nav items', () => {
     mockLocation = { pathname: '/dashboard', search: '' };
     renderLayout();
-    const clientLink = screen.getByText('Clientes').closest('a');
-    expect(clientLink).not.toHaveClass('bg-primary');
+    const sidebar = screen.getByRole('complementary', { name: /navegación principal/i });
+    const clientLink = within(sidebar).getByText('Clientes').closest('a');
+    expect(clientLink?.className).toContain('text-text-secondary');
   });
 });

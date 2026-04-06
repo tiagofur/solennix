@@ -5,6 +5,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:name=".SolennixApp"
@@ -99,6 +100,15 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/quick_actions_widget_info" />
         </receiver>
+
+        <!-- Firebase Messaging Service -->
+        <service
+            android:name=".service.SolennixMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.messaging.EVENT" />
+            </intent-filter>
+        </service>
 
         <!-- FileProvider for sharing PDFs -->
         <provider

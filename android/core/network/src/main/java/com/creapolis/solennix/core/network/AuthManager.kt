@@ -52,6 +52,7 @@ class AuthManager @Inject constructor(
         const val KEY_REFRESH_TOKEN = "refresh_token"
         const val KEY_USER_JSON = "current_user"
         const val KEY_BIOMETRIC_ENABLED = "biometric_enabled"
+        const val KEY_FCM_TOKEN = "fcm_token"
     }
 
     sealed class AuthState {
@@ -182,4 +183,10 @@ class AuthManager @Inject constructor(
     fun setBiometricEnabled(enabled: Boolean) {
         encryptedPrefs.edit().putBoolean(KEY_BIOMETRIC_ENABLED, enabled).commit()
     }
+
+    fun storeFcmToken(token: String) {
+        encryptedPrefs.edit().putString(KEY_FCM_TOKEN, token).apply()
+    }
+
+    fun getFcmToken(): String? = encryptedPrefs.getString(KEY_FCM_TOKEN, null)
 }

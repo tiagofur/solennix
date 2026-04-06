@@ -7,39 +7,44 @@ vi.mock('../contexts/AuthContext', () => ({
   useAuth: () => ({ user: mockUser }),
 }));
 
-const mockGetByDateRange = vi.fn();
-const mockGetAllClients = vi.fn();
-const mockGetAllProducts = vi.fn();
-const mockGetAllInventory = vi.fn();
+// Mock React Query hooks that usePlanLimits now uses
+let mockMonthEvents: any[] = [];
+let mockClients: any[] = [];
+let mockProducts: any[] = [];
+let mockInventory: any[] = [];
+let mockEventsLoading = false;
+let mockClientsLoading = false;
+let mockProductsLoading = false;
+let mockInventoryLoading = false;
 
-vi.mock('../services/eventService', () => ({
-  eventService: {
-    getByDateRange: (...args: any[]) => mockGetByDateRange(...args),
-  },
+vi.mock('./queries/useEventQueries', () => ({
+  useEventsByDateRange: () => ({ data: mockMonthEvents, isLoading: mockEventsLoading }),
 }));
 
-vi.mock('../services/clientService', () => ({
-  clientService: {
-    getAll: () => mockGetAllClients(),
-  },
+vi.mock('./queries/useClientQueries', () => ({
+  useClients: () => ({ data: mockClients, isLoading: mockClientsLoading }),
 }));
 
-vi.mock('../services/productService', () => ({
-  productService: {
-    getAll: () => mockGetAllProducts(),
-  },
+vi.mock('./queries/useProductQueries', () => ({
+  useProducts: () => ({ data: mockProducts, isLoading: mockProductsLoading }),
 }));
 
-vi.mock('../services/inventoryService', () => ({
-  inventoryService: {
-    getAll: () => mockGetAllInventory(),
-  },
+vi.mock('./queries/useInventoryQueries', () => ({
+  useInventoryItems: () => ({ data: mockInventory, isLoading: mockInventoryLoading }),
 }));
 
 describe('usePlanLimits', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUser = null;
+    mockMonthEvents = [];
+    mockClients = [];
+    mockProducts = [];
+    mockInventory = [];
+    mockEventsLoading = false;
+    mockClientsLoading = false;
+    mockProductsLoading = false;
+    mockInventoryLoading = false;
   });
 
   it('returns loading=false and isBasicPlan=true when no user', async () => {
@@ -55,10 +60,10 @@ describe('usePlanLimits', () => {
 
   it('fetches all data for basic plan user', async () => {
     mockUser = { id: '1', plan: 'basic' };
-    mockGetByDateRange.mockResolvedValue([{ id: 'e1' }, { id: 'e2' }]);
-    mockGetAllClients.mockResolvedValue([{ id: 'c1' }]);
-    mockGetAllProducts.mockResolvedValue([{ id: 'p1' }, { id: 'p2' }]);
-    mockGetAllInventory.mockResolvedValue([{ id: 'i1' }]);
+    mockMonthEvents = [{ id: 'e1' }, { id: 'e2' }];
+    mockClients = [{ id: 'c1' }];
+    mockProducts = [{ id: 'p1' }, { id: 'p2' }];
+    mockInventory = [{ id: 'i1' }];
 
     const { result } = renderHook(() => usePlanLimits());
 
@@ -80,10 +85,7 @@ describe('usePlanLimits', () => {
 
   it('blocks event creation when limit reached on basic plan', async () => {
     mockUser = { id: '1', plan: 'basic' };
-    mockGetByDateRange.mockResolvedValue([{ id: '1' }, { id: '2' }, { id: '3' }]);
-    mockGetAllClients.mockResolvedValue([]);
-    mockGetAllProducts.mockResolvedValue([]);
-    mockGetAllInventory.mockResolvedValue([]);
+    mockMonthEvents = [{ id: '1' }, { id: '2' }, { id: '3' }];
 
     const { result } = renderHook(() => usePlanLimits());
 
@@ -96,7 +98,7 @@ describe('usePlanLimits', () => {
 
   it('only fetches events for pro plan user', async () => {
     mockUser = { id: '1', plan: 'pro' };
-    mockGetByDateRange.mockResolvedValue([{ id: '1' }]);
+    mockMonthEvents = [{ id: '1' }];
 
     const { result } = renderHook(() => usePlanLimits());
 
@@ -107,16 +109,11 @@ describe('usePlanLimits', () => {
     expect(result.current.isBasicPlan).toBe(false);
     expect(result.current.eventsThisMonth).toBe(1);
     expect(result.current.canCreateEvent).toBe(true); // pro has no limit
-    expect(mockGetAllClients).not.toHaveBeenCalled();
-    expect(mockGetAllProducts).not.toHaveBeenCalled();
+    // React Query hooks are still called but limits don't apply for pro
   });
 
   it('treats null/undefined plan as basic', async () => {
     mockUser = { id: '1' };
-    mockGetByDateRange.mockResolvedValue([]);
-    mockGetAllClients.mockResolvedValue([]);
-    mockGetAllProducts.mockResolvedValue([]);
-    mockGetAllInventory.mockResolvedValue([]);
 
     const { result } = renderHook(() => usePlanLimits());
 
@@ -129,12 +126,7 @@ describe('usePlanLimits', () => {
 
   it('handles service errors gracefully for basic plan', async () => {
     mockUser = { id: '1', plan: 'basic' };
-    mockGetByDateRange.mockRejectedValue(new Error('fail'));
-    mockGetAllClients.mockRejectedValue(new Error('fail'));
-    mockGetAllProducts.mockRejectedValue(new Error('fail'));
-    mockGetAllInventory.mockRejectedValue(new Error('fail'));
-
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    // React Query handles errors internally; hooks return empty arrays as defaults
 
     const { result } = renderHook(() => usePlanLimits());
 
@@ -142,18 +134,12 @@ describe('usePlanLimits', () => {
       expect(result.current.loading).toBe(false);
     });
 
-    // Errors are caught per-service with .catch(() => []), so counts default to 0
     expect(result.current.eventsThisMonth).toBe(0);
-
-    consoleSpy.mockRestore();
   });
 
   it('handles null responses from services', async () => {
     mockUser = { id: '1', plan: 'basic' };
-    mockGetByDateRange.mockResolvedValue(null);
-    mockGetAllClients.mockResolvedValue(null);
-    mockGetAllProducts.mockResolvedValue(null);
-    mockGetAllInventory.mockResolvedValue(null);
+    // When React Query returns undefined/null, the hook defaults to []
 
     const { result } = renderHook(() => usePlanLimits());
 

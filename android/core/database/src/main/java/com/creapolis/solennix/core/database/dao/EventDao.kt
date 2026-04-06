@@ -14,6 +14,8 @@ interface EventDao {
     @Query("""
         SELECT * FROM events 
         WHERE (:status IS NULL OR status = :status)
+        AND (:startDate IS NULL OR event_date >= :startDate)
+        AND (:endDate IS NULL OR event_date <= :endDate)
         AND (
             :query = '' OR 
             service_type LIKE '%' || :query || '%' OR 
@@ -22,10 +24,21 @@ interface EventDao {
         )
         ORDER BY event_date DESC
     """)
-    fun getEventsPaging(query: String = "", status: String? = null): PagingSource<Int, CachedEvent>
+    fun getEventsPaging(
+        query: String = "", 
+        status: String? = null,
+        startDate: String? = null,
+        endDate: String? = null
+    ): PagingSource<Int, CachedEvent>
 
     @Query("SELECT * FROM events WHERE id = :id")
     suspend fun getEvent(id: String): CachedEvent?
+
+    @Query("SELECT * FROM events WHERE sync_status != 'SYNCED'")
+    suspend fun getPendingEvents(): List<CachedEvent>
+
+    @Query("UPDATE events SET sync_status = :status WHERE id = :id")
+    suspend fun updateSyncStatus(id: String, status: com.creapolis.solennix.core.database.entity.SyncStatus)
 
     @Query("SELECT * FROM events WHERE event_date >= date('now') ORDER BY event_date ASC LIMIT :limit")
     fun getUpcomingEvents(limit: Int): Flow<List<CachedEvent>>

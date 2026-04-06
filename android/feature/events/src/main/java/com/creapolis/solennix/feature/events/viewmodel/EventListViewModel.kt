@@ -9,17 +9,22 @@ import com.creapolis.solennix.core.model.Event
 import com.creapolis.solennix.core.model.EventStatus
 import com.creapolis.solennix.core.model.extensions.asMXN
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
+import java.time.LocalDate
 
 data class EventListUiState(
     val events: List<Event> = emptyList(),
     val clientMap: Map<String, Client> = emptyMap(),
     val searchQuery: String = "",
     val selectedStatus: EventStatus? = null,
+    val startDate: LocalDate? = null,
+    val endDate: LocalDate? = null,
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
     val error: String? = null,
@@ -32,6 +37,7 @@ data class EventStatusFilter(
     val count: Int = 0
 )
 
+@OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class EventListViewModel @Inject constructor(
     private val eventRepository: EventRepository,
@@ -40,24 +46,48 @@ class EventListViewModel @Inject constructor(
 
     private val _searchQuery = MutableStateFlow("")
     private val _selectedStatus = MutableStateFlow<EventStatus?>(null)
+    private val _startDate = MutableStateFlow<LocalDate?>(null)
+    private val _endDate = MutableStateFlow<LocalDate?>(null)
     private val _isRefreshing = MutableStateFlow(false)
     private val _error = MutableStateFlow<String?>(null)
 
-    val pagedEvents: Flow<PagingData<Event>> = combine(
-        _searchQuery.debounce(300),
-        _selectedStatus
-    ) { query, status ->
-        query to status
-    }.flatMapLatest { (query, status) ->
-        eventRepository.getEventsPaging(query, status?.name)
-    }.cachedIn(viewModelScope)
+    private data class FilterState(
+        val query: String,
+        val status: EventStatus?,
+        val startDate: LocalDate?,
+        val endDate: LocalDate?,
+        val refreshing: Boolean,
+        val error: String?
+    )
+
+    private val filterState: Flow<FilterState> = combine(
+        _searchQuery, _selectedStatus, _startDate, _endDate, _isRefreshing, _error
+    ) { params ->
+        FilterState(
+            query = params[0] as String,
+            status = params[1] as EventStatus?,
+            startDate = params[2] as LocalDate?,
+            endDate = params[3] as LocalDate?,
+            refreshing = params[4] as Boolean,
+            error = params[5] as String?
+        )
+    }
+
+    val pagedEvents: Flow<PagingData<Event>> = filterState
+        .debounce(300)
+        .flatMapLatest { filters ->
+            eventRepository.getEventsPaging(
+                query = filters.query,
+                status = filters.status?.name,
+                startDate = filters.startDate?.toString(),
+                endDate = filters.endDate?.toString()
+            )
+        }.cachedIn(viewModelScope)
 
     val uiState: StateFlow<EventListUiState> = combine(
         eventRepository.getEvents(),
         clientRepository.getClients(),
-        combine(_searchQuery, _selectedStatus, _isRefreshing, _error) { query, status, refreshing, error ->
-            FilterState(query, status, refreshing, error)
-        }
+        filterState
     ) { events, clients, filters ->
         val clientMap = clients.associateBy { it.id }
         val statusFilters = buildStatusFilters(events)
@@ -67,6 +97,8 @@ class EventListViewModel @Inject constructor(
             clientMap = clientMap,
             searchQuery = filters.query,
             selectedStatus = filters.status,
+            startDate = filters.startDate,
+            endDate = filters.endDate,
             isLoading = false,
             isRefreshing = filters.refreshing,
             error = filters.error,
@@ -76,13 +108,6 @@ class EventListViewModel @Inject constructor(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = EventListUiState(isLoading = true)
-    )
-
-    private data class FilterState(
-        val query: String,
-        val status: EventStatus?,
-        val refreshing: Boolean,
-        val error: String?
     )
 
     private fun buildStatusFilters(events: List<Event>): List<EventStatusFilter> {
@@ -106,6 +131,18 @@ class EventListViewModel @Inject constructor(
 
     fun onStatusFilterChange(status: EventStatus?) {
         _selectedStatus.value = status
+    }
+
+    fun onDateRangeChange(start: LocalDate?, end: LocalDate?) {
+        _startDate.value = start
+        _endDate.value = end
+    }
+
+    fun clearFilters() {
+        _searchQuery.value = ""
+        _selectedStatus.value = null
+        _startDate.value = null
+        _endDate.value = null
     }
 
     fun generateCsvContent(): String {

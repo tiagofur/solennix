@@ -65,8 +65,8 @@ describe('Login', () => {
     });
   });
 
-  it('handles invalid server response', async () => {
-    (api.post as any).mockResolvedValue({ tokens: {} });
+  it('handles API error response', async () => {
+    (api.post as any).mockRejectedValue(new Error('Credenciales incorrectas'));
     renderLogin();
 
     fireEvent.change(screen.getByLabelText(/email/i, { selector: 'input' }), { target: { value: 'test@example.com' } });
@@ -74,7 +74,7 @@ describe('Login', () => {
     fireEvent.click(screen.getByRole('button', { name: /iniciar sesión/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/Respuesta del servidor inválida/i)).toBeInTheDocument();
+      expect(screen.getByText(/Credenciales incorrectas/i)).toBeInTheDocument();
     });
   });
 

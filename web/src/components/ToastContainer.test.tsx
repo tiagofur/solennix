@@ -119,8 +119,8 @@ describe('ToastContainer', () => {
 
     render(<ToastContainer />);
     const toast = screen.getByRole('status');
-    expect(toast.className).toContain('bg-green-50');
-    expect(toast.className).toContain('border-green-200');
+    expect(toast.className).toContain('bg-success/10');
+    expect(toast.className).toContain('border-success/30');
   });
 
   it('applies correct style classes for error toast', () => {
@@ -130,8 +130,8 @@ describe('ToastContainer', () => {
 
     render(<ToastContainer />);
     const toast = screen.getByRole('alert');
-    expect(toast.className).toContain('bg-red-50');
-    expect(toast.className).toContain('border-red-200');
+    expect(toast.className).toContain('bg-error/10');
+    expect(toast.className).toContain('border-error/30');
   });
 
   it('applies correct style classes for info toast', () => {
@@ -141,8 +141,8 @@ describe('ToastContainer', () => {
 
     render(<ToastContainer />);
     const toast = screen.getByRole('status');
-    expect(toast.className).toContain('bg-blue-50');
-    expect(toast.className).toContain('border-blue-200');
+    expect(toast.className).toContain('bg-info/10');
+    expect(toast.className).toContain('border-info/30');
   });
 
   it('has aria-live="polite" on the container', () => {

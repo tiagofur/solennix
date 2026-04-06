@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@tests/customRender';
 import { MemoryRouter } from 'react-router-dom';
 import { CalendarView } from './CalendarView';
@@ -17,6 +17,23 @@ vi.mock('../../services/eventService', () => ({
   eventService: {
     getByDateRange: vi.fn(),
     getAll: vi.fn(),
+    getById: vi.fn(),
+    getByClientId: vi.fn(),
+    getUpcoming: vi.fn(),
+    getProducts: vi.fn(),
+    getExtras: vi.fn(),
+    getEquipment: vi.fn(),
+    getSupplies: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    updateItems: vi.fn(),
+    checkEquipmentConflicts: vi.fn(),
+    getEquipmentSuggestions: vi.fn(),
+    getSupplySuggestions: vi.fn(),
+    addProducts: vi.fn(),
+    updateProducts: vi.fn(),
+    updateExtras: vi.fn(),
   },
 }));
 
@@ -24,11 +41,22 @@ vi.mock('../../services/unavailableDatesService', () => ({
   unavailableDatesService: {
     getDates: vi.fn(),
     removeDate: vi.fn(),
+    addDate: vi.fn(),
+    updateDate: vi.fn(),
   },
 }));
 
 vi.mock('../../lib/errorHandler', () => ({
   logError: vi.fn(),
+  getErrorMessage: vi.fn((error: unknown, defaultMsg?: string) => defaultMsg || 'Error'),
+}));
+
+vi.mock('../../hooks/useToast', () => ({
+  useToast: () => ({
+    addToast: vi.fn(),
+    removeToast: vi.fn(),
+    toasts: [],
+  }),
 }));
 
 vi.mock('react-day-picker', () => ({
@@ -54,12 +82,10 @@ const renderCalendar = () =>
   );
 
 const waitForLoading = async () => {
-  // Wait for fetches to start if they haven't started yet
   await waitFor(() => {
     expect(eventService.getByDateRange).toHaveBeenCalled();
   }, { timeout: 2000 });
 
-  // Wait for fetches to finish (spinner should appear and then disappear)
   await waitFor(() => {
     expect(screen.queryByRole('status', { name: /Cargando/i })).not.toBeInTheDocument();
   }, { timeout: 5000 });
@@ -79,6 +105,12 @@ const makeEvent = (overrides: Record<string, any> = {}) => ({
   client: { name: 'Ana', phone: '5551234567' },
   ...overrides,
 });
+
+// Helper: select Jan 2 date (the initial date with fake timers is already Jan 2,
+// but clicking "Select" re-confirms it after any operations)
+const selectDate = () => {
+  fireEvent.click(screen.getByTestId('mock-select'));
+};
 
 describe('CalendarView', () => {
   const mockEvents: EventWithClient[] = [
@@ -106,8 +138,7 @@ describe('CalendarView', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.useFakeTimers();
-    // Set system time to Jan 2, 2024
+    vi.useFakeTimers({ shouldAdvanceTime: true });
     vi.setSystemTime(new Date(2024, 0, 2));
 
     (eventService.getByDateRange as any).mockResolvedValue(mockEvents);
@@ -156,18 +187,7 @@ describe('CalendarView', () => {
     renderCalendar();
     await waitForLoading();
 
-    await waitFor(() => {
-      expect(screen.getByTestId('mock-select')).toBeInTheDocument();
-    });
-    fireEvent.click(screen.getByTestId('mock-select'));
-    await waitForLoading();
-
-    await waitFor(() => {
-      expect(screen.getByTestId('mock-next')).toBeInTheDocument();
-    });
-    fireEvent.click(screen.getByTestId('mock-next'));
-    await waitForLoading();
-
+    // Initial selectedDate is Jan 2 (today with fake timers), events already visible
     await waitFor(() => {
       expect(screen.getByText('Ana')).toBeInTheDocument();
     });
@@ -180,14 +200,14 @@ describe('CalendarView', () => {
     (eventService.getByDateRange as any).mockResolvedValue([]);
 
     renderCalendar();
-    fireEvent.click(screen.getByText('Select'));
+    selectDate();
 
     await waitFor(() => {
       expect(screen.getByText(/No hay eventos para este día/i)).toBeInTheDocument();
     });
   });
 
-  it('clears selected date for new event link', async () => {
+  it('clears selected date', async () => {
     (eventService.getByDateRange as any).mockResolvedValue([]);
 
     renderCalendar();
@@ -198,7 +218,7 @@ describe('CalendarView', () => {
     fireEvent.click(screen.getByTestId('mock-clear'));
 
     await waitFor(() => {
-      expect(screen.getByRole('link', { name: 'Crear nuevo evento' }).getAttribute('href')).toEqual('/events/new');
+      expect(screen.getByLabelText('Crear nuevo evento o cotización')).toBeInTheDocument();
     });
   });
 
@@ -212,15 +232,15 @@ describe('CalendarView', () => {
     });
   });
 
-  // ---------- NEW TESTS FOR COVERAGE ----------
+  // ---------- COVERAGE TESTS ----------
 
   it('displays event card with all detail fields (time, location, phone, total)', async () => {
     (eventService.getByDateRange as any).mockResolvedValue([makeEvent()]);
 
     renderCalendar();
-    fireEvent.click(screen.getByText('Select'));
-    fireEvent.click(screen.getByText('Next'));
+    await waitForLoading();
 
+    // Events show on initial load (selectedDate = Jan 2 = today)
     await waitFor(() => {
       expect(screen.getByText('Ana')).toBeInTheDocument();
     });
@@ -239,8 +259,7 @@ describe('CalendarView', () => {
     ]);
 
     renderCalendar();
-    fireEvent.click(screen.getByText('Select'));
-    fireEvent.click(screen.getByText('Next'));
+    await waitForLoading();
 
     await waitFor(() => {
       expect(screen.getByText('Luis')).toBeInTheDocument();
@@ -254,8 +273,7 @@ describe('CalendarView', () => {
     ]);
 
     renderCalendar();
-    fireEvent.click(screen.getByText('Select'));
-    fireEvent.click(screen.getByText('Next'));
+    await waitForLoading();
 
     await waitFor(() => {
       expect(screen.getByText('Ana')).toBeInTheDocument();
@@ -269,8 +287,7 @@ describe('CalendarView', () => {
     ]);
 
     renderCalendar();
-    fireEvent.click(screen.getByText('Select'));
-    fireEvent.click(screen.getByText('Next'));
+    await waitForLoading();
 
     await waitFor(() => {
       expect(screen.getByText('Ana')).toBeInTheDocument();
@@ -287,8 +304,7 @@ describe('CalendarView', () => {
     ]);
 
     renderCalendar();
-    fireEvent.click(screen.getByText('Select'));
-    fireEvent.click(screen.getByText('Next'));
+    await waitForLoading();
 
     await waitFor(() => {
       expect(screen.getByText('C1')).toBeInTheDocument();
@@ -307,27 +323,23 @@ describe('CalendarView', () => {
     ]);
 
     renderCalendar();
-    fireEvent.click(screen.getByText('Select'));
-    fireEvent.click(screen.getByText('Next'));
+    await waitForLoading();
 
     await waitFor(() => {
       expect(screen.getByText('A1')).toBeInTheDocument();
     });
-    expect(screen.getByText('2')).toBeInTheDocument();
-    expect(screen.getByText('Eventos')).toBeInTheDocument();
+    expect(screen.getByText(/2 Eventos/)).toBeInTheDocument();
   });
 
   it('shows singular "Evento" badge for one event', async () => {
     (eventService.getByDateRange as any).mockResolvedValue([makeEvent()]);
 
     renderCalendar();
-    fireEvent.click(screen.getByText('Select'));
-    fireEvent.click(screen.getByText('Next'));
+    await waitForLoading();
 
     await waitFor(() => {
       expect(screen.getByText('Ana')).toBeInTheDocument();
     });
-    // Badge text is "1 Evento" inside a single span
     expect(screen.getByText(/1 Evento/)).toBeInTheDocument();
   });
 
@@ -335,8 +347,7 @@ describe('CalendarView', () => {
     (eventService.getByDateRange as any).mockResolvedValue([makeEvent()]);
 
     renderCalendar();
-    fireEvent.click(screen.getByText('Select'));
-    fireEvent.click(screen.getByText('Next'));
+    await waitForLoading();
 
     await waitFor(() => {
       expect(screen.getByText('Ana')).toBeInTheDocument();
@@ -351,8 +362,7 @@ describe('CalendarView', () => {
     (eventService.getByDateRange as any).mockResolvedValue([makeEvent()]);
 
     renderCalendar();
-    fireEvent.click(screen.getByText('Select'));
-    fireEvent.click(screen.getByText('Next'));
+    await waitForLoading();
 
     await waitFor(() => {
       expect(screen.getByText('Ana')).toBeInTheDocument();
@@ -367,8 +377,7 @@ describe('CalendarView', () => {
     (eventService.getByDateRange as any).mockResolvedValue([makeEvent()]);
 
     renderCalendar();
-    fireEvent.click(screen.getByText('Select'));
-    fireEvent.click(screen.getByText('Next'));
+    await waitForLoading();
 
     await waitFor(() => {
       expect(screen.getByText('Ana')).toBeInTheDocument();
@@ -379,285 +388,14 @@ describe('CalendarView', () => {
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 
-  // ---- LIST VIEW TESTS ----
-
-  it('switches to list view and fetches all events', async () => {
-    (eventService.getByDateRange as any).mockResolvedValue([
-      makeEvent({ id: '1', client: { name: 'ClienteA', phone: '111' } }),
-    ]);
-
-    renderCalendar();
-
-    fireEvent.click(screen.getByRole('button', { name: /Ver eventos en lista/i }));
-
-    await waitFor(() => {
-      expect(eventService.getByDateRange).toHaveBeenCalled();
-    });
-
-    await waitFor(() => {
-      expect(screen.getByText('ClienteA')).toBeInTheDocument();
-    });
-
-    // Table headers should be present
-    expect(screen.getByText('Fecha')).toBeInTheDocument();
-    expect(screen.getByText('Cliente / Tipo')).toBeInTheDocument();
-    expect(screen.getByText('Estado')).toBeInTheDocument();
-    expect(screen.getByText('Total')).toBeInTheDocument();
-  });
-
-  it('shows loading state in list view', async () => {
-    let resolvePromise: (value: any) => void;
-    const delayedPromise = new Promise((res) => { resolvePromise = res; });
-    (eventService.getByDateRange as any).mockReturnValue(delayedPromise);
-
-    renderCalendar();
-    fireEvent.click(screen.getByRole('button', { name: /Ver eventos en lista/i }));
-
-    // "Cargando eventos..." appears as both sr-only and visible text
-    await waitFor(() => {
-      expect(screen.getAllByText('Cargando eventos...').length).toBeGreaterThanOrEqual(1);
-    });
-
-    resolvePromise!([]);
-
-    // After resolving, loading spinner is replaced by empty state
-    await waitFor(() => {
-      expect(screen.getByText('No se encontraron eventos')).toBeInTheDocument();
-    });
-  });
-
-  it('shows empty state with filter hint when list is filtered with no results', async () => {
-    (eventService.getByDateRange as any).mockResolvedValue([
-      makeEvent({ id: '1', client: { name: 'Ana', phone: '111' }, status: 'confirmed' }),
-    ]);
-
-    renderCalendar();
-    fireEvent.click(screen.getByRole('button', { name: /Ver eventos en lista/i }));
-
-    await waitFor(() => {
-      expect(screen.getByText('Ana')).toBeInTheDocument();
-    });
-
-    // Filter by cancelled status (no events match)
-    fireEvent.click(screen.getByRole('button', { name: 'Cancelado' }));
-
-    expect(screen.getByText('No se encontraron eventos')).toBeInTheDocument();
-    expect(screen.getByText('Intenta ajustando los filtros.')).toBeInTheDocument();
-  });
-
-  it('shows empty state without filter hint when no events at all', async () => {
-    (eventService.getByDateRange as any).mockResolvedValue([]);
-
-    renderCalendar();
-    fireEvent.click(screen.getByRole('button', { name: /Ver eventos en lista/i }));
-
-    await waitFor(() => {
-      expect(screen.getByText('No se encontraron eventos')).toBeInTheDocument();
-    });
-    expect(screen.getByText('Agrega tu primer evento.')).toBeInTheDocument();
-  });
-
-  it('filters list view by search term', async () => {
-    (eventService.getByDateRange as any).mockResolvedValue([
-      makeEvent({ id: '1', client: { name: 'Ana', phone: '111' }, service_type: 'Boda' }),
-      makeEvent({ id: '2', client: { name: 'Carlos', phone: '222' }, service_type: 'Cumpleaños' }),
-    ]);
-
-    renderCalendar();
-    fireEvent.click(screen.getByRole('button', { name: /Ver eventos en lista/i }));
-
-    await waitFor(() => {
-      expect(screen.getByText('Ana')).toBeInTheDocument();
-    });
-
-    fireEvent.change(screen.getByPlaceholderText(/Buscar por cliente o servicio/i), {
-      target: { value: 'Carlos' },
-    });
-
-    expect(screen.getByText('Carlos')).toBeInTheDocument();
-    expect(screen.queryByText('Ana')).not.toBeInTheDocument();
-  });
-
-  it('filters list view by status', async () => {
-    (eventService.getByDateRange as any).mockResolvedValue([
-      makeEvent({ id: '1', client: { name: 'Ana', phone: '111' }, status: 'confirmed' }),
-      makeEvent({ id: '2', client: { name: 'Carlos', phone: '222' }, status: 'completed' }),
-    ]);
-
-    renderCalendar();
-    fireEvent.click(screen.getByRole('button', { name: /Ver eventos en lista/i }));
-
-    await waitFor(() => {
-      expect(screen.getByText('Ana')).toBeInTheDocument();
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: 'Completado' }));
-
-    expect(screen.getByText('Carlos')).toBeInTheDocument();
-    expect(screen.queryByText('Ana')).not.toBeInTheDocument();
-  });
-
-  it('navigates on list row click', async () => {
-    (eventService.getByDateRange as any).mockResolvedValue([
-      makeEvent({ id: 'ev-99', client: { name: 'ListClient', phone: '999' } }),
-    ]);
-
-    renderCalendar();
-    fireEvent.click(screen.getByRole('button', { name: /Ver eventos en lista/i }));
-
-    await waitFor(() => {
-      expect(screen.getByText('ListClient')).toBeInTheDocument();
-    });
-
-    const row = screen.getByRole('button', { name: /Ver detalles del evento/i });
-    fireEvent.click(row);
-    expect(mockNavigate).toHaveBeenCalledWith('/events/ev-99/summary');
-  });
-
-  it('navigates on list row keyboard Enter', async () => {
-    (eventService.getByDateRange as any).mockResolvedValue([
-      makeEvent({ id: 'ev-88', client: { name: 'KeyClient', phone: '888' } }),
-    ]);
-
-    renderCalendar();
-    fireEvent.click(screen.getByRole('button', { name: /Ver eventos en lista/i }));
-
-    await waitFor(() => {
-      expect(screen.getByText('KeyClient')).toBeInTheDocument();
-    });
-
-    const row = screen.getByRole('button', { name: /Ver detalles del evento/i });
-    fireEvent.keyDown(row, { key: 'Enter' });
-    expect(mockNavigate).toHaveBeenCalledWith('/events/ev-88/summary');
-  });
-
-  it('navigates on list row keyboard Space', async () => {
-    (eventService.getByDateRange as any).mockResolvedValue([
-      makeEvent({ id: 'ev-77', client: { name: 'SpaceClient', phone: '777' } }),
-    ]);
-
-    renderCalendar();
-    fireEvent.click(screen.getByRole('button', { name: /Ver eventos en lista/i }));
-
-    await waitFor(() => {
-      expect(screen.getByText('SpaceClient')).toBeInTheDocument();
-    });
-
-    const row = screen.getByRole('button', { name: /Ver detalles del evento/i });
-    fireEvent.keyDown(row, { key: ' ' });
-    expect(mockNavigate).toHaveBeenCalledWith('/events/ev-77/summary');
-  });
-
-  it('renders all status labels in list view', async () => {
-    (eventService.getByDateRange as any).mockResolvedValue([
-      makeEvent({ id: '1', status: 'confirmed', client: { name: 'C1', phone: '1' } }),
-      makeEvent({ id: '2', status: 'completed', client: { name: 'C2', phone: '2' } }),
-      makeEvent({ id: '3', status: 'cancelled', client: { name: 'C3', phone: '3' } }),
-      makeEvent({ id: '4', status: 'quoted', client: { name: 'C4', phone: '4' } }),
-    ]);
-
-    renderCalendar();
-    fireEvent.click(screen.getByRole('button', { name: /Ver eventos en lista/i }));
-
-    await waitFor(() => {
-      expect(screen.getByText('C1')).toBeInTheDocument();
-    });
-
-    // Status labels also appear in filter <option> elements, so use getAllByText
-    expect(screen.getAllByText('Confirmado').length).toBeGreaterThanOrEqual(2);
-    expect(screen.getAllByText('Completado').length).toBeGreaterThanOrEqual(2);
-    expect(screen.getAllByText('Cancelado').length).toBeGreaterThanOrEqual(2);
-    expect(screen.getAllByText('Cotizado').length).toBeGreaterThanOrEqual(1);
-  });
-
-  it('shows location and time info in list view rows', async () => {
-    (eventService.getByDateRange as any).mockResolvedValue([
-      makeEvent({
-        id: '1',
-        start_time: '09:00',
-        end_time: '13:00',
-        location: 'Hacienda',
-        client: { name: 'T1', phone: '111' },
-      }),
-    ]);
-
-    renderCalendar();
-    fireEvent.click(screen.getByRole('button', { name: /Ver eventos en lista/i }));
-
-    await waitFor(() => {
-      expect(screen.getByText('T1')).toBeInTheDocument();
-    });
-
-    expect(screen.getByText('Hacienda')).toBeInTheDocument();
-    expect(screen.getByText(/09:00/)).toBeInTheDocument();
-  });
-
-  it('shows "--" for missing start/end times in list view', async () => {
-    (eventService.getByDateRange as any).mockResolvedValue([
-      makeEvent({
-        id: '1',
-        start_time: null,
-        end_time: null,
-        location: null,
-        client: { name: 'NoTime', phone: '111' },
-      }),
-    ]);
-
-    renderCalendar();
-    fireEvent.click(screen.getByRole('button', { name: /Ver eventos en lista/i }));
-
-    await waitFor(() => {
-      expect(screen.getByText('NoTime')).toBeInTheDocument();
-    });
-
-    expect(screen.getByText('Sin locación')).toBeInTheDocument();
-  });
-
-  it('logs error when fetchAllEvents fails', async () => {
-    (eventService.getByDateRange as any)
-      .mockResolvedValueOnce([]) // initial calendar fetch
-      .mockRejectedValueOnce(new Error('list fail')); // list fetch
-
-    renderCalendar();
-
-    await waitFor(() => {
-      expect(eventService.getByDateRange).toHaveBeenCalledTimes(1);
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /Ver eventos en lista/i }));
-
-    await waitFor(() => {
-      expect(logError).toHaveBeenCalledWith('CalendarView:fetchAllEvents', expect.any(Error));
-    });
-  });
-
-  it('switches back from list to calendar view', async () => {
-    (eventService.getByDateRange as any).mockResolvedValue([]);
-
-    renderCalendar();
-
-    fireEvent.click(screen.getByRole('button', { name: /Ver eventos en lista/i }));
-
-    // Empty list shows "No se encontraron eventos" instead of table
-    await waitFor(() => {
-      expect(screen.getByText('No se encontraron eventos')).toBeInTheDocument();
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /Ver eventos en calendario/i }));
-
-    await waitFor(() => {
-      expect(screen.getByText('Select')).toBeInTheDocument();
-    });
-  });
-
   it('includes selected date in Nuevo Evento link when in calendar mode', async () => {
     (eventService.getByDateRange as any).mockResolvedValue([]);
 
     renderCalendar();
-    fireEvent.click(screen.getByText('Select'));
+    selectDate();
 
     await waitFor(() => {
-      const link = screen.getByRole('link', { name: 'Crear nuevo evento' });
+      const link = screen.getByRole('link', { name: 'Crear evento para esta fecha' });
       expect(link.getAttribute('href')).toContain('/events/new?date=2024-01-02');
     });
   });
@@ -666,42 +404,23 @@ describe('CalendarView', () => {
     (eventService.getByDateRange as any).mockResolvedValue(null);
 
     renderCalendar();
-    fireEvent.click(screen.getByText('Select'));
+    selectDate();
 
     await waitFor(() => {
       expect(screen.getByText(/No hay eventos para este día/i)).toBeInTheDocument();
     });
   });
 
-  it('shows "Crear uno nuevo" link in calendar empty state', async () => {
+  it('shows empty state link in calendar empty state', async () => {
     (eventService.getByDateRange as any).mockResolvedValue([]);
 
     renderCalendar();
-    fireEvent.click(screen.getByText('Select'));
+    selectDate();
 
     await waitFor(() => {
-      const link = screen.getByText('Crear uno nuevo');
+      const link = screen.getByRole('link', { name: 'Crear evento para esta fecha' });
       expect(link).toBeInTheDocument();
-      expect(link.closest('a')).toHaveAttribute('href', expect.stringContaining('/events/new'));
+      expect(link).toHaveAttribute('href', expect.stringContaining('/events/new'));
     });
-  });
-
-  it('filters list by search on service_type', async () => {
-    (eventService.getByDateRange as any).mockResolvedValue([
-      makeEvent({ id: '1', client: { name: 'X', phone: '1' }, service_type: 'Barra de Churros' }),
-      makeEvent({ id: '2', client: { name: 'Y', phone: '2' }, service_type: 'Coctel' }),
-    ]);
-
-    renderCalendar();
-    fireEvent.click(screen.getByRole('button', { name: /Ver eventos en lista/i }));
-
-    await waitFor(() => {
-      expect(screen.getByText('X')).toBeInTheDocument();
-    });
-
-    fireEvent.change(screen.getByPlaceholderText(/Buscar por cliente o servicio/i), { target: { value: 'churros' } });
-
-    expect(screen.getByText('X')).toBeInTheDocument();
-    expect(screen.queryByText('Y')).not.toBeInTheDocument();
   });
 });

@@ -478,10 +478,10 @@ class EventFormViewModel @Inject constructor(
         )
     }
 
-    fun setProductQuantityToNumPeople(productId: String) {
-        val qty = numPeople.toDoubleOrNull() ?: return
-        if (qty <= 0) return
-        updateProductQuantity(productId, qty)
+    fun moveProduct(fromIndex: Int, toIndex: Int) {
+        if (fromIndex == toIndex || fromIndex !in selectedProducts.indices || toIndex !in selectedProducts.indices) return
+        val item = selectedProducts.removeAt(fromIndex)
+        selectedProducts.add(toIndex, item)
     }
 
     fun addExtra(description: String, cost: Double, price: Double, excludeUtility: Boolean) {
@@ -513,6 +513,18 @@ class EventFormViewModel @Inject constructor(
 
     fun removeExtra(id: String) {
         eventExtras.removeAll { it.id == id }
+    }
+
+    fun moveExtra(fromIndex: Int, toIndex: Int) {
+        if (fromIndex == toIndex || fromIndex !in eventExtras.indices || toIndex !in eventExtras.indices) return
+        val item = eventExtras.removeAt(fromIndex)
+        eventExtras.add(toIndex, item)
+    }
+
+    fun setProductQuantityToNumPeople(productId: String) {
+        val qty = numPeople.toDoubleOrNull() ?: return
+        if (qty <= 0) return
+        updateProductQuantity(productId, qty)
     }
 
     // Equipment Methods

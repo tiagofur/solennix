@@ -73,6 +73,10 @@ class SubscriptionViewModel @Inject constructor(
         billingManager.purchase(activity, rcPackage)
     }
 
+    fun restorePurchases() {
+        billingManager.restorePurchases()
+    }
+
     override fun onCleared() {
         super.onCleared()
         billingManager.cleanup()

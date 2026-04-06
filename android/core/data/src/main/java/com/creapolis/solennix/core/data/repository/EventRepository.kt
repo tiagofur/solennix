@@ -4,23 +4,9 @@ import com.creapolis.solennix.core.database.dao.EventDao
 import com.creapolis.solennix.core.database.dao.EventItemDao
 import com.creapolis.solennix.core.database.entity.asEntity
 import com.creapolis.solennix.core.database.entity.asExternalModel
-import com.creapolis.solennix.core.model.Event
-import com.creapolis.solennix.core.model.EventEquipment
-import com.creapolis.solennix.core.model.EventExtra
-import com.creapolis.solennix.core.model.EventPhoto
-import com.creapolis.solennix.core.model.EventProduct
-import com.creapolis.solennix.core.model.EventSupply
-import com.creapolis.solennix.core.model.EquipmentConflict
-import com.creapolis.solennix.core.model.EquipmentSuggestion
-import com.creapolis.solennix.core.model.SupplySuggestion
-import com.creapolis.solennix.core.network.ApiService
-import com.creapolis.solennix.core.network.get
-import com.creapolis.solennix.core.network.post
-import com.creapolis.solennix.core.network.put
-import com.creapolis.solennix.core.network.get
-import com.creapolis.solennix.core.network.post
-import com.creapolis.solennix.core.network.put
-import com.creapolis.solennix.core.network.Endpoints
+import com.creapolis.solennix.core.database.entity.SyncStatus
+import com.creapolis.solennix.core.model.*
+import com.creapolis.solennix.core.network.*
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
@@ -34,9 +20,15 @@ import javax.inject.Singleton
 
 interface EventRepository {
     fun getEvents(): Flow<List<Event>>
-    fun getEventsPaging(query: String = "", status: String? = null): Flow<PagingData<Event>>
+    fun getEventsPaging(
+        query: String = "", 
+        status: String? = null,
+        startDate: String? = null,
+        endDate: String? = null
+    ): Flow<PagingData<Event>>
     fun getUpcomingEvents(limit: Int = 5): Flow<List<Event>>
     suspend fun getEvent(id: String): Event?
+    suspend fun getPendingEvents(): List<com.creapolis.solennix.core.database.entity.CachedEvent>
     suspend fun syncEvents()
     suspend fun createEvent(event: Event): Event
     suspend fun updateEvent(event: Event): Event
@@ -91,13 +83,18 @@ class OfflineFirstEventRepository @Inject constructor(
     override fun getEvents(): Flow<List<Event>> =
         eventDao.getEvents().map { it.map { entity -> entity.asExternalModel() } }
 
-    override fun getEventsPaging(query: String, status: String?): Flow<PagingData<Event>> =
+    override fun getEventsPaging(
+        query: String, 
+        status: String?,
+        startDate: String?,
+        endDate: String?
+    ): Flow<PagingData<Event>> =
         Pager(
             config = PagingConfig(
                 pageSize = 20,
                 enablePlaceholders = true
             ),
-            pagingSourceFactory = { eventDao.getEventsPaging(query, status) }
+            pagingSourceFactory = { eventDao.getEventsPaging(query, status, startDate, endDate) }
         ).flow.map { pagingData ->
             pagingData.map { it.asExternalModel() }
         }
@@ -108,28 +105,53 @@ class OfflineFirstEventRepository @Inject constructor(
     override suspend fun getEvent(id: String): Event? =
         eventDao.getEvent(id)?.asExternalModel()
 
+    override suspend fun getPendingEvents(): List<com.creapolis.solennix.core.database.entity.CachedEvent> =
+        eventDao.getPendingEvents()
+
     override suspend fun syncEvents() {
         val networkEvents: List<Event> = apiService.get(Endpoints.EVENTS)
-        eventDao.insertEvents(networkEvents.map { it.asEntity() })
+        eventDao.insertEvents(networkEvents.map { it.asEntity(SyncStatus.SYNCED) })
     }
 
     override suspend fun createEvent(event: Event): Event {
-        val networkEvent: Event = apiService.post(Endpoints.EVENTS, event)
-        eventDao.insertEvents(listOf(networkEvent.asEntity()))
-        return networkEvent
+        return try {
+            val remoteEvent: Event = apiService.post(Endpoints.EVENTS, event)
+            eventDao.insertEvents(listOf(remoteEvent.asEntity(SyncStatus.SYNCED)))
+            remoteEvent
+        } catch (e: Exception) {
+            if (e is SolennixException.Auth) throw e
+            // Offline support: save locally with pending status
+            val localEvent = event.asEntity(SyncStatus.PENDING_INSERT)
+            eventDao.insertEvents(listOf(localEvent))
+            event
+        }
     }
 
     override suspend fun updateEvent(event: Event): Event {
-        val networkEvent: Event = apiService.put(Endpoints.event(event.id), event)
-        eventDao.insertEvents(listOf(networkEvent.asEntity()))
-        return networkEvent
+        return try {
+            val remoteEvent: Event = apiService.put(Endpoints.event(event.id), event)
+            eventDao.insertEvents(listOf(remoteEvent.asEntity(SyncStatus.SYNCED)))
+            remoteEvent
+        } catch (e: Exception) {
+            if (e is SolennixException.Auth) throw e
+            // Offline support: update locally with pending status
+            val localEvent = event.asEntity(SyncStatus.PENDING_UPDATE)
+            eventDao.insertEvents(listOf(localEvent))
+            event
+        }
     }
 
     override suspend fun deleteEvent(id: String) {
-        apiService.delete(Endpoints.event(id))
-        val cached = eventDao.getEvent(id)
-        if (cached != null) {
-            eventDao.deleteEvent(cached)
+        try {
+            apiService.delete(Endpoints.event(id))
+            val cached = eventDao.getEvent(id)
+            if (cached != null) {
+                eventDao.deleteEvent(cached)
+            }
+        } catch (e: Exception) {
+            if (e is SolennixException.Auth) throw e
+            // Offline support: mark as pending delete
+            eventDao.updateSyncStatus(id, SyncStatus.PENDING_DELETE)
         }
     }
 
