@@ -32,6 +32,7 @@ extension EnvironmentValues {
 @main
 struct SolennixApp: App {
 
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var authManager: AuthManager
     @State private var planLimitsManager: PlanLimitsManager
     @State private var subscriptionManager = SubscriptionManager()
@@ -41,6 +42,7 @@ struct SolennixApp: App {
     @State private var backgroundTaskManager: BackgroundTaskManager?
 
     @AppStorage("appearance") private var appearance: String = "system"
+    @AppStorage("hasRequestedPushAuthorization") private var hasRequestedPushAuthorization = false
     @Environment(\.scenePhase) private var scenePhase
 
     /// The SwiftData model container for offline caching.
@@ -148,6 +150,9 @@ struct SolennixApp: App {
                     await subscriptionManager.loadOfferings()
                     await subscriptionManager.checkEntitlementStatus()
                 }
+                .task {
+                    await processPendingDeviceTokenRegistration()
+                }
                 .onChange(of: authManager.authState) { _, newState in
                     // Sync RevenueCat when user signs in (fresh login/register/social auth).
                     // The .task above handles session restore at app launch; this covers
@@ -158,7 +163,17 @@ struct SolennixApp: App {
                             if user.plan != .basic {
                                 subscriptionManager.setBackendPremiumStatus(true)
                             }
+                            await ensurePushAuthorization()
+                            await processPendingDeviceTokenRegistration()
                         }
+                    }
+                }
+                .onReceive(NotificationCenter.default.publisher(for: .deviceTokenReceived)) { notification in
+                    guard authManager.isAuthenticated,
+                          let token = notification.userInfo?["token"] as? String,
+                          !token.isEmpty else { return }
+                    Task {
+                        await registerDeviceTokenWithBackend(token)
                     }
                 }
                 .onChange(of: scenePhase) { _, newPhase in
@@ -196,6 +211,37 @@ struct SolennixApp: App {
         case "light": return .light
         case "dark":  return .dark
         default:      return nil // system default
+        }
+    }
+
+    private func ensurePushAuthorization() async {
+        await NotificationManager.shared.checkAuthorizationStatus()
+        if NotificationManager.shared.isAuthorized {
+            await MainActor.run {
+                UIApplication.shared.registerForRemoteNotifications()
+            }
+            return
+        }
+
+        guard !hasRequestedPushAuthorization else { return }
+        hasRequestedPushAuthorization = true
+        let _ = await NotificationManager.shared.requestAuthorization()
+    }
+
+    private func processPendingDeviceTokenRegistration() async {
+        guard authManager.isAuthenticated else { return }
+        guard let token = UserDefaults.standard.string(forKey: "pendingDeviceToken"), !token.isEmpty else { return }
+        await registerDeviceTokenWithBackend(token)
+    }
+
+    private func registerDeviceTokenWithBackend(_ token: String) async {
+        guard authManager.isAuthenticated else { return }
+        do {
+            let body = ["token": token, "platform": "ios"]
+            let _: EmptyResponse = try await apiClient.post(Endpoint.registerDevice, body: body)
+            UserDefaults.standard.removeObject(forKey: "pendingDeviceToken")
+        } catch {
+            SentryHelper.capture(error: error, context: "push_register_device")
         }
     }
 }

@@ -1,6 +1,7 @@
 import Foundation
 import UserNotifications
 import UIKit
+import SolennixCore
 
 // MARK: - Notification Manager
 
@@ -14,6 +15,45 @@ final class NotificationManager: NSObject, ObservableObject {
 
     private override init() {
         super.init()
+    }
+
+    func configureCategories() {
+        let viewEvent = UNNotificationAction(
+            identifier: NotificationAction.viewEvent.rawValue,
+            title: "Ver evento",
+            options: [.foreground]
+        )
+        let viewPayment = UNNotificationAction(
+            identifier: NotificationAction.viewPayment.rawValue,
+            title: "Ver pago",
+            options: [.foreground]
+        )
+        let viewInventory = UNNotificationAction(
+            identifier: NotificationAction.viewInventory.rawValue,
+            title: "Ver inventario",
+            options: [.foreground]
+        )
+
+        let eventCategory = UNNotificationCategory(
+            identifier: NotificationCategory.event.rawValue,
+            actions: [viewEvent],
+            intentIdentifiers: [],
+            options: []
+        )
+        let paymentCategory = UNNotificationCategory(
+            identifier: NotificationCategory.payment.rawValue,
+            actions: [viewPayment],
+            intentIdentifiers: [],
+            options: []
+        )
+        let inventoryCategory = UNNotificationCategory(
+            identifier: NotificationCategory.inventory.rawValue,
+            actions: [viewInventory],
+            intentIdentifiers: [],
+            options: []
+        )
+
+        UNUserNotificationCenter.current().setNotificationCategories([eventCategory, paymentCategory, inventoryCategory])
     }
 
     // MARK: - Request Authorization
@@ -89,6 +129,7 @@ final class NotificationManager: NSObject, ObservableObject {
             "event_id": eventId,
             "type": "event_reminder"
         ]
+        content.categoryIdentifier = NotificationCategory.event.rawValue
 
         let triggerDate = Calendar.current.date(
             byAdding: reminderType.offset,
@@ -185,16 +226,47 @@ extension NotificationManager: UNUserNotificationCenterDelegate {
         didReceive response: UNNotificationResponse
     ) async {
         let userInfo = response.notification.request.content.userInfo
-
-        if let eventId = userInfo["event_id"] as? String {
-            // Navigate to event detail
+        let action = response.actionIdentifier
+        if let route = routeFromNotification(userInfo: userInfo, actionIdentifier: action) {
             await MainActor.run {
                 NotificationCenter.default.post(
-                    name: .navigateToEvent,
+                    name: .spotlightNavigationRequested,
                     object: nil,
-                    userInfo: ["event_id": eventId]
+                    userInfo: ["route": route]
                 )
             }
+        }
+    }
+
+    private nonisolated func routeFromNotification(userInfo: [AnyHashable: Any], actionIdentifier: String) -> Route? {
+        let eventId = userInfo["event_id"] as? String
+        let typeRaw = userInfo["type"] as? String
+
+        switch actionIdentifier {
+        case NotificationAction.viewPayment.rawValue:
+            if let eventId, !eventId.isEmpty { return .eventPayments(id: eventId) }
+        case NotificationAction.viewInventory.rawValue:
+            return .inventoryList
+        case NotificationAction.viewEvent.rawValue, UNNotificationDefaultActionIdentifier:
+            break
+        default:
+            break
+        }
+
+        guard let typeRaw, let type = PushNotificationType(rawValue: typeRaw) else {
+            if let eventId, !eventId.isEmpty { return .eventDetail(id: eventId) }
+            return nil
+        }
+
+        switch type {
+        case .eventReminder, .eventConfirmed, .eventCancelled:
+            if let eventId, !eventId.isEmpty { return .eventDetail(id: eventId) }
+            return .eventList
+        case .paymentReceived:
+            if let eventId, !eventId.isEmpty { return .eventPayments(id: eventId) }
+            return .eventList
+        case .lowStock:
+            return .inventoryList
         }
     }
 }
@@ -202,10 +274,21 @@ extension NotificationManager: UNUserNotificationCenterDelegate {
 // MARK: - Notification Names
 
 extension Notification.Name {
-    static let navigateToEvent = Notification.Name("navigateToEvent")
     static let paymentReceived = Notification.Name("paymentReceived")
     static let lowStockAlert = Notification.Name("lowStockAlert")
     static let deviceTokenReceived = Notification.Name("deviceTokenReceived")
+}
+
+enum NotificationCategory: String {
+    case event = "EVENT_CATEGORY"
+    case payment = "PAYMENT_CATEGORY"
+    case inventory = "INVENTORY_CATEGORY"
+}
+
+enum NotificationAction: String {
+    case viewEvent = "VIEW_EVENT"
+    case viewPayment = "VIEW_PAYMENT"
+    case viewInventory = "VIEW_INVENTORY"
 }
 
 // MARK: - Push Notification Types

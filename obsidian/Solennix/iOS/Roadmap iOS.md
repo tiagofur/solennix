@@ -129,12 +129,12 @@
 
 ### 2.1 Push Notifications (APNs)
 
-- [ ] Registrar device token con backend
+- [x] Registrar device token con backend — ✅ 2026-04-06 (APNs token -> `/devices/register` con retry por pending token)
 - [ ] Notificaciones de eventos próximos
 - [ ] Notificaciones de pagos recibidos
 - [ ] Rich notifications con imagen del evento
-- [ ] Deep links desde notificaciones
-- [ ] Notification categories con acciones (confirmar, ver detalle)
+- [x] Deep links desde notificaciones — ✅ 2026-04-06 (tap/action navega a EventDetail/EventPayments/Inventory)
+- [x] Notification categories con acciones (confirmar, ver detalle) — ✅ 2026-04-06 (EVENT/PAYMENT/INVENTORY categories + actions)
 
 **Por qué**: Alineado con [[Roadmap Web]] Fase 2.5 y [[Roadmap Android]] Fase 2.1.
 
