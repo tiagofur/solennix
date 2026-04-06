@@ -1,9 +1,9 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { eventService } from '@/services/eventService';
 import { queryKeys } from './queryKeys';
 import { useToast } from '@/hooks/useToast';
 import { logError, getErrorMessage } from '@/lib/errorHandler';
-import type { EventInsert, EventUpdate } from '@/types/entities';
+import type { EventInsert, EventUpdate, PaginationParams } from '@/types/entities';
 import type { EventStatus } from '@/components/StatusDropdown';
 
 // ── Queries ──
@@ -12,6 +12,14 @@ export function useEvents() {
   return useQuery({
     queryKey: queryKeys.events.all,
     queryFn: () => eventService.getAll(),
+  });
+}
+
+export function useEventsPaginated(params: PaginationParams) {
+  return useQuery({
+    queryKey: queryKeys.events.paginated(params.page, params.limit, params.sort, params.order),
+    queryFn: () => eventService.getPage(params),
+    placeholderData: keepPreviousData,
   });
 }
 

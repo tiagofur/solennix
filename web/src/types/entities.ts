@@ -271,3 +271,19 @@ export interface Payment {
 
 export type PaymentInsert = Omit<Payment, 'id' | 'created_at'>
 export type PaymentUpdate = Partial<PaymentInsert>
+
+// ===== Pagination =====
+export interface PaginatedResponse<T> {
+    data: T[]
+    total: number
+    page: number
+    limit: number
+    total_pages: number
+}
+
+export interface PaginationParams {
+    page?: number
+    limit?: number
+    sort?: string
+    order?: 'asc' | 'desc'
+}

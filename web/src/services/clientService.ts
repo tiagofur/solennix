@@ -1,9 +1,18 @@
 import { api } from '../lib/api';
-import { Client, ClientInsert, ClientUpdate } from '../types/entities';
+import { Client, ClientInsert, ClientUpdate, PaginatedResponse, PaginationParams } from '../types/entities';
 
 export const clientService = {
   async getAll(): Promise<Client[]> {
     return api.get<Client[]>('/clients');
+  },
+
+  async getPage(params: PaginationParams = {}): Promise<PaginatedResponse<Client>> {
+    return api.get<PaginatedResponse<Client>>('/clients', {
+      page: String(params.page ?? 1),
+      limit: String(params.limit ?? 20),
+      ...(params.sort && { sort: params.sort }),
+      ...(params.order && { order: params.order }),
+    });
   },
 
   async getById(id: string): Promise<Client> {

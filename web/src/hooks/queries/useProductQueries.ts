@@ -1,9 +1,9 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { productService } from '@/services/productService';
 import { queryKeys } from './queryKeys';
 import { useToast } from '@/hooks/useToast';
 import { logError, getErrorMessage } from '@/lib/errorHandler';
-import type { ProductInsert, ProductUpdate } from '@/types/entities';
+import type { ProductInsert, ProductUpdate, PaginationParams } from '@/types/entities';
 
 // ── Queries ──
 
@@ -11,6 +11,14 @@ export function useProducts() {
   return useQuery({
     queryKey: queryKeys.products.all,
     queryFn: () => productService.getAll(),
+  });
+}
+
+export function useProductsPaginated(params: PaginationParams) {
+  return useQuery({
+    queryKey: queryKeys.products.paginated(params.page, params.limit, params.sort, params.order),
+    queryFn: () => productService.getPage(params),
+    placeholderData: keepPreviousData,
   });
 }
 

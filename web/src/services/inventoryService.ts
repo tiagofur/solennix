@@ -1,7 +1,15 @@
 import { api } from '../lib/api';
-import { InventoryItem, InventoryItemInsert, InventoryItemUpdate } from '../types/entities';
+import { InventoryItem, InventoryItemInsert, InventoryItemUpdate, PaginatedResponse, PaginationParams } from '../types/entities';
 
 export const inventoryService = {
+  async getPage(params: PaginationParams = {}): Promise<PaginatedResponse<InventoryItem>> {
+    return api.get<PaginatedResponse<InventoryItem>>('/inventory', {
+      page: String(params.page ?? 1),
+      limit: String(params.limit ?? 20),
+      ...(params.sort && { sort: params.sort }),
+      ...(params.order && { order: params.order }),
+    });
+  },
   async getAll(): Promise<InventoryItem[]> {
     const data = await api.get<InventoryItem[] | null>('/inventory');
     return data ?? [];

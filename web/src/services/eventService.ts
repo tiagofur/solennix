@@ -1,5 +1,5 @@
 import { api } from '../lib/api';
-import { Event, EventInsert, EventUpdate, EventEquipment, EventSupply, EquipmentConflict, EquipmentSuggestion, SupplySuggestion } from '../types/entities';
+import { Event, EventInsert, EventUpdate, EventEquipment, EventSupply, EquipmentConflict, EquipmentSuggestion, SupplySuggestion, PaginatedResponse, PaginationParams } from '../types/entities';
 
 // Helper for type safety on joined data
 type EventWithClient = Event & { clients?: { name: string } | null };
@@ -7,6 +7,15 @@ type EventWithClient = Event & { clients?: { name: string } | null };
 export const eventService = {
   async getAll(): Promise<EventWithClient[]> {
     return api.get<EventWithClient[]>('/events');
+  },
+
+  async getPage(params: PaginationParams = {}): Promise<PaginatedResponse<EventWithClient>> {
+    return api.get<PaginatedResponse<EventWithClient>>('/events', {
+      page: String(params.page ?? 1),
+      limit: String(params.limit ?? 20),
+      ...(params.sort && { sort: params.sort }),
+      ...(params.order && { order: params.order }),
+    });
   },
 
   async getByDateRange(start: string, end: string): Promise<EventWithClient[]> {

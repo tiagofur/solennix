@@ -1,9 +1,9 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { clientService } from '@/services/clientService';
 import { queryKeys } from './queryKeys';
 import { useToast } from '@/hooks/useToast';
 import { logError, getErrorMessage } from '@/lib/errorHandler';
-import type { ClientInsert, ClientUpdate } from '@/types/entities';
+import type { ClientInsert, ClientUpdate, PaginationParams } from '@/types/entities';
 
 // ── Queries ──
 
@@ -11,6 +11,14 @@ export function useClients() {
   return useQuery({
     queryKey: queryKeys.clients.all,
     queryFn: () => clientService.getAll(),
+  });
+}
+
+export function useClientsPaginated(params: PaginationParams) {
+  return useQuery({
+    queryKey: queryKeys.clients.paginated(params.page, params.limit, params.sort, params.order),
+    queryFn: () => clientService.getPage(params),
+    placeholderData: keepPreviousData,
   });
 }
 

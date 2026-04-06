@@ -1,9 +1,9 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { inventoryService } from '@/services/inventoryService';
 import { queryKeys } from './queryKeys';
 import { useToast } from '@/hooks/useToast';
 import { logError, getErrorMessage } from '@/lib/errorHandler';
-import type { InventoryItemInsert, InventoryItemUpdate } from '@/types/entities';
+import type { InventoryItemInsert, InventoryItemUpdate, PaginationParams } from '@/types/entities';
 
 // ── Queries ──
 
@@ -11,6 +11,14 @@ export function useInventoryItems() {
   return useQuery({
     queryKey: queryKeys.inventory.all,
     queryFn: () => inventoryService.getAll(),
+  });
+}
+
+export function useInventoryItemsPaginated(params: PaginationParams) {
+  return useQuery({
+    queryKey: queryKeys.inventory.paginated(params.page, params.limit, params.sort, params.order),
+    queryFn: () => inventoryService.getPage(params),
+    placeholderData: keepPreviousData,
   });
 }
 

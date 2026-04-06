@@ -1,10 +1,14 @@
 export const queryKeys = {
   clients: {
     all: ['clients'] as const,
+    paginated: (page?: number, limit?: number, sort?: string, order?: string) =>
+      ['clients', 'paginated', { page, limit, sort, order }] as const,
     detail: (id: string) => ['clients', id] as const,
   },
   events: {
     all: ['events'] as const,
+    paginated: (page?: number, limit?: number, sort?: string, order?: string) =>
+      ['events', 'paginated', { page, limit, sort, order }] as const,
     detail: (id: string) => ['events', id] as const,
     products: (eventId: string) => ['events', eventId, 'products'] as const,
     extras: (eventId: string) => ['events', eventId, 'extras'] as const,
@@ -16,6 +20,8 @@ export const queryKeys = {
   },
   products: {
     all: ['products'] as const,
+    paginated: (page?: number, limit?: number, sort?: string, order?: string) =>
+      ['products', 'paginated', { page, limit, sort, order }] as const,
     detail: (id: string) => ['products', id] as const,
     ingredients: (productId: string) => ['products', productId, 'ingredients'] as const,
     ingredientsBatch: (productIds: string[]) =>
@@ -23,6 +29,8 @@ export const queryKeys = {
   },
   inventory: {
     all: ['inventory'] as const,
+    paginated: (page?: number, limit?: number, sort?: string, order?: string) =>
+      ['inventory', 'paginated', { page, limit, sort, order }] as const,
     detail: (id: string) => ['inventory', id] as const,
   },
   payments: {

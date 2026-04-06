@@ -1,7 +1,15 @@
 import { api } from '../lib/api';
-import { Product, ProductInsert, ProductUpdate } from '../types/entities';
+import { Product, ProductInsert, ProductUpdate, PaginatedResponse, PaginationParams } from '../types/entities';
 
 export const productService = {
+  async getPage(params: PaginationParams = {}): Promise<PaginatedResponse<Product>> {
+    return api.get<PaginatedResponse<Product>>('/products', {
+      page: String(params.page ?? 1),
+      limit: String(params.limit ?? 20),
+      ...(params.sort && { sort: params.sort }),
+      ...(params.order && { order: params.order }),
+    });
+  },
   async uploadImage(file: File): Promise<{ url: string; thumbnail_url: string }> {
     const formData = new FormData();
     formData.append('file', file);
