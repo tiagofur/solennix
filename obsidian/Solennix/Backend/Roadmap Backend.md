@@ -76,33 +76,33 @@
 > [!success] Impacto: Alto | Esfuerzo: Medio
 > Base sólida para crecimiento.
 
-### 1.1 Email Transaccional Completo
+### 1.1 Email Transaccional Completo ✅
 
-- [ ] Welcome email al registrarse (onboarding)
-- [ ] Event reminder (24h antes)
-- [ ] Payment receipt email
+- [x] Welcome email al registrarse (onboarding)
+- [x] Event reminder (24h antes)
+- [x] Payment receipt email
 - [ ] Quotation received notification
-- [ ] Subscription confirmation/renewal
-- [ ] Template system con variables (reemplazar hardcoded HTML)
+- [x] Subscription confirmation/renewal
+- [x] Template system con variables (reemplazar hardcoded HTML)
 
 **Por qué**: Solo existe reset de password. El organizador necesita comunicación automatizada con clientes. Ver [[Roadmap Web]] Fase 5.4 (Portal de Cliente).
 
-### 1.2 File Storage Migration (S3/Cloud Storage)
+### 1.2 File Storage Migration (S3/Cloud Storage) ✅
 
-- [ ] Abstraer storage interface (`StorageProvider`)
-- [ ] Implementar `LocalStorage` (actual) y `S3Storage`
-- [ ] Configurar via `STORAGE_PROVIDER=local|s3`
+- [x] Abstraer storage interface (`StorageProvider`)
+- [x] Implementar `LocalStorage` (actual) y `S3Storage`
+- [x] Configurar via `STORAGE_PROVIDER=local|s3`
 - [ ] Presigned URLs para uploads directos
 - [ ] CDN para serving de imágenes
-- [ ] Image resize en upload (thumbnails como ahora, pero en S3)
+- [x] Image resize en upload (thumbnails como ahora, pero en S3)
 
 **Por qué**: El storage local no funciona con múltiples instancias. Para producción escalable, S3/Cloud Storage es esencial. Ver nota en `upload_handler.go`.
 
-### 1.3 Token Blacklist Persistente
+### 1.3 Token Blacklist Persistente ✅
 
-- [ ] Crear tabla `revoked_tokens(id, token_hash, expires_at, revoked_at)`
-- [ ] Reemplazar `sync.Map` con query a DB
-- [ ] Cleanup automático de tokens expirados
+- [x] Crear tabla `revoked_tokens(id, token_hash, expires_at, revoked_at)`
+- [x] Reemplazar `sync.Map` con query a DB
+- [x] Cleanup automático de tokens expirados
 - [ ] Alternativa: Redis con TTL automático
 
 **Por qué**: Blacklist en memoria se pierde al reiniciar. Tokens revocados por logout funcionan nuevamente post-restart.

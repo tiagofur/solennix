@@ -133,7 +133,24 @@ status: active
 ### Health Check
 - ✅ `/health` verifica conectividad a PostgreSQL via pool.Ping()
 
-### Migraciones (31 total)
+### Email Transaccional
+- ✅ Template system reutilizable con branding Solennix (gold #C4A265)
+- ✅ Welcome email al registrarse
+- ✅ Event reminder email (24h antes)
+- ✅ Payment receipt email al crear pago
+- ✅ Subscription confirmation al upgrade a Pro
+
+### Token Blacklist Persistente
+- ✅ Tabla revoked_tokens (migracion 032) reemplaza sync.Map en memoria
+- ✅ Tokens sobreviven reinicio del servidor
+- ✅ Cleanup automatico de tokens expirados cada hora
+
+### File Storage Abstraction
+- ✅ Interface StorageProvider con implementaciones Local y S3
+- ✅ Configurable via STORAGE_PROVIDER=local|s3
+- ✅ S3Provider compatible con AWS S3, MinIO, DigitalOcean Spaces
+
+### Migraciones (32 total)
 - ✅ 001: Tabla de usuarios
 - ✅ 002: Tabla de clientes
 - ✅ 003: Tabla de eventos
@@ -164,11 +181,10 @@ status: active
 
 > [!warning] Brechas restantes del backend
 
-- ⬜ Notificaciones por email (solo reset de contrasena implementado — falta welcome, reminder, receipt)
 - ⬜ Verificacion de recibos de App Store / Play Store
-- ⬜ Notificacion de cotizacion sin confirmar
-- ⬜ File storage migration (S3/Cloud Storage)
-- ⬜ Token blacklist persistente (actualmente in-memory)
+- ⬜ Notificacion de cotizacion sin confirmar (email template listo, falta trigger)
+- ⬜ Presigned URLs para uploads directos a S3
+- ⬜ Redis como alternativa para token blacklist (actualmente DB)
 
 ---
 
