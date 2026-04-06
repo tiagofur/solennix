@@ -594,6 +594,24 @@ flowchart TD
 
 **Accion requerida:** Verificar y alinear precios entre todas las plataformas. El precio de lanzamiento en web ($149/mes) debe coincidir con lo configurado en App Store Connect para iOS y Google Play Console para Android.
 
+### 11.7 Plataforma de Origen — No visible al usuario
+
+> [!warning] UX critica para cancelacion
+> El usuario puede suscribirse desde iOS (App Store), Android (Google Play) o Web (Stripe). Cada plataforma tiene un flujo de cancelacion distinto. Si el usuario no sabe DONDE se suscribio, no sabe COMO cancelar.
+
+**Estado actual:**
+- Backend almacena `provider` (`stripe` | `apple` | `google`) en tabla `subscriptions` ✅
+- `GET /api/subscriptions/status` devuelve `provider` en la respuesta ✅
+- **Ninguna plataforma muestra el provider al usuario** ❌
+- **Ninguna plataforma muestra instrucciones de cancelacion cross-platform** ❌
+
+**Accion requerida:**
+1. Mostrar badge "Suscrito via App Store / Google Play / Web" en pantalla de suscripcion
+2. Mostrar instrucciones de cancelacion especificas segun el provider
+3. Implementar en: Web → iOS → Android
+
+Ver documento detallado: [[12_SUBSCRIPTION_PLATFORM_ORIGIN]]
+
 ---
 
 #prd #monetizacion #stripe #revenuecat #solennix

@@ -700,6 +700,8 @@ status: active
 |---------|-----|---------|-----|---------|-------|
 | Ver estado de suscripcion | ✅ | ✅ | ✅ | ✅ | |
 | Flujo de compra | ✅ | ✅ | ✅ (Stripe) | ✅ | iOS y Android via RevenueCat SDK, Web via Stripe |
+| Mostrar plataforma de origen | ⬜ | ⬜ | ⬜ | ✅ | Backend devuelve `provider` pero ninguna UI lo muestra. Ver [[12_SUBSCRIPTION_PLATFORM_ORIGIN]] |
+| Instrucciones cancelacion cross-platform | ⬜ | ⬜ | ⬜ | ➖ | Usuario no sabe donde cancelar si se suscribio en otra plataforma |
 | Portal de gestion | ⬜ | ⬜ | ✅ (Stripe) | ✅ | Solo web |
 | Feature gating | ✅ | ✅ | 🔄 | ✅ | Backend enforced (403). iOS: PlanLimitsManager. Android: PlanLimitsManager + UpgradePlanDialog. Web: usePlanLimits (parcial) |
 | Webhook Stripe | ➖ | ➖ | ➖ | ✅ | |
@@ -842,6 +844,7 @@ Refactors planificados para lograr paridad total entre las 6 plataformas (iPhone
 | Brecha | Plataformas Afectadas | Impacto | Esfuerzo Estimado | Prioridad |
 |--------|----------------------|---------|-------------------|-----------|
 | Push notifications no implementadas | iOS, Android, Backend | Tokens registrados pero backend NO envia. Sin engagement ni recordatorios | 15-20h | P1 |
+| Plataforma de origen de suscripcion no visible | iOS, Android, Web | Usuario no sabe donde cancelar si se suscribio en otra plataforma | 4-6h | P2 |
 | Notificaciones email limitadas | Backend | Solo reset de contrasena; sin recordatorios de eventos/pagos | 10-15h | P1 |
 | Deep linking incompleto en Android | Android | Navegacion desde URLs externas limitada | 4-6h | P2 |
 | Live Activity equivalente en Android | Android | Sin notificacion persistente durante eventos | 6-8h | P2 |
