@@ -40,6 +40,14 @@ type Config struct {
 	UploadDir           string // Directory for uploaded files (default: "./uploads")
 	BootstrapAdminEmail string // Email to automatically promote to admin on startup
 	TrustProxy          bool   // Trust X-Forwarded-For header for client IP (only enable behind a reverse proxy)
+
+	// Push Notifications
+	FCMCredentialsJSON string // Firebase service account JSON (base64 or raw)
+	APNsKeyPath        string // Path to APNs .p8 key file
+	APNsKeyID          string // APNs key ID
+	APNsTeamID         string // APNs team ID
+	APNsBundleID       string // iOS app bundle ID
+	APNsProduction     bool   // true for production APNs, false for sandbox
 }
 
 func Load() (*Config, error) {
@@ -64,6 +72,12 @@ func Load() (*Config, error) {
 		UploadDir:               getEnv("UPLOAD_DIR", "./uploads"),
 		BootstrapAdminEmail:     os.Getenv("BOOTSTRAP_ADMIN_EMAIL"),
 		TrustProxy:              getEnv("TRUST_PROXY", "false") == "true",
+		FCMCredentialsJSON:      os.Getenv("FCM_CREDENTIALS_JSON"),
+		APNsKeyPath:             os.Getenv("APNS_KEY_PATH"),
+		APNsKeyID:               os.Getenv("APNS_KEY_ID"),
+		APNsTeamID:              os.Getenv("APNS_TEAM_ID"),
+		APNsBundleID:            getEnv("APNS_BUNDLE_ID", "com.creapolis.solennix"),
+		APNsProduction:          getEnv("APNS_PRODUCTION", "false") == "true",
 	}
 
 	if cfg.DatabaseURL == "" {

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log/slog"
@@ -16,6 +17,13 @@ import (
 	"github.com/tiagofur/solennix-backend/internal/repository"
 )
 
+// NotificationSender is an optional interface for sending push notifications.
+// When nil, notifications are silently skipped (e.g., in tests).
+type NotificationSender interface {
+	SendPaymentReceived(ctx context.Context, userID uuid.UUID, eventID uuid.UUID, amount float64) error
+	SendEventConfirmed(ctx context.Context, userID uuid.UUID, event models.Event) error
+}
+
 type CRUDHandler struct {
 	clientRepo    ClientRepository
 	eventRepo     FullEventRepository
@@ -24,6 +32,7 @@ type CRUDHandler struct {
 	paymentRepo   FullPaymentRepository
 	userRepo      FullUserRepository
 	unavailRepo   UnavailableDateRepository
+	notifier      NotificationSender // optional, may be nil
 }
 
 func NewCRUDHandler(
@@ -44,6 +53,11 @@ func NewCRUDHandler(
 		userRepo:      userRepo,
 		unavailRepo:   unavailRepo,
 	}
+}
+
+// SetNotifier configures an optional push notification sender.
+func (h *CRUDHandler) SetNotifier(n NotificationSender) {
+	h.notifier = n
 }
 
 // ===================
@@ -436,6 +450,12 @@ func (h *CRUDHandler) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 	if existing.Status == "confirmed" && oldStatus != "confirmed" {
 		if err := h.eventRepo.DeductSupplyStock(r.Context(), id); err != nil {
 			slog.Warn("Failed to deduct supply stock", "event_id", id, "error", err)
+		}
+		// Send push notification for event confirmation (fire-and-forget)
+		if h.notifier != nil {
+			go func() {
+				_ = h.notifier.SendEventConfirmed(context.Background(), userID, *existing)
+			}()
 		}
 	}
 
@@ -1496,6 +1516,14 @@ func (h *CRUDHandler) CreatePayment(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "Failed to create payment")
 		return
 	}
+
+	// Send push notification (fire-and-forget)
+	if h.notifier != nil {
+		go func() {
+			_ = h.notifier.SendPaymentReceived(context.Background(), userID, payment.EventID, payment.Amount)
+		}()
+	}
+
 	writeJSON(w, http.StatusCreated, payment)
 }
 

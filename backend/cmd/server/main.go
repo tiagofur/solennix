@@ -63,6 +63,7 @@ func main() {
 	// Initialize services
 	authService := services.NewAuthService(cfg.JWTSecret, cfg.JWTExpiryHours)
 	emailService := services.NewEmailService(cfg)
+	pushService := services.NewPushService(cfg)
 
 	// Initialize repositories
 	userRepo := repository.NewUserRepo(pool)
@@ -76,11 +77,15 @@ func main() {
 	unavailRepo := repository.NewUnavailableDateRepo(pool)
 	deviceRepo := repository.NewDeviceRepo(pool)
 
+	// Initialize notification service
+	notificationService := services.NewNotificationService(pushService, deviceRepo, pool)
+
 	// Initialize handlers
 	stripeService := &handlers.DefaultStripeService{}
 	rcService := services.NewRevenueCatService(cfg.RevenueCatAPIKey)
 	authHandler := handlers.NewAuthHandler(userRepo, authService, emailService, cfg)
 	crudHandler := handlers.NewCRUDHandler(clientRepo, eventRepo, productRepo, inventoryRepo, paymentRepo, userRepo, unavailRepo)
+	crudHandler.SetNotifier(notificationService)
 	subHandler := handlers.NewSubscriptionHandler(userRepo, subscriptionRepo, eventRepo, paymentRepo, stripeService, rcService, cfg)
 	searchHandler := handlers.NewSearchHandler(clientRepo, productRepo, inventoryRepo, eventRepo)
 	eventPaymentHandler := handlers.NewEventPaymentHandler(eventRepo, paymentRepo, stripeService, cfg)
@@ -108,6 +113,16 @@ func main() {
 		defer ticker.Stop()
 		for range ticker.C {
 			runExpiry()
+		}
+	}()
+
+	// Background job: send push notification reminders for upcoming events.
+	// Runs every 15 minutes.
+	go func() {
+		ticker := time.NewTicker(15 * time.Minute)
+		defer ticker.Stop()
+		for range ticker.C {
+			notificationService.ProcessPendingReminders(context.Background())
 		}
 	}()
 
