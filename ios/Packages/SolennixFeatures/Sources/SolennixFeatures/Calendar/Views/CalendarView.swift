@@ -128,71 +128,91 @@ public struct CalendarView: View {
 
     // MARK: - iPad Calendar Mode
 
+    /// Maximum width for the calendar grid in landscape so it doesn't stretch
+    /// into a poster-sized layout on iPad Pro 13".
+    private let calendarMaxWidthLandscape: CGFloat = 560
+
     private var iPadCalendarContent: some View {
-        HStack(spacing: 0) {
-            // Left: Calendar grid (~60%)
-            ScrollView {
-                VStack(spacing: Spacing.md) {
-                    monthHeader
+        GeometryReader { proxy in
+            let isLandscape = proxy.size.width > proxy.size.height
 
-                    CalendarGridView(
-                        days: viewModel.daysInMonth,
-                        eventDotsForDay: viewModel.eventDotsForDay,
-                        isDateBlocked: viewModel.isDateBlocked,
-                        selectedDate: viewModel.selectedDate,
-                        onSelectDate: viewModel.selectDate,
-                        onLongPressDate: handleLongPress
-                    )
-                    .padding(.horizontal, Spacing.sm)
-                }
-                .padding(.bottom, Spacing.xxl)
-            }
-            .frame(maxWidth: .infinity)
+            if isLandscape {
+                HStack(spacing: 0) {
+                    calendarPane
+                        .frame(maxWidth: calendarMaxWidthLandscape)
+                        .frame(maxWidth: .infinity, alignment: .top)
 
-            Divider()
+                    Divider()
 
-            // Right: Selected day's events (~40%)
-            ScrollView {
-                VStack(alignment: .leading, spacing: Spacing.sm) {
-                    if viewModel.selectedDate != nil {
-                        Text(viewModel.formattedSelectedDate())
-                            .font(.headline)
-                            .fontWeight(.semibold)
-                            .foregroundStyle(SolennixColors.text)
-                            .padding(.horizontal, Spacing.md)
-                            .padding(.top, Spacing.md)
-
-                        let dayEvents = viewModel.eventsForSelectedDate
-
-                        if dayEvents.isEmpty {
-                            emptyDayView
-                        } else {
-                            ForEach(dayEvents) { event in
-                                NavigationLink(value: Route.eventDetail(id: event.id)) {
-                                    eventCard(event)
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                    } else {
-                        VStack(spacing: Spacing.md) {
-                            Image(systemName: "hand.tap")
-                                .font(.system(size: 40))
-                                .foregroundStyle(SolennixColors.textTertiary)
-
-                            Text("Selecciona un dia para ver sus eventos")
-                                .font(.subheadline)
-                                .foregroundStyle(SolennixColors.textSecondary)
-                                .multilineTextAlignment(.center)
-                        }
+                    eventsPane
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, Spacing.xxxl)
-                    }
+                        .background(SolennixColors.card)
                 }
-                .padding(.bottom, Spacing.xxl)
+            } else {
+                // Portrait iPad: same single-column layout as iPhone.
+                calendarModeContent
             }
-            .frame(width: UIScreen.main.bounds.width * 0.4)
-            .background(SolennixColors.card)
+        }
+    }
+
+    private var calendarPane: some View {
+        ScrollView {
+            VStack(spacing: Spacing.md) {
+                monthHeader
+
+                CalendarGridView(
+                    days: viewModel.daysInMonth,
+                    eventDotsForDay: viewModel.eventDotsForDay,
+                    isDateBlocked: viewModel.isDateBlocked,
+                    selectedDate: viewModel.selectedDate,
+                    onSelectDate: viewModel.selectDate,
+                    onLongPressDate: handleLongPress
+                )
+                .padding(.horizontal, Spacing.sm)
+            }
+            .padding(.vertical, Spacing.md)
+        }
+    }
+
+    private var eventsPane: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: Spacing.sm) {
+                if viewModel.selectedDate != nil {
+                    Text(viewModel.formattedSelectedDate())
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(SolennixColors.text)
+                        .padding(.horizontal, Spacing.md)
+                        .padding(.top, Spacing.md)
+
+                    let dayEvents = viewModel.eventsForSelectedDate
+
+                    if dayEvents.isEmpty {
+                        emptyDayView
+                    } else {
+                        ForEach(dayEvents) { event in
+                            NavigationLink(value: Route.eventDetail(id: event.id)) {
+                                eventCard(event)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                } else {
+                    VStack(spacing: Spacing.md) {
+                        Image(systemName: "hand.tap")
+                            .font(.system(size: 40))
+                            .foregroundStyle(SolennixColors.textTertiary)
+
+                        Text("Selecciona un dia para ver sus eventos")
+                            .font(.subheadline)
+                            .foregroundStyle(SolennixColors.textSecondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, Spacing.xxxl)
+                }
+            }
+            .padding(.bottom, Spacing.xxl)
         }
     }
 

@@ -740,23 +740,23 @@ func (r *EventRepo) DeductSupplyStock(ctx context.Context, eventID uuid.UUID) er
 	return err
 }
 
-// Search performs a fuzzy search on events using pg_trgm similarity + ILIKE fallback
+// Search performs a fuzzy search on events using pg_trgm similarity + ILIKE fallback.
+// Uses the shared eventSelectFields/scanEventWithClient helpers so that DATE/TIME
+// columns are properly converted via to_char (otherwise pgx fails to scan into
+// the string-typed fields of models.Event).
 func (r *EventRepo) Search(ctx context.Context, userID uuid.UUID, query string) ([]models.Event, error) {
-	sqlQuery := `SELECT e.id, e.user_id, e.client_id, e.event_date, e.service_type, e.num_people,
-		e.start_time, e.end_time, e.location, e.status, e.discount, e.tax_rate, e.tax_amount, e.total_amount,
-		e.deposit_percent, e.cancellation_days, e.refund_percent, e.created_at, e.updated_at,
-		c.name as client_name
+	sqlQuery := fmt.Sprintf(`SELECT %s, c.name as client_name, c.phone as client_phone
 		FROM events e
 		LEFT JOIN clients c ON e.client_id = c.id
 		WHERE e.user_id = $1
 		AND (
-			e.service_type ILIKE '%' || $2 || '%' OR
-			e.location ILIKE '%' || $2 || '%' OR
-			c.name ILIKE '%' || $2 || '%' OR
-			similarity(c.name, $2) > 0.3
+			e.service_type ILIKE '%%' || $2 || '%%' OR
+			e.location ILIKE '%%' || $2 || '%%' OR
+			c.name ILIKE '%%' || $2 || '%%' OR
+			similarity(coalesce(c.name, ''), $2) > 0.3
 		)
-		ORDER BY similarity(c.name, $2) DESC, e.event_date DESC
-		LIMIT 10`
+		ORDER BY similarity(coalesce(c.name, ''), $2) DESC, e.event_date DESC
+		LIMIT 10`, eventSelectFields)
 
 	rows, err := r.pool.Query(ctx, sqlQuery, userID, query)
 	if err != nil {
@@ -764,29 +764,16 @@ func (r *EventRepo) Search(ctx context.Context, userID uuid.UUID, query string) 
 	}
 	defer rows.Close()
 
-	var events []models.Event
+	events := []models.Event{}
 	for rows.Next() {
-		var e models.Event
-		var clientName *string
-		if err := rows.Scan(&e.ID, &e.UserID, &e.ClientID, &e.EventDate, &e.ServiceType, &e.NumPeople,
-			&e.StartTime, &e.EndTime, &e.Location, &e.Status, &e.Discount, &e.TaxRate, &e.TaxAmount, &e.TotalAmount,
-			&e.DepositPercent, &e.CancellationDays, &e.RefundPercent, &e.CreatedAt, &e.UpdatedAt,
-			&clientName); err != nil {
+		e, err := scanEventWithClient(rows)
+		if err != nil {
 			return nil, err
-		}
-		if clientName != nil {
-			e.Client = &models.Client{
-				Name: *clientName,
-			}
 		}
 		events = append(events, e)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("error iterating event search: %w", err)
-	}
-
-	if events == nil {
-		events = []models.Event{}
 	}
 
 	return events, nil

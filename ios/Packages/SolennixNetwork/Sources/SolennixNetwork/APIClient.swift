@@ -155,6 +155,15 @@ public actor APIClient {
         if let array = try? decoder.decode([T].self, from: data) {
             return array
         }
+        // Both decode attempts failed — log a real error to help diagnose schema drift.
+        do {
+            _ = try decoder.decode(PaginatedResponse<T>.self, from: data)
+        } catch {
+            let url = request.url?.absoluteString ?? "?"
+            let preview = String(data: data.prefix(800), encoding: .utf8) ?? "<binary>"
+            NSLog("[APIClient.getAll] ❌ decode failed for %@ as PaginatedResponse<%@>: %@\n  body preview: %@",
+                  url, String(describing: T.self), String(describing: error), preview)
+        }
         throw APIError.decodingError
     }
 
@@ -353,6 +362,10 @@ public actor APIClient {
                 do {
                     return try decoder.decode(T.self, from: data)
                 } catch {
+                    let url = request.url?.absoluteString ?? "?"
+                    let preview = String(data: data.prefix(500), encoding: .utf8) ?? "<binary>"
+                    NSLog("[APIClient] ❌ decode failed for %@ as %@: %@\n  body preview: %@",
+                          url, String(describing: T.self), String(describing: error), preview)
                     throw APIError.decodingError
                 }
             } catch let urlError as URLError where isIdempotent && isTransient(urlError) && attempt < attempts - 1 {
@@ -486,8 +499,13 @@ public actor APIClient {
             throw APIError.unknown
         }
 
-        // On 401 and not already a retry, attempt token refresh then retry once
-        if httpResponse.statusCode == 401, !isRetry {
+        // On 401 and not already a retry, attempt token refresh then retry once.
+        // CRITICAL: skip this for the auth endpoints themselves — those are the routes
+        // that ISSUE tokens, not consume them. A 401 there means "bad credentials" or
+        // "no refresh token yet", not "expired token". Without this guard, the very
+        // first login attempt triggers an infinite refresh loop and the request hangs
+        // until the URLSession timeout fires.
+        if httpResponse.statusCode == 401, !isRetry, !isAuthEndpoint(request.url) {
             let refreshed = await attemptRefresh()
             if refreshed {
                 // Rebuild request with new token
@@ -501,6 +519,23 @@ public actor APIClient {
 
         try validateResponse(httpResponse, data: data)
         return data
+    }
+
+    /// Returns true if the URL targets an auth endpoint that issues tokens
+    /// (login, register, refresh, OAuth providers, password reset). 401 on
+    /// these routes must propagate as "invalid credentials", not trigger refresh.
+    private nonisolated func isAuthEndpoint(_ url: URL?) -> Bool {
+        guard let path = url?.path else { return false }
+        let authPaths = [
+            "/auth/login",
+            "/auth/register",
+            "/auth/refresh",
+            "/auth/google",
+            "/auth/apple",
+            "/auth/forgot-password",
+            "/auth/reset-password"
+        ]
+        return authPaths.contains { path.hasSuffix($0) }
     }
 
     // MARK: - Token Refresh

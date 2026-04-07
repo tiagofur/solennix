@@ -25,6 +25,18 @@ public struct DashboardView: View {
                 // Header
                 headerSection
 
+                // Inline error banner — sits between header and content so it
+                // doesn't float over empty KPI cards.
+                if let vm = viewModel,
+                   let error = vm.errorMessage,
+                   !vm.isLoading {
+                    InlineErrorBanner(message: error) {
+                        Task { await vm.loadDashboard() }
+                    }
+                    .padding(.horizontal, Spacing.md)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+                }
+
                 // Onboarding Checklist
                 if let vm = viewModel, !hasCompletedOnboarding {
                     OnboardingChecklistView(
@@ -103,22 +115,14 @@ public struct DashboardView: View {
             }
         }
         .overlay {
-            if let error = viewModel?.errorMessage, viewModel?.eventsThisMonth.isEmpty == true, viewModel?.isLoading == false {
-                EmptyStateView(
-                    icon: "wifi.exclamationmark",
-                    title: "Error al cargar",
-                    message: error,
-                    actionTitle: "Reintentar"
-                ) {
-                    Task { await viewModel?.loadDashboard() }
-                }
-            } else if viewModel?.isLoading == true && viewModel?.eventsThisMonth.isEmpty == true {
+            if viewModel?.isLoading == true && viewModel?.eventsThisMonth.isEmpty == true && viewModel?.errorMessage == nil {
                 ProgressView()
                     .tint(SolennixColors.primary)
             }
 
             PendingEventsModalView(apiClient: apiClient)
         }
+        .animation(.easeInOut(duration: 0.25), value: viewModel?.errorMessage)
     }
 
     // MARK: - Plan Limits Banner

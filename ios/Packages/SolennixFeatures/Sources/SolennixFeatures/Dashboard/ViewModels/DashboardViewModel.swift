@@ -146,33 +146,30 @@ public final class DashboardViewModel {
             let startStr = dateFormatter.string(from: startOfMonth)
             let endStr = dateFormatter.string(from: endOfMonth)
 
-            // Fetch all data concurrently
-            async let clientsResult: [Client] = apiClient.getAll(Endpoint.clients)
-            async let monthEventsResult: [Event] = apiClient.getAll(
+            // Fetch sequentially instead of in parallel.
+            // Some nginx HTTP/2 deployments choke on many concurrent streams over a
+            // single connection (the dashboard previously fired 8 GETs in parallel
+            // and they all hung waiting for response frames). Sequential issues one
+            // request at a time over the multiplexed connection, sidestepping the bug.
+            // TODO: collapse most of these into the server-side aggregated endpoints
+            // /api/v1/dashboard/kpis and friends (already implemented in backend).
+            let clients: [Client] = try await apiClient.getAll(Endpoint.clients)
+            let monthEvents: [Event] = try await apiClient.getAll(
                 Endpoint.events,
                 params: ["start_date": startStr, "end_date": endStr]
             )
-            async let upcomingResult: [Event] = apiClient.getAll(
+            let upcoming: [Event] = try await apiClient.getAll(
                 Endpoint.upcomingEvents,
                 params: ["limit": "5"]
             )
-            async let allEventsResult: [Event] = apiClient.getAll(Endpoint.events)
-            async let inventoryResult: [InventoryItem] = apiClient.getAll(Endpoint.inventory)
-            async let productsResult: [Product] = apiClient.getAll(Endpoint.products)
-            async let monthPaymentsResult: [Payment] = apiClient.getAll(
+            let loadedAllEvents: [Event] = try await apiClient.getAll(Endpoint.events)
+            let inventory: [InventoryItem] = try await apiClient.getAll(Endpoint.inventory)
+            let products: [Product] = try await apiClient.getAll(Endpoint.products)
+            let monthPayments: [Payment] = try await apiClient.getAll(
                 Endpoint.payments,
                 params: ["start_date": startStr, "end_date": endStr]
             )
-            async let allPaymentsResult: [Payment] = apiClient.getAll(Endpoint.payments)
-
-            let clients = try await clientsResult
-            let monthEvents = try await monthEventsResult
-            let upcoming = try await upcomingResult
-            let loadedAllEvents = try await allEventsResult
-            let inventory = try await inventoryResult
-            let products = try await productsResult
-            let monthPayments = try await monthPaymentsResult
-            let loadedAllPayments = try await allPaymentsResult
+            let loadedAllPayments: [Payment] = try await apiClient.getAll(Endpoint.payments)
 
             // Build client map
             clientMap = Dictionary(uniqueKeysWithValues: clients.map { ($0.id, $0) })

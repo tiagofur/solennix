@@ -57,6 +57,15 @@ public struct EventFormView: View {
         .background(SolennixColors.surfaceGrouped)
         .navigationTitle(eventId != nil ? "Editar Evento" : "Nuevo Evento")
         .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button("Cancelar") {
+                    dismiss()
+                }
+                .foregroundStyle(SolennixColors.text)
+            }
+        }
         .overlay {
             if viewModel.isLoading {
                 ProgressView("Cargando...")

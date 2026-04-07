@@ -22,8 +22,6 @@ struct CompactTabLayout: View {
     @State private var morePath = NavigationPath()
     @State private var homeSearchText = ""
     @State private var calendarSearchText = ""
-    @State private var eventsSearchText = ""
-    @State private var clientsSearchText = ""
     @State private var moreSearchText = ""
 
     /// Custom binding that detects same-tab re-taps for pop-to-root.
@@ -73,15 +71,12 @@ struct CompactTabLayout: View {
             }
             .tag(Tab.calendar)
 
-            // Events Tab
+            // Events Tab — uses the in-list InlineFilterBar instead of the
+            // global .searchable to avoid showing two search fields stacked.
             NavigationStack(path: $eventsPath) {
                 EventsRootView()
                     .navigationDestination(for: Route.self) { route in
                         RouteDestination(route: route)
-                    }
-                    .searchable(text: $eventsSearchText, prompt: globalSearchPrompt)
-                    .onSubmit(of: .search) {
-                        appendSearchRoute(query: &eventsSearchText, to: &eventsPath)
                     }
             }
             .tabItem {
@@ -89,15 +84,12 @@ struct CompactTabLayout: View {
             }
             .tag(Tab.events)
 
-            // Clients Tab
+            // Clients Tab — uses the in-list InlineFilterBar instead of the
+            // global .searchable to avoid showing two search fields stacked.
             NavigationStack(path: $clientsPath) {
                 ClientsRootView()
                     .navigationDestination(for: Route.self) { route in
                         RouteDestination(route: route)
-                    }
-                    .searchable(text: $clientsSearchText, prompt: globalSearchPrompt)
-                    .onSubmit(of: .search) {
-                        appendSearchRoute(query: &clientsSearchText, to: &clientsPath)
                     }
             }
             .tabItem {
