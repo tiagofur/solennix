@@ -105,6 +105,12 @@ func (h *UploadHandler) UploadImage(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
+	// Validate declared Content-Type header (defense in depth — magic bytes still authoritative)
+	if ct := header.Header.Get("Content-Type"); ct != "" && !strings.HasPrefix(ct, "image/") {
+		writeError(w, http.StatusBadRequest, "Only image content types are allowed")
+		return
+	}
+
 	// Validate file content by reading magic bytes (don't trust client Content-Type header)
 	buf := make([]byte, 512)
 	n, err := file.Read(buf)
