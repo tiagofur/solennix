@@ -8,7 +8,7 @@ aliases:
   - Estado Actual
   - Current Status
 date: 2026-03-20
-updated: 2026-04-04
+updated: 2026-04-06
 status: active
 ---
 
@@ -29,7 +29,7 @@ status: active
 
 | Plataforma | Estado | Notas |
 |------------|--------|-------|
-| Backend (Go) | Funcional ✅ | API completa, 31 migraciones, auth multi-proveedor, Stripe, RevenueCat, push notifications (FCM+APNs), paginacion server-side |
+| Backend (Go) | Funcional ✅ | API completa, 35 migraciones, auth multi-proveedor, Stripe, RevenueCat, push notifications (FCM+APNs), paginacion server-side, dashboard analytics, FTS, audit logging, CSRF, refresh token rotation, coverage handlers 70.1% |
 | Web (React) | Funcional ✅ | Todas las paginas principales, panel admin, cotizacion rapida |
 | iOS (SwiftUI) | En desarrollo 🔄 | Features principales + widgets (4 tipos) + Live Activity + 7 generadores PDF |
 | Android (Jetpack Compose) | En desarrollo 🔄 | Features principales, arquitectura modular multi-feature, 8 generadores PDF, RevenueCat billing |

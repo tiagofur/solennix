@@ -42,7 +42,7 @@
 - [x] Crear `services/notification_service.go` con templates de notificación
 - [x] Notificaciones de evento próximo (24h, 1h antes)
 - [x] Notificaciones de pago pendiente
-- [ ] Notificaciones de cotización sin confirmar
+- [x] Notificaciones de cotización sin confirmar (push + email, dedupe vía notification_log)
 - [x] Batch sending (no una por una)
 - [x] Manejo de tokens inválidos (limpieza automática)
 
@@ -57,7 +57,7 @@
 - [x] `GET /api/inventory?page=1&limit=20`
 - [x] `GET /api/payments?page=1&limit=20`
 - [x] Response: `{ data: [], total: N, page: 1, limit: 20, total_pages: N }`
-- [ ] Cursor-based pagination como alternativa para eventos (por fecha)
+- [ ] ~~Cursor-based pagination como alternativa para eventos (por fecha)~~ — **Diferido**: offset alcanza para los volúmenes actuales; reevaluar si crece el dataset
 
 **Por qué**: Sin paginación, `GET /api/events` retorna TODOS los eventos. Con cientos de eventos, las respuestas serán enormes. El frontend ya maneja paginación client-side, pero la carga inicial crece con el tiempo.
 
@@ -81,7 +81,7 @@
 - [x] Welcome email al registrarse (onboarding)
 - [x] Event reminder (24h antes)
 - [x] Payment receipt email
-- [ ] Quotation received notification
+- [x] Quotation received notification (`SendQuotationReceived`)
 - [x] Subscription confirmation/renewal
 - [x] Template system con variables (reemplazar hardcoded HTML)
 
@@ -107,13 +107,15 @@
 
 **Por qué**: Blacklist en memoria se pierde al reiniciar. Tokens revocados por logout funcionan nuevamente post-restart.
 
-### 1.4 Test Coverage Mínimo
+### 1.4 Test Coverage Mínimo ✅ (parcial)
 
-- [ ] Target: 60% coverage en handlers
-- [ ] Tests para todos los CRUD flows (happy + error paths)
-- [ ] Integration tests con testcontainers (PostgreSQL real en CI)
-- [ ] Benchmark tests para endpoints críticos
-- [ ] Tests para concurrent access scenarios
+- [x] Target: 60% coverage en handlers — **70.1% alcanzado** (2026-04-06)
+- [x] Tests para todos los CRUD flows (happy + error paths)
+- [ ] Integration tests con testcontainers (PostgreSQL real en CI) — futuro
+- [ ] Benchmark tests para endpoints críticos — futuro
+- [ ] Tests para concurrent access scenarios — futuro
+
+**Coverage actual**: middleware 95.8%, router 92.3%, handlers 70.1%, services 55.5%, storage 49%, repository 31.8%
 
 **Por qué**: Sin tests, cada cambio es un riesgo. La base de tests actual es buena pero no cubre todos los edge cases.
 
@@ -323,10 +325,10 @@ gantt
 - [x] Agregar índice `idx_events_user_date` en events
 - [x] Agregar `GET /api/health` que verifique DB connection (no solo HTTP)
 - [x] Agregar `X-Request-ID` header para tracing
-- [ ] Rate limiting en `POST /api/auth/register` separado de login
-- [ ] Agregar `Content-Type` validation en upload handler
-- [ ] Log user_id en todas las requests autenticadas (ya está en context)
-- [ ] Timeout en queries SQL via context (`context.WithTimeout`)
+- [x] Rate limiting en `POST /api/auth/register` separado de login (3 req / 15 min)
+- [x] Agregar `Content-Type` validation en upload handler
+- [x] Log user_id en todas las requests autenticadas (Logger middleware extendido)
+- [x] Timeout en queries SQL via context (`middleware/timeout.go` — 30s, skip uploads)
 
 ---
 
