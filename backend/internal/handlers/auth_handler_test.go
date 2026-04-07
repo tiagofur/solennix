@@ -462,8 +462,8 @@ func TestAuthHandler_Register_HappyPaths(t *testing.T) {
 		rr := httptest.NewRecorder()
 		h.Register(rr, req)
 
-		assert.Equal(t, http.StatusCreated, rr.Code)
-		assert.Contains(t, rr.Body.String(), "Account created successfully. Please check your email to verify your account.")
+		assert.Equal(t, http.StatusConflict, rr.Code)
+		assert.Contains(t, rr.Body.String(), "Email already registered")
 		mockRepo.AssertExpectations(t)
 	})
 

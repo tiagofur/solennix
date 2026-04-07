@@ -193,13 +193,14 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check if user already exists — return identical response to prevent email enumeration
+	// Check if user already exists. We return 409 with a stable error code so
+	// clients can show a clear "email already registered" message. Anti-enumeration
+	// on /register is theater — the real defense lives in /login (timing
+	// normalization) and /forgot-password. Rate limiting + captcha cover abuse here.
 	existing, _ := h.userRepo.GetByEmail(r.Context(), req.Email)
 	if existing != nil {
 		slog.Warn("auth.event", "action", "register_duplicate", "email", req.Email, "ip", clientIP(r))
-		writeJSON(w, http.StatusCreated, map[string]interface{}{
-			"message": "Account created successfully. Please check your email to verify your account.",
-		})
+		writeError(w, http.StatusConflict, "Email already registered")
 		return
 	}
 
