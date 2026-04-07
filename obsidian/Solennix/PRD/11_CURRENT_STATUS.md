@@ -873,3 +873,32 @@ Refactors planificados para lograr paridad total entre las 6 plataformas (iPhone
 ---
 
 #prd #estado #paridad #solennix
+
+---
+
+## Progreso publicación iOS — 2026-04-07
+
+### Completado hoy
+- ✅ RevenueCat entitlement corregido a `pro_access` (alineado iOS + backend Go)
+- ✅ Pipeline de secretos xcconfig: `ios/Config/Secrets.xcconfig` (gitignored) + `.example` committeado
+- ✅ `project.yml` usa `configFiles:` para Debug/Release; `REVENUECAT_PUBLIC_API_KEY` llega al runtime
+- ✅ App Group `group.com.solennix.app` añadido a entitlements de main app + widget (typo `roup.` corregido)
+- ✅ Build Xcode successful tras cambios
+- ✅ `backend/cmd/seed/main.go` — seed idempotente: 8 clientes LATAM, 12 eventos, 15 productos MXN, 20 inventario, pagos
+- ✅ Dockerfile + docker-compose.yml con servicio `seed` bajo profile `tools`
+- ✅ Cuenta demo en producción: `demo@solennix.com` (Pro forzado, datos sembrados)
+- ✅ 10 screenshots iPhone 6.9" en `marketing/ios_screens/final/` (1320×2868)
+
+### Pendiente para mañana
+- ⏳ Decidir iPad: app es universal → generar screenshots iPad 13" (2064×2752) o limitar a iPhone-only en `project.yml`
+- ⏳ Crear App en App Store Connect (bundle `com.solennix.app`, SKU `solennix-ios-001`)
+- ⏳ Registrar App Group en developer.apple.com + habilitar en ambos App IDs
+- ⏳ Crear Subscription Group `solennix_premium` + 2 productos en ASC
+- ⏳ Conectar Apple App Store en RevenueCat (requiere ASC API `.p8` key)
+- ⏳ Reemplazar `test_` RC key por `appl_` en `Secrets.xcconfig`
+- ⏳ Desactivar producto Lifetime en RevenueCat
+- ⏳ Rellenar metadata ASC (textos en ES ya listos en `ios/APP_STORE_GUIDE.md`)
+- ⏳ Subir 10 screenshots a ASC
+- ⏳ Cuestionario App Privacy
+- ⏳ Credenciales demo en ASC → Sign-in Information
+- ⏳ Sentry (diferido hasta antes de TestFlight)
