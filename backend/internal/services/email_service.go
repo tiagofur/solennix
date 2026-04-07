@@ -64,6 +64,17 @@ func (s *EmailService) SendPaymentReceipt(email, userName, eventName, amount, pa
 	return s.sendEmail(email, fmt.Sprintf("Pago registrado: %s", amount), body)
 }
 
+// SendQuotationReceived sends a notification reminding the user about an unconfirmed quotation.
+func (s *EmailService) SendQuotationReceived(email, userName, eventName, eventDate, quotationLink string) error {
+	body := s.renderTemplate(quotationReceivedBody, map[string]string{
+		"UserName":      userName,
+		"EventName":     eventName,
+		"EventDate":     eventDate,
+		"QuotationLink": quotationLink,
+	})
+	return s.sendEmail(email, fmt.Sprintf("Cotización pendiente: %s", eventName), body)
+}
+
 // SendSubscriptionConfirmation sends a plan upgrade/renewal confirmation.
 func (s *EmailService) SendSubscriptionConfirmation(email, userName, planName string) error {
 	body := s.renderTemplate(subscriptionConfirmationBody, map[string]string{
@@ -235,6 +246,18 @@ const paymentReceiptBody = `
     <p style="margin: 4px 0;"><strong>Fecha:</strong> {{.PaymentDate}}</p>
 </div>
 <p>Puedes ver el detalle completo del evento y sus pagos desde tu dashboard.</p>`
+
+const quotationReceivedBody = `
+<p>Hola {{.UserName}},</p>
+<p>Tienes una cotización <strong>pendiente de confirmación</strong>:</p>
+<div class="highlight">
+    <p style="margin: 0;"><strong>{{.EventName}}</strong></p>
+    <p style="margin: 4px 0; color: #6b7280;">📅 {{.EventDate}}</p>
+</div>
+<p>Hacé seguimiento con tu cliente para cerrar la cotización antes de que venza.</p>
+<div style="text-align: center;">
+    <a href="{{.QuotationLink}}" class="button">Ver Cotización</a>
+</div>`
 
 const subscriptionConfirmationBody = `
 <p>Hola {{.UserName}},</p>

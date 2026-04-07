@@ -130,6 +130,8 @@ func TestSendEventReminder_GivenTokensAndDisabledPush_WhenSending_ThenSucceeds(t
 	// Actually, wasAlreadySent uses pool.QueryRow which will panic with nil pool.
 	// We should test with a real scenario or skip pool-dependent paths.
 	// For now, let's test the 24h, 1h, and default reminder types for message content.
+	_ = svc
+	_ = event
 }
 
 func TestSendEventReminder_GivenDifferentReminderTypes_WhenSending_ThenUsesCorrectMessage(t *testing.T) {

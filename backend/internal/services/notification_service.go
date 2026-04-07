@@ -102,6 +102,34 @@ func (s *NotificationService) SendPaymentReceived(ctx context.Context, userID uu
 	return nil
 }
 
+// SendQuotationPending sends a notification when a quotation is still unconfirmed
+// and the event date is approaching. Deduped via notification_log.
+func (s *NotificationService) SendQuotationPending(ctx context.Context, userID uuid.UUID, event models.Event) error {
+	const notifType = "quotation_pending"
+	if s.wasAlreadySent(ctx, event.ID, notifType) {
+		return nil
+	}
+
+	tokens, err := s.deviceRepo.GetByUserID(ctx, userID)
+	if err != nil || len(tokens) == 0 {
+		return err
+	}
+
+	msg := PushMessage{
+		Title: "Cotización pendiente",
+		Body:  fmt.Sprintf("'%s' aún no está confirmado. Hacé seguimiento con el cliente.", event.ServiceType),
+		Data: map[string]string{
+			"type":     "quotation_pending",
+			"event_id": event.ID.String(),
+		},
+	}
+
+	failed := s.pushService.SendToTokens(ctx, tokens, msg)
+	s.cleanupFailedTokens(ctx, userID, failed)
+	s.markAsSent(ctx, userID, event.ID, notifType)
+	return nil
+}
+
 // SendEventConfirmed sends a notification when an event status changes to confirmed.
 func (s *NotificationService) SendEventConfirmed(ctx context.Context, userID uuid.UUID, event models.Event) error {
 	tokens, err := s.deviceRepo.GetByUserID(ctx, userID)
@@ -221,10 +249,65 @@ func (s *NotificationService) ProcessPendingReminders(ctx context.Context) {
 	if sentCount > 0 {
 		slog.Info("Processed event reminders", "sent", sentCount)
 	}
+
+	s.processQuotationPending(ctx, userIDs)
+}
+
+// processQuotationPending sends a one-time push for events still in 'quoted' status
+// with an event_date within the next 7 days.
+func (s *NotificationService) processQuotationPending(ctx context.Context, userIDs []uuid.UUID) {
+	if !s.pushService.IsEnabled() {
+		return
+	}
+	sent := 0
+	for _, uid := range userIDs {
+		rows, err := s.pool.Query(ctx,
+			`SELECT id, user_id, client_id, to_char(event_date, 'YYYY-MM-DD') as event_date,
+				to_char(start_time, 'HH24:MI:SS') as start_time,
+				to_char(end_time, 'HH24:MI:SS') as end_time,
+				service_type, num_people, status, discount, discount_type, requires_invoice,
+				tax_rate, tax_amount, total_amount, location, city,
+				deposit_percent, cancellation_days, refund_percent,
+				notes, photos, created_at, updated_at
+			FROM events
+			WHERE user_id = $1 AND status = 'quoted'
+			AND event_date >= CURRENT_DATE AND event_date <= CURRENT_DATE + INTERVAL '7 days'`, uid)
+		if err != nil {
+			slog.Error("Failed to query pending quotations", "user_id", uid, "error", err)
+			continue
+		}
+		var events []models.Event
+		for rows.Next() {
+			var e models.Event
+			if err := rows.Scan(
+				&e.ID, &e.UserID, &e.ClientID, &e.EventDate, &e.StartTime, &e.EndTime,
+				&e.ServiceType, &e.NumPeople, &e.Status, &e.Discount, &e.DiscountType, &e.RequiresInvoice,
+				&e.TaxRate, &e.TaxAmount, &e.TotalAmount, &e.Location, &e.City,
+				&e.DepositPercent, &e.CancellationDays, &e.RefundPercent,
+				&e.Notes, &e.Photos, &e.CreatedAt, &e.UpdatedAt,
+			); err != nil {
+				continue
+			}
+			events = append(events, e)
+		}
+		rows.Close()
+
+		for _, ev := range events {
+			if err := s.SendQuotationPending(ctx, uid, ev); err == nil {
+				sent++
+			}
+		}
+	}
+	if sent > 0 {
+		slog.Info("Processed pending quotation notifications", "sent", sent)
+	}
 }
 
 // wasAlreadySent checks the notification_log table for duplicates.
 func (s *NotificationService) wasAlreadySent(ctx context.Context, eventID uuid.UUID, notifType string) bool {
+	if s.pool == nil {
+		return false
+	}
 	var exists bool
 	err := s.pool.QueryRow(ctx,
 		`SELECT EXISTS(SELECT 1 FROM notification_log WHERE event_id = $1 AND notification_type = $2)`,
@@ -238,6 +321,9 @@ func (s *NotificationService) wasAlreadySent(ctx context.Context, eventID uuid.U
 
 // markAsSent records a notification in the log.
 func (s *NotificationService) markAsSent(ctx context.Context, userID, eventID uuid.UUID, notifType string) {
+	if s.pool == nil {
+		return
+	}
 	_, err := s.pool.Exec(ctx,
 		`INSERT INTO notification_log (user_id, event_id, notification_type) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`,
 		userID, eventID, notifType)
