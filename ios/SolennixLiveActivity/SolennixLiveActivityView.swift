@@ -85,10 +85,11 @@ struct SolennixLiveActivity: Widget {
                         .font(.subheadline)
                         .foregroundStyle(.white.opacity(0.9))
 
-                    Text(timerText(context.state))
+                    Text(context.state.startTime, style: .timer)
                         .font(.caption)
                         .fontWeight(.medium)
                         .foregroundStyle(.white.opacity(0.7))
+                        .monospacedDigit()
                 }
             }
 
@@ -130,10 +131,11 @@ struct SolennixLiveActivity: Widget {
                 .font(.caption)
                 .foregroundStyle(.white)
 
-            Text(timerText(context.state))
+            Text(context.state.startTime, style: .timer)
                 .font(.caption2)
                 .fontWeight(.medium)
                 .foregroundStyle(.white.opacity(0.7))
+                .monospacedDigit()
         }
     }
 
@@ -164,10 +166,12 @@ struct SolennixLiveActivity: Widget {
 
     @ViewBuilder
     private func compactTrailing(context: ActivityViewContext<SolennixEventAttributes>) -> some View {
-        Text(timerText(context.state))
+        Text(context.state.startTime, style: .timer)
             .font(.caption2)
             .fontWeight(.semibold)
             .foregroundStyle(statusColor(context.state.status))
+            .monospacedDigit()
+            .frame(maxWidth: 56)
     }
 
     // MARK: - Dynamic Island Minimal
@@ -219,16 +223,6 @@ struct SolennixLiveActivity: Widget {
         case "completed":   return .blue
         default:            return .gray
         }
-    }
-
-    /// Texto del temporizador basado en minutos transcurridos.
-    private func timerText(_ state: SolennixEventAttributes.ContentState) -> String {
-        let hours = state.elapsedMinutes / 60
-        let minutes = state.elapsedMinutes % 60
-        if hours > 0 {
-            return "\(hours)h \(minutes)m"
-        }
-        return "\(minutes) min"
     }
 
     /// Valor de progreso (0.0 - 1.0) según el estado.

@@ -62,8 +62,8 @@
 
 ### 0.2 Live Activities — Completar Wiring
 
-- [ ] Conectar actualizaciones de Live Activity con datos reales del evento
-- [ ] Implementar push-to-update para Live Activities (APNs)
+- [x] Conectar actualizaciones de Live Activity con datos reales del evento — ✅ 2026-04-06 (eliminado widget zombie `EventLiveActivity`/`EventActivityAttributes` con tipo divergente; timer ahora usa `Text(startTime, style: .timer)` nativo de WidgetKit y refresca solo; `loadData` reconcilia status con backend post-refresh)
+- [ ] Implementar push-to-update para Live Activities (APNs) — requiere endpoint backend para Live Activity push tokens
 - [ ] Testear en dispositivos reales (Dynamic Island solo en iPhone 14 Pro+)
 
 **Por qué**: La infraestructura existe pero el mecanismo de actualización no está completo.
@@ -134,8 +134,8 @@
 
 - [x] Registrar device token con backend — ✅ 2026-04-06 (APNs token -> `/devices/register` con retry por pending token)
 - [x] Notificaciones de eventos próximos — ✅ 2026-04-06 (sincronización automática de recordatorios locales para eventos confirmados al iniciar sesión, reconectar red y volver a foreground)
-- [ ] Notificaciones de pagos recibidos
-- [ ] Rich notifications con imagen del evento
+- [x] Notificaciones de pagos recibidos — ✅ 2026-04-06 (recibo local en Notification Center via `schedulePaymentReceipt`, observer cross-layer `NotificationCenter` ↔ `Notification.Name.solennixPaymentRegistered` declarado en `SolennixCore`, disparado desde `EventDetailViewModel.addPayment` con `payment_id`/`event_id`/`client_name`/`amount`)
+- [x] Rich notifications con imagen del evento — ✅ 2026-04-06 (target nuevo `SolennixNotificationServiceExtension` con `NotificationService` que descarga `image_url` del payload remoto y adjunta como `UNNotificationAttachment`; servidor debe enviar `mutable-content: 1` + campo `image_url`. **Pendiente correr `xcodegen generate` para materializar el target en Xcode**)
 - [x] Deep links desde notificaciones — ✅ 2026-04-06 (tap/action navega a EventDetail/EventPayments/Inventory)
 - [x] Notification categories con acciones (confirmar, ver detalle) — ✅ 2026-04-06 (EVENT/PAYMENT/INVENTORY categories + actions)
 - [x] Tests unitarios de routing/parseo de notificaciones — ✅ 2026-04-06 (`routeFromNotification`, extracción de `event_id`, y resolución de fecha/hora de evento)

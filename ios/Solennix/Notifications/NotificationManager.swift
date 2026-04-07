@@ -15,6 +15,34 @@ final class NotificationManager: NSObject, ObservableObject {
 
     private override init() {
         super.init()
+        observePaymentRegistrations()
+    }
+
+    // MARK: - Cross-layer Observers
+
+    private func observePaymentRegistrations() {
+        NotificationCenter.default.addObserver(
+            forName: .solennixPaymentRegistered,
+            object: nil,
+            queue: .main
+        ) { [weak self] note in
+            guard let self,
+                  let userInfo = note.userInfo,
+                  let paymentId = userInfo["payment_id"] as? String,
+                  let eventId = userInfo["event_id"] as? String,
+                  let clientName = userInfo["client_name"] as? String,
+                  let amount = userInfo["amount"] as? Double
+            else { return }
+
+            Task { @MainActor in
+                await self.schedulePaymentReceipt(
+                    paymentId: paymentId,
+                    eventId: eventId,
+                    clientName: clientName,
+                    amount: amount
+                )
+            }
+        }
     }
 
     func configureCategories() {
@@ -158,6 +186,63 @@ final class NotificationManager: NSObject, ObservableObject {
             print("Scheduled \(reminderType.rawValue) reminder for event \(eventId)")
         } catch {
             print("Error scheduling notification: \(error)")
+        }
+    }
+
+    // MARK: - Payment Receipt
+
+    /// Programa una notificación local de "pago recibido" como recibo en el Notification Center.
+    /// Se dispara inmediatamente (1s) y queda persistida hasta que el usuario la descarte.
+    /// Útil para registro y para sincronización multi-dispositivo (background sync detecta nuevo pago).
+    func schedulePaymentReceipt(
+        paymentId: String,
+        eventId: String,
+        clientName: String,
+        amount: Double,
+        currencyCode: String = "MXN",
+        attachmentURL: URL? = nil
+    ) async {
+        guard isAuthorized else { return }
+
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = currencyCode
+        formatter.maximumFractionDigits = 0
+        let amountString = formatter.string(from: NSNumber(value: amount)) ?? "\(amount)"
+
+        let content = UNMutableNotificationContent()
+        content.title = "Pago recibido"
+        content.body = "\(clientName) — \(amountString)"
+        content.sound = .default
+        content.badge = 1
+        content.categoryIdentifier = NotificationCategory.payment.rawValue
+        content.userInfo = [
+            "type": PushNotificationType.paymentReceived.rawValue,
+            "event_id": eventId,
+            "payment_id": paymentId
+        ]
+
+        // Adjuntar imagen si se proveyó (rich notification local).
+        if let attachmentURL,
+           let attachment = try? UNNotificationAttachment(
+               identifier: "payment_\(paymentId)",
+               url: attachmentURL,
+               options: nil
+           ) {
+            content.attachments = [attachment]
+        }
+
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+        let request = UNNotificationRequest(
+            identifier: "payment_receipt_\(paymentId)",
+            content: content,
+            trigger: trigger
+        )
+
+        do {
+            try await UNUserNotificationCenter.current().add(request)
+        } catch {
+            print("Error scheduling payment receipt: \(error)")
         }
     }
 

@@ -155,6 +155,12 @@ public final class EventDetailViewModel {
 
         isLoading = false
         checkLiveActivityState()
+
+        // Si la Live Activity está activa, reconciliar su estado con el del backend.
+        // Esto cubre pull-to-refresh, deep links y retorno desde background.
+        if isLiveActivityActive {
+            await updateLiveActivityStatus()
+        }
     }
 
     // MARK: - Status
@@ -199,6 +205,18 @@ public final class EventDetailViewModel {
 
             payments.append(payment)
             HapticsHelper.play(.success)
+
+            // Notificar a la app target para que programe el recibo en Notification Center.
+            NotificationCenter.default.post(
+                name: .solennixPaymentRegistered,
+                object: nil,
+                userInfo: [
+                    "payment_id": payment.id,
+                    "event_id": eventId,
+                    "client_name": client?.name ?? "Cliente",
+                    "amount": payment.amount
+                ]
+            )
 
             // Auto-confirm if quoted and payment received
             if event?.status == .quoted {

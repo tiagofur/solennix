@@ -66,6 +66,24 @@ targets:
       - package: SolennixFeatures
       - target: SolennixWidgetExtension
         embed: true
+      - target: SolennixNotificationServiceExtension
+        embed: true
+
+  SolennixNotificationServiceExtension:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - SolennixNotificationServiceExtension
+    entitlements:
+      path: SolennixNotificationServiceExtension/SolennixNotificationServiceExtension.entitlements
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.solennix.app.notifications
+        SWIFT_VERSION: "5.9"
+        INFOPLIST_FILE: SolennixNotificationServiceExtension/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        CODE_SIGN_ENTITLEMENTS: SolennixNotificationServiceExtension/SolennixNotificationServiceExtension.entitlements
 
   SolennixWidgetExtension:
     type: app-extension
@@ -109,6 +127,7 @@ schemes:
       targets:
         Solennix: all
         SolennixWidgetExtension: all
+        SolennixNotificationServiceExtension: all
     run:
       config: Debug
     test:
