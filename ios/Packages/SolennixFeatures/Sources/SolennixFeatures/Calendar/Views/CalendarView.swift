@@ -389,6 +389,7 @@ public struct CalendarView: View {
 
 // MARK: - Preview
 
+#if DEBUG
 #Preview("Calendar View") {
     NavigationStack {
         CalendarView(viewModel: .preview)
@@ -396,3 +397,4 @@ public struct CalendarView: View {
             .navigationBarTitleDisplayMode(.inline)
     }
 }
+#endif

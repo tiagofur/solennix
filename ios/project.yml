@@ -22,6 +22,7 @@ settings:
   base:
     SWIFT_VERSION: "5.9"
     DEVELOPMENT_TEAM: "T5SKULSP2M"
+    DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
   configs:
     Debug:
       CODE_SIGN_IDENTITY: "Apple Development"
