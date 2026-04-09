@@ -4,6 +4,16 @@ plugins {
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.google.services)
+}
+
+import java.util.Properties
+
+val keystorePropertiesFile = rootProject.file("key.properties")
+val keystoreProperties = Properties().apply {
+    if (keystorePropertiesFile.exists()) {
+        keystorePropertiesFile.inputStream().use { load(it) }
+    }
 }
 
 android {
@@ -11,13 +21,26 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.creapolis.solennix"
+        applicationId = "com.solennix.app"
         minSdk = 26
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "REVENUECAT_API_KEY", "\"${project.findProperty("REVENUECAT_API_KEY") ?: ""}\"")
+    }
+
+    signingConfigs {
+        if (keystorePropertiesFile.exists()) {
+            create("release") {
+                storeFile = rootProject.file(keystoreProperties["storeFile"] as String)
+                storePassword = keystoreProperties["storePassword"] as String
+                keyAlias = keystoreProperties["keyAlias"] as String
+                keyPassword = keystoreProperties["keyPassword"] as String
+            }
+        }
     }
 
     buildTypes {
@@ -28,6 +51,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfigs.findByName("release")?.let { signingConfig = it }
         }
     }
     compileOptions {
@@ -39,6 +63,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -76,18 +101,14 @@ dependencies {
     implementation(libs.lifecycle.runtime.compose)
     implementation(libs.navigation.compose)
 
-    // Coil image loading (network module for HTTP fetching)
     implementation(libs.coil.compose)
     implementation(libs.coil.network.ktor)
 
-    // RevenueCat
     implementation(libs.revenuecat)
 
-    // Firebase
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
 
-    // WorkManager for background sync
     implementation(libs.work.runtime)
     implementation(libs.hilt.work)
     ksp(libs.hilt.work.compiler)

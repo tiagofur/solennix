@@ -11,9 +11,6 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
-import java.security.MessageDigest
-import java.security.cert.Certificate
-import java.security.cert.CertificateFactory
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -22,13 +19,6 @@ import javax.inject.Singleton
 class KtorClient @Inject constructor(
     private val authManager: AuthManager
 ) {
-    private val certificatePinner by lazy {
-        CertificatePinner.Builder()
-            .add("api.solennix.com", "sha256/HASH_PLACEHOLDER_1")
-            .add("api.solennix.com", "sha256/HASH_PLACEHOLDER_2")
-            .build()
-    }
-
     val httpClient = HttpClient(OkHttp) {
         install(ContentNegotiation) {
             json(Json {
@@ -70,7 +60,7 @@ class KtorClient @Inject constructor(
         install(Logging) {
             level = LogLevel.HEADERS
             logger = Logger.DEFAULT
-        })
+        }
 
         defaultRequest {
             url(BuildConfig.API_BASE_URL)
@@ -84,7 +74,6 @@ class KtorClient @Inject constructor(
                 connectTimeout(30, TimeUnit.SECONDS)
                 readTimeout(30, TimeUnit.SECONDS)
                 writeTimeout(30, TimeUnit.SECONDS)
-                certificatePinner(certificatePinner)
             }
         }
     }

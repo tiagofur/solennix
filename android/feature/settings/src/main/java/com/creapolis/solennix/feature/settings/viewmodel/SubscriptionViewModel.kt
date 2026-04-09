@@ -9,6 +9,7 @@ import com.creapolis.solennix.core.model.SubscriptionStatusResponse
 import com.creapolis.solennix.core.network.ApiService
 import com.creapolis.solennix.core.network.AuthManager
 import com.creapolis.solennix.core.network.Endpoints
+import com.creapolis.solennix.core.network.get
 import com.creapolis.solennix.feature.settings.billing.BillingManager
 import com.creapolis.solennix.feature.settings.billing.BillingState
 import dagger.hilt.android.lifecycle.HiltViewModel

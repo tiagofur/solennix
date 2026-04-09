@@ -8,7 +8,7 @@
         android:shortcutLongLabel="@string/shortcut_new_event_long">
         <intent
             android:action="android.intent.action.VIEW"
-            android:targetPackage="com.creapolis.solennix"
+            android:targetPackage="com.solennix.app"
             android:targetClass="com.creapolis.solennix.MainActivity"
             android:data="solennix://new-event" />
     </shortcut>
@@ -19,7 +19,7 @@
         android:shortcutShortLabel="@string/shortcut_calendar">
         <intent
             android:action="android.intent.action.VIEW"
-            android:targetPackage="com.creapolis.solennix"
+            android:targetPackage="com.solennix.app"
             android:targetClass="com.creapolis.solennix.MainActivity"
             android:data="solennix://calendar" />
     </shortcut>

@@ -320,7 +320,7 @@ fun EventDetailScreen(
                     isUploading = uiState.isPhotoUploading,
                     onDismiss = { showPhotoGallery = false },
                     onPhotoSelected = { uri ->
-                        viewModel.uploadPhoto(uri.toString())
+                        viewModel.uploadPhoto(context, uri)
                     },
                     onDeletePhoto = { photo ->
                         viewModel.deletePhoto(photo)
@@ -1582,7 +1582,7 @@ fun PaymentModal(
 ) {
     val prefillAmount = initialAmount ?: if (remaining > 0) remaining else null
     var amount by remember { mutableStateOf(prefillAmount?.toString() ?: "") }
-    var method by remember { mutableStateOf("efectivo") }
+    var method by remember { mutableStateOf("cash") }
     var notes by remember { mutableStateOf("") }
     var paymentDate by remember { mutableStateOf(java.time.LocalDate.now().toString()) }
     var showDatePicker by remember { mutableStateOf(false) }
@@ -1652,7 +1652,7 @@ fun PaymentModal(
 
             Text("M\u00e9todo de Pago", style = MaterialTheme.typography.labelMedium)
             Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf("efectivo" to "Efectivo", "transferencia" to "Transferencia", "tarjeta" to "Tarjeta").forEach { (key, label) ->
+                listOf("cash" to "Efectivo", "transfer" to "Transferencia", "card" to "Tarjeta", "check" to "Cheque", "other" to "Otro").forEach { (key, label) ->
                     FilterChip(
                         selected = method == key,
                         onClick = { method = key },

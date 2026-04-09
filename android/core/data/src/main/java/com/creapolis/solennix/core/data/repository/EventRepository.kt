@@ -321,6 +321,10 @@ class OfflineFirstEventRepository @Inject constructor(
         return apiService.get(Endpoints.eventPhotos(eventId))
     }
 
+    override suspend fun uploadImage(bytes: ByteArray, fileName: String, mimeType: String): UploadResponse {
+        return apiService.upload(Endpoints.UPLOAD_IMAGE, bytes, fileName, mimeType)
+    }
+
     override suspend fun uploadEventPhoto(eventId: String, imageUrl: String, caption: String?): EventPhoto {
         val payload = PhotoPayload(
             url = imageUrl,
@@ -382,14 +386,6 @@ data class SupplyItemPayload(
     @SerialName("unit_cost") val unitCost: Double,
     val source: String,
     @SerialName("exclude_cost") val excludeCost: Boolean
-)
-
-@Serializable
-data class PhotoPayload(
-    val url: String,
-    val caption: String? = null
-)
-
 )
 
 @Serializable

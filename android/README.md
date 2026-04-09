@@ -156,7 +156,7 @@ keyPassword=xxx
 
 - **v1.0.0** - Feature parity con apps Web y Mobile
 - **Min SDK:** 26 (Android 8.0 Oreo)
-- **Target SDK:** 34 (Android 14)
+- **Target SDK:** 35 (Android 15)
 
 ---
 

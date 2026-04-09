@@ -7,6 +7,7 @@ import com.creapolis.solennix.core.data.paging.RemotePagingSource
 import com.creapolis.solennix.core.database.dao.PaymentDao
 import com.creapolis.solennix.core.database.entity.asEntity
 import com.creapolis.solennix.core.database.entity.asExternalModel
+import com.creapolis.solennix.core.model.CreatePaymentRequest
 import com.creapolis.solennix.core.model.PaginatedResponse
 import com.creapolis.solennix.core.model.Payment
 import com.creapolis.solennix.core.network.ApiService
@@ -67,7 +68,15 @@ class OfflineFirstPaymentRepository @Inject constructor(
     }
 
     override suspend fun createPayment(payment: Payment): Payment {
-        val networkPayment: Payment = apiService.post(Endpoints.PAYMENTS, payment)
+        val request = CreatePaymentRequest(
+            eventId = payment.eventId,
+            userId = payment.userId,
+            amount = payment.amount,
+            paymentDate = payment.paymentDate,
+            paymentMethod = payment.paymentMethod,
+            notes = payment.notes
+        )
+        val networkPayment: Payment = apiService.post(Endpoints.PAYMENTS, request)
         paymentDao.insertPayments(listOf(networkPayment.asEntity()))
         return networkPayment
     }

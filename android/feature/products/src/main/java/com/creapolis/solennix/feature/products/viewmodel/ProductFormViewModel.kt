@@ -25,9 +25,12 @@ import com.creapolis.solennix.core.network.post
 import com.creapolis.solennix.core.network.put
 import com.creapolis.solennix.core.network.AuthManager
 import com.creapolis.solennix.core.network.Endpoints
+import com.creapolis.solennix.core.data.util.ImageCompressor
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.UUID
 import javax.inject.Inject
 

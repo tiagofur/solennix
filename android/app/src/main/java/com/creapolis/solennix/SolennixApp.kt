@@ -16,10 +16,12 @@ class SolennixApp : Application(), SingletonImageLoader.Factory {
     override fun onCreate() {
         super.onCreate()
 
-        // Configure RevenueCat SDK
-        Purchases.configure(
-            PurchasesConfiguration.Builder(this, "goog_YOUR_API_KEY").build()
-        )
+        val revenueCatKey = BuildConfig.REVENUECAT_API_KEY.takeIf { it.isNotBlank() }
+        if (revenueCatKey != null) {
+            Purchases.configure(
+                PurchasesConfiguration.Builder(this, revenueCatKey).build()
+            )
+        }
     }
 
     override fun newImageLoader(context: android.content.Context): ImageLoader {

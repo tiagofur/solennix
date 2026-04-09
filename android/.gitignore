@@ -31,3 +31,7 @@ captures/
 *.keystore
 *.p12
 *.jceks
+key.properties
+
+# Firebase config (contains API keys; restore from Firebase Console)
+app/google-services.json

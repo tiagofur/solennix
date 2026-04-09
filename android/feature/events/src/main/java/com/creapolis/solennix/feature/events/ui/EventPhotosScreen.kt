@@ -61,14 +61,14 @@ fun EventPhotosScreen(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
         if (success) {
-            photoUri?.let { viewModel.uploadPhoto(it.toString()) }
+            photoUri?.let { viewModel.uploadPhoto(context, it) }
         }
     }
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
-        uri?.let { viewModel.uploadPhoto(it.toString()) }
+        uri?.let { viewModel.uploadPhoto(context, it) }
     }
 
     val cameraPermissionLauncher = rememberLauncherForActivityResult(
