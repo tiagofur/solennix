@@ -30,7 +30,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.mergeDescendants
 import androidx.compose.ui.semantics.semantics
 import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -465,6 +464,7 @@ private fun AnimatedEventListItem(
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun EventListItem(
     event: Event,
@@ -494,7 +494,6 @@ private fun EventListItem(
         .fillMaxWidth()
         .padding(horizontal = 16.dp, vertical = 4.dp)
         .semantics(mergeDescendants = true) { contentDescription = accessibilitySummary }
-    @OptIn(ExperimentalSharedTransitionApi::class)
     val cardModifier = if (sharedTransitionScope != null && animatedVisibilityScope != null) {
         with(sharedTransitionScope) {
             Modifier.sharedBounds(
