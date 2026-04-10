@@ -152,10 +152,14 @@ public final class DashboardViewModel {
             params: [String: String]? = nil,
             label: String
         ) async -> [T] {
+            let paramsDesc = params?.map { "\($0.key)=\($0.value)" }.joined(separator: "&") ?? "none"
+            NSLog("[Dashboard] 🔄 Loading %@ -> %@ params: %@", label, endpoint, paramsDesc)
             do {
-                return try await apiClient.getAll(endpoint, params: params)
+                let result: [T] = try await apiClient.getAll(endpoint, params: params)
+                NSLog("[Dashboard] ✅ %@ loaded %d items", label, result.count)
+                return result
             } catch {
-                NSLog("[Dashboard] ⚠️ %@ failed: %@", label, String(describing: error))
+                NSLog("[Dashboard] ❌ %@ FAILED: %@", label, String(describing: error))
                 encounteredError = true
                 return []
             }
@@ -234,6 +238,11 @@ public final class DashboardViewModel {
         // Cash collected = sum of payment amounts in current month
         cashCollectedThisMonth = monthPayments.reduce(0) { $0 + $1.amount }
         recalculateMonthlyMetrics()
+
+        NSLog("[Dashboard] 📊 Summary: clients=%d, monthEvents=%d, upcoming=%d, allEvents=%d, inventory=%d, products=%d, monthPayments=%d, allPayments=%d, encounteredError=%@",
+              clients.count, monthEvents.count, upcoming.count, loadedAllEvents.count,
+              inventory.count, products.count, monthPayments.count, loadedAllPayments.count,
+              encounteredError ? "YES" : "NO")
 
         if encounteredError {
             if clients.isEmpty && loadedAllEvents.isEmpty && products.isEmpty {

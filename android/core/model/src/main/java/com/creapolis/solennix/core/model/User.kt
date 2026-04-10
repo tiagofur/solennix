@@ -25,5 +25,6 @@ data class User(
 @Serializable
 enum class Plan {
     @SerialName("basic") BASIC,
+    @SerialName("pro") PRO,
     @SerialName("premium") PREMIUM
 }
