@@ -182,6 +182,8 @@
   },
   "active": "44c567cdf8cc277d",
   "lastOpenFiles": [
+    "Sin título.md",
+    "Solennix/PRD/02_FEATURES.md",
     "Solennix/PRD/01_PRODUCT_VISION.md",
     "Solennix/PRD/PRD MOC.md",
     "Solennix/iOS/Arquitectura General.md",
@@ -206,8 +208,6 @@
     "Solennix/Backend/Integraciones.md",
     "Solennix/Backend/Despliegue.md",
     "Solennix/Backend/Base de Datos.md",
-    "Solennix/Backend/Backend MOC.md",
-    "Solennix/Backend/Autenticación.md",
     "Solennix/Backend"
   ]
 }
