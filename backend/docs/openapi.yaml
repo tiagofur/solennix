@@ -1,0 +1,1187 @@
+openapi: 3.1.0
+info:
+  title: Solennix API
+  version: 1.0.0
+  description: Event management platform for Latin American organizers
+servers:
+  - url: http://localhost:8000
+    description: Local dev
+  - url: https://api.solennix.com
+    description: Production
+security:
+  - bearerAuth: []
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    User:
+      type: object
+      required:
+        - id
+        - email
+        - name
+        - plan
+        - role
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        business_name:
+          type: string
+          nullable: true
+        logo_url:
+          type: string
+          nullable: true
+        brand_color:
+          type: string
+          nullable: true
+        show_business_name_in_pdf:
+          type: boolean
+          nullable: true
+        default_deposit_percent:
+          type: number
+          format: double
+          nullable: true
+        default_cancellation_days:
+          type: number
+          format: double
+          nullable: true
+        default_refund_percent:
+          type: number
+          format: double
+          nullable: true
+        contract_template:
+          type: string
+          nullable: true
+        plan:
+          type: string
+          enum: [basic, pro]
+        role:
+          type: string
+          enum: [user, admin]
+        stripe_customer_id:
+          type: string
+          nullable: true
+        google_user_id:
+          type: string
+          nullable: true
+        apple_user_id:
+          type: string
+          nullable: true
+        plan_expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    TokenPair:
+      type: object
+      required:
+        - access_token
+        - refresh_token
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+    AuthSuccessResponse:
+      type: object
+      required:
+        - user
+        - tokens
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        tokens:
+          $ref: '#/components/schemas/TokenPair'
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+        - name
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+          maxLength: 128
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+    RefreshTokenRequest:
+      type: object
+      required:
+        - refresh_token
+      properties:
+        refresh_token:
+          type: string
+    ForgotPasswordRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+    ResetPasswordRequest:
+      type: object
+      required:
+        - token
+        - password
+      properties:
+        token:
+          type: string
+        password:
+          type: string
+          minLength: 8
+          maxLength: 128
+    ChangePasswordRequest:
+      type: object
+      required:
+        - current_password
+        - new_password
+      properties:
+        current_password:
+          type: string
+        new_password:
+          type: string
+          minLength: 8
+          maxLength: 128
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+    CheckoutSessionResponse:
+      type: object
+      required:
+        - url
+      properties:
+        url:
+          type: string
+          format: uri
+    SubscriptionInfo:
+      type: object
+      required:
+        - status
+        - provider
+        - cancel_at_period_end
+      properties:
+        status:
+          type: string
+          enum: [active, past_due, canceled, trialing]
+        provider:
+          type: string
+          enum: [stripe, apple, google]
+        current_period_end:
+          type: string
+          format: date-time
+          nullable: true
+        cancel_at_period_end:
+          type: boolean
+    SubscriptionStatusResponse:
+      type: object
+      required:
+        - plan
+        - has_stripe_account
+      properties:
+        plan:
+          type: string
+          enum: [basic, pro]
+        has_stripe_account:
+          type: boolean
+        subscription:
+          allOf:
+            - $ref: '#/components/schemas/SubscriptionInfo'
+          nullable: true
+    Event:
+      type: object
+      required:
+        - id
+        - user_id
+        - client_id
+        - event_date
+        - service_type
+        - num_people
+        - status
+        - discount
+        - discount_type
+        - requires_invoice
+        - tax_rate
+        - tax_amount
+        - total_amount
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        client_id:
+          type: string
+          format: uuid
+        event_date:
+          type: string
+          description: DATE string in YYYY-MM-DD format
+        start_time:
+          type: string
+          nullable: true
+        end_time:
+          type: string
+          nullable: true
+        service_type:
+          type: string
+        num_people:
+          type: integer
+        status:
+          type: string
+          enum: [draft, confirmed, completed, cancelled]
+        discount:
+          type: number
+          format: double
+        discount_type:
+          type: string
+          enum: [percent, fixed]
+        requires_invoice:
+          type: boolean
+        tax_rate:
+          type: number
+          format: double
+        tax_amount:
+          type: number
+          format: double
+        total_amount:
+          type: number
+          format: double
+        location:
+          type: string
+          nullable: true
+        city:
+          type: string
+          nullable: true
+        deposit_percent:
+          type: number
+          format: double
+          nullable: true
+        cancellation_days:
+          type: number
+          format: double
+          nullable: true
+        refund_percent:
+          type: number
+          format: double
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        photos:
+          type: string
+          nullable: true
+        client:
+          $ref: '#/components/schemas/Client'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    EventUpsertRequest:
+      type: object
+      required:
+        - client_id
+        - event_date
+        - service_type
+        - num_people
+        - status
+        - discount
+        - discount_type
+        - requires_invoice
+        - tax_rate
+        - tax_amount
+        - total_amount
+      properties:
+        client_id:
+          type: string
+          format: uuid
+        event_date:
+          type: string
+          description: DATE string in YYYY-MM-DD or ISO-like value; backend validates date portion
+        start_time:
+          type: string
+          nullable: true
+        end_time:
+          type: string
+          nullable: true
+        service_type:
+          type: string
+        num_people:
+          type: integer
+        status:
+          type: string
+          enum: [draft, confirmed, completed, cancelled]
+        discount:
+          type: number
+          format: double
+        discount_type:
+          type: string
+          enum: [percent, fixed]
+        requires_invoice:
+          type: boolean
+        tax_rate:
+          type: number
+          format: double
+        tax_amount:
+          type: number
+          format: double
+        total_amount:
+          type: number
+          format: double
+        location:
+          type: string
+          nullable: true
+        city:
+          type: string
+          nullable: true
+        deposit_percent:
+          type: number
+          format: double
+          nullable: true
+        cancellation_days:
+          type: number
+          format: double
+          nullable: true
+        refund_percent:
+          type: number
+          format: double
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+    Client:
+      type: object
+      required:
+        - id
+        - user_id
+        - name
+        - phone
+        - total_events
+        - total_spent
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+          format: email
+          nullable: true
+        address:
+          type: string
+          nullable: true
+        city:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        photo_url:
+          type: string
+          nullable: true
+        total_events:
+          type: integer
+        total_spent:
+          type: number
+          format: double
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    Product:
+      type: object
+      required:
+        - id
+        - user_id
+        - name
+        - category
+        - base_price
+        - is_active
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        category:
+          type: string
+        base_price:
+          type: number
+          format: double
+        recipe:
+          type: string
+          nullable: true
+        image_url:
+          type: string
+          nullable: true
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    InventoryItem:
+      type: object
+      required:
+        - id
+        - user_id
+        - ingredient_name
+        - current_stock
+        - minimum_stock
+        - unit
+        - type
+        - last_updated
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        ingredient_name:
+          type: string
+        current_stock:
+          type: number
+          format: double
+        minimum_stock:
+          type: number
+          format: double
+        unit:
+          type: string
+        unit_cost:
+          type: number
+          format: double
+          nullable: true
+        type:
+          type: string
+          enum: [equipment, supply, Equipment, Supply]
+        last_updated:
+          type: string
+          format: date-time
+    Payment:
+      type: object
+      required:
+        - id
+        - event_id
+        - user_id
+        - amount
+        - payment_date
+        - payment_method
+        - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        event_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        amount:
+          type: number
+          format: double
+        payment_date:
+          type: string
+          description: DATE string
+        payment_method:
+          type: string
+        notes:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error code or type
+        message:
+          type: string
+          description: Human-readable error message
+paths:
+  /health:
+    get:
+      security: []
+      operationId: healthCheck
+      summary: Check API and database health
+      responses:
+        '200':
+          description: API healthy
+        '503':
+          description: Database unavailable
+  /api/auth/register:
+    post:
+      security: []
+      operationId: register
+      summary: Register a new user account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: User registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSuccessResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Email already registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/auth/login:
+    post:
+      security: []
+      operationId: login
+      summary: Authenticate with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Authenticated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSuccessResponse'
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/auth/refresh:
+    post:
+      security: []
+      operationId: refreshToken
+      summary: Refresh access token using refresh token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+      responses:
+        '200':
+          description: Tokens refreshed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenPair'
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Invalid or expired token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/auth/logout:
+    post:
+      security: []
+      operationId: logout
+      summary: Logout and clear auth cookie/token
+      responses:
+        '200':
+          description: Logout processed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+  /api/auth/forgot-password:
+    post:
+      security: []
+      operationId: forgotPassword
+      summary: Start password reset flow
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ForgotPasswordRequest'
+      responses:
+        '200':
+          description: Reset message accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+  /api/auth/reset-password:
+    post:
+      security: []
+      operationId: resetPassword
+      summary: Complete password reset with token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPasswordRequest'
+      responses:
+        '200':
+          description: Password updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '400':
+          description: Invalid or malformed request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/auth/me:
+    get:
+      operationId: me
+      summary: Get current authenticated user profile
+      responses:
+        '200':
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+        '404':
+          description: User not found
+  /api/auth/change-password:
+    post:
+      operationId: changePassword
+      summary: Change current user password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '200':
+          description: Password changed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+  /api/subscriptions/status:
+    get:
+      operationId: getSubscriptionStatus
+      summary: Get current subscription and billing status
+      responses:
+        '200':
+          description: Subscription status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionStatusResponse'
+        '401':
+          description: Unauthorized
+  /api/subscriptions/checkout-session:
+    post:
+      operationId: createCheckoutSession
+      summary: Create Stripe checkout session for Pro subscription
+      responses:
+        '200':
+          description: Checkout session created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckoutSessionResponse'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Stripe not configured or session creation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/subscriptions/portal-session:
+    post:
+      operationId: createPortalSession
+      summary: Create Stripe customer portal session
+      responses:
+        '200':
+          description: Portal session created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckoutSessionResponse'
+        '400':
+          description: No associated Stripe customer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Stripe not configured or portal creation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/subscriptions/webhook/stripe:
+    post:
+      security: []
+      operationId: stripeWebhook
+      summary: Receive Stripe webhook events
+      responses:
+        '200':
+          description: Webhook processed
+        '400':
+          description: Invalid signature or payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Webhook not configured
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/subscriptions/webhook/revenuecat:
+    post:
+      security: []
+      operationId: revenueCatWebhook
+      summary: Receive RevenueCat webhook events
+      responses:
+        '200':
+          description: Webhook processed
+        '400':
+          description: Invalid webhook payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/events:
+    get:
+      operationId: listEvents
+      summary: Get all events for authenticated user
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: List of events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Event'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      operationId: createEvent
+      summary: Create new event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventUpsertRequest'
+      responses:
+        '201':
+          description: Event created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '422':
+          description: Unprocessable entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/events/{id}:
+    get:
+      operationId: getEvent
+      summary: Get event by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Event details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Event not found
+    put:
+      operationId: updateEvent
+      summary: Update event
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventUpsertRequest'
+      responses:
+        '200':
+          description: Event updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        '400':
+          description: Validation error
+        '401':
+          description: Unauthorized
+        '404':
+          description: Event not found
+    delete:
+      operationId: deleteEvent
+      summary: Delete event
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Event deleted
+        '401':
+          description: Unauthorized
+        '404':
+          description: Event not found
+  /api/clients:
+    get:
+      operationId: listClients
+      summary: Get all clients for authenticated user
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: List of clients
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Client'
+        '401':
+          description: Unauthorized
+    post:
+      operationId: createClient
+      summary: Create new client
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Client'
+      responses:
+        '201':
+          description: Client created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Client'
+        '400':
+          description: Validation error
+        '401':
+          description: Unauthorized
+  /api/clients/{id}:
+    get:
+      operationId: getClient
+      summary: Get client by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Client details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Client'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Client not found
+    put:
+      operationId: updateClient
+      summary: Update client
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Client'
+      responses:
+        '200':
+          description: Client updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Client'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Client not found
+    delete:
+      operationId: deleteClient
+      summary: Delete client
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Client deleted
+        '401':
+          description: Unauthorized
+        '404':
+          description: Client not found
+  /api/products:
+    get:
+      operationId: listProducts
+      summary: Get all products for authenticated user
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: List of products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+        '401':
+          description: Unauthorized
+    post:
+      operationId: createProduct
+      summary: Create new product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Product'
+      responses:
+        '201':
+          description: Product created
+        '400':
+          description: Validation error
+        '401':
+          description: Unauthorized
+  /api/inventory:
+    get:
+      operationId: listInventory
+      summary: Get all inventory for authenticated user
+      responses:
+        '200':
+          description: List of inventory items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InventoryItem'
+        '401':
+          description: Unauthorized
+    post:
+      operationId: createInventory
+      summary: Create new inventory item
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InventoryItem'
+      responses:
+        '201':
+          description: Inventory item created
+        '401':
+          description: Unauthorized
+  /api/payments:
+    get:
+      operationId: listPayments
+      summary: Get all payments for authenticated user
+      responses:
+        '200':
+          description: List of payments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Payment'
+        '401':
+          description: Unauthorized
+    post:
+      operationId: createPayment
+      summary: Create new payment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Payment'
+      responses:
+        '201':
+          description: Payment created
+        '400':
+          description: Validation error
+        '401':
+          description: Unauthorized
