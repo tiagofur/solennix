@@ -226,12 +226,12 @@ public struct InventoryListView: View {
                     Text("\(Int(item.currentStock)) \(item.unit)")
                         .font(.caption)
                         .foregroundStyle(
-                            item.currentStock < item.minimumStock
+                            item.minimumStock > 0 && item.currentStock < item.minimumStock
                                 ? SolennixColors.error
                                 : SolennixColors.textSecondary
                         )
 
-                    if item.currentStock < item.minimumStock {
+                    if item.minimumStock > 0 && item.currentStock < item.minimumStock {
                         Text("(min: \(Int(item.minimumStock)))")
                             .font(.caption2)
                             .foregroundStyle(SolennixColors.textTertiary)
@@ -307,12 +307,12 @@ public struct InventoryListView: View {
                         Text("\(Int(item.currentStock)) \(item.unit)")
                             .font(.caption)
                             .foregroundStyle(
-                                item.currentStock < item.minimumStock
+                                item.minimumStock > 0 && item.currentStock < item.minimumStock
                                     ? SolennixColors.error
                                     : SolennixColors.textSecondary
                             )
 
-                        if item.currentStock < item.minimumStock {
+                        if item.minimumStock > 0 && item.currentStock < item.minimumStock {
                             Text("(min: \(Int(item.minimumStock)))")
                                 .font(.caption2)
                                 .foregroundStyle(SolennixColors.textTertiary)
@@ -379,7 +379,7 @@ public struct InventoryListView: View {
     // MARK: - Stock Indicator
 
     private func stockIndicator(_ item: InventoryItem) -> some View {
-        let isLow = item.currentStock < item.minimumStock
+        let isLow = item.minimumStock > 0 && item.currentStock < item.minimumStock
 
         return ZStack {
             Circle()

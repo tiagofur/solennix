@@ -31,22 +31,22 @@ platform: Backend
 > [!info] Stack principal
 > **Go 1.24** + **Chi router** + **PostgreSQL 15** + **pgx driver** — sin ORM, queries SQL directas con connection pooling nativo.
 
-| Componente | Tecnologia | Version | Rol |
-|------------|------------|---------|-----|
-| **Lenguaje** | Go | 1.24.7 | Rendimiento, concurrencia nativa, binario estatico |
-| **Router HTTP** | Chi (`go-chi/chi/v5`) | 5.2.5 | Router ligero y compatible con `net/http`, middleware composable |
-| **Base de datos** | PostgreSQL | 15 (Alpine) | Base de datos relacional principal, JSONB para datos flexibles |
-| **Driver DB** | pgx (`jackc/pgx/v5`) | 5.8.0 | Driver nativo PostgreSQL con connection pooling (`pgxpool`) |
-| **Autenticacion** | golang-jwt (`golang-jwt/jwt/v5`) | 5.3.1 | Generacion y validacion de tokens JWT (HS256) |
-| **Pagos** | Stripe (`stripe/stripe-go/v81`) | 81.4.0 | Checkout sessions, webhooks, portal de facturacion |
-| **Email** | Resend (`resend/resend-go/v3`) | 3.1.1 | Emails transaccionales (recuperacion de contrasena) |
-| **Hashing** | bcrypt (`golang.org/x/crypto`) | 0.48.0 | Hash seguro de contrasenas con cost factor configurable |
-| **UUIDs** | google/uuid | 1.6.0 | Identificadores unicos para todas las entidades |
-| **Configuracion** | godotenv (`joho/godotenv`) | 1.5.1 | Carga de variables de entorno desde archivo `.env` |
-| **Imagenes** | golang.org/x/image | 0.36.0 | Redimensionamiento de imagenes para thumbnails |
-| **Testing** | testify (`stretchr/testify`) | 1.11.1 | Assertions y mocks para tests unitarios e integracion |
-| **Contenedor** | Docker (multi-stage) | Alpine | Build y despliegue en contenedor ligero |
-| **Logging** | log/slog (stdlib) | — | Logging estructurado nativo de Go |
+| Componente        | Tecnologia                       | Version     | Rol                                                              |
+| ----------------- | -------------------------------- | ----------- | ---------------------------------------------------------------- |
+| **Lenguaje**      | Go                               | 1.24.7      | Rendimiento, concurrencia nativa, binario estatico               |
+| **Router HTTP**   | Chi (`go-chi/chi/v5`)            | 5.2.5       | Router ligero y compatible con `net/http`, middleware composable |
+| **Base de datos** | PostgreSQL                       | 15 (Alpine) | Base de datos relacional principal, JSONB para datos flexibles   |
+| **Driver DB**     | pgx (`jackc/pgx/v5`)             | 5.8.0       | Driver nativo PostgreSQL con connection pooling (`pgxpool`)      |
+| **Autenticacion** | golang-jwt (`golang-jwt/jwt/v5`) | 5.3.1       | Generacion y validacion de tokens JWT (HS256)                    |
+| **Pagos**         | Stripe (`stripe/stripe-go/v81`)  | 81.4.0      | Checkout sessions, webhooks, portal de facturacion               |
+| **Email**         | Resend (`resend/resend-go/v3`)   | 3.1.1       | Emails transaccionales (recuperacion de contrasena)              |
+| **Hashing**       | bcrypt (`golang.org/x/crypto`)   | 0.48.0      | Hash seguro de contrasenas con cost factor configurable          |
+| **UUIDs**         | google/uuid                      | 1.6.0       | Identificadores unicos para todas las entidades                  |
+| **Configuracion** | godotenv (`joho/godotenv`)       | 1.5.1       | Carga de variables de entorno desde archivo `.env`               |
+| **Imagenes**      | golang.org/x/image               | 0.36.0      | Redimensionamiento de imagenes para thumbnails                   |
+| **Testing**       | testify (`stretchr/testify`)     | 1.11.1      | Assertions y mocks para tests unitarios e integracion            |
+| **Contenedor**    | Docker (multi-stage)             | Alpine      | Build y despliegue en contenedor ligero                          |
+| **Logging**       | log/slog (stdlib)                | —           | Logging estructurado nativo de Go                                |
 
 ---
 
@@ -78,6 +78,7 @@ graph TD
 ### Principios
 
 > [!note] Decisiones de diseno clave
+>
 > - **Sin ORM**: Queries SQL directas con `pgx` para control total y rendimiento
 > - **Inyeccion de dependencias**: Todos los componentes reciben dependencias via constructor (`NewXxxHandler(repo, service)`)
 > - **Propagacion de contexto**: `context.Context` se propaga desde el handler hasta el repositorio para cancelacion y timeouts
@@ -182,30 +183,32 @@ Todos los modelos se definen en `internal/models/models.go`. Cada struct usa tag
 ### 4.1 Usuarios
 
 #### `User`
-| Campo | Tipo | JSON | Descripcion |
-|-------|------|------|-------------|
-| `ID` | `uuid.UUID` | `id` | Identificador unico |
-| `Email` | `string` | `email` | Email del usuario (unico) |
-| `PasswordHash` | `string` | `-` | Hash bcrypt (nunca se expone en JSON) |
-| `Name` | `string` | `name` | Nombre del usuario |
-| `BusinessName` | `*string` | `business_name` | Nombre de la empresa (opcional) |
-| `LogoURL` | `*string` | `logo_url` | URL del logo (opcional) |
-| `BrandColor` | `*string` | `brand_color` | Color de marca personalizado (opcional) |
-| `ShowBusinessNameInPdf` | `*bool` | `show_business_name_in_pdf` | Mostrar nombre de empresa en PDFs |
-| `DefaultDepositPercent` | `*float64` | `default_deposit_percent` | Porcentaje de anticipo por defecto |
-| `DefaultCancellationDays` | `*float64` | `default_cancellation_days` | Dias de cancelacion por defecto |
-| `DefaultRefundPercent` | `*float64` | `default_refund_percent` | Porcentaje de reembolso por defecto |
-| `ContractTemplate` | `*string` | `contract_template` | Plantilla HTML de contratos |
-| `Plan` | `string` | `plan` | Plan de suscripcion (`basic` / `pro`) |
-| `Role` | `string` | `role` | Rol del usuario (`user` / `admin`) |
-| `StripeCustomerID` | `*string` | `stripe_customer_id` | ID de cliente en Stripe |
-| `GoogleUserID` | `*string` | `google_user_id` | ID de usuario Google OAuth |
-| `AppleUserID` | `*string` | `apple_user_id` | ID de usuario Apple Sign In |
-| `PlanExpiresAt` | `*time.Time` | `plan_expires_at` | Expiracion del plan (para planes gifted) |
-| `CreatedAt` | `time.Time` | `created_at` | Fecha de creacion |
-| `UpdatedAt` | `time.Time` | `updated_at` | Fecha de ultima actualizacion |
+
+| Campo                     | Tipo         | JSON                        | Descripcion                              |
+| ------------------------- | ------------ | --------------------------- | ---------------------------------------- |
+| `ID`                      | `uuid.UUID`  | `id`                        | Identificador unico                      |
+| `Email`                   | `string`     | `email`                     | Email del usuario (unico)                |
+| `PasswordHash`            | `string`     | `-`                         | Hash bcrypt (nunca se expone en JSON)    |
+| `Name`                    | `string`     | `name`                      | Nombre del usuario                       |
+| `BusinessName`            | `*string`    | `business_name`             | Nombre de la empresa (opcional)          |
+| `LogoURL`                 | `*string`    | `logo_url`                  | URL del logo (opcional)                  |
+| `BrandColor`              | `*string`    | `brand_color`               | Color de marca personalizado (opcional)  |
+| `ShowBusinessNameInPdf`   | `*bool`      | `show_business_name_in_pdf` | Mostrar nombre de empresa en PDFs        |
+| `DefaultDepositPercent`   | `*float64`   | `default_deposit_percent`   | Porcentaje de anticipo por defecto       |
+| `DefaultCancellationDays` | `*float64`   | `default_cancellation_days` | Dias de cancelacion por defecto          |
+| `DefaultRefundPercent`    | `*float64`   | `default_refund_percent`    | Porcentaje de reembolso por defecto      |
+| `ContractTemplate`        | `*string`    | `contract_template`         | Plantilla HTML de contratos              |
+| `Plan`                    | `string`     | `plan`                      | Plan de suscripcion (`basic` / `pro`)    |
+| `Role`                    | `string`     | `role`                      | Rol del usuario (`user` / `admin`)       |
+| `StripeCustomerID`        | `*string`    | `stripe_customer_id`        | ID de cliente en Stripe                  |
+| `GoogleUserID`            | `*string`    | `google_user_id`            | ID de usuario Google OAuth               |
+| `AppleUserID`             | `*string`    | `apple_user_id`             | ID de usuario Apple Sign In              |
+| `PlanExpiresAt`           | `*time.Time` | `plan_expires_at`           | Expiracion del plan (para planes gifted) |
+| `CreatedAt`               | `time.Time`  | `created_at`                | Fecha de creacion                        |
+| `UpdatedAt`               | `time.Time`  | `updated_at`                | Fecha de ultima actualizacion            |
 
 #### Requests de Autenticacion (definidas en `auth_handler.go`)
+
 - `registerRequest` — `email`, `password`, `name`
 - `loginRequest` — `email`, `password`
 - `forgotPasswordRequest` — `email`
@@ -213,96 +216,103 @@ Todos los modelos se definen en `internal/models/models.go`. Cada struct usa tag
 ### 4.2 Eventos
 
 #### `Event`
-| Campo | Tipo | JSON | Descripcion |
-|-------|------|------|-------------|
-| `ID` | `uuid.UUID` | `id` | Identificador unico |
-| `UserID` | `uuid.UUID` | `user_id` | Propietario del evento |
-| `ClientID` | `uuid.UUID` | `client_id` | Cliente asociado |
-| `EventDate` | `string` | `event_date` | Fecha del evento (`YYYY-MM-DD`) |
-| `StartTime` | `*string` | `start_time` | Hora de inicio (opcional) |
-| `EndTime` | `*string` | `end_time` | Hora de fin (opcional) |
-| `ServiceType` | `string` | `service_type` | Tipo de servicio |
-| `NumPeople` | `int` | `num_people` | Numero de personas |
-| `Status` | `string` | `status` | Estado del evento |
-| `Discount` | `float64` | `discount` | Monto/porcentaje de descuento |
-| `DiscountType` | `string` | `discount_type` | Tipo: `percent` o `fixed` |
-| `RequiresInvoice` | `bool` | `requires_invoice` | Requiere factura |
-| `TaxRate` | `float64` | `tax_rate` | Tasa de impuesto |
-| `TaxAmount` | `float64` | `tax_amount` | Monto de impuesto |
-| `TotalAmount` | `float64` | `total_amount` | Total del evento |
-| `Location` | `*string` | `location` | Ubicacion (opcional) |
-| `City` | `*string` | `city` | Ciudad (opcional) |
-| `DepositPercent` | `*float64` | `deposit_percent` | Porcentaje de anticipo |
-| `CancellationDays` | `*float64` | `cancellation_days` | Dias para cancelacion |
-| `RefundPercent` | `*float64` | `refund_percent` | Porcentaje de reembolso |
-| `Notes` | `*string` | `notes` | Notas (opcional) |
-| `Photos` | `*string` | `photos` | URLs de fotos (JSONB como string) |
-| `CreatedAt` | `time.Time` | `created_at` | Fecha de creacion |
-| `UpdatedAt` | `time.Time` | `updated_at` | Fecha de actualizacion |
-| `Client` | `*Client` | `client` | Datos del cliente (joined, opcional) |
+
+| Campo              | Tipo        | JSON                | Descripcion                          |
+| ------------------ | ----------- | ------------------- | ------------------------------------ |
+| `ID`               | `uuid.UUID` | `id`                | Identificador unico                  |
+| `UserID`           | `uuid.UUID` | `user_id`           | Propietario del evento               |
+| `ClientID`         | `uuid.UUID` | `client_id`         | Cliente asociado                     |
+| `EventDate`        | `string`    | `event_date`        | Fecha del evento (`YYYY-MM-DD`)      |
+| `StartTime`        | `*string`   | `start_time`        | Hora de inicio (opcional)            |
+| `EndTime`          | `*string`   | `end_time`          | Hora de fin (opcional)               |
+| `ServiceType`      | `string`    | `service_type`      | Tipo de servicio                     |
+| `NumPeople`        | `int`       | `num_people`        | Numero de personas                   |
+| `Status`           | `string`    | `status`            | Estado del evento                    |
+| `Discount`         | `float64`   | `discount`          | Monto/porcentaje de descuento        |
+| `DiscountType`     | `string`    | `discount_type`     | Tipo: `percent` o `fixed`            |
+| `RequiresInvoice`  | `bool`      | `requires_invoice`  | Requiere factura                     |
+| `TaxRate`          | `float64`   | `tax_rate`          | Tasa de impuesto                     |
+| `TaxAmount`        | `float64`   | `tax_amount`        | Monto de impuesto                    |
+| `TotalAmount`      | `float64`   | `total_amount`      | Total del evento                     |
+| `Location`         | `*string`   | `location`          | Ubicacion (opcional)                 |
+| `City`             | `*string`   | `city`              | Ciudad (opcional)                    |
+| `DepositPercent`   | `*float64`  | `deposit_percent`   | Porcentaje de anticipo               |
+| `CancellationDays` | `*float64`  | `cancellation_days` | Dias para cancelacion                |
+| `RefundPercent`    | `*float64`  | `refund_percent`    | Porcentaje de reembolso              |
+| `Notes`            | `*string`   | `notes`             | Notas (opcional)                     |
+| `Photos`           | `*string`   | `photos`            | URLs de fotos (JSONB como string)    |
+| `CreatedAt`        | `time.Time` | `created_at`        | Fecha de creacion                    |
+| `UpdatedAt`        | `time.Time` | `updated_at`        | Fecha de actualizacion               |
+| `Client`           | `*Client`   | `client`            | Datos del cliente (joined, opcional) |
 
 #### `EventProduct`
-| Campo | Tipo | JSON | Descripcion |
-|-------|------|------|-------------|
-| `ID` | `uuid.UUID` | `id` | Identificador unico |
-| `EventID` | `uuid.UUID` | `event_id` | Evento asociado |
-| `ProductID` | `uuid.UUID` | `product_id` | Producto asociado |
-| `Quantity` | `float64` | `quantity` | Cantidad |
-| `UnitPrice` | `float64` | `unit_price` | Precio unitario |
-| `Discount` | `float64` | `discount` | Descuento |
-| `TotalPrice` | `float64` | `total_price` | Precio total (columna generada en DB) |
-| `CreatedAt` | `time.Time` | `created_at` | Fecha de creacion |
-| `ProductName` | `*string` | `product_name` | Nombre del producto (joined) |
+
+| Campo         | Tipo        | JSON           | Descripcion                           |
+| ------------- | ----------- | -------------- | ------------------------------------- |
+| `ID`          | `uuid.UUID` | `id`           | Identificador unico                   |
+| `EventID`     | `uuid.UUID` | `event_id`     | Evento asociado                       |
+| `ProductID`   | `uuid.UUID` | `product_id`   | Producto asociado                     |
+| `Quantity`    | `float64`   | `quantity`     | Cantidad                              |
+| `UnitPrice`   | `float64`   | `unit_price`   | Precio unitario                       |
+| `Discount`    | `float64`   | `discount`     | Descuento                             |
+| `TotalPrice`  | `float64`   | `total_price`  | Precio total (columna generada en DB) |
+| `CreatedAt`   | `time.Time` | `created_at`   | Fecha de creacion                     |
+| `ProductName` | `*string`   | `product_name` | Nombre del producto (joined)          |
 
 #### `EventExtra`
-| Campo | Tipo | JSON | Descripcion |
-|-------|------|------|-------------|
-| `ID` | `uuid.UUID` | `id` | Identificador unico |
-| `EventID` | `uuid.UUID` | `event_id` | Evento asociado |
-| `Description` | `string` | `description` | Descripcion del extra |
-| `Cost` | `float64` | `cost` | Costo del extra |
-| `Price` | `float64` | `price` | Precio al cliente |
-| `ExcludeUtility` | `bool` | `exclude_utility` | Excluir del calculo de utilidad |
-| `CreatedAt` | `time.Time` | `created_at` | Fecha de creacion |
+
+| Campo            | Tipo        | JSON              | Descripcion                     |
+| ---------------- | ----------- | ----------------- | ------------------------------- |
+| `ID`             | `uuid.UUID` | `id`              | Identificador unico             |
+| `EventID`        | `uuid.UUID` | `event_id`        | Evento asociado                 |
+| `Description`    | `string`    | `description`     | Descripcion del extra           |
+| `Cost`           | `float64`   | `cost`            | Costo del extra                 |
+| `Price`          | `float64`   | `price`           | Precio al cliente               |
+| `ExcludeUtility` | `bool`      | `exclude_utility` | Excluir del calculo de utilidad |
+| `CreatedAt`      | `time.Time` | `created_at`      | Fecha de creacion               |
 
 #### `EventEquipment`
-| Campo | Tipo | JSON | Descripcion |
-|-------|------|------|-------------|
-| `ID` | `uuid.UUID` | `id` | Identificador unico |
-| `EventID` | `uuid.UUID` | `event_id` | Evento asociado |
-| `InventoryID` | `uuid.UUID` | `inventory_id` | Equipo del inventario |
-| `Quantity` | `int` | `quantity` | Cantidad asignada |
-| `Notes` | `*string` | `notes` | Notas (opcional) |
-| `CreatedAt` | `time.Time` | `created_at` | Fecha de creacion |
-| `EquipmentName` | `*string` | `equipment_name` | Nombre del equipo (joined) |
-| `Unit` | `*string` | `unit` | Unidad de medida (joined) |
-| `CurrentStock` | `*float64` | `current_stock` | Stock actual (joined) |
+
+| Campo           | Tipo        | JSON             | Descripcion                |
+| --------------- | ----------- | ---------------- | -------------------------- |
+| `ID`            | `uuid.UUID` | `id`             | Identificador unico        |
+| `EventID`       | `uuid.UUID` | `event_id`       | Evento asociado            |
+| `InventoryID`   | `uuid.UUID` | `inventory_id`   | Equipo del inventario      |
+| `Quantity`      | `int`       | `quantity`       | Cantidad asignada          |
+| `Notes`         | `*string`   | `notes`          | Notas (opcional)           |
+| `CreatedAt`     | `time.Time` | `created_at`     | Fecha de creacion          |
+| `EquipmentName` | `*string`   | `equipment_name` | Nombre del equipo (joined) |
+| `Unit`          | `*string`   | `unit`           | Unidad de medida (joined)  |
+| `CurrentStock`  | `*float64`  | `current_stock`  | Stock actual (joined)      |
 
 #### `EventSupply`
-| Campo | Tipo | JSON | Descripcion |
-|-------|------|------|-------------|
-| `ID` | `uuid.UUID` | `id` | Identificador unico |
-| `EventID` | `uuid.UUID` | `event_id` | Evento asociado |
-| `InventoryID` | `uuid.UUID` | `inventory_id` | Insumo del inventario |
-| `Quantity` | `float64` | `quantity` | Cantidad |
-| `UnitCost` | `float64` | `unit_cost` | Costo unitario |
-| `Source` | `string` | `source` | Origen: `stock` o `purchase` |
-| `ExcludeCost` | `bool` | `exclude_cost` | Excluir del total del evento |
-| `CreatedAt` | `time.Time` | `created_at` | Fecha de creacion |
-| `SupplyName` | `*string` | `supply_name` | Nombre del insumo (joined) |
-| `Unit` | `*string` | `unit` | Unidad (joined) |
-| `CurrentStock` | `*float64` | `current_stock` | Stock actual (joined) |
+
+| Campo          | Tipo        | JSON            | Descripcion                  |
+| -------------- | ----------- | --------------- | ---------------------------- |
+| `ID`           | `uuid.UUID` | `id`            | Identificador unico          |
+| `EventID`      | `uuid.UUID` | `event_id`      | Evento asociado              |
+| `InventoryID`  | `uuid.UUID` | `inventory_id`  | Insumo del inventario        |
+| `Quantity`     | `float64`   | `quantity`      | Cantidad                     |
+| `UnitCost`     | `float64`   | `unit_cost`     | Costo unitario               |
+| `Source`       | `string`    | `source`        | Origen: `stock` o `purchase` |
+| `ExcludeCost`  | `bool`      | `exclude_cost`  | Excluir del total del evento |
+| `CreatedAt`    | `time.Time` | `created_at`    | Fecha de creacion            |
+| `SupplyName`   | `*string`   | `supply_name`   | Nombre del insumo (joined)   |
+| `Unit`         | `*string`   | `unit`          | Unidad (joined)              |
+| `CurrentStock` | `*float64`  | `current_stock` | Stock actual (joined)        |
 
 #### `EventPhoto`
-| Campo | Tipo | JSON | Descripcion |
-|-------|------|------|-------------|
-| `ID` | `uuid.UUID` | `id` | Identificador unico |
-| `URL` | `string` | `url` | URL de la imagen |
-| `ThumbnailURL` | `*string` | `thumbnail_url` | URL del thumbnail (opcional) |
-| `Caption` | `*string` | `caption` | Titulo/descripcion (opcional) |
-| `CreatedAt` | `time.Time` | `created_at` | Fecha de creacion |
+
+| Campo          | Tipo        | JSON            | Descripcion                   |
+| -------------- | ----------- | --------------- | ----------------------------- |
+| `ID`           | `uuid.UUID` | `id`            | Identificador unico           |
+| `URL`          | `string`    | `url`           | URL de la imagen              |
+| `ThumbnailURL` | `*string`   | `thumbnail_url` | URL del thumbnail (opcional)  |
+| `Caption`      | `*string`   | `caption`       | Titulo/descripcion (opcional) |
+| `CreatedAt`    | `time.Time` | `created_at`    | Fecha de creacion             |
 
 #### Modelos auxiliares de eventos
+
 - `EquipmentSuggestion` — Sugerencia automatica de equipo con `SuggestedQty` calculado: `ceil(product_qty / capacity)`
 - `EquipmentConflict` — Conflicto detectado cuando el mismo equipo esta asignado a eventos en la misma fecha
 - `SupplySuggestion` — Sugerencia de insumos con cantidad fija por evento (no escalada por cantidad de producto)
@@ -310,121 +320,129 @@ Todos los modelos se definen en `internal/models/models.go`. Cada struct usa tag
 ### 4.3 Clientes
 
 #### `Client`
-| Campo | Tipo | JSON | Descripcion |
-|-------|------|------|-------------|
-| `ID` | `uuid.UUID` | `id` | Identificador unico |
-| `UserID` | `uuid.UUID` | `user_id` | Propietario |
-| `Name` | `string` | `name` | Nombre del cliente |
-| `Phone` | `string` | `phone` | Telefono |
-| `Email` | `*string` | `email` | Email (opcional) |
-| `Address` | `*string` | `address` | Direccion (opcional) |
-| `City` | `*string` | `city` | Ciudad (opcional) |
-| `Notes` | `*string` | `notes` | Notas (opcional) |
-| `PhotoURL` | `*string` | `photo_url` | Foto del cliente (opcional) |
-| `TotalEvents` | `int` | `total_events` | Total de eventos (calculado) |
-| `TotalSpent` | `float64` | `total_spent` | Total gastado (calculado) |
-| `CreatedAt` | `time.Time` | `created_at` | Fecha de creacion |
-| `UpdatedAt` | `time.Time` | `updated_at` | Fecha de actualizacion |
+
+| Campo         | Tipo        | JSON           | Descripcion                  |
+| ------------- | ----------- | -------------- | ---------------------------- |
+| `ID`          | `uuid.UUID` | `id`           | Identificador unico          |
+| `UserID`      | `uuid.UUID` | `user_id`      | Propietario                  |
+| `Name`        | `string`    | `name`         | Nombre del cliente           |
+| `Phone`       | `string`    | `phone`        | Telefono                     |
+| `Email`       | `*string`   | `email`        | Email (opcional)             |
+| `Address`     | `*string`   | `address`      | Direccion (opcional)         |
+| `City`        | `*string`   | `city`         | Ciudad (opcional)            |
+| `Notes`       | `*string`   | `notes`        | Notas (opcional)             |
+| `PhotoURL`    | `*string`   | `photo_url`    | Foto del cliente (opcional)  |
+| `TotalEvents` | `int`       | `total_events` | Total de eventos (calculado) |
+| `TotalSpent`  | `float64`   | `total_spent`  | Total gastado (calculado)    |
+| `CreatedAt`   | `time.Time` | `created_at`   | Fecha de creacion            |
+| `UpdatedAt`   | `time.Time` | `updated_at`   | Fecha de actualizacion       |
 
 ### 4.4 Productos
 
 #### `Product`
-| Campo | Tipo | JSON | Descripcion |
-|-------|------|------|-------------|
-| `ID` | `uuid.UUID` | `id` | Identificador unico |
-| `UserID` | `uuid.UUID` | `user_id` | Propietario |
-| `Name` | `string` | `name` | Nombre del producto |
-| `Category` | `string` | `category` | Categoria |
-| `BasePrice` | `float64` | `base_price` | Precio base |
-| `Recipe` | `*string` | `recipe` | Receta (JSONB como string) |
-| `ImageURL` | `*string` | `image_url` | URL de imagen (opcional) |
-| `IsActive` | `bool` | `is_active` | Activo/inactivo |
-| `CreatedAt` | `time.Time` | `created_at` | Fecha de creacion |
-| `UpdatedAt` | `time.Time` | `updated_at` | Fecha de actualizacion |
+
+| Campo       | Tipo        | JSON         | Descripcion                |
+| ----------- | ----------- | ------------ | -------------------------- |
+| `ID`        | `uuid.UUID` | `id`         | Identificador unico        |
+| `UserID`    | `uuid.UUID` | `user_id`    | Propietario                |
+| `Name`      | `string`    | `name`       | Nombre del producto        |
+| `Category`  | `string`    | `category`   | Categoria                  |
+| `BasePrice` | `float64`   | `base_price` | Precio base                |
+| `Recipe`    | `*string`   | `recipe`     | Receta (JSONB como string) |
+| `ImageURL`  | `*string`   | `image_url`  | URL de imagen (opcional)   |
+| `IsActive`  | `bool`      | `is_active`  | Activo/inactivo            |
+| `CreatedAt` | `time.Time` | `created_at` | Fecha de creacion          |
+| `UpdatedAt` | `time.Time` | `updated_at` | Fecha de actualizacion     |
 
 #### `ProductIngredient`
-| Campo | Tipo | JSON | Descripcion |
-|-------|------|------|-------------|
-| `ID` | `uuid.UUID` | `id` | Identificador unico |
-| `ProductID` | `uuid.UUID` | `product_id` | Producto asociado |
-| `InventoryID` | `uuid.UUID` | `inventory_id` | Item del inventario |
-| `QuantityRequired` | `float64` | `quantity_required` | Cantidad requerida |
-| `Capacity` | `*float64` | `capacity` | Capacidad por pieza (solo equipo): `ceil(event_qty / capacity)` |
-| `BringToEvent` | `bool` | `bring_to_event` | Transportar al evento |
-| `CreatedAt` | `time.Time` | `created_at` | Fecha de creacion |
-| `IngredientName` | `*string` | `ingredient_name` | Nombre del ingrediente (joined) |
-| `Unit` | `*string` | `unit` | Unidad de medida (joined) |
-| `UnitCost` | `*float64` | `unit_cost` | Costo unitario (joined) |
-| `Type` | `*string` | `type` | Tipo de inventario (joined) |
+
+| Campo              | Tipo        | JSON                | Descripcion                                                     |
+| ------------------ | ----------- | ------------------- | --------------------------------------------------------------- |
+| `ID`               | `uuid.UUID` | `id`                | Identificador unico                                             |
+| `ProductID`        | `uuid.UUID` | `product_id`        | Producto asociado                                               |
+| `InventoryID`      | `uuid.UUID` | `inventory_id`      | Item del inventario                                             |
+| `QuantityRequired` | `float64`   | `quantity_required` | Cantidad requerida                                              |
+| `Capacity`         | `*float64`  | `capacity`          | Capacidad por pieza (solo equipo): `ceil(event_qty / capacity)` |
+| `BringToEvent`     | `bool`      | `bring_to_event`    | Transportar al evento                                           |
+| `CreatedAt`        | `time.Time` | `created_at`        | Fecha de creacion                                               |
+| `IngredientName`   | `*string`   | `ingredient_name`   | Nombre del ingrediente (joined)                                 |
+| `Unit`             | `*string`   | `unit`              | Unidad de medida (joined)                                       |
+| `UnitCost`         | `*float64`  | `unit_cost`         | Costo unitario (joined)                                         |
+| `Type`             | `*string`   | `type`              | Tipo de inventario (joined)                                     |
 
 ### 4.5 Inventario
 
 #### `InventoryItem`
-| Campo | Tipo | JSON | Descripcion |
-|-------|------|------|-------------|
-| `ID` | `uuid.UUID` | `id` | Identificador unico |
-| `UserID` | `uuid.UUID` | `user_id` | Propietario |
-| `IngredientName` | `string` | `ingredient_name` | Nombre del ingrediente/equipo |
-| `CurrentStock` | `float64` | `current_stock` | Stock actual |
-| `MinimumStock` | `float64` | `minimum_stock` | Stock minimo (alerta) |
-| `Unit` | `string` | `unit` | Unidad de medida |
-| `UnitCost` | `*float64` | `unit_cost` | Costo unitario (opcional) |
-| `Type` | `string` | `type` | Tipo: `ingredient`, `equipment`, `supply` |
-| `LastUpdated` | `time.Time` | `last_updated` | Ultima actualizacion |
+
+| Campo            | Tipo        | JSON              | Descripcion                                                                         |
+| ---------------- | ----------- | ----------------- | ----------------------------------------------------------------------------------- |
+| `ID`             | `uuid.UUID` | `id`              | Identificador unico                                                                 |
+| `UserID`         | `uuid.UUID` | `user_id`         | Propietario                                                                         |
+| `IngredientName` | `string`    | `ingredient_name` | Nombre del ingrediente/equipo                                                       |
+| `CurrentStock`   | `float64`   | `current_stock`   | Stock actual                                                                        |
+| `MinimumStock`   | `float64`   | `minimum_stock`   | Stock minimo (alerta solo si `minimum_stock > 0` y `current_stock < minimum_stock`) |
+| `Unit`           | `string`    | `unit`            | Unidad de medida                                                                    |
+| `UnitCost`       | `*float64`  | `unit_cost`       | Costo unitario (opcional)                                                           |
+| `Type`           | `string`    | `type`            | Tipo: `ingredient`, `equipment`, `supply`                                           |
+| `LastUpdated`    | `time.Time` | `last_updated`    | Ultima actualizacion                                                                |
 
 ### 4.6 Pagos
 
 #### `Payment`
-| Campo | Tipo | JSON | Descripcion |
-|-------|------|------|-------------|
-| `ID` | `uuid.UUID` | `id` | Identificador unico |
-| `EventID` | `uuid.UUID` | `event_id` | Evento asociado |
-| `UserID` | `uuid.UUID` | `user_id` | Propietario |
-| `Amount` | `float64` | `amount` | Monto del pago |
-| `PaymentDate` | `string` | `payment_date` | Fecha del pago (`YYYY-MM-DD`) |
-| `PaymentMethod` | `string` | `payment_method` | Metodo de pago |
-| `Notes` | `*string` | `notes` | Notas (opcional) |
-| `CreatedAt` | `time.Time` | `created_at` | Fecha de creacion |
+
+| Campo           | Tipo        | JSON             | Descripcion                   |
+| --------------- | ----------- | ---------------- | ----------------------------- |
+| `ID`            | `uuid.UUID` | `id`             | Identificador unico           |
+| `EventID`       | `uuid.UUID` | `event_id`       | Evento asociado               |
+| `UserID`        | `uuid.UUID` | `user_id`        | Propietario                   |
+| `Amount`        | `float64`   | `amount`         | Monto del pago                |
+| `PaymentDate`   | `string`    | `payment_date`   | Fecha del pago (`YYYY-MM-DD`) |
+| `PaymentMethod` | `string`    | `payment_method` | Metodo de pago                |
+| `Notes`         | `*string`   | `notes`          | Notas (opcional)              |
+| `CreatedAt`     | `time.Time` | `created_at`     | Fecha de creacion             |
 
 ### 4.7 Suscripciones
 
 #### `Subscription`
-| Campo | Tipo | JSON | Descripcion |
-|-------|------|------|-------------|
-| `ID` | `uuid.UUID` | `id` | Identificador unico |
-| `UserID` | `uuid.UUID` | `user_id` | Usuario suscrito |
-| `Provider` | `string` | `provider` | Proveedor: `stripe`, `apple`, `google` |
-| `ProviderSubID` | `*string` | `provider_subscription_id` | ID de suscripcion del proveedor |
-| `RevenueCatAppUserID` | `*string` | `revenuecat_app_user_id` | App User ID de RevenueCat |
-| `Plan` | `string` | `plan` | Plan: `basic` o `pro` |
-| `Status` | `string` | `status` | Estado: `active`, `past_due`, `canceled`, `trialing` |
-| `CurrentPeriodStart` | `*time.Time` | `current_period_start` | Inicio del periodo actual |
-| `CurrentPeriodEnd` | `*time.Time` | `current_period_end` | Fin del periodo actual |
-| `CreatedAt` | `time.Time` | `created_at` | Fecha de creacion |
-| `UpdatedAt` | `time.Time` | `updated_at` | Fecha de actualizacion |
+
+| Campo                 | Tipo         | JSON                       | Descripcion                                          |
+| --------------------- | ------------ | -------------------------- | ---------------------------------------------------- |
+| `ID`                  | `uuid.UUID`  | `id`                       | Identificador unico                                  |
+| `UserID`              | `uuid.UUID`  | `user_id`                  | Usuario suscrito                                     |
+| `Provider`            | `string`     | `provider`                 | Proveedor: `stripe`, `apple`, `google`               |
+| `ProviderSubID`       | `*string`    | `provider_subscription_id` | ID de suscripcion del proveedor                      |
+| `RevenueCatAppUserID` | `*string`    | `revenuecat_app_user_id`   | App User ID de RevenueCat                            |
+| `Plan`                | `string`     | `plan`                     | Plan: `basic` o `pro`                                |
+| `Status`              | `string`     | `status`                   | Estado: `active`, `past_due`, `canceled`, `trialing` |
+| `CurrentPeriodStart`  | `*time.Time` | `current_period_start`     | Inicio del periodo actual                            |
+| `CurrentPeriodEnd`    | `*time.Time` | `current_period_end`       | Fin del periodo actual                               |
+| `CreatedAt`           | `time.Time`  | `created_at`               | Fecha de creacion                                    |
+| `UpdatedAt`           | `time.Time`  | `updated_at`               | Fecha de actualizacion                               |
 
 ### 4.8 Otros
 
 #### `UnavailableDate`
-| Campo | Tipo | JSON | Descripcion |
-|-------|------|------|-------------|
-| `ID` | `uuid.UUID` | `id` | Identificador unico |
-| `UserID` | `uuid.UUID` | `user_id` | Propietario |
-| `StartDate` | `string` | `start_date` | Fecha de inicio (`YYYY-MM-DD`) |
-| `EndDate` | `string` | `end_date` | Fecha de fin (`YYYY-MM-DD`) |
-| `Reason` | `*string` | `reason` | Razon (opcional) |
-| `CreatedAt` | `time.Time` | `created_at` | Fecha de creacion |
-| `UpdatedAt` | `time.Time` | `updated_at` | Fecha de actualizacion |
+
+| Campo       | Tipo        | JSON         | Descripcion                    |
+| ----------- | ----------- | ------------ | ------------------------------ |
+| `ID`        | `uuid.UUID` | `id`         | Identificador unico            |
+| `UserID`    | `uuid.UUID` | `user_id`    | Propietario                    |
+| `StartDate` | `string`    | `start_date` | Fecha de inicio (`YYYY-MM-DD`) |
+| `EndDate`   | `string`    | `end_date`   | Fecha de fin (`YYYY-MM-DD`)    |
+| `Reason`    | `*string`   | `reason`     | Razon (opcional)               |
+| `CreatedAt` | `time.Time` | `created_at` | Fecha de creacion              |
+| `UpdatedAt` | `time.Time` | `updated_at` | Fecha de actualizacion         |
 
 #### `DeviceToken`
-| Campo | Tipo | JSON | Descripcion |
-|-------|------|------|-------------|
-| `ID` | `uuid.UUID` | `id` | Identificador unico |
-| `UserID` | `uuid.UUID` | `user_id` | Propietario |
-| `Token` | `string` | `token` | Token del dispositivo |
-| `Platform` | `string` | `platform` | Plataforma: `ios`, `android`, `web` |
-| `CreatedAt` | `time.Time` | `created_at` | Fecha de creacion |
-| `UpdatedAt` | `time.Time` | `updated_at` | Fecha de actualizacion |
+
+| Campo       | Tipo        | JSON         | Descripcion                         |
+| ----------- | ----------- | ------------ | ----------------------------------- |
+| `ID`        | `uuid.UUID` | `id`         | Identificador unico                 |
+| `UserID`    | `uuid.UUID` | `user_id`    | Propietario                         |
+| `Token`     | `string`    | `token`      | Token del dispositivo               |
+| `Platform`  | `string`    | `platform`   | Plataforma: `ios`, `android`, `web` |
+| `CreatedAt` | `time.Time` | `created_at` | Fecha de creacion                   |
+| `UpdatedAt` | `time.Time` | `updated_at` | Fecha de actualizacion              |
 
 ---
 
@@ -434,13 +452,13 @@ Todos los modelos se definen en `internal/models/models.go`. Cada struct usa tag
 
 La conexion se establece mediante `pgxpool.Pool` con la siguiente configuracion:
 
-| Parametro | Valor | Descripcion |
-|-----------|-------|-------------|
-| `MaxConns` | 20 | Conexiones maximas en el pool |
-| `MinConns` | 2 | Conexiones minimas mantenidas |
-| `MaxConnLifetime` | 30 min | Vida maxima de una conexion |
-| `MaxConnIdleTime` | 5 min | Tiempo maximo inactivo antes de cerrar |
-| `ConnectTimeout` | 10 seg | Timeout para la conexion inicial |
+| Parametro         | Valor  | Descripcion                            |
+| ----------------- | ------ | -------------------------------------- |
+| `MaxConns`        | 20     | Conexiones maximas en el pool          |
+| `MinConns`        | 2      | Conexiones minimas mantenidas          |
+| `MaxConnLifetime` | 30 min | Vida maxima de una conexion            |
+| `MaxConnIdleTime` | 5 min  | Tiempo maximo inactivo antes de cerrar |
+| `ConnectTimeout`  | 10 seg | Timeout para la conexion inicial       |
 
 El pool se inicializa en `database.Connect()` y se verifica con un `Ping()` antes de retornar.
 
@@ -458,38 +476,38 @@ El pool se inicializa en `database.Connect()` y se verifica con un `Ping()` ante
 
 ### 5.3 Migraciones
 
-| # | Archivo | Proposito |
-|---|---------|-----------|
-| 001 | `create_users` | Tabla principal de usuarios |
-| 002 | `create_clients` | Tabla de clientes (`user_id` FK) |
-| 003 | `create_events` | Tabla de eventos con todos los campos financieros |
-| 004 | `create_products` | Tabla de productos/servicios |
-| 005 | `create_inventory` | Tabla de inventario (ingredientes, equipo, insumos) |
-| 006 | `create_junction_tables` | Tablas de union: `event_products`, `event_extras`, `product_ingredients` |
-| 007 | `create_payments_subscriptions` | Tablas de pagos y suscripciones |
-| 008 | `add_client_logo` | Campo `logo_url` en clientes |
-| 009 | `move_logo` | Migracion de logo de clients a users |
-| 010 | `add_user_brand_color` | Campo `brand_color` en usuarios |
-| 011 | `add_show_business_name` | Campo `show_business_name_in_pdf` |
-| 012 | `extend_subscriptions` | Campos adicionales de suscripcion (provider, RevenueCat) |
-| 013 | `fix_plan_constraint` | Correccion de constraint de plan |
-| 014 | `add_indexes_and_cascade` | Indices de rendimiento + CASCADE en FKs |
-| 015 | `add_image_fields` | Campos de imagen en productos |
-| 016 | `create_event_equipment` | Tabla `event_equipment` |
-| 017 | `add_contract_template_to_users` | Campo `contract_template` en usuarios |
-| 018 | `add_role_to_users` | Campo `role` (user/admin) |
-| 019 | `add_plan_expires_at` | Campo `plan_expires_at` para planes gifted |
-| 020a | `add_discount_type_to_events` | Campo `discount_type` (percent/fixed) |
-| 020b | `add_equipment_capacity` | Campo `capacity` en `product_ingredients` |
-| 021 | `add_bring_to_event` | Campo `bring_to_event` en `product_ingredients` |
-| 022 | `create_unavailable_dates` | Tabla de fechas no disponibles |
-| 023 | `add_supply_type_and_table` | Tipo `supply` en inventario + tabla `event_supplies` |
-| 024 | `add_exclude_cost_to_event_supplies` | Campo `exclude_cost` en `event_supplies` |
-| 025 | `add_oauth_user_ids` | Campos `google_user_id` y `apple_user_id` |
-| 026 | `create_device_tokens` | Tabla de tokens de dispositivo para push |
-| 027 | `add_subscription_provider_unique` | Constraint unico por proveedor de suscripcion |
-| 028 | `add_include_in_checklist` | Campo `include_in_checklist` para productos |
-| 029 | `make_password_hash_nullable` | Hash de contrasena nullable (soporte OAuth-only) |
+| #    | Archivo                              | Proposito                                                                |
+| ---- | ------------------------------------ | ------------------------------------------------------------------------ |
+| 001  | `create_users`                       | Tabla principal de usuarios                                              |
+| 002  | `create_clients`                     | Tabla de clientes (`user_id` FK)                                         |
+| 003  | `create_events`                      | Tabla de eventos con todos los campos financieros                        |
+| 004  | `create_products`                    | Tabla de productos/servicios                                             |
+| 005  | `create_inventory`                   | Tabla de inventario (ingredientes, equipo, insumos)                      |
+| 006  | `create_junction_tables`             | Tablas de union: `event_products`, `event_extras`, `product_ingredients` |
+| 007  | `create_payments_subscriptions`      | Tablas de pagos y suscripciones                                          |
+| 008  | `add_client_logo`                    | Campo `logo_url` en clientes                                             |
+| 009  | `move_logo`                          | Migracion de logo de clients a users                                     |
+| 010  | `add_user_brand_color`               | Campo `brand_color` en usuarios                                          |
+| 011  | `add_show_business_name`             | Campo `show_business_name_in_pdf`                                        |
+| 012  | `extend_subscriptions`               | Campos adicionales de suscripcion (provider, RevenueCat)                 |
+| 013  | `fix_plan_constraint`                | Correccion de constraint de plan                                         |
+| 014  | `add_indexes_and_cascade`            | Indices de rendimiento + CASCADE en FKs                                  |
+| 015  | `add_image_fields`                   | Campos de imagen en productos                                            |
+| 016  | `create_event_equipment`             | Tabla `event_equipment`                                                  |
+| 017  | `add_contract_template_to_users`     | Campo `contract_template` en usuarios                                    |
+| 018  | `add_role_to_users`                  | Campo `role` (user/admin)                                                |
+| 019  | `add_plan_expires_at`                | Campo `plan_expires_at` para planes gifted                               |
+| 020a | `add_discount_type_to_events`        | Campo `discount_type` (percent/fixed)                                    |
+| 020b | `add_equipment_capacity`             | Campo `capacity` en `product_ingredients`                                |
+| 021  | `add_bring_to_event`                 | Campo `bring_to_event` en `product_ingredients`                          |
+| 022  | `create_unavailable_dates`           | Tabla de fechas no disponibles                                           |
+| 023  | `add_supply_type_and_table`          | Tipo `supply` en inventario + tabla `event_supplies`                     |
+| 024  | `add_exclude_cost_to_event_supplies` | Campo `exclude_cost` en `event_supplies`                                 |
+| 025  | `add_oauth_user_ids`                 | Campos `google_user_id` y `apple_user_id`                                |
+| 026  | `create_device_tokens`               | Tabla de tokens de dispositivo para push                                 |
+| 027  | `add_subscription_provider_unique`   | Constraint unico por proveedor de suscripcion                            |
+| 028  | `add_include_in_checklist`           | Campo `include_in_checklist` para productos                              |
+| 029  | `make_password_hash_nullable`        | Hash de contrasena nullable (soporte OAuth-only)                         |
 
 ### 5.4 Relaciones Principales
 
@@ -527,177 +545,177 @@ Todas las entidades principales se filtran por `user_id` (multi-tenant por usuar
 
 ### 6.1 Health Check
 
-| Metodo | Ruta | Handler | Descripcion |
-|--------|------|---------|-------------|
-| `GET` | `/health` | inline | Retorna `{"status":"ok"}` |
+| Metodo | Ruta      | Handler | Descripcion               |
+| ------ | --------- | ------- | ------------------------- |
+| `GET`  | `/health` | inline  | Retorna `{"status":"ok"}` |
 
 ### 6.2 Rutas Publicas — Autenticacion
 
 Rate limit: **10 requests/minuto** por IP.
 
-| Metodo | Ruta | Handler | Descripcion |
-|--------|------|---------|-------------|
-| `POST` | `/api/auth/register` | `AuthHandler.Register` | Registro de nuevo usuario |
-| `POST` | `/api/auth/login` | `AuthHandler.Login` | Login con email/password |
-| `POST` | `/api/auth/logout` | `AuthHandler.Logout` | Logout (limpia cookie httpOnly) |
-| `POST` | `/api/auth/refresh` | `AuthHandler.RefreshToken` | Renovar access token con refresh token |
-| `POST` | `/api/auth/forgot-password` | `AuthHandler.ForgotPassword` | Solicitar email de recuperacion |
-| `POST` | `/api/auth/reset-password` | `AuthHandler.ResetPassword` | Restablecer contrasena con token |
-| `POST` | `/api/auth/google` | `AuthHandler.GoogleSignIn` | Login/registro con Google OAuth |
-| `POST` | `/api/auth/apple` | `AuthHandler.AppleSignIn` | Login/registro con Apple Sign In |
+| Metodo | Ruta                        | Handler                      | Descripcion                            |
+| ------ | --------------------------- | ---------------------------- | -------------------------------------- |
+| `POST` | `/api/auth/register`        | `AuthHandler.Register`       | Registro de nuevo usuario              |
+| `POST` | `/api/auth/login`           | `AuthHandler.Login`          | Login con email/password               |
+| `POST` | `/api/auth/logout`          | `AuthHandler.Logout`         | Logout (limpia cookie httpOnly)        |
+| `POST` | `/api/auth/refresh`         | `AuthHandler.RefreshToken`   | Renovar access token con refresh token |
+| `POST` | `/api/auth/forgot-password` | `AuthHandler.ForgotPassword` | Solicitar email de recuperacion        |
+| `POST` | `/api/auth/reset-password`  | `AuthHandler.ResetPassword`  | Restablecer contrasena con token       |
+| `POST` | `/api/auth/google`          | `AuthHandler.GoogleSignIn`   | Login/registro con Google OAuth        |
+| `POST` | `/api/auth/apple`           | `AuthHandler.AppleSignIn`    | Login/registro con Apple Sign In       |
 
 ### 6.3 Rutas Protegidas — Auth (requiere JWT)
 
-| Metodo | Ruta | Handler | Descripcion |
-|--------|------|---------|-------------|
-| `GET` | `/api/auth/me` | `AuthHandler.Me` | Obtener perfil del usuario actual |
-| `POST` | `/api/auth/change-password` | `AuthHandler.ChangePassword` | Cambiar contrasena |
+| Metodo | Ruta                        | Handler                      | Descripcion                       |
+| ------ | --------------------------- | ---------------------------- | --------------------------------- |
+| `GET`  | `/api/auth/me`              | `AuthHandler.Me`             | Obtener perfil del usuario actual |
+| `POST` | `/api/auth/change-password` | `AuthHandler.ChangePassword` | Cambiar contrasena                |
 
 ### 6.4 Rutas Publicas — Webhooks
 
-| Metodo | Ruta | Handler | Descripcion |
-|--------|------|---------|-------------|
-| `POST` | `/api/subscriptions/webhook/stripe` | `SubscriptionHandler.StripeWebhook` | Webhook de Stripe (verificado por firma) |
+| Metodo | Ruta                                    | Handler                                 | Descripcion                                   |
+| ------ | --------------------------------------- | --------------------------------------- | --------------------------------------------- |
+| `POST` | `/api/subscriptions/webhook/stripe`     | `SubscriptionHandler.StripeWebhook`     | Webhook de Stripe (verificado por firma)      |
 | `POST` | `/api/subscriptions/webhook/revenuecat` | `SubscriptionHandler.RevenueCatWebhook` | Webhook de RevenueCat (verificado por header) |
 
 ### 6.5 Rutas Publicas — Archivos
 
-| Metodo | Ruta | Handler | Descripcion |
-|--------|------|---------|-------------|
-| `GET` | `/api/uploads/*` | `http.FileServer` | Servir archivos subidos (cache 1 ano) |
+| Metodo | Ruta             | Handler           | Descripcion                           |
+| ------ | ---------------- | ----------------- | ------------------------------------- |
+| `GET`  | `/api/uploads/*` | `http.FileServer` | Servir archivos subidos (cache 1 ano) |
 
 ### 6.6 Rutas Protegidas — Usuarios
 
-| Metodo | Ruta | Handler | Descripcion |
-|--------|------|---------|-------------|
-| `PUT` | `/api/users/me` | `AuthHandler.UpdateProfile` | Actualizar perfil del usuario |
+| Metodo | Ruta            | Handler                     | Descripcion                   |
+| ------ | --------------- | --------------------------- | ----------------------------- |
+| `PUT`  | `/api/users/me` | `AuthHandler.UpdateProfile` | Actualizar perfil del usuario |
 
 ### 6.7 Rutas Protegidas — Clientes
 
-| Metodo | Ruta | Handler | Descripcion |
-|--------|------|---------|-------------|
-| `GET` | `/api/clients` | `CRUDHandler.ListClients` | Listar clientes del usuario |
-| `POST` | `/api/clients` | `CRUDHandler.CreateClient` | Crear cliente |
-| `GET` | `/api/clients/{id}` | `CRUDHandler.GetClient` | Obtener cliente por ID |
-| `PUT` | `/api/clients/{id}` | `CRUDHandler.UpdateClient` | Actualizar cliente |
-| `DELETE` | `/api/clients/{id}` | `CRUDHandler.DeleteClient` | Eliminar cliente |
+| Metodo   | Ruta                | Handler                    | Descripcion                 |
+| -------- | ------------------- | -------------------------- | --------------------------- |
+| `GET`    | `/api/clients`      | `CRUDHandler.ListClients`  | Listar clientes del usuario |
+| `POST`   | `/api/clients`      | `CRUDHandler.CreateClient` | Crear cliente               |
+| `GET`    | `/api/clients/{id}` | `CRUDHandler.GetClient`    | Obtener cliente por ID      |
+| `PUT`    | `/api/clients/{id}` | `CRUDHandler.UpdateClient` | Actualizar cliente          |
+| `DELETE` | `/api/clients/{id}` | `CRUDHandler.DeleteClient` | Eliminar cliente            |
 
 ### 6.8 Rutas Protegidas — Eventos
 
-| Metodo | Ruta | Handler | Descripcion |
-|--------|------|---------|-------------|
-| `GET` | `/api/events` | `CRUDHandler.ListEvents` | Listar eventos del usuario |
-| `GET` | `/api/events/upcoming` | `CRUDHandler.GetUpcomingEvents` | Eventos proximos |
-| `POST` | `/api/events` | `CRUDHandler.CreateEvent` | Crear evento |
-| `GET` | `/api/events/{id}` | `CRUDHandler.GetEvent` | Obtener evento con datos del cliente |
-| `PUT` | `/api/events/{id}` | `CRUDHandler.UpdateEvent` | Actualizar evento |
-| `DELETE` | `/api/events/{id}` | `CRUDHandler.DeleteEvent` | Eliminar evento |
-| `GET` | `/api/events/{id}/products` | `CRUDHandler.GetEventProducts` | Productos del evento |
-| `GET` | `/api/events/{id}/extras` | `CRUDHandler.GetEventExtras` | Extras del evento |
-| `PUT` | `/api/events/{id}/items` | `CRUDHandler.UpdateEventItems` | Actualizar productos, extras, equipo e insumos del evento |
-| `GET` | `/api/events/{id}/equipment` | `CRUDHandler.GetEventEquipment` | Equipo asignado al evento |
-| `GET` | `/api/events/{id}/supplies` | `CRUDHandler.GetEventSupplies` | Insumos del evento |
-| `GET` | `/api/events/{id}/photos` | `CRUDHandler.GetEventPhotos` | Fotos del evento |
-| `POST` | `/api/events/{id}/photos` | `CRUDHandler.AddEventPhoto` | Agregar foto al evento |
-| `DELETE` | `/api/events/{id}/photos/{photoId}` | `CRUDHandler.DeleteEventPhoto` | Eliminar foto del evento |
-| `GET` | `/api/events/equipment/conflicts` | `CRUDHandler.CheckEquipmentConflictsGET` | Detectar conflictos de equipo (GET para mobile) |
-| `POST` | `/api/events/equipment/conflicts` | `CRUDHandler.CheckEquipmentConflicts` | Detectar conflictos de equipo (POST para web) |
-| `GET` | `/api/events/equipment/suggestions` | `CRUDHandler.GetEquipmentSuggestionsGET` | Sugerencias de equipo (GET para mobile) |
-| `POST` | `/api/events/equipment/suggestions` | `CRUDHandler.GetEquipmentSuggestions` | Sugerencias de equipo (POST para web) |
-| `GET` | `/api/events/supplies/suggestions` | `CRUDHandler.GetSupplySuggestionsGET` | Sugerencias de insumos (GET para mobile) |
-| `POST` | `/api/events/supplies/suggestions` | `CRUDHandler.GetSupplySuggestions` | Sugerencias de insumos (POST para web) |
+| Metodo   | Ruta                                | Handler                                  | Descripcion                                               |
+| -------- | ----------------------------------- | ---------------------------------------- | --------------------------------------------------------- |
+| `GET`    | `/api/events`                       | `CRUDHandler.ListEvents`                 | Listar eventos del usuario                                |
+| `GET`    | `/api/events/upcoming`              | `CRUDHandler.GetUpcomingEvents`          | Eventos proximos                                          |
+| `POST`   | `/api/events`                       | `CRUDHandler.CreateEvent`                | Crear evento                                              |
+| `GET`    | `/api/events/{id}`                  | `CRUDHandler.GetEvent`                   | Obtener evento con datos del cliente                      |
+| `PUT`    | `/api/events/{id}`                  | `CRUDHandler.UpdateEvent`                | Actualizar evento                                         |
+| `DELETE` | `/api/events/{id}`                  | `CRUDHandler.DeleteEvent`                | Eliminar evento                                           |
+| `GET`    | `/api/events/{id}/products`         | `CRUDHandler.GetEventProducts`           | Productos del evento                                      |
+| `GET`    | `/api/events/{id}/extras`           | `CRUDHandler.GetEventExtras`             | Extras del evento                                         |
+| `PUT`    | `/api/events/{id}/items`            | `CRUDHandler.UpdateEventItems`           | Actualizar productos, extras, equipo e insumos del evento |
+| `GET`    | `/api/events/{id}/equipment`        | `CRUDHandler.GetEventEquipment`          | Equipo asignado al evento                                 |
+| `GET`    | `/api/events/{id}/supplies`         | `CRUDHandler.GetEventSupplies`           | Insumos del evento                                        |
+| `GET`    | `/api/events/{id}/photos`           | `CRUDHandler.GetEventPhotos`             | Fotos del evento                                          |
+| `POST`   | `/api/events/{id}/photos`           | `CRUDHandler.AddEventPhoto`              | Agregar foto al evento                                    |
+| `DELETE` | `/api/events/{id}/photos/{photoId}` | `CRUDHandler.DeleteEventPhoto`           | Eliminar foto del evento                                  |
+| `GET`    | `/api/events/equipment/conflicts`   | `CRUDHandler.CheckEquipmentConflictsGET` | Detectar conflictos de equipo (GET para mobile)           |
+| `POST`   | `/api/events/equipment/conflicts`   | `CRUDHandler.CheckEquipmentConflicts`    | Detectar conflictos de equipo (POST para web)             |
+| `GET`    | `/api/events/equipment/suggestions` | `CRUDHandler.GetEquipmentSuggestionsGET` | Sugerencias de equipo (GET para mobile)                   |
+| `POST`   | `/api/events/equipment/suggestions` | `CRUDHandler.GetEquipmentSuggestions`    | Sugerencias de equipo (POST para web)                     |
+| `GET`    | `/api/events/supplies/suggestions`  | `CRUDHandler.GetSupplySuggestionsGET`    | Sugerencias de insumos (GET para mobile)                  |
+| `POST`   | `/api/events/supplies/suggestions`  | `CRUDHandler.GetSupplySuggestions`       | Sugerencias de insumos (POST para web)                    |
 
 ### 6.9 Rutas Protegidas — Productos
 
-| Metodo | Ruta | Handler | Descripcion |
-|--------|------|---------|-------------|
-| `GET` | `/api/products` | `CRUDHandler.ListProducts` | Listar productos |
-| `POST` | `/api/products` | `CRUDHandler.CreateProduct` | Crear producto |
-| `POST` | `/api/products/ingredients/batch` | `CRUDHandler.GetBatchProductIngredients` | Obtener ingredientes de multiples productos |
-| `GET` | `/api/products/{id}` | `CUDHandler.GetProduct` | Obtener producto |
-| `PUT` | `/api/products/{id}` | `CRUDHandler.UpdateProduct` | Actualizar producto |
-| `DELETE` | `/api/products/{id}` | `CRUDHandler.DeleteProduct` | Eliminar producto |
-| `GET` | `/api/products/{id}/ingredients` | `CRUDHandler.GetProductIngredients` | Ingredientes del producto |
-| `PUT` | `/api/products/{id}/ingredients` | `CRUDHandler.UpdateProductIngredients` | Actualizar ingredientes |
+| Metodo   | Ruta                              | Handler                                  | Descripcion                                 |
+| -------- | --------------------------------- | ---------------------------------------- | ------------------------------------------- |
+| `GET`    | `/api/products`                   | `CRUDHandler.ListProducts`               | Listar productos                            |
+| `POST`   | `/api/products`                   | `CRUDHandler.CreateProduct`              | Crear producto                              |
+| `POST`   | `/api/products/ingredients/batch` | `CRUDHandler.GetBatchProductIngredients` | Obtener ingredientes de multiples productos |
+| `GET`    | `/api/products/{id}`              | `CUDHandler.GetProduct`                  | Obtener producto                            |
+| `PUT`    | `/api/products/{id}`              | `CRUDHandler.UpdateProduct`              | Actualizar producto                         |
+| `DELETE` | `/api/products/{id}`              | `CRUDHandler.DeleteProduct`              | Eliminar producto                           |
+| `GET`    | `/api/products/{id}/ingredients`  | `CRUDHandler.GetProductIngredients`      | Ingredientes del producto                   |
+| `PUT`    | `/api/products/{id}/ingredients`  | `CRUDHandler.UpdateProductIngredients`   | Actualizar ingredientes                     |
 
 ### 6.10 Rutas Protegidas — Inventario
 
-| Metodo | Ruta | Handler | Descripcion |
-|--------|------|---------|-------------|
-| `GET` | `/api/inventory` | `CRUDHandler.ListInventory` | Listar items del inventario |
-| `POST` | `/api/inventory` | `CRUDHandler.CreateInventoryItem` | Crear item de inventario |
-| `GET` | `/api/inventory/{id}` | `CRUDHandler.GetInventoryItem` | Obtener item |
-| `PUT` | `/api/inventory/{id}` | `CRUDHandler.UpdateInventoryItem` | Actualizar item |
-| `DELETE` | `/api/inventory/{id}` | `CRUDHandler.DeleteInventoryItem` | Eliminar item |
+| Metodo   | Ruta                  | Handler                           | Descripcion                 |
+| -------- | --------------------- | --------------------------------- | --------------------------- |
+| `GET`    | `/api/inventory`      | `CRUDHandler.ListInventory`       | Listar items del inventario |
+| `POST`   | `/api/inventory`      | `CRUDHandler.CreateInventoryItem` | Crear item de inventario    |
+| `GET`    | `/api/inventory/{id}` | `CRUDHandler.GetInventoryItem`    | Obtener item                |
+| `PUT`    | `/api/inventory/{id}` | `CRUDHandler.UpdateInventoryItem` | Actualizar item             |
+| `DELETE` | `/api/inventory/{id}` | `CRUDHandler.DeleteInventoryItem` | Eliminar item               |
 
 ### 6.11 Rutas Protegidas — Pagos
 
-| Metodo | Ruta | Handler | Descripcion |
-|--------|------|---------|-------------|
-| `GET` | `/api/payments` | `CRUDHandler.ListPayments` | Listar pagos |
-| `POST` | `/api/payments` | `CRUDHandler.CreatePayment` | Registrar pago |
-| `PUT` | `/api/payments/{id}` | `CRUDHandler.UpdatePayment` | Actualizar pago |
-| `DELETE` | `/api/payments/{id}` | `CRUDHandler.DeletePayment` | Eliminar pago |
+| Metodo   | Ruta                 | Handler                     | Descripcion     |
+| -------- | -------------------- | --------------------------- | --------------- |
+| `GET`    | `/api/payments`      | `CRUDHandler.ListPayments`  | Listar pagos    |
+| `POST`   | `/api/payments`      | `CRUDHandler.CreatePayment` | Registrar pago  |
+| `PUT`    | `/api/payments/{id}` | `CRUDHandler.UpdatePayment` | Actualizar pago |
+| `DELETE` | `/api/payments/{id}` | `CRUDHandler.DeletePayment` | Eliminar pago   |
 
 ### 6.12 Rutas Protegidas — Fechas No Disponibles
 
-| Metodo | Ruta | Handler | Descripcion |
-|--------|------|---------|-------------|
-| `GET` | `/api/unavailable-dates` | `UnavailableDateHandler.GetUnavailableDates` | Listar fechas bloqueadas |
-| `POST` | `/api/unavailable-dates` | `UnavailableDateHandler.CreateUnavailableDate` | Crear fecha no disponible |
-| `DELETE` | `/api/unavailable-dates/{id}` | `UnavailableDateHandler.DeleteUnavailableDate` | Eliminar fecha |
+| Metodo   | Ruta                          | Handler                                        | Descripcion               |
+| -------- | ----------------------------- | ---------------------------------------------- | ------------------------- |
+| `GET`    | `/api/unavailable-dates`      | `UnavailableDateHandler.GetUnavailableDates`   | Listar fechas bloqueadas  |
+| `POST`   | `/api/unavailable-dates`      | `UnavailableDateHandler.CreateUnavailableDate` | Crear fecha no disponible |
+| `DELETE` | `/api/unavailable-dates/{id}` | `UnavailableDateHandler.DeleteUnavailableDate` | Eliminar fecha            |
 
 ### 6.13 Rutas Protegidas — Dispositivos
 
-| Metodo | Ruta | Handler | Descripcion |
-|--------|------|---------|-------------|
-| `POST` | `/api/devices/register` | `DeviceHandler.RegisterDevice` | Registrar token para push notifications |
-| `POST` | `/api/devices/unregister` | `DeviceHandler.UnregisterDevice` | Desregistrar dispositivo |
+| Metodo | Ruta                      | Handler                          | Descripcion                             |
+| ------ | ------------------------- | -------------------------------- | --------------------------------------- |
+| `POST` | `/api/devices/register`   | `DeviceHandler.RegisterDevice`   | Registrar token para push notifications |
+| `POST` | `/api/devices/unregister` | `DeviceHandler.UnregisterDevice` | Desregistrar dispositivo                |
 
 ### 6.14 Rutas Protegidas — Suscripciones
 
-| Metodo | Ruta | Handler | Descripcion |
-|--------|------|---------|-------------|
-| `GET` | `/api/subscriptions/status` | `SubscriptionHandler.GetSubscriptionStatus` | Estado de la suscripcion |
-| `POST` | `/api/subscriptions/checkout-session` | `SubscriptionHandler.CreateCheckoutSession` | Crear sesion de checkout Stripe |
-| `POST` | `/api/subscriptions/portal-session` | `SubscriptionHandler.CreatePortalSession` | Crear sesion del portal de facturacion |
+| Metodo | Ruta                                  | Handler                                     | Descripcion                            |
+| ------ | ------------------------------------- | ------------------------------------------- | -------------------------------------- |
+| `GET`  | `/api/subscriptions/status`           | `SubscriptionHandler.GetSubscriptionStatus` | Estado de la suscripcion               |
+| `POST` | `/api/subscriptions/checkout-session` | `SubscriptionHandler.CreateCheckoutSession` | Crear sesion de checkout Stripe        |
+| `POST` | `/api/subscriptions/portal-session`   | `SubscriptionHandler.CreatePortalSession`   | Crear sesion del portal de facturacion |
 
 ### 6.15 Rutas Protegidas — Busqueda
 
 Rate limit: **30 requests/minuto** por IP.
 
-| Metodo | Ruta | Handler | Descripcion |
-|--------|------|---------|-------------|
-| `GET` | `/api/search` | `SearchHandler.SearchAll` | Busqueda global en clientes, productos, inventario y eventos |
+| Metodo | Ruta          | Handler                   | Descripcion                                                  |
+| ------ | ------------- | ------------------------- | ------------------------------------------------------------ |
+| `GET`  | `/api/search` | `SearchHandler.SearchAll` | Busqueda global en clientes, productos, inventario y eventos |
 
 ### 6.16 Rutas de Uploads
 
 Rate limit: **5 requests/minuto** por IP.
 
-| Metodo | Ruta | Handler | Descripcion |
-|--------|------|---------|-------------|
+| Metodo | Ruta                 | Handler                     | Descripcion                                                          |
+| ------ | -------------------- | --------------------------- | -------------------------------------------------------------------- |
 | `POST` | `/api/uploads/image` | `UploadHandler.UploadImage` | Subir imagen (genera thumbnail). Limite por plan: 50 basic / 200 pro |
 
 ### 6.17 Rutas Admin
 
 Requieren: JWT + rol `admin`. Rate limit: **30 requests/minuto**.
 
-| Metodo | Ruta | Handler | Descripcion |
-|--------|------|---------|-------------|
-| `GET` | `/api/admin/stats` | `AdminHandler.GetStats` | Estadisticas globales de la plataforma |
-| `GET` | `/api/admin/users` | `AdminHandler.ListUsers` | Listar todos los usuarios |
-| `GET` | `/api/admin/users/{id}` | `AdminHandler.GetUser` | Obtener usuario especifico |
-| `PUT` | `/api/admin/users/{id}/upgrade` | `AdminHandler.UpgradeUser` | Upgrade/downgrade de plan de usuario |
-| `GET` | `/api/admin/subscriptions` | `AdminHandler.GetSubscriptions` | Listar todas las suscripciones |
+| Metodo | Ruta                            | Handler                         | Descripcion                            |
+| ------ | ------------------------------- | ------------------------------- | -------------------------------------- |
+| `GET`  | `/api/admin/stats`              | `AdminHandler.GetStats`         | Estadisticas globales de la plataforma |
+| `GET`  | `/api/admin/users`              | `AdminHandler.ListUsers`        | Listar todos los usuarios              |
+| `GET`  | `/api/admin/users/{id}`         | `AdminHandler.GetUser`          | Obtener usuario especifico             |
+| `PUT`  | `/api/admin/users/{id}/upgrade` | `AdminHandler.UpgradeUser`      | Upgrade/downgrade de plan de usuario   |
+| `GET`  | `/api/admin/subscriptions`      | `AdminHandler.GetSubscriptions` | Listar todas las suscripciones         |
 
 ### 6.18 Rutas Debug (Admin Only)
 
 > [!warning] Solo desarrollo
 > Solo disponibles en entornos de desarrollo. Requieren JWT + rol `admin`.
 
-| Metodo | Ruta | Handler | Descripcion |
-|--------|------|---------|-------------|
-| `POST` | `/api/subscriptions/debug-upgrade` | `SubscriptionHandler.DebugUpgrade` | Upgrade manual de plan (solo dev) |
+| Metodo | Ruta                                 | Handler                              | Descripcion                         |
+| ------ | ------------------------------------ | ------------------------------------ | ----------------------------------- |
+| `POST` | `/api/subscriptions/debug-upgrade`   | `SubscriptionHandler.DebugUpgrade`   | Upgrade manual de plan (solo dev)   |
 | `POST` | `/api/subscriptions/debug-downgrade` | `SubscriptionHandler.DebugDowngrade` | Downgrade manual de plan (solo dev) |
 
 ---
@@ -747,15 +765,15 @@ graph LR
 
 Implementa headers de seguridad OWASP:
 
-| Header | Valor | Proteccion |
-|--------|-------|------------|
-| `X-Content-Type-Options` | `nosniff` | Previene MIME sniffing |
-| `X-Frame-Options` | `DENY` | Previene clickjacking |
-| `X-XSS-Protection` | `1; mode=block` | XSS en navegadores legacy |
-| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains` | Fuerza HTTPS (solo si TLS/proxy HTTPS) |
-| `Content-Security-Policy` | `default-src 'self'; script-src 'self'; ...` | Restringe fuentes de recursos |
-| `Referrer-Policy` | `strict-origin-when-cross-origin` | Controla info del Referer |
-| `Permissions-Policy` | `geolocation=(), microphone=(), camera=(), ...` | Deshabilita APIs del navegador no necesarias |
+| Header                      | Valor                                           | Proteccion                                   |
+| --------------------------- | ----------------------------------------------- | -------------------------------------------- |
+| `X-Content-Type-Options`    | `nosniff`                                       | Previene MIME sniffing                       |
+| `X-Frame-Options`           | `DENY`                                          | Previene clickjacking                        |
+| `X-XSS-Protection`          | `1; mode=block`                                 | XSS en navegadores legacy                    |
+| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains`           | Fuerza HTTPS (solo si TLS/proxy HTTPS)       |
+| `Content-Security-Policy`   | `default-src 'self'; script-src 'self'; ...`    | Restringe fuentes de recursos                |
+| `Referrer-Policy`           | `strict-origin-when-cross-origin`               | Controla info del Referer                    |
+| `Permissions-Policy`        | `geolocation=(), microphone=(), camera=(), ...` | Deshabilita APIs del navegador no necesarias |
 
 ### 7.4 Logger (Global)
 
@@ -771,6 +789,7 @@ Implementa headers de seguridad OWASP:
 **Archivo:** `middleware/auth.go`
 
 Flujo de validacion:
+
 1. Busca token en cookie `auth_token` (prioridad, seguro)
 2. Fallback a header `Authorization: Bearer {token}` (para API clients/mobile)
 3. Si no hay token: HTTP 401 `"Authentication required"`
@@ -790,12 +809,12 @@ Flujo de validacion:
 
 Limites configurados:
 
-| Grupo de rutas | Limite | Ventana |
-|----------------|--------|---------|
+| Grupo de rutas               | Limite      | Ventana  |
+| ---------------------------- | ----------- | -------- |
 | Auth (login, register, etc.) | 10 requests | 1 minuto |
-| Uploads (subida de imagenes) | 5 requests | 1 minuto |
-| Search | 30 requests | 1 minuto |
-| Admin | 30 requests | 1 minuto |
+| Uploads (subida de imagenes) | 5 requests  | 1 minuto |
+| Search                       | 30 requests | 1 minuto |
+| Admin                        | 30 requests | 1 minuto |
 
 Respuesta cuando se excede: HTTP 429 con header `Retry-After`.
 
@@ -818,13 +837,14 @@ Respuesta cuando se excede: HTTP 429 con header `Retry-After`.
 
 El sistema usa **tres tipos de token**, todos firmados con HS256:
 
-| Tipo | Subject | Duracion | Uso |
-|------|---------|----------|-----|
-| Access Token | `access` | Configurable (default 24h) | Autenticar requests a la API |
-| Refresh Token | `refresh` | 7 dias | Renovar access tokens sin re-login |
-| Reset Token | `password-reset` | 1 hora | Restablecer contrasena |
+| Tipo          | Subject          | Duracion                   | Uso                                |
+| ------------- | ---------------- | -------------------------- | ---------------------------------- |
+| Access Token  | `access`         | Configurable (default 24h) | Autenticar requests a la API       |
+| Refresh Token | `refresh`        | 7 dias                     | Renovar access tokens sin re-login |
+| Reset Token   | `password-reset` | 1 hora                     | Restablecer contrasena             |
 
 **Claims del token** (`TokenClaims`):
+
 - `user_id` — UUID del usuario
 - `email` — Email del usuario
 - `exp` — Expiracion
@@ -877,13 +897,14 @@ El sistema usa **tres tipos de token**, todos firmados con HS256:
 
 **Archivos:** `handlers/subscription_handler.go`, `handlers/stripe_service.go`
 
-| Funcionalidad | Endpoint | Descripcion |
-|---------------|----------|-------------|
-| Checkout Session (suscripcion) | `POST /api/subscriptions/checkout-session` | Crea una sesion de Stripe Checkout para upgrade a plan Pro |
-| Customer Portal | `POST /api/subscriptions/portal-session` | Redirige al portal de facturacion de Stripe |
-| Webhook | `POST /api/subscriptions/webhook/stripe` | Procesa eventos de Stripe (suscripcion creada, cancelada, etc.) |
+| Funcionalidad                  | Endpoint                                   | Descripcion                                                     |
+| ------------------------------ | ------------------------------------------ | --------------------------------------------------------------- |
+| Checkout Session (suscripcion) | `POST /api/subscriptions/checkout-session` | Crea una sesion de Stripe Checkout para upgrade a plan Pro      |
+| Customer Portal                | `POST /api/subscriptions/portal-session`   | Redirige al portal de facturacion de Stripe                     |
+| Webhook                        | `POST /api/subscriptions/webhook/stripe`   | Procesa eventos de Stripe (suscripcion creada, cancelada, etc.) |
 
 **Variables de entorno requeridas:**
+
 - `STRIPE_SECRET_KEY`
 - `STRIPE_WEBHOOK_SECRET`
 - `STRIPE_PRO_PRICE_ID`
@@ -909,6 +930,7 @@ El sistema usa **tres tipos de token**, todos firmados con HS256:
 - Si `RESEND_API_KEY` no esta configurado, el email no se envia (warning en log)
 
 **Variables de entorno:**
+
 - `RESEND_API_KEY`
 - `RESEND_FROM_EMAIL` (default: `Solennix <noreply@solennix.com>`)
 - `FRONTEND_URL` (default: `http://localhost:5173`)
@@ -928,10 +950,10 @@ El sistema usa **tres tipos de token**, todos firmados con HS256:
 
 **Limites por plan:**
 
-| Plan | Uploads maximos |
-|------|----------------|
-| Basic | 50 |
-| Pro | 200 |
+| Plan  | Uploads maximos |
+| ----- | --------------- |
+| Basic | 50              |
+| Pro   | 200             |
 
 ---
 
@@ -941,15 +963,15 @@ El sistema usa **tres tipos de token**, todos firmados con HS256:
 
 El proyecto tiene tests en todas las capas:
 
-| Capa | Archivos | Enfoque |
-|------|----------|---------|
-| Config | `config_test.go` | Variables de entorno, defaults |
-| Middleware | `auth_test.go`, `cors_test.go`, `recovery_test.go`, `security_test.go`, `ratelimit_test.go`, `admin_test.go`, `logging_test.go` | Comportamiento de cada middleware |
-| Handlers | `auth_handler_test.go`, `crud_handler_test.go`, `crud_handler_success_test.go`, `crud_handler_error_test.go`, `crud_payment_test.go`, `subscription_handler_test.go`, `upload_handler_test.go`, `search_handler_test.go`, `helpers_test.go`, `validation_test.go`, `contract_template_test.go` | Mocks de repos, validacion de HTTP responses |
-| Services | `auth_service_test.go`, `email_service_test.go` | JWT, bcrypt, templates de email |
-| Repository | `repository_integration_test.go`, `repository_error_test.go` | Tests de integracion con DB real |
-| Router | `router_test.go`, `router_api_integration_test.go` | Rutas registradas, integracion API |
-| Database | `database_test.go`, `migrate_test.go` | Conexion, sistema de migraciones |
+| Capa       | Archivos                                                                                                                                                                                                                                                                                       | Enfoque                                      |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| Config     | `config_test.go`                                                                                                                                                                                                                                                                               | Variables de entorno, defaults               |
+| Middleware | `auth_test.go`, `cors_test.go`, `recovery_test.go`, `security_test.go`, `ratelimit_test.go`, `admin_test.go`, `logging_test.go`                                                                                                                                                                | Comportamiento de cada middleware            |
+| Handlers   | `auth_handler_test.go`, `crud_handler_test.go`, `crud_handler_success_test.go`, `crud_handler_error_test.go`, `crud_payment_test.go`, `subscription_handler_test.go`, `upload_handler_test.go`, `search_handler_test.go`, `helpers_test.go`, `validation_test.go`, `contract_template_test.go` | Mocks de repos, validacion de HTTP responses |
+| Services   | `auth_service_test.go`, `email_service_test.go`                                                                                                                                                                                                                                                | JWT, bcrypt, templates de email              |
+| Repository | `repository_integration_test.go`, `repository_error_test.go`                                                                                                                                                                                                                                   | Tests de integracion con DB real             |
+| Router     | `router_test.go`, `router_api_integration_test.go`                                                                                                                                                                                                                                             | Rutas registradas, integracion API           |
+| Database   | `database_test.go`, `migrate_test.go`                                                                                                                                                                                                                                                          | Conexion, sistema de migraciones             |
 
 ### 10.2 Herramientas
 
@@ -1010,26 +1032,26 @@ services:
 
 ### 11.3 Variables de Entorno
 
-| Variable | Requerida | Default | Descripcion |
-|----------|-----------|---------|-------------|
-| `DATABASE_URL` | Si | — | URL de conexion PostgreSQL |
-| `JWT_SECRET` | Si | — | Secreto para firmar JWTs |
-| `PORT` | No | `8080` | Puerto del servidor HTTP |
-| `ENVIRONMENT` | No | `development` | Entorno (`development` / `production`) |
-| `JWT_EXPIRY_HOURS` | No | `24` | Horas de expiracion del access token |
-| `CORS_ALLOWED_ORIGINS` | No | `http://localhost:5173` | Origenes CORS (separados por coma) |
-| `RESEND_API_KEY` | No | — | API key de Resend para emails |
-| `RESEND_FROM_EMAIL` | No | `Solennix <noreply@solennix.com>` | Direccion de envio de emails |
-| `FRONTEND_URL` | No | `http://localhost:5173` | URL del frontend (para links en emails) |
-| `STRIPE_SECRET_KEY` | No | — | Secret key de Stripe |
-| `STRIPE_WEBHOOK_SECRET` | No | — | Secreto para verificar webhooks de Stripe |
-| `STRIPE_PRO_PRICE_ID` | No | — | Price ID del plan Pro en Stripe |
-| `STRIPE_PORTAL_CONFIG_ID` | No | — | Config ID del portal de facturacion |
-| `REVENUECAT_WEBHOOK_SECRET` | No | — | Secreto para webhooks de RevenueCat |
-| `REVENUECAT_API_KEY` | No | — | Secret API key de RevenueCat para sync Stripe->RC |
-| `UPLOAD_DIR` | No | `./uploads` | Directorio de uploads |
-| `BOOTSTRAP_ADMIN_EMAIL` | No | — | Email a promover a admin al iniciar |
-| `TRUST_PROXY` | No | `false` | Confiar en `X-Forwarded-For` |
+| Variable                    | Requerida | Default                           | Descripcion                                       |
+| --------------------------- | --------- | --------------------------------- | ------------------------------------------------- |
+| `DATABASE_URL`              | Si        | —                                 | URL de conexion PostgreSQL                        |
+| `JWT_SECRET`                | Si        | —                                 | Secreto para firmar JWTs                          |
+| `PORT`                      | No        | `8080`                            | Puerto del servidor HTTP                          |
+| `ENVIRONMENT`               | No        | `development`                     | Entorno (`development` / `production`)            |
+| `JWT_EXPIRY_HOURS`          | No        | `24`                              | Horas de expiracion del access token              |
+| `CORS_ALLOWED_ORIGINS`      | No        | `http://localhost:5173`           | Origenes CORS (separados por coma)                |
+| `RESEND_API_KEY`            | No        | —                                 | API key de Resend para emails                     |
+| `RESEND_FROM_EMAIL`         | No        | `Solennix <noreply@solennix.com>` | Direccion de envio de emails                      |
+| `FRONTEND_URL`              | No        | `http://localhost:5173`           | URL del frontend (para links en emails)           |
+| `STRIPE_SECRET_KEY`         | No        | —                                 | Secret key de Stripe                              |
+| `STRIPE_WEBHOOK_SECRET`     | No        | —                                 | Secreto para verificar webhooks de Stripe         |
+| `STRIPE_PRO_PRICE_ID`       | No        | —                                 | Price ID del plan Pro en Stripe                   |
+| `STRIPE_PORTAL_CONFIG_ID`   | No        | —                                 | Config ID del portal de facturacion               |
+| `REVENUECAT_WEBHOOK_SECRET` | No        | —                                 | Secreto para webhooks de RevenueCat               |
+| `REVENUECAT_API_KEY`        | No        | —                                 | Secret API key de RevenueCat para sync Stripe->RC |
+| `UPLOAD_DIR`                | No        | `./uploads`                       | Directorio de uploads                             |
+| `BOOTSTRAP_ADMIN_EMAIL`     | No        | —                                 | Email a promover a admin al iniciar               |
+| `TRUST_PROXY`               | No        | `false`                           | Confiar en `X-Forwarded-For`                      |
 
 ### 11.4 Health Check
 
@@ -1041,6 +1063,7 @@ curl http://localhost:8080/health
 ### 11.5 Graceful Shutdown
 
 El servidor captura senales `SIGINT` y `SIGTERM`:
+
 1. Deja de aceptar nuevas conexiones
 2. Espera hasta 15 segundos para que las conexiones activas terminen
 3. Cierra el pool de conexiones a PostgreSQL
@@ -1048,8 +1071,8 @@ El servidor captura senales `SIGINT` y `SIGTERM`:
 
 ### 11.6 Background Jobs
 
-| Job | Frecuencia | Descripcion |
-|-----|------------|-------------|
+| Job                 | Frecuencia  | Descripcion                                |
+| ------------------- | ----------- | ------------------------------------------ |
 | Expire Gifted Plans | Cada 1 hora | Revierte planes gifted expirados a `basic` |
 
 ---
@@ -1060,6 +1083,7 @@ El servidor captura senales `SIGINT` y `SIGTERM`:
 
 > [!note] Decision: pgx directo sin ORM
 > **Razones:**
+>
 > - Control total sobre las queries SQL (JOINs complejos, columnas generadas, JSONB)
 > - Mejor rendimiento al eliminar la capa de abstraccion del ORM
 > - `pgxpool` provee connection pooling nativo eficiente
@@ -1070,6 +1094,7 @@ El servidor captura senales `SIGINT` y `SIGTERM`:
 
 > [!note] Decision: Chi como router HTTP
 > **Razones:**
+>
 > - Totalmente compatible con `net/http` (handlers estandar de Go)
 > - Middleware composable con la firma estandar `func(http.Handler) http.Handler`
 > - Sin dependencias externas pesadas
@@ -1080,6 +1105,7 @@ El servidor captura senales `SIGINT` y `SIGTERM`:
 
 > [!note] Decision: Sistema de migraciones propio con go:embed
 > **Razones:**
+>
 > - Las migraciones se incluyen en el binario compilado (no hay archivos externos que gestionar)
 > - Ejecucion automatica al arrancar el servidor
 > - Control total sobre el proceso (transacciones por migracion, rollback automatico)
@@ -1090,6 +1116,7 @@ El servidor captura senales `SIGINT` y `SIGTERM`:
 
 > [!note] Decision: log/slog (stdlib) para logging
 > **Razones:**
+>
 > - Incluido en la biblioteca estandar desde Go 1.21
 > - Logging estructurado nativo (key-value pairs)
 > - Sin dependencias externas
@@ -1100,6 +1127,7 @@ El servidor captura senales `SIGINT` y `SIGTERM`:
 
 > [!note] Decision: Soportar ambos mecanismos de autenticacion
 > **Razones:**
+>
 > - Cookie httpOnly es mas seguro para la web (no accesible desde JavaScript)
 > - Header `Authorization: Bearer` es estandar para clientes moviles (iOS/Android)
 > - La prioridad es cookie > header para maxima seguridad en web
@@ -1108,6 +1136,7 @@ El servidor captura senales `SIGINT` y `SIGTERM`:
 
 > [!note] Decision: Filtrar por user_id en lugar de multi-database
 > **Razones:**
+>
 > - Simplicidad de implementacion y despliegue
 > - Una sola base de datos para todos los usuarios
 > - Cada usuario solo accede a sus propios datos
@@ -1117,6 +1146,7 @@ El servidor captura senales `SIGINT` y `SIGTERM`:
 
 > [!note] Decision: Almacenamiento en disco local (MVP)
 > **Razones:**
+>
 > - Simplicidad para MVP
 > - Sin costos adicionales de almacenamiento en la nube
 > - Servidos directamente por el servidor Go con `http.FileServer`
@@ -1126,6 +1156,7 @@ El servidor captura senales `SIGINT` y `SIGTERM`:
 
 > [!note] Decision: Fechas como string (YYYY-MM-DD) en modelos Go
 > **Razones:**
+>
 > - PostgreSQL almacena como tipo `DATE`
 > - Evita problemas de timezone al transportar entre servidor y clientes moviles
 > - Formato consistente y predecible en JSON

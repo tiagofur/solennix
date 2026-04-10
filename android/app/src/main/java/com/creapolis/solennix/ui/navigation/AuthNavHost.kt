@@ -4,6 +4,7 @@ import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSiz
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.fragment.app.FragmentActivity
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -21,7 +22,10 @@ import com.creapolis.solennix.feature.auth.viewmodel.AuthViewModel
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
-fun AuthNavHost(onAuthenticated: () -> Unit = {}) {
+fun AuthNavHost(
+    initialRoute: String? = null,
+    onAuthenticated: () -> Unit = {}
+) {
     val navController = rememberNavController()
     val viewModel: AuthViewModel = hiltViewModel()
 
@@ -30,6 +34,14 @@ fun AuthNavHost(onAuthenticated: () -> Unit = {}) {
     val windowSizeClass = activity?.let { calculateWindowSizeClass(it) }
     val isWideScreen = windowSizeClass != null &&
         windowSizeClass.widthSizeClass != WindowWidthSizeClass.Compact
+
+    LaunchedEffect(initialRoute) {
+        initialRoute?.let { route ->
+            navController.navigate(route) {
+                launchSingleTop = true
+            }
+        }
+    }
 
     NavHost(navController = navController, startDestination = "login") {
         composable("login") {

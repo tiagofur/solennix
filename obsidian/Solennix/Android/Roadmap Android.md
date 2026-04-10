@@ -9,34 +9,34 @@
 
 ## Estado de Paridad con Web
 
-| Feature | Web | Android | Gap |
-|---------|-----|---------|-----|
-| CRUD Eventos | ✅ | ✅ | — |
-| CRUD Clientes | ✅ | ✅ | — |
-| CRUD Productos | ✅ | ✅ | — |
-| CRUD Inventario | ✅ | ✅ | — |
-| Registro de pagos | ✅ | ✅ | — |
-| Calendario | ✅ | ✅ | — |
-| Dashboard con KPIs | ✅ | ✅ | — |
-| Generación de PDFs | ✅ Funcional | ✅ Nativo (PdfDocument) | **Fase 0 OK** |
-| Pagos online (Stripe) | ✅ Stripe | ❌ Solo registro manual | Fase 3 |
-| Onboarding checklist | ✅ | ✅ | — |
-| Cotización rápida | ✅ | ✅ | — |
-| Detección conflictos equipo | ✅ | ✅ | — |
-| Sugerencias equipo/insumos | ✅ | ✅ | — |
-| Búsqueda global | ✅ | ✅ + App Search | Android adelante |
-| Dark mode | ✅ | ✅ | — |
-| Auth biométrica | ❌ | ✅ | Android adelante |
-| Widgets home screen | ❌ | ✅ | Android adelante |
-| Quick Settings tile | ❌ | ✅ | Android adelante |
-| Deep links | ❌ | ✅ | Android adelante |
-| Offline-first | ❌ | ✅ (completo p/Eventos) | Android adelante |
-| React Query / cache | 🔄 En progreso | N/A (Room) | — |
-| Push notifications | ❌ | ✅ Activo (Firebase) | **Fase 2 OK** |
-| Test coverage | ❌ 0% | 🔄 15% (Infra OK) | Ambos |
-| i18n | ❌ | ❌ | Ambos |
-| Analytics | ❌ | ❌ | Ambos |
-| Suscripciones (billing) | ❌ | ✅ RevenueCat OK | **Fase 2 OK** |
+| Feature                     | Web            | Android                 | Gap              |
+| --------------------------- | -------------- | ----------------------- | ---------------- |
+| CRUD Eventos                | ✅             | ✅                      | —                |
+| CRUD Clientes               | ✅             | ✅                      | —                |
+| CRUD Productos              | ✅             | ✅                      | —                |
+| CRUD Inventario             | ✅             | ✅                      | —                |
+| Registro de pagos           | ✅             | ✅                      | —                |
+| Calendario                  | ✅             | ✅                      | —                |
+| Dashboard con KPIs          | ✅             | ✅                      | —                |
+| Generación de PDFs          | ✅ Funcional   | ✅ Nativo (PdfDocument) | **Fase 0 OK**    |
+| Pagos online (Stripe)       | ✅ Stripe      | ❌ Solo registro manual | Fase 3           |
+| Onboarding checklist        | ✅             | ✅                      | —                |
+| Cotización rápida           | ✅             | ✅                      | —                |
+| Detección conflictos equipo | ✅             | ✅                      | —                |
+| Sugerencias equipo/insumos  | ✅             | ✅                      | —                |
+| Búsqueda global             | ✅             | ✅ + App Search         | Android adelante |
+| Dark mode                   | ✅             | ✅                      | —                |
+| Auth biométrica             | ❌             | ✅                      | Android adelante |
+| Widgets home screen         | ❌             | ✅                      | Android adelante |
+| Quick Settings tile         | ❌             | ✅                      | Android adelante |
+| Deep links                  | ❌             | ✅                      | Android adelante |
+| Offline-first               | ❌             | ✅ (completo p/Eventos) | Android adelante |
+| React Query / cache         | 🔄 En progreso | N/A (Room)              | —                |
+| Push notifications          | ❌             | ✅ Activo (Firebase)    | **Fase 2 OK**    |
+| Test coverage               | ❌ 0%          | 🔄 15% (Infra OK)       | Ambos            |
+| i18n                        | ❌             | ❌                      | Ambos            |
+| Analytics                   | ❌             | ❌                      | Ambos            |
+| Suscripciones (billing)     | ❌             | ✅ RevenueCat OK        | **Fase 2 OK**    |
 
 ---
 
@@ -134,7 +134,7 @@
 
 ### 2.5 Sync Bidireccional ✅
 
-- [x] Esquema Room con `syncStatus` (SYNCED, PENDING_*)
+- [x] Esquema Room con `syncStatus` (SYNCED, PENDING\_\*)
 - [x] Lógica de "guardado local ante fallo" en Repositorios
 - [x] `SyncWorker` refactorizado para subir cambios antes de descargar
 
@@ -336,17 +336,17 @@ gantt
 
 ### Prioridad Android Etapa 2
 
-| Feature | Componente | Esfuerzo | Prioridad |
-|---------|-----------|:--------:|:---------:|
-| **Preferencias de notificación** | `SettingsScreen` → sección "Notificaciones" con switches | 3h | P0 |
-| **Pantalla de reportes** | `ReportsScreen` + Canvas charts + date range picker | 15h | P1 |
-| **Botón "Ir" + acciones** | `EventDetailScreen` → botones "En camino", "Llegamos" + Maps Intent | 8h | P1 |
-| **WhatsApp deep links** | Botón "Enviar por WhatsApp" con Intent | 2h | P0 |
-| **Plantillas de evento** | `TemplateListScreen` + guardar/cargar | 8h | P2 |
-| **Timeline del evento** | `EventTimelineScreen` hora por hora | 10h | P2 |
-| **Modo Día del Evento** | Banner + ongoing notification + acciones rápidas | 12h | P2 |
-| **Google Calendar Sync** | CalendarContract sync bidireccional | 8h | P2 |
-| **Notificación persistente (evento activo)** | Foreground service con controles | 6h | P2 |
+| Feature                                      | Componente                                                          | Esfuerzo | Prioridad |
+| -------------------------------------------- | ------------------------------------------------------------------- | :------: | :-------: |
+| **Preferencias de notificación**             | `SettingsScreen` → sección "Notificaciones" con switches            |    3h    |    P0     |
+| **Pantalla de reportes**                     | `ReportsScreen` + Canvas charts + date range picker                 |   15h    |    P1     |
+| **Botón "Ir" + acciones**                    | `EventDetailScreen` → botones "En camino", "Llegamos" + Maps Intent |    8h    |    P1     |
+| **WhatsApp deep links**                      | Botón "Enviar por WhatsApp" con Intent                              |    2h    |    P0     |
+| **Plantillas de evento**                     | `TemplateListScreen` + guardar/cargar                               |    8h    |    P2     |
+| **Timeline del evento**                      | `EventTimelineScreen` hora por hora                                 |   10h    |    P2     |
+| **Modo Día del Evento**                      | Banner + ongoing notification + acciones rápidas                    |   12h    |    P2     |
+| **Google Calendar Sync**                     | CalendarContract sync bidireccional                                 |    8h    |    P2     |
+| **Notificación persistente (evento activo)** | Foreground service con controles                                    |    6h    |    P2     |
 
 ---
 

@@ -45,8 +45,12 @@
                 <data android:scheme="solennix" android:host="client" />
                 <data android:scheme="solennix" android:host="event" />
                 <data android:scheme="solennix" android:host="product" />
+                <data android:scheme="solennix" android:host="inventory" />
                 <data android:scheme="solennix" android:host="new-event" />
                 <data android:scheme="solennix" android:host="calendar" />
+                <data android:scheme="solennix" android:host="settings" />
+                <data android:scheme="solennix" android:host="pricing" />
+                <data android:scheme="solennix" android:host="search" />
                 <data android:scheme="solennix" android:host="quick-quote" />
             </intent-filter>
 

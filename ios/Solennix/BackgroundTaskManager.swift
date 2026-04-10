@@ -122,7 +122,7 @@ final class BackgroundTaskManager {
                 guard let date = ISO8601DateFormatter().date(from: $0.eventDate) else { return false }
                 return date >= startOfWeek && date <= now.addingTimeInterval(7 * 24 * 3600)
             }
-            let lowStockCount = inventory.filter { $0.currentStock < $0.minimumStock }.count
+            let lowStockCount = inventory.filter { $0.minimumStock > 0 && $0.currentStock < $0.minimumStock }.count
             let monthlyRevenue = eventsThisMonth
                 .filter { $0.status == .completed }
                 .reduce(0.0) { $0 + $1.totalAmount }

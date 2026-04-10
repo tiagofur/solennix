@@ -24,6 +24,7 @@ platform: iOS
 > **Arquitectura:** MVVM con @Observable
 
 > [!tip] Documentos relacionados
+>
 > - [[PRD MOC]] — Indice general del PRD
 > - [[01_PRODUCT_VISION]] — Vision del producto
 > - [[02_FEATURES]] — Features y tabla de paridad
@@ -36,29 +37,30 @@ platform: iOS
 
 ## 1. Stack Tecnologico
 
-| Capa | Tecnologia | Version minima |
-|------|-----------|----------------|
-| Lenguaje | Swift 5.9 | Xcode 15+ |
-| UI | SwiftUI | iOS 17 |
-| Arquitectura | MVVM con `@Observable` macro | iOS 17 |
-| Paquetes | Swift Package Manager (SPM) local | -- |
-| Cache offline | SwiftData | iOS 17 |
-| Widgets | WidgetKit (4 widgets + 1 interactivo) | iOS 17 |
-| Dynamic Island | ActivityKit (Live Activity) | iOS 16.1+ |
-| Spotlight | CoreSpotlight (indexacion de eventos/clientes) | iOS 17 |
-| Suscripciones | RevenueCat SDK (wraps StoreKit 2) | iOS 17 |
-| Biometria | LocalAuthentication (Face ID / Touch ID) | iOS 17 |
-| Onboarding | TipKit | iOS 17 |
-| Crash Reporting | Sentry | -- |
-| Generacion de proyectos | XcodeGen (`project.yml`) | -- |
-| Red | URLSession (actor-based `APIClient`) | iOS 17 |
-| Almacenamiento seguro | Keychain Services | iOS 17 |
-| Conectividad | NWPathMonitor (Network framework) | iOS 17 |
-| Apple Sign-In | AuthenticationServices | iOS 17 |
+| Capa                    | Tecnologia                                     | Version minima |
+| ----------------------- | ---------------------------------------------- | -------------- |
+| Lenguaje                | Swift 5.9                                      | Xcode 15+      |
+| UI                      | SwiftUI                                        | iOS 17         |
+| Arquitectura            | MVVM con `@Observable` macro                   | iOS 17         |
+| Paquetes                | Swift Package Manager (SPM) local              | --             |
+| Cache offline           | SwiftData                                      | iOS 17         |
+| Widgets                 | WidgetKit (4 widgets + 1 interactivo)          | iOS 17         |
+| Dynamic Island          | ActivityKit (Live Activity)                    | iOS 16.1+      |
+| Spotlight               | CoreSpotlight (indexacion de eventos/clientes) | iOS 17         |
+| Suscripciones           | RevenueCat SDK (wraps StoreKit 2)              | iOS 17         |
+| Biometria               | LocalAuthentication (Face ID / Touch ID)       | iOS 17         |
+| Onboarding              | TipKit                                         | iOS 17         |
+| Crash Reporting         | Sentry                                         | --             |
+| Generacion de proyectos | XcodeGen (`project.yml`)                       | --             |
+| Red                     | URLSession (actor-based `APIClient`)           | iOS 17         |
+| Almacenamiento seguro   | Keychain Services                              | iOS 17         |
+| Conectividad            | NWPathMonitor (Network framework)              | iOS 17         |
+| Apple Sign-In           | AuthenticationServices                         | iOS 17         |
 
 ### Decisiones clave
 
 > [!note] Decisiones de arquitectura
+>
 > - **Sin dependencias SPM externas:** Todos los paquetes son locales (SolennixCore, SolennixNetwork, SolennixDesign, SolennixFeatures). Cero dependencias de terceros para maximo control y tiempos de compilacion minimos.
 > - **@Observable sobre TCA:** Se eligio la macro nativa `@Observable` (iOS 17) sobre The Composable Architecture. TCA agrega complejidad innecesaria para una app CRUD centrada en formularios. `@Observable` ofrece reactividad nativa sin boilerplate.
 > - **Actor-based networking:** `APIClient` es un `actor` de Swift, garantizando seguridad de hilos sin locks manuales ni `DispatchQueue`.
@@ -129,13 +131,13 @@ public final class EventFormViewModel {
 
 ### Principios de diseno
 
-| Principio | Implementacion |
-|-----------|---------------|
-| Reactividad | `@Observable` macro en todos los ViewModels |
-| DI | `@Environment` para servicios globales (AuthManager, APIClient, NetworkMonitor) |
-| Concurrencia | `actor` para APIClient; `@MainActor` para actualizaciones de UI |
-| Protocolos | `Codable`, `Identifiable`, `Sendable`, `Hashable` en todos los modelos |
-| Separacion | Views no contienen logica de negocio; ViewModels no importan SwiftUI |
+| Principio    | Implementacion                                                                  |
+| ------------ | ------------------------------------------------------------------------------- |
+| Reactividad  | `@Observable` macro en todos los ViewModels                                     |
+| DI           | `@Environment` para servicios globales (AuthManager, APIClient, NetworkMonitor) |
+| Concurrencia | `actor` para APIClient; `@MainActor` para actualizaciones de UI                 |
+| Protocolos   | `Codable`, `Identifiable`, `Sendable`, `Hashable` en todos los modelos          |
+| Separacion   | Views no contienen logica de negocio; ViewModels no importan SwiftUI            |
 
 ---
 
@@ -274,62 +276,64 @@ graph TD
 
 **Proposito:** Modelos de datos, cache offline, utilidades compartidas.
 
-| API Publica | Descripcion |
-|-------------|-------------|
-| `Event`, `Client`, `Product`, `User`, `Payment`, etc. | Structs `Codable + Identifiable + Sendable + Hashable` |
-| `EventStatus`, `DiscountType`, `InventoryType`, `Plan` | Enums de dominio |
-| `Route` | Enum con todos los destinos navegables de la app |
-| `SolennixEventAttributes` | `ActivityAttributes` para Live Activities |
-| `APIError` | Enum de errores de red con mensajes localizados |
-| `CacheManager` | Gestor de cache SwiftData (`@MainActor @Observable`) |
-| `SolennixModelContainer` | Factory para el `ModelContainer` de SwiftData |
-| `CachedEvent`, `CachedClient`, `CachedProduct` | Modelos `@Model` de SwiftData |
-| `AnyCodable` | Type-erased Codable wrapper para diccionarios dinamicos |
+| API Publica                                            | Descripcion                                             |
+| ------------------------------------------------------ | ------------------------------------------------------- |
+| `Event`, `Client`, `Product`, `User`, `Payment`, etc.  | Structs `Codable + Identifiable + Sendable + Hashable`  |
+| `EventStatus`, `DiscountType`, `InventoryType`, `Plan` | Enums de dominio                                        |
+| `Route`                                                | Enum con todos los destinos navegables de la app        |
+| `SolennixEventAttributes`                              | `ActivityAttributes` para Live Activities               |
+| `APIError`                                             | Enum de errores de red con mensajes localizados         |
+| `CacheManager`                                         | Gestor de cache SwiftData (`@MainActor @Observable`)    |
+| `SolennixModelContainer`                               | Factory para el `ModelContainer` de SwiftData           |
+| `CachedEvent`, `CachedClient`, `CachedProduct`         | Modelos `@Model` de SwiftData                           |
+| `AnyCodable`                                           | Type-erased Codable wrapper para diccionarios dinamicos |
 
 ### SolennixNetwork
 
 **Proposito:** Comunicacion HTTP, autenticacion, suscripciones, conectividad.
 
-| API Publica | Descripcion |
-|-------------|-------------|
-| `APIClient` | Actor HTTP: `get()`, `post()`, `put()`, `delete()`, `upload()` |
-| `AuthManager` | `@Observable`: login, register, signOut, refreshToken, biometrics |
-| `SubscriptionManager` | RevenueCat SDK: offerings, compras, entitlements, login/logout |
-| `AppleSignInService` | Sign in with Apple |
-| `KeychainHelper` | Lectura/escritura segura en Keychain |
-| `NetworkMonitor` | `@Observable` con `isConnected` y `connectionType` |
-| `Endpoint` | Constantes de rutas API (ej. `/auth/login`, `/events`, `/clients`) |
+| API Publica           | Descripcion                                                        |
+| --------------------- | ------------------------------------------------------------------ |
+| `APIClient`           | Actor HTTP: `get()`, `post()`, `put()`, `delete()`, `upload()`     |
+| `AuthManager`         | `@Observable`: login, register, signOut, refreshToken, biometrics  |
+| `SubscriptionManager` | RevenueCat SDK: offerings, compras, entitlements, login/logout     |
+| `AppleSignInService`  | Sign in with Apple                                                 |
+| `KeychainHelper`      | Lectura/escritura segura en Keychain                               |
+| `NetworkMonitor`      | `@Observable` con `isConnected` y `connectionType`                 |
+| `Endpoint`            | Constantes de rutas API (ej. `/auth/login`, `/events`, `/clients`) |
 
 ### SolennixDesign
 
 **Proposito:** Sistema de diseno visual — colores, tipografia, componentes reutilizables.
 
-| API Publica | Descripcion |
-|-------------|-------------|
-| `SolennixColors` | Paleta de colores (primary, background, surface, text, status) |
-| `SolennixGradient` | Gradientes premium (gold -> tan) |
-| `SolennixTypography` | Estilos tipograficos predefinidos |
-| `SolennixSpacing` | Sistema de espaciado consistente |
-| `SolennixShadows` | Estilos de sombra (card, fab, modal) |
-| Componentes | `Avatar`, `ConfirmDialog`, `EmptyStateView`, `PremiumButton`, `SkeletonView`, `SolennixTextField`, `StatusBadge`, `ToastOverlay`, `UpgradeBannerView` |
+| API Publica          | Descripcion                                                                                                                                           |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SolennixColors`     | Paleta de colores (primary, background, surface, text, status)                                                                                        |
+| `SolennixGradient`   | Gradientes premium (gold -> tan)                                                                                                                      |
+| `SolennixTypography` | Estilos tipograficos predefinidos                                                                                                                     |
+| `SolennixSpacing`    | Sistema de espaciado consistente                                                                                                                      |
+| `SolennixShadows`    | Estilos de sombra (card, fab, modal)                                                                                                                  |
+| Componentes          | `Avatar`, `ConfirmDialog`, `EmptyStateView`, `PremiumButton`, `SkeletonView`, `SolennixTextField`, `StatusBadge`, `ToastOverlay`, `UpgradeBannerView` |
 
 ### SolennixFeatures
 
 **Proposito:** Todos los modulos de funcionalidad de la app. Cada feature contiene sus propios ViewModels y Views.
 
-| Modulo | Descripcion |
-|--------|-------------|
-| `Auth` | Login, registro, recuperacion de contrasena, reset |
-| `Dashboard` | Vista principal con KPIs, eventos pendientes |
-| `Calendar` | Calendario mensual con eventos |
-| `Events` | CRUD completo de eventos (formulario multi-paso), detalle, checklist, 7 generadores PDF |
-| `Clients` | CRUD de clientes, cotizacion rapida (QuickQuote) con PDF |
-| `Products` | CRUD de productos/servicios |
-| `Inventory` | CRUD de inventario (ingredientes, equipo, insumos) |
-| `Settings` | Perfil, ajustes de negocio, plantilla de contrato, precios, legal |
-| `Search` | Busqueda global multi-entidad |
-| `Onboarding` | Flujo de primera vez con TipKit |
-| `Common` | PlanLimitsManager, Sentry, Spotlight, Haptics, LiveActivity, StoreReview |
+| Modulo       | Descripcion                                                                             |
+| ------------ | --------------------------------------------------------------------------------------- |
+| `Auth`       | Login, registro, recuperacion de contrasena, reset                                      |
+| `Dashboard`  | Vista principal con KPIs, eventos pendientes                                            |
+| `Calendar`   | Calendario mensual con eventos                                                          |
+| `Events`     | CRUD completo de eventos (formulario multi-paso), detalle, checklist, 7 generadores PDF |
+| `Clients`    | CRUD de clientes, cotizacion rapida (QuickQuote) con PDF                                |
+| `Products`   | CRUD de productos/servicios                                                             |
+| `Inventory`  | CRUD de inventario (ingredientes, equipo, insumos)                                      |
+| `Settings`   | Perfil, ajustes de negocio, plantilla de contrato, precios, legal                       |
+| `Search`     | Busqueda global multi-entidad                                                           |
+| `Onboarding` | Flujo de primera vez con TipKit                                                         |
+| `Common`     | PlanLimitsManager, Sentry, Spotlight, Haptics, LiveActivity, StoreReview                |
+
+Regla funcional de stock bajo (iOS): `minimumStock > 0 && currentStock < minimumStock`.
 
 ---
 
@@ -460,14 +464,14 @@ public struct Payment: Codable, Identifiable, Sendable, Hashable {
 
 ### Modelos de relacion (Event sub-items)
 
-| Modelo | Campos clave |
-|--------|-------------|
-| `EventProduct` | `productId`, `quantity`, `unitPrice`, `discount` |
-| `EventExtra` | `description`, `cost`, `price`, `excludeUtility` |
-| `EventEquipment` | `inventoryId`, `equipmentName`, `quantity`, `notes` |
-| `EventSupply` | `inventoryId`, `supplyName`, `quantity`, `unitCost`, `source`, `excludeCost` |
-| `ProductIngredient` | Relacion producto-ingrediente para recetas |
-| `UnavailableDate` | Fechas bloqueadas del usuario |
+| Modelo              | Campos clave                                                                 |
+| ------------------- | ---------------------------------------------------------------------------- |
+| `EventProduct`      | `productId`, `quantity`, `unitPrice`, `discount`                             |
+| `EventExtra`        | `description`, `cost`, `price`, `excludeUtility`                             |
+| `EventEquipment`    | `inventoryId`, `equipmentName`, `quantity`, `notes`                          |
+| `EventSupply`       | `inventoryId`, `supplyName`, `quantity`, `unitCost`, `source`, `excludeCost` |
+| `ProductIngredient` | Relacion producto-ingrediente para recetas                                   |
+| `UnavailableDate`   | Fechas bloqueadas del usuario                                                |
 
 ---
 
@@ -492,13 +496,13 @@ public actor APIClient {
 
 ### Metodos HTTP
 
-| Metodo | Firma | Retorno |
-|--------|-------|---------|
-| GET | `get<T: Decodable>(_ endpoint:, params:)` | `T` |
-| POST | `post<T: Decodable>(_ endpoint:, body:)` | `T` |
-| PUT | `put<T: Decodable>(_ endpoint:, body:)` | `T` |
-| DELETE | `delete(_ endpoint:)` | `Void` (usa `EmptyResponse`) |
-| Upload | `upload(_ endpoint:, data:, filename:)` | `UploadResponse` |
+| Metodo | Firma                                     | Retorno                      |
+| ------ | ----------------------------------------- | ---------------------------- |
+| GET    | `get<T: Decodable>(_ endpoint:, params:)` | `T`                          |
+| POST   | `post<T: Decodable>(_ endpoint:, body:)`  | `T`                          |
+| PUT    | `put<T: Decodable>(_ endpoint:, body:)`   | `T`                          |
+| DELETE | `delete(_ endpoint:)`                     | `Void` (usa `EmptyResponse`) |
+| Upload | `upload(_ endpoint:, data:, filename:)`   | `UploadResponse`             |
 
 ### Inyeccion de autenticacion
 
@@ -574,14 +578,14 @@ public final class AuthManager {
 
 ### Flujo de autenticacion
 
-| Operacion | Metodo | Descripcion |
-|-----------|--------|-------------|
-| Login | `signIn(email:password:)` | POST `/auth/login`, almacena tokens en Keychain |
-| Registro | `signUp(name:email:password:)` | POST `/auth/register`, almacena tokens |
-| Logout | `signOut()` | POST `/auth/logout` (best-effort), limpia tokens |
-| Refresh | `refreshToken()` | POST `/auth/refresh` con refresh token |
-| Session restore | `checkAuth()` | Lee token de Keychain, GET `/auth/me` |
-| Profile update | `updateProfile(data:)` | PUT `/auth/profile` |
+| Operacion       | Metodo                         | Descripcion                                      |
+| --------------- | ------------------------------ | ------------------------------------------------ |
+| Login           | `signIn(email:password:)`      | POST `/auth/login`, almacena tokens en Keychain  |
+| Registro        | `signUp(name:email:password:)` | POST `/auth/register`, almacena tokens           |
+| Logout          | `signOut()`                    | POST `/auth/logout` (best-effort), limpia tokens |
+| Refresh         | `refreshToken()`               | POST `/auth/refresh` con refresh token           |
+| Session restore | `checkAuth()`                  | Lee token de Keychain, GET `/auth/me`            |
+| Profile update  | `updateProfile(data:)`         | PUT `/auth/profile`                              |
 
 ### Biometria (Face ID / Touch ID)
 
@@ -599,6 +603,7 @@ Implementado en `AppleSignInService.swift` usando `AuthenticationServices`.
 ### Almacenamiento de tokens
 
 Los tokens (access + refresh) se almacenan en **Keychain** con `kSecAttrAccessibleWhenUnlockedThisDeviceOnly`:
+
 - Tokens solo accesibles con el dispositivo desbloqueado.
 - No se respaldan ni migran a otros dispositivos.
 
@@ -606,6 +611,7 @@ Los tokens (access + refresh) se almacenan en **Keychain** con `kSecAttrAccessib
 
 > [!note] Ciclo AuthManager <-> APIClient
 > `AuthManager` y `APIClient` tienen una dependencia circular:
+>
 > - `APIClient` necesita `AuthManager` para token refresh.
 > - `AuthManager` necesita `APIClient` para hacer requests.
 >
@@ -630,21 +636,21 @@ Protocolo `UserTrackingDelegate` permite reportar identidad del usuario a servic
 
 La app usa un layout adaptativo basado en `horizontalSizeClass`:
 
-| Size Class | Layout | Descripcion |
-|------------|--------|-------------|
-| `.compact` (iPhone) | `CompactTabLayout` | `TabView` con 4 tabs + FAB flotante |
+| Size Class            | Layout               | Descripcion                                          |
+| --------------------- | -------------------- | ---------------------------------------------------- |
+| `.compact` (iPhone)   | `CompactTabLayout`   | `TabView` con 4 tabs + FAB flotante                  |
 | `.regular` (iPad/Mac) | `SidebarSplitLayout` | `NavigationSplitView` con sidebar + content + detail |
 
 ### CompactTabLayout (iPhone)
 
 Cuatro tabs, cada uno con su propio `NavigationStack` y `NavigationPath` independiente:
 
-| Tab | Icono | Vista raiz |
-|-----|-------|------------|
-| Inicio | `house.fill` | `DashboardView` |
-| Calendario | `calendar` | `CalendarView` |
-| Clientes | `person.2.fill` | `ClientListView` |
-| Mas | `ellipsis` | `MoreMenuView` |
+| Tab        | Icono           | Vista raiz       |
+| ---------- | --------------- | ---------------- |
+| Inicio     | `house.fill`    | `DashboardView`  |
+| Calendario | `calendar`      | `CalendarView`   |
+| Clientes   | `person.2.fill` | `ClientListView` |
+| Mas        | `ellipsis`      | `MoreMenuView`   |
 
 Un **FAB (Floating Action Button)** con gradiente premium se superpone al tab bar para creacion rapida de eventos. Se oculta automaticamente cuando el usuario navega a una pantalla de detalle.
 
@@ -652,11 +658,11 @@ Un **FAB (Floating Action Button)** con gradiente premium se superpone al tab ba
 
 `NavigationSplitView` de tres columnas:
 
-| Columna | Contenido |
-|---------|-----------|
+| Columna | Contenido                                                                                |
+| ------- | ---------------------------------------------------------------------------------------- |
 | Sidebar | Secciones: Inicio, Calendario, Eventos, Clientes, Productos, Inventario, Buscar, Ajustes |
-| Content | Lista de la seccion seleccionada |
-| Detail | `NavigationStack` con `Route`-based navigation |
+| Content | Lista de la seccion seleccionada                                                         |
+| Detail  | `NavigationStack` con `Route`-based navigation                                           |
 
 ### Route enum
 
@@ -706,13 +712,13 @@ public enum Route: Hashable {
 
 El target `SolennixWidgetExtension` contiene 5 widgets registrados en `SolennixWidgets`:
 
-| Widget | Descripcion | Tamanos |
-|--------|-------------|---------|
-| `UpcomingEventsWidget` | Lista de proximos eventos | Small, Medium, Large |
-| `KPIWidget` | Metricas clave del negocio | Small, Medium |
-| `LockScreenWidget` | Widget circular para pantalla de bloqueo | Accessory |
-| `InteractiveEventWidget` | Widget interactivo con botones (iOS 17) | Medium, Large |
-| `SolennixLiveActivity` | Dynamic Island + Lock Screen banner | -- |
+| Widget                   | Descripcion                              | Tamanos              |
+| ------------------------ | ---------------------------------------- | -------------------- |
+| `UpcomingEventsWidget`   | Lista de proximos eventos                | Small, Medium, Large |
+| `KPIWidget`              | Metricas clave del negocio               | Small, Medium        |
+| `LockScreenWidget`       | Widget circular para pantalla de bloqueo | Accessory            |
+| `InteractiveEventWidget` | Widget interactivo con botones (iOS 17)  | Medium, Large        |
+| `SolennixLiveActivity`   | Dynamic Island + Lock Screen banner      | --                   |
 
 ### Datos compartidos (App Group)
 
@@ -736,13 +742,16 @@ Claves de datos: `widget_upcoming_events`, `widget_kpis`, `widget_last_updated`.
 Implementada con `ActivityKit` para eventos en curso. Usa `SolennixEventAttributes` definido en SolennixCore:
 
 **Datos estaticos** (fijados al iniciar):
+
 - `clientName`, `eventType`, `location`, `guestCount`
 
 **Estado dinamico** (`ContentState`, actualizable en tiempo real):
+
 - `status` ("setup" | "in_progress" | "completed")
 - `startTime`, `elapsedMinutes`, `statusLabel`
 
 **Presentaciones:**
+
 - **Lock Screen / Banner** -- Vista expandida con info del cliente, ubicacion, invitados, barra de progreso.
 - **Dynamic Island expandida** -- Leading (cliente + ubicacion), trailing (invitados + timer), center (tipo de evento), bottom (badge de estado).
 - **Dynamic Island compacta** -- Icono de evento + timer.
@@ -761,13 +770,14 @@ Implementada con `ActivityKit` para eventos en curso. Usa `SolennixEventAttribut
 
 ### Modelos de cache
 
-| Modelo SwiftData | Modelo fuente | Proposito |
-|-----------------|---------------|-----------|
-| `CachedEvent` | `Event` | Cache de eventos |
-| `CachedClient` | `Client` | Cache de clientes |
-| `CachedProduct` | `Product` | Cache de productos |
+| Modelo SwiftData | Modelo fuente | Proposito          |
+| ---------------- | ------------- | ------------------ |
+| `CachedEvent`    | `Event`       | Cache de eventos   |
+| `CachedClient`   | `Client`      | Cache de clientes  |
+| `CachedProduct`  | `Product`     | Cache de productos |
 
 Cada modelo `@Model` tiene:
+
 - Un `init(from:)` que convierte desde el struct API.
 - Un `toX()` que convierte de vuelta al struct API.
 
@@ -803,16 +813,16 @@ Factory que crea el `ModelContainer` con los tres modelos registrados. Usado en 
 
 La app genera 8 tipos de PDF para diferentes documentos de negocio. Todos residen en `SolennixFeatures/Events/PDFGenerators/` y `SolennixFeatures/Clients/PDFGenerators/`.
 
-| Generador | Archivo | Descripcion |
-|-----------|---------|-------------|
-| Factura | `InvoicePDFGenerator.swift` | Factura detallada del evento |
-| Contrato | `ContractPDFGenerator.swift` | Contrato de servicio con terminos |
-| Presupuesto | `BudgetPDFGenerator.swift` | Cotizacion detallada para el cliente |
-| Checklist | `ChecklistPDFGenerator.swift` | Lista de tareas del evento |
-| Lista de compras | `ShoppingListPDFGenerator.swift` | Insumos necesarios para el evento |
-| Lista de equipo | `EquipmentListPDFGenerator.swift` | Equipo asignado al evento |
-| Reporte de pagos | `PaymentReportPDFGenerator.swift` | Historial de pagos del evento |
-| Cotizacion rapida | `QuickQuotePDFGenerator.swift` | Cotizacion simplificada desde clientes |
+| Generador         | Archivo                           | Descripcion                            |
+| ----------------- | --------------------------------- | -------------------------------------- |
+| Factura           | `InvoicePDFGenerator.swift`       | Factura detallada del evento           |
+| Contrato          | `ContractPDFGenerator.swift`      | Contrato de servicio con terminos      |
+| Presupuesto       | `BudgetPDFGenerator.swift`        | Cotizacion detallada para el cliente   |
+| Checklist         | `ChecklistPDFGenerator.swift`     | Lista de tareas del evento             |
+| Lista de compras  | `ShoppingListPDFGenerator.swift`  | Insumos necesarios para el evento      |
+| Lista de equipo   | `EquipmentListPDFGenerator.swift` | Equipo asignado al evento              |
+| Reporte de pagos  | `PaymentReportPDFGenerator.swift` | Historial de pagos del evento          |
+| Cotizacion rapida | `QuickQuotePDFGenerator.swift`    | Cotizacion simplificada desde clientes |
 
 `PDFConstants.swift` define estilos compartidos (margenes, tipografia, colores) para mantener consistencia visual entre todos los PDFs.
 
@@ -826,20 +836,20 @@ Los PDFs incorporan la marca del usuario (logo, nombre de negocio, color de marc
 
 La paleta de Solennix usa tonos dorados/tan como color primario, con soporte completo para modo claro y oscuro.
 
-| Token | Uso |
-|-------|-----|
-| `SolennixColors.primary` | Dorado principal (botones, acentos, titulos) |
-| `SolennixColors.background` | Fondo principal de la app |
-| `SolennixColors.surface` | Fondo de tarjetas y secciones |
-| `SolennixColors.surfaceAlt` | Fondo alternativo (campos de formulario) |
-| `SolennixColors.textPrimary` | Texto principal |
-| `SolennixColors.textSecondary` | Texto secundario |
-| `SolennixColors.textTertiary` | Texto terciario / deshabilitado |
-| `SolennixColors.textInverse` | Texto sobre fondos oscuros |
-| `SolennixColors.success` | Verde para estados exitosos |
-| `SolennixColors.warning` | Amarillo/naranja para advertencias (offline banner) |
-| `SolennixColors.error` | Rojo para errores |
-| `SolennixColors.tabBarActive` | Color del tab activo |
+| Token                          | Uso                                                 |
+| ------------------------------ | --------------------------------------------------- |
+| `SolennixColors.primary`       | Dorado principal (botones, acentos, titulos)        |
+| `SolennixColors.background`    | Fondo principal de la app                           |
+| `SolennixColors.surface`       | Fondo de tarjetas y secciones                       |
+| `SolennixColors.surfaceAlt`    | Fondo alternativo (campos de formulario)            |
+| `SolennixColors.textPrimary`   | Texto principal                                     |
+| `SolennixColors.textSecondary` | Texto secundario                                    |
+| `SolennixColors.textTertiary`  | Texto terciario / deshabilitado                     |
+| `SolennixColors.textInverse`   | Texto sobre fondos oscuros                          |
+| `SolennixColors.success`       | Verde para estados exitosos                         |
+| `SolennixColors.warning`       | Amarillo/naranja para advertencias (offline banner) |
+| `SolennixColors.error`         | Rojo para errores                                   |
+| `SolennixColors.tabBarActive`  | Color del tab activo                                |
 
 ### Gradientes
 
@@ -848,6 +858,7 @@ La paleta de Solennix usa tonos dorados/tan como color primario, con soporte com
 ### Modo claro / oscuro
 
 Controlado via `@AppStorage("appearance")` con tres opciones:
+
 - `"light"` -> `.light`
 - `"dark"` -> `.dark`
 - `"system"` -> `nil` (sigue la configuracion del sistema)
@@ -858,17 +869,17 @@ Controlado via `@AppStorage("appearance")` con tres opciones:
 
 ### Componentes reutilizables
 
-| Componente | Uso |
-|-----------|-----|
-| `Avatar` | Foto de perfil circular con placeholder |
-| `ConfirmDialog` | Dialogo de confirmacion (eliminar, cancelar) |
-| `EmptyStateView` | Estado vacio con icono y mensaje |
-| `PremiumButton` | Boton con gradiente para acciones premium |
-| `SkeletonView` | Placeholder animado durante carga |
-| `SolennixTextField` | Campo de texto con estilo consistente |
-| `StatusBadge` | Badge de estado del evento (cotizado, confirmado, etc.) |
-| `ToastOverlay` | Notificaciones toast desde la capa de red |
-| `UpgradeBannerView` | Banner para promover upgrade a premium |
+| Componente          | Uso                                                     |
+| ------------------- | ------------------------------------------------------- |
+| `Avatar`            | Foto de perfil circular con placeholder                 |
+| `ConfirmDialog`     | Dialogo de confirmacion (eliminar, cancelar)            |
+| `EmptyStateView`    | Estado vacio con icono y mensaje                        |
+| `PremiumButton`     | Boton con gradiente para acciones premium               |
+| `SkeletonView`      | Placeholder animado durante carga                       |
+| `SolennixTextField` | Campo de texto con estilo consistente                   |
+| `StatusBadge`       | Badge de estado del evento (cotizado, confirmado, etc.) |
+| `ToastOverlay`      | Notificaciones toast desde la capa de red               |
+| `UpgradeBannerView` | Banner para promover upgrade a premium                  |
 
 ---
 
@@ -891,11 +902,11 @@ Cada vista y componente reutilizable incluye previews con diferentes estados (ca
 
 ### Enfoque de testing
 
-| Tipo | Cobertura |
-|------|-----------|
-| Previews | Validacion visual de todas las vistas con diferentes estados |
-| Unit Tests | ViewModels (logica de negocio, calculos, validaciones) |
-| Integration | Flujos completos (auth, CRUD) contra API mock |
+| Tipo        | Cobertura                                                    |
+| ----------- | ------------------------------------------------------------ |
+| Previews    | Validacion visual de todas las vistas con diferentes estados |
+| Unit Tests  | ViewModels (logica de negocio, calculos, validaciones)       |
+| Integration | Flujos completos (auth, CRUD) contra API mock                |
 
 Los ViewModels son facilmente testeables gracias a la inyeccion del `APIClient` como dependencia en el constructor, permitiendo sustituirlo con un mock en tests.
 
@@ -926,6 +937,7 @@ Los ViewModels son facilmente testeables gracias a la inyeccion del `APIClient` 
 > **Razon:** El archivo `.xcodeproj` es un XML complejo propenso a conflictos de merge. Con XcodeGen, el `project.yml` es legible, mergeable, y el `.xcodeproj` se regenera deterministicamente.
 >
 > **Targets definidos:**
+>
 > - `Solennix` (app principal, incluye SolennixIntents como source)
 > - `SolennixWidgetExtension` (widgets + live activity, extension de app)
 
@@ -941,6 +953,7 @@ Los ViewModels son facilmente testeables gracias a la inyeccion del `APIClient` 
 
 > [!note] Environment-based DI
 > **Decision:** Todos los servicios globales se inyectan via `@Environment`:
+>
 > - `@Environment(AuthManager.self)` -- macro-based (tipo @Observable)
 > - `@Environment(\.apiClient)` -- key-based (actor, no puede ser @Observable)
 > - `@Environment(NetworkMonitor.self)` -- macro-based

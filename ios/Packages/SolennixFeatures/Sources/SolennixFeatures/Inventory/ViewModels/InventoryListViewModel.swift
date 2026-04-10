@@ -82,7 +82,7 @@ public final class InventoryListViewModel {
 
     /// Count of low stock items
     public var lowStockCount: Int {
-        items.filter { $0.currentStock < $0.minimumStock }.count
+        items.filter { $0.minimumStock > 0 && $0.currentStock < $0.minimumStock }.count
     }
 
     /// Whether the current data was loaded from cache (not fresh from API).
@@ -309,7 +309,7 @@ public final class InventoryListViewModel {
 
         // Filter by low stock
         if showLowStockOnly {
-            result = result.filter { $0.currentStock < $0.minimumStock }
+            result = result.filter { $0.minimumStock > 0 && $0.currentStock < $0.minimumStock }
         }
 
         // Filter by search text

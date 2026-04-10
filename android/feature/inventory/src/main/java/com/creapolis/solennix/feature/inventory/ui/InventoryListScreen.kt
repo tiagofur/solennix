@@ -634,22 +634,29 @@ private fun InventoryGridCard(
                     Text(
                         text = "Stock: ${item.currentStock} ${item.unit}",
                         style = MaterialTheme.typography.bodySmall,
-                        color = if (isLowStock) SolennixTheme.colors.error else SolennixTheme.colors.secondaryText
+                        color = SolennixTheme.colors.secondaryText
                     )
-                    if (item.unitCost != null && item.unitCost!! > 0) {
-                        Text(text = item.unitCost!!.asMXN(), style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.secondaryText)
-                    }
-                }
-                if (isLowStock) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Surface(color = SolennixTheme.colors.error.copy(alpha = 0.1f), shape = MaterialTheme.shapes.extraSmall) {
-                        Text(
-                            text = "STOCK BAJO",
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                            color = SolennixTheme.colors.error,
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold
-                        )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        if (item.unitCost != null && item.unitCost!! > 0) {
+                            Text(text = item.unitCost!!.asMXN(), style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.secondaryText)
+                        }
+                        if (isLowStock) {
+                            Surface(
+                                color = SolennixTheme.colors.error.copy(alpha = 0.08f),
+                                shape = MaterialTheme.shapes.extraSmall
+                            ) {
+                                Text(
+                                    text = "Bajo",
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                    color = SolennixTheme.colors.error,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                        }
                     }
                 }
             }

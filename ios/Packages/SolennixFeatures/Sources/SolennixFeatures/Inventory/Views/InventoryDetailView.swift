@@ -40,7 +40,7 @@ public struct InventoryDetailView: View {
 
     private var isLowStock: Bool {
         guard let item else { return false }
-        return item.currentStock < item.minimumStock
+        return item.minimumStock > 0 && item.currentStock < item.minimumStock
     }
 
     private var stockValue: Double {
