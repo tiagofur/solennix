@@ -18,6 +18,8 @@ updated: 2026-04-10
 
 ✅ **Wave 1 documentación + Day 1 kickoff completados.**
 
+✅ **Backend contract freeze mucho más avanzado que el baseline original.**
+
 Rama `super-plan` lista con:
 
 - 6 commits de planificación y ejecución (sin push a main)
@@ -40,7 +42,15 @@ Rama `super-plan` lista con:
 | 5   | `36dd4e1` | 18_WEEKLY_CLOSE_TEMPLATE.md      | Template viernes 5pm                            |
 | 6   | `e6abcfb` | (edits)                          | Finalizaciones                                  |
 
-### 2. Rama WIP `wip/e2b1-openapi-start` — 1 Commit
+### 2. Backend Contract Expansion — progreso real posterior
+
+| Área | Resultado |
+| --- | --- |
+| OpenAPI | `backend/docs/openapi.yaml` expandido para nested event endpoints, product ingredients, event payment Stripe y envelopes paginados |
+| Contract tests | `backend/internal/handlers/contract_test.go` ahora falla si faltan esas rutas o schemas |
+| Validación | `go test ./internal/handlers -run "TestOpenAPISpec_(AuthContract\|SubscriptionsContract\|EventContract\|CoreCRUDContract\|OperationalEndpointsContract)$"` en PASS |
+
+### 3. Rama WIP `wip/e2b1-openapi-start` — 1 Commit
 
 | Commit    | Archivo                     | Status              |
 | --------- | --------------------------- | ------------------- |
@@ -55,7 +65,7 @@ Rama `super-plan` lista con:
 - ✅ Server definitions (local + prod)
 - ✅ Listo para expansión: /auth, /subscriptions, /admin
 
-### 3. Árbol de Documentación (Obsidian/Indices)
+### 4. Árbol de Documentación (Obsidian/Indices)
 
 ```
 obsidian/Solennix/SUPER_PLAN/
