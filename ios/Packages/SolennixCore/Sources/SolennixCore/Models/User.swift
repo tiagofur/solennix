@@ -6,9 +6,7 @@ import Foundation
 /// plan strings the backend might send (e.g., "business") by falling back to `.basic`.
 public enum Plan: String, Codable, Sendable, CaseIterable, Hashable {
     case basic
-    case pro
     case premium
-    case business
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()

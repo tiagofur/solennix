@@ -11,10 +11,14 @@
             "id": "44c567cdf8cc277d",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
+              "type": "markdown",
+              "state": {
+                "file": "Solennix/PRD/02_FEATURES.md",
+                "mode": "source",
+                "source": false
+              },
               "icon": "lucide-file",
-              "title": "Nueva pestaña"
+              "title": "02_FEATURES"
             }
           }
         ]
@@ -178,6 +182,10 @@
   },
   "active": "44c567cdf8cc277d",
   "lastOpenFiles": [
+    "Solennix/PRD/01_PRODUCT_VISION.md",
+    "Solennix/PRD/PRD MOC.md",
+    "Solennix/iOS/Arquitectura General.md",
+    "Solennix/iOS/Accesibilidad.md",
     "Solennix/Android/Roadmap Android.md",
     "Solennix/iOS/Roadmap iOS.md",
     "Solennix/Backend/Roadmap Backend.md",
@@ -200,7 +208,6 @@
     "Solennix/Backend/Base de Datos.md",
     "Solennix/Backend/Backend MOC.md",
     "Solennix/Backend/Autenticación.md",
-    "Solennix/Backend/Arquitectura General.md",
     "Solennix/Backend"
   ]
 }

@@ -22,7 +22,7 @@ export interface User {
     default_cancellation_days: number | null
     default_refund_percent: number | null
     contract_template: string | null
-    plan: 'basic' | 'pro' | 'premium'
+    plan: 'basic' | 'premium'
     stripe_customer_id: string | null
     created_at: string
     updated_at: string
