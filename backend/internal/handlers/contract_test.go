@@ -104,3 +104,34 @@ func TestOpenAPISpec_EventContract(t *testing.T) {
 		})
 	}
 }
+
+func TestOpenAPISpec_CoreCRUDContract(t *testing.T) {
+	spec := readOpenAPISpec(t)
+
+	tests := []struct {
+		name     string
+		fragment string
+	}{
+		{name: "clients collection endpoint", fragment: "/api/clients:"},
+		{name: "client item endpoint", fragment: "/api/clients/{id}:"},
+		{name: "products collection endpoint", fragment: "/api/products:"},
+		{name: "inventory collection endpoint", fragment: "/api/inventory:"},
+		{name: "payments collection endpoint", fragment: "/api/payments:"},
+		{name: "client schema", fragment: "Client:"},
+		{name: "product schema", fragment: "Product:"},
+		{name: "inventory schema", fragment: "InventoryItem:"},
+		{name: "payment schema", fragment: "Payment:"},
+		{name: "client created response", fragment: "description: Client created"},
+		{name: "product created response", fragment: "description: Product created"},
+		{name: "inventory created response", fragment: "description: Inventory item created"},
+		{name: "payment created response", fragment: "description: Payment created"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if !strings.Contains(spec, tt.fragment) {
+				t.Fatalf("openapi spec missing fragment %q", tt.fragment)
+			}
+		})
+	}
+}
