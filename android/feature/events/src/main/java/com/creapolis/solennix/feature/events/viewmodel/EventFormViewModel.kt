@@ -670,6 +670,14 @@ class EventFormViewModel @Inject constructor(
         }
     }
 
+    fun updateSupplyExcludeCost(inventoryId: String, excludeCost: Boolean) {
+        val existing = selectedSupplies.find { it.inventoryId == inventoryId }
+        if (existing != null) {
+            val index = selectedSupplies.indexOf(existing)
+            selectedSupplies[index] = existing.copy(excludeCost = excludeCost)
+        }
+    }
+
     fun fetchSupplySuggestions() {
         if (selectedProducts.isEmpty()) {
             _supplySuggestions.value = emptyList()

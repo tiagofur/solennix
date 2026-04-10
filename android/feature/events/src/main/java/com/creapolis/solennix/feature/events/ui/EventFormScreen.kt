@@ -373,7 +373,7 @@ fun StepGeneralInfo(viewModel: EventFormViewModel) {
                     onValueChange = { viewModel.onClientSearchQueryChange(it) },
                     modifier = Modifier.fillMaxWidth(),
                     placeholder = { Text("Buscar cliente...") },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                    leadingIcon = Icons.Default.Search,
                     shape = RoundedCornerShape(12.dp)
                 )
                 Spacer(modifier = Modifier.height(16.dp))
@@ -826,26 +826,763 @@ private fun ExtraCard(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StepEquipment(viewModel: EventFormViewModel) {
-    // Basic implementation to satisfy compilation
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text("Equipamiento (Proximamente)")
+    var showEquipmentPicker by remember { mutableStateOf(false) }
+    val suggestions by viewModel.equipmentSuggestions.collectAsStateWithLifecycle()
+    val conflicts by viewModel.equipmentConflicts.collectAsStateWithLifecycle()
+    val isWideScreen = LocalIsWideScreen.current
+
+    AdaptiveCenteredContent(maxWidth = 800.dp) {
+        Column(modifier = Modifier.padding(24.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Equipamiento", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.weight(1f))
+                IconButton(onClick = { showEquipmentPicker = true }) {
+                    Icon(Icons.Default.AddCircle, contentDescription = "Añadir", tint = SolennixTheme.colors.primary)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Suggestions banner
+            if (suggestions.isNotEmpty()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.primary.copy(alpha = 0.08f)),
+                    shape = MaterialTheme.shapes.medium
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Lightbulb, contentDescription = null, tint = SolennixTheme.colors.primary, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Sugerencias", style = MaterialTheme.typography.labelMedium, color = SolennixTheme.colors.primary)
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            modifier = Modifier.horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            suggestions.forEach { suggestion ->
+                                val alreadyAdded = viewModel.selectedEquipment.any { it.inventoryId == suggestion.id }
+                                FilterChip(
+                                    selected = alreadyAdded,
+                                    onClick = { if (!alreadyAdded) viewModel.addEquipmentFromSuggestion(suggestion) },
+                                    label = { Text("${suggestion.ingredientName} (${suggestion.suggestedQuantity.toInt()})") },
+                                    leadingIcon = if (alreadyAdded) { { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) } } else null
+                                )
+                            }
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            // Conflict warnings
+            if (conflicts.isNotEmpty()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.error.copy(alpha = 0.08f)),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, SolennixTheme.colors.error.copy(alpha = 0.3f)),
+                    shape = MaterialTheme.shapes.medium
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Warning, contentDescription = null, tint = SolennixTheme.colors.error, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Conflictos de disponibilidad", style = MaterialTheme.typography.labelMedium, color = SolennixTheme.colors.error)
+                        }
+                        Spacer(modifier = Modifier.height(6.dp))
+                        conflicts.forEach { conflict ->
+                            Text(
+                                "${conflict.equipmentName} — ${conflict.serviceType}${if (!conflict.clientName.isNullOrBlank()) " (${conflict.clientName})" else ""}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = SolennixTheme.colors.error
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            if (viewModel.selectedEquipment.isEmpty()) {
+                EmptyState(
+                    icon = Icons.Default.Build,
+                    title = "Sin equipamiento",
+                    message = "Añade equipo reutilizable necesario para el evento.",
+                    actionText = "Explorar Inventario",
+                    onAction = { showEquipmentPicker = true }
+                )
+            } else {
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    if (isWideScreen) {
+                        val chunked = viewModel.selectedEquipment.chunked(2)
+                        items(chunked.size) { index ->
+                            val pair = chunked[index]
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                                Box(modifier = Modifier.weight(1f)) {
+                                    EquipmentCard(
+                                        equipment = pair[0],
+                                        onQuantityChange = { viewModel.updateEquipmentQuantity(pair[0].inventoryId, it) },
+                                        onRemove = { viewModel.removeEquipment(pair[0].inventoryId) }
+                                    )
+                                }
+                                if (pair.size > 1) {
+                                    Box(modifier = Modifier.weight(1f)) {
+                                        EquipmentCard(
+                                            equipment = pair[1],
+                                            onQuantityChange = { viewModel.updateEquipmentQuantity(pair[1].inventoryId, it) },
+                                            onRemove = { viewModel.removeEquipment(pair[1].inventoryId) }
+                                        )
+                                    }
+                                } else {
+                                    Spacer(modifier = Modifier.weight(1f))
+                                }
+                            }
+                        }
+                    } else {
+                        items(viewModel.selectedEquipment.size) { index ->
+                            val eq = viewModel.selectedEquipment[index]
+                            EquipmentCard(
+                                equipment = eq,
+                                onQuantityChange = { viewModel.updateEquipmentQuantity(eq.inventoryId, it) },
+                                onRemove = { viewModel.removeEquipment(eq.inventoryId) }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (showEquipmentPicker) {
+        EquipmentPickerSheet(
+            viewModel = viewModel,
+            onDismiss = { showEquipmentPicker = false }
+        )
+    }
+}
+
+@Composable
+private fun EquipmentCard(
+    equipment: EventEquipment,
+    onQuantityChange: (Int) -> Unit,
+    onRemove: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
+        border = androidx.compose.foundation.BorderStroke(1.dp, SolennixTheme.colors.borderLight),
+        shape = MaterialTheme.shapes.medium
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(equipment.equipmentName ?: "Equipo", style = MaterialTheme.typography.titleSmall)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        if (equipment.unit != null) {
+                            Text("Unidad: ${equipment.unit}", style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.secondaryText)
+                        }
+                        if (equipment.currentStock != null) {
+                            Text("Stock: ${equipment.currentStock.toInt()}", style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.secondaryText)
+                        }
+                    }
+                    Text(
+                        "Sin costo — Activo reutilizable",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = SolennixTheme.colors.secondaryText
+                    )
+                }
+                IconButton(onClick = onRemove) {
+                    Icon(Icons.Default.Close, contentDescription = "Quitar", tint = SolennixTheme.colors.error)
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                IconButton(
+                    onClick = { onQuantityChange(equipment.quantity - 1) },
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(Icons.Default.Remove, contentDescription = "Menos")
+                }
+                Text(
+                    "${equipment.quantity}",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                IconButton(
+                    onClick = { onQuantityChange(equipment.quantity + 1) },
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Más")
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EquipmentPickerSheet(
+    viewModel: EventFormViewModel,
+    onDismiss: () -> Unit
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var searchQuery by remember { mutableStateOf("") }
+    val equipment by viewModel.availableEquipment.collectAsStateWithLifecycle()
+    val filtered = remember(searchQuery, equipment) {
+        if (searchQuery.isBlank()) equipment
+        else equipment.filter { it.ingredientName.contains(searchQuery, ignoreCase = true) }
+    }
+    val selectedIds = remember(viewModel.selectedEquipment.size) {
+        viewModel.selectedEquipment.map { it.inventoryId }.toSet()
+    }
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = SolennixTheme.colors.card
+    ) {
+        Column(modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 16.dp)) {
+            Text("Seleccionar Equipo", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 12.dp))
+            SolennixTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                label = "Buscar equipo",
+                leadingIcon = Icons.Default.Search,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            LazyColumn(modifier = Modifier.heightIn(max = 400.dp)) {
+                items(filtered.size) { index ->
+                    val item = filtered[index]
+                    val isSelected = selectedIds.contains(item.id)
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 3.dp)
+                            .clickable {
+                                if (!isSelected) {
+                                    viewModel.addEquipment(item, 1)
+                                }
+                                onDismiss()
+                            },
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isSelected) SolennixTheme.colors.primary.copy(alpha = 0.08f)
+                            else SolennixTheme.colors.card
+                        ),
+                        shape = MaterialTheme.shapes.medium
+                    ) {
+                        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(item.ingredientName, style = MaterialTheme.typography.bodyLarge)
+                                Text(
+                                    "Disponible: ${item.currentStock.toInt()} ${item.unit}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = SolennixTheme.colors.secondaryText
+                                )
+                            }
+                            if (isSelected) {
+                                Icon(Icons.Default.CheckCircle, contentDescription = "Seleccionado", tint = SolennixTheme.colors.success, modifier = Modifier.size(20.dp))
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StepSupplies(viewModel: EventFormViewModel) {
-    // Basic implementation to satisfy compilation
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text("Insumos (Proximamente)")
+    var showSupplyPicker by remember { mutableStateOf(false) }
+    val suggestions by viewModel.supplySuggestions.collectAsStateWithLifecycle()
+    val isWideScreen = LocalIsWideScreen.current
+
+    AdaptiveCenteredContent(maxWidth = 800.dp) {
+        Column(modifier = Modifier.padding(24.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Insumos", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.weight(1f))
+                IconButton(onClick = { showSupplyPicker = true }) {
+                    Icon(Icons.Default.AddCircle, contentDescription = "Añadir", tint = SolennixTheme.colors.primary)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Suggestions banner
+            if (suggestions.isNotEmpty()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.warning.copy(alpha = 0.08f)),
+                    shape = MaterialTheme.shapes.medium
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Lightbulb, contentDescription = null, tint = SolennixTheme.colors.warning, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Sugerencias por productos", style = MaterialTheme.typography.labelMedium, color = SolennixTheme.colors.warning)
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            modifier = Modifier.horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            suggestions.forEach { suggestion ->
+                                val alreadyAdded = viewModel.selectedSupplies.any { it.inventoryId == suggestion.id }
+                                FilterChip(
+                                    selected = alreadyAdded,
+                                    onClick = { if (!alreadyAdded) viewModel.addSupplyFromSuggestion(suggestion) },
+                                    label = { Text("${suggestion.ingredientName} (${String.format("%.1f", suggestion.suggestedQuantity)})") },
+                                    leadingIcon = if (alreadyAdded) { { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) } } else null
+                                )
+                            }
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            if (viewModel.selectedSupplies.isEmpty()) {
+                EmptyState(
+                    icon = Icons.Default.Inventory2,
+                    title = "Sin insumos",
+                    message = "Añade insumos consumibles necesarios para el evento.",
+                    actionText = "Explorar Inventario",
+                    onAction = { showSupplyPicker = true }
+                )
+            } else {
+                // Cost summary
+                Text(
+                    "Costo insumos: ${viewModel.costSupplies.asMXN()}",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = SolennixTheme.colors.secondaryText
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    if (isWideScreen) {
+                        val chunked = viewModel.selectedSupplies.chunked(2)
+                        items(chunked.size) { index ->
+                            val pair = chunked[index]
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                                Box(modifier = Modifier.weight(1f)) {
+                                    SupplyCard(
+                                        supply = pair[0],
+                                        onQuantityChange = { viewModel.updateSupplyQuantity(pair[0].inventoryId, it) },
+                                        onSourceChange = { viewModel.updateSupplySource(pair[0].inventoryId, it) },
+                                        onExcludeCostChange = { viewModel.updateSupplyExcludeCost(pair[0].inventoryId, it) },
+                                        onRemove = { viewModel.removeSupply(pair[0].inventoryId) }
+                                    )
+                                }
+                                if (pair.size > 1) {
+                                    Box(modifier = Modifier.weight(1f)) {
+                                        SupplyCard(
+                                            supply = pair[1],
+                                            onQuantityChange = { viewModel.updateSupplyQuantity(pair[1].inventoryId, it) },
+                                            onSourceChange = { viewModel.updateSupplySource(pair[1].inventoryId, it) },
+                                            onExcludeCostChange = { viewModel.updateSupplyExcludeCost(pair[1].inventoryId, it) },
+                                            onRemove = { viewModel.removeSupply(pair[1].inventoryId) }
+                                        )
+                                    }
+                                } else {
+                                    Spacer(modifier = Modifier.weight(1f))
+                                }
+                            }
+                        }
+                    } else {
+                        items(viewModel.selectedSupplies.size) { index ->
+                            val supply = viewModel.selectedSupplies[index]
+                            SupplyCard(
+                                supply = supply,
+                                onQuantityChange = { viewModel.updateSupplyQuantity(supply.inventoryId, it) },
+                                onSourceChange = { viewModel.updateSupplySource(supply.inventoryId, it) },
+                                onExcludeCostChange = { viewModel.updateSupplyExcludeCost(supply.inventoryId, it) },
+                                onRemove = { viewModel.removeSupply(supply.inventoryId) }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (showSupplyPicker) {
+        SupplyPickerSheet(
+            viewModel = viewModel,
+            onDismiss = { showSupplyPicker = false }
+        )
+    }
+}
+
+@Composable
+private fun SupplyCard(
+    supply: EventSupply,
+    onQuantityChange: (Double) -> Unit,
+    onSourceChange: (SupplySource) -> Unit,
+    onExcludeCostChange: (Boolean) -> Unit,
+    onRemove: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
+        border = androidx.compose.foundation.BorderStroke(1.dp, SolennixTheme.colors.borderLight),
+        shape = MaterialTheme.shapes.medium
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(supply.supplyName ?: "Insumo", style = MaterialTheme.typography.titleSmall)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        if (supply.unit != null) {
+                            Text("Unidad: ${supply.unit}", style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.secondaryText)
+                        }
+                        if (supply.currentStock != null) {
+                            Text(
+                                "Stock: ${String.format("%.1f", supply.currentStock)}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = if (supply.currentStock >= supply.quantity) SolennixTheme.colors.success else SolennixTheme.colors.error
+                            )
+                        }
+                    }
+                    Text(
+                        "Costo: ${supply.unitCost.asMXN()} × ${String.format("%.1f", supply.quantity)} = ${(supply.unitCost * supply.quantity).asMXN()}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = SolennixTheme.colors.primary
+                    )
+                }
+                IconButton(onClick = onRemove) {
+                    Icon(Icons.Default.Close, contentDescription = "Quitar", tint = SolennixTheme.colors.error)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Quantity controls
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                IconButton(
+                    onClick = { onQuantityChange((supply.quantity - 0.5).coerceAtLeast(0.5)) },
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(Icons.Default.Remove, contentDescription = "Menos")
+                }
+                Text(
+                    String.format("%.1f", supply.quantity),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                IconButton(
+                    onClick = { onQuantityChange(supply.quantity + 0.5) },
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Más")
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                // Source toggle
+                FilterChip(
+                    selected = supply.source == SupplySource.STOCK,
+                    onClick = { onSourceChange(SupplySource.STOCK) },
+                    label = { Text("Stock") }
+                )
+                FilterChip(
+                    selected = supply.source == SupplySource.PURCHASE,
+                    onClick = { onSourceChange(SupplySource.PURCHASE) },
+                    label = { Text("Compra") }
+                )
+            }
+
+            // Exclude cost (only for stock items)
+            if (supply.source == SupplySource.STOCK) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(
+                        checked = supply.excludeCost,
+                        onCheckedChange = { onExcludeCostChange(it) }
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Sin costo (reaprovechado)", style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SupplyPickerSheet(
+    viewModel: EventFormViewModel,
+    onDismiss: () -> Unit
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var searchQuery by remember { mutableStateOf("") }
+    val supplies by viewModel.availableSupplies.collectAsStateWithLifecycle()
+    val filtered = remember(searchQuery, supplies) {
+        if (searchQuery.isBlank()) supplies
+        else supplies.filter { it.ingredientName.contains(searchQuery, ignoreCase = true) }
+    }
+    val selectedIds = remember(viewModel.selectedSupplies.size) {
+        viewModel.selectedSupplies.map { it.inventoryId }.toSet()
+    }
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = SolennixTheme.colors.card
+    ) {
+        Column(modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 16.dp)) {
+            Text("Seleccionar Insumo", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 12.dp))
+            SolennixTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                label = "Buscar insumo",
+                leadingIcon = Icons.Default.Search,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            LazyColumn(modifier = Modifier.heightIn(max = 400.dp)) {
+                items(filtered.size) { index ->
+                    val item = filtered[index]
+                    val isSelected = selectedIds.contains(item.id)
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 3.dp)
+                            .clickable {
+                                if (!isSelected) {
+                                    viewModel.addSupply(item, 1.0)
+                                }
+                                onDismiss()
+                            },
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isSelected) SolennixTheme.colors.primary.copy(alpha = 0.08f)
+                            else SolennixTheme.colors.card
+                        ),
+                        shape = MaterialTheme.shapes.medium
+                    ) {
+                        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(item.ingredientName, style = MaterialTheme.typography.bodyLarge)
+                                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    Text(
+                                        "Stock: ${String.format("%.1f", item.currentStock)} ${item.unit}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = SolennixTheme.colors.secondaryText
+                                    )
+                                    if (item.unitCost != null) {
+                                        Text(
+                                            "Costo: ${item.unitCost.asMXN()}/${item.unit}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = SolennixTheme.colors.primary
+                                        )
+                                    }
+                                }
+                            }
+                            if (isSelected) {
+                                Icon(Icons.Default.CheckCircle, contentDescription = "Seleccionado", tint = SolennixTheme.colors.success, modifier = Modifier.size(20.dp))
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
 @Composable
 fun StepSummary(viewModel: EventFormViewModel, isEditMode: Boolean) {
-    // Basic implementation to satisfy compilation
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text("Resumen (Proximamente)")
+    val depositPct = viewModel.depositPercent.toDoubleOrNull() ?: 0.0
+    val depositAmount = viewModel.total * depositPct / 100
+
+    AdaptiveCenteredContent(maxWidth = 800.dp) {
+        Column(
+            modifier = Modifier
+                .padding(24.dp)
+                .verticalScroll(rememberScrollState())
+        ) {
+            Text("Finanzas y Resumen", style = MaterialTheme.typography.headlineSmall)
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Discount section
+            Text("Descuento", style = MaterialTheme.typography.titleMedium)
+            Spacer(modifier = Modifier.height(8.dp))
+            AdaptiveFormRow(
+                left = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        FilterChip(
+                            selected = viewModel.discountType == DiscountType.PERCENT,
+                            onClick = { viewModel.discountType = DiscountType.PERCENT },
+                            label = { Text("%") }
+                        )
+                        FilterChip(
+                            selected = viewModel.discountType == DiscountType.FIXED,
+                            onClick = { viewModel.discountType = DiscountType.FIXED },
+                            label = { Text("$") }
+                        )
+                    }
+                },
+                right = {
+                    SolennixTextField(
+                        value = viewModel.discount,
+                        onValueChange = { viewModel.discount = it },
+                        label = if (viewModel.discountType == DiscountType.PERCENT) "Descuento (%)" else "Descuento ($)",
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
+                    )
+                }
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Invoice / Tax section
+            Text("Facturación", style = MaterialTheme.typography.titleMedium)
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Requiere Factura (IVA)", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+                Switch(
+                    checked = viewModel.requiresInvoice,
+                    onCheckedChange = { viewModel.requiresInvoice = it }
+                )
+            }
+            if (viewModel.requiresInvoice) {
+                Spacer(modifier = Modifier.height(8.dp))
+                SolennixTextField(
+                    value = viewModel.taxRate,
+                    onValueChange = { viewModel.taxRate = it },
+                    label = "Tasa IVA (%)",
+                    keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
+                )
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Deposit section
+            Text("Anticipo", style = MaterialTheme.typography.titleMedium)
+            Spacer(modifier = Modifier.height(8.dp))
+            AdaptiveFormRow(
+                left = {
+                    SolennixTextField(
+                        value = viewModel.depositPercent,
+                        onValueChange = { viewModel.depositPercent = it },
+                        label = "Anticipo (%)",
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
+                    )
+                },
+                right = {
+                    Text(
+                        "= ${depositAmount.asMXN()}",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = SolennixTheme.colors.primary,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(start = 12.dp, top = 16.dp)
+                    )
+                }
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Cancellation policy
+            Text("Política de Cancelación", style = MaterialTheme.typography.titleMedium)
+            Spacer(modifier = Modifier.height(8.dp))
+            AdaptiveFormRow(
+                left = {
+                    SolennixTextField(
+                        value = viewModel.cancellationDays,
+                        onValueChange = { viewModel.cancellationDays = it },
+                        label = "Días de anticipación",
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+                    )
+                },
+                right = {
+                    SolennixTextField(
+                        value = viewModel.refundPercent,
+                        onValueChange = { viewModel.refundPercent = it },
+                        label = "Reembolso (%)",
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
+                    )
+                }
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Notes
+            Text("Notas", style = MaterialTheme.typography.titleMedium)
+            Spacer(modifier = Modifier.height(8.dp))
+            SolennixTextField(
+                value = viewModel.notes,
+                onValueChange = { viewModel.notes = it },
+                label = "Notas del evento",
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Totals summary card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
+                border = androidx.compose.foundation.BorderStroke(1.5.dp, SolennixTheme.colors.primary),
+                shape = MaterialTheme.shapes.medium
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("Resumen", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    SummaryRow("Subtotal productos", viewModel.subtotalProducts.asMXN())
+                    SummaryRow("Subtotal extras", viewModel.subtotalExtras.asMXN())
+
+                    if (viewModel.discountAmount > 0) {
+                        SummaryRow("Descuento", "-${viewModel.discountAmount.asMXN()}", valueColor = SolennixTheme.colors.error)
+                    }
+
+                    if (viewModel.requiresInvoice && viewModel.taxAmount > 0) {
+                        val rate = viewModel.taxRate.toDoubleOrNull() ?: 0.0
+                        SummaryRow("IVA (${String.format("%.0f", rate)}%)", "+${viewModel.taxAmount.asMXN()}")
+                    }
+
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = SolennixTheme.colors.borderLight)
+
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        Text("Total", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                        Text(viewModel.total.asMXN(), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = SolennixTheme.colors.primary)
+                    }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+                    SummaryRow("Anticipo (${String.format("%.0f", depositPct)}%)", depositAmount.asMXN(), valueColor = SolennixTheme.colors.primary)
+
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = SolennixTheme.colors.borderLight)
+
+                    // Profitability section
+                    Text("Rentabilidad", style = MaterialTheme.typography.labelMedium, color = SolennixTheme.colors.secondaryText)
+                    Spacer(modifier = Modifier.height(6.dp))
+                    SummaryRow("Costos totales", viewModel.totalCosts.asMXN())
+                    SummaryRow(
+                        "Ganancia neta",
+                        viewModel.netProfit.asMXN(),
+                        valueColor = if (viewModel.netProfit >= 0) SolennixTheme.colors.success else SolennixTheme.colors.error
+                    )
+                    SummaryRow(
+                        "Margen",
+                        "${String.format("%.1f", viewModel.profitMargin)}%",
+                        valueColor = if (viewModel.profitMargin >= 20) SolennixTheme.colors.success else SolennixTheme.colors.warning
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+    }
+}
+
+@Composable
+private fun SummaryRow(
+    label: String,
+    value: String,
+    valueColor: Color = Color.Unspecified
+) {
+    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
+        Text(label, style = MaterialTheme.typography.bodyMedium, color = SolennixTheme.colors.secondaryText, modifier = Modifier.weight(1f))
+        Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, color = valueColor)
     }
 }
 
@@ -856,5 +1593,86 @@ fun ProductPickerSheet(
     onDismiss: () -> Unit,
     onProductSelected: (com.creapolis.solennix.core.model.Product) -> Unit
 ) {
-    // Sheet implementation
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var searchQuery by remember { mutableStateOf("") }
+    val products = viewModel.availableProducts.collectAsStateWithLifecycle()
+    val filteredProducts = remember(searchQuery, products.value) {
+        if (searchQuery.isBlank()) products.value
+        else products.value.filter {
+            it.name.contains(searchQuery, ignoreCase = true) ||
+                it.category.contains(searchQuery, ignoreCase = true)
+        }
+    }
+    val selectedIds = remember(viewModel.selectedProducts.size) {
+        viewModel.selectedProducts.map { it.productId }.toSet()
+    }
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = SolennixTheme.colors.card
+    ) {
+        Column(modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 16.dp)) {
+            Text(
+                "Seleccionar Producto",
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+            SolennixTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                label = "Buscar producto",
+                leadingIcon = Icons.Default.Search,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            LazyColumn(modifier = Modifier.heightIn(max = 400.dp)) {
+                items(filteredProducts.size) { index ->
+                    val product = filteredProducts[index]
+                    val isSelected = selectedIds.contains(product.id)
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 3.dp)
+                            .clickable { onProductSelected(product) },
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isSelected) SolennixTheme.colors.primary.copy(alpha = 0.08f)
+                            else SolennixTheme.colors.card
+                        ),
+                        shape = MaterialTheme.shapes.medium
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(product.name, style = MaterialTheme.typography.bodyLarge)
+                                Text(
+                                    product.category,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = SolennixTheme.colors.secondaryText
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                product.basePrice.asMXN(),
+                                style = MaterialTheme.typography.titleSmall,
+                                color = SolennixTheme.colors.primary,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            if (isSelected) {
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Icon(
+                                    Icons.Default.CheckCircle,
+                                    contentDescription = "Seleccionado",
+                                    tint = SolennixTheme.colors.success,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
