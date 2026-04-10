@@ -384,6 +384,8 @@ Implementa el tema visual de Solennix basado en Material 3:
 
 **Calibración de contraste (Fase 3 A11y):** `Color.kt` endurece `secondaryText`, `tertiaryText` y `tabBarInactive` en light/dark para mantener legibilidad AA sobre `background`, `surface` y `card`. `EmptyState` también elevó el contraste del ícono base para evitar estados vacíos visualmente lavados.
 
+**Soporte `fontScale` extremo (Fase 3 A11y):** `KPICard`, `PremiumButton` y `QuickActionButton` se adaptan a escalas altas (`fontScale >= 1.3f`) con alturas mínimas mayores y textos multi-línea controlados para evitar clipping/truncado agresivo en dashboard y CTAs críticos.
+
 ### 4.4 `core:database` — Base de Datos Room
 
 Cache local offline-first con Room:

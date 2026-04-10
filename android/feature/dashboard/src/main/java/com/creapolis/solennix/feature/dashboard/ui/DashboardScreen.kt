@@ -22,7 +22,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.component.*
@@ -487,16 +489,23 @@ private fun QuickActionButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isLargeFontScale = LocalDensity.current.fontScale >= 1.3f
     Button(
         onClick = onClick,
-        modifier = modifier.height(52.dp),
+        modifier = modifier.heightIn(min = if (isLargeFontScale) 60.dp else 52.dp),
         colors = ButtonDefaults.buttonColors(containerColor = containerColor),
         shape = RoundedCornerShape(12.dp),
         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
     ) {
         Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color.White)
         Spacer(modifier = Modifier.width(6.dp))
-        Text(label, style = MaterialTheme.typography.labelMedium, color = Color.White, maxLines = 1)
+        Text(
+            label,
+            style = MaterialTheme.typography.labelMedium,
+            color = Color.White,
+            maxLines = if (isLargeFontScale) 2 else 1,
+            overflow = if (isLargeFontScale) TextOverflow.Clip else TextOverflow.Ellipsis
+        )
     }
 }
 

@@ -160,7 +160,7 @@
 - [ ] Testear flujos principales con TalkBack
 - [x] Centralización de recursos de accesibilidad en `core:designsystem`
 - [ ] `Modifier.semantics {}` para agrupaciones lógicas
-- [ ] Soporte de `fontScale` extremos
+- [x] Soporte de `fontScale` extremos
 
 ### 3.3 Baseline Profiles
 

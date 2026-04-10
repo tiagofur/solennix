@@ -10,8 +10,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.creapolis.solennix.core.designsystem.theme.SolennixGradient
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
@@ -32,9 +35,10 @@ fun PremiumButton(
     isLoading: Boolean = false,
     enabled: Boolean = true
 ) {
+    val isLargeFontScale = LocalDensity.current.fontScale >= 1.3f
     val buttonModifier = modifier
         .fillMaxWidth()
-        .height(50.dp)
+        .heightIn(min = if (isLargeFontScale) 56.dp else 50.dp)
         .animateContentSize()
 
     when (style) {
@@ -59,7 +63,7 @@ fun PremiumButton(
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-                    ButtonContent(text, icon, isLoading, Color.White)
+                    ButtonContent(text, icon, isLoading, Color.White, isLargeFontScale)
                 }
             }
         }
@@ -77,7 +81,7 @@ fun PremiumButton(
                     brush = if (enabled) SolennixGradient.premiumBrush else SolidColor(SolennixTheme.colors.border)
                 )
             ) {
-                ButtonContent(text, icon, isLoading, SolennixTheme.colors.primary)
+                ButtonContent(text, icon, isLoading, SolennixTheme.colors.primary, isLargeFontScale)
             }
         }
         ButtonStyle.Destructive -> {
@@ -91,7 +95,7 @@ fun PremiumButton(
                     contentColor = Color.White
                 )
             ) {
-                ButtonContent(text, icon, isLoading, Color.White)
+                ButtonContent(text, icon, isLoading, Color.White, isLargeFontScale)
             }
         }
     }
@@ -102,7 +106,8 @@ private fun ButtonContent(
     text: String,
     icon: ImageVector?,
     isLoading: Boolean,
-    contentColor: Color
+    contentColor: Color,
+    isLargeFontScale: Boolean
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -125,7 +130,10 @@ private fun ButtonContent(
             }
             Text(
                 text = text,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                maxLines = if (isLargeFontScale) 2 else 1,
+                overflow = if (isLargeFontScale) TextOverflow.Clip else TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center
             )
         }
     }

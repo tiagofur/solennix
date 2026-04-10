@@ -8,6 +8,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -28,9 +29,10 @@ fun KPICard(
     modifier: Modifier = Modifier,
     subtitle: String? = null
 ) {
+    val isLargeFontScale = LocalDensity.current.fontScale >= 1.3f
     Card(
         modifier = modifier
-            .defaultMinSize(minWidth = 155.dp)
+            .defaultMinSize(minWidth = if (isLargeFontScale) 180.dp else 155.dp)
             .semantics(mergeDescendants = true) {
                 contentDescription = "$title: $value" + (subtitle?.let { ". $it" } ?: "")
             },
@@ -72,15 +74,16 @@ fun KPICard(
                     letterSpacing = (-0.5).sp
                 ),
                 color = SolennixTheme.colors.primaryText,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+                maxLines = if (isLargeFontScale) 2 else 1,
+                overflow = if (isLargeFontScale) TextOverflow.Clip else TextOverflow.Ellipsis,
                 textAlign = TextAlign.Center
             )
             Text(
                 text = title,
                 style = MaterialTheme.typography.labelSmall,
                 color = SolennixTheme.colors.secondaryText,
-                maxLines = 1,
+                maxLines = if (isLargeFontScale) 2 else 1,
+                overflow = if (isLargeFontScale) TextOverflow.Clip else TextOverflow.Ellipsis,
                 textAlign = TextAlign.Center
             )
             if (subtitle != null) {
@@ -88,7 +91,8 @@ fun KPICard(
                     text = subtitle,
                     style = MaterialTheme.typography.labelSmall,
                     color = SolennixTheme.colors.tertiaryText,
-                    maxLines = 1,
+                    maxLines = if (isLargeFontScale) 2 else 1,
+                    overflow = if (isLargeFontScale) TextOverflow.Clip else TextOverflow.Ellipsis,
                     textAlign = TextAlign.Center
                 )
             }
