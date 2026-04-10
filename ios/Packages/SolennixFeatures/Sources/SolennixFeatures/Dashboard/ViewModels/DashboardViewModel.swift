@@ -128,87 +128,119 @@ public final class DashboardViewModel {
         isLoading = true
         errorMessage = nil
 
-        do {
-            // Build date range for current month
-            let now = Date()
-            let calendar = Calendar.current
-            let components = calendar.dateComponents([.year, .month], from: now)
-            guard let startOfMonth = calendar.date(from: components),
-                  let endOfMonth = calendar.date(byAdding: DateComponents(month: 1, day: -1), to: startOfMonth)
-            else {
-                errorMessage = "Error calculando rango de fechas"
-                isLoading = false
-                return
+        // Build date range for current month
+        let now = Date()
+        let calendar = Calendar.current
+        let components = calendar.dateComponents([.year, .month], from: now)
+        guard let startOfMonth = calendar.date(from: components),
+              let endOfMonth = calendar.date(byAdding: DateComponents(month: 1, day: -1), to: startOfMonth)
+        else {
+            errorMessage = "Error calculando rango de fechas"
+            isLoading = false
+            return
+        }
+
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        let startStr = dateFormatter.string(from: startOfMonth)
+        let endStr = dateFormatter.string(from: endOfMonth)
+
+        func loadOrEmpty<T: Decodable>(
+            _ endpoint: String,
+            params: [String: String]? = nil,
+            label: String
+        ) async -> [T] {
+            do {
+                return try await apiClient.getAll(endpoint, params: params)
+            } catch {
+                NSLog("[Dashboard] ⚠️ %@ failed: %@", label, String(describing: error))
+                return []
             }
+        }
 
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "yyyy-MM-dd"
-            let startStr = dateFormatter.string(from: startOfMonth)
-            let endStr = dateFormatter.string(from: endOfMonth)
+        // Fetch sequentially instead of in parallel.
+        // Some nginx HTTP/2 deployments choke on many concurrent streams over a
+        // single connection (the dashboard previously fired 8 GETs in parallel
+        // and they all hung waiting for response frames). Sequential issues one
+        // request at a time over the multiplexed connection, sidestepping the bug.
+        // TODO: collapse most of these into the server-side aggregated endpoints
+        // /api/v1/dashboard/kpis and friends (already implemented in backend).
+        let clients: [Client] = await loadOrEmpty(
+            Endpoint.clients,
+            label: "clients"
+        )
+        let monthEvents: [Event] = await loadOrEmpty(
+            Endpoint.events,
+            params: ["start": startStr, "end": endStr],
+            label: "month events"
+        )
+        let upcoming: [Event] = await loadOrEmpty(
+            Endpoint.upcomingEvents,
+            params: ["limit": "5"],
+            label: "upcoming events"
+        )
+        let loadedAllEvents: [Event] = await loadOrEmpty(
+            Endpoint.events,
+            label: "all events"
+        )
+        let inventory: [InventoryItem] = await loadOrEmpty(
+            Endpoint.inventory,
+            label: "inventory"
+        )
+        let products: [Product] = await loadOrEmpty(
+            Endpoint.products,
+            label: "products"
+        )
+        let monthPayments: [Payment] = await loadOrEmpty(
+            Endpoint.payments,
+            params: ["start": startStr, "end": endStr],
+            label: "month payments"
+        )
+        let loadedAllPayments: [Payment] = await loadOrEmpty(
+            Endpoint.payments,
+            label: "all payments"
+        )
 
-            // Fetch sequentially instead of in parallel.
-            // Some nginx HTTP/2 deployments choke on many concurrent streams over a
-            // single connection (the dashboard previously fired 8 GETs in parallel
-            // and they all hung waiting for response frames). Sequential issues one
-            // request at a time over the multiplexed connection, sidestepping the bug.
-            // TODO: collapse most of these into the server-side aggregated endpoints
-            // /api/v1/dashboard/kpis and friends (already implemented in backend).
-            let clients: [Client] = try await apiClient.getAll(Endpoint.clients)
-            let monthEvents: [Event] = try await apiClient.getAll(
-                Endpoint.events,
-                params: ["start_date": startStr, "end_date": endStr]
-            )
-            let upcoming: [Event] = try await apiClient.getAll(
-                Endpoint.upcomingEvents,
-                params: ["limit": "5"]
-            )
-            let loadedAllEvents: [Event] = try await apiClient.getAll(Endpoint.events)
-            let inventory: [InventoryItem] = try await apiClient.getAll(Endpoint.inventory)
-            let products: [Product] = try await apiClient.getAll(Endpoint.products)
-            let monthPayments: [Payment] = try await apiClient.getAll(
-                Endpoint.payments,
-                params: ["start_date": startStr, "end_date": endStr]
-            )
-            let loadedAllPayments: [Payment] = try await apiClient.getAll(Endpoint.payments)
+        // Build client map
+        clientMap = Dictionary(uniqueKeysWithValues: clients.map { ($0.id, $0) })
 
-            // Build client map
-            clientMap = Dictionary(uniqueKeysWithValues: clients.map { ($0.id, $0) })
+        // Events this month
+        eventsThisMonth = monthEvents
+        allEvents = loadedAllEvents
+        allPayments = loadedAllPayments
 
-            // Events this month
-            eventsThisMonth = monthEvents
-            allEvents = loadedAllEvents
-            allPayments = loadedAllPayments
+        // Upcoming events
+        upcomingEvents = upcoming
 
-            // Upcoming events
-            upcomingEvents = upcoming
+        // Low stock items = inventory where current_stock < minimum_stock AND minimum_stock > 0
+        lowStockItems = inventory.filter { $0.minimumStock > 0 && $0.currentStock < $0.minimumStock }
+        lowStockCount = lowStockItems.count
 
-            // Low stock items = inventory where current_stock < minimum_stock AND minimum_stock > 0
-            lowStockItems = inventory.filter { $0.minimumStock > 0 && $0.currentStock < $0.minimumStock }
-            lowStockCount = lowStockItems.count
+        // Counts for onboarding checklist
+        totalProducts = products.count
+        totalEvents = loadedAllEvents.count
 
-            // Counts for onboarding checklist
-            totalProducts = products.count
-            totalEvents = loadedAllEvents.count
+        // Attention events for dashboard alerts/cards.
+        attentionEvents = Self.makeAttentionEvents(
+            events: loadedAllEvents,
+            payments: loadedAllPayments,
+            clientMap: clientMap,
+            now: now
+        )
 
-            // Attention events for dashboard alerts/cards.
-            attentionEvents = Self.makeAttentionEvents(
-                events: loadedAllEvents,
-                payments: loadedAllPayments,
-                clientMap: clientMap,
-                now: now
-            )
+        // Cash collected = sum of payment amounts in current month
+        cashCollectedThisMonth = monthPayments.reduce(0) { $0 + $1.amount }
+        recalculateMonthlyMetrics()
 
-            // Cash collected = sum of payment amounts in current month
-            cashCollectedThisMonth = monthPayments.reduce(0) { $0 + $1.amount }
-            recalculateMonthlyMetrics()
-
-        } catch {
-            NSLog("[Dashboard] ❌ loadDashboard failed: %@", String(describing: error))
-            if let apiError = error as? APIError {
-                errorMessage = apiError.errorDescription ?? "Error cargando el dashboard"
-            } else {
-                errorMessage = "Error cargando el dashboard: \(error.localizedDescription)"
-            }
+        if clients.isEmpty,
+           monthEvents.isEmpty,
+           upcoming.isEmpty,
+           loadedAllEvents.isEmpty,
+           inventory.isEmpty,
+           products.isEmpty,
+           monthPayments.isEmpty,
+           loadedAllPayments.isEmpty {
+            errorMessage = "No se pudo cargar el dashboard"
         }
 
         isLoading = false
