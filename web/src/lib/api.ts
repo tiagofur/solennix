@@ -22,9 +22,19 @@ class ApiClient {
   private getHeaders(): HeadersInit {
     // Auth tokens are sent via httpOnly cookies automatically.
     // No Authorization header needed — cookies are included via credentials: 'include'.
-    return {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
+
+    // Include CSRF token if present
+    if (typeof document !== 'undefined') {
+      const match = document.cookie.match(/(?:^|;\s*)csrf_token=([^;]*)/);
+      if (match && match[1]) {
+        headers['X-CSRF-Token'] = decodeURIComponent(match[1]);
+      }
+    }
+
+    return headers;
   }
 
   private async attemptRefresh(): Promise<boolean> {
