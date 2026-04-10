@@ -26,7 +26,7 @@ func NewLiveActivityHandler(repo LiveActivityTokenRepository) *LiveActivityHandl
 	return &LiveActivityHandler{repo: repo}
 }
 
-// Register handles POST /api/v1/live-activities/register
+// Register handles POST /api/live-activities/register
 // Body: { "event_id": "uuid", "push_token": "..." }
 func (h *LiveActivityHandler) Register(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
@@ -57,7 +57,7 @@ func (h *LiveActivityHandler) Register(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusCreated, token)
 }
 
-// DeleteByEvent handles DELETE /api/v1/live-activities/by-event/{eventId}
+// DeleteByEvent handles DELETE /api/live-activities/by-event/{eventId}
 // Removes all Live Activity tokens for an event owned by the current user.
 func (h *LiveActivityHandler) DeleteByEvent(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())

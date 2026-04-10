@@ -135,6 +135,14 @@ var skipPrefixes = map[string]bool{
 	"dashboard":     true,
 }
 
+func trimAPIBasePrefix(pattern string) string {
+	pattern = strings.TrimPrefix(pattern, "/api/v1/")
+	pattern = strings.TrimPrefix(pattern, "/api/v1")
+	pattern = strings.TrimPrefix(pattern, "/api/")
+	pattern = strings.TrimPrefix(pattern, "/api")
+	return strings.TrimPrefix(pattern, "/")
+}
+
 // extractResource parses the Chi route context to determine the resource type and optional ID.
 // Returns empty resourceType for paths that should not be audited.
 func extractResource(r *http.Request) (string, *uuid.UUID) {
@@ -149,9 +157,7 @@ func extractResource(r *http.Request) (string, *uuid.UUID) {
 		return "", nil
 	}
 
-	// Strip the /api/v1/ prefix
-	pattern = strings.TrimPrefix(pattern, "/api/v1/")
-	pattern = strings.TrimPrefix(pattern, "/api/")
+	pattern = trimAPIBasePrefix(pattern)
 
 	parts := strings.Split(pattern, "/")
 	if len(parts) == 0 {

@@ -47,7 +47,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 		w.Write([]byte(`{"status":"ok"}`))
 	})
 
-	// Build API subrouter — mounted under both /api/v1 (canonical) and /api (legacy alias)
+	// Build API subrouter — mounted under both /api/v1 and /api for compatibility.
 	apiRouter := chi.NewRouter()
 	apiRouter.Use(mw.APIVersion("v1"))
 	apiRouter.Use(mw.Timeout(30 * time.Second)) // Bounds downstream SQL queries
