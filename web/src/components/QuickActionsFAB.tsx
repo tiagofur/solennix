@@ -35,12 +35,12 @@ export const QuickActionsFAB: React.FC = () => {
       {/* Backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 lg:hidden"
+          className="fixed inset-0 z-40 md:hidden"
           onClick={() => setIsOpen(false)}
         />
       )}
 
-      <div className="fixed bottom-24 right-5 z-50 flex flex-col items-end gap-3 lg:hidden">
+      <div className="fixed bottom-24 right-5 z-50 flex flex-col items-end gap-3 md:hidden">
         {/* Action items */}
         <div
           className={clsx(

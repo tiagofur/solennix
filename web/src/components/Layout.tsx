@@ -279,7 +279,7 @@ export const Layout: React.FC = () => {
           </div>
 
           {/* Scrollable Page Content */}
-          <main id="main-content" className="flex-1 overflow-y-auto px-6 lg:px-10 pb-28 lg:pb-10">
+          <main id="main-content" className="flex-1 overflow-y-auto px-6 lg:px-10 pb-28 md:pb-10">
             <Outlet />
           </main>
         </div>

@@ -164,6 +164,13 @@ describe('Layout', () => {
     expect(screen.getByTestId('command-palette')).toBeInTheDocument();
   });
 
+  it('uses smartphone-only bottom spacing for the main content area', () => {
+    renderLayout();
+    expect(screen.getByRole('main').className).toContain('pb-28');
+    expect(screen.getByRole('main').className).toContain('md:pb-10');
+    expect(screen.getByRole('main').className).not.toContain('lg:pb-10');
+  });
+
   // --- Overlay keyboard handler tests ---
 
   it('closes sidebar overlay when Enter key is pressed', () => {

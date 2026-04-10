@@ -36,27 +36,27 @@ platform: Web
 > [!info] Stack principal
 > React 19.2 · TypeScript ~5.9.3 · Vite 7.3.1 · Tailwind CSS 4.2.0 · Zustand 5.0.11
 
-| Capa | Tecnologia | Version | Justificacion |
-|------|------------|---------|---------------|
-| **Framework UI** | React | 19.2 | Componentes declarativos, Hooks, Concurrent Features, ecosistema maduro |
-| **Lenguaje** | TypeScript | ~5.9.3 | Tipado estatico, IntelliSense, deteccion de errores en compilacion |
-| **Build Tool** | Vite | 7.3.1 | HMR instantaneo, ESBuild para dev, Rollup para produccion, mucho mas rapido que CRA/Webpack |
-| **Estilos** | Tailwind CSS | 4.2.0 | Utility-first, purge automatico, consistencia de diseno sin escribir CSS custom |
-| **Estado Global** | Zustand | 5.0.11 | Minimalista, sin boilerplate, compatible con React 19, reemplaza Redux/Context para estado complejo |
-| **Routing** | react-router-dom | 7.13.0 | Rutas declarativas, rutas protegidas, parametros dinamicos |
-| **Formularios** | react-hook-form | 7.71.2 | Rendimiento superior (uncontrolled inputs), integracion nativa con zod via `@hookform/resolvers` |
-| **Validacion** | zod | 4.3.6 | Schemas de validacion type-safe, inferencia de tipos TypeScript, validacion en runtime |
-| **Graficos** | recharts | 3.7.0 | Graficos declarativos basados en D3, componibles con React, responsive |
-| **PDF** | jsPDF + jspdf-autotable | 4.2.0 / 5.0.7 | Generacion de PDF en el cliente (cotizaciones, contratos, resumen de eventos) |
-| **Calendario** | react-day-picker | 9.13.2 | Selector de fechas accesible, personalizable con Tailwind |
-| **Fechas** | date-fns | 4.1.0 | Funciones puras e inmutables para manipulacion de fechas, tree-shakeable |
-| **Iconos** | lucide-react | 0.575.0 | Iconos SVG ligeros, consistentes, tree-shakeable |
-| **CSS Utils** | clsx + tailwind-merge | 2.1.1 / 3.5.0 | Composicion condicional de clases sin conflictos de Tailwind |
-| **Testing Unitario** | Vitest | 4.0.18 | Compatible con Vite, API compatible con Jest, rapido, coverage con v8 |
-| **Testing E2E** | Playwright | 1.58.2 | Multi-navegador, auto-waiting, paralelismo, screenshots |
-| **API Mocking** | MSW (Mock Service Worker) | 2.12.10 | Intercepta requests a nivel de red, reutilizable entre tests unitarios y E2E |
-| **Testing Library** | @testing-library/react | 16.3.2 | Tests centrados en el usuario, queries accesibles |
-| **Linting** | ESLint | 10.0.1 | Analisis estatico con plugins para React Hooks y React Refresh |
+| Capa                 | Tecnologia                | Version       | Justificacion                                                                                       |
+| -------------------- | ------------------------- | ------------- | --------------------------------------------------------------------------------------------------- |
+| **Framework UI**     | React                     | 19.2          | Componentes declarativos, Hooks, Concurrent Features, ecosistema maduro                             |
+| **Lenguaje**         | TypeScript                | ~5.9.3        | Tipado estatico, IntelliSense, deteccion de errores en compilacion                                  |
+| **Build Tool**       | Vite                      | 7.3.1         | HMR instantaneo, ESBuild para dev, Rollup para produccion, mucho mas rapido que CRA/Webpack         |
+| **Estilos**          | Tailwind CSS              | 4.2.0         | Utility-first, purge automatico, consistencia de diseno sin escribir CSS custom                     |
+| **Estado Global**    | Zustand                   | 5.0.11        | Minimalista, sin boilerplate, compatible con React 19, reemplaza Redux/Context para estado complejo |
+| **Routing**          | react-router-dom          | 7.13.0        | Rutas declarativas, rutas protegidas, parametros dinamicos                                          |
+| **Formularios**      | react-hook-form           | 7.71.2        | Rendimiento superior (uncontrolled inputs), integracion nativa con zod via `@hookform/resolvers`    |
+| **Validacion**       | zod                       | 4.3.6         | Schemas de validacion type-safe, inferencia de tipos TypeScript, validacion en runtime              |
+| **Graficos**         | recharts                  | 3.7.0         | Graficos declarativos basados en D3, componibles con React, responsive                              |
+| **PDF**              | jsPDF + jspdf-autotable   | 4.2.0 / 5.0.7 | Generacion de PDF en el cliente (cotizaciones, contratos, resumen de eventos)                       |
+| **Calendario**       | react-day-picker          | 9.13.2        | Selector de fechas accesible, personalizable con Tailwind                                           |
+| **Fechas**           | date-fns                  | 4.1.0         | Funciones puras e inmutables para manipulacion de fechas, tree-shakeable                            |
+| **Iconos**           | lucide-react              | 0.575.0       | Iconos SVG ligeros, consistentes, tree-shakeable                                                    |
+| **CSS Utils**        | clsx + tailwind-merge     | 2.1.1 / 3.5.0 | Composicion condicional de clases sin conflictos de Tailwind                                        |
+| **Testing Unitario** | Vitest                    | 4.0.18        | Compatible con Vite, API compatible con Jest, rapido, coverage con v8                               |
+| **Testing E2E**      | Playwright                | 1.58.2        | Multi-navegador, auto-waiting, paralelismo, screenshots                                             |
+| **API Mocking**      | MSW (Mock Service Worker) | 2.12.10       | Intercepta requests a nivel de red, reutilizable entre tests unitarios y E2E                        |
+| **Testing Library**  | @testing-library/react    | 16.3.2        | Tests centrados en el usuario, queries accesibles                                                   |
+| **Linting**          | ESLint                    | 10.0.1        | Analisis estatico con plugins para React Hooks y React Refresh                                      |
 
 ---
 
@@ -98,6 +98,7 @@ graph TD
 ### Principios
 
 > [!note] Decisiones de diseno
+>
 > - **Composicion de componentes**: paginas compuestas por componentes reutilizables, cada uno con responsabilidad unica
 > - **Capa de API tipada**: todos los servicios usan el cliente API generico (`api.get<T>`, `api.post<T>`) con tipos TypeScript
 > - **Validacion con zod**: schemas definidos una vez, usados para validacion de formularios Y para inferir tipos TypeScript
@@ -170,7 +171,7 @@ web/src/
 │       └── AdminUsers.tsx            # Gestion de usuarios del sistema
 │
 ├── components/                       # Componentes compartidos
-│   ├── Layout.tsx                    # Layout principal: sidebar + header + Outlet
+│   ├── Layout.tsx                    # Layout principal: sidebar + header + Outlet; bottom nav/FAB solo en smartphones (<768px)
 │   ├── ProtectedRoute.tsx            # HOC que redirige a /login si no autenticado
 │   ├── AdminRoute.tsx                # HOC que verifica rol admin
 │   ├── Logo.tsx                      # Logo de Solennix (SVG)
@@ -180,6 +181,8 @@ web/src/
 │   ├── Skeleton.tsx                  # Placeholder de carga (skeleton screens)
 │   ├── Empty.tsx                     # Estado vacio con icono y CTA
 │   ├── ToastContainer.tsx            # Notificaciones toast
+│   ├── BottomTabBar.tsx              # Navegacion inferior solo para smartphones (<768px)
+│   ├── QuickActionsFAB.tsx           # FAB de acciones rapidas solo para smartphones (<768px)
 │   ├── UpgradeBanner.tsx             # Banner de upgrade a plan PRO
 │   ├── OnboardingChecklist.tsx       # Checklist de onboarding para nuevos usuarios
 │   ├── PendingEventsModal.tsx        # Modal de eventos pendientes de confirmacion
@@ -229,44 +232,44 @@ web/src/
 
 ### Rutas Publicas (sin autenticacion)
 
-| Ruta | Componente | Descripcion |
-|------|-----------|-------------|
-| `/` | `Landing` | Pagina de aterrizaje con informacion del producto |
-| `/login` | `Login` | Formulario de inicio de sesion |
-| `/register` | `Register` | Formulario de registro |
-| `/forgot-password` | `ForgotPassword` | Solicitud de restablecimiento de contrasena |
-| `/reset-password` | `ResetPassword` | Formulario para establecer nueva contrasena |
-| `/about` | `About` | Informacion sobre Solennix |
-| `/privacy` | `Privacy` | Politica de privacidad |
-| `/terms` | `Terms` | Terminos de uso |
+| Ruta               | Componente       | Descripcion                                       |
+| ------------------ | ---------------- | ------------------------------------------------- |
+| `/`                | `Landing`        | Pagina de aterrizaje con informacion del producto |
+| `/login`           | `Login`          | Formulario de inicio de sesion                    |
+| `/register`        | `Register`       | Formulario de registro                            |
+| `/forgot-password` | `ForgotPassword` | Solicitud de restablecimiento de contrasena       |
+| `/reset-password`  | `ResetPassword`  | Formulario para establecer nueva contrasena       |
+| `/about`           | `About`          | Informacion sobre Solennix                        |
+| `/privacy`         | `Privacy`        | Politica de privacidad                            |
+| `/terms`           | `Terms`          | Terminos de uso                                   |
 
 ### Rutas Protegidas (requieren autenticacion)
 
 Todas envueltas en `<ProtectedRoute>` + `<Layout>` (sidebar, header, Outlet).
 
-| Ruta | Componente | Descripcion |
-|------|-----------|-------------|
-| `/dashboard` | `Dashboard` | Panel principal con KPIs, graficos, eventos proximos |
-| `/search` | `SearchPage` | Busqueda global de clientes, eventos, productos |
-| `/calendar` | `CalendarView` | Vista de calendario mensual con eventos |
-| `/cotizacion-rapida` | `QuickQuotePage` | Cotizacion rapida sin crear evento completo |
-| `/events/new` | `EventForm` | Crear nuevo evento (formulario multi-paso) |
-| `/events/:id/edit` | `EventForm` | Editar evento existente |
-| `/events/:id/summary` | `EventSummary` | Resumen completo del evento |
-| `/clients` | `ClientList` | Lista de clientes con busqueda y paginacion |
-| `/clients/new` | `ClientForm` | Crear nuevo cliente |
-| `/clients/:id` | `ClientDetails` | Detalle del cliente con eventos asociados |
-| `/clients/:id/edit` | `ClientForm` | Editar cliente existente |
-| `/products` | `ProductList` | Catalogo de productos y servicios |
-| `/products/new` | `ProductForm` | Crear nuevo producto |
-| `/products/:id` | `ProductDetails` | Detalle del producto |
-| `/products/:id/edit` | `ProductForm` | Editar producto existente |
-| `/inventory` | `InventoryList` | Lista de items de inventario |
-| `/inventory/new` | `InventoryForm` | Crear nuevo item de inventario |
-| `/inventory/:id` | `InventoryDetails` | Detalle del item con disponibilidad |
-| `/inventory/:id/edit` | `InventoryForm` | Editar item de inventario |
-| `/settings` | `Settings` | Configuracion de perfil, negocio, contrato |
-| `/pricing` | `Pricing` | Planes y precios (fuera del Layout principal) |
+| Ruta                  | Componente         | Descripcion                                          |
+| --------------------- | ------------------ | ---------------------------------------------------- |
+| `/dashboard`          | `Dashboard`        | Panel principal con KPIs, graficos, eventos proximos |
+| `/search`             | `SearchPage`       | Busqueda global de clientes, eventos, productos      |
+| `/calendar`           | `CalendarView`     | Vista de calendario mensual con eventos              |
+| `/cotizacion-rapida`  | `QuickQuotePage`   | Cotizacion rapida sin crear evento completo          |
+| `/events/new`         | `EventForm`        | Crear nuevo evento (formulario multi-paso)           |
+| `/events/:id/edit`    | `EventForm`        | Editar evento existente                              |
+| `/events/:id/summary` | `EventSummary`     | Resumen completo del evento                          |
+| `/clients`            | `ClientList`       | Lista de clientes con busqueda y paginacion          |
+| `/clients/new`        | `ClientForm`       | Crear nuevo cliente                                  |
+| `/clients/:id`        | `ClientDetails`    | Detalle del cliente con eventos asociados            |
+| `/clients/:id/edit`   | `ClientForm`       | Editar cliente existente                             |
+| `/products`           | `ProductList`      | Catalogo de productos y servicios                    |
+| `/products/new`       | `ProductForm`      | Crear nuevo producto                                 |
+| `/products/:id`       | `ProductDetails`   | Detalle del producto                                 |
+| `/products/:id/edit`  | `ProductForm`      | Editar producto existente                            |
+| `/inventory`          | `InventoryList`    | Lista de items de inventario                         |
+| `/inventory/new`      | `InventoryForm`    | Crear nuevo item de inventario                       |
+| `/inventory/:id`      | `InventoryDetails` | Detalle del item con disponibilidad                  |
+| `/inventory/:id/edit` | `InventoryForm`    | Editar item de inventario                            |
+| `/settings`           | `Settings`         | Configuracion de perfil, negocio, contrato           |
+| `/pricing`            | `Pricing`          | Planes y precios (fuera del Layout principal)        |
 
 > [!tip] Planes y monetizacion
 > La ruta `/pricing` muestra los tiers FREE/PRO definidos en [[04_MONETIZATION]]. Los limites del plan se verifican via el hook `usePlanLimits`.
@@ -275,16 +278,16 @@ Todas envueltas en `<ProtectedRoute>` + `<Layout>` (sidebar, header, Outlet).
 
 Envueltas adicionalmente en `<AdminRoute>`.
 
-| Ruta | Componente | Descripcion |
-|------|-----------|-------------|
-| `/admin` | `AdminDashboard` | Metricas globales del sistema |
-| `/admin/users` | `AdminUsers` | Gestion de todos los usuarios |
+| Ruta           | Componente       | Descripcion                   |
+| -------------- | ---------------- | ----------------------------- |
+| `/admin`       | `AdminDashboard` | Metricas globales del sistema |
+| `/admin/users` | `AdminUsers`     | Gestion de todos los usuarios |
 
 ### Ruta Comodin
 
-| Ruta | Componente | Descripcion |
-|------|-----------|-------------|
-| `*` | `NotFound` | Pagina 404 para rutas no encontradas |
+| Ruta | Componente | Descripcion                          |
+| ---- | ---------- | ------------------------------------ |
+| `*`  | `NotFound` | Pagina 404 para rutas no encontradas |
 
 ---
 
@@ -292,22 +295,25 @@ Envueltas adicionalmente en `<AdminRoute>`.
 
 Cada servicio encapsula las llamadas HTTP a un grupo de endpoints del backend. Todos utilizan el cliente API generico de `lib/api.ts`.
 
-| Servicio | Archivo | Funcionalidad |
-|----------|---------|---------------|
-| **clientService** | `clientService.ts` | CRUD de clientes: listar (con paginacion/busqueda), crear, obtener por ID, actualizar, eliminar |
-| **eventService** | `eventService.ts` | CRUD de eventos: listar, crear, obtener por ID, actualizar, eliminar. Incluye productos, extras, insumos y equipo asociados al evento |
-| **eventPaymentService** | `eventPaymentService.ts` | Pagos de eventos: registrar pago manual, listar pagos de un evento, eliminar pago |
-| **productService** | `productService.ts` | CRUD de productos/servicios del catalogo: listar, crear, obtener, actualizar, eliminar |
-| **inventoryService** | `inventoryService.ts` | CRUD de inventario: listar items, crear, obtener, actualizar, eliminar. Verificacion de disponibilidad por fecha |
-| **subscriptionService** | `subscriptionService.ts` | Gestion de suscripciones Pro: crear sesion de checkout en Stripe, obtener portal de facturacion, obtener plan actual, verificar limites |
-| **searchService** | `searchService.ts` | Busqueda global multi-entidad: buscar clientes, eventos y productos en una sola consulta |
-| **adminService** | `adminService.ts` | Operaciones administrativas: listar todos los usuarios, estadisticas globales, gestion de cuentas |
-| **unavailableDatesService** | `unavailableDatesService.ts` | Gestion de fechas no disponibles: listar, crear, eliminar fechas bloqueadas en el calendario |
+| Servicio                    | Archivo                      | Funcionalidad                                                                                                                           |
+| --------------------------- | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| **clientService**           | `clientService.ts`           | CRUD de clientes: listar (con paginacion/busqueda), crear, obtener por ID, actualizar, eliminar                                         |
+| **eventService**            | `eventService.ts`            | CRUD de eventos: listar, crear, obtener por ID, actualizar, eliminar. Incluye productos, extras, insumos y equipo asociados al evento   |
+| **eventPaymentService**     | `eventPaymentService.ts`     | Pagos de eventos: registrar pago manual, listar pagos de un evento, eliminar pago                                                       |
+| **productService**          | `productService.ts`          | CRUD de productos/servicios del catalogo: listar, crear, obtener, actualizar, eliminar                                                  |
+| **inventoryService**        | `inventoryService.ts`        | CRUD de inventario: listar items, crear, obtener, actualizar, eliminar. Verificacion de disponibilidad por fecha                        |
+| **subscriptionService**     | `subscriptionService.ts`     | Gestion de suscripciones Pro: crear sesion de checkout en Stripe, obtener portal de facturacion, obtener plan actual, verificar limites |
+| **searchService**           | `searchService.ts`           | Busqueda global multi-entidad: buscar clientes, eventos y productos en una sola consulta                                                |
+| **adminService**            | `adminService.ts`            | Operaciones administrativas: listar todos los usuarios, estadisticas globales, gestion de cuentas                                       |
+| **unavailableDatesService** | `unavailableDatesService.ts` | Gestion de fechas no disponibles: listar, crear, eliminar fechas bloqueadas en el calendario                                            |
+
+Regla funcional de stock bajo (Web): `minimum_stock > 0 && current_stock < minimum_stock`.
 
 ### Cliente API (`lib/api.ts`)
 
 > [!note] Cliente HTTP centralizado
 > El cliente API centralizado proporciona:
+>
 > - **Wrapper tipado sobre `fetch`**: metodos `get<T>`, `post<T>`, `put<T>`, `delete<T>` con genericos TypeScript
 > - **Autenticacion automatica**: adjunta el token JWT desde `localStorage` en el header `Authorization: Bearer`
 > - **Refresh de token**: intercepta respuestas 401, intenta renovar con el refresh token, y reintenta la peticion original
@@ -341,10 +347,10 @@ sequenceDiagram
 
 ### Almacenamiento de Tokens
 
-| Token | Almacenamiento | Uso |
-|-------|---------------|-----|
-| `auth_token` | `localStorage` | JWT para autenticar peticiones API (header Authorization) |
-| `refresh_token` | `localStorage` | Token de larga duracion para renovar el auth_token |
+| Token           | Almacenamiento | Uso                                                       |
+| --------------- | -------------- | --------------------------------------------------------- |
+| `auth_token`    | `localStorage` | JWT para autenticar peticiones API (header Authorization) |
+| `refresh_token` | `localStorage` | Token de larga duracion para renovar el auth_token        |
 
 ### Interfaz de Usuario (`User`)
 
@@ -356,8 +362,8 @@ interface User {
   business_name?: string;
   logo_url?: string;
   brand_color?: string;
-  plan: 'basic' | 'pro' | 'premium'; // 'basic' (gratis) o 'pro'/'premium' (pagado)
-  role?: string;              // 'admin' | undefined
+  plan: "basic" | "pro" | "premium"; // 'basic' (gratis) o 'pro'/'premium' (pagado)
+  role?: string; // 'admin' | undefined
   stripe_customer_id?: string;
   default_deposit_percent?: number;
   default_cancellation_days?: number;
@@ -378,11 +384,11 @@ interface User {
 #### 1. Definicion del Schema (zod)
 
 ```typescript
-import { z } from 'zod';
+import { z } from "zod";
 
 const clientSchema = z.object({
-  name: z.string().min(1, 'El nombre es requerido'),
-  email: z.string().email('Email invalido').optional(),
+  name: z.string().min(1, "El nombre es requerido"),
+  email: z.string().email("Email invalido").optional(),
   phone: z.string().optional(),
   notes: z.string().optional(),
 });
@@ -393,10 +399,14 @@ type ClientFormData = z.infer<typeof clientSchema>;
 #### 2. Registro del Formulario (react-hook-form)
 
 ```typescript
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
-const { register, handleSubmit, formState: { errors } } = useForm<ClientFormData>({
+const {
+  register,
+  handleSubmit,
+  formState: { errors },
+} = useForm<ClientFormData>({
   resolver: zodResolver(clientSchema),
   defaultValues: existingClient ?? {},
 });
@@ -405,8 +415,10 @@ const { register, handleSubmit, formState: { errors } } = useForm<ClientFormData
 #### 3. Renderizado con Validacion
 
 ```tsx
-<input {...register('name')} className="..." />
-{errors.name && <span className="text-red-500">{errors.name.message}</span>}
+<input {...register("name")} className="..." />;
+{
+  errors.name && <span className="text-red-500">{errors.name.message}</span>;
+}
 ```
 
 ### Ventajas del Patron
@@ -431,11 +443,11 @@ const { register, handleSubmit, formState: { errors } } = useForm<ClientFormData
 
 ### Funcionalidades
 
-| Tipo de PDF | Contenido |
-|-------------|-----------|
-| **Cotizacion** | Logo del negocio, datos del cliente, tabla de productos/servicios con precios, extras, subtotal, impuestos, total, condiciones de pago |
-| **Contrato** | Plantilla personalizable del usuario (`contract_template`), variables reemplazadas dinamicamente (nombre del cliente, fecha, monto, etc.) |
-| **Resumen de Evento** | Informacion general del evento, productos, extras, insumos, pagos realizados, saldo pendiente |
+| Tipo de PDF           | Contenido                                                                                                                                 |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| **Cotizacion**        | Logo del negocio, datos del cliente, tabla de productos/servicios con precios, extras, subtotal, impuestos, total, condiciones de pago    |
+| **Contrato**          | Plantilla personalizable del usuario (`contract_template`), variables reemplazadas dinamicamente (nombre del cliente, fecha, monto, etc.) |
+| **Resumen de Evento** | Informacion general del evento, productos, extras, insumos, pagos realizados, saldo pendiente                                             |
 
 ### Flujo
 
@@ -457,12 +469,12 @@ const { register, handleSubmit, formState: { errors } } = useForm<ClientFormData
 
 El componente `Dashboard.tsx` presenta:
 
-| Componente | Tipo | Datos |
-|-----------|------|-------|
-| **KPIs** | Tarjetas numericas | Eventos del mes, ingresos del mes, clientes totales, tasa de confirmacion |
-| **Ingresos Mensuales** | Grafico de barras/lineas | Ingresos agrupados por mes (ultimos 6-12 meses) |
-| **Eventos por Estado** | Grafico de dona/pie | Distribucion: pendiente, confirmado, completado, cancelado |
-| **Proximos Eventos** | Lista | Eventos de los proximos 7 dias con fecha, cliente y monto |
+| Componente             | Tipo                     | Datos                                                                     |
+| ---------------------- | ------------------------ | ------------------------------------------------------------------------- |
+| **KPIs**               | Tarjetas numericas       | Eventos del mes, ingresos del mes, clientes totales, tasa de confirmacion |
+| **Ingresos Mensuales** | Grafico de barras/lineas | Ingresos agrupados por mes (ultimos 6-12 meses)                           |
+| **Eventos por Estado** | Grafico de dona/pie      | Distribucion: pendiente, confirmado, completado, cancelado                |
+| **Proximos Eventos**   | Lista                    | Eventos de los proximos 7 dias con fecha, cliente y monto                 |
 
 ### Responsividad
 
@@ -491,11 +503,11 @@ El proyecto utiliza **Tailwind CSS 4.2** como framework de estilos con enfoque u
 
 ### Responsive Design
 
-| Breakpoint | Uso |
-|-----------|-----|
-| `sm` (640px) | Moviles en landscape |
-| `md` (768px) | Tablets |
-| `lg` (1024px) | Desktop — sidebar visible |
+| Breakpoint    | Uso                                  |
+| ------------- | ------------------------------------ |
+| `sm` (640px)  | Moviles en landscape                 |
+| `md` (768px)  | Tablets                              |
+| `lg` (1024px) | Desktop — sidebar visible            |
 | `xl` (1280px) | Desktop grande — contenido mas ancho |
 
 ### Componentes de Layout
@@ -620,35 +632,36 @@ EXPOSE 80
 > [!note] Decisiones tecnicas fundamentales
 > Estas decisiones definen el stack y patron del proyecto web. Cada una fue evaluada contra alternativas concretas.
 
-| Decision | Alternativa Descartada | Justificacion |
-|----------|----------------------|---------------|
-| **Zustand** para estado global | Redux Toolkit, Jotai | Minimalista, zero boilerplate, no requiere Provider wrapper, API simple con hooks. Redux es excesivo para esta escala; Context API causa re-renders innecesarios para estado frecuente |
-| **Tailwind CSS** sobre CSS Modules | CSS Modules, styled-components, Emotion | Co-locacion de estilos con markup, purge automatico en produccion, consistencia de diseno sin archivo de estilos separado. Mejor DX con autocompletado |
-| **Vite** sobre CRA | Create React App, Webpack | HMR instantaneo (ESBuild en dev), builds de produccion mas rapidos con Rollup, configuracion minima, ESM nativo. CRA esta deprecated |
-| **zod** para validacion en runtime | Yup, Joi, io-ts | Inferencia de tipos TypeScript nativa (`z.infer`), API fluida, tree-shakeable, ecosistema TypeScript-first. Yup no infiere tipos |
-| **react-hook-form** sobre Formik | Formik, formularios manuales | Rendimiento superior (inputs no controlados, menos re-renders), API mas ligera, integracion nativa con zod. Formik re-renderiza todo el formulario en cada cambio |
-| **jsPDF** para generacion client-side | Server-side PDF, @react-pdf/renderer | Generacion instantanea sin round-trip al servidor, funciona offline, menor carga en el backend. Suficiente para cotizaciones y contratos simples |
-| **date-fns** sobre Moment.js | Moment.js, Day.js, Luxon | Funciones puras e inmutables, tree-shakeable (solo importar lo que se usa), sin mutaciones accidentales. Moment.js esta en maintenance mode y no es tree-shakeable |
-| **localStorage** para tokens | httpOnly cookies, sessionStorage | Simplicidad de implementacion para MVP. El backend tambien soporta httpOnly cookies como alternativa mas segura (migracion futura) |
-| **Path aliases** (`@/*`) | Rutas relativas (`../../`) | Imports limpios y refactorizables. `@/services/eventService` es mas legible que `../../../services/eventService`. Configurado en tsconfig + vite-tsconfig-paths |
+| Decision                              | Alternativa Descartada                  | Justificacion                                                                                                                                                                          |
+| ------------------------------------- | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Zustand** para estado global        | Redux Toolkit, Jotai                    | Minimalista, zero boilerplate, no requiere Provider wrapper, API simple con hooks. Redux es excesivo para esta escala; Context API causa re-renders innecesarios para estado frecuente |
+| **Tailwind CSS** sobre CSS Modules    | CSS Modules, styled-components, Emotion | Co-locacion de estilos con markup, purge automatico en produccion, consistencia de diseno sin archivo de estilos separado. Mejor DX con autocompletado                                 |
+| **Vite** sobre CRA                    | Create React App, Webpack               | HMR instantaneo (ESBuild en dev), builds de produccion mas rapidos con Rollup, configuracion minima, ESM nativo. CRA esta deprecated                                                   |
+| **zod** para validacion en runtime    | Yup, Joi, io-ts                         | Inferencia de tipos TypeScript nativa (`z.infer`), API fluida, tree-shakeable, ecosistema TypeScript-first. Yup no infiere tipos                                                       |
+| **react-hook-form** sobre Formik      | Formik, formularios manuales            | Rendimiento superior (inputs no controlados, menos re-renders), API mas ligera, integracion nativa con zod. Formik re-renderiza todo el formulario en cada cambio                      |
+| **jsPDF** para generacion client-side | Server-side PDF, @react-pdf/renderer    | Generacion instantanea sin round-trip al servidor, funciona offline, menor carga en el backend. Suficiente para cotizaciones y contratos simples                                       |
+| **date-fns** sobre Moment.js          | Moment.js, Day.js, Luxon                | Funciones puras e inmutables, tree-shakeable (solo importar lo que se usa), sin mutaciones accidentales. Moment.js esta en maintenance mode y no es tree-shakeable                     |
+| **localStorage** para tokens          | httpOnly cookies, sessionStorage        | Simplicidad de implementacion para MVP. El backend tambien soporta httpOnly cookies como alternativa mas segura (migracion futura)                                                     |
+| **Path aliases** (`@/*`)              | Rutas relativas (`../../`)              | Imports limpios y refactorizables. `@/services/eventService` es mas legible que `../../../services/eventService`. Configurado en tsconfig + vite-tsconfig-paths                        |
 
 ### Gotchas Conocidos
 
 > [!warning] Gotchas a tener en cuenta
 > Puntos que requieren atencion o tienen migraciones planificadas.
 
-| Gotcha | Detalle |
-|--------|---------|
-| **Strict mode deshabilitado** | `tsconfig.json` tiene `strict: false`. Planificado habilitarlo progresivamente para detectar mas errores en compilacion |
-| **4GB heap para tsc** | El build usa `NODE_OPTIONS=--max-old-space-size=4096` porque el type-checking de TypeScript puede exceder el heap por defecto con muchos archivos |
-| **Source maps hidden** | Los source maps se generan pero no se referencian en los bundles (evita exponer codigo fuente en produccion, pero disponibles para herramientas de error tracking) |
-| **Token en localStorage** | Vulnerable a XSS. Mitigado con CSP headers y sanitizacion de inputs. Plan futuro: migrar a httpOnly cookies |
-| **react-dev-locator** | Plugin de Babel solo en desarrollo para localizar componentes en el editor. Se desactiva automaticamente en produccion |
-| **@react-pdf/renderer** | Presente en dependencias pero el generador principal usa jsPDF. Posible migracion futura para PDFs mas complejos con layout React |
+| Gotcha                        | Detalle                                                                                                                                                            |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Strict mode deshabilitado** | `tsconfig.json` tiene `strict: false`. Planificado habilitarlo progresivamente para detectar mas errores en compilacion                                            |
+| **4GB heap para tsc**         | El build usa `NODE_OPTIONS=--max-old-space-size=4096` porque el type-checking de TypeScript puede exceder el heap por defecto con muchos archivos                  |
+| **Source maps hidden**        | Los source maps se generan pero no se referencian en los bundles (evita exponer codigo fuente en produccion, pero disponibles para herramientas de error tracking) |
+| **Token en localStorage**     | Vulnerable a XSS. Mitigado con CSP headers y sanitizacion de inputs. Plan futuro: migrar a httpOnly cookies                                                        |
+| **react-dev-locator**         | Plugin de Babel solo en desarrollo para localizar componentes en el editor. Se desactiva automaticamente en produccion                                             |
+| **@react-pdf/renderer**       | Presente en dependencias pero el generador principal usa jsPDF. Posible migracion futura para PDFs mas complejos con layout React                                  |
 
 ---
 
 > [!tip] Documentos relacionados
+>
 > - [[PRD MOC]] — Indice general del PRD
 > - [[Web MOC]] — Detalle de cada modulo web
 > - [[07_TECHNICAL_ARCHITECTURE_BACKEND]] — Arquitectura del backend Go

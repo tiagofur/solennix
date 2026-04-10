@@ -3,7 +3,7 @@
 > [!info] Plataforma
 > **Stack**: React 19 + TypeScript + Tailwind CSS 4 + Vite
 > **Estado**: Producción (MVP completo)
-> **Última actualización**: 2026-04-04
+> **Última actualización**: 2026-04-10
 
 ---
 
@@ -29,7 +29,7 @@
 
 - [[Capa de Servicios]] — API client, servicios por dominio
 - [[Sistema de PDFs]] — jsPDF, tipos de documento, branding
-- [[Componentes Compartidos]] — Layout, modales, skeletons, toasts, paginación
+- [[Componentes Compartidos]] — Layout, modales, skeletons, toasts, paginación, navegación mobile solo en smartphones
 - [[Hooks Personalizados]] — useAuth, usePagination, usePlanLimits, useToast, useTheme
 - [[Sistema de Tipos]] — Entidades, tipos de inserción/actualización
 

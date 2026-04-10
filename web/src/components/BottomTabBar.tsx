@@ -43,14 +43,14 @@ export const BottomTabBar: React.FC = () => {
       {/* "Más" overlay */}
       {moreOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm md:hidden"
           onClick={() => setMoreOpen(false)}
         />
       )}
 
       {/* "Más" drawer */}
       {moreOpen && (
-        <div className="fixed bottom-[4.5rem] left-4 right-4 z-50 bg-card rounded-2xl border border-border shadow-2xl p-2 lg:hidden">
+        <div className="fixed bottom-[4.5rem] left-4 right-4 z-50 bg-card rounded-2xl border border-border shadow-2xl p-2 md:hidden">
           <div className="flex items-center justify-between px-3 py-2 mb-1">
             <span className="text-xs font-medium text-text-secondary">
               Más opciones
@@ -89,7 +89,7 @@ export const BottomTabBar: React.FC = () => {
 
       {/* Bottom tab bar */}
       <nav
-        className="fixed bottom-0 left-0 right-0 z-40 bg-surface-grouped border-t border-border lg:hidden safe-area-bottom"
+        className="fixed bottom-0 left-0 right-0 z-40 bg-surface-grouped border-t border-border md:hidden safe-area-bottom"
         aria-label="Navegación principal"
       >
         <div className="flex items-center justify-around h-[4.5rem] px-2">
