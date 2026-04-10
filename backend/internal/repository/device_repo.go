@@ -65,7 +65,7 @@ func (r *DeviceRepo) GetByUserID(ctx context.Context, userID uuid.UUID) ([]model
 	}
 	defer rows.Close()
 
-	var devices []models.DeviceToken
+	devices := make([]models.DeviceToken, 0)
 	for rows.Next() {
 		var d models.DeviceToken
 		if err := rows.Scan(&d.ID, &d.UserID, &d.Token, &d.Platform, &d.CreatedAt, &d.UpdatedAt); err != nil {

@@ -32,7 +32,7 @@ func (r *InventoryRepo) GetAll(ctx context.Context, userID uuid.UUID) ([]models.
 	}
 	defer rows.Close()
 
-	var items []models.InventoryItem
+	items := make([]models.InventoryItem, 0)
 	for rows.Next() {
 		var i models.InventoryItem
 		if err := rows.Scan(&i.ID, &i.UserID, &i.IngredientName, &i.CurrentStock,
@@ -62,7 +62,7 @@ func (r *InventoryRepo) GetAllPaginated(ctx context.Context, userID uuid.UUID, o
 	}
 	defer rows.Close()
 
-	var items []models.InventoryItem
+	items := make([]models.InventoryItem, 0)
 	for rows.Next() {
 		var i models.InventoryItem
 		if err := rows.Scan(&i.ID, &i.UserID, &i.IngredientName, &i.CurrentStock,
@@ -141,7 +141,7 @@ func (r *InventoryRepo) Search(ctx context.Context, userID uuid.UUID, query stri
 	}
 	defer rows.Close()
 
-	var items []models.InventoryItem
+	items := make([]models.InventoryItem, 0)
 	for rows.Next() {
 		var item models.InventoryItem
 		if err := rows.Scan(&item.ID, &item.UserID, &item.IngredientName, &item.CurrentStock,

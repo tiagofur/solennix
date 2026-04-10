@@ -106,11 +106,11 @@ public struct DashboardView: View {
         }
         .background(SolennixColors.surfaceGrouped.ignoresSafeArea())
         .onAppear {
-            if viewModel == nil, let client = authManager.apiClient {
-                viewModel = DashboardViewModel(apiClient: client)
+            if viewModel == nil {
+                viewModel = DashboardViewModel(apiClient: apiClient)
             }
-            Task { 
-                await viewModel?.loadDashboard() 
+            Task {
+                await viewModel?.loadDashboard()
                 await planLimitsManager.checkLimits()
             }
         }

@@ -869,6 +869,39 @@ Refactors planificados para lograr paridad total entre las 6 plataformas (iPhone
 > - ~~Web: Fotos de evento~~ — Tab de fotos con galeria, upload, lightbox y eliminacion
 > - ~~Web: Checklist interactivo~~ — Tab de checklist con secciones, checkboxes y progreso
 > - ~~Android: Checklist mostraba todo el inventario~~ — Corregido para mostrar solo items del evento (equipo, insumos, ingredientes). Layout tablet ajustado
+> - ~~Email transaccional limitado~~ — Backend ahora envía: welcome, event reminder (24h), payment receipt, subscription confirmation
+
+---
+
+## 10. Etapa 2: Post-MVP (Planificación)
+
+> [!tip] Documento completo
+> Ver [[13_POST_MVP_ROADMAP|Roadmap Post-MVP (Etapa 2)]] para especificaciones, endpoints y estimaciones.
+
+**Estado:** MVP enviado a Apple Store Review (Abril 2026). Web y Backend en producción. Android en preparación.
+
+### Pilares Planificados
+
+| # | Pilar | Prioridad | Horas Est. |
+|---|-------|:---------:|:----------:|
+| 1 | **Notificaciones Inteligentes** — Preferencias de email/push, resumen semanal | P0 | ~22h |
+| 2 | **Reportes y Analítica** — Reportes por período, PDF/CSV, desglose IVA/márgenes | P1 | ~82h |
+| 3 | **Portal del Cliente** — URL compartible, acciones "en camino"/"llegamos", firma digital | P1 | ~107h |
+| 4 | **Diferenciadores** — Plantillas, timeline, WhatsApp, Calendar sync, colaboración | P2 | ~150h+ |
+
+### Email Transaccional — Estado Actual vs Etapa 2
+
+| Email | MVP (Actual) | Etapa 2 (Nuevo) |
+|-------|:------------:|:---------------:|
+| Welcome | ✅ | ✅ |
+| Password reset | ✅ | ✅ |
+| Event reminder (24h) | ✅ | ✅ + opt-out |
+| Payment receipt | ✅ | ✅ + opt-out |
+| Subscription confirmation | ✅ | ✅ + opt-out |
+| Resumen semanal | ⬜ | ✅ opt-in |
+| Cotización sin confirmar | ⬜ | ✅ |
+| Notificación al cliente del usuario | ⬜ | ✅ |
+| **Preferencias del usuario** | ⬜ | ✅ (toggles en Settings) |
 
 ---
 

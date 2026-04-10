@@ -17,6 +17,7 @@ type userVisitor struct {
 // PlanLimits defines rate limits per subscription plan (requests per window).
 var PlanLimits = map[string]int{
 	"basic":   60,  // 60 requests per minute
+	"pro":     200, // 200 requests per minute
 	"premium": 500, // 500 requests per minute
 }
 

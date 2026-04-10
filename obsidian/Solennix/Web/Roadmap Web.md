@@ -289,9 +289,30 @@ gantt
 
 ---
 
+## Etapa 2: Post-MVP — Web
+
+> [!tip] Documento completo
+> Ver [[13_POST_MVP_ROADMAP|Roadmap Post-MVP (Etapa 2)]] para el detalle completo.
+
+### Prioridad Web Etapa 2
+
+| Feature | Componentes | Esfuerzo | Prioridad |
+|---------|------------|:--------:|:---------:|
+| **Preferencias de notificación** | `Settings` → sección "Notificaciones" | 2h | P0 |
+| **Pantalla de reportes** | `Reports` page + gráficos + filtros de fecha | 12h | P1 |
+| **Portal del cliente** | Página pública `/portal/{token}` (sin auth) | 20h | P1 |
+| **Acciones de evento** | Botones en EventSummary: "En camino", "Llegamos" | 5h | P1 |
+| **Plantillas de evento** | UI para guardar/cargar templates | 8h | P2 |
+| **WhatsApp deep links** | Botón "Enviar por WhatsApp" en cotización/contrato | 2h | P0 |
+| **Timeline del evento** | Componente timeline hora por hora en EventSummary | 10h | P2 |
+| **Galería pública** | Página `/portafolio/{slug}` (público) | 15h | P3 |
+
+---
+
 ## Relaciones
 
 - [[Web MOC]] — Hub principal
 - [[Performance]] — Detalles técnicos de performance
 - [[Accesibilidad]] — Gaps de a11y a resolver
 - [[Testing]] — Estado actual de tests
+- [[13_POST_MVP_ROADMAP|Roadmap Post-MVP]] — Etapa 2 completa

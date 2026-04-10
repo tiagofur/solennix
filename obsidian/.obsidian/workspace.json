@@ -4,21 +4,17 @@
     "type": "split",
     "children": [
       {
-        "id": "f3c5908a23985ce1",
+        "id": "c62bde05920e295c",
         "type": "tabs",
         "children": [
           {
-            "id": "44c567cdf8cc277d",
+            "id": "729561947342fd9a",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Solennix/PRD/02_FEATURES.md",
-                "mode": "source",
-                "source": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "02_FEATURES"
+              "title": "Nueva pestaña"
             }
           }
         ]
@@ -180,16 +176,18 @@
       "bases:Crear nueva base": false
     }
   },
-  "active": "44c567cdf8cc277d",
+  "active": "729561947342fd9a",
   "lastOpenFiles": [
-    "Sin título.md",
+    "Solennix/Web/Roadmap Web.md",
+    "Solennix/iOS/Roadmap iOS.md",
+    "Solennix/PRD/13_POST_MVP_ROADMAP.md",
     "Solennix/PRD/02_FEATURES.md",
+    "Sin título.md",
     "Solennix/PRD/01_PRODUCT_VISION.md",
     "Solennix/PRD/PRD MOC.md",
     "Solennix/iOS/Arquitectura General.md",
     "Solennix/iOS/Accesibilidad.md",
     "Solennix/Android/Roadmap Android.md",
-    "Solennix/iOS/Roadmap iOS.md",
     "Solennix/Backend/Roadmap Backend.md",
     "Solennix/iOS/Módulo Clientes.md",
     "Solennix/Backend/Testing.md",
@@ -206,8 +204,6 @@
     "Solennix/Backend/Módulo Admin.md",
     "Solennix/Backend/Middleware Stack.md",
     "Solennix/Backend/Integraciones.md",
-    "Solennix/Backend/Despliegue.md",
-    "Solennix/Backend/Base de Datos.md",
     "Solennix/Backend"
   ]
 }

@@ -331,4 +331,43 @@ graph LR
 
 ---
 
+## Etapa 2: Post-MVP (Q2-Q4 2026)
+
+> [!tip] Documento detallado
+> Ver [[13_POST_MVP_ROADMAP|Roadmap Post-MVP (Etapa 2)]] para el documento completo con especificaciones, endpoints y esfuerzos estimados.
+
+### Resumen de Pilares
+
+| Pilar | Features clave | Horas | Prioridad |
+|-------|---------------|:-----:|:---------:|
+| **1. Notificaciones Inteligentes** | Preferencias email/push del usuario, resumen semanal, alertas de cotización vencida | ~22h | P0 |
+| **2. Reportes y Analítica** | Reportes financieros por período, exportación PDF/CSV, desglose IVA y márgenes | ~82h | P1 |
+| **3. Portal del Cliente** | URL compartible, notificaciones al cliente, botón "Ir" + Google Maps, firma digital, calificaciones | ~107h | P1 |
+| **4. Diferenciadores** | Timeline del evento, plantillas, Modo Día del Evento, WhatsApp deep links, Calendar sync, colaboración | ~150h+ | P2 |
+
+### Timeline Etapa 2
+
+```mermaid
+gantt
+    title Solennix — Etapa 2: Post-MVP
+    dateFormat YYYY-MM
+    axisFormat %b %Y
+
+    section Inmediato (P0)
+    Preferencias notificación  :p0a, 2026-05, 2026-05
+    WhatsApp deep links        :p0b, 2026-05, 2026-05
+
+    section Q2-Q3 (P1)
+    Reportes y analítica       :p1a, 2026-05, 2026-07
+    Portal del cliente         :p1b, 2026-07, 2026-09
+
+    section Q3-Q4 (P2)
+    Plantillas de evento       :p2a, 2026-06, 2026-07
+    Timeline del evento        :p2b, 2026-08, 2026-09
+    Calendar sync              :p2c, 2026-09, 2026-10
+    Colaboración               :p2d, 2026-10, 2026-11
+```
+
+---
+
 #prd #roadmap #timeline #solennix

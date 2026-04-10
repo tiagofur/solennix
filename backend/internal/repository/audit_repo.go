@@ -51,7 +51,7 @@ func (r *AuditRepo) GetByUser(ctx context.Context, userID uuid.UUID, offset, lim
 	}
 	defer rows.Close()
 
-	var logs []models.AuditLog
+	logs := make([]models.AuditLog, 0)
 	for rows.Next() {
 		var l models.AuditLog
 		if err := rows.Scan(&l.ID, &l.UserID, &l.Action, &l.ResourceType, &l.ResourceID,
@@ -77,7 +77,7 @@ func (r *AuditRepo) GetByResource(ctx context.Context, userID uuid.UUID, resourc
 	}
 	defer rows.Close()
 
-	var logs []models.AuditLog
+	logs := make([]models.AuditLog, 0)
 	for rows.Next() {
 		var l models.AuditLog
 		if err := rows.Scan(&l.ID, &l.UserID, &l.Action, &l.ResourceType, &l.ResourceID,
@@ -110,7 +110,7 @@ func (r *AuditRepo) GetAll(ctx context.Context, offset, limit int) ([]models.Aud
 	}
 	defer rows.Close()
 
-	var logs []models.AuditLog
+	logs := make([]models.AuditLog, 0)
 	for rows.Next() {
 		var l models.AuditLog
 		if err := rows.Scan(&l.ID, &l.UserID, &l.Action, &l.ResourceType, &l.ResourceID,

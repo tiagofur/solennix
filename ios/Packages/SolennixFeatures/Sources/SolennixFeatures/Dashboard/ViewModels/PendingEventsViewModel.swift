@@ -35,11 +35,8 @@ public final class PendingEventsViewModel {
     public func loadPendingEvents() async {
         isLoading = true
         do {
-            async let eventsResult: [Event] = apiClient.getAll(Endpoint.events)
-            async let paymentsResult: [Payment] = apiClient.getAll(Endpoint.payments)
-
-            let allEvents = try await eventsResult
-            let allPayments = try await paymentsResult
+            let allEvents: [Event] = try await apiClient.getAll(Endpoint.events)
+            let allPayments: [Payment] = try await apiClient.getAll(Endpoint.payments)
 
             let calendar = Calendar.current
             let startOfToday = calendar.startOfDay(for: Date())

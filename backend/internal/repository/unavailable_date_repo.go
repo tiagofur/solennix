@@ -35,7 +35,7 @@ func (r *UnavailableDateRepo) GetByDateRange(ctx context.Context, userID uuid.UU
 	}
 	defer rows.Close()
 
-	var dates []models.UnavailableDate
+	dates := make([]models.UnavailableDate, 0)
 	for rows.Next() {
 		var u models.UnavailableDate
 		if err := rows.Scan(&u.ID, &u.UserID, &u.StartDate, &u.EndDate, &u.Reason, &u.CreatedAt, &u.UpdatedAt); err != nil {

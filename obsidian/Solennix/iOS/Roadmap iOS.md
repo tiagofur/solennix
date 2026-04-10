@@ -54,7 +54,7 @@
 ### 0.1 RevenueCat API Key
 
  - [x] Reemplazar `appl_YOUR_API_KEY` placeholder en `SolennixApp.swift` — ✅ 2026-04-06 (ahora usa `REVENUECAT_PUBLIC_API_KEY` desde Info.plist/build settings)
-- [ ] Configurar offerings y packages en RevenueCat dashboard
+- [x] Configurar offerings y packages en RevenueCat dashboard
 - [ ] Verificar flujo de compra completo en sandbox
 - [ ] Testear restore purchases
 
@@ -72,7 +72,7 @@
 
 - [x] Verificar `PrivacyInfo.xcprivacy` cubre todos los APIs usados — ✅ 2026-04-05
 - [x] Declarar uso de Keychain, CoreSpotlight, NetworkMonitor — ✅ No son Required Reason APIs, no necesitan declaración
-- [ ] Asegurar compliance con App Store requirements 2024+
+- [x] Asegurar compliance con App Store requirements 2024+
 
 **Por qué**: Apple rechaza apps sin privacy manifest completo.
 
@@ -355,6 +355,26 @@ gantt
 
 ---
 
+## Etapa 2: Post-MVP — iOS
+
+> [!tip] Documento completo
+> Ver [[13_POST_MVP_ROADMAP|Roadmap Post-MVP (Etapa 2)]] para el detalle completo.
+
+### Prioridad iOS Etapa 2
+
+| Feature | Vista/Componente | Esfuerzo | Prioridad |
+|---------|-----------------|:--------:|:---------:|
+| **Preferencias de notificación** | `SettingsView` → sección "Notificaciones" con toggles | 3h | P0 |
+| **Pantalla de reportes** | `ReportsView` + Swift Charts + date picker | 15h | P1 |
+| **Botón "Ir" + acciones** | `EventDetailView` → botones "En camino", "Llegamos" + Maps | 8h | P1 |
+| **WhatsApp deep links** | Botón "Enviar por WhatsApp" en cotización/contrato | 2h | P0 |
+| **Plantillas de evento** | `TemplateListView` + guardar/cargar | 8h | P2 |
+| **Timeline del evento** | `EventTimelineView` hora por hora | 10h | P2 |
+| **Modo Día del Evento** | Banner especial + acciones rápidas + Live Activity mejorada | 12h | P2 |
+| **Apple Calendar Sync** | EventKit sync bidireccional | 8h | P2 |
+
+---
+
 ## Relaciones
 
 - [[iOS MOC]] — Hub principal
@@ -363,3 +383,4 @@ gantt
 - [[Accesibilidad]] — gaps
 - [[Caché y Offline]] — gaps de sync
 - [[Módulo Settings]] — RevenueCat placeholder
+- [[13_POST_MVP_ROADMAP|Roadmap Post-MVP]] — Etapa 2 completa

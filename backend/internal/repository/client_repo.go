@@ -33,7 +33,7 @@ func (r *ClientRepo) GetAll(ctx context.Context, userID uuid.UUID) ([]models.Cli
 	}
 	defer rows.Close()
 
-	var clients []models.Client
+	clients := make([]models.Client, 0)
 	for rows.Next() {
 		var c models.Client
 		if err := rows.Scan(&c.ID, &c.UserID, &c.Name, &c.Phone, &c.Email,
@@ -65,7 +65,7 @@ func (r *ClientRepo) GetAllPaginated(ctx context.Context, userID uuid.UUID, offs
 	}
 	defer rows.Close()
 
-	var clients []models.Client
+	clients := make([]models.Client, 0)
 	for rows.Next() {
 		var c models.Client
 		if err := rows.Scan(&c.ID, &c.UserID, &c.Name, &c.Phone, &c.Email,
@@ -147,7 +147,7 @@ func (r *ClientRepo) Search(ctx context.Context, userID uuid.UUID, query string)
 	}
 	defer rows.Close()
 
-	var clients []models.Client
+	clients := make([]models.Client, 0)
 	for rows.Next() {
 		var c models.Client
 		if err := rows.Scan(&c.ID, &c.UserID, &c.Name, &c.Phone, &c.Email,

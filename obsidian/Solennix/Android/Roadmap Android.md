@@ -329,6 +329,27 @@ gantt
 
 ---
 
+## Etapa 2: Post-MVP — Android
+
+> [!tip] Documento completo
+> Ver [[13_POST_MVP_ROADMAP|Roadmap Post-MVP (Etapa 2)]] para el detalle completo.
+
+### Prioridad Android Etapa 2
+
+| Feature | Componente | Esfuerzo | Prioridad |
+|---------|-----------|:--------:|:---------:|
+| **Preferencias de notificación** | `SettingsScreen` → sección "Notificaciones" con switches | 3h | P0 |
+| **Pantalla de reportes** | `ReportsScreen` + Canvas charts + date range picker | 15h | P1 |
+| **Botón "Ir" + acciones** | `EventDetailScreen` → botones "En camino", "Llegamos" + Maps Intent | 8h | P1 |
+| **WhatsApp deep links** | Botón "Enviar por WhatsApp" con Intent | 2h | P0 |
+| **Plantillas de evento** | `TemplateListScreen` + guardar/cargar | 8h | P2 |
+| **Timeline del evento** | `EventTimelineScreen` hora por hora | 10h | P2 |
+| **Modo Día del Evento** | Banner + ongoing notification + acciones rápidas | 12h | P2 |
+| **Google Calendar Sync** | CalendarContract sync bidireccional | 8h | P2 |
+| **Notificación persistente (evento activo)** | Foreground service con controles | 6h | P2 |
+
+---
+
 ## Relaciones
 
 - [[Android MOC]] — Hub principal
@@ -338,3 +359,4 @@ gantt
 - [[Sincronización Offline]] — Gaps de sync
 - [[Sistema de PDFs]] — Dependencia faltante
 - [[Módulo Settings]] — Play Billing y suscripciones
+- [[13_POST_MVP_ROADMAP|Roadmap Post-MVP]] — Etapa 2 completa

@@ -53,7 +53,7 @@ func (r *LiveActivityTokenRepo) GetByEventID(ctx context.Context, eventID uuid.U
 	}
 	defer rows.Close()
 
-	var tokens []models.LiveActivityToken
+	tokens := make([]models.LiveActivityToken, 0)
 	for rows.Next() {
 		var t models.LiveActivityToken
 		if err := rows.Scan(&t.ID, &t.UserID, &t.EventID, &t.PushToken, &t.CreatedAt, &t.ExpiresAt); err != nil {

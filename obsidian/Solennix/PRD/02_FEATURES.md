@@ -1074,7 +1074,58 @@ Sistema de upload de imagenes para fotos de eventos, productos y logos de negoci
 
 > [!tip] Documentos relacionados
 > - [[11_CURRENT_STATUS|Estado Actual]] — Detalle completo de brechas y progreso por plataforma
+> - [[13_POST_MVP_ROADMAP|Roadmap Post-MVP (Etapa 2)]] — Detalle completo de features post-MVP
 > - [[05_TECHNICAL_ARCHITECTURE_IOS|Arq. iOS]] | [[06_TECHNICAL_ARCHITECTURE_ANDROID|Arq. Android]] | [[08_TECHNICAL_ARCHITECTURE_WEB|Arq. Web]] | [[07_TECHNICAL_ARCHITECTURE_BACKEND|Arq. Backend]]
+
+---
+
+## P3 — Etapa 2: Post-MVP
+
+> [!abstract] Features planificadas para después del lanzamiento del MVP
+> Ver [[13_POST_MVP_ROADMAP|Roadmap Post-MVP (Etapa 2)]] para especificaciones completas, endpoints, estimaciones y priorización.
+
+### Pilar 1: Notificaciones Inteligentes
+
+| Feature | Plataformas | Prioridad | Descripción |
+|---------|:-----------:|:---------:|-------------|
+| Preferencias de notificación | [Todas] | P0 | Toggle por tipo de email/push en Settings |
+| Resumen semanal por email | [Backend] | P2 | Email semanal con KPIs y próximos eventos |
+| Alerta de cotización vencida | [Backend] | P1 | Email automático cuando cotización lleva 7+ días sin confirmar |
+
+### Pilar 2: Reportes y Analítica Avanzada
+
+| Feature | Plataformas | Prioridad | Descripción |
+|---------|:-----------:|:---------:|-------------|
+| Pantalla de Reportes | [Todas] | P1 | Reportes por período con filtros de fecha |
+| Reporte financiero | [Todas] | P1 | Ingresos, IVA, margen, métodos de pago |
+| Reporte de clientes | [Todas] | P1 | Top clientes, frecuencia, ticket promedio |
+| Reporte de productos | [Todas] | P1 | Productos más vendidos, tendencias |
+| Exportación PDF/CSV | [Todas] | P1 | Descargar reportes en PDF o CSV |
+
+### Pilar 3: Portal del Cliente
+
+| Feature | Plataformas | Prioridad | Descripción |
+|---------|:-----------:|:---------:|-------------|
+| URL compartible del evento | [Web] [Backend] | P1 | Link público sin login para el cliente |
+| Acciones de evento | [Todas] | P1 | Botones "En camino", "Llegamos", "Montaje listo" con notificación al cliente |
+| Botón "Ir" + Google Maps | [Mobile] | P1 | Abre Maps + notifica al cliente "en camino" |
+| Firma digital de contrato | [Web] | P2 | Canvas de firma en el portal del cliente |
+| Calificaciones post-evento | [Web] [Backend] | P2 | ⭐ 1-5 + comentario del cliente |
+
+### Pilar 4: Diferenciadores
+
+| Feature | Plataformas | Prioridad | Descripción |
+|---------|:-----------:|:---------:|-------------|
+| Plantillas de evento | [Todas] | P2 | Guardar/cargar eventos como plantillas reutilizables |
+| Timeline del día del evento | [Todas] | P2 | Vista hora por hora, compartible con cliente y equipo |
+| Modo Día del Evento | [Mobile] | P2 | Banner especial + checklist + acciones rápidas |
+| WhatsApp deep links | [Todas] | P0 | Botón "Enviar por WhatsApp" con mensaje pre-armado |
+| Calendar sync | [Todas] | P2 | Apple Calendar / Google Calendar bidireccional |
+| Colaboración y equipo | [Todas] | P2 | Invitar miembros, roles, activity log |
+| Galería pública del negocio | [Web] | P3 | Portfolio con fotos, testimonios y formulario de cotización |
+| Predicción de demanda | [Todas] | P3 | Sugerencias de stock basadas en eventos futuros |
+| Multi-moneda | [Todas] | P2 | MXN, USD, COP, ARS, BRL, PEN |
+| Multi-idioma | [Todas] | P3 | Español, Inglés, Portugués |
 
 ---
 

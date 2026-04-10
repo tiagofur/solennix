@@ -159,7 +159,7 @@ func TestCSRF(t *testing.T) {
 				req.AddCookie(&http.Cookie{Name: "auth_token", Value: "some-jwt"})
 			}
 			if tc.cookieValue != "" {
-				req.AddCookie(&http.Cookie{Name: "csrf_token", Value: tc.cookieValue})
+				req.AddCookie(&http.Cookie{Name: "csrf_token_v2", Value: tc.cookieValue})
 			}
 			if tc.headerToken != "" {
 				req.Header.Set("X-CSRF-Token", tc.headerToken)
@@ -175,24 +175,24 @@ func TestCSRF(t *testing.T) {
 				t.Fatalf("nextCalled = %v, want %v", nextCalled, tc.wantNextCalled)
 			}
 
-			// Check if csrf_token cookie was set in response
+			// Check if csrf_token_v2 cookie was set in response
 			var foundCookie bool
 			for _, c := range rr.Result().Cookies() {
-				if c.Name == "csrf_token" {
+				if c.Name == "csrf_token_v2" {
 					foundCookie = true
 					if c.HttpOnly {
-						t.Fatal("csrf_token cookie must NOT be HttpOnly")
+						t.Fatal("csrf_token_v2 cookie must NOT be HttpOnly")
 					}
 					if c.SameSite != http.SameSiteStrictMode {
-						t.Fatalf("csrf_token SameSite = %v, want Strict", c.SameSite)
+						t.Fatalf("csrf_token_v2 SameSite = %v, want Strict", c.SameSite)
 					}
 					if len(c.Value) != 64 {
-						t.Fatalf("csrf_token length = %d, want 64 hex chars", len(c.Value))
+						t.Fatalf("csrf_token_v2 length = %d, want 64 hex chars", len(c.Value))
 					}
 				}
 			}
 			if foundCookie != tc.wantCookie {
-				t.Fatalf("csrf_token cookie set = %v, want %v", foundCookie, tc.wantCookie)
+				t.Fatalf("csrf_token_v2 cookie set = %v, want %v", foundCookie, tc.wantCookie)
 			}
 		})
 	}

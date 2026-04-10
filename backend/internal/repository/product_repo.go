@@ -32,7 +32,7 @@ func (r *ProductRepo) GetAll(ctx context.Context, userID uuid.UUID) ([]models.Pr
 	}
 	defer rows.Close()
 
-	var products []models.Product
+	products := make([]models.Product, 0)
 	for rows.Next() {
 		var p models.Product
 		if err := rows.Scan(&p.ID, &p.UserID, &p.Name, &p.Category, &p.BasePrice,
@@ -62,7 +62,7 @@ func (r *ProductRepo) GetAllPaginated(ctx context.Context, userID uuid.UUID, off
 	}
 	defer rows.Close()
 
-	var products []models.Product
+	products := make([]models.Product, 0)
 	for rows.Next() {
 		var p models.Product
 		if err := rows.Scan(&p.ID, &p.UserID, &p.Name, &p.Category, &p.BasePrice,
@@ -132,7 +132,7 @@ func (r *ProductRepo) GetIngredients(ctx context.Context, productID uuid.UUID) (
 	}
 	defer rows.Close()
 
-	var ingredients []models.ProductIngredient
+	ingredients := make([]models.ProductIngredient, 0)
 	for rows.Next() {
 		var pi models.ProductIngredient
 		if err := rows.Scan(&pi.ID, &pi.ProductID, &pi.InventoryID, &pi.QuantityRequired, &pi.Capacity, &pi.BringToEvent,
@@ -161,7 +161,7 @@ func (r *ProductRepo) GetIngredientsForProducts(ctx context.Context, productIDs 
 	}
 	defer rows.Close()
 
-	var ingredients []models.ProductIngredient
+	ingredients := make([]models.ProductIngredient, 0)
 	for rows.Next() {
 		var pi models.ProductIngredient
 		if err := rows.Scan(&pi.ID, &pi.ProductID, &pi.InventoryID, &pi.QuantityRequired, &pi.Capacity, &pi.BringToEvent,
@@ -235,7 +235,7 @@ func (r *ProductRepo) Search(ctx context.Context, userID uuid.UUID, query string
 	}
 	defer rows.Close()
 
-	var products []models.Product
+	products := make([]models.Product, 0)
 	for rows.Next() {
 		var p models.Product
 		if err := rows.Scan(&p.ID, &p.UserID, &p.Name, &p.Category, &p.BasePrice,

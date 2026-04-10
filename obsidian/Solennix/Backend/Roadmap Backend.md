@@ -369,9 +369,33 @@ gantt
 
 ---
 
+## Etapa 2: Post-MVP — Backend
+
+> [!tip] Documento completo
+> Ver [[13_POST_MVP_ROADMAP|Roadmap Post-MVP (Etapa 2)]] para el detalle completo de todas las plataformas.
+
+### Prioridad Backend Etapa 2
+
+| Feature | Endpoint | Esfuerzo | Prioridad |
+|---------|----------|:--------:|:---------:|
+| **Preferencias de notificación** | `PUT /api/users/me` extendido | 4h | P0 |
+| **Endpoints de reportes** | `GET /api/v1/reports/{type}` x5 | 20h | P1 |
+| **Exportación PDF/CSV** | `GET /api/v1/reports/export/{format}` | 20h | P1 |
+| **Portal público del cliente** | `GET /api/public/events/{token}` | 25h | P1 |
+| **Acciones de evento** | `POST /api/events/{id}/actions/{action}` | 8h | P1 |
+| **Firma digital** | `POST /api/public/events/{token}/sign` | 12h | P2 |
+| **Calificaciones** | `POST /api/public/events/{token}/rate` | 6h | P2 |
+| **Event templates** | CRUD `/api/templates` | 10h | P2 |
+| **Calendar sync (iCal)** | `GET /api/calendar/ical` | 5h | P2 |
+| **WhatsApp deep links** | Solo frontend (sin backend) | 0h | P0 |
+| **Resumen semanal email** | Cron job + template | 8h | P2 |
+
+---
+
 ## Relaciones
 
 - [[Backend MOC]] — Hub principal
 - [[Seguridad]] — Mejoras de seguridad detalladas
 - [[Performance]] — Áreas de mejora de rendimiento
 - [[Testing]] — Estado actual de tests
+- [[13_POST_MVP_ROADMAP|Roadmap Post-MVP]] — Etapa 2 completa

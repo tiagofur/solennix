@@ -100,7 +100,7 @@ func (r *PaymentRepo) queryPayments(ctx context.Context, query string, args ...i
 	}
 	defer rows.Close()
 
-	var payments []models.Payment
+	payments := make([]models.Payment, 0)
 	for rows.Next() {
 		var p models.Payment
 		if err := rows.Scan(&p.ID, &p.EventID, &p.UserID, &p.Amount,

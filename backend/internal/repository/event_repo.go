@@ -72,7 +72,7 @@ func (r *EventRepo) GetAll(ctx context.Context, userID uuid.UUID) ([]models.Even
 	}
 	defer rows.Close()
 
-	var events []models.Event
+	events := make([]models.Event, 0)
 	for rows.Next() {
 		e, err := scanEventWithClient(rows)
 		if err != nil {
@@ -102,7 +102,7 @@ func (r *EventRepo) GetAllPaginated(ctx context.Context, userID uuid.UUID, offse
 	}
 	defer rows.Close()
 
-	var events []models.Event
+	events := make([]models.Event, 0)
 	for rows.Next() {
 		e, err := scanEventWithClient(rows)
 		if err != nil {
@@ -127,7 +127,7 @@ func (r *EventRepo) GetByDateRange(ctx context.Context, userID uuid.UUID, start,
 	}
 	defer rows.Close()
 
-	var events []models.Event
+	events := make([]models.Event, 0)
 	for rows.Next() {
 		e, err := scanEventWithClient(rows)
 		if err != nil {
@@ -150,7 +150,7 @@ func (r *EventRepo) GetByClientID(ctx context.Context, userID, clientID uuid.UUI
 	}
 	defer rows.Close()
 
-	var events []models.Event
+	events := make([]models.Event, 0)
 	for rows.Next() {
 		var e models.Event
 		err := rows.Scan(
@@ -193,7 +193,7 @@ func (r *EventRepo) GetUpcoming(ctx context.Context, userID uuid.UUID, limit int
 	}
 	defer rows.Close()
 
-	var events []models.Event
+	events := make([]models.Event, 0)
 	for rows.Next() {
 		e, err := scanEventWithClient(rows)
 		if err != nil {
@@ -314,7 +314,7 @@ func (r *EventRepo) GetProducts(ctx context.Context, eventID uuid.UUID) ([]model
 	}
 	defer rows.Close()
 
-	var products []models.EventProduct
+	products := make([]models.EventProduct, 0)
 	for rows.Next() {
 		var ep models.EventProduct
 		if err := rows.Scan(&ep.ID, &ep.EventID, &ep.ProductID, &ep.Quantity,
@@ -338,7 +338,7 @@ func (r *EventRepo) GetExtras(ctx context.Context, eventID uuid.UUID) ([]models.
 	}
 	defer rows.Close()
 
-	var extras []models.EventExtra
+	extras := make([]models.EventExtra, 0)
 	for rows.Next() {
 		var ee models.EventExtra
 		if err := rows.Scan(&ee.ID, &ee.EventID, &ee.Description, &ee.Cost,
@@ -447,7 +447,7 @@ func (r *EventRepo) GetEquipment(ctx context.Context, eventID uuid.UUID) ([]mode
 	}
 	defer rows.Close()
 
-	var items []models.EventEquipment
+	items := make([]models.EventEquipment, 0)
 	for rows.Next() {
 		var eq models.EventEquipment
 		if err := rows.Scan(&eq.ID, &eq.EventID, &eq.InventoryID, &eq.Quantity,
@@ -510,7 +510,7 @@ func (r *EventRepo) CheckEquipmentConflicts(ctx context.Context, userID uuid.UUI
 	}
 	defer rows.Close()
 
-	var conflicts []models.EquipmentConflict
+	conflicts := make([]models.EquipmentConflict, 0)
 	for rows.Next() {
 		var c models.EquipmentConflict
 		if err := rows.Scan(&c.InventoryID, &c.EquipmentName, &c.EventID, &c.EventDate,
@@ -646,7 +646,7 @@ func (r *EventRepo) GetSupplies(ctx context.Context, eventID uuid.UUID) ([]model
 	}
 	defer rows.Close()
 
-	var items []models.EventSupply
+	items := make([]models.EventSupply, 0)
 	for rows.Next() {
 		var s models.EventSupply
 		if err := rows.Scan(&s.ID, &s.EventID, &s.InventoryID, &s.Quantity,
@@ -841,7 +841,7 @@ func (r *EventRepo) SearchEventsAdvanced(ctx context.Context, userID uuid.UUID, 
 	}
 	defer rows.Close()
 
-	var events []models.Event
+	events := make([]models.Event, 0)
 	for rows.Next() {
 		e, err := scanEventWithClient(rows)
 		if err != nil {

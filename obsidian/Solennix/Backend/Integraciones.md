@@ -215,41 +215,44 @@ sequenceDiagram
 ## Resend (Transactional Email)
 
 > [!abstract] Resumen
-> Resend es el proveedor de email transaccional. Actualmente solo se usa para emails de recuperación de contraseña, con branding Solennix (tema naranja/dorado).
+> Resend es el proveedor de email transaccional. Se usa para múltiples tipos de emails automatizados con branding Solennix (tema dorado #C4A265).
 
 ### Archivo
 
 | Archivo | Rol |
 |---------|-----|
-| `services/email_service.go` | Servicio de email con template HTML inline. Usa `resend-go/v3`. |
+| `services/email_service.go` | Servicio de email con template HTML reutilizable. Usa `resend-go/v3`. |
 
-### Flujo de Password Reset
+### Emails Implementados
 
-```mermaid
-sequenceDiagram
-    participant U as Usuario
-    participant B as Backend
-    participant R as Resend API
+| Email | Trigger | Template |
+|-------|---------|----------|
+| Password Reset | `POST /api/auth/forgot-password` | Link de reset con expiración 1h |
+| Welcome | `POST /api/auth/register` | Bienvenida al registrarse |
+| Event Reminder | Background job (24h antes) | Recordatorio de evento próximo |
+| Payment Receipt | `POST /api/payments` | Recibo de pago registrado |
+| Subscription Confirmation | Webhook Stripe/RevenueCat | Confirmación de upgrade a Pro |
 
-    U->>B: POST /api/auth/forgot-password
-    B->>B: Generar token JWT de reset
-    B->>B: Generar HTML con template Solennix
-    B->>R: POST /emails (From: Solennix, To: user)
-    R-->>U: Email con link de reset
-    Note over U: Link: {FRONTEND_URL}/reset-password?token={token}
-```
+### Emails Planificados (Etapa 2)
+
+| Email | Trigger | Estado |
+|-------|---------|--------|
+| Resumen semanal | Cron cada lunes | ⬜ Pendiente |
+| Cotización sin confirmar | Cron diario (7+ días sin confirmar) | ⬜ Pendiente |
+| Notificación al cliente del usuario | Acciones de evento | ⬜ Pendiente |
+
+> [!tip] Preferencias del usuario (Etapa 2)
+> En la Etapa 2 se agregará una tabla de preferencias para que el usuario pueda activar/desactivar cada tipo de email. Ver [[13_POST_MVP_ROADMAP|Roadmap Post-MVP]].
 
 ### Características del Email
 
-- **Template HTML inline** con estilos embebidos (compatible con todos los clientes)
-- **Branding Solennix**: logo naranja `#f97316`, botón CTA, footer
-- **Enlace válido por 1 hora** (indicado con warning visual en el template)
-- **Asunto**: "Recuperación de Contraseña - Solennix"
+- **Template HTML reutilizable** con estilos embebidos (compatible con todos los clientes)
+- **Branding Solennix**: logo dorado `#C4A265`, botón CTA, footer
 - **Link fallback**: texto plano del enlace para clientes que no renderizan HTML
 - **From default**: `Solennix <noreply@solennix.com>`
 
 > [!warning] Degradación graciosa
-> Si `RESEND_API_KEY` no está configurada, el servicio loguea un warning (`"Resend not configured, email not sent"`) y devuelve un error. El flujo de forgot-password no falla — el endpoint responde 200 para no revelar si el email existe.
+> Si `RESEND_API_KEY` no está configurada, el servicio loguea un warning (`"Resend not configured, email not sent"`) y devuelve un error. Los flujos no fallan — degradan graciosamente.
 
 ### Variables de Entorno
 
@@ -395,17 +398,19 @@ graph TB
 ## Integration Gaps
 
 > [!warning] Brechas actuales
-> Las siguientes integraciones aún no están implementadas o están parcialmente completas.
 
 | Gap | Estado | Notas |
 |-----|--------|-------|
-| **Push Notifications** | Tokens almacenados, no enviados | `DeviceHandler` registra/unregister tokens en DB, pero no hay servicio de envío (FCM/APNs) |
-| **SMS / WhatsApp** | No implementado | Futuro: integración con WhatsApp Business API para recordatorios |
-| **Calendar Sync** | No implementado | No hay sync con Google Calendar ni Apple Calendar |
-| **Cloud Storage** | Local disk only | Uploads van a disco local. Para multi-instancia se necesita S3 / Cloud Storage |
-| **Email limitado** | Solo password reset | Faltan: welcome email, recordatorios de evento, recibos de pago, notificaciones de suscripción |
-| **Invoice generation** | No implementado | No hay generación de facturas PDF para pagos de eventos |
-| **Analytics/Tracking** | No implementado | No hay integración con Mixpanel, Amplitude, o similar |
+| ~~**Push Notifications**~~ | ✅ Implementado | FCM + APNs activos con PushService + NotificationService |
+| ~~**Email limitado**~~ | ✅ Implementado | Welcome, reminder, receipt, subscription. Ver Resend sección |
+| **SMS / WhatsApp** | No implementado | Etapa 2: WhatsApp deep links (P0), WhatsApp Business API (P3) |
+| **Calendar Sync** | No implementado | Etapa 2: iCal feed + Google Calendar + Apple Calendar (P2) |
+| **Cloud Storage** | ⚠️ Interface lista | StorageProvider con Local + S3. Presigned URLs pendientes |
+| **Portal del Cliente** | No implementado | Etapa 2: endpoints públicos con token de acceso (P1) |
+| **Analytics/Tracking** | No implementado | Diferido hasta usuarios en producción |
+| **Notificaciones al cliente del organizador** | No implementado | Etapa 2: emails automáticos al cliente final (P1) |
+
+> [!tip] Ver [[13_POST_MVP_ROADMAP|Roadmap Post-MVP (Etapa 2)]] para el plan completo de implementación.
 
 ---
 
