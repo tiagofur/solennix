@@ -10,7 +10,7 @@ aliases:
   - Arquitectura Backend
   - Backend Architecture
 date: 2026-03-20
-updated: 2026-04-04
+updated: 2026-04-10
 status: active
 platform: Backend
 ---
@@ -553,6 +553,8 @@ Todas las entidades principales se filtran por `user_id` (multi-tenant por usuar
 
 Rate limit: **10 requests/minuto** por IP.
 
+Estas rutas publicas de auth ya quedaron congeladas en `backend/docs/openapi.yaml`, incluyendo Google y Apple Sign In porque iOS/Android dependen de esos payloads.
+
 | Metodo | Ruta                        | Handler                      | Descripcion                            |
 | ------ | --------------------------- | ---------------------------- | -------------------------------------- |
 | `POST` | `/api/auth/register`        | `AuthHandler.Register`       | Registro de nuevo usuario              |
@@ -590,6 +592,8 @@ Rate limit: **10 requests/minuto** por IP.
 | ------ | --------------- | --------------------------- | ----------------------------- |
 | `PUT`  | `/api/users/me` | `AuthHandler.UpdateProfile` | Actualizar perfil del usuario |
 
+`PUT /api/users/me` tambien esta cubierto por el freeze contractual OpenAPI porque los clientes mobile actualizan branding y defaults desde esta ruta.
+
 ### 6.7 Rutas Protegidas — Clientes
 
 | Metodo   | Ruta                | Handler                    | Descripcion                 |
@@ -601,6 +605,8 @@ Rate limit: **10 requests/minuto** por IP.
 | `DELETE` | `/api/clients/{id}` | `CRUDHandler.DeleteClient` | Eliminar cliente            |
 
 ### 6.8 Rutas Protegidas — Eventos
+
+Las rutas de fotos y los endpoints GET orientados a mobile de esta seccion quedan protegidos por `contract_test.go` para evitar drift entre backend y clientes nativos.
 
 | Metodo   | Ruta                                | Handler                                  | Descripcion                                               |
 | -------- | ----------------------------------- | ---------------------------------------- | --------------------------------------------------------- |
@@ -699,6 +705,8 @@ Rate limit: **5 requests/minuto** por IP.
 ### 6.17 Rutas Admin
 
 Requieren: JWT + rol `admin`. Rate limit: **30 requests/minuto**.
+
+Estas rutas ya forman parte del contrato en `backend/docs/openapi.yaml` y quedan protegidas por `backend/internal/handlers/contract_test.go` para evitar drift respecto del panel admin Web.
 
 | Metodo | Ruta                            | Handler                         | Descripcion                            |
 | ------ | ------------------------------- | ------------------------------- | -------------------------------------- |
@@ -963,15 +971,15 @@ El sistema usa **tres tipos de token**, todos firmados con HS256:
 
 El proyecto tiene tests en todas las capas:
 
-| Capa       | Archivos                                                                                                                                                                                                                                                                                       | Enfoque                                      |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
-| Config     | `config_test.go`                                                                                                                                                                                                                                                                               | Variables de entorno, defaults               |
-| Middleware | `auth_test.go`, `cors_test.go`, `recovery_test.go`, `security_test.go`, `ratelimit_test.go`, `admin_test.go`, `logging_test.go`                                                                                                                                                                | Comportamiento de cada middleware            |
-| Handlers   | `auth_handler_test.go`, `crud_handler_test.go`, `crud_handler_success_test.go`, `crud_handler_error_test.go`, `crud_payment_test.go`, `subscription_handler_test.go`, `upload_handler_test.go`, `search_handler_test.go`, `helpers_test.go`, `validation_test.go`, `contract_template_test.go` | Mocks de repos, validacion de HTTP responses |
-| Services   | `auth_service_test.go`, `email_service_test.go`                                                                                                                                                                                                                                                | JWT, bcrypt, templates de email              |
-| Repository | `repository_integration_test.go`, `repository_error_test.go`                                                                                                                                                                                                                                   | Tests de integracion con DB real             |
-| Router     | `router_test.go`, `router_api_integration_test.go`                                                                                                                                                                                                                                             | Rutas registradas, integracion API           |
-| Database   | `database_test.go`, `migrate_test.go`                                                                                                                                                                                                                                                          | Conexion, sistema de migraciones             |
+| Capa       | Archivos                                                                                                                                                                                                                                                                                                                                    | Enfoque                                                                                     |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Config     | `config_test.go`                                                                                                                                                                                                                                                                                                                            | Variables de entorno, defaults                                                              |
+| Middleware | `auth_test.go`, `cors_test.go`, `recovery_test.go`, `security_test.go`, `ratelimit_test.go`, `admin_test.go`, `logging_test.go`                                                                                                                                                                                                             | Comportamiento de cada middleware                                                           |
+| Handlers   | `auth_handler_test.go`, `crud_handler_test.go`, `crud_handler_success_test.go`, `crud_handler_error_test.go`, `crud_payment_test.go`, `subscription_handler_test.go`, `upload_handler_test.go`, `search_handler_test.go`, `helpers_test.go`, `validation_test.go`, `contract_template_test.go`, `contract_test.go`, `admin_handler_test.go` | Mocks de repos, validacion de HTTP responses y freeze contractual OpenAPI para web y mobile |
+| Services   | `auth_service_test.go`, `email_service_test.go`                                                                                                                                                                                                                                                                                             | JWT, bcrypt, templates de email                                                             |
+| Repository | `repository_integration_test.go`, `repository_error_test.go`                                                                                                                                                                                                                                                                                | Tests de integracion con DB real                                                            |
+| Router     | `router_test.go`, `router_api_integration_test.go`                                                                                                                                                                                                                                                                                          | Rutas registradas, integracion API                                                          |
+| Database   | `database_test.go`, `migrate_test.go`                                                                                                                                                                                                                                                                                                       | Conexion, sistema de migraciones                                                            |
 
 ### 10.2 Herramientas
 

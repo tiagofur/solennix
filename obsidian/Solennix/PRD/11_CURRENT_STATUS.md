@@ -27,12 +27,12 @@ status: active
 > [!success] Plataformas funcionales
 > Backend y Web estan operativos. iOS y Android en desarrollo activo con features principales implementadas.
 
-| Plataforma                | Estado           | Notas                                                                                                                                                                                                                         |
-| ------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Backend (Go)              | Funcional ✅     | API completa, 35 migraciones, auth multi-proveedor, Stripe, RevenueCat, push notifications (FCM+APNs), paginacion server-side, dashboard analytics, FTS, audit logging, CSRF, refresh token rotation, coverage handlers 70.1% |
-| Web (React)               | Funcional ✅     | Todas las paginas principales, panel admin, cotizacion rapida                                                                                                                                                                 |
-| iOS (SwiftUI)             | En desarrollo 🔄 | Features principales + widgets (4 tipos) + Live Activity + 7 generadores PDF                                                                                                                                                  |
-| Android (Jetpack Compose) | En desarrollo 🔄 | Features principales, arquitectura modular multi-feature, 8 generadores PDF, RevenueCat billing                                                                                                                               |
+| Plataforma                | Estado           | Notas                                                                                                                                                                                                                                                                            |
+| ------------------------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Backend (Go)              | Funcional ✅     | API completa, 35 migraciones, auth multi-proveedor, Stripe, RevenueCat, push notifications (FCM+APNs), paginacion server-side, dashboard analytics, FTS, audit logging, CSRF, refresh token rotation, OpenAPI contractual cubriendo tambien panel admin, coverage handlers 70.1% |
+| Web (React)               | Funcional ✅     | Todas las paginas principales, panel admin, cotizacion rapida                                                                                                                                                                                                                    |
+| iOS (SwiftUI)             | En desarrollo 🔄 | Features principales + widgets (4 tipos) + Live Activity + 7 generadores PDF                                                                                                                                                                                                     |
+| Android (Jetpack Compose) | En desarrollo 🔄 | Features principales, arquitectura modular multi-feature, 8 generadores PDF, RevenueCat billing                                                                                                                                                                                  |
 
 ---
 
@@ -54,6 +54,7 @@ status: active
 - ✅ Obtener perfil (`GET /api/auth/me`)
 - ✅ Cambiar contrasena (`POST /api/auth/change-password`)
 - ✅ Actualizar perfil (`PUT /api/users/me`)
+- ✅ Contrato OpenAPI y contract tests cubren tambien OAuth social y update profile consumidos por iOS/Android
 
 ### Eventos
 
@@ -64,6 +65,7 @@ status: active
 - ✅ Deteccion de conflictos de equipamiento (`GET/POST /api/events/equipment/conflicts`)
 - ✅ Sugerencias de equipamiento (`GET/POST /api/events/equipment/suggestions`)
 - ✅ Sugerencias de suministros (`GET/POST /api/events/supplies/suggestions`)
+- ✅ Contrato OpenAPI y contract tests cubren tambien fotos de evento usadas por Android
 
 ### Clientes
 
@@ -108,6 +110,7 @@ status: active
 - ✅ Detalle de usuario (`GET /api/admin/users/{id}`)
 - ✅ Upgrade de usuario (`PUT /api/admin/users/{id}/upgrade`)
 - ✅ Lista de suscripciones (`GET /api/admin/subscriptions`)
+- ✅ Contrato OpenAPI y contract tests cubren ahora las rutas admin consumidas por Web
 
 ### Device Tokens
 

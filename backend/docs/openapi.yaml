@@ -172,6 +172,78 @@ components:
       properties:
         current_password:
           type: string
+    GoogleSignInRequest:
+      type: object
+      required:
+        - id_token
+      properties:
+        id_token:
+          type: string
+        full_name:
+          type: string
+          nullable: true
+    AppleSignInRequest:
+      type: object
+      required:
+        - identity_token
+      properties:
+        identity_token:
+          type: string
+        authorization_code:
+          type: string
+        full_name:
+          type: string
+          nullable: true
+        email:
+          type: string
+          format: email
+          nullable: true
+    AppleAuthSuccessResponse:
+      type: object
+      required:
+        - user
+        - tokens
+        - email_is_private_relay
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        tokens:
+          $ref: "#/components/schemas/TokenPair"
+        email_is_private_relay:
+          type: boolean
+    UpdateProfileRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          nullable: true
+        business_name:
+          type: string
+          nullable: true
+        logo_url:
+          type: string
+          nullable: true
+        brand_color:
+          type: string
+          nullable: true
+        show_business_name_in_pdf:
+          type: boolean
+          nullable: true
+        default_deposit_percent:
+          type: number
+          format: double
+          nullable: true
+        default_cancellation_days:
+          type: number
+          format: double
+          nullable: true
+        default_refund_percent:
+          type: number
+          format: double
+          nullable: true
+        contract_template:
+          type: string
+          nullable: true
         new_password:
           type: string
           minLength: 8
@@ -1316,6 +1388,166 @@ components:
           format: double
         confirmed_events:
           type: integer
+    EventPhoto:
+      type: object
+      required:
+        - id
+        - url
+        - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        url:
+          type: string
+        thumbnail_url:
+          type: string
+          nullable: true
+        caption:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+    EventPhotoCreateRequest:
+      type: object
+      required:
+        - url
+      properties:
+        url:
+          type: string
+        thumbnail_url:
+          type: string
+          nullable: true
+        caption:
+          type: string
+          nullable: true
+      PlatformStats:
+        type: object
+        required:
+          - total_users
+          - basic_users
+          - pro_users
+          - premium_users
+          - total_events
+          - total_clients
+          - total_products
+          - new_users_today
+          - new_users_week
+          - new_users_month
+          - active_subscriptions
+        properties:
+          total_users:
+            type: integer
+          basic_users:
+            type: integer
+          pro_users:
+            type: integer
+          premium_users:
+            type: integer
+          total_events:
+            type: integer
+          total_clients:
+            type: integer
+          total_products:
+            type: integer
+          new_users_today:
+            type: integer
+          new_users_week:
+            type: integer
+          new_users_month:
+            type: integer
+          active_subscriptions:
+            type: integer
+      AdminUser:
+        type: object
+        required:
+          - id
+          - email
+          - name
+          - plan
+          - role
+          - has_paid_subscription
+          - events_count
+          - clients_count
+          - products_count
+          - created_at
+          - updated_at
+        properties:
+          id:
+            type: string
+            format: uuid
+          email:
+            type: string
+            format: email
+          name:
+            type: string
+          business_name:
+            type: string
+            nullable: true
+          plan:
+            type: string
+            enum: [basic, pro, premium]
+          role:
+            type: string
+          stripe_customer_id:
+            type: string
+            nullable: true
+          has_paid_subscription:
+            type: boolean
+          plan_expires_at:
+            type: string
+            format: date-time
+            nullable: true
+          events_count:
+            type: integer
+          clients_count:
+            type: integer
+          products_count:
+            type: integer
+          created_at:
+            type: string
+            format: date-time
+          updated_at:
+            type: string
+            format: date-time
+      SubscriptionOverview:
+        type: object
+        required:
+          - total_active
+          - total_canceled
+          - total_trialing
+          - total_past_due
+          - stripe_count
+          - apple_count
+          - google_count
+        properties:
+          total_active:
+            type: integer
+          total_canceled:
+            type: integer
+          total_trialing:
+            type: integer
+          total_past_due:
+            type: integer
+          stripe_count:
+            type: integer
+          apple_count:
+            type: integer
+          google_count:
+            type: integer
+      AdminUpgradeRequest:
+        type: object
+        properties:
+          plan:
+            type: string
+            enum: [basic, pro, premium]
+            description: Target plan. Defaults to pro when omitted or empty.
+          expires_at:
+            type: string
+            format: date
+            nullable: true
+            description: Optional gift expiry date in YYYY-MM-DD format.
     ErrorResponse:
       type: object
       properties:
@@ -1520,6 +1752,109 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
         "401":
           description: Unauthorized
+  /api/auth/google:
+    post:
+      security: []
+      operationId: googleSignIn
+      summary: Sign in or register with Google ID token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GoogleSignInRequest"
+      responses:
+        "200":
+          description: Authenticated with Google
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthSuccessResponse"
+        "400":
+          description: Invalid request body or missing id_token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Invalid Google ID token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Failed to link Google account or generate tokens
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/auth/apple:
+    post:
+      security: []
+      operationId: appleSignIn
+      summary: Sign in or register with Apple identity token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AppleSignInRequest"
+      responses:
+        "200":
+          description: Authenticated with Apple
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppleAuthSuccessResponse"
+        "400":
+          description: Invalid request body or missing identity_token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Invalid Apple identity token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Failed to link Apple account or generate tokens
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/users/me:
+    put:
+      operationId: updateProfile
+      summary: Update current user profile and business defaults
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProfileRequest"
+      responses:
+        "200":
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          description: Invalid request body or contract template
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "500":
+          description: Failed to update profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /api/subscriptions/status:
     get:
       operationId: getSubscriptionStatus
@@ -1840,6 +2175,117 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
         "404":
           description: Event not found
+  /api/events/{id}/photos:
+    get:
+      operationId: getEventPhotos
+      summary: Get photos attached to an event
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Event photos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EventPhoto"
+        "400":
+          description: Invalid event ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Event not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: addEventPhoto
+      summary: Attach a photo to an event
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EventPhotoCreateRequest"
+      responses:
+        "201":
+          description: Event photo created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventPhoto"
+        "400":
+          description: Invalid event ID or photo payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Event not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Failed to add photo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/events/{id}/photos/{photoId}:
+    delete:
+      operationId: deleteEventPhoto
+      summary: Delete a photo attached to an event
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: photoId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Event photo deleted
+        "400":
+          description: Invalid event ID or photo ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Event or photo not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Failed to delete photo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /api/events/{id}/items:
     put:
       operationId: updateEventItems
@@ -3032,3 +3478,152 @@ paths:
                   $ref: "#/components/schemas/ForecastDataPoint"
         "401":
           description: Unauthorized
+  /api/admin/stats:
+    get:
+      operationId: getAdminStats
+      summary: Get platform-wide admin KPIs
+      responses:
+        "200":
+          description: Platform stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlatformStats"
+        "401":
+          description: Unauthorized
+        "500":
+          description: Failed to get platform stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/admin/users:
+    get:
+      operationId: listAdminUsers
+      summary: List users with usage counters for admin views
+      responses:
+        "200":
+          description: Admin users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminUser"
+        "401":
+          description: Unauthorized
+        "500":
+          description: Failed to list users
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/admin/users/{id}:
+    get:
+      operationId: getAdminUser
+      summary: Get one user with admin usage details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Admin user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUser"
+        "400":
+          description: Invalid user ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/admin/users/{id}/upgrade:
+    put:
+      operationId: upgradeAdminUser
+      summary: Change a user's plan from the admin console
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminUpgradeRequest"
+      responses:
+        "200":
+          description: User upgraded or downgraded
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/AdminUser"
+                  - type: object
+                    required:
+                      - message
+                    properties:
+                      message:
+                        type: string
+                        example: Plan updated successfully
+        "400":
+          description: Invalid user ID, plan, or expires_at
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Cannot downgrade a user with an active paid subscription
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Failed to update plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/admin/subscriptions:
+    get:
+      operationId: getAdminSubscriptions
+      summary: Get subscription overview metrics for the admin console
+      responses:
+        "200":
+          description: Subscription overview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubscriptionOverview"
+        "401":
+          description: Unauthorized
+        "500":
+          description: Failed to get subscription overview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"

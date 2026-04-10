@@ -15,12 +15,12 @@ updated: 2026-04-10
 
 ## Resumen Ejecutivo
 
-El backend Go ya tiene **implementados todos los handlers core** (CRUD de eventos, clientes, productos, inventario, pagos). E2.B1 ya avanzó a un `openapi.yaml` expandido y E2.B2 ya tiene una primera suite de contract tests que falla si desaparecen endpoints, schemas o responses críticas. El cierre más reciente de E2.C1 detectó y cubrió rutas que la Web usa realmente: nested event items, equipment/supplies suggestions, Stripe event payments, product ingredients y respuestas paginadas.
+El backend Go ya tiene **implementados todos los handlers core** (CRUD de eventos, clientes, productos, inventario, pagos). E2.B1 ya avanzó a un `openapi.yaml` expandido y E2.B2 ya tiene una primera suite de contract tests que falla si desaparecen endpoints, schemas o responses críticas. El cierre más reciente de E2.C1 detectó y cubrió rutas que la Web usa realmente: nested event items, equipment/supplies suggestions, Stripe event payments, product ingredients, respuestas paginadas y el bloque `/api/admin/*` consumido por `adminService`. La extension siguiente ya incorporó consumo mobile real: Google/Apple auth, `PUT /api/users/me` y fotos de evento.
 
 ## Estado Real al Cierre del Día
 
-- `backend/docs/openapi.yaml` existe y ya cubre auth, subscriptions, CRUD core, dashboard, search, uploads, devices, live-activities, unavailable-dates y los endpoints web-reales de eventos/productos/pagos.
-- `backend/internal/handlers/contract_test.go` valida contrato de auth, subscriptions, events, CRUD core y endpoints operativos, incluyendo nested event endpoints y envelopes paginados.
+- `backend/docs/openapi.yaml` existe y ya cubre auth, subscriptions, CRUD core, dashboard, search, uploads, devices, live-activities, unavailable-dates, admin y los endpoints web-reales y mobile-reales de eventos/productos/pagos/perfil.
+- `backend/internal/handlers/contract_test.go` valida contrato de auth, subscriptions, events, CRUD core, admin y endpoints operativos, incluyendo nested event endpoints, fotos de evento, OAuth social y envelopes paginados.
 - `backend/internal/handlers/crud_handler_success_test.go` ya cubre `CreateEvent` con fecha inválida y overlap con unavailable dates.
 - Siguiente foco real: endurecer E2.B2 con validaciones más finas de payloads reales y extender E2.C1 hacia iOS/Android usando este contrato ya expandido.
 
