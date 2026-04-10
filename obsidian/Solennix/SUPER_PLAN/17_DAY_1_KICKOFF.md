@@ -82,6 +82,7 @@ Crea 2 filas de tracking para Wave 1:
 ```
 
 **Action**: Abre GitHub Projects y crea dos epics:
+
 ```bash
 # En GitHub: New Project → Wave 1 Foundation Control
 # Agregar 2 Épicas (T-01, T-02)

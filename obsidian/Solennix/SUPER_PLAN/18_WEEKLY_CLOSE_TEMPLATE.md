@@ -31,13 +31,13 @@ Snapshot semanal de Wave 1: qué salió, qué quedó, qué bloqueó. Actualizar 
 
 ### Tabla de Progreso (E1.B1, E1.B2, E1.W1, E1.I1, E1.A1)
 
-| Epic | Owner | Estado | % Done | Bloqueos | Evidencia |
-|------|-------|--------|--------|----------|-----------|
-| E1.B1 | Backend | [ ] Planned [ ] In Progress [ ] Done | _% | — | — |
-| E1.B2 | Backend | [ ] Planned [ ] In Progress [ ] Done | _% | — | — |
-| E1.W1 | Web | [ ] Planned [ ] In Progress [ ] Done | _% | — | — |
-| E1.I1 | iOS | [ ] Planned [ ] In Progress [ ] Done | _% | — | — |
-| E1.A1 | Android | [ ] Planned [ ] In Progress [ ] Done | _% | — | — |
+| Epic  | Owner   | Estado                               | % Done | Bloqueos | Evidencia |
+| ----- | ------- | ------------------------------------ | ------ | -------- | --------- |
+| E1.B1 | Backend | [ ] Planned [ ] In Progress [ ] Done | \_%    | —        | —         |
+| E1.B2 | Backend | [ ] Planned [ ] In Progress [ ] Done | \_%    | —        | —         |
+| E1.W1 | Web     | [ ] Planned [ ] In Progress [ ] Done | \_%    | —        | —         |
+| E1.I1 | iOS     | [ ] Planned [ ] In Progress [ ] Done | \_%    | —        | —         |
+| E1.A1 | Android | [ ] Planned [ ] In Progress [ ] Done | \_%    | —        | —         |
 
 ### Deliverables Esperados (Semana X)
 
@@ -72,11 +72,11 @@ Risky:
 
 ## 2. Status de T-02: Backend Contract Freeze
 
-| Epic | Owner | Estado | % Done | Bloqueos | Evidencia |
-|------|-------|--------|--------|----------|-----------|
-| E2.B1 | Backend | [ ] Planned [ ] In Progress [ ] Done | _% | — | — |
-| E2.B2 | Backend | [ ] Planned [ ] In Progress [ ] Done | _% | — | — |
-| E2.C1 | Web/iOS/Android | [ ] Planned [ ] In Progress [ ] Done [ ] Blocked | _% | — | — |
+| Epic  | Owner           | Estado                                           | % Done | Bloqueos | Evidencia |
+| ----- | --------------- | ------------------------------------------------ | ------ | -------- | --------- |
+| E2.B1 | Backend         | [ ] Planned [ ] In Progress [ ] Done             | \_%    | —        | —         |
+| E2.B2 | Backend         | [ ] Planned [ ] In Progress [ ] Done             | \_%    | —        | —         |
+| E2.C1 | Web/iOS/Android | [ ] Planned [ ] In Progress [ ] Done [ ] Blocked | \_%    | —        | —         |
 
 ### Deliverables Esperados (Semana X)
 
@@ -92,7 +92,7 @@ Semana 1 (Apr 10-16):
 [Rellenar aquí]
 
 Ejemplo:
-- E2.B1: OpenAPI spec iniciado Monday. Endpoints /events core + /clients base. 
+- E2.B1: OpenAPI spec iniciado Monday. Endpoints /events core + /clients base.
   - Falta aún: /products, /inventory, /payments (estimado Martes).
   - Blocker: Necesito confirmar si hay breaking changes en schema de payment (revisar git history).
 - E2.B2: Aún no iniciado (espero E2.B1 complete mínimo Tuesday).
@@ -108,12 +108,12 @@ Risks:
 
 ### Build Success
 
-| Plataforma | Last Build | Status | Notes |
-|------------|-----------|--------|-------|
-| Backend | [date/time] | [ ] Green [ ] Yellow [ ] Red | `go test ./...` coverage % |
-| Web | [date/time] | [ ] Green [ ] Yellow [ ] Red | `npm run test:run` pass % |
-| iOS | [date/time] | [ ] Green [ ] Yellow [ ] Red | Xcode build success |
-| Android | [date/time] | [ ] Green [ ] Yellow [ ] Red | `./gradlew assembleDebug` |
+| Plataforma | Last Build  | Status                       | Notes                      |
+| ---------- | ----------- | ---------------------------- | -------------------------- |
+| Backend    | [date/time] | [ ] Green [ ] Yellow [ ] Red | `go test ./...` coverage % |
+| Web        | [date/time] | [ ] Green [ ] Yellow [ ] Red | `npm run test:run` pass %  |
+| iOS        | [date/time] | [ ] Green [ ] Yellow [ ] Red | Xcode build success        |
+| Android    | [date/time] | [ ] Green [ ] Yellow [ ] Red | `./gradlew assembleDebug`  |
 
 ### Test Coverage (si aplica)
 
@@ -130,20 +130,20 @@ Web:
 
 ### P0/P1 Open Count
 
-| Severity | Count | Trend | Notes |
-|----------|-------|-------|-------|
-| P0 | __ | [ ] ↑ [ ] → [ ] ↓ | [list if any] |
-| P1 | __ | [ ] ↑ [ ] → [ ] ↓ | [list if any] |
+| Severity | Count | Trend             | Notes         |
+| -------- | ----- | ----------------- | ------------- |
+| P0       | \_\_  | [ ] ↑ [ ] → [ ] ↓ | [list if any] |
+| P1       | \_\_  | [ ] ↑ [ ] → [ ] ↓ | [list if any] |
 
 ---
 
 ## 4. Riesgos Actualizados
 
-| Riesgo | Probabilidad | Impacto | Estado | Mitigación |
-|--------|:------------:|:-------:|--------|-----------|
-| E1.W1 refactor toma más de 12h | Media | Alto | Yellow | Agregar 4h buffer, reducir scope si necesario |
-| E2.B1 schema cambios en payment | Baja | Alto | Green | Validar schema viernes, documentar cambios |
-| Android tablet navigation crash | Baja | Medio | Green | Testing en Samsung Galaxy tab antes de cierre |
+| Riesgo                          | Probabilidad | Impacto | Estado | Mitigación                                    |
+| ------------------------------- | :----------: | :-----: | ------ | --------------------------------------------- |
+| E1.W1 refactor toma más de 12h  |    Media     |  Alto   | Yellow | Agregar 4h buffer, reducir scope si necesario |
+| E2.B1 schema cambios en payment |     Baja     |  Alto   | Green  | Validar schema viernes, documentar cambios    |
+| Android tablet navigation crash |     Baja     |  Medio  | Green  | Testing en Samsung Galaxy tab antes de cierre |
 
 ---
 
