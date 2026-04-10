@@ -305,9 +305,12 @@ class EventDetailViewModel @Inject constructor(
                 inputStream?.close()
 
                 if (bytes != null) {
-                    // 1. Compress image
+                    // 1. Center-crop to 4:3 and compress image for consistent gallery layout
                     val compressedBytes = withContext(Dispatchers.Default) {
-                        ImageCompressor.compress(bytes)
+                        ImageCompressor.compress(
+                            bytes = bytes,
+                            cropAspectRatio = 4 to 3
+                        )
                     }
 
                     // 2. Upload to storage

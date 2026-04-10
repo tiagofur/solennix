@@ -20,7 +20,8 @@ object ImageCompressor {
     fun compress(
         bytes: ByteArray,
         maxDimension: Int = 1280,
-        quality: Int = 80
+        quality: Int = 80,
+        cropAspectRatio: Pair<Int, Int>? = null
     ): ByteArray {
         try {
             // 1. Decode bounds to check size without loading entire image into memory
@@ -39,19 +40,24 @@ object ImageCompressor {
             // 4. Handle rotation from EXIF if possible
             bitmap = rotateImageIfRequired(bitmap, bytes)
 
-            // 5. Final resize to exact maxDimension if still larger
+            // 5. Optional center crop for fixed aspect ratio (used by event photos)
+            cropAspectRatio?.let { (widthRatio, heightRatio) ->
+                bitmap = centerCropToAspectRatio(bitmap, widthRatio, heightRatio)
+            }
+
+            // 6. Final resize to exact maxDimension if still larger
             if (bitmap.width > maxDimension || bitmap.height > maxDimension) {
                 bitmap = resizeBitmap(bitmap, maxDimension)
             }
 
-            // 6. Compress to JPEG
+            // 7. Compress to JPEG
             val outputStream = ByteArrayOutputStream()
             bitmap.compress(Bitmap.CompressFormat.JPEG, quality, outputStream)
             val compressedBytes = outputStream.toByteArray()
-            
+
             // Clean up
             bitmap.recycle()
-            
+
             return compressedBytes
         } catch (e: Exception) {
             e.printStackTrace()
@@ -77,17 +83,41 @@ object ImageCompressor {
     private fun resizeBitmap(bitmap: Bitmap, maxDimension: Int): Bitmap {
         val width = bitmap.width
         val height = bitmap.height
-        
+
         val scale = if (width > height) {
             maxDimension.toFloat() / width
         } else {
             maxDimension.toFloat() / height
         }
-        
+
         val newWidth = (width * scale).toInt()
         val newHeight = (height * scale).toInt()
-        
+
         return Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true)
+    }
+
+    private fun centerCropToAspectRatio(bitmap: Bitmap, widthRatio: Int, heightRatio: Int): Bitmap {
+        if (widthRatio <= 0 || heightRatio <= 0) return bitmap
+
+        val sourceWidth = bitmap.width
+        val sourceHeight = bitmap.height
+        val targetRatio = widthRatio.toFloat() / heightRatio.toFloat()
+        val sourceRatio = sourceWidth.toFloat() / sourceHeight.toFloat()
+
+        val (cropWidth, cropHeight) = if (sourceRatio > targetRatio) {
+            (sourceHeight * targetRatio).toInt() to sourceHeight
+        } else {
+            sourceWidth to (sourceWidth / targetRatio).toInt()
+        }
+
+        val xOffset = ((sourceWidth - cropWidth) / 2).coerceAtLeast(0)
+        val yOffset = ((sourceHeight - cropHeight) / 2).coerceAtLeast(0)
+
+        val cropped = Bitmap.createBitmap(bitmap, xOffset, yOffset, cropWidth, cropHeight)
+        if (cropped != bitmap) {
+            bitmap.recycle()
+        }
+        return cropped
     }
 
     private fun rotateImageIfRequired(img: Bitmap, bytes: ByteArray): Bitmap {

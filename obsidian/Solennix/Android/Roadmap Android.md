@@ -179,7 +179,7 @@
 - [x] Implementación de `ImageCompressor` (redimensión a 1280px + JPEG calidad 80)
 - [x] Integración de compresión en todos los flujos de upload (Logo, Clientes, Productos, Eventos)
 - [x] Corrección del flujo de upload de fotos de eventos (paso de URI local a upload real a API)
-- [ ] Photo picker con crop
+- [x] Photo picker con crop (auto-crop 4:3 previo a upload en EventDetailViewModel)
 - [x] Progress indicator durante upload (ya existía)
 - [x] Compresión antes de subir (reduce data usage en un 90%)
 

@@ -625,6 +625,7 @@ status: active
 > - ~~Tests de accesibilidad Android~~ — `DashboardAccessibilityTest` y `EventAccessibilityTest` validan contenido narrado por TalkBack
 > - ~~Baseline Profiles (infra)~~ — módulo `:baselineprofile` con `BaselineProfileGenerator` + `measureColdStartup`; app integrada con `profileinstaller` y consumo de perfiles en release
 > - ~~Dark mode polish (parcial)~~ — contraste dinámico en Events/Inventory para badges/FAB usando `MaterialTheme.colorScheme.onPrimary` (evita blanco fijo en modo oscuro)
+> - ~~Photo picker con crop~~ — flujo de fotos de eventos aplica auto-crop 4:3 antes de compresión/upload
 > - ~~RevenueCat sync en register/Google~~ — Agregado logInWith despues de register y Google sign-in
 > - ~~Contract preview interactivo~~ — EventContractPreviewScreen implementado con gating de anticipo y campos faltantes
 > - ~~Cotizacion rapida (Quick Quote)~~ — QuickQuoteScreen + QuickQuoteViewModel + QuickQuotePdfGenerator
