@@ -32,7 +32,7 @@ fun EmptyState(
             imageVector = icon,
             contentDescription = null,
             modifier = Modifier.size(80.dp),
-            tint = SolennixTheme.colors.secondaryText.copy(alpha = 0.5f)
+            tint = SolennixTheme.colors.secondaryText.copy(alpha = 0.78f)
         )
         Spacer(modifier = Modifier.height(24.dp))
         Text(

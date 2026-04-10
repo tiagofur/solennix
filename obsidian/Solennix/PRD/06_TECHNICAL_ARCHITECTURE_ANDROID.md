@@ -382,6 +382,8 @@ Implementa el tema visual de Solennix basado en Material 3:
 - **Componentes reutilizables**: `SolennixTextField`, `Avatar`, `StatusBadge`, `KPICard`, `ConfirmDialog`, `EmptyState`, `PremiumButton`, `SkeletonLoading`, `ToastOverlay`, `UpgradeBanner`
 - **Utilidades**: `HapticFeedback` para feedback táctil
 
+**Calibración de contraste (Fase 3 A11y):** `Color.kt` endurece `secondaryText`, `tertiaryText` y `tabBarInactive` en light/dark para mantener legibilidad AA sobre `background`, `surface` y `card`. `EmptyState` también elevó el contraste del ícono base para evitar estados vacíos visualmente lavados.
+
 ### 4.4 `core:database` — Base de Datos Room
 
 Cache local offline-first con Room:

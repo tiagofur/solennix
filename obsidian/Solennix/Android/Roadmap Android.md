@@ -156,7 +156,7 @@
 ### 3.2 Accesibilidad Audit ✅
 
 - [x] `contentDescription` en todos los `Icon()` de las pantallas principales (Settings, Inventory, Products, Events)
-- [ ] Auditar contraste WCAG AA con paleta dorado/navy
+- [x] Auditar contraste WCAG AA con paleta dorado/navy
 - [ ] Testear flujos principales con TalkBack
 - [x] Centralización de recursos de accesibilidad en `core:designsystem`
 - [ ] `Modifier.semantics {}` para agrupaciones lógicas

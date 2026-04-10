@@ -618,6 +618,7 @@ status: active
 > - ~~Stagger animations en EventList~~ — AnimatedEventListItem con delay por índice (≤5 items × 45ms)
 > - ~~Spring physics en swipes~~ — SwipeToDismissBox en ProductList/InventoryList con feedback elástico del fondo de borrado + reflow spring en secciones de inventario
 > - ~~Respetar ANIMATOR_DURATION_SCALE~~ — Delay multiplicado por Settings.Global.ANIMATOR_DURATION_SCALE; skip si = 0
+> - ~~Contraste WCAG AA con paleta dorado/navy~~ — Tokens `secondaryText` / `tertiaryText` / `tabBarInactive` recalibrados en `Color.kt` + `EmptyState` con iconografía más legible
 > - ~~Accesibilidad a11y StatusBadge~~ — contentDescription + Role.Image en StatusBadge
 > - ~~RevenueCat sync en register/Google~~ — Agregado logInWith despues de register y Google sign-in
 > - ~~Contract preview interactivo~~ — EventContractPreviewScreen implementado con gating de anticipo y campos faltantes
