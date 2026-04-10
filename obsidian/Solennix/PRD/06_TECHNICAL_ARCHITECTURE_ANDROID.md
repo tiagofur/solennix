@@ -30,32 +30,32 @@ platform: Android
 > [!info] Stack principal
 > **Kotlin 2.0** + **Jetpack Compose** (Material 3) + **Hilt** + **Ktor Client** + **Room** — orientado a offline-first con arquitectura multi-módulo MVVM.
 
-| Capa | Tecnología | Versión | Justificación |
-|------|------------|---------|---------------|
-| **Lenguaje** | Kotlin | 2.0.21 | Coroutines, null safety, first-class Android |
-| **KSP** | kotlin-symbol-processing | 2.0.21-1.0.28 | Debe coincidir exactamente con la versión de Kotlin |
-| **Build** | AGP + Gradle | 8.13.2 + Gradle | Version Catalogs (`libs.versions.toml`) |
-| **UI** | Jetpack Compose + Material 3 | BOM 2024.12.01 | Declarativa, Material You dynamic color |
-| **Arquitectura** | MVVM | — | ViewModel por pantalla, StateFlow + mutableStateOf para reactividad |
-| **DI** | Hilt (Dagger) | 2.53.1 | Constructor injection, `@HiltViewModel`, `@HiltWorker` para WorkManager |
-| **DB Local** | Room | 2.6.1 | SQLite typesafe con KSP, cache offline |
-| **Networking** | Ktor Client | 3.0.3 | Motor OkHttp, Kotlinx Serialization, DTOs alineados con backend Go |
-| **Background** | WorkManager | 2.10.0 | Sync diferido y tareas en segundo plano |
-| **Widgets** | Glance | 1.1.1 | Compose-based widgets para Home Screen |
-| **Imágenes** | Coil 3 | 3.0.4 | Carga de imágenes con motor Ktor |
-| **Serialización** | Kotlinx Serialization | 1.7.3 | JSON parsing compartido con Ktor |
-| **Billing** | Play Billing Library | 7.1.1 | Suscripciones in-app (FREE/PRO) |
-| **Biometría** | AndroidX Biometric | 1.2.0-alpha05 | Autenticación biométrica |
-| **Credenciales** | Credential Manager | 1.5.0-rc01 | Google One Tap Sign-In |
-| **Seguridad** | Security Crypto | 1.1.0-alpha06 | EncryptedSharedPreferences para tokens |
-| **DataStore** | Preferences DataStore | 1.1.1 | Preferencias de usuario |
-| **Charts** | Vico | 2.0.0-alpha.28 | Gráficos para dashboard |
-| **Adaptive** | material3-window-size-class | via BOM | `WindowWidthSizeClass` para layouts responsivos |
-| **Window** | androidx.window | 1.3.0 | Soporte para foldables |
-| **Navegación** | Navigation Compose | 2.8.5 | Navegación declarativa con type safety |
-| **Firebase** | Firebase BOM | 33.9.0 | Messaging + Analytics |
-| **Testing** | JUnit + AndroidJUnitRunner | — | Unit + instrumented tests |
-| **SDK** | minSdk 26 — targetSdk 35 | — | Android 8.0+ hasta Android 15 |
+| Capa              | Tecnología                   | Versión         | Justificación                                                           |
+| ----------------- | ---------------------------- | --------------- | ----------------------------------------------------------------------- |
+| **Lenguaje**      | Kotlin                       | 2.0.21          | Coroutines, null safety, first-class Android                            |
+| **KSP**           | kotlin-symbol-processing     | 2.0.21-1.0.28   | Debe coincidir exactamente con la versión de Kotlin                     |
+| **Build**         | AGP + Gradle                 | 8.13.2 + Gradle | Version Catalogs (`libs.versions.toml`)                                 |
+| **UI**            | Jetpack Compose + Material 3 | BOM 2024.12.01  | Declarativa, Material You dynamic color                                 |
+| **Arquitectura**  | MVVM                         | —               | ViewModel por pantalla, StateFlow + mutableStateOf para reactividad     |
+| **DI**            | Hilt (Dagger)                | 2.53.1          | Constructor injection, `@HiltViewModel`, `@HiltWorker` para WorkManager |
+| **DB Local**      | Room                         | 2.6.1           | SQLite typesafe con KSP, cache offline                                  |
+| **Networking**    | Ktor Client                  | 3.0.3           | Motor OkHttp, Kotlinx Serialization, DTOs alineados con backend Go      |
+| **Background**    | WorkManager                  | 2.10.0          | Sync diferido y tareas en segundo plano                                 |
+| **Widgets**       | Glance                       | 1.1.1           | Compose-based widgets para Home Screen                                  |
+| **Imágenes**      | Coil 3                       | 3.0.4           | Carga de imágenes con motor Ktor                                        |
+| **Serialización** | Kotlinx Serialization        | 1.7.3           | JSON parsing compartido con Ktor                                        |
+| **Billing**       | Play Billing Library         | 7.1.1           | Suscripciones in-app (FREE/PRO)                                         |
+| **Biometría**     | AndroidX Biometric           | 1.2.0-alpha05   | Autenticación biométrica                                                |
+| **Credenciales**  | Credential Manager           | 1.5.0-rc01      | Google One Tap Sign-In                                                  |
+| **Seguridad**     | Security Crypto              | 1.1.0-alpha06   | EncryptedSharedPreferences para tokens                                  |
+| **DataStore**     | Preferences DataStore        | 1.1.1           | Preferencias de usuario                                                 |
+| **Charts**        | Vico                         | 2.0.0-alpha.28  | Gráficos para dashboard                                                 |
+| **Adaptive**      | material3-window-size-class  | via BOM         | `WindowWidthSizeClass` para layouts responsivos                         |
+| **Window**        | androidx.window              | 1.3.0           | Soporte para foldables                                                  |
+| **Navegación**    | Navigation Compose           | 2.8.5           | Navegación declarativa con type safety                                  |
+| **Firebase**      | Firebase BOM                 | 33.9.0          | Messaging + Analytics                                                   |
+| **Testing**       | JUnit + AndroidJUnitRunner   | —               | Unit + instrumented tests                                               |
+| **SDK**           | minSdk 26 — targetSdk 35     | —               | Android 8.0+ hasta Android 15                                           |
 
 ---
 
@@ -356,6 +356,7 @@ Cliente HTTP construido sobre Ktor con motor OkHttp. Componentes principales:
 - **`ApiService`**: Wrapper genérico con métodos `get<T>()`, `post<T>()`, `put<T>()`, `delete<T>()` que usan el `KtorClient`
 
 - **`AuthManager`**: Gestiona la sesión del usuario con un `StateFlow<AuthState>`:
+
   ```
   sealed class AuthState {
       object Unknown          // App iniciando, sesión desconocida
@@ -409,85 +410,87 @@ Capa de acceso a datos que combina API remota + cache local:
 
 ### 5.1 `feature:auth` — Autenticación
 
-| Pantalla | ViewModel | Descripción |
-|----------|-----------|-------------|
-| `LoginScreen` | `AuthViewModel` | Email/password + Google One Tap |
-| `RegisterScreen` | `AuthViewModel` | Registro con validación |
-| `ForgotPasswordScreen` | `AuthViewModel` | Solicitar reset de contraseña |
-| `ResetPasswordScreen` | `AuthViewModel` | Ingresar nueva contraseña con token |
-| `BiometricGateScreen` | — | Gate biométrico al reanudar app |
-| `GoogleSignInButton` | — | Componente de Google Sign-In |
+| Pantalla               | ViewModel       | Descripción                         |
+| ---------------------- | --------------- | ----------------------------------- |
+| `LoginScreen`          | `AuthViewModel` | Email/password + Google One Tap     |
+| `RegisterScreen`       | `AuthViewModel` | Registro con validación             |
+| `ForgotPasswordScreen` | `AuthViewModel` | Solicitar reset de contraseña       |
+| `ResetPasswordScreen`  | `AuthViewModel` | Ingresar nueva contraseña con token |
+| `BiometricGateScreen`  | —               | Gate biométrico al reanudar app     |
+| `GoogleSignInButton`   | —               | Componente de Google Sign-In        |
 
 ### 5.2 `feature:dashboard` — Pantalla Principal
 
-| Pantalla | ViewModel | Descripción |
-|----------|-----------|-------------|
-| `DashboardScreen` | `DashboardViewModel` | KPIs, eventos próximos, gráficas Vico |
-| `OnboardingScreen` | — | Onboarding de primera vez (5 páginas) |
-| `OnboardingChecklist` | — | Checklist post-onboarding |
+| Pantalla              | ViewModel            | Descripción                           |
+| --------------------- | -------------------- | ------------------------------------- |
+| `DashboardScreen`     | `DashboardViewModel` | KPIs, eventos próximos, gráficas Vico |
+| `OnboardingScreen`    | —                    | Onboarding de primera vez (5 páginas) |
+| `OnboardingChecklist` | —                    | Checklist post-onboarding             |
 
 ### 5.3 `feature:events` — Gestión de Eventos
 
-| Pantalla | ViewModel | Descripción |
-|----------|-----------|-------------|
-| `EventListScreen` | `EventListViewModel` | Lista con búsqueda y filtros por estado |
-| `EventDetailScreen` | `EventDetailViewModel` | Detalle completo + pagos + documentos PDF |
-| `EventFormScreen` | `EventFormViewModel` | Formulario multi-paso (6 pasos): General, Productos, Extras, Equipo, Insumos, Resumen |
-| `EventChecklistScreen` | `EventChecklistViewModel` | Checklist de preparación del evento |
-| `PhotoGallerySheet` | — | Bottom sheet para galería de fotos |
+| Pantalla               | ViewModel                 | Descripción                                                                           |
+| ---------------------- | ------------------------- | ------------------------------------------------------------------------------------- |
+| `EventListScreen`      | `EventListViewModel`      | Lista con búsqueda y filtros por estado                                               |
+| `EventDetailScreen`    | `EventDetailViewModel`    | Detalle completo + pagos + documentos PDF                                             |
+| `EventFormScreen`      | `EventFormViewModel`      | Formulario multi-paso (6 pasos): General, Productos, Extras, Equipo, Insumos, Resumen |
+| `EventChecklistScreen` | `EventChecklistViewModel` | Checklist de preparación del evento                                                   |
+| `PhotoGallerySheet`    | —                         | Bottom sheet para galería de fotos                                                    |
 
 **Generadores PDF**: `BudgetPdfGenerator`, `ContractPdfGenerator`, `InvoicePdfGenerator`, `ChecklistPdfGenerator`, `EquipmentListPdfGenerator`, `ShoppingListPdfGenerator`, `PaymentReportPdfGenerator`
 
 ### 5.4 `feature:clients` — Gestión de Clientes
 
-| Pantalla | ViewModel | Descripción |
-|----------|-----------|-------------|
-| `ClientListScreen` | `ClientListViewModel` | Lista con búsqueda |
+| Pantalla             | ViewModel               | Descripción                    |
+| -------------------- | ----------------------- | ------------------------------ |
+| `ClientListScreen`   | `ClientListViewModel`   | Lista con búsqueda             |
 | `ClientDetailScreen` | `ClientDetailViewModel` | Detalle + historial de eventos |
-| `ClientFormScreen` | `ClientFormViewModel` | Crear/editar cliente |
+| `ClientFormScreen`   | `ClientFormViewModel`   | Crear/editar cliente           |
 
 ### 5.5 `feature:products` — Catálogo de Productos
 
-| Pantalla | ViewModel | Descripción |
-|----------|-----------|-------------|
-| `ProductListScreen` | `ProductListViewModel` | Lista de productos |
+| Pantalla              | ViewModel                | Descripción                       |
+| --------------------- | ------------------------ | --------------------------------- |
+| `ProductListScreen`   | `ProductListViewModel`   | Lista de productos                |
 | `ProductDetailScreen` | `ProductDetailViewModel` | Detalle con ingredientes y costos |
-| `ProductFormScreen` | `ProductFormViewModel` | Crear/editar producto |
+| `ProductFormScreen`   | `ProductFormViewModel`   | Crear/editar producto             |
 
 ### 5.6 `feature:inventory` — Inventario
 
-| Pantalla | ViewModel | Descripción |
-|----------|-----------|-------------|
-| `InventoryListScreen` | `InventoryListViewModel` | Lista filtrada por tipo (EQUIPMENT, SUPPLY, INGREDIENT) |
-| `InventoryDetailScreen` | `InventoryDetailViewModel` | Detalle de item |
-| `InventoryFormScreen` | `InventoryFormViewModel` | Crear/editar item de inventario |
+| Pantalla                | ViewModel                  | Descripción                                                                                               |
+| ----------------------- | -------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `InventoryListScreen`   | `InventoryListViewModel`   | Lista filtrada por tipo (EQUIPMENT, SUPPLY, INGREDIENT) con alerta de stock bajo discreta (badge pequeno) |
+| `InventoryDetailScreen` | `InventoryDetailViewModel` | Detalle de item                                                                                           |
+| `InventoryFormScreen`   | `InventoryFormViewModel`   | Crear/editar item de inventario                                                                           |
 
 ### 5.7 `feature:calendar` — Calendario
 
-| Pantalla | ViewModel | Descripción |
-|----------|-----------|-------------|
+| Pantalla         | ViewModel           | Descripción              |
+| ---------------- | ------------------- | ------------------------ |
 | `CalendarScreen` | `CalendarViewModel` | Vista mensual de eventos |
 
 ### 5.8 `feature:search` — Búsqueda Global
 
-| Pantalla | ViewModel | Descripción |
-|----------|-----------|-------------|
-| `SearchScreen` | `SearchViewModel` | Búsqueda unificada (eventos, clientes, productos) |
+| Pantalla       | ViewModel         | Descripción                                                                                       |
+| -------------- | ----------------- | ------------------------------------------------------------------------------------------------- |
+| `SearchScreen` | `SearchViewModel` | Búsqueda unificada (eventos, clientes, productos, inventario) con regla de stock bajo consistente |
+
+Regla funcional de stock bajo (Android): `minimumStock > 0 && currentStock < minimumStock`.
 
 ### 5.9 `feature:settings` — Configuración
 
-| Pantalla | ViewModel | Descripción |
-|----------|-----------|-------------|
-| `SettingsScreen` | `SettingsViewModel` | Menú principal de ajustes |
-| `EditProfileScreen` | `EditProfileViewModel` | Editar nombre, email, foto |
-| `ChangePasswordScreen` | `ChangePasswordViewModel` | Cambiar contraseña |
+| Pantalla                 | ViewModel                   | Descripción                              |
+| ------------------------ | --------------------------- | ---------------------------------------- |
+| `SettingsScreen`         | `SettingsViewModel`         | Menú principal de ajustes                |
+| `EditProfileScreen`      | `EditProfileViewModel`      | Editar nombre, email, foto               |
+| `ChangePasswordScreen`   | `ChangePasswordViewModel`   | Cambiar contraseña                       |
 | `BusinessSettingsScreen` | `BusinessSettingsViewModel` | Logo, nombre del negocio, datos fiscales |
-| `ContractDefaultsScreen` | `ContractDefaultsViewModel` | Plantilla de contrato por defecto |
-| `PricingScreen` | — | Comparación de planes |
-| `SubscriptionScreen` | `SubscriptionViewModel` | Gestión de suscripción activa |
-| `AboutScreen` | — | Versión, créditos |
-| `TermsScreen` | — | Términos de uso (WebView) |
-| `PrivacyScreen` | — | Política de privacidad (WebView) |
+| `ContractDefaultsScreen` | `ContractDefaultsViewModel` | Plantilla de contrato por defecto        |
+| `PricingScreen`          | —                           | Comparación de planes                    |
+| `SubscriptionScreen`     | `SubscriptionViewModel`     | Gestión de suscripción activa            |
+| `AboutScreen`            | —                           | Versión, créditos                        |
+| `TermsScreen`            | —                           | Términos de uso (WebView)                |
+| `PrivacyScreen`          | —                           | Política de privacidad (WebView)         |
 
 ---
 
@@ -588,19 +591,19 @@ stateDiagram-v2
 
 Según `WindowWidthSizeClass`:
 
-| Tamaño | Layout | Componente |
-|--------|--------|------------|
-| **Compact** (< 600dp) | Bottom Navigation Bar | `CompactBottomNavLayout` |
+| Tamaño                        | Layout                  | Componente                     |
+| ----------------------------- | ----------------------- | ------------------------------ |
+| **Compact** (< 600dp)         | Bottom Navigation Bar   | `CompactBottomNavLayout`       |
 | **Medium/Expanded** (≥ 600dp) | Navigation Rail lateral | `AdaptiveNavigationRailLayout` |
 
 ### Deep Linking
 
 Soporte de deep links con esquema `solennix://`:
 
-| URI | Destino |
-|-----|---------|
-| `solennix://client/{id}` | `ClientDetailScreen` |
-| `solennix://event/{id}` | `EventDetailScreen` |
+| URI                       | Destino               |
+| ------------------------- | --------------------- |
+| `solennix://client/{id}`  | `ClientDetailScreen`  |
+| `solennix://event/{id}`   | `EventDetailScreen`   |
 | `solennix://product/{id}` | `ProductDetailScreen` |
 
 Procesado en `MainActivity.onNewIntent()` y `parseDeepLinkRoute()` en `MainNavHost.kt`.
@@ -618,6 +621,33 @@ La navegación principal incluye las siguientes tabs y destinos:
 ---
 
 ## 8. Modelos de Datos
+
+### SharedElement Transitions (Fase 3)
+
+Implementada la transición Container Transform entre la lista de eventos y el detalle, usando la API de Compose 1.7 (`@ExperimentalSharedTransitionApi`).
+
+**Arquitectura de CompositionLocals:**
+
+```kotlin
+// core/designsystem/util/LocalNavScopes.kt
+val LocalSharedTransitionScope = compositionLocalOf<SharedTransitionScope?> { null }
+val LocalNavAnimatedVisibilityScope = compositionLocalOf<AnimatedVisibilityScope?> { null }
+```
+
+**Proveedores** (en layouts de navegación):
+- `CompactBottomNavLayout` — envuelve NavHost en `SharedTransitionLayout { CompositionLocalProvider(LocalSharedTransitionScope ...) }`
+- `AdaptiveNavigationRailLayout` — mismo patrón para tablets
+- Cada destino `composable { }` provee `LocalNavAnimatedVisibilityScope provides this`
+
+**Consumidores:**
+- `EventListItem` — `sharedBounds(key = "event_card_${event.id}", animatedVisibilityScope = avs)`
+- `EventDetailScreen` — recibe `sharedElementKey: String?`, aplica `sharedBounds` al `Scaffold`
+
+**Convención de keys:** `"event_card_{eventId}"` — vincula Card en lista con la pantalla de detalle.
+
+**Respeto de accesibilidad de animaciones:** `AnimatedEventListItem` lee `Settings.Global.ANIMATOR_DURATION_SCALE` en composable scope y multiplica el delay de stagger. Si el valor es 0 (animaciones desactivadas por el usuario), salta el delay completamente.
+
+---
 
 ### Entidades Principales
 
@@ -802,10 +832,10 @@ object DatabaseModule {
 
 ### Estrategia de Testing
 
-| Tipo | Herramientas | Alcance |
-|------|-------------|---------|
-| **Unit Tests** | JUnit 4/5, Mockk, Turbine | ViewModels, Repositories, lógica de negocio |
-| **Instrumented Tests** | AndroidJUnitRunner, Compose Test | UI Compose, Room DAOs, integración |
+| Tipo                   | Herramientas                     | Alcance                                     |
+| ---------------------- | -------------------------------- | ------------------------------------------- |
+| **Unit Tests**         | JUnit 4/5, Mockk, Turbine        | ViewModels, Repositories, lógica de negocio |
+| **Instrumented Tests** | AndroidJUnitRunner, Compose Test | UI Compose, Room DAOs, integración          |
 
 ### Configuración
 

@@ -147,11 +147,11 @@
 
 ### 3.1 Animaciones y Transiciones
 
-- [ ] Shared element transitions entre lista → detalle
-- [ ] Stagger animations en listas
-- [ ] Skeleton → content crossfade
+- [x] Shared element transitions entre lista → detalle
+- [x] Stagger animations en listas
+- [x] Skeleton → content crossfade
 - [ ] Spring physics en gestos (drag, swipe)
-- [ ] Respetar `Settings.Global.ANIMATOR_DURATION_SCALE`
+- [x] Respetar `Settings.Global.ANIMATOR_DURATION_SCALE`
 
 ### 3.2 Accesibilidad Audit ✅
 

@@ -6,6 +6,9 @@ import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import com.creapolis.solennix.core.designsystem.util.LocalNavAnimatedVisibilityScope
+import com.creapolis.solennix.core.designsystem.util.LocalSharedTransitionScope
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -62,7 +65,7 @@ import androidx.window.layout.FoldingFeature
 import androidx.window.layout.WindowInfoTracker
 import java.io.File
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun EventDetailScreen(
     viewModel: EventDetailViewModel,
@@ -78,7 +81,8 @@ fun EventDetailScreen(
     onSuppliesClick: (String) -> Unit = {},
     onShoppingListClick: (String) -> Unit = {},
     onPhotosClick: (String) -> Unit = {},
-    onContractPreviewClick: (String) -> Unit = {}
+    onContractPreviewClick: (String) -> Unit = {},
+    sharedElementKey: String? = null
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
@@ -106,7 +110,19 @@ fun EventDetailScreen(
         }
     }
 
+    val sts = LocalSharedTransitionScope.current
+    val avs = LocalNavAnimatedVisibilityScope.current
+    val sharedBoundsModifier: Modifier = if (sharedElementKey != null && sts != null && avs != null) {
+        with(sts) {
+            Modifier.sharedBounds(
+                rememberSharedContentState(key = sharedElementKey),
+                animatedVisibilityScope = avs
+            )
+        }
+    } else Modifier
+
     Scaffold(
+        modifier = sharedBoundsModifier,
         topBar = {
             SolennixTopAppBar(
                 title = { Text("Detalle del Evento") },

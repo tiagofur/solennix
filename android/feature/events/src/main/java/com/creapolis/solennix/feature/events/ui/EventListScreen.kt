@@ -3,6 +3,13 @@ package com.creapolis.solennix.feature.events.ui
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -22,15 +29,21 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.mergeDescendants
+import androidx.compose.ui.semantics.semantics
 import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.creapolis.solennix.core.designsystem.component.EmptyState
+import com.creapolis.solennix.core.designsystem.component.SkeletonLoading
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.component.StatusBadge
 import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveCardGrid
+import com.creapolis.solennix.core.designsystem.util.LocalNavAnimatedVisibilityScope
+import com.creapolis.solennix.core.designsystem.util.LocalSharedTransitionScope
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.Client
 import com.creapolis.solennix.core.model.Event
@@ -38,6 +51,7 @@ import com.creapolis.solennix.core.model.EventStatus
 import com.creapolis.solennix.core.model.extensions.asMXN
 import com.creapolis.solennix.feature.events.viewmodel.EventListViewModel
 import com.creapolis.solennix.feature.events.viewmodel.EventStatusFilter
+import kotlinx.coroutines.delay
 import java.io.File
 import com.creapolis.solennix.core.model.extensions.parseFlexibleDate
 import java.time.format.DateTimeFormatter
@@ -280,59 +294,174 @@ fun EventListScreen(
                 val isError = pagedEvents.loadState.refresh is LoadState.Error
                 val isEmpty = pagedEvents.itemCount == 0 && !isLoading
 
-                if (isLoading && pagedEvents.itemCount == 0) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(color = SolennixTheme.colors.primary)
+                AnimatedContent(
+                    targetState = when {
+                        isLoading && pagedEvents.itemCount == 0 -> "loading"
+                        isEmpty -> "empty"
+                        else -> "content"
+                    },
+                    transitionSpec = {
+                        fadeIn() togetherWith fadeOut()
+                    },
+                    label = "eventListState"
+                ) { screenState ->
+                    when (screenState) {
+                        "loading" -> EventListSkeleton()
+                        "empty" -> EmptyState(
+                            icon = Icons.Default.EventBusy,
+                            title = if (uiState.searchQuery.isNotEmpty()) "Sin resultados" else "Sin eventos",
+                            message = if (uiState.searchQuery.isNotEmpty())
+                                "No se encontraron eventos con ese filtro"
+                            else
+                                "Crea tu primer evento para comenzar"
+                        )
+                        else -> AdaptiveCardGrid(
+                            contentPadding = PaddingValues(vertical = 8.dp),
+                            gridContent = {
+                                items(
+                                    count = pagedEvents.itemCount,
+                                    key = pagedEvents.itemKey { it.id }
+                                ) { index ->
+                                    pagedEvents[index]?.let { event ->
+                                        val client = uiState.clientMap[event.clientId]
+                                        AnimatedEventListItem(
+                                            index = index,
+                                            event = event,
+                                            clientName = client?.name,
+                                            onClick = { onEventClick(event.id) }
+                                        )
+                                    }
+                                }
+                            },
+                            listContent = {
+                                items(
+                                    count = pagedEvents.itemCount,
+                                    key = pagedEvents.itemKey { it.id }
+                                ) { index ->
+                                    pagedEvents[index]?.let { event ->
+                                        val client = uiState.clientMap[event.clientId]
+                                        AnimatedEventListItem(
+                                            index = index,
+                                            event = event,
+                                            clientName = client?.name,
+                                            onClick = { onEventClick(event.id) }
+                                        )
+                                    }
+                                }
+                            }
+                        )
                     }
-                } else if (isEmpty) {
-                    EmptyState(
-                        icon = Icons.Default.EventBusy,
-                        title = if (uiState.searchQuery.isNotEmpty()) "Sin resultados" else "Sin eventos",
-                        message = if (uiState.searchQuery.isNotEmpty())
-                            "No se encontraron eventos con ese filtro"
-                        else
-                            "Crea tu primer evento para comenzar"
-                    )
-                } else {
-                    AdaptiveCardGrid(
-                        contentPadding = PaddingValues(vertical = 8.dp),
-                        gridContent = {
-                            items(
-                                count = pagedEvents.itemCount,
-                                key = pagedEvents.itemKey { it.id }
-                            ) { index ->
-                                pagedEvents[index]?.let { event ->
-                                    val client = uiState.clientMap[event.clientId]
-                                    EventListItem(
-                                        event = event,
-                                        clientName = client?.name,
-                                        onClick = { onEventClick(event.id) }
-                                    )
-                                }
-                            }
-                        },
-                        listContent = {
-                            items(
-                                count = pagedEvents.itemCount,
-                                key = pagedEvents.itemKey { it.id }
-                            ) { index ->
-                                pagedEvents[index]?.let { event ->
-                                    val client = uiState.clientMap[event.clientId]
-                                    EventListItem(
-                                        event = event,
-                                        clientName = client?.name,
-                                        onClick = { onEventClick(event.id) }
-                                    )
-                                }
-                            }
-                        }
-                    )
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun EventListSkeleton() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(top = 8.dp)
+    ) {
+        repeat(5) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
+                shape = MaterialTheme.shapes.medium
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        SkeletonLoading(
+                            modifier = Modifier
+                                .height(20.dp)
+                                .fillMaxWidth(0.45f)
+                        )
+                        SkeletonLoading(
+                            modifier = Modifier
+                                .height(24.dp)
+                                .width(92.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+                    SkeletonLoading(
+                        modifier = Modifier
+                            .height(16.dp)
+                            .fillMaxWidth(0.7f)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    SkeletonLoading(
+                        modifier = Modifier
+                            .height(16.dp)
+                            .fillMaxWidth(0.55f)
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    HorizontalDivider(color = SolennixTheme.colors.divider)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        SkeletonLoading(
+                            modifier = Modifier
+                                .height(16.dp)
+                                .width(110.dp)
+                        )
+                        SkeletonLoading(
+                            modifier = Modifier
+                                .height(20.dp)
+                                .width(90.dp)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AnimatedEventListItem(
+    index: Int,
+    event: Event,
+    clientName: String?,
+    onClick: () -> Unit
+) {
+    var visible by remember(event.id) { mutableStateOf(false) }
+
+    val context = LocalContext.current
+    val durationScale = remember {
+        android.provider.Settings.Global.getFloat(
+            context.contentResolver,
+            android.provider.Settings.Global.ANIMATOR_DURATION_SCALE,
+            1f
+        )
+    }
+
+    LaunchedEffect(event.id) {
+        if (durationScale > 0f) {
+            delay((index.coerceAtMost(5) * 45L * durationScale).toLong())
+        }
+        visible = true
+    }
+
+    AnimatedVisibility(
+        visible = visible,
+        enter = fadeIn() + slideInVertically(initialOffsetY = { it / 6 }),
+        label = "eventListItemVisibility"
+    ) {
+        EventListItem(
+            event = event,
+            clientName = clientName,
+            onClick = onClick
+        )
     }
 }
 
@@ -346,12 +475,38 @@ private fun EventListItem(
         val dateFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy", Locale("es", "MX"))
         parseFlexibleDate(event.eventDate)?.format(dateFormatter) ?: event.eventDate
     }
+    val accessibilitySummary = remember(event, clientName, eventDate) {
+        buildString {
+            append(event.serviceType)
+            append(", estado ${event.status.name.lowercase()}")
+            append(", fecha $eventDate")
+            append(", hora ${event.startTime ?: "todo el dia"}")
+            clientName?.takeIf { it.isNotBlank() }?.let { append(", cliente $it") }
+            event.location?.takeIf { it.isNotBlank() }?.let { append(", ubicación $it") }
+            append(", ${event.numPeople} personas")
+            append(", total ${event.totalAmount.asMXN()}")
+        }
+    }
+
+    val sharedTransitionScope = LocalSharedTransitionScope.current
+    val animatedVisibilityScope = LocalNavAnimatedVisibilityScope.current
+    val baseModifier = Modifier
+        .fillMaxWidth()
+        .padding(horizontal = 16.dp, vertical = 4.dp)
+        .semantics(mergeDescendants = true) { contentDescription = accessibilitySummary }
+    @OptIn(ExperimentalSharedTransitionApi::class)
+    val cardModifier = if (sharedTransitionScope != null && animatedVisibilityScope != null) {
+        with(sharedTransitionScope) {
+            Modifier.sharedBounds(
+                rememberSharedContentState(key = "event_card_${event.id}"),
+                animatedVisibilityScope = animatedVisibilityScope
+            ).then(baseModifier)
+        }
+    } else baseModifier
 
     Card(
         onClick = onClick,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp),
+        modifier = cardModifier,
         colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
         shape = MaterialTheme.shapes.medium
     ) {

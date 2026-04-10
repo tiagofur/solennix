@@ -12,6 +12,10 @@ import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Image
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
+import com.creapolis.solennix.core.designsystem.util.LocalNavAnimatedVisibilityScope
+import com.creapolis.solennix.core.designsystem.util.LocalSharedTransitionScope
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -157,11 +161,13 @@ fun AdaptiveNavigationRailLayout(
                     .height(48.dp)
             ) {
                 val isDark = LocalDarkTheme.current
-                Image(
-                    painter = painterResource(
-                        id = if (isDark) R.drawable.ic_solennix_logo_dark
-                             else R.drawable.ic_solennix_logo_light
-                    ),
+                    }       // NavHost
+                }           // CompositionLocalProvider(LocalSharedTransitionScope)
+            }               // SharedTransitionLayout
+                }           // Scaffold content { innerPadding -> }
+            }               // Row
+            } // CompositionLocalProvider(LocalIsWideScreen)
+        }
                     contentDescription = "Solennix",
                     modifier = Modifier
                         .size(36.dp)
@@ -260,11 +266,14 @@ fun AdaptiveNavigationRailLayout(
             },
             floatingActionButtonPosition = FabPosition.End
         ) { innerPadding ->
-            NavHost(
-                navController = navController,
-                startDestination = "home",
-                modifier = Modifier.padding(innerPadding)
-            ) {
+                @OptIn(ExperimentalSharedTransitionApi::class)
+                SharedTransitionLayout {
+                    CompositionLocalProvider(LocalSharedTransitionScope provides this) {
+                        NavHost(
+                            navController = navController,
+                            startDestination = "home",
+                            modifier = Modifier.padding(innerPadding)
+                        ) {
                 // ── Top-level section screens ──
                 composable("home") {
                     DashboardScreen(
@@ -469,37 +478,43 @@ fun AdaptiveNavigationRailLayout(
                         onNavigateBack = { navController.popBackStack() },
                         onEditClick = { id -> navController.navigate("product_form?productId=$id") }
                     )
-                }
-                composable(
-                    "product_form?productId={productId}",
-                    arguments = listOf(navArgument("productId") { type = NavType.StringType; nullable = true; defaultValue = null })
-                ) {
-                    ProductFormScreen(
-                        viewModel = hiltViewModel(),
-                        onSearchClick = { navController.navigate(buildSearchRoute()) },
-                        onNavigateBack = { navController.popBackStack() }
-                    )
-                }
-
-                // ── Inventory ──
-                composable(
-                    "inventory_detail/{itemId}",
-                    arguments = listOf(navArgument("itemId") { type = NavType.StringType })
-                ) {
-                    InventoryDetailScreen(
-                        viewModel = hiltViewModel(),
-                        onNavigateBack = { navController.popBackStack() },
-                        onSearchClick = { navController.navigate(buildSearchRoute()) },
-                        onEditClick = { id -> navController.navigate("inventory_form?itemId=$id") }
-                    )
-                }
-                composable(
-                    "inventory_form?itemId={itemId}",
-                    arguments = listOf(navArgument("itemId") { type = NavType.StringType; nullable = true; defaultValue = null })
-                ) {
-                    InventoryFormScreen(
-                        viewModel = hiltViewModel(),
-                        onSearchClick = { navController.navigate(buildSearchRoute()) },
+                        // ── Events ──
+                        composable("events") {
+                            CompositionLocalProvider(LocalNavAnimatedVisibilityScope provides this) {
+                                EventListScreen(
+                                    viewModel = hiltViewModel(),
+                                    onEventClick = { id -> navController.navigate("event_detail/$id") },
+                                    onNavigateBack = { navController.popBackStack() },
+                                    onSearchClick = { navController.navigate(buildSearchRoute()) },
+                                    showBackButton = false
+                                )
+                            }
+                        }
+                        composable(
+                            "event_detail/{eventId}",
+                            arguments = listOf(navArgument("eventId") { type = NavType.StringType })
+                        ) { backStackEntry ->
+                            val eventId = backStackEntry.arguments?.getString("eventId").orEmpty()
+                            CompositionLocalProvider(LocalNavAnimatedVisibilityScope provides this) {
+                                EventDetailScreen(
+                                    viewModel = hiltViewModel(),
+                                    sharedElementKey = "event_card_$eventId",
+                                    onNavigateBack = { navController.popBackStack() },
+                                    onEditClick = { id -> navController.navigate("event_form?eventId=$id") },
+                                    onSearchClick = { navController.navigate(buildSearchRoute()) },
+                                    onChecklistClick = { id -> navController.navigate("event_checklist/$id") },
+                                    onFinancesClick = { id -> navController.navigate("event_finances/$id") },
+                                    onPaymentsClick = { id -> navController.navigate("event_payments/$id") },
+                                    onProductsClick = { id -> navController.navigate("event_products/$id") },
+                                    onExtrasClick = { id -> navController.navigate("event_extras/$id") },
+                                    onEquipmentClick = { id -> navController.navigate("event_equipment/$id") },
+                                    onSuppliesClick = { id -> navController.navigate("event_supplies/$id") },
+                                    onShoppingListClick = { id -> navController.navigate("event_shopping/$id") },
+                                    onPhotosClick = { id -> navController.navigate("event_photos/$id") },
+                                    onContractPreviewClick = { id -> navController.navigate("event_contract/$id") }
+                                )
+                            }
+                        }
                         onNavigateBack = { navController.popBackStack() }
                     )
                 }

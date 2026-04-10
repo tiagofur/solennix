@@ -2,6 +2,8 @@ package com.creapolis.solennix.ui.navigation
 
 import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -25,6 +27,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.creapolis.solennix.core.designsystem.util.LocalNavAnimatedVisibilityScope
+import com.creapolis.solennix.core.designsystem.util.LocalSharedTransitionScope
 import com.creapolis.solennix.core.designsystem.component.QuickActionsFAB
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.theme.SolennixElevation
@@ -123,11 +127,14 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
         },
         floatingActionButtonPosition = FabPosition.End
     ) { padding ->
-        NavHost(
-            navController = navController,
-            startDestination = TopLevelDestination.HOME.route,
-            modifier = Modifier.padding(padding)
-        ) {
+            @OptIn(ExperimentalSharedTransitionApi::class)
+            SharedTransitionLayout {
+                CompositionLocalProvider(LocalSharedTransitionScope provides this) {
+                    NavHost(
+                        navController = navController,
+                        startDestination = TopLevelDestination.HOME.route,
+                        modifier = Modifier.padding(padding)
+                    ) {
             composable(TopLevelDestination.HOME.route) {
                 DashboardScreen(
                     viewModel = hiltViewModel(),
@@ -215,15 +222,17 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                     onSearchClick = { navController.navigate(buildSearchRoute()) },
                     onNavigateBack = { navController.popBackStack() }
                 )
-            }
-            
-            composable("inventory_detail/{itemId}") { backStackEntry ->
-                val itemId = backStackEntry.arguments?.getString("itemId")
-                com.creapolis.solennix.feature.inventory.ui.InventoryDetailScreen(
-                    viewModel = hiltViewModel(),
-                    onSearchClick = { navController.navigate(buildSearchRoute()) },
-                    onNavigateBack = { navController.popBackStack() },
-                    onEditClick = { id -> navController.navigate("inventory_form?itemId=$id") }
+                composable(TopLevelDestination.EVENTS.route) {
+                    CompositionLocalProvider(LocalNavAnimatedVisibilityScope provides this) {
+                        EventListScreen(
+                            viewModel = hiltViewModel(),
+                            onEventClick = { id -> navController.navigate("event_detail/$id") },
+                            onNavigateBack = { navController.popBackStack() },
+                            onSearchClick = { navController.navigate(buildSearchRoute()) },
+                            showBackButton = false
+                        )
+                    }
+                }
                 )
             }
             
@@ -434,24 +443,28 @@ fun MoreMenuScreen(
                 .padding(horizontal = 16.dp)
         ) {
             Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Catálogo",
-                style = MaterialTheme.typography.titleSmall,
-                color = SolennixTheme.colors.secondaryText,
-                modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
-            )
-            MenuCard(title = "Productos", subtitle = "Servicios y artículos que ofreces", icon = Icons.Default.Inventory2, onClick = onProductsClick)
-            MenuCard(title = "Inventario", subtitle = "Control de equipos e insumos", icon = Icons.Default.Widgets, onClick = onInventoryClick)
-
-            Spacer(modifier = Modifier.height(16.dp))
-            MenuCard(title = "Configuración", subtitle = "Cuenta, negocio y suscripción", icon = Icons.Default.Settings, onClick = onSettingsClick)
-        }
-    }
-}
-
-@Composable
-fun MenuCard(
-    title: String,
+            composable("event_detail/{eventId}") { backStackEntry ->
+                val eventId = backStackEntry.arguments?.getString("eventId").orEmpty()
+                CompositionLocalProvider(LocalNavAnimatedVisibilityScope provides this) {
+                    EventDetailScreen(
+                        viewModel = hiltViewModel(),
+                        sharedElementKey = "event_card_$eventId",
+                        onNavigateBack = { navController.popBackStack() },
+                        onEditClick = { id -> navController.navigate("event_form?eventId=$id") },
+                        onSearchClick = { navController.navigate(buildSearchRoute()) },
+                        onChecklistClick = { id -> navController.navigate("event_checklist/$id") },
+                        onFinancesClick = { id -> navController.navigate("event_finances/$id") },
+                        onPaymentsClick = { id -> navController.navigate("event_payments/$id") },
+                        onProductsClick = { id -> navController.navigate("event_products/$id") },
+                        onExtrasClick = { id -> navController.navigate("event_extras/$id") },
+                        onEquipmentClick = { id -> navController.navigate("event_equipment/$id") },
+                        onSuppliesClick = { id -> navController.navigate("event_supplies/$id") },
+                        onShoppingListClick = { id -> navController.navigate("event_shopping/$id") },
+                        onPhotosClick = { id -> navController.navigate("event_photos/$id") },
+                        onContractPreviewClick = { id -> navController.navigate("event_contract/$id") }
+                    )
+                }
+            }
     subtitle: String = "",
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     onClick: () -> Unit
