@@ -60,16 +60,20 @@ func CSRF(next http.Handler) http.Handler {
 	})
 }
 
-// ensureCSRFCookie sets a csrf_token cookie if one is not already present.
-// The cookie is NOT httpOnly so that JavaScript can read it and send it
-// back as the X-CSRF-Token header on mutating requests.
 func ensureCSRFCookie(w http.ResponseWriter, r *http.Request) {
 	if _, err := r.Cookie("csrf_token"); err != nil {
 		token := generateCSRFToken()
+		
+		domain := ""
+		if strings.Contains(r.Host, "solennix.com") {
+			domain = ".solennix.com"
+		}
+
 		http.SetCookie(w, &http.Cookie{
 			Name:     "csrf_token",
 			Value:    token,
 			Path:     "/",
+			Domain:   domain,
 			HttpOnly: false, // JS must read this
 			Secure:   r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https",
 			SameSite: http.SameSiteStrictMode,
