@@ -135,3 +135,49 @@ func TestOpenAPISpec_CoreCRUDContract(t *testing.T) {
 		})
 	}
 }
+
+func TestOpenAPISpec_OperationalEndpointsContract(t *testing.T) {
+	spec := readOpenAPISpec(t)
+
+	tests := []struct {
+		name     string
+		fragment string
+	}{
+		{name: "unavailable dates endpoint", fragment: "/api/unavailable-dates:"},
+		{name: "unavailable date item endpoint", fragment: "/api/unavailable-dates/{id}:"},
+		{name: "devices register endpoint", fragment: "/api/devices/register:"},
+		{name: "devices unregister endpoint", fragment: "/api/devices/unregister:"},
+		{name: "live activity register endpoint", fragment: "/api/live-activities/register:"},
+		{name: "live activity delete endpoint", fragment: "/api/live-activities/by-event/{eventId}:"},
+		{name: "upload image endpoint", fragment: "/api/uploads/image:"},
+		{name: "search endpoint", fragment: "/api/search:"},
+		{name: "dashboard kpis endpoint", fragment: "/api/dashboard/kpis:"},
+		{name: "dashboard revenue chart endpoint", fragment: "/api/dashboard/revenue-chart:"},
+		{name: "dashboard events by status endpoint", fragment: "/api/dashboard/events-by-status:"},
+		{name: "dashboard top clients endpoint", fragment: "/api/dashboard/top-clients:"},
+		{name: "dashboard product demand endpoint", fragment: "/api/dashboard/product-demand:"},
+		{name: "dashboard forecast endpoint", fragment: "/api/dashboard/forecast:"},
+		{name: "unavailable date schema", fragment: "UnavailableDate:"},
+		{name: "device token schema", fragment: "DeviceToken:"},
+		{name: "live activity token schema", fragment: "LiveActivityToken:"},
+		{name: "upload response schema", fragment: "UploadImageResponse:"},
+		{name: "search response schema", fragment: "SearchResponse:"},
+		{name: "dashboard kpis schema", fragment: "DashboardKPIs:"},
+		{name: "revenue data point schema", fragment: "RevenueDataPoint:"},
+		{name: "top client schema", fragment: "TopClient:"},
+		{name: "product demand item schema", fragment: "ProductDemandItem:"},
+		{name: "forecast data point schema", fragment: "ForecastDataPoint:"},
+		{name: "invalid period response", fragment: "description: Invalid period"},
+		{name: "upload image response", fragment: "description: Image uploaded"},
+		{name: "device registered response", fragment: "description: Device registered"},
+		{name: "search grouped results response", fragment: "description: Search results grouped by resource type"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if !strings.Contains(spec, tt.fragment) {
+				t.Fatalf("openapi spec missing fragment %q", tt.fragment)
+			}
+		})
+	}
+}
