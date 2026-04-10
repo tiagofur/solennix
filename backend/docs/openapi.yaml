@@ -3074,6 +3074,31 @@ paths:
         "401":
           description: Unauthorized
   /api/payments/{id}:
+    get:
+      operationId: getPayment
+      summary: Get payment by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Payment details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payment"
+        "400":
+          description: Invalid payment ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Payment not found
     put:
       operationId: updatePayment
       summary: Update payment

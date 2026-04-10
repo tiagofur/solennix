@@ -659,6 +659,7 @@ Las rutas de fotos y los endpoints GET orientados a mobile de esta seccion queda
 | Metodo   | Ruta                 | Handler                     | Descripcion     |
 | -------- | -------------------- | --------------------------- | --------------- |
 | `GET`    | `/api/payments`      | `CRUDHandler.ListPayments`  | Listar pagos    |
+| `GET`    | `/api/payments/{id}` | `CRUDHandler.GetPayment`    | Obtener pago    |
 | `POST`   | `/api/payments`      | `CRUDHandler.CreatePayment` | Registrar pago  |
 | `PUT`    | `/api/payments/{id}` | `CRUDHandler.UpdatePayment` | Actualizar pago |
 | `DELETE` | `/api/payments/{id}` | `CRUDHandler.DeletePayment` | Eliminar pago   |

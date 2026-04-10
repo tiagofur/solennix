@@ -28,6 +28,9 @@ func TestOpenAPISpec_AuthContract(t *testing.T) {
 		{name: "bearer auth security scheme", fragment: "bearerAuth:"},
 		{name: "register endpoint", fragment: "/api/auth/register:"},
 		{name: "login endpoint", fragment: "/api/auth/login:"},
+		{name: "logout endpoint", fragment: "/api/auth/logout:"},
+		{name: "forgot password endpoint", fragment: "/api/auth/forgot-password:"},
+		{name: "reset password endpoint", fragment: "/api/auth/reset-password:"},
 		{name: "refresh endpoint", fragment: "/api/auth/refresh:"},
 		{name: "me endpoint", fragment: "/api/auth/me:"},
 		{name: "google auth endpoint", fragment: "/api/auth/google:"},
@@ -36,6 +39,8 @@ func TestOpenAPISpec_AuthContract(t *testing.T) {
 		{name: "change password endpoint", fragment: "/api/auth/change-password:"},
 		{name: "register request schema", fragment: "RegisterRequest:"},
 		{name: "login request schema", fragment: "LoginRequest:"},
+		{name: "forgot password request schema", fragment: "ForgotPasswordRequest:"},
+		{name: "reset password request schema", fragment: "ResetPasswordRequest:"},
 		{name: "refresh request schema", fragment: "RefreshTokenRequest:"},
 		{name: "google auth request schema", fragment: "GoogleSignInRequest:"},
 		{name: "apple auth request schema", fragment: "AppleSignInRequest:"},
@@ -45,9 +50,13 @@ func TestOpenAPISpec_AuthContract(t *testing.T) {
 		{name: "token pair schema", fragment: "TokenPair:"},
 		{name: "register created response", fragment: "description: User registered"},
 		{name: "login success response", fragment: "description: Authenticated successfully"},
+		{name: "logout success response", fragment: "description: Logout processed"},
+		{name: "forgot password success response", fragment: "description: Reset message accepted"},
+		{name: "reset password success response", fragment: "description: Password updated"},
 		{name: "google auth success response", fragment: "description: Authenticated with Google"},
 		{name: "apple auth success response", fragment: "description: Authenticated with Apple"},
 		{name: "update profile success response", fragment: "description: Profile updated"},
+		{name: "reset password invalid request response", fragment: "description: Invalid or malformed request"},
 		{name: "refresh invalid token response", fragment: "description: Invalid or expired token"},
 	}
 
@@ -159,6 +168,7 @@ func TestOpenAPISpec_CoreCRUDContract(t *testing.T) {
 		{name: "inventory item endpoint", fragment: "/api/inventory/{id}:"},
 		{name: "payments collection endpoint", fragment: "/api/payments:"},
 		{name: "payment item endpoint", fragment: "/api/payments/{id}:"},
+		{name: "get payment operation", fragment: "operationId: getPayment"},
 		{name: "client schema", fragment: "Client:"},
 		{name: "product schema", fragment: "Product:"},
 		{name: "product ingredient schema", fragment: "ProductIngredient:"},
@@ -175,6 +185,7 @@ func TestOpenAPISpec_CoreCRUDContract(t *testing.T) {
 		{name: "product created response", fragment: "description: Product created"},
 		{name: "inventory created response", fragment: "description: Inventory item created"},
 		{name: "payment created response", fragment: "description: Payment created"},
+		{name: "payment details response", fragment: "description: Payment details"},
 	}
 
 	for _, tt := range tests {

@@ -54,8 +54,16 @@ class OfflineFirstPaymentRepository @Inject constructor(
     override fun getPaymentsByEventId(eventId: String): Flow<List<Payment>> =
         paymentDao.getPaymentsByEventId(eventId).map { it.map { entity -> entity.asExternalModel() } }
 
-    override suspend fun getPayment(id: String): Payment? =
-        paymentDao.getPayment(id)?.asExternalModel()
+    override suspend fun getPayment(id: String): Payment? {
+        val cachedPayment = paymentDao.getPayment(id)?.asExternalModel()
+        if (cachedPayment != null) {
+            return cachedPayment
+        }
+
+        val networkPayment: Payment = apiService.get(Endpoints.payment(id))
+        paymentDao.insertPayments(listOf(networkPayment.asEntity()))
+        return networkPayment
+    }
 
     override suspend fun syncPayments() {
         val networkPayments: List<Payment> = apiService.get(Endpoints.PAYMENTS)

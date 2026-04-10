@@ -405,7 +405,7 @@ Capa de acceso a datos que combina API remota + cache local:
 - **`OfflineFirstEventRepository`**: CRUD de eventos + items (productos, extras, equipo, insumos) + conflictos + sugerencias
 - **`OfflineFirstProductRepository`**: CRUD de productos con ingredientes
 - **`OfflineFirstInventoryRepository`**: CRUD de inventario filtrable por tipo
-- **`OfflineFirstPaymentRepository`**: CRUD de pagos
+- **`OfflineFirstPaymentRepository`**: CRUD de pagos con cache Room, sync por evento y fallback remoto para detalle (`GET /api/payments/{id}`)
 - **`PlanLimitsManager`**: Evalúa límites del plan (FREE vs PRO)
 - **`AppSearchIndexer`**: Indexación para búsqueda global unificada
 - **`DataModule`**: Hilt module que hace `@Binds` de interfaces a implementaciones concretas

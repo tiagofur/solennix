@@ -83,7 +83,8 @@ status: active
 
 ### Pagos
 
-- ✅ CRUD completo (`GET/POST /api/payments`, `PUT/DELETE /api/payments/{id}`)
+- ✅ CRUD completo (`GET/POST /api/payments`, `GET/PUT/DELETE /api/payments/{id}`)
+- ✅ Android resuelve detalle de pago con cache Room y fallback remoto a `GET /api/payments/{id}` cuando falta el registro local
 
 ### Suscripciones
 

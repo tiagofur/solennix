@@ -1531,6 +1531,23 @@ var paymentSortAllowlist = map[string]string{
 	"payment_method": "payment_method",
 }
 
+func (h *CRUDHandler) GetPayment(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+	id, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "Invalid payment ID")
+		return
+	}
+
+	payment, err := h.paymentRepo.GetByID(r.Context(), id, userID)
+	if err != nil {
+		writeError(w, http.StatusNotFound, "Payment not found")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, payment)
+}
+
 func (h *CRUDHandler) ListPayments(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 	eventID := r.URL.Query().Get("event_id")

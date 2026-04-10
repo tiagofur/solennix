@@ -204,6 +204,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 		r.Route("/payments", func(r chi.Router) {
 			r.Get("/", crudHandler.ListPayments)
 			r.Post("/", crudHandler.CreatePayment)
+			r.Get("/{id}", crudHandler.GetPayment)
 			r.Put("/{id}", crudHandler.UpdatePayment)
 			r.Delete("/{id}", crudHandler.DeletePayment)
 		})
