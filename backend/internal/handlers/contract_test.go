@@ -114,7 +114,7 @@ func TestOpenAPISpec_EventContract(t *testing.T) {
 		{name: "unprocessable entity response", fragment: "description: Unprocessable entity"},
 		{name: "validation error response", fragment: "description: Validation error"},
 		{name: "discount type enum", fragment: "enum: [percent, fixed]"},
-		{name: "status enum", fragment: "enum: [draft, confirmed, completed, cancelled]"},
+		{name: "status enum", fragment: "enum: [quoted, confirmed, completed, cancelled]"},
 	}
 
 	for _, tt := range tests {

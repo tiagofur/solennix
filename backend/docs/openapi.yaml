@@ -266,7 +266,7 @@ components:
           type: integer
         status:
           type: string
-          enum: [draft, confirmed, completed, cancelled]
+          enum: [quoted, confirmed, completed, cancelled]
         discount:
           type: number
           format: double
@@ -349,7 +349,7 @@ components:
           type: integer
         status:
           type: string
-          enum: [draft, confirmed, completed, cancelled]
+          enum: [quoted, confirmed, completed, cancelled]
         discount:
           type: number
           format: double

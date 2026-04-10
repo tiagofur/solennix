@@ -328,7 +328,7 @@ func (h *CRUDHandler) SearchEvents(w http.ResponseWriter, r *http.Request) {
 	// Validate status if provided
 	if filters.Status != "" {
 		validStatuses := map[string]bool{
-			"draft": true, "pending": true, "confirmed": true,
+			"quoted": true, "confirmed": true,
 			"completed": true, "cancelled": true,
 		}
 		if !validStatuses[filters.Status] {
