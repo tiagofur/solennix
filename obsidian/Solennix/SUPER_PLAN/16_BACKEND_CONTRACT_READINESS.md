@@ -23,38 +23,38 @@ El backend Go ya tiene **implementados todos los handlers core** (CRUD de evento
 
 ### Handlers Implementados ✅
 
-| Endpoint | Método | Handler | Status | Pruebas |
-|----------|--------|---------|--------|---------|
-| `/api/events` | GET | ListEvents | ✅ | crud_handler_test.go |
-| `/api/events` | POST | CreateEvent | ✅ | crud_handler_success_test.go |
-| `/api/events/{id}` | GET | GetEvent | ✅ | crud_handler_test.go |
-| `/api/events/{id}` | PUT | UpdateEvent | ✅ | crud_handler_success_test.go |
-| `/api/events/{id}` | DELETE | DeleteEvent | ✅ | crud_handler_test.go |
-| `/api/events/upcoming` | GET | GetUpcomingEvents | ✅ | — |
-| `/api/events/{id}/items` | GET/PUT | GetEvent/UpdateEventItems | ✅ | crud_handler_test.go |
-| `/api/events/{id}/photos` | GET/POST/DELETE | GetEventPhotos/AddEventPhoto/DeleteEventPhoto | ✅ | — |
-| `/api/events/{id}/equipment` | GET | GetEventEquipment | ✅ | — |
-| `/api/events/{id}/supplies` | GET | GetEventSupplies | ✅ | — |
-| **Clientes** | | | | |
-| `/api/clients` | GET/POST | ListClients/CreateClient | ✅ | crud_handler_test.go |
-| `/api/clients/{id}` | GET/PUT/DELETE | GetClient/UpdateClient/DeleteClient | ✅ | crud_handler_test.go |
-| **Productos** | | | | |
-| `/api/products` | GET/POST | ListProducts/CreateProduct | ✅ | crud_handler_test.go |
-| `/api/products/{id}` | GET/PUT/DELETE | GetProduct/UpdateProduct/DeleteProduct | ✅ | crud_handler_test.go |
-| `/api/products/{id}/ingredients` | GET/PUT | GetProductIngredients/UpdateIngredients | ✅ | — |
-| **Inventario** | | | | |
-| `/api/inventory` | GET/POST | ListInventory/CreateInventory | ✅ | crud_handler_test.go |
-| `/api/inventory/{id}` | GET/PUT/DELETE | GetInventory/UpdateInventory/DeleteInventory | ✅ | crud_handler_test.go |
-| **Pagos** | | | | |
-| `/api/payments` | GET/POST | ListPayments/CreatePayment | ✅ | crud_payment_test.go |
-| `/api/payments/{id}` | GET/PUT/DELETE | GetPayment/UpdatePayment/DeletePayment | ✅ | crud_payment_test.go |
-| **Auth** | | | | |
-| `/api/auth/register` | POST | CreateUser | ✅ | auth_handler_test.go |
-| `/api/auth/login` | POST | LoginUser | ✅ | auth_handler_test.go |
-| `/api/auth/refresh` | POST | RefreshToken | ✅ | auth_handler_test.go |
-| `/api/auth/logout` | POST | LogoutUser | ✅ | — |
-| `/api/auth/forgot-password` | POST | ForgotPassword | ✅ | auth_handler_test.go |
-| `/api/auth/reset-password` | POST | ResetPassword | ✅ | auth_handler_test.go |
+| Endpoint                         | Método          | Handler                                       | Status | Pruebas                      |
+| -------------------------------- | --------------- | --------------------------------------------- | ------ | ---------------------------- |
+| `/api/events`                    | GET             | ListEvents                                    | ✅     | crud_handler_test.go         |
+| `/api/events`                    | POST            | CreateEvent                                   | ✅     | crud_handler_success_test.go |
+| `/api/events/{id}`               | GET             | GetEvent                                      | ✅     | crud_handler_test.go         |
+| `/api/events/{id}`               | PUT             | UpdateEvent                                   | ✅     | crud_handler_success_test.go |
+| `/api/events/{id}`               | DELETE          | DeleteEvent                                   | ✅     | crud_handler_test.go         |
+| `/api/events/upcoming`           | GET             | GetUpcomingEvents                             | ✅     | —                            |
+| `/api/events/{id}/items`         | GET/PUT         | GetEvent/UpdateEventItems                     | ✅     | crud_handler_test.go         |
+| `/api/events/{id}/photos`        | GET/POST/DELETE | GetEventPhotos/AddEventPhoto/DeleteEventPhoto | ✅     | —                            |
+| `/api/events/{id}/equipment`     | GET             | GetEventEquipment                             | ✅     | —                            |
+| `/api/events/{id}/supplies`      | GET             | GetEventSupplies                              | ✅     | —                            |
+| **Clientes**                     |                 |                                               |        |                              |
+| `/api/clients`                   | GET/POST        | ListClients/CreateClient                      | ✅     | crud_handler_test.go         |
+| `/api/clients/{id}`              | GET/PUT/DELETE  | GetClient/UpdateClient/DeleteClient           | ✅     | crud_handler_test.go         |
+| **Productos**                    |                 |                                               |        |                              |
+| `/api/products`                  | GET/POST        | ListProducts/CreateProduct                    | ✅     | crud_handler_test.go         |
+| `/api/products/{id}`             | GET/PUT/DELETE  | GetProduct/UpdateProduct/DeleteProduct        | ✅     | crud_handler_test.go         |
+| `/api/products/{id}/ingredients` | GET/PUT         | GetProductIngredients/UpdateIngredients       | ✅     | —                            |
+| **Inventario**                   |                 |                                               |        |                              |
+| `/api/inventory`                 | GET/POST        | ListInventory/CreateInventory                 | ✅     | crud_handler_test.go         |
+| `/api/inventory/{id}`            | GET/PUT/DELETE  | GetInventory/UpdateInventory/DeleteInventory  | ✅     | crud_handler_test.go         |
+| **Pagos**                        |                 |                                               |        |                              |
+| `/api/payments`                  | GET/POST        | ListPayments/CreatePayment                    | ✅     | crud_payment_test.go         |
+| `/api/payments/{id}`             | GET/PUT/DELETE  | GetPayment/UpdatePayment/DeletePayment        | ✅     | crud_payment_test.go         |
+| **Auth**                         |                 |                                               |        |                              |
+| `/api/auth/register`             | POST            | CreateUser                                    | ✅     | auth_handler_test.go         |
+| `/api/auth/login`                | POST            | LoginUser                                     | ✅     | auth_handler_test.go         |
+| `/api/auth/refresh`              | POST            | RefreshToken                                  | ✅     | auth_handler_test.go         |
+| `/api/auth/logout`               | POST            | LogoutUser                                    | ✅     | —                            |
+| `/api/auth/forgot-password`      | POST            | ForgotPassword                                | ✅     | auth_handler_test.go         |
+| `/api/auth/reset-password`       | POST            | ResetPassword                                 | ✅     | auth_handler_test.go         |
 
 ### Estructura de Modelos ✅
 
@@ -78,6 +78,7 @@ type Event struct {
 ### Validación ✅
 
 Todos los handlers validan:
+
 - ✅ UserID desde JWT (OAuth)
 - ✅ Campos requeridos por modelo
 - ✅ UUID parsing
@@ -148,15 +149,15 @@ paths:
       security:
         - bearerAuth: []
       responses:
-        '200':
+        "200":
           description: List of events
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Event'
-        '401':
+                  $ref: "#/components/schemas/Event"
+        "401":
           description: Unauthorized
     post:
       operationId: createEvent
@@ -167,13 +168,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Event'
+              $ref: "#/components/schemas/Event"
       responses:
-        '201':
+        "201":
           description: Event created
-        '400':
+        "400":
           description: Validation error
-        '401':
+        "401":
           description: Unauthorized
 ```
 
@@ -223,6 +224,7 @@ func TestContractNoBreakingChanges_EventEndpoints(t *testing.T) {
 ### Librería Recomendada
 
 `github.com/swaggo/swag` (Swagger/OpenAPI generator):
+
 ```bash
 go get -u github.com/swaggo/swag/cmd/swag@latest
 swag init -g cmd/server/main.go  # genera openapi.yaml desde handler comments
@@ -233,6 +235,7 @@ O manual con comparación JSON Schema.
 ### Herramientas CI
 
 Agregar a GitHub Actions:
+
 ```yaml
 - name: Validate OpenAPI Spec
   run: |
@@ -297,11 +300,11 @@ Por eso E2.B1 es camino crítico.
 Week 1 (Apr 10-16):
   E2.B1 (4-6h) ← CRITICAL PATH
   E2.B2 comienza después de E2.B1
-  
+
 Week 2 (Apr 17-23):
   E2.B2 (6-8h)
   E2.C1 (Web/iOS/Android auditan contra spec)
-  
+
 Fin Wave 1 (Apr 24):
   ✅ E2.B1: OpenAPI green
   ✅ E2.B2: Contract tests green
