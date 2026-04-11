@@ -18,6 +18,8 @@ export const queryKeys = {
     upcoming: (limit: number) => ['events', 'upcoming', limit] as const,
     dateRange: (start: string, end: string) => ['events', 'range', start, end] as const,
     byClient: (clientId: string) => ['events', 'byClient', clientId] as const,
+    search: (filters: Record<string, string | undefined>) =>
+      ['events', 'search', filters] as const,
   },
   products: {
     all: ['products'] as const,

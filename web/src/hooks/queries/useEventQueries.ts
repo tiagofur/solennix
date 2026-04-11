@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { eventService } from '@/services/eventService';
-import type { EventPhotoCreateRequest } from '@/services/eventService';
+import type { EventPhotoCreateRequest, EventSearchFilters } from '@/services/eventService';
 import { queryKeys } from './queryKeys';
 import { useToast } from '@/hooks/useToast';
 import { logError, getErrorMessage } from '@/lib/errorHandler';
@@ -52,6 +52,23 @@ export function useEventsByDateRange(start: string, end: string) {
     queryKey: queryKeys.events.dateRange(start, end),
     queryFn: () => eventService.getByDateRange(start, end),
     enabled: !!start && !!end,
+  });
+}
+
+/**
+ * Advanced event search via the backend's `/api/events/search` FTS endpoint.
+ * The query only runs when at least one filter is non-empty — otherwise the
+ * backend rejects the request with 400 (it requires at least one filter).
+ * Callers should fall back to the regular listing (useEventsPaginated) when
+ * no filters are active.
+ */
+export function useEventSearch(filters: EventSearchFilters) {
+  const hasAnyFilter = !!(filters.q || filters.status || filters.from || filters.to || filters.client_id);
+  return useQuery({
+    queryKey: queryKeys.events.search(filters as Record<string, string | undefined>),
+    queryFn: () => eventService.searchAdvanced(filters),
+    enabled: hasAnyFilter,
+    placeholderData: keepPreviousData,
   });
 }
 

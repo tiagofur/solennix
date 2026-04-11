@@ -25,6 +25,16 @@ vi.mock('../../hooks/queries/useEventQueries', () => ({
     isLoading: false,
     isError: false,
   }),
+  // `useEventSearch` is only enabled when at least one filter is active.
+  // In the baseline "no filters" flow exercised by this test file, the hook
+  // returns an empty disabled query; tests that exercise filters should
+  // override this mock with mockImplementation. See Fase 6 of the slice
+  // `backend-as-source-of-truth`.
+  useEventSearch: () => ({
+    data: undefined,
+    isLoading: false,
+    isError: false,
+  }),
   useDeleteEvent: () => ({ mutate: vi.fn() }),
 }));
 

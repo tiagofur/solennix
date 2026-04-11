@@ -1,6 +1,6 @@
 import { api } from '../lib/api';
 import { Event, EventInsert, EventUpdate, EventEquipment, EventSupply, EquipmentConflict, EquipmentSuggestion, SupplySuggestion, PaginatedResponse, PaginationParams } from '../types/entities';
-import type { components } from '../types/api';
+import type { components, operations } from '../types/api';
 
 // Helper for type safety on joined data
 type EventWithClient = Event & { clients?: { name: string } | null };
@@ -33,6 +33,15 @@ export type EventPhoto = components['schemas']['EventPhoto'];
  */
 export type EventPhotoCreateRequest = components['schemas']['EventPhotoCreateRequest'];
 
+/**
+ * Query parameters accepted by the advanced event search endpoint.
+ * The backend requires at least one non-empty filter — if the caller passes
+ * all empty values the request is rejected with 400.
+ */
+export type EventSearchFilters = NonNullable<
+  NonNullable<operations['searchEvents']['parameters']['query']>
+>;
+
 export const eventService = {
   async getAll(): Promise<EventWithClient[]> {
     return api.get<EventWithClient[]>('/events');
@@ -53,6 +62,31 @@ export const eventService = {
 
   async getByClientId(clientId: string): Promise<EventWithClient[]> {
     return api.get<EventWithClient[]>('/events', { client_id: clientId });
+  },
+
+  /**
+   * Advanced search using the backend's `GET /api/events/search` endpoint.
+   * The backend supports: free-text query (`q`, matches service_type, location,
+   * city and client name with pg_trgm fuzzy on the client name), status,
+   * date range, and client id. At least one filter must be non-empty or the
+   * backend rejects the request with 400.
+   *
+   * Prefer this over client-side filtering of `getAll()` because the backend
+   * owns the FTS indexes and the filter logic — Web-side `.filter()` was the
+   * source of divergence when new event fields were added (e.g. city vs
+   * location).
+   */
+  async searchAdvanced(filters: EventSearchFilters): Promise<EventWithClient[]> {
+    // Drop empty values so the URLSearchParams query only carries what the
+    // caller actually wants to filter on. Empty strings would be interpreted
+    // as intentional filters by the backend and fail validation.
+    const params: Record<string, string> = {};
+    if (filters.q) params.q = filters.q;
+    if (filters.status) params.status = filters.status;
+    if (filters.from) params.from = filters.from;
+    if (filters.to) params.to = filters.to;
+    if (filters.client_id) params.client_id = filters.client_id;
+    return api.get<EventWithClient[]>('/events/search', params);
   },
 
   async getById(id: string): Promise<EventWithClient> {
