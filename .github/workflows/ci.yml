@@ -65,6 +65,17 @@ jobs:
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
 
+      - name: Generate OpenAPI types
+        run: npm run openapi:types
+
+      - name: Verify OpenAPI types are committed and up to date
+        run: |
+          if ! git diff --exit-code src/types/api.ts; then
+            echo "::error::web/src/types/api.ts is out of sync with backend/docs/openapi.yaml."
+            echo "::error::Run 'npm run openapi:types' in web/ and commit the result."
+            exit 1
+          fi
+
       - name: Type check
         run: npm run check
 

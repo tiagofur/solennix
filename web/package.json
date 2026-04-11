@@ -5,16 +5,17 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "cross-env NODE_OPTIONS=--max-old-space-size=4096 tsc -b && vite build",
+    "build": "npm run openapi:types && cross-env NODE_OPTIONS=--max-old-space-size=4096 tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "check": "cross-env NODE_OPTIONS=--max-old-space-size=4096 tsc -b --noEmit",
+    "check": "npm run openapi:types && cross-env NODE_OPTIONS=--max-old-space-size=4096 tsc -b --noEmit",
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:e2e:install": "playwright install"
+    "test:e2e:install": "playwright install",
+    "openapi:types": "openapi-typescript ../backend/docs/openapi.yaml -o src/types/api.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
