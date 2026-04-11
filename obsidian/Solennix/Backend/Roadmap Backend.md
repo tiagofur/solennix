@@ -247,6 +247,40 @@
 
 ---
 
+## Fase 3.6: MVP Contract Freeze (SUPER_PLAN Wave 1 T-02) ✅
+
+> [!done] Implementado 2026-04-10
+> Cierre del contrato API para MVP. El `openapi.yaml` cubre 100% de las rutas registradas en el router, el CI valida el spec en cada PR vía `@redocly/cli lint`, los contract tests extienden el gate a los endpoints nuevos, y los event handlers pasan el bar de ≥85% coverage mandado por E1.B2.
+
+- [x] **Paridad spec↔router**: agregados los 3 endpoints que faltaban en `backend/docs/openapi.yaml`:
+  - `GET /api/events/search` (advanced search con filtros)
+  - `GET /api/dashboard/activity` (audit log del usuario)
+  - `GET /api/admin/audit-logs` (audit log plataforma, admin only)
+  - Más los 3 GET variants de equipment/supplies suggestions/conflicts usados por los clientes mobile
+  - Nuevos schemas `AuditLog` y `PaginatedAuditLogsResponse` reusables
+- [x] **CI gate**: step `npx @redocly/cli lint backend/docs/openapi.yaml` en `.github/workflows/ci.yml` (job `backend`). Rompe el PR si el spec se rompe.
+- [x] **Bugs preexistentes del spec corregidos** expuestos por el lint:
+  - 4 schemas admin (`PlatformStats`, `AdminUser`, `SubscriptionOverview`, `AdminUpgradeRequest`) estaban anidados dentro de `EventPhotoCreateRequest` por un drift de indentación de 2 espacios — todos los `$ref` a ellos fallaban silenciosamente
+  - `SubscriptionStatusResponse.subscription` usaba `nullable: true` sobre un `allOf` sin `type` (inválido en 3.0)
+  - El spec declaraba `openapi: 3.1.0` pero todo el documento usa la sintaxis 3.0 (`nullable: true`), se downgradeó a `3.0.3`
+- [x] **Contract tests extendidos**: `backend/internal/handlers/contract_test.go` agrega fragment matchers para los 6 endpoints nuevos, los 2 schemas nuevos, y los 3 operationIds GET variants. Sigue gateando por `go test`.
+- [x] **Event handlers a ≥85% coverage** (SUPER_PLAN E1.B2):
+  - `SearchEvents` 41.9% → **100%**
+  - `UpdateEvent` 74.5% → **85.5%**
+  - `HandleEventPaymentSuccess` 58.3% → **100%**
+  - Suite de fotos (`GetEventPhotos`, `AddEventPhoto`, `DeleteEventPhoto`, `parseEventPhotos`) 0% → 93-100%
+  - Suite de supplies (`GetEventSupplies`, `GetSupplySuggestions`) 0% → 93-95%
+  - GET variants (`CheckEquipmentConflictsGET`, `GetEquipmentSuggestionsGET`, `GetSupplySuggestionsGET`) 0% → 94%+
+  - `parseEventStartTime` 0% → **100%**
+  - Setters (`SetNotifier`, `SetEmailService`, `SetLiveActivityNotifier`) 0% → **100%**
+  - Total handlers package: 69.8% → **78.6%**
+
+**Archivos**: `backend/docs/openapi.yaml`, `backend/internal/handlers/contract_test.go`, `backend/internal/handlers/crud_handler_events_coverage_test.go` (nuevo, 1013 LOC), `.github/workflows/ci.yml`. Commits en rama `super-plan`: `d69df81`, `99c17bc`, `836eba6`.
+
+**Desbloqueo**: E2.C1 (audit cross-platform Web/iOS/Android contra el spec) ahora puede arrancar sin riesgo de target móvil.
+
+---
+
 ## Fase 4: Features Avanzadas (Alineado con Frontend)
 
 > [!success] Impacto: Alto | Esfuerzo: Alto

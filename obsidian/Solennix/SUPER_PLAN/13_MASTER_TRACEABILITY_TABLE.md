@@ -22,8 +22,8 @@ Convertir el SUPER PLAN en ejecucion verificable: cada objetivo debe mapearse a 
 
 | ID   | Objetivo                                     | Ola      | Epic                        | Criterios de Aceptacion                                                                   | Evidencia Obligatoria                                                        | KPI Principal                           | Estado      |
 | ---- | -------------------------------------------- | -------- | --------------------------- | ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | --------------------------------------- | ----------- |
-| T-01 | Estabilizar crear evento end-to-end          | Wave 1-2 | Event Lifecycle Reliability | Crear/editar/guardar evento sin bloqueos en 4 plataformas; sin placeholders en pasos core | Tests de flujo core + video de smoke por plataforma + logs sin errores P0/P1 | Crash-free sessions; P0 open count      | In Progress |
-| T-02 | Congelar contrato API de eventos             | Wave 1   | Backend Contract Freeze     | Contratos versionados y validados; sin breaking changes no anunciados                     | Schema diff + contract tests + changelog de endpoints                        | Divergencias activas por contrato       | In Progress |
+| T-01 | Estabilizar crear evento end-to-end          | Wave 1-2 | Event Lifecycle Reliability | Crear/editar/guardar evento sin bloqueos en 4 plataformas; sin placeholders en pasos core | Tests de flujo core + video de smoke por plataforma + logs sin errores P0/P1 | Crash-free sessions; P0 open count      | Backend Done 2026-04-10 · Web/iOS/Android In Progress |
+| T-02 | Congelar contrato API de eventos             | Wave 1   | Backend Contract Freeze     | Contratos versionados y validados; sin breaking changes no anunciados                     | Schema diff + contract tests + changelog de endpoints                        | Divergencias activas por contrato       | Backend Done 2026-04-10 (E2.B1+E2.B2) · E2.C1 In Progress |
 | T-03 | Cerrar gaps de paridad P0                    | Wave 3   | Core Parity Program         | Todas las features P0 en estado Green en matriz de paridad                                | Matriz actualizada + evidencia funcional por plataforma                      | Features P0 Green ratio                 | Planned     |
 | T-04 | Reforzar UX nativa smartphone/tablet/desktop | Wave 4   | Native UX Excellence        | Flujos core pasan checklist UX por dispositivo                                            | Checklist UX aprobada + capturas comparativas                                | Flujos core completados por dispositivo | Planned     |
 | T-05 | Hardening de resiliencia y observabilidad    | Wave 5   | Reliability and Telemetry   | Alertas, trazas y errores accionables en todos los entornos                               | Dashboards + alert rules + runbook de incidentes                             | MTTR P0/P1; Change failure rate         | Planned     |
@@ -50,10 +50,10 @@ Convertir el SUPER PLAN en ejecucion verificable: cada objetivo debe mapearse a 
 
 ## Próximas Acciones (Semana 1-2)
 
-- **T-01**: Ver [[14_WAVE_1_BREAKDOWN]] para stories de Event Lifecycle.
-- **T-02**: Contrato backend ya expandido en `backend/docs/openapi.yaml` con auth, subscriptions, CRUD core, dashboard, search, uploads, devices y unavailable-dates.
-- **T-02**: Contract suite activa en `backend/internal/handlers/contract_test.go` validando presencia de endpoints, schemas y responses críticas.
-- **T-01**: Backend ya cubre validación de `event_date` inválida y solapamiento con unavailable dates en `CreateEvent`.
+- **T-01 Backend ✅ 2026-04-10**: Event handlers a ≥85% coverage (SearchEvents 42→100, UpdateEvent 74→85.5, HandleEventPaymentSuccess 58→100, fotos/supplies/GET variants 0→94-100). Ver `backend/internal/handlers/crud_handler_events_coverage_test.go` (commit `836eba6`).
+- **T-01 Pendiente**: Web/iOS/Android — smoke del flujo Create → Edit → Save del evento sobre dispositivos reales; ver [[14_WAVE_1_BREAKDOWN]].
+- **T-02 ✅ 2026-04-10 (E2.B1+E2.B2)**: `backend/docs/openapi.yaml` cubre 100% de rutas del router, CI gateado con `@redocly/cli lint`, contract tests extendidos. Commits `d69df81` y `99c17bc`.
+- **T-02 Pendiente (E2.C1)**: Web/iOS/Android auditan consumo real contra el spec — **ahora desbloqueado**.
 
 ## Enlaces
 

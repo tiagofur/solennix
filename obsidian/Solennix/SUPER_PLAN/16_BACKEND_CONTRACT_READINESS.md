@@ -6,12 +6,15 @@ tags:
   - readiness
 aliases:
   - Backend Contract Readiness
-status: active
+status: closed
 created: 2026-04-10
 updated: 2026-04-10
+closed: 2026-04-10
 ---
 
 # 16 - Backend Contract Readiness Assessment
+
+> **STATUS — 2026-04-10: CLOSED.** E2.B1 y E2.B2 cerrados. El `openapi.yaml` cubre el 100% de las rutas registradas en `router.go`, valida en CI con `@redocly/cli lint`, y está en 0 errores. Los contract tests están integrados al pipeline Go y hacen gate por PR. E1.B2 también cerrado: event handlers a ≥85% coverage. El único trabajo siguiente es E2.C1 (cross-platform audit), que ahora está desbloqueado.
 
 ## Resumen Ejecutivo
 
@@ -284,40 +287,39 @@ backend/
 - [x] Errores estructurados (writeError)
 - [x] OpenAPI base documentado y expandido
 - [x] Contract tests base para rutas y schemas críticas
+- [x] **OpenAPI cubre 100% de rutas del router** — paridad total router↔spec (commit `d69df81`, 2026-04-10)
+- [x] **Contract tests extendidos** con los 6 endpoints nuevos + schemas AuditLog / PaginatedAuditLogsResponse (commit `99c17bc`)
+- [x] **CI gate de OpenAPI** via `@redocly/cli lint` (commit `99c17bc`)
+- [x] **Bugs preexistentes del spec corregidos** expuestos por el lint: indentación de schemas admin + `nullable` con `allOf` sin type (commit `99c17bc`)
+- [x] **Event handlers a ≥85% coverage** (E1.B2): commit `836eba6`. SearchEvents 42→100, UpdateEvent 74→85.5, HandleEventPaymentSuccess 58→100, fotos/supplies/GET variants 0→94-100
 
 ### ⬜ Pendiente Wave 1
 
-- [ ] Refinar OpenAPI con endpoints secundarios y ejemplos específicos si hace falta
-- [ ] Endurecer contract tests con checks de payloads reales y status codes exactos
-- [ ] CI validation job en GitHub Actions
-- [ ] Changelog de endpoints
-- [ ] Documentación de breaking changes (si hay)
+- [ ] E2.C1 — Web/iOS/Android auditan consumo real contra el spec (**desbloqueado por el cierre de E2.B1/E2.B2**)
 
 ---
 
 ## Bloqueo de E2.B1 → E2.C1
 
-**Ni Web, iOS ni Android pueden validar su consumo hasta que E2.B1 (OpenAPI) esté done.**
-
-Por eso E2.B1 es camino crítico.
+**✅ Desbloqueado 2026-04-10.** E2.B1 y E2.B2 están done. Web, iOS y Android ya pueden correr su auditoría contra `backend/docs/openapi.yaml` sin riesgo de persecución de target móvil.
 
 ---
 
 ## Roadmap E2 (Epic Backend Contract Freeze)
 
 ```
-Week 1 (Apr 10-16):
-  E2.B1 (4-6h) ← CRITICAL PATH
-  E2.B2 comienza después de E2.B1
+Week 1 (Apr 10):
+  ✅ E2.B1 — DONE (commit d69df81)
+  ✅ E2.B2 — DONE (commit 99c17bc)
+  ✅ E1.B2 — DONE (commit 836eba6)
 
 Week 2 (Apr 17-23):
-  E2.B2 (6-8h)
-  E2.C1 (Web/iOS/Android auditan contra spec)
+  ⬜ E2.C1 — Web/iOS/Android auditan contra spec
 
 Fin Wave 1 (Apr 24):
-  ✅ E2.B1: OpenAPI green
+  ✅ E2.B1: OpenAPI lint green
   ✅ E2.B2: Contract tests green
-  ✅ E2.C1: Cero divergencias P0
+  ⬜ E2.C1: Cero divergencias P0
 ```
 
 ---

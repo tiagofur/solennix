@@ -29,7 +29,7 @@ status: active
 
 | Plataforma                | Estado           | Notas                                                                                                                                                                                                                                                                            |
 | ------------------------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Backend (Go)              | Funcional ✅     | API completa, 35 migraciones, auth multi-proveedor, Stripe, RevenueCat, push notifications (FCM+APNs), paginacion server-side, dashboard analytics, FTS, audit logging, CSRF, refresh token rotation, OpenAPI contractual cubriendo tambien panel admin, coverage handlers 70.1% |
+| Backend (Go)              | Funcional ✅ + **MVP Contract Freeze cerrado 2026-04-10** | API completa, 37 migraciones, auth multi-proveedor, Stripe, RevenueCat, push notifications (FCM+APNs), paginacion server-side, dashboard analytics, FTS, audit logging, CSRF, refresh token rotation, **OpenAPI 1.0 cubriendo 100% de rutas del router y gateado en CI con @redocly/cli lint**, **event handlers a ≥85% coverage** (E1.B2), coverage handlers 78.6% |
 | Web (React)               | Funcional ✅     | Todas las paginas principales, panel admin, cotizacion rapida                                                                                                                                                                                                                    |
 | iOS (SwiftUI)             | En desarrollo 🔄 | Features principales + widgets (4 tipos) + Live Activity + 7 generadores PDF                                                                                                                                                                                                     |
 | Android (Jetpack Compose) | En desarrollo 🔄 | Features principales, arquitectura modular multi-feature, 8 generadores PDF, RevenueCat billing                                                                                                                                                                                  |
@@ -200,6 +200,29 @@ status: active
 - ✅ 027-029: Migraciones adicionales
 - ✅ 030: Indices de paginacion y rendimiento
 - ✅ 031: Tabla notification_log para deduplicacion de push
+
+### MVP Contract Freeze — Cerrado 2026-04-10 ✅
+
+> [!done] Wave 1 T-02 + E1.B2 closed
+> Cierre del SUPER_PLAN Wave 1 para el backend: contrato API freezeado en 1.0, validado en CI, y con cobertura de tests en event handlers sobre el gate de 85%.
+
+- [x] **`backend/docs/openapi.yaml`** cubre el 100% de las rutas registradas en `backend/internal/router/router.go`. Agregados en la iteración final: `GET /api/events/search`, `GET /api/dashboard/activity`, `GET /api/admin/audit-logs`, más los 3 GET variants de equipment/supplies suggestions/conflicts usados por mobile.
+- [x] **Schemas nuevos** `AuditLog` y `PaginatedAuditLogsResponse` reusables por ambos endpoints de activity log.
+- [x] **CI gate** vía `npx @redocly/cli lint` en `.github/workflows/ci.yml` (job `backend`). Rompe el PR si el spec se rompe.
+- [x] **Bugs preexistentes corregidos** expuestos por el lint: indentación drifted de schemas admin (`PlatformStats`, `AdminUser`, `SubscriptionOverview`, `AdminUpgradeRequest`) anidados por error dentro de `EventPhotoCreateRequest`, `SubscriptionStatusResponse.subscription` con `nullable` sobre `allOf` sin `type`, y downgrade de `openapi: 3.1.0 → 3.0.3` para alinear con la sintaxis 3.0 usada en todo el documento (`nullable: true`).
+- [x] **Contract tests extendidos** en `backend/internal/handlers/contract_test.go` para los 6 endpoints nuevos y los 2 schemas nuevos.
+- [x] **Event handlers a ≥85% coverage** (E1.B2 — SUPER_PLAN Wave 1). Nuevo archivo `backend/internal/handlers/crud_handler_events_coverage_test.go` de 1013 LOC:
+  - `SearchEvents` 42% → **100%**
+  - `UpdateEvent` 74% → **85.5%**
+  - `HandleEventPaymentSuccess` 58% → **100%**
+  - Suite de fotos (`GetEventPhotos`, `AddEventPhoto`, `DeleteEventPhoto`, `parseEventPhotos`) 0% → 93-100%
+  - Suite de supplies (`GetEventSupplies`, `GetSupplySuggestions`) 0% → 93-95%
+  - GET variants (`CheckEquipmentConflictsGET`, `GetEquipmentSuggestionsGET`, `GetSupplySuggestionsGET`) 0% → 94%+
+  - Setters (`SetNotifier`, `SetEmailService`, `SetLiveActivityNotifier`) 0% → **100%**
+  - Total package: 69.8% → **78.6%**
+- [x] **E2.C1 desbloqueado** — Web/iOS/Android pueden auditar contra el spec sin riesgo de target móvil.
+
+Commits en rama `super-plan`: `d69df81`, `99c17bc`, `836eba6`.
 
 ### Pendiente Backend
 
