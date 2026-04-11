@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Plus, Trash2, ClipboardCheck } from 'lucide-react';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -33,10 +33,10 @@ export const EventExtras: React.FC<EventExtrasProps> = ({
     useSensor(KeyboardSensor),
   );
 
-  const itemIds = useMemo(
-    () => extras.map((_, i) => `extra-${i}`),
-    [extras.length],
-  );
+  // IDs determinísticos por índice — sin memoización para evitar
+  // warnings del React Compiler sobre `[extras.length]` y porque el costo
+  // de generar strings cortos es insignificante frente al riesgo de stale IDs.
+  const itemIds = extras.map((_, i) => `extra-${i}`);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;

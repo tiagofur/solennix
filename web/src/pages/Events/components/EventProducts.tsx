@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Plus, Trash2, Users } from 'lucide-react';
 import { useFormContext } from 'react-hook-form';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
@@ -48,11 +48,11 @@ export const EventProducts: React.FC<EventProductsProps> = ({
     useSensor(KeyboardSensor),
   );
 
-  // Generate stable IDs for sortable items
-  const itemIds = useMemo(
-    () => selectedProducts.map((_, i) => `product-${i}`),
-    [selectedProducts.length],
-  );
+  // IDs determinísticos por índice — sin memoización para evitar
+  // warnings del React Compiler sobre `[selectedProducts.length]` y porque
+  // el costo de generar strings cortos es insignificante frente al riesgo
+  // de stale IDs.
+  const itemIds = selectedProducts.map((_, i) => `product-${i}`);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
