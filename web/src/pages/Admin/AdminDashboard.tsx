@@ -19,6 +19,7 @@ import {
 import clsx from "clsx";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAdminStats, useAdminSubscriptions, useAdminUsers } from "@/hooks/queries/useAdminQueries";
+import { AdminAuditLogSection } from "@/components/AdminAuditLogSection";
 import { queryKeys } from "@/hooks/queries/queryKeys";
 import {
   PieChart,
@@ -725,6 +726,9 @@ export const AdminDashboard: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* ── AUDIT LOG ── */}
+      <AdminAuditLogSection />
     </div>
   );
 };

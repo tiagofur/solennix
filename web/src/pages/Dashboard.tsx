@@ -32,6 +32,7 @@ import {
 } from "../lib/finance";
 import { StatusDropdown, EventStatus } from "../components/StatusDropdown";
 import { OnboardingChecklist } from "../components/OnboardingChecklist";
+import { RecentActivityCard } from "../components/RecentActivityCard";
 import { UpgradeBanner } from "../components/UpgradeBanner";
 import { usePlanLimits } from "../hooks/usePlanLimits";
 import {
@@ -815,6 +816,9 @@ export const Dashboard: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* ── RECENT ACTIVITY ── */}
+      <RecentActivityCard />
     </div>
   );
 };
