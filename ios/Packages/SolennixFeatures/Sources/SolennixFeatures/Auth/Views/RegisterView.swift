@@ -2,6 +2,7 @@ import SwiftUI
 import AuthenticationServices
 import SolennixDesign
 import SolennixNetwork
+import SolennixCore
 
 // MARK: - Register View
 
@@ -206,16 +207,27 @@ public struct RegisterView: View {
     // MARK: - Terms Text
 
     private var termsText: some View {
-        Text("Al registrarte aceptas nuestros ")
-            .foregroundStyle(SolennixColors.textSecondary)
-        + Text("Terminos")
-            .foregroundStyle(SolennixColors.primary)
-            .underline()
-        + Text(" y ")
-            .foregroundStyle(SolennixColors.textSecondary)
-        + Text("Politica de Privacidad")
-            .foregroundStyle(SolennixColors.primary)
-            .underline()
+        HStack(spacing: 4) {
+            Text("Al registrarte aceptas nuestros")
+                .foregroundStyle(SolennixColors.textSecondary)
+
+            NavigationLink(value: Route.terms) {
+                Text("Terminos")
+                    .foregroundStyle(SolennixColors.primary)
+                    .underline()
+            }
+
+            Text("y")
+                .foregroundStyle(SolennixColors.textSecondary)
+
+            NavigationLink(value: Route.privacy) {
+                Text("Privacidad")
+                    .foregroundStyle(SolennixColors.primary)
+                    .underline()
+            }
+        }
+        .font(.caption)
+        .multilineTextAlignment(.center)
     }
 
     // MARK: - Divider with Text

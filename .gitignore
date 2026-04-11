@@ -37,6 +37,9 @@ video/node_modules/
 video/out/
 solennix-release.jks
 
+# Node Modules
+node_modules/
+
 # Solennix iOS secrets (keep template, ignore real values)
 ios/Config/Secrets.xcconfig
 android/google-services.json

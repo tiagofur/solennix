@@ -40,6 +40,9 @@ public struct SubscriptionView: View {
 
                 // Actions
                 actionsSection
+
+                // Legal links
+                legalFooter
             }
             .padding(Spacing.lg)
             .frame(maxWidth: sizeClass == .regular ? 600 : .infinity)
@@ -306,6 +309,37 @@ public struct SubscriptionView: View {
                 "Reportes basicos"
             ]
         }
+    }
+
+    // MARK: - Legal Footer
+
+    private var legalFooter: some View {
+        VStack(spacing: Spacing.md) {
+            Divider()
+                .padding(.vertical, Spacing.sm)
+
+            HStack(spacing: Spacing.lg) {
+                NavigationLink(value: Route.terms) {
+                    Text("Terminos")
+                }
+
+                Text("•")
+                    .foregroundStyle(SolennixColors.textTertiary)
+
+                NavigationLink(value: Route.privacy) {
+                    Text("Privacidad")
+                }
+            }
+            .font(.subheadline)
+            .fontWeight(.semibold)
+            .foregroundStyle(SolennixColors.primary)
+            .buttonStyle(.plain)
+
+            Text("© 2025 Solennix por Creapolis")
+                .font(.caption2)
+                .foregroundStyle(SolennixColors.textTertiary)
+        }
+        .padding(.top, Spacing.md)
     }
 }
 

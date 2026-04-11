@@ -1,5 +1,6 @@
 import SwiftUI
 import SolennixDesign
+import SolennixCore
 
 // MARK: - About View
 
@@ -16,6 +17,9 @@ public struct AboutView: View {
 
                     // App info
                     appInfoSection
+
+                    // Legal info
+                    legalSection
 
                     // Social links
                     socialLinksSection
@@ -81,6 +85,41 @@ public struct AboutView: View {
             }
         }
         .font(.subheadline)
+    }
+
+    // MARK: - Legal Section
+
+    private var legalSection: some View {
+        VStack(spacing: 0) {
+            NavigationLink(value: Route.terms) {
+                HStack {
+                    Text("Terminos de Uso (EULA)")
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption2)
+                        .foregroundStyle(SolennixColors.textTertiary)
+                }
+                .padding(Spacing.md)
+            }
+
+            Divider()
+                .padding(.leading, Spacing.md)
+
+            NavigationLink(value: Route.privacy) {
+                HStack {
+                    Text("Politica de Privacidad")
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption2)
+                        .foregroundStyle(SolennixColors.textTertiary)
+                }
+                .padding(Spacing.md)
+            }
+        }
+        .font(.subheadline)
+        .background(SolennixColors.card)
+        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+        .buttonStyle(.plain)
     }
 
     // MARK: - Social Links Section

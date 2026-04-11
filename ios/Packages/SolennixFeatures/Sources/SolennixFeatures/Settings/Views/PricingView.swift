@@ -40,6 +40,7 @@ public struct PricingView: View {
                 subscriptionActionsSection
 
                 // API Legal requirements (EULA and Privacy)
+                subscriptionDisclosureSection
                 legalLinksSection
 
                 // FAQ section
@@ -477,22 +478,52 @@ public struct PricingView: View {
 
     // MARK: - Legal Links Section
 
-    private var legalLinksSection: some View {
-        VStack(spacing: Spacing.xs) {
-            Text("Al suscribirte, aceptas nuestros")
+    // MARK: - Subscription Disclosure Section
+
+    private var subscriptionDisclosureSection: some View {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
+            Text("Informacion de suscripcion")
+                .font(.subheadline)
+                .fontWeight(.bold)
+                .foregroundStyle(SolennixColors.text)
+
+            Text("El pago se cargará a tu cuenta de Apple ID al confirmar la compra. La suscripción se renueva automáticamente a menos que se cancele al menos 24 horas antes del final del período actual. Se cobrará a tu cuenta la renovación dentro de las 24 horas anteriores al final del período actual. Puedes gestionar y cancelar tus suscripciones en los ajustes de tu cuenta del App Store después de la compra.")
                 .font(.caption2)
                 .foregroundStyle(SolennixColors.textSecondary)
-            
-            HStack(spacing: Spacing.xs) {
-                Link("Terminos de Uso (EULA)", destination: URL(string: "https://creapolis.dev/terms-of-use/")!)
-                Text("y")
-                    .font(.caption2)
-                    .foregroundStyle(SolennixColors.textSecondary)
-                Link("Aviso de Privacidad", destination: URL(string: "https://creapolis.dev/privacy-policy/")!)
-            }
-            .font(.caption2)
+                .lineSpacing(2)
         }
-        .padding(.top, Spacing.sm)
+        .padding(Spacing.md)
+        .background(SolennixColors.surfaceAlt)
+        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+    }
+
+    // MARK: - Legal Links Section
+
+    private var legalLinksSection: some View {
+        VStack(spacing: Spacing.md) {
+            HStack(spacing: Spacing.lg) {
+                NavigationLink(value: Route.terms) {
+                    Text("Terminos de Uso (EULA)")
+                }
+
+                Text("•")
+                    .foregroundStyle(SolennixColors.textTertiary)
+
+                NavigationLink(value: Route.privacy) {
+                    Text("Privacidad")
+                }
+            }
+            .font(.body)
+            .fontWeight(.bold)
+            .foregroundStyle(SolennixColors.primary)
+            .buttonStyle(.plain)
+            
+            Text("Solennix es un producto de Creapolis")
+                .font(.caption2)
+                .foregroundStyle(SolennixColors.textTertiary)
+        }
+        .padding(.top, Spacing.md)
+        .padding(.bottom, Spacing.xl)
     }
 }
 
