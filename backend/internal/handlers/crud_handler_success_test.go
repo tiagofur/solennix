@@ -238,6 +238,55 @@ func TestCreateEvent_CreateRepoError_Returns500(t *testing.T) {
 	}
 }
 
+func TestCreateEvent_InvalidEventDate_Returns400(t *testing.T) {
+	userID := uuid.New()
+	clientID := uuid.New()
+	h, _, eventRepo, _, _, _, userRepo, _ := setupCRUDTest(t)
+
+	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Plan: "pro"}, nil)
+
+	body := `{"client_id":"` + clientID.String() + `","event_date":"15-06-2026","service_type":"catering","num_people":50,"status":"quoted","tax_rate":16,"tax_amount":100,"total_amount":1000}`
+	req := makeReqWithUserID(http.MethodPost, "/api/events", body, userID)
+	rr := httptest.NewRecorder()
+	h.CreateEvent(rr, req)
+
+	if rr.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d, body=%s", rr.Code, http.StatusBadRequest, rr.Body.String())
+	}
+	if !strings.Contains(rr.Body.String(), "Invalid event_date format") {
+		t.Fatalf("body = %q, expected invalid event_date message", rr.Body.String())
+	}
+	eventRepo.AssertNotCalled(t, "Create", mock.Anything, mock.Anything)
+}
+
+func TestCreateEvent_UnavailableDateOverlap_Returns400(t *testing.T) {
+	userID := uuid.New()
+	clientID := uuid.New()
+	h, _, eventRepo, _, _, _, userRepo, unavailRepo := setupCRUDTest(t)
+
+	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Plan: "pro"}, nil)
+	unavailRepo.ExpectedCalls = nil
+	unavailRepo.On("GetByDateRange", mock.Anything, userID, "2026-06-15", "2026-06-15").Return([]models.UnavailableDate{{
+		ID:        uuid.New(),
+		UserID:    userID,
+		StartDate: "2026-06-15",
+		EndDate:   "2026-06-15",
+	}}, nil)
+
+	body := `{"client_id":"` + clientID.String() + `","event_date":"2026-06-15","service_type":"catering","num_people":50,"status":"quoted","tax_rate":16,"tax_amount":100,"total_amount":1000}`
+	req := makeReqWithUserID(http.MethodPost, "/api/events", body, userID)
+	rr := httptest.NewRecorder()
+	h.CreateEvent(rr, req)
+
+	if rr.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d, body=%s", rr.Code, http.StatusBadRequest, rr.Body.String())
+	}
+	if !strings.Contains(rr.Body.String(), "Date range overlaps with unavailable dates") {
+		t.Fatalf("body = %q, expected overlap message", rr.Body.String())
+	}
+	eventRepo.AssertNotCalled(t, "Create", mock.Anything, mock.Anything)
+}
+
 // ---------------------------------------------------------------------------
 // UpdateEvent — full update flow including client change
 // ---------------------------------------------------------------------------

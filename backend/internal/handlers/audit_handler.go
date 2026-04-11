@@ -25,7 +25,7 @@ func NewAuditHandler(repo AuditRepository) *AuditHandler {
 }
 
 // GetActivity returns paginated audit logs for the authenticated user.
-// GET /api/v1/dashboard/activity?page=1&limit=20
+// GET /api/dashboard/activity?page=1&limit=20
 func (h *AuditHandler) GetActivity(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 
@@ -47,7 +47,7 @@ func (h *AuditHandler) GetActivity(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetAllAuditLogs returns paginated audit logs across all users (admin only).
-// GET /api/v1/admin/audit-logs?page=1&limit=50
+// GET /api/admin/audit-logs?page=1&limit=50
 func (h *AuditHandler) GetAllAuditLogs(w http.ResponseWriter, r *http.Request) {
 	params := parsePaginationParams(r, auditSortAllowlist, "created_at")
 	if params == nil {

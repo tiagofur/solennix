@@ -1,8 +1,46 @@
 import { api } from '../lib/api';
 import { Event, EventInsert, EventUpdate, EventEquipment, EventSupply, EquipmentConflict, EquipmentSuggestion, SupplySuggestion, PaginatedResponse, PaginationParams } from '../types/entities';
+import type { components, operations } from '../types/api';
 
 // Helper for type safety on joined data
 type EventWithClient = Event & { clients?: { name: string } | null };
+
+/**
+ * EventProduct as declared by the backend contract. The join field the
+ * backend attaches is `product_name` (optional string, comes from a SQL
+ * join) — NOT the legacy `products: { name: ... }` shape that used to be
+ * returned by an earlier version of the repository.
+ */
+export type EventProduct = components['schemas']['EventProduct'];
+
+/**
+ * EventExtra as declared by the backend contract.
+ */
+export type EventExtra = components['schemas']['EventExtra'];
+
+/**
+ * EventPhoto as declared by the backend contract. The backend owns
+ * the photo array server-side (persisted as a JSON array on the event row)
+ * and exposes `GET/POST/DELETE /api/events/{id}/photos` endpoints. The
+ * Web used to serialize the array client-side via `PUT /api/events/{id}`;
+ * that path is legacy and is being replaced with the dedicated endpoints.
+ */
+export type EventPhoto = components['schemas']['EventPhoto'];
+
+/**
+ * Body shape for `POST /api/events/{id}/photos`. Only `url` is required
+ * — the backend generates the id, timestamps and any thumbnail metadata.
+ */
+export type EventPhotoCreateRequest = components['schemas']['EventPhotoCreateRequest'];
+
+/**
+ * Query parameters accepted by the advanced event search endpoint.
+ * The backend requires at least one non-empty filter — if the caller passes
+ * all empty values the request is rejected with 400.
+ */
+export type EventSearchFilters = NonNullable<
+  NonNullable<operations['searchEvents']['parameters']['query']>
+>;
 
 export const eventService = {
   async getAll(): Promise<EventWithClient[]> {
@@ -24,6 +62,31 @@ export const eventService = {
 
   async getByClientId(clientId: string): Promise<EventWithClient[]> {
     return api.get<EventWithClient[]>('/events', { client_id: clientId });
+  },
+
+  /**
+   * Advanced search using the backend's `GET /api/events/search` endpoint.
+   * The backend supports: free-text query (`q`, matches service_type, location,
+   * city and client name with pg_trgm fuzzy on the client name), status,
+   * date range, and client id. At least one filter must be non-empty or the
+   * backend rejects the request with 400.
+   *
+   * Prefer this over client-side filtering of `getAll()` because the backend
+   * owns the FTS indexes and the filter logic — Web-side `.filter()` was the
+   * source of divergence when new event fields were added (e.g. city vs
+   * location).
+   */
+  async searchAdvanced(filters: EventSearchFilters): Promise<EventWithClient[]> {
+    // Drop empty values so the URLSearchParams query only carries what the
+    // caller actually wants to filter on. Empty strings would be interpreted
+    // as intentional filters by the backend and fail validation.
+    const params: Record<string, string> = {};
+    if (filters.q) params.q = filters.q;
+    if (filters.status) params.status = filters.status;
+    if (filters.from) params.from = filters.from;
+    if (filters.to) params.to = filters.to;
+    if (filters.client_id) params.client_id = filters.client_id;
+    return api.get<EventWithClient[]>('/events/search', params);
   },
 
   async getById(id: string): Promise<EventWithClient> {
@@ -48,12 +111,12 @@ export const eventService = {
 
   // Products & Extras Management
 
-  async getProducts(eventId: string) {
-    return api.get<any[]>(`/events/${eventId}/products`);
+  async getProducts(eventId: string): Promise<EventProduct[]> {
+    return api.get<EventProduct[]>(`/events/${eventId}/products`);
   },
 
-  async getExtras(eventId: string) {
-    return api.get<any[]>(`/events/${eventId}/extras`);
+  async getExtras(eventId: string): Promise<EventExtra[]> {
+    return api.get<EventExtra[]>(`/events/${eventId}/extras`);
   },
 
   async updateItems(
@@ -134,6 +197,23 @@ export const eventService = {
 
   async getSupplySuggestions(products: { product_id: string; quantity: number }[]): Promise<SupplySuggestion[]> {
     return api.post('/events/supplies/suggestions', { products });
+  },
+
+  // Photo Management — uses the dedicated /api/events/{id}/photos endpoints
+  // instead of round-tripping the photos array via PUT /api/events/{id}.
+  // The backend owns the photo list server-side so the client never has
+  // to parse JSON strings or re-serialize the whole array on add/delete.
+
+  async getEventPhotos(eventId: string): Promise<EventPhoto[]> {
+    return api.get<EventPhoto[]>(`/events/${eventId}/photos`);
+  },
+
+  async addEventPhoto(eventId: string, req: EventPhotoCreateRequest): Promise<EventPhoto> {
+    return api.post<EventPhoto>(`/events/${eventId}/photos`, req);
+  },
+
+  async deleteEventPhoto(eventId: string, photoId: string): Promise<void> {
+    return api.delete(`/events/${eventId}/photos/${photoId}`);
   },
 
   // Compatibility methods for legacy calls (if any individual update is used)

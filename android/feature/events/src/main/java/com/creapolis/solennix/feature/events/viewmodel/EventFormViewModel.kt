@@ -13,6 +13,7 @@ import com.creapolis.solennix.core.data.repository.ClientRepository
 import com.creapolis.solennix.core.data.repository.EventRepository
 import com.creapolis.solennix.core.data.repository.InventoryRepository
 import com.creapolis.solennix.core.data.repository.ProductRepository
+import com.creapolis.solennix.core.designsystem.event.UiEvent
 import com.creapolis.solennix.core.model.*
 import com.creapolis.solennix.core.network.ApiService
 import com.creapolis.solennix.core.network.get
@@ -21,6 +22,7 @@ import com.creapolis.solennix.core.network.put
 import com.creapolis.solennix.core.network.AuthManager
 import com.creapolis.solennix.core.network.Endpoints
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -49,6 +51,17 @@ class EventFormViewModel @Inject constructor(
         get() = limitCheckResult is LimitCheckResult.LimitReached
 
     var isLoadingEvent by mutableStateOf(false)
+
+    /**
+     * Non-null when the primary event load failed and the form is in an unusable state.
+     * The screen should render an error card with a "Reintentar" button instead of the
+     * form fields when this is set.
+     */
+    var loadError by mutableStateOf<String?>(null)
+        private set
+
+    private val _uiEvents = MutableSharedFlow<UiEvent>(extraBufferCapacity = 1)
+    val uiEvents: SharedFlow<UiEvent> = _uiEvents.asSharedFlow()
 
     // Step 1: General Info
     var selectedClient by mutableStateOf<Client?>(null)
@@ -114,6 +127,11 @@ class EventFormViewModel @Inject constructor(
     val selectedProducts = mutableStateListOf<EventProduct>()
     private val _availableProducts = MutableStateFlow<List<Product>>(emptyList())
     val availableProducts: StateFlow<List<Product>> = _availableProducts.asStateFlow()
+    var isLoadingProducts by mutableStateOf(false)
+        private set
+    var productLoadError by mutableStateOf<String?>(null)
+        private set
+    private var loadProductsJob: Job? = null
 
     // Step 3: Extras
     val eventExtras = mutableStateListOf<EventExtra>()
@@ -169,6 +187,36 @@ class EventFormViewModel @Inject constructor(
     // Product Unit Costs (for profitability)
     private val _productUnitCosts = mutableMapOf<String, Double>()
     val productUnitCosts: Map<String, Double> get() = _productUnitCosts.toMap()
+    val hasPendingProductCosts: Boolean
+        get() = selectedProducts
+            .map { it.productId }
+            .distinct()
+            .any { _productUnitCosts[it] == null }
+
+    fun retryLoadProducts() {
+        loadProductsCatalog()
+    }
+
+    private fun loadProductsCatalog() {
+        loadProductsJob?.cancel()
+        loadProductsJob = viewModelScope.launch {
+            productRepository.getProducts()
+                .onStart {
+                    isLoadingProducts = true
+                    productLoadError = null
+                }
+                .catch {
+                    _availableProducts.value = emptyList()
+                    productLoadError = "No se pudo cargar el catálogo de productos."
+                }
+                .onCompletion {
+                    isLoadingProducts = false
+                }
+                .collect {
+                    _availableProducts.value = it
+                }
+        }
+    }
 
     private fun fetchProductCosts() {
         val missing = selectedProducts
@@ -275,11 +323,7 @@ class EventFormViewModel @Inject constructor(
     }
 
     init {
-        viewModelScope.launch {
-            productRepository.getProducts().collect {
-                _availableProducts.value = it
-            }
-        }
+        loadProductsCatalog()
         viewModelScope.launch {
             inventoryRepository.getInventoryItems().collect { items ->
                 _availableEquipment.value = items.filter { it.type == InventoryType.EQUIPMENT }
@@ -357,71 +401,110 @@ class EventFormViewModel @Inject constructor(
     private fun loadExistingEvent(id: String) {
         viewModelScope.launch {
             isLoadingEvent = true
+            loadError = null
             try {
                 val event = eventRepository.getEvent(id)
-                if (event != null) {
-                    // Populate general info
-                    eventDate = try {
-                        LocalDate.parse(event.eventDate)
-                    } catch (e: Exception) {
-                        LocalDate.now()
-                    }
-                    startTime = event.startTime ?: ""
-                    endTime = event.endTime ?: ""
-                    status = event.status
-                    serviceType = event.serviceType
-                    numPeople = event.numPeople.toString()
-                    location = event.location ?: ""
-                    city = event.city ?: ""
-                    notes = event.notes ?: ""
-                    discount = event.discount.toString()
-                    discountType = event.discountType
-                    requiresInvoice = event.requiresInvoice
-                    taxRate = event.taxRate.toString()
-                    depositPercent = event.depositPercent?.toString() ?: "50.0"
-                    cancellationDays = event.cancellationDays?.toString() ?: "7.0"
-                    refundPercent = event.refundPercent?.toString() ?: "50.0"
+                    ?: throw IllegalStateException(
+                        "El evento no existe o fue eliminado. Tirá abajo para actualizar " +
+                            "desde el servidor."
+                    )
 
-                    // Load client
-                    val client = clientRepository.getClient(event.clientId)
-                    selectedClient = client
-                    clientEventCount = client?.totalEvents
-                    clientTotalSpent = client?.totalSpent
+                // Populate general info
+                eventDate = try {
+                    LocalDate.parse(event.eventDate)
+                } catch (e: Exception) {
+                    LocalDate.now()
+                }
+                startTime = event.startTime ?: ""
+                endTime = event.endTime ?: ""
+                status = event.status
+                serviceType = event.serviceType
+                numPeople = event.numPeople.toString()
+                location = event.location ?: ""
+                city = event.city ?: ""
+                notes = event.notes ?: ""
+                discount = event.discount.toString()
+                discountType = event.discountType
+                requiresInvoice = event.requiresInvoice
+                taxRate = event.taxRate.toString()
+                depositPercent = event.depositPercent?.toString() ?: "50.0"
+                cancellationDays = event.cancellationDays?.toString() ?: "7.0"
+                refundPercent = event.refundPercent?.toString() ?: "50.0"
 
-                    // Load products
-                    try {
-                        eventRepository.syncEventItems(id)
-                    } catch (_: Exception) { }
-                    val products = eventRepository.getEventProducts(id).first()
-                    selectedProducts.clear()
-                    selectedProducts.addAll(products)
-                    fetchProductCosts()
+                // Load client — non-fatal if the client record is stale
+                val client = clientRepository.getClient(event.clientId)
+                selectedClient = client
+                clientEventCount = client?.totalEvents
+                clientTotalSpent = client?.totalSpent
 
-                    // Load extras
-                    val extras = eventRepository.getEventExtras(id).first()
-                    eventExtras.clear()
-                    eventExtras.addAll(extras)
+                // Sync event items from server — non-fatal, cache is authoritative for UI
+                try {
+                    eventRepository.syncEventItems(id)
+                } catch (e: Exception) {
+                    _uiEvents.tryEmit(
+                        UiEvent.Error(
+                            message = "No se pudo sincronizar con el servidor. " +
+                                "Mostrando datos en caché.",
+                            retryActionId = null,
+                        )
+                    )
+                }
 
-                    // Load equipment
-                    try {
-                        val equipment: List<EventEquipment> = apiService.get(Endpoints.eventEquipment(id))
-                        selectedEquipment.clear()
-                        selectedEquipment.addAll(equipment)
-                    } catch (_: Exception) { }
+                // Load products (primary)
+                val products = eventRepository.getEventProducts(id).first()
+                selectedProducts.clear()
+                selectedProducts.addAll(products)
+                fetchProductCosts()
 
-                    // Load supplies
-                    try {
-                        val supplies: List<EventSupply> = apiService.get(Endpoints.eventSupplies(id))
-                        selectedSupplies.clear()
-                        selectedSupplies.addAll(supplies)
-                    } catch (_: Exception) { }
+                // Load extras (primary)
+                val extras = eventRepository.getEventExtras(id).first()
+                eventExtras.clear()
+                eventExtras.addAll(extras)
+
+                // Load equipment — non-fatal, renders empty section with an advisory
+                try {
+                    val equipment: List<EventEquipment> =
+                        apiService.get(Endpoints.eventEquipment(id))
+                    selectedEquipment.clear()
+                    selectedEquipment.addAll(equipment)
+                } catch (e: Exception) {
+                    _uiEvents.tryEmit(
+                        UiEvent.Error(
+                            message = "No se pudo cargar el equipamiento del evento.",
+                            retryActionId = null,
+                        )
+                    )
+                }
+
+                // Load supplies — non-fatal
+                try {
+                    val supplies: List<EventSupply> =
+                        apiService.get(Endpoints.eventSupplies(id))
+                    selectedSupplies.clear()
+                    selectedSupplies.addAll(supplies)
+                } catch (e: Exception) {
+                    _uiEvents.tryEmit(
+                        UiEvent.Error(
+                            message = "No se pudieron cargar los insumos del evento.",
+                            retryActionId = null,
+                        )
+                    )
                 }
             } catch (e: Exception) {
-                // Error loading event data — form stays in default state
+                // Primary load failed — the form is unusable. Set error state so the UI
+                // can render a retry card instead of an empty form pretending everything
+                // is fine.
+                loadError = e.message
+                    ?: "No se pudo cargar el evento. Verificá tu conexión y reintentá."
             } finally {
                 isLoadingEvent = false
             }
         }
+    }
+
+    /** Retry loading the current event after a failure. */
+    fun retryLoad() {
+        eventId?.let { loadExistingEvent(it) }
     }
 
     fun addProduct(product: Product, quantity: Double) {
@@ -725,9 +808,43 @@ class EventFormViewModel @Inject constructor(
             selectedClient == null -> "Seleccioná un cliente"
             serviceType.isBlank() -> "Ingresá el tipo de servicio"
             (numPeople.toIntOrNull() ?: 0) < 1 -> "Ingresá la cantidad de personas"
+            !isValidTime24h(startTime) ->
+                "Hora de inicio inválida — usá formato HH:mm (ej: 14:30)"
+            !isValidTime24h(endTime) ->
+                "Hora de fin inválida — usá formato HH:mm (ej: 20:00)"
+            startTime.isNotBlank() && endTime.isNotBlank() &&
+                normalizeTime(startTime) == normalizeTime(endTime) ->
+                "La hora de inicio y de fin no pueden ser iguales"
             else -> null
         }
         else -> null
+    }
+
+    /**
+     * Accepts a blank string (maps to null in the backend) or a 24h time in HH:mm /
+     * HH:mm:ss format. Uses [java.time.LocalTime.parse] which rejects out-of-range
+     * values like "25:00" or "12:61".
+     *
+     * Domain note: we intentionally DO NOT enforce `endTime > startTime` because LATAM
+     * events (weddings, quinceañeras) regularly run past midnight — a start of 20:00 and
+     * an end of 02:00 is valid and means "next day". Only equality is rejected (that's
+     * a zero-duration bug).
+     */
+    private fun isValidTime24h(s: String): Boolean {
+        if (s.isBlank()) return true
+        return try {
+            java.time.LocalTime.parse(s)
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    /** Normalizes "14:30" and "14:30:00" to the same canonical form for comparison. */
+    private fun normalizeTime(s: String): String? = try {
+        java.time.LocalTime.parse(s).toString()
+    } catch (e: Exception) {
+        null
     }
 
     fun saveEvent() {
@@ -741,6 +858,22 @@ class EventFormViewModel @Inject constructor(
         }
         if (serviceType.isBlank()) {
             saveError = "Agrega el tipo de servicio"
+            return
+        }
+        // Final time validation — defensive, in case the user skipped step 0 validation.
+        if (!isValidTime24h(startTime)) {
+            saveError = "Hora de inicio inválida — usá formato HH:mm (ej: 14:30)"
+            return
+        }
+        if (!isValidTime24h(endTime)) {
+            saveError = "Hora de fin inválida — usá formato HH:mm (ej: 20:00)"
+            return
+        }
+        if (
+            startTime.isNotBlank() && endTime.isNotBlank() &&
+            normalizeTime(startTime) == normalizeTime(endTime)
+        ) {
+            saveError = "La hora de inicio y de fin no pueden ser iguales"
             return
         }
         viewModelScope.launch {

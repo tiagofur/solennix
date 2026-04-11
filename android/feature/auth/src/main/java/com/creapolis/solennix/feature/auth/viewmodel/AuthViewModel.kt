@@ -16,7 +16,9 @@ import com.creapolis.solennix.core.network.put
 import com.creapolis.solennix.core.network.AuthManager
 import com.creapolis.solennix.core.network.Endpoints
 import com.creapolis.solennix.core.network.runCatchingApi
+import android.util.Log
 import com.revenuecat.purchases.Purchases
+import com.revenuecat.purchases.logInWith
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -169,15 +171,40 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    /** Sync RevenueCat user identity for cross-platform subscription recognition */
+    /**
+     * Sync RevenueCat user identity for cross-platform subscription recognition.
+     *
+     * Failures are logged but do NOT block auth — the user can still sign in with an
+     * anonymous RevenueCat ID and the next session will retry the sync. We explicitly
+     * use `logInWith` (callback-based) instead of the blocking `logIn` so the SDK
+     * surfaces errors via `onError` instead of swallowing them in a silent try/catch.
+     *
+     * If `REVENUECAT_API_KEY` is blank (debug builds), `Purchases.sharedInstance` access
+     * throws `IllegalStateException` — we catch that narrowly and log a warning.
+     */
     private fun syncRevenueCat(userId: String) {
-        viewModelScope.launch {
-            try {
-                Purchases.sharedInstance.logIn(userId)
-            } catch (_: Exception) {
-                // RevenueCat may not be configured in debug builds
-            }
+        try {
+            Purchases.sharedInstance.logInWith(
+                appUserID = userId,
+                onError = { error ->
+                    Log.w(
+                        TAG,
+                        "RevenueCat sync failed for user $userId: ${error.message}. " +
+                            "Subscription state may be out of sync until next login. " +
+                            "If REVENUECAT_API_KEY is unset this is expected."
+                    )
+                },
+                onSuccess = { _, _ ->
+                    Log.d(TAG, "RevenueCat synced for user $userId")
+                }
+            )
+        } catch (e: IllegalStateException) {
+            Log.w(TAG, "RevenueCat SDK not configured, skipping sync: ${e.message}")
         }
+    }
+
+    private companion object {
+        private const val TAG = "AuthViewModel"
     }
 
     fun loginWithGoogle(idToken: String, fullName: String?) {
@@ -253,5 +280,8 @@ private fun ApiError.userMessage(context: ErrorContext): String = when (this) {
     is ApiError.NetworkError -> "Error de conexión. Verificá tu internet."
     is ApiError.ServerError -> "Error del servidor. Intentá más tarde."
     is ApiError.DecodingError -> "Error inesperado. Intentá de nuevo."
+    is ApiError.SecurityError ->
+        "No pudimos verificar la conexión segura con el servidor. " +
+            "Posible red comprometida. Intentá desde otra red."
     is ApiError.Unknown -> "Error inesperado. Intentá de nuevo."
 }

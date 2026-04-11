@@ -24,7 +24,13 @@ import { usePagination } from "../../hooks/usePagination";
 import { Pagination } from "../../components/Pagination";
 import { SkeletonTable } from "../../components/Skeleton";
 import { StatusDropdown, EventStatus } from "../../components/StatusDropdown";
-import { useEvents, useEventsPaginated, useDeleteEvent } from "../../hooks/queries/useEventQueries";
+import {
+  useEvents,
+  useEventsPaginated,
+  useDeleteEvent,
+  useEventSearch,
+} from "../../hooks/queries/useEventQueries";
+import type { EventSearchFilters } from "../../services/eventService";
 
 type EventWithClient = Event & { clients?: { name: string } | null };
 
@@ -54,7 +60,11 @@ export const EventList: React.FC = () => {
   const urlSort = searchParams.get("sort") || "event_date";
   const urlOrder = (searchParams.get("order") || "desc") as "asc" | "desc";
 
-  // Determine if client-side filters are active (backend doesn't support these yet)
+  // Determine if any filter is active — when it is, we hit the backend's
+  // advanced FTS endpoint (`GET /api/events/search`) which owns the filter
+  // logic across service_type, location, city, client name (fuzzy), status
+  // and date range. When no filter is active, fall back to the normal
+  // paginated listing.
   const hasFilters = !!(searchTerm || statusFilter !== "all" || dateFrom || dateTo);
 
   // Server-side paginated query (used when no filters active)
@@ -65,13 +75,28 @@ export const EventList: React.FC = () => {
     order: urlOrder,
   });
 
-  // Full fetch (fallback when filters are active)
+  // Server-side advanced search (used when any filter is active). The
+  // backend rejects empty-filter requests with 400, so the hook guards
+  // with `enabled: hasAnyFilter`.
+  const searchFilters: EventSearchFilters = useMemo(() => {
+    const filters: EventSearchFilters = {};
+    if (searchTerm) filters.q = searchTerm;
+    if (statusFilter !== "all") filters.status = statusFilter;
+    if (dateFrom) filters.from = dateFrom;
+    if (dateTo) filters.to = dateTo;
+    return filters;
+  }, [searchTerm, statusFilter, dateFrom, dateTo]);
+  const searchQuery = useEventSearch(searchFilters);
+
+  // Full fetch still needed for the CSV export / header totals when the
+  // user clears the filters. This is bounded by the user's own data and
+  // is already cached by React Query.
   const allEventsQuery = useEvents();
 
   // Pick the right loading state
-  const loading = hasFilters ? allEventsQuery.isLoading : paginatedQuery.isLoading;
+  const loading = hasFilters ? searchQuery.isLoading : paginatedQuery.isLoading;
 
-  // All events (for CSV export & header count)
+  // All events (for CSV export & header count when no filters are active)
   const allEvents: EventWithClient[] = allEventsQuery.data ?? [];
 
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -106,23 +131,13 @@ export const EventList: React.FC = () => {
     deleteEvent.mutate(id);
   };
 
-  // Client-side filtering (only used when filters are active)
-  const filteredEvents = useMemo(() => {
-    if (!hasFilters) return [];
-    return (allEvents || []).filter((event) => {
-      const clientName = event.clients?.name ?? "";
-      const matchesSearch =
-        !searchTerm ||
-        clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        event.service_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (event.city ?? "").toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus =
-        statusFilter === "all" || event.status === statusFilter;
-      const matchesDateFrom = !dateFrom || event.event_date >= dateFrom;
-      const matchesDateTo = !dateTo || event.event_date <= dateTo;
-      return matchesSearch && matchesStatus && matchesDateFrom && matchesDateTo;
-    });
-  }, [hasFilters, allEvents, searchTerm, statusFilter, dateFrom, dateTo]);
+  // Server-side filtered results (when filters are active) come directly
+  // from the FTS endpoint; we don't re-filter client-side. The backend
+  // enforces a hard LIMIT 50 on the result set — a known constraint that
+  // will be revisited once the endpoint grows pagination support.
+  const filteredEvents: EventWithClient[] = hasFilters
+    ? (searchQuery.data ?? [])
+    : [];
 
   // Client-side pagination (only used when filters are active)
   const clientPagination = usePagination({

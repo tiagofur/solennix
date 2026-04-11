@@ -33,6 +33,23 @@
 - [[13_POST_MVP_ROADMAP|Roadmap Post-MVP (Etapa 2)]] — Notificaciones, reportes, portal del cliente, diferenciadores
 - [[10_COLLABORATION_GUIDE|Guía de Colaboración]] — Workflow con Claude Code, prompts, reglas
 
+## Super Plan Cross-Platform
+
+- [[SUPER PLAN MOC]] — Indice principal del programa de transformación
+- [[01_VISUAL_EXECUTIVE_SUMMARY]] — Objetivos y resultados esperados
+- [[02_PLATFORM_EXPERIENCE_PRINCIPLES]] — UX nativa por plataforma/dispositivo
+- [[03_CROSS_PLATFORM_PARITY_MODEL]] — Reglas de paridad y SLA de desvíos
+- [[04_BACKEND_AS_PRODUCT_CONTRACT]] — Contratos backend-frontends
+- [[05_RELEASE_GOVERNANCE_AND_QUALITY_GATES]] — Gates obligatorios de calidad
+- [[06_DEVICE_MATRIX_AND_UX_VALIDATION]] — Matriz de validación smartphone/tablet/desktop
+- [[07_WAVE_PLAN_12_WEEKS]] — Roadmap por ondas de ejecución
+- [[08_RISK_REGISTER_AND_CONTINGENCIES]] — Registro de riesgos y contingencias
+- [[09_TEAM_OPERATING_SYSTEM]] — Sistema operativo de ejecución
+- [[10_BACKLOG_STRUCTURE_AND_ACCEPTANCE]] — Estructura de backlog y DoD
+- [[11_CROSS_PLATFORM_KPI_SCORECARD]] — Scorecard de salud del programa
+- [[12_EXECUTION_CHECKLISTS]] — Checklists de PR, ola y release
+- [[13_MASTER_TRACEABILITY_TABLE]] — Trazabilidad ejecutiva objetivo→ola→evidencia→KPI
+
 ---
 
 ## Principios Clave

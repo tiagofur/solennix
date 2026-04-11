@@ -173,7 +173,7 @@ public final class DashboardViewModel {
         // and they all hung waiting for response frames). Sequential issues one
         // request at a time over the multiplexed connection, sidestepping the bug.
         // TODO: collapse most of these into the server-side aggregated endpoints
-        // /api/v1/dashboard/kpis and friends (already implemented in backend).
+        // /api/dashboard/kpis and related endpoints (already implemented in backend).
         let clients: [Client] = await loadOrEmpty(
             Endpoint.clients,
             label: "clients"

@@ -37,6 +37,7 @@ import com.creapolis.solennix.core.designsystem.R as DesignSystemR
 import com.creapolis.solennix.core.designsystem.component.SkeletonLoading
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveCardGrid
+import com.creapolis.solennix.core.designsystem.event.UiEventSnackbarHandler
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.InventoryItem
 import com.creapolis.solennix.core.model.extensions.asMXN
@@ -57,6 +58,13 @@ fun InventoryListScreen(
     var pendingDeleteId by remember { mutableStateOf<String?>(null) }
     var adjustingItem by remember { mutableStateOf<InventoryItem?>(null) }
     var adjustmentInput by remember { mutableStateOf("") }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    UiEventSnackbarHandler(
+        events = viewModel.uiEvents,
+        snackbarHostState = snackbarHostState,
+        onRetry = viewModel::onRetry,
+    )
 
     // Delete confirmation dialog (triggered from long-press menu)
     if (pendingDeleteId != null) {
@@ -175,6 +183,7 @@ fun InventoryListScreen(
                 }
             )
         },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onAddItemClick,

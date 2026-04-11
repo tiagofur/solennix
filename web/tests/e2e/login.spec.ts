@@ -5,18 +5,18 @@ test.describe('Authentication Flow', () => {
   test('login page loads correctly', async ({ page }) => {
     await page.goto('/login');
 
-    const setupRequired = await isSetupRequired(page);
-    if (setupRequired) {
-      await expect(page.getByText('Configuración Requerida')).toBeVisible();
-    }
-    test.skip(setupRequired, 'Backend not configured - skipping auth tests');
+    // The login page itself is 100% static (no API calls) so it renders
+    // regardless of backend availability. Don't skip this test — verify
+    // the form is there even when the backend is offline.
 
-    // Verify login form elements
     await expect(page.getByRole('heading', { name: /iniciar sesión/i })).toBeVisible();
     await expect(page.getByLabel('Email')).toBeVisible();
-    await expect(page.getByLabel('Contraseña')).toBeVisible();
+    // exact:true excludes the "Mostrar contraseña" toggle button that
+    // shares the same substring on its aria-label.
+    await expect(page.getByLabel('Contraseña', { exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: /iniciar sesión/i })).toBeVisible();
-    await expect(page.getByRole('link', { name: /registrarse/i })).toBeVisible();
+    // Login page links to Register via "Regístrate gratis"
+    await expect(page.getByRole('link', { name: /regístrate/i })).toBeVisible();
   });
 
   test('register new user successfully', async ({ page }) => {
@@ -39,7 +39,7 @@ test.describe('Authentication Flow', () => {
     test.skip(await isSetupRequired(page), 'Backend not configured');
 
     await page.getByLabel('Email').fill('invalid@example.com');
-    await page.getByLabel('Contraseña').fill('wrongpassword');
+    await page.getByLabel('Contraseña', { exact: true }).fill('wrongpassword');
     await page.getByRole('button', { name: /iniciar sesión/i }).click();
 
     // Should show error message (toast or inline error)
@@ -67,7 +67,9 @@ test.describe('Authentication Flow', () => {
   });
 
   test('protected routes redirect to login when not authenticated', async ({ page }) => {
-    // Clear any existing auth state
+    // Navigate somewhere in the app origin first — `localStorage` is
+    // scoped to an origin and cannot be accessed on about:blank.
+    await page.goto('/login');
     await page.context().clearCookies();
     await page.evaluate(() => localStorage.clear());
 

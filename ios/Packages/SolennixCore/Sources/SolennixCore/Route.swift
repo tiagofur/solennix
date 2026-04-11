@@ -48,6 +48,4 @@ public enum Route: Hashable {
     case pricing
     case subscription
     case about
-    case privacy
-    case terms
 }

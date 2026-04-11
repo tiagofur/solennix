@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { eventService } from '@/services/eventService';
+import type { EventPhotoCreateRequest, EventSearchFilters } from '@/services/eventService';
 import { queryKeys } from './queryKeys';
 import { useToast } from '@/hooks/useToast';
 import { logError, getErrorMessage } from '@/lib/errorHandler';
@@ -54,6 +55,23 @@ export function useEventsByDateRange(start: string, end: string) {
   });
 }
 
+/**
+ * Advanced event search via the backend's `/api/events/search` FTS endpoint.
+ * The query only runs when at least one filter is non-empty — otherwise the
+ * backend rejects the request with 400 (it requires at least one filter).
+ * Callers should fall back to the regular listing (useEventsPaginated) when
+ * no filters are active.
+ */
+export function useEventSearch(filters: EventSearchFilters) {
+  const hasAnyFilter = !!(filters.q || filters.status || filters.from || filters.to || filters.client_id);
+  return useQuery({
+    queryKey: queryKeys.events.search(filters as Record<string, string | undefined>),
+    queryFn: () => eventService.searchAdvanced(filters),
+    enabled: hasAnyFilter,
+    placeholderData: keepPreviousData,
+  });
+}
+
 export function useEventProducts(eventId: string | undefined) {
   return useQuery({
     queryKey: queryKeys.events.products(eventId!),
@@ -82,6 +100,14 @@ export function useEventSupplies(eventId: string | undefined) {
   return useQuery({
     queryKey: queryKeys.events.supplies(eventId!),
     queryFn: () => eventService.getSupplies(eventId!),
+    enabled: !!eventId,
+  });
+}
+
+export function useEventPhotos(eventId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.events.photos(eventId!),
+    queryFn: () => eventService.getEventPhotos(eventId!),
     enabled: !!eventId,
   });
 }
@@ -158,6 +184,50 @@ export function useDeleteEvent() {
     onError: (error) => {
       logError('Error deleting event', error);
       addToast(getErrorMessage(error, 'Error al eliminar el evento.'), 'error');
+    },
+  });
+}
+
+// ── Photo mutations ──
+
+export function useAddEventPhoto(eventId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: ['events', eventId, 'photos', 'add'],
+    mutationFn: (req: EventPhotoCreateRequest) => {
+      if (!eventId) throw new Error('eventId is required');
+      return eventService.addEventPhoto(eventId, req);
+    },
+    onSuccess: () => {
+      if (!eventId) return;
+      // Invalidate both the photos list and the event detail — the detail
+      // still carries a `photos` JSON string that the backend keeps in sync.
+      queryClient.invalidateQueries({ queryKey: queryKeys.events.photos(eventId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.events.detail(eventId) });
+    },
+    onError: (error) => {
+      logError('Error uploading event photos', error);
+    },
+  });
+}
+
+export function useDeleteEventPhoto(eventId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: ['events', eventId, 'photos', 'delete'],
+    mutationFn: (photoId: string) => {
+      if (!eventId) throw new Error('eventId is required');
+      return eventService.deleteEventPhoto(eventId, photoId);
+    },
+    onSuccess: () => {
+      if (!eventId) return;
+      queryClient.invalidateQueries({ queryKey: queryKeys.events.photos(eventId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.events.detail(eventId) });
+    },
+    onError: (error) => {
+      logError('Error removing photo', error);
     },
   });
 }

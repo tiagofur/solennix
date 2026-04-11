@@ -110,6 +110,7 @@ type FullPaymentRepository interface {
 	PaymentRepository // existing: Create
 	GetAll(ctx context.Context, userID uuid.UUID) ([]models.Payment, error)
 	GetAllPaginated(ctx context.Context, userID uuid.UUID, offset, limit int, sortCol, order string) ([]models.Payment, int, error)
+	GetByID(ctx context.Context, id, userID uuid.UUID) (*models.Payment, error)
 	GetByEventID(ctx context.Context, userID, eventID uuid.UUID) ([]models.Payment, error)
 	GetByDateRange(ctx context.Context, userID uuid.UUID, start, end string) ([]models.Payment, error)
 	GetByEventIDs(ctx context.Context, userID uuid.UUID, eventIDs []uuid.UUID) ([]models.Payment, error)

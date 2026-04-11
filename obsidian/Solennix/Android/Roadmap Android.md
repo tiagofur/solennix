@@ -7,6 +7,39 @@
 
 ---
 
+## ⚠️ Wave Rescate Play Store (2026-04-11 → en curso)
+
+> [!danger] Los docs estaban desincronizados con el código
+> Auditoría cruzada en 2026-04-11 detectó que varios items marcados como "✅" en este Roadmap y en [[../PRD/11_CURRENT_STATUS]] **no existían en el código**. Se inició un Wave Rescate de 6 bloques para llevar la app a Play Store. Los items corregidos en este doc tienen un recordatorio histórico para evitar que vuelva a pasar.
+
+| Bloque | Descripción                              | Estado                                     | Commit      |
+| ------ | ---------------------------------------- | ------------------------------------------ | ----------- |
+| **A**  | Keystore/secrets fail-fast               | ✅ Infra lista, acciones manuales pendientes | `f003a0b`   |
+| **B**  | SSL Pinning real                         | ✅ Infra lista, usuario debe generar pins   | `3d2a763`   |
+| **C**  | Play Billing wire-up real                | ✅ Completo                                 | `b75881c`   |
+| **D**  | Error handling con Snackbar "Reintentar" | ✅ Slices 1+2 (CRUD + EventForm load)       | `d8c77bd`   |
+| **D.3** | Secondary fetches silenciosos           | ⏳ Deferido                                 | —           |
+| **E**  | Defensive validations                    | ⏭️ Mayormente ruido del audit inicial       | —           |
+| **F**  | Sync docs final                          | ✅ Completado                               | este commit |
+
+### Acciones manuales pendientes del usuario
+
+1. Rotar el password del keystore (`asd123` → fuerte) — ver [[Firma y Secretos de Release#Rotar el password del keystore existente]]
+2. Configurar `REVENUECAT_API_KEY` real en `~/.gradle/gradle.properties`
+3. Generar `SOLENNIX_SSL_PINS` con openssl y setearlos — ver [[Firma y Secretos de Release#SSL Pinning]]
+4. Probar `./gradlew :app:bundleRelease` end-to-end
+5. Testear SSL pinning con Charles/mitmproxy
+6. Rotar y guardar el upload key en password manager
+
+### Lecciones aprendidas del audit
+
+1. **NUNCA confiar en docs sobre estado del código**. `git ls-files`, `grep`, y leer el archivo son la única fuente de verdad.
+2. **Los audits pueden ver síntomas sin ver el sistema**. El audit inicial dijo "Play Billing no implementado — CRÍTICO" basándose en un `TODO` en `PricingScreen:168`. Pero 300+ líneas arriba ya existía `BillingManager` al 100%. Falta de contexto → diagnóstico erróneo.
+3. **`catch (_: Exception) {}` es un smell grave**. Cada silent catch que detectamos era un caso donde el usuario perdía trabajo sin enterarse. El pattern `UiEvent` en `core:designsystem` es la forma correcta.
+4. **Fail-fast en build vale más que warnings en docs**. El `build.gradle.kts` que refuse a compilar release sin signing config + RevenueCat key + SSL pins es mejor garantía que cualquier checklist.
+
+---
+
 ## Estado de Paridad con Web
 
 | Feature                     | Web            | Android                 | Gap              |
@@ -40,10 +73,10 @@
 
 ---
 
-## Fase 0: Blockers Críticos (Pre-Release) ✅
+## Fase 0: Blockers Críticos (Pre-Release)
 
-> [!success] Impacto: Crítico | Esfuerzo: Bajo-Medio
-> Sin esto, la app NO está lista para producción.
+> [!warning] Estado real — audit 2026-04-11 (Wave Rescate Play Store)
+> Los items 0.1 y 0.2 están bien. Item 0.3 (SSL Pinning) estaba marcado como ✅ pero NO estaba en el código — detectado en el audit del Bloque B. Ahora resuelto con fail-fast en release. Ver [[Firma y Secretos de Release]].
 
 ### 0.1 Resolver Dependencia de PDFs ✅
 
@@ -60,11 +93,18 @@
 - [x] Crear `Migration(4, 5)` como template
 - [x] Documentar proceso de migración para futuros cambios de schema
 
-### 0.3 SSL Pinning ✅
+### 0.3 SSL Pinning ✅ (resuelto en Wave Rescate Bloque B — 2026-04-11)
 
-- [x] Configurar `CertificatePinner` en OkHttp/Ktor
-- [x] Agregar pins para `api.solennix.com`
-- [x] Manejar rotación de certificados (backup pin)
+- [x] Configurar `CertificatePinner` en OkHttp/Ktor (`KtorClient.kt`)
+- [x] Pins resueltos desde env var `SOLENNIX_SSL_PINS` o gradle property
+- [x] `BuildConfig.SSL_PINS` + `BuildConfig.API_HOST` emitidos por `core/network`
+- [x] Fail-fast en release si faltan <2 pins
+- [x] `ApiError.SecurityError` con mapeo de `SSLPeerUnverifiedException` / `SSLHandshakeException`
+- [x] Docs en [[Firma y Secretos de Release]] con openssl commands para generar pins
+- [ ] **Pendiente del usuario**: generar pins reales contra `api.solennix.com` y setearlos en `~/.gradle/gradle.properties`
+
+> [!note] Estado histórico
+> Antes del 2026-04-11 este item estaba marcado como ✅ sin el código correspondiente. Es un recordatorio de por qué los docs tienen que sincronizarse con la realidad del repo.
 
 ---
 
@@ -114,11 +154,19 @@
 - [x] Canales de notificación configurados
 - [x] Permiso `POST_NOTIFICATIONS` (Android 13+)
 
-### 2.2 Suscripciones con Play Billing ✅
+### 2.2 Suscripciones con Play Billing ✅ (wire-up real en Wave Rescate Bloque C — 2026-04-11)
 
-- [x] Completar integración RevenueCat
-- [x] Flujo de "Restaurar Compras" implementado
-- [x] Botón de restauración en `SubscriptionScreen`
+- [x] Integración RevenueCat en `BillingManager` (fetch offerings, purchase, restore, login/logout, entitlements)
+- [x] `SubscriptionViewModel` conectado al `BillingManager`
+- [x] `SubscriptionScreen` con packages dinámicos, prices desde RevenueCat, provider badge cross-platform (Apple/Google/Stripe) con cancel instructions distintas por provider
+- [x] Flujo de "Restaurar Compras" implementado + botón en TopAppBar
+- [x] Ruta `pricing` del NavHost ahora renderea `SubscriptionScreen` (antes renderizaba `PricingScreen` que era una pantalla estática con un botón TODO)
+- [x] `PricingScreen.kt` zombie eliminado — su contenido (info estática de planes + FAQ) está duplicado en `SubscriptionScreen` con datos dinámicos
+- [x] `AuthViewModel.syncRevenueCat` usa `logInWith` con logs explícitos en lugar de `catch (_:)` silencioso
+- [ ] **Tech debt**: `BillingManager.ENTITLEMENT_PRO = "pro_access"` es legacy del plan pro/business. Planes se consolidaron a basic/premium pero quedó código zombie. Si RevenueCat Dashboard no devuelve packages "pro", la sección "Pro Packages" en `SubscriptionScreen:162-185` renderea vacía — no rompe. Cleanup en slice posterior después de verificar usuarios activos.
+
+> [!note] Estado histórico
+> Antes del 2026-04-11 este item estaba marcado como ✅ completamente, pero el botón "Actualizar a Premium" en `PricingScreen.kt:168` era un `TODO: Implement Play Billing` vacío. El infra estaba pero el usuario nunca llegaba a la UI real.
 
 ### 2.3 Búsqueda Avanzada ✅
 

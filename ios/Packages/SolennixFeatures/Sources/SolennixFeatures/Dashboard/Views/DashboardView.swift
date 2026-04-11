@@ -361,7 +361,7 @@ public struct DashboardView: View {
         KPICardView(
             title: "Cotizaciones",
             value: "\(viewModel?.pendingQuotes ?? 0)",
-            icon: "doc.text.badge.clock",
+            icon: "doc.text.magnifyingglass",
             iconColor: SolennixColors.kpiOrange,
             iconBgColor: SolennixColors.kpiOrangeBg,
             flexible: flexible

@@ -36,9 +36,17 @@ fun PremiumButton(
     enabled: Boolean = true
 ) {
     val isLargeFontScale = LocalDensity.current.fontScale >= 1.3f
+    // heightIn MUST bound both min AND max. Without `max`, the inner
+    // Box(Modifier.fillMaxSize()) in the Primary style demands maximum height from its
+    // parent constraints and, when placed in an unbounded context (e.g. a Scaffold
+    // bottomBar), the Button grows to fill the entire screen. See /Users/tiagofur/.claude/plans/proud-juggling-wolf.md
+    // for the full incident analysis.
     val buttonModifier = modifier
         .fillMaxWidth()
-        .heightIn(min = if (isLargeFontScale) 56.dp else 50.dp)
+        .heightIn(
+            min = if (isLargeFontScale) 56.dp else 50.dp,
+            max = if (isLargeFontScale) 88.dp else 64.dp,
+        )
         .animateContentSize()
 
     when (style) {

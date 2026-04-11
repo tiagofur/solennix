@@ -799,12 +799,19 @@ func (r *EventRepo) SearchEventsAdvanced(ctx context.Context, userID uuid.UUID, 
 	argN := 2
 
 	if filters.Query != "" {
+		// Text search covers:
+		//   - service_type  (e.g. "Boda", "Catering")
+		//   - location      (specific venue, e.g. "Salón Los Arcos")
+		//   - city          (e.g. "Guadalajara") — previously missing, caused
+		//                   Web searches by city to return no results
+		//   - client name   (ILIKE + pg_trgm similarity for fuzzy match)
 		baseQuery += fmt.Sprintf(` AND (
 			e.service_type ILIKE '%%' || $%d || '%%' OR
 			e.location ILIKE '%%' || $%d || '%%' OR
+			e.city ILIKE '%%' || $%d || '%%' OR
 			c.name ILIKE '%%' || $%d || '%%' OR
 			similarity(c.name, $%d) > 0.3
-		)`, argN, argN, argN, argN)
+		)`, argN, argN, argN, argN, argN)
 		args = append(args, filters.Query)
 		argN++
 	}

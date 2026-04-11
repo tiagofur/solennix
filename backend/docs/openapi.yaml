@@ -1,0 +1,3994 @@
+openapi: 3.0.3
+info:
+  title: Solennix API
+  version: 1.0.0
+  description: Event management platform for Latin American organizers
+servers:
+  - url: http://localhost:8000
+    description: Local dev
+  - url: https://api.solennix.com
+    description: Production
+security:
+  - bearerAuth: []
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    User:
+      type: object
+      required:
+        - id
+        - email
+        - name
+        - plan
+        - role
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        business_name:
+          type: string
+          nullable: true
+        logo_url:
+          type: string
+          nullable: true
+        brand_color:
+          type: string
+          nullable: true
+        show_business_name_in_pdf:
+          type: boolean
+          nullable: true
+        default_deposit_percent:
+          type: number
+          format: double
+          nullable: true
+        default_cancellation_days:
+          type: number
+          format: double
+          nullable: true
+        default_refund_percent:
+          type: number
+          format: double
+          nullable: true
+        contract_template:
+          type: string
+          nullable: true
+        plan:
+          type: string
+          enum: [basic, pro]
+        role:
+          type: string
+          enum: [user, admin]
+        stripe_customer_id:
+          type: string
+          nullable: true
+        google_user_id:
+          type: string
+          nullable: true
+        apple_user_id:
+          type: string
+          nullable: true
+        plan_expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    TokenPair:
+      type: object
+      required:
+        - access_token
+        - refresh_token
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+    AuthSuccessResponse:
+      type: object
+      required:
+        - user
+        - tokens
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        tokens:
+          $ref: "#/components/schemas/TokenPair"
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+        - name
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+          maxLength: 128
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+    RefreshTokenRequest:
+      type: object
+      required:
+        - refresh_token
+      properties:
+        refresh_token:
+          type: string
+    ForgotPasswordRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+    ResetPasswordRequest:
+      type: object
+      required:
+        - token
+        - password
+      properties:
+        token:
+          type: string
+        password:
+          type: string
+          minLength: 8
+          maxLength: 128
+    ChangePasswordRequest:
+      type: object
+      required:
+        - current_password
+        - new_password
+      properties:
+        current_password:
+          type: string
+    GoogleSignInRequest:
+      type: object
+      required:
+        - id_token
+      properties:
+        id_token:
+          type: string
+        full_name:
+          type: string
+          nullable: true
+    AppleSignInRequest:
+      type: object
+      required:
+        - identity_token
+      properties:
+        identity_token:
+          type: string
+        authorization_code:
+          type: string
+        full_name:
+          type: string
+          nullable: true
+        email:
+          type: string
+          format: email
+          nullable: true
+    AppleAuthSuccessResponse:
+      type: object
+      required:
+        - user
+        - tokens
+        - email_is_private_relay
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        tokens:
+          $ref: "#/components/schemas/TokenPair"
+        email_is_private_relay:
+          type: boolean
+    UpdateProfileRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          nullable: true
+        business_name:
+          type: string
+          nullable: true
+        logo_url:
+          type: string
+          nullable: true
+        brand_color:
+          type: string
+          nullable: true
+        show_business_name_in_pdf:
+          type: boolean
+          nullable: true
+        default_deposit_percent:
+          type: number
+          format: double
+          nullable: true
+        default_cancellation_days:
+          type: number
+          format: double
+          nullable: true
+        default_refund_percent:
+          type: number
+          format: double
+          nullable: true
+        contract_template:
+          type: string
+          nullable: true
+        new_password:
+          type: string
+          minLength: 8
+          maxLength: 128
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+    CheckoutSessionResponse:
+      type: object
+      required:
+        - url
+      properties:
+        url:
+          type: string
+          format: uri
+    SubscriptionInfo:
+      type: object
+      required:
+        - status
+        - provider
+        - cancel_at_period_end
+      properties:
+        status:
+          type: string
+          enum: [active, past_due, canceled, trialing]
+        provider:
+          type: string
+          enum: [stripe, apple, google]
+        current_period_end:
+          type: string
+          format: date-time
+          nullable: true
+        cancel_at_period_end:
+          type: boolean
+    SubscriptionStatusResponse:
+      type: object
+      required:
+        - plan
+        - has_stripe_account
+      properties:
+        plan:
+          type: string
+          enum: [basic, pro]
+        has_stripe_account:
+          type: boolean
+        subscription:
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/SubscriptionInfo"
+          nullable: true
+    Event:
+      type: object
+      required:
+        - id
+        - user_id
+        - client_id
+        - event_date
+        - service_type
+        - num_people
+        - status
+        - discount
+        - discount_type
+        - requires_invoice
+        - tax_rate
+        - tax_amount
+        - total_amount
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        client_id:
+          type: string
+          format: uuid
+        event_date:
+          type: string
+          description: DATE string in YYYY-MM-DD format
+        start_time:
+          type: string
+          nullable: true
+        end_time:
+          type: string
+          nullable: true
+        service_type:
+          type: string
+        num_people:
+          type: integer
+        status:
+          type: string
+          enum: [quoted, confirmed, completed, cancelled]
+        discount:
+          type: number
+          format: double
+        discount_type:
+          type: string
+          enum: [percent, fixed]
+        requires_invoice:
+          type: boolean
+        tax_rate:
+          type: number
+          format: double
+        tax_amount:
+          type: number
+          format: double
+        total_amount:
+          type: number
+          format: double
+        location:
+          type: string
+          nullable: true
+        city:
+          type: string
+          nullable: true
+        deposit_percent:
+          type: number
+          format: double
+          nullable: true
+        cancellation_days:
+          type: number
+          format: double
+          nullable: true
+        refund_percent:
+          type: number
+          format: double
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        photos:
+          type: string
+          nullable: true
+        client:
+          $ref: "#/components/schemas/Client"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    EventUpsertRequest:
+      type: object
+      required:
+        - client_id
+        - event_date
+        - service_type
+        - num_people
+        - status
+        - discount
+        - discount_type
+        - requires_invoice
+        - tax_rate
+        - tax_amount
+        - total_amount
+      properties:
+        client_id:
+          type: string
+          format: uuid
+        event_date:
+          type: string
+          description: DATE string in YYYY-MM-DD or ISO-like value; backend validates date portion
+        start_time:
+          type: string
+          nullable: true
+        end_time:
+          type: string
+          nullable: true
+        service_type:
+          type: string
+        num_people:
+          type: integer
+        status:
+          type: string
+          enum: [quoted, confirmed, completed, cancelled]
+        discount:
+          type: number
+          format: double
+        discount_type:
+          type: string
+          enum: [percent, fixed]
+        requires_invoice:
+          type: boolean
+        tax_rate:
+          type: number
+          format: double
+        tax_amount:
+          type: number
+          format: double
+        total_amount:
+          type: number
+          format: double
+        location:
+          type: string
+          nullable: true
+        city:
+          type: string
+          nullable: true
+        deposit_percent:
+          type: number
+          format: double
+          nullable: true
+        cancellation_days:
+          type: number
+          format: double
+          nullable: true
+        refund_percent:
+          type: number
+          format: double
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+    Client:
+      type: object
+      required:
+        - id
+        - user_id
+        - name
+        - phone
+        - total_events
+        - total_spent
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+          format: email
+          nullable: true
+        address:
+          type: string
+          nullable: true
+        city:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        photo_url:
+          type: string
+          nullable: true
+        total_events:
+          type: integer
+        total_spent:
+          type: number
+          format: double
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    Product:
+      type: object
+      required:
+        - id
+        - user_id
+        - name
+        - category
+        - base_price
+        - is_active
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        category:
+          type: string
+        base_price:
+          type: number
+          format: double
+        recipe:
+          type: string
+          nullable: true
+        image_url:
+          type: string
+          nullable: true
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    InventoryItem:
+      type: object
+      required:
+        - id
+        - user_id
+        - ingredient_name
+        - current_stock
+        - minimum_stock
+        - unit
+        - type
+        - last_updated
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        ingredient_name:
+          type: string
+        current_stock:
+          type: number
+          format: double
+        minimum_stock:
+          type: number
+          format: double
+        unit:
+          type: string
+        unit_cost:
+          type: number
+          format: double
+          nullable: true
+        type:
+          type: string
+          enum: [ingredient, equipment, supply]
+          description: Category of the inventory item. 'ingredient' scales with product recipes, 'equipment' is reusable, 'supply' is consumed per event.
+        last_updated:
+          type: string
+          format: date-time
+    ProductIngredient:
+      type: object
+      required:
+        - id
+        - product_id
+        - inventory_id
+        - quantity_required
+        - bring_to_event
+        - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        product_id:
+          type: string
+          format: uuid
+        inventory_id:
+          type: string
+          format: uuid
+        quantity_required:
+          type: number
+          format: double
+        capacity:
+          type: number
+          format: double
+          nullable: true
+        bring_to_event:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        ingredient_name:
+          type: string
+          nullable: true
+        unit:
+          type: string
+          nullable: true
+        unit_cost:
+          type: number
+          format: double
+          nullable: true
+        type:
+          type: string
+          enum: [ingredient, equipment, supply]
+          nullable: true
+    ProductIngredientsUpdateRequest:
+      type: object
+      required:
+        - ingredients
+      properties:
+        ingredients:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductIngredient"
+    ProductIngredientsBatchRequest:
+      type: object
+      required:
+        - product_ids
+      properties:
+        product_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+    EventProduct:
+      type: object
+      required:
+        - id
+        - event_id
+        - product_id
+        - quantity
+        - unit_price
+        - discount
+        - total_price
+        - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        event_id:
+          type: string
+          format: uuid
+        product_id:
+          type: string
+          format: uuid
+        quantity:
+          type: number
+          format: double
+        unit_price:
+          type: number
+          format: double
+        discount:
+          type: number
+          format: double
+        total_price:
+          type: number
+          format: double
+        created_at:
+          type: string
+          format: date-time
+        product_name:
+          type: string
+          nullable: true
+    EventExtra:
+      type: object
+      required:
+        - id
+        - event_id
+        - description
+        - cost
+        - price
+        - exclude_utility
+        - include_in_checklist
+        - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        event_id:
+          type: string
+          format: uuid
+        description:
+          type: string
+        cost:
+          type: number
+          format: double
+        price:
+          type: number
+          format: double
+        exclude_utility:
+          type: boolean
+        include_in_checklist:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+    EventEquipment:
+      type: object
+      required:
+        - id
+        - event_id
+        - inventory_id
+        - quantity
+        - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        event_id:
+          type: string
+          format: uuid
+        inventory_id:
+          type: string
+          format: uuid
+        quantity:
+          type: integer
+        notes:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        equipment_name:
+          type: string
+          nullable: true
+        unit:
+          type: string
+          nullable: true
+        current_stock:
+          type: number
+          format: double
+          nullable: true
+    EquipmentConflict:
+      type: object
+      required:
+        - inventory_id
+        - equipment_name
+        - conflicting_event_id
+        - event_date
+        - service_type
+        - conflict_type
+      properties:
+        inventory_id:
+          type: string
+          format: uuid
+        equipment_name:
+          type: string
+        conflicting_event_id:
+          type: string
+          format: uuid
+        event_date:
+          type: string
+        start_time:
+          type: string
+          nullable: true
+        end_time:
+          type: string
+          nullable: true
+        service_type:
+          type: string
+        client_name:
+          type: string
+          nullable: true
+        conflict_type:
+          type: string
+          enum: [overlap, insufficient_gap, full_day]
+    EquipmentConflictRequest:
+      type: object
+      required:
+        - event_date
+        - inventory_ids
+      properties:
+        event_date:
+          type: string
+        start_time:
+          type: string
+          nullable: true
+        end_time:
+          type: string
+          nullable: true
+        inventory_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        exclude_event_id:
+          type: string
+          format: uuid
+          nullable: true
+    ProductQuantityRequest:
+      type: object
+      required:
+        - product_id
+        - quantity
+      properties:
+        product_id:
+          type: string
+          format: uuid
+        quantity:
+          type: number
+          format: double
+    ProductQuantityRequestEnvelope:
+      type: object
+      required:
+        - products
+      properties:
+        products:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductQuantityRequest"
+    EquipmentSuggestion:
+      type: object
+      required:
+        - id
+        - ingredient_name
+        - current_stock
+        - unit
+        - type
+        - suggested_quantity
+      properties:
+        id:
+          type: string
+          format: uuid
+        ingredient_name:
+          type: string
+        current_stock:
+          type: number
+          format: double
+        unit:
+          type: string
+        type:
+          type: string
+        suggested_quantity:
+          type: integer
+    EventSupply:
+      type: object
+      required:
+        - id
+        - event_id
+        - inventory_id
+        - quantity
+        - unit_cost
+        - source
+        - exclude_cost
+        - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        event_id:
+          type: string
+          format: uuid
+        inventory_id:
+          type: string
+          format: uuid
+        quantity:
+          type: number
+          format: double
+        unit_cost:
+          type: number
+          format: double
+        source:
+          type: string
+          enum: [stock, purchase]
+        exclude_cost:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        supply_name:
+          type: string
+          nullable: true
+        unit:
+          type: string
+          nullable: true
+        current_stock:
+          type: number
+          format: double
+          nullable: true
+    SupplySuggestion:
+      type: object
+      required:
+        - id
+        - ingredient_name
+        - current_stock
+        - unit
+        - unit_cost
+        - suggested_quantity
+      properties:
+        id:
+          type: string
+          format: uuid
+        ingredient_name:
+          type: string
+        current_stock:
+          type: number
+          format: double
+        unit:
+          type: string
+        unit_cost:
+          type: number
+          format: double
+        suggested_quantity:
+          type: number
+          format: double
+    EventItemsUpdateRequest:
+      type: object
+      required:
+        - products
+        - extras
+      properties:
+        products:
+          type: array
+          items:
+            $ref: "#/components/schemas/EventProduct"
+        extras:
+          type: array
+          items:
+            $ref: "#/components/schemas/EventExtra"
+        equipment:
+          type: array
+          items:
+            $ref: "#/components/schemas/EventEquipment"
+        supplies:
+          type: array
+          items:
+            $ref: "#/components/schemas/EventSupply"
+    Payment:
+      type: object
+      required:
+        - id
+        - event_id
+        - user_id
+        - amount
+        - payment_date
+        - payment_method
+        - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        event_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        amount:
+          type: number
+          format: double
+        payment_date:
+          type: string
+          description: DATE string
+        payment_method:
+          type: string
+        notes:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+    EventCheckoutSession:
+      type: object
+      required:
+        - session_id
+        - url
+      properties:
+        session_id:
+          type: string
+        url:
+          type: string
+          format: uri
+    EventPaymentSession:
+      type: object
+      required:
+        - session_id
+        - payment_status
+        - amount_total
+        - customer_email
+      properties:
+        session_id:
+          type: string
+        payment_status:
+          type: string
+        amount_total:
+          type: number
+          format: double
+        customer_email:
+          type: string
+    PaginatedClientsResponse:
+      type: object
+      required:
+        - data
+        - total
+        - page
+        - limit
+        - total_pages
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Client"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        total_pages:
+          type: integer
+    PaginatedEventsResponse:
+      type: object
+      required:
+        - data
+        - total
+        - page
+        - limit
+        - total_pages
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Event"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        total_pages:
+          type: integer
+    PaginatedProductsResponse:
+      type: object
+      required:
+        - data
+        - total
+        - page
+        - limit
+        - total_pages
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Product"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        total_pages:
+          type: integer
+    PaginatedInventoryResponse:
+      type: object
+      required:
+        - data
+        - total
+        - page
+        - limit
+        - total_pages
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/InventoryItem"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        total_pages:
+          type: integer
+    PaginatedPaymentsResponse:
+      type: object
+      required:
+        - data
+        - total
+        - page
+        - limit
+        - total_pages
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Payment"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        total_pages:
+          type: integer
+    AuditLog:
+      type: object
+      required:
+        - id
+        - user_id
+        - action
+        - resource_type
+        - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        action:
+          type: string
+          description: Verb or action performed (e.g. create, update, delete, login)
+        resource_type:
+          type: string
+          description: Type of resource affected (e.g. event, client, product)
+        resource_id:
+          type: string
+          format: uuid
+          nullable: true
+        details:
+          type: string
+          nullable: true
+        ip_address:
+          type: string
+          nullable: true
+        user_agent:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+    PaginatedAuditLogsResponse:
+      type: object
+      required:
+        - data
+        - total
+        - page
+        - limit
+        - total_pages
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuditLog"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        total_pages:
+          type: integer
+    UnavailableDate:
+      type: object
+      required:
+        - id
+        - user_id
+        - start_date
+        - end_date
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        start_date:
+          type: string
+        end_date:
+          type: string
+        reason:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    UnavailableDateCreateRequest:
+      type: object
+      required:
+        - start_date
+        - end_date
+      properties:
+        start_date:
+          type: string
+        end_date:
+          type: string
+        reason:
+          type: string
+    DeviceToken:
+      type: object
+      required:
+        - id
+        - user_id
+        - token
+        - platform
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        token:
+          type: string
+        platform:
+          type: string
+          enum: [ios, android, web]
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    DeviceRegisterRequest:
+      type: object
+      required:
+        - token
+        - platform
+      properties:
+        token:
+          type: string
+        platform:
+          type: string
+          enum: [ios, android, web]
+    DeviceUnregisterRequest:
+      type: object
+      required:
+        - token
+      properties:
+        token:
+          type: string
+    StatusOkResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [ok]
+    LiveActivityToken:
+      type: object
+      required:
+        - id
+        - user_id
+        - event_id
+        - push_token
+        - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        event_id:
+          type: string
+          format: uuid
+        push_token:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+    LiveActivityRegisterRequest:
+      type: object
+      required:
+        - event_id
+        - push_token
+      properties:
+        event_id:
+          type: string
+          format: uuid
+        push_token:
+          type: string
+    UploadImageResponse:
+      type: object
+      required:
+        - url
+        - thumbnail_url
+        - filename
+      properties:
+        url:
+          type: string
+        thumbnail_url:
+          type: string
+        filename:
+          type: string
+    SearchResponse:
+      type: object
+      required:
+        - clients
+        - products
+        - inventory
+        - events
+      properties:
+        clients:
+          type: array
+          items:
+            $ref: "#/components/schemas/Client"
+        products:
+          type: array
+          items:
+            $ref: "#/components/schemas/Product"
+        inventory:
+          type: array
+          items:
+            $ref: "#/components/schemas/InventoryItem"
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/Event"
+    DashboardKPIs:
+      type: object
+      required:
+        - total_revenue
+        - events_this_month
+        - pending_quotes
+        - low_stock_items
+        - upcoming_events
+        - total_clients
+        - average_event_value
+      properties:
+        total_revenue:
+          type: number
+          format: double
+        events_this_month:
+          type: integer
+        pending_quotes:
+          type: integer
+        low_stock_items:
+          type: integer
+        upcoming_events:
+          type: integer
+        total_clients:
+          type: integer
+        average_event_value:
+          type: number
+          format: double
+    RevenueDataPoint:
+      type: object
+      required:
+        - month
+        - revenue
+        - event_count
+      properties:
+        month:
+          type: string
+        revenue:
+          type: number
+          format: double
+        event_count:
+          type: integer
+    EventStatusCount:
+      type: object
+      required:
+        - status
+        - count
+      properties:
+        status:
+          type: string
+        count:
+          type: integer
+    TopClient:
+      type: object
+      required:
+        - id
+        - name
+        - total_spent
+        - total_events
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        total_spent:
+          type: number
+          format: double
+        total_events:
+          type: integer
+    ProductDemandItem:
+      type: object
+      required:
+        - id
+        - name
+        - times_used
+        - total_revenue
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        times_used:
+          type: integer
+        total_revenue:
+          type: number
+          format: double
+    ForecastDataPoint:
+      type: object
+      required:
+        - month
+        - confirmed_revenue
+        - confirmed_events
+      properties:
+        month:
+          type: string
+        confirmed_revenue:
+          type: number
+          format: double
+        confirmed_events:
+          type: integer
+    EventPhoto:
+      type: object
+      required:
+        - id
+        - url
+        - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        url:
+          type: string
+        thumbnail_url:
+          type: string
+          nullable: true
+        caption:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+    EventPhotoCreateRequest:
+      type: object
+      required:
+        - url
+      properties:
+        url:
+          type: string
+        thumbnail_url:
+          type: string
+          nullable: true
+        caption:
+          type: string
+          nullable: true
+    PlatformStats:
+      type: object
+      required:
+        - total_users
+        - basic_users
+        - pro_users
+        - premium_users
+        - total_events
+        - total_clients
+        - total_products
+        - new_users_today
+        - new_users_week
+        - new_users_month
+        - active_subscriptions
+      properties:
+        total_users:
+          type: integer
+        basic_users:
+          type: integer
+        pro_users:
+          type: integer
+        premium_users:
+          type: integer
+        total_events:
+          type: integer
+        total_clients:
+          type: integer
+        total_products:
+          type: integer
+        new_users_today:
+          type: integer
+        new_users_week:
+          type: integer
+        new_users_month:
+          type: integer
+        active_subscriptions:
+          type: integer
+    AdminUser:
+      type: object
+      required:
+        - id
+        - email
+        - name
+        - plan
+        - role
+        - has_paid_subscription
+        - events_count
+        - clients_count
+        - products_count
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        business_name:
+          type: string
+          nullable: true
+        plan:
+          type: string
+          enum: [basic, pro, premium]
+        role:
+          type: string
+        stripe_customer_id:
+          type: string
+          nullable: true
+        has_paid_subscription:
+          type: boolean
+        plan_expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        events_count:
+          type: integer
+        clients_count:
+          type: integer
+        products_count:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    SubscriptionOverview:
+      type: object
+      required:
+        - total_active
+        - total_canceled
+        - total_trialing
+        - total_past_due
+        - stripe_count
+        - apple_count
+        - google_count
+      properties:
+        total_active:
+          type: integer
+        total_canceled:
+          type: integer
+        total_trialing:
+          type: integer
+        total_past_due:
+          type: integer
+        stripe_count:
+          type: integer
+        apple_count:
+          type: integer
+        google_count:
+          type: integer
+    AdminUpgradeRequest:
+      type: object
+      properties:
+        plan:
+          type: string
+          enum: [basic, pro, premium]
+          description: Target plan. Defaults to pro when omitted or empty.
+        expires_at:
+          type: string
+          format: date
+          nullable: true
+          description: Optional gift expiry date in YYYY-MM-DD format.
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error code or type
+        message:
+          type: string
+          description: Human-readable error message
+paths:
+  /health:
+    get:
+      security: []
+      operationId: healthCheck
+      summary: Check API and database health
+      responses:
+        "200":
+          description: API healthy
+        "503":
+          description: Database unavailable
+  /api/auth/register:
+    post:
+      security: []
+      operationId: register
+      summary: Register a new user account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "201":
+          description: User registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthSuccessResponse"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Email already registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/auth/login:
+    post:
+      security: []
+      operationId: login
+      summary: Authenticate with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Authenticated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthSuccessResponse"
+        "400":
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/auth/refresh:
+    post:
+      security: []
+      operationId: refreshToken
+      summary: Refresh access token using refresh token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshTokenRequest"
+      responses:
+        "200":
+          description: Tokens refreshed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenPair"
+        "400":
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Invalid or expired token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/auth/logout:
+    post:
+      security: []
+      operationId: logout
+      summary: Logout and clear auth cookie/token
+      responses:
+        "200":
+          description: Logout processed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+  /api/auth/forgot-password:
+    post:
+      security: []
+      operationId: forgotPassword
+      summary: Start password reset flow
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ForgotPasswordRequest"
+      responses:
+        "200":
+          description: Reset message accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+  /api/auth/reset-password:
+    post:
+      security: []
+      operationId: resetPassword
+      summary: Complete password reset with token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResetPasswordRequest"
+      responses:
+        "200":
+          description: Password updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          description: Invalid or malformed request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/auth/me:
+    get:
+      operationId: me
+      summary: Get current authenticated user profile
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Unauthorized
+        "404":
+          description: User not found
+  /api/auth/change-password:
+    post:
+      operationId: changePassword
+      summary: Change current user password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangePasswordRequest"
+      responses:
+        "200":
+          description: Password changed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+  /api/auth/google:
+    post:
+      security: []
+      operationId: googleSignIn
+      summary: Sign in or register with Google ID token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GoogleSignInRequest"
+      responses:
+        "200":
+          description: Authenticated with Google
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthSuccessResponse"
+        "400":
+          description: Invalid request body or missing id_token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Invalid Google ID token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Failed to link Google account or generate tokens
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/auth/apple:
+    post:
+      security: []
+      operationId: appleSignIn
+      summary: Sign in or register with Apple identity token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AppleSignInRequest"
+      responses:
+        "200":
+          description: Authenticated with Apple
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppleAuthSuccessResponse"
+        "400":
+          description: Invalid request body or missing identity_token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Invalid Apple identity token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Failed to link Apple account or generate tokens
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/users/me:
+    put:
+      operationId: updateProfile
+      summary: Update current user profile and business defaults
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProfileRequest"
+      responses:
+        "200":
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          description: Invalid request body or contract template
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "500":
+          description: Failed to update profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/subscriptions/status:
+    get:
+      operationId: getSubscriptionStatus
+      summary: Get current subscription and billing status
+      responses:
+        "200":
+          description: Subscription status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubscriptionStatusResponse"
+        "401":
+          description: Unauthorized
+  /api/subscriptions/checkout-session:
+    post:
+      operationId: createCheckoutSession
+      summary: Create Stripe checkout session for Pro subscription
+      responses:
+        "200":
+          description: Checkout session created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckoutSessionResponse"
+        "401":
+          description: Unauthorized
+        "500":
+          description: Stripe not configured or session creation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/subscriptions/portal-session:
+    post:
+      operationId: createPortalSession
+      summary: Create Stripe customer portal session
+      responses:
+        "200":
+          description: Portal session created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckoutSessionResponse"
+        "400":
+          description: No associated Stripe customer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "500":
+          description: Stripe not configured or portal creation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/subscriptions/webhook/stripe:
+    post:
+      security: []
+      operationId: stripeWebhook
+      summary: Receive Stripe webhook events
+      responses:
+        "200":
+          description: Webhook processed
+        "400":
+          description: Invalid signature or payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Webhook not configured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/subscriptions/webhook/revenuecat:
+    post:
+      security: []
+      operationId: revenueCatWebhook
+      summary: Receive RevenueCat webhook events
+      responses:
+        "200":
+          description: Webhook processed
+        "400":
+          description: Invalid webhook payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/events:
+    get:
+      operationId: listEvents
+      summary: Get all events for authenticated user
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: sort
+          in: query
+          schema:
+            type: string
+        - name: order
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+        - name: start
+          in: query
+          schema:
+            type: string
+        - name: end
+          in: query
+          schema:
+            type: string
+        - name: client_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: List of events or paginated events when page is provided
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                    items:
+                      $ref: "#/components/schemas/Event"
+                  - $ref: "#/components/schemas/PaginatedEventsResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: createEvent
+      summary: Create new event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EventUpsertRequest"
+      responses:
+        "201":
+          description: Event created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Event"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "422":
+          description: Unprocessable entity
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/events/{id}:
+    get:
+      operationId: getEvent
+      summary: Get event by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Event details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Event"
+        "401":
+          description: Unauthorized
+        "404":
+          description: Event not found
+    put:
+      operationId: updateEvent
+      summary: Update event
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EventUpsertRequest"
+      responses:
+        "200":
+          description: Event updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Event"
+        "400":
+          description: Validation error
+        "401":
+          description: Unauthorized
+        "404":
+          description: Event not found
+    delete:
+      operationId: deleteEvent
+      summary: Delete event
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Event deleted
+        "401":
+          description: Unauthorized
+        "404":
+          description: Event not found
+  /api/events/search:
+    get:
+      operationId: searchEvents
+      summary: Advanced search over events by query, status, date range or client
+      description: At least one filter must be provided (q, status, from, to or client_id). Returns a flat array of events matching every provided filter.
+      parameters:
+        - name: q
+          in: query
+          description: Free-text query matched against title, description and notes
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: Filter by event status
+          schema:
+            type: string
+            enum: [quoted, confirmed, completed, cancelled]
+        - name: from
+          in: query
+          description: Inclusive start date (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          description: Inclusive end date (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+        - name: client_id
+          in: query
+          description: Restrict results to one client
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Matching events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Event"
+        "400":
+          description: Invalid filters or missing mandatory filter
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "500":
+          description: Failed to search events
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/events/upcoming:
+    get:
+      operationId: getUpcomingEvents
+      summary: Get upcoming events for authenticated user
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 5
+      responses:
+        "200":
+          description: Upcoming events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Event"
+        "401":
+          description: Unauthorized
+  /api/events/{id}/products:
+    get:
+      operationId: getEventProducts
+      summary: Get products assigned to an event
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Event products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EventProduct"
+        "400":
+          description: Invalid event ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Event not found
+  /api/events/{id}/extras:
+    get:
+      operationId: getEventExtras
+      summary: Get extras assigned to an event
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Event extras
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EventExtra"
+        "400":
+          description: Invalid event ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Event not found
+  /api/events/{id}/photos:
+    get:
+      operationId: getEventPhotos
+      summary: Get photos attached to an event
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Event photos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EventPhoto"
+        "400":
+          description: Invalid event ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Event not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: addEventPhoto
+      summary: Attach a photo to an event
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EventPhotoCreateRequest"
+      responses:
+        "201":
+          description: Event photo created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventPhoto"
+        "400":
+          description: Invalid event ID or photo payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Event not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Failed to add photo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/events/{id}/photos/{photoId}:
+    delete:
+      operationId: deleteEventPhoto
+      summary: Delete a photo attached to an event
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: photoId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Event photo deleted
+        "400":
+          description: Invalid event ID or photo ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Event or photo not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Failed to delete photo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/events/{id}/items:
+    put:
+      operationId: updateEventItems
+      summary: Replace products extras equipment and supplies for an event
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EventItemsUpdateRequest"
+      responses:
+        "200":
+          description: Event items updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatusOkResponse"
+        "400":
+          description: Invalid event item payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Event not found
+  /api/events/{id}/equipment:
+    get:
+      operationId: getEventEquipment
+      summary: Get equipment assigned to an event
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Event equipment
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EventEquipment"
+        "400":
+          description: Invalid event ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Event not found
+  /api/events/{id}/supplies:
+    get:
+      operationId: getEventSupplies
+      summary: Get supplies assigned to an event
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Event supplies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EventSupply"
+        "400":
+          description: Invalid event ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Event not found
+  /api/events/equipment/conflicts:
+    get:
+      operationId: checkEquipmentConflictsGET
+      summary: Check scheduling conflicts using query parameters (mobile variant)
+      description: Alternative to the POST variant that accepts filters via query string. Without event_date and inventory_ids the response is an empty array.
+      parameters:
+        - name: event_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: inventory_ids
+          in: query
+          description: Comma-separated list of inventory UUIDs
+          schema:
+            type: string
+        - name: exclude_event_id
+          in: query
+          description: Event UUID to exclude from conflict calculation (useful when editing)
+          schema:
+            type: string
+            format: uuid
+        - name: start_time
+          in: query
+          schema:
+            type: string
+        - name: end_time
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Equipment conflict results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EquipmentConflict"
+        "400":
+          description: Invalid inventory ID or exclude_event_id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Failed to check equipment conflicts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: checkEquipmentConflicts
+      summary: Check scheduling conflicts for selected equipment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EquipmentConflictRequest"
+      responses:
+        "200":
+          description: Equipment conflict results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EquipmentConflict"
+        "400":
+          description: Invalid inventory ID or exclude_event_id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Failed to check equipment conflicts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/events/equipment/suggestions:
+    get:
+      operationId: getEquipmentSuggestionsGET
+      summary: Suggest equipment for selected products using query parameters (mobile variant)
+      parameters:
+        - name: product_ids
+          in: query
+          description: Comma-separated list of product UUIDs
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Equipment suggestions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EquipmentSuggestion"
+        "400":
+          description: Invalid product ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Failed to fetch equipment suggestions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: getEquipmentSuggestions
+      summary: Suggest equipment required for selected products
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductQuantityRequestEnvelope"
+      responses:
+        "200":
+          description: Equipment suggestions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EquipmentSuggestion"
+        "400":
+          description: Invalid product ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Failed to fetch equipment suggestions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/events/supplies/suggestions:
+    get:
+      operationId: getSupplySuggestionsGET
+      summary: Suggest supplies for selected products using query parameters (mobile variant)
+      parameters:
+        - name: product_ids
+          in: query
+          description: Comma-separated list of product UUIDs
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Supply suggestions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SupplySuggestion"
+        "400":
+          description: Invalid product ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Failed to fetch supply suggestions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: getSupplySuggestions
+      summary: Suggest supplies required for selected products
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductQuantityRequestEnvelope"
+      responses:
+        "200":
+          description: Supply suggestions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SupplySuggestion"
+        "400":
+          description: Invalid product ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Failed to fetch supply suggestions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/events/{id}/checkout-session:
+    post:
+      operationId: createEventCheckoutSession
+      summary: Create a Stripe checkout session for an event
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Event checkout session created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventCheckoutSession"
+        "400":
+          description: Invalid event ID or event cannot be paid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Event not found
+        "503":
+          description: Stripe payments are not configured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/events/{id}/payment-session:
+    get:
+      operationId: getEventPaymentSession
+      summary: Retrieve Stripe payment session details for an event payment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: session_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Event payment session details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventPaymentSession"
+        "400":
+          description: Missing session_id parameter or session does not match event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Unauthorized
+        "500":
+          description: Failed to retrieve payment session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/clients:
+    get:
+      operationId: listClients
+      summary: Get all clients for authenticated user
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: sort
+          in: query
+          schema:
+            type: string
+        - name: order
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+      responses:
+        "200":
+          description: List of clients or paginated clients when page is provided
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                    items:
+                      $ref: "#/components/schemas/Client"
+                  - $ref: "#/components/schemas/PaginatedClientsResponse"
+        "401":
+          description: Unauthorized
+    post:
+      operationId: createClient
+      summary: Create new client
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Client"
+      responses:
+        "201":
+          description: Client created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+        "400":
+          description: Validation error
+        "401":
+          description: Unauthorized
+  /api/clients/{id}:
+    get:
+      operationId: getClient
+      summary: Get client by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Client details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+        "401":
+          description: Unauthorized
+        "404":
+          description: Client not found
+    put:
+      operationId: updateClient
+      summary: Update client
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Client"
+      responses:
+        "200":
+          description: Client updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+        "401":
+          description: Unauthorized
+        "404":
+          description: Client not found
+    delete:
+      operationId: deleteClient
+      summary: Delete client
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Client deleted
+        "401":
+          description: Unauthorized
+        "404":
+          description: Client not found
+  /api/products:
+    get:
+      operationId: listProducts
+      summary: Get all products for authenticated user
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: sort
+          in: query
+          schema:
+            type: string
+        - name: order
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+      responses:
+        "200":
+          description: List of products or paginated products when page is provided
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                    items:
+                      $ref: "#/components/schemas/Product"
+                  - $ref: "#/components/schemas/PaginatedProductsResponse"
+        "401":
+          description: Unauthorized
+    post:
+      operationId: createProduct
+      summary: Create new product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Product"
+      responses:
+        "201":
+          description: Product created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+        "400":
+          description: Validation error
+        "401":
+          description: Unauthorized
+  /api/products/{id}:
+    get:
+      operationId: getProduct
+      summary: Get product by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Product details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+        "400":
+          description: Invalid product ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Product not found
+    put:
+      operationId: updateProduct
+      summary: Update product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Product"
+      responses:
+        "200":
+          description: Product updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Product not found
+    delete:
+      operationId: deleteProduct
+      summary: Delete product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Product deleted
+        "400":
+          description: Invalid product ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Product not found
+  /api/products/{id}/ingredients:
+    get:
+      operationId: getProductIngredients
+      summary: Get ingredients assigned to a product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Product ingredients
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProductIngredient"
+        "400":
+          description: Invalid product ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Product not found
+    put:
+      operationId: updateProductIngredients
+      summary: Replace ingredients assigned to a product
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductIngredientsUpdateRequest"
+      responses:
+        "200":
+          description: Product ingredients updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatusOkResponse"
+        "400":
+          description: Invalid ingredient payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Product not found
+  /api/products/ingredients/batch:
+    post:
+      operationId: getBatchProductIngredients
+      summary: Get ingredients for multiple products in one request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductIngredientsBatchRequest"
+      responses:
+        "200":
+          description: Product ingredients for requested products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProductIngredient"
+        "400":
+          description: Invalid request body or product ID list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/inventory:
+    get:
+      operationId: listInventory
+      summary: Get all inventory for authenticated user
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: sort
+          in: query
+          schema:
+            type: string
+        - name: order
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+      responses:
+        "200":
+          description: List of inventory items or paginated inventory when page is provided
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                    items:
+                      $ref: "#/components/schemas/InventoryItem"
+                  - $ref: "#/components/schemas/PaginatedInventoryResponse"
+        "401":
+          description: Unauthorized
+    post:
+      operationId: createInventory
+      summary: Create new inventory item
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InventoryItem"
+      responses:
+        "201":
+          description: Inventory item created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InventoryItem"
+        "401":
+          description: Unauthorized
+  /api/inventory/{id}:
+    get:
+      operationId: getInventoryItem
+      summary: Get inventory item by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Inventory item details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InventoryItem"
+        "400":
+          description: Invalid inventory ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Inventory item not found
+    put:
+      operationId: updateInventoryItem
+      summary: Update inventory item
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InventoryItem"
+      responses:
+        "200":
+          description: Inventory item updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InventoryItem"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Inventory item not found
+    delete:
+      operationId: deleteInventoryItem
+      summary: Delete inventory item
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Inventory item deleted
+        "400":
+          description: Invalid inventory ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Inventory item not found
+  /api/payments:
+    get:
+      operationId: listPayments
+      summary: Get all payments for authenticated user
+      parameters:
+        - name: event_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: start
+          in: query
+          schema:
+            type: string
+        - name: end
+          in: query
+          schema:
+            type: string
+        - name: event_ids
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: sort
+          in: query
+          schema:
+            type: string
+        - name: order
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+      responses:
+        "200":
+          description: List of payments filtered or paginated depending on query params
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                    items:
+                      $ref: "#/components/schemas/Payment"
+                  - $ref: "#/components/schemas/PaginatedPaymentsResponse"
+        "401":
+          description: Unauthorized
+    post:
+      operationId: createPayment
+      summary: Create new payment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Payment"
+      responses:
+        "201":
+          description: Payment created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payment"
+        "400":
+          description: Validation error
+        "401":
+          description: Unauthorized
+  /api/payments/{id}:
+    get:
+      operationId: getPayment
+      summary: Get payment by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Payment details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payment"
+        "400":
+          description: Invalid payment ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Payment not found
+    put:
+      operationId: updatePayment
+      summary: Update payment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Payment"
+      responses:
+        "200":
+          description: Payment updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payment"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Payment not found
+    delete:
+      operationId: deletePayment
+      summary: Delete payment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Payment deleted
+        "400":
+          description: Invalid payment ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Payment not found
+  /api/unavailable-dates:
+    get:
+      operationId: getUnavailableDates
+      summary: Get unavailable dates in a date range
+      parameters:
+        - name: start
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: end
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Unavailable dates found
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UnavailableDate"
+        "400":
+          description: Invalid or missing date parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+    post:
+      operationId: createUnavailableDate
+      summary: Create an unavailable date range
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UnavailableDateCreateRequest"
+      responses:
+        "201":
+          description: Unavailable date created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnavailableDate"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+  /api/unavailable-dates/{id}:
+    delete:
+      operationId: deleteUnavailableDate
+      summary: Delete an unavailable date range
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Unavailable date deleted
+        "400":
+          description: Invalid id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Unavailable date not found
+  /api/devices/register:
+    post:
+      operationId: registerDevice
+      summary: Register a device token for push notifications
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeviceRegisterRequest"
+      responses:
+        "200":
+          description: Device registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeviceToken"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+  /api/devices/unregister:
+    post:
+      operationId: unregisterDevice
+      summary: Unregister a device token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeviceUnregisterRequest"
+      responses:
+        "200":
+          description: Device unregistered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatusOkResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+  /api/live-activities/register:
+    post:
+      operationId: registerLiveActivity
+      summary: Register an iOS live activity push token for an event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LiveActivityRegisterRequest"
+      responses:
+        "201":
+          description: Live activity token registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LiveActivityToken"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+  /api/live-activities/by-event/{eventId}:
+    delete:
+      operationId: deleteLiveActivityByEvent
+      summary: Delete live activity tokens by event id
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Live activity tokens deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatusOkResponse"
+        "400":
+          description: Invalid event ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+  /api/uploads/image:
+    post:
+      operationId: uploadImage
+      summary: Upload an image file
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Image uploaded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadImageResponse"
+        "400":
+          description: Invalid upload request or file type
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Upload limit reached
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/search:
+    get:
+      operationId: searchAll
+      summary: Search across clients products inventory and events
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Search results grouped by resource type
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchResponse"
+        "400":
+          description: Missing query parameter
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+  /api/dashboard/kpis:
+    get:
+      operationId: getDashboardKPIs
+      summary: Get dashboard KPI summary
+      responses:
+        "200":
+          description: Dashboard KPIs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardKPIs"
+        "401":
+          description: Unauthorized
+        "500":
+          description: Failed to get dashboard KPIs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/dashboard/revenue-chart:
+    get:
+      operationId: getRevenueChart
+      summary: Get monthly revenue chart data
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [month, quarter, year]
+      responses:
+        "200":
+          description: Revenue chart data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RevenueDataPoint"
+        "400":
+          description: Invalid period
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+  /api/dashboard/events-by-status:
+    get:
+      operationId: getEventsByStatus
+      summary: Get event counts grouped by status
+      responses:
+        "200":
+          description: Event counts by status
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EventStatusCount"
+        "401":
+          description: Unauthorized
+  /api/dashboard/top-clients:
+    get:
+      operationId: getTopClients
+      summary: Get top clients by total spent
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Top clients
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TopClient"
+        "401":
+          description: Unauthorized
+  /api/dashboard/product-demand:
+    get:
+      operationId: getProductDemand
+      summary: Get most used products and generated revenue
+      responses:
+        "200":
+          description: Product demand data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProductDemandItem"
+        "401":
+          description: Unauthorized
+  /api/dashboard/forecast:
+    get:
+      operationId: getForecast
+      summary: Get revenue forecast for future confirmed or quoted events
+      responses:
+        "200":
+          description: Forecast data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ForecastDataPoint"
+        "401":
+          description: Unauthorized
+  /api/dashboard/activity:
+    get:
+      operationId: getActivityLog
+      summary: Get the audit activity log for the authenticated user
+      description: Returns the authenticated user's audit log entries. Returns a flat array when no page is provided or a paginated envelope when page is present.
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [created_at, action, resource]
+            default: created_at
+        - name: order
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+      responses:
+        "200":
+          description: Activity log entries
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                    items:
+                      $ref: "#/components/schemas/AuditLog"
+                  - $ref: "#/components/schemas/PaginatedAuditLogsResponse"
+        "401":
+          description: Unauthorized
+        "500":
+          description: Failed to get activity log
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/admin/stats:
+    get:
+      operationId: getAdminStats
+      summary: Get platform-wide admin KPIs
+      responses:
+        "200":
+          description: Platform stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlatformStats"
+        "401":
+          description: Unauthorized
+        "500":
+          description: Failed to get platform stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/admin/users:
+    get:
+      operationId: listAdminUsers
+      summary: List users with usage counters for admin views
+      responses:
+        "200":
+          description: Admin users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminUser"
+        "401":
+          description: Unauthorized
+        "500":
+          description: Failed to list users
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/admin/users/{id}:
+    get:
+      operationId: getAdminUser
+      summary: Get one user with admin usage details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Admin user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUser"
+        "400":
+          description: Invalid user ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/admin/users/{id}/upgrade:
+    put:
+      operationId: upgradeAdminUser
+      summary: Change a user's plan from the admin console
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminUpgradeRequest"
+      responses:
+        "200":
+          description: User upgraded or downgraded
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/AdminUser"
+                  - type: object
+                    required:
+                      - message
+                    properties:
+                      message:
+                        type: string
+                        example: Plan updated successfully
+        "400":
+          description: Invalid user ID, plan, or expires_at
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Cannot downgrade a user with an active paid subscription
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Failed to update plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/admin/subscriptions:
+    get:
+      operationId: getAdminSubscriptions
+      summary: Get subscription overview metrics for the admin console
+      responses:
+        "200":
+          description: Subscription overview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubscriptionOverview"
+        "401":
+          description: Unauthorized
+        "500":
+          description: Failed to get subscription overview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/admin/audit-logs:
+    get:
+      operationId: getAllAuditLogs
+      summary: Get paginated audit logs across all users (admin only)
+      description: Returns the platform-wide audit log. Returns a flat array when no page is provided or a paginated envelope when page is present.
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [created_at, action, resource]
+            default: created_at
+        - name: order
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+      responses:
+        "200":
+          description: Platform audit log entries
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                    items:
+                      $ref: "#/components/schemas/AuditLog"
+                  - $ref: "#/components/schemas/PaginatedAuditLogsResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden — admin role required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Failed to get audit logs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"

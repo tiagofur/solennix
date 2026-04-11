@@ -9,5 +9,14 @@ sealed class ApiError : Exception() {
     data class ServerError(val code: Int) : ApiError()
     data class NetworkError(override val cause: Throwable) : ApiError()
     data class DecodingError(override val cause: Throwable) : ApiError()
+
+    /**
+     * TLS certificate did not match the pinned fingerprints. Possible man-in-the-middle
+     * attack, corporate proxy with TLS inspection, or backend certificate rotated without
+     * updating the app. The app should refuse to continue the request and surface a clear
+     * security warning to the user.
+     */
+    data class SecurityError(override val cause: Throwable) : ApiError()
+
     data class Unknown(override val cause: Throwable) : ApiError()
 }

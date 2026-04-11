@@ -89,10 +89,6 @@ struct RouteDestination: View {
             SubscriptionView(apiClient: apiClient, authManager: authManager)
         case .about:
             AboutView()
-        case .privacy:
-            PrivacyView()
-        case .terms:
-            TermsView()
         }
     }
 }

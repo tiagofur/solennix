@@ -7,6 +7,8 @@ import io.ktor.serialization.*
 import java.io.IOException
 import java.net.ConnectException
 import java.net.SocketTimeoutException
+import javax.net.ssl.SSLPeerUnverifiedException
+import javax.net.ssl.SSLHandshakeException
 
 /**
  * Maps raw exceptions from Ktor HTTP calls into typed [ApiError] instances.
@@ -39,6 +41,8 @@ fun Throwable.toApiError(): ApiError = when (this) {
         }
     }
     is ServerResponseException -> ApiError.ServerError(response.status.value)
+    is SSLPeerUnverifiedException, is SSLHandshakeException ->
+        ApiError.SecurityError(this)
     is IOException, is ConnectException, is SocketTimeoutException ->
         ApiError.NetworkError(this)
     is JsonConvertException, is kotlinx.serialization.SerializationException ->

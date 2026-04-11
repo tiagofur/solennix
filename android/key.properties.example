@@ -1,0 +1,26 @@
+# Release signing config — Solennix Android
+#
+# Copy this file to `key.properties` in the same directory and fill in the values.
+# `key.properties` is gitignored — NEVER commit the real one.
+#
+# Alternative: set these as environment variables instead (CI-friendly):
+#   SOLENNIX_KEYSTORE_FILE, SOLENNIX_KEYSTORE_PASSWORD,
+#   SOLENNIX_KEY_ALIAS, SOLENNIX_KEY_PASSWORD
+#
+# Env vars take precedence over this file.
+#
+# See: obsidian/Solennix/Android/Firma y Secretos de Release.md for rotation and setup.
+
+# Path to the keystore file, relative to android/ (e.g. solennix.jks).
+# The keystore itself is gitignored via *.jks — store it outside the repo or in android/.
+storeFile=solennix.jks
+
+# Alias used when the keystore was created (`keytool -genkeypair -alias ...`).
+keyAlias=upload
+
+# Keystore password — at least 16 characters, mixed case + digits + symbols.
+# Do NOT reuse passwords from other projects or use trivial ones (e.g. `asd123`, `password`).
+storePassword=CHANGE_ME
+
+# Key password — can be the same as storePassword but a distinct value is recommended.
+keyPassword=CHANGE_ME

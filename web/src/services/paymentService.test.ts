@@ -22,6 +22,14 @@ describe('paymentService', () => {
     expect(api.get).toHaveBeenCalledWith('/payments');
   });
 
+  it('getPage calls api.get with pagination params and returns envelope', async () => {
+    const response = { data: [{ id: '1' }], total: 1, page: 5, limit: 40, total_pages: 1 };
+    (api.get as any).mockResolvedValue(response);
+
+    await expect(paymentService.getPage({ page: 5, limit: 40, sort: 'payment_date', order: 'desc' })).resolves.toEqual(response);
+    expect(api.get).toHaveBeenCalledWith('/payments', { page: '5', limit: '40', sort: 'payment_date', order: 'desc' });
+  });
+
   it('getByEventId calls api.get with params', async () => {
     (api.get as any).mockResolvedValue([]);
     await paymentService.getByEventId('event-1');

@@ -27,6 +27,28 @@ func (r *PaymentRepo) GetAll(ctx context.Context, userID uuid.UUID) ([]models.Pa
 	return r.queryPayments(ctx, query, userID)
 }
 
+func (r *PaymentRepo) GetByID(ctx context.Context, id, userID uuid.UUID) (*models.Payment, error) {
+	query := `SELECT ` + paymentSelectFields + `
+		FROM payments WHERE id = $1 AND user_id = $2`
+
+	var payment models.Payment
+	err := r.pool.QueryRow(ctx, query, id, userID).Scan(
+		&payment.ID,
+		&payment.EventID,
+		&payment.UserID,
+		&payment.Amount,
+		&payment.PaymentDate,
+		&payment.PaymentMethod,
+		&payment.Notes,
+		&payment.CreatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &payment, nil
+}
+
 func (r *PaymentRepo) GetAllPaginated(ctx context.Context, userID uuid.UUID, offset, limit int, sortCol, order string) ([]models.Payment, int, error) {
 	var total int
 	countQuery := `SELECT COUNT(*) FROM payments WHERE user_id = $1`

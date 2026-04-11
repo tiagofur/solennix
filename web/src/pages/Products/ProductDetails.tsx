@@ -24,20 +24,13 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { SkeletonCard } from "@/components/Skeleton";
 import clsx from "clsx";
 import { useProduct, useProductIngredients, useDeleteProduct } from "@/hooks/queries/useProductQueries";
+import type { ProductIngredientWithInventory } from "@/services/productService";
 
-type ProductIngredientRow = {
-  id: string;
-  product_id: string;
-  inventory_id: string;
-  quantity_required: number;
-  capacity: number | null;
-  bring_to_event: boolean;
-  ingredient_name: string;
-  unit: string;
-  unit_cost: number;
-  type: 'ingredient' | 'equipment' | 'supply';
-  inventory?: { ingredient_name?: string; unit?: string; unit_cost?: number; current_stock?: number } | null;
-};
+// Alias to the authoritative type from productService (which is the
+// `ProductIngredient` schema from the OpenAPI contract + the optional
+// `inventory` join that the backend attaches on this endpoint). Keeping
+// the local alias name so the rest of the file needs minimal churn.
+type ProductIngredientRow = ProductIngredientWithInventory;
 
 type EventWithClientName = { clients?: { name: string } | null };
 

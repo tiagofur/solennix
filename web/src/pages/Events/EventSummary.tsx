@@ -52,7 +52,17 @@ import { Payments } from "./components/Payments";
 import { StatusDropdown, EventStatus } from "@/components/StatusDropdown";
 import { SkeletonLine } from "@/components/Skeleton";
 import { useQuery } from "@tanstack/react-query";
-import { useEvent, useEventProducts, useEventExtras, useEventEquipment, useEventSupplies, useDeleteEvent } from "@/hooks/queries/useEventQueries";
+import {
+  useEvent,
+  useEventProducts,
+  useEventExtras,
+  useEventEquipment,
+  useEventSupplies,
+  useDeleteEvent,
+  useEventPhotos,
+  useAddEventPhoto,
+  useDeleteEventPhoto,
+} from "@/hooks/queries/useEventQueries";
 import { usePaymentsByEvent } from "@/hooks/queries/usePaymentQueries";
 import { queryKeys } from "@/hooks/queries/queryKeys";
 
@@ -79,7 +89,11 @@ interface EventProductWithDetails {
   discount: number;
   total_price: number | null;
   created_at: string;
-  products: { name: string; category?: string } | null;
+  // Backend attaches `product_name` via SQL join on GET /api/events/{id}/products
+  // (see backend/internal/models/models.go:114). The previous shape `products: { name }`
+  // was legacy and the backend never returned it — Web PDFs/UI showed "Producto"
+  // fallback in production because of this mismatch.
+  product_name?: string | null;
   cost?: number;
 }
 
@@ -113,6 +127,9 @@ export const EventSummary: React.FC = () => {
   const { data: extras = [] } = useEventExtras(id);
   const { data: equipment = [] } = useEventEquipment(id);
   const { data: supplies = [] } = useEventSupplies(id);
+  const { data: eventPhotos = [] } = useEventPhotos(id);
+  const addEventPhotoMutation = useAddEventPhoto(id);
+  const deleteEventPhotoMutation = useDeleteEventPhoto(id);
   const { data: payments = [] } = usePaymentsByEvent(id);
   const deleteEventMutation = useDeleteEvent();
 
@@ -122,7 +139,6 @@ export const EventSummary: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>("summary");
   const [actionsDropdownOpen, setActionsDropdownOpen] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
-  const [eventPhotos, setEventPhotos] = useState<string[]>([]);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [lightboxPhoto, setLightboxPhoto] = useState<string | null>(null);
   const photoInputRef = React.useRef<HTMLInputElement>(null);
@@ -175,19 +191,10 @@ export const EventSummary: React.FC = () => {
     return Object.values(aggregated);
   }, [allProdIngredients, productQuantities]);
 
-  // ── Parse photos from event data ──
-  useEffect(() => {
-    if (event?.photos) {
-      try {
-        const parsed = typeof event.photos === 'string' ? JSON.parse(event.photos) : event.photos;
-        setEventPhotos(Array.isArray(parsed) ? parsed : []);
-      } catch {
-        setEventPhotos([]);
-      }
-    } else {
-      setEventPhotos([]);
-    }
-  }, [event?.photos]);
+  // Photos are now fetched from the dedicated endpoint via useEventPhotos().
+  // The legacy path that parsed event.photos as JSON was removed — the
+  // backend owns the photo list server-side, so the Web never has to
+  // serialize or deserialize the array itself.
 
   // ── Build checklist items from cached query data (no additional fetches) ──
   useEffect(() => {
@@ -278,23 +285,30 @@ export const EventSummary: React.FC = () => {
 
     setIsUploadingPhoto(true);
     try {
-      const newUrls: string[] = [];
+      let uploadedCount = 0;
       for (const file of Array.from(files)) {
         if (file.size > 10 * 1024 * 1024) {
           addToast(`${file.name} es demasiado grande (máximo 10MB)`, "error");
           continue;
         }
+        // Step 1: upload the binary to the generic uploads endpoint to
+        // obtain a persistent URL. This endpoint is shared by all upload
+        // flows (client photos, product images, logos) and is intentionally
+        // decoupled from any resource.
         const formData = new FormData();
         formData.append('file', file);
-        const result = await api.postFormData<{ url: string }>('/uploads/image', formData);
-        newUrls.push(result.url);
+        const uploaded = await api.postFormData<{ url: string }>('/uploads/image', formData);
+
+        // Step 2: register the photo on the event via the dedicated
+        // endpoint. The backend assigns the id and timestamps and appends
+        // it to the event.photos array server-side; the Web never has to
+        // serialize the array itself.
+        await addEventPhotoMutation.mutateAsync({ url: uploaded.url });
+        uploadedCount += 1;
       }
 
-      if (newUrls.length > 0) {
-        const updated = [...eventPhotos, ...newUrls];
-        await eventService.update(id, { photos: JSON.stringify(updated) });
-        setEventPhotos(updated);
-        addToast(`${newUrls.length} foto(s) agregada(s)`, "success");
+      if (uploadedCount > 0) {
+        addToast(`${uploadedCount} foto(s) agregada(s)`, "success");
       }
     } catch (err) {
       logError("Error uploading event photos", err);
@@ -305,12 +319,10 @@ export const EventSummary: React.FC = () => {
     }
   };
 
-  const handleRemovePhoto = async (photoUrl: string) => {
+  const handleRemovePhoto = async (photoId: string) => {
     if (!id) return;
     try {
-      const updated = eventPhotos.filter(p => p !== photoUrl);
-      await eventService.update(id, { photos: JSON.stringify(updated) });
-      setEventPhotos(updated);
+      await deleteEventPhotoMutation.mutateAsync(photoId);
       addToast("Foto eliminada.", "success");
     } catch (err) {
       logError("Error removing photo", err);
@@ -892,7 +904,7 @@ export const EventSummary: React.FC = () => {
                 <tbody className="divide-y divide-border">
                   {products.map((p) => (
                     <tr key={p.product_id} className="group hover:bg-surface-alt/50 transition-colors">
-                      <td className="py-4 px-1 font-bold text-text">{p.products?.name}</td>
+                      <td className="py-4 px-1 font-bold text-text">{p.product_name || 'Producto'}</td>
                       <td className="py-4 px-1 text-right text-text-secondary">{p.quantity}</td>
                       <td className="py-4 px-1 text-right text-text-secondary font-medium">
                         ${p.unit_price.toFixed(2)}
@@ -1389,17 +1401,17 @@ export const EventSummary: React.FC = () => {
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-              {eventPhotos.map((url, idx) => (
-                <div key={idx} className="relative group aspect-square rounded-xl overflow-hidden bg-surface-alt">
+              {eventPhotos.map((photo, idx) => (
+                <div key={photo.id} className="relative group aspect-square rounded-xl overflow-hidden bg-surface-alt">
                   <OptimizedImage
-                    src={url}
+                    src={photo.url}
                     alt={`Foto ${idx + 1} del evento`}
                     className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                    onClick={() => setLightboxPhoto(url)}
+                    onClick={() => setLightboxPhoto(photo.url)}
                   />
                   <button
                     type="button"
-                    onClick={() => handleRemovePhoto(url)}
+                    onClick={() => handleRemovePhoto(photo.id)}
                     className="absolute top-2 right-2 bg-error text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-error/90"
                     aria-label={`Eliminar foto ${idx + 1}`}
                   >

@@ -107,7 +107,6 @@ describe('ClientForm', () => {
           name: 'Ana Perez',
           phone: '5551112222',
           email: 'ana@example.com',
-          user_id: 'user-1',
           photo_url: null,
         }),
       );

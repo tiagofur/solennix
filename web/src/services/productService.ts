@@ -1,5 +1,23 @@
 import { api } from '../lib/api';
 import { Product, ProductInsert, ProductUpdate, PaginatedResponse, PaginationParams } from '../types/entities';
+import type { components } from '../types/api';
+
+/**
+ * Shape that the /products/{id}/ingredients and /products/ingredients/batch
+ * endpoints return at runtime: the ProductIngredient schema from the contract
+ * plus a nested `inventory` join that the backend attaches but does not (yet)
+ * declare in the OpenAPI spec. Declared locally so callers have a single
+ * type to rely on; the backend's spec should eventually formalize this join.
+ */
+export type ProductIngredientWithInventory = components['schemas']['ProductIngredient'] & {
+  inventory?: {
+    id?: string;
+    ingredient_name?: string | null;
+    unit?: string | null;
+    unit_cost?: number | null;
+    current_stock?: number | null;
+  } | null;
+};
 
 export const productService = {
   async getPage(params: PaginationParams = {}): Promise<PaginatedResponse<Product>> {
@@ -36,24 +54,13 @@ export const productService = {
     return api.delete(`/products/${id}`);
   },
 
-  async addIngredients(productId: string, ingredients: { inventoryId: string, quantityRequired: number }[]) {
-    // Backend expects: { ingredients: [{ product_id, inventory_id, quantity_required }] }
-    // We define the type locally or just pass objects
-    const payload = ingredients.map(i => ({
-      product_id: productId,
-      inventory_id: i.inventoryId,
-      quantity_required: i.quantityRequired
-    }));
-    return api.put(`/products/${productId}/ingredients`, { ingredients: payload });
+  async getIngredients(productId: string): Promise<ProductIngredientWithInventory[]> {
+    return api.get<ProductIngredientWithInventory[]>(`/products/${productId}/ingredients`);
   },
 
-  async getIngredients(productId: string) {
-    return api.get<any[]>(`/products/${productId}/ingredients`);
-  },
-
-  async getIngredientsForProducts(productIds: string[]) {
+  async getIngredientsForProducts(productIds: string[]): Promise<ProductIngredientWithInventory[]> {
     if (productIds.length === 0) return [];
-    return api.post<any[]>('/products/ingredients/batch', { product_ids: productIds });
+    return api.post<ProductIngredientWithInventory[]>('/products/ingredients/batch', { product_ids: productIds });
   },
 
   async updateIngredients(productId: string, ingredients: { inventoryId: string, quantityRequired: number, capacity?: number | null, bringToEvent?: boolean }[]) {

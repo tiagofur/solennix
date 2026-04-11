@@ -141,7 +141,6 @@ describe('ProductForm', () => {
         name: 'Churros',
         category: 'Postres',
         base_price: 50,
-        user_id: 'user-1',
         image_url: null,
         is_active: true,
         recipe: null,

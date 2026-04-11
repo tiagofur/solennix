@@ -45,7 +45,6 @@ describe('Payments', () => {
       expect(paymentService.create).toHaveBeenCalledWith(
         expect.objectContaining({
           event_id: 'event-1',
-          user_id: 'user-1',
           amount: 200,
         })
       );

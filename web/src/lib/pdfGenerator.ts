@@ -17,9 +17,11 @@ type UserProfile = User & {
   updated_at?: string;
   contract_template?: string | null;
 };
-type ProductItem = EventProduct & {
-  products: { name: string } | null;
-};
+// Backend returns a flat `product_name?: string` via SQL join on
+// GET /api/events/{id}/products (see backend/internal/models/models.go:114).
+// EventProduct from the OpenAPI contract already declares it, so no extension
+// is needed — we just alias for clarity.
+type ProductItem = EventProduct;
 type ExtraItem = EventExtra;
 
 const DEFAULT_BRAND_COLOR = '#C4A265'; // Dorado de la marca
@@ -143,7 +145,7 @@ export const generateBudgetPDF = (
   currentY += 7;
 
   const productRows = products.map((p) => [
-    p.products?.name || 'Producto',
+    p.product_name || 'Producto',
     p.quantity.toString(),
     formatCurrency(p.unit_price),
     formatCurrency((p.unit_price - (p.discount || 0)) * p.quantity)
@@ -566,7 +568,7 @@ export const generateInvoicePDF = (
   currentY += 7;
 
   const productRows = products.map((p) => [
-    p.products?.name || 'Producto',
+    p.product_name || 'Producto',
     p.quantity.toString(),
     formatCurrency(p.unit_price),
     p.discount ? formatCurrency(p.discount) : '$0.00',
@@ -712,7 +714,7 @@ export const generateChecklistPDF = (
       startY: currentY,
       margin: { left: 20, right: 20 },
       head: [['\u2610', 'Producto', 'Cantidad']],
-      body: products.map(p => [checkboxCol, (p as any).product_name || p.products?.name || 'Producto', String(p.quantity)]),
+      body: products.map(p => [checkboxCol, p.product_name || 'Producto', String(p.quantity)]),
       headStyles: { fillColor: [245, 245, 245], textColor: brandColor },
       styles: { fontSize: 10 },
       columnStyles: { 0: { cellWidth: 12, halign: 'center' } },

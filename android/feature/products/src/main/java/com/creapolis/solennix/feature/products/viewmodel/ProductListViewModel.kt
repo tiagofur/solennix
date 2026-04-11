@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.creapolis.solennix.core.data.plan.LimitCheckResult
 import com.creapolis.solennix.core.data.plan.PlanLimitsManager
 import com.creapolis.solennix.core.data.repository.ProductRepository
+import com.creapolis.solennix.core.designsystem.event.UiEvent
 import com.creapolis.solennix.core.model.Plan
 import com.creapolis.solennix.core.model.Product
 import com.creapolis.solennix.core.network.AuthManager
@@ -55,6 +56,9 @@ class ProductListViewModel @Inject constructor(
     private val _isRefreshing = MutableStateFlow(false)
     private val _sortKey = MutableStateFlow(ProductSortKey.NAME)
     private val _sortAscending = MutableStateFlow(true)
+
+    private val _uiEvents = MutableSharedFlow<UiEvent>(extraBufferCapacity = 1)
+    val uiEvents: SharedFlow<UiEvent> = _uiEvents.asSharedFlow()
 
     val uiState: StateFlow<ProductListUiState> = combine(
         productRepository.getProducts(),
@@ -126,7 +130,16 @@ class ProductListViewModel @Inject constructor(
 
     fun deleteProduct(id: String) {
         viewModelScope.launch {
-            try { productRepository.deleteProduct(id) } catch (_: Exception) {}
+            try {
+                productRepository.deleteProduct(id)
+            } catch (e: Exception) {
+                _uiEvents.tryEmit(
+                    UiEvent.Error(
+                        message = "No se pudo borrar el producto",
+                        retryActionId = "$ACTION_DELETE:$id",
+                    )
+                )
+            }
         }
     }
 
@@ -136,10 +149,32 @@ class ProductListViewModel @Inject constructor(
             try {
                 productRepository.syncProducts()
             } catch (e: Exception) {
-                // Non-fatal, data will show from cache
+                _uiEvents.tryEmit(
+                    UiEvent.Error(
+                        message = "No se pudieron sincronizar los productos. Mostrando datos en caché.",
+                        retryActionId = ACTION_REFRESH,
+                    )
+                )
             } finally {
                 _isRefreshing.value = false
             }
         }
+    }
+
+    /**
+     * Handle retry requests from UiEvent snackbar "Reintentar" actions.
+     * `actionId` format: `"operation[:resourceId]"`.
+     */
+    fun onRetry(actionId: String) {
+        val parts = actionId.split(":", limit = 2)
+        when (parts[0]) {
+            ACTION_DELETE -> parts.getOrNull(1)?.let { deleteProduct(it) }
+            ACTION_REFRESH -> refresh()
+        }
+    }
+
+    private companion object {
+        const val ACTION_DELETE = "delete"
+        const val ACTION_REFRESH = "refresh"
     }
 }

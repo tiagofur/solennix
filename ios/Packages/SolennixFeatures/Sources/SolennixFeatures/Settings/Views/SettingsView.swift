@@ -27,6 +27,7 @@ public struct SettingsView: View {
 
     @State private var viewModel: SettingsViewModel
     @State private var showLogoutConfirm: Bool = false
+    @State private var legalSheetURL: IdentifiableURL?
 
     @AppStorage("appearance") private var appearance: String = "system"
     @Environment(\.horizontalSizeClass) private var sizeClass
@@ -58,6 +59,10 @@ public struct SettingsView: View {
             }
             .refreshable { await viewModel.loadUser() }
             .task { await viewModel.loadUser() }
+            .sheet(item: $legalSheetURL) { wrapper in
+                SafariView(url: wrapper.url)
+                    .ignoresSafeArea()
+            }
     }
 
     // MARK: - Settings List
@@ -159,13 +164,37 @@ public struct SettingsView: View {
             Label("Acerca de", systemImage: "info.circle")
         }
 
-        NavigationLink(value: Route.privacy) {
-            Label("Politica de Privacidad", systemImage: "hand.raised")
+        Button {
+            HapticsHelper.play(.selection)
+            legalSheetURL = IdentifiableURL(LegalURL.privacy)
+        } label: {
+            HStack {
+                Label("Politica de Privacidad", systemImage: "hand.raised")
+                    .foregroundStyle(SolennixColors.text)
+                Spacer()
+                Image(systemName: "arrow.up.right.square")
+                    .font(.caption)
+                    .foregroundStyle(SolennixColors.textTertiary)
+            }
+            .contentShape(Rectangle())
         }
+        .accessibilityHint("Abre la politica de privacidad en Safari")
 
-        NavigationLink(value: Route.terms) {
-            Label("Terminos de Servicio", systemImage: "doc.plaintext")
+        Button {
+            HapticsHelper.play(.selection)
+            legalSheetURL = IdentifiableURL(LegalURL.terms)
+        } label: {
+            HStack {
+                Label("Terminos de Servicio", systemImage: "doc.plaintext")
+                    .foregroundStyle(SolennixColors.text)
+                Spacer()
+                Image(systemName: "arrow.up.right.square")
+                    .font(.caption)
+                    .foregroundStyle(SolennixColors.textTertiary)
+            }
+            .contentShape(Rectangle())
         }
+        .accessibilityHint("Abre los terminos de servicio en Safari")
     }
 
     // MARK: - User Header Section

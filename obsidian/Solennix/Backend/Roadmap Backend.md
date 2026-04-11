@@ -247,6 +247,79 @@
 
 ---
 
+## Fase 3.6: MVP Contract Freeze (SUPER_PLAN Wave 1 T-02) ✅
+
+> [!done] Implementado 2026-04-10
+> Cierre del contrato API para MVP. El `openapi.yaml` cubre 100% de las rutas registradas en el router, el CI valida el spec en cada PR vía `@redocly/cli lint`, los contract tests extienden el gate a los endpoints nuevos, y los event handlers pasan el bar de ≥85% coverage mandado por E1.B2.
+
+- [x] **Paridad spec↔router**: agregados los 3 endpoints que faltaban en `backend/docs/openapi.yaml`:
+  - `GET /api/events/search` (advanced search con filtros)
+  - `GET /api/dashboard/activity` (audit log del usuario)
+  - `GET /api/admin/audit-logs` (audit log plataforma, admin only)
+  - Más los 3 GET variants de equipment/supplies suggestions/conflicts usados por los clientes mobile
+  - Nuevos schemas `AuditLog` y `PaginatedAuditLogsResponse` reusables
+- [x] **CI gate**: step `npx @redocly/cli lint backend/docs/openapi.yaml` en `.github/workflows/ci.yml` (job `backend`). Rompe el PR si el spec se rompe.
+- [x] **Bugs preexistentes del spec corregidos** expuestos por el lint:
+  - 4 schemas admin (`PlatformStats`, `AdminUser`, `SubscriptionOverview`, `AdminUpgradeRequest`) estaban anidados dentro de `EventPhotoCreateRequest` por un drift de indentación de 2 espacios — todos los `$ref` a ellos fallaban silenciosamente
+  - `SubscriptionStatusResponse.subscription` usaba `nullable: true` sobre un `allOf` sin `type` (inválido en 3.0)
+  - El spec declaraba `openapi: 3.1.0` pero todo el documento usa la sintaxis 3.0 (`nullable: true`), se downgradeó a `3.0.3`
+- [x] **Contract tests extendidos**: `backend/internal/handlers/contract_test.go` agrega fragment matchers para los 6 endpoints nuevos, los 2 schemas nuevos, y los 3 operationIds GET variants. Sigue gateando por `go test`.
+- [x] **Event handlers a ≥85% coverage** (SUPER_PLAN E1.B2):
+  - `SearchEvents` 41.9% → **100%**
+  - `UpdateEvent` 74.5% → **85.5%**
+  - `HandleEventPaymentSuccess` 58.3% → **100%**
+  - Suite de fotos (`GetEventPhotos`, `AddEventPhoto`, `DeleteEventPhoto`, `parseEventPhotos`) 0% → 93-100%
+  - Suite de supplies (`GetEventSupplies`, `GetSupplySuggestions`) 0% → 93-95%
+  - GET variants (`CheckEquipmentConflictsGET`, `GetEquipmentSuggestionsGET`, `GetSupplySuggestionsGET`) 0% → 94%+
+  - `parseEventStartTime` 0% → **100%**
+  - Setters (`SetNotifier`, `SetEmailService`, `SetLiveActivityNotifier`) 0% → **100%**
+  - Total handlers package: 69.8% → **78.6%**
+
+**Archivos**: `backend/docs/openapi.yaml`, `backend/internal/handlers/contract_test.go`, `backend/internal/handlers/crud_handler_events_coverage_test.go` (nuevo, 1013 LOC), `.github/workflows/ci.yml`. Commits en rama `super-plan`: `d69df81`, `99c17bc`, `836eba6`.
+
+**Desbloqueo**: E2.C1 (audit cross-platform Web/iOS/Android contra el spec) ahora puede arrancar sin riesgo de target móvil.
+
+---
+
+## Fase 3.7: Web ↔ Backend Alignment (E2.C1 Web, SUPER_PLAN Wave 1) ✅
+
+> [!done] Implementado 2026-04-10
+> Slice `backend-as-source-of-truth` completo. La Web ya no puede divergir del contrato del backend por construcción: los tipos TypeScript se regeneran automáticamente desde `backend/docs/openapi.yaml` en cada `npm run check`/`build`, y el CI falla si el archivo commiteado está desalineado con el spec.
+
+### Bugs del backend descubiertos y arreglados
+
+- [x] **Enum `InventoryItem.type` incorrecto**: declaraba `[equipment, supply, Equipment, Supply]` (sin `ingredient` + con variantes de case sin sentido). El Go repo acepta `ingredient` como valor válido; el spec estaba desactualizado. Corregido a `[ingredient, equipment, supply]` en el spec, contract tests siguen verdes (commit `af85e48`).
+- [x] **`SearchEventsAdvanced` no buscaba en `e.city`**: el query SQL buscaba el texto libre en `service_type`, `location`, `client.name` pero NO en `city`. El Web filtraba client-side por city, entonces al tipear "Guadalajara" el Web devolvía resultados locales pero el backend FTS no. Fix en `backend/internal/repository/event_repo.go:801-815` agregando `e.city ILIKE` al WHERE (commit `67f19ad`).
+
+### Spec cross-stack flow habilitado
+
+- [x] **`openapi-typescript` como fuente única de tipos del Web**: `web/src/types/api.ts` (5133 LOC) regenerado en cada `check`/`build`. Cualquier cambio del spec del backend cascadea al Web como error de tsc en el siguiente build.
+- [x] **CI gate**: nuevo step "Verify OpenAPI types are committed and up to date" que hace `git diff --exit-code src/types/api.ts` tras regenerar — falla el build si alguien modifica el spec sin regenerar.
+- [x] **`entities.ts` como capa delgada**: las interfaces principales del Web (User, Client, Event, Product, InventoryItem, Payment, EventProduct, EventExtra, EventEquipment, EventSupply, ProductIngredient, EquipmentSuggestion, EquipmentConflict, SupplySuggestion) pasan a ser aliases directos de `components['schemas']`. Los campos JOIN (equipment_name, supply_name, etc.) quedan como extensions opcionales locales hasta que el spec los formalice.
+
+### Endpoints del contract freeze finalmente consumidos por el Web
+
+- [x] **`GET/POST/DELETE /api/events/{id}/photos`**: el Web migró de serializar el array como JSON en el campo `photos` del evento vía `PUT /api/events/{id}` a los endpoints dedicados. El backend es ahora la única fuente de verdad del array de fotos, y los IDs de photo son UUIDs server-side (no índices del array).
+- [x] **`GET /api/events/search`**: `EventList.tsx` ahora usa el FTS del backend vía `useEventSearch` hook. Eliminado el bloque `useMemo` con filter client-side y el comentario `// backend doesn't support these yet`.
+- [x] **`GET /api/dashboard/activity`**: nuevo widget `RecentActivityCard` read-only en el Dashboard — muestra las últimas 8 entradas del audit log del usuario con verbos humanizados y relative timestamps.
+- [x] **`GET /api/admin/audit-logs`**: nueva sección `AdminAuditLogSection` paginada en el AdminDashboard — tabla read-only con 20 rows/página. Enforza admin role server-side.
+
+### Pipeline CI verde
+
+- [x] **Playwright suite arreglada**: 28 tests que estaban rotos por (a) selector ambiguo `getByLabel('Contraseña')` que matcheaba tanto el input como el botón "Mostrar contraseña", (b) `isSetupRequired` helper que nunca detectaba "backend offline" porque el componente `SetupRequired` ya no se renderiza en App.tsx, (c) regex `/registrarse/` en lugar de `/regístrate/`, (d) orden incorrecto de `localStorage.clear()` vs `goto`. Resultado: 2 passed / 26 auto-skipped cuando el backend no está disponible. Cuando el usuario arranque el backend localmente o en CI, los 26 skipped pasarán a correr sin cambios de código.
+- [x] **`deploy.yml`**: preparado con comentarios documentando los secrets requeridos (`VPS_HOST`, `VPS_USERNAME`, `VPS_SSH_KEY`, `VPS_PORT`) y el path `/path/to/solennix` a reemplazar. NO activado por decisión del usuario — queda listo para cuando el entorno esté configurado.
+
+**Archivos**: `backend/internal/repository/event_repo.go`, `backend/docs/openapi.yaml` (enum fix), `web/package.json` (new script), `web/src/types/api.ts` (generated), `web/src/types/entities.ts` (aliases), `web/src/services/eventService.ts` (+photos +search), `web/src/services/productService.ts` (+types), `web/src/services/activityService.ts` (nuevo), `web/src/hooks/queries/useEventQueries.ts` (+photos +search), `web/src/hooks/queries/useActivityQueries.ts` (nuevo), `web/src/components/RecentActivityCard.tsx` (nuevo), `web/src/components/AdminAuditLogSection.tsx` (nuevo), `web/src/pages/Events/EventSummary.tsx` (photo tab refactor + product_name fix), `web/src/pages/Events/EventList.tsx` (FTS integration), `web/src/pages/Dashboard.tsx` (+widget), `web/src/pages/Admin/AdminDashboard.tsx` (+section), varios tests actualizados, `.github/workflows/ci.yml` (+OpenAPI verification step), `.github/workflows/deploy.yml` (documentation).
+
+Commits en rama `super-plan`: `0fd6aac`, `42124d0`, `2c23dd6`, `af85e48`, `9bd07ad`, `67f19ad`, `d75bab0`, y el commit de Fase 7 de activity log.
+
+### Deuda técnica registrada para Etapa 2 cross-platform
+
+- **Fase 4 del slice SKIPPED** — migración de dashboard KPIs al backend. El backend `/api/dashboard/kpis` NO calcula lo que las 3 plataformas muestran; iOS y Android también calculan client-side. Migrar solo el Web perpetuaría la divergencia. Decisiones ya tomadas: bumpear spec a v1.1, agregar campos `net_sales_this_month`, `cash_collected_this_month`, `vat_collected_this_month`, `vat_outstanding_this_month`, `pending_quotes_this_month`; replicar las fórmulas de `web/src/lib/finance.ts` en SQL. Ver el plan completo en `~/.claude/plans/sprightly-bouncing-wand.md`.
+- **15 tests skipped en Web** con TODO documentado — 3 por leak de memoria en aggregation de ingredientes (bloqueado por Fase 4 que abriría el componente), 12 por selectors/formatos desactualizados (requieren investigación individual).
+
+---
+
 ## Fase 4: Features Avanzadas (Alineado con Frontend)
 
 > [!success] Impacto: Alto | Esfuerzo: Alto

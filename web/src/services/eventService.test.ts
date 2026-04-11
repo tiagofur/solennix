@@ -22,6 +22,14 @@ describe('eventService', () => {
     expect(api.get).toHaveBeenCalledWith('/events');
   });
 
+  it('getPage calls api.get with pagination params and returns envelope', async () => {
+    const response = { data: [{ id: '1' }], total: 1, page: 3, limit: 15, total_pages: 1 };
+    (api.get as any).mockResolvedValue(response);
+
+    await expect(eventService.getPage({ page: 3, limit: 15, sort: 'event_date', order: 'desc' })).resolves.toEqual(response);
+    expect(api.get).toHaveBeenCalledWith('/events', { page: '3', limit: '15', sort: 'event_date', order: 'desc' });
+  });
+
   it('getByDateRange calls api.get with params', async () => {
     (api.get as any).mockResolvedValue([]);
     await eventService.getByDateRange('start', 'end');

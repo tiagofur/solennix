@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/stripe/stripe-go/v81"
 	"github.com/stretchr/testify/mock"
+	"github.com/stripe/stripe-go/v81"
 	"github.com/tiagofur/solennix-backend/internal/models"
 	"github.com/tiagofur/solennix-backend/internal/repository"
 )
@@ -490,6 +490,14 @@ func (m *MockFullPaymentRepo) GetAll(ctx context.Context, userID uuid.UUID) ([]m
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]models.Payment), args.Error(1)
+}
+
+func (m *MockFullPaymentRepo) GetByID(ctx context.Context, id, userID uuid.UUID) (*models.Payment, error) {
+	args := m.Called(ctx, id, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.Payment), args.Error(1)
 }
 
 func (m *MockFullPaymentRepo) GetAllPaginated(ctx context.Context, userID uuid.UUID, offset, limit int, sortCol, order string) ([]models.Payment, int, error) {

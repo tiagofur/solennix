@@ -22,6 +22,14 @@ describe('inventoryService', () => {
     expect(api.get).toHaveBeenCalledWith('/inventory');
   });
 
+  it('getPage calls api.get with pagination params and returns envelope', async () => {
+    const response = { data: [{ id: '1' }], total: 1, page: 2, limit: 30, total_pages: 1 };
+    (api.get as any).mockResolvedValue(response);
+
+    await expect(inventoryService.getPage({ page: 2, limit: 30, sort: 'created_at', order: 'desc' })).resolves.toEqual(response);
+    expect(api.get).toHaveBeenCalledWith('/inventory', { page: '2', limit: '30', sort: 'created_at', order: 'desc' });
+  });
+
   it('getAll returns empty array when api returns null', async () => {
     (api.get as any).mockResolvedValue(null);
     await expect(inventoryService.getAll()).resolves.toEqual([]);

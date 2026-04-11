@@ -196,7 +196,6 @@ describe('QuickClientModal', () => {
         name: 'Maria Lopez',
         phone: '5551234567',
         email: 'maria@example.com',
-        user_id: 'user-1',
       });
     });
 
@@ -236,7 +235,6 @@ describe('QuickClientModal', () => {
         name: 'Juan Test',
         phone: '5559876543',
         email: null,
-        user_id: 'user-1',
       });
     });
   });

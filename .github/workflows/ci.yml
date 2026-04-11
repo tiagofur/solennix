@@ -23,6 +23,15 @@ jobs:
           go-version: "1.25.x"
           cache-dependency-path: ./backend/go.sum
 
+      - name: Set up Node (for OpenAPI linter)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Validate OpenAPI spec
+        working-directory: .
+        run: npx --yes @redocly/cli@latest lint backend/docs/openapi.yaml
+
       - name: Install dependencies
         run: go mod download
 
@@ -55,6 +64,17 @@ jobs:
 
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
+
+      - name: Generate OpenAPI types
+        run: npm run openapi:types
+
+      - name: Verify OpenAPI types are committed and up to date
+        run: |
+          if ! git diff --exit-code src/types/api.ts; then
+            echo "::error::web/src/types/api.ts is out of sync with backend/docs/openapi.yaml."
+            echo "::error::Run 'npm run openapi:types' in web/ and commit the result."
+            exit 1
+          fi
 
       - name: Type check
         run: npm run check

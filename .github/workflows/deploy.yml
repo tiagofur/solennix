@@ -1,3 +1,36 @@
+# ─────────────────────────────────────────────────────────────────────────
+# Production deploy workflow — PREPARED, NOT ACTIVATED
+#
+# Triggers on a successful CI Pipeline run on `main`. This means it only
+# fires when code is merged to main, NOT when feature branches are pushed.
+#
+# BEFORE enabling this in production you MUST:
+#
+#   1. Configure these repository secrets in GitHub (Settings → Secrets
+#      and variables → Actions):
+#        - VPS_HOST       (e.g. solennix.example.com or an IP)
+#        - VPS_USERNAME   (typically deploy or ubuntu)
+#        - VPS_SSH_KEY    (private key with access to the deploy user)
+#        - VPS_PORT       (usually 22)
+#
+#   2. Replace the `/path/to/solennix` placeholder below with the actual
+#      directory on the VPS where the repo is cloned (e.g.
+#      /home/deploy/solennix or /srv/solennix).
+#
+#   3. Ensure the VPS has:
+#        - git, docker and docker-compose installed
+#        - the deploy user owns the repo directory
+#        - the repo is already cloned and `git pull` works without prompts
+#
+# Until the secrets are set and the path is replaced, this workflow will
+# fail silently on every merge to main (appleboy/ssh-action reports
+# missing host as a step failure, which does NOT affect the CI run that
+# triggered it). That is the "prepared, not activated" state.
+#
+# Ver el slice 'backend-as-source-of-truth' en
+# ~/.claude/plans/sprightly-bouncing-wand.md (Fase 8) para contexto.
+# ─────────────────────────────────────────────────────────────────────────
+
 name: Deploy to production
 
 on:
@@ -23,6 +56,6 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT }}
           script: |
-            cd /path/to/solennix # Cambia esto a la ruta real de tu App
+            cd /path/to/solennix # TODO: replace with the real path on the VPS
             git pull origin main
             docker-compose up -d --build

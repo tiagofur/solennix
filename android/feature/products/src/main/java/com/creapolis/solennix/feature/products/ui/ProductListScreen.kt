@@ -48,6 +48,7 @@ import com.creapolis.solennix.core.designsystem.component.UpgradeBanner
 import com.creapolis.solennix.core.designsystem.component.UpgradeBannerStyle
 import com.creapolis.solennix.core.designsystem.component.UpgradePlanDialog
 import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveCardGrid
+import com.creapolis.solennix.core.designsystem.event.UiEventSnackbarHandler
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.Product
 import com.creapolis.solennix.core.model.extensions.asMXN
@@ -69,6 +70,13 @@ fun ProductListScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showLimitDialog by remember { mutableStateOf(false) }
     var pendingDeleteId by remember { mutableStateOf<String?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    UiEventSnackbarHandler(
+        events = viewModel.uiEvents,
+        snackbarHostState = snackbarHostState,
+        onRetry = viewModel::onRetry,
+    )
 
     if (showLimitDialog && viewModel.limitReachedMessage != null) {
         UpgradePlanDialog(
@@ -115,6 +123,7 @@ fun ProductListScreen(
                 }
             )
         },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {

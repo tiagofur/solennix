@@ -328,7 +328,7 @@ func (h *CRUDHandler) SearchEvents(w http.ResponseWriter, r *http.Request) {
 	// Validate status if provided
 	if filters.Status != "" {
 		validStatuses := map[string]bool{
-			"draft": true, "pending": true, "confirmed": true,
+			"quoted": true, "confirmed": true,
 			"completed": true, "cancelled": true,
 		}
 		if !validStatuses[filters.Status] {
@@ -1529,6 +1529,23 @@ var paymentSortAllowlist = map[string]string{
 	"created_at":     "created_at",
 	"amount":         "amount",
 	"payment_method": "payment_method",
+}
+
+func (h *CRUDHandler) GetPayment(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+	id, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "Invalid payment ID")
+		return
+	}
+
+	payment, err := h.paymentRepo.GetByID(r.Context(), id, userID)
+	if err != nil {
+		writeError(w, http.StatusNotFound, "Payment not found")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, payment)
 }
 
 func (h *CRUDHandler) ListPayments(w http.ResponseWriter, r *http.Request) {

@@ -12,6 +12,7 @@ public struct PricingView: View {
     @State private var selectedPlan: Plan = .basic
     @State private var showError: Bool = false
     @State private var purchaseErrorMessage: String = ""
+    @State private var legalSheetURL: IdentifiableURL?
     @Environment(SubscriptionManager.self) private var subscriptionManager
     @Environment(\.horizontalSizeClass) private var sizeClass
 
@@ -40,6 +41,7 @@ public struct PricingView: View {
                 subscriptionActionsSection
 
                 // API Legal requirements (EULA and Privacy)
+                subscriptionDisclosureSection
                 legalLinksSection
 
                 // FAQ section
@@ -62,6 +64,10 @@ public struct PricingView: View {
             Button("Aceptar", role: .cancel) {}
         } message: {
             Text(purchaseErrorMessage)
+        }
+        .sheet(item: $legalSheetURL) { wrapper in
+            SafariView(url: wrapper.url)
+                .ignoresSafeArea()
         }
     }
 
@@ -251,6 +257,7 @@ public struct PricingView: View {
             // Boton mensual
             if let monthly = subscriptionManager.monthlyPackage {
                 Button {
+                    HapticsHelper.play(.medium)
                     Task { await handlePurchase(monthly) }
                 } label: {
                     HStack {
@@ -275,6 +282,7 @@ public struct PricingView: View {
             // Boton anual
             if let yearly = subscriptionManager.yearlyPackage {
                 Button {
+                    HapticsHelper.play(.medium)
                     Task { await handlePurchase(yearly) }
                 } label: {
                     HStack {
@@ -326,6 +334,7 @@ public struct PricingView: View {
         VStack(spacing: Spacing.sm) {
             // Restaurar compras
             Button {
+                HapticsHelper.play(.light)
                 Task { await subscriptionManager.restorePurchases() }
             } label: {
                 HStack {
@@ -364,13 +373,16 @@ public struct PricingView: View {
     private func handlePurchase(_ package: RevenueCat.Package) async {
         do {
             try await subscriptionManager.purchase(package)
+            HapticsHelper.play(.success)
         } catch let error as SubscriptionError {
             if case .userCancelled = error {
                 return
             }
+            HapticsHelper.play(.error)
             purchaseErrorMessage = error.localizedDescription
             showError = true
         } catch {
+            HapticsHelper.play(.error)
             purchaseErrorMessage = "Ocurrio un error inesperado al procesar la compra."
             showError = true
         }
@@ -454,7 +466,7 @@ public struct PricingView: View {
 
             faqItem(
                 question: "Hay periodo de prueba?",
-                answer: "Puedes probar todas las funciones premium durante 14 dias gratis."
+                answer: "Si. Ofrecemos 14 dias de prueba gratuita de Premium. Al finalizar el periodo de prueba, la suscripcion se renovara automaticamente al precio del plan seleccionado, a menos que la canceles al menos 24 horas antes de que termine el trial. Podes cancelar en cualquier momento desde los Ajustes de tu Apple ID."
             )
         }
     }
@@ -477,22 +489,60 @@ public struct PricingView: View {
 
     // MARK: - Legal Links Section
 
-    private var legalLinksSection: some View {
-        VStack(spacing: Spacing.xs) {
-            Text("Al suscribirte, aceptas nuestros")
+    // MARK: - Subscription Disclosure Section
+
+    private var subscriptionDisclosureSection: some View {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
+            Text("Informacion de suscripcion")
+                .font(.subheadline)
+                .fontWeight(.bold)
+                .foregroundStyle(SolennixColors.text)
+
+            Text("El pago se cargara a tu cuenta de Apple ID al confirmar la compra. La suscripcion se renovara automaticamente a menos que sea cancelada al menos 24 horas antes del final del periodo actual. Se cobrara a tu cuenta la renovacion dentro de las 24 horas anteriores al final del periodo actual, al precio del plan seleccionado. Las suscripciones pueden ser administradas por el usuario y la renovacion automatica puede desactivarse yendo a los Ajustes de la cuenta del App Store despues de la compra. No se permite la cancelacion de la suscripcion actual durante el periodo activo.")
                 .font(.caption2)
                 .foregroundStyle(SolennixColors.textSecondary)
-            
-            HStack(spacing: Spacing.xs) {
-                Link("Terminos de Uso (EULA)", destination: URL(string: "https://creapolis.dev/terms-of-use/")!)
-                Text("y")
-                    .font(.caption2)
-                    .foregroundStyle(SolennixColors.textSecondary)
-                Link("Aviso de Privacidad", destination: URL(string: "https://creapolis.dev/privacy-policy/")!)
-            }
-            .font(.caption2)
+                .lineSpacing(2)
         }
-        .padding(.top, Spacing.sm)
+        .padding(Spacing.md)
+        .background(SolennixColors.surfaceAlt)
+        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+    }
+
+    // MARK: - Legal Links Section
+
+    private var legalLinksSection: some View {
+        VStack(spacing: Spacing.md) {
+            HStack(spacing: Spacing.lg) {
+                Button {
+                    HapticsHelper.play(.selection)
+                    legalSheetURL = IdentifiableURL(LegalURL.terms)
+                } label: {
+                    Text("Terminos de Uso (EULA)")
+                }
+                .accessibilityHint("Abre los terminos de uso en Safari")
+
+                Text("•")
+                    .foregroundStyle(SolennixColors.textTertiary)
+
+                Button {
+                    HapticsHelper.play(.selection)
+                    legalSheetURL = IdentifiableURL(LegalURL.privacy)
+                } label: {
+                    Text("Privacidad")
+                }
+                .accessibilityHint("Abre la politica de privacidad en Safari")
+            }
+            .font(.body)
+            .fontWeight(.bold)
+            .foregroundStyle(SolennixColors.primary)
+            .buttonStyle(.plain)
+
+            Text("Solennix es un producto de Creapolis")
+                .font(.caption2)
+                .foregroundStyle(SolennixColors.textTertiary)
+        }
+        .padding(.top, Spacing.md)
+        .padding(.bottom, Spacing.xl)
     }
 }
 

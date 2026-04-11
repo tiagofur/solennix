@@ -3,6 +3,7 @@ package com.creapolis.solennix.feature.inventory.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.creapolis.solennix.core.data.repository.InventoryRepository
+import com.creapolis.solennix.core.designsystem.event.UiEvent
 import com.creapolis.solennix.core.model.InventoryItem
 import com.creapolis.solennix.core.model.InventoryType
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -36,6 +37,13 @@ class InventoryListViewModel @Inject constructor(
     private val _isRefreshing = MutableStateFlow(false)
     private val _sortKey = MutableStateFlow(InventorySortKey.NAME)
     private val _sortAscending = MutableStateFlow(true)
+
+    private val _uiEvents = MutableSharedFlow<UiEvent>(extraBufferCapacity = 1)
+    val uiEvents: SharedFlow<UiEvent> = _uiEvents.asSharedFlow()
+
+    // Holds the most recent stock-adjust request so `onRetry` can replay it without
+    // forcing the snackbar to serialize the full InventoryItem + delta into the actionId.
+    private var lastAdjustRequest: Pair<InventoryItem, Double>? = null
 
     val uiState: StateFlow<InventoryListUiState> = combine(
         inventoryRepository.getInventoryItems(),
@@ -103,7 +111,12 @@ class InventoryListViewModel @Inject constructor(
             try {
                 inventoryRepository.syncInventory()
             } catch (e: Exception) {
-                // Non-fatal, data will show from cache
+                _uiEvents.tryEmit(
+                    UiEvent.Error(
+                        message = "No se pudo sincronizar el inventario. Mostrando datos en caché.",
+                        retryActionId = ACTION_REFRESH,
+                    )
+                )
             } finally {
                 _isRefreshing.value = false
             }
@@ -114,8 +127,13 @@ class InventoryListViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 inventoryRepository.deleteInventoryItem(id)
-            } catch (_: Exception) {
-                // Item will be re-fetched from cache
+            } catch (e: Exception) {
+                _uiEvents.tryEmit(
+                    UiEvent.Error(
+                        message = "No se pudo borrar el item",
+                        retryActionId = "$ACTION_DELETE:$id",
+                    )
+                )
             }
         }
     }
@@ -123,9 +141,41 @@ class InventoryListViewModel @Inject constructor(
     fun adjustStock(item: InventoryItem, delta: Double) {
         viewModelScope.launch {
             try {
-                val updated = item.copy(currentStock = (item.currentStock + delta).coerceAtLeast(0.0))
+                val updated = item.copy(
+                    currentStock = (item.currentStock + delta).coerceAtLeast(0.0)
+                )
                 inventoryRepository.updateInventoryItem(updated)
-            } catch (_: Exception) {}
+                lastAdjustRequest = null
+            } catch (e: Exception) {
+                lastAdjustRequest = item to delta
+                _uiEvents.tryEmit(
+                    UiEvent.Error(
+                        message = "No se pudo ajustar el stock de ${item.ingredientName}",
+                        retryActionId = ACTION_ADJUST_STOCK,
+                    )
+                )
+            }
         }
+    }
+
+    /**
+     * Handle retry requests from UiEvent snackbar "Reintentar" actions.
+     * `actionId` format: `"operation[:resourceId]"`.
+     */
+    fun onRetry(actionId: String) {
+        val parts = actionId.split(":", limit = 2)
+        when (parts[0]) {
+            ACTION_REFRESH -> refresh()
+            ACTION_DELETE -> parts.getOrNull(1)?.let { deleteItem(it) }
+            ACTION_ADJUST_STOCK -> lastAdjustRequest?.let { (item, delta) ->
+                adjustStock(item, delta)
+            }
+        }
+    }
+
+    private companion object {
+        const val ACTION_REFRESH = "refresh"
+        const val ACTION_DELETE = "delete"
+        const val ACTION_ADJUST_STOCK = "adjustStock"
     }
 }

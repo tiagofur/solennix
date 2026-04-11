@@ -1,9 +1,12 @@
 import SwiftUI
 import SolennixDesign
+import SolennixCore
 
 // MARK: - About View
 
 public struct AboutView: View {
+
+    @State private var legalSheetURL: IdentifiableURL?
 
     public init() {}
 
@@ -17,6 +20,9 @@ public struct AboutView: View {
                     // App info
                     appInfoSection
 
+                    // Legal info
+                    legalSection
+
                     // Social links
                     socialLinksSection
 
@@ -29,6 +35,10 @@ public struct AboutView: View {
         .background(SolennixColors.surfaceGrouped)
         .navigationTitle("Acerca de")
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(item: $legalSheetURL) { wrapper in
+            SafariView(url: wrapper.url)
+                .ignoresSafeArea()
+        }
     }
 
     // MARK: - App Header Section
@@ -81,6 +91,52 @@ public struct AboutView: View {
             }
         }
         .font(.subheadline)
+    }
+
+    // MARK: - Legal Section
+
+    private var legalSection: some View {
+        VStack(spacing: 0) {
+            Button {
+                HapticsHelper.play(.selection)
+                legalSheetURL = IdentifiableURL(LegalURL.terms)
+            } label: {
+                HStack {
+                    Text("Terminos de Uso (EULA)")
+                    Spacer()
+                    Image(systemName: "arrow.up.right.square")
+                        .font(.caption)
+                        .foregroundStyle(SolennixColors.textTertiary)
+                }
+                .padding(Spacing.md)
+                .contentShape(Rectangle())
+            }
+            .accessibilityHint("Abre los terminos de uso en Safari")
+
+            Divider()
+                .padding(.leading, Spacing.md)
+
+            Button {
+                HapticsHelper.play(.selection)
+                legalSheetURL = IdentifiableURL(LegalURL.privacy)
+            } label: {
+                HStack {
+                    Text("Politica de Privacidad")
+                    Spacer()
+                    Image(systemName: "arrow.up.right.square")
+                        .font(.caption)
+                        .foregroundStyle(SolennixColors.textTertiary)
+                }
+                .padding(Spacing.md)
+                .contentShape(Rectangle())
+            }
+            .accessibilityHint("Abre la politica de privacidad en Safari")
+        }
+        .font(.subheadline)
+        .foregroundStyle(SolennixColors.text)
+        .background(SolennixColors.card)
+        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+        .buttonStyle(.plain)
     }
 
     // MARK: - Social Links Section

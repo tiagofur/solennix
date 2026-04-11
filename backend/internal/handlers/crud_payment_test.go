@@ -88,6 +88,25 @@ func TestCRUDHandler_Payments(t *testing.T) {
 		mockRepo.AssertExpectations(t)
 	})
 
+	t.Run("GetPayment_Success", func(t *testing.T) {
+		mockRepo := new(MockFullPaymentRepo)
+		h := &CRUDHandler{paymentRepo: mockRepo}
+
+		paymentID := uuid.New()
+		payment := &models.Payment{ID: paymentID, EventID: eventID, Amount: 250, PaymentMethod: "card"}
+		mockRepo.On("GetByID", mock.Anything, paymentID, userID).Return(payment, nil)
+
+		req := httptest.NewRequest(http.MethodGet, "/api/payments/"+paymentID.String(), nil)
+		req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, userID))
+		req = withURLParam(req, "id", paymentID.String())
+		rr := httptest.NewRecorder()
+		h.GetPayment(rr, req)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+		assert.Contains(t, rr.Body.String(), paymentID.String())
+		mockRepo.AssertExpectations(t)
+	})
+
 	t.Run("CreatePayment_Success", func(t *testing.T) {
 		mockRepo := new(MockFullPaymentRepo)
 		h := &CRUDHandler{paymentRepo: mockRepo}
@@ -182,6 +201,34 @@ func TestCreatePayment_RepoError_Returns500(t *testing.T) {
 
 	assert.Equal(t, http.StatusInternalServerError, rr.Code)
 	assert.Contains(t, rr.Body.String(), "Failed to create payment")
+	mockRepo.AssertExpectations(t)
+}
+
+func TestGetPayment_InvalidUUID_Returns400(t *testing.T) {
+	h := &CRUDHandler{}
+
+	req := makeReqWithIDParam(http.MethodGet, "/api/payments/bad", "", "bad", uuid.New())
+	rr := httptest.NewRecorder()
+	h.GetPayment(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+	assert.Contains(t, rr.Body.String(), "Invalid payment ID")
+}
+
+func TestGetPayment_NotFound_Returns404(t *testing.T) {
+	userID := uuid.New()
+	paymentID := uuid.New()
+	mockRepo := new(MockFullPaymentRepo)
+	h := &CRUDHandler{paymentRepo: mockRepo}
+
+	mockRepo.On("GetByID", mock.Anything, paymentID, userID).Return(nil, errTest)
+
+	req := makeReqWithIDParam(http.MethodGet, "/api/payments/"+paymentID.String(), "", paymentID.String(), userID)
+	rr := httptest.NewRecorder()
+	h.GetPayment(rr, req)
+
+	assert.Equal(t, http.StatusNotFound, rr.Code)
+	assert.Contains(t, rr.Body.String(), "Payment not found")
 	mockRepo.AssertExpectations(t)
 }
 

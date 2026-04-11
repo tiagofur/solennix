@@ -10,6 +10,7 @@ import SolennixNetwork
 public struct SubscriptionView: View {
 
     @State private var viewModel: SettingsViewModel
+    @State private var legalSheetURL: IdentifiableURL?
     @Environment(SubscriptionManager.self) private var subscriptionManager
     @Environment(\.horizontalSizeClass) private var sizeClass
     private let apiClient: APIClient
@@ -40,6 +41,9 @@ public struct SubscriptionView: View {
 
                 // Actions
                 actionsSection
+
+                // Legal links
+                legalFooter
             }
             .padding(Spacing.lg)
             .frame(maxWidth: sizeClass == .regular ? 600 : .infinity)
@@ -52,6 +56,10 @@ public struct SubscriptionView: View {
             await viewModel.loadUser()
             await subscriptionManager.checkEntitlementStatus()
             await subscriptionManager.fetchBackendStatus(apiClient: apiClient)
+        }
+        .sheet(item: $legalSheetURL) { wrapper in
+            SafariView(url: wrapper.url)
+                .ignoresSafeArea()
         }
     }
 
@@ -306,6 +314,45 @@ public struct SubscriptionView: View {
                 "Reportes basicos"
             ]
         }
+    }
+
+    // MARK: - Legal Footer
+
+    private var legalFooter: some View {
+        VStack(spacing: Spacing.md) {
+            Divider()
+                .padding(.vertical, Spacing.sm)
+
+            HStack(spacing: Spacing.lg) {
+                Button {
+                    HapticsHelper.play(.selection)
+                    legalSheetURL = IdentifiableURL(LegalURL.terms)
+                } label: {
+                    Text("Terminos")
+                }
+                .accessibilityHint("Abre los terminos de uso en Safari")
+
+                Text("•")
+                    .foregroundStyle(SolennixColors.textTertiary)
+
+                Button {
+                    HapticsHelper.play(.selection)
+                    legalSheetURL = IdentifiableURL(LegalURL.privacy)
+                } label: {
+                    Text("Privacidad")
+                }
+                .accessibilityHint("Abre la politica de privacidad en Safari")
+            }
+            .font(.subheadline)
+            .fontWeight(.semibold)
+            .foregroundStyle(SolennixColors.primary)
+            .buttonStyle(.plain)
+
+            Text("© 2025 Solennix por Creapolis")
+                .font(.caption2)
+                .foregroundStyle(SolennixColors.textTertiary)
+        }
+        .padding(.top, Spacing.md)
     }
 }
 

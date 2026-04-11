@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/tiagofur/solennix-backend/internal/middleware"
 	"github.com/tiagofur/solennix-backend/internal/models"
+	"github.com/tiagofur/solennix-backend/internal/repository"
 )
 
 // errTest is a reusable test error.
@@ -397,6 +398,30 @@ func TestCRUDHandlerValidationPaths(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestSearchEvents_GivenQuotedStatus_WhenSearching_ThenAcceptsFilter(t *testing.T) {
+	h, _, eventRepo, _, _, _, _, _ := setupCRUDTest(t)
+	userID := uuid.New()
+
+	eventRepo.
+		On("SearchEventsAdvanced", mock.Anything, userID, mock.MatchedBy(func(filters interface{}) bool {
+			searchFilters, ok := filters.(repository.EventSearchFilters)
+			return ok && searchFilters.Status == "quoted"
+		})).
+		Return([]models.Event{}, nil).
+		Once()
+
+	req := makeReqWithUserID(http.MethodGet, "/api/events/search?status=quoted", "", userID)
+	rr := httptest.NewRecorder()
+
+	h.SearchEvents(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("expected status %d, got %d with body %s", http.StatusOK, rr.Code, rr.Body.String())
+	}
+
+	eventRepo.AssertExpectations(t)
 }
 
 func TestListPaymentsNoFiltersReturnsEmptyArray(t *testing.T) {

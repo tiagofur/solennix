@@ -113,8 +113,11 @@ export const ClientForm: React.FC = () => {
         { onSuccess: () => navigate("/clients") },
       );
     } else {
+      // `user_id` is NOT included in the payload — the backend reads the
+      // authenticated user from the JWT and ignores any user_id in the body.
+      // Previously the form was sending it anyway as dead weight.
       createClient.mutate(
-        { ...payload, user_id: user.id },
+        payload,
         { onSuccess: () => navigate("/clients") },
       );
     }

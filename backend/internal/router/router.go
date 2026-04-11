@@ -47,7 +47,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 		w.Write([]byte(`{"status":"ok"}`))
 	})
 
-	// Build API subrouter — mounted under both /api/v1 (canonical) and /api (legacy alias)
+	// Build API subrouter — mounted under both /api/v1 and /api for compatibility.
 	apiRouter := chi.NewRouter()
 	apiRouter.Use(mw.APIVersion("v1"))
 	apiRouter.Use(mw.Timeout(30 * time.Second)) // Bounds downstream SQL queries
@@ -204,6 +204,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 		r.Route("/payments", func(r chi.Router) {
 			r.Get("/", crudHandler.ListPayments)
 			r.Post("/", crudHandler.CreatePayment)
+			r.Get("/{id}", crudHandler.GetPayment)
 			r.Put("/{id}", crudHandler.UpdatePayment)
 			r.Delete("/{id}", crudHandler.DeletePayment)
 		})

@@ -12,37 +12,37 @@
 
 ## Estado de Paridad Cross-Platform
 
-| Feature | Web | Android | iOS | Gap iOS |
-|---------|-----|---------|-----|---------|
-| CRUD Eventos | ✅ | ✅ | ✅ | — |
-| CRUD Clientes | ✅ | ✅ | ✅ | — |
-| CRUD Productos | ✅ | ✅ | ✅ | — |
-| CRUD Inventario | ✅ | ✅ | ✅ | — |
-| Registro de pagos | ✅ | ✅ | ✅ | — |
-| Calendario | ✅ | ✅ | ✅ | — |
-| Dashboard con KPIs | ✅ | ✅ | ✅ | — |
-| Generación de PDFs | ✅ | ⚠️ Sin librería | ✅ 8 tipos | iOS adelante |
-| Pagos online (Stripe) | ✅ | ❌ | ❌ | Fase 3 |
-| Onboarding checklist | ✅ | ✅ | ✅ + TipKit | iOS adelante |
-| Cotización rápida + PDF | ✅ | ✅ | ✅ | — |
-| Conflictos equipo | ✅ | ✅ | ✅ | — |
-| Sugerencias equipo | ✅ | ✅ | ✅ | — |
-| Búsqueda global | ✅ | ✅ + App Search | ✅ + Spotlight | — |
-| Dark mode | ✅ | ✅ | ✅ | — |
-| Auth biométrica | ❌ | ✅ | ✅ Face/Touch ID | — |
-| Widgets | ❌ | ✅ Glance | ✅ WidgetKit | — |
-| Live Activities | ❌ | ❌ | ✅ Dynamic Island | iOS adelante |
-| Siri Shortcuts | ❌ | ❌ | ✅ AppIntents | iOS adelante |
-| Deep links | ❌ | ✅ | ✅ + Spotlight | — |
-| Offline caché | ❌ | ✅ Room | ✅ SwiftData | — |
-| Background sync | ❌ | ✅ WorkManager | ❌ | **P1** |
-| Push notifications | ❌ | ⚠️ Stub | ❌ | **P1** |
-| React Query / cache | 🔄 | N/A | N/A | — |
-| iPad / Mac support | N/A | Tablet | ✅ Split layout | iOS adelante |
-| Test coverage | ❌ 0% | ❌ 0% | ❌ 0% | Todos |
-| i18n | ❌ | ❌ | ❌ | Todos |
-| Analytics | ❌ | ❌ | ❌ | Todos |
-| Suscripciones | ❌ | ⚠️ RevenueCat stub | ⚠️ API key placeholder | **P0** |
+| Feature                 | Web   | Android            | iOS                    | Gap iOS      |
+| ----------------------- | ----- | ------------------ | ---------------------- | ------------ |
+| CRUD Eventos            | ✅    | ✅                 | ✅                     | —            |
+| CRUD Clientes           | ✅    | ✅                 | ✅                     | —            |
+| CRUD Productos          | ✅    | ✅                 | ✅                     | —            |
+| CRUD Inventario         | ✅    | ✅                 | ✅                     | —            |
+| Registro de pagos       | ✅    | ✅                 | ✅                     | —            |
+| Calendario              | ✅    | ✅                 | ✅                     | —            |
+| Dashboard con KPIs      | ✅    | ✅                 | ✅                     | —            |
+| Generación de PDFs      | ✅    | ⚠️ Sin librería    | ✅ 8 tipos             | iOS adelante |
+| Pagos online (Stripe)   | ✅    | ❌                 | ❌                     | Fase 3       |
+| Onboarding checklist    | ✅    | ✅                 | ✅ + TipKit            | iOS adelante |
+| Cotización rápida + PDF | ✅    | ✅                 | ✅                     | —            |
+| Conflictos equipo       | ✅    | ✅                 | ✅                     | —            |
+| Sugerencias equipo      | ✅    | ✅                 | ✅                     | —            |
+| Búsqueda global         | ✅    | ✅ + App Search    | ✅ + Spotlight         | —            |
+| Dark mode               | ✅    | ✅                 | ✅                     | —            |
+| Auth biométrica         | ❌    | ✅                 | ✅ Face/Touch ID       | —            |
+| Widgets                 | ❌    | ✅ Glance          | ✅ WidgetKit           | —            |
+| Live Activities         | ❌    | ❌                 | ✅ Dynamic Island      | iOS adelante |
+| Siri Shortcuts          | ❌    | ❌                 | ✅ AppIntents          | iOS adelante |
+| Deep links              | ❌    | ✅                 | ✅ + Spotlight         | —            |
+| Offline caché           | ❌    | ✅ Room            | ✅ SwiftData           | —            |
+| Background sync         | ❌    | ✅ WorkManager     | ❌                     | **P1**       |
+| Push notifications      | ❌    | ⚠️ Stub            | ❌                     | **P1**       |
+| React Query / cache     | 🔄    | N/A                | N/A                    | —            |
+| iPad / Mac support      | N/A   | Tablet             | ✅ Split layout        | iOS adelante |
+| Test coverage           | ❌ 0% | ❌ 0%              | ❌ 0%                  | Todos        |
+| i18n                    | ❌    | ❌                 | ❌                     | Todos        |
+| Analytics               | ❌    | ❌                 | ❌                     | Todos        |
+| Suscripciones           | ❌    | ⚠️ RevenueCat stub | ⚠️ API key placeholder | **P0**       |
 
 ---
 
@@ -53,7 +53,7 @@
 
 ### 0.1 RevenueCat API Key
 
- - [x] Reemplazar `appl_YOUR_API_KEY` placeholder en `SolennixApp.swift` — ✅ 2026-04-06 (ahora usa `REVENUECAT_PUBLIC_API_KEY` desde Info.plist/build settings)
+- [x] Reemplazar `appl_YOUR_API_KEY` placeholder en `SolennixApp.swift` — ✅ 2026-04-06 (ahora usa `REVENUECAT_PUBLIC_API_KEY` desde Info.plist/build settings)
 - [x] Configurar offerings y packages en RevenueCat dashboard
 - [ ] Verificar flujo de compra completo en sandbox
 - [ ] Testear restore purchases
@@ -63,7 +63,7 @@
 ### 0.2 Live Activities — Completar Wiring
 
 - [x] Conectar actualizaciones de Live Activity con datos reales del evento — ✅ 2026-04-06 (eliminado widget zombie `EventLiveActivity`/`EventActivityAttributes` con tipo divergente; timer ahora usa `Text(startTime, style: .timer)` nativo de WidgetKit y refresca solo; `loadData` reconcilia status con backend post-refresh)
-- [x] Implementar push-to-update para Live Activities (APNs) — ✅ 2026-04-06 (Activity ahora se inicia con `pushType: .token`; observer dual stream captura `pushTokenUpdates` → `POST /api/v1/live-activities/register` y `activityStateUpdates` → `DELETE /api/v1/live-activities/by-event/{id}`. Backend con migración 036, repo, service `LiveActivityService` con header `apns-push-type: liveactivity` + topic `bundle.push-type.liveactivity`, y hook automático en `PUT /events/{id}` cuando cambia el status)
+- [x] Implementar push-to-update para Live Activities (APNs) — ✅ 2026-04-06 (Activity ahora se inicia con `pushType: .token`; observer dual stream captura `pushTokenUpdates` → `POST /api/live-activities/register` y `activityStateUpdates` → `DELETE /api/live-activities/by-event/{id}`. Backend con migración 036, repo, service `LiveActivityService` con header `apns-push-type: liveactivity` + topic `bundle.push-type.liveactivity`, y hook automático en `PUT /events/{id}` cuando cambia el status)
 - [ ] Testear en dispositivos reales (Dynamic Island solo en iPhone 14 Pro+)
 
 **Por qué**: La infraestructura existe pero el mecanismo de actualización no está completo.
@@ -362,16 +362,16 @@ gantt
 
 ### Prioridad iOS Etapa 2
 
-| Feature | Vista/Componente | Esfuerzo | Prioridad |
-|---------|-----------------|:--------:|:---------:|
-| **Preferencias de notificación** | `SettingsView` → sección "Notificaciones" con toggles | 3h | P0 |
-| **Pantalla de reportes** | `ReportsView` + Swift Charts + date picker | 15h | P1 |
-| **Botón "Ir" + acciones** | `EventDetailView` → botones "En camino", "Llegamos" + Maps | 8h | P1 |
-| **WhatsApp deep links** | Botón "Enviar por WhatsApp" en cotización/contrato | 2h | P0 |
-| **Plantillas de evento** | `TemplateListView` + guardar/cargar | 8h | P2 |
-| **Timeline del evento** | `EventTimelineView` hora por hora | 10h | P2 |
-| **Modo Día del Evento** | Banner especial + acciones rápidas + Live Activity mejorada | 12h | P2 |
-| **Apple Calendar Sync** | EventKit sync bidireccional | 8h | P2 |
+| Feature                          | Vista/Componente                                            | Esfuerzo | Prioridad |
+| -------------------------------- | ----------------------------------------------------------- | :------: | :-------: |
+| **Preferencias de notificación** | `SettingsView` → sección "Notificaciones" con toggles       |    3h    |    P0     |
+| **Pantalla de reportes**         | `ReportsView` + Swift Charts + date picker                  |   15h    |    P1     |
+| **Botón "Ir" + acciones**        | `EventDetailView` → botones "En camino", "Llegamos" + Maps  |    8h    |    P1     |
+| **WhatsApp deep links**          | Botón "Enviar por WhatsApp" en cotización/contrato          |    2h    |    P0     |
+| **Plantillas de evento**         | `TemplateListView` + guardar/cargar                         |    8h    |    P2     |
+| **Timeline del evento**          | `EventTimelineView` hora por hora                           |   10h    |    P2     |
+| **Modo Día del Evento**          | Banner especial + acciones rápidas + Live Activity mejorada |   12h    |    P2     |
+| **Apple Calendar Sync**          | EventKit sync bidireccional                                 |    8h    |    P2     |
 
 ---
 

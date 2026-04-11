@@ -58,3 +58,4 @@
 | Área | Documento |
 |------|-----------|
 | Próximos pasos y prioridades | [[Roadmap Android]] |
+| Firma de release y secretos | [[Firma y Secretos de Release]] |

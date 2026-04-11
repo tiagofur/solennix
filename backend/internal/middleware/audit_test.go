@@ -276,6 +276,22 @@ func TestExtractResource_GivenClientsPath_ThenClient(t *testing.T) {
 	}
 }
 
+func TestExtractResource_GivenClientsPathOnAPIAlias_ThenClient(t *testing.T) {
+	req := httptest.NewRequest(http.MethodPost, "/api/clients", nil)
+	rctx := chi.NewRouteContext()
+	rctx.RoutePatterns = []string{"/api/clients"}
+	ctx := context.WithValue(req.Context(), chi.RouteCtxKey, rctx)
+	req = req.WithContext(ctx)
+
+	resourceType, resourceID := extractResource(req)
+	if resourceType != "client" {
+		t.Fatalf("resourceType = %q, want %q", resourceType, "client")
+	}
+	if resourceID != nil {
+		t.Fatalf("resourceID = %v, want nil", resourceID)
+	}
+}
+
 func TestExtractResource_GivenClientsWithID_ThenClientWithID(t *testing.T) {
 	id := uuid.New()
 	req := httptest.NewRequest(http.MethodPut, "/api/v1/clients/"+id.String(), nil)
@@ -415,6 +431,33 @@ func TestExtractResource_GivenSkipPrefixes_ThenEmpty(t *testing.T) {
 	}
 }
 
+func TestExtractResource_GivenSkipPrefixesOnAPIAlias_ThenEmpty(t *testing.T) {
+	skipPaths := []string{
+		"/api/auth/login",
+		"/api/search/clients",
+		"/api/devices/register",
+		"/api/uploads/image",
+		"/api/subscriptions/plan",
+		"/api/admin/users",
+		"/api/dashboard/stats",
+	}
+
+	for _, path := range skipPaths {
+		t.Run(path, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodPost, path, nil)
+			rctx := chi.NewRouteContext()
+			rctx.RoutePatterns = []string{path}
+			ctx := context.WithValue(req.Context(), chi.RouteCtxKey, rctx)
+			req = req.WithContext(ctx)
+
+			resourceType, _ := extractResource(req)
+			if resourceType != "" {
+				t.Fatalf("resourceType = %q, want empty for skip path %q", resourceType, path)
+			}
+		})
+	}
+}
+
 func TestExtractResource_GivenUnknownResource_ThenEmpty(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/unknown", nil)
 	rctx := chi.NewRouteContext()
@@ -469,6 +512,28 @@ func TestExtractResource_GivenResourceMappings_ThenCorrectTypes(t *testing.T) {
 			resourceType, _ := extractResource(req)
 			if resourceType != tc.wantType {
 				t.Fatalf("resourceType = %q, want %q", resourceType, tc.wantType)
+			}
+		})
+	}
+}
+
+func TestTrimAPIBasePrefix(t *testing.T) {
+	tests := []struct {
+		name    string
+		pattern string
+		want    string
+	}{
+		{name: "v1 slash", pattern: "/api/v1/clients", want: "clients"},
+		{name: "alias slash", pattern: "/api/clients", want: "clients"},
+		{name: "v1 root", pattern: "/api/v1", want: ""},
+		{name: "alias root", pattern: "/api", want: ""},
+		{name: "no prefix", pattern: "clients", want: "clients"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := trimAPIBasePrefix(tc.pattern); got != tc.want {
+				t.Fatalf("trimAPIBasePrefix(%q) = %q, want %q", tc.pattern, got, tc.want)
 			}
 		})
 	}

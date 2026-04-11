@@ -40,11 +40,24 @@ class AuthManager @Inject constructor(
 
     private val json = Json { ignoreUnknownKeys = true }
 
-    // Dedicated refresh client to avoid circular dependency
+    // Dedicated refresh client to avoid circular dependency.
+    //
+    // `expectSuccess = true` is REQUIRED here. Without it, the server returning 401 with
+    // `{"error":"Invalid or expired token"}` (when the refresh token was rotated, reused,
+    // or the family got revoked) flows silently into `.body()` which then throws a
+    // `MissingFieldException` while trying to deserialize the error shape as `TokenPair`.
+    // The catch below would then treat it as a transient error and leave the user in a
+    // zombie session — valid-looking tokens in storage, but every subsequent request
+    // fails with 401.
+    //
+    // With expectSuccess, Ktor throws `ClientRequestException` as soon as the 4xx arrives,
+    // which falls into the specific catch that calls `clearTokens()` and kicks the user
+    // back to the login screen.
     private val refreshHttpClient = HttpClient {
         install(ContentNegotiation) {
             json(json)
         }
+        expectSuccess = true
     }
 
     private companion object {
