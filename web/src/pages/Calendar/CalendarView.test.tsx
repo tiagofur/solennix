@@ -113,7 +113,11 @@ const selectDate = () => {
 };
 
 describe('CalendarView', () => {
-  const mockEvents: EventWithClient[] = [
+  // Partial mock: the calendar only consumes client.name + event_date +
+  // service_type + status. We cast through `as unknown as EventWithClient[]`
+  // instead of filling every field from the contract because the test only
+  // asserts text rendering, not field coverage.
+  const mockEvents = [
     {
       id: '1',
       event_date: '2024-01-02',
@@ -134,7 +138,7 @@ describe('CalendarView', () => {
       created_at: '',
       updated_at: '',
     },
-  ];
+  ] as unknown as EventWithClient[];
 
   beforeEach(() => {
     vi.clearAllMocks();

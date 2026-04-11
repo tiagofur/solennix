@@ -52,10 +52,11 @@ export const QuickClientModal: React.FC<QuickClientModalProps> = ({
     try {
       setIsLoading(true);
       setError(null);
+      // `user_id` is not sent — the backend uses the JWT's authenticated
+      // user. Previously the form was sending it as dead weight.
       const newClient = await clientService.create({
         ...data,
         email: data.email || null,
-        user_id: user.id,
       });
 
       if (newClient) {

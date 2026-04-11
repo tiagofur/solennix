@@ -583,7 +583,8 @@ components:
           nullable: true
         type:
           type: string
-          enum: [equipment, supply, Equipment, Supply]
+          enum: [ingredient, equipment, supply]
+          description: Category of the inventory item. 'ingredient' scales with product recipes, 'equipment' is reusable, 'supply' is consumed per event.
         last_updated:
           type: string
           format: date-time

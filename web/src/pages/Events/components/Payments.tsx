@@ -99,9 +99,11 @@ export const Payments: React.FC<PaymentsProps> = ({
   const onSubmit = async (data: PaymentFormData) => {
     try {
       const newPaymentAmount = Number(data.amount);
+      // `user_id` is NOT sent in the body — the backend takes the
+      // authenticated user from the JWT. Previously the form was sending it
+      // as dead weight; PaymentInsert no longer accepts it.
       await paymentService.create({
         event_id: eventId,
-        user_id: userId,
         amount: newPaymentAmount,
         payment_date: data.payment_date,
         payment_method: data.payment_method,

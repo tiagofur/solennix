@@ -112,8 +112,9 @@ export const InventoryForm: React.FC = () => {
         { onSuccess: () => navigate("/inventory") },
       );
     } else {
+      // `user_id` no se envía — el backend lo toma del JWT.
       createItem.mutate(
-        { ...payload, user_id: user.id },
+        payload,
         { onSuccess: () => navigate("/inventory") },
       );
     }

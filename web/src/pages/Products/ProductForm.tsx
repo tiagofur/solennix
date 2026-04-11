@@ -274,9 +274,10 @@ export const ProductForm: React.FC = () => {
         { onSuccess: () => navigate("/products") },
       );
     } else {
+      // `user_id` no se envía — el backend lo toma del JWT.
       createProduct.mutate(
         {
-          product: { ...data, user_id: user.id, image_url: imageUrl || null, is_active: isActive, recipe: null },
+          product: { ...data, image_url: imageUrl || null, is_active: isActive, recipe: null },
           ingredients: ingredientsToSave,
         },
         { onSuccess: () => navigate("/products") },

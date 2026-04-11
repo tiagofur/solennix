@@ -117,7 +117,6 @@ describe('InventoryForm', () => {
         minimum_stock: 2,
         unit: 'kg',
         unit_cost: 10,
-        user_id: 'user-1',
       });
     });
     expect(mockNavigate).toHaveBeenCalledWith('/inventory');
@@ -424,7 +423,6 @@ describe('InventoryForm', () => {
         minimum_stock: 1,
         unit: 'pieza',
         unit_cost: 5000,
-        user_id: 'user-1',
       });
     });
     expect(mockNavigate).toHaveBeenCalledWith('/inventory');

@@ -1371,8 +1371,11 @@ export interface components {
             unit: string;
             /** Format: double */
             unit_cost?: number | null;
-            /** @enum {string} */
-            type: "equipment" | "supply" | "Equipment" | "Supply";
+            /**
+             * @description Category of the inventory item. 'ingredient' scales with product recipes, 'equipment' is reusable, 'supply' is consumed per event.
+             * @enum {string}
+             */
+            type: "ingredient" | "equipment" | "supply";
             /** Format: date-time */
             last_updated: string;
         };
