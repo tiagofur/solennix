@@ -30,7 +30,9 @@ interface PreviewEvent {
   client?: { name: string; phone: string; email: string; address: string; city: string } | null;
 }
 interface PreviewProfile { name: string; business_name: string; email: string; }
-interface PreviewProduct { products: { name: string } | null; }
+// Preview product mirrors the backend contract shape for EventProduct:
+// a flat `product_name` via SQL join (see backend EventProduct schema).
+interface PreviewProduct { product_name: string; quantity?: number; }
 
 // ─── Preview mock data ────────────────────────────────────────────
 const PREVIEW_EVENT: PreviewEvent = {
@@ -42,9 +44,9 @@ const PREVIEW_EVENT: PreviewEvent = {
 };
 const PREVIEW_PROFILE: PreviewProfile = { name: "Juan Eventos", business_name: "Mi Empresa de Eventos", email: "info@mieventos.com" };
 const PREVIEW_PRODUCTS: PreviewProduct[] = [
-  { products: { name: "Paquete Premium" } },
-  { products: { name: "Iluminación" } },
-  { products: { name: "Decoración Floral" } },
+  { product_name: "Paquete Premium", quantity: 1 },
+  { product_name: "Iluminación", quantity: 1 },
+  { product_name: "Decoración Floral", quantity: 1 },
 ];
 const PREVIEW_PAYMENTS = [{ amount: 15000 }, { amount: 7500 }];
 

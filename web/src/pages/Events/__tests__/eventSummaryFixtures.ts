@@ -104,7 +104,7 @@ export const installEventSummaryMocks = (
 ): void => {
   services.eventService.getById.mockResolvedValue({ ...baseEvent, ...eventOverrides });
   services.eventService.getProducts.mockResolvedValue([
-    { product_id: 'p1', quantity: 2, unit_price: 100, products: { name: 'Churros' } },
+    { product_id: 'p1', quantity: 2, unit_price: 100, product_name: 'Churros' },
   ]);
   services.eventService.getExtras.mockResolvedValue([
     { description: 'Transporte', price: 50, cost: 20 },

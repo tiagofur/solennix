@@ -147,9 +147,9 @@ describe('contractTemplate', () => {
         template: 'Servicios: [Servicios del evento]',
         strict: false,
         products: [
-          { quantity: 2, products: { name: 'Churros' } },
-          { quantity: 3, products: { name: 'Paletas' } },
-          { quantity: 1, products: { name: 'Algodón de Azúcar' } },
+          { quantity: 2, product_name: 'Churros' },
+          { quantity: 3, product_name: 'Paletas' },
+          { quantity: 1, product_name: 'Algodón de Azúcar' },
         ] as any,
       });
       expect(rendered).toBe('Servicios: 2 Churros, 3 Paletas, 1 Algodón de Azúcar');
@@ -162,7 +162,7 @@ describe('contractTemplate', () => {
         template: 'Servicios: [Servicios del evento]',
         strict: false,
         products: [
-          { quantity: 5, products: { name: 'Churros' } },
+          { quantity: 5, product_name: 'Churros' },
         ] as any,
       });
       expect(rendered).toBe('Servicios: 5 Churros');

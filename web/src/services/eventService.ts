@@ -1,8 +1,22 @@
 import { api } from '../lib/api';
 import { Event, EventInsert, EventUpdate, EventEquipment, EventSupply, EquipmentConflict, EquipmentSuggestion, SupplySuggestion, PaginatedResponse, PaginationParams } from '../types/entities';
+import type { components } from '../types/api';
 
 // Helper for type safety on joined data
 type EventWithClient = Event & { clients?: { name: string } | null };
+
+/**
+ * EventProduct as declared by the backend contract. The join field the
+ * backend attaches is `product_name` (optional string, comes from a SQL
+ * join) — NOT the legacy `products: { name: ... }` shape that used to be
+ * returned by an earlier version of the repository.
+ */
+export type EventProduct = components['schemas']['EventProduct'];
+
+/**
+ * EventExtra as declared by the backend contract.
+ */
+export type EventExtra = components['schemas']['EventExtra'];
 
 export const eventService = {
   async getAll(): Promise<EventWithClient[]> {
@@ -48,12 +62,12 @@ export const eventService = {
 
   // Products & Extras Management
 
-  async getProducts(eventId: string) {
-    return api.get<any[]>(`/events/${eventId}/products`);
+  async getProducts(eventId: string): Promise<EventProduct[]> {
+    return api.get<EventProduct[]>(`/events/${eventId}/products`);
   },
 
-  async getExtras(eventId: string) {
-    return api.get<any[]>(`/events/${eventId}/extras`);
+  async getExtras(eventId: string): Promise<EventExtra[]> {
+    return api.get<EventExtra[]>(`/events/${eventId}/extras`);
   },
 
   async updateItems(

@@ -220,7 +220,7 @@ const buildTokenValues = (
     client_city: asText(event.client?.city),
     contract_city: asText(event.city) || asText(event.client?.city),
     event_services_list: products && products.length > 0
-      ? products.map(p => `${p.quantity ?? 1} ${p.products?.name || p.product_name || 'Producto'}`).join(', ')
+      ? products.map(p => `${p.quantity ?? 1} ${p.product_name || 'Producto'}`).join(', ')
       : undefined,
     event_paid_amount: formatCurrency(totalPaid),
   };

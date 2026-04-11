@@ -149,9 +149,15 @@ export interface EventProduct {
     discount: number
     total_price: number | null
     created_at: string
+    // Joined from backend via SQL join on GET /api/events/{id}/products
+    // (backend/internal/models/models.go — ProductName *string). Previously
+    // the Web assumed a nested shape `products: { name: string }` that
+    // never matched the backend response, causing product names to show
+    // as "Producto" fallback in PDFs and the event summary UI.
+    product_name?: string | null
 }
 
-export type EventProductInsert = Omit<EventProduct, 'id' | 'created_at'>
+export type EventProductInsert = Omit<EventProduct, 'id' | 'created_at' | 'product_name'>
 export type EventProductUpdate = Partial<EventProductInsert>
 
 // ===== Event Extra =====

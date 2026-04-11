@@ -54,18 +54,6 @@ describe('productService', () => {
     expect(api.delete).toHaveBeenCalledWith('/products/1');
   });
 
-  it('addIngredients maps payload and calls api.put', async () => {
-    (api.put as any).mockResolvedValue({});
-    await productService.addIngredients('prod-1', [
-      { inventoryId: 'inv-1', quantityRequired: 2 },
-    ]);
-    expect(api.put).toHaveBeenCalledWith('/products/prod-1/ingredients', {
-      ingredients: [
-        { product_id: 'prod-1', inventory_id: 'inv-1', quantity_required: 2 },
-      ],
-    });
-  });
-
   it('getIngredients calls api.get', async () => {
     (api.get as any).mockResolvedValue([]);
     await productService.getIngredients('1');

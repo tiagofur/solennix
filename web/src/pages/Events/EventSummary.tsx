@@ -79,7 +79,11 @@ interface EventProductWithDetails {
   discount: number;
   total_price: number | null;
   created_at: string;
-  products: { name: string; category?: string } | null;
+  // Backend attaches `product_name` via SQL join on GET /api/events/{id}/products
+  // (see backend/internal/models/models.go:114). The previous shape `products: { name }`
+  // was legacy and the backend never returned it — Web PDFs/UI showed "Producto"
+  // fallback in production because of this mismatch.
+  product_name?: string | null;
   cost?: number;
 }
 
@@ -892,7 +896,7 @@ export const EventSummary: React.FC = () => {
                 <tbody className="divide-y divide-border">
                   {products.map((p) => (
                     <tr key={p.product_id} className="group hover:bg-surface-alt/50 transition-colors">
-                      <td className="py-4 px-1 font-bold text-text">{p.products?.name}</td>
+                      <td className="py-4 px-1 font-bold text-text">{p.product_name || 'Producto'}</td>
                       <td className="py-4 px-1 text-right text-text-secondary">{p.quantity}</td>
                       <td className="py-4 px-1 text-right text-text-secondary font-medium">
                         ${p.unit_price.toFixed(2)}

@@ -107,7 +107,7 @@ const makeProduct = (overrides: Record<string, any> = {}) => ({
   discount: 20,
   total_price: 1800,
   created_at: '2024-01-01',
-  products: { name: 'Platillo Principal' },
+  product_name: 'Platillo Principal',
   ...overrides,
 });
 
@@ -165,7 +165,7 @@ describe('pdfGenerator', () => {
         { name: 'Eventos Ana', business_name: 'Eventos Ana' } as any,
         [
           {
-            products: { name: 'Menu' },
+            product_name: 'Menu',
             quantity: 2,
             unit_price: 100,
             discount: 10,
@@ -256,7 +256,7 @@ describe('pdfGenerator', () => {
       generateBudgetPDF(
         makeEvent() as any,
         makeProfile() as any,
-        [makeProduct({ products: null }) as any],
+        [makeProduct({ product_name: null }) as any],
         []
       );
 

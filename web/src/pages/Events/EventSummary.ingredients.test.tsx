@@ -184,8 +184,8 @@ describe.skip('EventSummary — ingredient aggregation (skipped: leak de memoria
 
   it('aggregates ingredients from multiple products with the same inventory_id', async () => {
     (eventService.getProducts as any).mockResolvedValue([
-      { product_id: 'p1', quantity: 2, unit_price: 100, products: { name: 'Churros' } },
-      { product_id: 'p2', quantity: 3, unit_price: 80, products: { name: 'Waffles' } },
+      { product_id: 'p1', quantity: 2, unit_price: 100, product_name: 'Churros' },
+      { product_id: 'p2', quantity: 3, unit_price: 80, product_name: 'Waffles' },
     ]);
     (productService.getIngredientsForProducts as any).mockResolvedValue([
       { product_id: 'p1', inventory_id: 'i1', quantity_required: 0.5, ingredient_name: 'Harina', unit: 'kg', unit_cost: 10, type: 'ingredient' },
