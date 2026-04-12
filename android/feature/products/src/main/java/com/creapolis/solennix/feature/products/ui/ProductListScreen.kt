@@ -44,6 +44,7 @@ import coil3.compose.AsyncImage
 import com.creapolis.solennix.core.designsystem.R as DesignSystemR
 import com.creapolis.solennix.core.designsystem.component.SkeletonLoading
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
+import com.creapolis.solennix.core.designsystem.component.SwipeRevealActions
 import com.creapolis.solennix.core.designsystem.component.UpgradeBanner
 import com.creapolis.solennix.core.designsystem.component.UpgradeBannerStyle
 import com.creapolis.solennix.core.designsystem.component.UpgradePlanDialog
@@ -69,13 +70,13 @@ fun ProductListScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showLimitDialog by remember { mutableStateOf(false) }
-    var pendingDeleteId by remember { mutableStateOf<String?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
 
     UiEventSnackbarHandler(
         events = viewModel.uiEvents,
         snackbarHostState = snackbarHostState,
         onRetry = viewModel::onRetry,
+        onUndo = viewModel::undoDelete,
     )
 
     if (showLimitDialog && viewModel.limitReachedMessage != null) {
@@ -86,25 +87,6 @@ fun ProductListScreen(
                 onUpgradeClick()
             },
             onDismiss = { showLimitDialog = false }
-        )
-    }
-
-    if (pendingDeleteId != null) {
-        AlertDialog(
-            onDismissRequest = { pendingDeleteId = null },
-            title = { Text("Eliminar producto") },
-            text = { Text("Esta acción no se puede deshacer.") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        pendingDeleteId?.let { viewModel.deleteProduct(it) }
-                        pendingDeleteId = null
-                    }
-                ) { Text("Eliminar", color = MaterialTheme.colorScheme.error) }
-            },
-            dismissButton = {
-                TextButton(onClick = { pendingDeleteId = null }) { Text("Cancelar") }
-            }
         )
     }
 
@@ -259,37 +241,22 @@ fun ProductListScreen(
                                     product = product,
                                     onClick = { onProductClick(product.id) },
                                     onEdit = { onEditProduct(product.id) },
-                                    onDelete = { pendingDeleteId = product.id }
+                                    onDelete = { viewModel.deleteProduct(product.id) }
                                 )
                             }
                         },
                         listContent = {
                             items(uiState.products, key = { it.id }) { product ->
-                                val dismissState = rememberSwipeToDismissBoxState(
-                                    confirmValueChange = { value ->
-                                        if (value == SwipeToDismissBoxValue.EndToStart) {
-                                            viewModel.deleteProduct(product.id)
-                                            true
-                                        } else false
-                                    }
-                                )
-                                SwipeToDismissBox(
-                                    state = dismissState,
-                                    enableDismissFromStartToEnd = false,
-                                    backgroundContent = {
-                                        SwipeDeleteBackground(
-                                            progress = dismissState.progress,
-                                            contentDescription = stringResource(DesignSystemR.string.cd_delete)
-                                        )
-                                    },
-                                    modifier = Modifier.animateItem()
+                                SwipeRevealActions(
+                                    onEdit = { onEditProduct(product.id) },
+                                    onDelete = { viewModel.deleteProduct(product.id) }
                                 ) {
-                                    Surface(color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.0f)) {
+                                    Surface(color = SolennixTheme.colors.card) {
                                         ProductListItem(
                                             product = product,
                                             onClick = { onProductClick(product.id) },
                                             onEdit = { onEditProduct(product.id) },
-                                            onDelete = { pendingDeleteId = product.id }
+                                            onDelete = { viewModel.deleteProduct(product.id) }
                                         )
                                     }
                                 }
@@ -302,47 +269,6 @@ fun ProductListScreen(
                     )
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun SwipeDeleteBackground(
-    progress: Float,
-    contentDescription: String,
-    modifier: Modifier = Modifier,
-    endPadding: Dp = 20.dp
-) {
-    val animatedProgress by animateFloatAsState(
-        targetValue = progress.coerceIn(0f, 1f),
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
-        ),
-        label = "productSwipeDeleteProgress"
-    )
-
-    Surface(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp),
-        color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.18f + (animatedProgress * 0.72f)),
-        shape = MaterialTheme.shapes.medium
-    ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.CenterEnd
-        ) {
-            Icon(
-                Icons.Default.Delete,
-                contentDescription = contentDescription,
-                tint = MaterialTheme.colorScheme.onErrorContainer,
-                modifier = Modifier
-                    .padding(end = endPadding - (animatedProgress * 8).dp)
-                    .offset(x = ((1f - animatedProgress) * 14f).dp)
-                    .scale(0.82f + (animatedProgress * 0.28f))
-                    .alpha(0.45f + (animatedProgress * 0.55f))
-            )
         }
     }
 }

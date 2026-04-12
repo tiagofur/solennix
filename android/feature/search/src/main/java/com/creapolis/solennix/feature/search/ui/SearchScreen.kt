@@ -9,6 +9,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -370,20 +371,31 @@ fun SearchInventoryListItem(item: InventoryItem, onClick: () -> Unit) {
                 Text(
                     text = "Stock: ${item.currentStock} ${item.unit}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = if (isLowStock) SolennixTheme.colors.error else SolennixTheme.colors.secondaryText
+                    color = SolennixTheme.colors.secondaryText
                 )
             }
             if (isLowStock) {
                 Surface(
-                    color = SolennixTheme.colors.error.copy(alpha = 0.1f),
+                    color = SolennixTheme.colors.warning.copy(alpha = 0.10f),
                     shape = MaterialTheme.shapes.extraSmall
                 ) {
-                    Text(
-                        text = "Bajo",
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = SolennixTheme.colors.error
-                    )
+                    Row(
+                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(3.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Warning,
+                            contentDescription = null,
+                            modifier = Modifier.size(10.dp),
+                            tint = SolennixTheme.colors.warning
+                        )
+                        Text(
+                            text = "Bajo",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = SolennixTheme.colors.warning
+                        )
+                    }
                 }
             }
         }
