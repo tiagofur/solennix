@@ -40,7 +40,6 @@ const RESOURCE_LABELS: Record<string, string> = {
   event: "un evento",
   events: "un evento",
   client: "un cliente",
-  client: "un cliente",
   product: "un producto",
   products: "un producto",
   inventory: "un ítem de inventario",

@@ -164,7 +164,6 @@ describe('EventSummary — contract view', () => {
       city: 'Guadalajara',
       refund_percent: 25,
       client: { name: 'Ana', phone: '555', email: 'ana@test.com', address: 'Calle 123', city: 'Guadalajara' },
-      client: { name: 'Ana', phone: '555', email: 'ana@test.com', address: 'Calle 123', city: 'Guadalajara' },
     });
     (paymentService.getByEventId as any).mockResolvedValue([{ amount: 600 }]);
 

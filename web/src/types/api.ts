@@ -1702,7 +1702,7 @@ export interface components {
             pending_quotes: number;
             low_stock_items: number;
             upcoming_events: number;
-            total_client: number;
+            total_clients: number;
             /** Format: double */
             average_event_value: number;
         };
@@ -1758,7 +1758,7 @@ export interface components {
             pro_users: number;
             premium_users: number;
             total_events: number;
-            total_client: number;
+            total_clients: number;
             total_products: number;
             new_users_today: number;
             new_users_week: number;

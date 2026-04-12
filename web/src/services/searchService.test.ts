@@ -15,13 +15,13 @@ describe('searchService', () => {
 
   it('returns empty results for empty query', async () => {
     const result = await searchService.searchAll('');
-    expect(result).toEqual({ client: [], event: [], product: [], inventory: [] });
+    expect(result).toEqual({ clients: [], events: [], products: [], inventory: [] });
     expect(api.get).not.toHaveBeenCalled();
   });
 
   it('filters clients by name', async () => {
     (api.get as any).mockResolvedValue({
-      client: [
+      clients: [
         { id: '1', name: 'Juan', email: 'juan@test.com', city: 'CDMX', phone: '123' },
       ],
       products: [],
@@ -31,13 +31,13 @@ describe('searchService', () => {
 
     const result = await searchService.searchAll('juan');
     expect(api.get).toHaveBeenCalledWith('/search?q=juan');
-    expect(result.client).toHaveLength(1);
-    expect(result.client[0].title).toBe('Juan');
+    expect(result.clients).toHaveLength(1);
+    expect(result.clients[0].title).toBe('Juan');
   });
 
   it('maps and filters across entities', async () => {
     (api.get as any).mockResolvedValue({
-      client: [
+      clients: [
         { id: '1', name: 'Maria', email: 'maria@test.com', city: 'GDL', phone: '555' },
       ],
       products: [],
@@ -49,17 +49,17 @@ describe('searchService', () => {
 
     const result = await searchService.searchAll('ma', 1);
 
-    expect(result.client).toHaveLength(1);
-    expect(result.client[0].subtitle).toContain('maria@test.com');
-    expect(result.product).toHaveLength(0);
+    expect(result.clients).toHaveLength(1);
+    expect(result.clients[0].subtitle).toContain('maria@test.com');
+    expect(result.products).toHaveLength(0);
     expect(result.inventory).toHaveLength(0);
-    expect(result.event).toHaveLength(1);
-    expect(result.event[0].href).toBe('/events/e1/summary');
+    expect(result.events).toHaveLength(1);
+    expect(result.events[0].href).toBe('/events/e1/summary');
   });
 
   it('handles events with client shape and inventory equipment', async () => {
     (api.get as any).mockResolvedValue({
-      client: [],
+      clients: [],
       products: [],
       inventory: [
         { id: 'i2', ingredient_name: 'Horno', type: 'equipment', unit: 'pieza', current_stock: 1 },
@@ -70,13 +70,13 @@ describe('searchService', () => {
     const result = await searchService.searchAll('ho');
 
     expect(result.inventory[0].subtitle).toBe('Equipo - pieza');
-    expect(result.product).toHaveLength(0);
-    expect(result.event).toHaveLength(0);
+    expect(result.products).toHaveLength(0);
+    expect(result.events).toHaveLength(0);
   });
 
   it('maps product meta only when base price exists', async () => {
     (api.get as any).mockResolvedValue({
-      client: [],
+      clients: [],
       products: [
         { id: 'p1', name: 'Tacos', category: 'Comida', base_price: 0 },
       ],
@@ -86,13 +86,13 @@ describe('searchService', () => {
 
     const result = await searchService.searchAll('tacos');
 
-    expect(result.product).toHaveLength(1);
-    expect(result.product[0].meta).toBeUndefined();
+    expect(result.products).toHaveLength(1);
+    expect(result.products[0].meta).toBeUndefined();
   });
 
   it('maps product with base_price and without category', async () => {
     (api.get as any).mockResolvedValue({
-      client: [],
+      clients: [],
       products: [
         { id: 'p2', name: 'Sushi', category: '', base_price: 150.5 },
       ],
@@ -102,14 +102,14 @@ describe('searchService', () => {
 
     const result = await searchService.searchAll('sushi');
 
-    expect(result.product).toHaveLength(1);
-    expect(result.product[0].meta).toBe('$150.50');
-    expect(result.product[0].subtitle).toBeUndefined();
+    expect(result.products).toHaveLength(1);
+    expect(result.products[0].meta).toBe('$150.50');
+    expect(result.products[0].subtitle).toBeUndefined();
   });
 
   it('maps client without city', async () => {
     (api.get as any).mockResolvedValue({
-      client: [
+      clients: [
         { id: 'c1', name: 'Ana', email: '', phone: '555', city: '' },
       ],
       products: [],
@@ -119,13 +119,13 @@ describe('searchService', () => {
 
     const result = await searchService.searchAll('ana');
 
-    expect(result.client).toHaveLength(1);
-    expect(result.client[0].meta).toBeUndefined();
+    expect(result.clients).toHaveLength(1);
+    expect(result.clients[0].meta).toBeUndefined();
   });
 
   it('maps inventory item with ingredient type', async () => {
     (api.get as any).mockResolvedValue({
-      client: [],
+      clients: [],
       products: [],
       inventory: [
         { id: 'i1', ingredient_name: 'Harina', type: 'ingredient', unit: 'kg', current_stock: 10 },
@@ -142,7 +142,7 @@ describe('searchService', () => {
 
   it('maps event without client', async () => {
     (api.get as any).mockResolvedValue({
-      client: [],
+      clients: [],
       products: [],
       inventory: [],
       events: [
@@ -152,9 +152,9 @@ describe('searchService', () => {
 
     const result = await searchService.searchAll('cumple');
 
-    expect(result.event).toHaveLength(1);
-    expect(result.event[0].subtitle).toBeUndefined();
-    expect(result.event[0].status).toBe('quoted');
+    expect(result.events).toHaveLength(1);
+    expect(result.events[0].subtitle).toBeUndefined();
+    expect(result.events[0].status).toBe('quoted');
   });
 
   it('handles response with missing/undefined arrays', async () => {
@@ -162,15 +162,15 @@ describe('searchService', () => {
 
     const result = await searchService.searchAll('test');
 
-    expect(result.client).toEqual([]);
-    expect(result.product).toEqual([]);
+    expect(result.clients).toEqual([]);
+    expect(result.products).toEqual([]);
     expect(result.inventory).toEqual([]);
-    expect(result.event).toEqual([]);
+    expect(result.events).toEqual([]);
   });
 
   it('returns empty results for whitespace-only query', async () => {
     const result = await searchService.searchAll('   ');
-    expect(result).toEqual({ client: [], event: [], product: [], inventory: [] });
+    expect(result).toEqual({ clients: [], events: [], products: [], inventory: [] });
     expect(api.get).not.toHaveBeenCalled();
   });
 });

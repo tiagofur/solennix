@@ -70,7 +70,7 @@ const getMockData = (): AdminUser[] => [
 
 const defaultStats = {
   total_users: 7, basic_users: 1, pro_users: 4, premium_users: 1,
-  total_events: 10, total_client: 10, total_products: 10,
+  total_events: 10, total_clients: 10, total_products: 10,
   new_users_today: 0, new_users_week: 0, new_users_month: 0, active_subscriptions: 1
 };
 

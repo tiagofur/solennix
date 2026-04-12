@@ -47,7 +47,7 @@ vi.mock('../../hooks/usePlanLimits', () => ({
 }));
 
 /** Sets up both getAll and getPage mocks with the same data. */
-const mockClients = (client: any[]) => {
+const mockClients = (clients: any[]) => {
   (clientService.getAll as any).mockResolvedValue(clients);
   (clientService.getPage as any).mockResolvedValue({
     data: clients,
