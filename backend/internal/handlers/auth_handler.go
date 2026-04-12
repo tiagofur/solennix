@@ -732,6 +732,7 @@ func (h *AuthHandler) GoogleSignIn(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		h.storeRefreshToken(r.Context(), tokens.RefreshToken, user.ID)
+		setAuthCookie(w, r, tokens.AccessToken)
 		slog.Info("auth.event", "action", "google_login", "user_id", user.ID, "email", email, "ip", clientIP(r))
 		writeJSON(w, http.StatusOK, map[string]interface{}{
 			"user":   user,
@@ -753,6 +754,7 @@ func (h *AuthHandler) GoogleSignIn(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			h.storeRefreshToken(r.Context(), tokens.RefreshToken, user.ID)
+			setAuthCookie(w, r, tokens.AccessToken)
 			slog.Info("auth.event", "action", "google_login", "user_id", user.ID, "email", email, "ip", clientIP(r))
 			writeJSON(w, http.StatusOK, map[string]interface{}{
 				"user":   user,
@@ -773,6 +775,7 @@ func (h *AuthHandler) GoogleSignIn(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		h.storeRefreshToken(r.Context(), tokens.RefreshToken, user.ID)
+		setAuthCookie(w, r, tokens.AccessToken)
 		slog.Info("auth.event", "action", "google_link_and_login", "user_id", user.ID, "email", email, "ip", clientIP(r))
 		writeJSON(w, http.StatusOK, map[string]interface{}{
 			"user":   user,
@@ -807,6 +810,7 @@ func (h *AuthHandler) GoogleSignIn(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 				h.storeRefreshToken(r.Context(), tokens.RefreshToken, existingUser.ID)
+				setAuthCookie(w, r, tokens.AccessToken)
 				writeJSON(w, http.StatusOK, map[string]interface{}{
 					"user":   existingUser,
 					"tokens": tokens,
@@ -826,6 +830,7 @@ func (h *AuthHandler) GoogleSignIn(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			h.storeRefreshToken(r.Context(), tokens.RefreshToken, existingUser.ID)
+			setAuthCookie(w, r, tokens.AccessToken)
 			slog.Info("auth.event", "action", "google_link_and_login_race", "user_id", existingUser.ID, "email", email, "ip", clientIP(r))
 			writeJSON(w, http.StatusOK, map[string]interface{}{
 				"user":   existingUser,
@@ -846,6 +851,7 @@ func (h *AuthHandler) GoogleSignIn(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.storeRefreshToken(r.Context(), tokens.RefreshToken, newUser.ID)
+	setAuthCookie(w, r, tokens.AccessToken)
 	slog.Info("auth.event", "action", "google_register", "user_id", newUser.ID, "email", newUser.Email, "ip", clientIP(r))
 
 	writeJSON(w, http.StatusCreated, map[string]interface{}{
