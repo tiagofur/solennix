@@ -13,6 +13,8 @@ import com.creapolis.solennix.core.model.Plan
 import com.creapolis.solennix.core.model.Product
 import com.creapolis.solennix.core.network.AuthManager
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -60,14 +62,18 @@ class ProductListViewModel @Inject constructor(
     private val _uiEvents = MutableSharedFlow<UiEvent>(extraBufferCapacity = 1)
     val uiEvents: SharedFlow<UiEvent> = _uiEvents.asSharedFlow()
 
+    private val _pendingDeleteIds = MutableStateFlow<Set<String>>(emptySet())
+    private var pendingDeleteJob: Job? = null
+
     val uiState: StateFlow<ProductListUiState> = combine(
         productRepository.getProducts(),
         _searchQuery,
         _selectedCategory,
-        combine(_isRefreshing, _sortKey, _sortAscending) { r, k, a -> Triple(r, k, a) }
-    ) { products, query, category, (refreshing, sortKey, sortAscending) ->
+        combine(_isRefreshing, _sortKey, _sortAscending, _pendingDeleteIds) { r, k, a, p -> Triple(r, k, a) to p }
+    ) { products, query, category, (triple, pendingIds) ->
+        val (refreshing, sortKey, sortAscending) = triple
         val allCategories = products.map { it.category }.distinct().sorted()
-        var filtered = products
+        var filtered = products.filter { it.id !in pendingIds }
         if (query.isNotBlank()) {
             filtered = filtered.filter {
                 it.name.contains(query, ignoreCase = true) || it.category.contains(query, ignoreCase = true)
@@ -129,6 +135,27 @@ class ProductListViewModel @Inject constructor(
     }
 
     fun deleteProduct(id: String) {
+        _pendingDeleteIds.update { it + id }
+        pendingDeleteJob?.cancel()
+        _uiEvents.tryEmit(
+            UiEvent.PendingDelete(
+                message = "Producto eliminado",
+                undoActionId = "$ACTION_DELETE:$id",
+            )
+        )
+        pendingDeleteJob = viewModelScope.launch {
+            delay(UNDO_TIMEOUT_MS)
+            commitDelete(id)
+        }
+    }
+
+    fun undoDelete(actionId: String) {
+        val id = actionId.split(":", limit = 2).getOrNull(1) ?: return
+        pendingDeleteJob?.cancel()
+        _pendingDeleteIds.update { it - id }
+    }
+
+    private fun commitDelete(id: String) {
         viewModelScope.launch {
             try {
                 productRepository.deleteProduct(id)
@@ -139,6 +166,8 @@ class ProductListViewModel @Inject constructor(
                         retryActionId = "$ACTION_DELETE:$id",
                     )
                 )
+            } finally {
+                _pendingDeleteIds.update { it - id }
             }
         }
     }
@@ -176,5 +205,6 @@ class ProductListViewModel @Inject constructor(
     private companion object {
         const val ACTION_DELETE = "delete"
         const val ACTION_REFRESH = "refresh"
+        const val UNDO_TIMEOUT_MS = 5000L
     }
 }

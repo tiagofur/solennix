@@ -262,7 +262,21 @@
       "Bash(export JAVA_HOME=/opt/homebrew/opt/openjdk/libexec/openjdk.jdk/Contents/Home)",
       "Bash(export ANDROID_HOME=/Users/tiagofur/Library/Android/sdk)",
       "Bash(./gradlew :app:installDebug)",
-      "Bash(export JAVA_HOME=\"/Applications/Android Studio.app/Contents/jbr/Contents/Home\")"
+      "Bash(export JAVA_HOME=\"/Applications/Android Studio.app/Contents/jbr/Contents/Home\")",
+      "Bash(xcodebuild -project /Users/tiagofur/dev/eventosapp/ios/Solennix.xcodeproj -list)",
+      "Bash(xcodebuild -project /Users/tiagofur/dev/eventosapp/ios/Solennix.xcodeproj -scheme Solennix -destination 'id=4277DB83-2869-41E5-8F8E-4410D01D8C95' -configuration Debug build)",
+      "Bash(plutil -p /Users/tiagofur/Library/Developer/Xcode/DerivedData/Solennix-gmhkpjpzqslphuahibsumbsnyvci/Build/Products/Debug-iphonesimulator/Solennix.app/Info.plist)",
+      "Bash(/Users/tiagofur/Library/Android/sdk/platform-tools/adb logcat:*)",
+      "Bash(./gradlew :feature:inventory:compileDebugKotlin :app:installDebug)",
+      "Bash(./gradlew :app:installDebug --stacktrace)",
+      "Bash(/Users/tiagofur/Library/Android/sdk/emulator/emulator -avd Pixel_10_Pro)",
+      "Bash(/Users/tiagofur/Library/Android/sdk/platform-tools/adb install:*)",
+      "Bash(./gradlew :core:designsystem:compileDebugKotlin)",
+      "Bash(JAVA_HOME=\"/Applications/Android Studio.app/Contents/jbr/Contents/Home\" ./gradlew :app:installDebug)",
+      "Bash(docker compose:*)",
+      "Bash(git fetch:*)",
+      "Bash(git checkout:*)",
+      "Bash(du -sh marketing/andorid_screens/smartphone/*)"
     ]
   }
 }

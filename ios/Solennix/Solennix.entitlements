@@ -10,7 +10,5 @@
 	<array>
 		<string>group.com.solennix.app</string>
 	</array>
-	<key>com.apple.security.network.client</key>
-	<true/>
 </dict>
 </plist>

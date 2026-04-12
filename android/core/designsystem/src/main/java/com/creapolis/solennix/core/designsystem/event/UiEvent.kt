@@ -43,4 +43,15 @@ sealed class UiEvent {
 
     /** Show a short, auto-dismissing success confirmation snackbar. */
     data class Success(val message: String) : UiEvent()
+
+    /**
+     * Show a snackbar with "Deshacer" action for pending deletions.
+     * The item is hidden from the UI immediately. If the user taps "Deshacer",
+     * [undoActionId] is passed to the host's undo callback to restore the item.
+     * If dismissed without action, the deletion proceeds.
+     */
+    data class PendingDelete(
+        val message: String,
+        val undoActionId: String,
+    ) : UiEvent()
 }

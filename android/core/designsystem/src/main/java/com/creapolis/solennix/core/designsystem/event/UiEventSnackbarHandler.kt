@@ -32,6 +32,7 @@ fun UiEventSnackbarHandler(
     events: Flow<UiEvent>,
     snackbarHostState: SnackbarHostState,
     onRetry: (actionId: String) -> Unit = {},
+    onUndo: (actionId: String) -> Unit = {},
 ) {
     LaunchedEffect(events) {
         events.collect { event ->
@@ -55,6 +56,17 @@ fun UiEventSnackbarHandler(
                         message = event.message,
                         duration = SnackbarDuration.Short,
                     )
+                }
+                is UiEvent.PendingDelete -> {
+                    val result = snackbarHostState.showSnackbar(
+                        message = event.message,
+                        actionLabel = "Deshacer",
+                        withDismissAction = true,
+                        duration = SnackbarDuration.Long,
+                    )
+                    if (result == SnackbarResult.ActionPerformed) {
+                        onUndo(event.undoActionId)
+                    }
                 }
             }
         }

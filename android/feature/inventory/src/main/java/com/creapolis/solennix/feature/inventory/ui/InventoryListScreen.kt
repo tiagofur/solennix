@@ -36,6 +36,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.R as DesignSystemR
 import com.creapolis.solennix.core.designsystem.component.SkeletonLoading
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
+import com.creapolis.solennix.core.designsystem.component.SwipeRevealActions
 import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveCardGrid
 import com.creapolis.solennix.core.designsystem.event.UiEventSnackbarHandler
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
@@ -55,7 +56,6 @@ fun InventoryListScreen(
     onAddItemClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    var pendingDeleteId by remember { mutableStateOf<String?>(null) }
     var adjustingItem by remember { mutableStateOf<InventoryItem?>(null) }
     var adjustmentInput by remember { mutableStateOf("") }
     val snackbarHostState = remember { SnackbarHostState() }
@@ -64,28 +64,8 @@ fun InventoryListScreen(
         events = viewModel.uiEvents,
         snackbarHostState = snackbarHostState,
         onRetry = viewModel::onRetry,
+        onUndo = viewModel::undoDelete,
     )
-
-    // Delete confirmation dialog (triggered from long-press menu)
-    if (pendingDeleteId != null) {
-        AlertDialog(
-            onDismissRequest = { pendingDeleteId = null },
-            title = { Text("Eliminar ítem") },
-            text = { Text("Esta acción no se puede deshacer.") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        pendingDeleteId?.let { viewModel.deleteItem(it) }
-                        pendingDeleteId = null
-                    },
-                    colors = ButtonDefaults.textButtonColors(contentColor = SolennixTheme.colors.error)
-                ) { Text("Eliminar") }
-            },
-            dismissButton = {
-                TextButton(onClick = { pendingDeleteId = null }) { Text("Cancelar") }
-            }
-        )
-    }
 
     // Stock adjustment bottom sheet
     if (adjustingItem != null) {
@@ -303,7 +283,7 @@ fun InventoryListScreen(
                                         onClick = { onItemClick(item.id) },
                                         onEdit = { onEditItem(item.id) },
                                         onAdjust = { adjustingItem = item },
-                                        onDelete = { pendingDeleteId = item.id }
+                                        onDelete = { viewModel.deleteItem(item.id) }
                                     )
                                 }
                             }
@@ -323,7 +303,7 @@ fun InventoryListScreen(
                                         onEditItem = onEditItem,
                                         onAdjustItem = { adjustingItem = it },
                                         onDeleteItem = { viewModel.deleteItem(it) },
-                                        onDeleteWithConfirm = { pendingDeleteId = it }
+                                        onDeleteWithConfirm = { viewModel.deleteItem(it) }
                                     )
                                 }
                             }
@@ -338,7 +318,7 @@ fun InventoryListScreen(
                                         onEditItem = onEditItem,
                                         onAdjustItem = { adjustingItem = it },
                                         onDeleteItem = { viewModel.deleteItem(it) },
-                                        onDeleteWithConfirm = { pendingDeleteId = it }
+                                        onDeleteWithConfirm = { viewModel.deleteItem(it) }
                                     )
                                 }
                             }
@@ -353,7 +333,7 @@ fun InventoryListScreen(
                                         onEditItem = onEditItem,
                                         onAdjustItem = { adjustingItem = it },
                                         onDeleteItem = { viewModel.deleteItem(it) },
-                                        onDeleteWithConfirm = { pendingDeleteId = it }
+                                        onDeleteWithConfirm = { viewModel.deleteItem(it) }
                                     )
                                 }
                             }
@@ -424,7 +404,6 @@ private fun InventorySkeletonList() {
 
 // MARK: - List Section (Phone)
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 private fun InventorySection(
     title: String,
@@ -434,8 +413,8 @@ private fun InventorySection(
     onItemClick: (String) -> Unit,
     onEditItem: (String) -> Unit,
     onAdjustItem: (InventoryItem) -> Unit,
-    onDeleteItem: (String) -> Unit,    // immediate (swipe)
-    onDeleteWithConfirm: (String) -> Unit  // confirmation dialog (menu)
+    onDeleteItem: (String) -> Unit,
+    onDeleteWithConfirm: (String) -> Unit
 ) {
     Surface(
         shape = MaterialTheme.shapes.medium,
@@ -475,20 +454,9 @@ private fun InventorySection(
 
             items.forEachIndexed { index, item ->
                 key(item.id) {
-                    val dismissState = rememberSwipeToDismissBoxState(
-                        confirmValueChange = { value ->
-                            if (value == SwipeToDismissBoxValue.EndToStart) {
-                                onDeleteItem(item.id)
-                                true
-                            } else false
-                        }
-                    )
-                    SwipeToDismissBox(
-                        state = dismissState,
-                        enableDismissFromStartToEnd = false,
-                        backgroundContent = {
-                            InventorySwipeDeleteBackground(progress = dismissState.progress)
-                        }
+                    SwipeRevealActions(
+                        onEdit = { onEditItem(item.id) },
+                        onDelete = { onDeleteWithConfirm(item.id) }
                     ) {
                         InventoryListItem(
                             item = item,
@@ -510,39 +478,6 @@ private fun InventorySection(
     }
 }
 
-@Composable
-private fun InventorySwipeDeleteBackground(progress: Float) {
-    val animatedProgress by animateFloatAsState(
-        targetValue = progress.coerceIn(0f, 1f),
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
-        ),
-        label = "inventorySwipeDeleteProgress"
-    )
-
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = SolennixTheme.colors.error.copy(alpha = 0.14f + (animatedProgress * 0.72f))
-    ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.CenterEnd
-        ) {
-            Icon(
-                Icons.Default.Delete,
-                contentDescription = "Eliminar",
-                tint = Color.White,
-                modifier = Modifier
-                    .padding(end = 20.dp - (animatedProgress * 8).dp)
-                    .offset(x = ((1f - animatedProgress) * 14f).dp)
-                    .scale(0.82f + (animatedProgress * 0.28f))
-                    .alpha(0.45f + (animatedProgress * 0.55f))
-            )
-        }
-    }
-}
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun InventoryListItem(
@@ -558,6 +493,7 @@ private fun InventoryListItem(
     Box {
         Row(
             modifier = Modifier
+                .background(SolennixTheme.colors.card)
                 .combinedClickable(
                     onClick = onClick,
                     onLongClick = { showMenu = true }
