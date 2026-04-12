@@ -84,7 +84,7 @@ public final class AppleSignInService: NSObject, Sendable {
 
 // MARK: - ASAuthorizationControllerDelegate
 
-extension AppleSignInService: @preconcurrency ASAuthorizationControllerDelegate {
+extension AppleSignInService: ASAuthorizationControllerDelegate {
 
     public func authorizationController(
         controller: ASAuthorizationController,
@@ -137,7 +137,7 @@ extension AppleSignInService: @preconcurrency ASAuthorizationControllerDelegate 
 
 // MARK: - ASAuthorizationControllerPresentationContextProviding
 
-extension AppleSignInService: @preconcurrency ASAuthorizationControllerPresentationContextProviding {
+extension AppleSignInService: ASAuthorizationControllerPresentationContextProviding {
 
     public func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
         // Pick the foreground-active window scene and its key window.

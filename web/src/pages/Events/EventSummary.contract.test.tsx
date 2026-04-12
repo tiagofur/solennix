@@ -163,7 +163,7 @@ describe('EventSummary — contract view', () => {
     setupMocks({
       city: 'Guadalajara',
       refund_percent: 25,
-      clients: { name: 'Ana', phone: '555', email: 'ana@test.com', address: 'Calle 123', city: 'Guadalajara' },
+      client: { name: 'Ana', phone: '555', email: 'ana@test.com', address: 'Calle 123', city: 'Guadalajara' },
       client: { name: 'Ana', phone: '555', email: 'ana@test.com', address: 'Calle 123', city: 'Guadalajara' },
     });
     (paymentService.getByEventId as any).mockResolvedValue([{ amount: 600 }]);
@@ -182,7 +182,7 @@ describe('EventSummary — contract view', () => {
   });
 
   it('shows missing data warning when city is null', async () => {
-    setupMocks({ city: null, clients: { name: 'Ana', phone: '555', email: 'ana@test.com', address: 'Calle 1' } });
+    setupMocks({ city: null, client: { name: 'Ana', phone: '555', email: 'ana@test.com', address: 'Calle 1' } });
 
     render(<MemoryRouter><EventSummary /></MemoryRouter>);
 

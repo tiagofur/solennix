@@ -12,6 +12,7 @@ import (
 	"log/slog"
 	"math/big"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strings"
 	"sync"
@@ -1069,7 +1070,7 @@ func (h *AuthHandler) AppleSignIn(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validate Apple identity token
-	claims, err := validateAppleIDToken(req.IdentityToken, h.cfg.AppleBundleID)
+	claims, err := validateAppleIDToken(req.IdentityToken, h.cfg.AppleClientIDs)
 	if err != nil {
 		slog.Warn("Invalid Apple identity token", "error", err)
 		writeError(w, http.StatusUnauthorized, "Invalid Apple identity token")
@@ -1109,10 +1110,11 @@ func (h *AuthHandler) AppleSignIn(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		h.storeRefreshToken(r.Context(), tokens.RefreshToken, user.ID)
+		setAuthCookie(w, r, tokens.AccessToken)
 		slog.Info("auth.event", "action", "apple_login", "user_id", user.ID, "email", user.Email, "ip", clientIP(r))
 		writeJSON(w, http.StatusOK, map[string]interface{}{
-			"user":                  user,
-			"tokens":                tokens,
+			"user":                   user,
+			"tokens":                 tokens,
 			"email_is_private_relay": isPrivateRelay(user.Email),
 		})
 		return
@@ -1132,10 +1134,11 @@ func (h *AuthHandler) AppleSignIn(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 				h.storeRefreshToken(r.Context(), tokens.RefreshToken, user.ID)
+				setAuthCookie(w, r, tokens.AccessToken)
 				slog.Info("auth.event", "action", "apple_login", "user_id", user.ID, "email", email, "ip", clientIP(r))
 				writeJSON(w, http.StatusOK, map[string]interface{}{
-					"user":                  user,
-					"tokens":                tokens,
+					"user":                   user,
+					"tokens":                 tokens,
 					"email_is_private_relay": isPrivateRelay(user.Email),
 				})
 				return
@@ -1153,76 +1156,32 @@ func (h *AuthHandler) AppleSignIn(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			h.storeRefreshToken(r.Context(), tokens.RefreshToken, user.ID)
-			slog.Info("auth.event", "action", "apple_link_and_login", "user_id", user.ID, "email", email, "ip", clientIP(r))
+			setAuthCookie(w, r, tokens.AccessToken)
+			slog.Info("auth.event", "action", "apple_link", "user_id", user.ID, "email", email, "ip", clientIP(r))
 			writeJSON(w, http.StatusOK, map[string]interface{}{
-				"user":                  user,
-				"tokens":                tokens,
+				"user":                   user,
+				"tokens":                 tokens,
 				"email_is_private_relay": isPrivateRelay(user.Email),
 			})
 			return
 		}
 	}
 
-	// Create new user with Apple account
-	// Apple may hide the real email, so we use a placeholder if not available
+	// Create new user
 	if email == "" {
-		email = appleUserID + "@privaterelay.appleid.com"
+		writeError(w, http.StatusBadRequest, "Apple did not provide an email address")
+		return
 	}
 
 	newUser := &models.User{
+		ID:          uuid.New(),
 		Email:       email,
 		Name:        name,
-		Plan:        "basic",
 		AppleUserID: &appleUserID,
 	}
-	if err := h.userRepo.CreateWithOAuth(r.Context(), newUser); err != nil {
-		// Handle race condition: unique constraint violation means another request created the user
-		if isUniqueViolation(err) {
-			slog.Warn("Race condition in Apple OAuth: user already created, retrying lookup", "email", email)
-			existingUser, lookupErr := h.userRepo.GetByEmail(r.Context(), email)
-			if lookupErr != nil || existingUser == nil {
-				slog.Error("Failed to find user after unique constraint violation", "email", email, "error", lookupErr)
-				writeError(w, http.StatusInternalServerError, "Failed to create account")
-				return
-			}
-			// Check if the existing user has this Apple account linked
-			if existingUser.AppleUserID != nil && *existingUser.AppleUserID == appleUserID {
-				tokens, tokenErr := h.authService.GenerateTokenPair(existingUser.ID, existingUser.Email)
-				if tokenErr != nil {
-					slog.Error("Failed to generate tokens", "error", tokenErr)
-					writeError(w, http.StatusInternalServerError, "Internal server error")
-					return
-				}
-				h.storeRefreshToken(r.Context(), tokens.RefreshToken, existingUser.ID)
-				writeJSON(w, http.StatusOK, map[string]interface{}{
-					"user":                  existingUser,
-					"tokens":                tokens,
-					"email_is_private_relay": isPrivateRelay(existingUser.Email),
-				})
-				return
-			}
-			// Existing user doesn't have Apple linked — auto-link
-			if linkErr := h.userRepo.LinkAppleAccount(r.Context(), existingUser.ID, appleUserID); linkErr != nil {
-				slog.Error("Failed to link Apple account on race recovery", "error", linkErr)
-				writeError(w, http.StatusInternalServerError, "Failed to link Apple account")
-				return
-			}
-			tokens, tokenErr := h.authService.GenerateTokenPair(existingUser.ID, existingUser.Email)
-			if tokenErr != nil {
-				slog.Error("Failed to generate tokens", "error", tokenErr)
-				writeError(w, http.StatusInternalServerError, "Internal server error")
-				return
-			}
-			h.storeRefreshToken(r.Context(), tokens.RefreshToken, existingUser.ID)
-			slog.Info("auth.event", "action", "apple_link_and_login_race", "user_id", existingUser.ID, "email", email, "ip", clientIP(r))
-			writeJSON(w, http.StatusOK, map[string]interface{}{
-				"user":                  existingUser,
-				"tokens":                tokens,
-				"email_is_private_relay": isPrivateRelay(existingUser.Email),
-			})
-			return
-		}
-		slog.Error("Failed to create user", "error", err)
+
+	if err := h.userRepo.Create(r.Context(), newUser); err != nil {
+		slog.Error("Failed to create user from Apple", "error", err)
 		writeError(w, http.StatusInternalServerError, "Failed to create account")
 		return
 	}
@@ -1234,14 +1193,218 @@ func (h *AuthHandler) AppleSignIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.storeRefreshToken(r.Context(), tokens.RefreshToken, newUser.ID)
+	setAuthCookie(w, r, tokens.AccessToken)
 
 	slog.Info("auth.event", "action", "apple_register", "user_id", newUser.ID, "email", newUser.Email, "ip", clientIP(r))
-
 	writeJSON(w, http.StatusCreated, map[string]interface{}{
-		"user":                  newUser,
-		"tokens":                tokens,
+		"user":                   newUser,
+		"tokens":                 tokens,
 		"email_is_private_relay": isPrivateRelay(newUser.Email),
 	})
+}
+
+// AppleInit handles GET /api/auth/apple/init
+// Redirects the user to Apple's authorization page
+func (h *AuthHandler) AppleInit(w http.ResponseWriter, r *http.Request) {
+	if h.cfg.AppleTeamID == "" || h.cfg.AppleKeyID == "" || h.cfg.AppleRedirectURI == "" {
+		slog.Error("Apple Sign-In not configured for REST flow")
+		writeError(w, http.StatusInternalServerError, "Apple Sign-In misconfiguration")
+		return
+	}
+
+	clientID := ""
+	for _, id := range h.cfg.AppleClientIDs {
+		if strings.HasSuffix(id, ".web") {
+			clientID = id
+			break
+		}
+	}
+	if clientID == "" && len(h.cfg.AppleClientIDs) > 0 {
+		clientID = h.cfg.AppleClientIDs[0]
+	}
+
+	if clientID == "" {
+		slog.Error("No Apple Client ID configured")
+		writeError(w, http.StatusInternalServerError, "Apple Sign-In misconfiguration")
+		return
+	}
+
+	v := url.Values{}
+	v.Set("client_id", clientID)
+	v.Set("redirect_uri", h.cfg.AppleRedirectURI)
+	v.Set("response_type", "code")
+	v.Set("scope", "name email")
+	v.Set("response_mode", "form_post")
+
+	authURL := "https://appleid.apple.com/auth/authorize?" + v.Encode()
+	http.Redirect(w, r, authURL, http.StatusFound)
+}
+
+// AppleCallback handles POST /api/auth/apple/callback
+func (h *AuthHandler) AppleCallback(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		writeError(w, http.StatusBadRequest, "Failed to parse form")
+		return
+	}
+
+	code := r.FormValue("code")
+	if code == "" {
+		writeError(w, http.StatusBadRequest, "Missing authorization code")
+		return
+	}
+
+	userJSON := r.FormValue("user")
+	var appleUser struct {
+		Name struct {
+			FirstName string `json:"firstName"`
+			LastName  string `json:"lastName"`
+		} `json:"name"`
+		Email string `json:"email"`
+	}
+	if userJSON != "" {
+		_ = json.Unmarshal([]byte(userJSON), &appleUser)
+	}
+
+	clientID := ""
+	for _, id := range h.cfg.AppleClientIDs {
+		if strings.HasSuffix(id, ".web") {
+			clientID = id
+			break
+		}
+	}
+	if clientID == "" && len(h.cfg.AppleClientIDs) > 0 {
+		clientID = h.cfg.AppleClientIDs[0]
+	}
+
+	clientSecret, err := h.generateAppleClientSecret(clientID)
+	if err != nil {
+		slog.Error("Failed to generate Apple client secret", "error", err)
+		writeError(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+
+	v := url.Values{}
+	v.Set("client_id", clientID)
+	v.Set("client_secret", clientSecret)
+	v.Set("code", code)
+	v.Set("grant_type", "authorization_code")
+	v.Set("redirect_uri", h.cfg.AppleRedirectURI)
+
+	resp, err := http.PostForm("https://appleid.apple.com/auth/token", v)
+	if err != nil {
+		slog.Error("Failed to call Apple token endpoint", "error", err)
+		writeError(w, http.StatusInternalServerError, "Failed to exchange Apple code")
+		return
+	}
+	defer resp.Body.Close()
+
+	var tokenResp struct {
+		IDToken      string `json:"id_token"`
+		Error        string `json:"error"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
+		writeError(w, http.StatusInternalServerError, "Failed to decode Apple token response")
+		return
+	}
+
+	if tokenResp.Error != "" {
+		slog.Error("Apple token error", "error", tokenResp.Error)
+		writeError(w, http.StatusUnauthorized, "Apple authentication failed: "+tokenResp.Error)
+		return
+	}
+
+	claims, err := validateAppleIDToken(tokenResp.IDToken, h.cfg.AppleClientIDs)
+	if err != nil {
+		slog.Warn("Invalid Apple identity token from callback", "error", err)
+		writeError(w, http.StatusUnauthorized, "Invalid Apple identity token")
+		return
+	}
+
+	appleUserID := claims.Subject
+	email := claims.Email
+	if email == "" && appleUser.Email != "" {
+		email = appleUser.Email
+	}
+
+	fullName := ""
+	if appleUser.Name.FirstName != "" || appleUser.Name.LastName != "" {
+		fullName = strings.TrimSpace(appleUser.Name.FirstName + " " + appleUser.Name.LastName)
+	}
+	if fullName == "" && email != "" {
+		fullName = strings.Split(email, "@")[0]
+	}
+
+	user, err := h.userRepo.GetByAppleUserID(r.Context(), appleUserID)
+	if err == nil && user != nil {
+		tokens, _ := h.authService.GenerateTokenPair(user.ID, user.Email)
+		h.storeRefreshToken(r.Context(), tokens.RefreshToken, user.ID)
+		setAuthCookie(w, r, tokens.AccessToken)
+		http.Redirect(w, r, h.cfg.FrontendURL+"/dashboard", http.StatusFound)
+		return
+	}
+
+	if email != "" {
+		user, err = h.userRepo.GetByEmail(r.Context(), email)
+		if err == nil && user != nil {
+			_ = h.userRepo.LinkAppleAccount(r.Context(), user.ID, appleUserID)
+			tokens, _ := h.authService.GenerateTokenPair(user.ID, user.Email)
+			h.storeRefreshToken(r.Context(), tokens.RefreshToken, user.ID)
+			setAuthCookie(w, r, tokens.AccessToken)
+			http.Redirect(w, r, h.cfg.FrontendURL+"/dashboard", http.StatusFound)
+			return
+		}
+	}
+
+	if email == "" {
+		writeError(w, http.StatusBadRequest, "Apple did not provide an email address")
+		return
+	}
+	newUser := &models.User{
+		ID:          uuid.New(),
+		Email:       email,
+		Name:        fullName,
+		AppleUserID: &appleUserID,
+	}
+	if err := h.userRepo.Create(r.Context(), newUser); err != nil {
+		slog.Error("Failed to create user from Apple", "error", err)
+		writeError(w, http.StatusInternalServerError, "Failed to create account")
+		return
+	}
+
+	tokens, _ := h.authService.GenerateTokenPair(newUser.ID, newUser.Email)
+	h.storeRefreshToken(r.Context(), tokens.RefreshToken, newUser.ID)
+	setAuthCookie(w, r, tokens.AccessToken)
+	http.Redirect(w, r, h.cfg.FrontendURL+"/dashboard", http.StatusFound)
+}
+
+func (h *AuthHandler) generateAppleClientSecret(clientID string) (string, error) {
+	if h.cfg.AppleTeamID == "" || h.cfg.AppleKeyID == "" || h.cfg.ApplePrivateKey == "" {
+		return "", fmt.Errorf("missing Apple configuration for client_secret generation")
+	}
+
+	keyBytes := []byte(h.cfg.ApplePrivateKey)
+	if !strings.Contains(h.cfg.ApplePrivateKey, "-----BEGIN") {
+		decoded, err := base64.StdEncoding.DecodeString(h.cfg.ApplePrivateKey)
+		if err == nil {
+			keyBytes = decoded
+		}
+	}
+
+	privKey, err := jwt.ParseECPrivateKeyFromPEM(keyBytes)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse Apple private key: %w", err)
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodES256, jwt.MapClaims{
+		"iss": h.cfg.AppleTeamID,
+		"iat": time.Now().Unix(),
+		"exp": time.Now().Add(5 * time.Minute).Unix(),
+		"aud": "https://appleid.apple.com",
+		"sub": clientID,
+	})
+	token.Header["kid"] = h.cfg.AppleKeyID
+
+	return token.SignedString(privKey)
 }
 
 // AppleIDTokenClaims represents the claims from an Apple identity token
@@ -1348,29 +1511,24 @@ func jwkToRSAPublicKey(jwk appleJWK) (*rsa.PublicKey, error) {
 
 // validateAppleIDToken validates an Apple identity token by verifying its JWT
 // signature against Apple's public keys and checking standard claims.
-// appleBundleID is used for audience verification; if empty, aud check is skipped (dev mode).
-func validateAppleIDToken(identityToken string, appleBundleID string) (*AppleIDTokenClaims, error) {
+// appleClientIDs are used for audience verification; if empty, aud check fails.
+func validateAppleIDToken(identityToken string, appleClientIDs []string) (*AppleIDTokenClaims, error) {
 	// Fetch Apple's public keys (uses 24h cache, falls back to stale cache if fetch fails)
 	keys, err := fetchApplePublicKeys()
 	if err != nil {
 		return nil, fmt.Errorf("failed to obtain Apple public keys for signature verification: %w", err)
 	}
 
+	// Audience verification is mandatory — reject if no client IDs are configured
+	if len(appleClientIDs) == 0 {
+		slog.Error("Apple Client IDs not configured — rejecting token (set APPLE_CLIENT_IDS env var)")
+		return nil, fmt.Errorf("server misconfiguration: Apple audience verification not configured")
+	}
+
 	// Parse the JWT header to find the kid
 	parser := jwt.NewParser(
 		jwt.WithValidMethods([]string{"RS256"}),
 		jwt.WithIssuer("https://appleid.apple.com"),
-	)
-
-	// Audience verification is mandatory — reject if bundle ID is not configured
-	if appleBundleID == "" {
-		slog.Error("Apple Bundle ID not configured — rejecting token (set APPLE_BUNDLE_ID env var)")
-		return nil, fmt.Errorf("server misconfiguration: Apple audience verification not configured")
-	}
-	parser = jwt.NewParser(
-		jwt.WithValidMethods([]string{"RS256"}),
-		jwt.WithIssuer("https://appleid.apple.com"),
-		jwt.WithAudience(appleBundleID),
 	)
 
 	var appleClaims struct {
@@ -1401,9 +1559,26 @@ func validateAppleIDToken(identityToken string, appleBundleID string) (*AppleIDT
 		return nil, fmt.Errorf("invalid token")
 	}
 
+	// Verify audience (client ID) — prevents tokens from other apps being accepted
+	aud, _ := appleClaims.GetAudience()
+	audValid := false
+	for _, tokenAud := range aud {
+		for _, allowed := range appleClientIDs {
+			if tokenAud == allowed {
+				audValid = true
+				break
+			}
+		}
+		if audValid {
+			break
+		}
+	}
+	if !audValid {
+		return nil, fmt.Errorf("invalid token audience: %v", aud)
+	}
+
 	return &AppleIDTokenClaims{
 		Subject: appleClaims.Subject,
 		Email:   appleClaims.Email,
 	}, nil
 }
-

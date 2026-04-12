@@ -349,5 +349,4 @@ private struct BrandFeatureRow: View {
         LoginView()
     }
     .environment(AuthManager())
-    .previewDevice("iPad Pro (11-inch) (4th generation)")
 }

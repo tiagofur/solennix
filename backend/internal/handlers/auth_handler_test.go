@@ -1792,7 +1792,7 @@ func TestAuthHandler_GoogleSignIn(t *testing.T) {
 func TestAuthHandler_AppleSignIn(t *testing.T) {
 	authService := services.NewAuthService("test-secret-key-32bytes-minimum!!", 1)
 	cfg := &config.Config{
-		AppleBundleID: "com.solennix.app",
+		AppleClientIDs: []string{"com.solennix.app"},
 	}
 
 	t.Run("InvalidJSON_Returns400", func(t *testing.T) {

@@ -312,7 +312,6 @@ public struct ClientListView: View {
         .listStyle(.insetGrouped)
         .scrollContentBackground(.hidden)
         .background(SolennixColors.surfaceGrouped)
-        .popoverTip(SwipeActionTip(), arrowEdge: .top)
     }
 
     // MARK: - Client Row

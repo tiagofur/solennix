@@ -32,7 +32,7 @@ import type { ProductIngredientWithInventory } from "@/services/productService";
 // the local alias name so the rest of the file needs minimal churn.
 type ProductIngredientRow = ProductIngredientWithInventory;
 
-type EventWithClientName = { clients?: { name: string } | null };
+type EventWithClientName = { client?: { name: string } | null };
 
 type DemandEntry = {
   date: string;
@@ -91,8 +91,8 @@ export const ProductDetails: React.FC = () => {
               entries.push({
                 date: event.event_date.slice(0, 10),
                 eventId: event.id,
-                eventName: (event as EventWithClientName).clients?.name
-                  ? `Evento - ${(event as EventWithClientName).clients.name}`
+                eventName: (event as EventWithClientName).client?.name
+                  ? `Evento - ${(event as EventWithClientName).client.name}`
                   : event.service_type || "Evento",
                 quantity: match.quantity,
                 numPeople: event.num_people || 0,

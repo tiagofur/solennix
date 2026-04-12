@@ -62,14 +62,14 @@ private fun ResetPasswordFormContent(
             )
             Spacer(modifier = Modifier.height(24.dp))
             Text(
-                text = "Contrasena actualizada",
+                text = "Contraseña actualizada",
                 style = MaterialTheme.typography.headlineSmall,
                 color = SolennixTheme.colors.primaryText,
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Tu contrasena ha sido restablecida con exito. Ya puedes iniciar sesion.",
+                text = "Tu contraseña fue restablecida con éxito. Ya podés iniciar sesión.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = SolennixTheme.colors.secondaryText,
                 textAlign = TextAlign.Center
@@ -81,14 +81,14 @@ private fun ResetPasswordFormContent(
             )
         } else {
             Text(
-                text = "Restablecer Contrasena",
+                text = "Restablecer Contraseña",
                 style = MaterialTheme.typography.headlineMedium,
                 color = SolennixTheme.colors.primaryText,
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Ingresa tu nueva contrasena a continuacion.",
+                text = "Ingresá tu nueva contraseña a continuación.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = SolennixTheme.colors.secondaryText,
                 textAlign = TextAlign.Center
@@ -106,7 +106,7 @@ private fun ResetPasswordFormContent(
                         SolennixTextField(
                             value = viewModel.newPassword,
                             onValueChange = { viewModel.newPassword = it },
-                            label = "Nueva Contrasena",
+                            label = "Nueva Contraseña",
                             leadingIcon = Icons.Default.Lock,
                             isPassword = true
                         )
@@ -115,7 +115,7 @@ private fun ResetPasswordFormContent(
                         SolennixTextField(
                             value = viewModel.confirmNewPassword,
                             onValueChange = { viewModel.confirmNewPassword = it },
-                            label = "Confirmar Nueva Contrasena",
+                            label = "Confirmar Nueva Contraseña",
                             leadingIcon = Icons.Default.Lock,
                             isPassword = true,
                             imeAction = ImeAction.Done

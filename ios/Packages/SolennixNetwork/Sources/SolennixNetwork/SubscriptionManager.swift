@@ -120,7 +120,7 @@ public final class SubscriptionManager {
             updatePremiumStatus(from: customerInfo)
 
             // Sync existing purchases from StoreKit (migration from direct StoreKit 2)
-            try? await Purchases.shared.syncPurchases()
+            _ = try? await Purchases.shared.syncPurchases()
         } catch {
             // Non-fatal: user can still use the app, premium status from backend
         }
@@ -139,20 +139,80 @@ public final class SubscriptionManager {
         }
     }
 
+    /// StoreKit products loaded directly as fallback.
+    public private(set) var storeProducts: [StoreKit.Product] = []
+
+    /// Product IDs for direct StoreKit fallback.
+    private static let productIDs: Set<String> = [
+        "solennix_premium_monthly",
+        "solennix_premium_yearly"
+    ]
+
+    /// Fallback monthly StoreKit product when RevenueCat offerings unavailable.
+    public var fallbackMonthlyProduct: StoreKit.Product? {
+        storeProducts.first { $0.id == "solennix_premium_monthly" }
+    }
+
+    /// Fallback yearly StoreKit product when RevenueCat offerings unavailable.
+    public var fallbackYearlyProduct: StoreKit.Product? {
+        storeProducts.first { $0.id == "solennix_premium_yearly" }
+    }
+
+    /// Whether subscription products are available (from RevenueCat or StoreKit).
+    public var hasProducts: Bool {
+        currentOffering != nil || !storeProducts.isEmpty
+    }
+
     // MARK: - Load Offerings
 
     /// Carga los offerings (productos con precios) desde RevenueCat.
+    /// Si RevenueCat falla, intenta cargar productos directamente via StoreKit.
     @MainActor
     public func loadOfferings() async {
-        guard isConfigured else { return }
+        guard isConfigured else {
+            // Even without RevenueCat, try StoreKit directly
+            await loadStoreKitProducts()
+            return
+        }
         isLoading = true
         defer { isLoading = false }
 
+        // Retry up to 3 times for RevenueCat
+        for attempt in 1...3 {
+            do {
+                let offerings = try await Purchases.shared.offerings()
+                if let current = offerings.current {
+                    currentOffering = current
+                    errorMessage = nil
+                    return
+                }
+            } catch {
+                if attempt == 3 {
+                    errorMessage = "No se pudieron cargar los planes desde RevenueCat."
+                }
+            }
+            // Brief delay before retry
+            _ = try? await Task.sleep(nanoseconds: UInt64(attempt) * 500_000_000)
+        }
+
+        // Fallback: load products directly from StoreKit
+        await loadStoreKitProducts()
+    }
+
+    /// Loads products directly from StoreKit as a fallback when RevenueCat offerings fail.
+    @MainActor
+    private func loadStoreKitProducts() async {
         do {
-            let offerings = try await Purchases.shared.offerings()
-            currentOffering = offerings.current
+            let products = try await StoreKit.Product.products(for: Self.productIDs)
+            storeProducts = products.sorted { $0.price < $1.price }
+            if !products.isEmpty {
+                errorMessage = nil
+            }
         } catch {
-            errorMessage = "No se pudieron cargar los planes. Verifica tu conexion e intenta de nuevo."
+            // StoreKit also failed - this is a real connectivity/config issue
+            if currentOffering == nil && storeProducts.isEmpty {
+                errorMessage = "No se pudieron cargar los planes. Verifica tu conexion e intenta de nuevo."
+            }
         }
     }
 
@@ -192,6 +252,45 @@ public final class SubscriptionManager {
             let subError = SubscriptionError.purchaseFailed(error.localizedDescription)
             errorMessage = subError.localizedDescription
             throw subError
+        }
+    }
+
+    // MARK: - Purchase StoreKit Product (Fallback)
+
+    /// Purchases a StoreKit product directly when RevenueCat offerings are unavailable.
+    /// After purchase, syncs with RevenueCat so the backend is notified via webhook.
+    @MainActor
+    public func purchaseStoreKitProduct(_ product: StoreKit.Product) async throws {
+        isPurchasing = true
+        defer { isPurchasing = false }
+
+        do {
+            let result = try await product.purchase()
+
+            switch result {
+            case .success(let verification):
+                switch verification {
+                case .verified(let transaction):
+                    await transaction.finish()
+                    // Sync purchase with RevenueCat so backend gets notified
+                    if isConfigured {
+                        _ = try? await Purchases.shared.syncPurchases()
+                        await checkEntitlementStatus()
+                    }
+                case .unverified:
+                    throw SubscriptionError.verificationFailed
+                }
+            case .userCancelled:
+                throw SubscriptionError.userCancelled
+            case .pending:
+                throw SubscriptionError.pending
+            @unknown default:
+                throw SubscriptionError.unknown
+            }
+        } catch let error as SubscriptionError {
+            throw error
+        } catch {
+            throw SubscriptionError.purchaseFailed(error.localizedDescription)
         }
     }
 

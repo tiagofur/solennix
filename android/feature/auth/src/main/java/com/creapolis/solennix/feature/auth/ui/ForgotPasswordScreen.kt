@@ -47,10 +47,10 @@ private fun ForgotPasswordFormContent(
         topBar = {
             if (!isWideScreen) {
                 SolennixTopAppBar(
-                    title = { Text("Recuperar Contrasena") },
+                    title = { Text("Recuperar Contraseña") },
                     navigationIcon = {
                         IconButton(onClick = onNavigateBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
@@ -96,14 +96,14 @@ private fun ForgotPasswordFormContent(
                 )
                 Spacer(modifier = Modifier.height(24.dp))
                 Text(
-                    text = "Revisa tu correo",
+                    text = "Revisá tu correo",
                     style = MaterialTheme.typography.headlineSmall,
                     color = SolennixTheme.colors.primaryText,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Hemos enviado un enlace para restablecer tu contrasena a ${viewModel.forgotEmail}.",
+                    text = "Te enviamos un enlace para restablecer tu contraseña a ${viewModel.forgotEmail}.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = SolennixTheme.colors.secondaryText,
                     textAlign = TextAlign.Center
@@ -115,7 +115,7 @@ private fun ForgotPasswordFormContent(
                 )
             } else {
                 Text(
-                    text = "Ingresa tu correo y te enviaremos un enlace para recuperar el acceso a tu cuenta.",
+                    text = "Ingresá tu correo y te enviamos un enlace para recuperar el acceso a tu cuenta.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = SolennixTheme.colors.secondaryText,
                     textAlign = TextAlign.Center
@@ -126,7 +126,7 @@ private fun ForgotPasswordFormContent(
                 SolennixTextField(
                     value = viewModel.forgotEmail,
                     onValueChange = { viewModel.forgotEmail = it },
-                    label = "Correo Electronico",
+                    label = "Correo Electrónico",
                     placeholder = "ejemplo@correo.com",
                     leadingIcon = Icons.Default.Email,
                     keyboardType = KeyboardType.Email,

@@ -10,6 +10,8 @@ struct ShowUpcomingEventsIntent: AppIntent {
 
     static var openAppWhenRun: Bool = false
 
+    nonisolated init() {}
+
     @Parameter(title: "Numero de eventos", default: 5)
     var count: Int
 
@@ -24,7 +26,7 @@ struct ShowUpcomingEventsIntent: AppIntent {
             )
         }
 
-        let eventList = events.map { "\($0.date): \($0.clientName) - \($0.eventType)" }.joined(separator: "\n")
+        _ = events.map { "\($0.date): \($0.clientName) - \($0.eventType)" }.joined(separator: "\n")
 
         return .result(
             dialog: "Tienes \(events.count) eventos proximos.",

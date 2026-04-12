@@ -10,7 +10,7 @@ interface KeyboardShortcutsHelpProps {
 
 const SECTION_LABELS: Record<string, string> = {
   events: 'Eventos',
-  clients: 'Clientes',
+  client: 'Clientes',
   products: 'Productos',
   inventory: 'Inventario',
 };

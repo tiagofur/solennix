@@ -1,0 +1,130 @@
+{
+  "identifier" : "A1B2C3D4",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+
+  ],
+  "settings" : {
+    "_failTransactionsEnabled" : false,
+    "_locale" : "es_MX",
+    "_storefront" : "MEX",
+    "_storeKitErrors" : [
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Load Products"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Purchase"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Verification"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Store Sync"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Subscription Status"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Transaction"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Manage Subscriptions Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Refund Request Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Offer Code Redeem Sheet"
+      }
+    ]
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "22020473",
+      "localizations" : [
+        {
+          "description" : "Planes de suscripcion Solennix Premium",
+          "displayName" : "Planes Solennix",
+          "locale" : "es_MX"
+        }
+      ],
+      "name" : "solennix_premium",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "6.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "6760874001",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Acceso premium mensual a todas las funciones de Solennix",
+              "displayName" : "Solennix Premium Mensual",
+              "locale" : "es_MX"
+            }
+          ],
+          "productID" : "solennix_premium_monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Solennix Premium Monthly",
+          "subscriptionGroupID" : "22020473",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "49.99",
+          "familyShareable" : false,
+          "groupNumber" : 2,
+          "internalID" : "6760874002",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Acceso premium anual a todas las funciones de Solennix",
+              "displayName" : "Solennix Premium Anual",
+              "locale" : "es_MX"
+            }
+          ],
+          "productID" : "solennix_premium_yearly",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Solennix Premium Yearly",
+          "subscriptionGroupID" : "22020473",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}

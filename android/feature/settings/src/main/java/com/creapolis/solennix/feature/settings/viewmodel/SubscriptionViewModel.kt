@@ -4,6 +4,7 @@ import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.revenuecat.purchases.Package
+import com.creapolis.solennix.core.designsystem.event.UiEvent
 import com.creapolis.solennix.core.model.SubscriptionProvider
 import com.creapolis.solennix.core.model.SubscriptionStatusResponse
 import com.creapolis.solennix.core.network.ApiService
@@ -13,9 +14,12 @@ import com.creapolis.solennix.core.network.get
 import com.creapolis.solennix.feature.settings.billing.BillingManager
 import com.creapolis.solennix.feature.settings.billing.BillingState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -23,65 +27,80 @@ import javax.inject.Inject
 
 data class SubscriptionUiState(
     val billingState: BillingState = BillingState.NotReady,
-    val proPackages: List<Package> = emptyList(),
     val premiumPackages: List<Package> = emptyList(),
-    val currentPlanName: String = "Basico",
+    val currentPlanName: String = "Básico",
     val hasActiveSubscription: Boolean = false,
-    val isLoading: Boolean = false,
-    val provider: SubscriptionProvider? = null
+    val purchasingPackageId: String? = null,
+    val provider: SubscriptionProvider? = null,
 )
 
 @HiltViewModel
 class SubscriptionViewModel @Inject constructor(
     private val billingManager: BillingManager,
     private val authManager: AuthManager,
-    private val apiService: ApiService
+    private val apiService: ApiService,
 ) : ViewModel() {
 
     private val _provider = MutableStateFlow<SubscriptionProvider?>(null)
+
+    private val _uiEvents = MutableSharedFlow<UiEvent>(extraBufferCapacity = 1)
+    val uiEvents: SharedFlow<UiEvent> = _uiEvents.asSharedFlow()
+
+    // Track last error message so we only emit Snackbar once per transition into Error.
+    private var lastErrorShown: String? = null
 
     val uiState: StateFlow<SubscriptionUiState> = combine(
         billingManager.billingState,
         billingManager.packages,
         billingManager.customerInfo,
+        billingManager.purchaseInProgress,
         authManager.currentUser,
-        _provider
+        _provider,
     ) { values ->
         val billingState = values[0] as BillingState
         @Suppress("UNCHECKED_CAST")
         val packages = values[1] as List<Package>
-        val user = values[3] as? com.creapolis.solennix.core.model.User
-        val provider = values[4] as? SubscriptionProvider
+        val purchasingId = values[3] as? String
+        val user = values[4] as? com.creapolis.solennix.core.model.User
+        val provider = values[5] as? SubscriptionProvider
 
-        val proPackages = packages.filter {
-            it.identifier.contains("pro", ignoreCase = true)
-        }
-        val premiumPackages = packages.filter {
-            it.identifier.contains("premium", ignoreCase = true)
+        // Surface error snackbars as a side effect of state observation.
+        if (billingState is BillingState.Error && lastErrorShown != billingState.message) {
+            lastErrorShown = billingState.message
+            _uiEvents.tryEmit(
+                UiEvent.Error(
+                    message = billingState.message,
+                    retryActionId = RETRY_FETCH_OFFERINGS,
+                )
+            )
+        } else if (billingState !is BillingState.Error) {
+            lastErrorShown = null
         }
 
-        val hasPremium = billingManager.hasPremiumAccess()
-        val hasPro = billingManager.hasProAccess()
-        val hasSubscription = hasPro || hasPremium
+        // Basic is free (no RC package). All packages from the current offering
+        // are Premium tier — no filter needed. RC standard identifiers are
+        // $rc_monthly, $rc_annual, etc.
+        val premiumPackages = packages
+
+        val hasSubscription = billingManager.hasPremiumAccess()
 
         val currentPlan = when {
-            hasPremium -> "Premium"
-            hasPro -> "Pro"
-            else -> user?.plan?.name?.replaceFirstChar { it.uppercase() } ?: "Basico"
+            hasSubscription -> "Premium"
+            else -> user?.plan?.name?.replaceFirstChar { it.uppercase() } ?: "Básico"
         }
 
         SubscriptionUiState(
             billingState = billingState,
-            proPackages = proPackages,
             premiumPackages = premiumPackages,
             currentPlanName = currentPlan,
             hasActiveSubscription = hasSubscription,
-            provider = provider
+            purchasingPackageId = purchasingId,
+            provider = provider,
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = SubscriptionUiState()
+        initialValue = SubscriptionUiState(),
     )
 
     fun initBilling() {
@@ -109,8 +128,22 @@ class SubscriptionViewModel @Inject constructor(
         billingManager.restorePurchases()
     }
 
+    /**
+     * Handle Snackbar retry actions emitted by [UiEvent.Error.retryActionId].
+     * Currently only [RETRY_FETCH_OFFERINGS] is supported.
+     */
+    fun onRetry(actionId: String) {
+        when (actionId) {
+            RETRY_FETCH_OFFERINGS -> billingManager.retryFetchOfferings()
+        }
+    }
+
     override fun onCleared() {
         super.onCleared()
         billingManager.cleanup()
+    }
+
+    private companion object {
+        const val RETRY_FETCH_OFFERINGS = "billing:fetchOfferings"
     }
 }

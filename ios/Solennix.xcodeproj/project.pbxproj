@@ -108,6 +108,7 @@
 		3EDE477D65F41F57F76457B4 /* Solennix.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Solennix.entitlements; sourceTree = "<group>"; };
 		3FD390257381E93F0922F9DF /* CompactTabLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompactTabLayout.swift; sourceTree = "<group>"; };
 		451A5953A5F61726A9FA40A8 /* UpcomingEventsWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpcomingEventsWidget.swift; sourceTree = "<group>"; };
+		4DDC4EAF1ADABBBC3A0948A5 /* SolennixProducts.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = SolennixProducts.storekit; sourceTree = "<group>"; };
 		5311BA08A554C452F2BF622A /* SolennixLiveActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolennixLiveActivityAttributes.swift; sourceTree = "<group>"; };
 		55B62E2796D149F1C17BE7FE /* InteractiveWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InteractiveWidget.swift; sourceTree = "<group>"; };
 		5E4DB82EC9A6C6C52AFD8046 /* LockScreenWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockScreenWidget.swift; sourceTree = "<group>"; };
@@ -140,7 +141,6 @@
 		E2E55DCCA04D139222E1CEBC /* EventCountIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventCountIntent.swift; sourceTree = "<group>"; };
 		EC4BED0BA0668EB3B1475A7D /* KPIWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KPIWidget.swift; sourceTree = "<group>"; };
 		F712A2D8BEDA9371EBEED283 /* WidgetDataSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetDataSync.swift; sourceTree = "<group>"; };
-		4DDC4EAF1ADABBBC3A0948A5 /* SolennixProducts.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = SolennixProducts.storekit; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -804,7 +804,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Solennix/Solennix.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Solennix/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -812,7 +812,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.2;
+				MARKETING_VERSION = 1.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.solennix.app;
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.9;
@@ -827,7 +827,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Solennix/Solennix.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Solennix/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -835,7 +835,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.2;
+				MARKETING_VERSION = 1.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.solennix.app;
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.9;

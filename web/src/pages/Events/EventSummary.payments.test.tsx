@@ -464,7 +464,7 @@ describe('EventSummary — payments & edge cases', () => {
   // TODO(contract-freeze-web): pre-existing fail — looks for "Sin teléfono"
   // which may not be the current fallback string. Pre-existing hidden fail.
   it.skip('renders event without client phone', async () => {
-    setupMocks({ clients: { name: 'Ana', phone: null, email: 'ana@test.com', address: 'Calle 1', city: 'CDMX' } });
+    setupMocks({ client: { name: 'Ana', phone: null, email: 'ana@test.com', address: 'Calle 1', city: 'CDMX' } });
 
     render(<MemoryRouter><EventSummary /></MemoryRouter>);
 

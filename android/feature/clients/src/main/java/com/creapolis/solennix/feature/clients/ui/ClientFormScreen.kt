@@ -170,14 +170,14 @@ fun ClientFormScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                     AdaptiveFormRow(
                         left = {
-                            SolennixTextField(value = viewModel.email, onValueChange = { viewModel.email = it }, label = "Correo Electronico", leadingIcon = Icons.Default.Email, keyboardType = KeyboardType.Email, errorMessage = viewModel.emailError)
+                            SolennixTextField(value = viewModel.email, onValueChange = { viewModel.email = it }, label = "Correo Electrónico", leadingIcon = Icons.Default.Email, keyboardType = KeyboardType.Email, errorMessage = viewModel.emailError)
                         },
                         right = {
                             SolennixTextField(value = viewModel.city, onValueChange = { viewModel.city = it }, label = "Ciudad", leadingIcon = Icons.Default.LocationCity)
                         }
                     )
                     Spacer(modifier = Modifier.height(16.dp))
-                    SolennixTextField(value = viewModel.address, onValueChange = { viewModel.address = it }, label = "Direccion", leadingIcon = Icons.Default.LocationOn)
+                    SolennixTextField(value = viewModel.address, onValueChange = { viewModel.address = it }, label = "Dirección", leadingIcon = Icons.Default.LocationOn)
                     Spacer(modifier = Modifier.height(16.dp))
                     SolennixTextField(value = viewModel.notes, onValueChange = { viewModel.notes = it }, label = "Notas", leadingIcon = Icons.Default.Notes)
                     Spacer(modifier = Modifier.height(32.dp))

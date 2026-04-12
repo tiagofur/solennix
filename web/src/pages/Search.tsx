@@ -32,14 +32,14 @@ export const SearchPage: React.FC = () => {
   const query = (searchParams.get("q") || "").trim();
 
   const { data: results, isLoading: loading, error: searchError } = useSearch(query);
-  const safeResults = results ?? { client: [], event: [], product: [], inventory: [] };
+  const safeResults = results ?? { clients: [], events: [], products: [], inventory: [] };
   const error = searchError ? "No pudimos completar la búsqueda. Intenta de nuevo." : null;
 
   const totalResults = useMemo(() => {
     return (
-      (safeResults.client?.length || 0) +
-      (safeResults.event?.length || 0) +
-      (safeResults.product?.length || 0) +
+      (safeResults.clients?.length || 0) +
+      (safeResults.events?.length || 0) +
+      (safeResults.products?.length || 0) +
       (safeResults.inventory?.length || 0)
     );
   }, [safeResults]);
@@ -105,16 +105,16 @@ export const SearchPage: React.FC = () => {
         </div>
       </div>
 
-      {safeResults.client.length > 0 && (
+      {safeResults.clients.length > 0 && (
         <section className="bg-card rounded-lg shadow-xs border border-border overflow-hidden mt-6">
           <div className="px-4 py-3 border-b border-border bg-surface-alt flex items-center justify-between">
             <h2 className="font-semibold text-text flex items-center">
               <Users className="h-4 w-4 mr-2 text-info" aria-hidden="true" />
-              Clientes ({safeResults.client.length})
+              Clientes ({safeResults.clients.length})
             </h2>
           </div>
           <ul className="divide-y divide-border">
-            {safeResults.client.map((client) => (
+            {safeResults.clients.map((client) => (
               <li key={client.id}>
                 <Link
                   to={client.href}
@@ -143,11 +143,11 @@ export const SearchPage: React.FC = () => {
         </section>
       )}
 
-      {safeResults.event.length > 0 && (
+      {safeResults.events.length > 0 && (
         <section className="space-y-3">
           <h2 className="text-lg font-semibold text-text">Eventos</h2>
           <div className="grid gap-3 md:grid-cols-2">
-            {safeResults.event.map((event) => (
+            {safeResults.events.map((event) => (
               <Link
                 key={event.id}
                 to={event.href}
@@ -172,11 +172,11 @@ export const SearchPage: React.FC = () => {
         </section>
       )}
 
-      {safeResults.product.length > 0 && (
+      {safeResults.products.length > 0 && (
         <section className="space-y-3">
           <h2 className="text-lg font-semibold text-text">Productos</h2>
           <div className="grid gap-3 md:grid-cols-2">
-            {safeResults.product.map((product) => (
+            {safeResults.products.map((product) => (
               <Link
                 key={product.id}
                 to={product.href}

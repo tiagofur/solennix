@@ -32,7 +32,7 @@ import {
 } from "../../hooks/queries/useEventQueries";
 import type { EventSearchFilters } from "../../services/eventService";
 
-type EventWithClient = Event & { clients?: { name: string } | null };
+type EventWithClient = Event & { client?: { name: string } | null };
 
 type StatusFilter = "all" | EventStatus;
 
@@ -260,7 +260,7 @@ export const EventList: React.FC = () => {
                   ],
                   allEvents.map((e) => [
                     formatDate(e.event_date),
-                    e.clients?.name ?? "",
+                    e.client?.name ?? "",
                     e.service_type,
                     e.num_people,
                     e.status,
@@ -483,7 +483,7 @@ export const EventList: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-semibold text-text">
-                        {event.clients?.name ?? "—"}
+                        {event.client?.name ?? "—"}
                       </div>
                       {event.city && (
                         <div className="text-xs text-text-secondary truncate max-w-[180px]">

@@ -33,7 +33,7 @@ const mockStats = {
   pro_users: 21,
   premium_users: 9,
   total_events: 501,
-  total_clients: 201,
+  total_client: 201,
   total_products: 301,
   new_users_today: 7,
   new_users_week: 23,

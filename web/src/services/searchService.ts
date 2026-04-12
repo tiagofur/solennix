@@ -14,16 +14,16 @@ export type SearchResult = {
 };
 
 export type SearchResults = {
-  client: SearchResult[];
-  event: SearchResult[];
-  product: SearchResult[];
+  clients: SearchResult[];
+  events: SearchResult[];
+  products: SearchResult[];
   inventory: SearchResult[];
 };
 
 const EMPTY_RESULTS: SearchResults = {
-  client: [],
-  event: [],
-  product: [],
+  clients: [],
+  events: [],
+  products: [],
   inventory: [],
 };
 
@@ -90,10 +90,10 @@ export const searchService = {
 
     // Backend already limits to 10 per category, but we apply client limit
     return {
-      client: limitResults(mapClientResults(response.clients || []), limit),
-      product: limitResults(mapProductResults(response.products || []), limit),
+      clients: limitResults(mapClientResults(response.clients || []), limit),
+      products: limitResults(mapProductResults(response.products || []), limit),
       inventory: limitResults(mapInventoryResults(response.inventory || []), limit),
-      event: limitResults(mapEventResults(response.events || []), limit),
+      events: limitResults(mapEventResults(response.events || []), limit),
     };
   },
 };

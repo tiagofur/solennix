@@ -186,7 +186,7 @@ fun BusinessSettingsScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = "Tu logo aparecera en los contratos y cotizaciones que generes.",
+                    text = "Tu logo aparecerá en los contratos y cotizaciones que generes.",
                     style = MaterialTheme.typography.bodySmall,
                     color = SolennixTheme.colors.secondaryText,
                     modifier = Modifier.padding(horizontal = 4.dp)
@@ -248,7 +248,7 @@ fun BusinessSettingsScreen(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         Text(
-                            text = "Si activas esta opcion, tu nombre comercial aparecera en los documentos en lugar de tu nombre personal.",
+                            text = "Si activás esta opción, tu nombre comercial aparecerá en los documentos en lugar de tu nombre personal.",
                             style = MaterialTheme.typography.bodySmall,
                             color = SolennixTheme.colors.secondaryText,
                             modifier = Modifier.padding(horizontal = 4.dp)

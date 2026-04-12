@@ -71,8 +71,8 @@ import { ContractTemplateError, renderContractTemplate } from "@/lib/contractTem
 import { renderFormattedReact } from "@/lib/inlineFormatting";
 import type { Event, Client, User, EventExtra, EventEquipment, EventSupply, Payment, ProductIngredient } from "@/types/entities";
 
-// API response types — backend returns `clients` (plural, Supabase join naming)
-type EventWithClient = Event & { clients?: Client | null };
+// API response types — backend returns `client` (singular)
+type EventWithClient = Event & { client?: Client | null };
 
 // Matches UserProfile in pdfGenerator (User + optional billing/template fields)
 type UserProfile = User & {
@@ -437,7 +437,7 @@ export const EventSummary: React.FC = () => {
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto px-4 sm:px-8 py-8 transition-colors">
-      <Breadcrumb items={[{ label: 'Eventos', href: '/events' }, { label: `${event.clients?.name || ''} — ${event?.service_type || 'Evento'}` }]} />
+      <Breadcrumb items={[{ label: 'Eventos', href: '/events' }, { label: `${event.client?.name || ''} — ${event?.service_type || 'Evento'}` }]} />
 
       {/* Header: Back + Title + StatusDropdown + Actions */}
       <div className="print:hidden flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -835,15 +835,15 @@ export const EventSummary: React.FC = () => {
                     <Users className="h-3.5 w-3.5" /> Cliente
                   </dt>
                   <dd className="mt-1 font-bold text-text">
-                    {event.clients?.id ? (
-                      <Link to={`/clients/${event.clients.id}`} className="text-primary hover:text-primary-dark transition-colors">
-                        {event.clients.name}
+                    {event.client?.id ? (
+                      <Link to={`/clients/${event.client.id}`} className="text-primary hover:text-primary-dark transition-colors">
+                        {event.client.name}
                       </Link>
                     ) : (
-                      event.clients?.name || "Sin cliente"
+                      event.client?.name || "Sin cliente"
                     )}
-                    {event.clients?.phone && (
-                      <span className="text-sm text-text-secondary ml-2">• {event.clients.phone}</span>
+                    {event.client?.phone && (
+                      <span className="text-sm text-text-secondary ml-2">• {event.client.phone}</span>
                     )}
                   </dd>
                 </div>
@@ -1349,7 +1349,7 @@ export const EventSummary: React.FC = () => {
               </p>
             </div>
             <div className="text-center border-t border-border pt-4">
-              <p className="font-bold">{event.clients?.name}</p>
+              <p className="font-bold">{event.client?.name}</p>
               <p className="text-sm text-text-secondary mt-1">
                 Firma de EL CLIENTE
               </p>

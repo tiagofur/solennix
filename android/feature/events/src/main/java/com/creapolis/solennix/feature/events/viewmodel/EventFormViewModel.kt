@@ -296,7 +296,7 @@ class EventFormViewModel @Inject constructor(
         }
         dateUnavailableWarning = if (blocked != null) {
             val reason = if (!blocked.reason.isNullOrBlank()) " (${blocked.reason})" else ""
-            "Esta fecha esta marcada como no disponible$reason"
+            "Esta fecha está marcada como no disponible$reason"
         } else {
             null
         }

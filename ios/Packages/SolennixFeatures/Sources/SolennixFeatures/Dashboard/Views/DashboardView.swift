@@ -229,7 +229,6 @@ public struct DashboardView: View {
             }
         }
         .padding(.horizontal, Spacing.md)
-        .popoverTip(NewEventTip(), arrowEdge: .bottom)
     }
 
     @ViewBuilder

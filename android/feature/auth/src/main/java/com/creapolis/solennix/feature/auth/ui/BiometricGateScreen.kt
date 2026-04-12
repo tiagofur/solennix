@@ -53,9 +53,9 @@ fun BiometricGateScreen(
     )
 
     val promptInfo = BiometricPrompt.PromptInfo.Builder()
-        .setTitle("Desbloquea Solennix")
-        .setSubtitle("Usa tu huella o rostro para continuar")
-        .setNegativeButtonText("Cerrar Sesion")
+        .setTitle("Desbloqueá Solennix")
+        .setSubtitle("Usá tu huella o rostro para continuar")
+        .setNegativeButtonText("Cerrar Sesión")
         .build()
 
     LaunchedEffect(Unit) {
@@ -93,7 +93,7 @@ fun BiometricGateScreen(
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Confirma tu identidad para continuar utilizando la aplicacion.",
+                text = "Confirmá tu identidad para continuar utilizando la aplicación.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = SolennixTheme.colors.secondaryText,
                 textAlign = TextAlign.Center

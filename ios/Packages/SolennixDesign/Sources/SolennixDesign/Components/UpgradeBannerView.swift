@@ -1,5 +1,4 @@
 import SwiftUI
-import SolennixDesign
 
 // MARK: - Upgrade Banner View
 

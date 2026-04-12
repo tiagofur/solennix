@@ -115,7 +115,7 @@ private fun LoginFormContent(
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Ingresa tus credenciales para continuar",
+                text = "Ingresá tus credenciales para continuar",
                 style = MaterialTheme.typography.bodyMedium,
                 color = SolennixTheme.colors.secondaryText
             )
@@ -127,7 +127,7 @@ private fun LoginFormContent(
         SolennixTextField(
             value = viewModel.loginEmail,
             onValueChange = { viewModel.loginEmail = it },
-            label = "Correo Electronico",
+            label = "Correo Electrónico",
             placeholder = "ejemplo@correo.com",
             leadingIcon = Icons.Default.Email,
             keyboardType = KeyboardType.Email,
@@ -139,11 +139,11 @@ private fun LoginFormContent(
         SolennixTextField(
             value = viewModel.loginPassword,
             onValueChange = { viewModel.loginPassword = it },
-            label = "Contrasena",
+            label = "Contraseña",
             leadingIcon = Icons.Default.Lock,
             isPassword = true,
             imeAction = ImeAction.Done,
-            errorMessage = if (viewModel.errorMessage?.contains("Contrasena", ignoreCase = true) == true) viewModel.errorMessage else null
+            errorMessage = if (viewModel.errorMessage?.contains("Contraseña", ignoreCase = true) == true) viewModel.errorMessage else null
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -153,7 +153,7 @@ private fun LoginFormContent(
             modifier = Modifier.align(Alignment.End)
         ) {
             Text(
-                text = "Olvidaste tu contrasena?",
+                text = "¿Olvidaste tu contraseña?",
                 color = SolennixTheme.colors.primary,
                 style = MaterialTheme.typography.labelLarge
             )
@@ -162,7 +162,7 @@ private fun LoginFormContent(
         Spacer(modifier = Modifier.height(24.dp))
 
         PremiumButton(
-            text = "Iniciar Sesion",
+            text = "Iniciar Sesión",
             onClick = { viewModel.login() },
             isLoading = viewModel.isLoading,
             enabled = viewModel.isLoginValid
@@ -186,7 +186,7 @@ private fun LoginFormContent(
         ) {
             HorizontalDivider(modifier = Modifier.weight(1f))
             Text(
-                text = " o continua con ",
+                text = " o continuá con ",
                 modifier = Modifier.padding(horizontal = 8.dp),
                 color = SolennixTheme.colors.secondaryText,
                 style = MaterialTheme.typography.labelMedium
@@ -224,7 +224,7 @@ private fun LoginFormContent(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "No tienes cuenta? ",
+                text = "¿No tenés cuenta? ",
                 color = SolennixTheme.colors.secondaryText,
                 style = MaterialTheme.typography.bodyMedium
             )

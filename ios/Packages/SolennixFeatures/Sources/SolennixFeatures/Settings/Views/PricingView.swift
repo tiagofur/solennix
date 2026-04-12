@@ -1,4 +1,5 @@
 import SwiftUI
+import StoreKit
 import SolennixCore
 import SolennixDesign
 import SolennixNetwork
@@ -155,12 +156,26 @@ public struct PricingView: View {
 
     // MARK: - Formatted Premium Price
 
-    /// Muestra el precio del package mensual de RevenueCat, o el precio por defecto.
+    /// Muestra el precio del package mensual (RevenueCat → StoreKit → fallback).
     private var formattedPremiumPrice: String {
         if let monthly = subscriptionManager.monthlyPackage {
             return "\(monthly.storeProduct.localizedPriceString)/mes"
         }
-        return "$199 MXN/mes"
+        if let fallback = subscriptionManager.fallbackMonthlyProduct {
+            return "\(fallback.displayPrice)/mes"
+        }
+        return "$6.99 USD/mes"
+    }
+
+    /// Precio anual formateado (RevenueCat → StoreKit → fallback).
+    private var formattedYearlyPrice: String {
+        if let yearly = subscriptionManager.yearlyPackage {
+            return "\(yearly.storeProduct.localizedPriceString)/año"
+        }
+        if let fallback = subscriptionManager.fallbackYearlyProduct {
+            return "\(fallback.displayPrice)/año"
+        }
+        return "$49.99 USD/año"
     }
 
     // MARK: - Plan Card
@@ -198,9 +213,9 @@ public struct PricingView: View {
                         .font(.headline)
                         .foregroundStyle(SolennixColors.primary)
 
-                    // Mostrar precio anual si esta disponible
-                    if plan == .premium, let yearly = subscriptionManager.yearlyPackage {
-                        Text("\(yearly.storeProduct.localizedPriceString)/ano")
+                    // Mostrar precio anual siempre para plan premium
+                    if plan == .premium {
+                        Text(formattedYearlyPrice)
                             .font(.caption)
                             .foregroundStyle(SolennixColors.textSecondary)
                     }
@@ -254,71 +269,79 @@ public struct PricingView: View {
 
     private var purchaseButtonsSection: some View {
         VStack(spacing: Spacing.sm) {
-            // Boton mensual
+            // Boton mensual — RevenueCat package o StoreKit fallback
             if let monthly = subscriptionManager.monthlyPackage {
-                Button {
-                    HapticsHelper.play(.medium)
-                    Task { await handlePurchase(monthly) }
-                } label: {
-                    HStack {
-                        if subscriptionManager.isPurchasing {
-                            ProgressView()
-                                .tint(.white)
-                        }
-                        Text("Suscribirse Mensual - \(monthly.storeProduct.localizedPriceString)")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                    }
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, Spacing.sm)
-                    .background(SolennixGradient.premium)
-                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                purchaseButton(
+                    title: "Suscribirse Mensual - \(monthly.storeProduct.localizedPriceString)",
+                    isPrimary: true
+                ) {
+                    await handlePurchase(monthly)
                 }
-                .buttonStyle(.plain)
-                .disabled(subscriptionManager.isPurchasing)
+            } else if let product = subscriptionManager.fallbackMonthlyProduct {
+                purchaseButton(
+                    title: "Suscribirse Mensual - \(product.displayPrice)",
+                    isPrimary: true
+                ) {
+                    await handleStoreKitPurchase(product)
+                }
+            } else {
+                // Hardcoded fallback — always show a buy button
+                purchaseButton(
+                    title: "Suscribirse Mensual - $6.99 USD",
+                    isPrimary: true
+                ) {
+                    await subscriptionManager.loadOfferings()
+                    if let monthly = subscriptionManager.monthlyPackage {
+                        await handlePurchase(monthly)
+                    } else if let product = subscriptionManager.fallbackMonthlyProduct {
+                        await handleStoreKitPurchase(product)
+                    } else {
+                        purchaseErrorMessage = "No se pudieron cargar los productos. Verifica tu conexion e intenta de nuevo."
+                        showError = true
+                    }
+                }
             }
 
-            // Boton anual
+            // Boton anual — RevenueCat package o StoreKit fallback
             if let yearly = subscriptionManager.yearlyPackage {
-                Button {
-                    HapticsHelper.play(.medium)
-                    Task { await handlePurchase(yearly) }
-                } label: {
-                    HStack {
-                        if subscriptionManager.isPurchasing {
-                            ProgressView()
-                                .tint(SolennixColors.primary)
-                        }
-                        Text("Suscribirse Anual - \(yearly.storeProduct.localizedPriceString)")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                    }
-                    .foregroundStyle(SolennixColors.primary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, Spacing.sm)
-                    .background(SolennixColors.primary.opacity(0.1))
-                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                purchaseButton(
+                    title: "Suscribirse Anual - \(yearly.storeProduct.localizedPriceString)",
+                    isPrimary: false
+                ) {
+                    await handlePurchase(yearly)
                 }
-                .buttonStyle(.plain)
-                .disabled(subscriptionManager.isPurchasing)
+            } else if let product = subscriptionManager.fallbackYearlyProduct {
+                purchaseButton(
+                    title: "Suscribirse Anual - \(product.displayPrice)",
+                    isPrimary: false
+                ) {
+                    await handleStoreKitPurchase(product)
+                }
+            } else {
+                // Hardcoded fallback — always show a buy button
+                purchaseButton(
+                    title: "Suscribirse Anual - $49.99 USD",
+                    isPrimary: false
+                ) {
+                    await subscriptionManager.loadOfferings()
+                    if let yearly = subscriptionManager.yearlyPackage {
+                        await handlePurchase(yearly)
+                    } else if let product = subscriptionManager.fallbackYearlyProduct {
+                        await handleStoreKitPurchase(product)
+                    } else {
+                        purchaseErrorMessage = "No se pudieron cargar los productos. Verifica tu conexion e intenta de nuevo."
+                        showError = true
+                    }
+                }
             }
 
-            // Fallback si los offerings no se cargaron
-            if subscriptionManager.currentOffering == nil && !subscriptionManager.isLoading {
-                Button {
-                    Task { await subscriptionManager.loadOfferings() }
-                } label: {
-                    Text("Actualizar a Premium")
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, Spacing.sm)
-                        .background(SolennixGradient.premium)
-                        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-                }
-                .buttonStyle(.plain)
+            // Error message
+            if let error = subscriptionManager.errorMessage, subscriptionManager.currentOffering == nil && subscriptionManager.storeProducts.isEmpty {
+                Text(error)
+                    .font(.caption)
+                    .foregroundStyle(SolennixColors.error)
+                    .multilineTextAlignment(.center)
+                    .padding(.top, Spacing.xs)
             }
 
             if subscriptionManager.isLoading {
@@ -326,6 +349,36 @@ public struct PricingView: View {
                     .padding(.vertical, Spacing.sm)
             }
         }
+    }
+
+    // MARK: - Purchase Button Helper
+
+    private func purchaseButton(
+        title: String,
+        isPrimary: Bool,
+        action: @escaping () async -> Void
+    ) -> some View {
+        Button {
+            HapticsHelper.play(.medium)
+            Task { await action() }
+        } label: {
+            HStack {
+                if subscriptionManager.isPurchasing {
+                    ProgressView()
+                        .tint(isPrimary ? .white : SolennixColors.primary)
+                }
+                Text(title)
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+            }
+            .foregroundStyle(isPrimary ? .white : SolennixColors.primary)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, Spacing.sm)
+            .background(isPrimary ? AnyShapeStyle(SolennixGradient.premium) : AnyShapeStyle(SolennixColors.primary.opacity(0.1)))
+            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+        }
+        .buttonStyle(.plain)
+        .disabled(subscriptionManager.isPurchasing)
     }
 
     // MARK: - Subscription Actions Section
@@ -378,6 +431,24 @@ public struct PricingView: View {
             if case .userCancelled = error {
                 return
             }
+            HapticsHelper.play(.error)
+            purchaseErrorMessage = error.localizedDescription
+            showError = true
+        } catch {
+            HapticsHelper.play(.error)
+            purchaseErrorMessage = "Ocurrio un error inesperado al procesar la compra."
+            showError = true
+        }
+    }
+
+    // MARK: - Handle StoreKit Purchase (Fallback)
+
+    private func handleStoreKitPurchase(_ product: StoreKit.Product) async {
+        do {
+            try await subscriptionManager.purchaseStoreKitProduct(product)
+            HapticsHelper.play(.success)
+        } catch let error as SubscriptionError {
+            if case .userCancelled = error { return }
             HapticsHelper.play(.error)
             purchaseErrorMessage = error.localizedDescription
             showError = true

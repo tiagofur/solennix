@@ -246,7 +246,23 @@
       "Bash(adb devices:*)",
       "Bash(xcodebuild -scheme Solennix -destination 'id=894B1409-0EF2-4B78-8A67-1020F9EB37A0' -configuration Debug build install)",
       "Bash(./gradlew installDebug -x test)",
-      "Bash(defaults read:*)"
+      "Bash(defaults read:*)",
+      "Bash(./gradlew :android:feature:inventory:compileDebugKotlin)",
+      "Bash(./gradlew :feature:inventory:compileDebugKotlin)",
+      "Bash(rm -f /Users/tiagofur/dev/eventosapp/.git/HEAD.lock /Users/tiagofur/dev/eventosapp/.git/index.lock)",
+      "Bash(git -C /Users/tiagofur/dev/eventosapp add android/feature/inventory/src/main/java/com/creapolis/solennix/feature/inventory/ui/InventoryListScreen.kt android/feature/inventory/src/main/java/com/creapolis/solennix/feature/inventory/ui/InventoryDetailScreen.kt)",
+      "Bash(git -C /Users/tiagofur/dev/eventosapp commit -m ':*)",
+      "Bash(/opt/homebrew/opt/openjdk/bin/java -version)",
+      "Bash(/Users/tiagofur/Library/Android/sdk/emulator/emulator -list-avds)",
+      "Bash(/Users/tiagofur/Library/Android/sdk/platform-tools/adb devices:*)",
+      "Bash(/Users/tiagofur/Library/Android/sdk/emulator/emulator -avd Pixel_10_Pro -no-snapshot-load)",
+      "Bash(echo \"Emulador lanzado, PID: $!\")",
+      "Bash(/Users/tiagofur/Library/Android/sdk/platform-tools/adb wait-for-device:*)",
+      "Bash(/Users/tiagofur/Library/Android/sdk/platform-tools/adb shell:*)",
+      "Bash(export JAVA_HOME=/opt/homebrew/opt/openjdk/libexec/openjdk.jdk/Contents/Home)",
+      "Bash(export ANDROID_HOME=/Users/tiagofur/Library/Android/sdk)",
+      "Bash(./gradlew :app:installDebug)",
+      "Bash(export JAVA_HOME=\"/Applications/Android Studio.app/Contents/jbr/Contents/Home\")"
     ]
   }
 }
