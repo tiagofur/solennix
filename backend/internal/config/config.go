@@ -35,7 +35,11 @@ type Config struct {
 	GoogleClientIDs []string // Allowed Google OAuth client IDs (iOS, Android, Web)
 
 	// Apple Sign In configuration
-	AppleBundleID string // Apple Bundle ID for audience verification
+	AppleClientIDs   []string // Allowed Apple Service IDs/Bundle IDs (iOS, Web)
+	AppleTeamID      string   // Apple Team ID
+	AppleKeyID       string   // Apple Key ID (for client_secret generation)
+	ApplePrivateKey  string   // Apple Private Key (.p8 file content or base64)
+	AppleRedirectURI string   // Apple Redirect URI (for REST flow)
 
 	UploadDir           string // Directory for uploaded files (default: "./uploads")
 	StorageProvider     string // "local" or "s3" (default: "local")
@@ -74,9 +78,12 @@ func Load() (*Config, error) {
 		StripePortalConfigID:    os.Getenv("STRIPE_PORTAL_CONFIG_ID"),
 		RevenueCatWebhookSecret: os.Getenv("REVENUECAT_WEBHOOK_SECRET"),
 		RevenueCatAPIKey:        os.Getenv("REVENUECAT_API_KEY"),
-		AppleBundleID:           os.Getenv("APPLE_BUNDLE_ID"),
 		UploadDir:               getEnv("UPLOAD_DIR", "./uploads"),
 		StorageProvider:         getEnv("STORAGE_PROVIDER", "local"),
+		AppleTeamID:             os.Getenv("APPLE_TEAM_ID"),
+		AppleKeyID:              os.Getenv("APPLE_KEY_ID"),
+		ApplePrivateKey:         os.Getenv("APPLE_PRIVATE_KEY"),
+		AppleRedirectURI:        os.Getenv("APPLE_REDIRECT_URI"),
 		S3Bucket:                os.Getenv("S3_BUCKET"),
 		S3Region:                getEnv("S3_REGION", "us-east-1"),
 		S3Prefix:                getEnv("S3_PREFIX", "uploads"),
@@ -120,6 +127,17 @@ func Load() (*Config, error) {
 			id = strings.TrimSpace(id)
 			if id != "" {
 				cfg.GoogleClientIDs = append(cfg.GoogleClientIDs, id)
+			}
+		}
+	}
+
+	// Parse Apple Client IDs (comma-separated: iOS Bundle ID, Web Service ID)
+	appleIDs := os.Getenv("APPLE_CLIENT_IDS")
+	if appleIDs != "" {
+		for _, id := range strings.Split(appleIDs, ",") {
+			id = strings.TrimSpace(id)
+			if id != "" {
+				cfg.AppleClientIDs = append(cfg.AppleClientIDs, id)
 			}
 		}
 	}

@@ -25,7 +25,7 @@ export type EventFixture = {
   tax_amount: number;
   requires_invoice: boolean;
   tax_rate: number;
-  clients: {
+  client: {
     id?: string;
     name: string;
     phone: string | null;
@@ -53,7 +53,7 @@ export const baseEvent: EventFixture = {
   tax_amount: 160,
   requires_invoice: true,
   tax_rate: 16,
-  clients: {
+  client: {
     id: 'c1',
     name: 'Ana',
     phone: '555',

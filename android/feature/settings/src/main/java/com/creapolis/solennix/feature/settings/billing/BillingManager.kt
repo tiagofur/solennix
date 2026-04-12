@@ -23,9 +23,11 @@ import javax.inject.Singleton
 class BillingManager @Inject constructor() {
 
     companion object {
-        // RevenueCat entitlement identifier
-        const val ENTITLEMENT_PRO = "pro_access"
-        const val ENTITLEMENT_PREMIUM = "premium_access"
+        // RevenueCat entitlement identifier — must match the entitlement ID
+        // configured in RevenueCat Dashboard → Project → Entitlements.
+        // Aligned with iOS which already uses "pro_access" in production.
+        // UI displays "Premium" — the internal ID is independent of the display name.
+        const val ENTITLEMENT_ID = "pro_access"
     }
 
     private val _billingState = MutableStateFlow<BillingState>(BillingState.NotReady)
@@ -38,21 +40,57 @@ class BillingManager @Inject constructor() {
     val customerInfo: StateFlow<CustomerInfo?> = _customerInfo.asStateFlow()
 
     /**
+     * Identifier of the package currently being purchased, or `null` if no purchase
+     * is in flight. Used by UI to disable plan cards during the purchase flow and
+     * prevent double-tap submissions.
+     */
+    private val _purchaseInProgress = MutableStateFlow<String?>(null)
+    val purchaseInProgress: StateFlow<String?> = _purchaseInProgress.asStateFlow()
+
+    /**
      * Initialize by fetching offerings and customer info from RevenueCat.
+     *
+     * If `REVENUECAT_API_KEY` is blank (debug builds), `Purchases.sharedInstance` is never
+     * configured and any access throws `UninitializedPropertyAccessException`. We surface
+     * this as a regular [BillingState.Error] so the UI shows an informative card instead
+     * of crashing the app.
      */
     fun initialize() {
+        if (!isRevenueCatAvailable()) {
+            _billingState.value = BillingState.Error(
+                "Suscripciones no disponibles: RevenueCat no está configurado."
+            )
+            return
+        }
         fetchOfferings()
         fetchCustomerInfo()
+    }
+
+    private fun isRevenueCatAvailable(): Boolean = try {
+        Purchases.sharedInstance
+        true
+    } catch (_: UninitializedPropertyAccessException) {
+        false
     }
 
     /**
      * Fetch available offerings (products/packages) from RevenueCat.
      */
+    /**
+     * Retry fetching offerings — callable from UI after a fetch failure.
+     * Resets state to NotReady to show a loading indicator while the retry runs.
+     */
+    fun retryFetchOfferings() {
+        if (!isRevenueCatAvailable()) return
+        _billingState.value = BillingState.NotReady
+        fetchOfferings()
+    }
+
     private fun fetchOfferings() {
         Purchases.sharedInstance.getOfferingsWith(
             onError = { error ->
                 _billingState.value = BillingState.Error(
-                    "Error al cargar planes: ${error.message}"
+                    "No se pudieron cargar los planes: ${error.message}"
                 )
             },
             onSuccess = { offerings ->
@@ -72,7 +110,7 @@ class BillingManager @Inject constructor() {
                 // Don't override billing state if offerings already loaded
                 if (_billingState.value is BillingState.NotReady) {
                     _billingState.value = BillingState.Error(
-                        "Error al verificar suscripcion: ${error.message}"
+                        "No se pudo verificar tu suscripción: ${error.message}"
                     )
                 }
             },
@@ -84,18 +122,27 @@ class BillingManager @Inject constructor() {
 
     /**
      * Launch the purchase flow for a RevenueCat package.
+     *
+     * Sets [purchaseInProgress] to the package identifier for the duration of the flow
+     * so the UI can disable interactions and show a per-card loading indicator. The flag
+     * is cleared in both success and error callbacks (including user cancellation).
      */
     fun purchase(activity: Activity, rcPackage: Package) {
+        if (_purchaseInProgress.value != null) return // defensive: ignore double-tap
+        if (!isRevenueCatAvailable()) return
+        _purchaseInProgress.value = rcPackage.identifier
         Purchases.sharedInstance.purchaseWith(
             purchaseParams = com.revenuecat.purchases.PurchaseParams.Builder(activity, rcPackage).build(),
             onError = { error, userCancelled ->
+                _purchaseInProgress.value = null
                 if (!userCancelled) {
                     _billingState.value = BillingState.Error(
-                        "Error en la compra: ${error.message}"
+                        "No se pudo completar la compra: ${error.message}"
                     )
                 }
             },
             onSuccess = { _, info ->
+                _purchaseInProgress.value = null
                 _customerInfo.value = info
             }
         )
@@ -105,11 +152,12 @@ class BillingManager @Inject constructor() {
      * Restore previous purchases from the store.
      */
     fun restorePurchases() {
+        if (!isRevenueCatAvailable()) return
         _billingState.value = BillingState.NotReady // Use as loading state
         Purchases.sharedInstance.restorePurchases(object : com.revenuecat.purchases.interfaces.ReceiveCustomerInfoCallback {
             override fun onError(error: com.revenuecat.purchases.PurchasesError) {
                 _billingState.value = BillingState.Error(
-                    "Error al restaurar compras: ${error.message}"
+                    "No se pudieron restaurar tus compras: ${error.message}"
                 )
             }
 
@@ -124,6 +172,7 @@ class BillingManager @Inject constructor() {
      * Identify the user in RevenueCat after login.
      */
     fun login(userId: String) {
+        if (!isRevenueCatAvailable()) return
         Purchases.sharedInstance.logInWith(
             appUserID = userId,
             onError = { error ->
@@ -140,6 +189,7 @@ class BillingManager @Inject constructor() {
      * Reset RevenueCat user on logout (creates anonymous user).
      */
     fun logout() {
+        if (!isRevenueCatAvailable()) return
         Purchases.sharedInstance.logOutWith(
             onError = { error ->
                 android.util.Log.w("BillingManager", "RevenueCat logout failed: ${error.message}")
@@ -151,30 +201,13 @@ class BillingManager @Inject constructor() {
     }
 
     /**
-     * Check if user has an active "pro_access" entitlement.
-     */
-    fun hasProAccess(): Boolean {
-        return _customerInfo.value
-            ?.entitlements
-            ?.get(ENTITLEMENT_PRO)
-            ?.isActive == true
-    }
-
-    /**
-     * Check if user has an active "premium_access" entitlement.
+     * Check if user has an active "premium" entitlement.
      */
     fun hasPremiumAccess(): Boolean {
         return _customerInfo.value
             ?.entitlements
-            ?.get(ENTITLEMENT_PREMIUM)
+            ?.get(ENTITLEMENT_ID)
             ?.isActive == true
-    }
-
-    /**
-     * Check if user has any active paid subscription (Pro or Premium).
-     */
-    fun hasProOrPremium(): Boolean {
-        return hasProAccess() || hasPremiumAccess()
     }
 
     /**

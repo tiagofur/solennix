@@ -16,11 +16,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.creapolis.solennix.feature.auth.R
 import java.net.URLEncoder
 import java.util.UUID
 
@@ -83,7 +85,7 @@ fun AppleSignInButton(
         onClick = {
             if (redirectUri == null || redirectUri.startsWith("YOUR_")) {
                 Log.e("AppleSignIn", "Apple redirect URI not configured in strings.xml")
-                onError?.invoke("Apple Sign-In no esta configurado")
+                onError?.invoke("Apple Sign-In no está configurado")
                 return@OutlinedButton
             }
             isLoading = true
@@ -100,22 +102,24 @@ fun AppleSignInButton(
         border = BorderStroke(1.dp, Color.Black),
         enabled = !isLoading
     ) {
-        if (isLoading) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(20.dp),
-                strokeWidth = 2.dp,
-                color = Color.White
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-        }
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
-            Text(
-                text = "\uD83C\uDF4E",
-                style = MaterialTheme.typography.titleLarge
-            )
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    strokeWidth = 2.dp,
+                    color = Color.White
+                )
+            } else {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_apple_logo),
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
             Spacer(modifier = Modifier.width(12.dp))
             Text(
                 text = "Continuar con Apple",
@@ -176,7 +180,7 @@ private fun AppleSignInDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Iniciar sesion con Apple",
+                        text = "Iniciar sesión con Apple",
                         style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.padding(start = 8.dp)
                     )
@@ -236,7 +240,7 @@ private fun AppleSignInDialog(
                                         return true
                                     }
                                     if (error != null) {
-                                        onError("Error al iniciar sesion con Apple")
+                                        onError("Error al iniciar sesión con Apple")
                                         return true
                                     }
 
@@ -251,7 +255,7 @@ private fun AppleSignInDialog(
 
                                     val returnedState = params["state"]
                                     if (returnedState != null && returnedState != state) {
-                                        onError("Error de seguridad. Intenta de nuevo.")
+                                        onError("Error de seguridad. Intentá de nuevo.")
                                         return
                                     }
 
@@ -262,7 +266,7 @@ private fun AppleSignInDialog(
                                             null // Apple only sends name on first auth via form_post
                                         )
                                     } else {
-                                        onError("No se recibio el token de Apple")
+                                        onError("No se recibió el token de Apple")
                                     }
                                 }
                             }

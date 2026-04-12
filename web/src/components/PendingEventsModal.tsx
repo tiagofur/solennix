@@ -59,7 +59,7 @@ export const PendingEventsModal: React.FC = () => {
             >
               <div className="flex-1 min-w-0">
                 <p className="font-bold text-text truncate group-hover:text-primary transition-colors">
-                  {event.clients?.name || "Sin Cliente"}
+                  {event.client?.name || "Sin Cliente"}
                 </p>
                 <div className="flex items-center gap-2 mt-1">
                   <span className="text-sm text-text-secondary">
@@ -82,7 +82,7 @@ export const PendingEventsModal: React.FC = () => {
                   onClick={() => handleUpdateStatus(event.id, "completed")}
                   disabled={updatingId === event.id}
                   className="flex-1 sm:flex-none inline-flex items-center justify-center px-4 py-2 bg-success text-white text-sm font-bold rounded-xl hover:opacity-90 transition-opacity shadow-sm shadow-success/20 disabled:opacity-50"
-                  aria-label={`Marcar evento como completado: ${event.clients?.name || "Sin Cliente"} - ${event.service_type}`}
+                  aria-label={`Marcar evento como completado: ${event.client?.name || "Sin Cliente"} - ${event.service_type}`}
                 >
                   <CheckCircle className="h-4 w-4 mr-2" aria-hidden="true" />
                   Completar
@@ -92,7 +92,7 @@ export const PendingEventsModal: React.FC = () => {
                   onClick={() => handleUpdateStatus(event.id, "cancelled")}
                   disabled={updatingId === event.id}
                   className="flex-1 sm:flex-none inline-flex items-center justify-center px-4 py-2 bg-error/10 text-error border border-error/20 text-sm font-bold rounded-xl hover:bg-error/20 transition-colors disabled:opacity-50"
-                  aria-label={`Marcar evento como cancelado: ${event.clients?.name || "Sin Cliente"} - ${event.service_type}`}
+                  aria-label={`Marcar evento como cancelado: ${event.client?.name || "Sin Cliente"} - ${event.service_type}`}
                 >
                   <XCircle className="h-4 w-4 mr-2" aria-hidden="true" />
                   Cancelar

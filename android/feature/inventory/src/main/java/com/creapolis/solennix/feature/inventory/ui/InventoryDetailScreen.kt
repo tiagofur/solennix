@@ -159,7 +159,12 @@ fun InventoryDetailScreen(
                 "SUPPLY" -> "Insumo por Evento"
                 else -> "Insumo Consumible"
             }
-            val stockColor = if (uiState.isLowStock) colors.error else Color(0xFF4CAF50)
+            val isCritical = uiState.demand7Days > 0 && uiState.stockAfter7Days < 0
+            val stockColor = when {
+                isCritical -> colors.error
+                uiState.isLowStock -> colors.warning
+                else -> Color(0xFF4CAF50)
+            }
 
             Column(
                 modifier = Modifier
@@ -193,7 +198,7 @@ fun InventoryDetailScreen(
                                 subtitle = item.unit,
                                 valueColor = stockColor,
                                 extraLabel = if (uiState.isLowStock) "Bajo mínimo" else null,
-                                extraColor = colors.error,
+                                extraColor = if (isCritical) colors.error else colors.warning,
                                 iconContentDescription = stringResource(DesignSystemR.string.cd_scale),
                                 modifier = Modifier.weight(1f)
                             )
@@ -302,7 +307,7 @@ private fun InventoryKpiCard(
     modifier: Modifier = Modifier,
     valueColor: Color = SolennixTheme.colors.primaryText,
     extraLabel: String? = null,
-    extraColor: Color = SolennixTheme.colors.error,
+    extraColor: Color = SolennixTheme.colors.warning,
     iconContentDescription: String? = null
 ) {
     Card(
@@ -359,7 +364,7 @@ private fun SmartStockAlert(
     val (bgColor, borderColor, iconColor, icon) = when {
         isCritical -> listOf(colors.error.copy(alpha = 0.08f), colors.error.copy(alpha = 0.2f), colors.error, Icons.Default.Warning)
         isWarning -> listOf(Color(0xFFFFF3E0), Color(0xFFFFE0B2), Color(0xFFFF9800), Icons.Default.Warning)
-        isLowOnly -> listOf(colors.error.copy(alpha = 0.08f), colors.error.copy(alpha = 0.2f), colors.error, Icons.Default.Warning)
+        isLowOnly -> listOf(colors.warning.copy(alpha = 0.08f), colors.warning.copy(alpha = 0.2f), colors.warning, Icons.Default.Warning)
         else -> listOf(Color(0xFFE8F5E9), Color(0xFFC8E6C9), Color(0xFF4CAF50), Icons.Default.CheckCircle)
     }
 
@@ -428,7 +433,11 @@ private fun StockHealthBars(
                 label = "Stock Actual",
                 value = "${currentStock.let { if (it == it.toLong().toDouble()) it.toLong().toString() else "%.1f".format(it) }} $unit",
                 fraction = (currentStock / maxBar).toFloat().coerceIn(0f, 1f),
-                barColor = if (isLowStock) colors.error else colors.primary
+                barColor = when {
+                    isLowStock && demand7Days > 0 && stockAfter7Days < 0 -> colors.error
+                    isLowStock -> colors.warning
+                    else -> colors.primary
+                }
             )
             // Mínimo bar
             HealthBar(

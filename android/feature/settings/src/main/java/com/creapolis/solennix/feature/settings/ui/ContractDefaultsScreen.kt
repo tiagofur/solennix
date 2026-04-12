@@ -343,7 +343,7 @@ fun ContractDefaultsScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = "Personaliza el texto de tus contratos. Usa los tokens para insertar datos del evento automaticamente.",
+                    text = "Personalizá el texto de tus contratos. Usá los tokens para insertar datos del evento automáticamente.",
                     style = MaterialTheme.typography.bodySmall,
                     color = SolennixTheme.colors.secondaryText,
                     modifier = Modifier.padding(horizontal = 4.dp)
@@ -481,7 +481,7 @@ private fun ContractTemplatePreviewDialog(
             Column {
                 if (template.isBlank()) {
                     Text(
-                        text = "La plantilla esta vacia. Escribe el texto del contrato y usa los tokens para insertar datos automaticamente.",
+                        text = "La plantilla está vacía. Escribí el texto del contrato y usá los tokens para insertar datos automáticamente.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = SolennixTheme.colors.secondaryText
                     )

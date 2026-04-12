@@ -544,7 +544,7 @@ private fun EventListItem(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = event.startTime ?: "Todo el dia",
+                        text = event.startTime ?: "Todo el día",
                         style = MaterialTheme.typography.bodySmall,
                         color = SolennixTheme.colors.secondaryText
                     )
@@ -631,7 +631,7 @@ internal fun eventCardTalkBackLabel(event: Event, clientName: String?, formatted
         append(event.serviceType)
         append(", estado ${event.status.name.lowercase()}")
         append(", fecha $formattedDate")
-        append(", hora ${event.startTime ?: "todo el dia"}")
+        append(", hora ${event.startTime ?: "todo el día"}")
         clientName?.takeIf { it.isNotBlank() }?.let { append(", cliente $it") }
         event.location?.takeIf { it.isNotBlank() }?.let { append(", ubicación $it") }
         append(", ${event.numPeople} personas")

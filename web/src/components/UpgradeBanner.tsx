@@ -19,7 +19,7 @@ export const UpgradeBanner: React.FC<UpgradeBannerProps> = ({
 }) => {
   const resourceNames = {
     events: { title: 'Eventos', plural: 'eventos mensuales', metric: 'Eventos este mes' },
-    clients: { title: 'Clientes', plural: 'clientes', metric: 'Clientes registrados' },
+    client: { title: 'Clientes', plural: 'clientes', metric: 'Clientes registrados' },
     catalog: { title: 'Catálogo', plural: 'productos e ítems de inventario', metric: 'Ítems en catálogo' }
   };
   const texts = resourceNames[resource];

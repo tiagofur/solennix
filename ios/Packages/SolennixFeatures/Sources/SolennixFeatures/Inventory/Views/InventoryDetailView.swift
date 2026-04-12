@@ -347,8 +347,8 @@ public struct InventoryDetailView: View {
                 icon: "dollarsign.circle.fill",
                 iconColor: SolennixColors.primary,
                 label: "Costo Unitario",
-                value: item.unitCost != nil && item.unitCost! > 0
-                    ? item.unitCost!.formatted(.currency(code: "MXN"))
+                value: (item.unitCost ?? 0) > 0
+                    ? (item.unitCost ?? 0).formatted(.currency(code: "MXN"))
                     : "—",
                 subtitle: "por \(item.unit)"
             )

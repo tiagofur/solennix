@@ -63,6 +63,8 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 			r.Post("/reset-password", authHandler.ResetPassword)
 			r.Post("/google", authHandler.GoogleSignIn)
 			r.Post("/apple", authHandler.AppleSignIn)
+			r.Get("/apple/init", authHandler.AppleInit)
+			r.Post("/apple/callback", authHandler.AppleCallback)
 			// /register has its own stricter limit (account creation abuse)
 			r.Group(func(r chi.Router) {
 				r.Use(mw.RateLimit(3, 15*time.Minute))

@@ -99,7 +99,7 @@ private fun RegisterFormContent(
             }
 
             Text(
-                text = "Unete a Solennix y gestiona tus eventos como un profesional.",
+                text = "Unite a Solennix y gestioná tus eventos como un profesional.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = SolennixTheme.colors.secondaryText,
                 textAlign = TextAlign.Center
@@ -111,7 +111,7 @@ private fun RegisterFormContent(
                 value = viewModel.registerName,
                 onValueChange = { viewModel.registerName = it },
                 label = "Nombre Completo",
-                placeholder = "Juan Perez",
+                placeholder = "Juan Pérez",
                 leadingIcon = Icons.Default.Person
             )
 
@@ -120,7 +120,7 @@ private fun RegisterFormContent(
             SolennixTextField(
                 value = viewModel.registerEmail,
                 onValueChange = { viewModel.registerEmail = it },
-                label = "Correo Electronico",
+                label = "Correo Electrónico",
                 placeholder = "ejemplo@correo.com",
                 leadingIcon = Icons.Default.Email,
                 keyboardType = KeyboardType.Email
@@ -131,7 +131,7 @@ private fun RegisterFormContent(
             SolennixTextField(
                 value = viewModel.registerPassword,
                 onValueChange = { viewModel.registerPassword = it },
-                label = "Contrasena",
+                label = "Contraseña",
                 leadingIcon = Icons.Default.Lock,
                 isPassword = true
             )
@@ -141,7 +141,7 @@ private fun RegisterFormContent(
             SolennixTextField(
                 value = viewModel.registerConfirmPassword,
                 onValueChange = { viewModel.registerConfirmPassword = it },
-                label = "Confirmar Contrasena",
+                label = "Confirmar Contraseña",
                 leadingIcon = Icons.Default.Lock,
                 isPassword = true,
                 imeAction = ImeAction.Done
@@ -181,7 +181,7 @@ private fun RegisterFormContent(
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "Al registrarte, aceptas nuestros Terminos de Servicio y Politica de Privacidad.",
+                text = "Al registrarte, aceptás nuestros Términos de Servicio y Política de Privacidad.",
                 style = MaterialTheme.typography.labelSmall,
                 color = SolennixTheme.colors.tertiaryText,
                 textAlign = TextAlign.Center,

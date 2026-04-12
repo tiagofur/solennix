@@ -21,7 +21,7 @@ describe('searchService', () => {
 
   it('filters clients by name', async () => {
     (api.get as any).mockResolvedValue({
-      clients: [
+      client: [
         { id: '1', name: 'Juan', email: 'juan@test.com', city: 'CDMX', phone: '123' },
       ],
       products: [],
@@ -37,7 +37,7 @@ describe('searchService', () => {
 
   it('maps and filters across entities', async () => {
     (api.get as any).mockResolvedValue({
-      clients: [
+      client: [
         { id: '1', name: 'Maria', email: 'maria@test.com', city: 'GDL', phone: '555' },
       ],
       products: [],
@@ -59,7 +59,7 @@ describe('searchService', () => {
 
   it('handles events with client shape and inventory equipment', async () => {
     (api.get as any).mockResolvedValue({
-      clients: [],
+      client: [],
       products: [],
       inventory: [
         { id: 'i2', ingredient_name: 'Horno', type: 'equipment', unit: 'pieza', current_stock: 1 },
@@ -76,7 +76,7 @@ describe('searchService', () => {
 
   it('maps product meta only when base price exists', async () => {
     (api.get as any).mockResolvedValue({
-      clients: [],
+      client: [],
       products: [
         { id: 'p1', name: 'Tacos', category: 'Comida', base_price: 0 },
       ],
@@ -92,7 +92,7 @@ describe('searchService', () => {
 
   it('maps product with base_price and without category', async () => {
     (api.get as any).mockResolvedValue({
-      clients: [],
+      client: [],
       products: [
         { id: 'p2', name: 'Sushi', category: '', base_price: 150.5 },
       ],
@@ -109,7 +109,7 @@ describe('searchService', () => {
 
   it('maps client without city', async () => {
     (api.get as any).mockResolvedValue({
-      clients: [
+      client: [
         { id: 'c1', name: 'Ana', email: '', phone: '555', city: '' },
       ],
       products: [],
@@ -125,7 +125,7 @@ describe('searchService', () => {
 
   it('maps inventory item with ingredient type', async () => {
     (api.get as any).mockResolvedValue({
-      clients: [],
+      client: [],
       products: [],
       inventory: [
         { id: 'i1', ingredient_name: 'Harina', type: 'ingredient', unit: 'kg', current_stock: 10 },
@@ -142,7 +142,7 @@ describe('searchService', () => {
 
   it('maps event without client', async () => {
     (api.get as any).mockResolvedValue({
-      clients: [],
+      client: [],
       products: [],
       inventory: [],
       events: [

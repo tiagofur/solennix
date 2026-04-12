@@ -226,18 +226,24 @@ func TestLoad_TrustProxy_Default(t *testing.T) {
 	}
 }
 
-func TestLoad_AppleBundleID(t *testing.T) {
+func TestLoad_AppleClientIDs(t *testing.T) {
 	os.Clearenv()
 	os.Setenv("DATABASE_URL", "postgres://test")
 	os.Setenv("JWT_SECRET", "supersecret-test-key-at-least-32bytes!")
-	os.Setenv("APPLE_BUNDLE_ID", "com.solennix.app")
+	os.Setenv("APPLE_CLIENT_IDS", "com.solennix.app, com.solennix.web")
 
 	cfg, err := Load()
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
-	if cfg.AppleBundleID != "com.solennix.app" {
-		t.Errorf("expected com.solennix.app, got %s", cfg.AppleBundleID)
+	if len(cfg.AppleClientIDs) != 2 {
+		t.Fatalf("expected 2 Apple client IDs, got %d", len(cfg.AppleClientIDs))
+	}
+	if cfg.AppleClientIDs[0] != "com.solennix.app" {
+		t.Errorf("expected com.solennix.app, got %s", cfg.AppleClientIDs[0])
+	}
+	if cfg.AppleClientIDs[1] != "com.solennix.web" {
+		t.Errorf("expected com.solennix.web, got %s", cfg.AppleClientIDs[1])
 	}
 }
 

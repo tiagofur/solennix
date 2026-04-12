@@ -93,7 +93,7 @@ const mockEvents = [
     status: 'confirmed',
     total_amount: 50000,
     city: 'CDMX',
-    clients: { name: 'María García' },
+    client: { name: 'María García' },
   },
   {
     id: 'ev2',
@@ -105,7 +105,7 @@ const mockEvents = [
     status: 'quoted',
     total_amount: 30000,
     city: 'Guadalajara',
-    clients: { name: 'Juan López' },
+    client: { name: 'Juan López' },
   },
 ];
 

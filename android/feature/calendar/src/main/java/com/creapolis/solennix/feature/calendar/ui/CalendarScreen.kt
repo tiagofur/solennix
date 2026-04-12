@@ -551,7 +551,7 @@ fun CalendarEventItem(
                     StatusBadge(status = event.status.name.lowercase())
                 }
                 Text(
-                    text = event.startTime ?: "Todo el dia",
+                    text = event.startTime ?: "Todo el día",
                     style = MaterialTheme.typography.bodySmall,
                     color = SolennixTheme.colors.secondaryText
                 )
@@ -589,7 +589,7 @@ fun BlockDateDialog(
                     value = reason,
                     onValueChange = { reason = it },
                     label = { Text("Motivo (opcional)") },
-                    placeholder = { Text("Ej: Vacaciones, dia personal...") },
+                    placeholder = { Text("Ej: Vacaciones, día personal...") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
@@ -821,7 +821,7 @@ fun ManageUnavailableDatesSheet(
                                 onDismissRequest = { showDeleteConfirm = false },
                                 title = { Text("Eliminar bloqueo") },
                                 text = {
-                                    Text("¿Estas seguro de que deseas eliminar este rango bloqueado?")
+                                    Text("¿Estás seguro de que querés eliminar este rango bloqueado?")
                                 },
                                 confirmButton = {
                                     TextButton(onClick = {

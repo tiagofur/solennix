@@ -9,18 +9,29 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.credentials.exceptions.NoCredentialException
+import com.creapolis.solennix.feature.auth.R
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import kotlinx.coroutines.launch
 
+/**
+ * Official Google Sign-In button following Google's branding guidelines:
+ * https://developers.google.com/identity/branding-guidelines
+ *
+ * - Light theme: white background, dark text, multicolor G logo
+ * - 20dp logo, 12dp padding between logo and text
+ * - Roboto medium typography (we use Material's titleMedium)
+ * - Disabled state while the credential flow is running
+ */
 @Composable
 fun GoogleSignInButton(
     onSuccess: (String, String?) -> Unit,
@@ -54,6 +65,7 @@ fun GoogleSignInButton(
                     val googleIdOption = GetGoogleIdOption.Builder()
                         .setFilterByAuthorizedAccounts(false)
                         .setServerClientId(webClientId)
+                        .setAutoSelectEnabled(true)
                         .build()
 
                     val request = GetCredentialRequest.Builder()
@@ -93,7 +105,7 @@ fun GoogleSignInButton(
                         "GetCredentialException: type=${e.type} errorClass=${e::class.java.name} msg=${e.message}",
                         e
                     )
-                    onError?.invoke("Error al iniciar sesión con Google: ${e.type}")
+                    onError?.invoke("Error al iniciar sesión con Google")
                 } catch (e: GoogleIdTokenParsingException) {
                     Log.e("GoogleSignIn", "Failed to parse Google ID token", e)
                     onError?.invoke("Error al procesar la respuesta de Google")
@@ -114,33 +126,41 @@ fun GoogleSignInButton(
             .height(50.dp),
         shape = MaterialTheme.shapes.small,
         colors = ButtonDefaults.outlinedButtonColors(
-            contentColor = SolennixTheme.colors.primaryText
+            containerColor = Color.White,
+            contentColor = GoogleTextColor,
         ),
-        border = BorderStroke(1.dp, SolennixTheme.colors.divider),
+        border = BorderStroke(1.dp, GoogleBorderColor),
         enabled = !isLoading
     ) {
-        if (isLoading) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(20.dp),
-                strokeWidth = 2.dp
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-        }
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
-            Text(
-                text = "G",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                color = if (isLoading) Color.Gray else Color.Red
-            )
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    strokeWidth = 2.dp,
+                    color = GoogleTextColor,
+                )
+            } else {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_google_logo),
+                    contentDescription = null,
+                    tint = Color.Unspecified,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
             Spacer(modifier = Modifier.width(12.dp))
             Text(
                 text = "Continuar con Google",
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Medium,
+                color = GoogleTextColor,
             )
         }
     }
 }
+
+// Google brand colors for the Sign-In button (light theme)
+private val GoogleTextColor = Color(0xFF3C4043)
+private val GoogleBorderColor = Color(0xFFDADCE0)

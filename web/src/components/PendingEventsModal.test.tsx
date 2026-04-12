@@ -75,7 +75,7 @@ function makePastEvent(overrides: Record<string, unknown> = {}) {
     notes: null,
     created_at: '2024-01-01T00:00:00Z',
     updated_at: '2024-01-01T00:00:00Z',
-    clients: { name: 'Juan Perez' },
+    client: { name: 'Juan Perez' },
     ...overrides,
   };
 }
@@ -144,7 +144,7 @@ describe('PendingEventsModal', () => {
   it('displays correct count of pending events', async () => {
     vi.mocked(eventService.getAll).mockResolvedValue([
       makePastEvent({ id: 'event-1' }),
-      makePastEvent({ id: 'event-2', clients: { name: 'Maria Lopez' }, service_type: 'Banquete' }),
+      makePastEvent({ id: 'event-2', client: { name: 'Maria Lopez' }, service_type: 'Banquete' }),
     ] as any);
 
     render(<PendingEventsModal />);
@@ -156,7 +156,7 @@ describe('PendingEventsModal', () => {
 
   it('shows "Sin Cliente" when client is null', async () => {
     vi.mocked(eventService.getAll).mockResolvedValue([
-      makePastEvent({ clients: null }),
+      makePastEvent({ client: null }),
     ] as any);
 
     render(<PendingEventsModal />);
@@ -168,7 +168,7 @@ describe('PendingEventsModal', () => {
 
   it('shows "Sin Cliente" when client has no name', async () => {
     vi.mocked(eventService.getAll).mockResolvedValue([
-      makePastEvent({ clients: undefined }),
+      makePastEvent({ client: undefined }),
     ] as any);
 
     render(<PendingEventsModal />);
@@ -249,12 +249,12 @@ describe('PendingEventsModal', () => {
     // First call returns both events; after mutation + refetch, first event is completed
     vi.mocked(eventService.getAll)
       .mockResolvedValueOnce([
-        makePastEvent({ id: 'event-1', clients: { name: 'Juan' } }),
-        makePastEvent({ id: 'event-2', clients: { name: 'Maria' }, service_type: 'Banquete' }),
+        makePastEvent({ id: 'event-1', client: { name: 'Juan' } }),
+        makePastEvent({ id: 'event-2', client: { name: 'Maria' }, service_type: 'Banquete' }),
       ] as any)
       .mockResolvedValue([
-        makePastEvent({ id: 'event-1', clients: { name: 'Juan' }, status: 'completed' }),
-        makePastEvent({ id: 'event-2', clients: { name: 'Maria' }, service_type: 'Banquete' }),
+        makePastEvent({ id: 'event-1', client: { name: 'Juan' }, status: 'completed' }),
+        makePastEvent({ id: 'event-2', client: { name: 'Maria' }, service_type: 'Banquete' }),
       ] as any);
     vi.mocked(eventService.update).mockResolvedValue({} as any);
 

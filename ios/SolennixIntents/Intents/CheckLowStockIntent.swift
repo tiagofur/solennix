@@ -10,6 +10,8 @@ struct CheckLowStockIntent: AppIntent {
 
     static var openAppWhenRun: Bool = false
 
+    nonisolated init() {}
+
     func perform() async throws -> some IntentResult & ProvidesDialog & ShowsSnippetView {
         let lowStockItems = await fetchLowStockItems()
 

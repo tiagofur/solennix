@@ -22,6 +22,19 @@
 | **E**  | Defensive validations                    | ⏭️ Mayormente ruido del audit inicial       | —           |
 | **F**  | Sync docs final                          | ✅ Completado                               | este commit |
 
+### Wave Rescate 2 (2026-04-11 — login + suscripción + i18n cleanup)
+
+| Ítem                                                        | Descripción                                                                                              | Estado |
+| ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ------ |
+| **G.1** Google Sign-In oficial                              | Drawable vectorial multicolor en `feature/auth/res/drawable/ic_google_logo.xml`; botón rearmado siguiendo branding guidelines (fondo blanco, texto `#3C4043`, logo 20dp, loading reemplaza logo, `autoSelectEnabled=true`) | ✅ |
+| **G.2** Apple Sign-In oficial                               | Drawable `ic_apple_logo.xml` reemplazando el emoji 🍎 que había en el botón                              | ✅ |
+| **G.3** Strings con acentos + voseo Rioplatense (feature/auth) | LoginScreen, RegisterScreen, ForgotPasswordScreen, ResetPasswordScreen, BiometricGateScreen, AppleSignInButton normalizados | ✅ |
+| **G.4** SubscriptionScreen accent sweep                     | Todos los textos ("Suscripción", "Elegí tu plan", "Básico", "Ahorrá 20%", "/año", FAQs, instrucciones de cancelación cross-platform) con acentos correctos | ✅ |
+| **G.5** Zombie Pro package cleanup                          | `SubscriptionViewModel.proPackages` eliminado; `SubscriptionScreen` solo renderea Básico + Premium. `hasProAccess()` se mapea a `"Premium"` para legacy customers | ✅ |
+| **G.6** Purchase loading state                              | `BillingManager.purchaseInProgress: StateFlow<String?>` emite el identifier del package en vuelo; `PlanCard` muestra spinner + "Procesando..." y deshabilita clicks para evitar double-tap | ✅ |
+| **G.7** Billing errors retryable                            | `SubscriptionViewModel` expone `uiEvents: SharedFlow<UiEvent>` + `onRetry`; `BillingManager.retryFetchOfferings()` reutilizable. `SubscriptionScreen` integra `UiEventSnackbarHandler` y muestra botón "Reintentar" tanto en Snackbar como en la Card de error | ✅ |
+| **G.8** Accent sweep cross-feature                          | CalendarScreen ("día" x2, "¿Estás seguro?"), ContractDefaultsScreen + BusinessSettingsScreen (tokens/logo/nombre comercial), EventListScreen ("Todo el día" x2 + TalkBack), EventFormViewModel ("fecha está marcada"), DashboardScreen ("Potenciá... Premium... más"), ClientDetailScreen ("¿Eliminar... acción...") | ✅ |
+
 ### Acciones manuales pendientes del usuario
 
 1. Rotar el password del keystore (`asd123` → fuerte) — ver [[Firma y Secretos de Release#Rotar el password del keystore existente]]

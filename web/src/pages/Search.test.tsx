@@ -43,9 +43,9 @@ describe('SearchPage', () => {
   it('renders results when search returns data', async () => {
     mockSearchParams = new URLSearchParams('?q=evento');
     (searchService.searchAll as any).mockResolvedValue({
-      client: [{ id: '1', title: 'Ana', href: '/clients/1' }],
-      event: [{ id: '2', title: 'Boda', href: '/events/2', meta: '2024-01-02', status: 'confirmed' }],
-      product: [{ id: '3', title: 'Menu', href: '/products/3', meta: '10 items' }],
+      clients: [{ id: '1', title: 'Ana', href: '/clients/1' }],
+      events: [{ id: '2', title: 'Boda', href: '/events/2', meta: '2024-01-02', status: 'confirmed' }],
+      products: [{ id: '3', title: 'Menu', href: '/products/3', meta: '10 items' }],
       inventory: [{ id: '4', title: 'Sillas', href: '/inventory/4' }],
     });
 
@@ -87,9 +87,9 @@ describe('SearchPage', () => {
   it('falls back to raw value when event date is invalid', async () => {
     mockSearchParams = new URLSearchParams('?q=evento');
     (searchService.searchAll as any).mockResolvedValue({
-      client: [],
-      event: [{ id: '10', title: 'Evento Raro', href: '/events/10', meta: 'not-a-date', status: 'confirmed' }],
-      product: [],
+      clients: [],
+      events: [{ id: '10', title: 'Evento Raro', href: '/events/10', meta: 'not-a-date', status: 'confirmed' }],
+      products: [],
       inventory: [],
     });
 

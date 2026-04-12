@@ -1,6 +1,8 @@
 package com.creapolis.solennix.feature.settings.ui
 
 import android.app.Activity
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -23,10 +25,30 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.R as DesignSystemR
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveCenteredContent
+import com.creapolis.solennix.core.designsystem.event.UiEventSnackbarHandler
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.SubscriptionProvider
 import com.creapolis.solennix.feature.settings.billing.BillingState
 import com.creapolis.solennix.feature.settings.viewmodel.SubscriptionViewModel
+
+private val PREMIUM_FEATURES = listOf(
+    PlanFeature("Eventos ilimitados", true),
+    PlanFeature("Clientes ilimitados", true),
+    PlanFeature("Productos ilimitados", true),
+    PlanFeature("Reportes avanzados", true),
+    PlanFeature("Widgets de inicio", true),
+    PlanFeature("Marca personalizada", true),
+    PlanFeature("Soporte prioritario", true),
+)
+
+private val BASIC_FEATURES = listOf(
+    PlanFeature("3 eventos por mes", true),
+    PlanFeature("50 clientes", true),
+    PlanFeature("20 productos", true),
+    PlanFeature("Reportes básicos", true),
+    PlanFeature("Marca personalizada", false),
+    PlanFeature("Soporte prioritario", false),
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,15 +59,22 @@ fun SubscriptionScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val activity = context as? Activity
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
         viewModel.initBilling()
     }
 
+    UiEventSnackbarHandler(
+        events = viewModel.uiEvents,
+        snackbarHostState = snackbarHostState,
+        onRetry = viewModel::onRetry,
+    )
+
     Scaffold(
         topBar = {
             SolennixTopAppBar(
-                title = { Text("Planes y Suscripcion") },
+                title = { Text("Planes y Suscripción") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
@@ -55,7 +84,10 @@ fun SubscriptionScreen(
                     }
                 },
                 actions = {
-                    TextButton(onClick = { viewModel.restorePurchases() }) {
+                    TextButton(
+                        onClick = { viewModel.restorePurchases() },
+                        enabled = uiState.purchasingPackageId == null
+                    ) {
                         Text(
                             "Restaurar",
                             color = SolennixTheme.colors.primary,
@@ -64,7 +96,8 @@ fun SubscriptionScreen(
                     }
                 }
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         AdaptiveCenteredContent(maxWidth = 700.dp) {
         LazyColumn(
@@ -106,7 +139,9 @@ fun SubscriptionScreen(
                             shape = MaterialTheme.shapes.medium
                         ) {
                             Row(
-                                modifier = Modifier.padding(16.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Icon(
@@ -115,10 +150,21 @@ fun SubscriptionScreen(
                                     tint = SolennixTheme.colors.error
                                 )
                                 Spacer(modifier = Modifier.width(12.dp))
-                                Text(
-                                    text = state.message,
-                                    color = SolennixTheme.colors.error
-                                )
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = state.message,
+                                        color = SolennixTheme.colors.error,
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                TextButton(onClick = { viewModel.onRetry("billing:fetchOfferings") }) {
+                                    Text(
+                                        "Reintentar",
+                                        color = SolennixTheme.colors.error,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
                             }
                         }
                     }
@@ -131,7 +177,7 @@ fun SubscriptionScreen(
             // Plan Cards
             item {
                 Text(
-                    text = "Elige tu plan",
+                    text = "Elegí tu plan",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = SolennixTheme.colors.primaryText
@@ -141,73 +187,94 @@ fun SubscriptionScreen(
             // Basic Plan (Free)
             item {
                 PlanCard(
-                    planName = "Basico",
+                    planName = "Básico",
                     price = "Gratis",
                     period = "",
-                    features = listOf(
-                        PlanFeature("3 eventos por mes", true),
-                        PlanFeature("50 clientes", true),
-                        PlanFeature("20 productos", true),
-                        PlanFeature("Reportes basicos", true),
-                        PlanFeature("Marca personalizada", false),
-                        PlanFeature("Soporte prioritario", false)
-                    ),
+                    features = BASIC_FEATURES,
                     isCurrentPlan = !uiState.hasActiveSubscription,
                     isRecommended = false,
+                    isPurchasing = false,
+                    isAnyPurchaseInProgress = uiState.purchasingPackageId != null,
                     onClick = { /* Free plan, no action */ }
                 )
             }
 
-            // Pro Packages
-            items(uiState.proPackages, key = { "pro_${it.identifier}" }) { rcPackage ->
-                val price = rcPackage.product.price.formatted
-                val isYearly = rcPackage.identifier.contains("annual", ignoreCase = true) ||
-                        rcPackage.identifier.contains("yearly", ignoreCase = true)
-                PlanCard(
-                    planName = "Pro",
-                    price = price,
-                    period = if (isYearly) "/ano" else "/mes",
-                    features = listOf(
-                        PlanFeature("20 eventos por mes", true),
-                        PlanFeature("500 clientes", true),
-                        PlanFeature("100 productos", true),
-                        PlanFeature("Reportes avanzados", true),
-                        PlanFeature("Marca personalizada", true),
-                        PlanFeature("Soporte prioritario", false)
-                    ),
-                    isCurrentPlan = uiState.currentPlanName == "Pro",
-                    isRecommended = isYearly,
-                    savingsText = if (isYearly) "Ahorra 20%" else null,
-                    onClick = {
-                        activity?.let { viewModel.launchPurchase(it, rcPackage) }
-                    }
-                )
+            // Premium Packages — dynamic from RevenueCat, fallback to static cards
+            if (uiState.premiumPackages.isNotEmpty()) {
+                items(uiState.premiumPackages, key = { "premium_${it.identifier}" }) { rcPackage ->
+                    val price = rcPackage.product.price.formatted
+                    val isYearly = rcPackage.identifier.contains("annual", ignoreCase = true) ||
+                            rcPackage.identifier.contains("yearly", ignoreCase = true)
+                    PlanCard(
+                        planName = "Premium",
+                        price = price,
+                        period = if (isYearly) "/año" else "/mes",
+                        features = PREMIUM_FEATURES,
+                        isCurrentPlan = uiState.currentPlanName == "Premium",
+                        isRecommended = isYearly,
+                        savingsText = if (isYearly) "Ahorrá 20%" else null,
+                        isPurchasing = uiState.purchasingPackageId == rcPackage.identifier,
+                        isAnyPurchaseInProgress = uiState.purchasingPackageId != null,
+                        onClick = {
+                            activity?.let { viewModel.launchPurchase(it, rcPackage) }
+                        }
+                    )
+                }
+            } else {
+                // Fallback static cards when RevenueCat is unavailable
+                // Matches iOS fallback prices: $6.99/month, $49.99/year
+                item(key = "premium_monthly_fallback") {
+                    PlanCard(
+                        planName = "Premium",
+                        price = "US\$ 6.99",
+                        period = "/mes",
+                        features = PREMIUM_FEATURES,
+                        isCurrentPlan = uiState.currentPlanName == "Premium",
+                        isRecommended = false,
+                        isPurchasing = false,
+                        isAnyPurchaseInProgress = true, // disable clicks — no RC to handle purchase
+                        onClick = { }
+                    )
+                }
+                item(key = "premium_yearly_fallback") {
+                    PlanCard(
+                        planName = "Premium",
+                        price = "US\$ 49.99",
+                        period = "/año",
+                        features = PREMIUM_FEATURES,
+                        isCurrentPlan = uiState.currentPlanName == "Premium",
+                        isRecommended = true,
+                        savingsText = "Ahorrá 40%",
+                        isPurchasing = false,
+                        isAnyPurchaseInProgress = true, // disable clicks — no RC to handle purchase
+                        onClick = { }
+                    )
+                }
             }
 
-            // Premium Packages
-            items(uiState.premiumPackages, key = { "premium_${it.identifier}" }) { rcPackage ->
-                val price = rcPackage.product.price.formatted
-                val isYearly = rcPackage.identifier.contains("annual", ignoreCase = true) ||
-                        rcPackage.identifier.contains("yearly", ignoreCase = true)
-                PlanCard(
-                    planName = "Premium",
-                    price = price,
-                    period = if (isYearly) "/ano" else "/mes",
-                    features = listOf(
-                        PlanFeature("Eventos ilimitados", true),
-                        PlanFeature("Clientes ilimitados", true),
-                        PlanFeature("Productos ilimitados", true),
-                        PlanFeature("Reportes avanzados", true),
-                        PlanFeature("Marca personalizada", true),
-                        PlanFeature("Soporte prioritario", true)
-                    ),
-                    isCurrentPlan = uiState.currentPlanName == "Premium",
-                    isRecommended = false,
-                    savingsText = if (isYearly) "Ahorra 20%" else null,
-                    onClick = {
-                        activity?.let { viewModel.launchPurchase(it, rcPackage) }
+            // Manage subscription — deep-link to Google Play
+            if (uiState.hasActiveSubscription && uiState.provider == SubscriptionProvider.GOOGLE) {
+                item(key = "manage_sub") {
+                    OutlinedButton(
+                        onClick = {
+                            val intent = Intent(
+                                Intent.ACTION_VIEW,
+                                Uri.parse("https://play.google.com/store/account/subscriptions")
+                            )
+                            context.startActivity(intent)
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        border = ButtonDefaults.outlinedButtonBorder(enabled = true),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ManageAccounts,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Administrar suscripción")
                     }
-                )
+                }
             }
 
             // FAQ Section
@@ -226,33 +293,48 @@ fun SubscriptionScreen(
             item {
                 val cancelAnswer = when (uiState.provider) {
                     SubscriptionProvider.STRIPE ->
-                        "Si, puedes cancelar tu suscripcion cuando quieras. Como te suscribiste desde la web, ingresa a solennix.com > Configuracion > Suscripcion."
+                        "Sí, podés cancelar tu suscripción cuando quieras. Como te suscribiste desde la web, ingresá a solennix.com > Configuración > Suscripción."
                     SubscriptionProvider.APPLE ->
-                        "Si, puedes cancelar tu suscripcion cuando quieras. Como te suscribiste desde iOS, abri Configuracion > tu Apple ID > Suscripciones en tu iPhone o iPad."
+                        "Sí, podés cancelar tu suscripción cuando quieras. Como te suscribiste desde iOS, abrí Configuración > tu Apple ID > Suscripciones en tu iPhone o iPad."
                     else ->
-                        "Si, puedes cancelar tu suscripcion cuando quieras desde la configuracion de tu cuenta de Google Play."
+                        "Sí, podés cancelar tu suscripción cuando quieras desde la configuración de tu cuenta de Google Play."
                 }
                 FaqItem(
-                    question = "Puedo cancelar en cualquier momento?",
+                    question = "¿Puedo cancelar en cualquier momento?",
                     answer = cancelAnswer
                 )
             }
 
             item {
                 FaqItem(
-                    question = "Que pasa con mis datos si cancelo?",
-                    answer = "Tus datos se mantienen, pero tendras acceso limitado segun el plan basico."
+                    question = "¿Qué pasa con mis datos si cancelo?",
+                    answer = "Tus datos se mantienen, pero vas a tener acceso limitado según el plan Básico."
                 )
             }
 
             item {
                 FaqItem(
-                    question = "Puedo cambiar de plan?",
-                    answer = "Si, puedes actualizar o degradar tu plan en cualquier momento."
+                    question = "¿Hay prueba gratuita?",
+                    answer = "Sí, el plan Premium incluye 14 días de prueba gratis. Se renueva automáticamente al precio del plan elegido a menos que canceles al menos 24 horas antes de que termine el período de prueba."
                 )
             }
 
             item {
+                FaqItem(
+                    question = "¿Puedo cambiar de plan?",
+                    answer = "Sí, podés actualizar o degradar tu plan en cualquier momento."
+                )
+            }
+
+            // Legal disclosure (required by Google Play)
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "La suscripción se renueva automáticamente. Podés cancelar en cualquier momento desde Google Play > Suscripciones. Solennix es un producto de Creapolis.",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = SolennixTheme.colors.tertiaryText,
+                    modifier = Modifier.padding(horizontal = 8.dp)
+                )
                 Spacer(modifier = Modifier.height(32.dp))
             }
         }
@@ -385,6 +467,8 @@ fun PlanCard(
     isCurrentPlan: Boolean,
     isRecommended: Boolean,
     savingsText: String? = null,
+    isPurchasing: Boolean = false,
+    isAnyPurchaseInProgress: Boolean = false,
     onClick: () -> Unit
 ) {
     val borderColor = when {
@@ -392,6 +476,10 @@ fun PlanCard(
         isRecommended -> SolennixTheme.colors.primary
         else -> Color.Transparent
     }
+
+    // The card is clickable only when it's not the current plan AND no purchase is
+    // in progress anywhere on the screen. This prevents double-tap submissions.
+    val cardClickable = !isCurrentPlan && !isAnyPurchaseInProgress
 
     Card(
         modifier = Modifier
@@ -401,7 +489,7 @@ fun PlanCard(
                     Modifier.border(2.dp, borderColor, MaterialTheme.shapes.medium)
                 else Modifier
             )
-            .clickable(enabled = !isCurrentPlan, onClick = onClick),
+            .clickable(enabled = cardClickable, onClick = onClick),
         colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
         shape = MaterialTheme.shapes.medium
     ) {
@@ -498,11 +586,22 @@ fun PlanCard(
                 Button(
                     onClick = onClick,
                     modifier = Modifier.fillMaxWidth(),
+                    enabled = cardClickable,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = SolennixTheme.colors.primary
                     )
                 ) {
-                    Text("Seleccionar plan")
+                    if (isPurchasing) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp,
+                            color = Color.White
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text("Procesando...")
+                    } else {
+                        Text("Seleccionar plan")
+                    }
                 }
             } else {
                 Spacer(modifier = Modifier.height(16.dp))

@@ -47,7 +47,6 @@ import {
 } from "recharts";
 
 type DashboardEvent = Event & {
-  clients?: { name: string } | null;
   client?: { name: string } | null;
 };
 
@@ -84,7 +83,7 @@ function parseDashboardEventDate(eventDate: string) {
 }
 
 function getDashboardEventClientName(event: DashboardEvent) {
-  return event.clients?.name ?? event.client?.name ?? "Sin cliente";
+  return event.client?.name ?? "Sin cliente";
 }
 
 // ── Skeleton loader ──────────────────────────────────────────────
@@ -241,7 +240,7 @@ function UpcomingEventCard({ event }: { event: DashboardEvent }) {
         <span className="text-lg font-bold text-primary leading-tight">{format(dateObj, "d")}</span>
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-text truncate">{event.clients?.name ?? "—"}</p>
+        <p className="text-sm font-semibold text-text truncate">{event.client?.name ?? "—"}</p>
         <p className="text-xs text-text-secondary truncate mt-0.5">{event.service_type} · {event.num_people} pax</p>
       </div>
       <div onClick={(e) => e.stopPropagation()}>

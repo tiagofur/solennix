@@ -180,7 +180,8 @@ class AuthViewModel @Inject constructor(
      * surfaces errors via `onError` instead of swallowing them in a silent try/catch.
      *
      * If `REVENUECAT_API_KEY` is blank (debug builds), `Purchases.sharedInstance` access
-     * throws `IllegalStateException` — we catch that narrowly and log a warning.
+     * throws `UninitializedPropertyAccessException` (NOT `IllegalStateException` — they
+     * are sibling classes under `RuntimeException`). We catch broadly to cover both.
      */
     private fun syncRevenueCat(userId: String) {
         try {
@@ -198,7 +199,7 @@ class AuthViewModel @Inject constructor(
                     Log.d(TAG, "RevenueCat synced for user $userId")
                 }
             )
-        } catch (e: IllegalStateException) {
+        } catch (e: RuntimeException) {
             Log.w(TAG, "RevenueCat SDK not configured, skipping sync: ${e.message}")
         }
     }

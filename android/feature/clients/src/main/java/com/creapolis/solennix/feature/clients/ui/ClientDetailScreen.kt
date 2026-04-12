@@ -125,15 +125,15 @@ fun ClientDetailScreen(
                             shape = MaterialTheme.shapes.medium
                         ) {
                             Column(modifier = Modifier.padding(20.dp)) {
-                                Text(text = "Informacion de Contacto", style = MaterialTheme.typography.titleMedium, color = SolennixTheme.colors.primaryText)
+                                Text(text = "Información de Contacto", style = MaterialTheme.typography.titleMedium, color = SolennixTheme.colors.primaryText)
                                 Spacer(modifier = Modifier.height(16.dp))
-                                InfoRow(icon = Icons.Default.Phone, label = "Telefono", value = client.phone)
+                                InfoRow(icon = Icons.Default.Phone, label = "Teléfono", value = client.phone)
                                 HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
                                 InfoRow(icon = Icons.Default.Email, label = "Email", value = client.email ?: "No proporcionado")
                                 val addr = client.address
                                 if (!addr.isNullOrBlank()) {
                                     HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
-                                    InfoRow(icon = Icons.Default.LocationOn, label = "Direccion", value = addr)
+                                    InfoRow(icon = Icons.Default.LocationOn, label = "Dirección", value = addr)
                                 }
                                 val cCity = client.city
                                 if (!cCity.isNullOrBlank()) {
@@ -240,7 +240,7 @@ fun ClientDetailScreen(
                 AlertDialog(
                     onDismissRequest = { showDeleteDialog = false },
                     title = { Text("Eliminar cliente") },
-                    text = { Text("\u00bfEliminar este cliente? Esta accion no se puede deshacer.") },
+                    text = { Text("¿Eliminar este cliente? Esta acción no se puede deshacer.") },
                     confirmButton = {
                         TextButton(
                             onClick = {

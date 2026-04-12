@@ -3,7 +3,7 @@ import { Event, EventInsert, EventUpdate, EventEquipment, EventSupply, Equipment
 import type { components, operations } from '../types/api';
 
 // Helper for type safety on joined data
-type EventWithClient = Event & { clients?: { name: string } | null };
+type EventWithClient = Event & { client?: { name: string; id?: string; phone?: string } | null };
 
 /**
  * EventProduct as declared by the backend contract. The join field the

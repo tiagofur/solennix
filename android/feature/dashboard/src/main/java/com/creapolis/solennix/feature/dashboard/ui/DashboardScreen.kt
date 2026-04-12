@@ -116,7 +116,7 @@ fun DashboardScreen(
                 if (uiState.isBasicPlan) {
                     item {
                         UpgradeBanner(
-                            message = "Potencia tu negocio con el plan Pro: eventos ilimitados, inventario y mas.",
+                            message = "Potenciá tu negocio con el plan Premium: eventos ilimitados, inventario y más.",
                             style = UpgradeBannerStyle.PROMO,
                             onUpgradeClick = onUpgradeClick
                         )
