@@ -23,4 +23,5 @@ sealed class Route {
     @Serializable data object About : Route()
     @Serializable data object Privacy : Route()
     @Serializable data object Terms : Route()
+    @Serializable data object EventFormLinks : Route()
 }

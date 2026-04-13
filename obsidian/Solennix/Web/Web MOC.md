@@ -24,6 +24,7 @@
 - [[Módulo Pagos]] — Registro de pagos, Stripe checkout, reportes
 - [[Módulo Calendario]] — Vista mensual, fechas bloqueadas
 - [[Módulo Admin]] — Dashboard admin, gestión de usuarios, suscripciones
+- [[Módulo Formularios Compartibles]] — Formulario publico para clientes + gestion de enlaces
 
 ## Infraestructura
 

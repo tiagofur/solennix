@@ -46,6 +46,9 @@ const InventoryDetails = React.lazy(() => import("@/pages/Inventory/InventoryDet
 
 const CalendarView = React.lazy(() => import("@/pages/Calendar/CalendarView").then((m) => ({ default: m.CalendarView })));
 const QuickQuotePage = React.lazy(() => import("@/pages/QuickQuote/QuickQuotePage").then((m) => ({ default: m.QuickQuotePage })));
+const PublicEventFormPage = React.lazy(() => import("@/pages/PublicEventForm/PublicEventFormPage").then((m) => ({ default: m.PublicEventFormPage })));
+
+const EventFormLinksPage = React.lazy(() => import("@/pages/EventForms/EventFormLinksPage").then((m) => ({ default: m.EventFormLinksPage })));
 
 const AdminDashboard = React.lazy(() => import("@/pages/Admin/AdminDashboard").then((m) => ({ default: m.AdminDashboard })));
 const AdminUsers = React.lazy(() => import("@/pages/Admin/AdminUsers").then((m) => ({ default: m.AdminUsers })));
@@ -76,6 +79,7 @@ function App() {
               <Route path="/about" element={<About />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
+              <Route path="/form/:token" element={<PublicEventFormPage />} />
 
               <Route
                 element={
@@ -110,6 +114,7 @@ function App() {
                 <Route path="/inventory/:id" element={<InventoryDetails />} />
                 <Route path="/inventory/:id/edit" element={<InventoryForm />} />
 
+                <Route path="/event-forms" element={<EventFormLinksPage />} />
                 <Route path="/settings" element={<Settings />} />
 
                 <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />

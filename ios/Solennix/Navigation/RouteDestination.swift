@@ -68,6 +68,10 @@ struct RouteDestination: View {
         case .inventoryForm(let id):
             InventoryFormView(apiClient: apiClient, itemId: id)
 
+        // Event Form Links
+        case .eventFormLinks:
+            EventFormLinksView(apiClient: apiClient)
+
         // Tools
         case .search(let query):
             SearchView(initialQuery: query)

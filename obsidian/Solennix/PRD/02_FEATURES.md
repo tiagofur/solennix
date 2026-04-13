@@ -860,6 +860,46 @@ Sistema de upload de imagenes para fotos de eventos, productos y logos de negoci
 
 ---
 
+### 15. Formularios Compartibles [Todas]
+
+> [!abstract] Resumen
+> El organizador genera un enlace temporal de un solo uso. Su cliente potencial abre el enlace en un navegador web (sin descargar app ni crear cuenta), llena datos de su evento, selecciona productos del catalogo (sin ver precios) y envia. Esto crea automaticamente un evento borrador + cliente nuevo para el organizador.
+
+#### Flujo
+
+1. Organizador crea enlace desde la app (iOS/Android) o web
+2. Comparte el enlace via WhatsApp/email/mensaje
+3. Cliente abre `/form/{token}` en su navegador
+4. Llena: nombre, telefono, email, fecha, tipo de evento, personas, ubicacion, notas
+5. Selecciona productos del catalogo del organizador (sin precios)
+6. Envia → se crea cliente + evento con status `quoted`
+7. El enlace se invalida (un solo uso)
+
+#### Seguridad
+
+| Control | Implementacion |
+|---------|---------------|
+| Token no predecible | `crypto/rand` 256 bits hex |
+| Precios ocultos | DTO dedicado sin base_price |
+| Doble envio | Atomico con `WHERE status='active'` |
+| Rate limit | 10 req/min en endpoints publicos |
+| TTL | 1-30 dias (default 7), cleanup hourly |
+
+#### Paridad
+
+| Funcion | iOS | Android | Web | Backend |
+|---------|-----|---------|-----|---------|
+| Crear enlace | 🔄 | 🔄 | ✅ | ✅ |
+| Listar enlaces | 🔄 | 🔄 | ✅ | ✅ |
+| Revocar enlace | 🔄 | 🔄 | ✅ | ✅ |
+| Compartir enlace | 🔄 | 🔄 | ✅ | ➖ |
+| Formulario publico | ➖ | ➖ | ✅ | ✅ |
+| Copiar al portapapeles | 🔄 | 🔄 | ✅ | ➖ |
+
+**Tier:** FREE (3 enlaces activos) / PRO (ilimitados)
+
+---
+
 ## P2 — Futuro
 
 > [!warning] Funcionalidades planificadas — no implementadas

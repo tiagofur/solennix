@@ -79,6 +79,7 @@ import com.creapolis.solennix.feature.settings.ui.EditProfileScreen
 import com.creapolis.solennix.feature.settings.ui.PrivacyScreen
 import com.creapolis.solennix.feature.settings.ui.SettingsScreen
 import com.creapolis.solennix.feature.settings.ui.SubscriptionScreen
+import com.creapolis.solennix.feature.settings.ui.EventFormLinksScreen
 import com.creapolis.solennix.feature.settings.ui.TermsScreen
 
 @Composable
@@ -276,6 +277,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                     onBusinessSettings = { navController.navigate("business_settings") },
                     onContractDefaults = { navController.navigate("contract_defaults") },
                     onPricing = { navController.navigate("pricing") },
+                    onEventFormLinks = { navController.navigate("event_form_links") },
                     onAbout = { navController.navigate("about") },
                     onPrivacy = { navController.navigate("privacy") },
                     onTerms = { navController.navigate("terms") },
@@ -301,6 +303,12 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                 // instructions. The legacy PricingScreen (static marketing copy with a
                 // broken upgrade button) was removed in Bloque C.
                 SubscriptionScreen(
+                    viewModel = hiltViewModel(),
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+            composable("event_form_links") {
+                EventFormLinksScreen(
                     viewModel = hiltViewModel(),
                     onNavigateBack = { navController.popBackStack() }
                 )

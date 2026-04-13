@@ -62,6 +62,10 @@ object Endpoints {
     // Subscriptions
     const val SUBSCRIPTION_STATUS = "subscriptions/status"
 
+    // Event Form Links
+    const val EVENT_FORM_LINKS = "event-forms"
+    fun eventFormLink(id: String) = "event-forms/$id"
+
     // Devices
     const val REGISTER_DEVICE = "devices/register"
     const val UNREGISTER_DEVICE = "devices/unregister"

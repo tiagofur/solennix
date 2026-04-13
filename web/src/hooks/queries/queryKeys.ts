@@ -50,5 +50,8 @@ export const queryKeys = {
     users: ['admin', 'users'] as const,
     stats: ['admin', 'stats'] as const,
   },
+  eventFormLinks: {
+    all: ['eventFormLinks'] as const,
+  },
   planLimits: ['planLimits'] as const,
 } as const;

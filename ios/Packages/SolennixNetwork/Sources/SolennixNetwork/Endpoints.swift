@@ -116,6 +116,14 @@ public enum Endpoint {
     public static let registerDevice = "/devices/register"
     public static let unregisterDevice = "/devices/unregister"
 
+    // MARK: - Event Form Links
+
+    public static let eventFormLinks = "/event-forms"
+
+    public static func eventFormLink(_ id: String) -> String {
+        "/event-forms/\(id)"
+    }
+
     // MARK: - Live Activities (iOS Dynamic Island remote updates)
 
     public static let registerLiveActivityToken = "/live-activities/register"

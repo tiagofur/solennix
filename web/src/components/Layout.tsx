@@ -16,7 +16,8 @@ import {
   Sun,
   Shield,
   ChevronsLeft,
-  ChevronsRight
+  ChevronsRight,
+  Link2
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/hooks/useTheme';
@@ -81,6 +82,7 @@ export const Layout: React.FC = () => {
     { name: 'Clientes', href: '/clients', icon: Users },
     { name: 'Productos', href: '/products', icon: Package },
     { name: 'Inventario', href: '/inventory', icon: Boxes },
+    { name: 'Formularios', href: '/event-forms', icon: Link2 },
     { name: 'Configuración', href: '/settings', icon: Settings },
     // Admin link — only visible to admins
     ...(user?.role === 'admin' ? [{ name: 'Admin', href: '/admin', icon: Shield }] : []),

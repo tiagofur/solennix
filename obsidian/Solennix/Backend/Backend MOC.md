@@ -26,6 +26,7 @@
 - [[Módulo Suscripciones]] — Stripe, RevenueCat, webhooks, sync bidireccional, billing
 - [[Módulos Auxiliares]] — Calendario (fechas bloqueadas), Búsqueda global, Uploads (imágenes), Dispositivos (push tokens)
 - [[Módulo Admin]] — Stats, gestión de usuarios, upgrades, suscripciones
+- [[Módulo Formularios Compartibles]] — Enlaces temporales para que clientes llenen datos de evento sin auth
 
 ## Infraestructura
 

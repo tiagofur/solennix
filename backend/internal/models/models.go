@@ -288,3 +288,21 @@ type LiveActivityToken struct {
 	CreatedAt time.Time  `json:"created_at"`
 	ExpiresAt *time.Time `json:"expires_at,omitempty"`
 }
+
+// EventFormLink represents a shareable, single-use link that a prospective client
+// opens in a browser to fill out event details and select products (without prices).
+// On submission it creates a draft Event + Client for the organizer.
+type EventFormLink struct {
+	ID                uuid.UUID  `json:"id"`
+	UserID            uuid.UUID  `json:"user_id"`
+	Token             string     `json:"token"`
+	Label             *string    `json:"label,omitempty"`
+	Status            string     `json:"status"` // "active" | "used" | "expired"
+	SubmittedEventID  *uuid.UUID `json:"submitted_event_id,omitempty"`
+	SubmittedClientID *uuid.UUID `json:"submitted_client_id,omitempty"`
+	ExpiresAt         time.Time  `json:"expires_at"`
+	UsedAt            *time.Time `json:"used_at,omitempty"`
+	CreatedAt         time.Time  `json:"created_at"`
+	UpdatedAt         time.Time  `json:"updated_at"`
+	URL               string     `json:"url,omitempty"` // Computed, not stored
+}

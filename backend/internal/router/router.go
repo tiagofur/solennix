@@ -16,7 +16,7 @@ import (
 func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, subHandler *handlers.SubscriptionHandler,
 	searchHandler *handlers.SearchHandler, eventPaymentHandler *handlers.EventPaymentHandler, uploadHandler *handlers.UploadHandler,
 	adminHandler *handlers.AdminHandler, dashboardHandler *handlers.DashboardHandler, auditHandler *handlers.AuditHandler, unavailHandler *handlers.UnavailableDateHandler, deviceHandler *handlers.DeviceHandler,
-	liveActivityHandler *handlers.LiveActivityHandler,
+	liveActivityHandler *handlers.LiveActivityHandler, eventFormHandler *handlers.EventFormHandler,
 	authService *services.AuthService, userRepo *repository.UserRepo, auditRepo mw.AuditLogger, pool *pgxpool.Pool, corsOrigins []string, uploadDir string) http.Handler {
 
 	r := chi.NewRouter()
@@ -124,6 +124,13 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 		legacyFileServer.ServeHTTP(w, r)
 	})
 
+	// Public event form routes (no auth — validated by token)
+	apiRouter.Route("/public/event-forms", func(r chi.Router) {
+		r.Use(mw.RateLimit(10, 1*time.Minute))
+		r.Get("/{token}", eventFormHandler.GetFormData)
+		r.Post("/{token}", eventFormHandler.SubmitForm)
+	})
+
 	// Protected routes
 	apiRouter.Group(func(r chi.Router) {
 		r.Use(mw.Auth(authService))
@@ -228,6 +235,13 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 		r.Route("/live-activities", func(r chi.Router) {
 			r.Post("/register", liveActivityHandler.Register)
 			r.Delete("/by-event/{eventId}", liveActivityHandler.DeleteByEvent)
+		})
+
+		// Event form links (shareable forms for prospective clients)
+		r.Route("/event-forms", func(r chi.Router) {
+			r.Get("/", eventFormHandler.ListLinks)
+			r.Post("/", eventFormHandler.GenerateLink)
+			r.Delete("/{id}", eventFormHandler.DeleteLink)
 		})
 
 		// Search — rate limited to prevent abuse

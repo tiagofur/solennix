@@ -59,6 +59,7 @@ graph TB
 | Uploads | 5 req/min | 1 minuto | Fixed window |
 | Search | 30 req/min | 1 minuto | Fixed window |
 | Admin | 30 req/min | 1 minuto | Fixed window |
+| Public Event Forms | 10 req/min | 1 minuto | Fixed window |
 
 > [!warning] Limitaciones
 > - **Fixed window**: Permite burst al inicio de cada ventana. Mejor: sliding window o token bucket.
@@ -143,8 +144,22 @@ graph TB
 | Request signing | Prevenir replay attacks | HMAC signing en headers |
 | API versioning | Breaking changes sin versión | `/api/v2/...` |
 
+## Formularios Compartibles — Seguridad
+
+Ver [[Módulo Formularios Compartibles]] para detalle completo.
+
+| Control | Implementacion |
+|---------|---------------|
+| Token no predecible | `crypto/rand` 32 bytes (256 bits), hex-encoded |
+| Precios ocultos | DTO `PublicProduct` sin base_price/recipe |
+| Doble envio | `MarkUsed` atomico con `WHERE status='active'` |
+| Spam | Rate limit 10/min en endpoints publicos |
+| CSRF | No aplica — sin `auth_token` cookie en requests publicos |
+| Links perpetuos | TTL max 30 dias + cleanup hourly |
+
 ## Relaciones
 
 - [[Middleware Stack]] — Implementación de cada middleware de seguridad
 - [[Autenticación]] — JWT, bcrypt, OAuth
+- [[Módulo Formularios Compartibles]] — Seguridad de enlaces publicos
 - [[Roadmap Backend]] — Plan de mejoras de seguridad
