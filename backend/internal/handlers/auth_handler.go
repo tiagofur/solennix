@@ -655,6 +655,15 @@ func (h *AuthHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		DefaultCancellationDays *float64 `json:"default_cancellation_days"`
 		DefaultRefundPercent    *float64 `json:"default_refund_percent"`
 		ContractTemplate        *string  `json:"contract_template"`
+		// Notification preferences
+		EmailPaymentReceipt      *bool `json:"email_payment_receipt"`
+		EmailEventReminder       *bool `json:"email_event_reminder"`
+		EmailSubscriptionUpdates *bool `json:"email_subscription_updates"`
+		EmailWeeklySummary       *bool `json:"email_weekly_summary"`
+		EmailMarketing           *bool `json:"email_marketing"`
+		PushEnabled              *bool `json:"push_enabled"`
+		PushEventReminder        *bool `json:"push_event_reminder"`
+		PushPaymentReceived      *bool `json:"push_payment_received"`
 	}
 
 	if err := decodeJSON(r, &req); err != nil {
@@ -676,6 +685,8 @@ func (h *AuthHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	user, err := h.userRepo.Update(r.Context(), userID,
 		req.Name, req.BusinessName, req.LogoURL, req.BrandColor, req.ShowBusinessNameInPdf,
 		req.DefaultDepositPercent, req.DefaultCancellationDays, req.DefaultRefundPercent, req.ContractTemplate,
+		req.EmailPaymentReceipt, req.EmailEventReminder, req.EmailSubscriptionUpdates,
+		req.EmailWeeklySummary, req.EmailMarketing, req.PushEnabled, req.PushEventReminder, req.PushPaymentReceived,
 	)
 	if err != nil {
 		slog.Error("Failed to update profile", "error", err)

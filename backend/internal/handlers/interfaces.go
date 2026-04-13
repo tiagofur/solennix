@@ -15,7 +15,7 @@ type FullUserRepository interface {
 	UserRepository // existing: GetByID, UpdatePlanAndStripeID, UpdatePlanByStripeCustomerID
 	GetByEmail(ctx context.Context, email string) (*models.User, error)
 	Create(ctx context.Context, user *models.User) error
-	Update(ctx context.Context, id uuid.UUID, name, businessName, logoURL, brandColor *string, showBusinessNameInPdf *bool, depositPercent, cancellationDays, refundPercent *float64, contractTemplate *string) (*models.User, error)
+	Update(ctx context.Context, id uuid.UUID, name, businessName, logoURL, brandColor *string, showBusinessNameInPdf *bool, depositPercent, cancellationDays, refundPercent *float64, contractTemplate *string, emailPaymentReceipt, emailEventReminder, emailSubscriptionUpdates, emailWeeklySummary, emailMarketing, pushEnabled, pushEventReminder, pushPaymentReceived *bool) (*models.User, error)
 	UpdatePassword(ctx context.Context, userID uuid.UUID, passwordHash string) error
 	// OAuth methods
 	GetByGoogleUserID(ctx context.Context, googleUserID string) (*models.User, error)

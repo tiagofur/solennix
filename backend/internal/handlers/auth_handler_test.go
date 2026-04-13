@@ -634,6 +634,7 @@ func TestAuthHandler_UpdateProfile_HappyPaths(t *testing.T) {
 		mockRepo.On("Update", mock.Anything, userID,
 			&newName, &newBusiness, (*string)(nil), (*string)(nil), (*bool)(nil),
 			(*float64)(nil), (*float64)(nil), (*float64)(nil), (*string)(nil),
+			(*bool)(nil), (*bool)(nil), (*bool)(nil), (*bool)(nil), (*bool)(nil), (*bool)(nil), (*bool)(nil), (*bool)(nil),
 		).Return(user, nil)
 
 		body := `{"name":"New Name","business_name":"New Business"}`
@@ -670,6 +671,7 @@ func TestAuthHandler_UpdateProfile_HappyPaths(t *testing.T) {
 		mockRepo.On("Update", mock.Anything, userID,
 			mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything,
 			mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+			mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything,
 		).Return(nil, fmt.Errorf("db error"))
 
 		body := `{"name":"Fail Update"}`
@@ -1035,6 +1037,7 @@ func TestAuthHandler_UpdateProfile_WithValidContractTemplate(t *testing.T) {
 		mock.Anything, mock.Anything, mock.Anything, mock.Anything,
 		mock.Anything, mock.Anything, mock.Anything, mock.Anything,
 		mock.Anything,
+		mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything,
 	).Return(updatedUser, nil)
 
 	// Use a valid contract template with recognized tokens
@@ -1067,6 +1070,7 @@ func TestAuthHandler_UpdateProfile_WithAllFields(t *testing.T) {
 		mock.Anything, mock.Anything, mock.Anything, mock.Anything,
 		mock.Anything, mock.Anything, mock.Anything, mock.Anything,
 		mock.Anything,
+		mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything,
 	).Return(updatedUser, nil)
 
 	body := `{"name":"All Fields","business_name":"My Biz","logo_url":"https://example.com/logo.png","brand_color":"#ff6600","show_business_name_in_pdf":true,"default_deposit_percent":50.0,"default_cancellation_days":7.0,"default_refund_percent":80.0}`
@@ -1106,6 +1110,7 @@ func TestAuthHandler_UpdateProfile_Paths(t *testing.T) {
 			(*float64)(nil),                 // cancellationDays
 			(*float64)(nil),                 // refundPercent
 			(*string)(nil),                  // contractTemplate
+			(*bool)(nil), (*bool)(nil), (*bool)(nil), (*bool)(nil), (*bool)(nil), (*bool)(nil), (*bool)(nil), (*bool)(nil),
 		).Return(updatedUser, nil)
 
 		body := `{"name":"Updated Name","business_name":"My Biz"}`
@@ -1158,6 +1163,7 @@ func TestAuthHandler_UpdateProfile_Paths(t *testing.T) {
 			mock.Anything, mock.Anything, mock.Anything, mock.Anything,
 			mock.Anything, mock.Anything, mock.Anything, mock.Anything,
 			mock.Anything,
+			mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything,
 		).Return(nil, fmt.Errorf("db error"))
 
 		body := `{"name":"Fail Name"}`
@@ -1353,6 +1359,7 @@ func TestAuthHandler_UpdateProfile_SuccessWithAllFieldsIncludingContractTemplate
 		mock.Anything, mock.Anything, mock.Anything, mock.Anything,
 		mock.Anything, mock.Anything, mock.Anything, mock.Anything,
 		mock.Anything,
+		mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything,
 	).Return(updatedUser, nil)
 
 	body := `{

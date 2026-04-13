@@ -13,6 +13,7 @@ import {
   Zap,
   Info,
   Shield,
+  Bell,
 } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import clsx from "clsx";
@@ -107,8 +108,18 @@ export const Settings: React.FC = () => {
   const [showBusinessNameInPdf, setShowBusinessNameInPdf] = useState(
     profile?.show_business_name_in_pdf ?? true,
   );
-  const initialTab = searchParams.get("tab") === "subscription" ? "subscription" : "profile";
-  const [activeTab, setActiveTab] = useState<"profile" | "business" | "subscription" | "contracts">(initialTab);
+  const [notifPrefs, setNotifPrefs] = useState({
+    email_payment_receipt: profile?.email_payment_receipt ?? true,
+    email_event_reminder: profile?.email_event_reminder ?? true,
+    email_subscription_updates: profile?.email_subscription_updates ?? true,
+    email_weekly_summary: profile?.email_weekly_summary ?? false,
+    email_marketing: profile?.email_marketing ?? false,
+    push_enabled: profile?.push_enabled ?? true,
+    push_event_reminder: profile?.push_event_reminder ?? true,
+    push_payment_received: profile?.push_payment_received ?? true,
+  });
+  const initialTab = searchParams.get("tab") === "subscription" ? "subscription" : searchParams.get("tab") === "notifications" ? "notifications" : "profile";
+  const [activeTab, setActiveTab] = useState<"profile" | "business" | "subscription" | "contracts" | "notifications">(initialTab);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
 
@@ -130,6 +141,16 @@ export const Settings: React.FC = () => {
       setContractTemplate(profile.contract_template || DEFAULT_CONTRACT_TEMPLATE);
       setBrandColor(profile.brand_color || "#C4A265");
       setShowBusinessNameInPdf(profile.show_business_name_in_pdf ?? true);
+      setNotifPrefs({
+        email_payment_receipt: profile.email_payment_receipt ?? true,
+        email_event_reminder: profile.email_event_reminder ?? true,
+        email_subscription_updates: profile.email_subscription_updates ?? true,
+        email_weekly_summary: profile.email_weekly_summary ?? false,
+        email_marketing: profile.email_marketing ?? false,
+        push_enabled: profile.push_enabled ?? true,
+        push_event_reminder: profile.push_event_reminder ?? true,
+        push_payment_received: profile.push_payment_received ?? true,
+      });
     }
   }, [profile]);
 
@@ -225,6 +246,16 @@ export const Settings: React.FC = () => {
     }
   });
 
+  const handleToggleNotif = async (key: keyof typeof notifPrefs, value: boolean) => {
+    setNotifPrefs((prev) => ({ ...prev, [key]: value }));
+    try {
+      await updateProfile({ [key]: value });
+    } catch (error) {
+      logError(`Error updating ${key}`, error);
+      setNotifPrefs((prev) => ({ ...prev, [key]: !value }));
+    }
+  };
+
   const handleManageSubscription = async () => {
     try {
       setIsPortalLoading(true);
@@ -261,6 +292,7 @@ export const Settings: React.FC = () => {
             { id: "profile", label: "Mi Cuenta", icon: User },
             { id: "business", label: "Mi Negocio", icon: Building },
             { id: "contracts", label: "Contratos", icon: FileText },
+            { id: "notifications", label: "Notificaciones", icon: Bell },
             { id: "subscription", label: "Suscripción", icon: CreditCard },
           ].map((tab) => (
             <button
@@ -598,6 +630,116 @@ export const Settings: React.FC = () => {
                   onSave={handleUpdateContractSettings}
                   isBasicPlan={isBasicPlan}
                 />
+              </div>
+            </div>
+          )}
+
+          {activeTab === "notifications" && (
+            <div className="bg-card shadow-sm rounded-2xl p-6 sm:p-8 space-y-8 border border-border">
+              <div>
+                <h3 className="text-lg font-bold text-text mb-1">
+                  Preferencias de Notificación
+                </h3>
+                <p className="text-sm text-text-secondary">
+                  Controla qué correos electrónicos y notificaciones push recibes.
+                </p>
+              </div>
+
+              {/* Email Notifications */}
+              <div className="space-y-4">
+                <label className="text-xs font-medium text-text-secondary uppercase tracking-wider">Correos Electrónicos</label>
+                {([
+                  { key: "email_payment_receipt" as const, label: "Recibos de Pago", desc: "Recibe un correo cuando se registra un pago" },
+                  { key: "email_event_reminder" as const, label: "Recordatorio de Eventos", desc: "Recibe un correo 24h antes de tu evento" },
+                  { key: "email_subscription_updates" as const, label: "Actualizaciones de Suscripción", desc: "Correos sobre cambios en tu plan" },
+                  { key: "email_weekly_summary" as const, label: "Resumen Semanal", desc: "Resumen de actividad de la semana" },
+                  { key: "email_marketing" as const, label: "Noticias y Tips", desc: "Novedades y consejos de Solennix" },
+                ]).map((item) => (
+                  <div key={item.key} className="flex items-center justify-between p-4 bg-surface-alt/50 rounded-2xl border border-border">
+                    <div>
+                      <p className="font-bold text-text">{item.label}</p>
+                      <p className="text-xs text-text-secondary mt-0.5">{item.desc}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleNotif(item.key, !notifPrefs[item.key])}
+                      className={clsx(
+                        "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none",
+                        notifPrefs[item.key] ? "bg-primary" : "bg-surface-alt border border-border",
+                      )}
+                      role="switch"
+                      aria-checked={notifPrefs[item.key]}
+                      aria-label={item.label}
+                    >
+                      <span
+                        className={clsx(
+                          "inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform",
+                          notifPrefs[item.key] ? "translate-x-6" : "translate-x-1",
+                        )}
+                      />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Push Notifications */}
+              <div className="space-y-4">
+                <label className="text-xs font-medium text-text-secondary uppercase tracking-wider">Notificaciones Push</label>
+                <div className="flex items-center justify-between p-4 bg-surface-alt/50 rounded-2xl border border-border">
+                  <div>
+                    <p className="font-bold text-text">Notificaciones Push</p>
+                    <p className="text-xs text-text-secondary mt-0.5">Habilitar o deshabilitar todas las notificaciones push</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleNotif("push_enabled", !notifPrefs.push_enabled)}
+                    className={clsx(
+                      "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none",
+                      notifPrefs.push_enabled ? "bg-primary" : "bg-surface-alt border border-border",
+                    )}
+                    role="switch"
+                    aria-checked={notifPrefs.push_enabled}
+                    aria-label="Notificaciones Push"
+                  >
+                    <span
+                      className={clsx(
+                        "inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform",
+                        notifPrefs.push_enabled ? "translate-x-6" : "translate-x-1",
+                      )}
+                    />
+                  </button>
+                </div>
+                <div className={clsx(!notifPrefs.push_enabled && "opacity-50 pointer-events-none")}>
+                  {([
+                    { key: "push_event_reminder" as const, label: "Recordatorio de Eventos", desc: "Notificación push antes de tu evento" },
+                    { key: "push_payment_received" as const, label: "Pago Recibido", desc: "Notificación push cuando se registra un pago" },
+                  ]).map((item) => (
+                    <div key={item.key} className="flex items-center justify-between p-4 bg-surface-alt/50 rounded-2xl border border-border mt-4">
+                      <div>
+                        <p className="font-bold text-text">{item.label}</p>
+                        <p className="text-xs text-text-secondary mt-0.5">{item.desc}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleToggleNotif(item.key, !notifPrefs[item.key])}
+                        className={clsx(
+                          "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none",
+                          notifPrefs[item.key] ? "bg-primary" : "bg-surface-alt border border-border",
+                        )}
+                        role="switch"
+                        aria-checked={notifPrefs[item.key]}
+                        aria-label={item.label}
+                      >
+                        <span
+                          className={clsx(
+                            "inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform",
+                            notifPrefs[item.key] ? "translate-x-6" : "translate-x-1",
+                          )}
+                        />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}

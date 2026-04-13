@@ -19,6 +19,15 @@ type User struct {
 	DefaultCancellationDays *float64   `json:"default_cancellation_days,omitempty"`
 	DefaultRefundPercent    *float64   `json:"default_refund_percent,omitempty"`
 	ContractTemplate        *string    `json:"contract_template,omitempty"`
+	// Notification preferences
+	EmailPaymentReceipt      *bool `json:"email_payment_receipt,omitempty"`
+	EmailEventReminder       *bool `json:"email_event_reminder,omitempty"`
+	EmailSubscriptionUpdates *bool `json:"email_subscription_updates,omitempty"`
+	EmailWeeklySummary       *bool `json:"email_weekly_summary,omitempty"`
+	EmailMarketing           *bool `json:"email_marketing,omitempty"`
+	PushEnabled              *bool `json:"push_enabled,omitempty"`
+	PushEventReminder        *bool `json:"push_event_reminder,omitempty"`
+	PushPaymentReceived      *bool `json:"push_payment_received,omitempty"`
 	Plan                    string     `json:"plan"`
 	Role                    string     `json:"role"`
 	StripeCustomerID        *string    `json:"stripe_customer_id,omitempty"`

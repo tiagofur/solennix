@@ -17,6 +17,15 @@ export interface User {
   default_cancellation_days?: number;
   default_refund_percent?: number;
   contract_template?: string | null;
+  // Notification preferences
+  email_payment_receipt?: boolean;
+  email_event_reminder?: boolean;
+  email_subscription_updates?: boolean;
+  email_weekly_summary?: boolean;
+  email_marketing?: boolean;
+  push_enabled?: boolean;
+  push_event_reminder?: boolean;
+  push_payment_received?: boolean;
 }
 
 interface AuthContextType {

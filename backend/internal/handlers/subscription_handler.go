@@ -224,11 +224,13 @@ func (h *SubscriptionHandler) StripeWebhook(w http.ResponseWriter, r *http.Reque
 			} else {
 				slog.Info("User upgraded to pro via Stripe checkout", "user_id", userID)
 
-				// Send subscription confirmation email (fire-and-forget)
+				// Send subscription confirmation email (fire-and-forget, respects user preference)
 				if h.emailService != nil {
 					go func() {
 						if user, err := h.userRepo.GetByID(context.Background(), userID); err == nil {
-							_ = h.emailService.SendSubscriptionConfirmation(user.Email, user.Name, "Pro")
+							if user.EmailSubscriptionUpdates == nil || *user.EmailSubscriptionUpdates {
+								_ = h.emailService.SendSubscriptionConfirmation(user.Email, user.Name, "Pro")
+							}
 						}
 					}()
 				}

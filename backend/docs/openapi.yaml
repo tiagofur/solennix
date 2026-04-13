@@ -63,6 +63,30 @@ components:
         contract_template:
           type: string
           nullable: true
+        email_payment_receipt:
+          type: boolean
+          nullable: true
+        email_event_reminder:
+          type: boolean
+          nullable: true
+        email_subscription_updates:
+          type: boolean
+          nullable: true
+        email_weekly_summary:
+          type: boolean
+          nullable: true
+        email_marketing:
+          type: boolean
+          nullable: true
+        push_enabled:
+          type: boolean
+          nullable: true
+        push_event_reminder:
+          type: boolean
+          nullable: true
+        push_payment_received:
+          type: boolean
+          nullable: true
         plan:
           type: string
           enum: [basic, pro]
@@ -243,6 +267,30 @@ components:
           nullable: true
         contract_template:
           type: string
+          nullable: true
+        email_payment_receipt:
+          type: boolean
+          nullable: true
+        email_event_reminder:
+          type: boolean
+          nullable: true
+        email_subscription_updates:
+          type: boolean
+          nullable: true
+        email_weekly_summary:
+          type: boolean
+          nullable: true
+        email_marketing:
+          type: boolean
+          nullable: true
+        push_enabled:
+          type: boolean
+          nullable: true
+        push_event_reminder:
+          type: boolean
+          nullable: true
+        push_payment_received:
+          type: boolean
           nullable: true
         new_password:
           type: string

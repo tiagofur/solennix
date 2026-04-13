@@ -76,6 +76,7 @@ import com.creapolis.solennix.feature.settings.ui.BusinessSettingsScreen
 import com.creapolis.solennix.feature.settings.ui.ChangePasswordScreen
 import com.creapolis.solennix.feature.settings.ui.ContractDefaultsScreen
 import com.creapolis.solennix.feature.settings.ui.EditProfileScreen
+import com.creapolis.solennix.feature.settings.ui.NotificationPreferencesScreen
 import com.creapolis.solennix.feature.settings.ui.PrivacyScreen
 import com.creapolis.solennix.feature.settings.ui.SettingsScreen
 import com.creapolis.solennix.feature.settings.ui.SubscriptionScreen
@@ -276,6 +277,7 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                     onChangePassword = { navController.navigate("change_password") },
                     onBusinessSettings = { navController.navigate("business_settings") },
                     onContractDefaults = { navController.navigate("contract_defaults") },
+                    onNotificationPreferences = { navController.navigate("notification_preferences") },
                     onPricing = { navController.navigate("pricing") },
                     onEventFormLinks = { navController.navigate("event_form_links") },
                     onAbout = { navController.navigate("about") },
@@ -296,6 +298,9 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
             }
             composable("contract_defaults") {
                 ContractDefaultsScreen(viewModel = hiltViewModel(), onNavigateBack = { navController.popBackStack() })
+            }
+            composable("notification_preferences") {
+                NotificationPreferencesScreen(viewModel = hiltViewModel(), onNavigateBack = { navController.popBackStack() })
             }
             composable("pricing") {
                 // "pricing" route now renders the real subscription flow with dynamic

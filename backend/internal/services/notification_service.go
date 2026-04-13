@@ -38,9 +38,31 @@ func NewNotificationService(pushService *PushService, deviceRepo DeviceTokenFetc
 	}
 }
 
+// getUserPushPrefs returns the push notification preferences for a user.
+// Returns defaults (all true) if the user cannot be fetched.
+func (s *NotificationService) getUserPushPrefs(ctx context.Context, userID uuid.UUID) (enabled, eventReminder, paymentReceived bool) {
+	enabled, eventReminder, paymentReceived = true, true, true
+	if s.pool == nil {
+		return
+	}
+	err := s.pool.QueryRow(ctx,
+		`SELECT COALESCE(push_enabled, true), COALESCE(push_event_reminder, true), COALESCE(push_payment_received, true) FROM users WHERE id = $1`,
+		userID).Scan(&enabled, &eventReminder, &paymentReceived)
+	if err != nil {
+		slog.Error("Failed to fetch push preferences", "user_id", userID, "error", err)
+	}
+	return
+}
+
 // SendEventReminder sends a push notification reminding about an upcoming event.
 // reminderType: "24h" or "1h"
 func (s *NotificationService) SendEventReminder(ctx context.Context, userID uuid.UUID, event models.Event, reminderType string) error {
+	// Check push preferences
+	enabled, eventRem, _ := s.getUserPushPrefs(ctx, userID)
+	if !enabled || !eventRem {
+		return nil
+	}
+
 	notifType := fmt.Sprintf("event_reminder_%s", reminderType)
 
 	// Check if already sent
@@ -83,6 +105,12 @@ func (s *NotificationService) SendEventReminder(ctx context.Context, userID uuid
 
 // SendPaymentReceived sends a notification when a payment is recorded.
 func (s *NotificationService) SendPaymentReceived(ctx context.Context, userID uuid.UUID, eventID uuid.UUID, amount float64) error {
+	// Check push preferences
+	enabled, _, paymentRcv := s.getUserPushPrefs(ctx, userID)
+	if !enabled || !paymentRcv {
+		return nil
+	}
+
 	tokens, err := s.deviceRepo.GetByUserID(ctx, userID)
 	if err != nil || len(tokens) == 0 {
 		return err
@@ -105,6 +133,12 @@ func (s *NotificationService) SendPaymentReceived(ctx context.Context, userID uu
 // SendQuotationPending sends a notification when a quotation is still unconfirmed
 // and the event date is approaching. Deduped via notification_log.
 func (s *NotificationService) SendQuotationPending(ctx context.Context, userID uuid.UUID, event models.Event) error {
+	// Check push preferences (gated by push_enabled + push_event_reminder)
+	enabled, eventRem, _ := s.getUserPushPrefs(ctx, userID)
+	if !enabled || !eventRem {
+		return nil
+	}
+
 	const notifType = "quotation_pending"
 	if s.wasAlreadySent(ctx, event.ID, notifType) {
 		return nil
@@ -132,6 +166,12 @@ func (s *NotificationService) SendQuotationPending(ctx context.Context, userID u
 
 // SendEventConfirmed sends a notification when an event status changes to confirmed.
 func (s *NotificationService) SendEventConfirmed(ctx context.Context, userID uuid.UUID, event models.Event) error {
+	// Check push preferences (gated by push_enabled global toggle)
+	enabled, _, _ := s.getUserPushPrefs(ctx, userID)
+	if !enabled {
+		return nil
+	}
+
 	tokens, err := s.deviceRepo.GetByUserID(ctx, userID)
 	if err != nil || len(tokens) == 0 {
 		return err

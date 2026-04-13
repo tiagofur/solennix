@@ -1655,11 +1655,14 @@ func (h *CRUDHandler) CreatePayment(w http.ResponseWriter, r *http.Request) {
 		}()
 	}
 
-	// Send payment receipt email (fire-and-forget)
+	// Send payment receipt email (fire-and-forget, respects user preference)
 	if h.emailService != nil {
 		go func() {
 			user, err := h.userRepo.GetByID(context.Background(), userID)
 			if err != nil {
+				return
+			}
+			if user.EmailPaymentReceipt != nil && !*user.EmailPaymentReceipt {
 				return
 			}
 			eventName := "Evento"

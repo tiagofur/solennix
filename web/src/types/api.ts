@@ -1146,6 +1146,14 @@ export interface components {
             /** Format: double */
             default_refund_percent?: number | null;
             contract_template?: string | null;
+            email_payment_receipt?: boolean | null;
+            email_event_reminder?: boolean | null;
+            email_subscription_updates?: boolean | null;
+            email_weekly_summary?: boolean | null;
+            email_marketing?: boolean | null;
+            push_enabled?: boolean | null;
+            push_event_reminder?: boolean | null;
+            push_payment_received?: boolean | null;
             /** @enum {string} */
             plan: "basic" | "pro";
             /** @enum {string} */
@@ -1222,6 +1230,14 @@ export interface components {
             /** Format: double */
             default_refund_percent?: number | null;
             contract_template?: string | null;
+            email_payment_receipt?: boolean | null;
+            email_event_reminder?: boolean | null;
+            email_subscription_updates?: boolean | null;
+            email_weekly_summary?: boolean | null;
+            email_marketing?: boolean | null;
+            push_enabled?: boolean | null;
+            push_event_reminder?: boolean | null;
+            push_payment_received?: boolean | null;
             new_password?: string;
         };
         MessageResponse: {

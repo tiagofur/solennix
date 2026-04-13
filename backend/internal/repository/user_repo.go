@@ -35,12 +35,16 @@ func (r *UserRepo) GetByEmail(ctx context.Context, email string) (*models.User, 
 	query := `SELECT id, email, password_hash, name, business_name, logo_url, brand_color, show_business_name_in_pdf,
 		default_deposit_percent, default_cancellation_days, default_refund_percent,
 		contract_template,
+		email_payment_receipt, email_event_reminder, email_subscription_updates,
+		email_weekly_summary, email_marketing, push_enabled, push_event_reminder, push_payment_received,
 		plan, role, stripe_customer_id, created_at, updated_at
 		FROM users WHERE email = $1`
 	err := r.pool.QueryRow(ctx, query, email).Scan(
 		&user.ID, &user.Email, &user.PasswordHash, &user.Name, &user.BusinessName, &user.LogoURL, &user.BrandColor, &user.ShowBusinessNameInPdf,
 		&user.DefaultDepositPercent, &user.DefaultCancellationDays, &user.DefaultRefundPercent,
 		&user.ContractTemplate,
+		&user.EmailPaymentReceipt, &user.EmailEventReminder, &user.EmailSubscriptionUpdates,
+		&user.EmailWeeklySummary, &user.EmailMarketing, &user.PushEnabled, &user.PushEventReminder, &user.PushPaymentReceived,
 		&user.Plan, &user.Role, &user.StripeCustomerID, &user.CreatedAt, &user.UpdatedAt,
 	)
 	if err != nil {
@@ -54,12 +58,16 @@ func (r *UserRepo) GetByID(ctx context.Context, id uuid.UUID) (*models.User, err
 	query := `SELECT id, email, password_hash, name, business_name, logo_url, brand_color, show_business_name_in_pdf,
 		default_deposit_percent, default_cancellation_days, default_refund_percent,
 		contract_template,
+		email_payment_receipt, email_event_reminder, email_subscription_updates,
+		email_weekly_summary, email_marketing, push_enabled, push_event_reminder, push_payment_received,
 		plan, role, stripe_customer_id, created_at, updated_at
 		FROM users WHERE id = $1`
 	err := r.pool.QueryRow(ctx, query, id).Scan(
 		&user.ID, &user.Email, &user.PasswordHash, &user.Name, &user.BusinessName, &user.LogoURL, &user.BrandColor, &user.ShowBusinessNameInPdf,
 		&user.DefaultDepositPercent, &user.DefaultCancellationDays, &user.DefaultRefundPercent,
 		&user.ContractTemplate,
+		&user.EmailPaymentReceipt, &user.EmailEventReminder, &user.EmailSubscriptionUpdates,
+		&user.EmailWeeklySummary, &user.EmailMarketing, &user.PushEnabled, &user.PushEventReminder, &user.PushPaymentReceived,
 		&user.Plan, &user.Role, &user.StripeCustomerID, &user.CreatedAt, &user.UpdatedAt,
 	)
 	if err != nil {
@@ -69,7 +77,8 @@ func (r *UserRepo) GetByID(ctx context.Context, id uuid.UUID) (*models.User, err
 }
 
 func (r *UserRepo) Update(ctx context.Context, id uuid.UUID, name, businessName, logoURL, brandColor *string, showBusinessNameInPdf *bool,
-	depositPercent, cancellationDays, refundPercent *float64, contractTemplate *string) (*models.User, error) {
+	depositPercent, cancellationDays, refundPercent *float64, contractTemplate *string,
+	emailPaymentReceipt, emailEventReminder, emailSubscriptionUpdates, emailWeeklySummary, emailMarketing, pushEnabled, pushEventReminder, pushPaymentReceived *bool) (*models.User, error) {
 	query := `
 		UPDATE users SET
 			name = COALESCE($2, name),
@@ -81,18 +90,31 @@ func (r *UserRepo) Update(ctx context.Context, id uuid.UUID, name, businessName,
 			default_cancellation_days = COALESCE($8, default_cancellation_days),
 			default_refund_percent = COALESCE($9, default_refund_percent),
 			contract_template = COALESCE($10, contract_template),
+			email_payment_receipt = COALESCE($11, email_payment_receipt),
+			email_event_reminder = COALESCE($12, email_event_reminder),
+			email_subscription_updates = COALESCE($13, email_subscription_updates),
+			email_weekly_summary = COALESCE($14, email_weekly_summary),
+			email_marketing = COALESCE($15, email_marketing),
+			push_enabled = COALESCE($16, push_enabled),
+			push_event_reminder = COALESCE($17, push_event_reminder),
+			push_payment_received = COALESCE($18, push_payment_received),
 			updated_at = NOW()
 		WHERE id = $1
 		RETURNING id, email, password_hash, name, business_name, logo_url, brand_color, show_business_name_in_pdf,
 			default_deposit_percent, default_cancellation_days, default_refund_percent,
 			contract_template,
+			email_payment_receipt, email_event_reminder, email_subscription_updates,
+			email_weekly_summary, email_marketing, push_enabled, push_event_reminder, push_payment_received,
 			plan, role, stripe_customer_id, created_at, updated_at`
 	user := &models.User{}
 	err := r.pool.QueryRow(ctx, query, id, name, businessName, logoURL, brandColor, showBusinessNameInPdf,
-		depositPercent, cancellationDays, refundPercent, contractTemplate).Scan(
+		depositPercent, cancellationDays, refundPercent, contractTemplate,
+		emailPaymentReceipt, emailEventReminder, emailSubscriptionUpdates, emailWeeklySummary, emailMarketing, pushEnabled, pushEventReminder, pushPaymentReceived).Scan(
 		&user.ID, &user.Email, &user.PasswordHash, &user.Name, &user.BusinessName, &user.LogoURL, &user.BrandColor, &user.ShowBusinessNameInPdf,
 		&user.DefaultDepositPercent, &user.DefaultCancellationDays, &user.DefaultRefundPercent,
 		&user.ContractTemplate,
+		&user.EmailPaymentReceipt, &user.EmailEventReminder, &user.EmailSubscriptionUpdates,
+		&user.EmailWeeklySummary, &user.EmailMarketing, &user.PushEnabled, &user.PushEventReminder, &user.PushPaymentReceived,
 		&user.Plan, &user.Role, &user.StripeCustomerID, &user.CreatedAt, &user.UpdatedAt,
 	)
 	if err != nil {
@@ -149,12 +171,16 @@ func (r *UserRepo) GetByStripeCustomerID(ctx context.Context, stripeCustomerID s
 	query := `SELECT id, email, password_hash, name, business_name, logo_url, brand_color, show_business_name_in_pdf,
 		default_deposit_percent, default_cancellation_days, default_refund_percent,
 		contract_template,
+		email_payment_receipt, email_event_reminder, email_subscription_updates,
+		email_weekly_summary, email_marketing, push_enabled, push_event_reminder, push_payment_received,
 		plan, role, stripe_customer_id, created_at, updated_at
 		FROM users WHERE stripe_customer_id = $1`
 	err := r.pool.QueryRow(ctx, query, stripeCustomerID).Scan(
 		&user.ID, &user.Email, &user.PasswordHash, &user.Name, &user.BusinessName, &user.LogoURL, &user.BrandColor, &user.ShowBusinessNameInPdf,
 		&user.DefaultDepositPercent, &user.DefaultCancellationDays, &user.DefaultRefundPercent,
 		&user.ContractTemplate,
+		&user.EmailPaymentReceipt, &user.EmailEventReminder, &user.EmailSubscriptionUpdates,
+		&user.EmailWeeklySummary, &user.EmailMarketing, &user.PushEnabled, &user.PushEventReminder, &user.PushPaymentReceived,
 		&user.Plan, &user.Role, &user.StripeCustomerID, &user.CreatedAt, &user.UpdatedAt,
 	)
 	if err != nil {
@@ -186,12 +212,16 @@ func (r *UserRepo) GetByGoogleUserID(ctx context.Context, googleUserID string) (
 	query := `SELECT id, email, password_hash, name, business_name, logo_url, brand_color, show_business_name_in_pdf,
 		default_deposit_percent, default_cancellation_days, default_refund_percent,
 		contract_template,
+		email_payment_receipt, email_event_reminder, email_subscription_updates,
+		email_weekly_summary, email_marketing, push_enabled, push_event_reminder, push_payment_received,
 		plan, role, stripe_customer_id, google_user_id, apple_user_id, created_at, updated_at
 		FROM users WHERE google_user_id = $1`
 	err := r.pool.QueryRow(ctx, query, googleUserID).Scan(
 		&user.ID, &user.Email, &user.PasswordHash, &user.Name, &user.BusinessName, &user.LogoURL, &user.BrandColor, &user.ShowBusinessNameInPdf,
 		&user.DefaultDepositPercent, &user.DefaultCancellationDays, &user.DefaultRefundPercent,
 		&user.ContractTemplate,
+		&user.EmailPaymentReceipt, &user.EmailEventReminder, &user.EmailSubscriptionUpdates,
+		&user.EmailWeeklySummary, &user.EmailMarketing, &user.PushEnabled, &user.PushEventReminder, &user.PushPaymentReceived,
 		&user.Plan, &user.Role, &user.StripeCustomerID, &user.GoogleUserID, &user.AppleUserID, &user.CreatedAt, &user.UpdatedAt,
 	)
 	if err != nil {
@@ -206,12 +236,16 @@ func (r *UserRepo) GetByAppleUserID(ctx context.Context, appleUserID string) (*m
 	query := `SELECT id, email, password_hash, name, business_name, logo_url, brand_color, show_business_name_in_pdf,
 		default_deposit_percent, default_cancellation_days, default_refund_percent,
 		contract_template,
+		email_payment_receipt, email_event_reminder, email_subscription_updates,
+		email_weekly_summary, email_marketing, push_enabled, push_event_reminder, push_payment_received,
 		plan, role, stripe_customer_id, google_user_id, apple_user_id, created_at, updated_at
 		FROM users WHERE apple_user_id = $1`
 	err := r.pool.QueryRow(ctx, query, appleUserID).Scan(
 		&user.ID, &user.Email, &user.PasswordHash, &user.Name, &user.BusinessName, &user.LogoURL, &user.BrandColor, &user.ShowBusinessNameInPdf,
 		&user.DefaultDepositPercent, &user.DefaultCancellationDays, &user.DefaultRefundPercent,
 		&user.ContractTemplate,
+		&user.EmailPaymentReceipt, &user.EmailEventReminder, &user.EmailSubscriptionUpdates,
+		&user.EmailWeeklySummary, &user.EmailMarketing, &user.PushEnabled, &user.PushEventReminder, &user.PushPaymentReceived,
 		&user.Plan, &user.Role, &user.StripeCustomerID, &user.GoogleUserID, &user.AppleUserID, &user.CreatedAt, &user.UpdatedAt,
 	)
 	if err != nil {
