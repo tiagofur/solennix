@@ -32,6 +32,15 @@ public struct User: Codable, Identifiable, Sendable, Hashable {
     public var defaultCancellationDays: Double?
     public var defaultRefundPercent: Double?
     public var contractTemplate: String?
+    // Notification preferences
+    public var emailPaymentReceipt: Bool?
+    public var emailEventReminder: Bool?
+    public var emailSubscriptionUpdates: Bool?
+    public var emailWeeklySummary: Bool?
+    public var emailMarketing: Bool?
+    public var pushEnabled: Bool?
+    public var pushEventReminder: Bool?
+    public var pushPaymentReceived: Bool?
     public let plan: Plan
     public var stripeCustomerId: String?
     public var planExpiresAt: String?

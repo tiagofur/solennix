@@ -19,6 +19,7 @@ sealed class Route {
     @Serializable data object ChangePassword : Route()
     @Serializable data object BusinessSettings : Route()
     @Serializable data object ContractDefaults : Route()
+    @Serializable data object NotificationPreferences : Route()
     @Serializable data object Pricing : Route()
     @Serializable data object About : Route()
     @Serializable data object Privacy : Route()

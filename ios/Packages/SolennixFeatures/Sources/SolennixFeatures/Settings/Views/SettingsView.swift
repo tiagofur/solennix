@@ -138,6 +138,10 @@ public struct SettingsView: View {
         NavigationLink(value: Route.changePassword) {
             Label("Cambiar Contrasena", systemImage: "lock.rotation")
         }
+
+        NavigationLink(value: Route.notificationPreferences) {
+            Label("Notificaciones", systemImage: "bell.badge")
+        }
     }
 
     @ViewBuilder

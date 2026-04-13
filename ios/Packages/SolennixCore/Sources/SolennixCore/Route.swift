@@ -50,5 +50,6 @@ public enum Route: Hashable {
     case contractDefaults
     case pricing
     case subscription
+    case notificationPreferences
     case about
 }

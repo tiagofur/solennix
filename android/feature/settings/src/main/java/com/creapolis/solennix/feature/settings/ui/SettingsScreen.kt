@@ -36,6 +36,7 @@ fun SettingsScreen(
     onChangePassword: () -> Unit,
     onBusinessSettings: () -> Unit,
     onContractDefaults: () -> Unit,
+    onNotificationPreferences: () -> Unit = {},
     onPricing: () -> Unit,
     onEventFormLinks: () -> Unit = {},
     onAbout: () -> Unit,
@@ -131,6 +132,7 @@ fun SettingsScreen(
                             SettingsItem(icon = Icons.Default.Business, label = "Ajustes del Negocio", onClick = onBusinessSettings)
                             SettingsItem(icon = Icons.Default.Receipt, label = "Valores del Contrato", onClick = onContractDefaults)
                             SettingsItem(icon = Icons.Default.Link, label = "Enlaces de Formulario", onClick = onEventFormLinks)
+                            SettingsItem(icon = Icons.Default.Notifications, label = "Notificaciones", onClick = onNotificationPreferences)
                             LogoutItem(onClick = { viewModel.logout() })
                         }
                     }
