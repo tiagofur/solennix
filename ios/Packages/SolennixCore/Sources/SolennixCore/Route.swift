@@ -40,6 +40,9 @@ public enum Route: Hashable {
     case search(query: String = "")
     case settings
 
+    // MARK: Event Form Links
+    case eventFormLinks
+
     // MARK: Settings Sub-Routes
     case editProfile
     case changePassword
