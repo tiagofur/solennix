@@ -30,7 +30,16 @@ declare namespace google {
         options: GsiButtonConfiguration
       ): void;
 
-      function prompt(): void;
+      function prompt(momentListener?: (notification: PromptMomentNotification) => void): void;
+
+      interface PromptMomentNotification {
+        isNotDisplayed(): boolean;
+        isSkippedMoment(): boolean;
+        isDismissedMoment(): boolean;
+        getNotDisplayedReason(): string;
+        getSkippedReason(): string;
+        getDismissedReason(): string;
+      }
       function disableAutoSelect(): void;
     }
   }
