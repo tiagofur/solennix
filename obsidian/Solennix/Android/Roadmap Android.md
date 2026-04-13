@@ -72,6 +72,8 @@
 | Sugerencias equipo/insumos  | ✅             | ✅                      | —                |
 | Búsqueda global             | ✅             | ✅ + App Search         | Android adelante |
 | Dark mode                   | ✅             | ✅                      | —                |
+| **Google Sign-In**          | ✅             | ✅ CredentialManager    | **✅ DONE**      |
+| **Apple Sign-In**           | ✅             | ✅ Apple SDK OAuth      | **✅ DONE**      |
 | Auth biométrica             | ❌             | ✅                      | Android adelante |
 | Widgets home screen         | ❌             | ✅                      | Android adelante |
 | Quick Settings tile         | ❌             | ✅                      | Android adelante |

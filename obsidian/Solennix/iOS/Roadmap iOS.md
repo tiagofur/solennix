@@ -29,6 +29,8 @@
 | Sugerencias equipo      | ✅    | ✅                 | ✅                     | —            |
 | Búsqueda global         | ✅    | ✅ + App Search    | ✅ + Spotlight         | —            |
 | Dark mode               | ✅    | ✅                 | ✅                     | —            |
+| **Google Sign-In**      | ✅    | ✅                 | ✅ Native SDK          | **✅ DONE**  |
+| **Apple Sign-In**       | ✅    | ✅                 | ✅ Native ASAuth       | **✅ DONE**  |
 | Auth biométrica         | ❌    | ✅                 | ✅ Face/Touch ID       | —            |
 | Widgets                 | ❌    | ✅ Glance          | ✅ WidgetKit           | —            |
 | Live Activities         | ❌    | ❌                 | ✅ Dynamic Island      | iOS adelante |
