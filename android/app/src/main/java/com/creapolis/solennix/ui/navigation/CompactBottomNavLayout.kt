@@ -110,9 +110,8 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                         onClick = {
                             selectedDestination = destination
                             navController.navigate(destination.route) {
-                                popUpTo(navController.graph.startDestinationId) { saveState = true }
+                                popUpTo(navController.graph.startDestinationId) { inclusive = false }
                                 launchSingleTop = true
-                                restoreState = true
                             }
                         },
                         icon = {
