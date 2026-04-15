@@ -103,7 +103,9 @@ public final class CalendarViewModel {
             guard let lastDayPrev = calendar.date(byAdding: .day, value: -1, to: firstOfMonth) else {
                 return []
             }
-            let prevMonthRange = calendar.range(of: .day, in: .month, for: lastDayPrev)!
+            guard let prevMonthRange = calendar.range(of: .day, in: .month, for: lastDayPrev) else {
+                return []
+            }
             for i in 0..<leadingBlanks {
                 let dayNum = prevMonthRange.upperBound - leadingBlanks + i
                 if let date = calendar.date(byAdding: .day, value: -(leadingBlanks - i), to: firstOfMonth) {

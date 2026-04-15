@@ -49,7 +49,8 @@ final class BackgroundTaskManager {
         do {
             try BGTaskScheduler.shared.submit(request)
         } catch {
-            print("[BackgroundTaskManager] Error scheduling refresh: \(error)")
+            // BGTaskScheduler commonly throws when running in simulator or when
+            // background app refresh is disabled — these are expected and not actionable.
         }
     }
 
@@ -140,7 +141,7 @@ final class BackgroundTaskManager {
 
             return true
         } catch {
-            print("[BackgroundTaskManager] Refresh failed: \(error)")
+            SentryHelper.capture(error: error, context: "background_task_refresh")
             return false
         }
     }

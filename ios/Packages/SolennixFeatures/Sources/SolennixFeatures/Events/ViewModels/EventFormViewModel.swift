@@ -149,6 +149,68 @@ public final class EventFormViewModel {
 
     public let apiClient: APIClient
 
+    // MARK: - Prefill Support (Duplicate Event)
+
+    private struct PrefillData {
+        let event: Event
+        let products: [EventProduct]
+        let extras: [EventExtra]
+        let equipment: [EventEquipment]
+        let supplies: [EventSupply]
+    }
+
+    private var pendingPrefill: PrefillData?
+
+    /// Queues event data to be applied after initial data loads.
+    /// Date is NOT copied — user picks a new one. Payments are NOT copied.
+    public func prefill(
+        from event: Event,
+        products: [EventProduct] = [],
+        extras: [EventExtra] = [],
+        equipment: [EventEquipment] = [],
+        supplies: [EventSupply] = []
+    ) {
+        pendingPrefill = PrefillData(event: event, products: products, extras: extras, equipment: equipment, supplies: supplies)
+    }
+
+    private func applyPrefillData(_ data: PrefillData) {
+        let event = data.event
+        clientId = event.clientId
+        clientName = clients.first(where: { $0.id == event.clientId })?.name ?? ""
+        serviceType = event.serviceType
+        numPeople = event.numPeople
+        discount = event.discount
+        discountType = event.discountType
+        taxRate = event.taxRate
+        requiresInvoice = event.requiresInvoice
+        location = event.location ?? ""
+        city = event.city ?? ""
+        notes = event.notes ?? ""
+        depositPercent = event.depositPercent ?? 50
+        cancellationDays = event.cancellationDays ?? 3
+        refundPercent = event.refundPercent ?? 50
+        status = .quoted
+
+        selectedProducts = data.products.map { ep in
+            SelectedProduct(
+                productId: ep.productId,
+                product: products.first(where: { $0.id == ep.productId }),
+                quantity: Double(ep.quantity),
+                unitPrice: ep.unitPrice,
+                discount: ep.discount
+            )
+        }
+        extras = data.extras.map { ee in
+            SelectedExtra(description: ee.description, cost: ee.cost, price: ee.price, excludeUtility: ee.excludeUtility)
+        }
+        selectedEquipment = data.equipment.map { eq in
+            SelectedEquipmentItem(inventoryId: eq.inventoryId, name: eq.equipmentName ?? "", quantity: eq.quantity, notes: eq.notes ?? "")
+        }
+        selectedSupplies = data.supplies.map { s in
+            SelectedSupplyItem(inventoryId: s.inventoryId, name: s.supplyName ?? "", quantity: s.quantity, unitCost: s.unitCost, source: s.source, excludeCost: s.excludeCost)
+        }
+    }
+
     // MARK: - Init
 
     public init(apiClient: APIClient) {
@@ -245,6 +307,12 @@ public final class EventFormViewModel {
         if let transferData = QuickQuoteDataHolder.shared.pendingData {
             applyQuickQuoteData(transferData)
             QuickQuoteDataHolder.shared.pendingData = nil
+        }
+
+        // Check for duplicate/prefill data (set via prefill(from:))
+        if let prefill = pendingPrefill {
+            applyPrefillData(prefill)
+            pendingPrefill = nil
         }
 
         isLoading = false

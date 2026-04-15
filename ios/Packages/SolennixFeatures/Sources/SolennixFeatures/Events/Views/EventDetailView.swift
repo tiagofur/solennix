@@ -9,14 +9,18 @@ import SolennixNetwork
 public struct EventDetailView: View {
 
     let eventId: String
+    private let apiClient: APIClient
 
     @State private var viewModel: EventDetailViewModel
     @State private var selectedPhotos: [PhotosPickerItem] = []
+    @State private var showDuplicateSheet = false
+    @State private var duplicateViewModel: EventFormViewModel?
     @Environment(\.dismiss) private var dismiss
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     public init(eventId: String, apiClient: APIClient) {
         self.eventId = eventId
+        self.apiClient = apiClient
         self._viewModel = State(initialValue: EventDetailViewModel(apiClient: apiClient))
     }
 
@@ -43,6 +47,20 @@ public struct EventDetailView: View {
                 Menu {
                     NavigationLink(value: Route.eventForm(id: eventId)) {
                         Label("Editar", systemImage: "pencil")
+                    }
+
+                    Button {
+                        duplicateEvent()
+                    } label: {
+                        Label("Duplicar Evento", systemImage: "doc.on.doc")
+                    }
+
+                    Divider()
+
+                    Button {
+                        shareOnWhatsApp()
+                    } label: {
+                        Label("Compartir por WhatsApp", systemImage: "square.and.arrow.up")
                     }
 
                     Divider()
@@ -91,6 +109,13 @@ public struct EventDetailView: View {
             pdfActionsSheet
         }
         .task { await viewModel.loadData(eventId: eventId) }
+        .sheet(isPresented: $showDuplicateSheet) {
+            if let vm = duplicateViewModel {
+                NavigationStack {
+                    EventFormView(prefilledViewModel: vm)
+                }
+            }
+        }
     }
 
     // MARK: - Scroll Content (Hub Layout)
@@ -1032,6 +1057,73 @@ public struct EventDetailView: View {
             ("pagos", "Pagos", "dollarsign.circle"),
             ("factura", "Factura", "doc.badge.arrow.up"),
         ]
+    }
+
+    // MARK: - Duplicate Event
+
+    private func duplicateEvent() {
+        guard let event = viewModel.event else { return }
+        HapticsHelper.play(.selection)
+        let vm = EventFormViewModel(apiClient: apiClient)
+        vm.prefill(
+            from: event,
+            products: viewModel.products,
+            extras: viewModel.extras,
+            equipment: viewModel.equipment,
+            supplies: viewModel.supplies
+        )
+        duplicateViewModel = vm
+        showDuplicateSheet = true
+    }
+
+    // MARK: - WhatsApp Share
+
+    private func shareOnWhatsApp() {
+        guard let event = viewModel.event else { return }
+        HapticsHelper.play(.selection)
+
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        dateFormatter.locale = Locale(identifier: "es_MX")
+        let displayFormatter = DateFormatter()
+        displayFormatter.dateFormat = "d 'de' MMMM, yyyy"
+        displayFormatter.locale = Locale(identifier: "es_MX")
+        let displayDate = dateFormatter.date(from: event.eventDate)
+            .map { displayFormatter.string(from: $0) } ?? event.eventDate
+
+        let clientName = viewModel.client?.name ?? "Cliente"
+
+        var lines = [
+            "*Resumen de Evento — Solennix*",
+            "",
+            "📋 *\(event.serviceType)*",
+            "👤 Cliente: \(clientName)",
+            "📅 Fecha: \(displayDate)",
+            "👥 Personas: \(event.numPeople) PAX",
+        ]
+
+        let locationParts = [event.location, event.city]
+            .compactMap { val -> String? in
+                guard let v = val, !v.isEmpty else { return nil }
+                return v
+            }
+        if !locationParts.isEmpty {
+            lines.append("📍 Lugar: \(locationParts.joined(separator: ", "))")
+        }
+
+        lines += [
+            "",
+            "💰 Total: \(event.totalAmount.asMXN)",
+            "✅ Pagado: \(viewModel.totalPaid.asMXN)",
+        ]
+        if viewModel.remaining > 0.01 {
+            lines.append("⏳ Saldo pendiente: \(viewModel.remaining.asMXN)")
+        }
+
+        let message = lines.joined(separator: "\n")
+        guard let encoded = message.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+              let url = URL(string: "whatsapp://send?text=\(encoded)") else { return }
+        UIApplication.shared.open(url)
     }
 }
 

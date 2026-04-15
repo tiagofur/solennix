@@ -18,6 +18,13 @@ public struct EventFormView: View {
         _viewModel = State(initialValue: EventFormViewModel(apiClient: apiClient))
     }
 
+    /// Init for duplicating an existing event. The viewModel should have `prefill(from:)` called
+    /// before being passed here — prefill is applied after initial data loads.
+    public init(prefilledViewModel: EventFormViewModel) {
+        self.eventId = nil
+        _viewModel = State(initialValue: prefilledViewModel)
+    }
+
     private let stepTitles = ["General", "Productos", "Extras", "Insumos", "Finanzas"]
 
     public var body: some View {
