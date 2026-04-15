@@ -35,7 +35,7 @@ const val DATABASE_NAME = "solennix-database"
         CachedEventProduct::class,
         CachedEventExtra::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 @TypeConverters(JsonConverters::class)
@@ -56,7 +56,14 @@ abstract class SolennixDatabase : RoomDatabase() {
             }
         }
 
-        private val ALL_MIGRATIONS = arrayOf(MIGRATION_4_5)
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                Log.d(TAG, "Running migration 5 -> 6: add product_name to event_products")
+                db.execSQL("ALTER TABLE event_products ADD COLUMN product_name TEXT")
+            }
+        }
+
+        private val ALL_MIGRATIONS = arrayOf(MIGRATION_4_5, MIGRATION_5_6)
 
         @Volatile
         private var INSTANCE: SolennixDatabase? = null

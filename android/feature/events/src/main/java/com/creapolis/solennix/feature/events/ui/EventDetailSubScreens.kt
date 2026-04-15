@@ -463,7 +463,7 @@ fun EventProductsScreen(
                 }
 
                 products.forEach { product ->
-                    val name = uiState.productNames[product.productId] ?: "Producto"
+                    val name = product.productName ?: "Producto"
                     val total = product.totalPrice ?: (product.quantity * product.unitPrice)
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -1111,7 +1111,7 @@ private fun renderContractTemplate(
     val today = java.text.SimpleDateFormat("d 'de' MMMM, yyyy", java.util.Locale("es", "MX")).format(java.util.Date())
 
     val servicesList = if (products.isNotEmpty()) {
-        products.joinToString(", ") { "${it.quantity} ${it.productName ?: "Producto"}" }
+        products.joinToString(", ") { "${it.quantity.formatQuantity()} ${it.productName ?: "Producto"}" }
     } else null
 
     val tokens: List<Pair<String, String?>> = listOf(

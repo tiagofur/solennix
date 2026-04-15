@@ -604,8 +604,7 @@ private fun EventInfoRow(
 
 @Composable
 private fun ProductsSection(
-    products: List<EventProduct>,
-    productNames: Map<String, String>
+    products: List<EventProduct>
 ) {
     var expanded by remember { mutableStateOf(true) }
     val subtotal = products.sumOf { it.totalPrice ?: (it.quantity * it.unitPrice) }
@@ -648,7 +647,7 @@ private fun ProductsSection(
                 Column {
                     Spacer(modifier = Modifier.height(12.dp))
                     products.forEach { product ->
-                        val name = productNames[product.productId] ?: "Producto"
+                        val name = product.productName ?: "Producto"
                         val total = product.totalPrice ?: (product.quantity * product.unitPrice)
                         ProductRow(
                             name = name,

@@ -14,7 +14,8 @@ data class CachedEventProduct(
     @ColumnInfo(name = "unit_price") val unitPrice: Double,
     val discount: Double,
     @ColumnInfo(name = "total_price") val totalPrice: Double?,
-    @ColumnInfo(name = "created_at") val createdAt: String
+    @ColumnInfo(name = "created_at") val createdAt: String,
+    @ColumnInfo(name = "product_name") val productName: String? = null
 )
 
 fun CachedEventProduct.asExternalModel() = EventProduct(
@@ -25,7 +26,8 @@ fun CachedEventProduct.asExternalModel() = EventProduct(
     unitPrice = unitPrice,
     discount = discount,
     totalPrice = totalPrice,
-    createdAt = createdAt
+    createdAt = createdAt,
+    productName = productName
 )
 
 fun EventProduct.asEntity() = CachedEventProduct(
@@ -36,5 +38,6 @@ fun EventProduct.asEntity() = CachedEventProduct(
     unitPrice = unitPrice,
     discount = discount,
     totalPrice = totalPrice,
-    createdAt = createdAt
+    createdAt = createdAt,
+    productName = productName
 )
