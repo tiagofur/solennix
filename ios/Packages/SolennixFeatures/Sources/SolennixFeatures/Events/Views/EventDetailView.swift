@@ -107,19 +107,6 @@ public struct EventDetailView: View {
         .sheet(isPresented: $viewModel.showPaymentSheet) {
             paymentSheet
         }
-        .sheet(isPresented: $viewModel.showActionsMenu) {
-            pdfActionsSheet
-        }
-        .onChange(of: viewModel.generatingPdf) { _, newKey in
-            guard let key = newKey, let event = viewModel.event else { return }
-            // Defer slightly so the actions sheet finishes dismissing before we
-            // try to present the share sheet — otherwise iOS treats the root as
-            // still-presenting and silently drops the share controller.
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-                generateAndSharePDF(key: key, event: event)
-                viewModel.generatingPdf = nil
-            }
-        }
         .task { await viewModel.loadData(eventId: eventId) }
         .sheet(isPresented: $showDuplicateSheet) {
             if let vm = duplicateViewModel {
@@ -150,6 +137,7 @@ public struct EventDetailView: View {
                     actionButtonsRow1(event)
                     checklistCard
                     contractPreviewCard
+                    documentsCard(event)
                     actionButtonsRow3
                 }
 
@@ -766,19 +754,11 @@ public struct EventDetailView: View {
         }
     }
 
-    // MARK: - Action Buttons Row 3 (PDF, Edit)
+    // MARK: - Action Buttons Row 3 (Edit)
 
     private var actionButtonsRow3: some View {
-        HStack(spacing: Spacing.sm) {
-            Button {
-                viewModel.showActionsMenu = true
-            } label: {
-                actionButton(icon: "doc.text", label: "Generar PDF", fg: SolennixColors.primary)
-            }
-
-            NavigationLink(value: Route.eventForm(id: eventId)) {
-                actionButton(icon: "pencil", label: "Editar", fg: SolennixColors.info)
-            }
+        NavigationLink(value: Route.eventForm(id: eventId)) {
+            actionButton(icon: "pencil", label: "Editar Evento", fg: SolennixColors.info)
         }
     }
 
@@ -959,59 +939,49 @@ public struct EventDetailView: View {
         .presentationDetents([.medium, .large])
     }
 
-    // MARK: - PDF Actions Sheet
+    // MARK: - Documents Grid Card
 
-    private var pdfActionsSheet: some View {
-        NavigationStack {
-            VStack(spacing: Spacing.sm) {
-                Text("Generar PDF")
-                    .font(.title3)
-                    .fontWeight(.bold)
+    private func documentsCard(_ event: Event) -> some View {
+        VStack(alignment: .leading, spacing: Spacing.md) {
+            HStack(spacing: Spacing.sm) {
+                Image(systemName: "doc.text.fill")
+                    .font(.body)
+                    .foregroundStyle(SolennixColors.primary)
+                Text("Generar Documentos")
+                    .font(.headline)
                     .foregroundStyle(SolennixColors.text)
-                    .padding(.bottom, Spacing.sm)
+            }
 
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: Spacing.sm),
+                                GridItem(.flexible(), spacing: Spacing.sm)],
+                      spacing: Spacing.sm) {
                 ForEach(pdfOptions, id: \.key) { option in
                     Button {
-                        viewModel.generatingPdf = option.key
-                        viewModel.showActionsMenu = false
+                        generateAndSharePDF(key: option.key, event: event)
                     } label: {
-                        HStack(spacing: Spacing.md) {
+                        VStack(spacing: Spacing.xs) {
                             Image(systemName: option.icon)
-                                .font(.body)
+                                .font(.title3)
                                 .foregroundStyle(SolennixColors.primary)
-                                .frame(width: 32)
-
                             Text(option.label)
-                                .font(.body)
-                                .foregroundStyle(SolennixColors.text)
-
-                            Spacer()
-
-                            Image(systemName: "chevron.right")
                                 .font(.caption)
-                                .foregroundStyle(SolennixColors.textTertiary)
+                                .fontWeight(.medium)
+                                .foregroundStyle(SolennixColors.text)
+                                .lineLimit(1)
                         }
-                        .padding(Spacing.md)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, Spacing.md)
                         .background(SolennixColors.surface)
                         .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
                     }
                     .buttonStyle(.plain)
                 }
-
-                Spacer()
-            }
-            .padding(Spacing.lg)
-            .background(SolennixColors.background)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cerrar") {
-                        viewModel.showActionsMenu = false
-                    }
-                    .foregroundStyle(SolennixColors.primary)
-                }
             }
         }
-        .presentationDetents([.medium])
+        .padding(Spacing.lg)
+        .background(SolennixColors.card)
+        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+        .shadowSm()
     }
 
     // MARK: - Helpers

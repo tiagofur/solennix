@@ -24,14 +24,12 @@ public final class EventDetailViewModel {
     public var showDeleteConfirm: Bool = false
     public var showStatusSheet: Bool = false
     public var showPaymentSheet: Bool = false
-    public var showActionsMenu: Bool = false
 
     public var paymentAmount: String = ""
     public var paymentMethod: String = "efectivo"
     public var paymentNotes: String = ""
     public var isSavingPayment: Bool = false
     public var isUploadingPhoto: Bool = false
-    public var generatingPdf: String?
     public var deletePaymentId: String?
 
     public var errorMessage: String?
