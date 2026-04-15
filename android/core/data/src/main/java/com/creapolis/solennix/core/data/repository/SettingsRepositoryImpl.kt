@@ -1,5 +1,6 @@
 package com.creapolis.solennix.core.data.repository
 
+import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
@@ -41,7 +42,7 @@ class SettingsRepositoryImpl @Inject constructor(
             apiService.post<Any>(Endpoints.REGISTER_DEVICE, mapOf("token" to token))
         } catch (e: Exception) {
             // Log error but don't fail
-            android.util.Log.e("SettingsRepository", "Failed to register FCM token", e)
+            Log.e("SettingsRepository", "Failed to register FCM token", e)
         }
     }
 }

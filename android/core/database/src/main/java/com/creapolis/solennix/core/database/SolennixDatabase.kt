@@ -36,7 +36,7 @@ const val DATABASE_NAME = "solennix-database"
         CachedEventExtra::class
     ],
     version = 6,
-    exportSchema = false
+    exportSchema = true
 )
 @TypeConverters(JsonConverters::class)
 abstract class SolennixDatabase : RoomDatabase() {

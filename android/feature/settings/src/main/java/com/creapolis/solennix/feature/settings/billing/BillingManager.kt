@@ -1,6 +1,7 @@
 package com.creapolis.solennix.feature.settings.billing
 
 import android.app.Activity
+import android.util.Log
 import com.revenuecat.purchases.CustomerInfo
 import com.revenuecat.purchases.Offerings
 import com.revenuecat.purchases.Package
@@ -177,7 +178,7 @@ class BillingManager @Inject constructor() {
             appUserID = userId,
             onError = { error ->
                 // Log but don't block — purchases still work with anonymous ID
-                android.util.Log.w("BillingManager", "RevenueCat login failed: ${error.message}")
+                Log.w("BillingManager", "RevenueCat login failed: ${error.message}")
             },
             onSuccess = { info, _ ->
                 _customerInfo.value = info
@@ -192,7 +193,7 @@ class BillingManager @Inject constructor() {
         if (!isRevenueCatAvailable()) return
         Purchases.sharedInstance.logOutWith(
             onError = { error ->
-                android.util.Log.w("BillingManager", "RevenueCat logout failed: ${error.message}")
+                Log.w("BillingManager", "RevenueCat logout failed: ${error.message}")
             },
             onSuccess = { info ->
                 _customerInfo.value = info

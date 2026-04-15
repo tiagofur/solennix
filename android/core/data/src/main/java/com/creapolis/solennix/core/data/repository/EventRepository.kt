@@ -367,20 +367,10 @@ data class ExtraItemPayload(
 )
 
 @Serializable
-data class EquipmentListPayload(
-    val equipment: List<EquipmentItemPayload>
-)
-
-@Serializable
 data class EquipmentItemPayload(
     @SerialName("inventory_id") val inventoryId: String,
     val quantity: Int,
     val notes: String? = null
-)
-
-@Serializable
-data class SupplyListPayload(
-    val supplies: List<SupplyItemPayload>
 )
 
 @Serializable
