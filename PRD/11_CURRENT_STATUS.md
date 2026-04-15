@@ -1,6 +1,6 @@
 # Current Status — Solennix
 
-**Last Updated:** 2026-04-12  
+**Last Updated:** 2026-04-15  
 **Status:** Core authentication complete across all platforms. Ready for next phase.
 
 ---
@@ -61,6 +61,10 @@ All authentication flows work identically across platforms.
 ## Known Issues
 
 None. All sign-in methods fully functional.
+
+### Resolved
+
+- **Android — Contract product names (2026-04-15):** El template de contrato renderizaba `"<cantidad> Producto"` en `[Servicios del evento]` porque la entidad Room `CachedEventProduct` no persistía la columna `product_name` devuelta por el backend. Fix: añadida columna + migración 5→6, y la UI ahora consume `EventProduct.productName` directo (eliminado el workaround `productNames` map en `EventDetailViewModel`).
 
 ---
 

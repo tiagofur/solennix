@@ -9,7 +9,6 @@ import androidx.lifecycle.viewModelScope
 import com.creapolis.solennix.core.data.repository.ClientRepository
 import com.creapolis.solennix.core.data.repository.EventRepository
 import com.creapolis.solennix.core.data.repository.PaymentRepository
-import com.creapolis.solennix.core.data.repository.ProductRepository
 import com.creapolis.solennix.core.data.util.ImageCompressor
 import com.creapolis.solennix.core.model.Client
 import com.creapolis.solennix.core.model.Event
@@ -37,7 +36,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -52,7 +50,6 @@ data class EventDetailUiState(
     val supplies: List<EventSupply> = emptyList(),
     val payments: List<Payment> = emptyList(),
     val photos: List<EventPhoto> = emptyList(),
-    val productNames: Map<String, String> = emptyMap(),
     val totalPaid: Double = 0.0,
     val currentUser: User? = null,
     val isLoading: Boolean = false,
@@ -66,7 +63,6 @@ class EventDetailViewModel @Inject constructor(
     private val eventRepository: EventRepository,
     private val clientRepository: ClientRepository,
     private val paymentRepository: PaymentRepository,
-    private val productRepository: ProductRepository,
     private val apiService: ApiService,
     private val authManager: AuthManager,
     private val eventDayNotificationManager: EventDayNotificationManager,
@@ -81,7 +77,6 @@ class EventDetailViewModel @Inject constructor(
     private val _client = MutableStateFlow<Client?>(null)
     private val _equipment = MutableStateFlow<List<EventEquipment>>(emptyList())
     private val _supplies = MutableStateFlow<List<EventSupply>>(emptyList())
-    private val _productNames = MutableStateFlow<Map<String, String>>(emptyMap())
     private val _photos = MutableStateFlow<List<EventPhoto>>(emptyList())
     private val _isPhotosLoading = MutableStateFlow(false)
     private val _isPhotoUploading = MutableStateFlow(false)
@@ -98,8 +93,7 @@ class EventDetailViewModel @Inject constructor(
         _isPhotosLoading,
         _isPhotoUploading,
         _equipment,
-        _supplies,
-        _productNames
+        _supplies
     ) { values ->
         val event = values[0] as Event?
         val client = values[1] as Client?
@@ -119,8 +113,6 @@ class EventDetailViewModel @Inject constructor(
         val equipment = values[10] as List<EventEquipment>
         @Suppress("UNCHECKED_CAST")
         val supplies = values[11] as List<EventSupply>
-        @Suppress("UNCHECKED_CAST")
-        val productNames = values[12] as Map<String, String>
 
         EventDetailUiState(
             event = event,
@@ -131,7 +123,6 @@ class EventDetailViewModel @Inject constructor(
             supplies = supplies,
             payments = payments,
             photos = photos,
-            productNames = productNames,
             totalPaid = payments.sumOf { it.amount },
             currentUser = authManager.currentUser.value,
             isLoading = isLoading,
@@ -183,9 +174,6 @@ class EventDetailViewModel @Inject constructor(
                 // Load equipment and supplies from API
                 loadEquipmentAndSupplies()
 
-                // Load product names for display
-                loadProductNames()
-
                 // Auto-mostrar notificacion persistente si el evento es hoy y confirmado
                 checkAndShowEventDayNotification(event, _client.value)
 
@@ -212,22 +200,6 @@ class EventDetailViewModel @Inject constructor(
         } catch (e: Exception) {
             // Non-fatal, supplies may not exist for this event
             _supplies.value = emptyList()
-        }
-    }
-
-    private suspend fun loadProductNames() {
-        try {
-            val namesMap = mutableMapOf<String, String>()
-            val products = eventRepository.getEventProducts(eventId).first()
-            for (product in products) {
-                val p = productRepository.getProduct(product.productId)
-                if (p != null) {
-                    namesMap[product.productId] = p.name
-                }
-            }
-            _productNames.value = namesMap
-        } catch (e: Exception) {
-            // Non-fatal
         }
     }
 
