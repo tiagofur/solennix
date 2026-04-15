@@ -28,6 +28,11 @@ import javax.net.ssl.SSLHandshakeException
  */
 fun Throwable.toApiError(): ApiError = when (this) {
     is ApiError -> this
+    // Map SolennixException hierarchy to ApiError so both systems are unified
+    is SolennixException.Auth -> ApiError.Unauthorized
+    is SolennixException.Server -> ApiError.ServerError(code)
+    is SolennixException.Network -> ApiError.NetworkError(this)
+    is SolennixException.Unknown -> ApiError.Unknown(this)
     is ClientRequestException -> when (response.status) {
         HttpStatusCode.Unauthorized -> ApiError.Unauthorized
         HttpStatusCode.Forbidden -> ApiError.Forbidden

@@ -26,6 +26,12 @@ dependencies {
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
 
+    // Encrypted SharedPreferences (read userId for multi-tenant filtering)
+    implementation(libs.security.crypto)
+
+    // Serialization (parse user JSON from prefs)
+    implementation(libs.kotlinx.serialization.json)
+
     implementation(libs.glance.appwidget)
     implementation(libs.glance.material3)
 

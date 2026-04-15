@@ -30,9 +30,14 @@ class UpcomingEventsWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         // Fetch upcoming events from database
         val database = SolennixDatabase.getInstance(context)
+        val userId = WidgetAuthProvider.getUserId(context)
         val events = try {
-            database.eventDao().getUpcomingEvents(3).first()
-                .map { it.asExternalModel() }
+            val flow = if (userId != null) {
+                database.eventDao().getUpcomingEvents(userId, 3)
+            } else {
+                database.eventDao().getUpcomingEvents(3)
+            }
+            flow.first().map { it.asExternalModel() }
         } catch (e: Exception) {
             emptyList()
         }

@@ -28,9 +28,14 @@ class KpiWidget : GlanceAppWidget() {
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val database = SolennixDatabase.getInstance(context)
+        val userId = WidgetAuthProvider.getUserId(context)
 
         val kpiData = try {
-            val events = database.eventDao().getEvents().first()
+            val events = if (userId != null) {
+                database.eventDao().getEvents(userId).first()
+            } else {
+                database.eventDao().getEvents().first()
+            }
             val today = LocalDate.now().toString()
             val thisMonth = LocalDate.now().withDayOfMonth(1).toString()
 

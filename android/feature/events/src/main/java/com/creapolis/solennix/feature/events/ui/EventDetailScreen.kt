@@ -93,8 +93,9 @@ fun EventDetailScreen(
     var showDeleteDialog by remember { mutableStateOf(false) }
 
     val windowInfoTracker = WindowInfoTracker.getOrCreate(context)
-    val windowLayoutInfo by windowInfoTracker.windowLayoutInfo(context as android.app.Activity)
-        .collectAsState(initial = null)
+    val windowLayoutInfo by (context as? android.app.Activity)?.let { activity ->
+        windowInfoTracker.windowLayoutInfo(activity)
+    }?.collectAsState(initial = null) ?: remember { mutableStateOf(null) }
 
     val foldingFeature = windowLayoutInfo?.displayFeatures
         ?.filterIsInstance<FoldingFeature>()

@@ -7,6 +7,9 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface EventDao {
+    @Query("SELECT * FROM events WHERE user_id = :userId ORDER BY event_date DESC")
+    fun getEvents(userId: String): Flow<List<CachedEvent>>
+
     @Query("SELECT * FROM events ORDER BY event_date DESC")
     fun getEvents(): Flow<List<CachedEvent>>
 
@@ -39,6 +42,9 @@ interface EventDao {
 
     @Query("UPDATE events SET sync_status = :status WHERE id = :id")
     suspend fun updateSyncStatus(id: String, status: com.creapolis.solennix.core.database.entity.SyncStatus)
+
+    @Query("SELECT * FROM events WHERE event_date >= date('now') AND user_id = :userId ORDER BY event_date ASC LIMIT :limit")
+    fun getUpcomingEvents(userId: String, limit: Int): Flow<List<CachedEvent>>
 
     @Query("SELECT * FROM events WHERE event_date >= date('now') ORDER BY event_date ASC LIMIT :limit")
     fun getUpcomingEvents(limit: Int): Flow<List<CachedEvent>>

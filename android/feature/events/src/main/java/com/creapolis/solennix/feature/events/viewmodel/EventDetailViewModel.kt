@@ -82,38 +82,34 @@ class EventDetailViewModel @Inject constructor(
     private val _isPhotoUploading = MutableStateFlow(false)
 
     val uiState: StateFlow<EventDetailUiState> = combine(
-        _event,
-        _client,
-        eventRepository.getEventProducts(eventId),
-        eventRepository.getEventExtras(eventId),
-        paymentRepository.getPaymentsByEventId(eventId),
-        _isLoading,
-        _errorMessage,
-        _photos,
-        _isPhotosLoading,
-        _isPhotoUploading,
-        _equipment,
-        _supplies
-    ) { values ->
-        val event = values[0] as Event?
-        val client = values[1] as Client?
-        @Suppress("UNCHECKED_CAST")
-        val products = values[2] as List<EventProduct>
-        @Suppress("UNCHECKED_CAST")
-        val extras = values[3] as List<EventExtra>
-        @Suppress("UNCHECKED_CAST")
-        val payments = values[4] as List<Payment>
-        val isLoading = values[5] as Boolean
-        val errorMessage = values[6] as String?
-        @Suppress("UNCHECKED_CAST")
-        val photos = values[7] as List<EventPhoto>
-        val isPhotosLoading = values[8] as Boolean
-        val isPhotoUploading = values[9] as Boolean
-        @Suppress("UNCHECKED_CAST")
-        val equipment = values[10] as List<EventEquipment>
-        @Suppress("UNCHECKED_CAST")
-        val supplies = values[11] as List<EventSupply>
-
+        combine(
+            _event,
+            _client,
+            ::Pair
+        ),
+        combine(
+            eventRepository.getEventProducts(eventId),
+            eventRepository.getEventExtras(eventId),
+            ::Pair
+        ),
+        combine(
+            paymentRepository.getPaymentsByEventId(eventId),
+            _equipment,
+            _supplies,
+            ::Triple
+        ),
+        combine(
+            _photos,
+            _isPhotosLoading,
+            _isPhotoUploading,
+            ::Triple
+        ),
+        combine(
+            _isLoading,
+            _errorMessage,
+            ::Pair
+        )
+    ) { (event, client), (products, extras), (payments, equipment, supplies), (photos, isPhotosLoading, isPhotoUploading), (isLoading, errorMessage) ->
         EventDetailUiState(
             event = event,
             client = client,
