@@ -7,8 +7,6 @@ import com.creapolis.solennix.core.model.Plan
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
-import java.time.LocalDate
 import java.time.YearMonth
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -72,20 +70,14 @@ class PlanLimitsManager @Inject constructor(
      * Get current usage counts.
      */
     fun getUsage(): Flow<PlanUsage> {
+        val currentMonth = YearMonth.now()
+        val monthStart = currentMonth.atDay(1).toString()
+        val monthEnd = currentMonth.plusMonths(1).atDay(1).toString()
+
         return combine(
-            eventRepository.getEvents().map { events ->
-                val currentMonth = YearMonth.now()
-                events.count { event ->
-                    try {
-                        val eventMonth = YearMonth.from(LocalDate.parse(event.eventDate.take(10)))
-                        eventMonth == currentMonth
-                    } catch (e: Exception) {
-                        false
-                    }
-                }
-            },
-            clientRepository.getClients().map { it.size },
-            productRepository.getProducts().map { it.size }
+            eventRepository.getEventCountForMonth(monthStart, monthEnd),
+            clientRepository.getClientCount(),
+            productRepository.getActiveProductCount()
         ) { eventsThisMonth, totalClients, catalogItems ->
             PlanUsage(
                 eventsThisMonth = eventsThisMonth,

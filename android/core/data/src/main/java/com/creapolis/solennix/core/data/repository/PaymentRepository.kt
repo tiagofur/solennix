@@ -11,6 +11,7 @@ import com.creapolis.solennix.core.model.CreatePaymentRequest
 import com.creapolis.solennix.core.model.PaginatedResponse
 import com.creapolis.solennix.core.model.Payment
 import com.creapolis.solennix.core.network.ApiService
+import com.creapolis.solennix.core.network.SolennixException
 import com.creapolis.solennix.core.network.get
 import com.creapolis.solennix.core.network.post
 import com.creapolis.solennix.core.network.put
@@ -96,10 +97,15 @@ class OfflineFirstPaymentRepository @Inject constructor(
     }
 
     override suspend fun deletePayment(id: String) {
-        apiService.delete(Endpoints.payment(id))
-        val cached = paymentDao.getPayment(id)
-        if (cached != null) {
-            paymentDao.deletePayment(cached)
+        try {
+            apiService.delete(Endpoints.payment(id))
+            val cached = paymentDao.getPayment(id)
+            if (cached != null) {
+                paymentDao.deletePayment(cached)
+            }
+        } catch (e: Exception) {
+            if (e is SolennixException.Auth) throw e
+            throw e
         }
     }
 

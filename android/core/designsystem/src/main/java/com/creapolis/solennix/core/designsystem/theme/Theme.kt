@@ -22,7 +22,7 @@ fun SolennixTheme(
         LocalDarkTheme provides darkTheme
     ) {
         MaterialTheme(
-            colorScheme = colors.toMaterialColorScheme(),
+            colorScheme = colors.toMaterialColorScheme(darkTheme),
             typography = SolennixTypography,
             shapes = SolennixShapes,
             content = content

@@ -21,6 +21,7 @@ import com.creapolis.solennix.core.designsystem.component.StatusBadge
 import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveDetailLayout
 import com.creapolis.solennix.core.designsystem.theme.LocalIsWideScreen
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
+import com.creapolis.solennix.core.network.UrlResolver
 import com.creapolis.solennix.core.model.Event
 import com.creapolis.solennix.core.model.extensions.asMXN
 import com.creapolis.solennix.feature.clients.viewmodel.ClientDetailViewModel
@@ -94,7 +95,7 @@ fun ClientDetailScreen(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Avatar(name = client.name, photoUrl = client.photoUrl, size = 80.dp)
+                        Avatar(name = client.name, photoUrl = UrlResolver.resolve(client.photoUrl), size = 80.dp)
                         Spacer(modifier = Modifier.width(20.dp))
                         Text(
                             text = client.name,
@@ -107,7 +108,7 @@ fun ClientDetailScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Avatar(name = client.name, photoUrl = client.photoUrl, size = 100.dp)
+                        Avatar(name = client.name, photoUrl = UrlResolver.resolve(client.photoUrl), size = 100.dp)
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(text = client.name, style = MaterialTheme.typography.headlineMedium, color = SolennixTheme.colors.primaryText)
                     }

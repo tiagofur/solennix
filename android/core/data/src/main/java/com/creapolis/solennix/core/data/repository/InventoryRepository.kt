@@ -10,6 +10,7 @@ import com.creapolis.solennix.core.database.entity.asExternalModel
 import com.creapolis.solennix.core.model.InventoryItem
 import com.creapolis.solennix.core.model.PaginatedResponse
 import com.creapolis.solennix.core.network.ApiService
+import com.creapolis.solennix.core.network.SolennixException
 import com.creapolis.solennix.core.network.get
 import com.creapolis.solennix.core.network.post
 import com.creapolis.solennix.core.network.put
@@ -74,8 +75,13 @@ class OfflineFirstInventoryRepository @Inject constructor(
     }
 
     override suspend fun deleteInventoryItem(id: String) {
-        apiService.delete(Endpoints.inventoryItem(id))
-        inventoryDao.deleteInventoryItemById(id)
+        try {
+            apiService.delete(Endpoints.inventoryItem(id))
+            inventoryDao.deleteInventoryItemById(id)
+        } catch (e: Exception) {
+            if (e is SolennixException.Auth) throw e
+            throw e
+        }
     }
 
     override fun getInventoryRemotePaging(

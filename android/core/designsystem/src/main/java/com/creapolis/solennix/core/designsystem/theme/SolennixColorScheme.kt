@@ -39,21 +39,8 @@ data class SolennixColorScheme(
     val tabBarInactive: Color,
     val avatarPalette: List<Color>
 ) {
-    fun toMaterialColorScheme(): ColorScheme {
-        return if (primaryText == Color(0xFF1A1A1A)) {
-            lightColorScheme(
-                primary = primary,
-                onPrimary = Color.White,
-                secondary = secondary,
-                onSecondary = Color.White,
-                error = error,
-                onError = Color.White,
-                background = background,
-                onBackground = primaryText,
-                surface = surface,
-                onSurface = primaryText
-            )
-        } else {
+    fun toMaterialColorScheme(isDarkTheme: Boolean): ColorScheme {
+        return if (isDarkTheme) {
             darkColorScheme(
                 primary = primary,
                 onPrimary = Color.Black,
@@ -61,6 +48,19 @@ data class SolennixColorScheme(
                 onSecondary = Color.Black,
                 error = error,
                 onError = Color.Black,
+                background = background,
+                onBackground = primaryText,
+                surface = surface,
+                onSurface = primaryText
+            )
+        } else {
+            lightColorScheme(
+                primary = primary,
+                onPrimary = Color.White,
+                secondary = secondary,
+                onSecondary = Color.White,
+                error = error,
+                onError = Color.White,
                 background = background,
                 onBackground = primaryText,
                 surface = surface,

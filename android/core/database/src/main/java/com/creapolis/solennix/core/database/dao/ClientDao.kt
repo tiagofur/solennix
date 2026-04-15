@@ -20,4 +20,10 @@ interface ClientDao {
 
     @Query("DELETE FROM clients")
     suspend fun deleteAll()
+
+    @Query("SELECT COUNT(*) FROM clients")
+    fun getClientCount(): Flow<Int>
+
+    @Query("UPDATE clients SET sync_status = :status WHERE id = :id")
+    suspend fun updateSyncStatus(id: String, status: com.creapolis.solennix.core.database.entity.SyncStatus)
 }

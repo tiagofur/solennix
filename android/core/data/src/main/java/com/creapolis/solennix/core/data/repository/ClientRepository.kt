@@ -6,11 +6,13 @@ import androidx.paging.PagingData
 import com.creapolis.solennix.core.data.paging.RemotePagingSource
 import com.creapolis.solennix.core.database.dao.ClientDao
 import com.creapolis.solennix.core.database.dao.EventDao
+import com.creapolis.solennix.core.database.entity.SyncStatus
 import com.creapolis.solennix.core.database.entity.asEntity
 import com.creapolis.solennix.core.database.entity.asExternalModel
 import com.creapolis.solennix.core.model.Client
 import com.creapolis.solennix.core.model.PaginatedResponse
 import com.creapolis.solennix.core.network.ApiService
+import com.creapolis.solennix.core.network.SolennixException
 import com.creapolis.solennix.core.network.get
 import com.creapolis.solennix.core.network.post
 import com.creapolis.solennix.core.network.put
@@ -23,6 +25,7 @@ import javax.inject.Singleton
 
 interface ClientRepository {
     fun getClients(): Flow<List<Client>>
+    fun getClientCount(): Flow<Int>
     suspend fun getClient(id: String): Client?
     suspend fun syncClients()
     suspend fun createClient(client: Client): Client
@@ -50,6 +53,8 @@ class OfflineFirstClientRepository @Inject constructor(
     override fun getClients(): Flow<List<Client>> =
         clientDao.getClients().map { it.map { entity -> entity.asExternalModel() } }
 
+    override fun getClientCount(): Flow<Int> = clientDao.getClientCount()
+
     override suspend fun getClient(id: String): Client? =
         clientDao.getClient(id)?.asExternalModel()
 
@@ -71,11 +76,17 @@ class OfflineFirstClientRepository @Inject constructor(
     }
 
     override suspend fun deleteClient(id: String) {
-        apiService.delete(Endpoints.client(id))
-        eventDao.deleteEventsByClientId(id)
-        val cached = clientDao.getClient(id)
-        if (cached != null) {
-            clientDao.deleteClient(cached)
+        try {
+            apiService.delete(Endpoints.client(id))
+            eventDao.deleteEventsByClientId(id)
+            val cached = clientDao.getClient(id)
+            if (cached != null) {
+                clientDao.deleteClient(cached)
+            }
+        } catch (e: Exception) {
+            if (e is SolennixException.Auth) throw e
+            // Offline support: mark as pending delete, SyncWorker will push later
+            clientDao.updateSyncStatus(id, SyncStatus.PENDING_DELETE)
         }
     }
 

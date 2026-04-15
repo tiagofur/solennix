@@ -37,8 +37,6 @@ android {
 }
 
 dependencies {
-    implementation(project(":core:network"))
-
     val composeBom = platform(libs.compose.bom)
     implementation(composeBom)
     implementation(libs.compose.material3)

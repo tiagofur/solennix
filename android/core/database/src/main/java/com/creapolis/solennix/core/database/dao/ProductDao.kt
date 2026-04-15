@@ -23,4 +23,7 @@ interface ProductDao {
 
     @Query("DELETE FROM products")
     suspend fun deleteAll()
+
+    @Query("SELECT COUNT(*) FROM products WHERE is_active = 1")
+    fun getActiveProductCount(): Flow<Int>
 }

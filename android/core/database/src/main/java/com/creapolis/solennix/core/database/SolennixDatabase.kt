@@ -65,6 +65,10 @@ abstract class SolennixDatabase : RoomDatabase() {
 
         private val ALL_MIGRATIONS = arrayOf(MIGRATION_4_5, MIGRATION_5_6)
 
+        /**
+         * Manual singleton for use in contexts without Hilt (e.g., Glance widgets).
+         * Hilt-injected code should use the DatabaseModule-provided instance instead.
+         */
         @Volatile
         private var INSTANCE: SolennixDatabase? = null
 

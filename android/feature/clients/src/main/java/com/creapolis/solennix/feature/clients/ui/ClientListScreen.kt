@@ -35,6 +35,7 @@ import com.creapolis.solennix.core.designsystem.component.UpgradeBannerStyle
 import com.creapolis.solennix.core.designsystem.component.UpgradePlanDialog
 import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveCardGrid
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
+import com.creapolis.solennix.core.network.UrlResolver
 import com.creapolis.solennix.core.model.Client
 import com.creapolis.solennix.core.model.extensions.asMXN
 import com.creapolis.solennix.feature.clients.viewmodel.ClientListViewModel
@@ -217,7 +218,7 @@ fun ClientListItem(
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Avatar(name = client.name, photoUrl = client.photoUrl, size = 48.dp)
+        Avatar(name = client.name, photoUrl = UrlResolver.resolve(client.photoUrl), size = 48.dp)
         Spacer(modifier = Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(

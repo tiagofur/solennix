@@ -26,6 +26,7 @@ import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveCente
 import com.creapolis.solennix.core.designsystem.theme.LocalIsWideScreen
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.ThemeConfig
+import com.creapolis.solennix.core.network.UrlResolver
 import com.creapolis.solennix.feature.settings.viewmodel.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -92,7 +93,7 @@ fun SettingsScreen(
                         .padding(24.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Avatar(name = it.name, photoUrl = it.logoUrl, size = 64.dp)
+                    Avatar(name = it.name, photoUrl = UrlResolver.resolve(it.logoUrl), size = 64.dp)
                     Spacer(modifier = Modifier.width(16.dp))
                     Column {
                         Text(

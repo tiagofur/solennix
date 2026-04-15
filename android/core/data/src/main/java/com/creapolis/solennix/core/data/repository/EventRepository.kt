@@ -41,6 +41,7 @@ interface EventRepository {
         query: String = ""
     ): Flow<PagingData<Event>>
     fun getUpcomingEvents(limit: Int = 5): Flow<List<Event>>
+    fun getEventCountForMonth(monthStart: String, monthEnd: String): Flow<Int>
     suspend fun getEvent(id: String): Event?
     suspend fun getPendingEvents(): List<com.creapolis.solennix.core.database.entity.CachedEvent>
     suspend fun syncEvents()
@@ -145,6 +146,9 @@ class OfflineFirstEventRepository @Inject constructor(
 
     override fun getUpcomingEvents(limit: Int): Flow<List<Event>> =
         eventDao.getUpcomingEvents(limit).map { it.map { entity -> entity.asExternalModel() } }
+
+    override fun getEventCountForMonth(monthStart: String, monthEnd: String): Flow<Int> =
+        eventDao.getEventCountForMonth(monthStart, monthEnd)
 
     override suspend fun getEvent(id: String): Event? =
         eventDao.getEvent(id)?.asExternalModel()

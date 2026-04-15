@@ -22,6 +22,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicInteger
 
 class SolennixMessagingService : FirebaseMessagingService() {
 
@@ -33,6 +34,7 @@ class SolennixMessagingService : FirebaseMessagingService() {
     }
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val notificationIdCounter = AtomicInteger(0)
 
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
@@ -103,7 +105,7 @@ class SolennixMessagingService : FirebaseMessagingService() {
             .setContentIntent(pendingIntent)
             .build()
 
-        notificationManager.notify(System.currentTimeMillis().toInt(), notification)
+        notificationManager.notify(notificationIdCounter.incrementAndGet(), notification)
     }
 
     private fun buildDeepLinkUriFromData(data: Map<String, String>): Uri? {
