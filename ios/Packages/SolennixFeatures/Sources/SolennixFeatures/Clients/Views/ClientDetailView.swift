@@ -1,4 +1,5 @@
 import SwiftUI
+import Charts
 import SolennixCore
 import SolennixDesign
 import SolennixNetwork
@@ -17,6 +18,7 @@ public struct ClientDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(PlanLimitsManager.self) private var planLimitsManager
 
     private let apiClient: APIClient
 
@@ -70,6 +72,8 @@ public struct ClientDetailView: View {
         ScrollView {
             VStack(spacing: Spacing.lg) {
                 headerCard(client)
+
+                clientInsightsCard
 
                 AdaptiveDetailLayout {
                     // Left: Contact info, notes
@@ -418,6 +422,143 @@ public struct ClientDetailView: View {
         dayFormatter.dateFormat = "d"
 
         return (monthFormatter.string(from: date), dayFormatter.string(from: date))
+    }
+
+    // MARK: - Premium: Client Insights Card
+
+    private struct EventRevenuePoint: Identifiable {
+        let id: String
+        let label: String
+        let revenue: Double
+    }
+
+    @ViewBuilder
+    private var clientInsightsCard: some View {
+        let completedEvents = events
+            .filter { $0.status == .completed || $0.status == .confirmed }
+            .sorted { $0.eventDate < $1.eventDate }
+
+        if !completedEvents.isEmpty {
+            let isPremium = !planLimitsManager.isBasicPlan
+
+            let points: [EventRevenuePoint] = completedEvents.suffix(6).map { event in
+                let formatter = DateFormatter()
+                formatter.dateFormat = "yyyy-MM-dd"
+                formatter.locale = Locale(identifier: "es_MX")
+                let displayFmt = DateFormatter()
+                displayFmt.dateFormat = "d MMM"
+                displayFmt.locale = Locale(identifier: "es_MX")
+                let label = formatter.date(from: String(event.eventDate.prefix(10)))
+                    .map { displayFmt.string(from: $0) } ?? event.eventDate
+                return EventRevenuePoint(id: event.id, label: label, revenue: event.totalAmount)
+            }
+
+            let topServiceType = Dictionary(grouping: completedEvents, by: \.serviceType)
+                .max(by: { $0.value.count < $1.value.count })?.key ?? ""
+
+            VStack(alignment: .leading, spacing: Spacing.md) {
+                HStack {
+                    Image(systemName: "chart.line.uptrend.xyaxis")
+                        .foregroundStyle(SolennixColors.primary)
+                    Text("Análisis del cliente")
+                        .font(.headline)
+                        .foregroundStyle(SolennixColors.text)
+                    Spacer()
+                    if !isPremium {
+                        Label("Pro", systemImage: "bolt.fill")
+                            .font(.caption2)
+                            .fontWeight(.bold)
+                            .foregroundStyle(SolennixColors.primary)
+                            .padding(.horizontal, Spacing.sm)
+                            .padding(.vertical, 3)
+                            .background(SolennixColors.primaryLight)
+                            .clipShape(Capsule())
+                    }
+                }
+
+                Chart(points) { point in
+                    BarMark(
+                        x: .value("Evento", point.label),
+                        y: .value("Ingresos", point.revenue)
+                    )
+                    .foregroundStyle(SolennixGradient.premium)
+                    .cornerRadius(4)
+                }
+                .chartYAxis {
+                    AxisMarks(position: .leading) { value in
+                        AxisValueLabel {
+                            if let d = value.as(Double.self) {
+                                Text(d == 0 ? "$0" : "\(Int(d / 1000))k")
+                                    .font(.caption2)
+                                    .foregroundStyle(SolennixColors.textTertiary)
+                            }
+                        }
+                        AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [4]))
+                            .foregroundStyle(SolennixColors.border)
+                    }
+                }
+                .chartXAxis {
+                    AxisMarks { _ in
+                        AxisValueLabel()
+                            .font(.caption2)
+                    }
+                }
+                .frame(height: 130)
+                .blur(radius: isPremium ? 0 : 10)
+
+                if isPremium && !topServiceType.isEmpty {
+                    HStack(spacing: Spacing.md) {
+                        insightBadge(
+                            icon: "star.fill",
+                            label: "Servicio más solicitado",
+                            value: topServiceType
+                        )
+                        if completedEvents.count > 1 {
+                            let avg = completedEvents.reduce(0.0) { $0 + $1.totalAmount } / Double(completedEvents.count)
+                            insightBadge(
+                                icon: "arrow.up.right",
+                                label: "Ticket promedio",
+                                value: avg.asMXN
+                            )
+                        }
+                    }
+                }
+
+                if !isPremium {
+                    NavigationLink(value: Route.pricing) {
+                        UpgradeBannerView(type: .upsell, onUpgrade: {})
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(Spacing.md)
+            .background(SolennixColors.card)
+            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
+            .shadowSm()
+        }
+    }
+
+    private func insightBadge(icon: String, label: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
+            HStack(spacing: Spacing.xs) {
+                Image(systemName: icon)
+                    .font(.caption)
+                    .foregroundStyle(SolennixColors.primary)
+                Text(label)
+                    .font(.caption2)
+                    .foregroundStyle(SolennixColors.textSecondary)
+            }
+            Text(value)
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .foregroundStyle(SolennixColors.text)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(Spacing.sm)
+        .background(SolennixColors.surface)
+        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
     }
 
     // MARK: - Data Loading

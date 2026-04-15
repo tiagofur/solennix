@@ -60,6 +60,16 @@ public struct DashboardAttentionEvent: Identifiable, Sendable, Hashable {
     }
 }
 
+// MARK: - Monthly Revenue Trend Point
+
+public struct MonthlyRevenueTrendPoint: Identifiable {
+    public let id = UUID()
+    public let month: String
+    public let monthDate: Date
+    public let revenue: Double
+    public let eventCount: Int
+}
+
 // MARK: - Dashboard View Model
 
 @Observable
@@ -462,6 +472,39 @@ public final class DashboardViewModel {
         formatter.dateFormat = "yyyy-MM-dd"
         return formatter
     }()
+
+    // MARK: - Premium: Monthly Revenue Trend
+
+    /// Revenue (confirmed + completed events) for each of the last 6 months.
+    public var monthlyRevenueTrend: [MonthlyRevenueTrendPoint] {
+        let calendar = Calendar.current
+        let now = Date()
+        let eventDateFormatter = DateFormatter()
+        eventDateFormatter.dateFormat = "yyyy-MM-dd"
+        let labelFormatter = DateFormatter()
+        labelFormatter.dateFormat = "MMM"
+        labelFormatter.locale = Locale(identifier: "es_MX")
+
+        return (-5...0).compactMap { offset -> MonthlyRevenueTrendPoint? in
+            guard let monthDate = calendar.date(byAdding: .month, value: offset, to: now),
+                  let monthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: monthDate)),
+                  let monthEnd = calendar.date(byAdding: DateComponents(month: 1, day: -1), to: monthStart)
+            else { return nil }
+
+            let startStr = eventDateFormatter.string(from: monthStart)
+            let endStr = eventDateFormatter.string(from: monthEnd)
+            let qualifying = allEvents.filter {
+                $0.eventDate >= startStr && $0.eventDate <= endStr &&
+                ($0.status == .confirmed || $0.status == .completed)
+            }
+            return MonthlyRevenueTrendPoint(
+                month: labelFormatter.string(from: monthDate).capitalized,
+                monthDate: monthDate,
+                revenue: qualifying.reduce(0) { $0 + $1.totalAmount },
+                eventCount: qualifying.count
+            )
+        }
+    }
 }
 
 // MARK: - Currency Formatting

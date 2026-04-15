@@ -1,4 +1,5 @@
 import SwiftUI
+import Charts
 import SolennixCore
 import SolennixDesign
 import SolennixNetwork
@@ -68,6 +69,9 @@ public struct DashboardView: View {
 
                 // Charts
                 chartsSection
+
+                // Premium: Monthly Revenue Trend
+                premiumReportsCard
 
                 // Low Stock Alerts
                 if let vm = viewModel, !vm.lowStockItems.isEmpty {
@@ -625,6 +629,79 @@ public struct DashboardView: View {
         .background(SolennixColors.card)
         .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
         .shadowSm()
+    }
+
+    // MARK: - Premium Reports Card
+
+    @ViewBuilder
+    private var premiumReportsCard: some View {
+        if let vm = viewModel {
+            let trend = vm.monthlyRevenueTrend
+            let isPremium = !planLimitsManager.isBasicPlan
+
+            VStack(alignment: .leading, spacing: Spacing.md) {
+                HStack {
+                    Image(systemName: "chart.bar.fill")
+                        .foregroundStyle(SolennixColors.primary)
+                    Text("Ingresos — Últimos 6 meses")
+                        .font(.headline)
+                        .foregroundStyle(SolennixColors.text)
+                    Spacer()
+                    if !isPremium {
+                        Label("Pro", systemImage: "bolt.fill")
+                            .font(.caption2)
+                            .fontWeight(.bold)
+                            .foregroundStyle(SolennixColors.primary)
+                            .padding(.horizontal, Spacing.sm)
+                            .padding(.vertical, 3)
+                            .background(SolennixColors.primaryLight)
+                            .clipShape(Capsule())
+                    }
+                }
+
+                Chart(trend) { point in
+                    BarMark(
+                        x: .value("Mes", point.month),
+                        y: .value("Ingresos", point.revenue)
+                    )
+                    .foregroundStyle(SolennixGradient.premium)
+                    .cornerRadius(6)
+                }
+                .chartYAxis {
+                    AxisMarks(position: .leading) { value in
+                        AxisValueLabel {
+                            if let d = value.as(Double.self) {
+                                Text(d == 0 ? "$0" : "\(Int(d / 1000))k")
+                                    .font(.caption2)
+                                    .foregroundStyle(SolennixColors.textTertiary)
+                            }
+                        }
+                        AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5, dash: [4]))
+                            .foregroundStyle(SolennixColors.border)
+                    }
+                }
+                .chartXAxis {
+                    AxisMarks { _ in
+                        AxisValueLabel()
+                            .font(.caption2)
+                    }
+                }
+                .frame(height: 140)
+                .blur(radius: isPremium ? 0 : 10)
+
+                if !isPremium {
+                    NavigationLink(value: Route.pricing) {
+                        UpgradeBannerView(type: .upsell, onUpgrade: {})
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(Spacing.md)
+            .background(SolennixColors.card)
+            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
+            .shadowSm()
+            .padding(.horizontal, Spacing.md)
+        }
     }
 }
 
