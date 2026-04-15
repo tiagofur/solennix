@@ -50,4 +50,29 @@
     <string name="cd_category">Categoría</string>
     <string name="cd_scale">Unidad de medida</string>
     <string name="cd_savings">Precio</string>
+
+    <!-- Navigation -->
+    <string name="nav_products">Productos</string>
+    <string name="nav_inventory">Inventario</string>
+    <string name="nav_settings">Configuración</string>
+    <string name="nav_catalog_costs">Catálogo y costos</string>
+    <string name="nav_stock_supply">Stock y abastecimiento</string>
+    <string name="nav_form_links">Enlaces de Formulario</string>
+    <string name="nav_share_clients">Compartir con clientes</string>
+    <string name="nav_profile">Perfil y negocio</string>
+
+    <!-- Notifications -->
+    <string name="notif_channel_general">Notificaciones Generales</string>
+    <string name="notif_channel_general_desc">Notificaciones de eventos, pagos y sistema</string>
+
+    <!-- Biometric -->
+    <string name="biometric_title">Desbloqueá Solennix</string>
+    <string name="biometric_subtitle">Usá tu huella o rostro para continuar</string>
+    <string name="biometric_negative">Cerrar Sesión</string>
+    <string name="biometric_protected">Acceso Protegido</string>
+    <string name="biometric_message">Confirmá tu identidad para continuar utilizando la aplicación.</string>
+    <string name="biometric_retry">Intentar de nuevo</string>
+
+    <!-- General Access -->
+    <string name="access_go_to">Ir a %s</string>
 </resources>

@@ -3,14 +3,71 @@
     <string name="tagline">EVERY DETAIL MATTERS</string>
     
     <!-- Auth -->
-    <string name="login_title">Log In</string>
+    <string name="login_title">Sign In</string>
     <string name="register_title">Create Account</string>
     <string name="forgot_password_title">Forgot your password?</string>
     <string name="reset_password_title">Reset Password</string>
-    
+
     <!-- Navigation -->
     <string name="nav_home">Home</string>
     <string name="nav_calendar">Calendar</string>
     <string name="nav_clients">Clients</string>
     <string name="nav_more">More</string>
+    <string name="nav_products">Products</string>
+    <string name="nav_inventory">Inventory</string>
+    <string name="nav_settings">Settings</string>
+    <string name="nav_catalog_costs">Catalog &amp; Costs</string>
+    <string name="nav_stock_supply">Stock &amp; Supply</string>
+    <string name="nav_form_links">Form Links</string>
+    <string name="nav_share_clients">Share with Clients</string>
+    <string name="nav_profile">Profile &amp; Business</string>
+    
+    <!-- General -->
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="error_unknown">An unexpected error occurred</string>
+    <string name="error_network">Connection error. Check your internet.</string>
+    
+    <!-- Shortcuts -->
+    <string name="shortcut_new_event">New Event</string>
+    <string name="shortcut_new_event_long">Create a new event</string>
+    <string name="shortcut_calendar">Calendar</string>
+
+    <!-- Widgets -->
+    <string name="widget_upcoming_events">Upcoming Events</string>
+    <string name="widget_kpi_description">KPI Summary</string>
+    <string name="widget_quick_actions_description">Quick Actions</string>
+
+    <!-- Accessibility Content Descriptions -->
+    <string name="cd_back">Go back</string>
+    <string name="cd_add">Add</string>
+    <string name="cd_edit">Edit</string>
+    <string name="cd_delete">Delete</string>
+    <string name="cd_search">Search</string>
+    <string name="cd_warning">Warning</string>
+    <string name="cd_visibility">View details</string>
+    <string name="cd_tune">Adjust</string>
+    <string name="cd_calendar">Calendar</string>
+    <string name="cd_more">More options</string>
+    <string name="cd_check">Done</string>
+    <string name="cd_logout">Log out</string>
+    <string name="cd_restart">Restart</string>
+    <string name="cd_category">Category</string>
+    <string name="cd_scale">Unit of measure</string>
+    <string name="cd_savings">Price</string>
+
+    <!-- Notifications -->
+    <string name="notif_channel_general">General Notifications</string>
+    <string name="notif_channel_general_desc">Event, payment and system notifications</string>
+
+    <!-- Biometric -->
+    <string name="biometric_title">Unlock Solennix</string>
+    <string name="biometric_subtitle">Use your fingerprint or face to continue</string>
+    <string name="biometric_negative">Sign Out</string>
+    <string name="biometric_protected">Protected Access</string>
+    <string name="biometric_message">Confirm your identity to continue using the app.</string>
+    <string name="biometric_retry">Try again</string>
+
+    <!-- General Access -->
+    <string name="access_go_to">Go to %s</string>
 </resources>
