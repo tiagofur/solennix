@@ -315,7 +315,15 @@ public struct EventContractPreviewView: View {
             toastManager.show(message: "Datos del cliente no disponibles", type: .error)
             return
         }
-        let pdfData = ContractPDFGenerator.generate(event: event, client: client, profile: profile)
+        let productNames = viewModel.productMap.mapValues { $0.name }
+        let pdfData = ContractPDFGenerator.generate(
+            event: event,
+            client: client,
+            profile: profile,
+            products: viewModel.products,
+            payments: viewModel.payments,
+            productNames: productNames
+        )
         let filename = "Contrato_\(client.name.replacingOccurrences(of: " ", with: "_")).pdf"
         let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
         do {

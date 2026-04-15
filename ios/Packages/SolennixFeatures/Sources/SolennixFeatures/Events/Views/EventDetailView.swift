@@ -1070,7 +1070,14 @@ public struct EventDetailView: View {
                 return
             }
             filename = "Contrato_\(client.name.replacingOccurrences(of: " ", with: "_")).pdf"
-            pdfData = ContractPDFGenerator.generate(event: event, client: client, profile: profile)
+            pdfData = ContractPDFGenerator.generate(
+                event: event,
+                client: client,
+                profile: profile,
+                products: viewModel.products,
+                payments: viewModel.payments,
+                productNames: productNames
+            )
         case "insumos":
             let ingredients = viewModel.supplies.map { s in
                 ShoppingListPDFGenerator.Ingredient(

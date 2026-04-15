@@ -4,7 +4,17 @@ import SolennixCore
 struct ContractPDFGenerator {
 
     /// Generates a contract PDF for the given event.
-    static func generate(event: Event, client: Client, profile: User?) -> Data {
+    /// Pass the full viewModel context (products, payments, productNames) so every
+    /// token in the user's saved template can be resolved — mirror of the render
+    /// logic in EventContractPreviewView.
+    static func generate(
+        event: Event,
+        client: Client,
+        profile: User?,
+        products: [EventProduct] = [],
+        payments: [Payment] = [],
+        productNames: [String: String] = [:]
+    ) -> Data {
         let renderer = UIGraphicsPDFRenderer(bounds: PDFConstants.pageRect)
 
         return renderer.pdfData { context in
@@ -15,7 +25,15 @@ struct ContractPDFGenerator {
 
             // MARK: Contract Body
             let template = profile?.contractTemplate ?? defaultContractTemplate()
-            let body = replaceTokens(in: template, event: event, client: client, profile: profile)
+            let body = replaceTokens(
+                in: template,
+                event: event,
+                client: client,
+                profile: profile,
+                products: products,
+                payments: payments,
+                productNames: productNames
+            )
 
             y = drawContractBody(context: context, y: y, text: body)
 
@@ -30,21 +48,43 @@ struct ContractPDFGenerator {
 
     // MARK: - Token Replacement
 
-    private static func replaceTokens(in template: String, event: Event, client: Client, profile: User?) -> String {
+    private static func replaceTokens(
+        in template: String,
+        event: Event,
+        client: Client,
+        profile: User?,
+        products: [EventProduct],
+        payments: [Payment],
+        productNames: [String: String]
+    ) -> String {
         let eventDateFormatted = PDFConstants.formatDate(event.eventDate)
         let todayFormatted = PDFConstants.dateFormatter.string(from: Date())
         let depositPercent = event.depositPercent ?? profile?.defaultDepositPercent ?? 0
         let depositAmount = event.totalAmount * (depositPercent / 100)
         let cancellationDays = event.cancellationDays ?? profile?.defaultCancellationDays ?? 0
         let refundPercent = event.refundPercent ?? profile?.defaultRefundPercent ?? 0
+        let totalPaid = payments.reduce(0) { $0 + $1.amount }
 
         // Compute discount
         let discountValue: Double
         if event.discountType == .percent {
-            discountValue = event.totalAmount * (event.discount / 100) / (1 - event.discount / 100 + event.taxRate / 100)
+            discountValue = event.totalAmount * (event.discount / 100) / max(1 - event.discount / 100 + event.taxRate / 100, 0.01)
         } else {
             discountValue = event.discount
         }
+
+        // Compose complex tokens
+        let scheduleValue: String = {
+            if let s = event.startTime, let e = event.endTime { return "\(s) - \(e)" }
+            return event.startTime ?? event.endTime ?? "—"
+        }()
+
+        let servicesValue: String = {
+            guard !products.isEmpty else { return "—" }
+            return products
+                .map { "\(Int($0.quantity)) \(productNames[$0.productId] ?? "Producto")" }
+                .joined(separator: ", ")
+        }()
 
         let tokenMap: [String: String] = [
             "[Nombre del cliente]": client.name,
@@ -55,22 +95,28 @@ struct ContractPDFGenerator {
             "[Fecha del evento]": eventDateFormatted,
             "[Hora de inicio]": event.startTime ?? "—",
             "[Hora de fin]": event.endTime ?? "—",
+            "[Horario del evento]": scheduleValue,
             "[Tipo de servicio]": event.serviceType,
             "[Número de personas]": "\(event.numPeople)",
             "[Ubicación del evento]": event.location ?? "—",
             "[Ciudad del evento]": event.city ?? "—",
+            "[Lugar del evento]": event.location ?? "—",
             "[Monto total del evento]": PDFConstants.formatCurrency(event.totalAmount),
             "[Subtotal del evento]": PDFConstants.formatCurrency(event.totalAmount - event.taxAmount + discountValue),
             "[Descuento del evento]": PDFConstants.formatCurrency(discountValue),
             "[IVA del evento]": PDFConstants.formatCurrency(event.taxAmount),
             "[Porcentaje de anticipo]": "\(Int(depositPercent))%",
             "[Monto de anticipo]": PDFConstants.formatCurrency(depositAmount),
+            "[Total pagado]": PDFConstants.formatCurrency(totalPaid),
             "[Días de cancelación]": "\(Int(cancellationDays))",
             "[Porcentaje de reembolso]": "\(Int(refundPercent))%",
             "[Nombre del negocio]": profile?.businessName ?? profile?.name ?? "—",
+            "[Nombre comercial del proveedor]": profile?.businessName ?? profile?.name ?? "—",
             "[Nombre del proveedor]": profile?.name ?? "—",
             "[Email del proveedor]": profile?.email ?? "—",
             "[Fecha actual]": todayFormatted,
+            "[Ciudad del contrato]": event.city ?? client.city ?? "—",
+            "[Servicios del evento]": servicesValue,
             "[Notas del evento]": event.notes ?? ""
         ]
 
@@ -78,6 +124,11 @@ struct ContractPDFGenerator {
         for (token, value) in tokenMap {
             result = result.replacingOccurrences(of: token, with: value)
         }
+        // Templates sometimes end up with literal '%%' when the author typed '%'
+        // right after a percentage token (e.g. "[Porcentaje de anticipo]%"). The
+        // token already renders "19%", so the adjacent '%' produces "19%%".
+        // Normalize any resulting double-percent back to single.
+        result = result.replacingOccurrences(of: "%%", with: "%")
         return result
     }
 
