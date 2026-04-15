@@ -11,6 +11,7 @@ public struct EventContractPreviewView: View {
 
     @State private var viewModel: EventDetailViewModel
     @Environment(AuthManager.self) private var authManager
+    @Environment(ToastManager.self) private var toastManager
     @Environment(\.dismiss) private var dismiss
 
     public init(eventId: String, apiClient: APIClient) {
@@ -310,21 +311,49 @@ public struct EventContractPreviewView: View {
     // MARK: - PDF Export
 
     private func sharePDF(_ event: Event) {
-        guard let client = viewModel.client else { return }
+        guard let client = viewModel.client else {
+            toastManager.show(message: "Datos del cliente no disponibles", type: .error)
+            return
+        }
         let pdfData = ContractPDFGenerator.generate(event: event, client: client, profile: profile)
         let filename = "Contrato_\(client.name.replacingOccurrences(of: " ", with: "_")).pdf"
         let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
-        try? pdfData.write(to: tempURL)
+        do {
+            try pdfData.write(to: tempURL)
+        } catch {
+            toastManager.show(message: "No se pudo guardar el PDF", type: .error)
+            return
+        }
+
+        guard let presenter = topMostViewController() else {
+            toastManager.show(message: "No se pudo presentar el compartir", type: .error)
+            return
+        }
 
         let activityVC = UIActivityViewController(activityItems: [tempURL], applicationActivities: nil)
-        if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let root = scene.windows.first?.rootViewController {
-            if let popover = activityVC.popoverPresentationController {
-                popover.sourceView = root.view
-                popover.sourceRect = CGRect(x: root.view.bounds.midX, y: root.view.bounds.midY, width: 0, height: 0)
-            }
-            root.present(activityVC, animated: true)
+        if let popover = activityVC.popoverPresentationController {
+            popover.sourceView = presenter.view
+            popover.sourceRect = CGRect(x: presenter.view.bounds.midX, y: presenter.view.bounds.midY, width: 0, height: 0)
+            popover.permittedArrowDirections = []
         }
+        presenter.present(activityVC, animated: true)
+    }
+
+    /// Walks the presentation chain to find the topmost VC that can present.
+    /// Using the root VC fails silently when a sheet/modal is already on top.
+    private func topMostViewController() -> UIViewController? {
+        guard let scene = UIApplication.shared.connectedScenes
+                .compactMap({ $0 as? UIWindowScene })
+                .first(where: { $0.activationState == .foregroundActive })
+              ?? UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first,
+              let window = scene.windows.first(where: { $0.isKeyWindow }) ?? scene.windows.first
+        else { return nil }
+
+        var top = window.rootViewController
+        while let presented = top?.presentedViewController {
+            top = presented
+        }
+        return top
     }
 
     // MARK: - Helpers

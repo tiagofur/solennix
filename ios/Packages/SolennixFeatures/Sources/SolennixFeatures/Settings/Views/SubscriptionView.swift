@@ -281,15 +281,17 @@ public struct SubscriptionView: View {
         if subscriptionManager.isPremium {
             return "Premium"
         }
-        guard let user = viewModel.user else { return "Basico" }
+        guard let user = viewModel.user else { return "Básico" }
         switch user.plan {
         case .premium: return "Premium"
-        case .basic: return "Basico"
+        case .pro: return "Pro"
+        case .business: return "Business"
+        case .basic: return "Básico"
         }
     }
 
     private var isPremiumUser: Bool {
-        subscriptionManager.isPremium || viewModel.user?.plan == .premium
+        subscriptionManager.isPremium || (viewModel.user?.plan.isPaid ?? false)
     }
 
     private var currentPlanFeatures: [String] {

@@ -273,15 +273,24 @@ public struct PlanBadge: View {
         self.plan = plan
     }
 
+    private var planLabel: String {
+        switch plan {
+        case .basic: return "Básico"
+        case .pro: return "Pro"
+        case .business: return "Business"
+        case .premium: return "Premium"
+        }
+    }
+
     public var body: some View {
-        Text(plan == .premium ? "Premium" : "Basico")
+        Text(planLabel)
             .font(.caption2)
             .fontWeight(.semibold)
-            .foregroundStyle(plan == .premium ? .white : SolennixColors.text)
+            .foregroundStyle(plan.isPaid ? .white : SolennixColors.text)
             .padding(.horizontal, Spacing.sm)
             .padding(.vertical, 2)
             .background(
-                plan == .premium
+                plan.isPaid
                     ? AnyShapeStyle(SolennixGradient.premium)
                     : AnyShapeStyle(SolennixColors.surface)
             )

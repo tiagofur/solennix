@@ -2,17 +2,23 @@ import Foundation
 
 // MARK: - Plan
 
-/// User subscription plan. Uses a custom decoder to handle any unknown
-/// plan strings the backend might send (e.g., "business") by falling back to `.basic`.
+/// User subscription plan. Backend sends "basic" | "pro" | "business"
+/// (and legacy "premium" from older records). Unknown strings fall back
+/// to `.basic` only when truly unrecognized.
 public enum Plan: String, Codable, Sendable, CaseIterable, Hashable {
     case basic
-    case premium
+    case pro
+    case business
+    case premium // legacy — treat as paid tier
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         let raw = try container.decode(String.self)
         self = Plan(rawValue: raw) ?? .basic
     }
+
+    /// True for any paid tier (pro, business, legacy premium).
+    public var isPaid: Bool { self != .basic }
 }
 
 // MARK: - User

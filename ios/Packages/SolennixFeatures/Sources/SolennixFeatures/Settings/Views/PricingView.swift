@@ -148,7 +148,7 @@ public struct PricingView: View {
                     "Soporte prioritario",
                     "Sin marca de agua en PDFs"
                 ],
-                isCurrentPlan: viewModel.user?.plan == .premium || subscriptionManager.isPremium,
+                isCurrentPlan: (viewModel.user?.plan.isPaid ?? false) || subscriptionManager.isPremium,
                 isRecommended: true
             )
         }
