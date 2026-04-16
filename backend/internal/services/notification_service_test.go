@@ -71,7 +71,7 @@ func TestNewNotificationService_GivenValidDeps_WhenCreated_ThenReturnsService(t 
 	ps := &PushService{enabled: false}
 	repo := &mockDeviceTokenFetcher{}
 
-	svc := NewNotificationService(ps, repo, nil)
+	svc := NewNotificationService(ps, repo, nil, nil)
 	require.NotNil(t, svc)
 	assert.Equal(t, ps, svc.pushService)
 	assert.Equal(t, repo, svc.deviceRepo)
@@ -84,7 +84,7 @@ func TestNewNotificationService_GivenValidDeps_WhenCreated_ThenReturnsService(t 
 func TestSendEventReminder_GivenDeviceRepoError_WhenSending_ThenReturnsError(t *testing.T) {
 	ps := &PushService{enabled: true}
 	repo := &mockDeviceTokenFetcher{err: errors.New("db error")}
-	svc := NewNotificationService(ps, repo, nil)
+	svc := NewNotificationService(ps, repo, nil, nil)
 
 	event := models.Event{
 		ID:          uuid.New(),
@@ -99,7 +99,7 @@ func TestSendEventReminder_GivenDeviceRepoError_WhenSending_ThenReturnsError(t *
 func TestSendEventReminder_GivenNoTokens_WhenSending_ThenReturnsNilWithNoSend(t *testing.T) {
 	ps := &PushService{enabled: true}
 	repo := &mockDeviceTokenFetcher{tokens: []models.DeviceToken{}}
-	svc := NewNotificationService(ps, repo, nil)
+	svc := NewNotificationService(ps, repo, nil, nil)
 
 	event := models.Event{
 		ID:          uuid.New(),
@@ -118,7 +118,7 @@ func TestSendEventReminder_GivenTokensAndDisabledPush_WhenSending_ThenSucceeds(t
 		},
 	}
 	// pool is nil — wasAlreadySent will fail and return false, so it proceeds
-	svc := NewNotificationService(ps, repo, nil)
+	svc := NewNotificationService(ps, repo, nil, nil)
 
 	event := models.Event{
 		ID:          uuid.New(),
@@ -167,7 +167,7 @@ func TestSendEventReminder_GivenDifferentReminderTypes_WhenSending_ThenUsesCorre
 func TestSendPaymentReceived_GivenDeviceRepoError_WhenSending_ThenReturnsError(t *testing.T) {
 	ps := &PushService{enabled: true}
 	repo := &mockDeviceTokenFetcher{err: errors.New("connection refused")}
-	svc := NewNotificationService(ps, repo, nil)
+	svc := NewNotificationService(ps, repo, nil, nil)
 
 	err := svc.SendPaymentReceived(context.Background(), uuid.New(), uuid.New(), 5000.00)
 	assert.Error(t, err)
@@ -177,7 +177,7 @@ func TestSendPaymentReceived_GivenDeviceRepoError_WhenSending_ThenReturnsError(t
 func TestSendPaymentReceived_GivenNoTokens_WhenSending_ThenReturnsNil(t *testing.T) {
 	ps := &PushService{enabled: true}
 	repo := &mockDeviceTokenFetcher{tokens: []models.DeviceToken{}}
-	svc := NewNotificationService(ps, repo, nil)
+	svc := NewNotificationService(ps, repo, nil, nil)
 
 	err := svc.SendPaymentReceived(context.Background(), uuid.New(), uuid.New(), 1500.50)
 	assert.NoError(t, err)
@@ -190,7 +190,7 @@ func TestSendPaymentReceived_GivenTokensAndDisabledPush_WhenSending_ThenReturnsN
 			{ID: uuid.New(), Token: "tok-1", Platform: "android"},
 		},
 	}
-	svc := NewNotificationService(ps, repo, nil)
+	svc := NewNotificationService(ps, repo, nil, nil)
 
 	err := svc.SendPaymentReceived(context.Background(), uuid.New(), uuid.New(), 2500.00)
 	assert.NoError(t, err)
@@ -203,7 +203,7 @@ func TestSendPaymentReceived_GivenTokensAndDisabledPush_WhenSending_ThenReturnsN
 func TestSendEventConfirmed_GivenDeviceRepoError_WhenSending_ThenReturnsError(t *testing.T) {
 	ps := &PushService{enabled: true}
 	repo := &mockDeviceTokenFetcher{err: errors.New("timeout")}
-	svc := NewNotificationService(ps, repo, nil)
+	svc := NewNotificationService(ps, repo, nil, nil)
 
 	event := models.Event{
 		ID:          uuid.New(),
@@ -218,7 +218,7 @@ func TestSendEventConfirmed_GivenDeviceRepoError_WhenSending_ThenReturnsError(t 
 func TestSendEventConfirmed_GivenNoTokens_WhenSending_ThenReturnsNil(t *testing.T) {
 	ps := &PushService{enabled: true}
 	repo := &mockDeviceTokenFetcher{tokens: []models.DeviceToken{}}
-	svc := NewNotificationService(ps, repo, nil)
+	svc := NewNotificationService(ps, repo, nil, nil)
 
 	event := models.Event{
 		ID:          uuid.New(),
@@ -236,7 +236,7 @@ func TestSendEventConfirmed_GivenTokensAndDisabledPush_WhenSending_ThenReturnsNi
 			{ID: uuid.New(), Token: "tok-1", Platform: "ios"},
 		},
 	}
-	svc := NewNotificationService(ps, repo, nil)
+	svc := NewNotificationService(ps, repo, nil, nil)
 
 	event := models.Event{
 		ID:          uuid.New(),
@@ -254,7 +254,7 @@ func TestSendEventConfirmed_GivenTokensAndDisabledPush_WhenSending_ThenReturnsNi
 func TestCleanupFailedTokens_GivenPermanentErrors_WhenCleaned_ThenUnregistersTokens(t *testing.T) {
 	repo := &mockDeviceTokenFetcher{}
 	ps := &PushService{enabled: false}
-	svc := NewNotificationService(ps, repo, nil)
+	svc := NewNotificationService(ps, repo, nil, nil)
 
 	failed := []FailedToken{
 		{Token: "tok-1", Platform: "ios", Reason: "Unregistered"},
@@ -275,7 +275,7 @@ func TestCleanupFailedTokens_GivenPermanentErrors_WhenCleaned_ThenUnregistersTok
 func TestCleanupFailedTokens_GivenTransientErrors_WhenCleaned_ThenDoesNotUnregister(t *testing.T) {
 	repo := &mockDeviceTokenFetcher{}
 	ps := &PushService{enabled: false}
-	svc := NewNotificationService(ps, repo, nil)
+	svc := NewNotificationService(ps, repo, nil, nil)
 
 	failed := []FailedToken{
 		{Token: "tok-1", Platform: "ios", Reason: "timeout"},
@@ -291,7 +291,7 @@ func TestCleanupFailedTokens_GivenTransientErrors_WhenCleaned_ThenDoesNotUnregis
 func TestCleanupFailedTokens_GivenEmptyFailedList_WhenCleaned_ThenDoesNothing(t *testing.T) {
 	repo := &mockDeviceTokenFetcher{}
 	ps := &PushService{enabled: false}
-	svc := NewNotificationService(ps, repo, nil)
+	svc := NewNotificationService(ps, repo, nil, nil)
 
 	svc.cleanupFailedTokens(context.Background(), uuid.New(), nil)
 
@@ -301,7 +301,7 @@ func TestCleanupFailedTokens_GivenEmptyFailedList_WhenCleaned_ThenDoesNothing(t 
 func TestCleanupFailedTokens_GivenMixedErrors_WhenCleaned_ThenOnlyUnregistersPermanent(t *testing.T) {
 	repo := &mockDeviceTokenFetcher{}
 	ps := &PushService{enabled: false}
-	svc := NewNotificationService(ps, repo, nil)
+	svc := NewNotificationService(ps, repo, nil, nil)
 
 	failed := []FailedToken{
 		{Token: "permanent-1", Platform: "ios", Reason: "Unregistered"},
@@ -324,7 +324,7 @@ func TestCleanupFailedTokens_GivenMixedErrors_WhenCleaned_ThenOnlyUnregistersPer
 func TestProcessPendingReminders_GivenDisabledPush_WhenCalled_ThenReturnsImmediately(t *testing.T) {
 	ps := &PushService{enabled: false}
 	repo := &mockDeviceTokenFetcher{}
-	svc := NewNotificationService(ps, repo, nil)
+	svc := NewNotificationService(ps, repo, nil, nil)
 
 	// Should return immediately without panicking on nil pool
 	svc.ProcessPendingReminders(context.Background())
