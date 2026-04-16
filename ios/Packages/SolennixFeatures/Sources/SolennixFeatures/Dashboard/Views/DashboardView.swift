@@ -179,10 +179,7 @@ public struct DashboardView: View {
     }
 
     private var currentDateString: String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "es_MX")
-        formatter.dateFormat = "EEEE d 'de' MMMM"
-        let str = formatter.string(from: Date())
+        let str = Date().formatted(style: "EEEE d 'de' MMMM")
         return str.prefix(1).uppercased() + str.dropFirst()
     }
 
@@ -599,17 +596,10 @@ public struct DashboardView: View {
     }
 
     private func parseDateComponents(_ dateString: String) -> (month: String, day: String) {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        guard let date = formatter.date(from: String(dateString.prefix(10))) else {
+        guard let date = Date.fromServerDay(dateString) else {
             return ("---", "--")
         }
-        let monthFormatter = DateFormatter()
-        monthFormatter.locale = Locale(identifier: "es_MX")
-        monthFormatter.dateFormat = "MMM"
-        let dayFormatter = DateFormatter()
-        dayFormatter.dateFormat = "d"
-        return (monthFormatter.string(from: date), dayFormatter.string(from: date))
+        return (date.formatted(style: "MMM"), date.formatted(style: "d"))
     }
 
     private var emptyEventsState: some View {

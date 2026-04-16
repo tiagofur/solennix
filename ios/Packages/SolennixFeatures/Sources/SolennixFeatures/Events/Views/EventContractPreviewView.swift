@@ -379,21 +379,12 @@ public struct EventContractPreviewView: View {
     }
 
     private static func formatDate(_ dateStr: String) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        formatter.locale = Locale(identifier: "es_MX")
-        guard let date = formatter.date(from: String(dateStr.prefix(10))) else { return dateStr }
-        let display = DateFormatter()
-        display.dateFormat = "d 'de' MMMM, yyyy"
-        display.locale = Locale(identifier: "es_MX")
-        return display.string(from: date)
+        guard let date = Date.fromServerDay(dateStr) else { return dateStr }
+        return date.formatted(style: "d 'de' MMMM, yyyy")
     }
 
     private static func formatDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "d 'de' MMMM, yyyy"
-        formatter.locale = Locale(identifier: "es_MX")
-        return formatter.string(from: date)
+        date.formatted(style: "d 'de' MMMM, yyyy")
     }
 
     // MARK: - Default Template

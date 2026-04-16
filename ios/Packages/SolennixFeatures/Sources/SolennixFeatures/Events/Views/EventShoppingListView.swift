@@ -346,14 +346,8 @@ public struct EventShoppingListView: View {
     // MARK: - Helpers
 
     private func formatDate(_ dateString: String) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        formatter.locale = Locale(identifier: "es_MX")
-        guard let date = formatter.date(from: String(dateString.prefix(10))) else { return dateString }
-        let display = DateFormatter()
-        display.dateFormat = "EEEE d 'de' MMMM, yyyy"
-        display.locale = Locale(identifier: "es_MX")
-        return display.string(from: date).capitalized
+        guard let date = Date.fromServerDay(dateString) else { return dateString }
+        return date.formatted(style: "EEEE d 'de' MMMM, yyyy").capitalized
     }
 
     private func formatQuantity(_ value: Double) -> String {

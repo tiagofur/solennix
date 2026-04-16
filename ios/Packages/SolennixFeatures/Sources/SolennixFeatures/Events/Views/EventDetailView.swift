@@ -987,37 +987,15 @@ public struct EventDetailView: View {
     // MARK: - Helpers
 
     private func formatDateShort(_ dateString: String) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        formatter.locale = Locale(identifier: "es_MX")
-
-        guard let date = formatter.date(from: String(dateString.prefix(10))) else {
-            return dateString
-        }
-
-        let displayFormatter = DateFormatter()
-        displayFormatter.dateFormat = "d MMM yyyy"
-        displayFormatter.locale = Locale(identifier: "es_MX")
-        return displayFormatter.string(from: date)
+        guard let date = Date.fromServerDay(dateString) else { return dateString }
+        return date.formatted(style: "d MMM yyyy")
     }
 
     private func parseDateComponents(_ dateString: String) -> (month: String, day: String) {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        formatter.locale = Locale(identifier: "es_MX")
-
-        guard let date = formatter.date(from: String(dateString.prefix(10))) else {
+        guard let date = Date.fromServerDay(dateString) else {
             return ("---", "--")
         }
-
-        let monthFormatter = DateFormatter()
-        monthFormatter.dateFormat = "MMM"
-        monthFormatter.locale = Locale(identifier: "es_MX")
-
-        let dayFormatter = DateFormatter()
-        dayFormatter.dateFormat = "d"
-
-        return (monthFormatter.string(from: date), dayFormatter.string(from: date))
+        return (date.formatted(style: "MMM"), date.formatted(style: "d"))
     }
 
     private var paymentMethods: [(key: String, label: String)] {
@@ -1206,14 +1184,8 @@ public struct EventDetailView: View {
         guard let event = viewModel.event else { return }
         HapticsHelper.play(.selection)
 
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd"
-        dateFormatter.locale = Locale(identifier: "es_MX")
-        let displayFormatter = DateFormatter()
-        displayFormatter.dateFormat = "d 'de' MMMM, yyyy"
-        displayFormatter.locale = Locale(identifier: "es_MX")
-        let displayDate = dateFormatter.date(from: event.eventDate)
-            .map { displayFormatter.string(from: $0) } ?? event.eventDate
+        let displayDate = Date.fromServerDay(event.eventDate)
+            .map { $0.formatted(style: "d 'de' MMMM, yyyy") } ?? event.eventDate
 
         let clientName = viewModel.client?.name ?? "Cliente"
 

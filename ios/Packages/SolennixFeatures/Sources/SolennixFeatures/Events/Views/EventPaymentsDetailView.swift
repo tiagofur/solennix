@@ -304,14 +304,8 @@ public struct EventPaymentsDetailView: View {
     // MARK: - Helpers
 
     private func formatDate(_ dateString: String) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        formatter.locale = Locale(identifier: "es_MX")
-        guard let date = formatter.date(from: String(dateString.prefix(10))) else { return dateString }
-        let display = DateFormatter()
-        display.dateFormat = "d MMM yyyy"
-        display.locale = Locale(identifier: "es_MX")
-        return display.string(from: date)
+        guard let date = Date.fromServerDay(dateString) else { return dateString }
+        return date.formatted(style: "d MMM yyyy")
     }
 
     private func paymentMethodLabel(_ method: String) -> String {

@@ -77,12 +77,56 @@ extension Date {
 
     // MARK: - Custom Format
 
-    /// Formats the date using a custom format string with es_MX locale.
-    public func formatted(style: String) -> String {
+    /// Cache of DateFormatter instances keyed by format string. SwiftUI view
+    /// helpers hit `formatted(style:)` on every `body` evaluation; without
+    /// caching each call allocates a new `DateFormatter`, which is measurable
+    /// on devices when the dashboard or event detail renders.
+    ///
+    /// NSCache is thread-safe for read/write; DateFormatter itself is safe
+    /// to READ concurrently (we never mutate an already-cached formatter).
+    private static let formatterCache: NSCache<NSString, DateFormatter> = {
+        let cache = NSCache<NSString, DateFormatter>()
+        cache.countLimit = 32
+        return cache
+    }()
+
+    /// Returns (or creates) a cached DateFormatter configured with the given
+    /// format string, es_MX locale and America/Mexico_City timezone.
+    public static func cachedFormatter(style: String) -> DateFormatter {
+        let key = style as NSString
+        if let cached = formatterCache.object(forKey: key) {
+            return cached
+        }
         let formatter = DateFormatter()
-        formatter.locale = Self.mexicanLocale
-        formatter.timeZone = Self.mexicanTimeZone
+        formatter.locale = mexicanLocale
+        formatter.timeZone = mexicanTimeZone
         formatter.dateFormat = style
-        return formatter.string(from: self)
+        formatterCache.setObject(formatter, forKey: key)
+        return formatter
+    }
+
+    /// Formats the date using a custom format string with es_MX locale.
+    /// Backed by an internal cache — reuse instead of allocating a new
+    /// `DateFormatter` for repeated calls with the same format string.
+    public func formatted(style: String) -> String {
+        Self.cachedFormatter(style: style).string(from: self)
+    }
+
+    // MARK: - Server date parsing (yyyy-MM-dd)
+
+    private static let serverDayFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        // Server dates are wall-clock dates (no time component). Parse them
+        // in UTC to keep them stable regardless of device timezone.
+        f.timeZone = TimeZone(identifier: "UTC")
+        return f
+    }()
+
+    /// Parses a `yyyy-MM-dd` string (optionally with trailing time) into a
+    /// `Date`. Server dates are treated as UTC so they do not shift by a day
+    /// on devices in negative-offset timezones.
+    public static func fromServerDay(_ dateString: String) -> Date? {
+        serverDayFormatter.date(from: String(dateString.prefix(10)))
     }
 }
