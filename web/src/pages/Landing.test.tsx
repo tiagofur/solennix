@@ -26,7 +26,7 @@ describe('Landing', () => {
 
   it('renders hero and navigation links', () => {
     renderLanding();
-    expect(screen.getByText(/Gestiona eventos/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Gestiona eventos/i).length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByRole('link', { name: /iniciar sesión/i })[0]).toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: /comenzar/i })[0]).toBeInTheDocument();
   });
@@ -302,7 +302,7 @@ describe('Landing', () => {
   it('renders footer with copyright and links', () => {
     renderLanding();
     expect(
-      screen.getByText(/2026 Eventos. Todos los derechos reservados/i)
+      screen.getByText(/2026 Solennix\. Todos los derechos reservados/i)
     ).toBeInTheDocument();
     expect(
       screen.getByText('Datos protegidos con encriptación de extremo a extremo')

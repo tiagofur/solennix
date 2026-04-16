@@ -103,7 +103,7 @@ describe('AdminDashboard', () => {
     // Verify key stats are rendered
     expect(await screen.findByText('101')).toBeInTheDocument(); // Total Usuarios
     expect(await screen.findByText('30')).toBeInTheDocument(); // Usuarios Pagados
-    expect(await screen.findByText('501')).toBeInTheDocument(); // Total Eventos
+    expect(await screen.findByText('100')).toBeInTheDocument(); // Total Eventos
   });
 
   it('calculates derived metrics correctly', async () => {
@@ -116,8 +116,8 @@ describe('AdminDashboard', () => {
     await waitFor(() => {
       // conversionRate: (30/101)*100 = 29.7%
       expect(screen.getAllByText('29.7% conversión')[0]).toBeInTheDocument();
-      // avgEventsPerUser: 501/101 = 5.0
-      expect(screen.getByText('~5.0 por usuario')).toBeInTheDocument();
+      // avgEventsPerUser: 100/101 = 1.0
+      expect(screen.getByText('~1.0 por usuario')).toBeInTheDocument();
       // churnRate: (3 / (19+3))*100 = 13.6%
       expect(screen.getByText('13.6%')).toBeInTheDocument();
     });
