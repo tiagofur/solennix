@@ -4,6 +4,11 @@ import { useToast } from '@/hooks/useToast';
 
 const STALE_TIME = 2 * 60 * 1000; // 2 minutes
 const GC_TIME = 10 * 60 * 1000; // 10 minutes
+// Minimum gap between background-refetch error toasts. On a flaky network
+// several queries can fail in the same tick, producing a flood of identical
+// toasts. This throttles them to at most one every 10s.
+const BG_REFETCH_TOAST_COOLDOWN_MS = 10_000;
+let lastBgRefetchToastAt = 0;
 
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
@@ -11,7 +16,11 @@ export const queryClient = new QueryClient({
       logError(`Query error [${String(query.queryKey)}]`, error);
       // Only toast for queries that already had data visible (background refetch failed)
       if (query.state.data !== undefined) {
-        useToast.getState().addToast('Error al actualizar los datos. Intenta recargar la página.', 'error');
+        const now = Date.now();
+        if (now - lastBgRefetchToastAt >= BG_REFETCH_TOAST_COOLDOWN_MS) {
+          lastBgRefetchToastAt = now;
+          useToast.getState().addToast('Error al actualizar los datos. Intenta recargar la página.', 'error');
+        }
       }
     },
   }),

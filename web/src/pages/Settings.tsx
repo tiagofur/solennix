@@ -272,6 +272,24 @@ export const Settings: React.FC = () => {
 
 
 
+  // Guard: do not render the form until auth profile is loaded. useState
+  // defaults are computed at mount with `profile?.foo || fallback`, so if
+  // a user clicked Save before the sync-effect ran, stale defaults would
+  // overwrite real server values. Returning the loader until profile is
+  // non-null sidesteps that race.
+  if (!profile) {
+    return (
+      <div
+        className="flex justify-center items-center h-64"
+        role="status"
+        aria-live="polite"
+      >
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <span className="sr-only">Cargando configuración...</span>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* ── HEADER ── */}

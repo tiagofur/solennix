@@ -65,12 +65,28 @@ describe('Modal', () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 
-  it('sets body overflow to hidden when open and restores on close', () => {
+  it('sets body overflow to hidden when open and restores the previous value on close', () => {
     const { rerender } = render(<Modal {...defaultProps} />);
     expect(document.body.style.overflow).toBe('hidden');
 
     rerender(<Modal {...defaultProps} isOpen={false} />);
-    expect(document.body.style.overflow).toBe('unset');
+    // Restores whatever overflow was present before the modal mounted (empty
+    // string in this test). Previously this hard-coded `unset`, which would
+    // clobber any prior scroll lock set by a parent modal or other UI.
+    expect(document.body.style.overflow).toBe('');
+  });
+
+  it('preserves an existing body overflow lock when opening and closing on top of it', () => {
+    document.body.style.overflow = 'hidden';
+    const { rerender, unmount } = render(<Modal {...defaultProps} />);
+    expect(document.body.style.overflow).toBe('hidden');
+
+    rerender(<Modal {...defaultProps} isOpen={false} />);
+    // The outer lock must survive; we should not have reset it to 'unset'.
+    expect(document.body.style.overflow).toBe('hidden');
+
+    unmount();
+    document.body.style.overflow = '';
   });
 
   it('applies correct max-width class for each size', () => {

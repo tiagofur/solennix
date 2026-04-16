@@ -28,12 +28,15 @@ export const Modal: React.FC<ModalProps> = ({
       if (e.key === 'Escape') onClose();
     };
 
-    // Prevent scrolling of the body when modal is open
+    // Prevent scrolling of the body when modal is open. Capture the existing
+    // overflow so nested modals / other UIs that rely on a prior scroll lock
+    // don't get their value clobbered when this modal unmounts.
+    const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     window.addEventListener('keydown', handleEscape);
 
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = previousOverflow;
       window.removeEventListener('keydown', handleEscape);
     };
   }, [isOpen, onClose]);
