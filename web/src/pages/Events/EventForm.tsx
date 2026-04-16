@@ -117,6 +117,37 @@ const STEPS = [
   { id: 5, title: "Finanzas y Contrato", icon: FileText },
 ];
 
+// Fields belonging to each step. Steps 2-4 manage local state (selectedProducts,
+// extras, selectedEquipment/Supplies) instead of form fields, so they have no
+// zod fields to validate — step progression for those is always permitted.
+const FIELDS_PER_STEP: Record<number, (keyof EventFormData)[]> = {
+  1: [
+    "client_id",
+    "event_date",
+    "start_time",
+    "end_time",
+    "service_type",
+    "num_people",
+    "status",
+    "location",
+    "city",
+  ],
+  2: [],
+  3: [],
+  4: [],
+  5: [
+    "discount",
+    "requires_invoice",
+    "tax_rate",
+    "tax_amount",
+    "total_amount",
+    "deposit_percent",
+    "cancellation_days",
+    "refund_percent",
+    "notes",
+  ],
+};
+
 export const EventForm: React.FC = () => {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
@@ -713,8 +744,11 @@ export const EventForm: React.FC = () => {
   }, [selectedEquipment, eventDateValue, startTimeValue, endTimeValue, id]);
 
   const onSubmit = async (data: EventFormData) => {
+    // Enter key on a non-final step must not silently advance the wizard or
+    // trigger a save: route through nextStep() so step-scoped validation runs
+    // before progressing. Only the final step actually saves.
     if (activeStep < STEPS.length) {
-      setActiveStep((prev) => Math.min(prev + 1, STEPS.length));
+      await nextStep();
       return;
     }
 
@@ -805,7 +839,14 @@ export const EventForm: React.FC = () => {
   const nextStep = async () => {
     if (isStepLoading) return;
     setIsStepLoading(true);
-    const isValidStep = await methods.trigger();
+    // Validate only the fields that belong to the CURRENT step. Without this
+    // scope, methods.trigger() validates the entire form, which surfaces
+    // errors on fields in steps the user has not yet reached.
+    const fieldsToValidate = FIELDS_PER_STEP[activeStep] ?? [];
+    const isValidStep =
+      fieldsToValidate.length === 0
+        ? true
+        : await methods.trigger(fieldsToValidate);
     if (isValidStep) {
       setActiveStep((prev) => Math.min(prev + 1, STEPS.length));
     }

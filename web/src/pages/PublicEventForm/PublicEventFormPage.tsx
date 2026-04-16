@@ -87,26 +87,35 @@ export const PublicEventFormPage: React.FC = () => {
 
   useEffect(() => {
     if (!token) return;
-    fetchFormData();
-  }, [token]);
+    const controller = new AbortController();
 
-  const fetchFormData = async () => {
-    try {
-      const res = await fetch(
-        `${API_BASE}/public/event-forms/${token}`
-      );
-      if (!res.ok) {
+    const fetchFormData = async () => {
+      try {
+        const res = await fetch(
+          `${API_BASE}/public/event-forms/${token}`,
+          { signal: controller.signal }
+        );
+        if (!res.ok) {
+          setExpired(true);
+          return;
+        }
+        const data: FormData = await res.json();
+        setFormData(data);
+      } catch (err) {
+        // Ignore aborts from unmount/token change; surface everything else
+        // as an expired/unavailable form.
+        if ((err as { name?: string })?.name === "AbortError") return;
         setExpired(true);
-        return;
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
       }
-      const data: FormData = await res.json();
-      setFormData(data);
-    } catch {
-      setExpired(true);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    fetchFormData();
+    return () => controller.abort();
+  }, [token]);
 
   const toggleProduct = (productId: string) => {
     setSelectedProducts((prev) => {
