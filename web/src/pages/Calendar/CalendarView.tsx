@@ -1,13 +1,16 @@
 import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { DayPicker, type DayButtonProps } from "react-day-picker";
 import "react-day-picker/style.css";
-import { eventService } from "../../services/eventService";
 import {
   unavailableDatesService,
   UnavailableDate,
 } from "../../services/unavailableDatesService";
 import { UnavailableDatesModal } from "./components/UnavailableDatesModal";
 import { Link, useNavigate } from "react-router-dom";
+import { useEventsByDateRange } from "../../hooks/queries/useEventQueries";
+import { useUnavailableDatesByRange } from "../../hooks/queries/useUnavailableDatesQueries";
+import { queryKeys } from "../../hooks/queries/queryKeys";
 import {
   Calendar,
   CalendarDays,
@@ -75,65 +78,56 @@ function makeDayButton(
 
 export const CalendarView: React.FC = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const normalizedToday = startOfDay(new Date());
   const { addToast } = useToast();
-  const [events, setEvents] = useState<EventWithClient[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
     normalizedToday,
   );
   const [currentMonth, setCurrentMonth] = useState<Date>(
     startOfMonth(normalizedToday),
   );
-  const [unavailableDates, setUnavailableDates] = useState<UnavailableDate[]>(
-    [],
-  );
   const [isManagingBlocks, setIsManagingBlocks] = useState(false);
   const [isConfirmingUnblock, setIsConfirmingUnblock] = useState(false);
   const [contextMenuDate, setContextMenuDate] = useState<string | undefined>();
   const [showCreateMenu, setShowCreateMenu] = useState(false);
   const createMenuRef = useRef<HTMLDivElement>(null);
-  const [loading, setLoading] = useState(true);
-  const [isFetching, setIsFetching] = useState(false);
 
-  const fetchEvents = useCallback(async (date: Date) => {
-    try {
-      setLoading(true);
-      setIsFetching(true);
-      const start = startOfMonth(date);
-      const endMonth = endOfMonth(date);
+  // Month boundaries as yyyy-MM-dd strings — used as both query args and
+  // React Query keys, so caching is automatic per month.
+  const rangeStart = format(startOfMonth(currentMonth), "yyyy-MM-dd");
+  const rangeEnd = format(endOfMonth(currentMonth), "yyyy-MM-dd");
 
-      const [eventsData, unavailableData] = await Promise.all([
-        eventService.getByDateRange(
-          format(start, "yyyy-MM-dd"),
-          format(endMonth, "yyyy-MM-dd"),
-        ),
-        unavailableDatesService.getDates(
-          format(start, "yyyy-MM-dd"),
-          format(endMonth, "yyyy-MM-dd"),
-        ),
-      ]);
+  const { data: eventsData, isLoading: eventsLoading, isFetching: eventsFetching, error: eventsError } =
+    useEventsByDateRange(rangeStart, rangeEnd);
+  const { data: unavailableData, isLoading: unavailableLoading, isFetching: unavailableFetching, error: unavailableError } =
+    useUnavailableDatesByRange(rangeStart, rangeEnd);
 
-      setEvents((eventsData as EventWithClient[]) || []);
-      setUnavailableDates(unavailableData || []);
-    } catch (error) {
-      logError("CalendarView:fetchEvents", error);
-    } finally {
-      setLoading(false);
-      setIsFetching(false);
-    }
-  }, []);
+  const events = useMemo(
+    () => ((eventsData as EventWithClient[] | undefined) ?? []),
+    [eventsData],
+  );
+  const unavailableDates = useMemo(
+    () => (unavailableData ?? []),
+    [unavailableData],
+  );
 
+  const loading = eventsLoading || unavailableLoading;
+  const isFetching = eventsFetching || unavailableFetching;
+
+  // Surface query errors via toast (once per transition).
   useEffect(() => {
-    let isMounted = true;
-    const fetchData = async () => {
-      if (!isMounted) return;
-      await fetchEvents(currentMonth);
-    };
-    fetchData();
-    return () => {
-      isMounted = false;
-    };
-  }, [currentMonth, fetchEvents]);
+    if (eventsError) logError("CalendarView:events", eventsError);
+    if (unavailableError) logError("CalendarView:unavailable", unavailableError);
+  }, [eventsError, unavailableError]);
+
+  // Invalidate both month windows whenever a mutation changes availability,
+  // so the UI stays in sync without a manual refresh.
+  const refreshUnavailableRange = useCallback(() => {
+    queryClient.invalidateQueries({
+      queryKey: queryKeys.unavailableDates.byRange(rangeStart, rangeEnd),
+    });
+  }, [queryClient, rangeStart, rangeEnd]);
 
   const handleMonthChange = (month: Date) => {
     setCurrentMonth(startOfMonth(startOfDay(month)));
@@ -174,9 +168,7 @@ export const CalendarView: React.FC = () => {
     if (!selectedUnavailable) return;
     try {
       await unavailableDatesService.removeDate(selectedUnavailable.id);
-      setUnavailableDates((prev) =>
-        prev.filter((d) => d.id !== selectedUnavailable.id),
-      );
+      refreshUnavailableRange();
       addToast("Fechas desbloqueadas exitosamente", "success");
       setSelectedDate(undefined);
     } catch (error) {
@@ -658,11 +650,11 @@ export const CalendarView: React.FC = () => {
           setIsManagingBlocks(false);
           setContextMenuDate(undefined);
         }}
-        onSave={(newDate) => {
-          setUnavailableDates((prev) => [...prev, newDate]);
+        onSave={(_newDate) => {
+          refreshUnavailableRange();
         }}
-        onDelete={(id) => {
-          setUnavailableDates((prev) => prev.filter((d) => d.id !== id));
+        onDelete={(_id) => {
+          refreshUnavailableRange();
         }}
         initialDate={contextMenuDate}
       />

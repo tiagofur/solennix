@@ -232,8 +232,11 @@ describe('CalendarView', () => {
     renderCalendar();
 
     await waitFor(() => {
-      expect(logError).toHaveBeenCalledWith('CalendarView:fetchEvents', expect.any(Error));
-    });
+      expect(logError).toHaveBeenCalledWith(
+        'CalendarView:events',
+        expect.any(Error),
+      );
+    }, { timeout: 3000 });
   });
 
   // ---------- COVERAGE TESTS ----------

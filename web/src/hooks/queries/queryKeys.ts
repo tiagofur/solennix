@@ -53,5 +53,10 @@ export const queryKeys = {
   eventFormLinks: {
     all: ['eventFormLinks'] as const,
   },
+  unavailableDates: {
+    all: ['unavailableDates'] as const,
+    byRange: (start: string, end: string) =>
+      ['unavailableDates', 'range', start, end] as const,
+  },
   planLimits: ['planLimits'] as const,
 } as const;
