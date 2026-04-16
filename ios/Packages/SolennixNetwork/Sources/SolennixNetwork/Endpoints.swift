@@ -95,6 +95,13 @@ public enum Endpoint {
         "/unavailable-dates/\(id)"
     }
 
+    // MARK: - Dashboard
+
+    /// Aggregated KPI endpoint — returns counts + totals server-side.
+    /// Use this for the dashboard header so the UI can paint immediately
+    /// while the underlying list endpoints continue loading.
+    public static let dashboardKpis = "/dashboard/kpis"
+
     // MARK: - Search
 
     public static let search = "/search"

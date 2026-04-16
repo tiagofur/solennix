@@ -330,7 +330,7 @@ public struct DashboardView: View {
 
         KPICardView(
             title: "Eventos del Mes",
-            value: "\(viewModel?.eventsThisMonth.count ?? 0)",
+            value: "\(viewModel?.eventsThisMonthCount ?? 0)",
             icon: "calendar",
             iconColor: SolennixColors.kpiOrange,
             iconBgColor: SolennixColors.kpiOrangeBg,

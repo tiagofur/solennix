@@ -92,6 +92,12 @@ public final class DashboardViewModel {
     public var attentionEvents: [DashboardAttentionEvent] = []
     public var updatingEventId: String?
 
+    /// Server-aggregated counts. Populated by the first /dashboard/kpis call
+    /// so header cards paint in <200ms while the list endpoints continue
+    /// loading. Views that render totals (events/clients/low stock) should
+    /// prefer `kpis?.*` over computing from the full lists when available.
+    public var kpis: DashboardKPIs?
+
     /// Map of client ID -> Client for joining event data with client names.
     public var clientMap: [String: Client] = [:]
 
@@ -118,12 +124,23 @@ public final class DashboardViewModel {
         return counts
     }
 
+    /// Prefer the server aggregate when available (arrives first); fall back
+    /// to computing from the already-loaded client map once the sequential
+    /// loaders finish populating it.
     public var totalClients: Int {
-        clientMap.count
+        kpis?.totalClients ?? clientMap.count
     }
 
+    /// Prefer the server aggregate when available; fall back to filtering the
+    /// already-loaded events list.
     public var pendingQuotes: Int {
-        eventsThisMonth.filter { $0.status == .quoted }.count
+        kpis?.pendingQuotes ?? eventsThisMonth.filter { $0.status == .quoted }.count
+    }
+
+    /// Count of events in the current month — paints instantly from kpis
+    /// preload, then stays stable once the full list loads.
+    public var eventsThisMonthCount: Int {
+        kpis?.eventsThisMonth ?? eventsThisMonth.count
     }
 
     /// Resolve a client name from the client map.
@@ -156,6 +173,26 @@ public final class DashboardViewModel {
         let endStr = dateFormatter.string(from: endOfMonth)
 
         var encounteredError = false
+
+        // Paint header counts IMMEDIATELY from the server-aggregated endpoint.
+        // A single /dashboard/kpis call returns revenue, event/client/inventory
+        // counts in <200ms. The 8 list calls below still populate the body
+        // (events, payments, inventory details) but the user no longer stares
+        // at an empty dashboard for ~1.6s while those fire sequentially.
+        do {
+            let aggregated: DashboardKPIs = try await apiClient.get(Endpoint.dashboardKpis)
+            kpis = aggregated
+            // Mirror low stock count for views that read `lowStockCount`
+            // directly. The list (`lowStockItems`) still comes from the
+            // inventory loader below. Other counts (totalEvents, totalProducts)
+            // are derived from the full lists and are not a clean 1:1 with
+            // kpis fields, so we leave those to the sequential loaders.
+            lowStockCount = aggregated.lowStockItems
+        } catch {
+            NSLog("[Dashboard] ⚠️ kpis preload failed: %@", String(describing: error))
+            // Non-fatal — the sequential loaders below will still populate
+            // everything; we just lose the progressive-paint advantage.
+        }
 
         func loadOrEmpty<T: Decodable>(
             _ endpoint: String,
