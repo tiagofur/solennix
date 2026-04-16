@@ -148,22 +148,40 @@ class EventListViewModel @Inject constructor(
     fun generateCsvContent(): String {
         val state = uiState.value
         val sb = StringBuilder()
-        sb.appendLine("Nombre,Fecha,Cliente,Estado,Total,Pagado,Lugar")
+        // "Pagado" column removed: payment totals were never populated (the
+        // column was always empty) and EventListViewModel does not have a
+        // PaymentRepository to compute them. Export only what we can honestly
+        // fill; adding Pagado back requires pulling payment aggregates.
+        sb.appendLine("Nombre,Fecha,Cliente,Estado,Total,Lugar")
         val statusLabels = mapOf(
             EventStatus.QUOTED to "Cotizado",
             EventStatus.CONFIRMED to "Confirmado",
             EventStatus.COMPLETED to "Completado",
             EventStatus.CANCELLED to "Cancelado"
         )
-        state.events.forEach { event ->
+        // Apply the same filters the user sees in the list before exporting.
+        // Previously CSV always wrote the full events cache, silently ignoring
+        // active status/date/search filters and producing surprising exports.
+        val filtered = state.events.filter { event ->
+            val matchesStatus = state.selectedStatus == null || event.status == state.selectedStatus
+            val matchesStart = state.startDate == null || event.eventDate >= state.startDate.toString()
+            val matchesEnd = state.endDate == null || event.eventDate <= state.endDate.toString()
+            val q = state.searchQuery.trim()
+            val matchesQuery = q.isEmpty()
+                || event.serviceType.contains(q, ignoreCase = true)
+                || (event.location?.contains(q, ignoreCase = true) == true)
+                || (event.city?.contains(q, ignoreCase = true) == true)
+                || (state.clientMap[event.clientId]?.name?.contains(q, ignoreCase = true) == true)
+            matchesStatus && matchesStart && matchesEnd && matchesQuery
+        }
+        filtered.forEach { event ->
             val name = event.serviceType.escapeCsv()
             val date = event.eventDate.escapeCsv()
             val clientName = (state.clientMap[event.clientId]?.name ?: "").escapeCsv()
             val status = (statusLabels[event.status] ?: event.status.name).escapeCsv()
             val total = event.totalAmount.asMXN().escapeCsv()
-            val paid = ""
             val location = (event.location ?: "").escapeCsv()
-            sb.appendLine("$name,$date,$clientName,$status,$total,$paid,$location")
+            sb.appendLine("$name,$date,$clientName,$status,$total,$location")
         }
         return sb.toString()
     }

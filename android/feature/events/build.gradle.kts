@@ -71,6 +71,9 @@ dependencies {
     // Window Manager for Foldables
     implementation(libs.androidx.window)
 
+    // EncryptedSharedPreferences for checklist progress (event IDs are keys)
+    implementation(libs.security.crypto)
+
     // Testing
     testImplementation(libs.junit.jupiter.api)
     testRuntimeOnly(libs.junit.jupiter.engine)

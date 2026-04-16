@@ -37,6 +37,17 @@ class CalendarViewModel @Inject constructor(
     private val _currentMonth = MutableStateFlow(YearMonth.now())
     private val _unavailableDates = MutableStateFlow<List<UnavailableDate>>(emptyList())
 
+    // Surface block/unblock failures to the UI. Previously toggleDateBlock,
+    // blockDateRange, and deleteUnavailableDate caught exceptions into empty
+    // catch blocks, so a failed API call produced no user feedback — the
+    // calendar would just fail to update silently.
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+
+    fun clearError() {
+        _errorMessage.value = null
+    }
+
     val uiState: StateFlow<CalendarUiState> = combine(
         eventRepository.getEvents(),
         _selectedDate,
@@ -146,7 +157,7 @@ class CalendarViewModel @Inject constructor(
                 }
                 loadUnavailableDates(_currentMonth.value)
             } catch (e: Exception) {
-                // Handle error
+                _errorMessage.value = e.message ?: "No se pudo actualizar la disponibilidad de la fecha."
             }
         }
     }
@@ -165,7 +176,7 @@ class CalendarViewModel @Inject constructor(
                 loadUnavailableDates(_currentMonth.value)
                 loadAllUnavailableDates()
             } catch (e: Exception) {
-                // Handle error
+                _errorMessage.value = e.message ?: "No se pudo bloquear el rango de fechas."
             }
         }
     }
@@ -177,7 +188,7 @@ class CalendarViewModel @Inject constructor(
                 loadUnavailableDates(_currentMonth.value)
                 loadAllUnavailableDates()
             } catch (e: Exception) {
-                // Handle error
+                _errorMessage.value = e.message ?: "No se pudo eliminar la fecha bloqueada."
             }
         }
     }

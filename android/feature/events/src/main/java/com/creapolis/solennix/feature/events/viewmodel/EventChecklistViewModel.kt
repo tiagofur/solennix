@@ -5,6 +5,8 @@ import android.content.SharedPreferences
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
 import com.creapolis.solennix.core.data.repository.EventRepository
 import com.creapolis.solennix.core.data.repository.ProductRepository
 import com.creapolis.solennix.core.model.SupplySource
@@ -61,7 +63,22 @@ class EventChecklistViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val eventId: String = savedStateHandle["eventId"] ?: ""
-    private val prefs: SharedPreferences = context.getSharedPreferences("checklist_prefs", Context.MODE_PRIVATE)
+
+    // Checklist progress is persisted per-event; event IDs end up as preference
+    // keys. Keep the file encrypted so a rooted device or backup extraction
+    // cannot enumerate the user's event IDs from plain preference files.
+    private val prefs: SharedPreferences = run {
+        val masterKey = MasterKey.Builder(context)
+            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            .build()
+        EncryptedSharedPreferences.create(
+            context,
+            "checklist_prefs_encrypted",
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
+    }
 
     private val _uiState = MutableStateFlow(EventChecklistUiState(eventId = eventId))
     val uiState: StateFlow<EventChecklistUiState> = _uiState.asStateFlow()

@@ -50,9 +50,15 @@ abstract class SolennixDatabase : RoomDatabase() {
     companion object {
         private const val TAG = "SolennixDatabase"
 
+        // Intentional no-op: v5 was a version bump without schema changes.
+        // Historical schemas for v4 were never exported (the schemas/ folder
+        // starts at v6), so we cannot retroactively verify. If a crash report
+        // shows a v4→v5 upgrade failing on a field addition we overlooked,
+        // add the DDL here. Devices upgrading through this migration today
+        // just tick the version counter.
         val MIGRATION_4_5 = object : Migration(4, 5) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                Log.d(TAG, "Running migration 4 -> 5")
+                Log.d(TAG, "Running migration 4 -> 5 (no schema change)")
             }
         }
 
