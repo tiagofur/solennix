@@ -64,10 +64,39 @@ func NewSubscriptionHandler(
 // POST /api/subscriptions/checkout-session
 // ─────────────────────────────────────────────
 
+// checkoutSessionRequest is the optional JSON body accepted by
+// CreateCheckoutSession. An empty/missing body defaults to the Pro plan with
+// the server-configured 14-day trial, which matches the historical behavior.
+type checkoutSessionRequest struct {
+	Plan             string `json:"plan"`               // "pro" | "business"
+	SkipTrial        bool   `json:"skip_trial"`         // true to bypass the trial for testing
+}
+
+// defaultCheckoutTrialDays is the free-trial length offered on the web
+// Stripe flow. Kept at parity with the mobile App Store / Play Billing
+// 14-day trial configured in the store products.
+const defaultCheckoutTrialDays = int64(14)
+
 func (h *SubscriptionHandler) CreateCheckoutSession(w http.ResponseWriter, r *http.Request) {
 	if h.cfg.StripeSecretKey == "" || h.cfg.StripeProPriceID == "" {
 		writeError(w, http.StatusInternalServerError, "Stripe is not configured on this server")
 		return
+	}
+
+	// Body is optional — older clients POST with no body, new clients send
+	// `{"plan": "business"}` to upgrade to Business tier.
+	var req checkoutSessionRequest
+	_ = decodeJSON(r, &req)
+
+	priceID := h.cfg.StripeProPriceID
+	plan := "pro"
+	if req.Plan == "business" {
+		if h.cfg.StripeBusinessPriceID == "" {
+			writeError(w, http.StatusBadRequest, "Business tier is not configured on this server")
+			return
+		}
+		priceID = h.cfg.StripeBusinessPriceID
+		plan = "business"
 	}
 
 	userID := middleware.GetUserID(r.Context())
@@ -83,7 +112,7 @@ func (h *SubscriptionHandler) CreateCheckoutSession(w http.ResponseWriter, r *ht
 		PaymentMethodTypes: stripe.StringSlice([]string{"card"}),
 		LineItems: []*stripe.CheckoutSessionLineItemParams{
 			{
-				Price:    stripe.String(h.cfg.StripeProPriceID),
+				Price:    stripe.String(priceID),
 				Quantity: stripe.Int64(1),
 			},
 		},
@@ -91,7 +120,22 @@ func (h *SubscriptionHandler) CreateCheckoutSession(w http.ResponseWriter, r *ht
 		SuccessURL:        stripe.String(domain + "/dashboard?session_id={CHECKOUT_SESSION_ID}"),
 		CancelURL:         stripe.String(domain + "/pricing"),
 		ClientReferenceID: stripe.String(user.ID.String()),
+		Metadata: map[string]string{
+			"plan": plan,
+		},
 	}
+
+	// Attach 14-day free trial for web parity with mobile IAP flows, and
+	// propagate the `plan` label into the Subscription metadata so webhook
+	// events (customer.subscription.updated) can distinguish pro vs business
+	// without re-reading the price object.
+	subData := &stripe.CheckoutSessionSubscriptionDataParams{
+		Metadata: map[string]string{"plan": plan},
+	}
+	if !req.SkipTrial {
+		subData.TrialPeriodDays = stripe.Int64(defaultCheckoutTrialDays)
+	}
+	params.SubscriptionData = subData
 
 	if user.StripeCustomerID != nil && *user.StripeCustomerID != "" {
 		params.Customer = stripe.String(*user.StripeCustomerID)
@@ -215,27 +259,44 @@ func (h *SubscriptionHandler) StripeWebhook(w http.ResponseWriter, r *http.Reque
 				slog.Error("Invalid user ID in checkout session", "id", s.ClientReferenceID)
 				break
 			}
+			// Which paid plan? CreateCheckoutSession stores it on the Session
+			// metadata so we don't have to re-inspect the price here. Older
+			// sessions without the field default to "pro" (historical
+			// behavior).
+			plan := s.Metadata["plan"]
+			if plan != "pro" && plan != "business" {
+				plan = "pro"
+			}
 			var customerID *string
 			if s.Customer != nil {
 				customerID = &s.Customer.ID
 			}
-			if err := h.userRepo.UpdatePlanAndStripeID(r.Context(), userID, "pro", customerID); err != nil {
+			if err := h.userRepo.UpdatePlanAndStripeID(r.Context(), userID, plan, customerID); err != nil {
 				slog.Error("Failed to update user plan after checkout", "error", err)
 			} else {
-				slog.Info("User upgraded to pro via Stripe checkout", "user_id", userID)
+				slog.Info("User upgraded via Stripe checkout", "user_id", userID, "plan", plan)
 
 				// Send subscription confirmation email (fire-and-forget, respects user preference)
 				if h.emailService != nil {
+					planLabel := "Pro"
+					if plan == "business" {
+						planLabel = "Business"
+					}
 					go func() {
 						if user, err := h.userRepo.GetByID(context.Background(), userID); err == nil {
 							if user.EmailSubscriptionUpdates == nil || *user.EmailSubscriptionUpdates {
-								_ = h.emailService.SendSubscriptionConfirmation(user.Email, user.Name, "Pro")
+								_ = h.emailService.SendSubscriptionConfirmation(user.Email, user.Name, planLabel)
 							}
 						}
 					}()
 				}
 
-				// Sync to RevenueCat so mobile apps see the entitlement
+				// Sync to RevenueCat so mobile apps see the entitlement.
+				// Both Pro and Business share the `pro_access` entitlement in
+				// RC today — a separate `business_access` entitlement will
+				// be added if/when Business-only features need gating on
+				// mobile. For now this keeps mobile access unlocked for
+				// Business subscribers without a second RC round-trip.
 				if h.rcService != nil {
 					duration := "monthly" // default
 					if s.Subscription != nil {
@@ -259,7 +320,7 @@ func (h *SubscriptionHandler) StripeWebhook(w http.ResponseWriter, r *http.Reque
 					UserID:        userID,
 					Provider:      "stripe",
 					ProviderSubID: &s.Subscription.ID,
-					Plan:          "pro",
+					Plan:          plan,
 					Status:        "active",
 				}
 				// Fetch Stripe subscription for period dates

@@ -27,6 +27,7 @@ type Config struct {
 	StripeSecretKey         string
 	StripeWebhookSecret     string
 	StripeProPriceID        string
+	StripeBusinessPriceID   string // Optional — unlocks Business tier checkout when set
 	StripePortalConfigID    string // Billing Portal configuration ID (optional)
 	RevenueCatWebhookSecret string // RevenueCat v2 webhook authorization header secret
 	RevenueCatAPIKey        string // RevenueCat secret API key for server-to-server calls
@@ -75,6 +76,7 @@ func Load() (*Config, error) {
 		StripeSecretKey:         os.Getenv("STRIPE_SECRET_KEY"),
 		StripeWebhookSecret:     os.Getenv("STRIPE_WEBHOOK_SECRET"),
 		StripeProPriceID:        os.Getenv("STRIPE_PRO_PRICE_ID"),
+		StripeBusinessPriceID:   os.Getenv("STRIPE_BUSINESS_PRICE_ID"),
 		StripePortalConfigID:    os.Getenv("STRIPE_PORTAL_CONFIG_ID"),
 		RevenueCatWebhookSecret: os.Getenv("REVENUECAT_WEBHOOK_SECRET"),
 		RevenueCatAPIKey:        os.Getenv("REVENUECAT_API_KEY"),
