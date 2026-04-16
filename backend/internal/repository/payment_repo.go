@@ -49,7 +49,12 @@ func (r *PaymentRepo) GetByID(ctx context.Context, id, userID uuid.UUID) (*model
 	return &payment, nil
 }
 
+var paymentAllowedSortCols = []string{"payment_date", "created_at", "amount", "payment_method"}
+
 func (r *PaymentRepo) GetAllPaginated(ctx context.Context, userID uuid.UUID, offset, limit int, sortCol, order string) ([]models.Payment, int, error) {
+	sortCol = safeSortColumn(sortCol, paymentAllowedSortCols, "payment_date")
+	order = safeSortOrder(order)
+
 	var total int
 	countQuery := `SELECT COUNT(*) FROM payments WHERE user_id = $1`
 	if err := r.pool.QueryRow(ctx, countQuery, userID).Scan(&total); err != nil {

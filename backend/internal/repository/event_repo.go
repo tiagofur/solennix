@@ -86,7 +86,14 @@ func (r *EventRepo) GetAll(ctx context.Context, userID uuid.UUID) ([]models.Even
 	return events, nil
 }
 
+var eventAllowedSortCols = []string{
+	"e.event_date", "e.created_at", "e.total_amount", "e.status", "e.num_people",
+}
+
 func (r *EventRepo) GetAllPaginated(ctx context.Context, userID uuid.UUID, offset, limit int, sortCol, order string) ([]models.Event, int, error) {
+	sortCol = safeSortColumn(sortCol, eventAllowedSortCols, "e.event_date")
+	order = safeSortOrder(order)
+
 	var total int
 	countQuery := `SELECT COUNT(*) FROM events WHERE user_id = $1`
 	if err := r.pool.QueryRow(ctx, countQuery, userID).Scan(&total); err != nil {

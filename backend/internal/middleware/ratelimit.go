@@ -15,11 +15,26 @@ type visitor struct {
 
 var RateLimitCleanupInterval = 5 * time.Minute
 
-// RateLimitStopFunc holds the function to stop all background cleanup loops.
-var RateLimitStopFunc func()
+// allStopFuncs accumulates stop functions for every rate limiter started.
+// Protected by stopFuncsMu so concurrent RateLimit() calls append safely.
+var (
+	allStopFuncs []func()
+	stopFuncsMu  sync.Mutex
+)
 
-// allStopFuncs accumulates stop functions for all rate limiters.
-var allStopFuncs []func()
+// RateLimitStopFunc closes all rate limiter cleanup goroutines that have been
+// registered. Safe to call once at shutdown. Previously this variable was
+// reassigned on every RateLimit() call, which meant (a) each call raced on the
+// package-global, and (b) only the last-registered limiter's stop closure was
+// reachable if the assignment was ever observed mid-flight.
+var RateLimitStopFunc = func() {
+	stopFuncsMu.Lock()
+	defer stopFuncsMu.Unlock()
+	for _, fn := range allStopFuncs {
+		fn()
+	}
+	allStopFuncs = nil
+}
 
 // TrustProxy controls whether X-Forwarded-For is used for client IP extraction.
 // Set to true only when behind a trusted reverse proxy.
@@ -34,15 +49,9 @@ func RateLimit(maxRequests int, window time.Duration) func(http.Handler) http.Ha
 	done := make(chan struct{})
 
 	stopThis := func() { close(done) }
+	stopFuncsMu.Lock()
 	allStopFuncs = append(allStopFuncs, stopThis)
-
-	// Update global stop to close all rate limiters
-	RateLimitStopFunc = func() {
-		for _, fn := range allStopFuncs {
-			fn()
-		}
-		allStopFuncs = nil
-	}
+	stopFuncsMu.Unlock()
 
 	// Background cleanup of stale entries
 	go func() {

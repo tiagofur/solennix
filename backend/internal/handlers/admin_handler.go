@@ -27,7 +27,7 @@ func (h *AdminHandler) GetStats(w http.ResponseWriter, r *http.Request) {
 	stats, err := h.adminRepo.GetPlatformStats(r.Context())
 	if err != nil {
 		slog.Error("admin: failed to get platform stats", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to get platform stats"})
+		writeError(w, http.StatusInternalServerError, "Failed to get platform stats")
 		return
 	}
 
@@ -40,7 +40,7 @@ func (h *AdminHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 	users, err := h.adminRepo.GetAllUsers(r.Context())
 	if err != nil {
 		slog.Error("admin: failed to list users", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to list users"})
+		writeError(w, http.StatusInternalServerError, "Failed to list users")
 		return
 	}
 
@@ -57,14 +57,14 @@ func (h *AdminHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid user ID"})
+		writeError(w, http.StatusBadRequest, "Invalid user ID")
 		return
 	}
 
 	user, err := h.adminRepo.GetUserByID(r.Context(), id)
 	if err != nil {
 		slog.Error("admin: failed to get user", "error", err, "id", idStr)
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "User not found"})
+		writeError(w, http.StatusNotFound, "User not found")
 		return
 	}
 
@@ -86,7 +86,7 @@ func (h *AdminHandler) UpgradeUser(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid user ID"})
+		writeError(w, http.StatusBadRequest, "Invalid user ID")
 		return
 	}
 
@@ -100,22 +100,20 @@ func (h *AdminHandler) UpgradeUser(w http.ResponseWriter, r *http.Request) {
 
 	// Validate target plan
 	if req.Plan != "pro" && req.Plan != "premium" && req.Plan != "basic" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid plan. Must be 'basic', 'pro', or 'premium'"})
+		writeError(w, http.StatusBadRequest, "Invalid plan. Must be 'basic', 'pro', or 'premium'")
 		return
 	}
 
 	// Get the current user info
 	user, err := h.adminRepo.GetUserByID(r.Context(), id)
 	if err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "User not found"})
+		writeError(w, http.StatusNotFound, "User not found")
 		return
 	}
 
 	// Prevent downgrading a user who has an active paid subscription
 	if req.Plan == "basic" && user.HasPaidSub {
-		writeJSON(w, http.StatusForbidden, map[string]string{
-			"error": "No se puede rebajar a un usuario que tiene una suscripción activa pagada. El usuario debe cancelar su suscripción primero.",
-		})
+		writeError(w, http.StatusForbidden, "No se puede rebajar a un usuario que tiene una suscripción activa pagada. El usuario debe cancelar su suscripción primero.")
 		return
 	}
 
@@ -124,7 +122,7 @@ func (h *AdminHandler) UpgradeUser(w http.ResponseWriter, r *http.Request) {
 	if req.ExpiresAt != nil && *req.ExpiresAt != "" {
 		t, err := time.Parse("2006-01-02", *req.ExpiresAt)
 		if err != nil {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid expires_at format. Use YYYY-MM-DD"})
+			writeError(w, http.StatusBadRequest, "Invalid expires_at format. Use YYYY-MM-DD")
 			return
 		}
 		// Expire at end of the specified day (UTC)
@@ -145,7 +143,7 @@ func (h *AdminHandler) UpgradeUser(w http.ResponseWriter, r *http.Request) {
 	// Perform the plan change
 	if err := h.adminRepo.UpdateUserPlan(r.Context(), id, req.Plan, expiresAt); err != nil {
 		slog.Error("admin: failed to upgrade user", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to update plan"})
+		writeError(w, http.StatusInternalServerError, "Failed to update plan")
 		return
 	}
 
@@ -165,7 +163,7 @@ func (h *AdminHandler) GetSubscriptions(w http.ResponseWriter, r *http.Request) 
 	overview, err := h.adminRepo.GetSubscriptionOverview(r.Context())
 	if err != nil {
 		slog.Error("admin: failed to get subscription overview", "error", err)
-		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to get subscription overview"})
+		writeError(w, http.StatusInternalServerError, "Failed to get subscription overview")
 		return
 	}
 

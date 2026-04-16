@@ -49,7 +49,12 @@ func (r *ClientRepo) GetAll(ctx context.Context, userID uuid.UUID) ([]models.Cli
 	return clients, nil
 }
 
+var clientAllowedSortCols = []string{"name", "created_at", "total_events", "total_spent"}
+
 func (r *ClientRepo) GetAllPaginated(ctx context.Context, userID uuid.UUID, offset, limit int, sortCol, order string) ([]models.Client, int, error) {
+	sortCol = safeSortColumn(sortCol, clientAllowedSortCols, "name")
+	order = safeSortOrder(order)
+
 	var total int
 	countQuery := `SELECT COUNT(*) FROM clients WHERE user_id = $1`
 	if err := r.pool.QueryRow(ctx, countQuery, userID).Scan(&total); err != nil {
