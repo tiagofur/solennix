@@ -21,7 +21,15 @@ import {
   Bell,
   ArrowUp,
   Clock,
+  Smartphone,
+  Play,
+  Fingerprint,
+  LayoutGrid,
+  RefreshCw,
 } from "lucide-react";
+
+const APP_STORE_URL =
+  "https://apps.apple.com/mx/app/solennix/id6760874129";
 import { useTheme } from "@/hooks/useTheme";
 import { Logo } from "@/components/Logo";
 
@@ -122,7 +130,7 @@ const TESTIMONIALS = [
     avatar: "MG",
     avatarColor: "bg-error",
     rating: 5,
-    text: "Antes usaba hojas de cálculo y me volvía loca. Ahora con Eventos tengo todo centralizado: clientes, inventario, pagos. ¡Recuperé 10 horas a la semana!",
+    text: "Antes usaba hojas de cálculo y me volvía loca. Ahora con Solennix tengo todo centralizado: clientes, inventario, pagos. ¡Recuperé 10 horas a la semana!",
   },
   {
     name: "Carlos Mendoza",
@@ -206,6 +214,149 @@ const FAQS = [
       "Sí, sin penalizaciones ni contratos de permanencia. Puedes cancelar cuando quieras y conservar acceso hasta el final del período pagado.",
   },
 ];
+
+const MOBILE_FEATURES = [
+  { icon: Fingerprint, text: "Face ID y Touch ID para entrar al instante" },
+  { icon: LayoutGrid, text: "Widgets en la pantalla de inicio" },
+  { icon: Bell, text: "Notificaciones en tiempo real" },
+  { icon: RefreshCw, text: "Sincronización automática con web" },
+];
+
+function AppStoreBadge() {
+  return (
+    <a
+      href={APP_STORE_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-3 bg-text text-bg px-5 py-3 rounded-2xl hover:opacity-90 transition-all hover:scale-[1.02] shadow-lg"
+      aria-label="Descargar Solennix en App Store"
+    >
+      {/* Apple logo SVG */}
+      <svg
+        viewBox="0 0 814 1000"
+        className="h-7 w-auto fill-current shrink-0"
+        aria-hidden="true"
+      >
+        <path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76 0-103.7 40.8-165.9 40.8s-105-47.4-148.2-91.6C93.4 747.1 22 592.4 22 440.8c0-248.2 163.2-379.2 323.4-379.2 85.5 0 156.7 56.3 210.5 56.3 51.5 0 132.2-59.8 232.2-59.8 30.4 0 108.2 2.6 159.8 96.8zM546.1 131.4c23.1-27.6 39.8-65.8 39.8-104 0-5.2-.6-10.4-1.3-15.6-37.5 1.3-82.5 25.1-109.4 55.8-21.7 24.4-42.2 62.7-42.2 101.5 0 5.8.6 11.7 1.3 13.6 2.6.6 6.5 1.3 10.4 1.3 34 0 76.9-22.5 101.4-52.6z" />
+      </svg>
+      <div className="text-left">
+        <div className="text-xs font-medium leading-none mb-0.5 opacity-75">
+          Descargá en
+        </div>
+        <div className="text-base font-black leading-none">App Store</div>
+      </div>
+    </a>
+  );
+}
+
+function GooglePlayBadge() {
+  return (
+    <div
+      className="inline-flex items-center gap-3 bg-surface-alt border border-border text-text-tertiary px-5 py-3 rounded-2xl opacity-60 cursor-not-allowed select-none"
+      aria-label="Próximamente en Google Play"
+      title="Próximamente en Google Play"
+    >
+      <Play className="h-6 w-6 shrink-0" aria-hidden="true" />
+      <div className="text-left">
+        <div className="text-xs font-medium leading-none mb-0.5">
+          Próximamente en
+        </div>
+        <div className="text-base font-black leading-none">Google Play</div>
+      </div>
+    </div>
+  );
+}
+
+function PhoneMockup() {
+  return (
+    <div className="relative w-full max-w-[280px] mx-auto select-none pointer-events-none">
+      {/* Phone frame */}
+      <div className="relative bg-card border-[3px] border-border rounded-[44px] overflow-hidden shadow-2xl">
+        {/* Notch */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-7 bg-card border-b border-border rounded-b-2xl z-10 flex items-center justify-center gap-1.5">
+          <div className="w-1.5 h-1.5 rounded-full bg-border" />
+          <div className="w-12 h-2 rounded-full bg-border" />
+        </div>
+
+        {/* Screen content */}
+        <div className="pt-10 pb-6 px-4 bg-bg min-h-[520px] flex flex-col gap-3">
+          {/* Header */}
+          <div className="flex items-center justify-between px-1 pt-2 pb-1">
+            <div>
+              <p className="text-xs text-text-secondary">Buenos días 👋</p>
+              <p className="text-sm font-black text-text">Mi negocio</p>
+            </div>
+            <div className="w-8 h-8 rounded-full premium-gradient flex items-center justify-center">
+              <Zap className="h-4 w-4 text-white" />
+            </div>
+          </div>
+
+          {/* KPI pills */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="bg-card border border-border rounded-2xl p-3">
+              <p className="text-xs text-text-secondary mb-1">Ingresos</p>
+              <p className="text-sm font-black text-text">$135,500</p>
+              <p className="text-xs text-success font-bold">+18% este mes</p>
+            </div>
+            <div className="bg-card border border-border rounded-2xl p-3">
+              <p className="text-xs text-text-secondary mb-1">Eventos</p>
+              <p className="text-sm font-black text-text">8 activos</p>
+              <p className="text-xs text-primary font-bold">3 esta semana</p>
+            </div>
+          </div>
+
+          {/* Events list */}
+          <div className="bg-card border border-border rounded-2xl overflow-hidden">
+            <div className="px-3 py-2 border-b border-border">
+              <p className="text-xs font-bold text-text-secondary">
+                Próximos eventos
+              </p>
+            </div>
+            {MOCK_EVENTS.map((event) => (
+              <div
+                key={event.name}
+                className="px-3 py-2.5 flex items-center gap-2.5 border-b border-border last:border-0"
+              >
+                <div className="w-7 h-7 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                  <Calendar className="h-3.5 w-3.5 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold text-text truncate">
+                    {event.name}
+                  </p>
+                  <p className="text-[10px] text-text-secondary">{event.date}</p>
+                </div>
+                <span
+                  className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${event.status === "confirmed" ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}`}
+                >
+                  {event.status === "confirmed" ? "Confirmado" : "Cotizado"}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* Bottom nav bar */}
+          <div className="mt-auto bg-card border border-border rounded-2xl px-4 py-2 flex justify-around">
+            {[BarChart3, Calendar, Users, Package].map((Icon, i) => (
+              <div
+                key={i}
+                className={`flex flex-col items-center gap-0.5 py-1 ${i === 0 ? "text-primary" : "text-text-tertiary"}`}
+              >
+                <Icon className="h-4 w-4" />
+                <div
+                  className={`h-1 w-1 rounded-full ${i === 0 ? "bg-primary" : "bg-transparent"}`}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Glow */}
+      <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-3/4 h-12 bg-primary/20 blur-2xl rounded-full" />
+    </div>
+  );
+}
 
 // Mini dashboard mockup data
 const MOCK_EVENTS = [
@@ -408,6 +559,13 @@ export const Landing: React.FC = () => {
                 Precios
               </a>
               <a
+                href="#app"
+                className="text-sm font-medium text-text-secondary hover:text-primary transition-colors flex items-center gap-1.5"
+              >
+                <Smartphone className="h-3.5 w-3.5" aria-hidden="true" />
+                App Móvil
+              </a>
+              <a
                 href="#faq"
                 className="text-sm font-medium text-text-secondary hover:text-primary transition-colors"
               >
@@ -488,6 +646,14 @@ export const Landing: React.FC = () => {
               Precios
             </a>
             <a
+              href="#app"
+              className="block text-sm text-text-secondary py-2 flex items-center gap-2"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <Smartphone className="h-4 w-4" aria-hidden="true" />
+              App Móvil
+            </a>
+            <a
               href="#faq"
               className="block text-sm text-text-secondary py-2"
               onClick={() => setMobileMenuOpen(false)}
@@ -562,6 +728,20 @@ export const Landing: React.FC = () => {
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-5 w-5 text-success" />
                 <span>Cancela cuando quieras</span>
+              </div>
+            </div>
+
+            {/* App Store badges */}
+            <div className="mt-10 flex flex-col items-center gap-4">
+              <div className="flex items-center gap-3 text-xs text-text-tertiary font-medium uppercase tracking-widest">
+                <span className="h-px w-10 bg-border" />
+                <Smartphone className="h-4 w-4" aria-hidden="true" />
+                <span>También disponible en</span>
+                <span className="h-px w-10 bg-border" />
+              </div>
+              <div className="flex flex-wrap items-center justify-center gap-4">
+                <AppStoreBadge />
+                <GooglePlayBadge />
               </div>
             </div>
           </div>
@@ -670,6 +850,57 @@ export const Landing: React.FC = () => {
         </div>
       </section>
 
+      {/* ── MOBILE APP ── */}
+      <section id="app" className="py-24 bg-bg">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            {/* Left: copy */}
+            <div>
+              <div className="inline-flex items-center space-x-2 bg-primary/10 text-primary text-sm font-bold px-5 py-2 rounded-full mb-8 uppercase tracking-wider">
+                <Smartphone className="h-4 w-4" aria-hidden="true" />
+                <span>App Móvil</span>
+              </div>
+
+              <h2 className="text-3xl sm:text-5xl font-black text-text mb-6 tracking-tight leading-[1.1]">
+                Tu negocio en el bolsillo
+              </h2>
+
+              <p className="text-lg text-text-secondary mb-10 leading-relaxed">
+                Gestiona eventos, revisá pagos y confirmá inventario desde tu
+                iPhone. La misma potencia de la plataforma web, ahora disponible
+                donde estés.
+              </p>
+
+              <ul className="space-y-4 mb-10">
+                {MOBILE_FEATURES.map((f) => (
+                  <li key={f.text} className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                      <f.icon
+                        className="h-5 w-5 text-primary"
+                        aria-hidden="true"
+                      />
+                    </div>
+                    <span className="text-text font-semibold text-sm">
+                      {f.text}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="flex flex-wrap gap-4">
+                <AppStoreBadge />
+                <GooglePlayBadge />
+              </div>
+            </div>
+
+            {/* Right: phone mockup */}
+            <div className="flex justify-center lg:justify-end">
+              <PhoneMockup />
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── TESTIMONIALS ── */}
       <section className="py-24 bg-bg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -681,7 +912,7 @@ export const Landing: React.FC = () => {
               Lo que dicen nuestros usuarios
             </h2>
             <p className="text-base sm:text-lg text-text-secondary">
-              Más de 500 organizadores ya confían en Eventos para gestionar su
+              Más de 500 organizadores ya confían en Solennix para gestionar su
               negocio.
             </p>
           </div>
@@ -928,8 +1159,8 @@ export const Landing: React.FC = () => {
       {/* ── FOOTER ── */}
       <footer className="bg-surface-grouped text-text-secondary py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-5 gap-8 mb-10">
-            <div className="md:col-span-2">
+          <div className="grid md:grid-cols-3 xl:grid-cols-6 gap-8 mb-10">
+            <div className="md:col-span-3 xl:col-span-2">
               <Logo size={40} className="mb-4" />
               <p className="text-sm leading-relaxed max-w-xs">
                 La plataforma todo-en-uno para organizadores de eventos
@@ -967,6 +1198,29 @@ export const Landing: React.FC = () => {
                   <a href="#faq" className="hover:text-text transition-colors">
                     FAQ
                   </a>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-text font-semibold text-sm mb-4 flex items-center gap-1.5">
+                <Smartphone className="h-3.5 w-3.5" aria-hidden="true" />
+                Descargar
+              </h4>
+              <ul className="space-y-2 text-sm">
+                <li>
+                  <a
+                    href={APP_STORE_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-text transition-colors flex items-center gap-1.5"
+                  >
+                    iOS — App Store
+                  </a>
+                </li>
+                <li>
+                  <span className="opacity-50 cursor-not-allowed select-none">
+                    Android — Próximamente
+                  </span>
                 </li>
               </ul>
             </div>
@@ -1031,7 +1285,7 @@ export const Landing: React.FC = () => {
           </div>
           <div className="border-t border-border pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
             <p className="text-sm">
-              © 2026 Eventos. Todos los derechos reservados.
+              © 2026 Solennix. Todos los derechos reservados.
             </p>
             <div className="flex items-center gap-2 text-sm">
               <Shield className="h-4 w-4 text-success" aria-hidden="true" />
