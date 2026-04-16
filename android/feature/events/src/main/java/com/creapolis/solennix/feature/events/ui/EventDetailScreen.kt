@@ -95,7 +95,7 @@ fun EventDetailScreen(
     val windowInfoTracker = WindowInfoTracker.getOrCreate(context)
     val windowLayoutInfo by (context as? android.app.Activity)?.let { activity ->
         windowInfoTracker.windowLayoutInfo(activity)
-    }?.collectAsState(initial = null) ?: remember { mutableStateOf(null) }
+    }?.collectAsStateWithLifecycle(initialValue = null) ?: remember { mutableStateOf(null) }
 
     val foldingFeature = windowLayoutInfo?.displayFeatures
         ?.filterIsInstance<FoldingFeature>()

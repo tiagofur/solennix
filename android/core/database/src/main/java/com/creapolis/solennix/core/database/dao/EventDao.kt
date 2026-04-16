@@ -37,6 +37,14 @@ interface EventDao {
     @Query("SELECT * FROM events WHERE id = :id")
     suspend fun getEvent(id: String): CachedEvent?
 
+    /**
+     * Observes a single event by id. Use this instead of `getEvents()` + `.find { }`
+     * when a screen only cares about one event — avoids re-scanning the full events
+     * table on every unrelated mutation.
+     */
+    @Query("SELECT * FROM events WHERE id = :id")
+    fun observeEvent(id: String): Flow<CachedEvent?>
+
     @Query("SELECT * FROM events WHERE sync_status != 'SYNCED'")
     suspend fun getPendingEvents(): List<CachedEvent>
 

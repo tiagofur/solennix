@@ -134,10 +134,12 @@ class EventDetailViewModel @Inject constructor(
 
     init {
         loadEvent()
-        // Keep _event in sync with Room so status changes from other screens reflect immediately
+        // Keep _event in sync with Room so status changes from other screens reflect
+        // immediately. Previously we collected the full getEvents() Flow and found
+        // this event by id — that re-scanned the entire events table on every
+        // unrelated mutation. observeEvent(eventId) is a single-row query.
         viewModelScope.launch {
-            eventRepository.getEvents().collect { events ->
-                val updated = events.find { it.id == eventId }
+            eventRepository.observeEvent(eventId).collect { updated ->
                 if (updated != null && updated != _event.value) {
                     _event.value = updated
                 }

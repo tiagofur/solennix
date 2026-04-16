@@ -66,7 +66,7 @@ class EventDetailViewModelTest {
     fun setUp() {
         Dispatchers.setMain(dispatcher)
 
-        every { eventRepository.getEvents() } returns flowOf(listOf(baseEvent))
+        every { eventRepository.observeEvent("event-1") } returns flowOf(baseEvent)
         coEvery { eventRepository.getEvent("event-1") } returns baseEvent
         every { eventRepository.getEventProducts("event-1") } returns flowOf(emptyList())
         every { eventRepository.getEventExtras("event-1") } returns flowOf(emptyList())

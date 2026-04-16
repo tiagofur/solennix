@@ -13,8 +13,15 @@ import com.creapolis.solennix.core.model.EventStatus
 import com.creapolis.solennix.core.model.InventoryItem
 import com.creapolis.solennix.core.model.InventoryType
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.sync.withPermit
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 import javax.inject.Inject
@@ -102,45 +109,59 @@ class InventoryDetailViewModel @Inject constructor(
                     it.eventDate >= today && it.status == EventStatus.CONFIRMED
                 }
 
-                val demandEntries = mutableListOf<InventoryDemandEntry>()
                 val item = _uiState.value.item ?: return@launch
 
-                for (event in upcomingEvents) {
-                    try {
-                        val eventProducts = eventRepository.getEventProductsFromApi(event.id)
-                        var eventDemand = 0.0
+                // Cache ingredients by productId: the same product frequently appears
+                // across multiple upcoming events, so fetching once per product (not
+                // once per event*product) cuts duplicate API calls.
+                val ingredientsCache = mutableMapOf<String, List<com.creapolis.solennix.core.model.ProductIngredient>>()
+                val cacheLock = Mutex()
+                // Cap in-flight event-product fetches so we don't spike the server on
+                // users with large backlogs. 4 is a compromise between latency and load.
+                val semaphore = Semaphore(permits = 4)
 
-                        for (ep in eventProducts) {
-                            try {
-                                val ingredients = productRepository.getProductIngredients(ep.productId)
-                                val matching = ingredients.find { it.inventoryId == itemId }
-                                if (matching != null) {
-                                    // Supplies have fixed per-event quantity, not scaled by product qty
-                                    eventDemand += if (item.type == InventoryType.SUPPLY) {
-                                        matching.quantityRequired
-                                    } else {
-                                        matching.quantityRequired * ep.quantity
+                val demandEntries = coroutineScope {
+                    upcomingEvents.map { event ->
+                        async {
+                            semaphore.withPermit {
+                                try {
+                                    val eventProducts = eventRepository.getEventProductsFromApi(event.id)
+                                    var eventDemand = 0.0
+                                    for (ep in eventProducts) {
+                                        val ingredients = cacheLock.withLock {
+                                            ingredientsCache.getOrPut(ep.productId) {
+                                                try {
+                                                    productRepository.getProductIngredients(ep.productId)
+                                                } catch (_: Exception) {
+                                                    emptyList()
+                                                }
+                                            }
+                                        }
+                                        val matching = ingredients.find { it.inventoryId == itemId }
+                                        if (matching != null) {
+                                            // Supplies have fixed per-event quantity, not scaled by product qty
+                                            eventDemand += if (item.type == InventoryType.SUPPLY) {
+                                                matching.quantityRequired
+                                            } else {
+                                                matching.quantityRequired * ep.quantity
+                                            }
+                                        }
                                     }
+                                    if (eventDemand > 0) {
+                                        InventoryDemandEntry(
+                                            eventId = event.id,
+                                            eventDate = event.eventDate.take(10),
+                                            eventName = event.serviceType ?: "Evento",
+                                            quantity = eventDemand,
+                                            unit = item.unit
+                                        )
+                                    } else null
+                                } catch (_: Exception) {
+                                    null
                                 }
-                            } catch (_: Exception) {
-                                // Skip failed ingredient fetches
                             }
                         }
-
-                        if (eventDemand > 0) {
-                            demandEntries.add(
-                                InventoryDemandEntry(
-                                    eventId = event.id,
-                                    eventDate = event.eventDate.take(10),
-                                    eventName = event.serviceType ?: "Evento",
-                                    quantity = eventDemand,
-                                    unit = item.unit
-                                )
-                            )
-                        }
-                    } catch (_: Exception) {
-                        continue
-                    }
+                    }.awaitAll().filterNotNull()
                 }
 
                 _uiState.value = _uiState.value.copy(
