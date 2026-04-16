@@ -30,6 +30,8 @@ import {
 
 const APP_STORE_URL =
   "https://apps.apple.com/mx/app/solennix/id6760874129";
+const PLAY_STORE_URL =
+  "https://play.google.com/store/apps/details?id=com.solennix.app";
 import { useTheme } from "@/hooks/useTheme";
 import { Logo } from "@/components/Logo";
 
@@ -251,19 +253,28 @@ function AppStoreBadge() {
 
 function GooglePlayBadge() {
   return (
-    <div
-      className="inline-flex items-center gap-3 bg-surface-alt border border-border text-text-tertiary px-5 py-3 rounded-2xl opacity-60 cursor-not-allowed select-none"
-      aria-label="Próximamente en Google Play"
-      title="Próximamente en Google Play"
+    <a
+      href={PLAY_STORE_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-3 bg-text text-bg px-5 py-3 rounded-2xl hover:opacity-90 transition-all hover:scale-[1.02] shadow-lg"
+      aria-label="Descargar Solennix en Google Play"
     >
-      <Play className="h-6 w-6 shrink-0" aria-hidden="true" />
+      {/* Google Play triangle icon */}
+      <svg
+        viewBox="0 0 24 24"
+        className="h-7 w-7 fill-current shrink-0"
+        aria-hidden="true"
+      >
+        <path d="M3 20.5v-17c0-.83.94-1.3 1.6-.8l14 8.5c.6.37.6 1.23 0 1.6l-14 8.5c-.66.5-1.6.03-1.6-.8z" />
+      </svg>
       <div className="text-left">
-        <div className="text-xs font-medium leading-none mb-0.5">
-          Próximamente en
+        <div className="text-xs font-medium leading-none mb-0.5 opacity-75">
+          Disponible en
         </div>
         <div className="text-base font-black leading-none">Google Play</div>
       </div>
-    </div>
+    </a>
   );
 }
 
@@ -1218,9 +1229,14 @@ export const Landing: React.FC = () => {
                   </a>
                 </li>
                 <li>
-                  <span className="opacity-50 cursor-not-allowed select-none">
-                    Android — Próximamente
-                  </span>
+                  <a
+                    href={PLAY_STORE_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-text transition-colors"
+                  >
+                    Android — Google Play
+                  </a>
                 </li>
               </ul>
             </div>
