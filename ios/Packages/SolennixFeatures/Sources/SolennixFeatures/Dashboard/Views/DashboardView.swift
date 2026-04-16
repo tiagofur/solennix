@@ -574,6 +574,9 @@ public struct DashboardView: View {
                 Text(title)
             }
         }
+        .accessibilityLabel(event.status == status
+            ? "\(title), estado actual"
+            : "Cambiar a \(title.lowercased())")
     }
 
     private func dateBox(for dateString: String) -> some View {

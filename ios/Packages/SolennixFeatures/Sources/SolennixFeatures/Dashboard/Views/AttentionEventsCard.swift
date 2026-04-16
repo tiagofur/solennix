@@ -96,6 +96,25 @@ struct AttentionEventsCard: View {
         .padding(Spacing.md)
         .background(SolennixColors.surface)
         .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+        // VoiceOver: one utterance per row — "Pago pendiente: Boda de Ana,
+        // 15 Jun, restan $8,500. Abrir detalle." — instead of one swipe per
+        // chip, label, icon.
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilityLabel(for: attentionEvent))
+        .accessibilityHint("Abrir detalle del evento")
+    }
+
+    private func accessibilityLabel(for attentionEvent: DashboardAttentionEvent) -> String {
+        var parts = [
+            attentionEvent.kind.title,
+            attentionEvent.event.serviceType,
+            "de \(attentionEvent.clientName)",
+            compactDate(for: attentionEvent.event.eventDate),
+        ]
+        if shouldShowPendingAmount(for: attentionEvent) {
+            parts.append("restan \(attentionEvent.outstandingAmount.asMXN)")
+        }
+        return parts.joined(separator: ", ")
     }
 
     private func reasonBadge(for kind: DashboardAttentionEventKind) -> some View {

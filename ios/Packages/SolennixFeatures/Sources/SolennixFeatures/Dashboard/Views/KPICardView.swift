@@ -71,6 +71,12 @@ public struct KPICardView: View {
         .background(SolennixColors.card)
         .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
         .shadowSm()
+        // VoiceOver: merge icon + value + title + subtitle into a single
+        // readable utterance ("Ventas Netas: $45,000, 71% cobrado") instead
+        // of having VoiceOver announce each Text view separately.
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(title)
+        .accessibilityValue(subtitle.map { "\(value), \($0)" } ?? value)
     }
 }
 

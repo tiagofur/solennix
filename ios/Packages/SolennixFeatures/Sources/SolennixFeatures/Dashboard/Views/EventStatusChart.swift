@@ -69,6 +69,18 @@ public struct EventStatusChart: View {
         .background(SolennixColors.card)
         .clipShape(RoundedRectangle(cornerRadius: CornerRadius.card))
         .shadowSm()
+        // VoiceOver: collapse the bar + legend dots into a single summary so
+        // the user hears "Estado de Eventos: 3 cotizados, 5 confirmados, 2
+        // completados, 1 cancelado" instead of ~12 unlabeled pieces.
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Estado de eventos del mes")
+        .accessibilityValue(accessibilitySummary)
+    }
+
+    private var accessibilitySummary: String {
+        orderedStatuses.map { status in
+            "\(statusCounts[status, default: 0]) \(labelForStatus(status).lowercased())"
+        }.joined(separator: ", ")
     }
 
     // MARK: - Helpers
