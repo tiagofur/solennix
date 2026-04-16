@@ -18,10 +18,12 @@ export const subscriptionService = {
     return await api.get<SubscriptionStatus>("/subscriptions/status");
   },
 
-  createCheckoutSession: async (): Promise<{ url: string }> => {
+  createCheckoutSession: async (
+    plan: "pro" | "business" = "pro",
+  ): Promise<{ url: string }> => {
     return await api.post<{ url: string }>(
       "/subscriptions/checkout-session",
-      {},
+      { plan },
     );
   },
 

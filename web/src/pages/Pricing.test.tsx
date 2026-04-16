@@ -51,7 +51,7 @@ describe('Pricing', () => {
       expect(screen.getByText('Planes y Precios')).toBeInTheDocument();
       expect(screen.getByText('Potencia tu negocio de eventos')).toBeInTheDocument();
       expect(
-        screen.getByText('Elige el plan que se adapte al tamaño y crecimiento de tus eventos.'),
+        screen.getByText('Elegí el plan que se adapte al tamaño y crecimiento de tus eventos.'),
       ).toBeInTheDocument();
     });
 
@@ -80,7 +80,8 @@ describe('Pricing', () => {
         screen.getByText('Todas las herramientas para escalar tu negocio sin límites.'),
       ).toBeInTheDocument();
       expect(screen.getByText('$1,499')).toBeInTheDocument();
-      expect(screen.getByText('MXN/año')).toBeInTheDocument();
+      // MXN/año appears in both Pro and Business cards now.
+      expect(screen.getAllByText('MXN/año').length).toBeGreaterThan(0);
       expect(screen.getByText('$149')).toBeInTheDocument();
       expect(screen.getByText('Recomendado')).toBeInTheDocument();
 
@@ -89,8 +90,31 @@ describe('Pricing', () => {
       expect(screen.getByText('Clientes y catálogo ilimitados')).toBeInTheDocument();
       expect(screen.getByText('Control de pagos e ingresos en múltiples plazos')).toBeInTheDocument();
       expect(screen.getByText('Reportes y analíticas avanzadas')).toBeInTheDocument();
+      expect(screen.getByText('Portal del cliente con tu marca')).toBeInTheDocument();
       expect(screen.getByText('Soporte prioritario')).toBeInTheDocument();
       expect(screen.getByText('Todo lo anterior, y además:')).toBeInTheDocument();
+    });
+
+    it('renders the Business plan card with features', () => {
+      renderPricing();
+
+      expect(screen.getByText('Business')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          'Para equipos que necesitan branding propio, automatización y soporte personalizado.',
+        ),
+      ).toBeInTheDocument();
+      expect(screen.getByText('$4,999')).toBeInTheDocument();
+      expect(screen.getByText('$499')).toBeInTheDocument();
+
+      // Business features
+      expect(screen.getByText('Todo lo de Pro, sin excepción')).toBeInTheDocument();
+      expect(
+        screen.getByText('Hasta 3 usuarios del equipo con roles'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText('WhatsApp Business API para notificaciones al cliente'),
+      ).toBeInTheDocument();
     });
 
     it('shows the disabled "Plan Actual" button for Basico plan', () => {
@@ -121,7 +145,17 @@ describe('Pricing', () => {
         name: /Suscribirse al Plan Pro/i,
       });
       expect(upgradeButton).toBeEnabled();
-      expect(upgradeButton).toHaveTextContent('Comenzar ahora');
+      expect(upgradeButton).toHaveTextContent('Probar 14 días gratis');
+    });
+
+    it('shows the upgrade button for the Business plan', () => {
+      renderPricing();
+
+      const upgradeButton = screen.getByRole('button', {
+        name: /Suscribirse al Plan Business/i,
+      });
+      expect(upgradeButton).toBeEnabled();
+      expect(upgradeButton).toHaveTextContent('Probar 14 días gratis');
     });
   });
 
@@ -380,7 +414,7 @@ describe('Pricing', () => {
         name: /Suscribirse al Plan Pro/i,
       });
       expect(retryButton).toBeEnabled();
-      expect(retryButton).toHaveTextContent('Comenzar ahora');
+      expect(retryButton).toHaveTextContent('Probar 14 días gratis');
     });
   });
 
@@ -441,7 +475,7 @@ describe('Pricing', () => {
         expect(mockCheckAuth).toHaveBeenCalledTimes(1);
       });
 
-      expect(alertSpy).toHaveBeenCalledWith('Plan actualizado a Premium (Modo Debug)');
+      expect(alertSpy).toHaveBeenCalledWith('Plan actualizado a Pro (Modo Debug)');
       alertSpy.mockRestore();
     });
 

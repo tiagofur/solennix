@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useLocation, Outlet } from 'react-router-dom';
+import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import {
   LayoutDashboard,
   Calendar,
@@ -35,6 +35,7 @@ export const Layout: React.FC = () => {
   const { signOut, user } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
+  const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(() => localStorage.getItem('sidebar-collapsed') === 'true');
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
@@ -74,6 +75,22 @@ export const Layout: React.FC = () => {
     document.addEventListener('open-command-palette', handleOpenPalette);
     return () => document.removeEventListener('open-command-palette', handleOpenPalette);
   }, []);
+
+  // Global paywall trigger: when ApiClient receives 403 plan_limit_exceeded
+  // it dispatches this event. The toast is already shown by the api layer;
+  // here we redirect to the pricing page so the user lands on a CTA
+  // instead of the action they tried to perform. Already-on-/pricing users
+  // stay put — no point re-routing.
+  useEffect(() => {
+    const handlePlanLimit = () => {
+      if (location.pathname !== '/pricing') {
+        // Short delay so the user reads the toast before the route change.
+        window.setTimeout(() => navigate('/pricing'), 800);
+      }
+    };
+    window.addEventListener('plan:limit-exceeded', handlePlanLimit);
+    return () => window.removeEventListener('plan:limit-exceeded', handlePlanLimit);
+  }, [location.pathname, navigate]);
 
   const navigation = [
     { name: 'Inicio', href: '/dashboard', icon: LayoutDashboard },

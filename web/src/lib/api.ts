@@ -1,4 +1,38 @@
+import { useToast } from '@/hooks/useToast';
+
 export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+
+/**
+ * Thrown when the backend returns 403 `{ error: "plan_limit_exceeded" }`.
+ * Callers that want to handle plan walls inline can catch this type;
+ * everyone else ignores it and a global listener (mounted in Layout)
+ * surfaces a toast + navigates to /pricing.
+ */
+export class PlanLimitExceededError extends Error {
+  readonly limitType: string;
+  readonly current: number;
+  readonly max: number;
+
+  constructor(message: string, limitType: string, current: number, max: number) {
+    super(message);
+    this.name = 'PlanLimitExceededError';
+    this.limitType = limitType;
+    this.current = current;
+    this.max = max;
+  }
+}
+
+/**
+ * Detail payload emitted on the `plan:limit-exceeded` CustomEvent.
+ * Listeners (e.g., Layout.tsx) use this to decide whether to show a
+ * modal, redirect, or simply flash a toast.
+ */
+export interface PlanLimitExceededEventDetail {
+  message: string;
+  limitType: string;
+  current: number;
+  max: number;
+}
 
 export function getAssetUrl(path: string | null | undefined): string | undefined {
   if (!path) return undefined;
@@ -108,6 +142,37 @@ class ApiClient {
         const retryAfter = response.headers.get('Retry-After');
         const waitHint = retryAfter ? ` Intentá nuevamente en ${retryAfter}.` : '';
         throw new Error(`Demasiadas solicitudes.${waitHint} Esperá un momento e intentá de nuevo.`);
+      }
+      // Plan-limit walls come as 403 with a structured body the backend
+      // produces via writePlanLimitError. Surface them globally (toast +
+      // CustomEvent so Layout can route to /pricing) and throw a typed
+      // error so callers can still catch inline if they prefer.
+      if (response.status === 403 && errorData.error === 'plan_limit_exceeded') {
+        const limit = (errorData.limit ?? {}) as {
+          type?: string;
+          current?: number;
+          max?: number;
+        };
+        const detail: PlanLimitExceededEventDetail = {
+          message: errorData.message || 'Alcanzaste el límite de tu plan.',
+          limitType: limit.type ?? 'unknown',
+          current: limit.current ?? 0,
+          max: limit.max ?? 0,
+        };
+        useToast.getState().addToast(detail.message, 'error');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent<PlanLimitExceededEventDetail>('plan:limit-exceeded', {
+              detail,
+            }),
+          );
+        }
+        throw new PlanLimitExceededError(
+          detail.message,
+          detail.limitType,
+          detail.current,
+          detail.max,
+        );
       }
       throw new Error(errorData.error || `Request failed with status ${response.status}`);
     }
