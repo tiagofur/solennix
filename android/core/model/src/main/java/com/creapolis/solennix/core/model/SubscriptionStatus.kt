@@ -5,6 +5,12 @@ import kotlinx.serialization.Serializable
 
 /**
  * Platform where the user originally subscribed.
+ *
+ * The user-facing `badge` and `cancelInstructions` strings are kept on the
+ * enum ONLY as a fallback when talking to an older backend that does not yet
+ * return the server-authored `source_badge` / `cancel_instructions` fields.
+ * Once the backend is deployed with those fields, the client renders them
+ * verbatim so the 3 platforms stay in sync without per-client drift.
  */
 @Serializable
 enum class SubscriptionProvider {
@@ -12,20 +18,20 @@ enum class SubscriptionProvider {
     @SerialName("apple") APPLE,
     @SerialName("google") GOOGLE;
 
-    /** User-facing label in Spanish. */
-    val badge: String
+    /** Fallback label in Spanish — only used if backend omitted `source_badge`. */
+    val fallbackBadge: String
         get() = when (this) {
             STRIPE -> "Suscrito vía Web"
             APPLE -> "Suscrito vía App Store"
             GOOGLE -> "Suscrito vía Google Play"
         }
 
-    /** Cancellation instructions when current platform differs from provider. */
-    val cancelInstructions: String
+    /** Fallback cancel instructions — only used if backend omitted the field. */
+    val fallbackCancelInstructions: String
         get() = when (this) {
             STRIPE -> "Tu suscripción fue realizada desde la web. Para cancelarla, ingresá a solennix.com > Configuración > Suscripción."
             APPLE -> "Tu suscripción fue realizada desde iOS. Para cancelarla, abrí Configuración > tu Apple ID > Suscripciones en tu iPhone o iPad."
-            GOOGLE -> "Para cancelar, abrí Google Play Store > Pagos y suscripciones."
+            GOOGLE -> "Tu suscripción fue realizada desde Android. Para cancelarla, abrí Google Play Store > Pagos y suscripciones."
         }
 
     /** Whether this provider matches the current platform (Android). */
@@ -35,11 +41,17 @@ enum class SubscriptionProvider {
 
 /**
  * Subscription details from backend.
+ *
+ * `sourceBadge` and `cancelInstructions` are server-authored (backend
+ * Fase 2). They are nullable on the client to stay forward-compatible with
+ * older backend deployments; when missing, UI falls back to the enum.
  */
 @Serializable
 data class SubscriptionInfo(
     val status: String,
     val provider: SubscriptionProvider,
+    @SerialName("source_badge") val sourceBadge: String? = null,
+    @SerialName("cancel_instructions") val cancelInstructions: String? = null,
     @SerialName("current_period_end") val currentPeriodEnd: String? = null,
     @SerialName("cancel_at_period_end") val cancelAtPeriodEnd: Boolean = false
 )

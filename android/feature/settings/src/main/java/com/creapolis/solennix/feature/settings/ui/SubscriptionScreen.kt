@@ -118,7 +118,11 @@ fun SubscriptionScreen(
             // Provider badge + cross-platform cancel instructions
             uiState.provider?.let { provider ->
                 item(key = "provider_info") {
-                    ProviderInfoSection(provider = provider)
+                    ProviderInfoSection(
+                        provider = provider,
+                        sourceBadge = uiState.subscription?.sourceBadge,
+                        cancelInstructions = uiState.subscription?.cancelInstructions,
+                    )
                 }
             }
 
@@ -343,7 +347,18 @@ fun SubscriptionScreen(
 }
 
 @Composable
-fun ProviderInfoSection(provider: SubscriptionProvider) {
+fun ProviderInfoSection(
+    provider: SubscriptionProvider,
+    sourceBadge: String?,
+    cancelInstructions: String?,
+) {
+    // Server-authored strings are the source of truth. The enum values are
+    // kept as a fallback so the UI degrades gracefully when talking to an
+    // older backend that does not yet return these fields.
+    val badgeText = sourceBadge?.takeIf { it.isNotBlank() } ?: provider.fallbackBadge
+    val instructionsText =
+        cancelInstructions?.takeIf { it.isNotBlank() } ?: provider.fallbackCancelInstructions
+
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         // Provider badge
         Surface(
@@ -368,7 +383,7 @@ fun ProviderInfoSection(provider: SubscriptionProvider) {
                     modifier = Modifier.size(20.dp)
                 )
                 Text(
-                    text = provider.badge,
+                    text = badgeText,
                     style = MaterialTheme.typography.bodyMedium,
                     color = SolennixTheme.colors.secondaryText
                 )
@@ -394,7 +409,7 @@ fun ProviderInfoSection(provider: SubscriptionProvider) {
                         modifier = Modifier.size(20.dp)
                     )
                     Text(
-                        text = provider.cancelInstructions,
+                        text = instructionsText,
                         style = MaterialTheme.typography.bodySmall,
                         color = SolennixTheme.colors.primaryText
                     )

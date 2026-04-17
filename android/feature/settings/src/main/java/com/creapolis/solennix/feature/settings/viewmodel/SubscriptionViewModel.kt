@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.revenuecat.purchases.Package
 import com.creapolis.solennix.core.designsystem.event.UiEvent
+import com.creapolis.solennix.core.model.SubscriptionInfo
 import com.creapolis.solennix.core.model.SubscriptionProvider
 import com.creapolis.solennix.core.model.SubscriptionStatusResponse
 import com.creapolis.solennix.core.network.ApiService
@@ -32,6 +33,7 @@ data class SubscriptionUiState(
     val hasActiveSubscription: Boolean = false,
     val purchasingPackageId: String? = null,
     val provider: SubscriptionProvider? = null,
+    val subscription: SubscriptionInfo? = null,
 )
 
 @HiltViewModel
@@ -41,7 +43,7 @@ class SubscriptionViewModel @Inject constructor(
     private val apiService: ApiService,
 ) : ViewModel() {
 
-    private val _provider = MutableStateFlow<SubscriptionProvider?>(null)
+    private val _subscription = MutableStateFlow<SubscriptionInfo?>(null)
 
     private val _uiEvents = MutableSharedFlow<UiEvent>(extraBufferCapacity = 1)
     val uiEvents: SharedFlow<UiEvent> = _uiEvents.asSharedFlow()
@@ -55,14 +57,15 @@ class SubscriptionViewModel @Inject constructor(
         billingManager.customerInfo,
         billingManager.purchaseInProgress,
         authManager.currentUser,
-        _provider,
+        _subscription,
     ) { values ->
         val billingState = values[0] as BillingState
         @Suppress("UNCHECKED_CAST")
         val packages = values[1] as List<Package>
         val purchasingId = values[3] as? String
         val user = values[4] as? com.creapolis.solennix.core.model.User
-        val provider = values[5] as? SubscriptionProvider
+        val subscription = values[5] as? SubscriptionInfo
+        val provider = subscription?.provider
 
         // Surface error snackbars as a side effect of state observation.
         if (billingState is BillingState.Error && lastErrorShown != billingState.message) {
@@ -102,6 +105,7 @@ class SubscriptionViewModel @Inject constructor(
             hasActiveSubscription = hasSubscription,
             purchasingPackageId = purchasingId,
             provider = provider,
+            subscription = subscription,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -119,9 +123,9 @@ class SubscriptionViewModel @Inject constructor(
             try {
                 val response: SubscriptionStatusResponse =
                     apiService.get(Endpoints.SUBSCRIPTION_STATUS)
-                _provider.value = response.subscription?.provider
+                _subscription.value = response.subscription
             } catch (_: Exception) {
-                // Non-fatal: provider info is informational
+                // Non-fatal: subscription info is informational
             }
         }
     }
