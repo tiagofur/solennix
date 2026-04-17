@@ -299,7 +299,9 @@
       "Bash(eza -la /Users/tiagofur/dev/eventosapp/web/package.json)",
       "Bash(eza /Users/tiagofur/dev/eventosapp/backend/internal/database/migrations/)",
       "Bash(eza *)",
-      "Bash(git *)"
+      "Bash(git *)",
+      "Bash(rg -E '\\(FAIL |✗ |Error|TypeError\\)')",
+      "Bash(rg -n \"MockClientRepo|newTestHandler|makeReqWithUserID|makeReqWithIDParam\" /Users/tiagofur/dev/eventosapp/backend/internal/handlers/mocks_test.go /Users/tiagofur/dev/eventosapp/backend/internal/handlers/*helper*)"
     ]
   }
 }
