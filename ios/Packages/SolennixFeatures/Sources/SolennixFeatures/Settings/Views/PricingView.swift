@@ -98,7 +98,7 @@ public struct PricingView: View {
                 Image(systemName: "crown.fill")
                     .foregroundStyle(SolennixColors.warning)
 
-                Text("Suscripcion Premium activa")
+                Text("Suscripción Pro activa")
                     .font(.subheadline)
                     .fontWeight(.semibold)
 
@@ -135,11 +135,11 @@ public struct PricingView: View {
                 isCurrentPlan: viewModel.user?.plan == .basic
             )
 
-            // Premium plan
+            // Pro plan
             planCard(
-                plan: .premium,
-                title: "Premium",
-                price: formattedPremiumPrice,
+                plan: .pro,
+                title: "Pro",
+                price: formattedProPrice,
                 features: [
                     "Productos ilimitados",
                     "Clientes ilimitados",
@@ -154,10 +154,10 @@ public struct PricingView: View {
         }
     }
 
-    // MARK: - Formatted Premium Price
+    // MARK: - Formatted Pro Price
 
     /// Muestra el precio del package mensual (RevenueCat → StoreKit → fallback).
-    private var formattedPremiumPrice: String {
+    private var formattedProPrice: String {
         if let monthly = subscriptionManager.monthlyPackage {
             return "\(monthly.storeProduct.localizedPriceString)/mes"
         }
@@ -247,8 +247,8 @@ public struct PricingView: View {
                 }
             }
 
-            // Action button - solo mostrar si no es premium activo
-            if !isCurrentPlan && plan == .premium && !subscriptionManager.isPremium {
+            // Action button — solo mostrar si el plan pago no está activo
+            if !isCurrentPlan && plan == .pro && !subscriptionManager.isPremium {
                 purchaseButtonsSection
             }
         }
@@ -537,7 +537,7 @@ public struct PricingView: View {
 
             faqItem(
                 question: "Hay periodo de prueba?",
-                answer: "Si. Ofrecemos 14 dias de prueba gratuita de Premium. Al finalizar el periodo de prueba, la suscripcion se renovara automaticamente al precio del plan seleccionado, a menos que la canceles al menos 24 horas antes de que termine el trial. Podes cancelar en cualquier momento desde los Ajustes de tu Apple ID."
+                answer: "Si. Ofrecemos 14 dias de prueba gratuita del plan Pro. Al finalizar el periodo de prueba, la suscripcion se renovara automaticamente al precio del plan seleccionado, a menos que la canceles al menos 24 horas antes de que termine el trial. Podes cancelar en cualquier momento desde los Ajustes de tu Apple ID."
             )
         }
     }

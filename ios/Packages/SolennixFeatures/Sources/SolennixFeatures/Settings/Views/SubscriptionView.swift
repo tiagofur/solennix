@@ -66,7 +66,8 @@ public struct SubscriptionView: View {
     // MARK: - Current Plan Card
 
     private var currentPlanCard: some View {
-        VStack(spacing: Spacing.md) {
+        let sub = subscriptionManager.subscriptionStatus?.subscription
+        return VStack(alignment: .leading, spacing: Spacing.sm) {
             HStack {
                 VStack(alignment: .leading, spacing: Spacing.xs) {
                     Text("Plan actual")
@@ -85,41 +86,91 @@ public struct SubscriptionView: View {
                     PlanBadge(plan: user.plan)
                 }
             }
+
+            if let price = priceLine(sub) {
+                Text(price)
+                    .font(.subheadline)
+                    .foregroundStyle(SolennixColors.text)
+            }
+
+            if let renewal = renewalLine(sub) {
+                Text(renewal)
+                    .font(.caption)
+                    .foregroundStyle(SolennixColors.textSecondary)
+            }
         }
         .padding(Spacing.lg)
         .background(SolennixColors.primary.opacity(0.08))
         .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
     }
 
+    // MARK: - Current Plan Card Helpers
+
+    /// Builds the human-readable renewal line from the backend response.
+    /// Returns "Se renueva el ..." — or "Vence el ..." when
+    /// `cancelAtPeriodEnd` is true.
+    private func renewalLine(_ sub: SubscriptionInfo?) -> String? {
+        guard let iso = sub?.currentPeriodEnd, !iso.isEmpty else { return nil }
+        let isoFormatter = ISO8601DateFormatter()
+        isoFormatter.formatOptions = [.withInternetDateTime]
+        guard let date = isoFormatter.date(from: iso) else { return nil }
+        let displayFormatter = DateFormatter()
+        displayFormatter.locale = Locale(identifier: "es")
+        displayFormatter.dateFormat = "d 'de' MMMM 'de' yyyy"
+        let formatted = displayFormatter.string(from: date)
+        return (sub?.cancelAtPeriodEnd == true)
+            ? "Vence el \(formatted)"
+            : "Se renueva el \(formatted)"
+    }
+
+    /// Formats the price line when the backend exposes it (Stripe provider).
+    /// Returns nil for Apple/Google — the store is the source of truth there.
+    private func priceLine(_ sub: SubscriptionInfo?) -> String? {
+        guard let cents = sub?.amountCents, let currency = sub?.currency else {
+            return nil
+        }
+        let interval: String
+        switch sub?.billingInterval {
+        case "month": interval = "/mes"
+        case "year": interval = "/año"
+        default: interval = ""
+        }
+        let amount = Double(cents) / 100.0
+        let formatted = String(format: "%.2f", amount)
+        return "\(currency.uppercased()) \(formatted)\(interval)"
+    }
+
     // MARK: - Active Status Banner
 
     private var activeStatusBanner: some View {
-        HStack {
+        let cancelPending = subscriptionManager.subscriptionStatus?.subscription?.cancelAtPeriodEnd == true
+        let accent = cancelPending ? SolennixColors.warning : SolennixColors.success
+        return HStack {
             Image(systemName: "crown.fill")
                 .foregroundStyle(SolennixColors.warning)
 
-            Text("Suscripcion activa")
+            Text(cancelPending ? "Cancela al vencer" : "Suscripción activa")
                 .font(.subheadline)
                 .fontWeight(.semibold)
 
             Spacer()
 
             HStack(spacing: Spacing.xs) {
-                Image(systemName: "checkmark.seal.fill")
-                    .foregroundStyle(SolennixColors.success)
+                Image(systemName: cancelPending ? "exclamationmark.triangle.fill" : "checkmark.seal.fill")
+                    .foregroundStyle(accent)
 
-                Text("Activo")
+                Text(cancelPending ? "Pendiente" : "Activo")
                     .font(.caption)
                     .fontWeight(.bold)
-                    .foregroundStyle(SolennixColors.success)
+                    .foregroundStyle(accent)
             }
             .padding(.horizontal, Spacing.sm)
             .padding(.vertical, 4)
-            .background(SolennixColors.success.opacity(0.15))
+            .background(accent.opacity(0.15))
             .clipShape(Capsule())
         }
         .padding(Spacing.md)
-        .background(SolennixColors.success.opacity(0.08))
+        .background(accent.opacity(0.08))
         .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
     }
 
@@ -161,14 +212,22 @@ public struct SubscriptionView: View {
     // MARK: - Provider Section
 
     private func providerSection(_ sub: SubscriptionInfo) -> some View {
-        VStack(spacing: Spacing.sm) {
+        // Server-authored strings are the source of truth. Fall back to the
+        // enum only when talking to an older backend that did not yet
+        // populate `source_badge` / `cancel_instructions`.
+        let badgeText = (sub.sourceBadge?.isEmpty == false ? sub.sourceBadge : nil)
+            ?? sub.provider.fallbackBadge
+        let instructionsText = (sub.cancelInstructions?.isEmpty == false ? sub.cancelInstructions : nil)
+            ?? sub.provider.fallbackCancelInstructions
+
+        return VStack(spacing: Spacing.sm) {
             // Provider badge
             HStack(spacing: Spacing.sm) {
                 Image(systemName: providerIcon(sub.provider))
                     .font(.subheadline)
                     .foregroundStyle(SolennixColors.textSecondary)
 
-                Text(sub.provider.badge)
+                Text(badgeText)
                     .font(.subheadline)
                     .foregroundStyle(SolennixColors.textSecondary)
 
@@ -185,7 +244,7 @@ public struct SubscriptionView: View {
                         .font(.subheadline)
                         .foregroundStyle(SolennixColors.info)
 
-                    Text(sub.provider.cancelInstructions)
+                    Text(instructionsText)
                         .font(.caption)
                         .foregroundStyle(SolennixColors.text)
                 }
@@ -277,16 +336,20 @@ public struct SubscriptionView: View {
 
     // MARK: - Computed Properties
 
+    /// Label strategy (mirrors backend/Stripe/RevenueCat contract): display
+    /// the literal plan the user is on. `.premium` is a legacy DB value that
+    /// predates the Pro/Business split and is rendered as "Pro". The
+    /// `subscriptionManager.isPremium` flag is just "RC entitlement active"
+    /// and cannot distinguish Pro from Business, so the user model wins.
     private var currentPlanName: String {
-        if subscriptionManager.isPremium {
-            return "Premium"
+        guard let user = viewModel.user else {
+            return subscriptionManager.isPremium ? "Pro" : "Básico"
         }
-        guard let user = viewModel.user else { return "Básico" }
         switch user.plan {
-        case .premium: return "Premium"
-        case .pro: return "Pro"
+        case .basic:
+            return subscriptionManager.isPremium ? "Pro" : "Básico"
+        case .pro, .premium: return "Pro"
         case .business: return "Business"
-        case .basic: return "Básico"
         }
     }
 

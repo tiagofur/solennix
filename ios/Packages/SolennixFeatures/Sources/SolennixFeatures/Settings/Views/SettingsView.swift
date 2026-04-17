@@ -276,9 +276,8 @@ public struct PlanBadge: View {
     private var planLabel: String {
         switch plan {
         case .basic: return "Básico"
-        case .pro: return "Pro"
+        case .pro, .premium: return "Pro"
         case .business: return "Business"
-        case .premium: return "Premium"
         }
     }
 
