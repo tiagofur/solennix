@@ -2,6 +2,23 @@
 
 # Roadmap iOS — Hacia la Paridad y Más Allá
 
+> [!success] 🆕 Jornada 2026-04-16 — 5 commits iOS
+> Ver [[../PRD/16_SPRINT_LOG_2026_04_16|Sprint Log del día]] y [[../00_DASHBOARD|Dashboard]].
+>
+> | SHA | Commit | Impacto |
+> |---|---|---|
+> | `8277dc2` | fix(ios): APIClient timeout + SwiftData error propagation | P0 — estabilidad red + startup |
+> | `3b72e8e` | fix(ios): Dashboard .task + DateFormatter + safer regex | P1 — lifecycle hygiene |
+> | `f960e02` | fix(ios): Dashboard kpis preload | UX — cards <200ms |
+> | `62a5d6b` | perf(ios): DateFormatter cache + hot-path migration | Perf — render body |
+> | `0284923` | a11y(ios): VoiceOver pass Dashboard | A11y — KPICards + chart + buttons |
+> | `b4ad3e1` | fix(ios): removePhoto undo + utf8 force-unwraps | P2 — data integrity |
+
+> [!todo] Próximos sprints iOS
+> - **Sprint 7.B** — Paywall modal reactivo a `plan_limit_exceeded` 403 con CTA contextual.
+> - **Sprint 8** — Portal Cliente ShareSheet nativo en EventDetailView (Copy + WhatsApp + Rotate + Revoke).
+> - **Sprint 9** — UI de registro de pagos por transferencia para el organizer (feature B).
+
 > [!tip] Filosofía
 > Priorizado por **impacto en usuario** × **esfuerzo técnico**. Alineado con [[Roadmap Web]] y [[Roadmap Android]] para paridad cross-platform. iOS es la plataforma más madura — el foco está en pulir, completar integraciones, y testing.
 >

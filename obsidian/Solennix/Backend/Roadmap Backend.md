@@ -2,6 +2,29 @@
 
 #backend #roadmap #mejoras
 
+> [!success] 🆕 Jornada 2026-04-16 — 5 commits Backend (incluyendo Portal Cliente MVP + Business tier)
+> Ver [[../PRD/16_SPRINT_LOG_2026_04_16|Sprint Log del día]] y [[../00_DASHBOARD|Dashboard]].
+>
+> | SHA | Commit | Impacto |
+> |---|---|---|
+> | `3ec4eba` | fix(backend): restore Apple Sign-In for new users | **P0 CRÍTICO** — bug silencioso en producción: new users con Apple Sign-In devolvían 500 |
+> | `a8a8dd4` | fix(backend): GetAll LIMIT + Apple token timeout | P1 — cap 1000 en unpaginated + timeout 10s en Apple token |
+> | `3a72812` | fix(backend): sort allowlist + rate limiter thread-safe + admin errors | P2/P3 — defense-in-depth SQL + mutex en ratelimit + envelope consistency |
+> | `8d521b2` | feat(backend): Business tier + 14-day Stripe trial | Feature — migration 040 + `StripeBusinessPriceID` opt-in + trial default + metadata propagation |
+> | `8dff4f3` | feat(backend): Portal Cliente MVP | 🎁 Feature nueva — migration 041 + model + repo + 4 endpoints — ver [[../PRD/15_PORTAL_CLIENTE_TRACKER]] |
+
+### Migraciones nuevas en DB (pendientes de aplicar en VPS)
+
+- **040** — `users_plan_check` amplía constraint para aceptar `'business'`.
+- **041** — crea tabla `event_public_links` con partial unique index.
+
+> [!todo] Próximos sprints Backend
+> - **Sprint 7.C** — Enforcement matrix: gate con 403 `{type: "requires_paid_plan"}` en endpoints de features A/B/C/D/E/G/H/I según tier del organizer. Para feature A (Portal): el endpoint público lee `organizer.plan` y devuelve `basic_payload` o `full_payload`.
+> - **Sprint 9** — Tabla `payment_submissions` + 6 endpoints (3 públicos rate-limited + 3 organizer) para registro de pago por transferencia del cliente.
+> - **Sprint 10** — Tabla `event_reviews` + cron que envía email de review 48h post-evento.
+> - **Follow-up** — Documentar los 4 endpoints de Portal Cliente en `backend/docs/openapi.yaml`.
+> - **Follow-up** — Corregir `PRD/08 §4`: email provider es Resend, no SMTP.
+
 > [!tip] Filosofía
 > Priorizado por **impacto en usuario** × **esfuerzo técnico**. Alineado con [[Roadmap Web]], [[Roadmap Android]] y [[Roadmap iOS]]. Cada fase deja la API en un estado shippable mejor que el anterior.
 

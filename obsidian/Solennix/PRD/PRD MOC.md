@@ -3,8 +3,19 @@
 > [!info] Solennix
 > **Producto**: Plataforma de gestión de eventos para organizadores LATAM
 > **Plataformas**: iOS · Android · Web · Backend (Go)
-> **Estado**: En desarrollo activo — Google & Apple Sign-In ✅ completado en todas plataformas
-> **Última actualización**: 2026-04-12 — Verificación y documentación de paridad authentication
+> **Estado**: En producción (4 plataformas live) · Audit 2026-04-16 cerrado (30/38) · **Portal Cliente MVP shipped**
+> **Última actualización**: 2026-04-16 — jornada de 28 commits, 7 sprints cerrados, nuevo feature shipped
+
+> [!success] 🎯 Dashboard Visual Diario
+> Abrí [[../00_DASHBOARD|🏛️ Dashboard Ejecutivo]] para ver el estado del producto en 30 segundos con Mermaid + progress bars + matrices visuales. **Es el nuevo punto de entrada recomendado.**
+
+---
+
+## 🆕 Jornada 2026-04-16
+
+- 🏛️ [[../00_DASHBOARD|Dashboard Ejecutivo]] — visión global con progreso visual + gantt + pies
+- 📅 [[16_SPRINT_LOG_2026_04_16|Sprint Log de la jornada]] — los 7 sprints + 28 commits detallados
+- 🎁 [[15_PORTAL_CLIENTE_TRACKER|Portal Cliente Tracker]] — feature A estado end-to-end con mermaid de arquitectura
 
 ---
 
@@ -12,12 +23,12 @@
 
 - [[01_PRODUCT_VISION|Visión del Producto]] — Problema, visión, objetivos, usuarios, historias de usuario
 - [[03_COMPETITIVE_ANALYSIS|Análisis Competitivo]] — Posicionamiento vs HoneyBook, Excel, WhatsApp y LATAM
-- [[04_MONETIZATION|Monetización]] — Tiers (Básico/Premium), precios, Stripe, StoreKit 2, RevenueCat
+- [[04_MONETIZATION|Monetización]] — Tiers (**Gratis con taste** / Pro / Business), precios, Stripe, RevenueCat, **§4.3 qué ve cada tier**, **§11 keys y secrets — no confundir**
 
 ## Features y Estado
 
-- [[02_FEATURES|Catálogo de Features]] — Todas las features con tabla de paridad cross-platform
-- [[11_CURRENT_STATUS|Estado Actual]] — Implementación por plataforma, brechas, migraciones
+- [[02_FEATURES|Catálogo de Features]] — Paridad cross-platform por feature, **§13.bis Portal Cliente**
+- [[11_CURRENT_STATUS|Estado Actual]] — Implementación por plataforma, brechas, migraciones, commits del día
 
 ## Arquitectura Técnica
 
@@ -29,7 +40,7 @@
 
 ## Planificación
 
-- [[09_ROADMAP|Roadmap MVP (Etapa 1)]] — Timeline, estimaciones, camino crítico por plataforma
+- [[09_ROADMAP|Roadmap Maestro]] — Timeline, matriz feature-per-platform, bloqueantes externos, Q2-Q4 2026 + Q1 2027
 - [[13_POST_MVP_ROADMAP|Roadmap Post-MVP (Etapa 2)]] — Notificaciones, reportes, portal del cliente, diferenciadores
 - [[14_CLIENT_EXPERIENCE_IDEAS|Ideas Experiencia Cliente (Exploración)]] — Clusters A–G: bidireccionalidad, transparencia, momentos en vivo, co-planificación, pagos, telemetría inversa, multi-destinatario
 - [[10_COLLABORATION_GUIDE|Guía de Colaboración]] — Workflow con Claude Code, prompts, reglas
@@ -69,10 +80,14 @@
 ## Navegación Rápida
 
 ```mermaid
-graph LR
+graph TB
+    D["🏛️ 00_DASHBOARD<br/>Visual daily hub"]
+    D --> SL["📅 16_SPRINT_LOG<br/>Jornada 2026-04-16"]
+    D --> PCT["🎁 15_PORTAL_CLIENTE<br/>Feature A tracker"]
+
     V[Visión] --> F[Features]
     V --> C[Competencia]
-    V --> M[Monetización]
+    V --> M[Monetización §4.3 taste<br/>+ §11 keys y secrets]
     F --> iOS[Arq. iOS]
     F --> And[Arq. Android]
     F --> Web[Arq. Web]
@@ -84,14 +99,22 @@ graph LR
     Back --> R
     R --> G[Guía Colaboración]
 
-    style V fill:#C4A265,stroke:#1B2A4A,color:#1A1A1A
-    style F fill:#C4A265,stroke:#1B2A4A,color:#1A1A1A
-    style S fill:#C4A265,stroke:#1B2A4A,color:#1A1A1A
+    D -.-> V
+    D -.-> R
+
+    style D fill:#1B2A4A,stroke:#C4A265,color:#fff
+    style SL fill:#C4A265,stroke:#1B2A4A,color:#1A1A1A
+    style PCT fill:#C4A265,stroke:#1B2A4A,color:#1A1A1A
+    style V fill:#F5F4F1,stroke:#1B2A4A,color:#1A1A1A
+    style F fill:#F5F4F1,stroke:#1B2A4A,color:#1A1A1A
+    style S fill:#F5F4F1,stroke:#1B2A4A,color:#1A1A1A
+    style M fill:#F5F4F1,stroke:#1B2A4A,color:#1A1A1A
+    style R fill:#F5F4F1,stroke:#1B2A4A,color:#1A1A1A
 ```
 
 ---
 
 > [!tip] Navegación
-> Cada documento enlaza con `[[wikilinks]]` a sus dependencias. Usá el **Graph View** de Obsidian para ver las relaciones entre documentos del PRD.
+> Cada documento enlaza con `[[wikilinks]]` a sus dependencias. Usá el **Graph View** de Obsidian para ver las relaciones entre documentos del PRD. El `00_DASHBOARD` tiene Mermaid gantt + pies + flowcharts y es el punto de entrada diario recomendado.
 
 #prd #moc #solennix

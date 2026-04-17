@@ -2,6 +2,23 @@
 
 #web #roadmap #mejoras
 
+> [!success] 🆕 Jornada 2026-04-16 — 6 commits Web (incluyendo Portal Cliente MVP)
+> Ver [[../PRD/16_SPRINT_LOG_2026_04_16|Sprint Log del día]] y [[../00_DASHBOARD|Dashboard]].
+>
+> | SHA | Commit | Impacto |
+> |---|---|---|
+> | `e5751ae` | fix(web): EventForm fetchMissingCosts re-render loop | P0 — riesgo infinite loop |
+> | `8a3162f` | fix(web): EventForm step validation + PublicEventForm AbortController | P1 — UX wizard + memory leak |
+> | `8335d5d` | fix(web): Modal scroll lock + toast throttle + Settings guard | P2/P3 — polish nested modals + resilience |
+> | `d2b967e` | fix(web): CalendarView → React Query | UX — no más spinner en cada navegación de mes |
+> | `993719c` | feat(web): Business tier card + paywall interceptor + plan param | Nueva feature — Pricing.tsx 3 cards + global 403 handler |
+> | `06d69ff` | feat(web): Client Portal MVP — /client/:token + share card | 🎁 Feature nueva end-to-end — ver [[../PRD/15_PORTAL_CLIENTE_TRACKER]] |
+
+> [!todo] Próximos sprints Web
+> - **Sprint 7.C** — Enforcement tier gating (copy paywall "requiere Plan Pro" + shape-based render del portal según plan del organizer).
+> - **Sprint 9** — UI registro de pagos por transferencia en el portal cliente + inbox del organizer.
+> - **Sprint 10** — UI pública de reseñas desde link en email + portfolio público (`/organizer/:slug/reviews`).
+
 > [!tip] Filosofía
 > Priorizado por **impacto en usuario** × **esfuerzo técnico**. Las mejoras están organizadas en fases incrementales — cada fase deja la app en un estado shippable mejor que el anterior.
 

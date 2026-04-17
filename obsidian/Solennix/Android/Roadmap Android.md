@@ -2,6 +2,21 @@
 
 # Roadmap Android — Hacia la Paridad y Más Allá
 
+> [!success] 🆕 Jornada 2026-04-16 — 3 commits Android
+> Ver [[../PRD/16_SPRINT_LOG_2026_04_16|Sprint Log del día]] y [[../00_DASHBOARD|Dashboard]].
+>
+> | SHA | Commit | Impacto |
+> |---|---|---|
+> | `3bb1cba` | fix(android): syncEventItems @Transaction | P0 — elimina UI flicker "0 productos" durante sync |
+> | `665c002` | fix(android): observeEvent + lifecycle-aware WindowInfo + bounded InventoryDemand | P1 — perf del EventDetail + ahorro de batería |
+> | `5e4a900` | fix(android): CSV filters + Calendar errors + encrypted checklist | P2/P3 — correctness CSV + a11y errores calendario + security prefs |
+> | `a3f425a` | fix(android): silent migration legacy checklist prefs | Sin regresión — preserva ✓ históricos al actualizar APK |
+
+> [!todo] Próximos sprints Android
+> - **Sprint 7.B** — `UpgradePlanDialog` wiring cuando API devuelve 403 `plan_limit_exceeded`.
+> - **Sprint 8** — Portal Cliente bottom sheet nativo en EventDetailScreen (paridad con iOS/Web).
+> - **Sprint 9** — UI registro de pagos por transferencia (feature B).
+
 > [!tip] Filosofía
 > Priorizado por **impacto en usuario** × **esfuerzo técnico**. Alineado con el [[Roadmap Web]] para mantener paridad cross-platform. Las fases son incrementales — cada una deja la app shippable.
 
