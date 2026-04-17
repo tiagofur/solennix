@@ -1060,7 +1060,7 @@ Refactors planificados para lograr paridad total entre las 6 plataformas (iPhone
 > [!tip] Documento completo
 > Ver [[13_POST_MVP_ROADMAP|Roadmap Post-MVP (Etapa 2)]] para especificaciones, endpoints y estimaciones.
 
-**Estado:** MVP enviado a Apple Store Review (Abril 2026). Web y Backend en producción. Android en preparación.
+**Estado:** MVP enviado a Apple Store Review (Abril 2026). Web y Backend en producción. Android en preparación. Portal Cliente MVP entregado (Abril 2026, commits `993719c` + `06d69ff`).
 
 ### Pilares Planificados
 
@@ -1070,6 +1070,13 @@ Refactors planificados para lograr paridad total entre las 6 plataformas (iPhone
 | 2   | **Reportes y Analítica** — Reportes por período, PDF/CSV, desglose IVA/márgenes          |    P1     |    ~82h    |
 | 3   | **Portal del Cliente** — URL compartible, acciones "en camino"/"llegamos", firma digital |    P1     |   ~107h    |
 | 4   | **Diferenciadores** — Plantillas, timeline, WhatsApp, Calendar sync, colaboración        |    P2     |   ~150h+   |
+
+### Próximas direcciones en exploración
+
+> [!note] Pilar 5 — Experiencia del Cliente
+> Ver [[14_CLIENT_EXPERIENCE_IDEAS|Ideas Experiencia Cliente (Exploración)]] para el catálogo completo de 7 clusters (A–G) y 20 ideas sobre visibilidad, comunicación bidireccional, transparencia granular, momentos en vivo, co-planificación, pagos in-portal, telemetría inversa y multi-destinatario.
+>
+> Estado: exploración. Estimación gruesa total 480–730h, distribuibles en 2–3 trimestres según priorización. Requiere decisiones abiertas sobre storage de media, proveedor de pagos LATAM (Stripe vs MercadoPago), y modelo de tokens públicos.
 
 ### Email Transaccional — Estado Actual vs Etapa 2
 

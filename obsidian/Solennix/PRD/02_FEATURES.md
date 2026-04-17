@@ -49,6 +49,7 @@ status: active
 | ✅      | Implementado |
 | 🔄      | En progreso  |
 | ⬜      | Pendiente    |
+| 📋      | Idea en exploración (no comprometida) |
 | ➖      | No aplica    |
 
 ---
@@ -1193,6 +1194,21 @@ Sistema de upload de imagenes para fotos de eventos, productos y logos de negoci
 | Predicción de demanda       |   [Todas]   |    P3     | Sugerencias de stock basadas en eventos futuros             |
 | Multi-moneda                |   [Todas]   |    P2     | MXN, USD, COP, ARS, BRL, PEN                                |
 | Multi-idioma                |   [Todas]   |    P3     | Español, Inglés, Portugués                                  |
+
+### Pilar 5: Experiencia del Cliente (Exploración)
+
+> [!warning] Ideas en exploración, no comprometidas
+> Ver [[14_CLIENT_EXPERIENCE_IDEAS|Ideas Experiencia Cliente]] para detalle por idea, tier sugerido, estimación gruesa y plan de implementación cross-platform. Al aprobarse un cluster, pasa a Pilar 3 (Portal del Cliente) con compromiso firme.
+
+| Cluster                              | Plataformas | Estado | Descripción                                                                       |
+| ------------------------------------ | :---------: | :----: | --------------------------------------------------------------------------------- |
+| A. Bidireccionalidad y aprobaciones  |   [Todas]   |   📋   | Inbox cliente↔organizador, aprobaciones estructuradas, comentarios por sección, polls |
+| B. Transparencia granular opt-in     |   [Todas]   |   📋   | Toggle de visibilidad por sección, stepper de milestones, tareas cliente-lado     |
+| C. Momentos en vivo (Event Day)      |   [Todas]   |   📋   | Stream de fotos/video, ubicación en vivo, check-ins cualitativos                  |
+| D. Co-planificación                  |   [Todas]   |   📋   | RSVP/invitados, moodboard, agenda Calendly-lite                                   |
+| E. Pagos e integraciones financieras | [Web] [Backend] |   📋   | Pagar desde el portal (Stripe/MercadoPago), recordatorios inteligentes            |
+| F. Telemetría inversa y confianza    |   [Todas]   |   📋   | Read-receipts, eventos del cliente al organizador                                 |
+| G. Multi-destinatario y relación continua | [Todas] |   📋   | Sub-invitados con scope por link, hub histórico, deep-links segmentados           |
 
 ---
 

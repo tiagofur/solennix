@@ -31,6 +31,7 @@
 
 - [[09_ROADMAP|Roadmap MVP (Etapa 1)]] — Timeline, estimaciones, camino crítico por plataforma
 - [[13_POST_MVP_ROADMAP|Roadmap Post-MVP (Etapa 2)]] — Notificaciones, reportes, portal del cliente, diferenciadores
+- [[14_CLIENT_EXPERIENCE_IDEAS|Ideas Experiencia Cliente (Exploración)]] — Clusters A–G: bidireccionalidad, transparencia, momentos en vivo, co-planificación, pagos, telemetría inversa, multi-destinatario
 - [[10_COLLABORATION_GUIDE|Guía de Colaboración]] — Workflow con Claude Code, prompts, reglas
 
 ## Super Plan Cross-Platform
