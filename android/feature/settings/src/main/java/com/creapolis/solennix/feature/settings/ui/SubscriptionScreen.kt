@@ -27,9 +27,13 @@ import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveCenteredContent
 import com.creapolis.solennix.core.designsystem.event.UiEventSnackbarHandler
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
+import com.creapolis.solennix.core.model.SubscriptionInfo
 import com.creapolis.solennix.core.model.SubscriptionProvider
 import com.creapolis.solennix.feature.settings.billing.BillingState
 import com.creapolis.solennix.feature.settings.viewmodel.SubscriptionViewModel
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 private val PRO_FEATURES = listOf(
     PlanFeature("Eventos ilimitados", true),
@@ -111,7 +115,8 @@ fun SubscriptionScreen(
             item(key = "current_plan") {
                 CurrentPlanCard(
                     planName = uiState.currentPlanName,
-                    isActive = uiState.hasActiveSubscription
+                    isActive = uiState.hasActiveSubscription,
+                    subscription = uiState.subscription,
                 )
             }
 
@@ -422,8 +427,12 @@ fun ProviderInfoSection(
 @Composable
 fun CurrentPlanCard(
     planName: String,
-    isActive: Boolean
+    isActive: Boolean,
+    subscription: SubscriptionInfo? = null,
 ) {
+    val renewalLine = subscription?.let { renewalLine(it) }
+    val priceLine = subscription?.let { priceLine(it) }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -431,41 +440,107 @@ fun CurrentPlanCard(
         ),
         shape = MaterialTheme.shapes.medium
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(20.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            Column {
-                Text(
-                    text = "Plan actual",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = SolennixTheme.colors.primary
-                )
-                Text(
-                    text = planName,
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = SolennixTheme.colors.primaryText
-                )
-            }
-            if (isActive) {
-                Surface(
-                    color = SolennixTheme.colors.success.copy(alpha = 0.2f),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
                     Text(
-                        text = "Activo",
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-                        color = SolennixTheme.colors.success,
-                        fontWeight = FontWeight.Bold
+                        text = "Plan actual",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = SolennixTheme.colors.primary
+                    )
+                    Text(
+                        text = planName,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = SolennixTheme.colors.primaryText
                     )
                 }
+                if (isActive) {
+                    val cancelPending = subscription?.cancelAtPeriodEnd == true
+                    Surface(
+                        color = if (cancelPending)
+                            SolennixTheme.colors.warning.copy(alpha = 0.2f)
+                        else
+                            SolennixTheme.colors.success.copy(alpha = 0.2f),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            text = if (cancelPending) "Cancela al vencer" else "Activo",
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                            color = if (cancelPending)
+                                SolennixTheme.colors.warning
+                            else
+                                SolennixTheme.colors.success,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+
+            if (priceLine != null) {
+                Text(
+                    text = priceLine,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = SolennixTheme.colors.primaryText,
+                )
+            }
+            if (renewalLine != null) {
+                Text(
+                    text = renewalLine,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = SolennixTheme.colors.secondaryText,
+                )
             }
         }
     }
+}
+
+/**
+ * Builds the human-readable renewal line from the backend response.
+ *
+ * Examples: "Se renueva el 14 de mayo de 2026" — or when cancelAtPeriodEnd
+ * is true: "Vence el 14 de mayo de 2026". Returns null when the backend
+ * did not populate a period end date.
+ */
+private fun renewalLine(subscription: SubscriptionInfo): String? {
+    val iso = subscription.currentPeriodEnd?.takeIf { it.isNotBlank() } ?: return null
+    val formatted = runCatching {
+        val parsed = OffsetDateTime.parse(iso)
+        parsed.format(
+            DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy", Locale("es"))
+        )
+    }.getOrNull() ?: return null
+    return if (subscription.cancelAtPeriodEnd) {
+        "Vence el $formatted"
+    } else {
+        "Se renueva el $formatted"
+    }
+}
+
+/**
+ * Formats the price line when the backend exposes it (Stripe provider).
+ * Returns null for Apple/Google, where the price is shown by the store.
+ */
+private fun priceLine(subscription: SubscriptionInfo): String? {
+    val cents = subscription.amountCents ?: return null
+    val currency = subscription.currency ?: return null
+    val interval = when (subscription.billingInterval) {
+        "month" -> "/mes"
+        "year" -> "/año"
+        else -> ""
+    }
+    val amount = cents / 100.0
+    val formatted = String.format(Locale("es"), "%.2f", amount)
+    return "${currency.uppercase(Locale.ROOT)} $formatted$interval"
 }
 
 data class PlanFeature(

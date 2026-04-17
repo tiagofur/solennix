@@ -53,7 +53,12 @@ data class SubscriptionInfo(
     @SerialName("source_badge") val sourceBadge: String? = null,
     @SerialName("cancel_instructions") val cancelInstructions: String? = null,
     @SerialName("current_period_end") val currentPeriodEnd: String? = null,
-    @SerialName("cancel_at_period_end") val cancelAtPeriodEnd: Boolean = false
+    @SerialName("cancel_at_period_end") val cancelAtPeriodEnd: Boolean = false,
+    // Pricing — currently populated only for Stripe-originated subs. Apple and
+    // Google users see their price natively in the respective stores.
+    @SerialName("amount_cents") val amountCents: Int? = null,
+    val currency: String? = null,
+    @SerialName("billing_interval") val billingInterval: String? = null,
 )
 
 /**
