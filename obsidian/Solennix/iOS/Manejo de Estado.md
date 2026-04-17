@@ -59,6 +59,24 @@ public final class EventListViewModel {
 
 ---
 
+## Sincronización Reactiva entre Vistas
+
+Debido a que `eventosapp` iOS carece de un *store* global centralizado estilo Redux o Room (como sí tiene Android), los ViewModels manejan su propio caché aislado. Cuando una vista "hija" dentro de un `NavigationStack` (ej. `EventDetailView`) realiza un cambio exitoso en la API (ej. registrar un pago), la vista "padre" (`DashboardView`) **no vuelve a ejecutar `.task` ni `.onAppear`** al volver atrás (por optimización del sistema iOS 16/17+).
+
+Para resolver esto y mantener el Dashboard sincronizado sin re-consumir APIs innecesariamente, utilizamos un patrón híbrido con **`NotificationCenter`**:
+
+1. El ViewModel que hace la escritura exitosa a la API notifica globalmente: 
+   `NotificationCenter.default.post(name: .solennixPaymentRegistered, object: nil)`
+2. La vista que necesita estar al día (`DashboardView`) escucha pasivamente y ejecuta su método `refresh()`:
+   `.onReceive(NotificationCenter.default.publisher(for: .solennixPaymentRegistered)) { _ in Task { await viewModel?.refresh() } }`
+
+Notificaciones actuales en el sistema (`SolennixCore/SolennixNotificationNames.swift`):
+- `.solennixPaymentRegistered`
+- `.solennixPaymentDeleted`
+- `.solennixEventUpdated`
+
+---
+
 ## ViewModels del Sistema
 
 | ViewModel | Feature | Responsabilidad |

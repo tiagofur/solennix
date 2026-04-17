@@ -107,6 +107,9 @@ val uiState: StateFlow<DashboardUiState> = combine(
 > [!important] WhileSubscribed(5000)
 > El timeout de 5 segundos evita cancelar el Flow durante rotaciones de pantalla, pero libera recursos cuando el usuario navega fuera.
 
+> [!tip] Sincronización Automática vs iOS
+> Gracias a este patrón de Flows reactivos conectados directamente a Room, **Android no requiere utilidades como NotificationCenter** para mantener el Dashboard al día. Cuando una vista secundaria graba un cambio en Room, la base de datos re-emite el Flow de inmediato y todas las Vistas que observen ese estado se refrescan por defecto (Single Source of Truth).
+
 ---
 
 ## Eventos de UI (One-Shot)
