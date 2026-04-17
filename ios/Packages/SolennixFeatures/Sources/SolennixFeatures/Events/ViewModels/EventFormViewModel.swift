@@ -792,6 +792,7 @@ public final class EventFormViewModel {
         )
 
         HapticsHelper.play(.success)
+        NotificationCenter.default.post(name: .solennixEventUpdated, object: nil)
     }
 
     // MARK: - Step Navigation

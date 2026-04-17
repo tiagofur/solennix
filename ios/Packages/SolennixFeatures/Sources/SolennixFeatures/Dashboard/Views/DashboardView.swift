@@ -125,6 +125,15 @@ public struct DashboardView: View {
             PendingEventsModalView(apiClient: apiClient)
         }
         .animation(.easeInOut(duration: 0.25), value: viewModel?.errorMessage)
+        .onReceive(NotificationCenter.default.publisher(for: .solennixPaymentRegistered)) { _ in
+            Task { await viewModel?.refresh() }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .solennixPaymentDeleted)) { _ in
+            Task { await viewModel?.refresh() }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .solennixEventUpdated)) { _ in
+            Task { await viewModel?.refresh() }
+        }
     }
 
     // MARK: - Plan Limits Banner

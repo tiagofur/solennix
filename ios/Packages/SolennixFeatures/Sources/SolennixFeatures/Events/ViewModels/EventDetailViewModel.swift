@@ -182,6 +182,8 @@ public final class EventDetailViewModel {
             let updated: Event = try await apiClient.put(Endpoint.event(eventId), body: body)
             event = updated
             HapticsHelper.play(.success)
+            
+            NotificationCenter.default.post(name: .solennixEventUpdated, object: nil)
 
             // Actualizar la Live Activity si está activa
             await updateLiveActivityStatus()
@@ -269,6 +271,8 @@ public final class EventDetailViewModel {
             try await apiClient.delete(Endpoint.payment(id))
             payments.removeAll { $0.id == id }
             HapticsHelper.play(.success)
+            
+            NotificationCenter.default.post(name: .solennixPaymentDeleted, object: nil)
 
             // Reload to sync status
             await loadData(eventId: eventId)
@@ -285,6 +289,7 @@ public final class EventDetailViewModel {
         do {
             try await apiClient.delete(Endpoint.event(eventId))
             HapticsHelper.play(.success)
+            NotificationCenter.default.post(name: .solennixEventUpdated, object: nil)
             return true
         } catch {
             HapticsHelper.play(.error)

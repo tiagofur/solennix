@@ -18,4 +18,10 @@ public extension Notification.Name {
     /// - `client_name: String`
     /// - `amount: Double`
     static let solennixPaymentRegistered = Notification.Name("solennix.payment.registered")
+    
+    /// Posted por los ViewModels cuando un pago se elimina.
+    static let solennixPaymentDeleted = Notification.Name("solennix.payment.deleted")
+    
+    /// Posted por los ViewModels cuando un evento cambia de estado o se edita.
+    static let solennixEventUpdated = Notification.Name("solennix.event.updated")
 }
