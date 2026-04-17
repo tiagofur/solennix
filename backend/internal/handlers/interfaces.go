@@ -47,7 +47,8 @@ type FullEventRepository interface {
 	UpdateClientStats(ctx context.Context, clientID uuid.UUID) error
 	GetProducts(ctx context.Context, eventID uuid.UUID) ([]models.EventProduct, error)
 	GetExtras(ctx context.Context, eventID uuid.UUID) ([]models.EventExtra, error)
-	UpdateEventItems(ctx context.Context, eventID uuid.UUID, products []models.EventProduct, extras []models.EventExtra, equipment *[]models.EventEquipment, supplies *[]models.EventSupply) error
+	UpdateEventItems(ctx context.Context, eventID uuid.UUID, products []models.EventProduct, extras []models.EventExtra, equipment *[]models.EventEquipment, supplies *[]models.EventSupply, staff *[]models.EventStaff) error
+	GetStaff(ctx context.Context, eventID uuid.UUID) ([]models.EventStaff, error)
 	GetEquipment(ctx context.Context, eventID uuid.UUID) ([]models.EventEquipment, error)
 	CheckEquipmentConflicts(ctx context.Context, userID uuid.UUID, eventDate string, startTime, endTime *string, inventoryIDs []uuid.UUID, excludeEventID *uuid.UUID) ([]models.EquipmentConflict, error)
 	GetEquipmentSuggestionsFromProducts(ctx context.Context, userID uuid.UUID, products []repository.ProductQuantity) ([]models.EquipmentSuggestion, error)
@@ -68,6 +69,18 @@ type ClientRepository interface {
 	Delete(ctx context.Context, id, userID uuid.UUID) error
 	CountByUserID(ctx context.Context, userID uuid.UUID) (int, error)
 	Search(ctx context.Context, userID uuid.UUID, query string) ([]models.Client, error)
+}
+
+// StaffRepository defines staff repo operations.
+type StaffRepository interface {
+	GetAll(ctx context.Context, userID uuid.UUID) ([]models.Staff, error)
+	GetAllPaginated(ctx context.Context, userID uuid.UUID, offset, limit int, sortCol, order string) ([]models.Staff, int, error)
+	GetByID(ctx context.Context, id, userID uuid.UUID) (*models.Staff, error)
+	Create(ctx context.Context, s *models.Staff) error
+	Update(ctx context.Context, s *models.Staff) error
+	Delete(ctx context.Context, id, userID uuid.UUID) error
+	CountByUserID(ctx context.Context, userID uuid.UUID) (int, error)
+	Search(ctx context.Context, userID uuid.UUID, query string) ([]models.Staff, error)
 }
 
 // ProductRepository defines product repo operations.

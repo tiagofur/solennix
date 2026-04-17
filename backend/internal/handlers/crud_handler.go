@@ -657,6 +657,7 @@ func (h *CRUDHandler) UpdateEventItems(w http.ResponseWriter, r *http.Request) {
 		Extras    []models.EventExtra      `json:"extras"`
 		Equipment *[]models.EventEquipment `json:"equipment,omitempty"`
 		Supplies  *[]models.EventSupply    `json:"supplies,omitempty"`
+		Staff     *[]models.EventStaff     `json:"staff,omitempty"`
 	}
 	if err := decodeJSON(r, &req); err != nil {
 		writeError(w, http.StatusBadRequest, "Invalid request body")
@@ -699,11 +700,40 @@ func (h *CRUDHandler) UpdateEventItems(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if err := h.eventRepo.UpdateEventItems(r.Context(), eventID, req.Products, req.Extras, req.Equipment, req.Supplies); err != nil {
+	// Validate all staff assignments (if provided)
+	if req.Staff != nil {
+		for i, s := range *req.Staff {
+			if err := ValidateEventStaff(&s); err != nil {
+				writeError(w, http.StatusBadRequest, fmt.Sprintf("staff[%d]: %s", i, err.Error()))
+				return
+			}
+		}
+	}
+
+	if err := h.eventRepo.UpdateEventItems(r.Context(), eventID, req.Products, req.Extras, req.Equipment, req.Supplies, req.Staff); err != nil {
 		writeError(w, http.StatusInternalServerError, "Failed to update event items")
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+}
+
+func (h *CRUDHandler) GetEventStaff(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+	eventID, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "Invalid event ID")
+		return
+	}
+	if _, err := h.eventRepo.GetByID(r.Context(), eventID, userID); err != nil {
+		writeError(w, http.StatusNotFound, "Event not found")
+		return
+	}
+	staff, err := h.eventRepo.GetStaff(r.Context(), eventID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "Failed to fetch event staff")
+		return
+	}
+	writeJSON(w, http.StatusOK, staff)
 }
 
 func (h *CRUDHandler) GetEventEquipment(w http.ResponseWriter, r *http.Request) {

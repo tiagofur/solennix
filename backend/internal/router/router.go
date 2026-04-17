@@ -18,6 +18,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 	adminHandler *handlers.AdminHandler, dashboardHandler *handlers.DashboardHandler, auditHandler *handlers.AuditHandler, unavailHandler *handlers.UnavailableDateHandler, deviceHandler *handlers.DeviceHandler,
 	liveActivityHandler *handlers.LiveActivityHandler, eventFormHandler *handlers.EventFormHandler,
 	eventPublicLinkHandler *handlers.EventPublicLinkHandler,
+	staffHandler *handlers.StaffHandler,
 	authService *services.AuthService, userRepo *repository.UserRepo, auditRepo mw.AuditLogger, pool *pgxpool.Pool, corsOrigins []string, uploadDir string) http.Handler {
 
 	r := chi.NewRouter()
@@ -157,6 +158,15 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 		// Users
 		r.Put("/users/me", authHandler.UpdateProfile)
 
+		// Staff (Personal — collaborators catalog)
+		r.Route("/staff", func(r chi.Router) {
+			r.Get("/", staffHandler.ListStaff)
+			r.Post("/", staffHandler.CreateStaff)
+			r.Get("/{id}", staffHandler.GetStaff)
+			r.Put("/{id}", staffHandler.UpdateStaff)
+			r.Delete("/{id}", staffHandler.DeleteStaff)
+		})
+
 		// Clients
 		r.Route("/clients", func(r chi.Router) {
 			r.Get("/", crudHandler.ListClients)
@@ -180,6 +190,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 			r.Put("/{id}/items", crudHandler.UpdateEventItems)
 			r.Get("/{id}/equipment", crudHandler.GetEventEquipment)
 			r.Get("/{id}/supplies", crudHandler.GetEventSupplies)
+			r.Get("/{id}/staff", crudHandler.GetEventStaff)
 			// Event photos
 			r.Get("/{id}/photos", crudHandler.GetEventPhotos)
 			r.Post("/{id}/photos", crudHandler.AddEventPhoto)

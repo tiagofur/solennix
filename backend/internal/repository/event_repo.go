@@ -361,9 +361,11 @@ func (r *EventRepo) GetExtras(ctx context.Context, eventID uuid.UUID) ([]models.
 }
 
 // UpdateEventItems replaces the Supabase RPC `update_event_items`.
-// It atomically replaces all products, extras, and optionally equipment and supplies for an event within a transaction.
+// It atomically replaces all products, extras, and optionally equipment, supplies and staff for an event within a transaction.
 func (r *EventRepo) UpdateEventItems(ctx context.Context, eventID uuid.UUID,
-	products []models.EventProduct, extras []models.EventExtra, equipment *[]models.EventEquipment, supplies *[]models.EventSupply) error {
+	products []models.EventProduct, extras []models.EventExtra,
+	equipment *[]models.EventEquipment, supplies *[]models.EventSupply,
+	staff *[]models.EventStaff) error {
 
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
@@ -438,7 +440,55 @@ func (r *EventRepo) UpdateEventItems(ctx context.Context, eventID uuid.UUID,
 		}
 	}
 
+	// Insert staff (only if provided — nil means skip, preserving backward compatibility)
+	if staff != nil {
+		if _, err := tx.Exec(ctx, "DELETE FROM event_staff WHERE event_id=$1", eventID); err != nil {
+			return err
+		}
+		for _, st := range *staff {
+			_, err := tx.Exec(ctx,
+				`INSERT INTO event_staff (event_id, staff_id, fee_amount, role_override, notes)
+				VALUES ($1, $2, $3, $4, $5)`,
+				eventID, st.StaffID, st.FeeAmount, st.RoleOverride, st.Notes)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	return tx.Commit(ctx)
+}
+
+// GetStaff returns all staff assigned to an event with joined denormalized fields
+// from the staff catalog (name, role_label, phone, email) for display convenience.
+func (r *EventRepo) GetStaff(ctx context.Context, eventID uuid.UUID) ([]models.EventStaff, error) {
+	query := `SELECT es.id, es.event_id, es.staff_id, es.fee_amount, es.role_override,
+		es.notes, es.notification_sent_at, es.notification_last_result, es.created_at,
+		s.name, s.role_label, s.phone, s.email
+		FROM event_staff es
+		LEFT JOIN staff s ON es.staff_id = s.id
+		WHERE es.event_id = $1
+		ORDER BY s.name`
+	rows, err := r.pool.Query(ctx, query, eventID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	items := make([]models.EventStaff, 0)
+	for rows.Next() {
+		var es models.EventStaff
+		if err := rows.Scan(&es.ID, &es.EventID, &es.StaffID, &es.FeeAmount,
+			&es.RoleOverride, &es.Notes, &es.NotificationSentAt, &es.NotificationLastResult,
+			&es.CreatedAt, &es.StaffName, &es.StaffRoleLabel, &es.StaffPhone, &es.StaffEmail); err != nil {
+			return nil, err
+		}
+		items = append(items, es)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating event staff: %w", err)
+	}
+	return items, nil
 }
 
 // -- Event Equipment --

@@ -716,6 +716,7 @@ func TestUpdateEventItems_Success(t *testing.T) {
 		mock.AnythingOfType("[]models.EventExtra"),
 		mock.AnythingOfType("*[]models.EventEquipment"),
 		mock.Anything, // supplies
+		mock.Anything, // staff
 	).Return(nil)
 
 	h := newTestHandler(new(MockClientRepo), eventRepo, new(MockProductRepo), new(MockInventoryRepo), new(MockFullPaymentRepo), new(MockFullUserRepo))
@@ -749,6 +750,7 @@ func TestUpdateEventItems_EmptyLists_Success(t *testing.T) {
 		mock.AnythingOfType("[]models.EventExtra"),
 		mock.Anything, // equipment can be nil
 		mock.Anything, // supplies can be nil
+		mock.Anything, // staff can be nil
 	).Return(nil)
 
 	h := newTestHandler(new(MockClientRepo), eventRepo, new(MockProductRepo), new(MockInventoryRepo), new(MockFullPaymentRepo), new(MockFullUserRepo))
@@ -847,6 +849,7 @@ func TestUpdateEventItems_RepoError_Returns500(t *testing.T) {
 		mock.AnythingOfType("[]models.EventExtra"),
 		mock.Anything, // equipment
 		mock.Anything, // supplies
+		mock.Anything, // staff
 	).Return(errTest)
 
 	h := newTestHandler(new(MockClientRepo), eventRepo, new(MockProductRepo), new(MockInventoryRepo), new(MockFullPaymentRepo), new(MockFullUserRepo))

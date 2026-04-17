@@ -5,6 +5,7 @@ import (
 	"html"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/tiagofur/solennix-backend/internal/models"
 )
 
@@ -353,6 +354,65 @@ func ValidateInventoryItem(item *models.InventoryItem) error {
 func ValidateEventEquipment(eq *models.EventEquipment) error {
 	if eq.Quantity < 1 {
 		return ValidationError{Field: "quantity", Message: "must be at least 1"}
+	}
+	return nil
+}
+
+// ValidateStaff validates a staff catalog entry.
+func ValidateStaff(s *models.Staff) error {
+	if s.Name == "" {
+		return ValidationError{Field: "name", Message: "is required"}
+	}
+	if err := validateStringLength("name", s.Name, MaxNameLength); err != nil {
+		return err
+	}
+	if s.Email != nil && *s.Email != "" {
+		if !emailRegex.MatchString(*s.Email) {
+			return ValidationError{Field: "email", Message: "invalid email format"}
+		}
+		if err := validateStringLength("email", *s.Email, MaxEmailLength); err != nil {
+			return err
+		}
+	}
+	if s.Phone != nil {
+		if err := validateStringLength("phone", *s.Phone, MaxPhoneLength); err != nil {
+			return err
+		}
+	}
+	if s.RoleLabel != nil {
+		if err := validateStringLength("role_label", *s.RoleLabel, MaxNameLength); err != nil {
+			return err
+		}
+	}
+	if s.Notes != nil {
+		if err := validateStringLength("notes", *s.Notes, MaxNotesLength); err != nil {
+			return err
+		}
+	}
+
+	s.Name = sanitizeString(s.Name)
+	s.RoleLabel = sanitizeOptionalString(s.RoleLabel)
+	s.Notes = sanitizeOptionalString(s.Notes)
+	return nil
+}
+
+// ValidateEventStaff validates event staff assignments.
+func ValidateEventStaff(es *models.EventStaff) error {
+	if es.StaffID == (uuid.UUID{}) {
+		return ValidationError{Field: "staff_id", Message: "is required"}
+	}
+	if es.FeeAmount != nil && *es.FeeAmount < 0 {
+		return ValidationError{Field: "fee_amount", Message: "must be greater than or equal to 0"}
+	}
+	if es.RoleOverride != nil {
+		if err := validateStringLength("role_override", *es.RoleOverride, MaxNameLength); err != nil {
+			return err
+		}
+	}
+	if es.Notes != nil {
+		if err := validateStringLength("notes", *es.Notes, MaxNotesLength); err != nil {
+			return err
+		}
 	}
 	return nil
 }

@@ -494,13 +494,13 @@ func TestEventRepoIntegration(t *testing.T) {
 		{ProductID: productID, Quantity: 10, UnitPrice: 120, Discount: 5},
 	}, []models.EventExtra{
 		{Description: "Decoracion", Cost: 40, Price: 70, ExcludeUtility: false},
-	}, nil, nil)
+	}, nil, nil, nil)
 	if err != nil {
 		t.Fatalf("UpdateEventItems() error = %v", err)
 	}
 	err = repo.UpdateEventItems(context.Background(), event.ID, []models.EventProduct{
 		{ProductID: uuid.New(), Quantity: 1, UnitPrice: 10, Discount: 0},
-	}, nil, nil, nil)
+	}, nil, nil, nil, nil)
 	if err == nil {
 		t.Fatalf("UpdateEventItems() expected error for invalid product foreign key")
 	}
@@ -1097,7 +1097,7 @@ func TestEventRepoGetEquipmentIntegration(t *testing.T) {
 
 	// Add equipment via UpdateEventItems
 	eqList := []models.EventEquipment{{InventoryID: equipmentID, Quantity: 3}}
-	if err := repo.UpdateEventItems(context.Background(), eventID, nil, nil, &eqList, nil); err != nil {
+	if err := repo.UpdateEventItems(context.Background(), eventID, nil, nil, &eqList, nil, nil); err != nil {
 		t.Fatalf("UpdateEventItems(equipment) error = %v", err)
 	}
 

@@ -316,6 +316,46 @@ type EventFormLink struct {
 	URL               string     `json:"url,omitempty"` // Computed, not stored
 }
 
+// Staff represents a collaborator (photographer, DJ, waiter, coordinator, etc.)
+// that the organizer keeps in their contact list and assigns to events.
+// Ownership is per user (multi-tenant). Phase 1 is pure CRM; Phase 2 adds
+// email notifications on assignment; Phase 3 (Business tier) lets the
+// collaborator log in via invited_user_id and see their assigned events.
+type Staff struct {
+	ID                     uuid.UUID  `json:"id"`
+	UserID                 uuid.UUID  `json:"user_id"`
+	Name                   string     `json:"name"`
+	RoleLabel              *string    `json:"role_label,omitempty"`
+	Phone                  *string    `json:"phone,omitempty"`
+	Email                  *string    `json:"email,omitempty"`
+	Notes                  *string    `json:"notes,omitempty"`
+	NotificationEmailOptIn bool       `json:"notification_email_opt_in"`
+	InvitedUserID          *uuid.UUID `json:"invited_user_id,omitempty"`
+	CreatedAt              time.Time  `json:"created_at"`
+	UpdatedAt              time.Time  `json:"updated_at"`
+}
+
+// EventStaff is the assignment of a Staff row to an Event. Fee is per-assignment
+// because the same person may charge differently per event. NotificationSentAt
+// and NotificationLastResult are Phase 2 tracking columns (dedup + outcome).
+type EventStaff struct {
+	ID                     uuid.UUID  `json:"id"`
+	EventID                uuid.UUID  `json:"event_id"`
+	StaffID                uuid.UUID  `json:"staff_id"`
+	FeeAmount              *float64   `json:"fee_amount,omitempty"`
+	RoleOverride           *string    `json:"role_override,omitempty"`
+	Notes                  *string    `json:"notes,omitempty"`
+	NotificationSentAt     *time.Time `json:"notification_sent_at,omitempty"`
+	NotificationLastResult *string    `json:"notification_last_result,omitempty"`
+	CreatedAt              time.Time  `json:"created_at"`
+
+	// Joined from staff
+	StaffName      *string `json:"staff_name,omitempty"`
+	StaffRoleLabel *string `json:"staff_role_label,omitempty"`
+	StaffPhone     *string `json:"staff_phone,omitempty"`
+	StaffEmail     *string `json:"staff_email,omitempty"`
+}
+
 // EventPublicLink is a shareable, revocable token that opens a read-only
 // portal (PRD/12 feature A) for the end client of an event — the person who
 // hired the organizer. Unlike EventFormLink (which captures a lead), this

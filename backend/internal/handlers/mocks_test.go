@@ -199,9 +199,17 @@ func (m *MockFullEventRepo) GetExtras(ctx context.Context, eventID uuid.UUID) ([
 	return args.Get(0).([]models.EventExtra), args.Error(1)
 }
 
-func (m *MockFullEventRepo) UpdateEventItems(ctx context.Context, eventID uuid.UUID, products []models.EventProduct, extras []models.EventExtra, equipment *[]models.EventEquipment, supplies *[]models.EventSupply) error {
-	args := m.Called(ctx, eventID, products, extras, equipment, supplies)
+func (m *MockFullEventRepo) UpdateEventItems(ctx context.Context, eventID uuid.UUID, products []models.EventProduct, extras []models.EventExtra, equipment *[]models.EventEquipment, supplies *[]models.EventSupply, staff *[]models.EventStaff) error {
+	args := m.Called(ctx, eventID, products, extras, equipment, supplies, staff)
 	return args.Error(0)
+}
+
+func (m *MockFullEventRepo) GetStaff(ctx context.Context, eventID uuid.UUID) ([]models.EventStaff, error) {
+	args := m.Called(ctx, eventID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]models.EventStaff), args.Error(1)
 }
 
 func (m *MockFullEventRepo) GetEquipment(ctx context.Context, eventID uuid.UUID) ([]models.EventEquipment, error) {
