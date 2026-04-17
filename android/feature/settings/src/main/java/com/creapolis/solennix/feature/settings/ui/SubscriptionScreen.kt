@@ -31,7 +31,7 @@ import com.creapolis.solennix.core.model.SubscriptionProvider
 import com.creapolis.solennix.feature.settings.billing.BillingState
 import com.creapolis.solennix.feature.settings.viewmodel.SubscriptionViewModel
 
-private val PREMIUM_FEATURES = listOf(
+private val PRO_FEATURES = listOf(
     PlanFeature("Eventos ilimitados", true),
     PlanFeature("Clientes ilimitados", true),
     PlanFeature("Productos ilimitados", true),
@@ -199,18 +199,18 @@ fun SubscriptionScreen(
                 )
             }
 
-            // Premium Packages — dynamic from RevenueCat, fallback to static cards
-            if (uiState.premiumPackages.isNotEmpty()) {
-                items(uiState.premiumPackages, key = { "premium_${it.identifier}" }) { rcPackage ->
+            // Pro Packages — dynamic from RevenueCat, fallback to static cards
+            if (uiState.proPackages.isNotEmpty()) {
+                items(uiState.proPackages, key = { "pro_${it.identifier}" }) { rcPackage ->
                     val price = rcPackage.product.price.formatted
                     val isYearly = rcPackage.identifier.contains("annual", ignoreCase = true) ||
                             rcPackage.identifier.contains("yearly", ignoreCase = true)
                     PlanCard(
-                        planName = "Premium",
+                        planName = "Pro",
                         price = price,
                         period = if (isYearly) "/año" else "/mes",
-                        features = PREMIUM_FEATURES,
-                        isCurrentPlan = uiState.currentPlanName == "Premium",
+                        features = PRO_FEATURES,
+                        isCurrentPlan = uiState.currentPlanName == "Pro",
                         isRecommended = isYearly,
                         savingsText = if (isYearly) "Ahorrá 20%" else null,
                         isPurchasing = uiState.purchasingPackageId == rcPackage.identifier,
@@ -223,26 +223,26 @@ fun SubscriptionScreen(
             } else {
                 // Fallback static cards when RevenueCat is unavailable
                 // Matches iOS fallback prices: $6.99/month, $49.99/year
-                item(key = "premium_monthly_fallback") {
+                item(key = "pro_monthly_fallback") {
                     PlanCard(
-                        planName = "Premium",
+                        planName = "Pro",
                         price = "US\$ 6.99",
                         period = "/mes",
-                        features = PREMIUM_FEATURES,
-                        isCurrentPlan = uiState.currentPlanName == "Premium",
+                        features = PRO_FEATURES,
+                        isCurrentPlan = uiState.currentPlanName == "Pro",
                         isRecommended = false,
                         isPurchasing = false,
                         isAnyPurchaseInProgress = true, // disable clicks — no RC to handle purchase
                         onClick = { }
                     )
                 }
-                item(key = "premium_yearly_fallback") {
+                item(key = "pro_yearly_fallback") {
                     PlanCard(
-                        planName = "Premium",
+                        planName = "Pro",
                         price = "US\$ 49.99",
                         period = "/año",
-                        features = PREMIUM_FEATURES,
-                        isCurrentPlan = uiState.currentPlanName == "Premium",
+                        features = PRO_FEATURES,
+                        isCurrentPlan = uiState.currentPlanName == "Pro",
                         isRecommended = true,
                         savingsText = "Ahorrá 40%",
                         isPurchasing = false,
@@ -315,7 +315,7 @@ fun SubscriptionScreen(
             item {
                 FaqItem(
                     question = "¿Hay prueba gratuita?",
-                    answer = "Sí, el plan Premium incluye 14 días de prueba gratis. Se renueva automáticamente al precio del plan elegido a menos que canceles al menos 24 horas antes de que termine el período de prueba."
+                    answer = "Sí, el plan Pro incluye 14 días de prueba gratis. Se renueva automáticamente al precio del plan elegido a menos que canceles al menos 24 horas antes de que termine el período de prueba."
                 )
             }
 

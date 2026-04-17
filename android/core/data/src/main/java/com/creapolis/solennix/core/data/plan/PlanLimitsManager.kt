@@ -21,17 +21,14 @@ class PlanLimitsManager @Inject constructor(
     private val productRepository: ProductRepository
 ) {
     companion object {
-        // Basic plan limits
+        // Basic plan limits (free tier)
         const val BASIC_EVENTS_PER_MONTH = 3
         const val BASIC_CLIENTS_TOTAL = 50
         const val BASIC_CATALOG_ITEMS = 20
 
-        // Pro plan limits
-        const val PRO_EVENTS_PER_MONTH = 20
-        const val PRO_CLIENTS_TOTAL = 500
-        const val PRO_CATALOG_ITEMS = 100
-
-        // Premium has unlimited access
+        // Pro and Business are unlimited. The difference between them lives at
+        // the feature level (team seats, multi-business, advanced analytics),
+        // not in usage caps.
     }
 
     /**
@@ -47,15 +44,15 @@ class PlanLimitsManager @Inject constructor(
                 hasCustomBranding = false,
                 hasPrioritySupport = false
             )
-            Plan.PRO -> PlanLimits(
-                eventsPerMonth = PRO_EVENTS_PER_MONTH,
-                totalClients = PRO_CLIENTS_TOTAL,
-                catalogItems = PRO_CATALOG_ITEMS,
+            Plan.PRO, Plan.PREMIUM -> PlanLimits(
+                eventsPerMonth = Int.MAX_VALUE,
+                totalClients = Int.MAX_VALUE,
+                catalogItems = Int.MAX_VALUE,
                 hasAdvancedReports = true,
                 hasCustomBranding = true,
                 hasPrioritySupport = false
             )
-            Plan.PREMIUM -> PlanLimits(
+            Plan.BUSINESS -> PlanLimits(
                 eventsPerMonth = Int.MAX_VALUE,
                 totalClients = Int.MAX_VALUE,
                 catalogItems = Int.MAX_VALUE,

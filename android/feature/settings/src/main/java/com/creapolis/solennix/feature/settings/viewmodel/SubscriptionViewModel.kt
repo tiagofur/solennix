@@ -27,7 +27,7 @@ import javax.inject.Inject
 
 data class SubscriptionUiState(
     val billingState: BillingState = BillingState.NotReady,
-    val premiumPackages: List<Package> = emptyList(),
+    val proPackages: List<Package> = emptyList(),
     val currentPlanName: String = "Básico",
     val hasActiveSubscription: Boolean = false,
     val purchasingPackageId: String? = null,
@@ -78,20 +78,26 @@ class SubscriptionViewModel @Inject constructor(
         }
 
         // Basic is free (no RC package). All packages from the current offering
-        // are Premium tier — no filter needed. RC standard identifiers are
+        // are the Pro tier — no filter needed. RC standard identifiers are
         // $rc_monthly, $rc_annual, etc.
-        val premiumPackages = packages
+        val proPackages = packages
 
-        val hasSubscription = billingManager.hasPremiumAccess()
+        val hasSubscription = billingManager.hasProAccess()
 
+        // Label strategy (mirrors iOS and the backend/Stripe/RevenueCat contract):
+        // show the literal plan the user is on. `PREMIUM` is a legacy DB value
+        // that predates the Pro/Business split and is rendered as "Pro".
         val currentPlan = when {
-            hasSubscription -> "Premium"
-            else -> user?.plan?.name?.replaceFirstChar { it.uppercase() } ?: "Básico"
+            user?.plan == com.creapolis.solennix.core.model.Plan.BUSINESS -> "Business"
+            hasSubscription -> "Pro"
+            user?.plan == com.creapolis.solennix.core.model.Plan.PRO -> "Pro"
+            user?.plan == com.creapolis.solennix.core.model.Plan.PREMIUM -> "Pro"
+            else -> "Básico"
         }
 
         SubscriptionUiState(
             billingState = billingState,
-            premiumPackages = premiumPackages,
+            proPackages = proPackages,
             currentPlanName = currentPlan,
             hasActiveSubscription = hasSubscription,
             purchasingPackageId = purchasingId,

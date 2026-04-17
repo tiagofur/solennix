@@ -31,9 +31,22 @@ data class User(
     @SerialName("updated_at") val updatedAt: String = ""
 )
 
+/**
+ * User subscription plan.
+ *
+ * Backend / Stripe / RevenueCat only sell `basic | pro | business`. The
+ * `PREMIUM` case is kept strictly as a legacy fallback for pre-existing DB
+ * rows (migration 040 allows `premium` for backward compat; migration 037
+ * reset most of them to basic). It must never surface in new UI copy —
+ * treat it as a paid tier alias of `PRO`.
+ *
+ * This mirrors the iOS `Plan` enum at
+ * `ios/Packages/SolennixCore/Sources/SolennixCore/Models/User.swift`.
+ */
 @Serializable
 enum class Plan {
     @SerialName("basic") BASIC,
     @SerialName("pro") PRO,
-    @SerialName("premium") PREMIUM
+    @SerialName("business") BUSINESS,
+    @SerialName("premium") PREMIUM // legacy — treat as paid tier
 }

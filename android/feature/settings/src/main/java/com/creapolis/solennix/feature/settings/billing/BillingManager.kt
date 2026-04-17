@@ -27,7 +27,8 @@ class BillingManager @Inject constructor() {
         // RevenueCat entitlement identifier — must match the entitlement ID
         // configured in RevenueCat Dashboard → Project → Entitlements.
         // Aligned with iOS which already uses "pro_access" in production.
-        // UI displays "Premium" — the internal ID is independent of the display name.
+        // Both Pro and Business tiers map to this single entitlement — the
+        // tier distinction lives in the backend User.plan field.
         const val ENTITLEMENT_ID = "pro_access"
     }
 
@@ -202,9 +203,10 @@ class BillingManager @Inject constructor() {
     }
 
     /**
-     * Check if user has an active "premium" entitlement.
+     * Check if the user has the `pro_access` entitlement active in RevenueCat.
+     * Both Pro and Business tiers grant this entitlement.
      */
-    fun hasPremiumAccess(): Boolean {
+    fun hasProAccess(): Boolean {
         return _customerInfo.value
             ?.entitlements
             ?.get(ENTITLEMENT_ID)
