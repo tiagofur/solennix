@@ -1,3 +1,5 @@
+name: solennix
+
 services:
   backend:
     build:

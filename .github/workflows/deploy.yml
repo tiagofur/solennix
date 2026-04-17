@@ -1,34 +1,22 @@
 # ─────────────────────────────────────────────────────────────────────────
-# Production deploy workflow — PREPARED, NOT ACTIVATED
+# Production deploy workflow
 #
-# Triggers on a successful CI Pipeline run on `main`. This means it only
-# fires when code is merged to main, NOT when feature branches are pushed.
+# Se dispara al hacer push (o merge de PR) a `main`. Flujo:
+#   1. Espera a que el CI Pipeline termine exitosamente
+#   2. Se conecta por SSH al VPS con el usuario deploy
+#   3. Hace fetch + reset a origin/main
+#   4. Levanta/actualiza containers con docker compose
 #
-# BEFORE enabling this in production you MUST:
+# Estrategia de branching: GitHub Flow.
+#   - `main` = producción. Feature branches → PR → merge → deploy automático.
+#   - Hotfix: branch desde main, PR, merge.
 #
-#   1. Configure these repository secrets in GitHub (Settings → Secrets
-#      and variables → Actions):
-#        - VPS_HOST       (e.g. solennix.example.com or an IP)
-#        - VPS_USERNAME   (typically deploy or ubuntu)
-#        - VPS_SSH_KEY    (private key with access to the deploy user)
-#        - VPS_PORT       (usually 22)
-#
-#   2. Replace the `/path/to/solennix` placeholder below with the actual
-#      directory on the VPS where the repo is cloned (e.g.
-#      /home/deploy/solennix or /srv/solennix).
-#
-#   3. Ensure the VPS has:
-#        - git, docker and docker-compose installed
-#        - the deploy user owns the repo directory
-#        - the repo is already cloned and `git pull` works without prompts
-#
-# Until the secrets are set and the path is replaced, this workflow will
-# fail silently on every merge to main (appleboy/ssh-action reports
-# missing host as a step failure, which does NOT affect the CI run that
-# triggered it). That is the "prepared, not activated" state.
-#
-# Ver el slice 'backend-as-source-of-truth' en
-# ~/.claude/plans/sprightly-bouncing-wand.md (Fase 8) para contexto.
+# Secretos requeridos (Settings → Secrets and variables → Actions):
+#   - VPS_HOST       host o IP del servidor (ej. 74.208.234.244)
+#   - VPS_USERNAME   usuario SSH (deploy)
+#   - VPS_SSH_KEY    clave privada OpenSSH (con BEGIN/END intactos)
+#   - VPS_PORT       puerto SSH (22)
+#   - VPS_APP_PATH   ruta absoluta al repo en el VPS (/home/deploy/solennix)
 # ─────────────────────────────────────────────────────────────────────────
 
 name: Deploy to production
@@ -40,12 +28,17 @@ on:
       - completed
     branches:
       - main
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
 
 jobs:
   deploy:
     name: Deploy to VPS
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
 
     steps:
       - name: Execute deployment script on VPS
@@ -56,6 +49,22 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT }}
           script: |
-            cd /path/to/solennix # TODO: replace with the real path on the VPS
-            git pull origin main
-            docker-compose up -d --build
+            set -euo pipefail
+            cd "${{ secrets.VPS_APP_PATH }}"
+            echo "→ Fetching latest from origin/main"
+            git fetch origin main
+            git checkout main
+            git reset --hard origin/main
+            echo "→ Rebuilding containers"
+            if docker compose version >/dev/null 2>&1; then
+              docker compose pull || true
+              docker compose up -d --build --remove-orphans
+              docker compose ps
+            else
+              docker-compose pull || true
+              docker-compose up -d --build --remove-orphans
+              docker-compose ps
+            fi
+            echo "→ Cleaning dangling images"
+            docker image prune -f || true
+            echo "✓ Deploy OK"
