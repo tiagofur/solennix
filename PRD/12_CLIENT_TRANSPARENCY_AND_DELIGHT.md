@@ -12,7 +12,7 @@
 | Feature | Estado | Plataformas |
 |---|---|---|
 | **A. Portal público del cliente** | 🚧 **En desarrollo** | ✅ Backend + ✅ Web · 📋 iOS + Android (Sprint 8) |
-| B. Transparencia de pagos (cronograma + botón Pagar) | 📋 Planeado | Q3 2026 (Sprint 9) |
+| B. Pagos del cliente — visualización + registro por transferencia | 📋 Planeado | Q3 2026 (Sprint 9) · reemplaza Stripe-checkout |
 | C. Notificaciones por etapa (configurable) | 📋 Planeado | Q3 2026 (Sprint 11) |
 | D. Thread de comunicación organizador↔cliente | 📋 Planeado | Q3 2026 (Sprint 12) |
 | E. Bandeja "Requiere tu decisión" | 📋 Planeado | Q3 2026 (Sprint 13) |
@@ -104,29 +104,146 @@ La propuesta: abrir una **ventana controlada** al cliente — el organizador dec
 - Web: ruta pública en `web/src/pages/ClientPortal/ClientPortalPage.tsx` (no `client/ClientEventView.tsx` como decía la vision, renombrado por coherencia con el directorio `ClientPortal/`).
 - iOS/Android: compartir desde la app aún no implementado — por ahora el organizador comparte el link que pegue manualmente desde el web si no está en desktop. Gap real a cerrar en Sprint 8.
 
-**Tier (según PRD/04):** Gratis (1 portal activo) · Pro (ilimitado + branding) · Business (white-label completo + dominio custom). **Enforcement pendiente en Sprint 7.C** — hoy cualquiera puede generar sin límite.
+**Tier (según PRD/04):** Pro (ilimitado + branding) · Business (white-label completo + dominio custom). **Gratis NO tiene acceso a esta feature** (decisión 2026-04-16 — Gratis es CRM interno; toda comunicación con cliente es Pro+). **Enforcement pendiente en Sprint 7.C** — hoy cualquiera puede generar sin límite.
 
 ---
 
-### B. Transparencia de pagos (`/client/:eventSlug/payments`)
+#### A.1 Garantía de acceso perpetuo del cliente al evento
 
-**Qué:** El cliente ve su balance, historial y próximos vencimientos en tiempo real.
+**Decisión 2026-04-16:** el cliente debe poder acceder al portal de SU evento **sin importar cuánto tiempo pase desde el evento**. Bodas, quinceañeras, eventos importantes — la gente vuelve años después a revisitar detalles, contratos, fotos, comprobantes. Cortar ese acceso es una regresión emocional que no queremos.
+
+**Reglas:**
+
+1. **Default de expiración: NULL (nunca caduca).** Ya implementado en el MVP — `event_public_links.expires_at` es nullable y los links se crean sin TTL por default. El organizador puede PONER un TTL explícito si quiere (ej. links promocionales temporales), pero la UI no debe mostrar un control de TTL a menos que lo pida explícitamente.
+
+2. **Post-evento NO se revoca automáticamente.** No hay cron job que "limpie" links de eventos pasados. El link que funciona hoy, funciona también en 5 años.
+
+3. **Revocación explícita SIGUE siendo posible pero con fricción.** El organizador puede revocar manualmente desde la share card (botón "Deshabilitar"); cuando el evento es más antiguo que X días (ej. 180), mostrar un confirm reforzado: *"Este evento fue hace 2 años. Si deshabilitás este enlace, tu cliente puede perder acceso a información que aún quiera consultar. ¿Continuar?"*
+
+4. **Si el organizador borra su cuenta** → los events y sus links se borran en cascada (ON DELETE CASCADE). Para preservar acceso del cliente en ese escenario, futura feature:
+   - `Business tier:` botón "Exportar portal como PDF permanente" antes de cerrar cuenta. Genera un snapshot estático hosted en URL permanente (`solennix.com/archive/{event-id}`) con los datos al momento de la exportación.
+   - Backlog — no es P0 para el MVP.
+
+5. **Cambio de URL del portal del cliente en el futuro** (rename `/client/:token` a otra cosa) → mantener el redirect legacy indefinidamente. NUNCA dejar URLs que el cliente haya guardado caer en 404.
+
+**Implementación actual (MVP):** los 3 primeros puntos están ya garantizados por diseño. El punto 4 (export permanent) y el confirm reforzado del punto 3 van como follow-up.
+
+---
+
+### B. Pagos del cliente — visualización + registro por transferencia
+
+**Qué:** Dos cosas bundleadas en el mismo flujo del portal (`/client/:token`):
+1. **Transparencia** — el cliente ve balance, historial y próximos vencimientos en tiempo real (ya está parcialmente en el MVP de A).
+2. **Registro de pago por transferencia** — el cliente reporta un pago que ya hizo por su home banking / Pix / MercadoPago / transferencia normal; el organizador aprueba o rechaza.
+
+**DECISIÓN 2026-04-16:** reemplazamos el "botón Pagar ahora con Stripe" del plan original por este flujo de registro + approve/reject. Zero fees de pasarela, mejor fit con realidad LATAM (80% paga por transferencia), organizador mantiene el control. Stripe-as-payment-gateway queda fuera de scope de producto por ahora; si se retoma en el futuro va como `B.bis — Pagos con tarjeta via pasarela` y coexistirá con este flujo.
+
+---
+
+#### B.1 Visualización (parcial ya en MVP A)
 
 **Contenido:**
 - Total del evento.
-- Pagado / Pendiente / Vencido (con semáforo).
-- Cronograma de cuotas: fecha, monto, estado.
-- Historial: cada pago con fecha, método, monto, link a recibo PDF.
-- Botón "Pagar ahora" si hay integración (MercadoPago/Stripe/Conekta en LATAM).
-- Notificación automática al cliente 3 días antes de cada vencimiento (configurable).
+- Pagado / Pendiente / Vencido (con semáforo). _(hoy ya tenemos Total / Paid / Remaining en el portal MVP.)_
+- Cronograma de cuotas: fecha, monto, estado. _(pendiente de schema + UI.)_
+- Historial: cada pago aprobado con fecha, método, monto, link a comprobante (si lo adjuntó el cliente).
+- Notificación automática al cliente 3 días antes de cada vencimiento (configurable desde settings).
 
 **Implementación:**
-- Backend: `GET /api/public/events/:slug/payments` (mismo token firmado).
-- Tabla `payment_schedule` (si no existe): `id, event_id, due_date, amount, status (pending/paid/overdue), paid_at, payment_id, receipt_url`.
-- Integración con pasarelas → fuera del scope de esta doc, tracking aparte.
-- UI: `web/src/pages/client/ClientPayments.tsx`.
+- Backend: ampliar `PublicEventView` con `payment_schedule` + `payment_history` arrays.
+- Tabla `payment_schedule` (si no existe): `id, event_id, due_date, amount, status (pending/paid/overdue), paid_at, payment_id`.
+- UI: sección "Pagos" en `ClientPortalPage.tsx`.
 
-**Por qué es "antojable":** el cliente deja de pedir recibos por WhatsApp. El organizador deja de cazar pagos. Todos duermen mejor.
+---
+
+#### B.2 Registro de pago por transferencia (nuevo, reemplaza Stripe)
+
+**Flujo desde el cliente:**
+1. En el portal (`/client/:token`), sección "Registrar un pago".
+2. Formulario:
+   - **Monto** (requerido).
+   - **Clave de transferencia** (requerido) — el número que genera el banco al confirmar la transferencia. En AR: "CVU/CBU destino y comprobante". En MX: "referencia SPEI". En BR: "ID da transferência / Pix ID". El campo es un string libre — Solennix no valida contra el banco.
+   - **Comprobante (imagen o PDF)** — **opcional** _(decisión provisional 2026-04-16; el organizador puede pedirlo después si no vino)_. Max 5 MB. Tipos: JPG / PNG / PDF.
+   - **Nota del cliente** (opcional) — ej. "Pago de la segunda cuota + extras de fotografía".
+3. Submit → toast "Tu pago está en revisión. El organizador te va a confirmar en breve."
+4. Sección inferior "Mis registros": historial con estado — `En revisión` (amarillo) · `Aprobado ✓` (verde) · `Rechazado ✗` (rojo con nota del organizador).
+
+**Flujo desde el organizador (EventDetail / EventSummary):**
+1. Badge/alert cuando hay submissions pending: "3 pagos del cliente esperando revisión".
+2. Lista con monto, clave, preview del comprobante (si hay), nota del cliente, fecha.
+3. Botones:
+   - **Aprobar** — nota opcional ("OK recibido Banco Santander 14:32"). Al aprobar:
+     - Crea una row en `payments` (con método `transfer`, amount, fecha, link al comprobante).
+     - Marca submission como `approved`, guarda `resulting_payment_id`, `reviewed_at`, `reviewed_by`.
+     - Email al cliente: "Tu pago de $5,000 MXN fue confirmado."
+   - **Rechazar** — nota **obligatoria** (el cliente necesita saber por qué). Al rechazar:
+     - Marca submission como `rejected` + nota.
+     - Email al cliente con la nota.
+     - NO crea row en `payments`.
+
+**Modelo de datos:**
+
+```sql
+CREATE TABLE payment_submissions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  event_id UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+  token_used TEXT NOT NULL,                         -- trazabilidad del portal
+  amount NUMERIC(12,2) NOT NULL CHECK (amount > 0),
+  payment_method TEXT NOT NULL DEFAULT 'transfer',  -- futuro: 'mercadopago', 'pix', 'other'
+  transfer_reference TEXT NOT NULL,                 -- clave del banco
+  receipt_image_url TEXT,                           -- opcional
+  client_note TEXT,                                 -- opcional
+  status TEXT NOT NULL DEFAULT 'pending'
+    CHECK (status IN ('pending', 'approved', 'rejected')),
+  submitted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  reviewed_at TIMESTAMPTZ,
+  reviewed_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  organizer_note TEXT,
+  resulting_payment_id UUID REFERENCES payments(id) ON DELETE SET NULL,
+  submitter_ip INET,                                -- audit trail
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_payment_submissions_event_pending
+  ON payment_submissions(event_id) WHERE status = 'pending';
+
+-- En la tabla payments existente:
+ALTER TABLE payments ADD COLUMN submission_id UUID REFERENCES payment_submissions(id);
+```
+
+**Endpoints nuevos:**
+
+| Método | Path | Auth | Descripción |
+|---|---|---|---|
+| POST | `/api/public/events/{token}/payment-submissions` | 🔓 rate-limited | Cliente submite pago |
+| GET | `/api/public/events/{token}/payment-submissions` | 🔓 rate-limited | Cliente ve SUS submissions + estados |
+| POST | `/api/public/uploads/receipt` | 🔓 rate-limited | Subir imagen del comprobante |
+| GET | `/api/events/{id}/payment-submissions` | 🔒 | Organizador lista pending + history |
+| POST | `/api/events/{id}/payment-submissions/{submissionId}/approve` | 🔒 | Organizador aprueba |
+| POST | `/api/events/{id}/payment-submissions/{submissionId}/reject` | 🔒 | Organizador rechaza (nota obligatoria) |
+
+**Seguridad:**
+- Rate limit del POST público: 5 submissions/hora por token. Evita spam.
+- Upload de comprobante: max 5 MB, content-type whitelist (`image/jpeg`, `image/png`, `application/pdf`), nombre hasheado, stored en bucket separado.
+- `transfer_reference` es solo string — Solennix NO valida contra el banco. Organizador verifica manualmente contra su home banking.
+- Rotar el token NO borra submissions — son históricas por evento. Nuevo token ve las MISMAS submissions.
+- Submitter IP grabada para audit.
+
+**Notificaciones:**
+- Submission creada → email + push al organizador: "Nuevo pago registrado por {cliente}: ${amount}".
+- Approved → email al cliente: "Tu pago de ${amount} fue confirmado. Gracias!"
+- Rejected → email al cliente: "No pudimos confirmar tu pago de ${amount}. Razón: {organizer_note}. Contactanos para resolver."
+
+**Tier gating (provisional — revisable post-launch):**
+
+| Tier | Límite |
+|---|---|
+| Gratis | ∞ submissions, ∞ history, review manual. |
+| Pro | + email templates customizables + bulk approve. |
+| Business | + auto-match con CSV de estado de cuenta del banco (feature futura), + API export de payment_submissions. |
+
+**Por qué es "antojable":** el cliente deja de mandar screenshots por WhatsApp. El organizador deja de tener que pedirlos + responder "recibí, gracias". Todos tienen el audit trail limpio. **Cero fees.** Cero dependencia de pasarelas externas.
 
 ---
 
@@ -155,7 +272,7 @@ La propuesta: abrir una **ventana controlada** al cliente — el organizador dec
 - Tabla `milestone_preferences` por usuario + `milestone_triggers` por evento.
 - UI settings: `Settings → Notificaciones al cliente` (iOS/Android/Web).
 
-**Tier:** Gratis (email-only, 3 milestones fijos) · Pro (todos los canales excepto WhatsApp Business + 10 milestones) · Business (WhatsApp Business API + milestones ilimitados + templates custom).
+**Tier (decisión 2026-04-16):** Pro (email + push, 10 milestones) · Business (+ SMS + WhatsApp Business API + milestones ilimitados + templates custom). **Gratis sin acceso** (coherente con la regla "Gratis no tiene comunicación con el cliente").
 
 ---
 
@@ -175,7 +292,7 @@ La propuesta: abrir una **ventana controlada** al cliente — el organizador dec
 - Real-time vía WebSocket o SSE (futuro) — empieza con polling.
 - UI: integrado en `EventDetailView` (iOS/Android) y `EventDetailPage` (Web).
 
-**Tier:** Pro en adelante (gratis sin thread, solo portal read-only).
+**Tier:** Pro en adelante. **Gratis sin acceso** (Gratis no tiene portal cliente — ver PRD/04 §4.2).
 
 ---
 
@@ -300,7 +417,7 @@ La propuesta: abrir una **ventana controlada** al cliente — el organizador dec
 - i18n en rutas `/client/:eventSlug` → `i18next` o similar en web.
 - Content editorial del organizador (nombres, descripciones): quedan en idioma del organizador. Solo chrome/labels traducidos.
 
-**Tier:** Gratis (es + en) · Pro (+ pt).
+**Tier:** Pro (es + en + pt). **Gratis sin acceso** (feature vive dentro del portal cliente, que es Pro+).
 
 ---
 
@@ -312,7 +429,7 @@ La propuesta: abrir una **ventana controlada** al cliente — el organizador dec
 
 **Implementación:** agregación estadística del evento en un template PDF + vista web.
 
-**Tier:** Gratis (básico) · Pro (custom branding) · Business (exportable para portfolio).
+**Tier:** Pro (básico + custom branding) · Business (+ exportable para portfolio). **Gratis sin acceso** (feature se renderiza dentro del portal cliente).
 
 ---
 
@@ -339,20 +456,24 @@ La propuesta: abrir una **ventana controlada** al cliente — el organizador dec
 
 ## 5. Matriz de monetización (tiers)
 
+**Regla global (decisión 2026-04-16):** Gratis NO tiene acceso a ninguna feature de comunicación con el cliente final. Todo lo que sigue abajo arranca desde Pro. Ver `PRD/04 §4.2` para el racional (retention driver).
+
 | Feature | Gratis | Pro | Business |
 |---|---|---|---|
-| Portal público (A) | 1 activo | ∞ + branding | + dominio custom |
-| Transparencia pagos (B) | Read-only | + botón pagar | + reconciliación automática |
-| Notificaciones (C) | Email, 3 milestones | Email+SMS, ∞ milestones | + WhatsApp API + templates custom |
-| Chat (D) | — | ✓ | + export legal |
-| Decisiones (E) | 3/evento | ∞ | + flujos complejos (multi-paso) |
-| Upload cliente (F) | 10MB total | 1GB | ∞ |
-| Firma digital (G) | — | ✓ (simple) | + proveedor legal |
-| RSVP (H) | 50 invitados | 500 | ∞ |
-| Reseñas (I) | ✓ | + portfolio público | + integración Google/Facebook |
-| Branding (J) | Logo básico | Logo + colores | + dominio + DKIM |
-| Multi-idioma (K) | es + en | + pt | + idiomas custom |
-| Resumen valor (L) | Básico | + branding | + exportable |
+| Portal público (A) | — | ∞ + branding | + dominio custom |
+| Transparencia pagos + registro por transferencia (B) | — | ✓ + bulk approve + email templates | + auto-match CSV banco |
+| Notificaciones (C) | — | Email + Push, 10 milestones | + SMS + WhatsApp API + ∞ milestones + templates custom |
+| Chat organizador↔cliente (D) | — | ✓ | + export legal |
+| Decisiones pendientes (E) | — | ∞ | + flujos multi-paso |
+| Upload cliente (F) | — | 1GB | ∞ |
+| Firma digital (G) | — | ✓ (canvas simple) | + proveedor legal |
+| RSVP invitados (H) | — | 500 invitados | ∞ |
+| Reseñas post-evento (I) | — | + portfolio público | + integración Google/FB |
+| Branding portal (J) | — | Logo + colores | + dominio custom + DKIM |
+| Multi-idioma cliente (K) | — | es + en + pt | + idiomas custom |
+| Resumen valor post-evento (L) | — | + custom branding | + exportable |
+
+**Nota sobre el registro de pago por transferencia (B):** este flujo NO usa Stripe ni ninguna pasarela — el cliente reporta un pago que ya hizo por su banco (Pix, SPEI, transferencia, MercadoPago, etc.) y el organizador aprueba o rechaza. Zero fees. Solennix es solo el canal de registro + audit trail, no la pasarela.
 
 ---
 

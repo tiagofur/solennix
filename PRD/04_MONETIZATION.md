@@ -54,17 +54,17 @@ Suscripción SaaS mensual/anual con 3 tiers: **Gratis · Pro · Business**.
 | | Contratos PDF con template | ✓ básico | ✓ editable | ✓ con firma digital |
 | | Branding en PDFs (logo + colores) | logo básico | ✓ completo | ✓ + dominio email propio |
 | | Exportar CSV | ✓ | ✓ | ✓ |
-| **Pagos** | Registro manual de pagos | ✓ | ✓ | ✓ |
-| | Integración MercadoPago / Stripe / Conekta | — | ✓ | ✓ |
+| **Pagos (internos al organizador)** | Registro manual de pagos (organizador) | ✓ | ✓ | ✓ |
 | | Recordatorios automáticos de pago | — | ✓ | ✓ |
-| **Cliente** | Portal público del cliente (ver PRD/12) | 1 activo | ∞ + branding | + dominio custom |
-| | Transparencia de pagos (cliente ve balance) | solo lectura | + botón pagar | + reconciliación auto |
-| | Notificaciones al cliente | email, 3 milestones | email+SMS, ∞ milestones | + WhatsApp API + custom |
+| **Cliente — comunicación (ver `PRD/12`)** | Portal público del cliente | — | ∞ + branding | + dominio custom |
+| | Transparencia de pagos (cliente ve balance + cronograma) | — | ✓ | + export API |
+| | **Registro de pago por transferencia del cliente + approve/reject** | — | ✓ + bulk approve + email templates | + auto-match con CSV estado de cuenta |
+| | Notificaciones al cliente | — | email+SMS, ∞ milestones | + WhatsApp API + custom |
 | | Thread de comunicación organizador↔cliente | — | ✓ | + export legal |
-| | Bandeja de decisiones pendientes | 3/evento | ∞ | + flujos multi-paso |
+| | Bandeja de decisiones pendientes | — | ∞ | + flujos multi-paso |
 | | Firma digital de contratos | — | ✓ (canvas) | ✓ con proveedor legal |
 | | RSVP de invitados | — | 500 invitados | ∞ |
-| | Reseñas post-evento | ✓ | + portfolio público | + integración Google/FB |
+| | Reseñas post-evento | — | + portfolio público | + integración Google/FB |
 | **Operación** | Calendario con eventos | ✓ | ✓ | ✓ |
 | | Bloqueo de fechas no disponibles | ✓ | ✓ | ✓ |
 | | Checklist por evento | ✓ | ✓ | ✓ |
@@ -94,8 +94,8 @@ Suscripción SaaS mensual/anual con 3 tiers: **Gratis · Pro · Business**.
 ### 4.2 Qué sí es palanca fuerte
 
 - **Límite de eventos/mes.** El momento en que el usuario alcanza 5/5 es el mejor momento de conversión. Mostrar upgrade ahí, con claridad.
-- **Portal del cliente + branding.** Un organizador que quiere verse profesional paga por quitar el "Powered by Solennix".
-- **Integración de pagos.** El organizador quiere cobrar con 1 click desde el portal — upgrade natural a Pro.
+- **Comunicación con el cliente final es Pro+.** **Decisión 2026-04-16:** el plan Gratis NO incluye NINGUNA feature cara-al-cliente: sin portal público, sin registro de pagos por transferencia, sin notificaciones automáticas al cliente, sin thread, sin bandeja de decisiones, sin reseñas. Gratis es un CRM interno para el organizador que recién arranca; toda la diferenciación "app que el cliente percibe" vive en Pro. Esa brecha es el upgrade driver más fuerte.
+- **Portal del cliente + branding.** Un organizador que quiere verse profesional paga por abrir la ventana al cliente con su marca.
 - **WhatsApp Business.** Alto costo variable por mensaje enviado → exclusivo de Business, costo transferible al organizador.
 
 ### 4.3 Comportamiento al alcanzar un límite

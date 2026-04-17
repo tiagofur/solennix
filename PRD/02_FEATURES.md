@@ -231,6 +231,10 @@ Todos los PDFs se generan **client-side** (iOS con `UIGraphicsPDFRenderer`, Andr
 
 Portal privado per-evento para que el CLIENTE final (no el organizador) vea estado de su evento en read-only. Distinto del portal de captura (13) — este es post-venta.
 
+**Tier (decisión 2026-04-16):** Gratis NO tiene acceso a esta feature ni a ninguna de comunicación con el cliente. Pro+ habilita todo.
+
+### A.1 Link y acceso
+
 | Feature | iOS | Android | Web | Backend |
 |---|:-:|:-:|:-:|:-:|
 | Generar link por evento | 📋 | 📋 | ✅ *(share card en EventSummary)* | ✅ `POST /api/events/{id}/public-link` |
@@ -241,15 +245,39 @@ Portal privado per-evento para que el CLIENTE final (no el organizador) vea esta
 | Copy + WhatsApp share desde UI organizador | 📋 | 📋 | ✅ | — |
 | 410 Gone para revoked/expired | — | — | ✅ *(distinct copy)* | ✅ |
 | Auto-revoke si evento se borra | — | — | — | ✅ |
+| **Acceso perpetuo por default** (no TTL) | — | — | ✅ | ✅ |
+| Confirm reforzado al revocar eventos antiguos (>180d) | 📋 | 📋 | 📋 | — |
+| Archive permanente post-cierre de cuenta (Business) | 📋 | 📋 | 📋 | 📋 |
 | PIN opcional (capa extra) | 📋 | 📋 | 📋 | 📋 |
 | Toggles `visibleToClient` por campo | 📋 | 📋 | 📋 | 📋 |
-| Plan limit (Gratis=1 / Pro=∞) | — | — | — | 📋 *(Sprint 7.C)* |
+| Plan limit (Gratis=❌ / Pro=∞ / Business=∞) | — | — | — | 📋 *(Sprint 7.C)* |
+
+### A.2 Feature B — Pagos del cliente (Sprint 9)
+
+Visualización + registro de pago por transferencia con approve/reject. Reemplaza el plan original de "botón Pagar con Stripe". **Gratis sin acceso.**
+
+| Feature | iOS | Android | Web | Backend |
+|---|:-:|:-:|:-:|:-:|
+| Cliente ve balance + total + remaining | — | — | ✅ *(MVP)* | ✅ *(MVP)* |
+| Cliente ve cronograma de cuotas (schedule) | 📋 | 📋 | 📋 | 📋 |
+| Cliente ve historial de pagos aprobados | 📋 | 📋 | 📋 | 📋 |
+| Cliente registra pago con clave (requerida) + comprobante (opcional) | — | — | 📋 | 📋 |
+| Cliente ve sus submissions y estado (pending/approved/rejected) | — | — | 📋 | 📋 |
+| Organizador ve inbox de submissions pending | 📋 | 📋 | 📋 | 📋 |
+| Organizador aprueba (crea row en `payments`) | 📋 | 📋 | 📋 | 📋 |
+| Organizador rechaza (con nota obligatoria) | 📋 | 📋 | 📋 | 📋 |
+| Email al organizador cuando hay submission nueva | — | — | — | 📋 |
+| Email al cliente cuando approved/rejected | — | — | — | 📋 |
+| Recordatorio de vencimiento del cronograma (3 días antes) | — | — | — | 📋 |
+| Auto-match con CSV estado de cuenta del banco (Business) | 📋 | 📋 | 📋 | 📋 |
 
 **Leyenda:** ✅ Shipped · 📋 Planeado · — No aplica a esa plataforma.
 
-**Gap a cerrar en Sprint 8:** UI nativa en iOS + Android (bottom sheet con Copy/WhatsApp/Rotate/Revoke, equivalente al share card web). El portal público del cliente es web-responsive por diseño; no se planea view nativa.
+**Gap a cerrar en Sprint 8:** UI nativa en iOS + Android (bottom sheet con Copy/WhatsApp/Rotate/Revoke para feature A). El portal público del cliente es web-responsive por diseño; no se planea view nativa.
 
-**Futuro (PRD/12 features B-L):** portal del cliente más completo con transparencia de pagos (B), milestones (C), thread de comunicación (D), decisiones pendientes (E), firma digital (G), RSVP (H), reseñas (I), etc. — todos pendientes para Q3-Q4 2026.
+**Gap a cerrar en Sprint 9:** todo feature B de arriba — tabla `payment_submissions`, endpoints públicos y privados, UI cliente + organizer.
+
+**Futuro (PRD/12 features C-L):** milestones (C), thread de comunicación (D), decisiones pendientes (E), firma digital (G), RSVP (H), reseñas (I), etc. — todos pendientes para Q3-Q4 2026.
 
 ---
 

@@ -254,7 +254,9 @@ De las 38 findings originales:
 
 ### Sprint 7.C — Enforcement matrix completo
 
-Alinear TODOS los límites server-side con `PRD/04` sección 3:
+Alinear TODOS los límites server-side con `PRD/04` sección 3.
+
+**Regla global reciente (2026-04-16):** Gratis NO tiene acceso a features de comunicación con el cliente. Hay que gatear `403 plan_limit_exceeded` con `{type: "requires_paid_plan"}` en CADA endpoint del portal cliente + payment submissions + milestone notifications + chat thread + decisiones + firma digital + RSVP + reseñas.
 
 - [ ] Eventos/mes — ya existe (3 para basic).
 - [ ] Clientes — ya existe (50 para basic).
@@ -262,10 +264,17 @@ Alinear TODOS los límites server-side con `PRD/04` sección 3:
 - [ ] Uploads — ya existe.
 - [ ] Event form links — ya existe (3 para basic).
 - [ ] **Staff seats** — NO implementado.
-- [ ] **Portal cliente activos** (Gratis=1, Pro=∞) — NO implementado.
-- [ ] **RSVP invitados** (Pro=500, Business=∞) — feature no implementada aún.
+- [ ] **Portal cliente (feature A)** — Gratis bloqueado, Pro+ ilimitado. Hoy cualquiera puede crear.
+- [ ] **Payment submissions (feature B)** — Gratis bloqueado (cliente no puede submitir si organizer es Gratis).
+- [ ] **Milestone notifications (feature C)** — Gratis bloqueado.
+- [ ] **Chat thread (feature D)** — Gratis bloqueado.
+- [ ] **Decisiones pendientes (feature E)** — Gratis bloqueado.
+- [ ] **Firma digital (feature G)** — Pro para canvas, Business para proveedor legal.
+- [ ] **RSVP invitados (feature H)** — Pro=500, Business=∞. Feature no implementada aún.
+- [ ] **Reseñas post-evento (feature I)** — Gratis bloqueado.
 - [ ] Advanced analytics gating — pending.
 - [ ] Plan expiry job (downgrade automático tras `plan_expires_at`) — pending.
+- [ ] Migrar copy de paywall web/mobile para decir "Esta feature requiere Plan Pro" cuando corresponda, no solo "alcanzaste el límite".
 
 ### Sprint 8 — iOS + Android Portal Cliente (completar feature A)
 
@@ -274,14 +283,27 @@ Alinear TODOS los límites server-side con `PRD/04` sección 3:
 - [ ] UI tests básicos en ambos (mockeando servicio).
 - [ ] Commit cross-platform con paridad verificada.
 
-### Sprint 9 — PRD/12 feature B: Transparencia de pagos avanzada
+### Sprint 9 — PRD/12 feature B: Pagos del cliente (visualización + registro por transferencia)
+
+**Decisión 2026-04-16:** reemplazamos el flujo "botón Pagar con Stripe" por registro de pago por transferencia con approve/reject. Solennix NO procesa pagos; el cliente reporta y el organizador aprueba.
 
 - [ ] Backend: tabla `payment_schedule` (cronograma de cuotas con due_date).
-- [ ] Backend: ampliar `PublicEventView` con schedule.
-- [ ] Backend: endpoint `POST /public/events/{token}/payments/intent` para crear checkout session del cliente (Stripe).
-- [ ] Web: sección de pagos en ClientPortalPage con progress por cuota + botón "Pagar ahora".
-- [ ] Notification: email al cliente 3 días antes de cada vencimiento.
-- [ ] Paridad mobile.
+- [ ] Backend: tabla `payment_submissions` (registro cliente + estado pending/approved/rejected + resulting_payment_id).
+- [ ] Backend: ampliar `PublicEventView` con `payment_schedule` + `payment_history` (solo aprobados).
+- [ ] Backend: endpoints nuevos:
+  - `POST /api/public/events/{token}/payment-submissions` (cliente registra; clave requerida, comprobante opcional).
+  - `GET /api/public/events/{token}/payment-submissions` (cliente ve sus registros + estados).
+  - `POST /api/public/uploads/receipt` (upload de comprobante, max 5 MB, rate-limited).
+  - `GET /api/events/{id}/payment-submissions` (organizador lista pending + history).
+  - `POST /api/events/{id}/payment-submissions/{sid}/approve` (crea row en `payments`).
+  - `POST /api/events/{id}/payment-submissions/{sid}/reject` (nota obligatoria).
+- [ ] Web: sección "Pagos" en ClientPortalPage con cronograma + formulario "Registrar pago" + historial de submissions con badges de estado.
+- [ ] Web: vista organizador en EventDetail con inbox de pending submissions + approve/reject UI.
+- [ ] Notifications: nuevo submission → email + push al organizador. Approved/rejected → email al cliente.
+- [ ] Email template: 3 días antes de cada vencimiento del cronograma (configurable desde settings).
+- [ ] Paridad mobile (iOS + Android): misma vista organizador con bottom sheet approve/reject.
+- [ ] Rate limit: 5 submissions/hora por token (anti-spam).
+- [ ] Security: content-type whitelist en upload (JPG/PNG/PDF), nombre hasheado, bucket separado.
 
 ### Sprint 10 — PRD/12 feature I: Reseñas post-evento
 
