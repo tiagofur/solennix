@@ -1,17 +1,17 @@
+import * as Sentry from '@sentry/react';
+
 /**
- * Safely logs errors without exposing sensitive user data
- * @param context - Description of where the error occurred
- * @param error - The error object
+ * Safely logs errors without exposing sensitive user data.
+ * In production, also forwards to Sentry (no-op if Sentry DSN is unset).
  */
 export const logError = (context: string, error: unknown): void => {
   if (import.meta.env.DEV) {
-    // In development, log full error for debugging
     console.error(`[${context}]`, error);
-  } else {
-    // In production, only log the error message without sensitive details
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error(`[${context}] Error:`, message);
+    return;
   }
+  const message = error instanceof Error ? error.message : 'Unknown error';
+  console.error(`[${context}] Error:`, message);
+  Sentry.captureException(error, { tags: { context } });
 };
 
 /**

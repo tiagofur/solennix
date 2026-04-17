@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/tiagofur/solennix-backend/internal/config"
 	"github.com/tiagofur/solennix-backend/internal/database"
 	"github.com/tiagofur/solennix-backend/internal/handlers"
@@ -35,6 +36,21 @@ func main() {
 
 	// Set rate limiter trust proxy from config
 	mw.TrustProxy = cfg.TrustProxy
+
+	// Sentry — panics + errors reporting. No-op if DSN is empty.
+	if cfg.SentryDSN != "" {
+		if err := sentry.Init(sentry.ClientOptions{
+			Dsn:              cfg.SentryDSN,
+			Environment:      cfg.Environment,
+			TracesSampleRate: cfg.SentryTracesSampleRate,
+			SendDefaultPII:   false,
+		}); err != nil {
+			slog.Error("Sentry init failed", "error", err)
+		} else {
+			defer sentry.Flush(2 * time.Second)
+			slog.Info("Sentry initialized", "environment", cfg.Environment, "traces_sample_rate", cfg.SentryTracesSampleRate)
+		}
+	}
 
 	slog.Info("Starting server", "environment", cfg.Environment, "port", cfg.Port)
 

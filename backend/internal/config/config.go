@@ -59,6 +59,10 @@ type Config struct {
 	APNsTeamID         string // APNs team ID
 	APNsBundleID       string // iOS app bundle ID
 	APNsProduction     bool   // true for production APNs, false for sandbox
+
+	// Observability
+	SentryDSN              string  // If empty, Sentry is disabled
+	SentryTracesSampleRate float64 // 0.0–1.0; default 0.1 in prod, 1.0 in dev
 }
 
 func Load() (*Config, error) {
@@ -99,7 +103,14 @@ func Load() (*Config, error) {
 		APNsTeamID:              os.Getenv("APNS_TEAM_ID"),
 		APNsBundleID:            getEnv("APNS_BUNDLE_ID", "com.creapolis.solennix"),
 		APNsProduction:          getEnv("APNS_PRODUCTION", "false") == "true",
+		SentryDSN:               os.Getenv("SENTRY_DSN"),
 	}
+
+	sentryRate, err := strconv.ParseFloat(getEnv("SENTRY_TRACES_SAMPLE_RATE", defaultSentryRate(cfg.Environment)), 64)
+	if err != nil {
+		return nil, fmt.Errorf("SENTRY_TRACES_SAMPLE_RATE must be a number: %w", err)
+	}
+	cfg.SentryTracesSampleRate = sentryRate
 
 	if cfg.DatabaseURL == "" {
 		return nil, fmt.Errorf("DATABASE_URL is required")
@@ -152,4 +163,11 @@ func getEnv(key, fallback string) string {
 		return value
 	}
 	return fallback
+}
+
+func defaultSentryRate(env string) string {
+	if env == "production" {
+		return "0.1"
+	}
+	return "1.0"
 }
