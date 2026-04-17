@@ -292,7 +292,8 @@ Catálogo per-organizador de colaboradores (fotógrafo, DJ, coordinador, meseros
 | Asignar en event form (Step 4) | ✅ | ✅ | ✅ | ✅ `PUT /events/{id}/items` acepta `staff[]` |
 | Ver asignados en EventDetail | ✅ | ✅ | ✅ | ✅ `GET /events/{id}/staff` |
 | Fee opcional por asignación | ✅ | ✅ | ✅ | ✅ `event_staff.fee_amount` |
-| Toggle "notificar por email al asignar" (guarda flag, no envía aún) | ✅ | ✅ | ✅ | ✅ `staff.notification_email_opt_in` |
+| Toggle "notificar por email al asignar" (guarda flag) | ✅ | ✅ | ✅ | ✅ `staff.notification_email_opt_in` |
+| **Phase 2 — email al colaborador al asignarlo** (Pro+, fire-and-forget) | ✅ *(trigger en save)* | ✅ *(trigger en save)* | ✅ *(trigger en save)* | ✅ goroutine en `UpdateEventItems` + Resend |
 
 **Data model (migration 042):**
 - `staff` — catálogo per-user con `name`, `role_label`, `phone`, `email`, `notes`, `notification_email_opt_in`, `invited_user_id` (hook Phase 3, nullable FK a users).

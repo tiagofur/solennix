@@ -66,7 +66,7 @@ Suscripción SaaS mensual/anual con 3 tiers: **Gratis · Pro · Business**.
 | | RSVP de invitados | — | 500 invitados | ∞ |
 | | Reseñas post-evento — **básicas** (ver 4.3) | ✓ email automático + organizer ve privado (no responde) | + responder la review + portfolio público | + integración Google/FB |
 | **Personal / Colaboradores** | Catálogo de staff + asignar a eventos (Phase 1) | ✓ | ✓ | ✓ |
-| | Email al colaborador al asignarlo (Phase 2) | — | ✓ | ✓ |
+| | Email al colaborador al asignarlo (Phase 2 — shipped 2026-04-17) | — | ✓ | ✓ |
 | | Login del colaborador + ver sus eventos asignados (Phase 3) | — | — | ✓ |
 | | Thread de comunicación colaborador↔gerente (Phase 3, reusa PRD/12 D) | — | — | ✓ |
 | **Operación** | Calendario con eventos | ✓ | ✓ | ✓ |

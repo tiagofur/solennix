@@ -9,14 +9,17 @@ aliases:
   - Staff Tracker
   - Colaboradores
 date: 2026-04-16
-updated: 2026-04-16
-status: phase-1-done
+updated: 2026-04-17
+status: phase-2-done
 ---
 
 # 🤝 Personal / Colaboradores — Tracker
 
 > [!success] Phase 1 cerrada 2026-04-16
 > Backend + Web + iOS + Android en paridad. Hooks Phase 2 y Phase 3 ya viajan en la migración 042 → futuros sprints son puro código, sin nuevas migraciones.
+
+> [!success] Phase 2 cerrada 2026-04-17 — email al colaborador al asignar (Pro+)
+> Goroutine en `CRUDHandler.UpdateEventItems` manda email via Resend cuando el organizer es Pro+ y el colaborador marcó `notification_email_opt_in=true`. UPSERT pattern preserva `notification_sent_at` para que re-guardar el evento no dispare duplicados. **Commit `20a2d07`**.
 
 ---
 
@@ -35,7 +38,8 @@ Los organizadores tenían un problema silencioso: **dónde anotar al fotógrafo,
 | Asignar colaboradores a un evento (Step 4) | ✅ | ✅ | ✅ | ✅ `PUT /events/{id}/items` con `staff[]` |
 | Ver asignados en EventDetail (read-only) | ✅ | ✅ | ✅ | ✅ `GET /events/{id}/staff` |
 | Fee opcional por asignación | ✅ | ✅ | ✅ | ✅ `event_staff.fee_amount` |
-| Toggle "notificar por email al asignar" (solo persiste, no envía) | ✅ | ✅ | ✅ | ✅ `staff.notification_email_opt_in` |
+| Toggle "notificar por email al asignar" | ✅ | ✅ | ✅ | ✅ `staff.notification_email_opt_in` |
+| **Email automático al colaborador al asignarlo (Phase 2, Pro+)** | ✅ *(trigger implícito en save)* | ✅ | ✅ | ✅ goroutine fire-and-forget + Resend |
 
 ---
 
@@ -44,13 +48,13 @@ Los organizadores tenían un problema silencioso: **dónde anotar al fotógrafo,
 ```mermaid
 flowchart LR
     P1[Phase 1<br/>CRUD + asignación<br/>✅ 2026-04-16]
-    P2[Phase 2<br/>Email al colaborador<br/>Pro+ · hook ready]
+    P2[Phase 2<br/>Email al colaborador<br/>Pro+ · ✅ 2026-04-17]
     P3[Phase 3<br/>Login Business multi-user<br/>Business · hook ready]
 
     P1 --> P2 --> P3
 
     style P1 fill:#1B5E20,stroke:#4CAF50,color:#fff
-    style P2 fill:#E65100,stroke:#FF9800,color:#fff
+    style P2 fill:#1B5E20,stroke:#4CAF50,color:#fff
     style P3 fill:#6A1B9A,stroke:#CE93D8,color:#fff
 ```
 
@@ -158,17 +162,15 @@ CREATE TABLE event_staff (
 
 ---
 
-## 🔮 Phase 2 — scaffolding ya en la migración
+## ✅ Phase 2 — shipped 2026-04-17
 
-**No implementado aún — solo hooks:**
+**Implementado en commit `20a2d07`:**
 
-1. Columna `staff.notification_email_opt_in BOOLEAN DEFAULT false`.
-2. Columnas `event_staff.notification_sent_at` + `notification_last_result`.
-3. UI del form ya tiene el toggle y el backend lo persiste.
-
-**Phase 2 va a ser una goroutine en `CRUDHandler.UpdateEventItems`** que, después de persistir `event_staff`, consulta `staff.email` + `notification_email_opt_in`, llama a `emailService.SendCollaboratorAssigned()`, escribe `notification_sent_at`. Mirror del pattern de payment receipt (`crud_handler.go:1658-1679`).
-
-**Gate:** `if user.Plan == "basic" { return }` — se agrega en Phase 2.
+1. **UPSERT en vez de DELETE+INSERT** para staff en `UpdateEventItems` — preserva `notification_sent_at` y `notification_last_result` entre saves. Sin esto, cada re-guardado del evento sería spam.
+2. **`GetStaffPendingNotifications`** filtra `event_staff` rows con `notification_sent_at IS NULL` + `staff.notification_email_opt_in=true` + email no vacío.
+3. **`MarkStaffNotificationResult`** escribe `'sent'` o `'failed:<reason>'` + stampa `notification_sent_at` incluso en fallo (evita retry storms). El organizer puede forzar retry removiendo y re-agregando al colaborador.
+4. **`EmailService.SendCollaboratorAssigned`** + template en español con event name, fecha, rol, honorarios (si hay).
+5. **Goroutine en `CRUDHandler.notifyAssignedStaff`**: fire-and-forget, nunca bloquea el save. Gate `if user.Plan == "basic" { return }`. Usa `BusinessName` del organizer si está, fallback a `Name`.
 
 ---
 
