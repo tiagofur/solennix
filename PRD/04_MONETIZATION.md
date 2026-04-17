@@ -56,7 +56,7 @@ Suscripción SaaS mensual/anual con 3 tiers: **Gratis · Pro · Business**.
 | | Exportar CSV | ✓ | ✓ | ✓ |
 | **Pagos (internos al organizador)** | Registro manual de pagos (organizador) | ✓ | ✓ | ✓ |
 | | Recordatorios automáticos de pago | — | ✓ | ✓ |
-| **Cliente — comunicación (ver `PRD/12`)** | Portal público del cliente | — | ∞ + branding | + dominio custom |
+| **Cliente — comunicación (ver `PRD/12`)** | Portal público del cliente — **básico** (ver 4.3) | ✓ en ∞ eventos, sin branding, footer "Powered by Solennix" linkeado | ✓ + branding propio + payment summary + timeline + todo | + dominio custom + DKIM |
 | | Transparencia de pagos (cliente ve balance + cronograma) | — | ✓ | + export API |
 | | **Registro de pago por transferencia del cliente + approve/reject** | — | ✓ + bulk approve + email templates | + auto-match con CSV estado de cuenta |
 | | Notificaciones al cliente | — | email+SMS, ∞ milestones | + WhatsApp API + custom |
@@ -64,7 +64,7 @@ Suscripción SaaS mensual/anual con 3 tiers: **Gratis · Pro · Business**.
 | | Bandeja de decisiones pendientes | — | ∞ | + flujos multi-paso |
 | | Firma digital de contratos | — | ✓ (canvas) | ✓ con proveedor legal |
 | | RSVP de invitados | — | 500 invitados | ∞ |
-| | Reseñas post-evento | — | + portfolio público | + integración Google/FB |
+| | Reseñas post-evento — **básicas** (ver 4.3) | ✓ email automático + organizer ve privado (no responde) | + responder la review + portfolio público | + integración Google/FB |
 | **Operación** | Calendario con eventos | ✓ | ✓ | ✓ |
 | | Bloqueo de fechas no disponibles | ✓ | ✓ | ✓ |
 | | Checklist por evento | ✓ | ✓ | ✓ |
@@ -94,9 +94,51 @@ Suscripción SaaS mensual/anual con 3 tiers: **Gratis · Pro · Business**.
 ### 4.2 Qué sí es palanca fuerte
 
 - **Límite de eventos/mes.** El momento en que el usuario alcanza 5/5 es el mejor momento de conversión. Mostrar upgrade ahí, con claridad.
-- **Comunicación con el cliente final es Pro+.** **Decisión 2026-04-16:** el plan Gratis NO incluye NINGUNA feature cara-al-cliente: sin portal público, sin registro de pagos por transferencia, sin notificaciones automáticas al cliente, sin thread, sin bandeja de decisiones, sin reseñas. Gratis es un CRM interno para el organizador que recién arranca; toda la diferenciación "app que el cliente percibe" vive en Pro. Esa brecha es el upgrade driver más fuerte.
-- **Portal del cliente + branding.** Un organizador que quiere verse profesional paga por abrir la ventana al cliente con su marca.
+- **Comunicación con el cliente final en Pro+, con "taste" en Gratis.** **Decisión 2026-04-16 (ajustada):** Gratis tiene una **versión BÁSICA** de dos features cara-al-cliente — Portal público (sin branding propio, con footer Solennix linkeado) y Reseñas (email automático + vista privada). Todo lo demás cara-al-cliente (payment registration, milestone notifications, chat, decisiones, firma, RSVP, respuesta a reviews, portfolio público) vive exclusivamente en Pro+. El objetivo es que el Gratis **sienta el wow** ("miré, mi cliente vio esta página, qué cool") sin darle el full-experience — el upgrade driver pasa a ser CALIDAD, no cantidad. Ver §4.3.
+- **Calidad del portal, no cantidad.** En ambos tiers se permite generar portales en ∞ eventos. La diferencia es que Pro tiene branding propio, sección de pagos, timeline, chat, decisiones, etc. El organizer ve el portal Gratis y piensa "quiero que esto se vea con MI marca y con pagos visibles" → upgrade.
+- **Portal del cliente + branding propio.** Un organizador que quiere verse profesional paga por quitar el "Powered by Solennix" y poner su logo + color.
 - **WhatsApp Business.** Alto costo variable por mensaje enviado → exclusivo de Business, costo transferible al organizador.
+
+### 4.3 Features "teaser" de Gratis (detalle)
+
+**Portal público — versión Gratis:**
+
+Qué VE el cliente final cuando abre `/client/:token` de un organizador Gratis:
+- Nombre del evento + tipo ("Boda", "Quinceañera", etc.).
+- Fecha del evento con countdown ("27 días restantes" / "¡Es hoy!").
+- Ubicación + ciudad.
+- # de invitados.
+- Status (confirmado / cotizado).
+- Greeting personalizado al cliente: "Hola Ana, aquí está el detalle de tu evento".
+- Footer visible: **"Powered by [Solennix](https://solennix.com)"** (link activo — genera awareness del producto).
+
+Qué NO ve el cliente de un organizador Gratis:
+- ❌ Logo del organizador.
+- ❌ Color de marca del organizador.
+- ❌ Business name destacado.
+- ❌ Payment summary (total, paid, remaining).
+- ❌ Cronograma de cuotas.
+- ❌ Opción de registrar pago por transferencia.
+- ❌ Timeline de etapas del evento.
+- ❌ Chat con el organizador.
+- ❌ Bandeja de decisiones.
+- ❌ Firma digital de contratos.
+
+Ese contraste es visible: si el cliente compara (en el poco probable caso de ver ambos), **el Pro se ve claramente más profesional**. El upgrade de Gratis → Pro prende la ficha cuando el organizer escucha a un colega comentar "ponele tu marca, no tengas el 'Powered by Solennix', paga los $15 mes".
+
+**Reseñas post-evento — versión Gratis:**
+
+Gratis incluye:
+- Cron automático envía email al cliente 48h post-evento: "¿Cómo fue tu experiencia con [organizer]?".
+- Cliente responde con rating 1-5 + texto opcional.
+- Organizador ve la review privada en EventDetail.
+
+Gratis NO incluye:
+- ❌ Responder la review del cliente (solo VER).
+- ❌ Portfolio público del organizer en `solennix.com/organizer/:slug/reviews`.
+- ❌ Prompt "compartilo en Google / Facebook" cuando rating ≥4.
+
+El organizer Gratis ve una review de 5 estrellas y piensa "qué lástima que solo lo veo yo, quiero que esto sea público y aparezca en Google" → upgrade.
 
 ### 4.3 Comportamiento al alcanzar un límite
 

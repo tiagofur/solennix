@@ -11,7 +11,7 @@
 
 | Feature | Estado | Plataformas |
 |---|---|---|
-| **A. Portal público del cliente** | 🚧 **En desarrollo** | ✅ Backend + ✅ Web · 📋 iOS + Android (Sprint 8) |
+| **A. Portal público del cliente** | 🚧 **En desarrollo** | ✅ Backend + ✅ Web · 📋 iOS + Android (Sprint 8) · Gratis=básico, Pro=full |
 | B. Pagos del cliente — visualización + registro por transferencia | 📋 Planeado | Q3 2026 (Sprint 9) · reemplaza Stripe-checkout |
 | C. Notificaciones por etapa (configurable) | 📋 Planeado | Q3 2026 (Sprint 11) |
 | D. Thread de comunicación organizador↔cliente | 📋 Planeado | Q3 2026 (Sprint 12) |
@@ -19,7 +19,7 @@
 | F. Subida de contenido del cliente | 📋 Planeado | Q1 2027 |
 | G. Firma digital de contratos | 📋 Planeado | Q4 2026 (Sprint 16) |
 | H. RSVP de invitados | 📋 Planeado | Q3 2026 (Sprint 14) |
-| I. Reseñas post-evento | 📋 Planeado | Q2 2026 (Sprint 10) |
+| I. Reseñas post-evento | 📋 Planeado | Q2 2026 (Sprint 10) · Gratis=básicas, Pro=responder+portfolio |
 | J. Branding del organizador (dominio custom + DKIM) | 📋 Planeado | Q4 2026 (Sprint 17) |
 | K. Multi-idioma cliente | 📋 Planeado | Q1 2027 |
 | L. Resumen de valor post-evento | 📋 Planeado | Q1 2027 |
@@ -104,7 +104,17 @@ La propuesta: abrir una **ventana controlada** al cliente — el organizador dec
 - Web: ruta pública en `web/src/pages/ClientPortal/ClientPortalPage.tsx` (no `client/ClientEventView.tsx` como decía la vision, renombrado por coherencia con el directorio `ClientPortal/`).
 - iOS/Android: compartir desde la app aún no implementado — por ahora el organizador comparte el link que pegue manualmente desde el web si no está en desktop. Gap real a cerrar en Sprint 8.
 
-**Tier (según PRD/04):** Pro (ilimitado + branding) · Business (white-label completo + dominio custom). **Gratis NO tiene acceso a esta feature** (decisión 2026-04-16 — Gratis es CRM interno; toda comunicación con cliente es Pro+). **Enforcement pendiente en Sprint 7.C** — hoy cualquiera puede generar sin límite.
+**Tier (decisión 2026-04-16 — ajustada al final del día para agregar "taste" Gratis):**
+
+| Tier | Portal |
+|---|---|
+| Gratis | ✓ **básico** en ∞ eventos, sin branding propio, footer "Powered by Solennix" linkeado (drive marketing). Ve: evento + fecha + countdown + ubicación + invitados + status + greeting. **NO ve**: payment summary, cronograma, registrar pago, timeline, chat, decisiones, branding del organizer. |
+| Pro | ✓ + branding propio + payment summary + cronograma + timeline + todos los features B-I |
+| Business | + dominio custom + DKIM + white-label completo |
+
+**Filosofía del split:** el upgrade driver pasa a ser **CALIDAD** (cómo se ve) no **CANTIDAD** (cuántos portales). El Gratis siente el "wow, mi cliente vio una página pro de mi evento" pero inmediatamente nota las limitaciones y sube a Pro para quitarlas. Ver `PRD/04 §4.3` para el detalle de qué se expone en cada tier.
+
+**Enforcement pendiente en Sprint 7.C** — hoy el MVP devuelve el shape completo para todos; la variante "basic shape para Gratis" se implementa cuando activemos gate.
 
 ---
 
@@ -387,7 +397,15 @@ ALTER TABLE payments ADD COLUMN submission_id UUID REFERENCES payment_submission
 - Si rating ≤3 → solo va al organizador (feedback privado, no quemado público).
 - El organizador construye un portfolio público de testimoniales en un URL share-friendly (`/organizer/:slug/reviews`).
 
-**Tier:** Pro en adelante. Feature cruzada con marketing del organizador → retención fuerte.
+**Tier (decisión 2026-04-16 ajustada):**
+
+| Tier | Reseñas |
+|---|---|
+| Gratis | ✓ **básicas**: email automático al cliente 48h post-evento + organizer ve la review privada en EventDetail. **NO puede responderla**, **NO hay portfolio público**. |
+| Pro | + responder reviews del cliente + portfolio público en `/organizer/:slug/reviews` |
+| Business | + integración con Google Reviews + Facebook (OG tags + prompt post-review) |
+
+**Filosofía:** Gratis ve el wow emocional ("mi cliente me dejó 5 estrellas, qué lindo") pero no puede capitalizarlo marketing-wise → upgrade driver claro. Feature cruzada con marketing del organizador → retención fuerte.
 
 ---
 
@@ -456,19 +474,19 @@ ALTER TABLE payments ADD COLUMN submission_id UUID REFERENCES payment_submission
 
 ## 5. Matriz de monetización (tiers)
 
-**Regla global (decisión 2026-04-16):** Gratis NO tiene acceso a ninguna feature de comunicación con el cliente final. Todo lo que sigue abajo arranca desde Pro. Ver `PRD/04 §4.2` para el racional (retention driver).
+**Regla global (decisión 2026-04-16, ajustada al final del día):** Gratis tiene **versión básica** de 2 features cara-al-cliente (Portal A + Reseñas I) como teaser + drive de conversión. Todo lo demás es Pro+. Ver `PRD/04 §4.2-4.3` para el detalle de qué se expone en cada tier de las features "teaser".
 
 | Feature | Gratis | Pro | Business |
 |---|---|---|---|
-| Portal público (A) | — | ∞ + branding | + dominio custom |
+| Portal público (A) | ✓ **básico** en ∞ eventos, sin branding, footer Solennix linkeado | ∞ + branding propio + payment summary + timeline + features B-I | + dominio custom + DKIM |
 | Transparencia pagos + registro por transferencia (B) | — | ✓ + bulk approve + email templates | + auto-match CSV banco |
-| Notificaciones (C) | — | Email + Push, 10 milestones | + SMS + WhatsApp API + ∞ milestones + templates custom |
+| Notificaciones al cliente (C) | — | Email + Push, 10 milestones | + SMS + WhatsApp API + ∞ milestones + templates custom |
 | Chat organizador↔cliente (D) | — | ✓ | + export legal |
 | Decisiones pendientes (E) | — | ∞ | + flujos multi-paso |
 | Upload cliente (F) | — | 1GB | ∞ |
 | Firma digital (G) | — | ✓ (canvas simple) | + proveedor legal |
 | RSVP invitados (H) | — | 500 invitados | ∞ |
-| Reseñas post-evento (I) | — | + portfolio público | + integración Google/FB |
+| Reseñas post-evento (I) | ✓ **básicas** (email + vista privada del organizer) | + responder review + portfolio público | + integración Google/FB |
 | Branding portal (J) | — | Logo + colores | + dominio custom + DKIM |
 | Multi-idioma cliente (K) | — | es + en + pt | + idiomas custom |
 | Resumen valor post-evento (L) | — | + custom branding | + exportable |

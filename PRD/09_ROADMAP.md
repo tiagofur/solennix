@@ -256,7 +256,7 @@ De las 38 findings originales:
 
 Alinear TODOS los límites server-side con `PRD/04` sección 3.
 
-**Regla global reciente (2026-04-16):** Gratis NO tiene acceso a features de comunicación con el cliente. Hay que gatear `403 plan_limit_exceeded` con `{type: "requires_paid_plan"}` en CADA endpoint del portal cliente + payment submissions + milestone notifications + chat thread + decisiones + firma digital + RSVP + reseñas.
+**Regla global (decisión 2026-04-16, ajustada al final del día):** Gratis tiene versión **BÁSICA** de 2 features cara-al-cliente (Portal A + Reseñas I) como teaser. Todo lo demás cara-al-cliente es Pro+. El gating en features A + I es **shape-based** (mismo endpoint devuelve menos campos para Gratis), no bloqueo de endpoint. El gating en B, C, D, E, G, H es **endpoint-based** (403 `{type: "requires_paid_plan"}`).
 
 - [ ] Eventos/mes — ya existe (3 para basic).
 - [ ] Clientes — ya existe (50 para basic).
@@ -264,14 +264,14 @@ Alinear TODOS los límites server-side con `PRD/04` sección 3.
 - [ ] Uploads — ya existe.
 - [ ] Event form links — ya existe (3 para basic).
 - [ ] **Staff seats** — NO implementado.
-- [ ] **Portal cliente (feature A)** — Gratis bloqueado, Pro+ ilimitado. Hoy cualquiera puede crear.
-- [ ] **Payment submissions (feature B)** — Gratis bloqueado (cliente no puede submitir si organizer es Gratis).
+- [ ] **Portal cliente (feature A)** — Gratis = basic shape (sin branding, payment, chat, timeline, etc.); Pro+ = full shape. El `GET /api/public/events/{token}` debe leer el plan del organizer y devolver el shape correspondiente. Footer "Powered by Solennix" incluye link activo en Gratis; ausente en Pro+.
+- [ ] **Payment submissions (feature B)** — Gratis bloqueado. El endpoint público `POST /api/public/events/{token}/payment-submissions` devuelve 403 `{type: "requires_paid_plan"}` si el organizer es Gratis (mensaje al cliente: "El organizador no tiene habilitado el registro de pagos en su plan actual").
 - [ ] **Milestone notifications (feature C)** — Gratis bloqueado.
 - [ ] **Chat thread (feature D)** — Gratis bloqueado.
 - [ ] **Decisiones pendientes (feature E)** — Gratis bloqueado.
 - [ ] **Firma digital (feature G)** — Pro para canvas, Business para proveedor legal.
 - [ ] **RSVP invitados (feature H)** — Pro=500, Business=∞. Feature no implementada aún.
-- [ ] **Reseñas post-evento (feature I)** — Gratis bloqueado.
+- [ ] **Reseñas post-evento (feature I)** — Gratis = email automático + vista privada del organizer (read-only). Pro+ = además responder review + portfolio público. Gating por tier del organizer al renderizar la UI de respuesta.
 - [ ] Advanced analytics gating — pending.
 - [ ] Plan expiry job (downgrade automático tras `plan_expires_at`) — pending.
 - [ ] Migrar copy de paywall web/mobile para decir "Esta feature requiere Plan Pro" cuando corresponda, no solo "alcanzaste el límite".
