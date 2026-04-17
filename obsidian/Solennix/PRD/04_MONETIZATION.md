@@ -9,16 +9,96 @@ aliases:
   - Monetización
   - Monetization
 date: 2026-03-20
-updated: 2026-04-04
+updated: 2026-04-17
 status: active
 ---
 
 # Monetizacion — Solennix (iOS + Android + Web)
 
-**Version:** 1.0
-**Fecha:** 2026-03-20
+**Version:** 2.0
+**Fecha:** 2026-04-17 (revisión a modelo 3-tier Gratis/Pro/Business)
 **Alcance:** Documento unificado de monetizacion para todas las plataformas
 **Audiencia objetivo:** Organizadores de eventos en LATAM
+
+> [!warning] Migración de modelo (2026-04-16)
+> El modelo basic/premium descrito originalmente en este doc fue revisado a un modelo 3-tier **Gratis · Pro · Business** durante Sprint 7.A. Las secciones 2-4 (basic/premium) quedan como referencia histórica de la implementación previa; el modelo vigente está descrito en la sección 0 abajo. Las secciones técnicas de implementación (StoreKit, RevenueCat, Stripe) siguen aplicando — el cambio es de pricing y feature gating, no de stack.
+
+---
+
+## 0. Modelo vigente — 3 tiers (2026-04-16)
+
+### 0.1 Tiers y precios ancla
+
+| Tier | Precio ancla (USD/mes) | Público objetivo |
+|---|---|---|
+| **Gratis** | $0 | Probador, organizador nuevo, mercado con baja disposición a pagar. |
+| **Pro** | $15 / mes o $144 / año (-20%) | Organizador consolidado con 5–30 eventos/mes. |
+| **Business** | $49 / mes o $470 / año (-20%) | Organizador con equipo, marca propia, múltiples líneas de servicio. |
+
+**Localización:** cada mercado tiene precio ajustado a PPP + IVA local. Referencial:
+
+| Tier | MXN/mes | ARS/mes | COP/mes | CLP/mes |
+|---|---|---|---|---|
+| Pro | $299 | $15.000 | $60.000 | $14.000 |
+| Business | $899 | $49.000 | $199.000 | $45.000 |
+
+### 0.2 Matriz de features (resumen — fuente de verdad para gating)
+
+| Categoría | Feature | Gratis | Pro | Business |
+|---|---|:---:|:---:|:---:|
+| **Límites de escala** | Eventos activos | 5/mes | ∞ | ∞ |
+| | Clientes guardados | 15 | ∞ | ∞ |
+| | Productos en catálogo | 25 | ∞ | ∞ |
+| | Items de inventario | 30 | ∞ | ∞ |
+| | Staff seats | 1 | 3 | ∞ |
+| **Documentos** | Cotizaciones / Contratos PDF | ✓ básico | ✓ editable | ✓ con firma digital |
+| | Branding en PDFs | logo básico | ✓ completo | ✓ + dominio email propio |
+| **Cliente — comunicación** ([[14_CLIENT_EXPERIENCE_IDEAS]]) | Portal cliente — **básico** | ✓ ∞ eventos, sin branding, footer "Powered by Solennix" linkeado | ✓ + branding propio + payment summary + timeline | + dominio custom + DKIM |
+| | Pagos cliente (registro por transferencia + approve/reject) | — | ✓ + bulk approve | + auto-match CSV banco |
+| | Notificaciones al cliente | — | email+SMS, ∞ milestones | + WhatsApp API |
+| | Thread comunicación organizador↔cliente | — | ✓ | + export legal |
+| | Decisiones pendientes / Firma digital | — | ✓ | + proveedor legal |
+| | Reseñas post-evento — **básicas** | ✓ email + vista privada (no responde) | + responder + portfolio público | + integración Google/FB |
+| **Personal / Colaboradores** | Catálogo + asignar (Phase 1) | ✓ | ✓ | ✓ |
+| | Email al colaborador al asignar (Phase 2 — shipped 2026-04-17) | — | ✓ | ✓ |
+| | Login colaborador + scope eventos (Phase 3) | — | — | ✓ |
+| **Inventario** | Catálogo básico | ✓ | ✓ | ✓ |
+| | Demand forecast / alertas stock bajo | — | ✓ | ✓ |
+| **Integraciones** | WhatsApp Business API | — | — | ✓ |
+| | Webhooks / API pública | — | — | ✓ |
+| **Soporte** | Canal | docs + email (48h) | WhatsApp (24h) | WhatsApp (4h) + onboarding 1:1 |
+
+### 0.3 Filosofía de feature-gating (decisión 2026-04-16)
+
+> [!important] Gratis tiene "taste" del Pro, no muros opacos
+> Gratis incluye **versión BÁSICA** de dos features cara-al-cliente — Portal público (sin branding propio, footer Solennix linkeado) y Reseñas (email automático + vista privada). Todo lo demás cara-al-cliente (payment registration, milestones, chat, decisiones, firma, RSVP, respuesta a reviews, portfolio público) vive exclusivamente en Pro+.
+>
+> El upgrade driver pasa a ser **CALIDAD** ("quiero MI marca, no 'Powered by Solennix'"), no cantidad.
+
+**Patrón técnico:** backend devuelve `403 plan_limit_exceeded` con shape:
+```json
+{
+  "error": "plan_limit_exceeded",
+  "message": "Has alcanzado el límite de tu plan.",
+  "limit": { "type": "events_per_month", "current": 5, "max": 5 }
+}
+```
+Implementado en `backend/internal/handlers/helpers.go::writePlanLimitError`.
+
+### 0.4 Free trial
+
+- **Pro y Business:** 14 días de prueba gratis (Stripe trial — shipped 2026-04-16). Mobile pendiente de configuración en App Store / Play.
+- **Cancelación durante trial:** 1 click, sin fricción.
+
+### 0.5 Bloqueantes externos (acción del usuario, ver [[09_ROADMAP]] §5)
+
+Para activar pricing en producción se requieren:
+- Stripe Dashboard: productos Pro/Business mensual+anual + webhook + billing portal.
+- App Store Connect: subscription group + products + intro offer 14d.
+- Google Play Console: subscription products + base plans con free trial.
+- RevenueCat Dashboard: entitlement `pro_access` + offerings + webhook secret.
+
+---
 
 > [!tip] Documentos relacionados
 > - [[01_PRODUCT_VISION]] — Vision del producto y mercado objetivo
@@ -611,6 +691,68 @@ flowchart TD
 3. Implementar en: Web → iOS → Android
 
 Ver documento detallado: [[12_SUBSCRIPTION_PLATFORM_ORIGIN]]
+
+---
+
+## 12. Keys y secrets — no confundir (lectura obligatoria antes de tocar billing)
+
+> [!warning] Causa #1 de bugs de billing
+> Cada integración de cobro tiene **varias keys** en lugares distintos. Confundirlas produce bugs tipo "el pago se cobró pero el usuario no ve el upgrade" o "en iOS ves ofertas de test aunque el backend ya está en producción".
+
+### 12.1 Stripe
+
+| Key | Dónde vive | Prefix | Quién lo usa |
+|---|---|---|---|
+| Secret API Key | Backend `.env` → `STRIPE_SECRET_KEY` | `sk_live_...` / `sk_test_...` | Backend: crea checkout sessions, lee subscriptions. **Nunca** en el frontend. |
+| Webhook Signing Secret | Backend `.env` → `STRIPE_WEBHOOK_SECRET` | `whsec_...` | Backend: valida firma de eventos webhook. |
+| Price IDs | Backend `.env` → `STRIPE_PRO_PRICE_ID`, `STRIPE_BUSINESS_PRICE_ID` | `price_...` | Backend: identifica qué tier comprar al crear checkout session. |
+| Billing Portal Config | Backend `.env` → `STRIPE_PORTAL_CONFIG_ID` (opcional) | `bpc_...` | Backend: variante custom del Customer Portal. |
+
+El web NO necesita ninguna key de Stripe. Flujo: web → backend → Stripe Checkout redirect. La `sk_...` nunca sale del servidor.
+
+### 12.2 RevenueCat — 3 keys DISTINTAS (confusión típica)
+
+RevenueCat usa **3 keys separadas, una por superficie**:
+
+| Key | Dónde vive | Prefix | Quién lo usa |
+|---|---|---|---|
+| Secret API Key (server REST) | Backend `.env` → `REVENUECAT_API_KEY` | `sk_...` | Backend: grant/revoke entitlements (ej. cuando Stripe web cobra, backend llama a RC para que mobile vea el entitlement). |
+| Public App Key iOS | iOS build → `ios/Config/Secrets.xcconfig` → `REVENUECAT_PUBLIC_API_KEY` | `appl_...` | iOS SDK: `Purchases.configure(withAPIKey:)`. |
+| Public App Key Android | Android build → env var / `gradle.properties` → `REVENUECAT_API_KEY` | `goog_...` | Android SDK: misma función que iOS. |
+
+> [!danger] El prefix `appl_` NO indica test vs live
+> Dentro de un Project de RevenueCat hay múltiples "apps" — Test Store y Apple App Store, ambas con prefix `appl_`. Verificar en el dashboard cuál está configurada.
+
+#### Cómo verificar la key mobile actual
+
+1. https://app.revenuecat.com → tu Project.
+2. **Project Settings** → **API Keys**.
+3. Comparar el valor en `Secrets.xcconfig` (iOS) / `gradle.properties` (Android) contra la lista del dashboard:
+   - `Solennix iOS (App Store)` → `appl_XXXX…` ← prod OK
+   - `Solennix iOS (Test Store)` → `appl_YYYY…` ← solo dev local
+
+> [!info] Estado actual (2026-04-16)
+> El comentario de `ios/Config/Secrets.xcconfig:12` dice: "Current value is the Test Store key — replace with `appl_...` once the Apple App Store app is connected in RevenueCat." **Pendiente activo.**
+
+### 12.3 App Store Connect + Google Play
+
+- **App Store Connect** no provee key consumible — la integración es por **bundle ID** + productos creados en el dashboard. RC absorbe los productos via la conexión "Apple App Store".
+- **Google Play Console** idem: bundle + products en Play Console, RC absorbe.
+
+**Error típico:** crear productos en App Store Connect / Play pero olvidar conectarlos en RC. Síntoma: `Purchases.shared.offerings()` devuelve vacío en mobile aunque el store sí los muestre.
+
+### 12.4 Checklist rápido antes de cobrar en prod
+
+- [ ] `STRIPE_SECRET_KEY` es `sk_live_...` (no `sk_test_...`) en VPS `.env`.
+- [ ] `STRIPE_WEBHOOK_SECRET` matchea el endpoint LIVE de Stripe Dashboard.
+- [ ] `STRIPE_PRO_PRICE_ID` y `STRIPE_BUSINESS_PRICE_ID` apuntan a prices en modo Live.
+- [ ] `REVENUECAT_API_KEY` (backend) es la Secret key del Project, no public.
+- [ ] `REVENUECAT_WEBHOOK_SECRET` matchea el Authorization Header del webhook de RC.
+- [ ] `ios/Config/Secrets.xcconfig` `REVENUECAT_PUBLIC_API_KEY` es key de "Apple App Store" (live), no Test Store.
+- [ ] Android `REVENUECAT_API_KEY` (gradle) es key de "Google Play Store" (live).
+- [ ] App Store Connect: productos `solennix_premium_monthly`/`yearly` en estado "Approved".
+- [ ] Google Play Console: productos publicados en al menos closed testing track.
+- [ ] RevenueCat Dashboard: entitlement `pro_access` asociado a productos de ambas stores + default offering activo.
 
 ---
 

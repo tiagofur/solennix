@@ -8,7 +8,7 @@ aliases:
   - Guía de Colaboración
   - Collaboration Guide
 date: 2026-03-20
-updated: 2026-04-04
+updated: 2026-04-17
 status: active
 ---
 
@@ -248,6 +248,69 @@ graph TD
 - **Delegar lo repetitivo** — enfocar energía en UX y decisiones de producto
 - **Code review diario** — prevención barata contra deuda técnica
 - **Orden óptimo**: Backend → Web → iOS → Android
+
+---
+
+## Workflow de Sprint (plantilla 2026-04-16)
+
+> [!info] Plantilla real
+> Basado en los Sprints 1–5 ejecutados el 2026-04-16. Ver [[09_ROADMAP]] sección "Estado de hoy".
+
+1. **Definir alcance** — ¿fix/build? ¿cross-platform o single-platform?
+2. **Revisar `11_CURRENT_STATUS`** — priorizar P0 → P1 → P2/P3.
+3. **Delegación opcional** — Explore agents en background si se necesita auditoría amplia.
+4. **Implementación por plataforma** — orden típico: backend → web → iOS → Android.
+5. **Tests por plataforma:**
+   - Backend: `go test ./internal/{handlers,repository,services,middleware}/ -count=1`
+   - Web: `npm run test:run && npm run check`
+   - iOS: QA manual en device (SPM `swift test` falla por ActivityKit)
+   - Android: QA manual en device (gradle tests pesados para sprint)
+6. **Commit por plataforma** — paridad check antes del siguiente commit.
+7. **Actualizar `11_CURRENT_STATUS`** con lo resuelto y lo pendiente.
+8. **Persistir a engram** (`mem_save`) con topic key estable (ej. `sprint/2026-04-16-p0-bundle`).
+
+---
+
+## Sub-agents — Patrones y Pitfalls
+
+> [!success] Cuándo delegar
+>
+> - Investigación abierta que tocaría 4+ archivos.
+> - Trabajo en paralelo genuino (sin dependencias).
+> - Para proteger el contexto del thread principal.
+
+> [!warning] Cuándo NO delegar
+>
+> - Tareas chicas (1-2 archivos).
+> - Decisiones que requieren juicio arquitectónico del thread.
+> - Fixes con interdependencias (mejor secuencial).
+
+> [!danger] Pitfalls observados
+>
+> - **Explore agents son read-only** — no pueden escribir archivos. Devuelven contenido al thread y éste lo materializa.
+> - **Rate limits** — múltiples agentes pueden saturar quota. Plan B: escribir el doc manual.
+> - **Findings inválidos** — verificar cada finding antes de aplicar (ej. `addPhotos @MainActor` fue falso positivo en Sprint 1).
+
+---
+
+## Reglas no negociables (2026-04-16)
+
+> [!danger] Prohibido
+>
+> - **Commitear con `Co-Authored-By: Claude`** — el usuario lo prohíbe explícitamente (regla global `~/.claude/CLAUDE.md`).
+> - **Push a remoto sin pedir** — el usuario hace `git push` él mismo.
+> - **Activar auto-deploy a producción** sin confirmación de infra.
+> - **Refactorear por estética** sin pedir.
+> - **Never build after changes** — evitar `xcodebuild`/`gradle build` automático. Tests sí se corren.
+
+---
+
+## Lecciones duras registradas
+
+- **Asumir que `CLAUDE.md` está al día** — audit del 2026-04-16 detectó que Web era React 19 + React Query (el doc decía React 18 + Zustand). Los docs se atrasan, siempre verificar el código.
+- **Saltear tests "porque va a andar"** — audit encontró 38 findings que nadie había detectado.
+- **Confiar 100% en sub-agents sin verificar** — 2 findings de Sprint 1 y Sprint 2 fueron inválidos.
+- **Delegar decisiones comerciales** (precios, marketing) a Claude sin validación humana.
 
 ---
 

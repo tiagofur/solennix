@@ -10,7 +10,7 @@ aliases:
   - Arquitectura Web
   - Web Architecture
 date: 2026-03-20
-updated: 2026-04-04
+updated: 2026-04-17
 status: active
 platform: Web
 ---
@@ -20,11 +20,26 @@ platform: Web
 > [!tip] Para documentacion detallada de cada modulo web, ver [[Web MOC]]
 
 **Version:** 1.0
-**Fecha:** 2026-03-20
+**Fecha:** 2026-03-20 · **Última actualización:** 2026-04-17
 **Plataforma:** Web (navegadores modernos: Chrome, Firefox, Safari, Edge)
 
 > [!abstract] Resumen
-> SPA construida con **React 19 + TypeScript** sobre **Vite**, con **Tailwind CSS** para estilos, **Zustand** para estado global, y **zod + react-hook-form** para formularios tipados. Arquitectura por capas: Pages → Hooks/Contexts → Services → Backend API (Go). Ver tambien [[07_TECHNICAL_ARCHITECTURE_BACKEND]] para la contraparte del servidor.
+> SPA construida con **React 19 + TypeScript** sobre **Vite**, con **Tailwind CSS** para estilos, estado client vía **React Context** (AuthContext, ThemeContext), estado server vía **TanStack React Query 5**, y **zod + react-hook-form** para formularios tipados. Arquitectura por capas: Pages → Hooks/Contexts → Services → Backend API (Go). Ver tambien [[07_TECHNICAL_ARCHITECTURE_BACKEND]] para la contraparte del servidor.
+
+> [!warning] Corrección 2026-04-16
+> La tabla de abajo menciona "Zustand 5.0.11". **No está en uso a 2026-04-16** — la app migró a React Query + Context. CLAUDE.md todavía dice "Zustand"; actualizar ambos cuando se consolide. HTTP es `fetch` nativo (clase `ApiClient` en `lib/api.ts`), no Axios.
+
+> [!info] Stack actualizado (2026-04-16 — `web/package.json`)
+>
+> | Capa             | Librería                           | Versión        |
+> | ---------------- | ---------------------------------- | -------------- |
+> | Server state     | **TanStack React Query**           | 5.96.x         |
+> | Client state     | React Context (Auth, Theme)        | —              |
+> | HTTP             | fetch nativo (`ApiClient` class)   | —              |
+> | Auth social      | Firebase SDK                       | 12.11.x        |
+> | Push             | Firebase Messaging (FCM)           | —              |
+> | PWA              | vite-plugin-pwa                    | 1.2.x          |
+> | OpenAPI codegen  | openapi-typescript                 | 7.4.x          |
 
 **Documentos relacionados:** [[PRD MOC]] · [[01_PRODUCT_VISION]] · [[02_FEATURES]] · [[11_CURRENT_STATUS]]
 **Arquitecturas hermanas:** [[05_TECHNICAL_ARCHITECTURE_IOS]] · [[06_TECHNICAL_ARCHITECTURE_ANDROID]] · [[07_TECHNICAL_ARCHITECTURE_BACKEND]]

@@ -9,7 +9,7 @@ aliases:
   - Arquitectura iOS
   - iOS Architecture
 date: 2026-03-20
-updated: 2026-04-04
+updated: 2026-04-17
 status: active
 platform: iOS
 ---
@@ -17,11 +17,27 @@ platform: iOS
 # Arquitectura Tecnica: Solennix iOS
 
 > [!info] Stack Principal
-> **Fecha:** Marzo 2026
+> **Fecha:** Marzo 2026 · **Última actualización:** 2026-04-17
 > **Plataformas:** iOS 17+ / iPadOS 17+ / macOS 14+ (Designed for iPad)
 > **Lenguaje:** Swift 5.9+
 > **Framework UI:** SwiftUI
 > **Arquitectura:** MVVM con @Observable
+
+> [!success] Producción (2026-04-16)
+>
+> - **App Store live:** https://apps.apple.com/mx/app/solennix/id6760874129
+> - **Versión:** 1.0.4 (build 5)
+> - **Bundle ID:** `com.solennix.app`
+> - **Development Team:** `T5SKULSP2M`
+> - **Base URL API:** `https://api.solennix.com/api`
+
+> [!info] Dependencias externas SPM (2026-04-16)
+>
+> | Paquete                          | Versión mínima | Usado en                              |
+> | -------------------------------- | -------------- | ------------------------------------- |
+> | `RevenueCat/purchases-ios-spm`   | 5.0.0          | SolennixNetwork, SolennixFeatures     |
+> | `google/GoogleSignIn-iOS`        | 8.0.0          | SolennixNetwork                       |
+> | `getsentry/sentry-cocoa`         | 8.43.0         | SolennixFeatures                      |
 
 > [!tip] Documentos relacionados
 >

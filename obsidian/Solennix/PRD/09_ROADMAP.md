@@ -8,7 +8,7 @@ aliases:
   - Roadmap
   - Timeline
 date: 2026-03-20
-updated: 2026-04-04
+updated: 2026-04-17
 status: active
 ---
 
@@ -23,6 +23,99 @@ status: active
 > - [[SUPER PLAN MOC]] — sistema de ejecución cross-platform (12 semanas)
 > - [[07_WAVE_PLAN_12_WEEKS]] — plan operativo por ondas
 > - [[05_RELEASE_GOVERNANCE_AND_QUALITY_GATES]] — calidad obligatoria por PR/release
+
+---
+
+## Estado de hoy (2026-04-17)
+
+> [!info] Producto en producción
+> | Componente | Versión pública | Status |
+> |---|---|---|
+> | iOS | 1.0.2 en App Store MX | ✅ Live (próxima release 1.0.4+) |
+> | Android | 1.0.0 en Play Store | ✅ Live |
+> | Web | `solennix.com` | ✅ Live |
+> | Backend | `api.solennix.com` | ✅ Live |
+
+### Sprint log (cronológico, post-Apr 16 audit)
+
+#### Sprints 1–3 — P0/P1/P2 audit fixes (2026-04-16, cerrado)
+30 de 38 findings cerradas, 7 diferidas con justificación, 1 inválida. Commits cross-platform en backend, iOS, Android, web.
+
+#### Sprint 5 — Backfill PRD (2026-04-16)
+10 docs PRD escritos / actualizados (incluyendo este).
+
+#### Sprint 6 — Polish técnico (2026-04-16)
+- Web: `CalendarView` migrado a React Query.
+- iOS: Dashboard kpis preload (<200ms paint), `DateFormatter` cache, VoiceOver pass.
+
+#### Sprint 7.A — Pricing foundation (2026-04-16, cerrado)
+- `.env.example` completo.
+- Migration 040: `users_plan_check` acepta `'business'`.
+- `Config.StripeBusinessPriceID` opcional.
+- `CreateCheckoutSession` acepta `{plan, skip_trial}` + trial 14d.
+- Webhook handler distingue Pro vs Business via `Session.Metadata.plan`.
+- Web: `lib/api.ts` detecta `403 plan_limit_exceeded` → toast + redirect a `/pricing`.
+- Web: `Pricing.tsx` con 3 cards (Básico / Pro / Business) + CTA "Probar 14 días gratis".
+
+#### Portal Cliente MVP (2026-04-16, [[14_CLIENT_EXPERIENCE_IDEAS|feature A]])
+- Backend: migration 041 `event_public_links` + 4 endpoints (create/get/revoke + GET público).
+- Backend: `PublicEventView` curated shape, 410 Gone para revoked, auto-revoke al borrar evento.
+- Web: `/client/:token` → `ClientPortalPage.tsx` con countdown, payment progress bar, branding del organizer.
+- Web: `ClientPortalShareCard` en EventSummary (Copy + WhatsApp + Rotate + Revoke).
+
+#### Sprint 8 — iOS + Android Portal Cliente (✅ 2026-04-17)
+Paridad mobile cerrada. iOS `ClientPortalShareSheet.swift` (`ShareLink` + `confirmationDialog`). Android `ClientPortalShareBottomSheet.kt` (`ModalBottomSheet` + `ACTION_SEND`). Models idénticos en ambos stacks.
+
+#### Sprint 8.bis — Personal / Colaboradores Phase 1 (✅ 2026-04-16)
+Backend + Web + iOS + Android liberados con paridad.
+- Migration 042: tablas `staff` + `event_staff` con hooks Phase 2/3.
+- Phase 2 (email Pro+) shipped 2026-04-17 — goroutine en `UpdateEventItems` + Resend.
+- Phase 3 (login colaborador) pendiente — usa Pilar 5 D.
+
+### Próximos sprints (Q2 2026)
+
+#### Sprint 7.B — Client paywalls coherentes (mobile)
+- iOS: paywall modal reactivo a `plan_limit_exceeded`.
+- Android: wiring de `UpgradePlanDialog`.
+- Audit Android Play Billing integration.
+
+#### Sprint 7.C — Enforcement matrix completo
+> [!important] Regla global
+> Gratis tiene versión BÁSICA de 2 features cara-al-cliente (Portal A + Reseñas I) como teaser. Resto cara-al-cliente es Pro+. Gating en A + I es **shape-based** (mismo endpoint, menos campos para Gratis); en B/C/D/E/G/H es **endpoint-based** (403 `{type: "requires_paid_plan"}`).
+
+Items pendientes: staff seats, portal cliente shape-based gate, payment submissions block, milestone notifications, chat/decisiones/firma/RSVP/reviews gating, plan expiry job, copy de paywall.
+
+#### Sprint 9 — Feature B: Pagos del cliente (visualización + registro por transferencia)
+**Decisión 2026-04-16:** reemplazamos "botón Pagar con Stripe" por registro por transferencia con approve/reject. Solennix NO procesa pagos.
+- Backend: tablas `payment_schedule` + `payment_submissions`, endpoints públicos y privados.
+- Web: sección Pagos en ClientPortalPage + inbox organizador.
+- Notifications + email templates de vencimiento.
+- Paridad mobile (iOS + Android).
+
+#### Sprint 10 — Feature I: Reseñas post-evento
+- Backend: `event_reviews` + cron 48h post-evento.
+- Web: UI pública para review + portfolio público `/organizer/:slug/reviews`.
+
+### Bloqueantes externos (acción del usuario, 2-4h)
+
+> [!warning] Sprint 7 bloqueado hasta completar
+> Stripe Dashboard (productos Pro/Business + webhook + portal), App Store Connect (subscription group + intro offer 14d), Google Play Console (subscription products), RevenueCat Dashboard (entitlement + offerings + webhook). Detalle completo en root `PRD/09_ROADMAP.md` §5 (a portar al Obsidian si se mantiene este flujo).
+
+### Roadmap Q3-Q4 2026
+
+- **Q3:** Sprints 11-14 — features C (notif por etapa), D (thread), E (decisiones), H (RSVP).
+- **Q4:** Sprints 15-18 — WhatsApp Business API, firma digital, branding completo Business, analytics/forecast.
+- **Q1 2027:** referidos, cupones partners, planes anuales con descuento, features F/K/L de [[14_CLIENT_EXPERIENCE_IDEAS]].
+
+### Infraestructura CI/CD
+
+| Item | Status |
+|---|---|
+| CI tests web + backend | ✅ |
+| CI tests iOS / Android | ❌ |
+| CI lint + typecheck | ✅ web/backend |
+| CI E2E Playwright | ✅ web |
+| Auto-deploy VPS | 🟡 prepared, not activated |
 
 ---
 
@@ -380,6 +473,31 @@ gantt
     Calendar sync              :p2c, 2026-09, 2026-10
     Colaboración               :p2d, 2026-10, 2026-11
 ```
+
+---
+
+## 11. Estimaciones de esfuerzo (capacidad)
+
+> [!info] Asunción
+> 1 founder-ingeniero + asistente de AI (Claude Code) en jornada completa.
+
+| Tipo de trabajo                                     | Esfuerzo típico              |
+| --------------------------------------------------- | ---------------------------- |
+| Fix P0 bundle cross-platform                        | 1 sesión intensiva           |
+| Feature cliente-facing nueva cross-platform         | 2–3 sprints de 2 semanas     |
+| Feature interno solo backend                        | 1 sprint                     |
+| Backfill de doc PRD completo                        | 1 sesión                     |
+| Activación de deploy VPS (cuando secrets listos)    | 30 min (validado 2026-04-17) |
+| Pass de polish cross-platform (ej. P3)              | 1 sprint, baja prioridad     |
+| Portal Cliente backend MVP + Web UI                 | ~4 h (medido 2026-04-16)     |
+
+---
+
+## 12. Compromisos hard (fechas no negociables)
+
+| Milestone                    | Fecha hard |
+| ---------------------------- | ---------- |
+| *(ninguno hoy — 2026-04-17)* | —          |
 
 ---
 

@@ -9,7 +9,7 @@ aliases:
   - Client Experience Ideas
   - Ideas Experiencia Cliente
 date: 2026-04-16
-updated: 2026-04-16
+updated: 2026-04-17
 status: exploration
 ---
 
@@ -29,14 +29,45 @@ status: exploration
 
 ## 1. Contexto
 
-### 1.1 Lo que ya existe (MVP)
+### 1.1 Lo que ya existe (MVP — 2026-04-16)
 
-El **Portal Cliente MVP** fue entregado en Abril 2026 (commits `993719c` backend, `06d69ff` web):
+> [!success] Portal Cliente MVP shipped
+> Commits: `8dff4f3` (backend) · `06d69ff` (web) · `a3f425a` (polish). Ver también [[11_CURRENT_STATUS]].
 
-- Tabla `event_public_links` con token firmado, rotación y revocación.
-- Endpoint público `GET /api/public/events/{token}` con campos filtrados (sin márgenes ni notas internas).
-- Página pública `/client/:token` en web: datos del evento, countdown, badge de estado, barra de progreso de pagos (agregada), checklist en %, documentos descargables.
-- Share card en el EventDetail del organizador (web): generar link, copiar, enviar por WhatsApp (`wa.me/?text=...`), rotar, revocar.
+- **Migration 041** `event_public_links` table con partial unique index (1 link activo por evento) + token `crypto/rand` 256 bits.
+- **Endpoints autenticados:** `POST/GET/DELETE /api/events/{id}/public-link`.
+- **Endpoint público sin auth:** `GET /api/public/events/{token}` con rate limit 10/min IP.
+- **Response curada `PublicEventView`:** event basics, organizer branding, client name, payment summary (total/paid/remaining). Sin márgenes, sin notas internas.
+- **410 Gone** para revoked/expired — el frontend distingue "URL mal copiada" (404) de "organizer deshabilitó" (410).
+- **Auto-revoke** si el evento es borrado mientras el link está activo.
+- **Web `/client/:token`** (`ClientPortalPage.tsx`): hero + countdown + details grid + payment progress bar `role="progressbar"` aria-accessible.
+- **`ClientPortalUnavailable`** con copy diferente 404 vs 410.
+- **Branding del organizer** aplicado en vivo (color + logo) con regex anti-CSS-injection.
+- **`ClientPortalShareCard`** en EventSummary: Copy + WhatsApp (`wa.me/?text=...`) + Rotar + Deshabilitar.
+- **`eventPublicLinkService`** wrappea los 3 endpoints autenticados.
+
+> [!warning] Gaps conocidos del MVP
+>
+> - iOS/Android share card nativas — **pendiente Sprint 8** (organizador comparte desde desktop por ahora).
+> - `OpenAPI docs` — los 4 endpoints aún no están en `backend/docs/openapi.yaml`.
+> - Enforcement del límite "1 portal Gratis vs ∞ Pro/Business" — **pendiente Sprint 7.C**.
+> - Field-level `visibleToClient` — hoy la respuesta es subset fijo; toggles pendientes (cluster B.1).
+> - Timeline de milestones, equipo asignado, progress bar "72% listo", PIN opcional, mapa integrado — todos en backlog.
+
+### 1.1.bis Garantía de acceso perpetuo del cliente (decisión 2026-04-16)
+
+> [!important] El cliente debe poder volver años después
+> Bodas, quinces, eventos importantes — la gente vuelve a revisitar detalles, contratos, fotos. Cortar ese acceso es una regresión emocional que no queremos.
+
+Reglas ya implementadas por diseño en el MVP:
+
+1. **Default de expiración: `NULL` (nunca caduca).** `event_public_links.expires_at` es nullable; los links se crean sin TTL por default.
+2. **Post-evento NO se revoca automáticamente.** No hay cron job que "limpie" links viejos.
+3. **Revocación explícita** sigue disponible pero con fricción — el botón "Deshabilitar" debe mostrar confirm reforzado cuando el evento es >180 días (pendiente de polish).
+4. **ON DELETE CASCADE** si el organizador borra su cuenta. Feature futura Business: "Exportar portal como PDF permanente" (snapshot estático en `solennix.com/archive/{event-id}`).
+5. **Cambio de URL del portal en el futuro** → mantener redirect legacy indefinidamente. NUNCA 404 a URLs guardadas por el cliente.
+
+---
 
 ### 1.2 Lo que ya está planeado (Pilar 3 — [[13_POST_MVP_ROADMAP]])
 

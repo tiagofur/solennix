@@ -9,7 +9,7 @@ aliases:
   - Arquitectura Android
   - Android Architecture
 date: 2026-03-20
-updated: 2026-04-04
+updated: 2026-04-17
 status: active
 platform: Android
 ---
@@ -17,8 +17,16 @@ platform: Android
 # Arquitectura Técnica — Android
 
 **Versión:** 1.0
-**Fecha:** 2026-03-20
+**Fecha:** 2026-03-20 · **Última actualización:** 2026-04-17
 **Plataforma:** Android (teléfono/tablet)
+
+> [!success] Producción (2026-04-16)
+>
+> - **App ID:** `com.solennix.app`
+> - **Namespace Gradle:** `com.creapolis.solennix`
+> - **versionCode:** 2 · **versionName:** 1.0
+> - **Kotlin:** 2.1.0 · **AGP:** 8.13.2 · **KSP:** 2.1.0-1.0.29
+> - **RevenueCat SDK:** 8.10.1 (activo para Play Billing)
 
 > [!tip] Documentos relacionados
 > [[PRD MOC]] · [[01_PRODUCT_VISION]] · [[02_FEATURES]] · [[05_TECHNICAL_ARCHITECTURE_IOS]] · [[07_TECHNICAL_ARCHITECTURE_BACKEND]] · [[08_TECHNICAL_ARCHITECTURE_WEB]] · [[11_CURRENT_STATUS]]

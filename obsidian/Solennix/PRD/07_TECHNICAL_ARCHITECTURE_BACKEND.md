@@ -10,7 +10,7 @@ aliases:
   - Arquitectura Backend
   - Backend Architecture
 date: 2026-03-20
-updated: 2026-04-10
+updated: 2026-04-17
 status: active
 platform: Backend
 ---
@@ -21,8 +21,22 @@ platform: Backend
 > [[PRD MOC]] | [[01_PRODUCT_VISION]] | [[02_FEATURES]] | [[05_TECHNICAL_ARCHITECTURE_IOS]] | [[06_TECHNICAL_ARCHITECTURE_ANDROID]] | [[08_TECHNICAL_ARCHITECTURE_WEB]] | [[11_CURRENT_STATUS]] | [[04_MONETIZATION]]
 
 **Version:** 1.0
-**Fecha:** 2026-03-20
+**Fecha:** 2026-03-20 · **Última actualización:** 2026-04-17
 **Plataforma:** Go REST API + PostgreSQL
+
+> [!success] Producción (2026-04-16)
+>
+> - **Base URL prod:** `https://api.solennix.com/api`
+> - **Fuente de verdad versiones:** `backend/go.mod`
+> - **Fuente de verdad endpoints:** `backend/internal/router/router.go` + `backend/docs/openapi.yaml`
+
+> [!info] Migraciones recientes (2026-04-16)
+>
+> | # | Tabla / Cambio | Sprint |
+> | --- | --- | --- |
+> | **040** | Stripe trial 14d (`trial_ends_at`, `is_in_trial`) | 7.A |
+> | **041** | `event_public_links` (Portal Cliente MVP) | Portal MVP |
+> | **042** | `staff` + `event_staff` (Personal Phase 1) | 8.bis |
 
 ---
 

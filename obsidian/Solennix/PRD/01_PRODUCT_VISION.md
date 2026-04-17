@@ -7,7 +7,7 @@ aliases:
   - Visión del Producto
   - Product Vision
 date: 2026-03-20
-updated: 2026-04-04
+updated: 2026-04-17
 status: active
 ---
 
@@ -91,6 +91,37 @@ Cada competidor cubre 1-2. **Solennix cubre los 6.** Ver [[03_COMPETITIVE_ANALYS
 | NG4 | Sin gestión de venue/salón         | Ubicación es campo de texto, no entidad gestionada        |
 | NG5 | Sin project management genérico    | Optimizado para ciclo de vida de eventos, no Kanban       |
 | NG6 | Sin integración con redes sociales | Las redes son marketing del organizador, fuera del scope  |
+
+### Anti-posicionamiento (2026-04-16)
+
+> [!info] Lo que NO somos
+>
+> - No somos una **red social** de eventos.
+> - No somos un **marketplace** entre organizadores y clientes.
+> - No somos un **CRM genérico** — estamos especializados en eventos.
+> - No somos una herramienta para **equipos de 50+** con permisos granulares — somos para el founder/operador y un equipo chico (1–8).
+
+---
+
+## North-star
+
+> [!quote] Frase guía
+> **El organizador de eventos promedio debería poder abrir Solennix un lunes a la mañana y saber, en menos de 30 segundos, exactamente qué eventos tiene esta semana, cuánto le deben cobrar, qué le tiene que entregar al cliente, y qué insumos le faltan.**
+
+Todo lo demás se mide contra esa frase.
+
+---
+
+## Modelo de Negocio (referencia rápida)
+
+> [!tip] Pricing 2026 — 3 tiers
+> A partir del 2026-04-16, el modelo es **Gratis · Pro · Business** (USD $0 / $15 / $49) con precios localizados a MXN/ARS/COP/CLP. Trial Stripe de 14 días. Detalle completo en [[04_MONETIZATION|Monetización]].
+
+| Plan         | Precio USD | Para quién                                        |
+| ------------ | ---------- | ------------------------------------------------- |
+| **Gratis**   | $0         | Onboarding, ≤3 eventos activos, teasers de Pro    |
+| **Pro**      | $15/mes    | Organizador independiente, hasta 5 colaboradores  |
+| **Business** | $49/mes    | Equipo chico (≤8), múltiples sucursales, analítica |
 
 ---
 

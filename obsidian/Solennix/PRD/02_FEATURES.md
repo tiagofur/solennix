@@ -8,14 +8,14 @@ aliases:
   - Catálogo de Features
   - Features
 date: 2026-03-20
-updated: 2026-04-04
+updated: 2026-04-17
 status: active
 ---
 
 # Solennix — Documento Unificado de Features
 
-**Version:** 1.1
-**Fecha:** 2026-04-02
+**Version:** 1.2
+**Fecha:** 2026-04-17 (post Sprint 7.A + Portal Cliente MVP + Personal/Colaboradores Phase 1)
 **Plataformas:** iOS (iPhone/iPad), Android (Phone/Tablet), Web (React SPA), Backend (Go/PostgreSQL)
 **Autor:** Tiago David + Claude Code
 **Estado:** Borrador
@@ -898,6 +898,80 @@ Sistema de upload de imagenes para fotos de eventos, productos y logos de negoci
 | Copiar al portapapeles | 🔄 | 🔄 | ✅ | ➖ |
 
 **Tier:** FREE (3 enlaces activos) / PRO (ilimitados)
+
+---
+
+### 15.bis Portal Cliente (Feature A de [[14_CLIENT_EXPERIENCE_IDEAS|Pilar 5]]) — NUEVO 2026-04-16
+
+> [!success] MVP shipped 2026-04-16 — Web + Backend
+> Portal privado per-evento para que el CLIENTE final (no el organizador) vea estado de su evento en read-only. Distinto del portal público de captura — este es post-venta. Sprint 8 (2026-04-17) cerró paridad mobile (iOS + Android share cards nativas).
+
+**Tier (decisión 2026-04-16):** Gratis tiene versión BÁSICA (sin branding, sin payment summary, footer "Powered by Solennix"). Pro+ habilita branding completo, payment summary, todo. Ver [[04_MONETIZATION|Monetización]] §4.3.
+
+#### A.1 Link y acceso
+
+| Feature | iOS | Android | Web | Backend |
+|---|:-:|:-:|:-:|:-:|
+| Generar link por evento | ✅ *(ShareSheet)* | ✅ *(BottomSheet)* | ✅ *(share card en EventSummary)* | ✅ `POST /api/events/{id}/public-link` |
+| Consultar link activo | ✅ | ✅ | ✅ | ✅ `GET /api/events/{id}/public-link` |
+| Rotar link (revoca anterior) | ✅ | ✅ | ✅ | ✅ |
+| Revocar link | ✅ | ✅ | ✅ | ✅ `DELETE /api/events/{id}/public-link` |
+| Portal público (cliente sin login) | — | — | ✅ `/client/:token` | ✅ `/api/public/events/{token}` |
+| Copy + share nativo (WhatsApp/Mail/SMS/AirDrop) | ✅ *(ShareLink)* | ✅ *(ACTION_SEND)* | ✅ *(wa.me)* | — |
+| 410 Gone para revoked/expired | — | — | ✅ *(distinct copy)* | ✅ |
+| Auto-revoke si evento se borra | — | — | — | ✅ |
+| Acceso perpetuo por default (no TTL) | — | — | ✅ | ✅ |
+| PIN opcional | 📋 | 📋 | 📋 | 📋 |
+| Toggles `visibleToClient` por campo | 📋 | 📋 | 📋 | 📋 |
+| Plan limit shape-based (Gratis básico / Pro∞ full) | — | — | — | 📋 *(Sprint 7.C)* |
+
+#### A.2 Feature B — Pagos del cliente (Sprint 9, planeado)
+
+Visualización + registro de pago por transferencia con approve/reject. Reemplaza el plan original de "botón Pagar con Stripe" — Solennix NO procesa pagos, el cliente reporta y el organizador aprueba. **Gratis sin acceso (endpoint-based gating).**
+
+| Feature | iOS | Android | Web | Backend |
+|---|:-:|:-:|:-:|:-:|
+| Cliente ve balance + total + remaining | — | — | ✅ *(MVP)* | ✅ *(MVP)* |
+| Cliente ve cronograma de cuotas | 📋 | 📋 | 📋 | 📋 |
+| Cliente ve historial de pagos aprobados | 📋 | 📋 | 📋 | 📋 |
+| Cliente registra pago con clave + comprobante opcional | — | — | 📋 | 📋 |
+| Organizador inbox approve/reject | 📋 | 📋 | 📋 | 📋 |
+| Email organizador on submission / Email cliente on approve/reject | — | — | — | 📋 |
+| Recordatorio vencimiento cronograma (3 días antes) | — | — | — | 📋 |
+
+> [!info] Roadmap completo
+> Features C–L (milestones, thread, decisiones, firma, RSVP, reseñas, branding completo, multi-idioma, resumen post-evento) en [[14_CLIENT_EXPERIENCE_IDEAS]] y [[09_ROADMAP]].
+
+---
+
+### 15.ter Personal / Colaboradores (Phase 1 — 2026-04-16)
+
+> [!success] Phase 1 shipped 2026-04-16 — Backend + Web + iOS + Android
+> Catálogo per-organizador de colaboradores (fotógrafo, DJ, coordinador, meseros) y asignación a eventos. El mismo colaborador puede cobrar distinto por evento (fee guardado en `event_staff`, no en `staff`).
+
+| Feature | iOS | Android | Web | Backend |
+|---|:-:|:-:|:-:|:-:|
+| CRUD catálogo `/staff` | ✅ | ✅ | ✅ | ✅ `/api/staff` |
+| Búsqueda (nombre/rol/contacto) | ✅ | ✅ | ✅ | ✅ `?q=` |
+| Asignar en event form (Step 4) | ✅ | ✅ | ✅ | ✅ `PUT /events/{id}/items` acepta `staff[]` |
+| Ver asignados en EventDetail | ✅ | ✅ | ✅ | ✅ `GET /events/{id}/staff` |
+| Fee opcional por asignación | ✅ | ✅ | ✅ | ✅ `event_staff.fee_amount` |
+| Toggle "notificar por email" (guarda flag) | ✅ | ✅ | ✅ | ✅ `staff.notification_email_opt_in` |
+| **Phase 2 — email al colaborador al asignar** (Pro+) | ✅ *(trigger en save, shipped 2026-04-17)* | ✅ | ✅ | ✅ goroutine en `UpdateEventItems` + Resend |
+
+**Data model (migration 042):**
+- `staff` — catálogo per-user con `name`, `role_label`, `phone`, `email`, `notes`, `notification_email_opt_in`, `invited_user_id` (hook Phase 3, nullable FK a users).
+- `event_staff` — junction con `fee_amount`, `role_override`, `notes`, `notification_sent_at`, `notification_last_result`. UNIQUE `(event_id, staff_id)`.
+
+**Tier gating:**
+- **Phase 1:** sin gate — todos los planes pueden usar el catálogo.
+- **Phase 2 (Pro+):** activa email de notificación al asignar.
+- **Phase 3 (Business+):** login del colaborador + scope de sus eventos + thread con gerente (reusa Pilar 5 D de [[14_CLIENT_EXPERIENCE_IDEAS]]).
+
+**Navegación:**
+- Web sidebar y iPad sidebar → entrada "Personal" entre Clientes y Productos.
+- iPhone → overflow "Más" (no se agrega como 6º tab).
+- Android → overflow del bottom nav.
 
 ---
 

@@ -8,7 +8,7 @@ aliases:
   - Análisis Competitivo
   - Competitive Analysis
 date: 2026-03-20
-updated: 2026-04-04
+updated: 2026-04-17
 status: active
 ---
 
@@ -52,13 +52,17 @@ quadrantChart
 
 ### HoneyBook
 
-| Aspecto | Detalle |
-|---------|---------|
-| **Precio** | $19-79/mo (~$380-1580 MXN/mo) |
-| **Mercado** | EE.UU., creativos, wedding planners |
-| **Idioma** | Solo inglés |
-| **Fortalezas** | CRM robusto, contratos digitales, pagos online, UX excelente |
-| **Debilidades** | Sin inventario · Sin catálogo con recetas · Sin LATAM · Costoso |
+| Aspecto        | Detalle                                                             |
+| -------------- | ------------------------------------------------------------------- |
+| **URL**        | honeybook.com                                                       |
+| **Precio**     | USD $39/mo (o $390/año ≈ $32/mo) — abril 2026                       |
+| **Mercado**    | EE.UU., creativos, wedding planners                                 |
+| **Idioma**     | Solo inglés (español parcial 2025)                                  |
+| **Fortalezas** | CRM robusto, contratos digitales, firma legal US, pagos online, UX excelente |
+| **Debilidades** | Sin inventario · Sin catálogo con recetas · Sin LATAM · Sin MercadoPago/Conekta/PSE |
+
+> [!tip] Lección que copiamos
+> Sensación premium del portal del cliente + flujo de firma digital. NO copiamos: precio en USD, tono frío, peso del onboarding.
 
 > [!danger] Amenaza ALTA
 > Si entra a LATAM con localización, es el competidor más peligroso. **Mitigación**: construir base de usuarios leal + features LATAM-específicos que HoneyBook no tenga incentivo de construir.
@@ -69,9 +73,10 @@ quadrantChart
 
 | Aspecto | Detalle |
 |---------|---------|
-| **Precio** | $20-40/mo |
-| **Fortalezas** | Formularios, workflows automatizados, portales de cliente |
-| **Debilidades** | Sin inventario · Sin app móvil nativa · Sin LATAM · UX compleja |
+| **URL** | dubsado.com |
+| **Precio** | USD $40/mo, USD $400/año |
+| **Fortalezas** | Formularios, workflows automatizados, portales de cliente — customización profunda |
+| **Debilidades** | Sin inventario · UI recargada · Stripe/Square (sin pasarelas LATAM) · UX compleja |
 
 > [!warning] Amenaza MEDIA — buena automatización, pero no es para eventos ni LATAM
 
@@ -79,9 +84,10 @@ quadrantChart
 
 | Aspecto | Detalle |
 |---------|---------|
-| **Precio** | $15-60/mo |
+| **URL** | 17hats.com |
+| **Precio** | USD $15–50/mo |
 | **Fortalezas** | Todo-en-uno para freelancers: contratos, facturas, calendario |
-| **Debilidades** | No event-specific · Sin inventario · Sin app nativa · Sin LATAM |
+| **Debilidades** | Producto estancado · UX anticuada · No event-specific · Sin inventario · Sin app nativa · Sin LATAM |
 
 > [!warning] Amenaza MEDIA — overlap parcial en CRM, pero no es vertical
 
@@ -89,7 +95,8 @@ quadrantChart
 
 | Aspecto | Detalle |
 |---------|---------|
-| **Precio** | $30+/mo |
+| **URL** | aisleplanner.com |
+| **Precio** | USD $50/mo aprox (nicho boda) |
 | **Fortalezas** | Diseñado para bodas: timelines, floor plans, vendors |
 | **Debilidades** | Solo bodas · Sin inventario · Sin app nativa · Sin LATAM |
 
@@ -101,6 +108,18 @@ quadrantChart
 
 > [!important] El competidor real
 > La competencia en LATAM no son apps especializadas — son las herramientas informales que los organizadores ya usan. Son gratuitas, familiares, y ya integradas en su flujo de trabajo.
+
+### Players LATAM especializados (observados — 2026-04-16)
+
+> [!warning] Requiere investigación de campo
+> Este bloque se rellena con entrevistas a 20 organizadores MX/AR/CO/CL en Q2 2026.
+
+| Competidor   | País | Modelo    | Fortaleza observada           | Debilidad observada                               |
+| ------------ | ---- | --------- | ----------------------------- | ------------------------------------------------- |
+| Aplanar.app  | AR   | Freemium  | UI local, precios en ARS      | Producto joven, feature gap, foco bodas           |
+| Eventos365   | MX   | Anual     | Integración con salones       | UI anticuada, no mobile                           |
+| PlanPro MX   | MX   | Comisión  | Marketplace de proveedores    | No es SaaS puro, depende de proveedores pagando   |
+| WedPlanner CO| CO   | Freemium  | Foco wedding                  | Cero traction reportado                           |
 
 ### Excel / Google Sheets
 
@@ -200,6 +219,30 @@ quadrantChart
 | Sensibilidad de precio extrema | 🔴 | Alta | Free tier generoso + pricing escalonado |
 | Baja penetración digital | 🟡 | Media | Onboarding simple + tutoriales en video |
 | Competidor local LATAM | 🟡 | Baja-Media | First-mover + multi-plataforma como barrera |
+
+---
+
+## Pricing benchmark (2026-04-16)
+
+| Producto                      | USD/mes | USD/año  | País  |
+| ----------------------------- | ------- | -------- | ----- |
+| Honeybook                     | 39      | 390      | USA   |
+| Dubsado                       | 40      | 400      | USA   |
+| 17hats                        | 15–50   | variable | USA   |
+| Aisle Planner                 | 50      | 480      | USA   |
+| **Solennix Pro**              | **15**  | **144**  | LATAM |
+| **Solennix Business**         | **49**  | **470**  | LATAM |
+
+Ver [[04_MONETIZATION]] para justificación de los precios Solennix.
+
+---
+
+## Siguientes pasos (2026-Q2/Q3)
+
+- **Q2 2026:** 20 entrevistas a organizadores LATAM (5 por país clave MX/AR/CO/CL). Llenar la tabla de competidores LATAM.
+- **Q2 2026:** Comprar suscripción Honeybook 1 mes y documentar screenshots del portal del cliente para benchmarking.
+- **Q3 2026:** Mystery-shopping de 3 competidores LATAM (cuenta nueva, flujo completo, reporte de fricciones).
+- **Revisión:** cada 6 meses o ad-hoc si un competidor lanza algo grande.
 
 ---
 

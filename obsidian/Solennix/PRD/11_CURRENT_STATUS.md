@@ -8,7 +8,7 @@ aliases:
   - Estado Actual
   - Current Status
 date: 2026-03-20
-updated: 2026-04-11
+updated: 2026-04-17
 status: active
 ---
 
@@ -1126,3 +1126,93 @@ Refactors planificados para lograr paridad total entre las 6 plataformas (iPhone
 - ⏳ Cuestionario App Privacy
 - ⏳ Credenciales demo en ASC → Sign-in Information
 - ⏳ Sentry (diferido hasta antes de TestFlight)
+
+---
+
+## Progreso infraestructura deploy — 2026-04-17
+
+> [!success] Auto-deploy end-to-end funcionando
+> Push a `main` → CI Pipeline (~8 min) → al finalizar OK → workflow Deploy to production (~2 min) → SSH al VPS → `git fetch && git reset --hard origin/main` → `docker compose up -d --build`. Primer deploy verificado con commit `e042a4b` corriendo en producción.
+
+### Completado hoy
+
+- ✅ Rename de carpeta raíz `eventosapp/` → `solennix/` para coherencia de marca (local + VPS + `docker-compose.yml project name`)
+- ✅ Usuario `deploy` creado en VPS Ubuntu 24.04.4 (Plesk Obsidian 18.0.76, Docker 29.4.0, Compose v5.1.2)
+- ✅ Keypair ed25519 CI → VPS: llave privada en GitHub Secret `VPS_SSH_KEY`, pública en `/home/deploy/.ssh/authorized_keys`
+- ✅ Keypair ed25519 VPS → GitHub: llave en `/home/deploy/.ssh/github_deploy`, registrada como **Deploy Key read-only** en el repo (fingerprint `AAAA…VShZ/`)
+- ✅ `~/.ssh/config` del usuario `deploy` apunta `github.com` a la clave `github_deploy` con `IdentitiesOnly yes`
+- ✅ `git remote set-url origin git@github.com:tiagofur/eventosapp.git` — cambio de HTTPS a SSH para poder pull sin credenciales
+- ✅ `github.com` añadido a `known_hosts` (ed25519, rsa, ecdsa) para evitar prompts interactivos
+- ✅ `docker-compose.yml` con `name: solennix` pinneado en la raíz — garantiza que el project name sea estable sin importar la carpeta
+- ✅ `.github/workflows/deploy.yml` con trigger `workflow_run` sobre "CI Pipeline" en `main` + `workflow_dispatch` manual
+- ✅ 5 GitHub Secrets configurados en el repo: `VPS_HOST`, `VPS_USERNAME`, `VPS_SSH_KEY`, `VPS_PORT`, `VPS_APP_PATH`
+- ✅ Deploy #294 validado: 3 contenedores `Up` en VPS (`solennix-backend-1` :8080, `solennix-frontend-1` :3000, `solennix-db-1` :5433), HEAD en `e042a4b`
+
+### Componentes clave
+
+| Pieza                          | Ubicación                                           | Rol                                                |
+| ------------------------------ | --------------------------------------------------- | -------------------------------------------------- |
+| Workflow de deploy             | `.github/workflows/deploy.yml`                      | Orquesta el SSH → VPS al terminar CI OK            |
+| Docker Compose (project name)  | `docker-compose.yml` (línea 1: `name: solennix`)    | Congela el nombre del stack                        |
+| Usuario VPS                    | `/home/deploy/`                                     | Dueño del checkout y del compose stack             |
+| Repo en VPS                    | `/home/deploy/solennix/`                            | Working tree sincronizado por `git reset --hard`   |
+| Llave CI → VPS                 | `authorized_keys` en VPS + Secret `VPS_SSH_KEY`     | Autentica a `appleboy/ssh-action` desde CI         |
+| Llave VPS → GitHub             | `~/.ssh/github_deploy` + Deploy Key en repo        | Autentica al VPS al hacer `git fetch` del privado  |
+
+### Pendientes inmediatos (infra)
+
+- ⏳ Rotar la llave CI → VPS cada 90 días (recordatorio: 2026-07-16)
+- ⏳ Instrumentar notificación en Slack/email cuando deploy falla (ahora solo GitHub Actions)
+- ⏳ Documentar rollback: `git reset --hard <sha-anterior> && docker compose up -d --build`
+- ⏳ Backup automático de `solennix-db` (postgres:15-alpine, puerto 5433) — falta decidir target (S3 vs disco local)
+- ⏳ Healthcheck HTTP post-deploy para abortar si backend no responde en 60s
+
+---
+
+## Observabilidad y seguridad — 2026-04-17 (arranque)
+
+> [!info] Rollout inicial de observabilidad + WAF
+> Se arranca el stack free/self-hosted para: analytics de tráfico, tracking de errores, uptime, WAF perimetral y anti-bot/anti-DDoS. Primeras 3 piezas (Cloudflare + Sentry + UptimeRobot) cubren el 80% del valor sin costo ni peso adicional en el VPS.
+
+### Stack elegido
+
+| Capa | Servicio | Tier | Dónde corre | Qué cubre |
+| ---- | -------- | ---- | ----------- | --------- |
+| Perímetro | Cloudflare Free | Gratis | SaaS (delante del VPS) | WAF, DDoS, bot fight mode, rate limiting, cache, analytics de tráfico, SSL terminación |
+| Errors + perf | Sentry | Developer (5k err/mo, 10k perf units/mo) | SaaS | Stack traces React + Go, performance básico, alertas por email |
+| Uptime | UptimeRobot | Free (50 monitors, 5-min interval) | SaaS | Health checks de `/health` + raíz, alerta email cuando baja |
+| Analytics producto | GoatCounter | Gratis, self-hosted | Mismo VPS (~40MB RAM) | Pageviews, referrers, países — *pendiente de deploy* |
+| Auto-ban IPs | CrowdSec | Gratis, self-hosted + cloud console free | Mismo VPS (~50MB RAM) | Detecta SQLi, path traversal, credential stuffing — *pendiente* |
+
+### Cambios de código (backend)
+
+- `backend/cmd/server/main.go` — `sentry.Init` condicional por `SENTRY_DSN`, `defer sentry.Flush(2s)` para entregar el último batch al shutdown
+- `backend/internal/middleware/sentry.go` — middleware `mw.Sentry` (basado en `sentry-go/http` con `Repanic: true`)
+- `backend/internal/middleware/recovery.go` — sin cambios; queda como outermost y captura el repanic de Sentry
+- `backend/internal/router/router.go` — orden de middleware: `Recovery → Sentry → RequestID → CORS → SecurityHeaders → Logger`
+- `backend/internal/config/config.go` — nuevos campos `SentryDSN`, `SentryTracesSampleRate` (default 0.1 en prod, 1.0 en dev)
+- `backend/go.mod` — `github.com/getsentry/sentry-go v0.45.1`
+
+### Cambios de código (web)
+
+- `web/src/main.tsx` — `Sentry.init` condicional por `VITE_SENTRY_DSN`, `browserTracingIntegration` con `tracesSampleRate: 0.05` en prod (0 en dev)
+- `web/src/lib/errorHandler.ts` — `logError` ahora forwardea a `Sentry.captureException` en prod con el `context` como tag
+- `web/src/components/ErrorBoundary.tsx` — sin cambios; ya llama `onError` que va a `logError`
+- `web/package.json` — `@sentry/react ^10.49.0`
+
+### Configuración de env y build
+
+- `.env.example` — nuevas variables `SENTRY_DSN`, `SENTRY_TRACES_SAMPLE_RATE`, `VITE_SENTRY_DSN`
+- `docker-compose.yml` — `frontend.build.args` recibe `VITE_SENTRY_DSN` (build-time)
+- `web/Dockerfile` — nuevo `ARG VITE_SENTRY_DSN` inyectado al `npm run build`
+- Backend recibe `SENTRY_DSN` vía `backend/.env` (env_file existente)
+
+### Pendientes inmediatos (observabilidad + seguridad)
+
+- ⏳ Configurar Cloudflare: nameservers, Full (strict) SSL, WAF rules, page rules de cache, bot fight mode
+- ⏳ Crear cuenta Sentry + 2 proyectos (solennix-web, solennix-backend) y pegar DSNs en `.env` del repo y en `backend/.env` del VPS
+- ⏳ Crear UptimeRobot free + 2 monitors (`https://solennix.com` y `https://api.solennix.com/health` con keyword "ok")
+- ⏳ Self-host GoatCounter para analytics de producto (subdominio `stats.solennix.com`)
+- ⏳ Instalar CrowdSec agent en VPS + collection nginx + collection Go
+- ⏳ Tabla `audit_logs` ya existe — auditar qué eventos sensibles quedan sin registrar (acceso a pagos, contratos, datos de cliente)
+- ⏳ Rate limiting por endpoint más fino en Chi (hoy solo auth/register tienen límites específicos)

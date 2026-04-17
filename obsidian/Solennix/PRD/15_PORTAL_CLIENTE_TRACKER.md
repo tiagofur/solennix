@@ -24,7 +24,7 @@ feature: "PRD/12 A"
 **Progreso:** `████████████████████` **100%** (MVP). Extensiones (PIN, visibleToClient, archive permanente) siguen en backlog.
 
 > [!tip] Documentos relacionados
-> [[00_DASHBOARD|Dashboard Ejecutivo]] · [[12_SUBSCRIPTION_PLATFORM_ORIGIN|PRD/12 features A–L]] · [[02_FEATURES|Feature Matrix]] · [[04_MONETIZATION|Monetización §4.3]] · [[09_ROADMAP|Roadmap]] · [[16_SPRINT_LOG_2026_04_16|Sprint Log del día]]
+> [[00_DASHBOARD|Dashboard Ejecutivo]] · [[12_CLIENT_TRANSPARENCY_AND_DELIGHT|PRD/12 features A–L]] · [[02_FEATURES|Feature Matrix]] · [[04_MONETIZATION|Monetización §4.3]] · [[09_ROADMAP|Roadmap]] · [[16_SPRINT_LOG_2026_04_16|Sprint Log del día]]
 
 ---
 
@@ -361,7 +361,7 @@ Cuando haya métricas reales, actualizar acá.
 - **Código web:** [[../../Web/Módulo Eventos]] (ampliar cuando se doc el Portal Cliente)
 - **Código iOS:** ✅ Sprint 8 (commit `1f76702`)
 - **Código Android:** ✅ Sprint 8 (commit `a884733`)
-- **Spec completa original:** [[12_SUBSCRIPTION_PLATFORM_ORIGIN|PRD/12 feature A]]
+- **Spec completa original:** [[12_CLIENT_TRANSPARENCY_AND_DELIGHT|PRD/12 feature A]]
 - **Tier matrix:** [[04_MONETIZATION#§4.3]]
 - **Decision record:** [[16_SPRINT_LOG_2026_04_16|Sprint Log del día]]
 

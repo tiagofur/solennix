@@ -21,7 +21,7 @@ Solennix es multi-plataforma: **iOS · Android · Web · Backend**. Todo cambio 
 
 ### 2. Mantenimiento del PRD
 
-El PRD vive en `PRD/`. Después de cualquier cambio significativo, actualiza los docs relevantes:
+El PRD vive en `Obsidian/Solennix/PRD/` (vault único — no hay copia en la raíz). Después de cualquier cambio significativo, actualiza los docs relevantes:
 
 | Doc                                    | Contenido                                       |
 | -------------------------------------- | ----------------------------------------------- |
