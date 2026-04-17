@@ -83,6 +83,7 @@ func main() {
 	refreshTokenRepo := repository.NewRefreshTokenRepo(pool)
 	liveActivityRepo := repository.NewLiveActivityTokenRepo(pool)
 	eventFormLinkRepo := repository.NewEventFormLinkRepo(pool)
+	eventPublicLinkRepo := repository.NewEventPublicLinkRepo(pool)
 
 	// Set persistent token blacklist (replaces in-memory sync.Map)
 	mw.SetTokenBlacklist(revokedTokenRepo)
@@ -136,9 +137,10 @@ func main() {
 	deviceHandler := handlers.NewDeviceHandler(deviceRepo)
 	liveActivityHandler := handlers.NewLiveActivityHandler(liveActivityRepo)
 	eventFormHandler := handlers.NewEventFormHandler(eventFormLinkRepo, productRepo, userRepo, cfg.FrontendURL, pool)
+	eventPublicLinkHandler := handlers.NewEventPublicLinkHandler(eventPublicLinkRepo, eventRepo, clientRepo, userRepo, paymentRepo, cfg.FrontendURL)
 
 	// Create router
-	r := router.New(authHandler, crudHandler, subHandler, searchHandler, eventPaymentHandler, uploadHandler, adminHandler, dashboardHandler, auditHandler, unavailHandler, deviceHandler, liveActivityHandler, eventFormHandler, authService, userRepo, auditRepo, pool, cfg.CORSAllowedOrigins, cfg.UploadDir)
+	r := router.New(authHandler, crudHandler, subHandler, searchHandler, eventPaymentHandler, uploadHandler, adminHandler, dashboardHandler, auditHandler, unavailHandler, deviceHandler, liveActivityHandler, eventFormHandler, eventPublicLinkHandler, authService, userRepo, auditRepo, pool, cfg.CORSAllowedOrigins, cfg.UploadDir)
 
 	// Background job: expire gifted plans that have passed their expiry date.
 	// Runs once at startup then every hour.

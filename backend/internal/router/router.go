@@ -17,6 +17,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 	searchHandler *handlers.SearchHandler, eventPaymentHandler *handlers.EventPaymentHandler, uploadHandler *handlers.UploadHandler,
 	adminHandler *handlers.AdminHandler, dashboardHandler *handlers.DashboardHandler, auditHandler *handlers.AuditHandler, unavailHandler *handlers.UnavailableDateHandler, deviceHandler *handlers.DeviceHandler,
 	liveActivityHandler *handlers.LiveActivityHandler, eventFormHandler *handlers.EventFormHandler,
+	eventPublicLinkHandler *handlers.EventPublicLinkHandler,
 	authService *services.AuthService, userRepo *repository.UserRepo, auditRepo mw.AuditLogger, pool *pgxpool.Pool, corsOrigins []string, uploadDir string) http.Handler {
 
 	r := chi.NewRouter()
@@ -131,6 +132,14 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 		r.Post("/{token}", eventFormHandler.SubmitForm)
 	})
 
+	// Public client-portal route (PRD/12 feature A). Tokens are
+	// cryptographically random; same rate limit as event-forms to keep the
+	// abuse surface narrow.
+	apiRouter.Route("/public/events", func(r chi.Router) {
+		r.Use(mw.RateLimit(10, 1*time.Minute))
+		r.Get("/{token}", eventPublicLinkHandler.GetPortalData)
+	})
+
 	// Protected routes
 	apiRouter.Group(func(r chi.Router) {
 		r.Use(mw.Auth(authService))
@@ -186,6 +195,11 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 			// Event payment routes
 			r.Post("/{id}/checkout-session", eventPaymentHandler.CreateEventCheckoutSession)
 			r.Get("/{id}/payment-session", eventPaymentHandler.HandleEventPaymentSuccess)
+			// Client-portal share link (PRD/12 feature A). Per-event CRUD
+			// for the tokenized URL the organizer shares with the end client.
+			r.Post("/{id}/public-link", eventPublicLinkHandler.CreateOrRotate)
+			r.Get("/{id}/public-link", eventPublicLinkHandler.GetActive)
+			r.Delete("/{id}/public-link", eventPublicLinkHandler.Revoke)
 		})
 
 		// Products

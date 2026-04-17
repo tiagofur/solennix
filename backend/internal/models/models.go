@@ -315,3 +315,25 @@ type EventFormLink struct {
 	UpdatedAt         time.Time  `json:"updated_at"`
 	URL               string     `json:"url,omitempty"` // Computed, not stored
 }
+
+// EventPublicLink is a shareable, revocable token that opens a read-only
+// portal (PRD/12 feature A) for the end client of an event — the person who
+// hired the organizer. Unlike EventFormLink (which captures a lead), this
+// link is generated AFTER the event exists so the client can watch timeline,
+// payment status, etc.
+//
+// One event may have many rows here (history of rotated tokens). Only one
+// row with status='active' exists at a time — enforced by a partial unique
+// index in migration 041 plus application-layer revoke-before-insert logic.
+type EventPublicLink struct {
+	ID        uuid.UUID  `json:"id"`
+	EventID   uuid.UUID  `json:"event_id"`
+	UserID    uuid.UUID  `json:"user_id"`
+	Token     string     `json:"token"`
+	Status    string     `json:"status"` // "active" | "revoked" | "expired"
+	ExpiresAt *time.Time `json:"expires_at,omitempty"`
+	RevokedAt *time.Time `json:"revoked_at,omitempty"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at"`
+	URL       string     `json:"url,omitempty"` // Computed, not stored
+}
