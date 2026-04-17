@@ -1206,7 +1206,6 @@ Sistema de upload de imagenes para fotos de eventos, productos y logos de negoci
 | B. Transparencia granular opt-in     |   [Todas]   |   📋   | Toggle de visibilidad por sección, stepper de milestones, tareas cliente-lado     |
 | C. Momentos en vivo (Event Day)      |   [Todas]   |   📋   | Stream de fotos/video, ubicación en vivo, check-ins cualitativos                  |
 | D. Co-planificación                  |   [Todas]   |   📋   | RSVP/invitados, moodboard, agenda Calendly-lite                                   |
-| E. Pagos e integraciones financieras | [Web] [Backend] |   📋   | Pagar desde el portal (Stripe/MercadoPago), recordatorios inteligentes            |
 | F. Telemetría inversa y confianza    |   [Todas]   |   📋   | Read-receipts, eventos del cliente al organizador                                 |
 | G. Multi-destinatario y relación continua | [Todas] |   📋   | Sub-invitados con scope por link, hub histórico, deep-links segmentados           |
 

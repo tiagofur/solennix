@@ -229,27 +229,19 @@ Todo lo anterior es **organizador → cliente (broadcast)**. No hay ninguna feat
 
 ---
 
-### Cluster E — Pagos e integraciones financieras
+### Cluster E — Pagos e integraciones financieras (FUERA DE ALCANCE)
 
-#### E.1 Pagar desde el portal
-
-- **Problema:** "te paso mi CBU/CLABE" → transferencia → screenshot → "lo recibiste?". Cero escalable.
-- **Requisitos:**
-  - Botón "Pagar" cuando hay saldo pendiente.
-  - Stripe (ya integrado) como provider base; MercadoPago como segundo (decisión abierta).
-  - Webhook existente reconcilia contra `payments` del evento.
-- **Tier sugerido:** Pro.
-- **Dependencias:** B.1 (visibilidad de pagos).
-
-#### E.2 Recordatorios inteligentes
-
-- **Problema:** el pago se pasa y nadie se acuerda hasta un día antes.
-- **Requisitos:**
-  - Al cliente: T-7 y T-1 antes de vencimiento.
-  - Al organizador: T+3 post-vencimiento sin pago.
-  - Respeta preferencias de notificación (Pilar 1).
-- **Tier sugerido:** Pro.
-- **Dependencias:** Pilar 1 (preferencias de notificación).
+> [!danger] Decisión del producto — 2026-04-16
+> Solennix **NO** procesa pagos entre el organizador y sus clientes a través de la app. No hay botón "Pagar" en el portal, no se integra Stripe/MercadoPago para este flujo, no se facilitan fondos de terceros. Motivo: evitar exposición legal/operativa de actuar como intermediario de pagos entre terceros.
+>
+> **Aclaración:** los pagos de suscripción del organizador hacia Solennix (Stripe) siguen vigentes — eso NO cambia. Lo que queda fuera es la facilitación cliente↔organizador.
+>
+> **Qué SÍ se puede hacer sin entrar en este terreno:**
+> - Recordatorios al cliente sobre fechas de pago (ya planeado en [[13_POST_MVP_ROADMAP|Pilar 3]] como trigger `Recordatorio de pago`).
+> - UI que muestra saldo pendiente (ya existe en el MVP como agregado).
+> - Instrucciones de pago en texto libre que el organizador sube (sin procesar dinero).
+>
+> **Revisitar:** el usuario dejó la puerta abierta ("puede que más tarde sí, pero ahora no"). Solo reabrir cuando se solicite explícitamente.
 
 ---
 
@@ -269,7 +261,7 @@ Todo lo anterior es **organizador → cliente (broadcast)**. No hay ninguna feat
 
 - **Problema:** hoy sólo `contract_signed` dispara push al organizador. Todo lo demás requiere que el organizador chequee manualmente.
 - **Requisitos:**
-  - Push cuando: cliente aprueba (A.2), comenta (A.3), vota (A.4), completa decisión de checklist (B.3), paga (E.1), sube al moodboard (D.2), reserva reunión (D.3).
+  - Push cuando: cliente aprueba (A.2), comenta (A.3), vota (A.4), completa decisión de checklist (B.3), sube al moodboard (D.2), reserva reunión (D.3).
 - **Tier sugerido:** Gratis (incluido con cada feature que lo necesita).
 - **Dependencias:** cada feature respectiva.
 
@@ -325,8 +317,6 @@ Todo lo anterior es **organizador → cliente (broadcast)**. No hay ninguna feat
 | D.1 RSVP / invitados              |        |   ✅  |    ✅    |
 | D.2 Moodboard                     |        |   ✅  |    ✅    |
 | D.3 Agenda Calendly-lite          |        |       |    ✅    |
-| E.1 Pagos in-portal               |        |   ✅  |    ✅    |
-| E.2 Recordatorios                 |        |   ✅  |    ✅    |
 | F.1 Read-receipts                 |  ✅    |   ✅  |    ✅    |
 | F.2 Eventos al organizador        |  ✅    |   ✅  |    ✅    |
 | G.1 Sub-invitados (3 / ilimitado) |        |   ✅  |    ✅    |
@@ -354,8 +344,6 @@ Formato idéntico al de [[02_FEATURES]]. `📋` = idea, aún no planeada.
 | D.1 RSVP / invitados           | 📋  |   📋    |       📋        |         📋         |   📋    |
 | D.2 Moodboard                  | 📋  |   📋    |       📋        |         📋         |   📋    |
 | D.3 Agenda Calendly-lite       | 📋  |   📋    |       📋        |         📋         |   📋    |
-| E.1 Pagos in-portal            | ➖  |   ➖    |       📋        |         📋         |   📋    |
-| E.2 Recordatorios              | ➖  |   ➖    |       ➖        |         ➖         |   📋    |
 | F.1 Read-receipts              | 📋  |   📋    |       📋        |         ➖         |   📋    |
 | F.2 Eventos al organizador     | 📋  |   📋    |       📋        |         ➖         |   📋    |
 | G.1 Sub-invitados              | 📋  |   📋    |       📋        |         📋         |   📋    |
@@ -372,10 +360,10 @@ Formato idéntico al de [[02_FEATURES]]. `📋` = idea, aún no planeada.
 | B — Transparencia granular        |     40–60h     | Mayormente backend + web; mobile ligero     |
 | C — Momentos en vivo              |    100–140h    | Storage + upload + UI; decisión de proveedor|
 | D — Co-planificación              |    100–140h    | RSVP es el mayor; moodboard y agenda medianos|
-| E — Pagos                         |     50–80h     | Depende si sumamos MercadoPago              |
+| E — Pagos                         |     ➖         | Fuera de alcance por decisión del producto   |
 | F — Telemetría inversa            |     30–50h     | Tabla + middleware + UI de dashboard        |
 | G — Multi-destinatario            |     40–80h     | G.1 y G.3 son ligeros; G.2 requiere refactor|
-| **Total orientativo**             |  **480–730h**  | Spread en 2–3 trimestres realistas          |
+| **Total orientativo**             |  **430–650h**  | Spread en 2–3 trimestres realistas          |
 
 ---
 
@@ -383,11 +371,10 @@ Formato idéntico al de [[02_FEATURES]]. `📋` = idea, aún no planeada.
 
 1. **Inbox storage** — ¿tabla propia `event_messages` o integración con email (IMAP/Gmail API) como backing store?
 2. **Media storage** — ¿S3, Cloudflare R2, Backblaze B2? ¿O reutilizamos el File Storage abstraction actual ([[07_TECHNICAL_ARCHITECTURE_BACKEND]] sección File Storage)?
-3. **Pagos portal** — ¿sólo Stripe (ya integrado) o agregamos MercadoPago para LATAM? MP tiene cuotas sin interés que Stripe no.
-4. **Modelo de tokens (G.2)** — ¿evolucionamos `event_public_links` a un sistema más general `public_links(kind, scope, subject_id)` o mantenemos tablas separadas?
-5. **Moderación de media (C.1)** — ¿subida libre del organizador o hay algún filtro/reporte? Caso borde: cliente ve algo que no debía.
-6. **Legal de aprobaciones (A.2)** — ¿las aprobaciones tipo `price_change` tienen valor contractual o son sólo registro operativo? Impacta el UX del disclaimer.
-7. **PWA / app del cliente** — ¿el portal es una PWA instalable con push? Costo moderado, ganancia grande en retención de visitas.
+3. **Modelo de tokens (G.2)** — ¿evolucionamos `event_public_links` a un sistema más general `public_links(kind, scope, subject_id)` o mantenemos tablas separadas?
+4. **Moderación de media (C.1)** — ¿subida libre del organizador o hay algún filtro/reporte? Caso borde: cliente ve algo que no debía.
+5. **Legal de aprobaciones (A.2)** — ¿las aprobaciones tipo `price_change` tienen valor contractual o son sólo registro operativo? Impacta el UX del disclaimer.
+6. **PWA / app del cliente** — ¿el portal es una PWA instalable con push? Costo moderado, ganancia grande en retención de visitas.
 
 ---
 
@@ -530,20 +517,8 @@ Formato idéntico al de [[02_FEATURES]]. `📋` = idea, aún no planeada.
 
 ### 8.5 Cluster E — Pagos
 
-#### Backend
-
-- Extender `handler/payments.go`: `POST /api/public/events/{token}/payment-intent` crea intent con metadata `event_id` y `amount`.
-- Webhook existente Stripe amplía `handleCheckoutCompleted` para reconciliar contra `payments` del evento.
-- Si MercadoPago entra: `handler/mercadopago.go` nuevo + webhook propio.
-
-#### Web portal cliente
-
-- Sección "Pagar ahora" cuando saldo > 0 y `visibility_prefs.payments != 'hidden'`.
-- Stripe Elements (embed) o Checkout (redirect) — elegir por fricción.
-
-#### iOS / Android
-
-- Sin UI de pago: se recibe notificación FCM/APNs de "pago recibido" que ya existe parcialmente.
+> [!danger] Fuera de alcance
+> Ver nota en §3 Cluster E. No se documenta plan de implementación. Si el usuario reabre el alcance, esta sección se completa con Stripe/MercadoPago + webhook de reconciliación + UI de portal.
 
 ---
 
