@@ -123,5 +123,14 @@ export const handlers = [
   http.get(`${API_BASE}/inventory`, () => HttpResponse.json(mockStore.inventory)),
   http.get(`${API_BASE}/payments`, () => HttpResponse.json(mockStore.payments)),
   http.get(`${API_BASE}/unavailable-dates`, () => HttpResponse.json([])),
+  // Staff (Personal/Colaboradores — Phase 1/2). Empty defaults; individual
+  // tests can override with server.use(...) when they need specific data.
+  http.get(`${API_BASE}/staff`, () => HttpResponse.json([])),
+  http.get(`${API_BASE}/events/:id/staff`, () => HttpResponse.json([])),
+  // Portal Cliente (PRD/12 feature A). 404 default = "no active link yet";
+  // individual tests can override when they want has-link state.
+  http.get(`${API_BASE}/events/:id/public-link`, () =>
+    HttpResponse.json({ error: 'not found' }, { status: 404 }),
+  ),
   http.get('http://localhost:8080/health', () => HttpResponse.json({ status: 'ok' })),
 ];

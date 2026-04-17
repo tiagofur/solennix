@@ -339,7 +339,7 @@ describe('Settings', () => {
   it('shows plan name on subscription tab', () => {
     renderSettings();
     clickTab('Suscripción');
-    expect(screen.getByText('basic')).toBeInTheDocument();
+    expect(screen.getByText('Básico')).toBeInTheDocument();
     expect(screen.getByText('Plan Actual')).toBeInTheDocument();
   });
 
@@ -359,14 +359,14 @@ describe('Settings', () => {
   it('shows basic plan description for basic users', () => {
     renderSettings();
     clickTab('Suscripción');
-    expect(screen.getByText(/Potencia tu negocio con el plan Pro/)).toBeInTheDocument();
+    expect(screen.getByText(/Potenciá tu negocio con el plan Pro/)).toBeInTheDocument();
   });
 
   it('shows pro plan description for pro users', () => {
     mockUser = { ...mockUser, plan: 'pro' };
     renderSettings();
     clickTab('Suscripción');
-    expect(screen.getByText(/Disfrutas de acceso ilimitado/)).toBeInTheDocument();
+    expect(screen.getByText(/Disfrutás de acceso ilimitado/)).toBeInTheDocument();
   });
 
   it('shows usage stats on subscription tab', () => {
@@ -450,6 +450,8 @@ describe('Settings', () => {
       subscription: {
         status: 'active',
         provider: 'stripe',
+        source_badge: 'Suscrito vía Stripe',
+        cancel_instructions: 'Gestioná tu suscripción desde el portal de Stripe.',
         current_period_end: '2026-04-04T00:00:00Z',
         cancel_at_period_end: false,
       },
@@ -472,6 +474,8 @@ describe('Settings', () => {
       subscription: {
         status: 'past_due',
         provider: 'stripe',
+        source_badge: 'Suscrito vía Stripe',
+        cancel_instructions: 'Gestioná tu suscripción desde el portal de Stripe.',
         cancel_at_period_end: false,
       },
     });
@@ -492,6 +496,8 @@ describe('Settings', () => {
       subscription: {
         status: 'active',
         provider: 'stripe',
+        source_badge: 'Suscrito vía Stripe',
+        cancel_instructions: 'Gestioná tu suscripción desde el portal de Stripe.',
         current_period_end: '2026-04-04T00:00:00Z',
         cancel_at_period_end: true,
       },
@@ -517,7 +523,7 @@ describe('Settings', () => {
     clickTab('Suscripción');
 
     await waitFor(() => {
-      expect(screen.getByText('basic')).toBeInTheDocument();
+      expect(screen.getByText('Básico')).toBeInTheDocument();
     });
     expect(screen.queryByRole('button', { name: /gestionar/i })).not.toBeInTheDocument();
   });

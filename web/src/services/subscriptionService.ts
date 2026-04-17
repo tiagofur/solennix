@@ -1,17 +1,12 @@
 import { api } from "../lib/api";
+import type { components } from "../types/api";
 
-export interface SubscriptionInfo {
-  status: string;
-  provider: string;
-  current_period_end?: string;
-  cancel_at_period_end: boolean;
-}
-
-export interface SubscriptionStatus {
-  plan: string;
-  has_stripe_account: boolean;
-  subscription?: SubscriptionInfo;
-}
+// Source of truth is backend/docs/openapi.yaml. Aliased here so callers keep
+// using `SubscriptionInfo` / `SubscriptionStatus` and don't have to learn the
+// `components['schemas'][...]` lookup syntax.
+export type SubscriptionInfo = components["schemas"]["SubscriptionInfo"];
+export type SubscriptionStatus =
+  components["schemas"]["SubscriptionStatusResponse"];
 
 export const subscriptionService = {
   getStatus: async (): Promise<SubscriptionStatus> => {

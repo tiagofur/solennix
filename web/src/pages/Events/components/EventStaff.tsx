@@ -1,5 +1,4 @@
 import { Plus, Trash2, UserCog } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import type { Staff } from '../../../types/entities';
 
 // Shape tracked in EventForm state — matches EventStaffAssignment but with
@@ -44,9 +43,9 @@ export const EventStaff: React.FC<EventStaffProps> = ({
       {emptyCatalog ? (
         <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 text-sm text-text-secondary">
           Aún no tenés colaboradores en tu catálogo.{' '}
-          <Link to="/staff/new" className="text-primary font-medium hover:underline">
+          <a href="/staff/new" className="text-primary font-medium hover:underline">
             Crear el primero
-          </Link>
+          </a>
           .
         </div>
       ) : (

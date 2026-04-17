@@ -346,7 +346,7 @@ describe('EventForm', () => {
         end_time: null,
         user_id: 'user-1',
       });
-      expect(eventService.updateItems).toHaveBeenCalledWith('event-1', [], [], [], []);
+      expect(eventService.updateItems).toHaveBeenCalledWith('event-1', [], [], [], [], []);
     });
   });
 
@@ -662,6 +662,7 @@ describe('EventForm', () => {
           }),
         ],
         [],
+        [],
         []
       );
     });
@@ -814,7 +815,7 @@ describe('EventForm', () => {
     };
     mockParams = {};
 
-    render(<MemoryRouter><EventForm /></MemoryRouter>);
+    render(<EventForm />);
 
     await waitFor(() => {
       expect(screen.getByText(/Límite de Eventos Alcanzado/i)).toBeInTheDocument();
@@ -989,7 +990,7 @@ describe('EventForm', () => {
         client_id: 'client-1',
         user_id: 'user-1',
       }));
-      expect(eventService.updateItems).toHaveBeenCalledWith('event-1', [], [], [], []);
+      expect(eventService.updateItems).toHaveBeenCalledWith('event-1', [], [], [], [], []);
     });
 
     expect(mockNavigate).toHaveBeenCalledWith('/events/event-1/summary');
