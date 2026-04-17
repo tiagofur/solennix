@@ -1179,10 +1179,27 @@ Refactors planificados para lograr paridad total entre las 6 plataformas (iPhone
 | Capa | Servicio | Tier | Dónde corre | Qué cubre |
 | ---- | -------- | ---- | ----------- | --------- |
 | Perímetro | Cloudflare Free | Gratis | SaaS (delante del VPS) | WAF, DDoS, bot fight mode, rate limiting, cache, analytics de tráfico, SSL terminación |
-| Errors + perf | Sentry | Developer (5k err/mo, 10k perf units/mo) | SaaS | Stack traces React + Go, performance básico, alertas por email |
+| Errors + perf | Sentry | Developer (5k err/mo, 5M tracing spans/mo, 50 replays/mo) | SaaS | Stack traces React + Go, performance básico, alertas por email |
 | Uptime | UptimeRobot | Free (50 monitors, 5-min interval) | SaaS | Health checks de `/health` + raíz, alerta email cuando baja |
 | Analytics producto | GoatCounter | Gratis, self-hosted | Mismo VPS (~40MB RAM) | Pageviews, referrers, países — *pendiente de deploy* |
 | Auto-ban IPs | CrowdSec | Gratis, self-hosted + cloud console free | Mismo VPS (~50MB RAM) | Detecta SQLi, path traversal, credential stuffing — *pendiente* |
+
+### Costos y escalado — cuándo pagarías (verificado Abril 2026)
+
+> [!success] Todo el stack es gratis a escala MVP (<1k usuarios activos)
+> Ningún servicio se cobra hoy ni en los próximos 6-12 meses. El único que tiene techo relevante a corto plazo es Sentry (5k errores/mes + 1 seat). Los demás dan margen de sobra.
+
+| Servicio | Tier actual | Límites duros | Próximo tier | Disparadores del upgrade |
+| -------- | ----------- | ------------- | ------------ | ------------------------ |
+| Cloudflare | Free | 5 WAF rules · 5 Page Rules · DDoS + bandwidth ilimitados | Pro $20/mo | Solo si necesitás OWASP Managed Ruleset, >5 WAF rules, Super Bot Fight Mode, o image optimization |
+| Sentry | Developer | **5k errors/mo** · 5M tracing spans/mo · 50 replays/mo · **1 seat** · 30 días retención | Team $26/mo (anual) | (a) segundo dev en el equipo, (b) bug en loop que quema los 5k errores, (c) >10k usuarios activos/mes generando errores legítimos |
+| UptimeRobot | Free | 50 monitors · intervalo mínimo 5 min · email/SMS · 3 meses logs | Solo $7/mo (anual) | Alertas Slack/webhook o intervalo de 1 min (SLA real) |
+| GoatCounter | Self-hosted | Ilimitado en tu VPS | — | Nunca (es software libre EUPL) |
+| CrowdSec | Community | 500 alerts/mo · 3 blocklists · 1 org free | Premium from $49/mo | >1 VPS para proteger, o threat intel premium |
+
+**Política de upgrade**: no pagamos nada hasta ver disparador real en el dashboard del servicio. Sentry tiene **Spike Protection ON** por default — si un bug quema la cuota, corta y NO cobra. Los demás simplemente rechazan el exceso (ej. UptimeRobot no te deja crear el monitor #51).
+
+**Revisión trimestral**: chequear consumo en cada dashboard el primer lunes de cada trimestre. Si Sentry pasa 60% del cap sostenido, evaluar Team $26/mo antes de llegar a 100%.
 
 ### Cambios de código (backend)
 
