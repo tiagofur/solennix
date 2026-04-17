@@ -17,7 +17,8 @@ import {
   Shield,
   ChevronsLeft,
   ChevronsRight,
-  Link2
+  Link2,
+  UserCog,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/hooks/useTheme';
@@ -97,6 +98,7 @@ export const Layout: React.FC = () => {
     { name: 'Calendario', href: '/calendar', icon: Calendar },
     { name: 'Eventos', href: '/events', icon: CalendarCheck },
     { name: 'Clientes', href: '/clients', icon: Users },
+    { name: 'Personal', href: '/staff', icon: UserCog },
     { name: 'Productos', href: '/products', icon: Package },
     { name: 'Inventario', href: '/inventory', icon: Boxes },
     { name: 'Formularios', href: '/event-forms', icon: Link2 },

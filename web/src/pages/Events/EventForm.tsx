@@ -30,6 +30,9 @@ import { EventProducts } from "./components/EventProducts";
 import { EventExtras } from "./components/EventExtras";
 import { EventFinancials } from "./components/EventFinancials";
 import { EventEquipment } from "./components/EventEquipment";
+import { EventStaff, type SelectedStaffAssignment } from "./components/EventStaff";
+import { useStaff } from "@/hooks/queries/useStaffQueries";
+import { staffService } from "@/services/staffService";
 import { EventSupplies } from "./components/EventSupplies";
 import { usePlanLimits } from "@/hooks/usePlanLimits";
 import { useClients } from "@/hooks/queries/useClientQueries";
@@ -230,6 +233,10 @@ export const EventForm: React.FC = () => {
       exclude_cost: boolean;
     }[]
   >([]);
+
+  // Staff state — personal/colaboradores assigned to this event.
+  const [selectedStaff, setSelectedStaff] = useState<SelectedStaffAssignment[]>([]);
+  const { data: staffCatalog = [] } = useStaff();
   const [supplySuggestions, setSupplySuggestions] = useState<
     SupplySuggestion[]
   >([]);
@@ -284,6 +291,25 @@ export const EventForm: React.FC = () => {
   const { data: existingEventExtras } = useEventExtras(id);
   const { data: existingEventEquipment } = useEventEquipment(id);
   const { data: existingEventSupplies } = useEventSupplies(id);
+
+  // Staff for edit-mode — plain service call because there is no dedicated
+  // hook yet and this query is scoped to a single event detail view.
+  useEffect(() => {
+    if (!id) return;
+    let cancelled = false;
+    staffService.getByEvent(id).then((rows) => {
+      if (cancelled) return;
+      setSelectedStaff(
+        rows.map((r) => ({
+          staff_id: r.staff_id,
+          fee_amount: r.fee_amount ?? null,
+          role_override: r.role_override ?? "",
+          notes: r.notes ?? "",
+        })),
+      );
+    }).catch(() => { /* empty list on error — parity with equipment */ });
+    return () => { cancelled = true; };
+  }, [id]);
 
   // Load unavailable dates (kept as direct call — small, calendar-specific)
   useEffect(() => {
@@ -625,6 +651,31 @@ export const EventForm: React.FC = () => {
     }
   };
 
+  // --- Staff handlers ---
+
+  const handleAddStaff = () => {
+    setSelectedStaff((prev) => [
+      ...prev,
+      { staff_id: "", fee_amount: null, role_override: "", notes: "" },
+    ]);
+  };
+
+  const handleRemoveStaff = (index: number) => {
+    setSelectedStaff((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleStaffChange = (
+    index: number,
+    field: keyof SelectedStaffAssignment,
+    value: string | number | null,
+  ) => {
+    setSelectedStaff((prev) => {
+      const next = [...prev];
+      next[index] = { ...next[index], [field]: value } as SelectedStaffAssignment;
+      return next;
+    });
+  };
+
   // --- Supply handlers ---
 
   const handleAddSupply = () => {
@@ -821,6 +872,14 @@ export const EventForm: React.FC = () => {
               unitCost: s.unit_cost,
               source: s.source,
               excludeCost: s.exclude_cost,
+            })),
+          selectedStaff
+            .filter((s) => s.staff_id)
+            .map((s) => ({
+              staffId: s.staff_id,
+              feeAmount: s.fee_amount,
+              roleOverride: s.role_override || null,
+              notes: s.notes || null,
             })),
         );
       }
@@ -1092,6 +1151,14 @@ export const EventForm: React.FC = () => {
                     onRemoveEquipment={handleRemoveEquipment}
                     onEquipmentChange={handleEquipmentChange}
                     onQuickAddSuggestion={handleQuickAddSuggestion}
+                  />
+                  <div className="border-t border-border" />
+                  <EventStaff
+                    staffCatalog={staffCatalog}
+                    selectedStaff={selectedStaff}
+                    onAdd={handleAddStaff}
+                    onRemove={handleRemoveStaff}
+                    onChange={handleStaffChange}
                   />
                 </div>
               )}

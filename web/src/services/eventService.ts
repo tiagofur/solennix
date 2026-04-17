@@ -125,6 +125,7 @@ export const eventService = {
     extras: { description: string; cost: number; price: number; exclude_utility?: boolean; include_in_checklist?: boolean }[],
     equipment?: { inventoryId: string; quantity: number; notes?: string }[],
     supplies?: { inventoryId: string; quantity: number; unitCost: number; source: 'stock' | 'purchase'; excludeCost?: boolean }[],
+    staff?: { staffId: string; feeAmount?: number | null; roleOverride?: string | null; notes?: string | null }[],
   ) {
     // Map frontend structure to backend expected JSON
     // Backend expects: { products: [{product_id, ...}], extras: [...], equipment: [...], supplies: [...] }
@@ -163,6 +164,15 @@ export const eventService = {
         unit_cost: s.unitCost,
         source: s.source,
         exclude_cost: s.excludeCost || false
+      }));
+    }
+
+    if (staff) {
+      payload.staff = staff.map(st => ({
+        staff_id: st.staffId,
+        fee_amount: st.feeAmount ?? null,
+        role_override: st.roleOverride ?? null,
+        notes: st.notes ?? null,
       }));
     }
 

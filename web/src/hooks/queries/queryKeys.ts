@@ -14,6 +14,7 @@ export const queryKeys = {
     extras: (eventId: string) => ['events', eventId, 'extras'] as const,
     equipment: (eventId: string) => ['events', eventId, 'equipment'] as const,
     supplies: (eventId: string) => ['events', eventId, 'supplies'] as const,
+    staff: (eventId: string) => ['events', eventId, 'staff'] as const,
     photos: (eventId: string) => ['events', eventId, 'photos'] as const,
     upcoming: (limit: number) => ['events', 'upcoming', limit] as const,
     dateRange: (start: string, end: string) => ['events', 'range', start, end] as const,
@@ -35,6 +36,12 @@ export const queryKeys = {
     paginated: (page?: number, limit?: number, sort?: string, order?: string) =>
       ['inventory', 'paginated', { page, limit, sort, order }] as const,
     detail: (id: string) => ['inventory', id] as const,
+  },
+  staff: {
+    all: ['staff'] as const,
+    paginated: (page?: number, limit?: number, sort?: string, order?: string) =>
+      ['staff', 'paginated', { page, limit, sort, order }] as const,
+    detail: (id: string) => ['staff', id] as const,
   },
   payments: {
     byEvent: (eventId: string) => ['payments', 'event', eventId] as const,

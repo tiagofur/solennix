@@ -169,6 +169,56 @@ export interface EventFormLink {
     updated_at: string
 }
 
+// ===== Staff (Personal / Colaboradores) =====
+// Hasta que el spec openapi incluya Staff/EventStaff declaramos las shapes
+// localmente. Alinea 1:1 con backend/internal/models/models.go::Staff.
+export interface Staff {
+    id: string
+    user_id: string
+    name: string
+    role_label?: string | null
+    phone?: string | null
+    email?: string | null
+    notes?: string | null
+    notification_email_opt_in: boolean
+    // Phase 3 hook — poblado cuando el organizer invita al colaborador a
+    // registrarse (solo tier Business). Phase 1 siempre es null/undefined.
+    invited_user_id?: string | null
+    created_at: string
+    updated_at: string
+}
+
+export type StaffInsert = Omit<Staff, 'id' | 'user_id' | 'created_at' | 'updated_at'>
+export type StaffUpdate = Partial<StaffInsert>
+
+// EventStaff: asignación de un Staff a un evento.
+export interface EventStaff {
+    id: string
+    event_id: string
+    staff_id: string
+    fee_amount?: number | null
+    role_override?: string | null
+    notes?: string | null
+    notification_sent_at?: string | null
+    notification_last_result?: string | null
+    created_at: string
+
+    // Joined desde staff
+    staff_name?: string
+    staff_role_label?: string
+    staff_phone?: string
+    staff_email?: string
+}
+
+// Shape del body request al asignar staff en /api/events/{id}/items.
+// No se envía id/created_at/notification_*; el backend los maneja.
+export interface EventStaffAssignment {
+    staff_id: string
+    fee_amount?: number | null
+    role_override?: string | null
+    notes?: string | null
+}
+
 // ===== Pagination =====
 // Wrapper genérico — el spec declara PaginatedXxxResponse concretos por
 // entidad. El Web usa PaginatedResponse<T> genéricamente para reutilizar
