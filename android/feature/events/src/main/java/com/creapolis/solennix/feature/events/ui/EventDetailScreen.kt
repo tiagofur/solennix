@@ -1732,7 +1732,7 @@ fun PaymentModal(
             PremiumButton(
                 text = "Guardar Pago",
                 onClick = {
-                    val amt = amount.toDoubleOrNull()
+                    val amt = amount.replace(",", ".").toDoubleOrNull()
                     if (amt != null && amt > 0) {
                         onConfirm(amt, method, notes, paymentDate)
                     }
