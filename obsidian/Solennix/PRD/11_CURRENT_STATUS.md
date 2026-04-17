@@ -1344,3 +1344,70 @@ for i in {1..6}; do curl -sI -X POST https://api.solennix.com/api/auth/login -o 
 - El cambio de nameservers a Cloudflare se hizo en IONOS.MX el 2026-04-17. Propagación esperada: 1-24 h.
 - Cloudflare emite email `activation OK` cuando detecta los NS propagados — mantener revisada la casilla `tiagofur@gmail.com`.
 - Mientras propaga: tráfico sigue yendo al IP directo del VPS (74.208.234.244), sin Cloudflare en el medio. No hay downtime.
+
+### Configuración requerida en el VPS (no en el repo)
+
+Cloudflare inserta un proxy entre el cliente y el VPS — sin ajustar nginx + backend, el rate limiter del backend ve todos los requests viniendo de la IP de nginx (o peor, de Cloudflare) y limita a todos los usuarios como uno.
+
+**1. `backend/.env` en el VPS → `TRUST_PROXY=true`**
+
+```bash
+# editar /opt/solennix/backend/.env (o equivalente)
+TRUST_PROXY=true
+CORS_ALLOWED_ORIGINS=https://solennix.com,https://www.solennix.com
+# reiniciar
+sudo systemctl restart solennix-backend   # o: docker compose restart backend
+```
+
+**2. nginx en el VPS → `set_real_ip_from` + `real_ip_header CF-Connecting-IP`**
+
+Crear `/etc/nginx/snippets/cloudflare-real-ip.conf` con los 15 rangos IPv4 + 7 IPv6 de Cloudflare, luego `include snippets/cloudflare-real-ip.conf;` dentro de cada `server {}` de `solennix.com` y `api.solennix.com`. Validar `sudo nginx -t && sudo systemctl reload nginx`. Rangos vigentes en https://www.cloudflare.com/ips/ (revisar c/mes).
+
+```nginx
+# /etc/nginx/snippets/cloudflare-real-ip.conf
+set_real_ip_from 173.245.48.0/20;
+set_real_ip_from 103.21.244.0/22;
+set_real_ip_from 103.22.200.0/22;
+set_real_ip_from 103.31.4.0/22;
+set_real_ip_from 141.101.64.0/18;
+set_real_ip_from 108.162.192.0/18;
+set_real_ip_from 190.93.240.0/20;
+set_real_ip_from 188.114.96.0/20;
+set_real_ip_from 197.234.240.0/22;
+set_real_ip_from 198.41.128.0/17;
+set_real_ip_from 162.158.0.0/15;
+set_real_ip_from 104.16.0.0/13;
+set_real_ip_from 104.24.0.0/14;
+set_real_ip_from 172.64.0.0/13;
+set_real_ip_from 131.0.72.0/22;
+set_real_ip_from 2400:cb00::/32;
+set_real_ip_from 2606:4700::/32;
+set_real_ip_from 2803:f800::/32;
+set_real_ip_from 2405:b500::/32;
+set_real_ip_from 2405:8100::/32;
+set_real_ip_from 2a06:98c0::/29;
+set_real_ip_from 2c0f:f248::/32;
+real_ip_header CF-Connecting-IP;
+real_ip_recursive on;
+```
+
+**3. Firewall UFW → solo tráfico desde Cloudflare (opcional, recomendado)**
+
+Evita que un atacante bypasee el WAF/rate limit pegándole directo al IP del VPS.
+
+```bash
+sudo ufw delete allow 80
+sudo ufw delete allow 443
+for cidr in 173.245.48.0/20 103.21.244.0/22 103.22.200.0/22 103.31.4.0/22 \
+             141.101.64.0/18 108.162.192.0/18 190.93.240.0/20 188.114.96.0/20 \
+             197.234.240.0/22 198.41.128.0/17 162.158.0.0/15 104.16.0.0/13 \
+             104.24.0.0/14 172.64.0.0/13 131.0.72.0/22; do
+  sudo ufw allow from $cidr to any port 443 proto tcp
+  sudo ufw allow from $cidr to any port 80  proto tcp
+done
+sudo ufw reload
+```
+
+Dejar `22/tcp` (SSH) abierto. Cuidado si usas Plesk: verificar que sus puertos de admin no se bloqueen.
+
+**Frontend:** no requiere cambios. `VITE_API_URL=https://api.solennix.com` sigue intacto.
