@@ -1553,8 +1553,103 @@ Orden de rollback de **menor a mayor impacto** si algo falla:
 ### Pendientes de infra (fuera de este batch)
 
 - ⏳ `GET /api/health` endpoint en backend Go
-- ⏳ UptimeRobot: 2 monitors (`solennix.com` + `api.solennix.com/api/health`)
+- [x] UptimeRobot: 2 monitors (`solennix.com` + `api.solennix.com/health`) — configurado 2026-04-17 (ver sección abajo)
 - ⏳ Reboot del VPS para aplicar kernel `6.8.0-110-generic` (pendiente, no urgente)
 - ⏳ Validar que reglas de iptables sobreviven el reboot post-kernel-upgrade
 - ⏳ Re-evaluar HSTS preload después de 30 días estables
 - ⏳ Rotación llave CI → VPS (recordatorio: 2026-07-16)
+
+---
+
+## UptimeRobot — configuración completa (2026-04-17)
+
+> [!success] UptimeRobot Free activo
+> Cuenta Free bajo `tiagofur@gmail.com`. 2 monitors activos (intervalo 5 min), status page público, alertas por email. Free tier cubre el 80% del valor — limitaciones documentadas abajo.
+
+### Monitors activos
+
+| ID         | Nombre                    | Tipo    | URL / Keyword                               | Intervalo | Lógica                                        |
+| ---------- | ------------------------- | ------- | ------------------------------------------- | --------- | --------------------------------------------- |
+| 802870461  | Solennix Backend Health   | Keyword | `https://api.solennix.com/health` + `"ok"`  | 5 min     | Incident cuando keyword `ok` **no existe** en body |
+| 802870486  | Solennix Web              | HTTP    | `https://solennix.com`                      | 5 min     | Incident cuando status ≠ 2xx/3xx              |
+
+**Nota:** el monitor de backend apunta a `/health` (root), no `/api/health`. La ruta `/api/health` aún no existe en el backend Go (gap documentado arriba). Cuando se registre el handler, actualizar el monitor para apuntar a `/api/health` y mantener la keyword `ok`.
+
+### Alert contacts
+
+- **Email:** `tiagofur@gmail.com` (verificado)
+- **Telegram:** bloqueado en free tier (paid feature)
+- **Webhooks / Slack / Discord:** bloqueado en free tier
+
+### Notification settings
+
+| Setting                    | Valor            | Nota                                              |
+| -------------------------- | ---------------- | ------------------------------------------------- |
+| Notify when **down**       | ON               | Free tier                                         |
+| Notify when **up**         | ON               | Free tier                                         |
+| Notification delay         | 0 min (inmediato)| Slider fijado en 0 — paid unlocks 1-59 min delay  |
+| Reminder cada X min        | Deshabilitado    | **Paid feature** — free no permite repetición     |
+| Re-test before notifying   | 2 tests (default)| Hardcoded, no configurable en free                |
+
+### Status page pública
+
+- **ID:** 1067498
+- **Nombre:** `Solennix Status`
+- **URL pública:** https://stats.uptimerobot.com/lpJYl6r2zB
+- **Dominio custom (`status.solennix.com`):** bloqueado en free tier (paid only — CNAME requiere upgrade)
+- **Auto-add monitors:** ON — cualquier monitor nuevo se suma solo
+- **Monitors mostrados:** `Solennix Backend Health` + `Solennix Web` (ambos 100% Operational)
+
+### Maintenance Windows
+
+> [!warning] Maintenance Windows = paid feature
+> La página `/maintenance` en el dashboard muestra explícitamente "Plans start at $7 / month". El tier Free **no permite** silenciar alertas durante ventanas de mantenimiento planificado.
+
+**Workaround manual durante un deploy / mantenimiento programado:**
+
+1. Dashboard → Monitoring → seleccionar el monitor afectado
+2. Botón **Pause** (pausa envío de checks y alertas)
+3. Ejecutar el deploy / mantenimiento
+4. Volver a **Resume** cuando el servicio esté verificado sano
+
+**Cuando hagamos upgrade a plan pago** (a partir de $7/mes), el flujo correcto será:
+
+1. https://dashboard.uptimerobot.com/maintenance → **New Maintenance Window**
+2. Campos: `Friendly Name`, `Start Time`, `Duration (minutes)`, `Timezone`, `Repeat` (`Once` / `Daily` / `Weekly` / `Monthly`)
+3. Seleccionar monitors afectados (`Solennix Backend Health` y/o `Solennix Web`)
+4. Durante la ventana, UptimeRobot no dispara notificaciones aunque el check falle
+5. Al terminar, vuelve automáticamente a modo activo
+
+**Convención Solennix para deploys cortos (<15 min):** usar Pause/Resume manual — no amerita upgrade todavía.
+
+### Limitaciones del free tier (confirmadas en dashboard)
+
+| Feature                         | Free   | Paid ($7+/mes)                              |
+| ------------------------------- | ------ | ------------------------------------------- |
+| Monitors                        | 50     | 50+                                         |
+| Intervalo mínimo                | 5 min  | 1 min / 30 s                                |
+| HTTP method custom              | ❌ GET | ✅ GET/POST/PUT/HEAD/PATCH/DELETE/OPTIONS   |
+| Expected status codes           | 2xx/3xx hardcoded | ✅ configurable                    |
+| Timeout custom                  | ❌     | ✅ ajustable                                |
+| Reminder notifications          | ❌     | ✅ repetir cada X min                       |
+| Notification delay              | 0 fijo | ✅ 1-59 min                                 |
+| Maintenance windows             | ❌     | ✅                                          |
+| Custom CNAME status page        | ❌     | ✅ `status.solennix.com`                    |
+| Telegram / Slack / Discord      | ❌     | ✅                                          |
+| SSL certificate checks          | ❌     | ✅                                          |
+| Response time charts históricos | 90 días| ✅ ilimitado                                |
+
+### Decisiones tomadas
+
+- **Free tier es suficiente para MVP:** 2 monitors a 5 min cubren el caso (detección < 10 min, notificación inmediata por email).
+- **Upgrade diferido:** re-evaluar cuando tengamos clientes pagando (convierte $7/mes en un gasto operativo justificado por SLA).
+- **Status page público sin CNAME custom:** la URL `stats.uptimerobot.com/lpJYl6r2zB` es aceptable para uso interno y linkeable desde la app. Si en futuro queremos `status.solennix.com` → upgrade a paid.
+- **Redundancia con Sentry:** Sentry cubre errores de app, UptimeRobot cubre disponibilidad externa. No se solapan.
+
+### Rollback / desactivar
+
+Si queremos parar las alertas temporal o definitivamente:
+
+- **Pausa temporal:** Dashboard → Monitoring → cada monitor → botón **Pause**
+- **Eliminar definitivo:** Monitoring → `⋮` → **Delete** (ids 802870461 y 802870486)
+- **Cerrar cuenta:** Settings → Account → Delete account (elimina también la status page 1067498)
