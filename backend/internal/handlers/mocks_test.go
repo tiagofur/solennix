@@ -212,6 +212,19 @@ func (m *MockFullEventRepo) GetStaff(ctx context.Context, eventID uuid.UUID) ([]
 	return args.Get(0).([]models.EventStaff), args.Error(1)
 }
 
+func (m *MockFullEventRepo) GetStaffPendingNotifications(ctx context.Context, eventID uuid.UUID) ([]repository.StaffPendingNotification, error) {
+	args := m.Called(ctx, eventID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]repository.StaffPendingNotification), args.Error(1)
+}
+
+func (m *MockFullEventRepo) MarkStaffNotificationResult(ctx context.Context, eventStaffID uuid.UUID, result string) error {
+	args := m.Called(ctx, eventStaffID, result)
+	return args.Error(0)
+}
+
 func (m *MockFullEventRepo) GetEquipment(ctx context.Context, eventID uuid.UUID) ([]models.EventEquipment, error) {
 	args := m.Called(ctx, eventID)
 	if args.Get(0) == nil {

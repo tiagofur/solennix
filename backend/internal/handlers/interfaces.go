@@ -49,6 +49,8 @@ type FullEventRepository interface {
 	GetExtras(ctx context.Context, eventID uuid.UUID) ([]models.EventExtra, error)
 	UpdateEventItems(ctx context.Context, eventID uuid.UUID, products []models.EventProduct, extras []models.EventExtra, equipment *[]models.EventEquipment, supplies *[]models.EventSupply, staff *[]models.EventStaff) error
 	GetStaff(ctx context.Context, eventID uuid.UUID) ([]models.EventStaff, error)
+	GetStaffPendingNotifications(ctx context.Context, eventID uuid.UUID) ([]repository.StaffPendingNotification, error)
+	MarkStaffNotificationResult(ctx context.Context, eventStaffID uuid.UUID, result string) error
 	GetEquipment(ctx context.Context, eventID uuid.UUID) ([]models.EventEquipment, error)
 	CheckEquipmentConflicts(ctx context.Context, userID uuid.UUID, eventDate string, startTime, endTime *string, inventoryIDs []uuid.UUID, excludeEventID *uuid.UUID) ([]models.EquipmentConflict, error)
 	GetEquipmentSuggestionsFromProducts(ctx context.Context, userID uuid.UUID, products []repository.ProductQuantity) ([]models.EquipmentSuggestion, error)

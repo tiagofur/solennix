@@ -64,6 +64,27 @@ func (s *EmailService) SendPaymentReceipt(email, userName, eventName, amount, pa
 	return s.sendEmail(email, fmt.Sprintf("Pago registrado: %s", amount), body)
 }
 
+// SendCollaboratorAssigned notifies a staff collaborator (photographer, DJ,
+// coordinator, etc.) that an organizer assigned them to an event. Part of
+// PRD "Personal/Colaboradores" Phase 2 — gated to Pro+ plans at the caller.
+//
+// `orgName` is the organizer's business_name (or name fallback). `role` is
+// the role_override for this event if set, else the staff.role_label. `fee`
+// is pre-formatted (e.g. "$3,000 MXN") or empty if no fee was provided.
+func (s *EmailService) SendCollaboratorAssigned(
+	email, staffName, orgName, eventName, eventDate, role, fee string,
+) error {
+	body := s.renderTemplate(collaboratorAssignedBody, map[string]string{
+		"StaffName": staffName,
+		"OrgName":   orgName,
+		"EventName": eventName,
+		"EventDate": eventDate,
+		"Role":      role,
+		"Fee":       fee,
+	})
+	return s.sendEmail(email, fmt.Sprintf("%s te asignó a un evento", orgName), body)
+}
+
 // SendQuotationReceived sends a notification reminding the user about an unconfirmed quotation.
 func (s *EmailService) SendQuotationReceived(email, userName, eventName, eventDate, quotationLink string) error {
 	body := s.renderTemplate(quotationReceivedBody, map[string]string{
@@ -265,6 +286,18 @@ const paymentReceiptBody = `
     <p style="margin: 4px 0;"><strong>Fecha:</strong> {{.PaymentDate}}</p>
 </div>
 <p>Puedes ver el detalle completo del evento y sus pagos desde tu dashboard.</p>`
+
+const collaboratorAssignedBody = `
+<p>Hola {{.StaffName}},</p>
+<p><strong>{{.OrgName}}</strong> te asignó a un evento próximo:</p>
+<div class="highlight">
+    <p style="margin: 0;"><strong>{{.EventName}}</strong></p>
+    <p style="margin: 4px 0; color: #6b7280;">📅 {{.EventDate}}</p>
+    {{if .Role}}<p style="margin: 4px 0; color: #6b7280;">🎯 Rol: {{.Role}}</p>{{end}}
+    {{if .Fee}}<p style="margin: 4px 0; color: #6b7280;">💰 Honorarios: {{.Fee}}</p>{{end}}
+</div>
+<p>Comunicate directamente con {{.OrgName}} para confirmar detalles, horarios y logística.</p>
+<p style="color: #6b7280; font-size: 13px;">Recibís este aviso porque {{.OrgName}} te agregó a su equipo en Solennix y marcaste tu contacto para recibir notificaciones. Si no era para vos, respondé este mail.</p>`
 
 const quotationReceivedBody = `
 <p>Hola {{.UserName}},</p>

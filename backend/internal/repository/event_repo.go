@@ -440,15 +440,36 @@ func (r *EventRepo) UpdateEventItems(ctx context.Context, eventID uuid.UUID,
 		}
 	}
 
-	// Insert staff (only if provided — nil means skip, preserving backward compatibility)
+	// Upsert staff (only if provided — nil means skip, preserving backward compatibility).
+	// UNLIKE equipment/supplies we DO NOT DELETE+INSERT here, because event_staff carries
+	// the Phase 2 notification dedup state (`notification_sent_at`, `notification_last_result`).
+	// A DELETE+INSERT would wipe that state and cause email spam on every event save.
+	// Instead: DELETE rows no longer in the list, then UPSERT on (event_id, staff_id).
 	if staff != nil {
-		if _, err := tx.Exec(ctx, "DELETE FROM event_staff WHERE event_id=$1", eventID); err != nil {
-			return err
+		requestedStaffIDs := make([]uuid.UUID, 0, len(*staff))
+		for _, st := range *staff {
+			requestedStaffIDs = append(requestedStaffIDs, st.StaffID)
+		}
+		if len(requestedStaffIDs) == 0 {
+			if _, err := tx.Exec(ctx, "DELETE FROM event_staff WHERE event_id=$1", eventID); err != nil {
+				return err
+			}
+		} else {
+			if _, err := tx.Exec(ctx,
+				"DELETE FROM event_staff WHERE event_id=$1 AND NOT (staff_id = ANY($2))",
+				eventID, requestedStaffIDs,
+			); err != nil {
+				return err
+			}
 		}
 		for _, st := range *staff {
 			_, err := tx.Exec(ctx,
 				`INSERT INTO event_staff (event_id, staff_id, fee_amount, role_override, notes)
-				VALUES ($1, $2, $3, $4, $5)`,
+				VALUES ($1, $2, $3, $4, $5)
+				ON CONFLICT (event_id, staff_id) DO UPDATE SET
+					fee_amount = EXCLUDED.fee_amount,
+					role_override = EXCLUDED.role_override,
+					notes = EXCLUDED.notes`,
 				eventID, st.StaffID, st.FeeAmount, st.RoleOverride, st.Notes)
 			if err != nil {
 				return err
@@ -457,6 +478,71 @@ func (r *EventRepo) UpdateEventItems(ctx context.Context, eventID uuid.UUID,
 	}
 
 	return tx.Commit(ctx)
+}
+
+// StaffPendingNotification is a row from event_staff JOIN staff that still
+// needs a Phase 2 assignment email (opt-in by the staff, they have an email,
+// and the organizer hasn't sent it yet for this assignment). Only returned
+// in the state "nothing has been sent for this (event_id, staff_id) pair".
+type StaffPendingNotification struct {
+	EventStaffID uuid.UUID
+	StaffID      uuid.UUID
+	StaffName    string
+	StaffEmail   string
+	RoleLabel    *string
+	RoleOverride *string
+	FeeAmount    *float64
+}
+
+// GetStaffPendingNotifications returns event_staff rows that are ready for
+// the Phase 2 email: the staff opted in, has an email, and no notification
+// has been recorded yet for this assignment row (`notification_sent_at IS NULL`).
+// The UPSERT pattern in UpdateEventItems preserves notification_sent_at across
+// saves, so a re-save of an unchanged assignment won't re-notify.
+func (r *EventRepo) GetStaffPendingNotifications(ctx context.Context, eventID uuid.UUID) ([]StaffPendingNotification, error) {
+	query := `SELECT es.id, es.staff_id, s.name, s.email, s.role_label,
+		es.role_override, es.fee_amount
+		FROM event_staff es
+		JOIN staff s ON es.staff_id = s.id
+		WHERE es.event_id = $1
+		AND es.notification_sent_at IS NULL
+		AND s.notification_email_opt_in = true
+		AND s.email IS NOT NULL
+		AND length(trim(s.email)) > 0`
+	rows, err := r.pool.Query(ctx, query, eventID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	pending := make([]StaffPendingNotification, 0)
+	for rows.Next() {
+		var p StaffPendingNotification
+		var email *string
+		if err := rows.Scan(&p.EventStaffID, &p.StaffID, &p.StaffName, &email, &p.RoleLabel, &p.RoleOverride, &p.FeeAmount); err != nil {
+			return nil, err
+		}
+		if email != nil {
+			p.StaffEmail = *email
+		}
+		pending = append(pending, p)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating pending staff notifications: %w", err)
+	}
+	return pending, nil
+}
+
+// MarkStaffNotificationResult records the outcome of the Phase 2 email send
+// attempt. `result` is "sent" or "failed:<reason>". Setting notification_sent_at
+// is what prevents a retry loop; even on failure we set it so a transient
+// Resend outage doesn't spam the inbox every time the organizer re-saves the
+// event. The organizer can force a retry by removing and re-adding the staff.
+func (r *EventRepo) MarkStaffNotificationResult(ctx context.Context, eventStaffID uuid.UUID, result string) error {
+	_, err := r.pool.Exec(ctx,
+		`UPDATE event_staff SET notification_sent_at = NOW(), notification_last_result = $2 WHERE id = $1`,
+		eventStaffID, result)
+	return err
 }
 
 // GetStaff returns all staff assigned to an event with joined denormalized fields

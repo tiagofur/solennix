@@ -714,7 +714,83 @@ func (h *CRUDHandler) UpdateEventItems(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "Failed to update event items")
 		return
 	}
+
+	// Phase 2 (Personal/Colaboradores): fire-and-forget email notifications to
+	// newly assigned staff members who opted in. Gated to Pro+ plans. The
+	// pending query filters by notification_sent_at IS NULL, and the UPSERT
+	// in the repo preserves that timestamp across re-saves, so a repeat save
+	// of the same assignments will NOT re-notify.
+	if req.Staff != nil && len(*req.Staff) > 0 && h.emailService != nil {
+		go h.notifyAssignedStaff(userID, eventID)
+	}
+
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+}
+
+// notifyAssignedStaff runs in a background goroutine after UpdateEventItems
+// commits. It sends the Phase 2 assignment email to any staff with pending
+// notifications on this event. Silent on errors (logged, not returned) —
+// never blocks the user's save.
+func (h *CRUDHandler) notifyAssignedStaff(userID, eventID uuid.UUID) {
+	ctx := context.Background()
+
+	// Gate: only Pro+ plans trigger the email. Basic skips entirely.
+	user, err := h.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		slog.Error("staff notifs: failed to load organizer", "error", err, "user_id", userID)
+		return
+	}
+	if user.Plan == "basic" {
+		return
+	}
+
+	event, err := h.eventRepo.GetByID(ctx, eventID, userID)
+	if err != nil {
+		slog.Error("staff notifs: failed to load event", "error", err, "event_id", eventID)
+		return
+	}
+
+	pending, err := h.eventRepo.GetStaffPendingNotifications(ctx, eventID)
+	if err != nil {
+		slog.Error("staff notifs: failed to query pending", "error", err, "event_id", eventID)
+		return
+	}
+	if len(pending) == 0 {
+		return
+	}
+
+	orgName := user.Name
+	if user.BusinessName != nil && *user.BusinessName != "" {
+		orgName = *user.BusinessName
+	}
+
+	for _, p := range pending {
+		role := ""
+		if p.RoleOverride != nil && *p.RoleOverride != "" {
+			role = *p.RoleOverride
+		} else if p.RoleLabel != nil {
+			role = *p.RoleLabel
+		}
+		fee := ""
+		if p.FeeAmount != nil && *p.FeeAmount > 0 {
+			fee = fmt.Sprintf("$%.2f MXN", *p.FeeAmount)
+		}
+
+		sendErr := h.emailService.SendCollaboratorAssigned(
+			p.StaffEmail, p.StaffName, orgName, event.ServiceType, event.EventDate, role, fee,
+		)
+		result := "sent"
+		if sendErr != nil {
+			result = "failed:" + sendErr.Error()
+			slog.Error("staff notifs: email send failed",
+				"error", sendErr, "event_staff_id", p.EventStaffID, "staff_id", p.StaffID)
+		}
+		// Mark result even on failure to avoid retry-storm. The organizer can
+		// force a retry by removing and re-adding the staff to the event.
+		if mkErr := h.eventRepo.MarkStaffNotificationResult(ctx, p.EventStaffID, result); mkErr != nil {
+			slog.Error("staff notifs: failed to mark result", "error", mkErr, "event_staff_id", p.EventStaffID)
+		}
+	}
 }
 
 func (h *CRUDHandler) GetEventStaff(w http.ResponseWriter, r *http.Request) {
