@@ -347,6 +347,66 @@ func (m *MockClientRepo) Search(ctx context.Context, userID uuid.UUID, query str
 }
 
 // ---------------------------------------------------------------------------
+// MockStaffRepo — implements StaffRepository (Personal/Colaboradores)
+// ---------------------------------------------------------------------------
+
+type MockStaffRepo struct {
+	mock.Mock
+}
+
+func (m *MockStaffRepo) GetAll(ctx context.Context, userID uuid.UUID) ([]models.Staff, error) {
+	args := m.Called(ctx, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]models.Staff), args.Error(1)
+}
+
+func (m *MockStaffRepo) GetAllPaginated(ctx context.Context, userID uuid.UUID, offset, limit int, sortCol, order string) ([]models.Staff, int, error) {
+	args := m.Called(ctx, userID, offset, limit, sortCol, order)
+	if args.Get(0) == nil {
+		return nil, args.Int(1), args.Error(2)
+	}
+	return args.Get(0).([]models.Staff), args.Int(1), args.Error(2)
+}
+
+func (m *MockStaffRepo) GetByID(ctx context.Context, id, userID uuid.UUID) (*models.Staff, error) {
+	args := m.Called(ctx, id, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.Staff), args.Error(1)
+}
+
+func (m *MockStaffRepo) Create(ctx context.Context, s *models.Staff) error {
+	args := m.Called(ctx, s)
+	return args.Error(0)
+}
+
+func (m *MockStaffRepo) Update(ctx context.Context, s *models.Staff) error {
+	args := m.Called(ctx, s)
+	return args.Error(0)
+}
+
+func (m *MockStaffRepo) Delete(ctx context.Context, id, userID uuid.UUID) error {
+	args := m.Called(ctx, id, userID)
+	return args.Error(0)
+}
+
+func (m *MockStaffRepo) CountByUserID(ctx context.Context, userID uuid.UUID) (int, error) {
+	args := m.Called(ctx, userID)
+	return args.Int(0), args.Error(1)
+}
+
+func (m *MockStaffRepo) Search(ctx context.Context, userID uuid.UUID, query string) ([]models.Staff, error) {
+	args := m.Called(ctx, userID, query)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]models.Staff), args.Error(1)
+}
+
+// ---------------------------------------------------------------------------
 // MockProductRepo — implements ProductRepository
 // ---------------------------------------------------------------------------
 

@@ -777,3 +777,77 @@ func TestRepositoryEdgeCases(t *testing.T) {
 		t.Fatalf("EventRepo.GetEquipmentSuggestionsFromProducts(empty) expected nil, got %d items", len(suggestions))
 	}
 }
+
+
+// TestStaffRepoClosedPool covers all StaffRepo methods + the Phase 2 helpers
+// against a closed pgxpool. Validates that SQL compiles, param binding works,
+// and errors bubble up instead of panicking. Integration-level correctness
+// (what rows come back) is covered by repository_integration_test.go.
+func TestStaffRepoClosedPool(t *testing.T) {
+	pool := closedPool(t)
+	ctx := context.Background()
+	userID := uuid.New()
+	staffID := uuid.New()
+
+	repo := NewStaffRepo(pool)
+
+	if _, err := repo.GetAll(ctx, userID); err == nil {
+		t.Fatalf("StaffRepo.GetAll() expected error with closed pool")
+	}
+	if _, _, err := repo.GetAllPaginated(ctx, userID, 0, 20, "name", "asc"); err == nil {
+		t.Fatalf("StaffRepo.GetAllPaginated() expected error with closed pool")
+	}
+	if _, err := repo.GetByID(ctx, staffID, userID); err == nil {
+		t.Fatalf("StaffRepo.GetByID() expected error with closed pool")
+	}
+	if _, err := repo.CountByUserID(ctx, userID); err == nil {
+		t.Fatalf("StaffRepo.CountByUserID() expected error with closed pool")
+	}
+	if _, err := repo.Search(ctx, userID, "test"); err == nil {
+		t.Fatalf("StaffRepo.Search() expected error with closed pool")
+	}
+	optIn := false
+	staff := &models.Staff{UserID: userID, Name: "Test", NotificationEmailOptIn: optIn}
+	if err := repo.Create(ctx, staff); err == nil {
+		t.Fatalf("StaffRepo.Create() expected error with closed pool")
+	}
+	staff.ID = staffID
+	if err := repo.Update(ctx, staff); err == nil {
+		t.Fatalf("StaffRepo.Update() expected error with closed pool")
+	}
+	if err := repo.Delete(ctx, staffID, userID); err == nil {
+		t.Fatalf("StaffRepo.Delete() expected error with closed pool")
+	}
+}
+
+// TestEventRepoStaffPhase2ClosedPool covers GetStaff / GetStaffPendingNotifications
+// / MarkStaffNotificationResult — the Phase 2 plumbing — against a closed pool.
+func TestEventRepoStaffPhase2ClosedPool(t *testing.T) {
+	pool := closedPool(t)
+	ctx := context.Background()
+	eventID := uuid.New()
+	eventStaffID := uuid.New()
+
+	repo := NewEventRepo(pool)
+
+	if _, err := repo.GetStaff(ctx, eventID); err == nil {
+		t.Fatalf("EventRepo.GetStaff() expected error with closed pool")
+	}
+	if _, err := repo.GetStaffPendingNotifications(ctx, eventID); err == nil {
+		t.Fatalf("EventRepo.GetStaffPendingNotifications() expected error with closed pool")
+	}
+	if err := repo.MarkStaffNotificationResult(ctx, eventStaffID, "sent"); err == nil {
+		t.Fatalf("EventRepo.MarkStaffNotificationResult() expected error with closed pool")
+	}
+
+	// UpdateEventItems with staff list (UPSERT path + DELETE ANY)
+	staffList := []models.EventStaff{{StaffID: uuid.New(), FeeAmount: nil}}
+	if err := repo.UpdateEventItems(ctx, eventID, nil, nil, nil, nil, &staffList); err == nil {
+		t.Fatalf("EventRepo.UpdateEventItems(with staff list) expected error with closed pool")
+	}
+	// UpdateEventItems with empty staff list (DELETE ALL path)
+	emptyStaff := []models.EventStaff{}
+	if err := repo.UpdateEventItems(ctx, eventID, nil, nil, nil, nil, &emptyStaff); err == nil {
+		t.Fatalf("EventRepo.UpdateEventItems(empty staff) expected error with closed pool")
+	}
+}
