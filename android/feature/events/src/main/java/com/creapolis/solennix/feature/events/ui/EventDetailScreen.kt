@@ -1308,6 +1308,10 @@ fun StatusChangeSection(
         EventStatus.COMPLETED to "Completado",
         EventStatus.CANCELLED to "Cancelado"
     )
+    val currentLabel = statusOptions.firstOrNull { it.first == currentStatus }?.second
+        ?: currentStatus.name
+    val currentColor = statusColor(currentStatus)
+    var expanded by remember { mutableStateOf(false) }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -1317,39 +1321,73 @@ fun StatusChangeSection(
         Column(modifier = Modifier.padding(16.dp)) {
             Text("Estado del Evento", style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(12.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                statusOptions.forEach { (status, label) ->
-                    FilterChip(
-                        selected = currentStatus == status,
-                        onClick = {
-                            if (currentStatus != status) {
-                                onStatusChange(status)
-                            }
-                        },
-                        label = { Text(label, style = MaterialTheme.typography.labelSmall) },
-                        modifier = Modifier.weight(1f),
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = when (status) {
-                                EventStatus.QUOTED -> SolennixTheme.colors.primary.copy(alpha = 0.15f)
-                                EventStatus.CONFIRMED -> SolennixTheme.colors.success.copy(alpha = 0.15f)
-                                EventStatus.COMPLETED -> SolennixTheme.colors.primary.copy(alpha = 0.15f)
-                                EventStatus.CANCELLED -> SolennixTheme.colors.error.copy(alpha = 0.15f)
-                            },
-                            selectedLabelColor = when (status) {
-                                EventStatus.QUOTED -> SolennixTheme.colors.primary
-                                EventStatus.CONFIRMED -> SolennixTheme.colors.success
-                                EventStatus.COMPLETED -> SolennixTheme.colors.primary
-                                EventStatus.CANCELLED -> SolennixTheme.colors.error
-                            }
+            Box {
+                Surface(
+                    onClick = { expanded = true },
+                    shape = RoundedCornerShape(999.dp),
+                    color = currentColor.copy(alpha = 0.15f),
+                    contentColor = currentColor
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            currentLabel,
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.SemiBold
                         )
-                    )
+                        Icon(
+                            Icons.Default.ArrowDropDown,
+                            contentDescription = "Cambiar estado",
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    statusOptions.forEach { (status, label) ->
+                        val color = statusColor(status)
+                        val isSelected = status == currentStatus
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    label,
+                                    color = color,
+                                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+                                )
+                            },
+                            onClick = {
+                                expanded = false
+                                if (!isSelected) onStatusChange(status)
+                            },
+                            trailingIcon = if (isSelected) {
+                                {
+                                    Icon(
+                                        Icons.Default.Check,
+                                        contentDescription = null,
+                                        tint = color,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            } else null
+                        )
+                    }
                 }
             }
         }
     }
+}
+
+@Composable
+private fun statusColor(status: EventStatus): androidx.compose.ui.graphics.Color = when (status) {
+    EventStatus.QUOTED -> SolennixTheme.colors.primary
+    EventStatus.CONFIRMED -> SolennixTheme.colors.success
+    EventStatus.COMPLETED -> SolennixTheme.colors.primary
+    EventStatus.CANCELLED -> SolennixTheme.colors.error
 }
 
 // ==================== Documents Grid ====================
