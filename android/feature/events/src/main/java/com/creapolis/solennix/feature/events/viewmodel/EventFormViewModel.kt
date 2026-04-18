@@ -353,8 +353,12 @@ class EventFormViewModel @Inject constructor(
                 val plan = authManager.currentUser.value?.plan ?: Plan.BASIC
                 limitCheckResult = planLimitsManager.canCreateEvent(plan)
             }
-            // Load data from QuickQuote if available
-            loadFromQuickQuote()
+            // Prefill from Duplicate source if available, otherwise from QuickQuote.
+            // Duplicate wins because it carries a full event; QuickQuote only has
+            // products/extras/discount.
+            if (!loadFromDuplicate()) {
+                loadFromQuickQuote()
+            }
         }
         loadUnavailableDates()
     }
@@ -410,6 +414,94 @@ class EventFormViewModel @Inject constructor(
         requiresInvoice = data.requiresInvoice
 
         fetchProductCosts()
+    }
+
+    /**
+     * Prefill the form from a source event when duplicating. Generates fresh IDs
+     * for every child row so Room doesn't collide on insert, clears server-only
+     * fields (eventId), and resets the date to today so the user picks a new one.
+     * Returns true when data was found and applied.
+     */
+    private fun loadFromDuplicate(): Boolean {
+        val data = DuplicateEventDataHolder.pendingData ?: return false
+        DuplicateEventDataHolder.pendingData = null
+
+        val source = data.event
+
+        // Step 1: General info
+        eventDate = LocalDate.now()
+        startTime = source.startTime ?: "14:00"
+        endTime = source.endTime ?: "20:00"
+        status = EventStatus.QUOTED
+        serviceType = source.serviceType
+        numPeople = source.numPeople.toString()
+        location = source.location ?: ""
+        city = source.city ?: ""
+        notes = source.notes ?: ""
+
+        // Client (best-effort — may be null if the source event's client is stale)
+        viewModelScope.launch {
+            val client = clientRepository.getClient(source.clientId)
+            if (client != null) onClientSelected(client)
+        }
+
+        // Financials
+        discount = source.discount.toString()
+        discountType = source.discountType
+        requiresInvoice = source.requiresInvoice
+        taxRate = source.taxRate.toString()
+        depositPercent = source.depositPercent?.toString() ?: "50.0"
+        cancellationDays = source.cancellationDays?.toString() ?: "7.0"
+        refundPercent = source.refundPercent?.toString() ?: "50.0"
+
+        // Products — fresh IDs, clear server-side eventId
+        selectedProducts.clear()
+        data.products.forEach { product ->
+            selectedProducts.add(
+                product.copy(
+                    id = UUID.randomUUID().toString(),
+                    eventId = "",
+                    createdAt = ""
+                )
+            )
+        }
+
+        // Extras — fresh IDs
+        eventExtras.clear()
+        data.extras.forEach { extra ->
+            eventExtras.add(
+                extra.copy(
+                    id = UUID.randomUUID().toString(),
+                    eventId = "",
+                    createdAt = ""
+                )
+            )
+        }
+
+        // Equipment — fresh IDs
+        selectedEquipment.clear()
+        data.equipment.forEach { eq ->
+            selectedEquipment.add(
+                eq.copy(
+                    id = UUID.randomUUID().toString(),
+                    eventId = ""
+                )
+            )
+        }
+
+        // Supplies — fresh IDs
+        selectedSupplies.clear()
+        data.supplies.forEach { sup ->
+            selectedSupplies.add(
+                sup.copy(
+                    id = UUID.randomUUID().toString(),
+                    eventId = ""
+                )
+            )
+        }
+
+        fetchProductCosts()
+        return true
     }
 
     private fun loadExistingEvent(id: String) {

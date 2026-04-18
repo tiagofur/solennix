@@ -417,7 +417,8 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                     onShoppingListClick = { id -> navController.navigate("event_shopping/$id") },
                     onPhotosClick = { id -> navController.navigate("event_photos/$id") },
                     onContractPreviewClick = { id -> navController.navigate("event_contract/$id") },
-                    onStaffClick = { id -> navController.navigate("event_staff/$id") }
+                    onStaffClick = { id -> navController.navigate("event_staff/$id") },
+                    onDuplicateClick = { navController.navigate("event_form?eventId=") }
                 )
             }
             composable("event_finances/{eventId}") {

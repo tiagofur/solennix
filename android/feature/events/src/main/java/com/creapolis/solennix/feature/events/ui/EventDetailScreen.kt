@@ -83,6 +83,7 @@ fun EventDetailScreen(
     onPhotosClick: (String) -> Unit = {},
     onContractPreviewClick: (String) -> Unit = {},
     onStaffClick: (String) -> Unit = {},
+    onDuplicateClick: () -> Unit = {},
     sharedElementKey: String? = null
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -93,6 +94,7 @@ fun EventDetailScreen(
     var showPhotoGallery by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showClientPortalSheet by remember { mutableStateOf(false) }
+    var showMoreMenu by remember { mutableStateOf(false) }
 
     val windowInfoTracker = WindowInfoTracker.getOrCreate(context)
     val windowLayoutInfo by (context as? android.app.Activity)?.let { activity ->
@@ -153,6 +155,46 @@ fun EventDetailScreen(
                                 tint = SolennixTheme.colors.error
                             )
                         }
+                        Box {
+                            IconButton(onClick = { showMoreMenu = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.MoreVert,
+                                    contentDescription = "Más acciones"
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = showMoreMenu,
+                                onDismissRequest = { showMoreMenu = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Duplicar evento") },
+                                    leadingIcon = {
+                                        Icon(Icons.Default.ContentCopy, contentDescription = null)
+                                    },
+                                    onClick = {
+                                        showMoreMenu = false
+                                        if (viewModel.prepareDuplicate()) {
+                                            onDuplicateClick()
+                                        }
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Compartir por WhatsApp") },
+                                    leadingIcon = {
+                                        Icon(Icons.Default.Share, contentDescription = null)
+                                    },
+                                    onClick = {
+                                        showMoreMenu = false
+                                        shareEventOnWhatsApp(
+                                            context = context,
+                                            event = event,
+                                            client = uiState.client,
+                                            totalPaid = uiState.totalPaid
+                                        )
+                                    }
+                                )
+                            }
+                        }
                     }
                 }
             )
@@ -207,12 +249,14 @@ fun EventDetailScreen(
                                 equipmentCount = uiState.equipment.size,
                                 purchaseSuppliesCount = uiState.supplies.count { it.source == SupplySource.PURCHASE },
                                 photosCount = uiState.photos.size,
+                                staffCount = uiState.staff.size,
                                 onProductsClick = { onProductsClick(event.id) },
                                 onExtrasClick = { onExtrasClick(event.id) },
                                 onSuppliesClick = { onSuppliesClick(event.id) },
                                 onEquipmentClick = { onEquipmentClick(event.id) },
                                 onShoppingListClick = { onShoppingListClick(event.id) },
-                                onPhotosClick = { onPhotosClick(event.id) }
+                                onPhotosClick = { onPhotosClick(event.id) },
+                                onStaffClick = { onStaffClick(event.id) }
                             )
 
                             // Photos preview strip (first 4 photos)
@@ -1621,6 +1665,60 @@ fun DocumentActionsGrid(
     }
 }
 
+private fun shareEventOnWhatsApp(
+    context: android.content.Context,
+    event: com.creapolis.solennix.core.model.Event,
+    client: Client?,
+    totalPaid: Double
+) {
+    val remaining = (event.totalAmount - totalPaid).coerceAtLeast(0.0)
+    val clientName = client?.name ?: "Cliente"
+    val locationParts = listOfNotNull(
+        event.location?.takeIf { it.isNotBlank() },
+        event.city?.takeIf { it.isNotBlank() }
+    )
+
+    val lines = buildList {
+        add("*Resumen de Evento — Solennix*")
+        add("")
+        add("📋 *${event.serviceType}*")
+        add("👤 Cliente: $clientName")
+        add("📅 Fecha: ${event.eventDate}")
+        add("👥 Personas: ${event.numPeople} PAX")
+        if (locationParts.isNotEmpty()) {
+            add("📍 Lugar: ${locationParts.joinToString(", ")}")
+        }
+        add("")
+        add("💰 Total: ${event.totalAmount.asMXN()}")
+        add("✅ Pagado: ${totalPaid.asMXN()}")
+        if (remaining > 0.01) {
+            add("⏳ Saldo pendiente: ${remaining.asMXN()}")
+        }
+    }
+
+    val message = lines.joinToString("\n")
+
+    // Try the WhatsApp-specific intent first. Falls back to a generic share
+    // sheet if WhatsApp isn't installed so the user still gets somewhere useful.
+    val whatsappIntent = Intent(Intent.ACTION_VIEW).apply {
+        data = Uri.parse("https://wa.me/?text=${Uri.encode(message)}")
+        setPackage("com.whatsapp")
+    }
+    try {
+        context.startActivity(whatsappIntent)
+    } catch (e: android.content.ActivityNotFoundException) {
+        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, message)
+        }
+        try {
+            context.startActivity(Intent.createChooser(shareIntent, "Compartir resumen"))
+        } catch (_: Exception) {
+            Toast.makeText(context, "No hay aplicación para compartir", Toast.LENGTH_SHORT).show()
+        }
+    }
+}
+
 private fun sharePdfFile(context: android.content.Context, file: File) {
     try {
         val uri = FileProvider.getUriForFile(
@@ -2026,12 +2124,14 @@ private fun ContentCardsGrid(
     equipmentCount: Int,
     purchaseSuppliesCount: Int,
     photosCount: Int,
+    staffCount: Int,
     onProductsClick: () -> Unit,
     onExtrasClick: () -> Unit,
     onSuppliesClick: () -> Unit,
     onEquipmentClick: () -> Unit,
     onShoppingListClick: () -> Unit,
-    onPhotosClick: () -> Unit
+    onPhotosClick: () -> Unit,
+    onStaffClick: () -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -2087,6 +2187,17 @@ private fun ContentCardsGrid(
                 onClick = onPhotosClick,
                 modifier = Modifier.weight(1f)
             )
+        }
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            SummaryNavCard(
+                icon = Icons.Default.Group,
+                title = "Personal",
+                count = staffCount,
+                color = SolennixTheme.colors.info,
+                onClick = onStaffClick,
+                modifier = Modifier.weight(1f)
+            )
+            Spacer(modifier = Modifier.weight(1f))
         }
     }
 }

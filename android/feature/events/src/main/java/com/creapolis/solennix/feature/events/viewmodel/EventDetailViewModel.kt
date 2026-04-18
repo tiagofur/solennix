@@ -12,6 +12,8 @@ import com.creapolis.solennix.core.data.repository.PaymentRepository
 import com.creapolis.solennix.core.data.repository.StaffRepository
 import com.creapolis.solennix.core.data.util.ImageCompressor
 import com.creapolis.solennix.core.model.Client
+import com.creapolis.solennix.core.model.DuplicateEventData
+import com.creapolis.solennix.core.model.DuplicateEventDataHolder
 import com.creapolis.solennix.core.model.Event
 import com.creapolis.solennix.core.model.EventEquipment
 import com.creapolis.solennix.core.model.EventExtra
@@ -385,6 +387,26 @@ class EventDetailViewModel @Inject constructor(
                 _errorMessage.value = "Error al cambiar status: ${e.message}"
             }
         }
+    }
+
+    /**
+     * Snapshot the current event + its children into DuplicateEventDataHolder so
+     * the EventFormScreen (opened right after this) can prefill a fresh event
+     * with the same service type, products, extras, equipment and supplies.
+     * Returns true when the snapshot was captured; false if the event is not
+     * loaded yet (caller should no-op in that case).
+     */
+    fun prepareDuplicate(): Boolean {
+        val currentState = uiState.value
+        val event = currentState.event ?: return false
+        DuplicateEventDataHolder.pendingData = DuplicateEventData(
+            event = event,
+            products = currentState.products,
+            extras = currentState.extras,
+            equipment = currentState.equipment,
+            supplies = currentState.supplies
+        )
+        return true
     }
 
     var deleteSuccess by mutableStateOf(false)
