@@ -381,8 +381,7 @@ public final class EventFormViewModel {
                 description: item.description,
                 cost: item.cost,
                 price: item.price,
-                excludeUtility: item.excludeUtility,
-                includeInChecklist: item.includeInChecklist
+                excludeUtility: item.excludeUtility
             )
         }
     }
