@@ -26,27 +26,30 @@ public struct EventListView: View {
     // MARK: - Body
 
     public var body: some View {
-        VStack(spacing: 0) {
-            if viewModel.isShowingCachedData {
-                CachedDataBanner()
+        eventList
+            .background(SolennixColors.surfaceGrouped)
+            .navigationTitle("Eventos")
+            .navigationBarTitleDisplayMode(.large)
+            .searchable(text: $viewModel.searchQuery, prompt: "Buscar eventos")
+            .safeAreaInset(edge: .top, spacing: 0) {
+                VStack(spacing: 0) {
+                    if viewModel.isShowingCachedData {
+                        CachedDataBanner()
+                    }
+                    filterChips
+                    advancedFilters
+                    resultCount
+                }
+                .background(SolennixColors.surfaceGrouped)
             }
-            searchBar
-            filterChips
-            advancedFilters
-            resultCount
-            eventList
-        }
-        .background(SolennixColors.surfaceGrouped)
-        .navigationTitle("Eventos")
-        .navigationBarTitleDisplayMode(.large)
-        .refreshable {
-            await viewModel.refresh()
-        }
-        .task {
-            viewModel.setCacheManager(cacheManager)
-            await viewModel.loadEvents()
-        }
-        .toolbar {
+            .refreshable {
+                await viewModel.refresh()
+            }
+            .task {
+                viewModel.setCacheManager(cacheManager)
+                await viewModel.loadEvents()
+            }
+            .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 HStack(spacing: Spacing.sm) {
                     Menu {
@@ -75,50 +78,41 @@ public struct EventListView: View {
                 }
             }
         }
-        .sheet(isPresented: $showShareSheet) {
-            if let url = csvFileURL {
-                ShareSheet(items: [url])
+            .sheet(isPresented: $showShareSheet) {
+                if let url = csvFileURL {
+                    ShareSheet(items: [url])
+                }
             }
-        }
-        .confirmationDialog(
-            "Eliminar evento",
-            isPresented: $viewModel.showDeleteConfirm,
-            presenting: viewModel.deleteTarget
-        ) { event in
-            Button("Eliminar", role: .destructive) {
-                HapticsHelper.play(.success)
-                guard let removed = viewModel.softDeleteEvent(event) else { return }
-                toastManager.showUndo(
-                    message: "\(event.serviceType) eliminado",
-                    onUndo: {
-                        viewModel.restoreEvent(removed.event, at: removed.index)
-                        HapticsHelper.play(.success)
-                    },
-                    onExpire: {
-                        Task { await viewModel.confirmDeleteEvent(removed.event) }
-                    }
-                )
+            .confirmationDialog(
+                "Eliminar evento",
+                isPresented: $viewModel.showDeleteConfirm,
+                presenting: viewModel.deleteTarget
+            ) { event in
+                Button("Eliminar", role: .destructive) {
+                    HapticsHelper.play(.success)
+                    guard let removed = viewModel.softDeleteEvent(event) else { return }
+                    toastManager.showUndo(
+                        message: "\(event.serviceType) eliminado",
+                        onUndo: {
+                            viewModel.restoreEvent(removed.event, at: removed.index)
+                            HapticsHelper.play(.success)
+                        },
+                        onExpire: {
+                            Task { await viewModel.confirmDeleteEvent(removed.event) }
+                        }
+                    )
+                }
+                Button("Cancelar", role: .cancel) {}
+            } message: { event in
+                Text("Se eliminara \"\(event.serviceType)\". Podras deshacer durante unos segundos.")
             }
-            Button("Cancelar", role: .cancel) {}
-        } message: { event in
-            Text("Se eliminara \"\(event.serviceType)\". Podras deshacer durante unos segundos.")
-        }
-        .overlay {
-            if viewModel.isLoading && viewModel.events.isEmpty {
-                ProgressView()
-                    .controlSize(.large)
-                    .tint(SolennixColors.primary)
+            .overlay {
+                if viewModel.isLoading && viewModel.events.isEmpty {
+                    ProgressView()
+                        .controlSize(.large)
+                        .tint(SolennixColors.primary)
+                }
             }
-        }
-    }
-
-    // MARK: - Search Bar
-
-    private var searchBar: some View {
-        InlineFilterBar(
-            placeholder: "Filtrar por cliente, servicio o lugar...",
-            text: $viewModel.searchQuery
-        )
     }
 
     // MARK: - Filter Chips

@@ -18,14 +18,12 @@ public struct StaffListView: View {
     }
 
     public var body: some View {
-        VStack(spacing: 0) {
-            filterBar
-            content
-        }
-        .background(SolennixColors.surfaceGrouped)
-        .navigationTitle("Personal")
-        .navigationBarTitleDisplayMode(.large)
-        .refreshable { await viewModel.loadStaff() }
+        content
+            .background(SolennixColors.surfaceGrouped)
+            .navigationTitle("Personal")
+            .navigationBarTitleDisplayMode(.large)
+            .searchable(text: $viewModel.searchText, prompt: "Buscar personal")
+            .refreshable { await viewModel.loadStaff() }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 HStack(spacing: Spacing.sm) {
@@ -68,51 +66,40 @@ public struct StaffListView: View {
         }
     }
 
-    // MARK: - Filter Bar
-
-    private var filterBar: some View {
-        InlineFilterBar(
-            placeholder: "Filtrar personal por nombre, rol o telefono...",
-            text: $viewModel.searchText
-        )
-    }
-
     // MARK: - Content
 
     @ViewBuilder
     private var content: some View {
-        VStack(spacing: 0) {
-            if let error = viewModel.errorMessage, viewModel.staff.isEmpty, !viewModel.isLoading {
+        if let error = viewModel.errorMessage, viewModel.staff.isEmpty, !viewModel.isLoading {
+            EmptyStateView(
+                icon: "wifi.exclamationmark",
+                title: "Error al cargar",
+                message: error,
+                actionTitle: "Reintentar"
+            ) {
+                Task { await viewModel.loadStaff() }
+            }
+        } else if viewModel.isLoading && viewModel.staff.isEmpty {
+            skeletonList
+        } else if viewModel.filteredStaff.isEmpty && !viewModel.isLoading {
+            if viewModel.searchText.isEmpty {
                 EmptyStateView(
-                    icon: "wifi.exclamationmark",
-                    title: "Error al cargar",
-                    message: error,
-                    actionTitle: "Reintentar"
+                    icon: "person.3",
+                    title: "Sin personal",
+                    message: "Agrega a tu primer colaborador para asignarlo a eventos",
+                    actionTitle: "Agregar Personal"
                 ) {
-                    Task { await viewModel.loadStaff() }
-                }
-            } else if viewModel.isLoading && viewModel.staff.isEmpty {
-                skeletonList
-            } else if viewModel.filteredStaff.isEmpty && !viewModel.isLoading {
-                if viewModel.searchText.isEmpty {
-                    EmptyStateView(
-                        icon: "person.3",
-                        title: "Sin personal",
-                        message: "Agrega a tu primer colaborador para asignarlo a eventos",
-                        actionTitle: "Agregar Personal"
-                    ) {
-                        // FAB handles navigation; empty state CTA is visual only
-                    }
-                } else {
-                    EmptyStateView(
-                        icon: "magnifyingglass",
-                        title: "Sin resultados",
-                        message: "No se encontro personal que coincida con tu busqueda"
-                    )
+                    // FAB handles navigation; empty state CTA is visual only
                 }
             } else {
-                staffList
+                EmptyStateView(
+                    icon: "magnifyingglass",
+                    title: "Sin resultados",
+                    message: "No se encontro personal que coincida con tu busqueda"
+                )
             }
+        } else {
+            staffList
         }
     }
 

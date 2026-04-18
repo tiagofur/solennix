@@ -16,7 +16,7 @@ public struct NotificationPreferencesView: View {
     public var body: some View {
         content
             .navigationTitle("Notificaciones")
-            .navigationBarTitleDisplayMode(.large)
+            .navigationBarTitleDisplayMode(.inline)
             .scrollContentBackground(.hidden)
             .background(SolennixColors.surfaceGrouped)
             .task { await viewModel.loadPreferences() }

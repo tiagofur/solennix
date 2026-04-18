@@ -18,18 +18,43 @@ public struct ProductListView: View {
     }
 
     public var body: some View {
-        VStack(spacing: 0) {
-            if viewModel.isShowingCachedData {
-                CachedDataBanner()
+        content
+            .background(SolennixColors.surfaceGrouped)
+            .navigationTitle("Productos")
+            .navigationBarTitleDisplayMode(.large)
+            .searchable(text: $viewModel.searchText, prompt: "Buscar productos")
+            .safeAreaInset(edge: .top, spacing: 0) {
+                VStack(spacing: 0) {
+                    if viewModel.isShowingCachedData {
+                        CachedDataBanner()
+                    }
+                    if !planLimitsManager.canCreateCatalogItem {
+                        UpgradeBannerView(
+                            type: .limitReached,
+                            resource: "Catalogo",
+                            currentUsage: planLimitsManager.catalogCount,
+                            limit: PlanLimitsManager.catalogLimit
+                        ) {
+                            // Action to go to Pricing
+                        }
+                        .padding(.horizontal, Spacing.md)
+                        .padding(.top, Spacing.sm)
+                    }
+                    if !viewModel.categories.isEmpty {
+                        CategoryChips(
+                            categories: viewModel.categories,
+                            selectedCategory: $viewModel.selectedCategory
+                        ) { category in
+                            viewModel.toggleCategory(category)
+                        }
+                        .padding(.vertical, Spacing.sm)
+                        .padding(.bottom, Spacing.md)
+                    }
+                }
+                .background(SolennixColors.surfaceGrouped)
             }
-            filterBar
-            content
-        }
-        .background(SolennixColors.surfaceGrouped)
-        .navigationTitle("Productos")
-        .navigationBarTitleDisplayMode(.large)
-        .refreshable { await viewModel.loadProducts() }
-        .toolbar {
+            .refreshable { await viewModel.loadProducts() }
+            .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 HStack(spacing: Spacing.sm) {
                     NavigationLink(value: Route.productForm()) {
@@ -44,43 +69,34 @@ public struct ProductListView: View {
                 }
             }
         }
-        .confirmationDialog(
-            "Eliminar producto",
-            isPresented: $viewModel.showDeleteConfirm,
-            presenting: viewModel.deleteTarget
-        ) { product in
-            Button("Eliminar", role: .destructive) {
-                HapticsHelper.play(.success)
-                guard let removed = viewModel.softDeleteProduct(product) else { return }
-                toastManager.showUndo(
-                    message: "\(product.name) eliminado",
-                    onUndo: {
-                        viewModel.restoreProduct(removed.product, at: removed.index)
-                        HapticsHelper.play(.success)
-                    },
-                    onExpire: {
-                        Task { await viewModel.confirmDeleteProduct(removed.product) }
-                    }
-                )
+            .confirmationDialog(
+                "Eliminar producto",
+                isPresented: $viewModel.showDeleteConfirm,
+                presenting: viewModel.deleteTarget
+            ) { product in
+                Button("Eliminar", role: .destructive) {
+                    HapticsHelper.play(.success)
+                    guard let removed = viewModel.softDeleteProduct(product) else { return }
+                    toastManager.showUndo(
+                        message: "\(product.name) eliminado",
+                        onUndo: {
+                            viewModel.restoreProduct(removed.product, at: removed.index)
+                            HapticsHelper.play(.success)
+                        },
+                        onExpire: {
+                            Task { await viewModel.confirmDeleteProduct(removed.product) }
+                        }
+                    )
+                }
+                Button("Cancelar", role: .cancel) {}
+            } message: { product in
+                Text("Se eliminara \"\(product.name)\". Podras deshacer durante unos segundos.")
             }
-            Button("Cancelar", role: .cancel) {}
-        } message: { product in
-            Text("Se eliminara \"\(product.name)\". Podras deshacer durante unos segundos.")
-        }
-        .task {
-            viewModel.setCacheManager(cacheManager)
-            await viewModel.loadProducts()
-            await planLimitsManager.checkLimits()
-        }
-    }
-
-    // MARK: - Filter Bar
-
-    private var filterBar: some View {
-        InlineFilterBar(
-            placeholder: "Filtrar productos por nombre o categoría...",
-            text: $viewModel.searchText
-        )
+            .task {
+                viewModel.setCacheManager(cacheManager)
+                await viewModel.loadProducts()
+                await planLimitsManager.checkLimits()
+            }
     }
 
     // MARK: - Content
@@ -116,36 +132,7 @@ public struct ProductListView: View {
                 )
             }
         } else {
-            VStack(spacing: 0) {
-                // Plan limit warning
-                if !planLimitsManager.canCreateCatalogItem {
-                    UpgradeBannerView(
-                        type: .limitReached,
-                        resource: "Catalogo",
-                        currentUsage: planLimitsManager.catalogCount,
-                        limit: PlanLimitsManager.catalogLimit
-                    ) {
-                        // Action to go to Pricing
-                    }
-                    .padding(.horizontal, Spacing.md)
-                    .padding(.top, Spacing.sm)
-                }
-
-                // Category chips
-                if !viewModel.categories.isEmpty {
-                    CategoryChips(
-                        categories: viewModel.categories,
-                        selectedCategory: $viewModel.selectedCategory
-                    ) { category in
-                        viewModel.toggleCategory(category)
-                    }
-                    .padding(.vertical, Spacing.sm)
-                    .padding(.bottom, Spacing.md)
-                }
-
-                // Product list
-                productList
-            }
+            productList
         }
     }
 

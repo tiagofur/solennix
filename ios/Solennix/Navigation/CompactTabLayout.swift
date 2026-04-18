@@ -73,8 +73,8 @@ struct CompactTabLayout: View {
             }
             .tag(Tab.calendar)
 
-            // Events Tab — uses the in-list InlineFilterBar instead of the
-            // global .searchable to avoid showing two search fields stacked.
+            // Events Tab — EventListView provides its own .searchable for
+            // local filtering of the events list.
             NavigationStack(path: $eventsPath) {
                 EventsRootView()
                     .navigationDestination(for: Route.self) { route in
@@ -86,8 +86,8 @@ struct CompactTabLayout: View {
             }
             .tag(Tab.events)
 
-            // Clients Tab — uses the in-list InlineFilterBar instead of the
-            // global .searchable to avoid showing two search fields stacked.
+            // Clients Tab — ClientListView provides its own .searchable for
+            // local filtering of the clients list.
             NavigationStack(path: $clientsPath) {
                 ClientsRootView()
                     .navigationDestination(for: Route.self) { route in

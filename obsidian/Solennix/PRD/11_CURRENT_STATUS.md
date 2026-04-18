@@ -17,6 +17,14 @@ status: active
 **Fecha:** Abril 2026
 **Version:** 1.2
 
+> [!info] 2026-04-17 — iOS Navigation Bar Standardization
+> App bar de iOS unificada al default de Apple con paridad cross-platform mantenida:
+> - **Display mode uniforme**: tab roots usan `.large`, detail/form screens usan `.inline` — patrón default de Apple. Fixes: `NotificationPreferencesView` pasó de `.large` a `.inline` (es pushed desde Ajustes); `KeyboardShortcutsHelpView` recibió `.navigationBarTitleDisplayMode(.inline)` explícito con guard `#if os(iOS)`.
+> - **Búsqueda unificada vía `.searchable`**: los 5 list views (Eventos, Clientes, Productos, Personal, Inventario) reemplazaron el `InlineFilterBar` custom por el modificador nativo `.searchable` de SwiftUI. Resultado: filtro local mientras tipeás + comportamiento iOS estándar de colapso on-scroll.
+> - **Restructura del body con `.safeAreaInset(edge: .top)`**: los 5 list views eliminaron el `VStack` envolvente que rompía el tracking de scroll del large title. Ahora el `List`/`ScrollView` es hijo directo de la navigation stack (pattern Apple Mail/Notes), y banners + chips + filtros viven adentro de `.safeAreaInset`. Esto arregla dos bugs visuales: (a) título invisible al abrir el tab hasta hacer scroll, (b) título grande que no colapsaba a inline al scrollear.
+> - **Paridad cross-platform**: la búsqueda global sigue accesible vía tabs Inicio/Calendario/Más (iOS), ícono dedicado en TopAppBar (Android), y Cmd+K CommandPalette (Web). Cada plataforma usa su patrón idiomático.
+> - **"Hola, {nombre}" se mantiene** en Dashboard — los 3 plataformas lo tienen con la misma feature (paridad total).
+
 > [!info] 2026-04-11 — iOS Apple Compliance Hardening
 > Antes del reenvio a App Review, la app iOS pasa por un hardening de compliance de suscripciones:
 > - **Free trial disclosure** agregado al FAQ de `PricingView` (auto-conversion a pago al finalizar los 14 dias).

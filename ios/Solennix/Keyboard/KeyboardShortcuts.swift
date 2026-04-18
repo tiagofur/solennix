@@ -232,6 +232,9 @@ struct KeyboardShortcutsHelpView: View {
             }
         }
         .navigationTitle("Atajos de Teclado")
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
     }
 
     private func shortcutRow(key: String, description: String) -> some View {

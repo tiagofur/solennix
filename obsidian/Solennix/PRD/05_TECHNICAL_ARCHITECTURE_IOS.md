@@ -709,6 +709,29 @@ public enum Route: Hashable {
 
 `RouteDestination` resuelve cada `Route` a su `View` correspondiente via `.navigationDestination(for: Route.self)`.
 
+### Navigation Bar y Búsqueda (Apple Default)
+
+La app sigue el patrón default de Apple para la navigation bar:
+
+| Tipo de pantalla                   | Display Mode | Ejemplos                                                      |
+| ---------------------------------- | ------------ | ------------------------------------------------------------- |
+| Tab root / Sidebar root            | `.large`     | `DashboardView`, `EventListView`, `CalendarView`, `SettingsView` |
+| Pushed detail / Form / Sheet       | `.inline`    | `EventDetailView`, `ClientFormView`, `QuickQuoteView`            |
+| Auth / Splash / Onboarding         | —            | Layouts full-screen custom sin nav bar                           |
+
+**Búsqueda (`.searchable`) en tab roots:**
+
+- **Home, Calendario, Más** (`CompactTabLayout`): `.searchable` con submit que navega a `Route.search(query:)` → `SearchView` dedicada (búsqueda global cross-entidad).
+- **Eventos, Clientes, Productos, Personal, Inventario**: `.searchable` dentro de cada list view, bound al `viewModel.searchText`/`searchQuery` — filtra la lista local mientras el usuario tipea. Sigue el patrón de iOS Mail/Notes.
+
+**Paridad cross-platform** (los 3 platforms tienen búsqueda global accesible):
+
+| Platform | Patrón                                                                      |
+| -------- | --------------------------------------------------------------------------- |
+| iOS      | `.searchable` nativo (colapso on-scroll, patrón Apple)                      |
+| Android  | Ícono 🔍 en `SolennixTopAppBar` → `SearchScreen` dedicada (Material 3)      |
+| Web      | `Ctrl/Cmd+K` → `CommandPalette` → `SearchPage` (`/search?q=`)               |
+
 ### Deep Linking
 
 `DeepLinkHandler` maneja dos fuentes de navegacion profunda:

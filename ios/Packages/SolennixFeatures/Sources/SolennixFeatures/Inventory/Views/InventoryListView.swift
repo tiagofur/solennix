@@ -18,18 +18,33 @@ public struct InventoryListView: View {
     }
 
     public var body: some View {
-        VStack(spacing: 0) {
-            if viewModel.isShowingCachedData {
-                CachedDataBanner()
+        content
+            .background(SolennixColors.surfaceGrouped)
+            .navigationTitle("Inventario")
+            .navigationBarTitleDisplayMode(.large)
+            .searchable(text: $viewModel.searchText, prompt: "Buscar inventario")
+            .safeAreaInset(edge: .top, spacing: 0) {
+                VStack(spacing: 0) {
+                    if viewModel.isShowingCachedData {
+                        CachedDataBanner()
+                    }
+                    if !planLimitsManager.canCreateCatalogItem {
+                        UpgradeBannerView(
+                            type: .limitReached,
+                            resource: "Catalogo",
+                            currentUsage: planLimitsManager.catalogCount,
+                            limit: PlanLimitsManager.catalogLimit
+                        ) {
+                            // Action to go to Pricing
+                        }
+                        .padding(.horizontal, Spacing.md)
+                        .padding(.top, Spacing.sm)
+                    }
+                }
+                .background(SolennixColors.surfaceGrouped)
             }
-            filterBar
-            content
-        }
-        .background(SolennixColors.surfaceGrouped)
-        .navigationTitle("Inventario")
-        .navigationBarTitleDisplayMode(.large)
-        .refreshable { await viewModel.loadItems() }
-        .toolbar {
+            .refreshable { await viewModel.loadItems() }
+            .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 HStack(spacing: Spacing.sm) {
                     NavigationLink(value: Route.inventoryForm()) {
@@ -45,100 +60,76 @@ public struct InventoryListView: View {
                 }
             }
         }
-        .confirmationDialog(
-            "Eliminar item",
-            isPresented: $viewModel.showDeleteConfirm,
-            presenting: viewModel.deleteTarget
-        ) { item in
-            Button("Eliminar", role: .destructive) {
-                HapticsHelper.play(.success)
-                guard let removed = viewModel.softDeleteItem(item) else { return }
-                toastManager.showUndo(
-                    message: "\(item.ingredientName) eliminado",
-                    onUndo: {
-                        viewModel.restoreItem(removed.item, at: removed.index)
-                        HapticsHelper.play(.success)
-                    },
-                    onExpire: {
-                        Task { await viewModel.confirmDeleteItem(removed.item) }
-                    }
-                )
+            .confirmationDialog(
+                "Eliminar item",
+                isPresented: $viewModel.showDeleteConfirm,
+                presenting: viewModel.deleteTarget
+            ) { item in
+                Button("Eliminar", role: .destructive) {
+                    HapticsHelper.play(.success)
+                    guard let removed = viewModel.softDeleteItem(item) else { return }
+                    toastManager.showUndo(
+                        message: "\(item.ingredientName) eliminado",
+                        onUndo: {
+                            viewModel.restoreItem(removed.item, at: removed.index)
+                            HapticsHelper.play(.success)
+                        },
+                        onExpire: {
+                            Task { await viewModel.confirmDeleteItem(removed.item) }
+                        }
+                    )
+                }
+                Button("Cancelar", role: .cancel) {}
+            } message: { item in
+                Text("Se eliminara \"\(item.ingredientName)\". Podras deshacer durante unos segundos.")
             }
-            Button("Cancelar", role: .cancel) {}
-        } message: { item in
-            Text("Se eliminara \"\(item.ingredientName)\". Podras deshacer durante unos segundos.")
-        }
-        .sheet(isPresented: $viewModel.showStockAdjustment) {
-            stockAdjustmentSheet
-        }
-        .task {
-            viewModel.setCacheManager(cacheManager)
-            await viewModel.loadItems()
-            await planLimitsManager.checkLimits()
-        }
-    }
-
-    // MARK: - Filter Bar
-
-    private var filterBar: some View {
-        InlineFilterBar(
-            placeholder: "Filtrar inventario por nombre...",
-            text: $viewModel.searchText
-        )
+            .sheet(isPresented: $viewModel.showStockAdjustment) {
+                stockAdjustmentSheet
+            }
+            .task {
+                viewModel.setCacheManager(cacheManager)
+                await viewModel.loadItems()
+                await planLimitsManager.checkLimits()
+            }
     }
 
     // MARK: - Content
 
     @ViewBuilder
     private var content: some View {
-        VStack(spacing: 0) {
-            if !planLimitsManager.canCreateCatalogItem {
-                UpgradeBannerView(
-                    type: .limitReached,
-                    resource: "Catalogo",
-                    currentUsage: planLimitsManager.catalogCount,
-                    limit: PlanLimitsManager.catalogLimit
-                ) {
-                    // Action to go to Pricing
-                }
-                .padding(.horizontal, Spacing.md)
-                .padding(.top, Spacing.sm)
+        if let error = viewModel.errorMessage, viewModel.items.isEmpty, !viewModel.isLoading {
+            EmptyStateView(
+                icon: "wifi.exclamationmark",
+                title: "Error al cargar",
+                message: error,
+                actionTitle: "Reintentar"
+            ) {
+                Task { await viewModel.loadItems() }
             }
-
-            if let error = viewModel.errorMessage, viewModel.items.isEmpty, !viewModel.isLoading {
+        } else if viewModel.isLoading && viewModel.items.isEmpty {
+            skeletonList
+        } else if viewModel.filteredItems.isEmpty && !viewModel.isLoading {
+            if viewModel.searchText.isEmpty && !viewModel.showLowStockOnly {
                 EmptyStateView(
-                    icon: "wifi.exclamationmark",
-                    title: "Error al cargar",
-                    message: error,
-                    actionTitle: "Reintentar"
+                    icon: "archivebox",
+                    title: "Sin inventario",
+                    message: "Agrega tu primer item al inventario",
+                    actionTitle: "Nuevo Item"
                 ) {
-                    Task { await viewModel.loadItems() }
-                }
-            } else if viewModel.isLoading && viewModel.items.isEmpty {
-                skeletonList
-            } else if viewModel.filteredItems.isEmpty && !viewModel.isLoading {
-                if viewModel.searchText.isEmpty && !viewModel.showLowStockOnly {
-                    EmptyStateView(
-                        icon: "archivebox",
-                        title: "Sin inventario",
-                        message: "Agrega tu primer item al inventario",
-                        actionTitle: "Nuevo Item"
-                    ) {
-                        // FAB handles navigation
-                    }
-                } else {
-                    EmptyStateView(
-                        icon: "magnifyingglass",
-                        title: "Sin resultados",
-                        message: viewModel.showLowStockOnly
-                            ? "No hay items con stock bajo"
-                            : "No se encontraron items que coincidan con la busqueda"
-                    )
+                    // FAB handles navigation
                 }
             } else {
-                inventoryList
+                EmptyStateView(
+                    icon: "magnifyingglass",
+                    title: "Sin resultados",
+                    message: viewModel.showLowStockOnly
+                        ? "No hay items con stock bajo"
+                        : "No se encontraron items que coincidan con la busqueda"
+                )
             }
-        } // End VStack
+        } else {
+            inventoryList
+        }
     }
 
     // MARK: - Inventory List
