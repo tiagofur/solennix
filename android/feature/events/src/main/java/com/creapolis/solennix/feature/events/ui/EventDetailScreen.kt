@@ -181,7 +181,10 @@ fun EventDetailScreen(
                     AdaptiveDetailLayout(
                         left = {
                             // Event Info Card (header)
-                            EventInfoCard(event = event)
+                            EventInfoCard(
+                                event = event,
+                                onStatusChange = { newStatus -> viewModel.updateEventStatus(newStatus) }
+                            )
 
                             // Client Info
                             ClientInfoHeader(
@@ -280,12 +283,6 @@ fun EventDetailScreen(
 
                             // Contract preview link
                             ContractPreviewButton(onClick = { onContractPreviewClick(event.id) })
-
-                            // Status Change
-                            StatusChangeSection(
-                                currentStatus = event.status,
-                                onStatusChange = { newStatus -> viewModel.updateEventStatus(newStatus) }
-                            )
 
                             // Documents/PDFs
                             Text("Generar Documentos", style = MaterialTheme.typography.titleMedium)
@@ -479,7 +476,10 @@ private fun ClientInfoHeader(
 // ==================== B. Event Info Card ====================
 
 @Composable
-private fun EventInfoCard(event: com.creapolis.solennix.core.model.Event) {
+private fun EventInfoCard(
+    event: com.creapolis.solennix.core.model.Event,
+    onStatusChange: (EventStatus) -> Unit
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
@@ -557,7 +557,10 @@ private fun EventInfoCard(event: com.creapolis.solennix.core.model.Event) {
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(12.dp))
-                StatusBadge(status = event.status.name)
+                StatusChangePill(
+                    currentStatus = event.status,
+                    onStatusChange = onStatusChange
+                )
             }
 
             // Notes
@@ -1298,7 +1301,7 @@ private fun ContractPreviewButton(onClick: () -> Unit) {
 // ==================== Status Change Section ====================
 
 @Composable
-fun StatusChangeSection(
+fun StatusChangePill(
     currentStatus: EventStatus,
     onStatusChange: (EventStatus) -> Unit
 ) {
@@ -1313,70 +1316,60 @@ fun StatusChangeSection(
     val currentColor = statusColor(currentStatus)
     var expanded by remember { mutableStateOf(false) }
 
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
-        shape = MaterialTheme.shapes.medium
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text("Estado del Evento", style = MaterialTheme.typography.titleMedium)
-            Spacer(modifier = Modifier.height(12.dp))
-            Box {
-                Surface(
-                    onClick = { expanded = true },
-                    shape = RoundedCornerShape(999.dp),
-                    color = currentColor.copy(alpha = 0.15f),
-                    contentColor = currentColor
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
+    Box {
+        Surface(
+            onClick = { expanded = true },
+            shape = RoundedCornerShape(999.dp),
+            color = currentColor.copy(alpha = 0.15f),
+            contentColor = currentColor
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    currentLabel,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Icon(
+                    Icons.Default.ArrowDropDown,
+                    contentDescription = "Cambiar estado",
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            statusOptions.forEach { (status, label) ->
+                val color = statusColor(status)
+                val isSelected = status == currentStatus
+                DropdownMenuItem(
+                    text = {
                         Text(
-                            currentLabel,
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.SemiBold
+                            label,
+                            color = color,
+                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
                         )
-                        Icon(
-                            Icons.Default.ArrowDropDown,
-                            contentDescription = "Cambiar estado",
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-                }
-                DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    statusOptions.forEach { (status, label) ->
-                        val color = statusColor(status)
-                        val isSelected = status == currentStatus
-                        DropdownMenuItem(
-                            text = {
-                                Text(
-                                    label,
-                                    color = color,
-                                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
-                                )
-                            },
-                            onClick = {
-                                expanded = false
-                                if (!isSelected) onStatusChange(status)
-                            },
-                            trailingIcon = if (isSelected) {
-                                {
-                                    Icon(
-                                        Icons.Default.Check,
-                                        contentDescription = null,
-                                        tint = color,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                }
-                            } else null
-                        )
-                    }
-                }
+                    },
+                    onClick = {
+                        expanded = false
+                        if (!isSelected) onStatusChange(status)
+                    },
+                    trailingIcon = if (isSelected) {
+                        {
+                            Icon(
+                                Icons.Default.Check,
+                                contentDescription = null,
+                                tint = color,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    } else null
+                )
             }
         }
     }
