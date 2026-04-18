@@ -142,19 +142,6 @@ fun EventDetailScreen(
                 },
                 actions = {
                     uiState.event?.let { event ->
-                        IconButton(onClick = { onEditClick(event.id) }) {
-                            Icon(
-                                imageVector = Icons.Default.Edit,
-                                contentDescription = stringResource(DesignSystemR.string.cd_edit)
-                            )
-                        }
-                        IconButton(onClick = { showDeleteDialog = true }) {
-                            Icon(
-                                imageVector = Icons.Default.Delete,
-                                contentDescription = stringResource(DesignSystemR.string.cd_delete),
-                                tint = SolennixTheme.colors.error
-                            )
-                        }
                         Box {
                             IconButton(onClick = { showMoreMenu = true }) {
                                 Icon(
@@ -166,6 +153,16 @@ fun EventDetailScreen(
                                 expanded = showMoreMenu,
                                 onDismissRequest = { showMoreMenu = false }
                             ) {
+                                DropdownMenuItem(
+                                    text = { Text("Editar") },
+                                    leadingIcon = {
+                                        Icon(Icons.Default.Edit, contentDescription = null)
+                                    },
+                                    onClick = {
+                                        showMoreMenu = false
+                                        onEditClick(event.id)
+                                    }
+                                )
                                 DropdownMenuItem(
                                     text = { Text("Duplicar evento") },
                                     leadingIcon = {
@@ -191,6 +188,26 @@ fun EventDetailScreen(
                                             client = uiState.client,
                                             totalPaid = uiState.totalPaid
                                         )
+                                    }
+                                )
+                                HorizontalDivider()
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            "Eliminar",
+                                            color = SolennixTheme.colors.error
+                                        )
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            Icons.Default.Delete,
+                                            contentDescription = null,
+                                            tint = SolennixTheme.colors.error
+                                        )
+                                    },
+                                    onClick = {
+                                        showMoreMenu = false
+                                        showDeleteDialog = true
                                     }
                                 )
                             }
