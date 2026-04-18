@@ -37,7 +37,7 @@ class KtorClient @Inject constructor(
                 !response.status.isSuccess() && response.status.value >= 500
             }
             retryOnExceptionIf { _, cause ->
-                cause is java.net.ConnectException || cause is java.net.SocketTimeoutException
+                cause is java.io.IOException
             }
             exponentialDelay()
         }
