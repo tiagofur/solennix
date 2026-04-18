@@ -32,6 +32,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.component.SolennixSectionTopAppBar
 import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveCenteredContent
@@ -60,6 +61,11 @@ fun CalendarScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isWideScreen = LocalIsWideScreen.current
     var showBlockDialog by remember { mutableStateOf(false) }
+
+    LifecycleResumeEffect(viewModel) {
+        viewModel.refresh()
+        onPauseOrDispose { }
+    }
     var showUnblockDialog by remember { mutableStateOf(false) }
     var longPressedDate by remember { mutableStateOf<LocalDate?>(null) }
     var showManageUnavailableSheet by remember { mutableStateOf(false) }

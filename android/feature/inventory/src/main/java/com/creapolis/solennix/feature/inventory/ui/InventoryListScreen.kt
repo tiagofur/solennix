@@ -32,6 +32,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.R as DesignSystemR
 import com.creapolis.solennix.core.designsystem.component.SkeletonLoading
@@ -59,6 +60,11 @@ fun InventoryListScreen(
     var adjustingItem by remember { mutableStateOf<InventoryItem?>(null) }
     var adjustmentInput by remember { mutableStateOf("") }
     val snackbarHostState = remember { SnackbarHostState() }
+
+    LifecycleResumeEffect(viewModel) {
+        viewModel.refresh()
+        onPauseOrDispose { }
+    }
 
     UiEventSnackbarHandler(
         events = viewModel.uiEvents,

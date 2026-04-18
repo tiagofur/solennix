@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.creapolis.solennix.core.designsystem.component.Avatar
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
@@ -75,6 +76,11 @@ fun ClientListScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var showLimitDialog by remember { mutableStateOf(false) }
+
+    LifecycleResumeEffect(viewModel) {
+        viewModel.refresh()
+        onPauseOrDispose { }
+    }
 
     // Show limit reached dialog
     if (showLimitDialog && viewModel.limitReachedMessage != null) {

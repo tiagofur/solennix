@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.core.content.FileProvider
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
@@ -90,6 +91,11 @@ fun EventListScreen(
     val pagedEvents = viewModel.pagedEvents.collectAsLazyPagingItems()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
+
+    LifecycleResumeEffect(viewModel) {
+        viewModel.refresh()
+        onPauseOrDispose { }
+    }
 
     LaunchedEffect(uiState.error) {
         uiState.error?.let {
