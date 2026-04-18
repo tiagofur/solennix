@@ -24,6 +24,9 @@ public struct ProductListView: View {
             .navigationBarTitleDisplayMode(.large)
             .searchable(text: $viewModel.searchText, prompt: "Buscar productos")
             .safeAreaInset(edge: .top, spacing: 0) {
+                // Only static banners live in safeAreaInset. The CategoryChips
+                // (a horizontal ScrollView) is placed inside the main list so
+                // it does not steal scroll-edge tracking from the large title.
                 VStack(spacing: 0) {
                     if viewModel.isShowingCachedData {
                         CachedDataBanner()
@@ -39,16 +42,6 @@ public struct ProductListView: View {
                         }
                         .padding(.horizontal, Spacing.md)
                         .padding(.top, Spacing.sm)
-                    }
-                    if !viewModel.categories.isEmpty {
-                        CategoryChips(
-                            categories: viewModel.categories,
-                            selectedCategory: $viewModel.selectedCategory
-                        ) { category in
-                            viewModel.toggleCategory(category)
-                        }
-                        .padding(.vertical, Spacing.sm)
-                        .padding(.bottom, Spacing.md)
                     }
                 }
                 .background(SolennixColors.surfaceGrouped)
@@ -149,6 +142,16 @@ public struct ProductListView: View {
 
     private var productGrid: some View {
         ScrollView {
+            if !viewModel.categories.isEmpty {
+                CategoryChips(
+                    categories: viewModel.categories,
+                    selectedCategory: $viewModel.selectedCategory
+                ) { category in
+                    viewModel.toggleCategory(category)
+                }
+                .padding(.vertical, Spacing.sm)
+            }
+
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 250))], spacing: Spacing.sm) {
                 ForEach(viewModel.filteredProducts) { product in
                     NavigationLink(value: Route.productDetail(id: product.id)) {
@@ -185,38 +188,53 @@ public struct ProductListView: View {
     }
 
     private var productListCompact: some View {
-        List(viewModel.filteredProducts) { product in
-            NavigationLink(value: Route.productDetail(id: product.id)) {
-                ProductRow(product: product)
-            }
-            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                Button(role: .destructive) {
-                    HapticsHelper.play(.warning)
-                    viewModel.deleteTarget = product
-                    viewModel.showDeleteConfirm = true
-                } label: {
-                    Label("Eliminar", systemImage: "trash")
+        List {
+            if !viewModel.categories.isEmpty {
+                CategoryChips(
+                    categories: viewModel.categories,
+                    selectedCategory: $viewModel.selectedCategory
+                ) { category in
+                    viewModel.toggleCategory(category)
                 }
+                .padding(.vertical, Spacing.sm)
+                .listRowBackground(Color.clear)
+                .listRowInsets(EdgeInsets())
+                .listRowSeparator(.hidden)
+            }
 
-                NavigationLink(value: Route.productForm(id: product.id)) {
-                    Label("Editar", systemImage: "pencil")
-                }
-                .tint(.blue)
-            }
-            .contextMenu {
-                NavigationLink(value: Route.productForm(id: product.id)) {
-                    Label("Editar", systemImage: "pencil")
-                }
+            ForEach(viewModel.filteredProducts) { product in
                 NavigationLink(value: Route.productDetail(id: product.id)) {
-                    Label("Ver Detalle", systemImage: "eye")
+                    ProductRow(product: product)
                 }
-                Divider()
-                Button(role: .destructive) {
-                    HapticsHelper.play(.warning)
-                    viewModel.deleteTarget = product
-                    viewModel.showDeleteConfirm = true
-                } label: {
-                    Label("Eliminar", systemImage: "trash")
+                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                    Button(role: .destructive) {
+                        HapticsHelper.play(.warning)
+                        viewModel.deleteTarget = product
+                        viewModel.showDeleteConfirm = true
+                    } label: {
+                        Label("Eliminar", systemImage: "trash")
+                    }
+
+                    NavigationLink(value: Route.productForm(id: product.id)) {
+                        Label("Editar", systemImage: "pencil")
+                    }
+                    .tint(.blue)
+                }
+                .contextMenu {
+                    NavigationLink(value: Route.productForm(id: product.id)) {
+                        Label("Editar", systemImage: "pencil")
+                    }
+                    NavigationLink(value: Route.productDetail(id: product.id)) {
+                        Label("Ver Detalle", systemImage: "eye")
+                    }
+                    Divider()
+                    Button(role: .destructive) {
+                        HapticsHelper.play(.warning)
+                        viewModel.deleteTarget = product
+                        viewModel.showDeleteConfirm = true
+                    } label: {
+                        Label("Eliminar", systemImage: "trash")
+                    }
                 }
             }
         }

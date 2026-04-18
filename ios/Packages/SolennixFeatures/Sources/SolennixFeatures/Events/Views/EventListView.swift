@@ -32,15 +32,14 @@ public struct EventListView: View {
             .navigationBarTitleDisplayMode(.large)
             .searchable(text: $viewModel.searchQuery, prompt: "Buscar eventos")
             .safeAreaInset(edge: .top, spacing: 0) {
-                VStack(spacing: 0) {
-                    if viewModel.isShowingCachedData {
-                        CachedDataBanner()
-                    }
-                    filterChips
-                    advancedFilters
-                    resultCount
+                // Only static banners live in safeAreaInset. Nested horizontal
+                // ScrollViews (filter chips) must stay inside the primary
+                // ScrollView so they don't steal scroll-edge tracking from
+                // the large title.
+                if viewModel.isShowingCachedData {
+                    CachedDataBanner()
+                        .background(SolennixColors.surfaceGrouped)
                 }
-                .background(SolennixColors.surfaceGrouped)
             }
             .refreshable {
                 await viewModel.refresh()
@@ -161,10 +160,6 @@ public struct EventListView: View {
             }
             .padding(.horizontal, Spacing.md)
         }
-        // Intrinsic height is required so this horizontal ScrollView doesn't
-        // steal scroll-edge tracking from the vertical list underneath, which
-        // would prevent the large title from collapsing on scroll.
-        .fixedSize(horizontal: false, vertical: true)
         .padding(.top, Spacing.sm)
     }
 
@@ -333,8 +328,21 @@ public struct EventListView: View {
 
     // MARK: - Event List
 
-    @ViewBuilder
     private var eventList: some View {
+        // The ScrollView is always the body root so the large title tracks it
+        // correctly and collapses to inline on scroll. Filters scroll with the
+        // content (Apple-standard behavior for list views with filter chips).
+        ScrollView {
+            filterChips
+            advancedFilters
+            resultCount
+
+            eventListContent
+        }
+    }
+
+    @ViewBuilder
+    private var eventListContent: some View {
         let filtered = viewModel.filteredEvents
 
         if let error = viewModel.errorMessage, filtered.isEmpty, !viewModel.isLoading {
@@ -346,59 +354,57 @@ public struct EventListView: View {
             ) {
                 Task { await viewModel.loadEvents() }
             }
-            .frame(maxHeight: .infinity)
+            .padding(.top, Spacing.xl)
         } else if filtered.isEmpty && !viewModel.isLoading {
             emptyState
-        } else {
-            ScrollView {
-                if sizeClass == .regular {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 300))], spacing: Spacing.sm) {
-                        ForEach(filtered) { event in
-                            NavigationLink(value: Route.eventDetail(id: event.id)) {
-                                eventCard(event)
-                            }
-                            .buttonStyle(.plain)
-                            .contextMenu {
-                                NavigationLink(value: Route.eventForm(id: event.id)) {
-                                    Label("Editar", systemImage: "pencil")
-                                }
-                                NavigationLink(value: Route.eventChecklist(id: event.id)) {
-                                    Label("Checklist", systemImage: "checklist")
-                                }
-                                Divider()
-                                Button(role: .destructive) {
-                                    HapticsHelper.play(.warning)
-                                    viewModel.deleteTarget = event
-                                    viewModel.showDeleteConfirm = true
-                                } label: {
-                                    Label("Eliminar", systemImage: "trash")
-                                }
-                            }
+        } else if sizeClass == .regular {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 300))], spacing: Spacing.sm) {
+                ForEach(filtered) { event in
+                    NavigationLink(value: Route.eventDetail(id: event.id)) {
+                        eventCard(event)
+                    }
+                    .buttonStyle(.plain)
+                    .contextMenu {
+                        NavigationLink(value: Route.eventForm(id: event.id)) {
+                            Label("Editar", systemImage: "pencil")
+                        }
+                        NavigationLink(value: Route.eventChecklist(id: event.id)) {
+                            Label("Checklist", systemImage: "checklist")
+                        }
+                        Divider()
+                        Button(role: .destructive) {
+                            HapticsHelper.play(.warning)
+                            viewModel.deleteTarget = event
+                            viewModel.showDeleteConfirm = true
+                        } label: {
+                            Label("Eliminar", systemImage: "trash")
                         }
                     }
-                } else {
-                    LazyVStack(spacing: Spacing.sm) {
-                        ForEach(filtered) { event in
-                            NavigationLink(value: Route.eventDetail(id: event.id)) {
-                                eventCard(event)
-                            }
-                            .buttonStyle(.plain)
-                            .contextMenu {
-                                NavigationLink(value: Route.eventForm(id: event.id)) {
-                                    Label("Editar", systemImage: "pencil")
-                                }
-                                NavigationLink(value: Route.eventChecklist(id: event.id)) {
-                                    Label("Checklist", systemImage: "checklist")
-                                }
-                                Divider()
-                                Button(role: .destructive) {
-                                    HapticsHelper.play(.warning)
-                                    viewModel.deleteTarget = event
-                                    viewModel.showDeleteConfirm = true
-                                } label: {
-                                    Label("Eliminar", systemImage: "trash")
-                                }
-                            }
+                }
+            }
+            .padding(.horizontal, Spacing.md)
+            .padding(.bottom, Spacing.xxl)
+        } else {
+            LazyVStack(spacing: Spacing.sm) {
+                ForEach(filtered) { event in
+                    NavigationLink(value: Route.eventDetail(id: event.id)) {
+                        eventCard(event)
+                    }
+                    .buttonStyle(.plain)
+                    .contextMenu {
+                        NavigationLink(value: Route.eventForm(id: event.id)) {
+                            Label("Editar", systemImage: "pencil")
+                        }
+                        NavigationLink(value: Route.eventChecklist(id: event.id)) {
+                            Label("Checklist", systemImage: "checklist")
+                        }
+                        Divider()
+                        Button(role: .destructive) {
+                            HapticsHelper.play(.warning)
+                            viewModel.deleteTarget = event
+                            viewModel.showDeleteConfirm = true
+                        } label: {
+                            Label("Eliminar", systemImage: "trash")
                         }
                     }
                 }
