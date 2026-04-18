@@ -31,11 +31,7 @@ object DatabaseModule {
             SolennixDatabase::class.java,
             DATABASE_NAME
         )
-            .addMigrations(
-                SolennixDatabase.MIGRATION_4_5,
-                SolennixDatabase.MIGRATION_5_6,
-                SolennixDatabase.MIGRATION_6_7
-            )
+            .addMigrations(*SolennixDatabase.ALL_MIGRATIONS)
             .build()
     }
 
