@@ -161,6 +161,10 @@ public struct EventListView: View {
             }
             .padding(.horizontal, Spacing.md)
         }
+        // Intrinsic height is required so this horizontal ScrollView doesn't
+        // steal scroll-edge tracking from the vertical list underneath, which
+        // would prevent the large title from collapsing on scroll.
+        .fixedSize(horizontal: false, vertical: true)
         .padding(.top, Spacing.sm)
     }
 

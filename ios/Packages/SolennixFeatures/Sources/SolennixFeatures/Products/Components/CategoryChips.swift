@@ -34,6 +34,10 @@ public struct CategoryChips: View {
             }
             .padding(.horizontal, Spacing.lg)
         }
+        // Intrinsic height so that, when placed inside a parent's safeAreaInset,
+        // this horizontal ScrollView doesn't capture scroll-edge tracking from
+        // the vertical list underneath and break large-title collapse-on-scroll.
+        .fixedSize(horizontal: false, vertical: true)
     }
 }
 
