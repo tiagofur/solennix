@@ -339,25 +339,17 @@ fun EventDetailScreen(
                                 }
                             }
 
-                            // Checklist link
+                            // Quick nav cards
                             ChecklistButton(onClick = { onChecklistClick(event.id) })
-
-                            // Contract preview link
                             ContractPreviewButton(onClick = { onContractPreviewClick(event.id) })
+                            ClientPortalCard(onClick = { showClientPortalSheet = true })
 
                             // Documents/PDFs
                             Text("Generar Documentos", style = MaterialTheme.typography.titleMedium)
                             DocumentActionsGrid(
                                 uiState = uiState,
                                 context = context,
-                                onSharePdf = { file -> sharePdfFile(context, file) },
-                                onChecklistClick = { onChecklistClick(event.id) },
-                                onPhotosClick = {
-                                    viewModel.loadPhotos()
-                                    showPhotoGallery = true
-                                },
-                                onStaffClick = { onStaffClick(event.id) },
-                                onClientPortalClick = { showClientPortalSheet = true }
+                                onSharePdf = { file -> sharePdfFile(context, file) }
                             )
                         }
                     )
@@ -547,31 +539,30 @@ private fun EventInfoCard(
         shape = MaterialTheme.shapes.medium
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
+            // Header: date box + service type/status
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    Icons.Default.Celebration,
-                    contentDescription = null,
-                    tint = SolennixTheme.colors.primary,
-                    modifier = Modifier.size(24.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = event.serviceType,
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = SolennixTheme.colors.primaryText,
-                    fontWeight = FontWeight.Bold
-                )
+                DateBox(event.eventDate)
+                Spacer(modifier = Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = event.serviceType,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = SolennixTheme.colors.primaryText,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    StatusChangePill(
+                        currentStatus = event.status,
+                        onStatusChange = onStatusChange
+                    )
+                }
             }
+
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Date
-            EventInfoRow(
-                icon = Icons.Default.CalendarToday,
-                label = "Fecha",
-                value = event.eventDate
-            )
-
-            // Time
+            // Quick info 2x2 grid
             val timeText = buildString {
                 event.startTime?.let { append(it) }
                 event.endTime?.let {
@@ -579,54 +570,55 @@ private fun EventInfoCard(
                     append(it)
                 }
             }
-            if (timeText.isNotEmpty()) {
-                EventInfoRow(
-                    icon = Icons.Default.Schedule,
-                    label = "Horario",
-                    value = timeText
-                )
+            val locationText = buildString {
+                event.location?.takeIf { it.isNotEmpty() }?.let { append(it) }
+                event.city?.takeIf { it.isNotEmpty() }?.let {
+                    if (isNotEmpty()) append(", ")
+                    append(it)
+                }
             }
 
-            // Location
-            if (!event.location.isNullOrEmpty()) {
-                EventInfoRow(
-                    icon = Icons.Default.LocationOn,
-                    label = "Lugar",
-                    value = buildString {
-                        append(event.location)
-                        event.city?.let {
-                            if (it.isNotEmpty()) append(", $it")
-                        }
-                    }
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                QuickInfoItem(
+                    icon = Icons.Default.CalendarToday,
+                    label = "Fecha",
+                    value = event.eventDate,
+                    modifier = Modifier.weight(1f)
                 )
+                if (timeText.isNotEmpty()) {
+                    QuickInfoItem(
+                        icon = Icons.Default.Schedule,
+                        label = "Horario",
+                        value = timeText,
+                        modifier = Modifier.weight(1f)
+                    )
+                } else {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
             }
-
-            // Num people
-            EventInfoRow(
-                icon = Icons.Default.People,
-                label = "Personas",
-                value = "${event.numPeople}"
-            )
-
-            // Status
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    Icons.Default.Info,
-                    contentDescription = null,
-                    tint = SolennixTheme.colors.secondaryText,
-                    modifier = Modifier.size(18.dp)
+            Spacer(modifier = Modifier.height(10.dp))
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                QuickInfoItem(
+                    icon = Icons.Default.People,
+                    label = "Personas",
+                    value = "${event.numPeople} PAX",
+                    modifier = Modifier.weight(1f)
                 )
-                Spacer(modifier = Modifier.width(12.dp))
-                StatusChangePill(
-                    currentStatus = event.status,
-                    onStatusChange = onStatusChange
-                )
+                if (locationText.isNotEmpty()) {
+                    QuickInfoItem(
+                        icon = Icons.Default.LocationOn,
+                        label = "Ubicación",
+                        value = locationText,
+                        modifier = Modifier.weight(1f)
+                    )
+                } else {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
             }
 
             // Notes
             if (!event.notes.isNullOrEmpty()) {
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(16.dp))
                 HorizontalDivider(color = SolennixTheme.colors.secondaryText.copy(alpha = 0.2f))
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
@@ -646,34 +638,75 @@ private fun EventInfoCard(
 }
 
 @Composable
-private fun EventInfoRow(
+private fun DateBox(dateString: String) {
+    // Fallback to raw string splits so an unparseable date never blanks the card.
+    val parsed = try {
+        java.time.LocalDate.parse(dateString)
+    } catch (e: Exception) {
+        null
+    }
+    val month = parsed?.format(
+        java.time.format.DateTimeFormatter.ofPattern("MMM", java.util.Locale("es", "ES"))
+    )?.uppercase() ?: dateString.take(3).uppercase()
+    val day = parsed?.dayOfMonth?.toString() ?: dateString.takeLast(2)
+
+    Surface(
+        shape = MaterialTheme.shapes.medium,
+        color = SolennixTheme.colors.primary.copy(alpha = 0.12f),
+        modifier = Modifier.size(64.dp)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = month,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = SolennixTheme.colors.primary
+            )
+            Text(
+                text = day,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = SolennixTheme.colors.primaryText
+            )
+        }
+    }
+}
+
+@Composable
+private fun QuickInfoItem(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
-    value: String
+    value: String,
+    modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
+        modifier = modifier,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
             icon,
             contentDescription = null,
-            tint = SolennixTheme.colors.secondaryText,
-            modifier = Modifier.size(18.dp)
+            tint = SolennixTheme.colors.primary,
+            modifier = Modifier.size(16.dp)
         )
-        Spacer(modifier = Modifier.width(12.dp))
-        Column {
+        Spacer(modifier = Modifier.width(8.dp))
+        Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = label,
+                text = label.uppercase(),
                 style = MaterialTheme.typography.labelSmall,
-                color = SolennixTheme.colors.secondaryText
+                color = SolennixTheme.colors.tertiaryText
             )
             Text(
                 text = value,
-                style = MaterialTheme.typography.bodyMedium,
-                color = SolennixTheme.colors.primaryText
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.SemiBold,
+                color = SolennixTheme.colors.primaryText,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }
@@ -1322,41 +1355,78 @@ private fun PaymentsSection(
     }
 }
 
-// ==================== I. Checklist Button ====================
+// ==================== I. Quick Nav Cards ====================
 
 @Composable
-private fun ChecklistButton(onClick: () -> Unit) {
-    OutlinedButton(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.medium
+private fun NavLinkCard(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    tint: androidx.compose.ui.graphics.Color,
+    onClick: () -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        shape = MaterialTheme.shapes.medium,
+        color = tint.copy(alpha = 0.1f)
     ) {
-        Icon(
-            Icons.AutoMirrored.Filled.PlaylistAddCheck,
-            contentDescription = null,
-            modifier = Modifier.size(20.dp)
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Text("Ver Checklist del Evento")
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                icon,
+                contentDescription = null,
+                tint = tint,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+                color = tint,
+                modifier = Modifier.weight(1f)
+            )
+            Icon(
+                Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = SolennixTheme.colors.tertiaryText,
+                modifier = Modifier.size(18.dp)
+            )
+        }
     }
 }
 
 @Composable
+private fun ChecklistButton(onClick: () -> Unit) {
+    NavLinkCard(
+        icon = Icons.AutoMirrored.Filled.PlaylistAddCheck,
+        label = "Checklist de Carga",
+        tint = SolennixTheme.colors.primary,
+        onClick = onClick
+    )
+}
+
+@Composable
 private fun ContractPreviewButton(onClick: () -> Unit) {
-    OutlinedButton(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.medium,
-        colors = ButtonDefaults.outlinedButtonColors(contentColor = SolennixTheme.colors.info)
-    ) {
-        Icon(
-            Icons.AutoMirrored.Filled.Article,
-            contentDescription = null,
-            modifier = Modifier.size(20.dp)
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Text("Ver Contrato")
-    }
+    NavLinkCard(
+        icon = Icons.AutoMirrored.Filled.Article,
+        label = "Ver Contrato",
+        tint = SolennixTheme.colors.info,
+        onClick = onClick
+    )
+}
+
+@Composable
+private fun ClientPortalCard(onClick: () -> Unit) {
+    NavLinkCard(
+        icon = Icons.Default.Link,
+        label = "Portal del cliente",
+        tint = SolennixTheme.colors.primary,
+        onClick = onClick
+    )
 }
 
 // ==================== Status Change Section ====================
@@ -1450,11 +1520,7 @@ private fun statusColor(status: EventStatus): androidx.compose.ui.graphics.Color
 fun DocumentActionsGrid(
     uiState: EventDetailUiState,
     context: android.content.Context,
-    onSharePdf: (File) -> Unit,
-    onChecklistClick: () -> Unit = {},
-    onPhotosClick: () -> Unit = {},
-    onStaffClick: () -> Unit = {},
-    onClientPortalClick: () -> Unit = {}
+    onSharePdf: (File) -> Unit
 ) {
     val event = uiState.event ?: return
     val client = uiState.client ?: Client(
@@ -1613,7 +1679,8 @@ fun DocumentActionsGrid(
             )
         }
         Spacer(modifier = Modifier.height(8.dp))
-        // Third row
+        // Third row — only Equipo PDF remains here; Checklist, Fotos, Personal
+        // and Portal moved to dedicated nav cards above.
         Row(modifier = Modifier.fillMaxWidth()) {
             ActionButton(
                 icon = Icons.Default.Inventory2,
@@ -1637,36 +1704,7 @@ fun DocumentActionsGrid(
                 }
             )
             Spacer(modifier = Modifier.width(8.dp))
-            ActionButton(
-                icon = Icons.AutoMirrored.Filled.PlaylistAddCheck,
-                label = "Lista",
-                modifier = Modifier.weight(1f),
-                onClick = onChecklistClick
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            ActionButton(
-                icon = Icons.Default.PhotoLibrary,
-                label = "Fotos",
-                modifier = Modifier.weight(1f),
-                onClick = onPhotosClick
-            )
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        // Fourth row — Personal asignado + Portal del cliente (PRD/12 feature A)
-        Row(modifier = Modifier.fillMaxWidth()) {
-            ActionButton(
-                icon = Icons.Default.Group,
-                label = "Personal",
-                modifier = Modifier.weight(1f),
-                onClick = onStaffClick
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            ActionButton(
-                icon = Icons.Default.Link,
-                label = "Portal",
-                modifier = Modifier.weight(1f),
-                onClick = onClientPortalClick
-            )
+            Spacer(modifier = Modifier.weight(1f))
             Spacer(modifier = Modifier.width(8.dp))
             Spacer(modifier = Modifier.weight(1f))
         }
