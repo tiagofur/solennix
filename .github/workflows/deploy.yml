@@ -55,6 +55,8 @@ jobs:
             git fetch origin main
             git checkout main
             git reset --hard origin/main
+            echo "→ Cleaning up orphan containers from previous compose versions"
+            docker rm -f solennix-frontend solennix-backend solennix-db 2>/dev/null || true
             echo "→ Rebuilding containers"
             if docker compose version >/dev/null 2>&1; then
               docker compose pull || true

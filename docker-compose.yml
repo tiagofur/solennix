@@ -13,7 +13,7 @@ services:
       db:
         condition: service_healthy
     ports:
-      - "${BACKEND_PORT:-8080}:8080"
+      - "127.0.0.1:${BACKEND_PORT:-8080}:8080"
     volumes:
       - uploads_data:/root/uploads
 
@@ -40,7 +40,7 @@ services:
     container_name: solennix-frontend
     restart: always
     ports:
-      - "${FRONTEND_PORT:-3000}:80"
+      - "127.0.0.1:${FRONTEND_PORT:-3000}:80"
 
   db:
     image: postgres:15-alpine
@@ -48,10 +48,10 @@ services:
     restart: always
     environment:
       POSTGRES_USER: ${DB_USER:-solennix_user}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-solennix_password}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set}
       POSTGRES_DB: ${DB_NAME:-solennix}
-    ports:
-      - "5433:5432"
+    expose:
+      - "5432"
     volumes:
       - db_data:/var/lib/postgresql/data
     healthcheck:
@@ -62,4 +62,8 @@ services:
 
 volumes:
   db_data:
+    external: true
+    name: solennix_db_data
   uploads_data:
+    external: true
+    name: solennix_uploads_data
