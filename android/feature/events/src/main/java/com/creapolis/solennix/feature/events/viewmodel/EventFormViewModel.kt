@@ -388,6 +388,7 @@ class EventFormViewModel @Inject constructor(
                 cost = transferExtra.cost,
                 price = transferExtra.price,
                 excludeUtility = transferExtra.excludeUtility,
+                includeInChecklist = transferExtra.includeInChecklist,
                 createdAt = ""
             )
             eventExtras.add(extra)
@@ -605,7 +606,7 @@ class EventFormViewModel @Inject constructor(
         selectedProducts.add(toIndex, item)
     }
 
-    fun addExtra(description: String, cost: Double, price: Double, excludeUtility: Boolean) {
+    fun addExtra(description: String, cost: Double, price: Double, excludeUtility: Boolean, includeInChecklist: Boolean = true) {
         if (description.isBlank()) return
         val effectivePrice = if (excludeUtility) cost else price
         if (effectivePrice <= 0 && cost <= 0) return
@@ -616,19 +617,21 @@ class EventFormViewModel @Inject constructor(
             cost = cost,
             price = effectivePrice,
             excludeUtility = excludeUtility,
+            includeInChecklist = includeInChecklist,
             createdAt = ""
         )
         eventExtras.add(extra)
     }
 
-    fun updateExtra(id: String, cost: Double, price: Double, excludeUtility: Boolean) {
+    fun updateExtra(id: String, cost: Double, price: Double, excludeUtility: Boolean, includeInChecklist: Boolean = true) {
         val existing = eventExtras.find { it.id == id } ?: return
         val index = eventExtras.indexOf(existing)
         val effectivePrice = if (excludeUtility) cost else price
         eventExtras[index] = existing.copy(
             cost = cost,
             price = effectivePrice,
-            excludeUtility = excludeUtility
+            excludeUtility = excludeUtility,
+            includeInChecklist = includeInChecklist
         )
     }
 

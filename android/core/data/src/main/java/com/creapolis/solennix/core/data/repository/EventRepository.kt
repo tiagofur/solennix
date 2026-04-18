@@ -230,7 +230,8 @@ class OfflineFirstEventRepository @Inject constructor(
                     description = it.description,
                     cost = it.cost,
                     price = it.price,
-                    excludeUtility = it.excludeUtility
+                    excludeUtility = it.excludeUtility,
+                    includeInChecklist = it.includeInChecklist
                 )
             },
             equipment = equipment.map {
@@ -372,7 +373,8 @@ data class ExtraItemPayload(
     val description: String,
     val cost: Double,
     val price: Double,
-    @SerialName("exclude_utility") val excludeUtility: Boolean
+    @SerialName("exclude_utility") val excludeUtility: Boolean,
+    @SerialName("include_in_checklist") val includeInChecklist: Boolean = true
 )
 
 @Serializable

@@ -13,6 +13,7 @@ data class CachedEventExtra(
     val cost: Double,
     val price: Double,
     @ColumnInfo(name = "exclude_utility") val excludeUtility: Boolean,
+    @ColumnInfo(name = "include_in_checklist", defaultValue = "1") val includeInChecklist: Boolean = true,
     @ColumnInfo(name = "created_at") val createdAt: String
 )
 
@@ -23,6 +24,7 @@ fun CachedEventExtra.asExternalModel() = EventExtra(
     cost = cost,
     price = price,
     excludeUtility = excludeUtility,
+    includeInChecklist = includeInChecklist,
     createdAt = createdAt
 )
 
@@ -33,5 +35,6 @@ fun EventExtra.asEntity() = CachedEventExtra(
     cost = cost,
     price = price,
     excludeUtility = excludeUtility,
+    includeInChecklist = includeInChecklist,
     createdAt = createdAt
 )

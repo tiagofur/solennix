@@ -40,7 +40,7 @@ const val DATABASE_NAME = "solennix-database"
         CachedStaff::class,
         CachedEventStaff::class
     ],
-    version = 7,
+    version = 8,
     exportSchema = true
 )
 @TypeConverters(JsonConverters::class)
@@ -130,7 +130,19 @@ abstract class SolennixDatabase : RoomDatabase() {
             }
         }
 
-        private val ALL_MIGRATIONS = arrayOf(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+        /**
+         * v8 — Mirror backend migration 028: add `include_in_checklist` to
+         * `event_extras`. Controla si el extra aparece en el PDF de checklist
+         * de carga. Default TRUE para match con Web + backend (opt-out model).
+         */
+        val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                Log.d(TAG, "Running migration 7 -> 8: add include_in_checklist to event_extras")
+                db.execSQL("ALTER TABLE event_extras ADD COLUMN include_in_checklist INTEGER NOT NULL DEFAULT 1")
+            }
+        }
+
+        private val ALL_MIGRATIONS = arrayOf(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
 
         /**
          * Manual singleton for use in contexts without Hilt (e.g., Glance widgets).

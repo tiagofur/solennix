@@ -788,6 +788,7 @@ fun StepExtras(viewModel: EventFormViewModel) {
             var extraCost by remember { mutableStateOf("") }
             var extraPrice by remember { mutableStateOf("") }
             var extraExcludeUtility by remember { mutableStateOf(false) }
+            var extraIncludeInChecklist by remember { mutableStateOf(true) }
 
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -834,21 +835,34 @@ fun StepExtras(viewModel: EventFormViewModel) {
                         Spacer(modifier = Modifier.width(4.dp))
                         Text("Solo cobrar costo", style = MaterialTheme.typography.bodySmall)
                     }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Checkbox(
+                            checked = extraIncludeInChecklist,
+                            onCheckedChange = { extraIncludeInChecklist = it }
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Incluir en checklist", style = MaterialTheme.typography.bodySmall)
+                    }
                     Spacer(modifier = Modifier.height(12.dp))
                     Row {
                         TextButton(onClick = {
                             showAddExtra = false
                             extraExcludeUtility = false
+                            extraIncludeInChecklist = true
                         }) { Text("Cancelar") }
                         Spacer(modifier = Modifier.weight(1f))
                         Button(onClick = {
                             val c = extraCost.toDoubleOrNull() ?: 0.0
                             val p = extraPrice.toDoubleOrNull() ?: 0.0
-                            viewModel.addExtra(extraDesc, c, p, extraExcludeUtility)
+                            viewModel.addExtra(extraDesc, c, p, extraExcludeUtility, extraIncludeInChecklist)
                             extraDesc = ""
                             extraCost = ""
                             extraPrice = ""
                             extraExcludeUtility = false
+                            extraIncludeInChecklist = true
                             showAddExtra = false
                         }) { Text("Anadir") }
                     }

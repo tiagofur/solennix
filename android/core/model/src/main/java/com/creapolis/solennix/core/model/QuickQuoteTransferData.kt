@@ -26,7 +26,8 @@ data class QuoteTransferExtra(
     val description: String,
     val cost: Double,
     val price: Double,
-    @SerialName("exclude_utility") val excludeUtility: Boolean
+    @SerialName("exclude_utility") val excludeUtility: Boolean,
+    @SerialName("include_in_checklist") val includeInChecklist: Boolean = true
 )
 
 object QuickQuoteDataHolder {

@@ -166,6 +166,20 @@ struct Step3ExtrasView: View {
                     viewModel.extras[index].price = viewModel.extras[index].cost
                 }
             }
+
+            // Include in checklist toggle
+            Toggle(isOn: $viewModel.extras[index].includeInChecklist) {
+                Label {
+                    Text("Incluir en checklist")
+                        .font(.caption)
+                        .foregroundStyle(SolennixColors.textSecondary)
+                } icon: {
+                    Image(systemName: "checklist")
+                        .font(.caption)
+                        .foregroundStyle(SolennixColors.textSecondary)
+                }
+            }
+            .tint(SolennixColors.primary)
         }
         .padding(Spacing.md)
         .background(SolennixColors.card)

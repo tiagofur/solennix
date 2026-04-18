@@ -28,12 +28,14 @@ public struct SelectedExtra: Identifiable, Hashable {
     public var cost: Double
     public var price: Double
     public var excludeUtility: Bool
+    public var includeInChecklist: Bool
 
-    public init(description: String = "", cost: Double = 0, price: Double = 0, excludeUtility: Bool = false) {
+    public init(description: String = "", cost: Double = 0, price: Double = 0, excludeUtility: Bool = false, includeInChecklist: Bool = true) {
         self.description = description
         self.cost = cost
         self.price = price
         self.excludeUtility = excludeUtility
+        self.includeInChecklist = includeInChecklist
     }
 }
 
@@ -235,7 +237,7 @@ public final class EventFormViewModel {
             )
         }
         extras = data.extras.map { ee in
-            SelectedExtra(description: ee.description, cost: ee.cost, price: ee.price, excludeUtility: ee.excludeUtility)
+            SelectedExtra(description: ee.description, cost: ee.cost, price: ee.price, excludeUtility: ee.excludeUtility, includeInChecklist: ee.includeInChecklist)
         }
         selectedEquipment = data.equipment.map { eq in
             SelectedEquipmentItem(inventoryId: eq.inventoryId, name: eq.equipmentName ?? "", quantity: eq.quantity, notes: eq.notes ?? "")
@@ -379,7 +381,8 @@ public final class EventFormViewModel {
                 description: item.description,
                 cost: item.cost,
                 price: item.price,
-                excludeUtility: item.excludeUtility
+                excludeUtility: item.excludeUtility,
+                includeInChecklist: item.includeInChecklist
             )
         }
     }
@@ -446,7 +449,8 @@ public final class EventFormViewModel {
                     description: ee.description,
                     cost: ee.cost,
                     price: ee.price,
-                    excludeUtility: ee.excludeUtility
+                    excludeUtility: ee.excludeUtility,
+                    includeInChecklist: ee.includeInChecklist
                 )
             }
 
@@ -755,7 +759,8 @@ public final class EventFormViewModel {
                 "description": $0.description,
                 "cost": $0.cost,
                 "price": $0.price,
-                "exclude_utility": $0.excludeUtility
+                "exclude_utility": $0.excludeUtility,
+                "include_in_checklist": $0.includeInChecklist
             ] },
             "equipment": selectedEquipment.map { [
                 "inventory_id": $0.inventoryId,

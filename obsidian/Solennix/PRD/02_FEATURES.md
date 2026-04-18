@@ -1038,6 +1038,7 @@ Visualización + registro de pago por transferencia con approve/reject. Reemplaz
 | Sugerencias de equipo                      | ✅  | ✅      | ✅  | ✅      |                                                                          |
 | Sugerencias de insumos                     | ✅  | ✅      | ✅  | ✅      |                                                                          |
 | Extras (cargos adicionales)                | ✅  | ✅      | ✅  | ✅      |                                                                          |
+| Extras: toggle "Incluir en checklist"       | ✅  | ✅      | ✅  | ✅      | opt-out, default `true` en las 4 plataformas (paridad 2026-04-18)        |
 | Deposito y cancelacion                     | ✅  | ✅      | ✅  | ✅      |                                                                          |
 | Lista de eventos                           | ✅  | ✅      | ✅  | ✅      | Web: EventList page con filtros (Todos/Proximos/Pasados/Borradores)      |
 | Detalle de evento (Hub con cards)          | ✅  | ✅      | ✅  | ✅      | Mobile: cards navegables a sub-pantallas. Web: tabs                      |

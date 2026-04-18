@@ -17,6 +17,22 @@ status: active
 **Fecha:** Abril 2026
 **Version:** 1.2
 
+> [!info] 2026-04-18 — iOS + Android: toggle "Incluir en checklist" de Extras (paridad con Web)
+> El campo booleano `include_in_checklist` (backend migration 028, default `true`) estaba sólo expuesto en Web. iOS y Android recibían el dato del backend pero lo descartaban al decodificar y no tenían UI para togglearlo. Cerrada la brecha en ambas plataformas con default opt-out uniforme (coincide con Web + backend — opt-in se descartó porque la mayoría de extras son físicos y forzar opt-in agrega fricción).
+> - **iOS**:
+>   - Campo `includeInChecklist: Bool` en `EventExtra.swift` (init del struct + `init(from:)` con `decodeIfPresent` y fallback `true`).
+>   - Campo en `SelectedExtra` (UI struct de `EventFormViewModel.swift`) + mapeo en los 3 sitios donde se convierte EventExtra → SelectedExtra + pasar `include_in_checklist` en el payload de save.
+>   - Toggle "Incluir en checklist" en `Step3ExtrasView.swift` debajo del toggle existente de "Solo cobrar costo".
+>   - `ChecklistPDFGenerator.swift` filtra extras por `includeInChecklist` antes de renderizar la sección EXTRAS (match con el filtro de Web en `pdfGenerator.ts`).
+> - **Android**:
+>   - Campo `includeInChecklist` en `EventExtra.kt` data class con `@SerialName("include_in_checklist")` + default `true`.
+>   - `CachedEventExtra` entity + `asEntity`/`asExternalModel` mappers actualizados.
+>   - Room DB bump v7→v8 + `MIGRATION_7_8` que ejecuta `ALTER TABLE event_extras ADD COLUMN include_in_checklist INTEGER NOT NULL DEFAULT 1`.
+>   - `ExtraItemPayload` (EventRepository) y `QuoteTransferExtra` extendidos con el campo.
+>   - `EventFormViewModel.addExtra` / `updateExtra` reciben el nuevo bool; transfer desde QuickQuote preserva el valor.
+>   - Checkbox "Incluir en checklist" en `EventFormScreen.kt` debajo del checkbox "Solo cobrar costo".
+> - **Gap conocido (fuera de scope)**: Android `ChecklistPdfGenerator.kt` no incluye extras en el PDF de carga (sólo productos + equipment). iOS y Web sí los incluyen. Pre-existente — no introducido por este cambio. Seguimiento: tarea aparte para sumar la sección EXTRAS al PDF de Android con el mismo filtro por `includeInChecklist`.
+
 > [!info] 2026-04-18 — iOS "Enlaces de Formulario" relocated to tab "Más" (Android parity)
 > La entrada al feature Event Form Links (sección 15 del [[02_FEATURES]]) se movió de `Ajustes → Negocio → "Links de Formulario"` al tab `Más → Catálogo → "Enlaces de Formulario"`, inmediatamente después de "Personal". Match exacto con la ubicación en Android (`CompactBottomNavLayout` → tab Más). En iPad, se agregó `SidebarSection.eventFormLinks` a `mainSections` del sidebar con ícono `link`.
 > - **Archivos tocados**: `MoreMenuView.swift` (nuevo row), `SettingsView.swift` (removida entrada duplicada en `businessContent`), `Route.swift` (nuevo case en enum `SidebarSection`), `SidebarSplitLayout.swift` (case en `sectionListView` + `mainSections`).

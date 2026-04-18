@@ -151,10 +151,11 @@ struct ChecklistPDFGenerator {
             }
 
             // MARK: EXTRAS Section
-            if !extras.isEmpty {
+            let physicalExtras = extras.filter { $0.includeInChecklist }
+            if !physicalExtras.isEmpty {
                 y = PDFConstants.drawSectionHeader(context: context, y: y, title: "EXTRAS")
 
-                for extra in extras {
+                for extra in physicalExtras {
                     y = PDFConstants.ensureSpace(context: context, currentY: y, needed: rowHeight)
 
                     (checkbox as NSString).draw(

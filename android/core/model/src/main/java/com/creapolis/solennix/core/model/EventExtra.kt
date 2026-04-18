@@ -11,5 +11,6 @@ data class EventExtra(
     val cost: Double,
     val price: Double,
     @SerialName("exclude_utility") val excludeUtility: Boolean = false,
+    @SerialName("include_in_checklist") val includeInChecklist: Boolean = true,
     @SerialName("created_at") val createdAt: String = ""
 )
