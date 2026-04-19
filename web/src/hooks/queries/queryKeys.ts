@@ -46,6 +46,12 @@ export const queryKeys = {
   payments: {
     byEvent: (eventId: string) => ['payments', 'event', eventId] as const,
     byDateRange: (start: string, end: string) => ['payments', 'range', start, end] as const,
+    byEventIds: (eventIds: string[]) => ['payments', 'byEventIds', ...[...eventIds].sort()] as const,
+    // Prefix used to invalidate every active byEventIds query regardless of
+    // its specific event-id list. TanStack Query v5 invalidateQueries does
+    // partial-from-the-start key matching, so this prefix matches all keys
+    // shaped ['payments', 'byEventIds', ...].
+    byEventIdsPrefix: ['payments', 'byEventIds'] as const,
   },
   search: {
     results: (query: string) => ['search', query] as const,

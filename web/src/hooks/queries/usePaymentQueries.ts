@@ -17,7 +17,7 @@ export function usePaymentsByEvent(eventId: string | undefined) {
 
 export function usePaymentsByEventIds(eventIds: string[]) {
   return useQuery({
-    queryKey: ['payments', 'byEventIds', ...eventIds.sort()] as const,
+    queryKey: queryKeys.payments.byEventIds(eventIds),
     queryFn: () => paymentService.getByEventIds(eventIds),
     enabled: eventIds.length > 0,
   });
@@ -43,6 +43,12 @@ export function useCreatePayment() {
       paymentService.create(data),
     onSuccess: (_result, { event_id }) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.payments.byEvent(event_id) });
+      // Prefix invalidation reaches every active usePaymentsByEventIds
+      // query regardless of its specific id list. TanStack Query v5
+      // invalidateQueries matches partial keys from the start by default.
+      // Required because the dashboard's saldo pendiente reads from this
+      // aggregated cache and per-event invalidation alone leaves it stale.
+      queryClient.invalidateQueries({ queryKey: queryKeys.payments.byEventIdsPrefix });
       addToast('Pago registrado correctamente.', 'success');
     },
     onError: (error) => {
@@ -62,6 +68,7 @@ export function useDeletePayment() {
       paymentService.delete(id),
     onSuccess: (_result, { eventId }) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.payments.byEvent(eventId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.payments.byEventIdsPrefix });
       addToast('Pago eliminado correctamente.', 'success');
     },
     onError: (error) => {

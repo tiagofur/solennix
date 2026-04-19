@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
+import { queryKeys } from './queryKeys';
 
 const mockGetByEventId = vi.fn();
 const mockGetByEventIds = vi.fn();
@@ -41,6 +42,16 @@ const createWrapper = () => {
   return ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={qc}>{children}</QueryClientProvider>
   );
+};
+
+const createWrapperWithClient = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
+  const wrapper = ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+  return { wrapper, queryClient };
 };
 
 describe('usePaymentQueries', () => {
@@ -121,6 +132,45 @@ describe('usePaymentQueries', () => {
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
       expect(mockDelete).toHaveBeenCalledWith('pay1');
+    });
+  });
+
+  describe('byEventIds invalidation on mutations', () => {
+    // Regression for the dashboard "saldo pendiente" stale-cache bug:
+    // useCreatePayment / useDeletePayment must invalidate every active
+    // ['payments', 'byEventIds', ...] query, not just the per-event one.
+    it('useCreatePayment invalidates a seeded byEventIds query', async () => {
+      mockCreate.mockResolvedValue({ id: 'pay-new' });
+      const { wrapper, queryClient } = createWrapperWithClient();
+
+      const seededKey = queryKeys.payments.byEventIds(['ev1', 'ev2']);
+      queryClient.setQueryData(seededKey, [{ id: 'old', amount: 100 }]);
+      expect(queryClient.getQueryState(seededKey)?.isInvalidated).toBe(false);
+
+      const { result } = renderHook(() => useCreatePayment(), { wrapper });
+      await act(async () => {
+        result.current.mutate({ event_id: 'ev1', amount: 500 } as any);
+      });
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+      expect(queryClient.getQueryState(seededKey)?.isInvalidated).toBe(true);
+    });
+
+    it('useDeletePayment invalidates a seeded byEventIds query', async () => {
+      mockDelete.mockResolvedValue(undefined);
+      const { wrapper, queryClient } = createWrapperWithClient();
+
+      const seededKey = queryKeys.payments.byEventIds(['ev1', 'ev2']);
+      queryClient.setQueryData(seededKey, [{ id: 'old', amount: 100 }]);
+      expect(queryClient.getQueryState(seededKey)?.isInvalidated).toBe(false);
+
+      const { result } = renderHook(() => useDeletePayment(), { wrapper });
+      await act(async () => {
+        result.current.mutate({ id: 'pay1', eventId: 'ev1' });
+      });
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+      expect(queryClient.getQueryState(seededKey)?.isInvalidated).toBe(true);
     });
   });
 });
