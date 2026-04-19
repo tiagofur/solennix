@@ -1,13 +1,20 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import { paymentService } from "../../../services/paymentService";
 import { Payment } from "../../../types/entities";
-import { Trash2, DollarSign, CheckCircle, AlertCircle, Calendar, CreditCard, Banknote } from "lucide-react";
+import { Plus, Trash2, DollarSign, CheckCircle, AlertCircle, Calendar, CreditCard, Banknote } from "lucide-react";
 import { logError } from "../../../lib/errorHandler";
 import { ConfirmDialog } from "../../../components/ConfirmDialog";
 import { Modal } from "../../../components/Modal";
-import { PaymentFormFields, PaymentFormData } from "../../../components/PaymentFormFields";
 import { useToast } from "../../../hooks/useToast";
 import clsx from "clsx";
+
+interface PaymentFormData {
+  amount: number;
+  payment_date: string;
+  payment_method: string;
+  notes: string;
+}
 
 interface PaymentsProps {
   eventId: string;
@@ -36,34 +43,41 @@ export const Payments: React.FC<PaymentsProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
   const [modalTitle, setModalTitle] = useState("Registrar Pago");
-  const [formInitialAmount, setFormInitialAmount] = useState(0);
-  const [formInitialNotes, setFormInitialNotes] = useState("");
-  const [isSavingPayment, setIsSavingPayment] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const { addToast } = useToast();
 
+  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm({
+    defaultValues: {
+      amount: 0,
+      payment_date: new Date().toISOString().split("T")[0],
+      payment_method: "cash",
+      notes: "",
+    },
+  });
+
   useEffect(() => {
     if (autoOpenAdd) {
       setModalTitle("Registrar Pago");
-      setFormInitialAmount(initialAmount !== undefined ? initialAmount : 0);
-      setFormInitialNotes("");
       setIsAdding(true);
+      if (initialAmount !== undefined) {
+        setValue("amount", parseFloat(initialAmount.toFixed(2)));
+      }
     }
-  }, [autoOpenAdd, initialAmount]);
+  }, [autoOpenAdd, initialAmount, setValue]);
 
   const openAddPayment = () => {
+    reset();
     setModalTitle("Registrar Pago");
-    setFormInitialAmount(0);
-    setFormInitialNotes("");
     setIsAdding(true);
   };
 
   const openAddDeposit = () => {
+    reset();
+    setValue("amount", parseFloat(depositBalance.toFixed(2)));
+    setValue("notes", "Anticipo");
     setModalTitle("Registrar Anticipo");
-    setFormInitialAmount(depositBalance);
-    setFormInitialNotes("Anticipo");
     setIsAdding(true);
   };
 
@@ -83,11 +97,11 @@ export const Payments: React.FC<PaymentsProps> = ({
   }, [loadPayments]);
 
   const onSubmit = async (data: PaymentFormData) => {
-    setIsSavingPayment(true);
     try {
       const newPaymentAmount = Number(data.amount);
       // `user_id` is NOT sent in the body — the backend takes the
-      // authenticated user from the JWT.
+      // authenticated user from the JWT. Previously the form was sending it
+      // as dead weight; PaymentInsert no longer accepts it.
       await paymentService.create({
         event_id: eventId,
         amount: newPaymentAmount,
@@ -103,14 +117,13 @@ export const Payments: React.FC<PaymentsProps> = ({
       }
 
       setIsAdding(false);
+      reset();
       loadPayments();
       onPaymentAdded?.();
       addToast("Pago registrado correctamente.", "success");
     } catch (err) {
       logError("Error creating payment", err);
       addToast("Error al registrar el pago.", "error");
-    } finally {
-      setIsSavingPayment(false);
     }
   };
 
@@ -329,14 +342,95 @@ export const Payments: React.FC<PaymentsProps> = ({
           maxWidth="2xl"
           titleId="payment-modal-title"
         >
-          <PaymentFormFields
-            initialAmount={formInitialAmount}
-            initialNotes={formInitialNotes}
-            saldoAmount={balance > 0 ? balance : undefined}
-            isSubmitting={isSavingPayment}
-            onCancel={() => setIsAdding(false)}
-            onSubmit={onSubmit}
-          />
+          <div className="animate-in zoom-in-95 fade-in duration-300">
+            <form 
+              onSubmit={handleSubmit(onSubmit)} 
+              className="relative overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
+                <Plus className="h-24 w-24 text-primary" />
+              </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+                <div>
+                  <label htmlFor="payment-amount" className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">Monto *</label>
+                  <div className="relative group">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-tertiary font-bold">$</span>
+                    <input
+                      id="payment-amount"
+                      type="number"
+                      step="0.01"
+                      {...register("amount", { required: "Monto requerido", min: 0.01 })}
+                      className="block w-full bg-card border border-border rounded-xl pl-8 pr-4 py-3 text-sm font-bold text-text focus:ring-2 focus:ring-primary/20 focus:border-primary outline-hidden transition-all"
+                      placeholder="0.00"
+                    />
+                    {balance > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setValue("amount", parseFloat(balance.toFixed(2)))}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 text-xs font-black bg-success text-white rounded-md hover:bg-success/90 transition-colors uppercase"
+                      >
+                        Saldo
+                      </button>
+                    )}
+                  </div>
+                  {errors.amount && <p className="text-xs text-error font-bold mt-1 uppercase tracking-tighter">{errors.amount.message as string}</p>}
+                </div>
+
+                <div>
+                  <label htmlFor="payment-date" className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">Fecha *</label>
+                  <input
+                    id="payment-date"
+                    type="date"
+                    {...register("payment_date", { required: true })}
+                    className="block w-full bg-card border border-border rounded-xl px-4 py-3 text-sm font-bold text-text focus:ring-2 focus:ring-primary/20 focus:border-primary outline-hidden transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="payment-method" className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">Método *</label>
+                  <select
+                    id="payment-method"
+                    {...register("payment_method")}
+                    className="block w-full bg-card border border-border rounded-xl px-4 py-3 text-sm font-bold text-text focus:ring-2 focus:ring-primary/20 focus:border-primary outline-hidden transition-all appearance-none cursor-pointer"
+                  >
+                    <option value="cash">Efectivo 💵</option>
+                    <option value="transfer">Transferencia 🏦</option>
+                    <option value="card">Tarjeta 💳</option>
+                    <option value="check">Cheque 📝</option>
+                    <option value="other">Otro 🏷️</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label htmlFor="payment-notes" className="block text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">Nota</label>
+                  <input
+                    id="payment-notes"
+                    type="text"
+                    {...register("notes")}
+                    className="block w-full bg-card border border-border rounded-xl px-4 py-3 text-sm font-bold text-text focus:ring-2 focus:ring-primary/20 focus:border-primary outline-hidden transition-all"
+                    placeholder="Ref. de pago..."
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-6 border-t border-border/50">
+                <button
+                  type="button"
+                  onClick={() => setIsAdding(false)}
+                  className="px-6 py-2.5 text-xs font-black text-text-tertiary uppercase tracking-widest hover:text-text transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-8 py-2.5 premium-gradient text-white text-xs font-black rounded-xl hover:opacity-90 shadow-lg shadow-primary/20 transition-all uppercase tracking-widest"
+                >
+                  Confirmar Pago
+                </button>
+              </div>
+            </form>
+          </div>
         </Modal>
       </div>
 

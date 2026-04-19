@@ -21,13 +21,10 @@ import {
   Zap,
 } from "lucide-react";
 import { logError } from "../lib/errorHandler";
-import { useEvents, useUpcomingEvents, useEventsByDateRange, useUpdateEventStatus } from "../hooks/queries/useEventQueries";
+import { useEvents, useUpcomingEvents, useEventsByDateRange } from "../hooks/queries/useEventQueries";
 import { useClients } from "../hooks/queries/useClientQueries";
 import { useInventoryItems } from "../hooks/queries/useInventoryQueries";
-import { usePaymentsByDateRange, usePaymentsByEventIds, useCreatePayment } from "../hooks/queries/usePaymentQueries";
-import { Modal } from "../components/Modal";
-import { PaymentFormFields, PaymentFormData } from "../components/PaymentFormFields";
-import { useToast } from "../hooks/useToast";
+import { usePaymentsByDateRange, usePaymentsByEventIds } from "../hooks/queries/usePaymentQueries";
 import {
   getEventNetSales,
   getEventTaxAmount,
@@ -58,7 +55,6 @@ type AttentionAlertTone = "warning" | "error";
 interface DashboardAttentionItem {
   event: DashboardEvent;
   detail: string;
-  pendingAmount: number;
 }
 
 interface DashboardAttentionAlert {
@@ -272,128 +268,7 @@ function LowStockCard({ item }: { item: InventoryItem }) {
   );
 }
 
-interface DashboardAttentionSectionProps {
-  alerts: DashboardAttentionAlert[];
-  updatingEventId: string | null;
-  onComplete: (eventId: string) => void;
-  onCancel: (eventId: string) => void;
-  onRegisterPayment: (event: DashboardEvent, pendingAmount: number) => void;
-}
-
-function AttentionItemCard({
-  alertKey,
-  item,
-  styles,
-  updatingEventId,
-  onComplete,
-  onCancel,
-  onRegisterPayment,
-}: {
-  alertKey: string;
-  item: DashboardAttentionItem;
-  styles: { detail: string };
-  updatingEventId: string | null;
-  onComplete: (eventId: string) => void;
-  onCancel: (eventId: string) => void;
-  onRegisterPayment: (event: DashboardEvent, pendingAmount: number) => void;
-}) {
-  const { event, detail, pendingAmount } = item;
-  const isUpdating = updatingEventId === event.id;
-  const hasPending = pendingAmount > 0.01;
-
-  return (
-    <div className="rounded-lg border border-border bg-card px-3 py-2.5">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-text truncate">{getDashboardEventClientName(event)}</p>
-          <p className="text-xs text-text-secondary truncate mt-0.5">{event.service_type}</p>
-        </div>
-        <span className="shrink-0 text-xs text-text-secondary whitespace-nowrap">
-          {format(parseDashboardEventDate(event.event_date), "d MMM", { locale: es })}
-        </span>
-      </div>
-      <p className={`text-xs font-semibold mt-1.5 ${styles.detail}`}>{detail}</p>
-
-      <div className="mt-2.5 flex flex-wrap gap-2 items-center">
-        {alertKey === "confirmed-payment" && hasPending && (
-          <button
-            type="button"
-            disabled={isUpdating}
-            onClick={() => onRegisterPayment(event, pendingAmount)}
-            className="px-3 py-1.5 text-xs font-bold rounded-lg bg-primary text-white hover:bg-primary-dark transition-colors disabled:opacity-50"
-          >
-            Registrar pago
-          </button>
-        )}
-
-        {alertKey === "past-active" && hasPending && (
-          <>
-            <button
-              type="button"
-              disabled={isUpdating}
-              onClick={() => onRegisterPayment(event, pendingAmount)}
-              className="px-3 py-1.5 text-xs font-bold rounded-lg bg-primary text-white hover:bg-primary-dark transition-colors disabled:opacity-50"
-            >
-              Pagar y completar
-            </button>
-            <button
-              type="button"
-              disabled={isUpdating}
-              onClick={() => onCancel(event.id)}
-              className="px-3 py-1.5 text-xs font-bold rounded-lg border border-error/40 text-error hover:bg-error/10 transition-colors disabled:opacity-50"
-            >
-              Cancelar
-            </button>
-            <button
-              type="button"
-              disabled={isUpdating}
-              onClick={() => onComplete(event.id)}
-              className="text-xs font-semibold text-text-secondary hover:text-text underline-offset-2 hover:underline disabled:opacity-50"
-            >
-              Solo completar
-            </button>
-          </>
-        )}
-
-        {alertKey === "past-active" && !hasPending && (
-          <>
-            <button
-              type="button"
-              disabled={isUpdating}
-              onClick={() => onComplete(event.id)}
-              className="px-3 py-1.5 text-xs font-bold rounded-lg bg-success text-white hover:bg-success/90 transition-colors disabled:opacity-50"
-            >
-              Completar
-            </button>
-            <button
-              type="button"
-              disabled={isUpdating}
-              onClick={() => onCancel(event.id)}
-              className="px-3 py-1.5 text-xs font-bold rounded-lg border border-error/40 text-error hover:bg-error/10 transition-colors disabled:opacity-50"
-            >
-              Cancelar
-            </button>
-          </>
-        )}
-
-        <Link
-          to={`/events/${event.id}/summary`}
-          className="text-xs font-semibold text-primary hover:underline ml-auto inline-flex items-center gap-1"
-        >
-          Ver detalle <ArrowRight className="h-3 w-3" />
-        </Link>
-      </div>
-    </div>
-  );
-}
-
-function DashboardAttentionSection({
-  alerts,
-  updatingEventId,
-  onComplete,
-  onCancel,
-  onRegisterPayment,
-}: DashboardAttentionSectionProps) {
+function DashboardAttentionSection({ alerts }: { alerts: DashboardAttentionAlert[] }) {
   if (alerts.length === 0) return null;
 
   const totalAlerts = alerts.reduce((sum, alert) => sum + alert.items.length, 0);
@@ -434,17 +309,23 @@ function DashboardAttentionSection({
               </div>
 
               <div className="mt-3 space-y-2">
-                {alert.items.slice(0, 3).map((item) => (
-                  <AttentionItemCard
-                    key={item.event.id}
-                    alertKey={alert.key}
-                    item={item}
-                    styles={styles}
-                    updatingEventId={updatingEventId}
-                    onComplete={onComplete}
-                    onCancel={onCancel}
-                    onRegisterPayment={onRegisterPayment}
-                  />
+                {alert.items.slice(0, 3).map(({ event, detail }) => (
+                  <Link
+                    key={event.id}
+                    to={`/events/${event.id}/summary`}
+                    className="block rounded-lg border border-border bg-card px-3 py-2.5 hover:border-primary/30 hover:shadow-sm transition-all"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-text truncate">{getDashboardEventClientName(event)}</p>
+                        <p className="text-xs text-text-secondary truncate mt-0.5">{event.service_type}</p>
+                      </div>
+                      <span className="shrink-0 text-xs text-text-secondary whitespace-nowrap">
+                        {format(parseDashboardEventDate(event.event_date), "d MMM", { locale: es })}
+                      </span>
+                    </div>
+                    <p className={`text-xs font-semibold mt-1.5 ${styles.detail}`}>{detail}</p>
+                  </Link>
                 ))}
 
                 {alert.items.length > 3 && (
@@ -515,8 +396,6 @@ export const Dashboard: React.FC = () => {
   const eventPayments = _eventPayments ?? [];
 
   // ── Derived: attention event IDs for payment query ──
-  // Includes confirmed events in the next 7 days AND past-active events
-  // so the saldo pendiente can be shown for both categories.
   const attentionCandidateIds = useMemo(() => {
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
@@ -524,11 +403,7 @@ export const Dashboard: React.FC = () => {
     return attentionEvents
       .filter((event) => {
         const eventDate = parseDashboardEventDate(event.event_date);
-        const isConfirmedSoon =
-          event.status === "confirmed" && eventDate >= todayStart && eventDate <= confirmedCutoff;
-        const isPastActive =
-          eventDate < todayStart && (event.status === "quoted" || event.status === "confirmed");
-        return isConfirmedSoon || isPastActive;
+        return event.status === "confirmed" && eventDate >= todayStart && eventDate <= confirmedCutoff;
       })
       .map((event) => event.id);
   }, [attentionEvents]);
@@ -588,76 +463,6 @@ export const Dashboard: React.FC = () => {
     }
   }, [searchParams, checkAuth, setSearchParams]);
 
-  // ── Attention actions: complete, cancel, register-payment-and-complete ──
-  const updateStatusMutation = useUpdateEventStatus();
-  const createPaymentMutation = useCreatePayment();
-  const [updatingEventId, setUpdatingEventId] = useState<string | null>(null);
-  const [paymentModal, setPaymentModal] = useState<{ event: DashboardEvent; pendingAmount: number } | null>(null);
-  const { addToast } = useToast();
-
-  const handleCompleteEvent = async (eventId: string) => {
-    setUpdatingEventId(eventId);
-    try {
-      await updateStatusMutation.mutateAsync({ id: eventId, status: "completed" });
-      addToast("Evento marcado como completado.", "success");
-    } catch (err) {
-      logError("Error completing event", err);
-    } finally {
-      setUpdatingEventId(null);
-    }
-  };
-
-  const handleCancelEvent = async (eventId: string) => {
-    setUpdatingEventId(eventId);
-    try {
-      await updateStatusMutation.mutateAsync({ id: eventId, status: "cancelled" });
-      addToast("Evento cancelado.", "success");
-    } catch (err) {
-      logError("Error cancelling event", err);
-    } finally {
-      setUpdatingEventId(null);
-    }
-  };
-
-  const handleOpenPaymentModal = (event: DashboardEvent, pendingAmount: number) => {
-    setPaymentModal({ event, pendingAmount });
-  };
-
-  const handlePayAndComplete = async (data: PaymentFormData) => {
-    if (!paymentModal) return;
-    const { event, pendingAmount } = paymentModal;
-    const eventDate = parseDashboardEventDate(event.event_date);
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-    const shouldAutoComplete = eventDate < todayStart && pendingAmount > 0.01;
-
-    setUpdatingEventId(event.id);
-    try {
-      await createPaymentMutation.mutateAsync({
-        event_id: event.id,
-        amount: data.amount,
-        payment_date: data.payment_date,
-        payment_method: data.payment_method,
-        notes: data.notes,
-      });
-
-      if (shouldAutoComplete) {
-        try {
-          await updateStatusMutation.mutateAsync({ id: event.id, status: "completed" });
-          addToast("Evento marcado como completado.", "success");
-        } catch (statusErr) {
-          logError("Error updating status after payment", statusErr);
-          addToast("Pago registrado. Marcá el evento como completado manualmente.", "info");
-        }
-      }
-      setPaymentModal(null);
-    } catch (err) {
-      logError("Error registering payment from dashboard", err);
-    } finally {
-      setUpdatingEventId(null);
-    }
-  };
-
   // Chart data
   const chartData = React.useMemo(() => {
     if (!eventsThisMonthList.length) return [];
@@ -706,7 +511,6 @@ export const Dashboard: React.FC = () => {
         return {
           event,
           detail: `Saldo pendiente ${fmt(pendingAmount)} de ${fmt(totalCharged)}`,
-          pendingAmount,
         };
       });
 
@@ -716,17 +520,10 @@ export const Dashboard: React.FC = () => {
         return eventDate < todayStart && (event.status === "quoted" || event.status === "confirmed");
       })
       .sort((a, b) => parseDashboardEventDate(a.event_date).getTime() - parseDashboardEventDate(b.event_date).getTime())
-      .map((event) => {
-        const totalCharged = getEventTotalCharged(event);
-        const totalPaid = attentionPaidByEvent[event.id] || 0;
-        const pendingAmount = Math.max(totalCharged - totalPaid, 0);
-        const baseDetail = event.status === "confirmed" ? "Evento pasado aún confirmado" : "Cotización vencida sin cerrar";
-        const detail = pendingAmount > 0.01
-          ? `${baseDetail} · saldo ${fmt(pendingAmount)}`
-          : baseDetail;
-
-        return { event, detail, pendingAmount };
-      });
+      .map((event) => ({
+        event,
+        detail: event.status === "confirmed" ? "Evento pasado aún confirmado" : "Cotización vencida sin cerrar",
+      }));
 
     const quotesWithoutConfirmation = attentionEvents
       .filter((event) => {
@@ -742,7 +539,6 @@ export const Dashboard: React.FC = () => {
           detail: daysUntilEvent === 0
             ? "La fecha del evento es hoy y sigue sin confirmar"
             : `Faltan ${daysUntilEvent} día(s) para confirmar`,
-          pendingAmount: 0,
         };
       });
 
@@ -821,43 +617,7 @@ export const Dashboard: React.FC = () => {
       )}
 
       {/* ── ALERTAS DE ATENCIÓN ── */}
-      <DashboardAttentionSection
-        alerts={attentionAlerts}
-        updatingEventId={updatingEventId}
-        onComplete={handleCompleteEvent}
-        onCancel={handleCancelEvent}
-        onRegisterPayment={handleOpenPaymentModal}
-      />
-
-      {/* ── PAGO + COMPLETAR (modal) ── */}
-      {paymentModal && (
-        <Modal
-          isOpen
-          onClose={() => setPaymentModal(null)}
-          title={
-            paymentModal.pendingAmount > 0.01 &&
-            parseDashboardEventDate(paymentModal.event.event_date) < new Date()
-              ? "Registrar pago y completar"
-              : "Registrar pago"
-          }
-          maxWidth="2xl"
-          titleId="dashboard-payment-modal-title"
-        >
-          <PaymentFormFields
-            initialAmount={paymentModal.pendingAmount}
-            saldoAmount={paymentModal.pendingAmount > 0 ? paymentModal.pendingAmount : undefined}
-            submitLabel={
-              paymentModal.pendingAmount > 0.01 &&
-              parseDashboardEventDate(paymentModal.event.event_date) < new Date()
-                ? "Pagar y completar"
-                : "Registrar pago"
-            }
-            isSubmitting={createPaymentMutation.isPending || updateStatusMutation.isPending}
-            onCancel={() => setPaymentModal(null)}
-            onSubmit={handlePayAndComplete}
-          />
-        </Modal>
-      )}
+      <DashboardAttentionSection alerts={attentionAlerts} />
 
       {/* ── MÉTRICAS + ACCIONES ── */}
       <section className="flex flex-col gap-3">
