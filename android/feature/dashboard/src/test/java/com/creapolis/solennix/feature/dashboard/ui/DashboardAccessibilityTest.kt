@@ -6,6 +6,7 @@ import com.creapolis.solennix.core.model.EventStatus
 import com.creapolis.solennix.core.model.InventoryItem
 import com.creapolis.solennix.core.model.InventoryType
 import com.creapolis.solennix.feature.dashboard.viewmodel.PendingEvent
+import com.creapolis.solennix.feature.dashboard.viewmodel.PendingEventReason
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -29,7 +30,14 @@ class DashboardAccessibilityTest {
             updatedAt = "2026-01-01T00:00:00Z"
         )
 
-        val label = pendingEventTalkBackLabel(PendingEvent(event = event, reason = "Falta anticipo"))
+        val label = pendingEventTalkBackLabel(
+            PendingEvent(
+                event = event,
+                reason = PendingEventReason.PAYMENT_DUE,
+                reasonLabel = "Falta anticipo",
+                pendingAmount = 100.0
+            )
+        )
 
         assertTrue(label.contains("Evento pendiente"))
         assertTrue(label.contains("XV"))

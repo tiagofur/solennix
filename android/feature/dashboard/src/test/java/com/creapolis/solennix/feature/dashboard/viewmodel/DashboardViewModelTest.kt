@@ -173,6 +173,191 @@ class DashboardViewModelTest {
     }
 
     @Test
+    fun `registerPayment with autoComplete creates payment then completes the event`() = runTest {
+        val today = LocalDate.now().minusDays(2).toString()
+        val pendingEvent = PendingEvent(
+            event = Event(
+                id = "event-overdue",
+                userId = "user-1",
+                clientId = "client-1",
+                eventDate = today,
+                serviceType = "Boda",
+                numPeople = 100,
+                status = EventStatus.CONFIRMED,
+                totalAmount = 1000.0,
+                taxRate = 0.16
+            ),
+            reason = PendingEventReason.OVERDUE_EVENT,
+            reasonLabel = "Evento vencido",
+            pendingAmount = 600.0
+        )
+
+        every { eventRepository.getUpcomingEvents(5) } returns flowOf(emptyList())
+        every { inventoryRepository.getLowStockItems() } returns flowOf(emptyList())
+        every { eventRepository.getEvents() } returns flowOf(listOf(pendingEvent.event))
+        every { clientRepository.getClients() } returns flowOf(emptyList())
+        every { paymentRepository.getPayments() } returns flowOf(emptyList())
+        every { productRepository.getProducts() } returns flowOf(emptyList())
+        every { authManager.currentUser } returns MutableStateFlow(
+            User(id = "user-1", email = "a@b.com", name = "Juan", plan = Plan.BASIC)
+        )
+
+        coEvery { eventRepository.syncEvents() } returns Unit
+        coEvery { inventoryRepository.syncInventory() } returns Unit
+        coEvery { clientRepository.syncClients() } returns Unit
+        coEvery { paymentRepository.syncPayments() } returns Unit
+        coEvery { productRepository.syncProducts() } returns Unit
+        coEvery { eventRepository.getEvent("event-overdue") } returns pendingEvent.event
+        coEvery { eventRepository.updateEvent(any()) } returns pendingEvent.event.copy(status = EventStatus.COMPLETED)
+        coEvery { paymentRepository.createPayment(any()) } answers {
+            firstArg<Payment>().copy(id = "pay-new")
+        }
+
+        val viewModel = DashboardViewModel(
+            eventRepository,
+            inventoryRepository,
+            clientRepository,
+            paymentRepository,
+            productRepository,
+            authManager
+        )
+        val collectJob = backgroundScope.launch { viewModel.uiState.collect {} }
+
+        advanceUntilIdle()
+        viewModel.registerPayment(
+            pendingEvent = pendingEvent,
+            amount = 600.0,
+            method = "cash",
+            notes = null,
+            date = LocalDate.now().toString(),
+            autoComplete = true
+        )
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { paymentRepository.createPayment(any()) }
+        coVerify(exactly = 1) {
+            eventRepository.updateEvent(match { it.id == "event-overdue" && it.status == EventStatus.COMPLETED })
+        }
+        collectJob.cancel()
+    }
+
+    @Test
+    fun `registerPayment without autoComplete only creates payment`() = runTest {
+        val pendingEvent = PendingEvent(
+            event = Event(
+                id = "event-future",
+                userId = "user-1",
+                clientId = "client-1",
+                eventDate = LocalDate.now().plusDays(3).toString(),
+                serviceType = "Boda",
+                numPeople = 100,
+                status = EventStatus.CONFIRMED,
+                totalAmount = 1000.0,
+                taxRate = 0.16
+            ),
+            reason = PendingEventReason.PAYMENT_DUE,
+            reasonLabel = "Cobro por cerrar",
+            pendingAmount = 400.0
+        )
+
+        every { eventRepository.getUpcomingEvents(5) } returns flowOf(emptyList())
+        every { inventoryRepository.getLowStockItems() } returns flowOf(emptyList())
+        every { eventRepository.getEvents() } returns flowOf(listOf(pendingEvent.event))
+        every { clientRepository.getClients() } returns flowOf(emptyList())
+        every { paymentRepository.getPayments() } returns flowOf(emptyList())
+        every { productRepository.getProducts() } returns flowOf(emptyList())
+        every { authManager.currentUser } returns MutableStateFlow(
+            User(id = "user-1", email = "a@b.com", name = "Juan", plan = Plan.BASIC)
+        )
+
+        coEvery { eventRepository.syncEvents() } returns Unit
+        coEvery { inventoryRepository.syncInventory() } returns Unit
+        coEvery { clientRepository.syncClients() } returns Unit
+        coEvery { paymentRepository.syncPayments() } returns Unit
+        coEvery { productRepository.syncProducts() } returns Unit
+        coEvery { paymentRepository.createPayment(any()) } answers {
+            firstArg<Payment>().copy(id = "pay-new")
+        }
+
+        val viewModel = DashboardViewModel(
+            eventRepository,
+            inventoryRepository,
+            clientRepository,
+            paymentRepository,
+            productRepository,
+            authManager
+        )
+        val collectJob = backgroundScope.launch { viewModel.uiState.collect {} }
+
+        advanceUntilIdle()
+        viewModel.registerPayment(
+            pendingEvent = pendingEvent,
+            amount = 400.0,
+            method = "cash",
+            notes = null,
+            date = LocalDate.now().toString(),
+            autoComplete = false
+        )
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { paymentRepository.createPayment(any()) }
+        coVerify(exactly = 0) { eventRepository.updateEvent(any()) }
+        collectJob.cancel()
+    }
+
+    @Test
+    fun `updateEventStatus marks event with chosen status`() = runTest {
+        val event = Event(
+            id = "event-x",
+            userId = "user-1",
+            clientId = "client-1",
+            eventDate = LocalDate.now().minusDays(5).toString(),
+            serviceType = "Boda",
+            numPeople = 100,
+            status = EventStatus.CONFIRMED,
+            totalAmount = 500.0,
+            taxRate = 0.16
+        )
+
+        every { eventRepository.getUpcomingEvents(5) } returns flowOf(emptyList())
+        every { inventoryRepository.getLowStockItems() } returns flowOf(emptyList())
+        every { eventRepository.getEvents() } returns flowOf(listOf(event))
+        every { clientRepository.getClients() } returns flowOf(emptyList())
+        every { paymentRepository.getPayments() } returns flowOf(emptyList())
+        every { productRepository.getProducts() } returns flowOf(emptyList())
+        every { authManager.currentUser } returns MutableStateFlow(
+            User(id = "user-1", email = "a@b.com", name = "Juan", plan = Plan.BASIC)
+        )
+
+        coEvery { eventRepository.syncEvents() } returns Unit
+        coEvery { inventoryRepository.syncInventory() } returns Unit
+        coEvery { clientRepository.syncClients() } returns Unit
+        coEvery { paymentRepository.syncPayments() } returns Unit
+        coEvery { productRepository.syncProducts() } returns Unit
+        coEvery { eventRepository.getEvent("event-x") } returns event
+        coEvery { eventRepository.updateEvent(any()) } returns event.copy(status = EventStatus.COMPLETED)
+
+        val viewModel = DashboardViewModel(
+            eventRepository,
+            inventoryRepository,
+            clientRepository,
+            paymentRepository,
+            productRepository,
+            authManager
+        )
+        val collectJob = backgroundScope.launch { viewModel.uiState.collect {} }
+
+        advanceUntilIdle()
+        viewModel.updateEventStatus("event-x", EventStatus.COMPLETED)
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) {
+            eventRepository.updateEvent(match { it.id == "event-x" && it.status == EventStatus.COMPLETED })
+        }
+        collectJob.cancel()
+    }
+
+    @Test
     fun `refresh triggers all sync operations`() = runTest {
         every { eventRepository.getUpcomingEvents(5) } returns flowOf(emptyList())
         every { inventoryRepository.getLowStockItems() } returns flowOf(emptyList())
