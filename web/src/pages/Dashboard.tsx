@@ -21,13 +21,22 @@ import {
   Zap,
 } from "lucide-react";
 import { logError } from "../lib/errorHandler";
+import { useQueryClient } from "@tanstack/react-query";
 import { useEvents, useUpcomingEvents, useEventsByDateRange, useUpdateEventStatus } from "../hooks/queries/useEventQueries";
 import { useClients } from "../hooks/queries/useClientQueries";
 import { useInventoryItems } from "../hooks/queries/useInventoryQueries";
 import { usePaymentsByDateRange, usePaymentsByEventIds, useCreatePayment } from "../hooks/queries/usePaymentQueries";
+import { queryKeys } from "../hooks/queries/queryKeys";
+import { eventService } from "../services/eventService";
 import { Modal } from "../components/Modal";
 import { PaymentFormFields, PaymentFormData } from "../components/PaymentFormFields";
 import { useToast } from "../hooks/useToast";
+
+// Single source of truth for the "paid enough / has pending balance" cutoff.
+// Used by detection logic, the dashboard CTAs, and the financial-critical
+// auto-complete guard. Keep in sync with mobile's MIN_PENDING_AMOUNT
+// (Android core/dashboard, iOS PendingEventsViewModel).
+const PAYMENT_COMPLETION_EPSILON = 0.01;
 import {
   getEventNetSales,
   getEventTaxAmount,
@@ -299,7 +308,7 @@ function AttentionItemCard({
 }) {
   const { event, detail, pendingAmount } = item;
   const isUpdating = updatingEventId === event.id;
-  const hasPending = pendingAmount > 0.01;
+  const hasPending = pendingAmount > PAYMENT_COMPLETION_EPSILON;
 
   return (
     <div className="rounded-lg border border-border bg-card px-3 py-2.5">
@@ -632,15 +641,11 @@ export const Dashboard: React.FC = () => {
     const eventDate = parseDashboardEventDate(event.event_date);
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
-    const shouldAutoComplete = eventDate < todayStart && pendingAmount > 0.01;
+    const shouldAutoComplete = eventDate < todayStart && pendingAmount > PAYMENT_COMPLETION_EPSILON;
     setPaymentModal({ event, pendingAmount, shouldAutoComplete });
   };
 
-  // PAYMENT_COMPLETION_EPSILON guards the Bug 5 case from PR #72:
-  // a partial payment in a "Pagar y completar" flow must NOT auto-complete
-  // the event. Cross-platform the same epsilon is used (iOS PR #74,
-  // Android PR #73). Single source of truth in this file.
-  const PAYMENT_COMPLETION_EPSILON = 0.01;
+  const queryClient = useQueryClient();
 
   const handlePayAndComplete = async (data: PaymentFormData) => {
     if (!paymentModal) return;
@@ -659,8 +664,14 @@ export const Dashboard: React.FC = () => {
       });
 
       if (willAutoComplete) {
+        // Bypass useUpdateEventStatus here: its onError shows a generic
+        // error toast that would compete with the recovery info toast
+        // below (Copilot review). We still mirror the hook's invalidations.
         try {
-          await updateStatusMutation.mutateAsync({ id: event.id, status: "completed" });
+          await eventService.update(event.id, { status: "completed" });
+          queryClient.invalidateQueries({ queryKey: queryKeys.events.all });
+          queryClient.invalidateQueries({ queryKey: queryKeys.events.detail(event.id) });
+          queryClient.invalidateQueries({ queryKey: queryKeys.events.upcoming(5) });
           addToast("Evento marcado como completado.", "success");
         } catch (statusErr) {
           logError("Error updating status after payment", statusErr);
@@ -717,7 +728,7 @@ export const Dashboard: React.FC = () => {
 
         const totalCharged = getEventTotalCharged(event);
         const totalPaid = attentionPaidByEvent[event.id] || 0;
-        return totalCharged - totalPaid > 0.01;
+        return totalCharged - totalPaid > PAYMENT_COMPLETION_EPSILON;
       })
       .sort((a, b) => parseDashboardEventDate(a.event_date).getTime() - parseDashboardEventDate(b.event_date).getTime())
       .map((event) => {
@@ -743,7 +754,7 @@ export const Dashboard: React.FC = () => {
         const totalPaid = attentionPaidByEvent[event.id] || 0;
         const pendingAmount = Math.max(totalCharged - totalPaid, 0);
         const baseDetail = event.status === "confirmed" ? "Evento pasado aún confirmado" : "Cotización vencida sin cerrar";
-        const detail = pendingAmount > 0.01 ? `${baseDetail} · saldo ${fmt(pendingAmount)}` : baseDetail;
+        const detail = pendingAmount > PAYMENT_COMPLETION_EPSILON ? `${baseDetail} · saldo ${fmt(pendingAmount)}` : baseDetail;
 
         return { event, detail, pendingAmount };
       });
@@ -862,7 +873,7 @@ export const Dashboard: React.FC = () => {
             initialAmount={paymentModal.pendingAmount}
             saldoAmount={paymentModal.pendingAmount > 0 ? paymentModal.pendingAmount : undefined}
             submitLabel={paymentModal.shouldAutoComplete ? "Pagar y completar" : "Registrar pago"}
-            isSubmitting={createPaymentMutation.isPending || updateStatusMutation.isPending}
+            isSubmitting={createPaymentMutation.isPending || updatingEventId === paymentModal.event.id}
             onCancel={() => setPaymentModal(null)}
             onSubmit={handlePayAndComplete}
           />

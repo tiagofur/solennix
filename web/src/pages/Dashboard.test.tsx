@@ -427,8 +427,12 @@ describe('Dashboard', () => {
         );
       });
 
-      // Status update must NOT be called for partial pay (Bug 5 guard)
-      await new Promise((r) => setTimeout(r, 50));
+      // Wait for the modal to close — that only happens after the handler
+      // finishes its async block, so by this point the auto-complete branch
+      // had its chance to fire and didn't (Bug 5 guard).
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      });
       expect((eventService.update as any)).not.toHaveBeenCalled();
     });
 
