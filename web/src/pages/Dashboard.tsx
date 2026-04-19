@@ -592,7 +592,11 @@ export const Dashboard: React.FC = () => {
   const updateStatusMutation = useUpdateEventStatus();
   const createPaymentMutation = useCreatePayment();
   const [updatingEventId, setUpdatingEventId] = useState<string | null>(null);
-  const [paymentModal, setPaymentModal] = useState<{ event: DashboardEvent; pendingAmount: number } | null>(null);
+  const [paymentModal, setPaymentModal] = useState<{
+    event: DashboardEvent;
+    pendingAmount: number;
+    shouldAutoComplete: boolean;
+  } | null>(null);
   const { addToast } = useToast();
 
   const handleCompleteEvent = async (eventId: string) => {
@@ -620,16 +624,19 @@ export const Dashboard: React.FC = () => {
   };
 
   const handleOpenPaymentModal = (event: DashboardEvent, pendingAmount: number) => {
-    setPaymentModal({ event, pendingAmount });
-  };
-
-  const handlePayAndComplete = async (data: PaymentFormData) => {
-    if (!paymentModal) return;
-    const { event, pendingAmount } = paymentModal;
+    // Compute shouldAutoComplete once at open time using day-based comparison
+    // (event date < today start). parseDashboardEventDate normalizes to T12:00,
+    // so comparing against `new Date()` would flip at midday — see PR #72 review.
     const eventDate = parseDashboardEventDate(event.event_date);
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
     const shouldAutoComplete = eventDate < todayStart && pendingAmount > 0.01;
+    setPaymentModal({ event, pendingAmount, shouldAutoComplete });
+  };
+
+  const handlePayAndComplete = async (data: PaymentFormData) => {
+    if (!paymentModal) return;
+    const { event, shouldAutoComplete } = paymentModal;
 
     setUpdatingEventId(event.id);
     try {
@@ -834,24 +841,14 @@ export const Dashboard: React.FC = () => {
         <Modal
           isOpen
           onClose={() => setPaymentModal(null)}
-          title={
-            paymentModal.pendingAmount > 0.01 &&
-            parseDashboardEventDate(paymentModal.event.event_date) < new Date()
-              ? "Registrar pago y completar"
-              : "Registrar pago"
-          }
+          title={paymentModal.shouldAutoComplete ? "Registrar pago y completar" : "Registrar pago"}
           maxWidth="2xl"
           titleId="dashboard-payment-modal-title"
         >
           <PaymentFormFields
             initialAmount={paymentModal.pendingAmount}
             saldoAmount={paymentModal.pendingAmount > 0 ? paymentModal.pendingAmount : undefined}
-            submitLabel={
-              paymentModal.pendingAmount > 0.01 &&
-              parseDashboardEventDate(paymentModal.event.event_date) < new Date()
-                ? "Pagar y completar"
-                : "Registrar pago"
-            }
+            submitLabel={paymentModal.shouldAutoComplete ? "Pagar y completar" : "Registrar pago"}
             isSubmitting={createPaymentMutation.isPending || updateStatusMutation.isPending}
             onCancel={() => setPaymentModal(null)}
             onSubmit={handlePayAndComplete}

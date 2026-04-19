@@ -33,6 +33,19 @@ export function usePaymentsByDateRange(start: string, end: string) {
 
 // ── Mutations ──
 
+// Invalidates every active `usePaymentsByEventIds` query (key shape:
+// `['payments', 'byEventIds', ...sortedEventIds]`). Necessary because the
+// dashboard's saldo pendiente depends on this aggregated cache and the
+// per-event `byEvent` invalidation alone leaves it stale.
+function invalidatePaymentsByEventIds(queryClient: ReturnType<typeof useQueryClient>) {
+  queryClient.invalidateQueries({
+    predicate: (q) =>
+      Array.isArray(q.queryKey)
+      && q.queryKey[0] === 'payments'
+      && q.queryKey[1] === 'byEventIds',
+  });
+}
+
 export function useCreatePayment() {
   const queryClient = useQueryClient();
   const { addToast } = useToast();
@@ -43,6 +56,7 @@ export function useCreatePayment() {
       paymentService.create(data),
     onSuccess: (_result, { event_id }) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.payments.byEvent(event_id) });
+      invalidatePaymentsByEventIds(queryClient);
       addToast('Pago registrado correctamente.', 'success');
     },
     onError: (error) => {
@@ -62,6 +76,7 @@ export function useDeletePayment() {
       paymentService.delete(id),
     onSuccess: (_result, { eventId }) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.payments.byEvent(eventId) });
+      invalidatePaymentsByEventIds(queryClient);
       addToast('Pago eliminado correctamente.', 'success');
     },
     onError: (error) => {
