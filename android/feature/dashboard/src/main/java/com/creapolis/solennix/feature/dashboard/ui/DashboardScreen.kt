@@ -1,5 +1,6 @@
 package com.creapolis.solennix.feature.dashboard.ui
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -13,6 +14,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -22,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
@@ -43,6 +46,7 @@ import com.creapolis.solennix.core.model.extensions.asMXN
 import com.creapolis.solennix.core.model.extensions.parseFlexibleDate
 import com.creapolis.solennix.feature.dashboard.viewmodel.DashboardViewModel
 import com.creapolis.solennix.feature.dashboard.viewmodel.PendingEvent
+import com.creapolis.solennix.feature.dashboard.viewmodel.PendingEventReason
 import com.creapolis.solennix.feature.dashboard.viewmodel.StatusCount
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -59,10 +63,19 @@ fun DashboardScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isWideScreen = LocalIsWideScreen.current
+    val context = LocalContext.current
 
     LifecycleResumeEffect(viewModel) {
         viewModel.refresh()
         onPauseOrDispose { }
+    }
+
+    // Surface ViewModel transient messages as a toast (matches Solennix Android pattern).
+    LaunchedEffect(uiState.transientMessage) {
+        uiState.transientMessage?.let { message ->
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            viewModel.consumeTransientMessage()
+        }
     }
 
     Scaffold(
@@ -149,7 +162,17 @@ fun DashboardScreen(
                                 uiState.pendingEvents.forEach { pendingEvent ->
                                     PendingEventItem(
                                         pendingEvent = pendingEvent,
-                                        onClick = { onEventClick(pendingEvent.event.id) }
+                                        isUpdating = uiState.updatingEventId == pendingEvent.event.id,
+                                        onClick = { onEventClick(pendingEvent.event.id) },
+                                        onComplete = {
+                                            viewModel.updateEventStatus(pendingEvent.event.id, EventStatus.COMPLETED)
+                                        },
+                                        onCancel = {
+                                            viewModel.updateEventStatus(pendingEvent.event.id, EventStatus.CANCELLED)
+                                        },
+                                        onRegisterPayment = {
+                                            viewModel.openPaymentModal(pendingEvent)
+                                        }
                                     )
                                 }
                             }
@@ -289,6 +312,33 @@ fun DashboardScreen(
             }
             }
         }
+
+        uiState.paymentModalEvent?.let { pe ->
+            val isOverdueWithBalance =
+                pe.reason == PendingEventReason.OVERDUE_EVENT && pe.pendingAmount > 0.01
+            val (modalTitle, confirmLabel) = if (isOverdueWithBalance) {
+                "Registrar pago y completar" to "Pagar y completar"
+            } else {
+                "Registrar pago" to "Guardar Pago"
+            }
+            PaymentModal(
+                remaining = pe.pendingAmount,
+                initialAmount = pe.pendingAmount.takeIf { it > 0 },
+                title = modalTitle,
+                confirmLabel = confirmLabel,
+                onDismiss = { viewModel.dismissPaymentModal() },
+                onConfirm = { amount, method, notes, date ->
+                    viewModel.registerPayment(
+                        pendingEvent = pe,
+                        amount = amount,
+                        method = method,
+                        notes = notes,
+                        date = date,
+                        autoComplete = isOverdueWithBalance
+                    )
+                }
+            )
+        }
     }
 }
 
@@ -386,53 +436,142 @@ private fun statusLabel(status: EventStatus): String {
 }
 
 @Composable
-fun PendingEventItem(pendingEvent: PendingEvent, onClick: () -> Unit = {}) {
+fun PendingEventItem(
+    pendingEvent: PendingEvent,
+    isUpdating: Boolean = false,
+    onClick: () -> Unit = {},
+    onComplete: () -> Unit = {},
+    onCancel: () -> Unit = {},
+    onRegisterPayment: () -> Unit = {}
+) {
+    val hasPending = pendingEvent.pendingAmount > 0.01
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
             .semantics(mergeDescendants = true) {
                 contentDescription = pendingEventTalkBackLabel(pendingEvent)
-            }
-            .clickable(onClick = onClick),
+            },
         colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
         shape = MaterialTheme.shapes.medium
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Default.ErrorOutline,
-                contentDescription = null,
-                tint = SolennixTheme.colors.warning,
-                modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = pendingEvent.event.serviceType,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = SolennixTheme.colors.primaryText
-                )
-                Text(
-                    text = pendingEvent.event.eventDate,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = SolennixTheme.colors.secondaryText
-                )
-            }
-            Surface(
-                color = SolennixTheme.colors.warning.copy(alpha = 0.15f),
-                shape = RoundedCornerShape(6.dp)
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(onClick = onClick),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = pendingEvent.reason,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                    color = SolennixTheme.colors.warning,
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.Bold
+                Icon(
+                    imageVector = Icons.Default.ErrorOutline,
+                    contentDescription = null,
+                    tint = SolennixTheme.colors.warning,
+                    modifier = Modifier.size(24.dp)
                 )
+                Spacer(modifier = Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = pendingEvent.event.serviceType,
+                        style = MaterialTheme.typography.titleSmall,
+                        color = SolennixTheme.colors.primaryText
+                    )
+                    Text(
+                        text = pendingEvent.event.eventDate,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = SolennixTheme.colors.secondaryText
+                    )
+                }
+                Surface(
+                    color = SolennixTheme.colors.warning.copy(alpha = 0.15f),
+                    shape = RoundedCornerShape(6.dp)
+                ) {
+                    Text(
+                        text = pendingEvent.reasonLabel,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        color = SolennixTheme.colors.warning,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            PendingEventActions(
+                reason = pendingEvent.reason,
+                hasPending = hasPending,
+                isUpdating = isUpdating,
+                onComplete = onComplete,
+                onCancel = onCancel,
+                onRegisterPayment = onRegisterPayment,
+                onViewDetail = onClick
+            )
+        }
+    }
+}
+
+@Composable
+private fun PendingEventActions(
+    reason: PendingEventReason,
+    hasPending: Boolean,
+    isUpdating: Boolean,
+    onComplete: () -> Unit,
+    onCancel: () -> Unit,
+    onRegisterPayment: () -> Unit,
+    onViewDetail: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        when (reason) {
+            PendingEventReason.PAYMENT_DUE -> {
+                Button(
+                    onClick = onRegisterPayment,
+                    enabled = !isUpdating,
+                    colors = ButtonDefaults.buttonColors(containerColor = SolennixTheme.colors.primary)
+                ) { Text("Registrar pago") }
+                TextButton(onClick = onViewDetail, enabled = !isUpdating) { Text("Ver") }
+            }
+            PendingEventReason.OVERDUE_EVENT -> {
+                if (hasPending) {
+                    Button(
+                        onClick = onRegisterPayment,
+                        enabled = !isUpdating,
+                        colors = ButtonDefaults.buttonColors(containerColor = SolennixTheme.colors.primary)
+                    ) { Text("Pagar y completar") }
+                    OutlinedButton(
+                        onClick = onCancel,
+                        enabled = !isUpdating,
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = SolennixTheme.colors.error)
+                    ) { Text("Cancelar") }
+                    TextButton(onClick = onComplete, enabled = !isUpdating) { Text("Solo completar") }
+                } else {
+                    Button(
+                        onClick = onComplete,
+                        enabled = !isUpdating,
+                        colors = ButtonDefaults.buttonColors(containerColor = SolennixTheme.colors.success)
+                    ) { Text("Completar") }
+                    OutlinedButton(
+                        onClick = onCancel,
+                        enabled = !isUpdating,
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = SolennixTheme.colors.error)
+                    ) { Text("Cancelar") }
+                }
+            }
+            PendingEventReason.QUOTE_URGENT -> {
+                TextButton(onClick = onViewDetail, enabled = !isUpdating) { Text("Ver detalle") }
+            }
+        }
+
+        if (isUpdating) {
+            Spacer(modifier = Modifier.width(4.dp))
+            CircularProgressIndicator(
+                modifier = Modifier.size(16.dp),
+                strokeWidth = 2.dp,
+                color = SolennixTheme.colors.primary
+            )
         }
     }
 }
@@ -640,7 +779,7 @@ internal fun pendingEventTalkBackLabel(pendingEvent: PendingEvent): String {
         append("Evento pendiente")
         append(": ${pendingEvent.event.serviceType}")
         append(", fecha ${pendingEvent.event.eventDate}")
-        append(", motivo ${pendingEvent.reason}")
+        append(", motivo ${pendingEvent.reasonLabel}")
     }
 }
 
