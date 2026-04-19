@@ -200,7 +200,7 @@ web/src/
 │   ├── QuickActionsFAB.tsx           # FAB de acciones rapidas solo para smartphones (<768px)
 │   ├── UpgradeBanner.tsx             # Banner de upgrade a plan PRO
 │   ├── OnboardingChecklist.tsx       # Checklist de onboarding para nuevos usuarios
-│   ├── PaymentFormFields.tsx         # Form de pago reusable (monto, fecha, metodo, notas) consumido por Payments.tsx y Dashboard.tsx (modal de "Pagar y completar")
+│   ├── PendingEventsModal.tsx        # Modal de eventos pendientes de confirmacion (orfano post-refactor de marzo 2026; pendiente decidir reemplazo definitivo tras revert PR #76)
 │   ├── SetupRequired.tsx             # Pantalla de configuracion inicial requerida
 │   └── ContractTemplateEditor.tsx    # Editor de plantillas de contrato
 │

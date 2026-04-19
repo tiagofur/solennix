@@ -459,7 +459,7 @@ Cada alerta muestra: nombre del evento, fecha, razon (badge), monto pendiente cu
 | Evento vencido     | Si tiene saldo: "Pagar y completar" (atajo: registra pago + marca completado en una sola accion), "Cancelar", "Solo completar". Si no tiene saldo: "Completar", "Cancelar". El saldo se pre-llena en el form de pago |
 | Cotizacion urgente | Solo navegacion al detalle (no requiere accion rapida)                                                                                                                                                               |
 
-**"Pagar y completar"** ejecuta dos llamadas secuenciales: `POST /payments` para crear el pago y, si tuvo exito, `PUT /events/{id}` con `status: completed`. Si falla la segunda llamada, se muestra un mensaje de recuperacion para que el organizador complete el evento manualmente desde el detalle.
+**"Pagar y completar"** ejecuta dos llamadas secuenciales: `POST /api/payments` para crear el pago y, si tuvo exito, `PUT /api/events/{id}` con `{"status": "completed"}`. El auto-complete solo dispara cuando el monto ingresado cubre el saldo pendiente (`amount >= pendingAmount - 0.01`) — un pago parcial no marca el evento como completado. Si falla la segunda llamada, se muestra un mensaje de recuperacion para que el organizador complete el evento manualmente desde el detalle.
 
 #### Quick Actions (2 botones)
 
@@ -488,7 +488,7 @@ Cada alerta muestra: nombre del evento, fecha, razon (badge), monto pendiente cu
 
 - **[iOS]**: `DashboardView`, `KPICardView`, `EventStatusChart`, `PendingEventsModalView` (modal bloqueante con CTAs por categoria), `PaymentEntrySheet` (sheet reusable para registrar pago)
 - **[Android]**: `DashboardScreen`, `PendingEventItem` (banner inline en LazyColumn con CTAs por categoria), `PaymentModal` (extraido a `core:designsystem` para reuso)
-- **[Web]**: `Dashboard`, `DashboardAttentionSection` (seccion inline con CTAs por categoria), `PaymentFormFields` (form reusable consumido por modal del dashboard y detalle de evento)
+- **[Web]**: `Dashboard`, `DashboardAttentionSection` (seccion inline con las 3 categorias y navegacion al detalle del evento). Las acciones rapidas inline (Registrar pago / Completar / Cancelar / Pagar y completar / Solo completar) estan **pendientes de re-implementacion** — la version inicial fue reverted por bugs financieros (ver tarea cross-platform "Bug 5: auto-complete sin verificar monto" para el contexto). Mientras tanto, las acciones se ejecutan desde el detalle del evento.
 
 **Endpoints usados por las acciones inline:**
 
