@@ -91,7 +91,7 @@ public struct EventPaymentsDetailView: View {
                 // Deposit status
                 if let depositPercent = event.depositPercent, depositPercent > 0 {
                     let depositAmount = event.totalAmount * (depositPercent / 100)
-                    let isDepositMet = viewModel.totalPaid >= (depositAmount - 0.1)
+                    let isDepositMet = viewModel.totalPaid >= (depositAmount - 0.01)
                     HStack(spacing: Spacing.sm) {
                         Image(systemName: isDepositMet ? "checkmark.seal.fill" : "exclamationmark.triangle.fill")
                             .font(.title3)
@@ -119,13 +119,21 @@ public struct EventPaymentsDetailView: View {
 
                 // Action buttons
                 if viewModel.remaining > 0.01 {
-                    HStack(spacing: Spacing.sm) {
-                        PremiumButton(title: "Registrar Pago", fullWidth: true) {
-                            viewModel.showPaymentSheet = true
+                    VStack(spacing: Spacing.sm) {
+                        HStack(spacing: Spacing.sm) {
+                            PremiumButton(title: "Registrar Pago", fullWidth: true) {
+                                viewModel.showPaymentSheet = true
+                            }
+
+                            PremiumButton(title: "Liquidar \(viewModel.remaining.asMXN)", fullWidth: true) {
+                                viewModel.payRemaining()
+                            }
                         }
 
-                        PremiumButton(title: "Liquidar \(viewModel.remaining.asMXN)", fullWidth: true) {
-                            viewModel.payRemaining()
+                        if viewModel.depositBalance > 0.01 {
+                            PremiumButton(title: "$ Anticipo - \(viewModel.depositBalance.asMXN)", fullWidth: true) {
+                                viewModel.payDeposit()
+                            }
                         }
                     }
                 }

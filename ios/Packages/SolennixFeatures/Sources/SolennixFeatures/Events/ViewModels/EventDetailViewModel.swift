@@ -69,6 +69,18 @@ public final class EventDetailViewModel {
         remaining <= 0.01
     }
 
+    /// Monto total del anticipo basado en `depositPercent` y `totalAmount`.
+    /// Devuelve 0 si el evento no tiene porcentaje de anticipo.
+    public var depositAmount: Double {
+        guard let event, let pct = event.depositPercent, pct > 0 else { return 0 }
+        return event.totalAmount * pct / 100.0
+    }
+
+    /// Saldo pendiente del anticipo (lo que falta pagar para cubrirlo).
+    public var depositBalance: Double {
+        max(depositAmount - totalPaid, 0)
+    }
+
     /// Reusable `yyyy-MM-dd` formatter. SwiftUI re-reads `canStartLiveActivity`
     /// on every render, so allocating a new `DateFormatter` per access (as we
     /// did previously) showed up as measurable render overhead on devices.
@@ -255,14 +267,11 @@ public final class EventDetailViewModel {
     }
 
     public func payDeposit() {
-        guard let event else { return }
-        let depositPct = event.depositPercent ?? 0.0
-        if depositPct > 0 {
-            let depositAmount = (event.totalAmount * depositPct) / 100.0
-            let formatted = String(format: "%.2f", depositAmount)
-            paymentAmount = formatted
-            showPaymentSheet = true
-        }
+        let balance = depositBalance
+        guard balance > 0.01 else { return }
+        paymentAmount = String(format: "%.2f", balance)
+        paymentNotes = "Anticipo"
+        showPaymentSheet = true
     }
 
     @MainActor

@@ -1057,6 +1057,7 @@ Visualización + registro de pago por transferencia con approve/reject. Reemplaz
 | Detalle de evento (Hub con cards)          | ✅  | ✅      | ✅  | ✅      | Mobile: cards navegables a sub-pantallas. Web: tabs                      |
 | Sub-pantalla: Finanzas (9 KPIs)            | ✅  | ✅      | ✅  | ✅      | Total, Bruta, IVA, Anticipo, Descuento, Costos, Utilidad, Margen, Pagado |
 | Sub-pantalla: Pagos (historial + registro) | ✅  | ✅      | ✅  | ✅      | KPIs, progress bar, deposito, historial completo                         |
+| Botón explícito "$ Anticipo" en Pagos      | ✅  | ✅      | ✅  | —       | Pre-llena saldo pendiente + notes="Anticipo". iOS cerrado 2026-04-19 (#80) |
 | Sub-pantalla: Productos                    | ✅  | ✅      | ✅  | ✅      | Lista con cantidades y precios                                           |
 | Sub-pantalla: Extras                       | ✅  | ✅      | ✅  | ✅      |                                                                          |
 | Sub-pantalla: Insumos                      | ✅  | ✅      | ✅  | ✅      | Con badges almacen/compra                                                |

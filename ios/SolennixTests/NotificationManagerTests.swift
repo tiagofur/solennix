@@ -3,6 +3,7 @@ import UserNotifications
 @testable import Solennix
 import SolennixCore
 
+@MainActor
 final class NotificationManagerTests: XCTestCase {
 
     func testExtractEventIdFromReminderIdentifier() {

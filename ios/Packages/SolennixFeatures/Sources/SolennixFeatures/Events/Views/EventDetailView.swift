@@ -750,9 +750,8 @@ public struct EventDetailView: View {
                         }
                     }
 
-                    if let depositPct = event.depositPercent, depositPct > 0, viewModel.totalPaid < 0.01 {
-                        let depositAmount = (event.totalAmount * depositPct) / 100.0
-                        PremiumButton(title: "Registrar Anticipo (\(Int(depositPct))%) - \(depositAmount.asMXN)", fullWidth: true) {
+                    if let depositPct = event.depositPercent, depositPct > 0, viewModel.depositBalance > 0.01 {
+                        PremiumButton(title: "Registrar Anticipo (\(Int(depositPct))%) - \(viewModel.depositBalance.asMXN)", fullWidth: true) {
                             viewModel.payDeposit()
                         }
                     }

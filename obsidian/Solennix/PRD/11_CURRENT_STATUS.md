@@ -8,7 +8,7 @@ aliases:
   - Estado Actual
   - Current Status
 date: 2026-03-20
-updated: 2026-04-18
+updated: 2026-04-19
 status: active
 ---
 
@@ -16,6 +16,15 @@ status: active
 
 **Fecha:** Abril 2026
 **Version:** 1.2
+
+> [!info] 2026-04-19 — iOS: botón explícito "$ Anticipo" (paridad con Web/Android, issue #80 Opción B)
+> iOS quedaba sin el botón directo para registrar anticipo en `EventPaymentsDetailView` — el usuario tenía que tipear el monto a mano. Cerrada la brecha con `viewModel.depositBalance` como saldo pendiente del anticipo y un `PremiumButton` dinámico que aparece cuando `depositBalance > 0.01`.
+> - Nuevo botón "$ Anticipo - $X" en `EventPaymentsDetailView.swift` (junto a "Registrar Pago" / "Liquidar"), visible mientras quede anticipo por cobrar.
+> - Fix lateral: el botón del hub (`EventDetailView.swift`) usaba `totalPaid < 0.01` como condición, desaparecía tras cualquier pago parcial aunque el anticipo no estuviera cubierto. Ahora usa `depositBalance > 0.01` y muestra el saldo pendiente.
+> - Helper `payDeposit()` corregido: pre-llena `paymentAmount` con el saldo pendiente (no el total) y `paymentNotes = "Anticipo"` (convención web).
+> - Epsilon alineado a `0.01` en el check "Anticipo cubierto" (antes `0.1`, inconsistente con el resto del código iOS y con web — podía dar drift visual de centavos).
+> - Tests unitarios nuevos en `ios/Packages/SolennixFeatures/Tests/SolennixFeaturesTests/EventDetailViewModelTests.swift` cubriendo `payDeposit()` + computed `depositAmount`/`depositBalance`.
+> - **Fuera de alcance** (queda para Opción C del issue #80): tipar `Payment.is_deposit` en backend + clientes; fecha límite del anticipo; reportes filtrados por tipo de pago.
 
 > [!info] 2026-04-18 — iOS + Android: toggle "Incluir en checklist" de Extras (paridad con Web)
 > El campo booleano `include_in_checklist` (backend migration 028, default `true`) estaba sólo expuesto en Web. iOS y Android recibían el dato del backend pero lo descartaban al decodificar y no tenían UI para togglearlo. Cerrada la brecha en ambas plataformas con default opt-out uniforme (coincide con Web + backend — opt-in se descartó porque la mayoría de extras son físicos y forzar opt-in agrega fricción).
