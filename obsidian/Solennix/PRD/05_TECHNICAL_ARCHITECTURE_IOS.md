@@ -347,7 +347,7 @@ graph TD
 | `Settings`   | Perfil, ajustes de negocio, plantilla de contrato, precios, legal                       |
 | `Search`     | Busqueda global multi-entidad                                                           |
 | `Onboarding` | Flujo de primera vez con TipKit                                                         |
-| `Common`     | PlanLimitsManager, Sentry, Spotlight, Haptics, LiveActivity, StoreReview                |
+| `Common`     | PlanLimitsManager, Sentry, Spotlight, Haptics, LiveActivity, StoreReview, `PaymentEntrySheet` (sheet reusable de registro de pago, consumido por dashboard y detalle de evento) |
 
 Regla funcional de stock bajo (iOS): `minimumStock > 0 && currentStock < minimumStock`.
 

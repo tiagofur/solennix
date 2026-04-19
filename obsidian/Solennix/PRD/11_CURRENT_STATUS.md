@@ -337,6 +337,8 @@ Commits del slice en rama `super-plan`: `0fd6aac`, `42124d0`, `2c23dd6`, `af85e4
 ### Paginas Protegidas
 
 - ✅ Dashboard (KPIs, resumen)
+  - ✅ Alertas de Atencion (DashboardAttentionSection) — 3 categorias paridad cross-platform: cobro por cerrar, evento vencido, cotizacion urgente
+  - ✅ Acciones inline en alertas (2026-04): Completar / Cancelar / "Pagar y completar" (modal con `PaymentFormFields` reusable, autocompleta evento vencido con saldo)
 - ✅ Busqueda global
 - ✅ Calendario con vista de eventos
 - ✅ Lista de eventos (EventList) con filtros: Todos, Proximos, Pasados, Borradores
@@ -470,7 +472,8 @@ Commits del slice en rama `super-plan`: `0fd6aac`, `42124d0`, `2c23dd6`, `af85e4
 - ✅ Tarjetas KPI — 8 KPIs (KPICardView)
 - ✅ Grafico de estado de eventos (EventStatusChart)
 - ✅ Grafico de comparativa financiera (FinancialComparisonChart)
-- ✅ Alertas de Atencion (AttentionEventsCard) — 3 tipos: vencido, pago pendiente, sin confirmar
+- ✅ Alertas de Atencion (PendingEventsModalView) — 3 categorias paridad cross-platform: cobro por cerrar, evento vencido, cotizacion urgente
+- ✅ Acciones inline en alertas (2026-04): Completar / Cancelar / "Pagar y completar" (form de pago en sheet, autocompleta evento vencido con saldo). Sheet reusable `PaymentEntrySheet` en `Common/Views/`
 - ✅ Quick Actions — 2 botones: Nuevo Evento + Nuevo Cliente
 - ✅ Alertas de Stock Bajo — regla: `minimumStock > 0 && currentStock < minimumStock` (caso 0/0 sin alerta)
 - ✅ Proximos Eventos con dropdown de estado
@@ -639,7 +642,8 @@ Commits del slice en rama `super-plan`: `0fd6aac`, `42124d0`, `2c23dd6`, `af85e4
 
 - ✅ Dashboard principal (DashboardScreen)
 - ✅ Tarjetas KPI — 8 KPIs
-- ✅ Alertas de Atencion (PendingEventsBanner) — 3 tipos: vencido, pago pendiente, sin confirmar
+- ✅ Alertas de Atencion (PendingEventItem en banner) — 3 categorias paridad cross-platform: cobro por cerrar, evento vencido, cotizacion urgente
+- ✅ Acciones inline en alertas (2026-04): Completar / Cancelar / "Pagar y completar" (Material `Button` por categoria, `ModalBottomSheet` para registrar pago, autocompleta evento vencido con saldo). `PaymentModal` extraido a `core:designsystem` para reuso entre dashboard y detalle de evento
 - ✅ Quick Actions — 2 botones: Nuevo Evento + Nuevo Cliente
 - ✅ Grafico de estado de eventos + Comparativa financiera
 - ✅ Alertas de Inventario
@@ -864,7 +868,8 @@ Commits del slice en rama `super-plan`: `0fd6aac`, `42124d0`, `2c23dd6`, `af85e4
 | Dashboard principal           | ✅  | ✅      | ✅  | ✅      |                                                                                          |
 | Header (saludo + fecha)       | ✅  | ✅      | ✅  | ➖      | Todas las plataformas tienen saludo + fecha                                              |
 | KPI cards (8)                 | ✅  | ✅      | ✅  | ✅      | Labels consistentes. Web: "Cobrado (mes)" vs mobile: "Cobrado" (menor)                   |
-| Alertas de Atencion           | ✅  | ✅      | ✅  | ✅      | 3 tipos: vencido, pago pendiente, sin confirmar. Implementado en las 3 plataformas       |
+| Alertas de Atencion           | ✅  | ✅      | ✅  | ✅      | 3 categorias paridad cross-platform: cobro por cerrar, evento vencido, cotizacion urgente |
+| Acciones inline en alertas    | ✅  | ✅      | ✅  | ➖      | Completar / Cancelar / Pagar y completar (form de pago en modal/sheet/banner). Form/sheet reusable: web `PaymentFormFields`, android `PaymentModal` (core:designsystem), iOS `PaymentEntrySheet` (Common/Views) |
 | Quick Actions (2)             | ✅  | ✅      | ✅  | ➖      | Nuevo Evento + Nuevo Cliente en las 3 plataformas                                        |
 | Chart: Distribucion estados   | ✅  | ✅      | ✅  | ➖      |                                                                                          |
 | Chart: Comparacion financiera | ✅  | ✅      | ✅  | ➖      |                                                                                          |

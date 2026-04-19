@@ -389,7 +389,7 @@ Implementa el tema visual de Solennix basado en Material 3:
 - **`SolennixColorScheme`**: Esquema de colores personalizado con soporte para light/dark
 - **Contraste dinámico**: componentes interactivos (FAB, badges seleccionados) usan `MaterialTheme.colorScheme.onPrimary` para evitar hardcodes de blanco en dark mode
 - **Tokens**: `Color.kt`, `Typography.kt`, `Shape.kt`, `Spacing.kt`, `Elevation.kt`, `Gradient.kt`
-- **Componentes reutilizables**: `SolennixTextField`, `Avatar`, `StatusBadge`, `KPICard`, `ConfirmDialog`, `EmptyState`, `PremiumButton`, `SkeletonLoading`, `ToastOverlay`, `UpgradeBanner`
+- **Componentes reutilizables**: `SolennixTextField`, `Avatar`, `StatusBadge`, `KPICard`, `ConfirmDialog`, `EmptyState`, `PremiumButton`, `SkeletonLoading`, `ToastOverlay`, `UpgradeBanner`, `PaymentModal` (`ModalBottomSheet` reusable de registro de pago, consumido por dashboard y detalle de evento — params `title` y `confirmLabel`)
 - **Utilidades**: `HapticFeedback` para feedback táctil
 
 **Calibración de contraste (Fase 3 A11y):** `Color.kt` endurece `secondaryText`, `tertiaryText` y `tabBarInactive` en light/dark para mantener legibilidad AA sobre `background`, `surface` y `card`. `EmptyState` también elevó el contraste del ícono base para evitar estados vacíos visualmente lavados.
