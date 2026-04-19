@@ -225,88 +225,14 @@ public struct EventPaymentsDetailView: View {
     // MARK: - Payment Sheet
 
     private var paymentSheet: some View {
-        NavigationStack {
-            VStack(spacing: Spacing.lg) {
-                Text("Registrar Pago")
-                    .font(.title3)
-                    .fontWeight(.bold)
-                    .foregroundStyle(SolennixColors.text)
-
-                VStack(alignment: .leading, spacing: Spacing.xs) {
-                    Text("Monto")
-                        .font(.caption)
-                        .foregroundStyle(SolennixColors.textSecondary)
-
-                    TextField("0.00", text: $viewModel.paymentAmount)
-                        .keyboardType(.decimalPad)
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .foregroundStyle(SolennixColors.text)
-                        .padding(Spacing.md)
-                        .background(SolennixColors.surface)
-                        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-                }
-
-                VStack(alignment: .leading, spacing: Spacing.xs) {
-                    Text("Metodo de pago")
-                        .font(.caption)
-                        .foregroundStyle(SolennixColors.textSecondary)
-
-                    HStack(spacing: Spacing.sm) {
-                        ForEach(paymentMethods, id: \.key) { method in
-                            Button {
-                                viewModel.paymentMethod = method.key
-                            } label: {
-                                Text(method.label)
-                                    .font(.caption)
-                                    .fontWeight(.medium)
-                                    .foregroundStyle(
-                                        viewModel.paymentMethod == method.key ? .white : SolennixColors.text
-                                    )
-                                    .padding(.horizontal, Spacing.md)
-                                    .padding(.vertical, Spacing.sm)
-                                    .background(
-                                        viewModel.paymentMethod == method.key ? SolennixColors.primary : SolennixColors.surface
-                                    )
-                                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-                            }
-                        }
-                    }
-                }
-
-                VStack(alignment: .leading, spacing: Spacing.xs) {
-                    Text("Notas (opcional)")
-                        .font(.caption)
-                        .foregroundStyle(SolennixColors.textSecondary)
-
-                    TextField("Notas del pago", text: $viewModel.paymentNotes)
-                        .font(.body)
-                        .foregroundStyle(SolennixColors.text)
-                        .padding(Spacing.md)
-                        .background(SolennixColors.surface)
-                        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-                }
-
-                Spacer()
-
-                PremiumButton(
-                    title: "Guardar Pago",
-                    isLoading: viewModel.isSavingPayment,
-                    isDisabled: viewModel.paymentAmount.isEmpty
-                ) {
-                    Task { await viewModel.addPayment(eventId: eventId) }
-                }
-            }
-            .padding(Spacing.lg)
-            .background(SolennixColors.background)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancelar") { viewModel.showPaymentSheet = false }
-                        .foregroundStyle(SolennixColors.primary)
-                }
-            }
-        }
-        .presentationDetents([.medium, .large])
+        PaymentEntrySheet(
+            amount: $viewModel.paymentAmount,
+            method: $viewModel.paymentMethod,
+            notes: $viewModel.paymentNotes,
+            isSaving: viewModel.isSavingPayment,
+            onCancel: { viewModel.showPaymentSheet = false },
+            onConfirm: { Task { await viewModel.addPayment(eventId: eventId) } }
+        )
     }
 
     // MARK: - Helpers
@@ -324,9 +250,5 @@ public struct EventPaymentsDetailView: View {
         case "cheque": return "Cheque"
         default: return method.capitalized
         }
-    }
-
-    private var paymentMethods: [(key: String, label: String)] {
-        [("cash", "Efectivo"), ("transfer", "Transferencia"), ("card", "Tarjeta"), ("check", "Cheque")]
     }
 }
