@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@tests/customRender';
+import { render, screen, fireEvent, waitFor, within } from '@tests/customRender';
 import { MemoryRouter } from 'react-router-dom';
 import { Dashboard } from './Dashboard';
 import { eventService } from '../services/eventService';
@@ -334,6 +334,137 @@ describe('Dashboard', () => {
     const formatter = capturedTooltipFormatters[0];
     const result = formatter(1500);
     expect(result).toEqual(['$1,500', 'Monto']);
+  });
+
+  describe('attention CTAs', () => {
+    const today = new Date();
+    const twoDaysAgo = new Date(today);
+    twoDaysAgo.setDate(today.getDate() - 2);
+
+    const toLocalDateString = (date: Date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
+    const seedOverdueWithBalance = () => {
+      // Single past-quoted event with $1000 total and $0 paid → "past-active"
+      // category with balance $1000 → CTAs include "Pagar y completar".
+      (eventService.getAll as any).mockResolvedValue([
+        {
+          id: 'evt-overdue',
+          status: 'quoted',
+          total_amount: 1000,
+          tax_amount: 0,
+          requires_invoice: false,
+          event_date: toLocalDateString(twoDaysAgo),
+          client: { name: 'Ana' },
+          service_type: 'Boda',
+          num_people: 100,
+        },
+      ]);
+      // realizedEventIds payments + attentionCandidateIds payments
+      (paymentService.getByEventIds as any)
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([]);
+    };
+
+    it('"Pagar y completar" with full amount triggers payment + status=completed', async () => {
+      seedOverdueWithBalance();
+      (paymentService.create as any).mockResolvedValue({ id: 'pay-1' });
+      (eventService.update as any).mockResolvedValue({ id: 'evt-overdue', status: 'completed' });
+
+      renderDashboard();
+
+      // Click the inline CTA — there's only one button with this text before
+      // the modal opens.
+      const ctaBtn = await screen.findByRole('button', { name: /Pagar y completar/i });
+      fireEvent.click(ctaBtn);
+
+      // Modal opens. Scope subsequent queries to the dialog so the submit
+      // button (same label) is unambiguous.
+      const dialog = await screen.findByRole('dialog');
+      const amountInput = within(dialog).getByLabelText(/Monto/i) as HTMLInputElement;
+      await waitFor(() => expect(amountInput.value).toBe('1000'));
+
+      const submitBtn = within(dialog).getByRole('button', { name: /Pagar y completar/i });
+      fireEvent.click(submitBtn);
+
+      await waitFor(() => {
+        expect((paymentService.create as any)).toHaveBeenCalledWith(
+          expect.objectContaining({ event_id: 'evt-overdue', amount: 1000 }),
+        );
+      });
+      await waitFor(() => {
+        expect((eventService.update as any)).toHaveBeenCalledWith(
+          'evt-overdue',
+          expect.objectContaining({ status: 'completed' }),
+        );
+      });
+    });
+
+    it('"Pagar y completar" with partial amount creates payment but does NOT auto-complete', async () => {
+      seedOverdueWithBalance();
+      (paymentService.create as any).mockResolvedValue({ id: 'pay-2' });
+      (eventService.update as any).mockResolvedValue({ id: 'evt-overdue' });
+
+      renderDashboard();
+
+      const ctaBtn = await screen.findByRole('button', { name: /Pagar y completar/i });
+      fireEvent.click(ctaBtn);
+
+      const dialog = await screen.findByRole('dialog');
+      const amountInput = within(dialog).getByLabelText(/Monto/i) as HTMLInputElement;
+      fireEvent.change(amountInput, { target: { value: '200' } });
+
+      const submitBtn = within(dialog).getByRole('button', { name: /Pagar y completar/i });
+      fireEvent.click(submitBtn);
+
+      await waitFor(() => {
+        expect((paymentService.create as any)).toHaveBeenCalledWith(
+          expect.objectContaining({ event_id: 'evt-overdue', amount: 200 }),
+        );
+      });
+
+      // Status update must NOT be called for partial pay (Bug 5 guard)
+      await new Promise((r) => setTimeout(r, 50));
+      expect((eventService.update as any)).not.toHaveBeenCalled();
+    });
+
+    it('"Cancelar" on past-active without balance triggers status=cancelled only', async () => {
+      // Past-active fully paid → no balance → renders "Completar" + "Cancelar"
+      (eventService.getAll as any).mockResolvedValue([
+        {
+          id: 'evt-fullpaid',
+          status: 'confirmed',
+          total_amount: 500,
+          tax_amount: 0,
+          requires_invoice: false,
+          event_date: toLocalDateString(twoDaysAgo),
+          client: { name: 'Bea' },
+          service_type: 'XV',
+          num_people: 50,
+        },
+      ]);
+      (paymentService.getByEventIds as any)
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([{ event_id: 'evt-fullpaid', amount: 500 }]);
+      (eventService.update as any).mockResolvedValue({ id: 'evt-fullpaid' });
+
+      renderDashboard();
+
+      const cancelBtn = await screen.findByRole('button', { name: /^Cancelar$/i });
+      fireEvent.click(cancelBtn);
+
+      await waitFor(() => {
+        expect((eventService.update as any)).toHaveBeenCalledWith(
+          'evt-fullpaid',
+          expect.objectContaining({ status: 'cancelled' }),
+        );
+      });
+      expect((paymentService.create as any)).not.toHaveBeenCalled();
+    });
   });
 
   describe('post-checkout plan refresh', () => {
