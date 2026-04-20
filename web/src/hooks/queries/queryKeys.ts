@@ -77,4 +77,8 @@ export const queryKeys = {
       ['unavailableDates', 'range', start, end] as const,
   },
   planLimits: ['planLimits'] as const,
+  dashboard: {
+    kpis: ['dashboard', 'kpis'] as const,
+    revenueChart: (period: string) => ['dashboard', 'revenueChart', period] as const,
+  },
 } as const;

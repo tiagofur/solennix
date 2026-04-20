@@ -25,7 +25,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useEvents, useUpcomingEvents, useEventsByDateRange, useUpdateEventStatus } from "../hooks/queries/useEventQueries";
 import { useClients } from "../hooks/queries/useClientQueries";
 import { useInventoryItems } from "../hooks/queries/useInventoryQueries";
-import { usePaymentsByDateRange, usePaymentsByEventIds, useCreatePayment } from "../hooks/queries/usePaymentQueries";
+import { usePaymentsByEventIds, useCreatePayment } from "../hooks/queries/usePaymentQueries";
+import { useDashboardKpis, useDashboardRevenueChart } from "../hooks/queries/useDashboardQueries";
+import type { DashboardRevenuePoint } from "../types/dashboard";
 import { queryKeys } from "../hooks/queries/queryKeys";
 import { eventService } from "../services/eventService";
 import { Modal } from "../components/Modal";
@@ -37,11 +39,7 @@ import { useToast } from "../hooks/useToast";
 // auto-complete guard. Keep in sync with mobile's MIN_PENDING_AMOUNT
 // (Android core/dashboard, iOS PendingEventsViewModel).
 const PAYMENT_COMPLETION_EPSILON = 0.01;
-import {
-  getEventNetSales,
-  getEventTaxAmount,
-  getEventTotalCharged,
-} from "../lib/finance";
+import { getEventTotalCharged } from "../lib/finance";
 import { StatusDropdown, EventStatus } from "../components/StatusDropdown";
 import { OnboardingChecklist } from "../components/OnboardingChecklist";
 import { RecentActivityCard } from "../components/RecentActivityCard";
@@ -157,10 +155,12 @@ function KpiCard({ icon: Icon, iconBg, iconColor, label, value, sub, compact = f
           <Icon className={`h-5 w-5 ${iconColor}`} aria-hidden="true" />
         </div>
         <div className="flex-1 min-w-0">
-          <dt className="text-xs font-medium text-text-secondary leading-tight mb-1">
+          <dt className="text-xs font-medium text-text-secondary leading-tight mb-1 truncate">
             {label}
           </dt>
-          <dd className="text-xl font-bold text-text tracking-tight">{value}</dd>
+          {/* Responsive font + truncate so long MXN amounts don't spill out
+              of the 2-column grid on phones. parity with the compact variant. */}
+          <dd className="text-base sm:text-xl font-bold text-text tracking-tight truncate">{value}</dd>
         </div>
       </div>
       {sub && <div className="text-xs text-text-tertiary border-t border-border pt-3">{sub}</div>}
@@ -474,6 +474,59 @@ function fmt(n: number) {
   return `$${n.toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
 }
 
+// ── Monthly Revenue Trend Card (premium only) ────────────────────
+// 6-month bar chart of confirmed+completed event revenue. Data comes from
+// `/api/dashboard/revenue-chart?period=year` and is sliced to the last 6
+// months. Matches iOS & Android premium charts.
+function MonthlyRevenueTrendCard({ points }: { points: DashboardRevenuePoint[] }) {
+  const monthLabels = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+  const chartData = points.map((p) => {
+    const [, mm] = p.month.split("-");
+    const idx = Number(mm) - 1;
+    const label = idx >= 0 && idx < 12 ? monthLabels[idx] : p.month;
+    return { name: label.charAt(0).toUpperCase() + label.slice(1), value: p.revenue };
+  });
+
+  return (
+    <div className="bg-card shadow-sm border border-border rounded-2xl p-6 flex flex-col">
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-sm font-semibold text-text">Ingresos — Últimos 6 meses</h3>
+      </div>
+      <div className="h-60 w-full" role="img" aria-label="Gráfico de ingresos por mes en los últimos 6 meses">
+        <ResponsiveContainer width="100%" height={240}>
+          <BarChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" opacity={0.5} />
+            <XAxis
+              dataKey="name"
+              axisLine={false}
+              tickLine={false}
+              tick={{ fill: "var(--color-text-secondary)", fontSize: 12 }}
+            />
+            <YAxis
+              axisLine={false}
+              tickLine={false}
+              tick={{ fill: "var(--color-text-tertiary)", fontSize: 11 }}
+              tickFormatter={(value: number) => value === 0 ? "$0" : `${Math.round(value / 1000)}k`}
+              width={48}
+            />
+            <Tooltip
+              formatter={(value: number) => [`$${value.toLocaleString("es-MX")}`, "Ingresos"]}
+              contentStyle={{
+                background: "var(--color-card)",
+                border: "1px solid var(--color-border)",
+                borderRadius: "0.5rem",
+                fontSize: "0.75rem",
+              }}
+              cursor={{ fill: "var(--color-surface-alt)" }}
+            />
+            <Bar dataKey="value" fill="var(--color-primary)" radius={[6, 6, 0, 0]} barSize={32} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
+
 // ────────────────────────────────────────────────────────────────
 export const Dashboard: React.FC = () => {
   const { user, checkAuth } = useAuth();
@@ -494,14 +547,18 @@ export const Dashboard: React.FC = () => {
   const { data: _allEvents, isLoading: loadingAttention } = useEvents();
   const { data: _inventory, isLoading: loadingInventory } = useInventoryItems();
   const { data: _clients, isLoading: loadingClients } = useClients();
-  const { data: _paymentsMonth } = usePaymentsByDateRange(monthStart, monthEnd);
+
+  // Backend-aggregated header metrics. Single source of truth across iOS,
+  // Android and Web — no client-side aggregation of raw lists.
+  const { data: kpis } = useDashboardKpis();
+  // 6-month revenue trend — premium feature, so only fetched for Pro/Business.
+  const { data: revenueChartData } = useDashboardRevenueChart("year", !isBasicPlan);
 
   const eventsThisMonthList = _eventsMonth ?? [];
   const upcomingEvents = _upcoming ?? [];
   const allEvents = _allEvents ?? [];
   const inventoryData = _inventory ?? [];
   const clients = _clients ?? [];
-  const paymentsInMonth = _paymentsMonth ?? [];
 
   const attentionEvents = allEvents as DashboardEvent[];
   const clientCount = clients.length;
@@ -513,15 +570,6 @@ export const Dashboard: React.FC = () => {
     [inventoryData],
   );
   const lowStockCount = lowStockItems.length;
-
-  // ── Derived: realized event IDs for payment query ──
-  const realizedEvents = useMemo(
-    () => eventsThisMonthList.filter((e) => e.status === "confirmed" || e.status === "completed"),
-    [eventsThisMonthList],
-  );
-  const realizedEventIds = useMemo(() => realizedEvents.map((e) => e.id), [realizedEvents]);
-  const { data: _eventPayments } = usePaymentsByEventIds(realizedEventIds);
-  const eventPayments = _eventPayments ?? [];
 
   // ── Derived: attention event IDs for payment query ──
   // Includes confirmed events in the next 7 days AND past-active events
@@ -545,43 +593,12 @@ export const Dashboard: React.FC = () => {
   const { data: _attentionPayments } = usePaymentsByEventIds(attentionCandidateIds);
   const attentionPayments = _attentionPayments ?? [];
 
-  // ── Derived: financial metrics (pure computation from cached data) ──
-  const netSalesThisMonth = useMemo(
-    () => realizedEvents.reduce((sum, event) => sum + getEventNetSales(event), 0),
-    [realizedEvents],
-  );
-
-  const cashCollectedThisMonth = useMemo(
-    () => (paymentsInMonth || []).reduce((sum: number, p: Payment) => sum + Number(p.amount || 0), 0),
-    [paymentsInMonth],
-  );
-
-  const paidByEvent = useMemo(() => {
-    const map: Record<string, number> = {};
-    eventPayments.forEach((p: Payment) => {
-      map[p.event_id] = (map[p.event_id] || 0) + Number(p.amount || 0);
-    });
-    return map;
-  }, [eventPayments]);
-
-  const vatCollectedThisMonth = useMemo(() =>
-    realizedEvents.reduce((sum, event) => {
-      const totalCharged = getEventTotalCharged(event);
-      const paid = paidByEvent[event.id] || 0;
-      const ratio = totalCharged > 0 ? Math.min(paid / totalCharged, 1) : 0;
-      return sum + getEventTaxAmount(event) * ratio;
-    }, 0),
-  [realizedEvents, paidByEvent]);
-
-  const vatOutstandingThisMonth = useMemo(() =>
-    realizedEvents.reduce((sum, event) => {
-      const totalCharged = getEventTotalCharged(event);
-      const paid = paidByEvent[event.id] || 0;
-      const ratio = totalCharged > 0 ? Math.min(paid / totalCharged, 1) : 0;
-      const vat = getEventTaxAmount(event);
-      return sum + (vat - vat * ratio);
-    }, 0),
-  [realizedEvents, paidByEvent]);
+  // ── Financial KPIs — backend is the single source of truth ──
+  // (iOS / Android / Web read identical numbers from /api/dashboard/kpis)
+  const netSalesThisMonth = kpis?.net_sales_this_month ?? 0;
+  const cashCollectedThisMonth = kpis?.cash_collected_this_month ?? 0;
+  const vatCollectedThisMonth = kpis?.vat_collected_this_month ?? 0;
+  const vatOutstandingThisMonth = kpis?.vat_outstanding_this_month ?? 0;
 
   const attentionPaidByEvent = useMemo(() => {
     const map: Record<string, number> = {};
@@ -912,15 +929,15 @@ export const Dashboard: React.FC = () => {
                 iconBg="bg-primary/10"
                 iconColor="text-primary"
                 label="Eventos"
-                value={String(eventsThisMonthList.length)}
+                value={String(kpis?.events_this_month ?? eventsThisMonthList.length)}
                 sub="Este mes"
               />
               <KpiCard
                 icon={FileText}
-                iconBg={eventsThisMonthList.filter(e => e.status === 'quoted').length > 0 ? "bg-warning/10" : "bg-surface-alt"}
-                iconColor={eventsThisMonthList.filter(e => e.status === 'quoted').length > 0 ? "text-warning" : "text-text-tertiary"}
+                iconBg={(kpis?.pending_quotes ?? 0) > 0 ? "bg-warning/10" : "bg-surface-alt"}
+                iconColor={(kpis?.pending_quotes ?? 0) > 0 ? "text-warning" : "text-text-tertiary"}
                 label="Cotizaciones"
-                value={String(eventsThisMonthList.filter(e => e.status === 'quoted').length)}
+                value={String(kpis?.pending_quotes ?? 0)}
                 sub="Pendientes de confirmar"
               />
             </>
@@ -949,17 +966,17 @@ export const Dashboard: React.FC = () => {
               />
               <KpiCard compact
                 icon={Package}
-                iconBg={lowStockCount > 0 ? "bg-error/10" : "bg-surface-alt"}
-                iconColor={lowStockCount > 0 ? "text-error" : "text-text-secondary"}
+                iconBg={(kpis?.low_stock_items ?? lowStockCount) > 0 ? "bg-error/10" : "bg-surface-alt"}
+                iconColor={(kpis?.low_stock_items ?? lowStockCount) > 0 ? "text-error" : "text-text-secondary"}
                 label="Stock Bajo"
-                value={lowStockCount > 0 ? `${lowStockCount} ítems` : "Sin alertas"}
+                value={(kpis?.low_stock_items ?? lowStockCount) > 0 ? `${kpis?.low_stock_items ?? lowStockCount} ítems` : "Sin alertas"}
               />
               <KpiCard compact
                 icon={Users}
                 iconBg="bg-surface-alt"
                 iconColor="text-text-secondary"
                 label="Clientes"
-                value={String(clientCount)}
+                value={String(kpis?.total_clients ?? clientCount)}
               />
             </>
           )}
@@ -1020,6 +1037,13 @@ export const Dashboard: React.FC = () => {
           <EventStatusBar data={chartData} loading={loadingMonth} />
         </div>
       </div>
+
+      {/* ── 6-MONTH REVENUE TREND (premium only) ── */}
+      {/* Parity with iOS and Android: non-premium users do not see this card
+          at all (no blur, no upsell). Upsell surfaces live elsewhere. */}
+      {!isBasicPlan && revenueChartData && revenueChartData.length > 0 && (
+        <MonthlyRevenueTrendCard points={revenueChartData.slice(-6)} />
+      )}
 
       {/* ── LOW STOCK ── */}
       {lowStockItems.length > 0 && (

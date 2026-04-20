@@ -86,6 +86,22 @@ export const handlers = [
       plan: 'basic',
     });
   }),
+  // Dashboard aggregates — single source of truth for header KPIs.
+  http.get(`${API_BASE}/dashboard/kpis`, () => HttpResponse.json({
+    total_revenue: 0,
+    events_this_month: 0,
+    pending_quotes: 0,
+    low_stock_items: 0,
+    upcoming_events: 0,
+    total_clients: mockStore.clients.length,
+    average_event_value: 0,
+    net_sales_this_month: 0,
+    cash_collected_this_month: 0,
+    vat_collected_this_month: 0,
+    vat_outstanding_this_month: 0,
+  })),
+  http.get(`${API_BASE}/dashboard/revenue-chart`, () => HttpResponse.json([])),
+  http.get(`${API_BASE}/dashboard/activity`, () => HttpResponse.json([])),
   http.get(`${API_BASE}/clients`, () => HttpResponse.json(mockStore.clients)),
   http.get(`${API_BASE}/clients/:id`, ({ params }) => {
     const client = mockStore.clients.find((c) => c.id === params.id);
