@@ -140,6 +140,11 @@ public enum Endpoint {
     /// the last 6 entries.
     public static let dashboardRevenueChart = "/dashboard/revenue-chart"
 
+    /// Events grouped by status. Query param `scope=month|all` — the
+    /// dashboard passes `month` so the status distribution stays consistent
+    /// with the rest of the month-scoped KPI cards.
+    public static let dashboardEventsByStatus = "/dashboard/events-by-status"
+
     // MARK: - Search
 
     public static let search = "/search"

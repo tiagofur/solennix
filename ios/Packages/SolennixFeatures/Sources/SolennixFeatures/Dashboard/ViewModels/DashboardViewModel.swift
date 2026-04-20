@@ -89,9 +89,16 @@ public final class DashboardViewModel {
     public var updatingEventId: String?
 
     /// Last 6 months of revenue, fetched from
-    /// `GET /api/dashboard/revenue-chart?period=year` (backend returns 12
-    /// months, we slice the tail). Only populated for premium users.
+    /// `GET /api/dashboard/revenue-chart?period=year` (backend returns only
+    /// months with data; we slice the tail and pad missing months with zero
+    /// revenue so the chart always shows 6 bars).
     public var monthlyRevenueTrend: [MonthlyRevenueTrendPoint] = []
+
+    /// Status → count for the current month's events, fetched from
+    /// `GET /api/dashboard/events-by-status?scope=month`. Backend is the
+    /// source of truth — the dashboard no longer derives this from the
+    /// local event list so iOS / Android / Web always show identical numbers.
+    public var eventStatusCounts: [EventStatus: Int] = [:]
 
     /// Server-aggregated counts. Populated by the first /dashboard/kpis call
     /// so header cards paint in <200ms while the list endpoints continue
@@ -115,15 +122,6 @@ public final class DashboardViewModel {
     }
 
     // MARK: - Computed
-
-    /// Group events by status and return counts.
-    public var eventStatusCounts: [EventStatus: Int] {
-        var counts: [EventStatus: Int] = [:]
-        for event in eventsThisMonth {
-            counts[event.status, default: 0] += 1
-        }
-        return counts
-    }
 
     /// Backend is the single source of truth for these counts — fall back to
     /// 0 only while the preload is in flight. Once `kpis` is populated by
@@ -285,6 +283,11 @@ public final class DashboardViewModel {
         // non-premium user just pays for one extra GET and never sees it.
         await loadMonthlyRevenueTrend()
 
+        // Month-scoped status distribution for the "Estado de Eventos" chart.
+        // Kept in parallel with the same-named iOS/Android/Web card so all
+        // three platforms show identical confirmed / completed / quoted counts.
+        await loadEventStatusCounts()
+
         if encounteredError {
             if clients.isEmpty && loadedAllEvents.isEmpty && products.isEmpty {
                 errorMessage = "No se pudo cargar el dashboard"
@@ -313,13 +316,14 @@ public final class DashboardViewModel {
             let updatedEvent: Event = try await apiClient.put(Endpoint.event(eventId), body: body)
 
             applyUpdatedEvent(updatedEvent)
-            // Refresh server-aggregated KPIs so monetary cards (net sales,
-            // VAT, cash collected) reflect the new event status without
-            // requiring a full pull-to-refresh.
+            // Refresh server-aggregated KPIs + status distribution so the
+            // monetary cards and the "Estado de Eventos" chart reflect the
+            // new status without requiring a full pull-to-refresh.
             if let refreshed: DashboardKPIs = try? await apiClient.get(Endpoint.dashboardKpis) {
                 kpis = refreshed
                 lowStockCount = refreshed.lowStockItems
             }
+            await loadEventStatusCounts()
             HapticsHelper.play(.success)
         } catch {
             HapticsHelper.play(.error)
@@ -492,8 +496,11 @@ public final class DashboardViewModel {
     // MARK: - Premium: Monthly Revenue Trend
 
     /// Fetch the last 6 months of revenue from the backend and map to the
-    /// chart-friendly `MonthlyRevenueTrendPoint` shape (localized month
-    /// label). Called from `loadDashboard()` for premium users.
+    /// chart-friendly `MonthlyRevenueTrendPoint` shape with a ZERO-PADDED
+    /// trailing 6-month window. Backend only returns months with payments,
+    /// so without padding the chart would collapse to 2-3 bars on new
+    /// accounts and look broken. Parity with Android and Web, which apply
+    /// the same padding client-side.
     @MainActor
     public func loadMonthlyRevenueTrend() async {
         let points: [DashboardRevenuePoint]
@@ -507,6 +514,17 @@ public final class DashboardViewModel {
             return
         }
 
+        monthlyRevenueTrend = Self.buildTrailingSixMonthTrend(from: points, now: Date())
+    }
+
+    /// Build 6 ordered trend points ending at the current month. Missing
+    /// months get revenue=0, eventCount=0. Exposed as a static helper so
+    /// tests can call it deterministically.
+    static func buildTrailingSixMonthTrend(
+        from serverPoints: [DashboardRevenuePoint],
+        now: Date,
+        calendar: Calendar = Calendar(identifier: .gregorian)
+    ) -> [MonthlyRevenueTrendPoint] {
         let keyFormatter = DateFormatter()
         keyFormatter.calendar = Calendar(identifier: .gregorian)
         keyFormatter.locale = Locale(identifier: "en_US_POSIX")
@@ -517,20 +535,53 @@ public final class DashboardViewModel {
         labelFormatter.dateFormat = "MMM"
         labelFormatter.locale = Locale(identifier: "es_MX")
 
-        // Backend returns up to 12 months (period=year). Take the last 6 to
-        // match the existing "Ingresos — Últimos 6 meses" card.
-        let trimmed = Array(points.suffix(6))
-        monthlyRevenueTrend = trimmed.compactMap { point in
-            guard let monthDate = keyFormatter.date(from: point.month) else {
-                return nil
-            }
+        let byMonth: [String: DashboardRevenuePoint] = Dictionary(
+            uniqueKeysWithValues: serverPoints.map { ($0.month, $0) }
+        )
+
+        return (-5...0).compactMap { offset -> MonthlyRevenueTrendPoint? in
+            guard let monthDate = calendar.date(byAdding: .month, value: offset, to: now),
+                  let monthStart = calendar.date(
+                    from: calendar.dateComponents([.year, .month], from: monthDate)
+                  )
+            else { return nil }
+            let key = keyFormatter.string(from: monthStart)
+            let point = byMonth[key]
             return MonthlyRevenueTrendPoint(
-                month: labelFormatter.string(from: monthDate).capitalized,
-                monthDate: monthDate,
-                revenue: point.revenue,
-                eventCount: point.eventCount
+                month: labelFormatter.string(from: monthStart).capitalized,
+                monthDate: monthStart,
+                revenue: point?.revenue ?? 0,
+                eventCount: point?.eventCount ?? 0
             )
         }
+    }
+
+    // MARK: - Events by Status
+
+    /// Fetch the month-scoped status distribution from the backend and map
+    /// it into `[EventStatus: Int]` for the chart. Status strings that
+    /// don't match the iOS enum are dropped silently (defensive against
+    /// future backend additions).
+    @MainActor
+    public func loadEventStatusCounts() async {
+        let rows: [DashboardEventStatusCount]
+        do {
+            rows = try await apiClient.get(
+                Endpoint.dashboardEventsByStatus,
+                params: ["scope": "month"]
+            )
+        } catch {
+            NSLog("[Dashboard] ⚠️ events-by-status failed: %@", String(describing: error))
+            return
+        }
+
+        var map: [EventStatus: Int] = [:]
+        for row in rows {
+            if let status = EventStatus(rawValue: row.status) {
+                map[status] = row.count
+            }
+        }
+        eventStatusCounts = map
     }
 }
 

@@ -69,3 +69,16 @@ public struct DashboardRevenuePoint: Codable, Sendable, Hashable {
         self.eventCount = eventCount
     }
 }
+
+/// One row returned by `GET /api/dashboard/events-by-status`. `status`
+/// is the raw backend string (e.g. "quoted"); callers map it to the
+/// platform's `EventStatus` enum. Relies on `.convertFromSnakeCase`.
+public struct DashboardEventStatusCount: Codable, Sendable, Hashable {
+    public let status: String
+    public let count: Int
+
+    public init(status: String, count: Int) {
+        self.status = status
+        self.count = count
+    }
+}
