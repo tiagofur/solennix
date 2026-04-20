@@ -1,5 +1,6 @@
 package com.creapolis.solennix.core.data.repository
 
+import com.creapolis.solennix.core.model.DashboardEventStatusCount
 import com.creapolis.solennix.core.model.DashboardKPIs
 import com.creapolis.solennix.core.model.DashboardRevenuePoint
 
@@ -11,4 +12,5 @@ import com.creapolis.solennix.core.model.DashboardRevenuePoint
 interface DashboardRepository {
     suspend fun getKPIs(): DashboardKPIs
     suspend fun getRevenueChart(period: String = "year"): List<DashboardRevenuePoint>
+    suspend fun getEventsByStatus(scope: String = "month"): List<DashboardEventStatusCount>
 }

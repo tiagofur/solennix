@@ -1,5 +1,6 @@
 package com.creapolis.solennix.core.data.repository
 
+import com.creapolis.solennix.core.model.DashboardEventStatusCount
 import com.creapolis.solennix.core.model.DashboardKPIs
 import com.creapolis.solennix.core.model.DashboardRevenuePoint
 import com.creapolis.solennix.core.network.ApiService
@@ -20,5 +21,11 @@ class DashboardRepositoryImpl @Inject constructor(
         apiService.get(
             Endpoints.DASHBOARD_REVENUE_CHART,
             mapOf("period" to period)
+        )
+
+    override suspend fun getEventsByStatus(scope: String): List<DashboardEventStatusCount> =
+        apiService.get(
+            Endpoints.DASHBOARD_EVENTS_BY_STATUS,
+            mapOf("scope" to scope)
         )
 }

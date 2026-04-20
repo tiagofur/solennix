@@ -40,3 +40,15 @@ data class DashboardRevenuePoint(
     val revenue: Double,
     @SerialName("event_count") val eventCount: Int
 )
+
+/**
+ * One row returned by `GET /api/dashboard/events-by-status?scope=month|all`.
+ * Mirrors [backend/internal/repository/EventStatusCount]. `status` is the
+ * raw backend string (e.g. "quoted"); callers map it to the client's
+ * `EventStatus` enum and drop rows that don't match.
+ */
+@Serializable
+data class DashboardEventStatusCount(
+    val status: String,
+    val count: Int
+)

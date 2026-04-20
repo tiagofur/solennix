@@ -10,6 +10,7 @@ import com.creapolis.solennix.core.data.repository.InventoryRepository
 import com.creapolis.solennix.core.data.repository.PaymentRepository
 import com.creapolis.solennix.core.data.repository.ProductRepository
 import com.creapolis.solennix.core.model.Client
+import com.creapolis.solennix.core.model.DashboardEventStatusCount
 import com.creapolis.solennix.core.model.DashboardKPIs
 import com.creapolis.solennix.core.model.DashboardRevenuePoint
 import com.creapolis.solennix.core.model.Event
@@ -107,6 +108,7 @@ class DashboardViewModel @Inject constructor(
     // `refresh()`. Null while the first fetch is in flight.
     private val _kpis = MutableStateFlow<DashboardKPIs?>(null)
     private val _monthlyRevenueTrend = MutableStateFlow<List<DashboardRevenuePoint>>(emptyList())
+    private val _statusCountsFromBackend = MutableStateFlow<List<DashboardEventStatusCount>?>(null)
 
     private val dataFlow = combine(
         eventRepository.getUpcomingEvents(5),
@@ -125,10 +127,18 @@ class DashboardViewModel @Inject constructor(
         data.copy(allProducts = allProducts)
     }
 
-    // Bundle the two backend aggregates into one flow so the main combine
+    // Bundle the three backend aggregates into one flow so the main combine
     // stays under the 5-arg overload ceiling.
-    private val dashboardAggregatesFlow: Flow<Pair<DashboardKPIs?, List<DashboardRevenuePoint>>> =
-        combine(_kpis, _monthlyRevenueTrend) { kpis, trend -> kpis to trend }
+    private data class DashboardAggregates(
+        val kpis: DashboardKPIs?,
+        val revenueTrend: List<DashboardRevenuePoint>,
+        val statusRows: List<DashboardEventStatusCount>?
+    )
+
+    private val dashboardAggregatesFlow: Flow<DashboardAggregates> =
+        combine(_kpis, _monthlyRevenueTrend, _statusCountsFromBackend) { kpis, trend, status ->
+            DashboardAggregates(kpis, trend, status)
+        }
 
     val uiState: StateFlow<DashboardUiState> = combine(
         enrichedDataFlow,
@@ -137,7 +147,9 @@ class DashboardViewModel @Inject constructor(
         _updatingEventId,
         combine(_paymentModalEvent, _transientMessage) { modal, msg -> modal to msg }
     ) { data, aggregates, isRefreshing, updatingEventId, modalAndMsg ->
-        val (kpis, revenueTrend) = aggregates
+        val kpis = aggregates.kpis
+        val revenueTrend = aggregates.revenueTrend
+        val statusRows = aggregates.statusRows
         val (paymentModalEvent, transientMessage) = modalAndMsg
 
         val now = java.time.LocalDate.now()
@@ -187,16 +199,35 @@ class DashboardViewModel @Inject constructor(
             } catch (_: Exception) { }
         }
 
-        // Event status distribution
-        val totalEvents = data.allEvents.size
-        val statusDistribution = EventStatus.entries.map { status ->
-            val count = data.allEvents.count { it.status == status }
-            StatusCount(
-                status = status,
-                count = count,
-                percentage = if (totalEvents > 0) count.toFloat() / totalEvents else 0f
-            )
-        }.filter { it.count > 0 }
+        // Event status distribution — backend-sourced (scope=month) so it
+        // matches iOS and Web. Fall back to a client-side count over the
+        // month's events while the first backend fetch is in flight so the
+        // card isn't empty at first paint.
+        val statusDistribution: List<StatusCount> = if (statusRows != null) {
+            val total = statusRows.sumOf { it.count }
+            statusRows.mapNotNull { row ->
+                val status = runCatching { EventStatus.valueOf(row.status.uppercase()) }.getOrNull()
+                if (status == null || row.count == 0) null else StatusCount(
+                    status = status,
+                    count = row.count,
+                    percentage = if (total > 0) row.count.toFloat() / total else 0f
+                )
+            }
+        } else {
+            val monthEvents = data.allEvents.filter {
+                val date = parseFlexibleDate(it.eventDate)
+                date != null && date.month == now.month && date.year == now.year
+            }
+            val totalMonth = monthEvents.size
+            EventStatus.entries.mapNotNull { status ->
+                val count = monthEvents.count { it.status == status }
+                if (count == 0) null else StatusCount(
+                    status = status,
+                    count = count,
+                    percentage = if (totalMonth > 0) count.toFloat() / totalMonth else 0f
+                )
+            }
+        }
 
         val currentPlan = authManager.currentUser.value?.plan ?: Plan.BASIC
 
@@ -232,9 +263,12 @@ class DashboardViewModel @Inject constructor(
             updatingEventId = updatingEventId,
             paymentModalEvent = paymentModalEvent,
             transientMessage = transientMessage,
-            // Backend returns up to 12 months (period=year). Slice the tail
-            // to match the "Ingresos — Últimos 6 meses" card everywhere.
-            monthlyRevenueTrend = revenueTrend.takeLast(6)
+            // Backend returns up to 12 months (period=year) but only the
+            // months with data. We zero-pad the trailing 6 so the chart
+            // always shows 6 bars (parity with iOS / Web). Without padding,
+            // new accounts or gap months make the chart collapse and look
+            // broken.
+            monthlyRevenueTrend = buildTrailingSixMonthTrend(revenueTrend, now)
         )
     }.stateIn(
         scope = viewModelScope,
@@ -278,6 +312,31 @@ class DashboardViewModel @Inject constructor(
             } catch (e: Exception) {
                 Log.w(TAG, "revenue-chart fetch failed", e)
             }
+        }
+        viewModelScope.launch {
+            try {
+                _statusCountsFromBackend.value = dashboardRepository.getEventsByStatus("month")
+            } catch (e: Exception) {
+                Log.w(TAG, "events-by-status fetch failed", e)
+            }
+        }
+    }
+
+    /**
+     * Build 6 ordered `DashboardRevenuePoint`s ending at the current month.
+     * Missing months get `revenue=0`, `eventCount=0`. The chart Composable
+     * maps the YYYY-MM string to a localized month label.
+     */
+    private fun buildTrailingSixMonthTrend(
+        serverPoints: List<DashboardRevenuePoint>,
+        today: java.time.LocalDate
+    ): List<DashboardRevenuePoint> {
+        val byMonth = serverPoints.associateBy { it.month }
+        val current = java.time.YearMonth.from(today)
+        return (5 downTo 0).map { offset ->
+            val ym = current.minusMonths(offset.toLong())
+            val key = ym.toString() // "YYYY-MM"
+            byMonth[key] ?: DashboardRevenuePoint(month = key, revenue = 0.0, eventCount = 0)
         }
     }
 
