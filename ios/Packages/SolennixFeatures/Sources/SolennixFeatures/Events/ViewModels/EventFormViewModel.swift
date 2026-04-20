@@ -640,6 +640,36 @@ public final class EventFormViewModel {
         selectedStaff.remove(at: index)
     }
 
+    /// Agrega todos los miembros de un team al evento, saltando los que ya
+    /// estaban asignados. Si el staff no tiene role propio y el team si tiene
+    /// `roleLabel`, se usa ese como `roleOverride` del evento.
+    /// Devuelve cuantos miembros se agregaron efectivamente.
+    @discardableResult
+    public func addStaffTeam(_ team: StaffTeam) -> Int {
+        let teamRole = team.roleLabel?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let members = (team.members ?? []).sorted { $0.position < $1.position }
+        var added = 0
+
+        for member in members {
+            if selectedStaff.contains(where: { $0.staffId == member.staffId }) { continue }
+
+            let staffRole = member.staffRoleLabel?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            let roleOverride = staffRole.isEmpty ? teamRole : ""
+
+            selectedStaff.append(
+                SelectedStaffAssignment(
+                    staffId: member.staffId,
+                    staffName: member.staffName ?? "",
+                    staffRoleLabel: member.staffRoleLabel,
+                    roleOverride: roleOverride
+                )
+            )
+            added += 1
+        }
+
+        return added
+    }
+
     /// Suma de costos de staff asignado (se muestra en el panel pero NO afecta
     /// el total del evento en Phase 1 — es informativo).
     public var staffCost: Double {

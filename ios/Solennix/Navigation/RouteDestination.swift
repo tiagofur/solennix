@@ -62,6 +62,14 @@ struct RouteDestination: View {
         case .staffForm(let id):
             StaffFormView(staffId: id, apiClient: apiClient)
 
+        // Staff Teams (Cuadrillas)
+        case .staffTeamList:
+            StaffTeamListView(apiClient: apiClient)
+        case .staffTeamDetail(let id):
+            StaffTeamDetailView(teamId: id, apiClient: apiClient)
+        case .staffTeamForm(let id):
+            StaffTeamFormView(teamId: id, apiClient: apiClient)
+
         // Products
         case .productList:
             ProductListView(apiClient: apiClient)

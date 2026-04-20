@@ -116,6 +116,39 @@ public struct StaffListView: View {
 
     private var staffGrid: some View {
         ScrollView {
+            NavigationLink(value: Route.staffTeamList) {
+                HStack(spacing: Spacing.md) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: CornerRadius.md)
+                            .fill(SolennixColors.primaryLight)
+                            .frame(width: 36, height: 36)
+                        Image(systemName: "person.3.fill")
+                            .font(.subheadline)
+                            .foregroundStyle(SolennixColors.primary)
+                    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Equipos")
+                            .font(.body)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(SolennixColors.text)
+                        Text("Armá cuadrillas para asignarlas de un toque")
+                            .font(.caption)
+                            .foregroundStyle(SolennixColors.textSecondary)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(SolennixColors.textTertiary)
+                }
+                .padding(Spacing.md)
+                .background(SolennixColors.card)
+                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+                .shadowSm()
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, Spacing.md)
+            .padding(.top, Spacing.sm)
+
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 300))], spacing: Spacing.sm) {
                 ForEach(viewModel.paginatedStaff) { item in
                     NavigationLink(value: Route.staffDetail(id: item.id)) {
@@ -183,6 +216,30 @@ public struct StaffListView: View {
 
     private var staffListCompact: some View {
         List {
+            Section {
+                NavigationLink(value: Route.staffTeamList) {
+                    HStack(spacing: Spacing.md) {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: CornerRadius.md)
+                                .fill(SolennixColors.primaryLight)
+                                .frame(width: 36, height: 36)
+                            Image(systemName: "person.3.fill")
+                                .font(.subheadline)
+                                .foregroundStyle(SolennixColors.primary)
+                        }
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Equipos")
+                                .font(.body)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(SolennixColors.text)
+                            Text("Armá cuadrillas para asignarlas de un toque")
+                                .font(.caption)
+                                .foregroundStyle(SolennixColors.textSecondary)
+                        }
+                    }
+                }
+            }
+
             ForEach(viewModel.paginatedStaff) { item in
                 NavigationLink(value: Route.staffDetail(id: item.id)) {
                     staffRow(item)

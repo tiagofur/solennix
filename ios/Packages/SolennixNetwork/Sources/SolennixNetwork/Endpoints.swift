@@ -81,6 +81,14 @@ public enum Endpoint {
     /// `?start=YYYY-MM-DD&end=YYYY-MM-DD`.
     public static let staffAvailability = "/staff/availability"
 
+    // MARK: - Staff Teams (Cuadrillas)
+
+    public static let staffTeams = "/staff/teams"
+
+    public static func staffTeam(_ id: String) -> String {
+        "/staff/teams/\(id)"
+    }
+
     // MARK: - Products
 
     public static let products = "/products"

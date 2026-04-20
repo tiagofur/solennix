@@ -13,8 +13,13 @@ struct Step4PersonnelPanel: View {
     @Bindable var viewModel: EventFormViewModel
 
     @State private var showStaffPicker = false
+    @State private var showTeamPicker = false
     @State private var staffSearch = ""
     @State private var expandedShiftRow: UUID?
+
+    /// Cache de equipos del organizador (se carga on-demand al abrir el picker).
+    @State private var teams: [StaffTeam] = []
+    @State private var isLoadingTeams: Bool = false
 
     /// Cachea la disponibilidad del dia del evento. Vive aca (no en el VM del
     /// form) para no contaminar la logica del form con datos de solo lectura.
@@ -31,30 +36,57 @@ struct Step4PersonnelPanel: View {
                 staffRow(assignment: assignment, index: index)
             }
 
-            // Add staff button
-            Button {
-                showStaffPicker = true
-            } label: {
-                HStack(spacing: Spacing.sm) {
-                    Image(systemName: "person.crop.circle.badge.plus")
-                        .foregroundStyle(SolennixColors.primary)
+            // Add staff / team buttons
+            HStack(spacing: Spacing.sm) {
+                Button {
+                    showStaffPicker = true
+                } label: {
+                    HStack(spacing: Spacing.sm) {
+                        Image(systemName: "person.crop.circle.badge.plus")
+                            .foregroundStyle(SolennixColors.primary)
 
-                    Text("Agregar Personal")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundStyle(SolennixColors.primary)
+                        Text("Agregar Personal")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundStyle(SolennixColors.primary)
 
-                    Spacer()
+                        Spacer()
+                    }
+                    .padding(Spacing.md)
+                    .background(SolennixColors.primaryLight)
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: CornerRadius.md)
+                            .stroke(SolennixColors.primary.opacity(0.3), lineWidth: 1)
+                    )
                 }
-                .padding(Spacing.md)
-                .background(SolennixColors.primaryLight)
-                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-                .overlay(
-                    RoundedRectangle(cornerRadius: CornerRadius.md)
-                        .stroke(SolennixColors.primary.opacity(0.3), lineWidth: 1)
-                )
+                .buttonStyle(.plain)
+
+                Button {
+                    showTeamPicker = true
+                    Task { await loadTeamsIfNeeded() }
+                } label: {
+                    HStack(spacing: Spacing.sm) {
+                        Image(systemName: "person.3.fill")
+                            .foregroundStyle(SolennixColors.primary)
+
+                        Text("Agregar equipo completo")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundStyle(SolennixColors.primary)
+
+                        Spacer()
+                    }
+                    .padding(Spacing.md)
+                    .background(SolennixColors.surface)
+                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: CornerRadius.md)
+                            .stroke(SolennixColors.primary.opacity(0.3), lineWidth: 1)
+                    )
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
 
             // Staff cost total (informativo — no suma al total en Phase 1)
             if !viewModel.selectedStaff.isEmpty {
@@ -78,8 +110,116 @@ struct Step4PersonnelPanel: View {
         .sheet(isPresented: $showStaffPicker) {
             staffPickerSheet
         }
+        .sheet(isPresented: $showTeamPicker) {
+            teamPickerSheet
+        }
         .task(id: viewModel.eventDate) {
             await refreshAvailability()
+        }
+    }
+
+    // MARK: - Team Picker
+
+    private var teamPickerSheet: some View {
+        NavigationStack {
+            Group {
+                if isLoadingTeams && teams.isEmpty {
+                    ProgressView("Cargando equipos...")
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if teams.isEmpty {
+                    EmptyStateView(
+                        icon: "person.3.sequence",
+                        title: "Sin equipos todavia",
+                        message: "Agrupa a tu equipo de meseros o fotografos desde Personal > Equipos para asignarlos con un solo toque."
+                    )
+                } else {
+                    List {
+                        Section {
+                            Text("Seleccioná un equipo para asignar a todos sus miembros. Los que ya esten asignados se ignoran.")
+                                .font(.caption)
+                                .foregroundStyle(SolennixColors.textSecondary)
+                        }
+
+                        ForEach(teams) { team in
+                            Button {
+                                let added = viewModel.addStaffTeam(team)
+                                HapticsHelper.play(added > 0 ? .success : .warning)
+                                showTeamPicker = false
+                            } label: {
+                                HStack(spacing: Spacing.md) {
+                                    ZStack {
+                                        RoundedRectangle(cornerRadius: CornerRadius.md)
+                                            .fill(SolennixColors.primaryLight)
+                                            .frame(width: 40, height: 40)
+                                        Image(systemName: "person.3.fill")
+                                            .font(.subheadline)
+                                            .foregroundStyle(SolennixColors.primary)
+                                    }
+
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(team.name)
+                                            .font(.body)
+                                            .fontWeight(.semibold)
+                                            .foregroundStyle(SolennixColors.text)
+
+                                        HStack(spacing: Spacing.sm) {
+                                            if let role = team.roleLabel, !role.isEmpty {
+                                                Text(role)
+                                                    .font(.caption)
+                                                    .foregroundStyle(SolennixColors.textSecondary)
+                                            }
+                                            if let count = team.memberCount {
+                                                Text(count == 1 ? "1 miembro" : "\(count) miembros")
+                                                    .font(.caption)
+                                                    .foregroundStyle(SolennixColors.textTertiary)
+                                            }
+                                        }
+                                    }
+
+                                    Spacer()
+
+                                    Image(systemName: "chevron.right")
+                                        .font(.caption)
+                                        .foregroundStyle(SolennixColors.textTertiary)
+                                }
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .listStyle(.insetGrouped)
+                }
+            }
+            .navigationTitle("Agregar equipo")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Cerrar") { showTeamPicker = false }
+                        .foregroundStyle(SolennixColors.textSecondary)
+                }
+            }
+        }
+    }
+
+    private func loadTeamsIfNeeded() async {
+        // Siempre que se abre el picker refrescamos — asi el usuario ve los
+        // cambios hechos en el catalogo sin salir del form.
+        isLoadingTeams = true
+        defer { isLoadingTeams = false }
+        do {
+            // Listado liviano — para el detalle de miembros llamamos por ID.
+            let list = try await viewModel.apiClient.listStaffTeams()
+            // Hidratamos miembros por cada team (N requests pero N suele ser chico).
+            var hydrated: [StaffTeam] = []
+            for t in list {
+                if let full = try? await viewModel.apiClient.getStaffTeam(id: t.id) {
+                    hydrated.append(full)
+                } else {
+                    hydrated.append(t)
+                }
+            }
+            teams = hydrated
+        } catch {
+            teams = []
         }
     }
 

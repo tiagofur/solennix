@@ -32,6 +32,11 @@ public enum Route: Hashable {
     case staffDetail(id: String)
     case staffForm(id: String? = nil)
 
+    // MARK: Staff Teams (Cuadrillas)
+    case staffTeamList
+    case staffTeamDetail(id: String)
+    case staffTeamForm(id: String? = nil)
+
     // MARK: Products
     case productList
     case productDetail(id: String)
