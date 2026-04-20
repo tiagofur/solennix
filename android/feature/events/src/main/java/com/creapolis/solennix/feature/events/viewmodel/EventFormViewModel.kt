@@ -14,6 +14,7 @@ import com.creapolis.solennix.core.data.repository.EventRepository
 import com.creapolis.solennix.core.data.repository.InventoryRepository
 import com.creapolis.solennix.core.data.repository.ProductRepository
 import com.creapolis.solennix.core.data.repository.StaffRepository
+import com.creapolis.solennix.core.data.repository.StaffTeamRepository
 import com.creapolis.solennix.core.designsystem.event.UiEvent
 import com.creapolis.solennix.core.model.*
 import com.creapolis.solennix.core.network.ApiService
@@ -37,6 +38,7 @@ class EventFormViewModel @Inject constructor(
     private val productRepository: ProductRepository,
     private val inventoryRepository: InventoryRepository,
     private val staffRepository: StaffRepository,
+    private val staffTeamRepository: StaffTeamRepository,
     private val apiService: ApiService,
     private val planLimitsManager: PlanLimitsManager,
     private val authManager: AuthManager,
@@ -179,6 +181,15 @@ class EventFormViewModel @Inject constructor(
     val staffAvailability: StateFlow<Map<String, List<StaffAvailabilityAssignment>>> =
         _staffAvailability.asStateFlow()
     private var availabilityJob: Job? = null
+
+    // Ola 2: equipos (staff teams). Se cargan bajo demanda cuando se abre el
+    // picker de "Agregar equipo completo". Network-only — no cacheamos en Room.
+    private val _availableTeams = MutableStateFlow<List<StaffTeam>>(emptyList())
+    val availableTeams: StateFlow<List<StaffTeam>> = _availableTeams.asStateFlow()
+    var isLoadingTeams by mutableStateOf(false)
+        private set
+    var teamsErrorMessage by mutableStateOf<String?>(null)
+        private set
 
     // Step 6: Location & Details (moved to GeneralInfo in UI)
     var location by mutableStateOf("")
@@ -1053,6 +1064,73 @@ class EventFormViewModel @Inject constructor(
         val index = selectedStaff.indexOfFirst { it.staffId == staffId }
         if (index < 0) return
         selectedStaff[index] = selectedStaff[index].copy(notes = notes)
+    }
+
+    // ===== Staff Teams (Ola 2) =====
+
+    /** Lista equipos del usuario para el picker. Refresca on-demand. */
+    fun loadTeams() {
+        viewModelScope.launch {
+            isLoadingTeams = true
+            teamsErrorMessage = null
+            try {
+                _availableTeams.value = staffTeamRepository.listTeams()
+                    .sortedBy { it.name.lowercase() }
+            } catch (e: Exception) {
+                teamsErrorMessage = "No pudimos cargar los equipos: ${e.message}"
+            } finally {
+                isLoadingTeams = false
+            }
+        }
+    }
+
+    /**
+     * Expande un equipo: trae su detalle (con miembros) y agrega los staff que
+     * no estén ya asignados al evento. Preserva la lógica Ola 1 — cada miembro
+     * queda como asignación independiente y el usuario puede ajustar fee /
+     * turno / estado después.
+     */
+    fun addTeamAssignment(teamId: String, onDone: (added: Int, skipped: Int) -> Unit = { _, _ -> }) {
+        viewModelScope.launch {
+            try {
+                val team = staffTeamRepository.getTeam(teamId)
+                val catalog = _availableStaff.value.associateBy { it.id }
+                val currentIds = selectedStaff.map { it.staffId }.toSet()
+                var added = 0
+                var skipped = 0
+                team.members.orEmpty().sortedBy { it.position }.forEach { member ->
+                    if (member.staffId in currentIds) {
+                        skipped++
+                        return@forEach
+                    }
+                    // Prefer the fresh staff from catalog; fall back to the snapshot
+                    // that came inside the team payload.
+                    val resolvedName = catalog[member.staffId]?.name
+                        ?: member.staffName
+                        ?: "Colaborador"
+                    val resolvedRole = catalog[member.staffId]?.roleLabel
+                        ?: member.staffRoleLabel
+                    selectedStaff.add(
+                        SelectedStaffAssignment(
+                            staffId = member.staffId,
+                            feeAmount = null,
+                            roleOverride = "",
+                            notes = "",
+                            staffName = resolvedName,
+                            staffRoleLabel = resolvedRole,
+                            shiftStart = null,
+                            shiftEnd = null,
+                            status = AssignmentStatus.CONFIRMED.raw
+                        )
+                    )
+                    added++
+                }
+                onDone(added, skipped)
+            } catch (e: Exception) {
+                teamsErrorMessage = "No pudimos agregar el equipo: ${e.message}"
+                onDone(0, 0)
+            }
+        }
     }
 
     /** Costo total del personal — suma de `feeAmount` (null cuenta como 0). */

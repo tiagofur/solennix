@@ -88,6 +88,9 @@ import com.creapolis.solennix.feature.settings.ui.TermsScreen
 import com.creapolis.solennix.feature.staff.ui.StaffDetailScreen
 import com.creapolis.solennix.feature.staff.ui.StaffFormScreen
 import com.creapolis.solennix.feature.staff.ui.StaffListScreen
+import com.creapolis.solennix.feature.staff.ui.StaffTeamDetailScreen
+import com.creapolis.solennix.feature.staff.ui.StaffTeamFormScreen
+import com.creapolis.solennix.feature.staff.ui.StaffTeamListScreen
 
 @Composable
 fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
@@ -357,7 +360,39 @@ fun CompactBottomNavLayout(initialDeepLinkRoute: String? = null) {
                     viewModel = hiltViewModel(),
                     onStaffClick = { id -> navController.navigate("staff_detail/$id") },
                     onAddStaffClick = { navController.navigate("staff_form") },
-                    onSearchClick = { navController.navigate(buildSearchRoute()) }
+                    onSearchClick = { navController.navigate(buildSearchRoute()) },
+                    onTeamsClick = { navController.navigate("staff_teams") }
+                )
+            }
+            composable("staff_teams") {
+                StaffTeamListScreen(
+                    viewModel = hiltViewModel(),
+                    onTeamClick = { id -> navController.navigate("staff_team_detail/$id") },
+                    onAddTeamClick = { navController.navigate("staff_team_form") },
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+            composable("staff_team_detail/{teamId}") {
+                StaffTeamDetailScreen(
+                    viewModel = hiltViewModel(),
+                    onNavigateBack = { navController.popBackStack() },
+                    onEditClick = { id -> navController.navigate("staff_team_form?teamId=$id") }
+                )
+            }
+            composable("staff_team_form?teamId={teamId}", arguments = listOf(navArgument("teamId") {
+                type = NavType.StringType
+                nullable = true
+                defaultValue = null
+            })) {
+                StaffTeamFormScreen(
+                    viewModel = hiltViewModel(),
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+            composable("staff_team_form") {
+                StaffTeamFormScreen(
+                    viewModel = hiltViewModel(),
+                    onNavigateBack = { navController.popBackStack() }
                 )
             }
             composable("staff_detail/{staffId}") {

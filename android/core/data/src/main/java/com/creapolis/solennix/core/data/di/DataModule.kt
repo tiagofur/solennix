@@ -45,6 +45,11 @@ interface DataModule {
     ): StaffRepository
 
     @Binds
+    fun bindsStaffTeamRepository(
+        repository: DefaultStaffTeamRepository
+    ): StaffTeamRepository
+
+    @Binds
     fun bindsEventPublicLinkRepository(
         repository: DefaultEventPublicLinkRepository
     ): EventPublicLinkRepository

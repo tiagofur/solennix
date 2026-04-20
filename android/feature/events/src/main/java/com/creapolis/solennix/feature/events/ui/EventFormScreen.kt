@@ -1877,6 +1877,7 @@ fun ProductPickerSheet(
 @Composable
 private fun StaffAssignmentPanel(viewModel: EventFormViewModel) {
     var showStaffPicker by remember { mutableStateOf(false) }
+    var showTeamPicker by remember { mutableStateOf(false) }
     val availableStaff by viewModel.availableStaff.collectAsStateWithLifecycle()
 
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -1934,13 +1935,27 @@ private fun StaffAssignmentPanel(viewModel: EventFormViewModel) {
                 }
             }
         } else if (viewModel.selectedStaff.isEmpty()) {
-            OutlinedButton(
-                onClick = { showStaffPicker = true },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Asignar colaborador")
+            Column(modifier = Modifier.fillMaxWidth()) {
+                OutlinedButton(
+                    onClick = { showStaffPicker = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Agregar colaborador")
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedButton(
+                    onClick = {
+                        viewModel.loadTeams()
+                        showTeamPicker = true
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.Group, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Agregar equipo completo")
+                }
             }
         } else {
             viewModel.selectedStaff.forEach { assignment ->
@@ -1969,6 +1984,19 @@ private fun StaffAssignmentPanel(viewModel: EventFormViewModel) {
                     color = SolennixTheme.colors.primary
                 )
             }
+
+            Spacer(modifier = Modifier.height(8.dp))
+            OutlinedButton(
+                onClick = {
+                    viewModel.loadTeams()
+                    showTeamPicker = true
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(Icons.Default.Group, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Agregar equipo completo")
+            }
         }
     }
 
@@ -1976,6 +2004,13 @@ private fun StaffAssignmentPanel(viewModel: EventFormViewModel) {
         StaffPickerSheet(
             viewModel = viewModel,
             onDismiss = { showStaffPicker = false }
+        )
+    }
+
+    if (showTeamPicker) {
+        TeamPickerSheet(
+            viewModel = viewModel,
+            onDismiss = { showTeamPicker = false }
         )
     }
 }
@@ -2373,6 +2408,147 @@ private fun StaffPickerSheet(
                     }
                 }
             }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TeamPickerSheet(
+    viewModel: EventFormViewModel,
+    onDismiss: () -> Unit
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val teams by viewModel.availableTeams.collectAsStateWithLifecycle()
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                "Seleccioná un equipo",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                "Los miembros se suman como asignaciones nuevas. Podés ajustar el " +
+                    "fee, turno o estado de cada uno después.",
+                style = MaterialTheme.typography.bodySmall,
+                color = SolennixTheme.colors.secondaryText
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            when {
+                viewModel.isLoadingTeams && teams.isEmpty() -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
+                viewModel.teamsErrorMessage != null && teams.isEmpty() -> {
+                    Text(
+                        viewModel.teamsErrorMessage.orEmpty(),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = SolennixTheme.colors.error
+                    )
+                }
+                teams.isEmpty() -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            "Sin equipos todavía. Creá uno desde Personal → Equipos.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = SolennixTheme.colors.secondaryText
+                        )
+                    }
+                }
+                else -> {
+                    LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                        items(teams, key = { it.id }) { team ->
+                            Card(
+                                onClick = {
+                                    viewModel.addTeamAssignment(team.id) { added, skipped ->
+                                        val msg = buildString {
+                                            append("Equipo aplicado: ")
+                                            append(
+                                                when (added) {
+                                                    0 -> "sin nuevos miembros"
+                                                    1 -> "1 agregado"
+                                                    else -> "$added agregados"
+                                                }
+                                            )
+                                            if (skipped > 0) append(" · $skipped ya estaban")
+                                        }
+                                        scope.launch { snackbarHostState.showSnackbar(msg) }
+                                    }
+                                    onDismiss()
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = SolennixTheme.colors.card
+                                ),
+                                shape = MaterialTheme.shapes.medium
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        Icons.Default.Group,
+                                        contentDescription = null,
+                                        tint = SolennixTheme.colors.primary
+                                    )
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            team.name,
+                                            style = MaterialTheme.typography.titleSmall,
+                                            color = SolennixTheme.colors.primaryText
+                                        )
+                                        team.roleLabel?.takeIf { it.isNotBlank() }?.let { label ->
+                                            Text(
+                                                label,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = SolennixTheme.colors.primary
+                                            )
+                                        }
+                                        val count = team.memberCount ?: team.members?.size ?: 0
+                                        Text(
+                                            when (count) {
+                                                0 -> "Sin miembros"
+                                                1 -> "1 miembro"
+                                                else -> "$count miembros"
+                                            },
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = SolennixTheme.colors.secondaryText
+                                        )
+                                    }
+                                    Icon(
+                                        Icons.Default.Add,
+                                        contentDescription = "Aplicar",
+                                        tint = SolennixTheme.colors.primary
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            SnackbarHost(hostState = snackbarHostState)
         }
     }
 }
