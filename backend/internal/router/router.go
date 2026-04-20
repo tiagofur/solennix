@@ -168,13 +168,17 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 			// "availability" as an id param.
 			r.Get("/availability", staffHandler.GetStaffAvailability)
 			// Teams (Ola 2) — static prefix wins over /{id} in chi's trie.
-			r.Route("/teams", func(r chi.Router) {
-				r.Get("/", staffTeamHandler.ListTeams)
-				r.Post("/", staffTeamHandler.CreateTeam)
-				r.Get("/{id}", staffTeamHandler.GetTeam)
-				r.Put("/{id}", staffTeamHandler.UpdateTeam)
-				r.Delete("/{id}", staffTeamHandler.DeleteTeam)
-			})
+			// Guarded so router tests / future wiring can pass nil without
+			// triggering a method-on-nil panic when a request hits /teams.
+			if staffTeamHandler != nil {
+				r.Route("/teams", func(r chi.Router) {
+					r.Get("/", staffTeamHandler.ListTeams)
+					r.Post("/", staffTeamHandler.CreateTeam)
+					r.Get("/{id}", staffTeamHandler.GetTeam)
+					r.Put("/{id}", staffTeamHandler.UpdateTeam)
+					r.Delete("/{id}", staffTeamHandler.DeleteTeam)
+				})
+			}
 			r.Get("/{id}", staffHandler.GetStaff)
 			r.Put("/{id}", staffHandler.UpdateStaff)
 			r.Delete("/{id}", staffHandler.DeleteStaff)

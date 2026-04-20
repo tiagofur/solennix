@@ -60,7 +60,8 @@ func (h *StaffTeamHandler) GetTeam(w http.ResponseWriter, r *http.Request) {
 	}
 	t, err := h.repo.GetByID(r.Context(), id, userID)
 	if err != nil {
-		writeError(w, http.StatusNotFound, "Team not found")
+		slog.Error("get staff team failed", "error", err, "user_id", userID, "team_id", id)
+		writeStaffTeamError(w, err, "Failed to fetch team")
 		return
 	}
 	writeJSON(w, http.StatusOK, t)
@@ -126,7 +127,8 @@ func (h *StaffTeamHandler) DeleteTeam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := h.repo.Delete(r.Context(), id, userID); err != nil {
-		writeError(w, http.StatusNotFound, "Team not found")
+		slog.Error("delete staff team failed", "error", err, "user_id", userID, "team_id", id)
+		writeStaffTeamError(w, err, "Failed to delete team")
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
