@@ -14,11 +14,13 @@ import com.creapolis.solennix.core.data.plan.LimitCheckResult
 import com.creapolis.solennix.core.data.plan.PlanLimitsManager
 import com.creapolis.solennix.core.data.repository.InventoryRepository
 import com.creapolis.solennix.core.data.repository.ProductRepository
+import com.creapolis.solennix.core.data.repository.StaffTeamRepository
 import com.creapolis.solennix.core.model.InventoryItem
 import com.creapolis.solennix.core.model.InventoryType
 import com.creapolis.solennix.core.model.Plan
 import com.creapolis.solennix.core.model.Product
 import com.creapolis.solennix.core.model.ProductIngredient
+import com.creapolis.solennix.core.model.StaffTeam
 import com.creapolis.solennix.core.network.ApiService
 import com.creapolis.solennix.core.network.get
 import com.creapolis.solennix.core.network.post
@@ -48,6 +50,7 @@ data class RecipeItem(
 class ProductFormViewModel @Inject constructor(
     private val productRepository: ProductRepository,
     private val inventoryRepository: InventoryRepository,
+    private val staffTeamRepository: StaffTeamRepository,
     private val apiService: ApiService,
     private val planLimitsManager: PlanLimitsManager,
     private val authManager: AuthManager,
@@ -67,6 +70,12 @@ class ProductFormViewModel @Inject constructor(
     var basePrice by mutableStateOf("")
     var imageUrl by mutableStateOf("")
     var isActive by mutableStateOf(true)
+
+    // Ola 3 — equipo opcional. Al agregar el producto a un evento, el cliente
+    // expande los miembros en asignaciones de staff.
+    var staffTeamId by mutableStateOf<String?>(null)
+    var availableTeams by mutableStateOf<List<StaffTeam>>(emptyList())
+        private set
 
     // Recipe items
     val ingredients = mutableStateListOf<RecipeItem>()
@@ -116,6 +125,16 @@ class ProductFormViewModel @Inject constructor(
                 val products = productRepository.getProducts().first()
                 existingCategories = products.map { it.category }.distinct().sorted()
 
+                // Load staff teams for the optional "Equipo asociado" dropdown.
+                // Non-blocking: si falla, el dropdown queda vacío y la feature
+                // se degrada a "Sin equipo" sin romper el form.
+                try {
+                    availableTeams = staffTeamRepository.listTeams()
+                        .sortedBy { it.name.lowercase() }
+                } catch (_: Exception) {
+                    availableTeams = emptyList()
+                }
+
                 if (productId != null) {
                     loadProduct(productId)
                 } else {
@@ -139,6 +158,7 @@ class ProductFormViewModel @Inject constructor(
                 basePrice = product.basePrice.toString()
                 imageUrl = product.imageUrl ?: ""
                 isActive = product.isActive
+                staffTeamId = product.staffTeamId
             }
 
             // Load ingredients
@@ -209,6 +229,7 @@ class ProductFormViewModel @Inject constructor(
                     recipe = null,
                     imageUrl = imageUrl.takeIf { it.isNotBlank() },
                     isActive = isActive,
+                    staffTeamId = staffTeamId,
                     createdAt = "",
                     updatedAt = ""
                 )

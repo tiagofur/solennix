@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -33,7 +34,8 @@ type CRUDHandler struct {
 	paymentRepo     FullPaymentRepository
 	userRepo        FullUserRepository
 	unavailRepo     UnavailableDateRepository
-	notifier        NotificationSender         // optional, may be nil
+	staffTeamRepo   StaffTeamRepository         // optional, may be nil (Ola 3)
+	notifier        NotificationSender          // optional, may be nil
 	emailService    *services.EmailService      // optional, may be nil
 	liveActivitySvc LiveActivityNotifier        // optional, may be nil
 }
@@ -77,6 +79,14 @@ func (h *CRUDHandler) SetEmailService(e *services.EmailService) {
 // SetLiveActivityNotifier configures an optional Live Activity push notifier.
 func (h *CRUDHandler) SetLiveActivityNotifier(s LiveActivityNotifier) {
 	h.liveActivitySvc = s
+}
+
+// SetStaffTeamRepo configures an optional staff team repository used to verify
+// tenant ownership of `staff_team_id` on product Create/Update (Ola 3).
+// When nil, products accept any staff_team_id the client sends — rely on the
+// FK constraint alone. Prefer wiring this in production.
+func (h *CRUDHandler) SetStaffTeamRepo(s StaffTeamRepository) {
+	h.staffTeamRepo = s
 }
 
 // ===================
@@ -1338,6 +1348,22 @@ func (h *CRUDHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	product.UserID = userID
+
+	// Tenant check on staff_team_id — prevent a client from attaching another
+	// user's team. The FK alone can't enforce this because staff_teams doesn't
+	// carry a denormalized user_id check on its own row in this query.
+	if product.StaffTeamID != nil && h.staffTeamRepo != nil {
+		if _, err := h.staffTeamRepo.GetByID(r.Context(), *product.StaffTeamID, userID); err != nil {
+			if errors.Is(err, repository.ErrStaffTeamNotFound) {
+				writeError(w, http.StatusBadRequest, "staff_team_id does not belong to this user")
+				return
+			}
+			slog.Error("verify staff team ownership failed", "error", err, "user_id", userID)
+			writeError(w, http.StatusInternalServerError, "Failed to verify team ownership")
+			return
+		}
+	}
+
 	if err := h.productRepo.Create(r.Context(), &product); err != nil {
 		writeError(w, http.StatusInternalServerError, "Failed to create product")
 		return
@@ -1366,6 +1392,19 @@ func (h *CRUDHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 
 	product.ID = id
 	product.UserID = userID
+
+	if product.StaffTeamID != nil && h.staffTeamRepo != nil {
+		if _, err := h.staffTeamRepo.GetByID(r.Context(), *product.StaffTeamID, userID); err != nil {
+			if errors.Is(err, repository.ErrStaffTeamNotFound) {
+				writeError(w, http.StatusBadRequest, "staff_team_id does not belong to this user")
+				return
+			}
+			slog.Error("verify staff team ownership failed", "error", err, "user_id", userID)
+			writeError(w, http.StatusInternalServerError, "Failed to verify team ownership")
+			return
+		}
+	}
+
 	if err := h.productRepo.Update(r.Context(), &product); err != nil {
 		writeError(w, http.StatusInternalServerError, "Failed to update product")
 		return

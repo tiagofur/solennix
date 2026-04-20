@@ -77,6 +77,7 @@ interface Product {
   name: string;
   category: string;
   base_price: number;
+  staff_team_id?: string | null;
 }
 
 // Convert an ISO8601 UTC string (e.g. the backend's shift_start) to the
@@ -582,6 +583,35 @@ export const EventForm: React.FC = () => {
     }
   }, [quickQuoteData, id, setValue]);
 
+  // Ola 3 — si el product lleva staff_team_id, expandimos los miembros del
+  // equipo como filas de staff en el form (snapshot at add-time). No bloquea
+  // el add en error: logea y sigue. Dedupe vía handleAddTeamMembers.
+  const expandProductTeam = async (product: Product) => {
+    if (!product.staff_team_id) return;
+    try {
+      const team = await staffService.getTeam(product.staff_team_id);
+      const members = [...(team.members ?? [])].sort((a, b) => a.position - b.position);
+      const rows: SelectedStaffAssignment[] = members.map((m) => {
+        const staff = staffCatalog.find((s) => s.id === m.staff_id);
+        const staffRole = staff?.role_label ?? null;
+        const teamRole = team.role_label ?? null;
+        const roleOverride = staffRole ? "" : teamRole ?? "";
+        return {
+          staff_id: m.staff_id,
+          fee_amount: null,
+          role_override: roleOverride,
+          notes: "",
+          shift_start: null,
+          shift_end: null,
+          status: null,
+        };
+      });
+      if (rows.length > 0) handleAddTeamMembers(rows);
+    } catch (err) {
+      logError("Error expanding product staff team", err);
+    }
+  };
+
   const handleAddProduct = () => {
     if (products.length > 0) {
       const product = products[0];
@@ -594,6 +624,7 @@ export const EventForm: React.FC = () => {
           discount: 0,
         },
       ]);
+      void expandProductTeam(product);
     }
   };
 
@@ -611,6 +642,7 @@ export const EventForm: React.FC = () => {
   };
 
   const handleProductChange = (index: number, field: string, value: string | number | boolean) => {
+    let productToExpand: Product | null = null;
     setSelectedProducts((prev) => {
       const next = [...prev];
       next[index] = { ...next[index], [field]: value };
@@ -619,10 +651,13 @@ export const EventForm: React.FC = () => {
         if (product) {
           next[index].price = product.base_price;
           next[index].discount = 0;
+          // Ola 3 — si el nuevo product lleva team asociado, expandir.
+          if (product.staff_team_id) productToExpand = product;
         }
       }
       return next;
     });
+    if (productToExpand) void expandProductTeam(productToExpand);
   };
 
   const handleAddExtra = () => {

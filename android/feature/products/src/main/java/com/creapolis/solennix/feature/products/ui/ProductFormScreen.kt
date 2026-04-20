@@ -346,6 +346,8 @@ fun ProductFormScreen(
                     showCost = true
                 )
 
+                StaffTeamSection(viewModel = viewModel)
+
                 if (viewModel.errorMessage != null) {
                     Text(
                         text = viewModel.errorMessage.orEmpty(),
@@ -583,6 +585,111 @@ private fun RecipeItemRow(
                     contentDescription = stringResource(DesignSystemR.string.cd_delete),
                     tint = colors.error,
                     modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun StaffTeamSection(viewModel: ProductFormViewModel) {
+    val colors = SolennixTheme.colors
+    var expanded by remember { mutableStateOf(false) }
+    val teams = viewModel.availableTeams
+    val selected = teams.find { it.id == viewModel.staffTeamId }
+    val selectedText = selected?.name ?: "Sin equipo"
+
+    Card(
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(containerColor = colors.card),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = "Equipo asociado",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = colors.primaryText
+            )
+            Text(
+                text = "Agregá un equipo para vender el servicio de meseros con este producto.",
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.tertiaryText
+            )
+
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = it }
+            ) {
+                OutlinedTextField(
+                    value = selectedText,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Equipo") },
+                    leadingIcon = {
+                        Icon(
+                            Icons.Default.Groups,
+                            contentDescription = null
+                        )
+                    },
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor(MenuAnchorType.PrimaryNotEditable),
+                    shape = MaterialTheme.shapes.small,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = colors.primary,
+                        focusedLabelColor = colors.primary,
+                        cursorColor = colors.primary
+                    ),
+                    singleLine = true
+                )
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Sin equipo") },
+                        onClick = {
+                            viewModel.staffTeamId = null
+                            expanded = false
+                        }
+                    )
+                    teams.forEach { team ->
+                        DropdownMenuItem(
+                            text = {
+                                Column {
+                                    Text(team.name)
+                                    val count = team.memberCount ?: team.members?.size
+                                    if (count != null) {
+                                        Text(
+                                            text = "$count integrantes",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = colors.secondaryText
+                                        )
+                                    }
+                                }
+                            },
+                            onClick = {
+                                viewModel.staffTeamId = team.id
+                                expanded = false
+                            }
+                        )
+                    }
+                }
+            }
+
+            if (viewModel.staffTeamId != null) {
+                Text(
+                    text = "Cuando agregues este producto a un evento, se asignan automáticamente los miembros del equipo como personal.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.secondaryText
                 )
             }
         }

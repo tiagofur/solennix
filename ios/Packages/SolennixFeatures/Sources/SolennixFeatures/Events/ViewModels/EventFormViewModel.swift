@@ -539,6 +539,25 @@ public final class EventFormViewModel {
                 )
             )
         }
+
+        // Ola 3: si el producto carga un team asociado, expandir sus miembros
+        // como staff del evento. Snapshot: el team se hidrata acá y el dedup
+        // lo maneja `addStaffTeam`.
+        if let teamId = product.staffTeamId, !teamId.isEmpty {
+            Task { await expandStaffTeam(teamId: teamId) }
+        }
+    }
+
+    /// Fetcha el team por ID y expande sus miembros en `selectedStaff`. Los
+    /// errores se reportan via `errorMessage` sin bloquear el add del producto.
+    @MainActor
+    private func expandStaffTeam(teamId: String) async {
+        do {
+            let team = try await apiClient.getStaffTeam(id: teamId)
+            _ = addStaffTeam(team)
+        } catch {
+            errorMessage = mapError(error)
+        }
     }
 
     public func removeProduct(at index: Int) {

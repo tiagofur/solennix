@@ -691,6 +691,51 @@ class EventFormViewModel @Inject constructor(
             selectedProducts.add(eventProduct)
         }
         fetchProductCosts()
+
+        // Ola 3 — snapshot at add-time: si el producto tiene un equipo asociado,
+        // expandimos sus miembros como asignaciones de staff. Dedup via Ola 2.
+        product.staffTeamId?.takeIf { it.isNotBlank() }?.let { teamId ->
+            expandStaffTeamForProduct(teamId)
+        }
+    }
+
+    private fun expandStaffTeamForProduct(teamId: String) {
+        viewModelScope.launch {
+            try {
+                val team = staffTeamRepository.getTeam(teamId)
+                val catalog = _availableStaff.value.associateBy { it.id }
+                val currentIds = selectedStaff.map { it.staffId }.toMutableSet()
+                team.members.orEmpty().sortedBy { it.position }.forEach { member ->
+                    if (member.staffId in currentIds) return@forEach
+                    val resolvedName = catalog[member.staffId]?.name
+                        ?: member.staffName
+                        ?: "Colaborador"
+                    val resolvedRole = catalog[member.staffId]?.roleLabel
+                        ?: member.staffRoleLabel
+                    selectedStaff.add(
+                        SelectedStaffAssignment(
+                            staffId = member.staffId,
+                            feeAmount = null,
+                            roleOverride = "",
+                            notes = "",
+                            staffName = resolvedName,
+                            staffRoleLabel = resolvedRole,
+                            shiftStart = null,
+                            shiftEnd = null,
+                            status = AssignmentStatus.CONFIRMED.raw
+                        )
+                    )
+                    currentIds.add(member.staffId)
+                }
+            } catch (e: Exception) {
+                _uiEvents.tryEmit(
+                    UiEvent.Error(
+                        message = "No pudimos expandir el equipo del producto: ${e.message}",
+                        retryActionId = null,
+                    )
+                )
+            }
+        }
     }
 
     fun removeProduct(productId: String) {

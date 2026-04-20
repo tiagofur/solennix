@@ -115,10 +115,27 @@ struct Step2ProductsView: View {
         VStack(spacing: Spacing.sm) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(item.product?.name ?? "Producto")
-                        .font(.body)
-                        .fontWeight(.medium)
-                        .foregroundStyle(SolennixColors.text)
+                    HStack(spacing: Spacing.xs) {
+                        Text(item.product?.name ?? "Producto")
+                            .font(.body)
+                            .fontWeight(.medium)
+                            .foregroundStyle(SolennixColors.text)
+
+                        if let teamId = item.product?.staffTeamId, !teamId.isEmpty {
+                            HStack(spacing: 2) {
+                                Image(systemName: "person.3.fill")
+                                    .font(.caption2)
+                                Text("Incluye equipo")
+                                    .font(.caption2)
+                                    .fontWeight(.medium)
+                            }
+                            .foregroundStyle(SolennixColors.primary)
+                            .padding(.horizontal, Spacing.xs)
+                            .padding(.vertical, 2)
+                            .background(SolennixColors.primaryLight)
+                            .clipShape(Capsule())
+                        }
+                    }
 
                     Text("$\(String(format: "%.2f", item.unitPrice)) c/u")
                         .font(.caption)

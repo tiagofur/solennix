@@ -121,6 +121,7 @@ func main() {
 	crudHandler.SetNotifier(notificationService)
 	crudHandler.SetEmailService(emailService)
 	crudHandler.SetLiveActivityNotifier(liveActivityService)
+	crudHandler.SetStaffTeamRepo(staffTeamRepo)
 	subHandler := handlers.NewSubscriptionHandler(userRepo, subscriptionRepo, eventRepo, paymentRepo, stripeService, rcService, cfg)
 	subHandler.SetEmailService(emailService)
 	searchHandler := handlers.NewSearchHandler(clientRepo, productRepo, inventoryRepo, eventRepo)

@@ -17,6 +17,18 @@ status: active
 **Fecha:** Abril 2026
 **Version:** 1.2
 
+> [!info] 2026-04-20 — Personal Ola 3: productos con equipo asociado (venta de "servicio de meseros")
+> Tercera y última ola de la expansión de Personal. Cierra el ciclo comercial: el organizador ya podía (1) catalogar colaboradores con costo (Phase 1), (2) organizar turnos y RSVP (Ola 1), (3) agrupar en equipos (Ola 2). Ahora puede (4) vender el servicio del equipo como Product con precio al cliente, manteniendo el costo interno por fee.
+> - **Backend (migration 045)**: `products.staff_team_id` nullable FK con `ON DELETE SET NULL`. Partial index para queries de "products con team" a futuro. Aditivo — productos existentes intactos.
+> - **Tenant isolation opcional**: `CRUDHandler.SetStaffTeamRepo` (siguiendo el patrón de SetNotifier/SetEmailService). Cuando está wireado en main.go, valida que el `staff_team_id` del payload pertenezca al mismo user antes de persistir. Evita que un cliente adjunte el team de otro organizador.
+> - **Cliente orquesta expansión**: backend NO hace auto-expansion. Cuando el organizador agrega un Product con team al EventForm, el cliente fetchea `/api/staff/teams/{id}` (endpoint de Ola 2), expande los miembros y los agrega a `selectedStaff` reusando la dedupe y el UPSERT de Ola 2. Consistente con cómo EventProduct copia `unit_price` al agregar (no refresh dinámico).
+> - **Semantics snapshot-at-add-time**: si el team se edita después de agregar el Product al evento, el evento NO se actualiza. Si el organizador quiere refrescar, quita y re-agrega el Product. Clara, predecible.
+> - **Coexiste con Recipe**: un Product puede tener `staff_team_id` Y `recipe`. No forzamos exclusión.
+> - **UI cross-platform**: Product form suma selector opcional "Equipo asociado" (default "Sin equipo") con texto explicativo de qué pasa al agregar al evento. Chip "Incluye equipo" en la lista de productos dentro del EventForm.
+> - **Margen interno solamente**: organizador ve `Product.price − Σ(fees)` en cálculos internos. Cliente final NO ve estructura de costos.
+> - **Sin plan gating** (consistente con Olas 1 y 2).
+> - **Decisiones de producto pospuestas**: visualización de rentabilidad en Dashboard/EventSummary; plan gating si validamos que es premium; link quitar-Product→quitar-staff (v1 deja el staff expandido intacto).
+
 > [!info] 2026-04-19 — Personal Ola 2: equipos (staff_teams + staff_team_members) para asignar cuadrillas en bloque
 > Segunda ola de expansión de Personal (después de Ola 1 del mismo día). Motivación: sin equipos, el mismo organizador que tiene una plantilla recurrente de 10 meseros tiene que agregarlos uno por uno a cada evento. Con Ola 2 los agrupa una vez y los asigna a un evento con un solo toque. Escala el modelo a empresas de catering sin cambiar el flujo base de Staff catalog.
 > - **Backend (migration 044)**: `staff_teams` (user_id, name, role_label, notes, timestamps) + `staff_team_members` (team_id, staff_id, is_lead, position) con PK compuesta. Cascade a ambos lados; miembros sin fee/status (esos siguen viviendo per-assignment en `event_staff`, así un equipo puede asignarse a varios eventos con distintos costos/RSVPs).

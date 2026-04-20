@@ -724,6 +724,33 @@ fun ProductSelectionItem(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(product.name, style = MaterialTheme.typography.titleSmall)
                     Text(item.unitPrice.asMXN(), style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.primary)
+                    product.staffTeamId?.takeIf { it.isNotBlank() }?.let {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        AssistChip(
+                            onClick = {},
+                            enabled = false,
+                            label = {
+                                Text(
+                                    "Incluye equipo",
+                                    style = MaterialTheme.typography.labelSmall
+                                )
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.Groups,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                            },
+                            colors = AssistChipDefaults.assistChipColors(
+                                disabledContainerColor = SolennixTheme.colors.primary.copy(alpha = 0.08f),
+                                disabledLabelColor = SolennixTheme.colors.primary,
+                                disabledLeadingIconContentColor = SolennixTheme.colors.primary
+                            ),
+                            border = null,
+                            modifier = Modifier.height(24.dp)
+                        )
+                    }
                 }
 
                 Row(verticalAlignment = Alignment.CenterVertically) {

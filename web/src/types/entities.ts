@@ -68,13 +68,22 @@ export type EventInsert =
 export type EventUpdate = Partial<Omit<Event, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'client'>>
 
 // ===== Product =====
-export type Product = components['schemas']['Product']
+// Spec declara la shape básica. `staff_team_id` (Ola 3) es un FK opcional
+// que el backend ya persiste pero aún no está formalizado en el spec — se
+// extiende localmente hasta que openapi lo incluya. Cuando un Product con
+// staff_team_id se agrega a un evento, el cliente expande los miembros del
+// equipo como asignaciones de staff (snapshot at add-time, ver EventForm).
+type ProductSchema = components['schemas']['Product']
+export type Product = ProductSchema & {
+    staff_team_id?: string | null
+}
 
 export type ProductInsert =
-    Omit<Product, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'recipe' | 'is_active' | 'image_url'> & {
+    Omit<Product, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'recipe' | 'is_active' | 'image_url' | 'staff_team_id'> & {
         recipe?: string | null
         is_active?: boolean
         image_url?: string | null
+        staff_team_id?: string | null
     }
 export type ProductUpdate = Partial<Omit<Product, 'id' | 'user_id' | 'created_at' | 'updated_at'>>
 

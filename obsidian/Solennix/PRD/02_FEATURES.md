@@ -1005,8 +1005,21 @@ Visualización + registro de pago por transferencia con approve/reject. Reemplaz
 - **Asignación al evento:** nuevo botón "Agregar equipo completo" en Step 4 del EventForm. Expande los miembros del equipo a N filas en `event_staff` reusando el UPSERT de Ola 1 — no hay endpoint nuevo. Miembros ya asignados se saltean. El usuario puede editar fee/turno/estado por fila después de expandir.
 - **Sin plan gating:** disponible para todos los planes (igual que Ola 1).
 
+**Ola 3 — Staff como servicio vendible (shipped 2026-04-20):**
+- **Schema (migration 045):** `products.staff_team_id` nullable FK a `staff_teams` con `ON DELETE SET NULL`. Partial index para queries "has a team" a futuro. Additivo — productos existentes intactos.
+- **Tenant isolation en Create/Update:** `CRUDHandler.SetStaffTeamRepo` opcional; cuando está wireado, valida que el `staff_team_id` del payload pertenezca al mismo user antes de persistir. Bloquea que un cliente malicioso adjunte el team de otro organizador.
+- **Cliente orquesta, backend solo persiste:** no hay endpoint de expansión ni tabla snapshot. Cuando el organizador agrega un Product con team a un evento, el cliente fetchea el team via `/api/staff/teams/{id}` (Ola 2) y copia los miembros a `event_staff` usando el mismo UPSERT. Consistente con cómo `EventProduct` copia `unit_price` al agregar.
+- **Snapshot semantics:** la expansión ocurre AT-ADD-TIME. Editar el team después NO afecta eventos ya creados. Si el organizador quiere que un evento refleje cambios al team, debe quitar y re-agregar el Product.
+- **Dedupe automática:** miembros ya presentes en el evento (por asignación manual u otra expansión) se saltean — sin filas duplicadas.
+- **Coexiste con `recipe`:** un Product puede tener `staff_team_id` Y `recipe`. No forzamos exclusión (ej. "servicio de mesa Plata" con insumos + 10 meseros).
+- **UI cross-platform:** Product form suma selector "Equipo asociado" (opcional, default "Sin equipo"). En el EventForm, cuando se agrega un Product con team, aparece chip "Incluye equipo" en la lista de productos para que el organizador entienda por qué aparecieron filas nuevas en Personal.
+- **Internal margin only:** el organizador ve `Product.price − Σ(event_staff.fee)` en cálculos internos; el cliente solo ve el precio del Product. NO filtramos estructura de costos al cliente.
+- **Sin plan gating** (consistente con Olas 1 y 2).
+
 **Roadmap siguiente (no implementado):**
-- **Ola 3 — Staff como servicio vendible:** `Product.staff_team_id` opcional para cobrar al cliente con markup vs. costo interno. Reutiliza Products/Quotes (no un tercer tipo de item). Requiere decisiones de negocio: cómo se congela el team al agregar al Quote, cómo se muestra el margen (price − sum(fees)), qué pasa al editar el team tras asignarlo.
+- **Visualización de margen:** mostrar rentabilidad por evento en el EventSummary / Dashboard (Product price − sum fees). Schema listo, solo falta UI.
+- **Plan gating:** cuando validemos que "vender staffing" es premium, mover la feature a Pro+ via `canCreateProductWithTeam` check.
+- **Removal link:** quitar un Product del evento NO quita el staff expandido (decisión de diseño v1). Si el feedback pide lo opuesto, agregar opt-in flag en el Product.
 - **Phase 3:** login del colaborador vía `invited_user_id` — intacto como estaba planeado.
 
 **Navegación:**

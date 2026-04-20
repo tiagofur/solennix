@@ -103,9 +103,85 @@ public struct ProductFormView: View {
                     },
                     showCost: true
                 )
+
+                staffTeamSection
             }
             .padding(Spacing.lg)
         }
+    }
+
+    // MARK: - Staff Team Section (Ola 3)
+
+    private var staffTeamSection: some View {
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            Text("Equipo asociado")
+                .font(.headline)
+                .foregroundStyle(SolennixColors.text)
+
+            Text("Cuando agregues este producto a un evento, se asignan automaticamente los miembros del equipo como personal.")
+                .font(.caption)
+                .foregroundStyle(SolennixColors.textSecondary)
+
+            Menu {
+                Button {
+                    viewModel.staffTeamId = nil
+                } label: {
+                    Label("Sin equipo", systemImage: viewModel.staffTeamId == nil ? "checkmark" : "")
+                }
+
+                if !viewModel.availableStaffTeams.isEmpty {
+                    Divider()
+
+                    ForEach(viewModel.availableStaffTeams) { team in
+                        Button {
+                            viewModel.staffTeamId = team.id
+                        } label: {
+                            let count = team.memberCount ?? team.members?.count ?? 0
+                            let label = count > 0 ? "\(team.name) (\(count))" : team.name
+                            Label(label, systemImage: viewModel.staffTeamId == team.id ? "checkmark" : "")
+                        }
+                    }
+                }
+            } label: {
+                HStack {
+                    Image(systemName: "person.3.fill")
+                        .foregroundStyle(SolennixColors.primary)
+
+                    Text(selectedTeamLabel)
+                        .foregroundStyle(viewModel.staffTeamId == nil ? SolennixColors.textTertiary : SolennixColors.text)
+
+                    Spacer()
+
+                    Image(systemName: "chevron.down")
+                        .foregroundStyle(SolennixColors.textTertiary)
+                }
+                .padding(Spacing.md)
+                .background(SolennixColors.surface)
+                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                .overlay(
+                    RoundedRectangle(cornerRadius: CornerRadius.md)
+                        .stroke(SolennixColors.border, lineWidth: 1)
+                )
+            }
+
+            if viewModel.availableStaffTeams.isEmpty {
+                Text("Agrega equipos desde Personal para venderlos como servicio.")
+                    .font(.caption2)
+                    .foregroundStyle(SolennixColors.textTertiary)
+            }
+        }
+        .padding(Spacing.md)
+        .background(SolennixColors.card)
+        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.lg))
+        .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
+    }
+
+    private var selectedTeamLabel: String {
+        guard let id = viewModel.staffTeamId,
+              let team = viewModel.availableStaffTeams.first(where: { $0.id == id }) else {
+            return "Sin equipo"
+        }
+        return team.name
     }
 
     // MARK: - Image Section

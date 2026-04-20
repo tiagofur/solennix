@@ -93,8 +93,13 @@ type Product struct {
 	Recipe    *string   `json:"recipe,omitempty"`    // JSONB stored as string
 	ImageURL  *string   `json:"image_url,omitempty"` // Product image URL
 	IsActive  bool      `json:"is_active"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	// StaffTeamID (Ola 3) optionally binds a product to a staff team. When the
+	// client adds this product to an event, the UI expands the team's members
+	// into event_staff rows so the organizer can sell "servicio de meseros"
+	// as a line item with internal staff cost tracking. Coexists with Recipe.
+	StaffTeamID *uuid.UUID `json:"staff_team_id,omitempty"`
+	CreatedAt   time.Time  `json:"created_at"`
+	UpdatedAt   time.Time  `json:"updated_at"`
 }
 
 type InventoryItem struct {

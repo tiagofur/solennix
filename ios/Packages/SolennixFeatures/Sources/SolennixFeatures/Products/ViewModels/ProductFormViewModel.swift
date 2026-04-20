@@ -13,6 +13,7 @@ private struct ProductBody: Encodable {
     let basePrice: Double
     let isActive: Bool
     let imageUrl: String?
+    let staffTeamId: String?
 }
 
 private struct RecipeIngredientBody: Encodable {
@@ -69,6 +70,12 @@ public final class ProductFormViewModel {
     public var imageUrl: String?
     public var selectedPhoto: PhotosPickerItem?
     public var localImageData: Data?
+
+    // MARK: - Staff Team (Ola 3)
+
+    /// Team opcional que se expande en staff al agregar el producto a un evento.
+    public var staffTeamId: String?
+    public var availableStaffTeams: [StaffTeam] = []
 
     // MARK: - Recipe
 
@@ -154,6 +161,13 @@ public final class ProductFormViewModel {
             let cats = Set(products.map { $0.category }.filter { !$0.isEmpty })
             existingCategories = Array(cats).sorted()
 
+            // Load staff teams (non-blocking: fallback to empty list)
+            do {
+                availableStaffTeams = try await apiClient.listStaffTeams()
+            } catch {
+                availableStaffTeams = []
+            }
+
             // If editing, load product data
             if let id = productId {
                 let product: Product = try await apiClient.get(Endpoint.product(id))
@@ -176,6 +190,7 @@ public final class ProductFormViewModel {
         basePrice = product.basePrice
         isActive = product.isActive
         imageUrl = product.imageUrl
+        staffTeamId = product.staffTeamId
     }
 
     private func populateRecipe(from productIngredients: [ProductIngredient]) {
@@ -339,7 +354,8 @@ public final class ProductFormViewModel {
                 category: category.trimmingCharacters(in: .whitespacesAndNewlines),
                 basePrice: basePrice,
                 isActive: isActive,
-                imageUrl: finalImageUrl
+                imageUrl: finalImageUrl,
+                staffTeamId: staffTeamId
             )
 
             // Prepare recipe data

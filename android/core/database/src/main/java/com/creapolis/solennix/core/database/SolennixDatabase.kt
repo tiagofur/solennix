@@ -40,7 +40,7 @@ const val DATABASE_NAME = "solennix-database"
         CachedStaff::class,
         CachedEventStaff::class
     ],
-    version = 9,
+    version = 10,
     exportSchema = true
 )
 @TypeConverters(JsonConverters::class)
@@ -158,7 +158,19 @@ abstract class SolennixDatabase : RoomDatabase() {
             }
         }
 
-        val ALL_MIGRATIONS = arrayOf(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
+        /**
+         * v10 — Ola 3 del módulo Personal: `products.staff_team_id`. Permite
+         * asociar un equipo opcional al producto; el cliente expande los
+         * miembros en asignaciones de staff cuando se agrega al evento.
+         */
+        val MIGRATION_9_10 = object : Migration(9, 10) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                Log.d(TAG, "Running migration 9 -> 10: add staff_team_id to products")
+                db.execSQL("ALTER TABLE products ADD COLUMN staff_team_id TEXT")
+            }
+        }
+
+        val ALL_MIGRATIONS = arrayOf(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10)
 
         /**
          * Manual singleton for use in contexts without Hilt (e.g., Glance widgets).

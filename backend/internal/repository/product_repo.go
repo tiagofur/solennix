@@ -24,7 +24,7 @@ func (r *ProductRepo) CountByUserID(ctx context.Context, userID uuid.UUID) (int,
 }
 
 func (r *ProductRepo) GetAll(ctx context.Context, userID uuid.UUID) ([]models.Product, error) {
-	query := fmt.Sprintf(`SELECT id, user_id, name, category, base_price, recipe, image_url, is_active, created_at, updated_at
+	query := fmt.Sprintf(`SELECT id, user_id, name, category, base_price, recipe, image_url, is_active, staff_team_id, created_at, updated_at
 		FROM products WHERE user_id = $1 ORDER BY name LIMIT %d`, GetAllSafetyLimit)
 	rows, err := r.pool.Query(ctx, query, userID)
 	if err != nil {
@@ -36,7 +36,7 @@ func (r *ProductRepo) GetAll(ctx context.Context, userID uuid.UUID) ([]models.Pr
 	for rows.Next() {
 		var p models.Product
 		if err := rows.Scan(&p.ID, &p.UserID, &p.Name, &p.Category, &p.BasePrice,
-			&p.Recipe, &p.ImageURL, &p.IsActive, &p.CreatedAt, &p.UpdatedAt); err != nil {
+			&p.Recipe, &p.ImageURL, &p.IsActive, &p.StaffTeamID, &p.CreatedAt, &p.UpdatedAt); err != nil {
 			return nil, err
 		}
 		products = append(products, p)
@@ -54,7 +54,7 @@ func (r *ProductRepo) GetAllPaginated(ctx context.Context, userID uuid.UUID, off
 		return nil, 0, fmt.Errorf("count products: %w", err)
 	}
 
-	query := fmt.Sprintf(`SELECT id, user_id, name, category, base_price, recipe, image_url, is_active, created_at, updated_at
+	query := fmt.Sprintf(`SELECT id, user_id, name, category, base_price, recipe, image_url, is_active, staff_team_id, created_at, updated_at
 		FROM products WHERE user_id = $1 ORDER BY %s %s LIMIT $2 OFFSET $3`, sortCol, order)
 	rows, err := r.pool.Query(ctx, query, userID, limit, offset)
 	if err != nil {
@@ -66,7 +66,7 @@ func (r *ProductRepo) GetAllPaginated(ctx context.Context, userID uuid.UUID, off
 	for rows.Next() {
 		var p models.Product
 		if err := rows.Scan(&p.ID, &p.UserID, &p.Name, &p.Category, &p.BasePrice,
-			&p.Recipe, &p.ImageURL, &p.IsActive, &p.CreatedAt, &p.UpdatedAt); err != nil {
+			&p.Recipe, &p.ImageURL, &p.IsActive, &p.StaffTeamID, &p.CreatedAt, &p.UpdatedAt); err != nil {
 			return nil, 0, err
 		}
 		products = append(products, p)
@@ -79,11 +79,11 @@ func (r *ProductRepo) GetAllPaginated(ctx context.Context, userID uuid.UUID, off
 
 func (r *ProductRepo) GetByID(ctx context.Context, id, userID uuid.UUID) (*models.Product, error) {
 	p := &models.Product{}
-	query := `SELECT id, user_id, name, category, base_price, recipe, image_url, is_active, created_at, updated_at
+	query := `SELECT id, user_id, name, category, base_price, recipe, image_url, is_active, staff_team_id, created_at, updated_at
 		FROM products WHERE id = $1 AND user_id = $2`
 	err := r.pool.QueryRow(ctx, query, id, userID).Scan(
 		&p.ID, &p.UserID, &p.Name, &p.Category, &p.BasePrice,
-		&p.Recipe, &p.ImageURL, &p.IsActive, &p.CreatedAt, &p.UpdatedAt)
+		&p.Recipe, &p.ImageURL, &p.IsActive, &p.StaffTeamID, &p.CreatedAt, &p.UpdatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("product not found: %w", err)
 	}
@@ -91,20 +91,20 @@ func (r *ProductRepo) GetByID(ctx context.Context, id, userID uuid.UUID) (*model
 }
 
 func (r *ProductRepo) Create(ctx context.Context, p *models.Product) error {
-	query := `INSERT INTO products (user_id, name, category, base_price, recipe, image_url, is_active)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+	query := `INSERT INTO products (user_id, name, category, base_price, recipe, image_url, is_active, staff_team_id)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 		RETURNING id, created_at, updated_at`
 	return r.pool.QueryRow(ctx, query,
-		p.UserID, p.Name, p.Category, p.BasePrice, p.Recipe, p.ImageURL, p.IsActive,
+		p.UserID, p.Name, p.Category, p.BasePrice, p.Recipe, p.ImageURL, p.IsActive, p.StaffTeamID,
 	).Scan(&p.ID, &p.CreatedAt, &p.UpdatedAt)
 }
 
 func (r *ProductRepo) Update(ctx context.Context, p *models.Product) error {
-	query := `UPDATE products SET name=$3, category=$4, base_price=$5, recipe=$6, image_url=$7, is_active=$8, updated_at=NOW()
+	query := `UPDATE products SET name=$3, category=$4, base_price=$5, recipe=$6, image_url=$7, is_active=$8, staff_team_id=$9, updated_at=NOW()
 		WHERE id=$1 AND user_id=$2
 		RETURNING created_at, updated_at`
 	return r.pool.QueryRow(ctx, query,
-		p.ID, p.UserID, p.Name, p.Category, p.BasePrice, p.Recipe, p.ImageURL, p.IsActive,
+		p.ID, p.UserID, p.Name, p.Category, p.BasePrice, p.Recipe, p.ImageURL, p.IsActive, p.StaffTeamID,
 	).Scan(&p.CreatedAt, &p.UpdatedAt)
 }
 
@@ -218,7 +218,7 @@ func (r *ProductRepo) VerifyOwnership(ctx context.Context, productIDs []uuid.UUI
 
 // Search performs a fuzzy search on products using pg_trgm similarity + ILIKE fallback
 func (r *ProductRepo) Search(ctx context.Context, userID uuid.UUID, query string) ([]models.Product, error) {
-	sqlQuery := `SELECT id, user_id, name, category, base_price, recipe, image_url, is_active, created_at, updated_at
+	sqlQuery := `SELECT id, user_id, name, category, base_price, recipe, image_url, is_active, staff_team_id, created_at, updated_at
 		FROM products
 		WHERE user_id = $1
 		AND (
@@ -239,7 +239,7 @@ func (r *ProductRepo) Search(ctx context.Context, userID uuid.UUID, query string
 	for rows.Next() {
 		var p models.Product
 		if err := rows.Scan(&p.ID, &p.UserID, &p.Name, &p.Category, &p.BasePrice,
-			&p.Recipe, &p.ImageURL, &p.IsActive, &p.CreatedAt, &p.UpdatedAt); err != nil {
+			&p.Recipe, &p.ImageURL, &p.IsActive, &p.StaffTeamID, &p.CreatedAt, &p.UpdatedAt); err != nil {
 			return nil, err
 		}
 		products = append(products, p)
