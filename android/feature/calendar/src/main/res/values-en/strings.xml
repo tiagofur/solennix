@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ===== Calendar screen — English ===== -->
+
+    <!-- Chrome -->
+    <string name="calendar_title">Calendar</string>
+    <string name="calendar_today">Today</string>
+    <string name="calendar_previous_month">Previous month</string>
+    <string name="calendar_next_month">Next month</string>
+    <string name="calendar_manage_blocks">Manage blocked dates</string>
+
+    <!-- Empty / day states -->
+    <string name="calendar_no_events_scheduled">No events scheduled</string>
+    <string name="calendar_all_day">All day</string>
+    <string name="calendar_select_date">Select a date</string>
+    <string name="calendar_overflow_more">+%1$d more</string>
+
+    <plurals name="calendar_event_count">
+        <item quantity="one">%d event</item>
+        <item quantity="other">%d events</item>
+    </plurals>
+
+    <!-- Block (single + range dialogs) -->
+    <string name="calendar_block_title">Block date</string>
+    <string name="calendar_block_range_title">Block date range</string>
+    <string name="calendar_block_reason_label">Reason (optional)</string>
+    <string name="calendar_block_reason_placeholder_single">E.g. Vacation, personal day…</string>
+    <string name="calendar_block_reason_placeholder_range">E.g. Vacation, maintenance…</string>
+    <string name="calendar_block_start_date">Start date</string>
+    <string name="calendar_block_end_date">End date</string>
+    <string name="calendar_block_add_range">Add range</string>
+    <string name="calendar_block_confirm">Block</string>
+    <string name="calendar_block_range_invalid">End date cannot be before start date</string>
+
+    <!-- Unblock / delete block -->
+    <string name="calendar_unblock_title">Unblock date</string>
+    <string name="calendar_unblock_confirm">Unblock</string>
+    <string name="calendar_unblock_reason_prefix">Reason: %1$s</string>
+    <string name="calendar_delete_block_title">Delete block</string>
+
+    <!-- Manage-blocks sheet -->
+    <string name="calendar_blocked_dates_title">Unavailable Dates</string>
+    <string name="calendar_blocked_dates_empty">No blocked dates</string>
+    <string name="calendar_blocked_dates_empty_subtitle">All dates are available</string>
+
+    <!-- Status filter chips -->
+    <string name="calendar_filter_all">All</string>
+    <string name="calendar_filter_quoted">Quoted</string>
+    <string name="calendar_filter_confirmed">Confirmed</string>
+    <string name="calendar_filter_completed">Completed</string>
+    <string name="calendar_filter_cancelled">Cancelled</string>
+
+    <!-- Errors -->
+    <string name="calendar_error_load_failed">Failed to load events</string>
+    <string name="calendar_error_block_failed">Failed to block date</string>
+    <string name="calendar_error_unblock_failed">Failed to unblock date</string>
+    <string name="calendar_error_retry">Retry</string>
+
+    <!-- Shared dialog actions -->
+    <string name="calendar_action_cancel">Cancel</string>
+    <string name="calendar_action_ok">OK</string>
+    <string name="calendar_action_delete">Delete</string>
+</resources>

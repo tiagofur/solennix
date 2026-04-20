@@ -1,9 +1,11 @@
 package com.creapolis.solennix.feature.calendar.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.creapolis.solennix.core.data.repository.EventRepository
 import com.creapolis.solennix.core.model.Event
+import com.creapolis.solennix.core.model.EventStatus
 import com.creapolis.solennix.core.model.UnavailableDate
 import com.creapolis.solennix.core.network.ApiService
 import com.creapolis.solennix.core.network.get
@@ -18,13 +20,29 @@ import java.time.LocalDate
 import java.time.YearMonth
 import javax.inject.Inject
 
+private const val TAG = "CalendarViewModel"
+
+/**
+ * Typed error surface for the Calendar screen. The ViewModel emits these
+ * enum cases; the Composable maps them to `stringResource(R.string.*)` so
+ * translations stay in the resource catalog (not hardcoded here).
+ */
+enum class CalendarError {
+    LoadFailed,
+    BlockFailed,
+    UnblockFailed
+}
+
 data class CalendarUiState(
     val selectedDate: LocalDate = LocalDate.now(),
     val currentMonth: YearMonth = YearMonth.now(),
     val events: List<Event> = emptyList(),
     val eventsForSelectedDate: List<Event> = emptyList(),
     val unavailableDates: List<UnavailableDate> = emptyList(),
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    // null = no filter active ("Todos" chip). When set, the grid dots and
+    // the selected-day list are filtered to events matching this status.
+    val statusFilter: EventStatus? = null
 )
 
 @HiltViewModel
@@ -36,34 +54,46 @@ class CalendarViewModel @Inject constructor(
     private val _selectedDate = MutableStateFlow(LocalDate.now())
     private val _currentMonth = MutableStateFlow(YearMonth.now())
     private val _unavailableDates = MutableStateFlow<List<UnavailableDate>>(emptyList())
+    private val _statusFilter = MutableStateFlow<EventStatus?>(null)
 
-    // Surface block/unblock failures to the UI. Previously toggleDateBlock,
-    // blockDateRange, and deleteUnavailableDate caught exceptions into empty
-    // catch blocks, so a failed API call produced no user feedback — the
-    // calendar would just fail to update silently.
-    private val _errorMessage = MutableStateFlow<String?>(null)
-    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+    // Surface load/block/unblock failures to the UI. Previously every catch
+    // was empty — a failed API call produced no user feedback. Now the
+    // screen observes this Flow and shows a Snackbar with the corresponding
+    // localized message.
+    private val _error = MutableStateFlow<CalendarError?>(null)
+    val error: StateFlow<CalendarError?> = _error.asStateFlow()
 
     fun clearError() {
-        _errorMessage.value = null
+        _error.value = null
+    }
+
+    fun setStatusFilter(filter: EventStatus?) {
+        _statusFilter.value = filter
     }
 
     val uiState: StateFlow<CalendarUiState> = combine(
         eventRepository.getEvents(),
         _selectedDate,
         _currentMonth,
-        _unavailableDates
-    ) { events, selected, month, unavailableDates ->
-        val eventsForSelectedDate = events.filter {
+        _unavailableDates,
+        _statusFilter
+    ) { events, selected, month, unavailableDates, statusFilter ->
+        val filtered = if (statusFilter != null) {
+            events.filter { it.status == statusFilter }
+        } else {
+            events
+        }
+        val eventsForSelectedDate = filtered.filter {
             parseFlexibleDate(it.eventDate) == selected
         }
         CalendarUiState(
             selectedDate = selected,
             currentMonth = month,
-            events = events,
+            events = filtered,
             eventsForSelectedDate = eventsForSelectedDate,
             unavailableDates = unavailableDates,
-            isLoading = false
+            isLoading = false,
+            statusFilter = statusFilter
         )
     }.stateIn(
         scope = viewModelScope,
@@ -97,7 +127,8 @@ class CalendarViewModel @Inject constructor(
             try {
                 eventRepository.syncEvents()
             } catch (e: Exception) {
-                // Handle error
+                Log.w(TAG, "event sync failed", e)
+                _error.value = CalendarError.LoadFailed
             }
         }
     }
@@ -113,7 +144,8 @@ class CalendarViewModel @Inject constructor(
                 )
                 _unavailableDates.value = dates
             } catch (e: Exception) {
-                // Keep existing dates on error
+                Log.w(TAG, "unavailable-dates load failed for $yearMonth", e)
+                _error.value = CalendarError.LoadFailed
             }
         }
     }
@@ -131,7 +163,8 @@ class CalendarViewModel @Inject constructor(
                 )
                 _unavailableDates.value = dates
             } catch (e: Exception) {
-                // Keep existing dates on error
+                Log.w(TAG, "all-unavailable-dates load failed", e)
+                _error.value = CalendarError.LoadFailed
             }
         }
     }
@@ -157,7 +190,12 @@ class CalendarViewModel @Inject constructor(
                 }
                 loadUnavailableDates(_currentMonth.value)
             } catch (e: Exception) {
-                _errorMessage.value = e.message ?: "No se pudo actualizar la disponibilidad de la fecha."
+                Log.w(TAG, "toggleDateBlock failed for $date", e)
+                _error.value = if (existingBlockFor(date) != null) {
+                    CalendarError.UnblockFailed
+                } else {
+                    CalendarError.BlockFailed
+                }
             }
         }
     }
@@ -176,7 +214,8 @@ class CalendarViewModel @Inject constructor(
                 loadUnavailableDates(_currentMonth.value)
                 loadAllUnavailableDates()
             } catch (e: Exception) {
-                _errorMessage.value = e.message ?: "No se pudo bloquear el rango de fechas."
+                Log.w(TAG, "blockDateRange $startDate..$endDate failed", e)
+                _error.value = CalendarError.BlockFailed
             }
         }
     }
@@ -188,19 +227,17 @@ class CalendarViewModel @Inject constructor(
                 loadUnavailableDates(_currentMonth.value)
                 loadAllUnavailableDates()
             } catch (e: Exception) {
-                _errorMessage.value = e.message ?: "No se pudo eliminar la fecha bloqueada."
+                Log.w(TAG, "deleteUnavailableDate $id failed", e)
+                _error.value = CalendarError.UnblockFailed
             }
         }
     }
 
-    fun isDateBlocked(date: LocalDate): Boolean {
-        val dateStr = date.toString()
-        return _unavailableDates.value.any { ud ->
-            dateStr >= ud.startDate && dateStr <= ud.endDate
-        }
-    }
+    fun isDateBlocked(date: LocalDate): Boolean = existingBlockFor(date) != null
 
-    fun getUnavailableDateFor(date: LocalDate): UnavailableDate? {
+    fun getUnavailableDateFor(date: LocalDate): UnavailableDate? = existingBlockFor(date)
+
+    private fun existingBlockFor(date: LocalDate): UnavailableDate? {
         val dateStr = date.toString()
         return _unavailableDates.value.find { ud ->
             dateStr >= ud.startDate && dateStr <= ud.endDate
