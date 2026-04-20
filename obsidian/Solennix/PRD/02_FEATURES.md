@@ -980,15 +980,28 @@ Visualización + registro de pago por transferencia con approve/reject. Reemplaz
 | Fee opcional por asignación | ✅ | ✅ | ✅ | ✅ `event_staff.fee_amount` |
 | Toggle "notificar por email" (guarda flag) | ✅ | ✅ | ✅ | ✅ `staff.notification_email_opt_in` |
 | **Phase 2 — email al colaborador al asignar** (Pro+) | ✅ *(trigger en save, shipped 2026-04-17)* | ✅ | ✅ | ✅ goroutine en `UpdateEventItems` + Resend |
+| **Ola 1 — turnos + estado + disponibilidad** (todos los planes, shipped 2026-04-19) | ✅ | ✅ | ✅ | ✅ migration 043 + `GET /api/staff/availability` |
 
-**Data model (migration 042):**
+**Data model (migration 042 + 043):**
 - `staff` — catálogo per-user con `name`, `role_label`, `phone`, `email`, `notes`, `notification_email_opt_in`, `invited_user_id` (hook Phase 3, nullable FK a users).
 - `event_staff` — junction con `fee_amount`, `role_override`, `notes`, `notification_sent_at`, `notification_last_result`. UNIQUE `(event_id, staff_id)`.
+- **Ola 1 (migration 043)** agrega a `event_staff`: `shift_start` / `shift_end` (TIMESTAMPTZ, nullables — TIMESTAMPTZ porque los turnos pueden cruzar medianoche), `status` (enum `pending | confirmed | declined | cancelled`, default `confirmed` para retrocompatibilidad). Constraint `shift_end > shift_start`.
 
 **Tier gating:**
-- **Phase 1:** sin gate — todos los planes pueden usar el catálogo.
+- **Phase 1 / Ola 1:** sin gate — todos los planes pueden usar el catálogo, turnos, estados y disponibilidad.
 - **Phase 2 (Pro+):** activa email de notificación al asignar.
 - **Phase 3 (Business+):** login del colaborador + scope de sus eventos + thread con gerente (reusa Pilar 5 D de [[14_CLIENT_EXPERIENCE_IDEAS]]).
+
+**Ola 1 — capa operativa (shipped 2026-04-19):**
+- **Turnos:** `shift_start` / `shift_end` por asignación (opcionales). UI usa pickers colapsables "Agregar horario (opcional)" y sugiere como default la ventana del evento. Backend almacena UTC; clientes convierten a local.
+- **Estado RSVP:** `status` con 4 valores (pending / confirmed / declined / cancelled). Default `confirmed` preserva el comportamiento pre-Ola-1. Badges de color en UI: amber/green/rose/slate. Strings Rioplatense: "Sin confirmar", "Confirmado", "Rechazó", "Cancelado".
+- **Disponibilidad:** endpoint `GET /api/staff/availability?date=YYYY-MM-DD` (o rango con `start`/`end`). Devuelve solo staff con asignaciones en la ventana (ausencia = libre). Se consume dentro del Step 4 del EventForm — indicador "Ocupado ese día" al lado del nombre en el selector. **Sin pantalla nueva.**
+- **UPSERT resiliente:** el patrón de `notification_sent_at` (preservar en re-save) se extiende a `status` vía `COALESCE($status, event_staff.status)` — clientes viejos que no envían `status` en el payload NO sobreescriben el RSVP actual. Ver [backend/internal/repository/event_repo.go](../../backend/internal/repository/event_repo.go) método `UpdateEventItems`.
+
+**Roadmap siguiente (no implementado):**
+- **Ola 2 — Equipos:** tabla `staff_teams` + `staff_team_members` para asignar cuadrillas en bloque (un equipo de N meseros). Team lead como badge visual, no rol técnico.
+- **Ola 3 — Staff como servicio vendible:** `Product.staff_team_id` opcional para cobrar al cliente con markup vs. costo interno. Reutiliza Products/Quotes (no un tercer tipo de item).
+- **Phase 3:** login del colaborador vía `invited_user_id` — intacto como estaba planeado.
 
 **Navegación:**
 - Web sidebar y iPad sidebar → entrada "Personal" entre Clientes y Productos.
