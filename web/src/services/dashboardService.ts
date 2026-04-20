@@ -1,5 +1,7 @@
 import { api } from "../lib/api";
 import type {
+  DashboardEventStatusCount,
+  DashboardEventStatusScope,
   DashboardKpis,
   DashboardRevenuePeriod,
   DashboardRevenuePoint,
@@ -15,6 +17,14 @@ export const dashboardService = {
   ): Promise<DashboardRevenuePoint[]> {
     return api.get<DashboardRevenuePoint[]>("/dashboard/revenue-chart", {
       period,
+    });
+  },
+
+  async getEventsByStatus(
+    scope: DashboardEventStatusScope = "month"
+  ): Promise<DashboardEventStatusCount[]> {
+    return api.get<DashboardEventStatusCount[]>("/dashboard/events-by-status", {
+      scope,
     });
   },
 };

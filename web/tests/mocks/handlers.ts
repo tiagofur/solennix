@@ -101,6 +101,7 @@ export const handlers = [
     vat_outstanding_this_month: 0,
   })),
   http.get(`${API_BASE}/dashboard/revenue-chart`, () => HttpResponse.json([])),
+  http.get(`${API_BASE}/dashboard/events-by-status`, () => HttpResponse.json([])),
   http.get(`${API_BASE}/dashboard/activity`, () => HttpResponse.json([])),
   http.get(`${API_BASE}/clients`, () => HttpResponse.json(mockStore.clients)),
   http.get(`${API_BASE}/clients/:id`, ({ params }) => {

@@ -26,7 +26,11 @@ import { useEvents, useUpcomingEvents, useEventsByDateRange, useUpdateEventStatu
 import { useClients } from "../hooks/queries/useClientQueries";
 import { useInventoryItems } from "../hooks/queries/useInventoryQueries";
 import { usePaymentsByEventIds, useCreatePayment } from "../hooks/queries/usePaymentQueries";
-import { useDashboardKpis, useDashboardRevenueChart } from "../hooks/queries/useDashboardQueries";
+import {
+  useDashboardEventsByStatus,
+  useDashboardKpis,
+  useDashboardRevenueChart,
+} from "../hooks/queries/useDashboardQueries";
 import type { DashboardRevenuePoint } from "../types/dashboard";
 import { queryKeys } from "../hooks/queries/queryKeys";
 import { eventService } from "../services/eventService";
@@ -476,16 +480,27 @@ function fmt(n: number) {
 
 // ── Monthly Revenue Trend Card (premium only) ────────────────────
 // 6-month bar chart of confirmed+completed event revenue. Data comes from
-// `/api/dashboard/revenue-chart?period=year` and is sliced to the last 6
-// months. Matches iOS & Android premium charts.
+// `/api/dashboard/revenue-chart?period=year`; we zero-pad the trailing 6
+// months so the chart ALWAYS shows 6 bars even on new accounts or months
+// without activity (matches iOS / Android parity). Backend returns only
+// months with data, so without padding the chart collapses and looks broken.
 function MonthlyRevenueTrendCard({ points }: { points: DashboardRevenuePoint[] }) {
   const monthLabels = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
-  const chartData = points.map((p) => {
-    const [, mm] = p.month.split("-");
-    const idx = Number(mm) - 1;
-    const label = idx >= 0 && idx < 12 ? monthLabels[idx] : p.month;
-    return { name: label.charAt(0).toUpperCase() + label.slice(1), value: p.revenue };
-  });
+  const chartData = React.useMemo(() => {
+    const byMonth = new Map(points.map((p) => [p.month, p.revenue]));
+    const today = new Date();
+    const bars: { name: string; value: number }[] = [];
+    for (let offset = 5; offset >= 0; offset--) {
+      const d = new Date(today.getFullYear(), today.getMonth() - offset, 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const label = monthLabels[d.getMonth()];
+      bars.push({
+        name: label.charAt(0).toUpperCase() + label.slice(1),
+        value: byMonth.get(key) ?? 0,
+      });
+    }
+    return bars;
+  }, [points]);
 
   return (
     <div className="bg-card shadow-sm border border-border rounded-2xl p-6 flex flex-col">
@@ -553,6 +568,9 @@ export const Dashboard: React.FC = () => {
   const { data: kpis } = useDashboardKpis();
   // 6-month revenue trend — premium feature, so only fetched for Pro/Business.
   const { data: revenueChartData } = useDashboardRevenueChart("year", !isBasicPlan);
+  // Month-scoped status distribution for the "Estado de Eventos" chart.
+  // Matches the rest of the month-scoped dashboard cards.
+  const { data: statusCountsData } = useDashboardEventsByStatus("month");
 
   const eventsThisMonthList = _eventsMonth ?? [];
   const upcomingEvents = _upcoming ?? [];
@@ -708,21 +726,24 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  // Chart data
-  const chartData = React.useMemo(() => {
-    if (!eventsThisMonthList.length) return [];
-    const statusData = [
-      { status: "quoted" as const,    name: "Cotizado",   value: 0, color: "var(--color-status-quoted)" },
-      { status: "confirmed" as const, name: "Confirmado", value: 0, color: "var(--color-status-confirmed)" },
-      { status: "completed" as const, name: "Completado", value: 0, color: "var(--color-status-completed)" },
-      { status: "cancelled" as const, name: "Cancelado",  value: 0, color: "var(--color-status-cancelled)" },
+  // Event status distribution — single source of truth is the backend
+  // (/api/dashboard/events-by-status?scope=month). The fetched shape is
+  // [{status, count}]; we overlay it on the 4 known buckets so colors /
+  // labels stay deterministic regardless of the server's ordering.
+  const chartData = React.useMemo<StatusSegment[]>(() => {
+    const buckets = [
+      { status: "quoted" as const,    name: "Cotizado",   color: "var(--color-status-quoted)" },
+      { status: "confirmed" as const, name: "Confirmado", color: "var(--color-status-confirmed)" },
+      { status: "completed" as const, name: "Completado", color: "var(--color-status-completed)" },
+      { status: "cancelled" as const, name: "Cancelado",  color: "var(--color-status-cancelled)" },
     ];
-    eventsThisMonthList.forEach((event) => {
-      const bucket = statusData.find((s) => s.status === event.status);
-      if (bucket) bucket.value += 1;
-    });
-    return statusData.filter((d) => d.value > 0);
-  }, [eventsThisMonthList]);
+    const byStatus = new Map<string, number>(
+      (statusCountsData ?? []).map((row) => [row.status, row.count])
+    );
+    return buckets
+      .map((b) => ({ name: b.name, value: byStatus.get(b.status) ?? 0, color: b.color }))
+      .filter((d) => d.value > 0);
+  }, [statusCountsData]);
 
   const financialComparisonData = React.useMemo(() => [
     { name: "Ventas Netas",    value: netSalesThisMonth,       color: "var(--color-success)" },
@@ -1040,9 +1061,12 @@ export const Dashboard: React.FC = () => {
 
       {/* ── 6-MONTH REVENUE TREND (premium only) ── */}
       {/* Parity with iOS and Android: non-premium users do not see this card
-          at all (no blur, no upsell). Upsell surfaces live elsewhere. */}
-      {!isBasicPlan && revenueChartData && revenueChartData.length > 0 && (
-        <MonthlyRevenueTrendCard points={revenueChartData.slice(-6)} />
+          at all (no blur, no upsell). Premium users always see 6 bars,
+          zero-padded for months without data — the padding lives inside
+          MonthlyRevenueTrendCard so the card renders even if the server
+          returns an empty array (brand new premium accounts). */}
+      {!isBasicPlan && (
+        <MonthlyRevenueTrendCard points={revenueChartData ?? []} />
       )}
 
       {/* ── LOW STOCK ── */}

@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { dashboardService } from "@/services/dashboardService";
-import type { DashboardRevenuePeriod } from "@/types/dashboard";
+import type { DashboardEventStatusScope, DashboardRevenuePeriod } from "@/types/dashboard";
 import { queryKeys } from "./queryKeys";
 
 /**
@@ -34,5 +34,19 @@ export function useDashboardRevenueChart(
     queryFn: () => dashboardService.getRevenueChart(period),
     enabled,
     staleTime: 5 * 60_000,
+  });
+}
+
+/**
+ * Month-scoped event status distribution for the "Estado de Eventos" chart.
+ * Backend is the source of truth so iOS / Android / Web show identical counts.
+ */
+export function useDashboardEventsByStatus(
+  scope: DashboardEventStatusScope = "month"
+) {
+  return useQuery({
+    queryKey: queryKeys.dashboard.eventsByStatus(scope),
+    queryFn: () => dashboardService.getEventsByStatus(scope),
+    staleTime: 30_000,
   });
 }

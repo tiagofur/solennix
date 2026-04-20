@@ -25,3 +25,13 @@ export interface DashboardRevenuePoint {
 }
 
 export type DashboardRevenuePeriod = "month" | "quarter" | "year";
+
+// One row from GET /api/dashboard/events-by-status?scope=month|all.
+// Mirrors backend/internal/repository/EventStatusCount. `status` is the
+// raw backend string; callers map it onto their local enum.
+export interface DashboardEventStatusCount {
+  status: string;
+  count: number;
+}
+
+export type DashboardEventStatusScope = "month" | "all";
