@@ -722,6 +722,22 @@ private fun MonthlyRevenueTrendCard(points: List<com.creapolis.solennix.core.mod
     val monthLabelFormatter = remember {
         java.time.format.DateTimeFormatter.ofPattern("MMM", java.util.Locale("es", "MX"))
     }
+    // 4 gridlines + baseline at $0 → matches iOS's AxisMarks(leading) look.
+    // We pick nice round fractions of the max so labels are "$0", "2k",
+    // "5k", "7k", "10k" equivalents regardless of the actual peak.
+    val yTicks = remember(maxRevenue) {
+        listOf(0.0, 0.25, 0.5, 0.75, 1.0).map { it * maxRevenue }
+    }
+    val yAxisLabelFormatter: (Double) -> String = remember {
+        { value ->
+            when {
+                value == 0.0 -> "$0"
+                value >= 1_000_000 -> "${(value / 1_000_000).toInt()}M"
+                value >= 1_000 -> "${(value / 1_000).toInt()}k"
+                else -> "${value.toInt()}"
+            }
+        }
+    }
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
@@ -737,45 +753,72 @@ private fun MonthlyRevenueTrendCard(points: List<com.creapolis.solennix.core.mod
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(140.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.Bottom
+                    .height(140.dp)
             ) {
-                points.forEach { point ->
-                    val fraction = (point.revenue / maxRevenue).coerceIn(0.0, 1.0).toFloat()
-                    val monthLabel = try {
-                        val parsed = java.time.YearMonth.parse(point.month) // "YYYY-MM"
-                        parsed.format(monthLabelFormatter).replaceFirstChar { it.uppercase() }
-                    } catch (_: Exception) {
-                        point.month
+                // Y-axis labels column (top=max, bottom=$0) — mirrors iOS's
+                // AxisMarks(position: .leading). Tiny fixed width so bars
+                // still get most of the horizontal space.
+                Column(
+                    modifier = Modifier
+                        .width(36.dp)
+                        .fillMaxHeight(),
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.SpaceBetween
+                ) {
+                    yTicks.reversed().forEach { tick ->
+                        Text(
+                            yAxisLabelFormatter(tick),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = SolennixTheme.colors.tertiaryText
+                        )
                     }
-                    Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Bottom
-                    ) {
-                        Box(
+                }
+                Spacer(modifier = Modifier.width(4.dp))
+                // Bars column — each bar fills its weight slot and stacks
+                // from bottom, matching the iOS BarMark(y:) behavior.
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.Bottom
+                ) {
+                    points.forEach { point ->
+                        val fraction = (point.revenue / maxRevenue).coerceIn(0.0, 1.0).toFloat()
+                        val monthLabel = try {
+                            val parsed = java.time.YearMonth.parse(point.month)
+                            parsed.format(monthLabelFormatter).replaceFirstChar { it.uppercase() }
+                        } catch (_: Exception) {
+                            point.month
+                        }
+                        Column(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f),
-                            contentAlignment = Alignment.BottomCenter
+                                .weight(1f)
+                                .fillMaxHeight(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Bottom
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .fillMaxWidth(0.7f)
-                                    .fillMaxHeight(fraction.coerceAtLeast(0.02f))
-                                    .clip(RoundedCornerShape(6.dp))
-                                    .background(SolennixTheme.colors.primary)
+                                    .fillMaxWidth()
+                                    .weight(1f),
+                                contentAlignment = Alignment.BottomCenter
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth(0.7f)
+                                        .fillMaxHeight(fraction.coerceAtLeast(0.02f))
+                                        .clip(RoundedCornerShape(6.dp))
+                                        .background(SolennixTheme.colors.primary)
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                monthLabel,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = SolennixTheme.colors.secondaryText
                             )
                         }
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            monthLabel,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = SolennixTheme.colors.secondaryText
-                        )
                     }
                 }
             }

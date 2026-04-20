@@ -640,14 +640,11 @@ public struct DashboardView: View {
         // no upsell banner). Upsell surfaces live elsewhere in the app.
         if let vm = viewModel, !planLimitsManager.isBasicPlan {
             VStack(alignment: .leading, spacing: Spacing.md) {
-                HStack {
-                    Image(systemName: "chart.bar.fill")
-                        .foregroundStyle(SolennixColors.primary)
-                    Text("Ingresos — Últimos 6 meses")
-                        .font(.headline)
-                        .foregroundStyle(SolennixColors.text)
-                    Spacer()
-                }
+                // No leading icon — Android and Web use a plain title,
+                // keeping the three dashboards visually consistent.
+                Text("Ingresos — Últimos 6 meses")
+                    .font(.headline)
+                    .foregroundStyle(SolennixColors.text)
 
                 Chart(vm.monthlyRevenueTrend) { point in
                     BarMark(

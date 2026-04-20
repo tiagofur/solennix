@@ -200,17 +200,24 @@ class DashboardViewModel @Inject constructor(
         }
 
         // Event status distribution — backend-sourced (scope=month) so it
-        // matches iOS and Web. Fall back to a client-side count over the
-        // month's events while the first backend fetch is in flight so the
-        // card isn't empty at first paint.
+        // matches iOS and Web. Iterate `EventStatus.entries` (declaration
+        // order: QUOTED, CONFIRMED, COMPLETED, CANCELLED) instead of the
+        // backend's count-DESC ordering so the legend lines up with iOS /
+        // Web. Fall back to a client-side count over the month's events
+        // while the first backend fetch is in flight so the card isn't
+        // empty at first paint.
         val statusDistribution: List<StatusCount> = if (statusRows != null) {
-            val total = statusRows.sumOf { it.count }
-            statusRows.mapNotNull { row ->
-                val status = runCatching { EventStatus.valueOf(row.status.uppercase()) }.getOrNull()
-                if (status == null || row.count == 0) null else StatusCount(
+            val byStatus: Map<EventStatus, Int> = statusRows.mapNotNull { row ->
+                runCatching { EventStatus.valueOf(row.status.uppercase()) }.getOrNull()
+                    ?.let { it to row.count }
+            }.toMap()
+            val total = byStatus.values.sum()
+            EventStatus.entries.mapNotNull { status ->
+                val count = byStatus[status] ?: 0
+                if (count == 0) null else StatusCount(
                     status = status,
-                    count = row.count,
-                    percentage = if (total > 0) row.count.toFloat() / total else 0f
+                    count = count,
+                    percentage = if (total > 0) count.toFloat() / total else 0f
                 )
             }
         } else {
