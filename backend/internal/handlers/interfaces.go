@@ -86,6 +86,16 @@ type StaffRepository interface {
 	GetAvailability(ctx context.Context, userID uuid.UUID, start, end string) ([]repository.StaffAvailability, error)
 }
 
+// StaffTeamRepository defines staff team repo operations (Ola 2).
+type StaffTeamRepository interface {
+	GetAll(ctx context.Context, userID uuid.UUID) ([]models.StaffTeam, error)
+	GetByID(ctx context.Context, id, userID uuid.UUID) (*models.StaffTeam, error)
+	Create(ctx context.Context, t *models.StaffTeam) error
+	Update(ctx context.Context, t *models.StaffTeam) error
+	Delete(ctx context.Context, id, userID uuid.UUID) error
+	CountByUserID(ctx context.Context, userID uuid.UUID) (int, error)
+}
+
 // ProductRepository defines product repo operations.
 type ProductRepository interface {
 	GetAll(ctx context.Context, userID uuid.UUID) ([]models.Product, error)

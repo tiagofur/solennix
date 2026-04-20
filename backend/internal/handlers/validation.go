@@ -396,6 +396,43 @@ func ValidateStaff(s *models.Staff) error {
 	return nil
 }
 
+// ValidateStaffTeam validates a staff team and its members.
+// Tenant isolation (members must belong to the same user) is enforced at the
+// repository layer because it requires DB lookups per staff_id.
+func ValidateStaffTeam(t *models.StaffTeam) error {
+	if t.Name == "" {
+		return ValidationError{Field: "name", Message: "is required"}
+	}
+	if err := validateStringLength("name", t.Name, MaxNameLength); err != nil {
+		return err
+	}
+	if t.RoleLabel != nil {
+		if err := validateStringLength("role_label", *t.RoleLabel, MaxNameLength); err != nil {
+			return err
+		}
+	}
+	if t.Notes != nil {
+		if err := validateStringLength("notes", *t.Notes, MaxNotesLength); err != nil {
+			return err
+		}
+	}
+	seen := make(map[uuid.UUID]bool, len(t.Members))
+	for i := range t.Members {
+		m := &t.Members[i]
+		if m.StaffID == (uuid.UUID{}) {
+			return ValidationError{Field: "members.staff_id", Message: "is required"}
+		}
+		if seen[m.StaffID] {
+			return ValidationError{Field: "members.staff_id", Message: "duplicate member"}
+		}
+		seen[m.StaffID] = true
+	}
+	t.Name = sanitizeString(t.Name)
+	t.RoleLabel = sanitizeOptionalString(t.RoleLabel)
+	t.Notes = sanitizeOptionalString(t.Notes)
+	return nil
+}
+
 // ValidateEventStaff validates event staff assignments.
 func ValidateEventStaff(es *models.EventStaff) error {
 	if es.StaffID == (uuid.UUID{}) {

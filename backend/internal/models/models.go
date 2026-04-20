@@ -371,6 +371,40 @@ type EventStaff struct {
 	StaffEmail     *string `json:"staff_email,omitempty"`
 }
 
+// StaffTeam is a named group of staff (e.g. "Meseros Plata", "Cuadrilla de
+// montaje") so the organizer can assign the whole crew to an event in one
+// click. Members are populated by GetByID; MemberCount by list queries for
+// cheap display. RoleLabel is the default role applied to each expanded
+// assignment when role_override is blank.
+type StaffTeam struct {
+	ID          uuid.UUID         `json:"id"`
+	UserID      uuid.UUID         `json:"user_id"`
+	Name        string            `json:"name"`
+	RoleLabel   *string           `json:"role_label,omitempty"`
+	Notes       *string           `json:"notes,omitempty"`
+	CreatedAt   time.Time         `json:"created_at"`
+	UpdatedAt   time.Time         `json:"updated_at"`
+	Members     []StaffTeamMember `json:"members,omitempty"`
+	MemberCount *int              `json:"member_count,omitempty"`
+}
+
+// StaffTeamMember is the junction between a team and a staff row. Carries no
+// fee/status — those belong on event_staff per assignment so the same team can
+// be assigned to multiple events with different costs/RSVPs.
+type StaffTeamMember struct {
+	TeamID    uuid.UUID `json:"team_id"`
+	StaffID   uuid.UUID `json:"staff_id"`
+	IsLead    bool      `json:"is_lead"`
+	Position  int       `json:"position"`
+	CreatedAt time.Time `json:"created_at"`
+
+	// Joined from staff for display convenience
+	StaffName      *string `json:"staff_name,omitempty"`
+	StaffRoleLabel *string `json:"staff_role_label,omitempty"`
+	StaffPhone     *string `json:"staff_phone,omitempty"`
+	StaffEmail     *string `json:"staff_email,omitempty"`
+}
+
 // EventPublicLink is a shareable, revocable token that opens a read-only
 // portal (PRD/12 feature A) for the end client of an event — the person who
 // hired the organizer. Unlike EventFormLink (which captures a lead), this
