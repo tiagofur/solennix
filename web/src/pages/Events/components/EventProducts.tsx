@@ -12,6 +12,7 @@ interface Product {
   name: string;
   category: string;
   base_price: number;
+  staff_team_id?: string | null;
 }
 
 interface SelectedProduct {
@@ -74,7 +75,10 @@ export const EventProducts: React.FC<EventProductsProps> = ({
         onDragEnd={handleDragEnd}
       >
         <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
-          {selectedProducts.map((item, index) => (
+          {selectedProducts.map((item, index) => {
+            const selectedProduct = products.find((p) => p.id === item.product_id);
+            const hasTeam = !!selectedProduct?.staff_team_id;
+            return (
             <SortableItem key={itemIds[index]} id={itemIds[index]}>
               <div className="bg-surface-alt p-4 rounded-xl relative group border border-border shadow-xs">
                 <button
@@ -87,7 +91,18 @@ export const EventProducts: React.FC<EventProductsProps> = ({
                 </button>
 
                 <div className="mb-2 pr-6">
-                  <label htmlFor={`product-select-${index}`} className="block text-xs text-text-secondary mb-1">Producto</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label htmlFor={`product-select-${index}`} className="block text-xs text-text-secondary">Producto</label>
+                    {hasTeam && (
+                      <span
+                        className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-accent/10 text-accent dark:bg-accent/20"
+                        title="Este producto agrega automáticamente miembros del equipo asociado como personal"
+                      >
+                        <Users className="h-3 w-3" aria-hidden="true" />
+                        Incluye equipo
+                      </span>
+                    )}
+                  </div>
                   <select
                     id={`product-select-${index}`}
                     value={item.product_id}
@@ -183,7 +198,8 @@ export const EventProducts: React.FC<EventProductsProps> = ({
                 )}
               </div>
             </SortableItem>
-          ))}
+            );
+          })}
         </SortableContext>
       </DndContext>
 

@@ -144,6 +144,7 @@ describe('ProductForm', () => {
         image_url: null,
         is_active: true,
         recipe: null,
+        staff_team_id: null,
       });
     });
     await waitFor(() => {
@@ -190,6 +191,7 @@ describe('ProductForm', () => {
         base_price: 60,
         image_url: null,
         is_active: true,
+        staff_team_id: null,
       });
     });
   });

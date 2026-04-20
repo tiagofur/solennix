@@ -14,6 +14,7 @@ import {
   Fuel,
   Camera,
   X,
+  Users,
 } from "lucide-react";
 import { ProductIngredient } from "../../types/entities";
 import { logError } from "../../lib/errorHandler";
@@ -22,6 +23,7 @@ import { usePlanLimits } from "../../hooks/usePlanLimits";
 import { UpgradeBanner } from "../../components/UpgradeBanner";
 import { useProduct, useProductIngredients, useCreateProduct, useUpdateProduct, useUploadProductImage } from "../../hooks/queries/useProductQueries";
 import { useInventoryItems } from "../../hooks/queries/useInventoryQueries";
+import { useStaffTeams } from "../../hooks/queries/useStaffQueries";
 
 const productSchema = z.object({
   name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
@@ -39,6 +41,7 @@ export const ProductForm: React.FC = () => {
   const [isActive, setIsActive] = useState(true);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [staffTeamId, setStaffTeamId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
@@ -49,6 +52,7 @@ export const ProductForm: React.FC = () => {
   } = usePlanLimits();
 
   const { data: inventoryItems = [] } = useInventoryItems();
+  const { data: staffTeams = [] } = useStaffTeams();
   const { data: existingProduct, isLoading: isLoadingProduct } = useProduct(id);
   const { data: existingIngredients } = useProductIngredients(id);
   const createProduct = useCreateProduct();
@@ -96,6 +100,7 @@ export const ProductForm: React.FC = () => {
         setImageUrl(existingProduct.image_url);
         setImagePreview(existingProduct.image_url);
       }
+      setStaffTeamId(existingProduct.staff_team_id ?? null);
     }
   }, [existingProduct, reset]);
 
@@ -268,7 +273,12 @@ export const ProductForm: React.FC = () => {
       updateProduct.mutate(
         {
           id,
-          product: { ...data, image_url: imageUrl || null, is_active: isActive },
+          product: {
+            ...data,
+            image_url: imageUrl || null,
+            is_active: isActive,
+            staff_team_id: staffTeamId,
+          },
           ingredients: ingredientsToSave,
         },
         { onSuccess: () => navigate("/products") },
@@ -277,7 +287,13 @@ export const ProductForm: React.FC = () => {
       // `user_id` no se envía — el backend lo toma del JWT.
       createProduct.mutate(
         {
-          product: { ...data, image_url: imageUrl || null, is_active: isActive, recipe: null },
+          product: {
+            ...data,
+            image_url: imageUrl || null,
+            is_active: isActive,
+            recipe: null,
+            staff_team_id: staffTeamId,
+          },
           ingredients: ingredientsToSave,
         },
         { onSuccess: () => navigate("/products") },
@@ -887,6 +903,46 @@ export const ProductForm: React.FC = () => {
               </p>
             </div>
           )}
+        </div>
+
+        {/* Equipo asociado (Ola 3 — opcional) */}
+        <div className="bg-card shadow-sm border border-border px-4 py-8 rounded-2xl sm:p-10 flex flex-col">
+          <h3 className="text-lg leading-6 font-medium text-text mb-4 flex items-center">
+            <Users className="h-5 w-5 mr-2 text-accent" aria-hidden="true" />
+            Equipo asociado
+          </h3>
+          <p className="text-xs text-text-secondary mb-4">
+            Agregá un equipo para vender el servicio de meseros con este producto.
+            Cuando agregues este producto a un evento, se asignan automáticamente
+            los miembros del equipo como personal.
+          </p>
+
+          <div>
+            <label
+              htmlFor="staff-team-select"
+              className="block text-sm font-medium text-text-secondary mb-2"
+            >
+              Equipo
+            </label>
+            <select
+              id="staff-team-select"
+              value={staffTeamId ?? ""}
+              onChange={(e) =>
+                setStaffTeamId(e.target.value === "" ? null : e.target.value)
+              }
+              className="w-full rounded-xl shadow-sm border border-border bg-card text-text p-3 transition-shadow focus:ring-2 focus:ring-primary/20"
+              aria-label="Seleccionar equipo asociado al producto"
+            >
+              <option value="">Sin equipo</option>
+              {staffTeams.map((team) => (
+                <option key={team.id} value={team.id}>
+                  {team.name}
+                  {team.role_label ? ` · ${team.role_label}` : ""}
+                  {team.member_count != null ? ` · ${team.member_count} miembros` : ""}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {/* Botones de acción */}
