@@ -299,10 +299,14 @@ Cada producto puede tener una receta que vincula items del inventario como ingre
 | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | Vista mensual (unica vista) | Grid de calendario con indicadores de eventos por dia. No hay vista lista — se elimino para evitar duplicacion con la seccion Eventos |
 | Navegacion por mes          | Botones/gestos para avanzar y retroceder meses                                                                                        |
-| Indicadores de eventos      | Dots de colores por status: gris (cotizado), azul (confirmado), verde (completado), rojo (cancelado). Max 3 dots por dia              |
-| Fechas no disponibles       | Long-press para bloquear/desbloquear rapido + boton "Gestionar Bloqueos" para ver/editar todos los bloqueos                           |
+| Indicadores de eventos      | Dots de colores por status: gris (cotizado), azul (confirmado), verde (completado), rojo (cancelado). Max 3 dots por dia + caption "+N mas" cuando hay mas eventos en la fecha |
+| Filtros por status          | Chips (Android) / Menu (iOS) / Pills (Web) con opciones Todos · Cotizados · Confirmados · Completados · Cancelados. El filtro afecta tanto los dots del grid como la lista del dia seleccionado |
+| Fechas no disponibles       | Long-press para bloquear/desbloquear rapido (mobile) / right-click (web) + boton "Gestionar Bloqueos" para ver/editar todos los bloqueos |
+| Haptics mobile              | iOS dispara `.impact(weight: .medium)` via `sensoryFeedback`; Android dispara `HapticFeedbackType.LongPress` — feedback tactil antes de que el dialog robe el foco |
 | Tap en dia                  | Muestra eventos de ese dia en panel inferior (phone) o panel lateral (tablet/desktop)                                                 |
 | Panel de dia seleccionado   | Muestra event cards con tipo de servicio, hora, cliente, status badge. Tap en card → detalle del evento                               |
+| Errores visibles            | Cualquier fallo de red (cargar eventos, bloquear, desbloquear) muestra Snackbar (Android), Alert (iOS), banner con "Reintentar" (Web). Antes los errores se silenciaban. |
+| i18n (ES + EN)              | Toda la pantalla consume strings del catalogo localizable. El idioma sigue al device / navigator — sin selector de idioma todavia. Detalles en `19_I18N_STRATEGY.md` |
 
 #### Toolbar del Calendario
 

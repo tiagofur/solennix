@@ -364,6 +364,29 @@ Commits en rama `super-plan`: `d69df81`, `99c17bc`, `836eba6`.
 
 Commits del slice en rama `super-plan`: `0fd6aac`, `42124d0`, `2c23dd6`, `af85e48`, `9bd07ad`, `67f19ad`, `d75bab0`, y el commit de Fase 7 de activity log.
 
+### Slice: Calendar parity + i18n foundation (2026-04-20)
+
+Primera pantalla de paridad post-Dashboard:
+
+- **Backend**: sin cambios — el Calendario no sirve strings desde servidor, solo data.
+- **Todas las apps**: extraccion completa de strings hardcodeados → catalogo localizable, con ES + EN reales (no placeholders). Device / navigator locale gobierna; selector de idioma per-usuario queda para otro slice.
+  - iOS: nuevo `Localizable.xcstrings` en `SolennixFeatures`, `Package.swift` con `defaultLocalization: "es"` + `resources: [.process("Resources")]`, `project.yml` con `knownRegions: [en, es, Base]`.
+  - Android: nuevo `feature/calendar/src/main/res/values/strings.xml` + `values-en/` con 40+ keys. Antes todo era literal `Text("Calendario")` in-line.
+  - Web: instalado `i18next` + `react-i18next` + `i18next-browser-languagedetector`, config en `web/src/i18n/config.ts`, catalogos por namespace en `web/src/i18n/locales/{es,en}/calendar.json`.
+- **Polish del month view**:
+  - Errores antes silenciados ahora visibles: Snackbar (Android), Alert (iOS), banner con Retry (Web).
+  - Indicador "+N mas" en celdas con mas de 3 eventos.
+  - Haptics nativos en long-press (iOS `sensoryFeedback`, Android `LocalHapticFeedback`).
+  - Filtros por status (chips M3 / Menu iOS / pills web).
+  - Web: la expansion dia-por-dia de rangos de bloqueo se reemplazo por un `Set<string>` keyed por `YYYY-MM-DD` — O(rangos × diasEnRango) una vez + lookup O(1).
+- **ViewModel changes** (iOS + Android): enum `CalendarError { loadFailed, blockFailed, unblockFailed }` en lugar de strings de error hardcodeados en el VM. Los catches vacios historicos (`// Handle error`, `// Silently fail`) ahora escriben al error state.
+- **Docs**: nuevo `19_I18N_STRATEGY.md` con el naming convention, file map, patron de uso por plataforma y verificacion rapida.
+
+**Gate verde**:
+- iOS: `xcodebuild ... build` → BUILD SUCCEEDED
+- Android: `:app:assembleDebug` + `:feature:calendar:testDebugUnitTest` verdes
+- Web: 1137 tests (96 suites) verdes, typecheck clean, `vite build` OK
+
 ### Paginas Publicas
 
 - ✅ Landing page
