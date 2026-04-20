@@ -3,6 +3,7 @@ package com.creapolis.solennix.feature.calendar.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.creapolis.solennix.core.data.repository.ClientRepository
 import com.creapolis.solennix.core.data.repository.EventRepository
 import com.creapolis.solennix.core.model.Event
 import com.creapolis.solennix.core.model.EventStatus
@@ -42,12 +43,17 @@ data class CalendarUiState(
     val isLoading: Boolean = false,
     // null = no filter active ("Todos" chip). When set, the grid dots and
     // the selected-day list are filtered to events matching this status.
-    val statusFilter: EventStatus? = null
+    val statusFilter: EventStatus? = null,
+    // Map of clientId -> client name so event cards can show "Maria Lopez"
+    // as the primary label (the Event entity only carries clientId). iOS
+    // already does this via `clientMap` in its CalendarViewModel.
+    val clientNames: Map<String, String> = emptyMap()
 )
 
 @HiltViewModel
 class CalendarViewModel @Inject constructor(
     private val eventRepository: EventRepository,
+    private val clientRepository: ClientRepository,
     private val apiService: ApiService
 ) : ViewModel() {
 
@@ -71,13 +77,23 @@ class CalendarViewModel @Inject constructor(
         _statusFilter.value = filter
     }
 
-    val uiState: StateFlow<CalendarUiState> = combine(
+    // Combine events + clients into one upstream flow so the main combine
+    // stays under the 5-arg overload ceiling. Same pattern we used in
+    // DashboardViewModel for aggregates.
+    private val eventsWithClientsFlow = combine(
         eventRepository.getEvents(),
+        clientRepository.getClients()
+    ) { events, clients ->
+        events to clients.associate { it.id to it.name }
+    }
+
+    val uiState: StateFlow<CalendarUiState> = combine(
+        eventsWithClientsFlow,
         _selectedDate,
         _currentMonth,
         _unavailableDates,
         _statusFilter
-    ) { events, selected, month, unavailableDates, statusFilter ->
+    ) { (events, clientNames), selected, month, unavailableDates, statusFilter ->
         val filtered = if (statusFilter != null) {
             events.filter { it.status == statusFilter }
         } else {
@@ -93,7 +109,8 @@ class CalendarViewModel @Inject constructor(
             eventsForSelectedDate = eventsForSelectedDate,
             unavailableDates = unavailableDates,
             isLoading = false,
-            statusFilter = statusFilter
+            statusFilter = statusFilter,
+            clientNames = clientNames
         )
     }.stateIn(
         scope = viewModelScope,
@@ -129,6 +146,17 @@ class CalendarViewModel @Inject constructor(
             } catch (e: Exception) {
                 Log.w(TAG, "event sync failed", e)
                 _error.value = CalendarError.LoadFailed
+            }
+        }
+        // Independent launch so a stale client cache doesn't hold up the
+        // event list (nor vice versa).
+        viewModelScope.launch {
+            try {
+                clientRepository.syncClients()
+            } catch (e: Exception) {
+                Log.w(TAG, "client sync failed", e)
+                // Non-fatal — event cards fall back to "Cliente" if the
+                // clientId doesn't resolve.
             }
         }
     }

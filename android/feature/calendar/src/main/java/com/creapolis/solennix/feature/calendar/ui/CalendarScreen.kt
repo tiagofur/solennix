@@ -339,7 +339,11 @@ fun CalendarViewContent(
                             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp)
                         ) {
                             items(uiState.eventsForSelectedDate) { event ->
-                                CalendarEventItem(event = event, onClick = { onEventClick(event.id) })
+                                CalendarEventItem(
+                                    event = event,
+                                    clientName = uiState.clientNames[event.clientId],
+                                    onClick = { onEventClick(event.id) }
+                                )
                             }
                         }
                     }
@@ -411,7 +415,11 @@ fun CalendarViewContent(
                 }
             } else {
                 items(uiState.eventsForSelectedDate) { event ->
-                    CalendarEventItem(event = event, onClick = { onEventClick(event.id) })
+                    CalendarEventItem(
+                                    event = event,
+                                    clientName = uiState.clientNames[event.clientId],
+                                    onClick = { onEventClick(event.id) }
+                                )
                 }
             }
         }
@@ -619,16 +627,25 @@ private fun getStatusColor(status: EventStatus): Color {
     }
 }
 
+/**
+ * Baseline event card shared with iOS — the same information density so
+ * the user sees the same card on both phones:
+ *   - vertical status bar (left, Android-native idiom vs. iOS's dot)
+ *   - client name (bold, primary row)
+ *   - service type (caption)
+ *   - status badge (right of the client row)
+ *   - time range (start - end, or "Todo el día")
+ *   - people count + MXN total (bottom meta row)
+ */
 @Composable
 fun CalendarEventItem(
     event: Event,
+    clientName: String?,
     onClick: () -> Unit
 ) {
     // No horizontal padding here — the LazyColumn that hosts these cards
     // already applies `contentPadding(horizontal = 12.dp)` (phone mode) or
-    // sits inside a Surface with its own inset (tablet mode). Adding more
-    // horizontal padding on the card itself made the event list narrower
-    // than the calendar grid beside it.
+    // sits inside a Surface with its own inset (tablet mode).
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -641,37 +658,105 @@ fun CalendarEventItem(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Left: status color bar (Android's native marker vs. iOS's dot).
             Box(
                 modifier = Modifier
                     .width(4.dp)
-                    .height(40.dp)
+                    .height(56.dp)
                     .clip(CircleShape)
                     .background(getStatusColor(event.status))
             )
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(12.dp))
+
             Column(modifier = Modifier.weight(1f)) {
+                // Row 1: client (bold) + status badge (right).
                 Row(
+                    modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        text = event.serviceType,
+                        text = clientName
+                            ?: stringResource(R.string.calendar_unknown_client),
                         style = MaterialTheme.typography.titleSmall,
-                        color = SolennixTheme.colors.primaryText
+                        fontWeight = FontWeight.SemiBold,
+                        color = SolennixTheme.colors.primaryText,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
                     )
                     StatusBadge(status = event.status.name.lowercase())
                 }
+                // Row 2: service type.
                 Text(
-                    text = event.startTime ?: stringResource(R.string.calendar_all_day),
+                    text = event.serviceType,
                     style = MaterialTheme.typography.bodySmall,
-                    color = SolennixTheme.colors.secondaryText
+                    color = SolennixTheme.colors.secondaryText,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
+                Spacer(modifier = Modifier.height(6.dp))
+                // Row 3: time range · people · amount.
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    val timeLabel = when {
+                        event.startTime == null -> stringResource(R.string.calendar_all_day)
+                        event.endTime != null -> stringResource(
+                            R.string.calendar_event_time_range,
+                            event.startTime!!.take(5),
+                            event.endTime!!.take(5)
+                        )
+                        else -> event.startTime!!.take(5)
+                    }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Schedule,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp),
+                            tint = SolennixTheme.colors.secondaryText
+                        )
+                        Text(
+                            text = timeLabel,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = SolennixTheme.colors.secondaryText
+                        )
+                    }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.People,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp),
+                            tint = SolennixTheme.colors.secondaryText
+                        )
+                        Text(
+                            text = stringResource(
+                                R.string.calendar_event_people_count,
+                                event.numPeople
+                            ),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = SolennixTheme.colors.secondaryText
+                        )
+                    }
+                    Spacer(modifier = Modifier.weight(1f))
+                    // Amount rendered without decimals (dashboard parity) —
+                    // cents belong to the event detail screen, not a list card.
+                    Text(
+                        text = "$${String.format("%,.0f", event.totalAmount)}",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = SolennixTheme.colors.primary
+                    )
+                }
             }
-            Text(
-                text = "$${String.format("%.2f", event.totalAmount)}",
-                style = MaterialTheme.typography.labelLarge,
-                color = SolennixTheme.colors.primary
-            )
         }
     }
 }

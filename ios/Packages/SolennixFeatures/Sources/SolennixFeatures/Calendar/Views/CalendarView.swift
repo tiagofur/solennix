@@ -408,41 +408,56 @@ public struct CalendarView: View {
         .padding(.horizontal, Spacing.sm)
     }
 
+    /// Baseline event card shared with Android — same data density so the
+    /// user sees the same info on either phone. Layout:
+    ///   Left: status dot (iOS-native vs. Android's vertical bar)
+    ///   Middle: client name (bold) + service type + time row
+    ///   Right: status badge (top) + people count + MXN amount (bottom)
     private func eventCard(_ event: Event) -> some View {
-        HStack(spacing: Spacing.sm) {
+        HStack(alignment: .top, spacing: Spacing.sm) {
             Circle()
                 .fill(colorForStatus(event.status))
-                .frame(width: 8, height: 8)
+                .frame(width: 10, height: 10)
+                .padding(.top, 4)
 
             VStack(alignment: .leading, spacing: Spacing.xs) {
                 Text(viewModel.clientName(for: event.clientId))
                     .font(.subheadline)
                     .fontWeight(.bold)
                     .foregroundStyle(SolennixColors.text)
+                    .lineLimit(1)
 
                 Text(event.serviceType)
                     .font(.caption)
                     .foregroundStyle(SolennixColors.textSecondary)
+                    .lineLimit(1)
 
-                if let timeRange = viewModel.timeRange(for: event) {
-                    Label(timeRange, systemImage: "clock")
+                HStack(spacing: Spacing.sm) {
+                    let timeLabel = viewModel.timeRange(for: event)
+                        ?? String(localized: "calendar.all_day", bundle: .module)
+                    Label(timeLabel, systemImage: "clock")
+                        .font(.caption)
+                        .foregroundStyle(SolennixColors.textSecondary)
+
+                    Label("\(event.numPeople)", systemImage: "person.2")
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)
                 }
             }
 
-            Spacer()
+            Spacer(minLength: Spacing.xs)
 
             VStack(alignment: .trailing, spacing: Spacing.xs) {
                 StatusBadge(status: event.status.rawValue)
 
-                HStack(spacing: Spacing.xs) {
-                    Image(systemName: "person.2")
-                        .font(.caption2)
-                    Text("\(event.numPeople)")
-                        .font(.caption)
-                }
-                .foregroundStyle(SolennixColors.textSecondary)
+                // Zero-decimal MXN for list cards — same convention as the
+                // dashboard. Cents live on the event detail screen.
+                Text(Self.amountFormatter.string(
+                    from: NSNumber(value: event.totalAmount)
+                ) ?? "$0")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(SolennixColors.primary)
             }
         }
         .padding(Spacing.md)
@@ -454,6 +469,20 @@ public struct CalendarView: View {
         // than the calendar above it on iPhone.
         .padding(.horizontal, Spacing.sm)
     }
+
+    // MARK: - Helpers
+
+    /// Shared zero-decimal MXN formatter. Uses `es-MX` regardless of UI
+    /// language — the business is Mexico-based and users recognize that
+    /// separator convention on bank statements.
+    private static let amountFormatter: NumberFormatter = {
+        let f = NumberFormatter()
+        f.numberStyle = .currency
+        f.locale = Locale(identifier: "es_MX")
+        f.maximumFractionDigits = 0
+        f.minimumFractionDigits = 0
+        return f
+    }()
 
     // MARK: - Long Press Handler
 

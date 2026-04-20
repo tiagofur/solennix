@@ -60,4 +60,9 @@
     <string name="calendar_action_cancel">Cancel</string>
     <string name="calendar_action_ok">OK</string>
     <string name="calendar_action_delete">Delete</string>
+
+    <!-- Event card -->
+    <string name="calendar_unknown_client">Client</string>
+    <string name="calendar_event_time_range">%1$s - %2$s</string>
+    <string name="calendar_event_people_count">%1$d pax</string>
 </resources>
