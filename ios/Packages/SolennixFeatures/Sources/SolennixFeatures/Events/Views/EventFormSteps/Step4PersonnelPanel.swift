@@ -330,7 +330,7 @@ struct Step4PersonnelPanel: View {
                                             HStack(spacing: 4) {
                                                 Image(systemName: "clock.badge.exclamationmark")
                                                     .font(.caption2)
-                                                Text("Ocupado ese dia")
+                                                Text("Ocupado ese día")
                                                     .font(.caption2)
                                                     .fontWeight(.medium)
                                             }
@@ -384,10 +384,14 @@ struct Step4PersonnelPanel: View {
         if availabilityVM == nil {
             availabilityVM = StaffAvailabilityViewModel(apiClient: viewModel.apiClient)
         }
-        let iso = ISO8601DateFormatter()
-        iso.formatOptions = [.withFullDate]
-        iso.timeZone = TimeZone(identifier: "UTC")
-        let dateString = iso.string(from: viewModel.eventDate)
+        // Formateamos en el calendario local para evitar que un offset UTC
+        // desplace el `YYYY-MM-DD` al dia anterior/siguiente (las fechas del
+        // backend viven en tz de usuario, no en UTC puro).
+        let components = Calendar.current.dateComponents([.year, .month, .day], from: viewModel.eventDate)
+        guard let year = components.year, let month = components.month, let day = components.day else {
+            return
+        }
+        let dateString = String(format: "%04d-%02d-%02d", year, month, day)
         availabilityVM?.reset()
         await availabilityVM?.load(for: dateString)
     }

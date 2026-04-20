@@ -113,9 +113,9 @@ public struct SelectedStaffAssignment: Identifiable, Hashable {
     /// Inicio del turno como `Date` local. Se serializa a ISO8601 UTC en el body.
     /// Nil = no se capturo turno.
     public var shiftStart: Date?
-    /// Fin del turno como `Date` local. `shiftEnd < shiftStart` significa que
-    /// cruza medianoche — el backend acepta ambos timestamps en UTC y deja
-    /// que el consumidor interprete.
+    /// Fin del turno como `Date` local. Si `shiftEnd <= shiftStart` el turno
+    /// cruza medianoche — la serializacion empuja el end +1 dia antes de
+    /// enviarlo al backend, que tiene un CHECK `shift_end > shift_start`.
     public var shiftEnd: Date?
     /// Status tipado. Default `.confirmed` — coherente con el fallback del backend.
     public var status: AssignmentStatus
@@ -821,8 +821,17 @@ public final class EventFormViewModel {
                 iso.formatOptions = [.withInternetDateTime]
                 if let start = assignment.shiftStart {
                     dict["shift_start"] = iso.string(from: start)
-                }
-                if let end = assignment.shiftEnd {
+                    if let rawEnd = assignment.shiftEnd {
+                        // Overnight turnos: si el usuario eligio una hora de salida
+                        // anterior a la de entrada, interpretamos que cruza
+                        // medianoche y empujamos el end al dia siguiente para que
+                        // pase el CHECK `shift_end > shift_start` del backend.
+                        let end = rawEnd <= start
+                            ? Calendar.current.date(byAdding: .day, value: 1, to: rawEnd) ?? rawEnd
+                            : rawEnd
+                        dict["shift_end"] = iso.string(from: end)
+                    }
+                } else if let end = assignment.shiftEnd {
                     dict["shift_end"] = iso.string(from: end)
                 }
                 return dict
