@@ -478,11 +478,11 @@
 				};
 			};
 			buildConfigurationList = 70310F7E6A776E4EB5633230 /* Build configuration list for PBXProject "Solennix" */;
-			developmentRegion = en;
+			developmentRegion = es;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				Base,
-				en,
+				es,
 			);
 			mainGroup = 00B3A82EFA8ECD121B573E85;
 			minimizedProjectReferenceProxies = 1;

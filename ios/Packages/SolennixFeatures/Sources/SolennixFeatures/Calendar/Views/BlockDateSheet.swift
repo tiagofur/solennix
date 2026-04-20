@@ -25,8 +25,8 @@ struct BlockDateSheet: View {
 
     private static let displayFormatter: DateFormatter = {
         let f = DateFormatter()
-        f.locale = Locale(identifier: "es_MX")
-        f.dateFormat = "EEEE, d 'de' MMMM"
+        f.locale = Locale.autoupdatingCurrent
+        f.setLocalizedDateFormatFromTemplate("EEEEdMMMM")
         return f
     }()
 
@@ -42,38 +42,41 @@ struct BlockDateSheet: View {
                         .foregroundStyle(SolennixColors.text)
                     }
                 } header: {
-                    Text("Fecha de inicio")
+                    Text(String(localized: "calendar.block.start_date", bundle: .module))
                 }
 
                 Section {
                     DatePicker(
-                        "Fecha fin",
+                        String(localized: "calendar.block.end_date", bundle: .module),
                         selection: $endDate,
                         in: startDate...,
                         displayedComponents: .date
                     )
                 } header: {
-                    Text("Fecha fin (opcional — para bloquear un rango)")
+                    Text(String(localized: "calendar.block.end_date", bundle: .module))
                 }
 
                 Section {
-                    TextField("Ej. Vacaciones, Mantenimiento, Feriado", text: $reason)
-                        .textInputAutocapitalization(.sentences)
+                    TextField(
+                        String(localized: "calendar.block.reason_placeholder_range", bundle: .module),
+                        text: $reason
+                    )
+                    .textInputAutocapitalization(.sentences)
                 } header: {
-                    Text("Razón (opcional)")
+                    Text(String(localized: "calendar.block.reason_label", bundle: .module))
                 }
             }
-            .navigationTitle("Bloquear Fecha")
+            .navigationTitle(String(localized: "calendar.block.title", bundle: .module))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancelar") {
+                    Button(String(localized: "calendar.action.cancel", bundle: .module)) {
                         onDismiss()
                         dismiss()
                     }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Bloquear") {
+                    Button(String(localized: "calendar.block.save", bundle: .module)) {
                         Task {
                             isSubmitting = true
                             let trimmed = reason.trimmingCharacters(in: .whitespacesAndNewlines)

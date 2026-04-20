@@ -1,0 +1,276 @@
+{
+  "sourceLanguage" : "es",
+  "version" : "1.0",
+  "strings" : {
+    "calendar.title" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Calendario" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Calendar" } }
+      }
+    },
+    "calendar.today" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Hoy" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Today" } }
+      }
+    },
+    "calendar.previous_month" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Mes anterior" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Previous month" } }
+      }
+    },
+    "calendar.next_month" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Mes siguiente" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Next month" } }
+      }
+    },
+    "calendar.new_event" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Nuevo Evento" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "New Event" } }
+      }
+    },
+    "calendar.quick_quote" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Cotización Rápida" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Quick Quote" } }
+      }
+    },
+    "calendar.manage_blocks" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Gestionar fechas bloqueadas" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Manage blocked dates" } }
+      }
+    },
+    "calendar.no_events_scheduled" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "No hay eventos programados" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No events scheduled" } }
+      }
+    },
+    "calendar.all_day" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Todo el día" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "All day" } }
+      }
+    },
+    "calendar.select_date" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Selecciona una fecha" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Select a date" } }
+      }
+    },
+    "calendar.overflow_more" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "+%lld más" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "+%lld more" } }
+      }
+    },
+    "calendar.block.title" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Bloquear fecha" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Block date" } }
+      }
+    },
+    "calendar.block.range_title" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Bloquear rango de fechas" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Block date range" } }
+      }
+    },
+    "calendar.block.reason_label" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Motivo (opcional)" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Reason (optional)" } }
+      }
+    },
+    "calendar.block.reason_placeholder_single" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ej: Vacaciones, día personal…" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "E.g. Vacation, personal day…" } }
+      }
+    },
+    "calendar.block.reason_placeholder_range" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ej: Vacaciones, mantenimiento…" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "E.g. Vacation, maintenance…" } }
+      }
+    },
+    "calendar.block.start_date" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Desde" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "From" } }
+      }
+    },
+    "calendar.block.end_date" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Hasta" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "To" } }
+      }
+    },
+    "calendar.block.add_range" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Agregar rango" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Add range" } }
+      }
+    },
+    "calendar.block.save" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Bloquear" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Block" } }
+      }
+    },
+    "calendar.block.range_invalid" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "La fecha fin no puede ser anterior a la fecha inicio" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "End date cannot be before start date" } }
+      }
+    },
+    "calendar.unblock.title" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Desbloquear fecha" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Unblock date" } }
+      }
+    },
+    "calendar.unblock.confirm" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Desbloquear" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Unblock" } }
+      }
+    },
+    "calendar.unblock.reason_prefix" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Motivo: %@" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Reason: %@" } }
+      }
+    },
+    "calendar.blocked_dates_title" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Fechas No Disponibles" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Unavailable Dates" } }
+      }
+    },
+    "calendar.blocked_dates_empty" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "No hay fechas bloqueadas" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No blocked dates" } }
+      }
+    },
+    "calendar.blocked_dates_empty_subtitle" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Todas las fechas están disponibles" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "All dates are available" } }
+      }
+    },
+    "calendar.filter.all" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Todos" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "All" } }
+      }
+    },
+    "calendar.filter.quoted" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Cotizados" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Quoted" } }
+      }
+    },
+    "calendar.filter.confirmed" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Confirmados" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Confirmed" } }
+      }
+    },
+    "calendar.filter.completed" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Completados" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Completed" } }
+      }
+    },
+    "calendar.filter.cancelled" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Cancelados" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cancelled" } }
+      }
+    },
+    "calendar.error.load_failed" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "No se pudieron cargar los eventos" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Failed to load events" } }
+      }
+    },
+    "calendar.error.block_failed" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "No se pudo bloquear la fecha" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Failed to block date" } }
+      }
+    },
+    "calendar.error.unblock_failed" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "No se pudo desbloquear" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Failed to unblock date" } }
+      }
+    },
+    "calendar.error.retry" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Reintentar" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Retry" } }
+      }
+    },
+    "calendar.action.cancel" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Cancelar" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cancel" } }
+      }
+    },
+    "calendar.action.ok" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Aceptar" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "OK" } }
+      }
+    },
+    "calendar.action.delete" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Eliminar" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete" } }
+      }
+    },
+    "calendar.unknown_client" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Cliente" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Client" } }
+      }
+    },
+    "calendar.select_day_prompt" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Seleccioná un día para ver sus eventos" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Select a day to see its events" } }
+      }
+    },
+    "calendar.no_events_for_day" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "No hay eventos para este día" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No events on this day" } }
+      }
+    },
+    "calendar.create_event_action" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Crear evento o cotización" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Create event or quote" } }
+      }
+    },
+    "calendar.unblock_message_reason" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Motivo: %@\n\nEsta acción habilitará la fecha nuevamente." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Reason: %@\n\nThis will make the date available again." } }
+      }
+    },
+    "calendar.unblock_message" : {
+      "localizations" : {
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Esta acción habilitará la fecha nuevamente." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "This will make the date available again." } }
+      }
+    }
+  }
+}

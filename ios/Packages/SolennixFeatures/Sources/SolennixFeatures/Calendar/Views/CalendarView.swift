@@ -13,8 +13,10 @@ public struct CalendarView: View {
     @Bindable private var viewModel: CalendarViewModel
     @State private var showBlockSheet = false
     @State private var showUnblockAlert = false
+    @State private var showErrorAlert = false
     @State private var longPressedDate: Date?
     @State private var showBlockedDatesSheet = false
+    @State private var hapticTrigger: Int = 0
     @Environment(PlanLimitsManager.self) private var planLimitsManager
     @Environment(\.apiClient) private var apiClient
     @Environment(\.horizontalSizeClass) private var sizeClass
@@ -31,26 +33,51 @@ public struct CalendarView: View {
     public var body: some View {
         calendarBody
             .background(SolennixColors.surfaceGrouped)
-            .navigationTitle("Calendario")
+            .navigationTitle(String(localized: "calendar.title", bundle: .module))
             .navigationBarTitleDisplayMode(.large)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 HStack(spacing: Spacing.sm) {
+                    // Status filter — Apple HIG: Menu attached to a toolbar
+                    // button, checkmark on the active item. Feels native vs.
+                    // a chips row (which belongs to Android's M3 vocabulary).
+                    Menu {
+                        filterMenuButton(label: "calendar.filter.all", status: nil)
+                        Divider()
+                        filterMenuButton(label: "calendar.filter.quoted", status: .quoted)
+                        filterMenuButton(label: "calendar.filter.confirmed", status: .confirmed)
+                        filterMenuButton(label: "calendar.filter.completed", status: .completed)
+                        filterMenuButton(label: "calendar.filter.cancelled", status: .cancelled)
+                    } label: {
+                        Image(systemName: viewModel.statusFilter == nil
+                              ? "line.3.horizontal.decrease.circle"
+                              : "line.3.horizontal.decrease.circle.fill")
+                            .font(.body)
+                            .foregroundStyle(SolennixColors.primary)
+                            .accessibilityLabel(String(localized: "calendar.filter.all", bundle: .module))
+                    }
+
                     // New event / quick quote menu
                     Menu {
                         NavigationLink(value: Route.eventForm(date: viewModel.selectedDate)) {
-                            Label("Nuevo Evento", systemImage: "calendar.badge.plus")
+                            Label(
+                                String(localized: "calendar.new_event", bundle: .module),
+                                systemImage: "calendar.badge.plus"
+                            )
                         }
                         .disabled(!planLimitsManager.canCreateEvent)
 
                         NavigationLink(value: Route.quickQuote) {
-                            Label("Cotización Rápida", systemImage: "doc.text.magnifyingglass")
+                            Label(
+                                String(localized: "calendar.quick_quote", bundle: .module),
+                                systemImage: "doc.text.magnifyingglass"
+                            )
                         }
                     } label: {
                         Image(systemName: "plus")
                             .font(.body)
                             .foregroundStyle(SolennixColors.primary)
-                            .accessibilityLabel("Crear evento o cotización")
+                            .accessibilityLabel(String(localized: "calendar.create_event_action", bundle: .module))
                     }
 
                     Button {
@@ -59,7 +86,7 @@ public struct CalendarView: View {
                         Image(systemName: "calendar.badge.minus")
                             .font(.body)
                             .foregroundStyle(SolennixColors.primary)
-                            .accessibilityLabel("Gestionar fechas bloqueadas")
+                            .accessibilityLabel(String(localized: "calendar.manage_blocks", bundle: .module))
                     }
 
                     Button {
@@ -67,7 +94,7 @@ public struct CalendarView: View {
                             viewModel.goToToday()
                         }
                     } label: {
-                        Text("Hoy")
+                        Text(String(localized: "calendar.today", bundle: .module))
                             .font(.subheadline)
                             .fontWeight(.semibold)
                             .foregroundStyle(SolennixColors.primary)
@@ -85,11 +112,14 @@ public struct CalendarView: View {
                 onDismiss: { longPressedDate = nil }
             )
         }
-        .alert("Desbloquear fecha", isPresented: $showUnblockAlert) {
-            Button("Cancelar", role: .cancel) {
+        .alert(
+            String(localized: "calendar.unblock.title", bundle: .module),
+            isPresented: $showUnblockAlert
+        ) {
+            Button(String(localized: "calendar.action.cancel", bundle: .module), role: .cancel) {
                 longPressedDate = nil
             }
-            Button("Desbloquear", role: .destructive) {
+            Button(String(localized: "calendar.unblock.confirm", bundle: .module), role: .destructive) {
                 guard let date = longPressedDate else { return }
                 Task {
                     await viewModel.toggleDateBlock(startDate: date, endDate: date, reason: nil)
@@ -100,10 +130,30 @@ public struct CalendarView: View {
             if let date = longPressedDate,
                let unavailable = viewModel.unavailableDateFor(date),
                let reason = unavailable.reason, !reason.isEmpty {
-                Text("Motivo: \(reason)\n\nEsta accion habilitara la fecha nuevamente.")
+                Text(String(
+                    format: String(localized: "calendar.unblock_message_reason", bundle: .module),
+                    reason
+                ))
             } else {
-                Text("Esta accion habilitara la fecha nuevamente.")
+                Text(String(localized: "calendar.unblock_message", bundle: .module))
             }
+        }
+        // Generic error alert — the ViewModel emits a typed `CalendarError`,
+        // we map each case to a localized string. No freetext in-memory.
+        .alert(
+            errorAlertTitle,
+            isPresented: $showErrorAlert
+        ) {
+            Button(String(localized: "calendar.action.ok", bundle: .module), role: .cancel) {
+                viewModel.clearError()
+            }
+        }
+        // Native haptic on long-press — `sensoryFeedback` is iOS 17+ and
+        // respects the user's Haptic Touch setting. Trigger flips whenever
+        // a long-press is consumed.
+        .sensoryFeedback(.impact(weight: .medium), trigger: hapticTrigger)
+        .onChange(of: viewModel.error) { _, new in
+            showErrorAlert = new != nil
         }
         .refreshable {
             await viewModel.loadEvents()
@@ -117,6 +167,34 @@ public struct CalendarView: View {
                     .controlSize(.large)
                     .tint(SolennixColors.primary)
             }
+        }
+    }
+
+    // MARK: - Helpers
+
+    @ViewBuilder
+    private func filterMenuButton(label: String.LocalizationValue, status: EventStatus?) -> some View {
+        Button {
+            viewModel.setStatusFilter(status)
+        } label: {
+            if viewModel.statusFilter == status {
+                Label(String(localized: label, bundle: .module), systemImage: "checkmark")
+            } else {
+                Text(String(localized: label, bundle: .module))
+            }
+        }
+    }
+
+    private var errorAlertTitle: String {
+        switch viewModel.error {
+        case .loadFailed:
+            return String(localized: "calendar.error.load_failed", bundle: .module)
+        case .blockFailed:
+            return String(localized: "calendar.error.block_failed", bundle: .module)
+        case .unblockFailed:
+            return String(localized: "calendar.error.unblock_failed", bundle: .module)
+        case .none:
+            return ""
         }
     }
 
@@ -168,6 +246,7 @@ public struct CalendarView: View {
                 CalendarGridView(
                     days: viewModel.daysInMonth,
                     eventDotsForDay: viewModel.eventDotsForDay,
+                    eventCountForDay: viewModel.eventCountForDay,
                     isDateBlocked: viewModel.isDateBlocked,
                     selectedDate: viewModel.selectedDate,
                     onSelectDate: viewModel.selectDate,
@@ -208,7 +287,7 @@ public struct CalendarView: View {
                             .font(.system(size: 40))
                             .foregroundStyle(SolennixColors.textTertiary)
 
-                        Text("Selecciona un dia para ver sus eventos")
+                        Text(String(localized: "calendar.select_day_prompt", bundle: .module))
                             .font(.subheadline)
                             .foregroundStyle(SolennixColors.textSecondary)
                             .multilineTextAlignment(.center)
@@ -231,6 +310,7 @@ public struct CalendarView: View {
                 CalendarGridView(
                     days: viewModel.daysInMonth,
                     eventDotsForDay: viewModel.eventDotsForDay,
+                    eventCountForDay: viewModel.eventCountForDay,
                     isDateBlocked: viewModel.isDateBlocked,
                     selectedDate: viewModel.selectedDate,
                     onSelectDate: viewModel.selectDate,
@@ -255,6 +335,7 @@ public struct CalendarView: View {
                     .font(.body.weight(.semibold))
                     .foregroundStyle(SolennixColors.text)
                     .frame(width: 36, height: 36)
+                    .accessibilityLabel(String(localized: "calendar.previous_month", bundle: .module))
             }
 
             Spacer()
@@ -275,6 +356,7 @@ public struct CalendarView: View {
                     .font(.body.weight(.semibold))
                     .foregroundStyle(SolennixColors.text)
                     .frame(width: 36, height: 36)
+                    .accessibilityLabel(String(localized: "calendar.next_month", bundle: .module))
             }
         }
         .padding(.horizontal, Spacing.md)
@@ -313,7 +395,7 @@ public struct CalendarView: View {
                 .font(.system(size: 40))
                 .foregroundStyle(SolennixColors.textTertiary)
 
-            Text("No hay eventos para este dia")
+            Text(String(localized: "calendar.no_events_for_day", bundle: .module))
                 .font(.subheadline)
                 .foregroundStyle(SolennixColors.textSecondary)
         }
@@ -373,6 +455,8 @@ public struct CalendarView: View {
 
     private func handleLongPress(_ date: Date) {
         longPressedDate = date
+        // Nudge the trigger — `sensoryFeedback` modifier fires the impact.
+        hapticTrigger &+= 1
         if viewModel.isDateBlocked(date) {
             showUnblockAlert = true
         } else {

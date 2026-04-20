@@ -29,11 +29,13 @@ public struct BlockedDatesSheet: View {
                     .listStyle(.insetGrouped)
                 }
             }
-            .navigationTitle("Fechas Bloqueadas")
+            .navigationTitle(String(localized: "calendar.blocked_dates_title", bundle: .module))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cerrar") { dismiss() }
+                    Button(String(localized: "calendar.action.cancel", bundle: .module)) {
+                        dismiss()
+                    }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
@@ -79,6 +81,7 @@ public struct BlockedDatesSheet: View {
                     .foregroundStyle(SolennixColors.statusCancelled)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(String(localized: "calendar.action.delete", bundle: .module))
         }
         .padding(.vertical, Spacing.xs)
     }
@@ -91,11 +94,11 @@ public struct BlockedDatesSheet: View {
                 .font(.system(size: 48))
                 .foregroundStyle(SolennixColors.textTertiary)
 
-            Text("No hay fechas bloqueadas")
+            Text(String(localized: "calendar.blocked_dates_empty", bundle: .module))
                 .font(.headline)
                 .foregroundStyle(SolennixColors.text)
 
-            Text("Usa el botón + para agregar un bloqueo o mantén presionada una fecha en el calendario.")
+            Text(String(localized: "calendar.blocked_dates_empty_subtitle", bundle: .module))
                 .font(.subheadline)
                 .foregroundStyle(SolennixColors.textSecondary)
                 .multilineTextAlignment(.center)
@@ -104,14 +107,17 @@ public struct BlockedDatesSheet: View {
             Button {
                 showAddForm = true
             } label: {
-                Label("Agregar Bloqueo", systemImage: "plus")
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, Spacing.lg)
-                    .padding(.vertical, Spacing.sm)
-                    .background(SolennixColors.primary)
-                    .clipShape(RoundedRectangle(cornerRadius: CornerRadius.full))
+                Label(
+                    String(localized: "calendar.block.add_range", bundle: .module),
+                    systemImage: "plus"
+                )
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .foregroundStyle(.white)
+                .padding(.horizontal, Spacing.lg)
+                .padding(.vertical, Spacing.sm)
+                .background(SolennixColors.primary)
+                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.full))
             }
             .padding(.top, Spacing.sm)
         }
@@ -123,8 +129,8 @@ public struct BlockedDatesSheet: View {
 
     private static let displayFormatter: DateFormatter = {
         let f = DateFormatter()
-        f.locale = Locale(identifier: "es_MX")
-        f.dateFormat = "d 'de' MMMM, yyyy"
+        f.locale = Locale.autoupdatingCurrent
+        f.setLocalizedDateFormatFromTemplate("dMMMMyyyy")
         return f
     }()
 
@@ -164,28 +170,42 @@ struct AddBlockSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Rango de fechas") {
-                    DatePicker("Fecha inicio", selection: $startDate, displayedComponents: .date)
-                        .onChange(of: startDate) { _, new in
-                            if endDate < new { endDate = new }
-                        }
+                Section(String(localized: "calendar.block.range_title", bundle: .module)) {
+                    DatePicker(
+                        String(localized: "calendar.block.start_date", bundle: .module),
+                        selection: $startDate,
+                        displayedComponents: .date
+                    )
+                    .onChange(of: startDate) { _, new in
+                        if endDate < new { endDate = new }
+                    }
 
-                    DatePicker("Fecha fin", selection: $endDate, in: startDate..., displayedComponents: .date)
+                    DatePicker(
+                        String(localized: "calendar.block.end_date", bundle: .module),
+                        selection: $endDate,
+                        in: startDate...,
+                        displayedComponents: .date
+                    )
                 }
 
-                Section("Detalle (opcional)") {
-                    TextField("Razón (ej. Vacaciones, Mantenimiento)", text: $reason)
-                        .textInputAutocapitalization(.sentences)
+                Section(String(localized: "calendar.block.reason_label", bundle: .module)) {
+                    TextField(
+                        String(localized: "calendar.block.reason_placeholder_range", bundle: .module),
+                        text: $reason
+                    )
+                    .textInputAutocapitalization(.sentences)
                 }
             }
-            .navigationTitle("Agregar Bloqueo")
+            .navigationTitle(String(localized: "calendar.block.add_range", bundle: .module))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancelar") { dismiss() }
+                    Button(String(localized: "calendar.action.cancel", bundle: .module)) {
+                        dismiss()
+                    }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Bloquear") {
+                    Button(String(localized: "calendar.block.save", bundle: .module)) {
                         Task {
                             isSubmitting = true
                             let trimmed = reason.trimmingCharacters(in: .whitespacesAndNewlines)

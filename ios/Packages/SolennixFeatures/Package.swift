@@ -3,6 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "SolennixFeatures",
+    defaultLocalization: "es",
     platforms: [.iOS(.v17), .macOS(.v14)],
     products: [
         .library(name: "SolennixFeatures", targets: ["SolennixFeatures"])
@@ -22,6 +23,9 @@ let package = Package(
                     "SolennixDesign",
                     .product(name: "RevenueCat", package: "purchases-ios-spm"),
                     .product(name: "Sentry", package: "sentry-cocoa"),
+                ],
+                resources: [
+                    .process("Resources"),
                 ])
     ]
 )

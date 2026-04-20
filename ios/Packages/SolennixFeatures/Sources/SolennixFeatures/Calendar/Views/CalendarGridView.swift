@@ -11,6 +11,7 @@ public struct CalendarGridView: View {
 
     let days: [DateDay]
     let eventDotsForDay: (Date) -> [EventStatus]
+    let eventCountForDay: (Date) -> Int
     let isDateBlocked: (Date) -> Bool
     let selectedDate: Date?
     let onSelectDate: (Date) -> Void
@@ -19,13 +20,27 @@ public struct CalendarGridView: View {
     // MARK: - Constants
 
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 2), count: 7)
-    private let weekdaySymbols = ["Dom", "Lun", "Mar", "Mie", "Jue", "Vie", "Sab"]
+    /// Weekday headers localized via Calendar so they follow the device
+    /// language (es → "lun mar mié", en → "Mon Tue Wed"). The ordering
+    /// also respects the locale's `firstWeekday` so Monday-first locales
+    /// get the right layout.
+    private var weekdaySymbols: [String] {
+        let cal = Calendar.autoupdatingCurrent
+        // DateFormatter.shortWeekdaySymbols is Sunday-first; rotate to the
+        // locale's first weekday (1=Sun, 2=Mon) minus one for zero-index.
+        let formatter = DateFormatter()
+        formatter.locale = Locale.autoupdatingCurrent
+        let symbols = formatter.shortWeekdaySymbols ?? ["S", "M", "T", "W", "T", "F", "S"]
+        let shift = cal.firstWeekday - 1
+        return Array(symbols[shift...]) + Array(symbols[..<shift])
+    }
 
     // MARK: - Init
 
     public init(
         days: [DateDay],
         eventDotsForDay: @escaping (Date) -> [EventStatus],
+        eventCountForDay: @escaping (Date) -> Int = { _ in 0 },
         isDateBlocked: @escaping (Date) -> Bool = { _ in false },
         selectedDate: Date?,
         onSelectDate: @escaping (Date) -> Void,
@@ -33,6 +48,7 @@ public struct CalendarGridView: View {
     ) {
         self.days = days
         self.eventDotsForDay = eventDotsForDay
+        self.eventCountForDay = eventCountForDay
         self.isDateBlocked = isDateBlocked
         self.selectedDate = selectedDate
         self.onSelectDate = onSelectDate
@@ -60,6 +76,9 @@ public struct CalendarGridView: View {
                     DayCellView(
                         day: day,
                         dots: day.isCurrentMonth ? eventDotsForDay(day.date) : [],
+                        // Overflow count = events beyond the 3 rendered
+                        // dots. Capped at a positive number by DayCellView.
+                        overflow: day.isCurrentMonth ? max(0, eventCountForDay(day.date) - 3) : 0,
                         isBlocked: day.isCurrentMonth ? isDateBlocked(day.date) : false
                     )
                     .onTapGesture {
@@ -86,6 +105,10 @@ public struct CalendarGridView: View {
 private struct DayCellView: View {
     let day: DateDay
     let dots: [EventStatus]
+    /// Events beyond the 3 status dots we render. When > 0 we show a
+    /// "+N" caption below the dots so the user knows the day is busier
+    /// than the dot row suggests.
+    let overflow: Int
     let isBlocked: Bool
 
     var body: some View {
@@ -117,7 +140,8 @@ private struct DayCellView: View {
             }
             .frame(width: 32, height: 32)
 
-            // Event dots (up to 3)
+            // Event dots (up to 3). Parity with Android / Web — all three
+            // show the dot row first.
             HStack(spacing: 2) {
                 ForEach(Array(dots.enumerated()), id: \.offset) { _, status in
                     Circle()
@@ -126,9 +150,22 @@ private struct DayCellView: View {
                 }
             }
             .frame(height: 6)
+
+            // "+N más" caption when the day has more events than the 3
+            // rendered dots. Keeps the overflow signal visible without
+            // expanding the grid cell height.
+            if overflow > 0 {
+                Text(String(
+                    format: String(localized: "calendar.overflow_more", bundle: .module),
+                    overflow
+                ))
+                .font(.system(size: 8))
+                .foregroundStyle(SolennixColors.textSecondary)
+                .lineLimit(1)
+            }
         }
         .frame(maxWidth: .infinity)
-        .frame(height: 50)
+        .frame(height: 52)
         .contentShape(Rectangle())
     }
 

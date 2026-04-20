@@ -15,6 +15,15 @@ public struct DateDay: Identifiable, Hashable {
     public let isSelected: Bool
 }
 
+/// Typed error surface for the Calendar screen. The view maps each case
+/// to a localized string from `Localizable.xcstrings` — translations live
+/// in the resource catalog, not in the ViewModel.
+public enum CalendarError: Sendable, Equatable {
+    case loadFailed
+    case blockFailed
+    case unblockFailed
+}
+
 // MARK: - Calendar View Model
 
 @Observable
@@ -28,7 +37,13 @@ public final class CalendarViewModel {
     public var selectedDate: Date?
     public var isLoading: Bool = false
     public var isBlockingDate: Bool = false
-    public var errorMessage: String?
+    /// Typed last error — the view observes this and renders a localized
+    /// banner/alert. Previously this was a free-text Spanish string which
+    /// made translation impossible.
+    public var error: CalendarError?
+    /// null = no filter ("Todos"). Filters both the grid dots and the
+    /// selected-day list to events matching the chosen status.
+    public var statusFilter: EventStatus?
 
     /// Map of client ID -> Client for resolving client names.
     public var clientMap: [String: Client] = [:]
@@ -40,17 +55,21 @@ public final class CalendarViewModel {
 
     // MARK: - Date Formatters
 
+    // Month title and selected-date label. `autoupdatingCurrent` makes
+    // them follow the device language (es → "marzo 2026", en → "March
+    // 2026"). Previously hardcoded `es_MX`, which prevented EN users from
+    // ever seeing English month names.
     private static let monthFormatter: DateFormatter = {
         let f = DateFormatter()
-        f.locale = Locale(identifier: "es_MX")
-        f.dateFormat = "MMMM yyyy"
+        f.locale = Locale.autoupdatingCurrent
+        f.setLocalizedDateFormatFromTemplate("MMMM yyyy")
         return f
     }()
 
     private static let selectedDateFormatter: DateFormatter = {
         let f = DateFormatter()
-        f.locale = Locale(identifier: "es_MX")
-        f.dateFormat = "EEEE, d 'de' MMMM"
+        f.locale = Locale.autoupdatingCurrent
+        f.setLocalizedDateFormatFromTemplate("EEEEdMMMM")
         return f
     }()
 
@@ -71,13 +90,26 @@ public final class CalendarViewModel {
 
     // MARK: - Computed Properties
 
-    /// Events matching the selected date, sorted by start time.
+    /// Events matching the selected date, sorted by start time. Honors
+    /// the active `statusFilter` so the day list stays in sync with the
+    /// filter chips.
     public var eventsForSelectedDate: [Event] {
         guard let selected = selectedDate else { return [] }
         let selectedStr = Self.apiDateFormatter.string(from: selected)
         return events
             .filter { $0.eventDate == selectedStr }
+            .filter { statusFilter == nil || $0.status == statusFilter }
             .sorted { ($0.startTime ?? "") < ($1.startTime ?? "") }
+    }
+
+    /// Total number of events on a given day — used to render the `+N más`
+    /// overflow badge when there are more than 3 dots worth of data.
+    public func eventCountForDay(_ date: Date) -> Int {
+        let dateStr = Self.apiDateFormatter.string(from: date)
+        return events
+            .filter { $0.eventDate == dateStr }
+            .filter { statusFilter == nil || $0.status == statusFilter }
+            .count
     }
 
     /// Array of `DateDay` structs for the current month grid, with leading
@@ -146,10 +178,13 @@ public final class CalendarViewModel {
         return days
     }
 
-    /// Up to 3 status-colored dots for a given day, representing events on that date.
+    /// Up to 3 status-colored dots for a given day, representing events on
+    /// that date. Honors `statusFilter` when set.
     public func eventDotsForDay(_ date: Date) -> [EventStatus] {
         let dateStr = Self.apiDateFormatter.string(from: date)
-        let dayEvents = events.filter { $0.eventDate == dateStr }
+        let dayEvents = events
+            .filter { $0.eventDate == dateStr }
+            .filter { statusFilter == nil || $0.status == statusFilter }
         var seen: Set<EventStatus> = []
         var dots: [EventStatus] = []
         for event in dayEvents {
@@ -167,9 +202,19 @@ public final class CalendarViewModel {
         Self.monthFormatter.string(from: currentMonth).capitalized
     }
 
-    /// Resolve client name from the client map.
+    /// Resolve client name from the client map. Falls back to the
+    /// localized "Cliente"/"Client" label when the client is unknown.
     public func clientName(for clientId: String) -> String {
-        clientMap[clientId]?.name ?? "Cliente"
+        clientMap[clientId]?.name
+            ?? String(localized: "calendar.unknown_client", defaultValue: "Cliente", bundle: .module)
+    }
+
+    public func setStatusFilter(_ filter: EventStatus?) {
+        statusFilter = filter
+    }
+
+    public func clearError() {
+        error = nil
     }
 
     /// Format the selected date for display, e.g. "lunes, 17 de marzo".
@@ -236,6 +281,7 @@ public final class CalendarViewModel {
     @MainActor
     public func toggleDateBlock(startDate: Date, endDate: Date, reason: String?) async {
         isBlockingDate = true
+        let wasBlocked = unavailableDateFor(startDate) != nil
         do {
             if let existing = unavailableDateFor(startDate) {
                 try await apiClient.delete(Endpoint.unavailableDate(existing.id))
@@ -252,11 +298,7 @@ public final class CalendarViewModel {
             }
             await loadUnavailableDates()
         } catch {
-            if let apiError = error as? APIError {
-                errorMessage = apiError.errorDescription ?? "Error actualizando fecha"
-            } else {
-                errorMessage = "Error actualizando fecha"
-            }
+            self.error = wasBlocked ? .unblockFailed : .blockFailed
         }
         isBlockingDate = false
     }
@@ -269,11 +311,7 @@ public final class CalendarViewModel {
             try await apiClient.delete(Endpoint.unavailableDate(entry.id))
             await loadUnavailableDates()
         } catch {
-            if let apiError = error as? APIError {
-                errorMessage = apiError.errorDescription ?? "Error eliminando bloqueo"
-            } else {
-                errorMessage = "Error eliminando bloqueo"
-            }
+            self.error = .unblockFailed
         }
         isBlockingDate = false
     }
@@ -295,7 +333,10 @@ public final class CalendarViewModel {
             )
             unavailableDates = fetched
         } catch {
-            // Silently fail — unavailable dates are non-critical
+            // Surface through the typed error channel instead of silently
+            // failing — before, a server outage left stale blocked dates
+            // on screen with no user indication.
+            self.error = .loadFailed
         }
     }
 
@@ -304,14 +345,14 @@ public final class CalendarViewModel {
     @MainActor
     public func loadEvents() async {
         isLoading = true
-        errorMessage = nil
+        error = nil
 
         do {
             let now = Date()
             guard let startDate = calendar.date(byAdding: .month, value: -6, to: now),
                   let endDate = calendar.date(byAdding: .month, value: 6, to: now)
             else {
-                errorMessage = "Error calculando rango de fechas"
+                self.error = .loadFailed
                 isLoading = false
                 return
             }
@@ -338,11 +379,7 @@ public final class CalendarViewModel {
             unavailableDates = fetchedUnavailable
 
         } catch {
-            if let apiError = error as? APIError {
-                errorMessage = apiError.errorDescription ?? "Error cargando eventos"
-            } else {
-                errorMessage = "Error cargando eventos"
-            }
+            self.error = .loadFailed
         }
 
         isLoading = false

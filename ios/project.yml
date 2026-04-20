@@ -7,6 +7,14 @@ options:
   xcodeVersion: "15.0"
   generateEmptyDirectories: true
   groupSortPosition: top
+  # i18n: app ships Spanish (development) + English. SPM packages that
+  # hold their own strings (SolennixFeatures) declare defaultLocalization
+  # in their Package.swift; the app target mirrors the same known regions.
+  developmentLanguage: es
+  knownRegions:
+    - en
+    - es
+    - Base
 
 packages:
   SolennixCore:
