@@ -53,13 +53,20 @@ export const StaffDetails: React.FC = () => {
   const deleteMut = useDeleteStaff();
   const [confirmOpen, setConfirmOpen] = React.useState(false);
 
-  // Próximas asignaciones — ventana rolling de 90 días desde hoy.
+  // Próximas asignaciones — ventana rolling de 90 días desde hoy. Usamos la
+  // fecha en zona local (no UTC) para que la ventana coincida con lo que el
+  // usuario ve en su calendario; toISOString() podría correr un día.
   const { rangeStart, rangeEnd } = useMemo(() => {
+    const ymdLocal = (d: Date) => {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    };
     const today = new Date();
     const end = new Date(today);
     end.setDate(end.getDate() + 90);
-    const ymd = (d: Date) => d.toISOString().split("T")[0];
-    return { rangeStart: ymd(today), rangeEnd: ymd(end) };
+    return { rangeStart: ymdLocal(today), rangeEnd: ymdLocal(end) };
   }, []);
   const { data: availability = [] } = useStaffAvailabilityRange(
     staff ? rangeStart : null,

@@ -26,6 +26,7 @@ interface EventStaffProps {
   staffCatalog: Staff[];
   selectedStaff: SelectedStaffAssignment[];
   eventDate?: string | null; // YYYY-MM-DD para availability lookup
+  eventId?: string | null;   // Excluir este evento del flag "ocupado"
   onAdd: () => void;
   onRemove: (index: number) => void;
   onChange: (index: number, field: keyof SelectedStaffAssignment, value: StaffFieldValue) => void;
@@ -42,6 +43,7 @@ export const EventStaff: React.FC<EventStaffProps> = ({
   staffCatalog,
   selectedStaff,
   eventDate,
+  eventId,
   onAdd,
   onRemove,
   onChange,
@@ -51,13 +53,18 @@ export const EventStaff: React.FC<EventStaffProps> = ({
   // Availability — solo pedimos si tenemos fecha. El hook se skipea en caso contrario.
   const { data: availability = [] } = useStaffAvailability(eventDate || null);
 
+  // Excluimos el evento actual al calcular busy: un staff ya asignado a este
+  // mismo evento NO debe mostrarse como "Ocupado ese día" consigo mismo.
   const busyStaffIds = useMemo(() => {
     const set = new Set<string>();
     for (const row of availability) {
-      if (row.assignments.length > 0) set.add(row.staff_id);
+      const hasOther = row.assignments.some(
+        (a) => !eventId || a.event_id !== eventId,
+      );
+      if (hasOther) set.add(row.staff_id);
     }
     return set;
-  }, [availability]);
+  }, [availability, eventId]);
 
   // Track which rows have expanded the "Agregar horario (opcional)" panel.
   const [shiftExpanded, setShiftExpanded] = useState<Record<number, boolean>>({});

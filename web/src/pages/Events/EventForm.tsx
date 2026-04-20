@@ -92,17 +92,42 @@ const isoToLocalHHmm = (iso: string | null | undefined): string | null => {
 };
 
 // Combine a YYYY-MM-DD event date with a HH:mm local time into an ISO8601
-// UTC string. Returns null when either piece is missing. Used at submit
-// time to build the shift_start/shift_end payload.
-const hhmmToUtcIso = (eventDate: string | null | undefined, hhmm: string | null): string | null => {
+// UTC string. `dayOffset` shifts the day by N (used for overnight shifts).
+// Returns null when either piece is missing.
+const hhmmToUtcIso = (
+  eventDate: string | null | undefined,
+  hhmm: string | null,
+  dayOffset = 0,
+): string | null => {
   if (!eventDate || !hhmm) return null;
   const [h, m] = hhmm.split(":").map((n) => Number(n));
   if (Number.isNaN(h) || Number.isNaN(m)) return null;
   const [y, mo, d] = eventDate.split("-").map((n) => Number(n));
   if (Number.isNaN(y) || Number.isNaN(mo) || Number.isNaN(d)) return null;
-  const local = new Date(y, mo - 1, d, h, m, 0, 0);
+  const local = new Date(y, mo - 1, d + dayOffset, h, m, 0, 0);
   if (Number.isNaN(local.getTime())) return null;
   return local.toISOString();
+};
+
+// Serialize a shift range, bumping the end by +1 day when the user chose an
+// end time on or before the start (overnight turno). Backend enforces
+// CHECK (shift_end > shift_start), so "19:00 → 02:00" would otherwise be
+// rejected.
+const serializeShift = (
+  eventDate: string | null | undefined,
+  start: string | null,
+  end: string | null,
+): { shiftStart: string | null; shiftEnd: string | null } => {
+  const shiftStart = hhmmToUtcIso(eventDate, start);
+  if (!end) return { shiftStart, shiftEnd: null };
+  if (!start) return { shiftStart: null, shiftEnd: hhmmToUtcIso(eventDate, end) };
+  const [sh, sm] = start.split(":").map(Number);
+  const [eh, em] = end.split(":").map(Number);
+  const overnight = eh * 60 + em <= sh * 60 + sm;
+  return {
+    shiftStart,
+    shiftEnd: hhmmToUtcIso(eventDate, end, overnight ? 1 : 0),
+  };
 };
 
 const eventSchema = z.object({
@@ -913,15 +938,18 @@ export const EventForm: React.FC = () => {
             })),
           selectedStaff
             .filter((s) => s.staff_id)
-            .map((s) => ({
-              staffId: s.staff_id,
-              feeAmount: s.fee_amount,
-              roleOverride: s.role_override || null,
-              notes: s.notes || null,
-              shiftStart: hhmmToUtcIso(eventDateValue, s.shift_start),
-              shiftEnd: hhmmToUtcIso(eventDateValue, s.shift_end),
-              status: s.status, // null = preserve current value on upsert
-            })),
+            .map((s) => {
+              const shift = serializeShift(eventDateValue, s.shift_start, s.shift_end);
+              return {
+                staffId: s.staff_id,
+                feeAmount: s.fee_amount,
+                roleOverride: s.role_override || null,
+                notes: s.notes || null,
+                shiftStart: shift.shiftStart,
+                shiftEnd: shift.shiftEnd,
+                status: s.status, // null = preserve current value on upsert
+              };
+            }),
         );
       }
 
@@ -1198,6 +1226,7 @@ export const EventForm: React.FC = () => {
                     staffCatalog={staffCatalog}
                     selectedStaff={selectedStaff}
                     eventDate={eventDateValue}
+                    eventId={id ?? null}
                     onAdd={handleAddStaff}
                     onRemove={handleRemoveStaff}
                     onChange={handleStaffChange}
