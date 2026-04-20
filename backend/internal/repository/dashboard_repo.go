@@ -9,14 +9,24 @@ import (
 )
 
 // DashboardKPIs holds user-scoped key performance indicators.
+//
+// Monthly fields (net_sales_this_month, cash_collected_this_month,
+// vat_collected_this_month, vat_outstanding_this_month) are scoped to events
+// with event_date in the current calendar month AND status IN
+// ('confirmed','completed'). VAT is prorated per event by paid ratio.
+// Cash collected is scoped by payment_date in the current calendar month.
 type DashboardKPIs struct {
-	TotalRevenue     float64 `json:"total_revenue"`
-	EventsThisMonth  int     `json:"events_this_month"`
-	PendingQuotes    int     `json:"pending_quotes"`
-	LowStockItems    int     `json:"low_stock_items"`
-	UpcomingEvents   int     `json:"upcoming_events"`
-	TotalClients     int     `json:"total_clients"`
-	AverageEventValue float64 `json:"average_event_value"`
+	TotalRevenue              float64 `json:"total_revenue"`
+	EventsThisMonth           int     `json:"events_this_month"`
+	PendingQuotes             int     `json:"pending_quotes"`
+	LowStockItems             int     `json:"low_stock_items"`
+	UpcomingEvents            int     `json:"upcoming_events"`
+	TotalClients              int     `json:"total_clients"`
+	AverageEventValue         float64 `json:"average_event_value"`
+	NetSalesThisMonth         float64 `json:"net_sales_this_month"`
+	CashCollectedThisMonth    float64 `json:"cash_collected_this_month"`
+	VATCollectedThisMonth     float64 `json:"vat_collected_this_month"`
+	VATOutstandingThisMonth   float64 `json:"vat_outstanding_this_month"`
 }
 
 // RevenueDataPoint represents one month of revenue data.
@@ -134,6 +144,55 @@ func (r *DashboardRepo) GetKPIs(ctx context.Context, userID uuid.UUID) (*Dashboa
 		WHERE user_id = $1 AND total_amount > 0`, userID).Scan(&kpis.AverageEventValue)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get average event value: %w", err)
+	}
+
+	// Net sales / VAT collected / VAT outstanding for the current month.
+	// Scope: events with event_date in current month AND status IN ('confirmed','completed').
+	// VAT is prorated per event by paid ratio (capped at 1.0 if overpaid).
+	err = r.pool.QueryRow(ctx, `
+		WITH month_events AS (
+			SELECT
+				e.total_amount,
+				e.tax_amount,
+				COALESCE((SELECT SUM(p.amount) FROM payments p WHERE p.event_id = e.id), 0) AS total_paid
+			FROM events e
+			WHERE e.user_id = $1
+			  AND DATE_TRUNC('month', e.event_date) = DATE_TRUNC('month', CURRENT_DATE)
+			  AND e.status IN ('confirmed', 'completed')
+		)
+		SELECT
+			COALESCE(SUM(total_amount), 0) AS net_sales,
+			COALESCE(SUM(
+				CASE WHEN total_amount > 0
+					 THEN tax_amount * LEAST(total_paid / total_amount, 1.0)
+					 ELSE 0
+				END
+			), 0) AS vat_collected,
+			COALESCE(SUM(
+				CASE WHEN total_amount > 0
+					 THEN tax_amount * GREATEST(1.0 - (total_paid / total_amount), 0.0)
+					 ELSE tax_amount
+				END
+			), 0) AS vat_outstanding
+		FROM month_events`, userID).Scan(
+		&kpis.NetSalesThisMonth,
+		&kpis.VATCollectedThisMonth,
+		&kpis.VATOutstandingThisMonth,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get monthly sales/VAT aggregates: %w", err)
+	}
+
+	// Cash collected this month: sum of payments with payment_date in current month
+	// belonging to the user's events.
+	err = r.pool.QueryRow(ctx, `
+		SELECT COALESCE(SUM(p.amount), 0)
+		FROM payments p
+		JOIN events e ON p.event_id = e.id
+		WHERE e.user_id = $1
+		  AND DATE_TRUNC('month', p.payment_date) = DATE_TRUNC('month', CURRENT_DATE)`, userID).Scan(&kpis.CashCollectedThisMonth)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get cash collected this month: %w", err)
 	}
 
 	return kpis, nil
