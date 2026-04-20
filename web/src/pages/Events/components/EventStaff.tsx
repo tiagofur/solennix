@@ -1,32 +1,70 @@
-import { Plus, Trash2, UserCog } from 'lucide-react';
-import type { Staff } from '../../../types/entities';
+import { useMemo, useState } from 'react';
+import { Clock, Plus, Trash2, UserCog } from 'lucide-react';
+import type { AssignmentStatus, Staff } from '../../../types/entities';
+import { useStaffAvailability } from '@/hooks/queries/useStaffQueries';
 
 // Shape tracked in EventForm state — matches EventStaffAssignment but with
 // a deterministic row id so the list can be edited before the event has an
 // event_id in the backend.
+//
+// Ola 1 — shift window + status. shift_start/end son TIME (HH:mm) en UI,
+// se convierten a ISO8601 UTC en el submit combinándolos con event_date.
+// status null = preservar en upsert (semántica del backend).
 export interface SelectedStaffAssignment {
   staff_id: string;
   fee_amount: number | null;
   role_override: string;
   notes: string;
+  shift_start: string | null; // "HH:mm" local o null
+  shift_end: string | null;   // "HH:mm" local o null
+  status: AssignmentStatus | null;
 }
+
+export type StaffFieldValue = string | number | null;
 
 interface EventStaffProps {
   staffCatalog: Staff[];
   selectedStaff: SelectedStaffAssignment[];
+  eventDate?: string | null; // YYYY-MM-DD para availability lookup
   onAdd: () => void;
   onRemove: (index: number) => void;
-  onChange: (index: number, field: keyof SelectedStaffAssignment, value: string | number | null) => void;
+  onChange: (index: number, field: keyof SelectedStaffAssignment, value: StaffFieldValue) => void;
 }
+
+const STATUS_OPTIONS: { value: AssignmentStatus; label: string }[] = [
+  { value: 'pending', label: 'Sin confirmar' },
+  { value: 'confirmed', label: 'Confirmado' },
+  { value: 'declined', label: 'Rechazó' },
+  { value: 'cancelled', label: 'Cancelado' },
+];
 
 export const EventStaff: React.FC<EventStaffProps> = ({
   staffCatalog,
   selectedStaff,
+  eventDate,
   onAdd,
   onRemove,
   onChange,
 }) => {
   const emptyCatalog = staffCatalog.length === 0;
+
+  // Availability — solo pedimos si tenemos fecha. El hook se skipea en caso contrario.
+  const { data: availability = [] } = useStaffAvailability(eventDate || null);
+
+  const busyStaffIds = useMemo(() => {
+    const set = new Set<string>();
+    for (const row of availability) {
+      if (row.assignments.length > 0) set.add(row.staff_id);
+    }
+    return set;
+  }, [availability]);
+
+  // Track which rows have expanded the "Agregar horario (opcional)" panel.
+  const [shiftExpanded, setShiftExpanded] = useState<Record<number, boolean>>({});
+
+  const toggleShift = (index: number) => {
+    setShiftExpanded((prev) => ({ ...prev, [index]: !prev[index] }));
+  };
 
   return (
     <div className="space-y-4">
@@ -54,6 +92,11 @@ export const EventStaff: React.FC<EventStaffProps> = ({
             const availableCatalog = staffCatalog.filter(
               (s) => s.id === item.staff_id || !selectedStaff.some((sel, i) => i !== index && sel.staff_id === s.id),
             );
+            const isShiftOpen =
+              shiftExpanded[index] || !!item.shift_start || !!item.shift_end;
+            // Default mostrado del select cuando no hay status seteado = "confirmed".
+            const statusValue: AssignmentStatus = item.status ?? 'confirmed';
+
             return (
               <div
                 key={index}
@@ -67,13 +110,22 @@ export const EventStaff: React.FC<EventStaffProps> = ({
                     className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
                   >
                     <option value="">Seleccionar…</option>
-                    {availableCatalog.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.name}
-                        {s.role_label ? ` · ${s.role_label}` : ''}
-                      </option>
-                    ))}
+                    {availableCatalog.map((s) => {
+                      const busy = eventDate && busyStaffIds.has(s.id) && s.id !== item.staff_id;
+                      return (
+                        <option key={s.id} value={s.id}>
+                          {s.name}
+                          {s.role_label ? ` · ${s.role_label}` : ''}
+                          {busy ? ' · Ocupado ese día' : ''}
+                        </option>
+                      );
+                    })}
                   </select>
+                  {eventDate && item.staff_id && busyStaffIds.has(item.staff_id) && (
+                    <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
+                      Ocupado ese día
+                    </span>
+                  )}
                 </div>
 
                 <div className="sm:col-span-3">
@@ -117,7 +169,22 @@ export const EventStaff: React.FC<EventStaffProps> = ({
                   </button>
                 </div>
 
-                <div className="sm:col-span-12">
+                <div className="sm:col-span-4">
+                  <label className="block text-xs font-medium text-text-secondary mb-1">Estado</label>
+                  <select
+                    value={statusValue}
+                    onChange={(e) => onChange(index, 'status', e.target.value as AssignmentStatus)}
+                    className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
+                  >
+                    {STATUS_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="sm:col-span-8">
                   <label className="block text-xs font-medium text-text-secondary mb-1">Notas</label>
                   <input
                     type="text"
@@ -126,6 +193,48 @@ export const EventStaff: React.FC<EventStaffProps> = ({
                     className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
                     placeholder="Hora de llegada, indicaciones…"
                   />
+                </div>
+
+                <div className="sm:col-span-12">
+                  {!isShiftOpen ? (
+                    <button
+                      type="button"
+                      onClick={() => toggleShift(index)}
+                      className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+                    >
+                      <Clock className="h-4 w-4" aria-hidden="true" />
+                      Agregar horario (opcional)
+                    </button>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-text-secondary mb-1">
+                          Entrada
+                        </label>
+                        <input
+                          type="time"
+                          value={item.shift_start ?? ''}
+                          onChange={(e) =>
+                            onChange(index, 'shift_start', e.target.value === '' ? null : e.target.value)
+                          }
+                          className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-text-secondary mb-1">
+                          Salida
+                        </label>
+                        <input
+                          type="time"
+                          value={item.shift_end ?? ''}
+                          onChange={(e) =>
+                            onChange(index, 'shift_end', e.target.value === '' ? null : e.target.value)
+                          }
+                          className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             );

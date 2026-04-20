@@ -38,6 +38,28 @@ export function useEventStaff(eventId: string | undefined) {
   });
 }
 
+// Staff availability for a single date — used inside EventStaff picker to
+// badge collaborators already booked that day. Skips when date is falsy.
+export function useStaffAvailability(date: string | null | undefined) {
+  return useQuery({
+    queryKey: queryKeys.staff.availability(date ?? ''),
+    queryFn: () => staffService.getAvailability({ date: date! }),
+    enabled: !!date,
+    staleTime: 30 * 1000,
+  });
+}
+
+// Range variant — used in StaffDetails "Próximas asignaciones". Only enabled
+// when both bounds are provided.
+export function useStaffAvailabilityRange(start: string | null | undefined, end: string | null | undefined) {
+  return useQuery({
+    queryKey: ['staff', 'availability', 'range', start ?? '', end ?? ''] as const,
+    queryFn: () => staffService.getAvailability({ start: start!, end: end! }),
+    enabled: !!start && !!end,
+    staleTime: 30 * 1000,
+  });
+}
+
 // ── Mutations ──
 
 export function useCreateStaff() {

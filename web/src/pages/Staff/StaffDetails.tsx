@@ -1,8 +1,50 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Edit, Mail, Phone, Trash2, UserCog } from "lucide-react";
-import { useStaffMember, useDeleteStaff } from "@/hooks/queries/useStaffQueries";
+import { ArrowLeft, CalendarClock, Edit, Mail, Phone, Trash2, UserCog } from "lucide-react";
+import {
+  useStaffMember,
+  useDeleteStaff,
+  useStaffAvailabilityRange,
+} from "@/hooks/queries/useStaffQueries";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import type { AssignmentStatus } from "@/types/entities";
+
+const STATUS_LABELS: Record<AssignmentStatus, string> = {
+  pending: "Sin confirmar",
+  confirmed: "Confirmado",
+  declined: "Rechazó",
+  cancelled: "Cancelado",
+};
+
+// Tailwind palette mapping — stays off the brand gold/navy so badges feel
+// semantic rather than decorative.
+const STATUS_CLASSES: Record<AssignmentStatus, string> = {
+  pending: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200",
+  confirmed: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200",
+  declined: "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-200",
+  cancelled: "bg-slate-200 text-slate-700 dark:bg-slate-700/40 dark:text-slate-200",
+};
+
+const formatShiftRange = (start?: string | null, end?: string | null): string | null => {
+  const fmt = (iso: string) => {
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return null;
+    return d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+  };
+  const s = start ? fmt(start) : null;
+  const e = end ? fmt(end) : null;
+  if (s && e) return `${s} – ${e}`;
+  if (s) return `Desde ${s}`;
+  if (e) return `Hasta ${e}`;
+  return null;
+};
+
+const formatEventDate = (ymd: string): string => {
+  const [y, m, d] = ymd.split("-").map((n) => Number(n));
+  if (Number.isNaN(y) || Number.isNaN(m) || Number.isNaN(d)) return ymd;
+  const dt = new Date(y, m - 1, d);
+  return dt.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short", year: "numeric" });
+};
 
 export const StaffDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -10,6 +52,25 @@ export const StaffDetails: React.FC = () => {
   const { data: staff, isLoading } = useStaffMember(id);
   const deleteMut = useDeleteStaff();
   const [confirmOpen, setConfirmOpen] = React.useState(false);
+
+  // Próximas asignaciones — ventana rolling de 90 días desde hoy.
+  const { rangeStart, rangeEnd } = useMemo(() => {
+    const today = new Date();
+    const end = new Date(today);
+    end.setDate(end.getDate() + 90);
+    const ymd = (d: Date) => d.toISOString().split("T")[0];
+    return { rangeStart: ymd(today), rangeEnd: ymd(end) };
+  }, []);
+  const { data: availability = [] } = useStaffAvailabilityRange(
+    staff ? rangeStart : null,
+    staff ? rangeEnd : null,
+  );
+  const upcomingAssignments = useMemo(() => {
+    if (!staff) return [];
+    const entry = availability.find((a) => a.staff_id === staff.id);
+    if (!entry) return [];
+    return [...entry.assignments].sort((a, b) => a.event_date.localeCompare(b.event_date));
+  }, [availability, staff]);
 
   if (isLoading) return <div className="text-text-secondary">Cargando…</div>;
   if (!staff) {
@@ -121,6 +182,45 @@ export const StaffDetails: React.FC = () => {
             </dd>
           </div>
         </dl>
+      </div>
+
+      <div className="bg-card border border-border rounded-2xl shadow-sm p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <CalendarClock className="h-5 w-5 text-primary" aria-hidden="true" />
+          <h2 className="text-lg font-semibold text-text">Próximas asignaciones</h2>
+        </div>
+        {upcomingAssignments.length === 0 ? (
+          <p className="text-sm text-text-secondary">
+            No tiene eventos asignados en los próximos 90 días.
+          </p>
+        ) : (
+          <ul className="divide-y divide-border">
+            {upcomingAssignments.map((a) => {
+              const shift = formatShiftRange(a.shift_start, a.shift_end);
+              return (
+                <li key={a.event_id} className="py-3 flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <Link
+                      to={`/events/${a.event_id}/summary`}
+                      className="font-medium text-text hover:text-primary hover:underline truncate block"
+                    >
+                      {a.event_name || "Evento"}
+                    </Link>
+                    <div className="text-xs text-text-secondary mt-0.5">
+                      {formatEventDate(a.event_date)}
+                      {shift ? ` · ${shift}` : ""}
+                    </div>
+                  </div>
+                  <span
+                    className={`shrink-0 inline-flex items-center text-[11px] font-medium px-2 py-0.5 rounded-full ${STATUS_CLASSES[a.status]}`}
+                  >
+                    {STATUS_LABELS[a.status]}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </div>
     </div>
   );

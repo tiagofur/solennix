@@ -125,7 +125,15 @@ export const eventService = {
     extras: { description: string; cost: number; price: number; exclude_utility?: boolean; include_in_checklist?: boolean }[],
     equipment?: { inventoryId: string; quantity: number; notes?: string }[],
     supplies?: { inventoryId: string; quantity: number; unitCost: number; source: 'stock' | 'purchase'; excludeCost?: boolean }[],
-    staff?: { staffId: string; feeAmount?: number | null; roleOverride?: string | null; notes?: string | null }[],
+    staff?: {
+      staffId: string;
+      feeAmount?: number | null;
+      roleOverride?: string | null;
+      notes?: string | null;
+      shiftStart?: string | null;
+      shiftEnd?: string | null;
+      status?: 'pending' | 'confirmed' | 'declined' | 'cancelled' | null;
+    }[],
   ) {
     // Map frontend structure to backend expected JSON
     // Backend expects: { products: [{product_id, ...}], extras: [...], equipment: [...], supplies: [...] }
@@ -173,6 +181,11 @@ export const eventService = {
         fee_amount: st.feeAmount ?? null,
         role_override: st.roleOverride ?? null,
         notes: st.notes ?? null,
+        shift_start: st.shiftStart ?? null,
+        shift_end: st.shiftEnd ?? null,
+        // status omitted when null so backend preserves the existing value
+        // on upsert (treats null/undefined the same as absent).
+        ...(st.status ? { status: st.status } : {}),
       }));
     }
 

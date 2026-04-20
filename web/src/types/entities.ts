@@ -191,6 +191,10 @@ export interface Staff {
 export type StaffInsert = Omit<Staff, 'id' | 'user_id' | 'created_at' | 'updated_at'>
 export type StaffUpdate = Partial<StaffInsert>
 
+// Status de una asignación Staff↔Evento. Default backend: 'confirmed'.
+// En writes: null/omit = preservar el valor actual en upsert.
+export type AssignmentStatus = 'pending' | 'confirmed' | 'declined' | 'cancelled'
+
 // EventStaff: asignación de un Staff a un evento.
 export interface EventStaff {
     id: string
@@ -201,6 +205,10 @@ export interface EventStaff {
     notes?: string | null
     notification_sent_at?: string | null
     notification_last_result?: string | null
+    // Ola 1 — ventana de turno (UTC) y estado de confirmación.
+    shift_start?: string | null
+    shift_end?: string | null
+    status?: AssignmentStatus | null
     created_at: string
 
     // Joined desde staff
@@ -217,6 +225,27 @@ export interface EventStaffAssignment {
     fee_amount?: number | null
     role_override?: string | null
     notes?: string | null
+    shift_start?: string | null
+    shift_end?: string | null
+    status?: AssignmentStatus | null
+}
+
+// ===== Staff Availability (Ola 1) =====
+// GET /api/staff/availability?date=YYYY-MM-DD | ?start=...&end=...
+// Solo devuelve staff CON asignaciones en la ventana pedida.
+export interface StaffAvailabilityAssignment {
+    event_id: string
+    event_name: string
+    event_date: string // YYYY-MM-DD
+    shift_start?: string | null
+    shift_end?: string | null
+    status: AssignmentStatus
+}
+
+export interface StaffAvailability {
+    staff_id: string
+    staff_name: string
+    assignments: StaffAvailabilityAssignment[]
 }
 
 // ===== Pagination =====

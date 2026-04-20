@@ -4,6 +4,7 @@ import type {
   PaginatedResponse,
   PaginationParams,
   Staff,
+  StaffAvailability,
   StaffInsert,
   StaffUpdate,
 } from '../types/entities';
@@ -44,5 +45,13 @@ export const staffService = {
 
   async getByEvent(eventId: string): Promise<EventStaff[]> {
     return api.get<EventStaff[]>(`/events/${eventId}/staff`);
+  },
+
+  async getAvailability(params: { date?: string; start?: string; end?: string }): Promise<StaffAvailability[]> {
+    const query: Record<string, string> = {};
+    if (params.date) query.date = params.date;
+    if (params.start) query.start = params.start;
+    if (params.end) query.end = params.end;
+    return api.get<StaffAvailability[]>('/staff/availability', query);
   },
 };

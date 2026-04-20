@@ -79,6 +79,32 @@ interface Product {
   base_price: number;
 }
 
+// Convert an ISO8601 UTC string (e.g. the backend's shift_start) to the
+// browser-local HH:mm representation used by <input type="time">. Returns
+// null when the input is empty/invalid so the field stays cleared.
+const isoToLocalHHmm = (iso: string | null | undefined): string | null => {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  return `${hh}:${mm}`;
+};
+
+// Combine a YYYY-MM-DD event date with a HH:mm local time into an ISO8601
+// UTC string. Returns null when either piece is missing. Used at submit
+// time to build the shift_start/shift_end payload.
+const hhmmToUtcIso = (eventDate: string | null | undefined, hhmm: string | null): string | null => {
+  if (!eventDate || !hhmm) return null;
+  const [h, m] = hhmm.split(":").map((n) => Number(n));
+  if (Number.isNaN(h) || Number.isNaN(m)) return null;
+  const [y, mo, d] = eventDate.split("-").map((n) => Number(n));
+  if (Number.isNaN(y) || Number.isNaN(mo) || Number.isNaN(d)) return null;
+  const local = new Date(y, mo - 1, d, h, m, 0, 0);
+  if (Number.isNaN(local.getTime())) return null;
+  return local.toISOString();
+};
+
 const eventSchema = z.object({
   client_id: z.string().min(1, "Selecciona un cliente"),
   event_date: z.string().min(1, "Selecciona una fecha"),
@@ -305,6 +331,10 @@ export const EventForm: React.FC = () => {
           fee_amount: r.fee_amount ?? null,
           role_override: r.role_override ?? "",
           notes: r.notes ?? "",
+          // Shift ISO8601 UTC → HH:mm local para edición en UI.
+          shift_start: r.shift_start ? isoToLocalHHmm(r.shift_start) : null,
+          shift_end: r.shift_end ? isoToLocalHHmm(r.shift_end) : null,
+          status: r.status ?? null,
         })),
       );
     }).catch(() => { /* empty list on error — parity with equipment */ });
@@ -656,7 +686,15 @@ export const EventForm: React.FC = () => {
   const handleAddStaff = () => {
     setSelectedStaff((prev) => [
       ...prev,
-      { staff_id: "", fee_amount: null, role_override: "", notes: "" },
+      {
+        staff_id: "",
+        fee_amount: null,
+        role_override: "",
+        notes: "",
+        shift_start: null,
+        shift_end: null,
+        status: null,
+      },
     ]);
   };
 
@@ -880,6 +918,9 @@ export const EventForm: React.FC = () => {
               feeAmount: s.fee_amount,
               roleOverride: s.role_override || null,
               notes: s.notes || null,
+              shiftStart: hhmmToUtcIso(eventDateValue, s.shift_start),
+              shiftEnd: hhmmToUtcIso(eventDateValue, s.shift_end),
+              status: s.status, // null = preserve current value on upsert
             })),
         );
       }
@@ -1156,6 +1197,7 @@ export const EventForm: React.FC = () => {
                   <EventStaff
                     staffCatalog={staffCatalog}
                     selectedStaff={selectedStaff}
+                    eventDate={eventDateValue}
                     onAdd={handleAddStaff}
                     onRemove={handleRemoveStaff}
                     onChange={handleStaffChange}
