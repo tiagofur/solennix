@@ -6,6 +6,9 @@ import type {
   Staff,
   StaffAvailability,
   StaffInsert,
+  StaffTeam,
+  StaffTeamInsert,
+  StaffTeamUpdate,
   StaffUpdate,
 } from '../types/entities';
 
@@ -53,5 +56,27 @@ export const staffService = {
     if (params.start) query.start = params.start;
     if (params.end) query.end = params.end;
     return api.get<StaffAvailability[]>('/staff/availability', query);
+  },
+
+  // ── Staff Teams (Ola 2) ──
+
+  async listTeams(): Promise<StaffTeam[]> {
+    return api.get<StaffTeam[]>('/staff/teams');
+  },
+
+  async getTeam(id: string): Promise<StaffTeam> {
+    return api.get<StaffTeam>(`/staff/teams/${id}`);
+  },
+
+  async createTeam(data: StaffTeamInsert): Promise<StaffTeam> {
+    return api.post<StaffTeam>('/staff/teams', data);
+  },
+
+  async updateTeam(id: string, data: StaffTeamUpdate): Promise<StaffTeam> {
+    return api.put<StaffTeam>(`/staff/teams/${id}`, data);
+  },
+
+  async deleteTeam(id: string): Promise<void> {
+    return api.delete(`/staff/teams/${id}`);
   },
 };

@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
-import { Clock, Plus, Trash2, UserCog } from 'lucide-react';
+import { Clock, Crown, Plus, Trash2, UserCog, Users } from 'lucide-react';
 import type { AssignmentStatus, Staff } from '../../../types/entities';
-import { useStaffAvailability } from '@/hooks/queries/useStaffQueries';
+import { useStaffAvailability, useStaffTeams } from '@/hooks/queries/useStaffQueries';
+import { Modal } from '@/components/Modal';
 
 // Shape tracked in EventForm state — matches EventStaffAssignment but with
 // a deterministic row id so the list can be edited before the event has an
@@ -30,6 +31,10 @@ interface EventStaffProps {
   onAdd: () => void;
   onRemove: (index: number) => void;
   onChange: (index: number, field: keyof SelectedStaffAssignment, value: StaffFieldValue) => void;
+  // Ola 2 — block-add members de un equipo al form. Las filas expandidas
+  // respetan los fee/shift/status defaults (la UI ya se pueden editar fila a
+  // fila). El padre maneja la dedupe y el role_override del team.
+  onAddTeamMembers?: (rows: SelectedStaffAssignment[]) => void;
 }
 
 const STATUS_OPTIONS: { value: AssignmentStatus; label: string }[] = [
@@ -47,8 +52,51 @@ export const EventStaff: React.FC<EventStaffProps> = ({
   onAdd,
   onRemove,
   onChange,
+  onAddTeamMembers,
 }) => {
   const emptyCatalog = staffCatalog.length === 0;
+  const [teamPickerOpen, setTeamPickerOpen] = useState(false);
+  const { data: teams = [], isLoading: loadingTeams } = useStaffTeams();
+
+  const handlePickTeam = async (teamId: string) => {
+    if (!onAddTeamMembers) return;
+    // Evitamos el fetch por-id desde acá para no dependency-injectar un hook
+    // dinámico. Usamos el ListTeams (member_count) solo para el menú; al
+    // seleccionar delegamos el fetch-and-expand al padre vía callback con
+    // el id, pero por simplicidad buscamos miembros con un extra fetch en
+    // el padre. Para mantener este componente self-contained: resolvemos
+    // via fetch directo al service.
+    const { staffService } = await import('@/services/staffService');
+    try {
+      const team = await staffService.getTeam(teamId);
+      const members = [...(team.members ?? [])].sort((a, b) => a.position - b.position);
+      const existingIds = new Set(selectedStaff.map((s) => s.staff_id).filter(Boolean));
+      const rows: SelectedStaffAssignment[] = [];
+      for (const m of members) {
+        if (existingIds.has(m.staff_id)) continue;
+        const staff = staffCatalog.find((s) => s.id === m.staff_id);
+        // Si el staff del equipo no está en el catálogo local (p.ej. filtro),
+        // igual lo agregamos por id — el backend valida en el upsert.
+        const staffRole = staff?.role_label ?? null;
+        const teamRole = team.role_label ?? null;
+        const roleOverride = staffRole ? '' : teamRole ?? '';
+        rows.push({
+          staff_id: m.staff_id,
+          fee_amount: null,
+          role_override: roleOverride,
+          notes: '',
+          shift_start: null,
+          shift_end: null,
+          status: null,
+        });
+      }
+      if (rows.length > 0) onAddTeamMembers(rows);
+      setTeamPickerOpen(false);
+    } catch {
+      // El service/api ya muestra toasts globales para errores HTTP.
+      setTeamPickerOpen(false);
+    }
+  };
 
   // Availability — solo pedimos si tenemos fecha. El hook se skipea en caso contrario.
   const { data: availability = [] } = useStaffAvailability(eventDate || null);
@@ -247,16 +295,80 @@ export const EventStaff: React.FC<EventStaffProps> = ({
             );
           })}
 
-          <button
-            type="button"
-            onClick={onAdd}
-            className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors"
-          >
-            <Plus className="h-4 w-4" aria-hidden="true" />
-            Agregar colaborador
-          </button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={onAdd}
+              className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors"
+            >
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              Agregar colaborador
+            </button>
+            {onAddTeamMembers && (
+              <button
+                type="button"
+                onClick={() => setTeamPickerOpen(true)}
+                className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-text bg-surface-alt hover:bg-card border border-border rounded-lg transition-colors"
+              >
+                <Users className="h-4 w-4" aria-hidden="true" />
+                Agregar equipo completo
+              </button>
+            )}
+          </div>
         </>
       )}
+
+      <Modal
+        isOpen={teamPickerOpen}
+        onClose={() => setTeamPickerOpen(false)}
+        title="Seleccioná un equipo"
+        maxWidth="lg"
+      >
+        {loadingTeams ? (
+          <p className="text-sm text-text-secondary">Cargando equipos…</p>
+        ) : teams.length === 0 ? (
+          <div className="text-sm text-text-secondary space-y-2">
+            <p>Sin equipos todavía.</p>
+            <a
+              href="/staff/teams/new"
+              className="inline-flex items-center gap-1 text-primary hover:underline"
+            >
+              <Plus className="h-4 w-4" aria-hidden="true" /> Agregá tu primera cuadrilla
+            </a>
+          </div>
+        ) : (
+          <ul className="divide-y divide-border max-h-96 overflow-y-auto">
+            {teams.map((t) => (
+              <li key={t.id}>
+                <button
+                  type="button"
+                  onClick={() => handlePickTeam(t.id)}
+                  className="w-full flex items-start justify-between gap-3 py-3 px-1 hover:bg-surface-alt/60 transition-colors text-left"
+                >
+                  <div className="min-w-0 flex items-start gap-3">
+                    <div
+                      className="h-9 w-9 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-primary shrink-0"
+                      aria-hidden="true"
+                    >
+                      <Users className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-sm font-medium text-text truncate">{t.name}</div>
+                      {t.role_label && (
+                        <div className="text-xs text-text-secondary truncate">{t.role_label}</div>
+                      )}
+                    </div>
+                  </div>
+                  <span className="shrink-0 inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-accent/10 text-accent dark:bg-accent/20">
+                    <Crown className="h-3 w-3" aria-hidden="true" />
+                    {t.member_count ?? 0}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Modal>
     </div>
   );
 };

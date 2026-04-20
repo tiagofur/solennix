@@ -44,6 +44,9 @@ export const queryKeys = {
     detail: (id: string) => ['staff', id] as const,
     availability: (date: string) => ['staff', 'availability', date] as const,
     assignments: (staffId: string) => ['staff', staffId, 'assignments'] as const,
+    // Ola 2 — staff teams (cuadrillas).
+    teams: ['staff', 'teams'] as const,
+    team: (id: string) => ['staff', 'teams', id] as const,
   },
   payments: {
     byEvent: (eventId: string) => ['payments', 'event', eventId] as const,

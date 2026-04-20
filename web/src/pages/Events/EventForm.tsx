@@ -727,6 +727,16 @@ export const EventForm: React.FC = () => {
     setSelectedStaff((prev) => prev.filter((_, i) => i !== index));
   };
 
+  // Ola 2 — expandir un equipo en filas, deduplicando contra los ya presentes.
+  const handleAddTeamMembers = (rows: SelectedStaffAssignment[]) => {
+    setSelectedStaff((prev) => {
+      const existing = new Set(prev.map((r) => r.staff_id).filter(Boolean));
+      const toAdd = rows.filter((r) => r.staff_id && !existing.has(r.staff_id));
+      if (toAdd.length === 0) return prev;
+      return [...prev, ...toAdd];
+    });
+  };
+
   const handleStaffChange = (
     index: number,
     field: keyof SelectedStaffAssignment,
@@ -1230,6 +1240,7 @@ export const EventForm: React.FC = () => {
                     onAdd={handleAddStaff}
                     onRemove={handleRemoveStaff}
                     onChange={handleStaffChange}
+                    onAddTeamMembers={handleAddTeamMembers}
                   />
                 </div>
               )}

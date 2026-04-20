@@ -9,6 +9,7 @@ import {
   Mail,
   UserCog,
   Eye,
+  Users,
 } from "lucide-react";
 import { RowActionMenu } from "@/components/RowActionMenu";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
@@ -99,13 +100,22 @@ export const StaffList: React.FC = () => {
             Tu agenda de colaboradores: fotógrafos, DJs, meseros, coordinadores.
           </p>
         </div>
-        <Link
-          to="/staff/new"
-          className="inline-flex items-center justify-center px-4 py-2 text-sm font-bold rounded-xl text-white premium-gradient shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all hover:scale-[1.02]"
-        >
-          <Plus className="h-5 w-5 mr-2" aria-hidden="true" />
-          Nuevo colaborador
-        </Link>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Link
+            to="/staff/teams"
+            className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-xl text-text bg-surface-alt hover:bg-card border border-border transition-colors"
+          >
+            <Users className="h-4 w-4 mr-2" aria-hidden="true" />
+            Equipos
+          </Link>
+          <Link
+            to="/staff/new"
+            className="inline-flex items-center justify-center px-4 py-2 text-sm font-bold rounded-xl text-white premium-gradient shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all hover:scale-[1.02]"
+          >
+            <Plus className="h-5 w-5 mr-2" aria-hidden="true" />
+            Nuevo colaborador
+          </Link>
+        </div>
       </div>
 
       <div className="relative max-w-md">

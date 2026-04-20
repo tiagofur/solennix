@@ -39,6 +39,9 @@ const ClientDetails = React.lazy(() => import("@/pages/Clients/ClientDetails").t
 const StaffList = React.lazy(() => import("@/pages/Staff/StaffList").then((m) => ({ default: m.StaffList })));
 const StaffForm = React.lazy(() => import("@/pages/Staff/StaffForm").then((m) => ({ default: m.StaffForm })));
 const StaffDetails = React.lazy(() => import("@/pages/Staff/StaffDetails").then((m) => ({ default: m.StaffDetails })));
+const StaffTeamList = React.lazy(() => import("@/pages/Staff/Teams/StaffTeamList").then((m) => ({ default: m.StaffTeamList })));
+const StaffTeamForm = React.lazy(() => import("@/pages/Staff/Teams/StaffTeamForm").then((m) => ({ default: m.StaffTeamForm })));
+const StaffTeamDetails = React.lazy(() => import("@/pages/Staff/Teams/StaffTeamDetails").then((m) => ({ default: m.StaffTeamDetails })));
 
 const ProductList = React.lazy(() => import("@/pages/Products/ProductList").then((m) => ({ default: m.ProductList })));
 const ProductForm = React.lazy(() => import("@/pages/Products/ProductForm").then((m) => ({ default: m.ProductForm })));
@@ -110,6 +113,10 @@ function App() {
                 <Route path="/clients/:id" element={<ClientDetails />} />
                 <Route path="/clients/:id/edit" element={<ClientForm />} />
                 <Route path="/staff" element={<StaffList />} />
+                <Route path="/staff/teams" element={<StaffTeamList />} />
+                <Route path="/staff/teams/new" element={<StaffTeamForm />} />
+                <Route path="/staff/teams/:id" element={<StaffTeamDetails />} />
+                <Route path="/staff/teams/:id/edit" element={<StaffTeamForm />} />
                 <Route path="/staff/new" element={<StaffForm />} />
                 <Route path="/staff/:id" element={<StaffDetails />} />
                 <Route path="/staff/:id/edit" element={<StaffForm />} />
