@@ -813,8 +813,8 @@ func (m *MockDashboardRepo) GetRevenueChart(ctx context.Context, userID uuid.UUI
 	return args.Get(0).([]repository.RevenueDataPoint), args.Error(1)
 }
 
-func (m *MockDashboardRepo) GetEventsByStatus(ctx context.Context, userID uuid.UUID) ([]repository.EventStatusCount, error) {
-	args := m.Called(ctx, userID)
+func (m *MockDashboardRepo) GetEventsByStatus(ctx context.Context, userID uuid.UUID, scope string) ([]repository.EventStatusCount, error) {
+	args := m.Called(ctx, userID, scope)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}

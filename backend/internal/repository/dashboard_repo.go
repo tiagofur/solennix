@@ -253,11 +253,17 @@ func (r *DashboardRepo) GetRevenueChart(ctx context.Context, userID uuid.UUID, p
 }
 
 // GetEventsByStatus returns event counts grouped by status for the user.
-func (r *DashboardRepo) GetEventsByStatus(ctx context.Context, userID uuid.UUID) ([]EventStatusCount, error) {
+// scope = "month" restricts to events in the current calendar month;
+// scope = "all" (or anything else) counts every event.
+func (r *DashboardRepo) GetEventsByStatus(ctx context.Context, userID uuid.UUID, scope string) ([]EventStatusCount, error) {
 	query := `
 		SELECT status, COUNT(*) AS count
 		FROM events
-		WHERE user_id = $1
+		WHERE user_id = $1`
+	if scope == "month" {
+		query += ` AND DATE_TRUNC('month', event_date) = DATE_TRUNC('month', CURRENT_DATE)`
+	}
+	query += `
 		GROUP BY status
 		ORDER BY count DESC`
 

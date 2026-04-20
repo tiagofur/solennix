@@ -176,7 +176,7 @@ func TestGetEventsByStatus(t *testing.T) {
 			{Status: "confirmed", Count: 10},
 			{Status: "pending", Count: 5},
 		}
-		repo.On("GetEventsByStatus", mock.Anything, mock.Anything).Return(data, nil)
+		repo.On("GetEventsByStatus", mock.Anything, mock.Anything, "all").Return(data, nil)
 
 		req, _ := dashboardReq("/api/dashboard/events-by-status")
 		rr := httptest.NewRecorder()
@@ -187,11 +187,37 @@ func TestGetEventsByStatus(t *testing.T) {
 		repo.AssertExpectations(t)
 	})
 
+	t.Run("GivenMonthScope_WhenCalled_ThenUseMonth", func(t *testing.T) {
+		repo := new(MockDashboardRepo)
+		h := newDashboardHandler(repo)
+
+		repo.On("GetEventsByStatus", mock.Anything, mock.Anything, "month").Return([]repository.EventStatusCount{}, nil)
+
+		req, _ := dashboardReq("/api/dashboard/events-by-status?scope=month")
+		rr := httptest.NewRecorder()
+		h.GetEventsByStatus(rr, req)
+
+		assert.Equal(t, http.StatusOK, rr.Code)
+		repo.AssertExpectations(t)
+	})
+
+	t.Run("GivenInvalidScope_WhenCalled_ThenBadRequest", func(t *testing.T) {
+		repo := new(MockDashboardRepo)
+		h := newDashboardHandler(repo)
+
+		req, _ := dashboardReq("/api/dashboard/events-by-status?scope=invalid")
+		rr := httptest.NewRecorder()
+		h.GetEventsByStatus(rr, req)
+
+		assert.Equal(t, http.StatusBadRequest, rr.Code)
+		assert.Contains(t, rr.Body.String(), "Invalid scope")
+	})
+
 	t.Run("GivenRepoError_WhenGetEventsByStatus_ThenInternalServerError", func(t *testing.T) {
 		repo := new(MockDashboardRepo)
 		h := newDashboardHandler(repo)
 
-		repo.On("GetEventsByStatus", mock.Anything, mock.Anything).Return(nil, errors.New("db error"))
+		repo.On("GetEventsByStatus", mock.Anything, mock.Anything, "all").Return(nil, errors.New("db error"))
 
 		req, _ := dashboardReq("/api/dashboard/events-by-status")
 		rr := httptest.NewRecorder()

@@ -148,7 +148,7 @@ type FullPaymentRepository interface {
 type DashboardRepository interface {
 	GetKPIs(ctx context.Context, userID uuid.UUID) (*repository.DashboardKPIs, error)
 	GetRevenueChart(ctx context.Context, userID uuid.UUID, period string) ([]repository.RevenueDataPoint, error)
-	GetEventsByStatus(ctx context.Context, userID uuid.UUID) ([]repository.EventStatusCount, error)
+	GetEventsByStatus(ctx context.Context, userID uuid.UUID, scope string) ([]repository.EventStatusCount, error)
 	GetTopClients(ctx context.Context, userID uuid.UUID, limit int) ([]repository.TopClient, error)
 	GetProductDemand(ctx context.Context, userID uuid.UUID) ([]repository.ProductDemandItem, error)
 	GetForecast(ctx context.Context, userID uuid.UUID) ([]repository.ForecastDataPoint, error)

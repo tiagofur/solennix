@@ -58,11 +58,23 @@ func (h *DashboardHandler) GetRevenueChart(w http.ResponseWriter, r *http.Reques
 }
 
 // GetEventsByStatus returns event counts grouped by status.
-// GET /api/dashboard/events-by-status
+// GET /api/dashboard/events-by-status?scope=month|all
+// Default scope is "all" for backwards compatibility. The dashboard uses
+// scope=month so its status chart is consistent with the other
+// month-scoped KPI cards.
 func (h *DashboardHandler) GetEventsByStatus(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 
-	data, err := h.dashboardRepo.GetEventsByStatus(r.Context(), userID)
+	scope := r.URL.Query().Get("scope")
+	if scope == "" {
+		scope = "all"
+	}
+	if scope != "month" && scope != "all" {
+		writeError(w, http.StatusBadRequest, "Invalid scope. Must be 'month' or 'all'")
+		return
+	}
+
+	data, err := h.dashboardRepo.GetEventsByStatus(r.Context(), userID, scope)
 	if err != nil {
 		slog.Error("dashboard: failed to get events by status", "error", err, "user_id", userID)
 		writeError(w, http.StatusInternalServerError, "Failed to get events by status")
