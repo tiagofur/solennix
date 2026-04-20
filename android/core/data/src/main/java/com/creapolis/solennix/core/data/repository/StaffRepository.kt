@@ -11,6 +11,7 @@ import com.creapolis.solennix.core.database.entity.asExternalModel
 import com.creapolis.solennix.core.model.EventStaff
 import com.creapolis.solennix.core.model.PaginatedResponse
 import com.creapolis.solennix.core.model.Staff
+import com.creapolis.solennix.core.model.StaffAvailability
 import com.creapolis.solennix.core.network.ApiService
 import com.creapolis.solennix.core.network.Endpoints
 import com.creapolis.solennix.core.network.SolennixException
@@ -48,6 +49,17 @@ interface StaffRepository {
      * No-op silencioso si el GET falla (la UI cae al cache).
      */
     suspend fun syncEventStaff(eventId: String): List<EventStaff>
+
+    /**
+     * `GET /api/staff/availability` — sólo devuelve colaboradores CON asignaciones
+     * en la ventana consultada. Si se pasa [date] se consulta ese día; si se pasan
+     * [start]/[end] se consulta el rango.
+     */
+    suspend fun getStaffAvailability(
+        date: String? = null,
+        start: String? = null,
+        end: String? = null
+    ): List<StaffAvailability>
 }
 
 @Singleton
@@ -126,5 +138,18 @@ class OfflineFirstStaffRepository @Inject constructor(
         val remote: List<EventStaff> = apiService.get(Endpoints.eventStaff(eventId))
         staffDao.replaceEventStaff(eventId, remote.map { it.asEntity() })
         return remote
+    }
+
+    override suspend fun getStaffAvailability(
+        date: String?,
+        start: String?,
+        end: String?
+    ): List<StaffAvailability> {
+        val params = buildMap {
+            if (!date.isNullOrBlank()) put("date", date)
+            if (!start.isNullOrBlank()) put("start", start)
+            if (!end.isNullOrBlank()) put("end", end)
+        }
+        return apiService.get(Endpoints.STAFF_AVAILABILITY, params)
     }
 }

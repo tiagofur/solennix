@@ -17,6 +17,16 @@ status: active
 **Fecha:** Abril 2026
 **Version:** 1.2
 
+> [!info] 2026-04-19 — Personal Ola 1: turnos + estado RSVP + disponibilidad (paridad iOS · Android · Web · Backend)
+> Feature Personal (shipped 2026-04-16 como catálogo plano + costo por evento) expandida con la capa operativa. Motivación del usuario: escalar el uso para equipos de meseros / empresas de catering, sin cerrar la puerta a que el mismo modelo sirva al organizador con plantilla propia. Phase 3 (login del colaborador) se mantiene intacto como roadmap futuro.
+> - **Backend (migration 043)**: `event_staff` recibe `shift_start`, `shift_end` (TIMESTAMPTZ nullables — pueden cruzar medianoche) y `status` (enum `pending | confirmed | declined | cancelled`, default `confirmed`). Constraint `shift_end > shift_start`. Todo aditivo — filas existentes siguen válidas.
+> - **Backend UPSERT resiliente**: `UpdateEventItems` en `event_repo.go` usa `COALESCE($status, event_staff.status)` para preservar el RSVP cuando un cliente viejo no envía el campo. Mismo patrón que `notification_sent_at` de Phase 2.
+> - **Backend endpoint**: `GET /api/staff/availability?date=YYYY-MM-DD` (o rango `start`/`end`). Devuelve solo staff con asignaciones `pending|confirmed` en la ventana; el cliente infiere "libre" por ausencia.
+> - **iOS / Android / Web**: modelos extendidos con `shift_start`/`shift_end`/`status` (opcionales — retrocompatibles). Step 4 del EventForm suma pickers de horario colapsables ("Agregar horario (opcional)") y selector de estado con badges de color (amber / green / rose muted / slate). Indicador "Ocupado ese día" al lado de los nombres en el selector de staff cuando la fecha del evento matchea. **Sin pantallas nuevas.**
+> - **UX**: strings Rioplatense ("Sin confirmar", "Confirmado", "Rechazó", "Cancelado"). Defaults inteligentes — `status = confirmed` y `shift_start/end = NULL` mantienen el comportamiento pre-Ola-1 para quienes no quieren usar la feature.
+> - **Sin gating de plan** en esta ola — todos los planes pueden usar turnos / estado / disponibilidad. Gating sigue siendo solo en Phase 2 (Pro+) para el email, y Phase 3 (Business+) para el login del colaborador.
+> - **Roadmap siguiente** (no incluido en esta ola, documentado en [[02_FEATURES#15.ter Personal]]): Ola 2 — equipos (`staff_teams`) para asignar cuadrillas en bloque; Ola 3 — staff como servicio vendible vía `Product.staff_team_id` opcional (markup vs. costo interno).
+
 > [!info] 2026-04-19 — iOS: botón explícito "$ Anticipo" (paridad con Web/Android, issue #80 Opción B)
 > iOS quedaba sin el botón directo para registrar anticipo en `EventPaymentsDetailView` — el usuario tenía que tipear el monto a mano. Cerrada la brecha con `viewModel.depositBalance` como saldo pendiente del anticipo y un `PremiumButton` dinámico que aparece cuando `depositBalance > 0.01`.
 > - Nuevo botón "$ Anticipo - $X" en `EventPaymentsDetailView.swift` (junto a "Registrar Pago" / "Liquidar"), visible mientras quede anticipo por cobrar.

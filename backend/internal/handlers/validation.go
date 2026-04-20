@@ -414,6 +414,21 @@ func ValidateEventStaff(es *models.EventStaff) error {
 			return err
 		}
 	}
+	if es.ShiftStart != nil && es.ShiftEnd != nil && !es.ShiftEnd.After(*es.ShiftStart) {
+		return ValidationError{Field: "shift_end", Message: "must be after shift_start"}
+	}
+	// Status is optional. Nil = keep current (UPSERT uses COALESCE). Empty string
+	// from an older client is treated the same as nil for preservation semantics.
+	if es.Status != nil && *es.Status != "" {
+		switch *es.Status {
+		case models.AssignmentStatusPending,
+			models.AssignmentStatusConfirmed,
+			models.AssignmentStatusDeclined,
+			models.AssignmentStatusCancelled:
+		default:
+			return ValidationError{Field: "status", Message: "must be one of: pending, confirmed, declined, cancelled"}
+		}
+	}
 	return nil
 }
 

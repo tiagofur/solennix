@@ -1946,9 +1946,16 @@ private fun StaffAssignmentPanel(viewModel: EventFormViewModel) {
             viewModel.selectedStaff.forEach { assignment ->
                 StaffAssignmentCard(
                     assignment = assignment,
+                    defaultStart = viewModel.startTime,
+                    defaultEnd = viewModel.endTime,
                     onFeeChange = { viewModel.updateStaffFee(assignment.staffId, it) },
                     onRoleChange = { viewModel.updateStaffRoleOverride(assignment.staffId, it) },
                     onNotesChange = { viewModel.updateStaffNotes(assignment.staffId, it) },
+                    onShiftChange = { start, end ->
+                        viewModel.updateStaffShift(assignment.staffId, start, end)
+                    },
+                    onShiftClear = { viewModel.clearStaffShift(assignment.staffId) },
+                    onStatusChange = { viewModel.updateStaffStatus(assignment.staffId, it) },
                     onRemove = { viewModel.removeStaffAssignment(assignment.staffId) }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
@@ -1973,17 +1980,54 @@ private fun StaffAssignmentPanel(viewModel: EventFormViewModel) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun StaffAssignmentCard(
     assignment: SelectedStaffAssignment,
+    defaultStart: String,
+    defaultEnd: String,
     onFeeChange: (Double?) -> Unit,
     onRoleChange: (String) -> Unit,
     onNotesChange: (String) -> Unit,
+    onShiftChange: (java.time.LocalTime?, java.time.LocalTime?) -> Unit,
+    onShiftClear: () -> Unit,
+    onStatusChange: (AssignmentStatus) -> Unit,
     onRemove: () -> Unit
 ) {
     var feeText by remember(assignment.staffId) {
         mutableStateOf(assignment.feeAmount?.let { "%.2f".format(it) } ?: "")
     }
+
+    val currentStatus = remember(assignment.status) {
+        AssignmentStatus.fromString(assignment.status)
+    }
+    var shiftExpanded by remember(assignment.staffId) {
+        mutableStateOf(!assignment.shiftStart.isNullOrBlank() || !assignment.shiftEnd.isNullOrBlank())
+    }
+    val zone = java.time.ZoneId.systemDefault()
+    val startLocalTime = remember(assignment.shiftStart) {
+        assignment.shiftStart?.let {
+            try {
+                java.time.Instant.parse(it).atZone(zone).toLocalTime()
+            } catch (_: Exception) {
+                null
+            }
+        }
+    }
+    val endLocalTime = remember(assignment.shiftEnd) {
+        assignment.shiftEnd?.let {
+            try {
+                java.time.Instant.parse(it).atZone(zone).toLocalTime()
+            } catch (_: Exception) {
+                null
+            }
+        }
+    }
+    val defaultStartLocal = remember(defaultStart) { parseHHmmOrNull(defaultStart) }
+    val defaultEndLocal = remember(defaultEnd) { parseHHmmOrNull(defaultEnd) }
+
+    var showStartPicker by remember { mutableStateOf(false) }
+    var showEndPicker by remember { mutableStateOf(false) }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -2017,6 +2061,28 @@ private fun StaffAssignmentCard(
             }
 
             Spacer(modifier = Modifier.height(8.dp))
+
+            // Status chips — sin confirmar / confirmado / rechazó / cancelado.
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                AssignmentStatus.values().forEach { opt ->
+                    FilterChip(
+                        selected = opt == currentStatus,
+                        onClick = { onStatusChange(opt) },
+                        label = { Text(opt.uiLabel()) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = opt.uiColor().copy(alpha = 0.18f),
+                            selectedLabelColor = opt.uiColor()
+                        )
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
 
             AdaptiveFormRow(
                 left = {
@@ -2053,8 +2119,130 @@ private fun StaffAssignmentCard(
                 modifier = Modifier.fillMaxWidth(),
                 maxLines = 3
             )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Sección expandible del turno — oculta por default.
+            TextButton(
+                onClick = { shiftExpanded = !shiftExpanded },
+                contentPadding = PaddingValues(0.dp)
+            ) {
+                Icon(
+                    if (shiftExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                    contentDescription = null
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    if (shiftExpanded) "Horario del turno" else "Agregar horario (opcional)",
+                    style = MaterialTheme.typography.labelLarge
+                )
+            }
+
+            if (shiftExpanded) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedButton(
+                        onClick = { showStartPicker = true },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(Icons.Default.Schedule, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            startLocalTime?.let { formatTime(it) } ?: "Entrada"
+                        )
+                    }
+                    OutlinedButton(
+                        onClick = { showEndPicker = true },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(Icons.Default.Schedule, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            endLocalTime?.let { formatTime(it) } ?: "Salida"
+                        )
+                    }
+                    if (startLocalTime != null || endLocalTime != null) {
+                        IconButton(onClick = onShiftClear) {
+                            Icon(
+                                Icons.Default.Clear,
+                                contentDescription = "Limpiar turno",
+                                tint = SolennixTheme.colors.secondaryText
+                            )
+                        }
+                    }
+                }
+            }
+
+            if (showStartPicker) {
+                val pickerState = rememberTimePickerState(
+                    initialHour = (startLocalTime ?: defaultStartLocal)?.hour ?: 14,
+                    initialMinute = (startLocalTime ?: defaultStartLocal)?.minute ?: 0,
+                    is24Hour = true
+                )
+                AlertDialog(
+                    onDismissRequest = { showStartPicker = false },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            val picked = java.time.LocalTime.of(pickerState.hour, pickerState.minute)
+                            onShiftChange(picked, endLocalTime)
+                            showStartPicker = false
+                        }) { Text("Listo") }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showStartPicker = false }) { Text("Cancelar") }
+                    },
+                    text = { TimePicker(state = pickerState) }
+                )
+            }
+            if (showEndPicker) {
+                val pickerState = rememberTimePickerState(
+                    initialHour = (endLocalTime ?: defaultEndLocal)?.hour ?: 20,
+                    initialMinute = (endLocalTime ?: defaultEndLocal)?.minute ?: 0,
+                    is24Hour = true
+                )
+                AlertDialog(
+                    onDismissRequest = { showEndPicker = false },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            val picked = java.time.LocalTime.of(pickerState.hour, pickerState.minute)
+                            onShiftChange(startLocalTime, picked)
+                            showEndPicker = false
+                        }) { Text("Listo") }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showEndPicker = false }) { Text("Cancelar") }
+                    },
+                    text = { TimePicker(state = pickerState) }
+                )
+            }
         }
     }
+}
+
+private fun parseHHmmOrNull(hhmm: String): java.time.LocalTime? = try {
+    java.time.LocalTime.parse(hhmm)
+} catch (_: Exception) {
+    null
+}
+
+private fun formatTime(time: java.time.LocalTime): String =
+    time.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"))
+
+private fun AssignmentStatus.uiLabel(): String = when (this) {
+    AssignmentStatus.PENDING -> "Sin confirmar"
+    AssignmentStatus.CONFIRMED -> "Confirmado"
+    AssignmentStatus.DECLINED -> "Rechazó"
+    AssignmentStatus.CANCELLED -> "Cancelado"
+}
+
+private fun AssignmentStatus.uiColor(): Color = when (this) {
+    AssignmentStatus.PENDING -> Color(0xFFB7791F)      // amber
+    AssignmentStatus.CONFIRMED -> Color(0xFF2F855A)    // green
+    AssignmentStatus.DECLINED -> Color(0xFFC53030)     // red muted
+    AssignmentStatus.CANCELLED -> Color(0xFF718096)    // gray
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -2065,6 +2253,7 @@ private fun StaffPickerSheet(
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val availableStaff by viewModel.availableStaff.collectAsStateWithLifecycle()
+    val availability by viewModel.staffAvailability.collectAsStateWithLifecycle()
     var query by remember { mutableStateOf("") }
 
     val selectedIds = remember(viewModel.selectedStaff.size) {
@@ -2156,6 +2345,21 @@ private fun StaffPickerSheet(
                                             subtitle,
                                             style = MaterialTheme.typography.bodySmall,
                                             color = SolennixTheme.colors.secondaryText
+                                        )
+                                    }
+                                }
+                                if (availability[staff.id]?.isNotEmpty() == true) {
+                                    Surface(
+                                        shape = MaterialTheme.shapes.small,
+                                        color = Color(0xFFB7791F).copy(alpha = 0.15f),
+                                        modifier = Modifier.padding(end = 8.dp)
+                                    ) {
+                                        Text(
+                                            "Ocupado ese día",
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = Color(0xFFB7791F),
+                                            fontWeight = FontWeight.Medium
                                         )
                                     }
                                 }

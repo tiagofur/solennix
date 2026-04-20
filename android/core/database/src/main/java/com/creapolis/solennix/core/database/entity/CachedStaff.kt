@@ -71,7 +71,11 @@ data class CachedEventStaff(
     @ColumnInfo(name = "staff_name") val staffName: String?,
     @ColumnInfo(name = "staff_role_label") val staffRoleLabel: String?,
     @ColumnInfo(name = "staff_phone") val staffPhone: String?,
-    @ColumnInfo(name = "staff_email") val staffEmail: String?
+    @ColumnInfo(name = "staff_email") val staffEmail: String?,
+    // Ola 1 (operational layer)
+    @ColumnInfo(name = "shift_start") val shiftStart: String? = null,
+    @ColumnInfo(name = "shift_end") val shiftEnd: String? = null,
+    val status: String? = null
 )
 
 fun CachedEventStaff.asExternalModel() = EventStaff(
@@ -87,7 +91,10 @@ fun CachedEventStaff.asExternalModel() = EventStaff(
     staffName = staffName,
     staffRoleLabel = staffRoleLabel,
     staffPhone = staffPhone,
-    staffEmail = staffEmail
+    staffEmail = staffEmail,
+    shiftStart = shiftStart,
+    shiftEnd = shiftEnd,
+    status = status
 )
 
 fun EventStaff.asEntity() = CachedEventStaff(
@@ -103,5 +110,8 @@ fun EventStaff.asEntity() = CachedEventStaff(
     staffName = staffName,
     staffRoleLabel = staffRoleLabel,
     staffPhone = staffPhone,
-    staffEmail = staffEmail
+    staffEmail = staffEmail,
+    shiftStart = shiftStart,
+    shiftEnd = shiftEnd,
+    status = status
 )

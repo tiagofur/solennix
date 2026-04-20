@@ -335,9 +335,18 @@ type Staff struct {
 	UpdatedAt              time.Time  `json:"updated_at"`
 }
 
+// AssignmentStatus values for EventStaff.Status.
+const (
+	AssignmentStatusPending   = "pending"
+	AssignmentStatusConfirmed = "confirmed"
+	AssignmentStatusDeclined  = "declined"
+	AssignmentStatusCancelled = "cancelled"
+)
+
 // EventStaff is the assignment of a Staff row to an Event. Fee is per-assignment
 // because the same person may charge differently per event. NotificationSentAt
 // and NotificationLastResult are Phase 2 tracking columns (dedup + outcome).
+// ShiftStart/End and Status are Ola 1 operational fields (shift window + RSVP).
 type EventStaff struct {
 	ID                     uuid.UUID  `json:"id"`
 	EventID                uuid.UUID  `json:"event_id"`
@@ -345,6 +354,12 @@ type EventStaff struct {
 	FeeAmount              *float64   `json:"fee_amount,omitempty"`
 	RoleOverride           *string    `json:"role_override,omitempty"`
 	Notes                  *string    `json:"notes,omitempty"`
+	ShiftStart             *time.Time `json:"shift_start,omitempty"`
+	ShiftEnd               *time.Time `json:"shift_end,omitempty"`
+	// Status is a pointer so an omitted field in the payload is distinguishable
+	// from an empty string. UPSERT uses COALESCE to preserve the stored status
+	// when clients (e.g. older app versions) don't send the field at all.
+	Status *string `json:"status,omitempty"`
 	NotificationSentAt     *time.Time `json:"notification_sent_at,omitempty"`
 	NotificationLastResult *string    `json:"notification_last_result,omitempty"`
 	CreatedAt              time.Time  `json:"created_at"`

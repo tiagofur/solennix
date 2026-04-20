@@ -42,6 +42,8 @@ export const queryKeys = {
     paginated: (page?: number, limit?: number, sort?: string, order?: string) =>
       ['staff', 'paginated', { page, limit, sort, order }] as const,
     detail: (id: string) => ['staff', id] as const,
+    availability: (date: string) => ['staff', 'availability', date] as const,
+    assignments: (staffId: string) => ['staff', staffId, 'assignments'] as const,
   },
   payments: {
     byEvent: (eventId: string) => ['payments', 'event', eventId] as const,

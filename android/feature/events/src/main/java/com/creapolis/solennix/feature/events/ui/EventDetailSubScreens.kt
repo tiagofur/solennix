@@ -12,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -22,6 +23,7 @@ import com.creapolis.solennix.core.designsystem.component.PremiumButton
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.component.StatusBadge
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
+import com.creapolis.solennix.core.model.AssignmentStatus
 import com.creapolis.solennix.core.model.DiscountType
 import com.creapolis.solennix.core.model.SupplySource
 import com.creapolis.solennix.core.model.extensions.asMXN
@@ -1325,6 +1327,22 @@ fun EventStaffScreen(
                                 }
                             }
 
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                AssignmentStatusBadge(assignment.status)
+                                val window = formatShiftWindow(assignment.shiftStart, assignment.shiftEnd)
+                                if (window != null) {
+                                    Text(
+                                        window,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = SolennixTheme.colors.secondaryText
+                                    )
+                                }
+                            }
+
                             val contact = listOfNotNull(
                                 assignment.staffPhone?.takeIf { it.isNotBlank() },
                                 assignment.staffEmail?.takeIf { it.isNotBlank() }
@@ -1351,5 +1369,52 @@ fun EventStaffScreen(
                 }
             }
         }
+    }
+}
+
+// ==================== Assignment status helpers ====================
+
+@Composable
+private fun AssignmentStatusBadge(rawStatus: String?) {
+    val status = AssignmentStatus.fromString(rawStatus)
+    val (label, color) = when (status) {
+        AssignmentStatus.PENDING -> "Sin confirmar" to Color(0xFFB7791F)
+        AssignmentStatus.CONFIRMED -> "Confirmado" to Color(0xFF2F855A)
+        AssignmentStatus.DECLINED -> "Rechazó" to Color(0xFFC53030)
+        AssignmentStatus.CANCELLED -> "Cancelado" to Color(0xFF718096)
+    }
+    Surface(
+        shape = MaterialTheme.shapes.small,
+        color = color.copy(alpha = 0.15f)
+    ) {
+        Text(
+            label,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+            style = MaterialTheme.typography.labelSmall,
+            color = color,
+            fontWeight = FontWeight.Medium
+        )
+    }
+}
+
+/**
+ * Formatea el turno como `HH:mm – HH:mm` en hora local. Devuelve null si
+ * ambos extremos son null. Si solo uno está seteado, muestra ese extremo.
+ */
+private fun formatShiftWindow(shiftStartIso: String?, shiftEndIso: String?): String? {
+    if (shiftStartIso.isNullOrBlank() && shiftEndIso.isNullOrBlank()) return null
+    val zone = java.time.ZoneId.systemDefault()
+    val fmt = java.time.format.DateTimeFormatter.ofPattern("HH:mm")
+    val start = shiftStartIso?.let {
+        runCatching { java.time.Instant.parse(it).atZone(zone).toLocalTime().format(fmt) }.getOrNull()
+    }
+    val end = shiftEndIso?.let {
+        runCatching { java.time.Instant.parse(it).atZone(zone).toLocalTime().format(fmt) }.getOrNull()
+    }
+    return when {
+        start != null && end != null -> "$start – $end"
+        start != null -> "Desde $start"
+        end != null -> "Hasta $end"
+        else -> null
     }
 }

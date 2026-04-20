@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -161,4 +162,99 @@ func (r *StaffRepo) Search(ctx context.Context, userID uuid.UUID, query string) 
 		return nil, fmt.Errorf("error iterating staff search: %w", err)
 	}
 	return result, nil
+}
+
+// StaffAvailabilityAssignment is a single assignment for a staff member inside a
+// date window, used to surface "who is busy" in the event form.
+type StaffAvailabilityAssignment struct {
+	EventID    uuid.UUID  `json:"event_id"`
+	EventName  string     `json:"event_name"`
+	EventDate  string     `json:"event_date"`
+	ShiftStart *string    `json:"shift_start,omitempty"`
+	ShiftEnd   *string    `json:"shift_end,omitempty"`
+	Status     string     `json:"status"`
+}
+
+// StaffAvailability groups assignments per staff inside a date window.
+// Staff without assignments in the window are NOT included (they are free).
+type StaffAvailability struct {
+	StaffID     uuid.UUID                     `json:"staff_id"`
+	StaffName   string                        `json:"staff_name"`
+	Assignments []StaffAvailabilityAssignment `json:"assignments"`
+}
+
+// GetAvailability returns busy staff for the user in [start, end] inclusive.
+// Dates are YYYY-MM-DD strings matching events.event_date. Only staff with at
+// least one assignment in the window are returned; the UI infers "free" from
+// absence.
+func (r *StaffRepo) GetAvailability(ctx context.Context, userID uuid.UUID, start, end string) ([]StaffAvailability, error) {
+	query := `
+		SELECT s.id, s.name, e.id, e.name, e.event_date,
+			es.shift_start, es.shift_end, es.status
+		FROM event_staff es
+		JOIN staff s ON s.id = es.staff_id
+		JOIN events e ON e.id = es.event_id
+		WHERE s.user_id = $1
+			AND e.event_date BETWEEN $2::date AND $3::date
+			AND es.status IN ('pending', 'confirmed')
+		ORDER BY s.name, e.event_date`
+
+	rows, err := r.pool.Query(ctx, query, userID, start, end)
+	if err != nil {
+		return nil, fmt.Errorf("query staff availability: %w", err)
+	}
+	defer rows.Close()
+
+	byStaff := make(map[uuid.UUID]*StaffAvailability)
+	order := make([]uuid.UUID, 0)
+	for rows.Next() {
+		var (
+			staffID    uuid.UUID
+			staffName  string
+			eventID    uuid.UUID
+			eventName  string
+			eventDate  time.Time
+			shiftStart *time.Time
+			shiftEnd   *time.Time
+			status     string
+		)
+		if err := rows.Scan(&staffID, &staffName, &eventID, &eventName, &eventDate,
+			&shiftStart, &shiftEnd, &status); err != nil {
+			return nil, err
+		}
+		entry, ok := byStaff[staffID]
+		if !ok {
+			entry = &StaffAvailability{
+				StaffID:     staffID,
+				StaffName:   staffName,
+				Assignments: []StaffAvailabilityAssignment{},
+			}
+			byStaff[staffID] = entry
+			order = append(order, staffID)
+		}
+		a := StaffAvailabilityAssignment{
+			EventID:   eventID,
+			EventName: eventName,
+			EventDate: eventDate.Format("2006-01-02"),
+			Status:    status,
+		}
+		if shiftStart != nil {
+			s := shiftStart.UTC().Format(time.RFC3339)
+			a.ShiftStart = &s
+		}
+		if shiftEnd != nil {
+			s := shiftEnd.UTC().Format(time.RFC3339)
+			a.ShiftEnd = &s
+		}
+		entry.Assignments = append(entry.Assignments, a)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate staff availability: %w", err)
+	}
+
+	out := make([]StaffAvailability, 0, len(order))
+	for _, id := range order {
+		out = append(out, *byStaff[id])
+	}
+	return out, nil
 }

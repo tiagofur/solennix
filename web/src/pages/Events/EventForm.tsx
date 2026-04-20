@@ -79,6 +79,57 @@ interface Product {
   base_price: number;
 }
 
+// Convert an ISO8601 UTC string (e.g. the backend's shift_start) to the
+// browser-local HH:mm representation used by <input type="time">. Returns
+// null when the input is empty/invalid so the field stays cleared.
+const isoToLocalHHmm = (iso: string | null | undefined): string | null => {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  return `${hh}:${mm}`;
+};
+
+// Combine a YYYY-MM-DD event date with a HH:mm local time into an ISO8601
+// UTC string. `dayOffset` shifts the day by N (used for overnight shifts).
+// Returns null when either piece is missing.
+const hhmmToUtcIso = (
+  eventDate: string | null | undefined,
+  hhmm: string | null,
+  dayOffset = 0,
+): string | null => {
+  if (!eventDate || !hhmm) return null;
+  const [h, m] = hhmm.split(":").map((n) => Number(n));
+  if (Number.isNaN(h) || Number.isNaN(m)) return null;
+  const [y, mo, d] = eventDate.split("-").map((n) => Number(n));
+  if (Number.isNaN(y) || Number.isNaN(mo) || Number.isNaN(d)) return null;
+  const local = new Date(y, mo - 1, d + dayOffset, h, m, 0, 0);
+  if (Number.isNaN(local.getTime())) return null;
+  return local.toISOString();
+};
+
+// Serialize a shift range, bumping the end by +1 day when the user chose an
+// end time on or before the start (overnight turno). Backend enforces
+// CHECK (shift_end > shift_start), so "19:00 → 02:00" would otherwise be
+// rejected.
+const serializeShift = (
+  eventDate: string | null | undefined,
+  start: string | null,
+  end: string | null,
+): { shiftStart: string | null; shiftEnd: string | null } => {
+  const shiftStart = hhmmToUtcIso(eventDate, start);
+  if (!end) return { shiftStart, shiftEnd: null };
+  if (!start) return { shiftStart: null, shiftEnd: hhmmToUtcIso(eventDate, end) };
+  const [sh, sm] = start.split(":").map(Number);
+  const [eh, em] = end.split(":").map(Number);
+  const overnight = eh * 60 + em <= sh * 60 + sm;
+  return {
+    shiftStart,
+    shiftEnd: hhmmToUtcIso(eventDate, end, overnight ? 1 : 0),
+  };
+};
+
 const eventSchema = z.object({
   client_id: z.string().min(1, "Selecciona un cliente"),
   event_date: z.string().min(1, "Selecciona una fecha"),
@@ -305,6 +356,10 @@ export const EventForm: React.FC = () => {
           fee_amount: r.fee_amount ?? null,
           role_override: r.role_override ?? "",
           notes: r.notes ?? "",
+          // Shift ISO8601 UTC → HH:mm local para edición en UI.
+          shift_start: r.shift_start ? isoToLocalHHmm(r.shift_start) : null,
+          shift_end: r.shift_end ? isoToLocalHHmm(r.shift_end) : null,
+          status: r.status ?? null,
         })),
       );
     }).catch(() => { /* empty list on error — parity with equipment */ });
@@ -656,7 +711,15 @@ export const EventForm: React.FC = () => {
   const handleAddStaff = () => {
     setSelectedStaff((prev) => [
       ...prev,
-      { staff_id: "", fee_amount: null, role_override: "", notes: "" },
+      {
+        staff_id: "",
+        fee_amount: null,
+        role_override: "",
+        notes: "",
+        shift_start: null,
+        shift_end: null,
+        status: null,
+      },
     ]);
   };
 
@@ -875,12 +938,18 @@ export const EventForm: React.FC = () => {
             })),
           selectedStaff
             .filter((s) => s.staff_id)
-            .map((s) => ({
-              staffId: s.staff_id,
-              feeAmount: s.fee_amount,
-              roleOverride: s.role_override || null,
-              notes: s.notes || null,
-            })),
+            .map((s) => {
+              const shift = serializeShift(eventDateValue, s.shift_start, s.shift_end);
+              return {
+                staffId: s.staff_id,
+                feeAmount: s.fee_amount,
+                roleOverride: s.role_override || null,
+                notes: s.notes || null,
+                shiftStart: shift.shiftStart,
+                shiftEnd: shift.shiftEnd,
+                status: s.status, // null = preserve current value on upsert
+              };
+            }),
         );
       }
 
@@ -1156,6 +1225,8 @@ export const EventForm: React.FC = () => {
                   <EventStaff
                     staffCatalog={staffCatalog}
                     selectedStaff={selectedStaff}
+                    eventDate={eventDateValue}
+                    eventId={id ?? null}
                     onAdd={handleAddStaff}
                     onRemove={handleRemoveStaff}
                     onChange={handleStaffChange}

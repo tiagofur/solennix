@@ -40,7 +40,7 @@ const val DATABASE_NAME = "solennix-database"
         CachedStaff::class,
         CachedEventStaff::class
     ],
-    version = 8,
+    version = 9,
     exportSchema = true
 )
 @TypeConverters(JsonConverters::class)
@@ -142,7 +142,23 @@ abstract class SolennixDatabase : RoomDatabase() {
             }
         }
 
-        val ALL_MIGRATIONS = arrayOf(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
+        /**
+         * v9 — Ola 1 (operational layer) del módulo Personal.
+         *
+         * Agrega `shift_start`, `shift_end` y `status` a `cached_event_staff`
+         * para espejar el backend. Nullable — filas existentes quedan sin turno
+         * y sin status (la UI asume `confirmed` cuando `status` es null).
+         */
+        val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                Log.d(TAG, "Running migration 8 -> 9: add shift_start/shift_end/status to cached_event_staff")
+                db.execSQL("ALTER TABLE cached_event_staff ADD COLUMN shift_start TEXT")
+                db.execSQL("ALTER TABLE cached_event_staff ADD COLUMN shift_end TEXT")
+                db.execSQL("ALTER TABLE cached_event_staff ADD COLUMN status TEXT")
+            }
+        }
+
+        val ALL_MIGRATIONS = arrayOf(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
 
         /**
          * Manual singleton for use in contexts without Hilt (e.g., Glance widgets).

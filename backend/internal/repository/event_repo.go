@@ -463,14 +463,31 @@ func (r *EventRepo) UpdateEventItems(ctx context.Context, eventID uuid.UUID,
 			}
 		}
 		for _, st := range *staff {
+			// Preserve-on-nil semantics for fields that legacy clients may not
+			// send at all. Without this, an older app version saving an event
+			// would clobber shift windows and RSVP state set by newer clients.
+			//
+			// Tradeoff: a client can no longer clear a previously-set shift by
+			// sending null alone — the UI must DELETE+re-add the assignment to
+			// clear a shift. Same reasoning as `status`. If explicit clearing
+			// becomes a real user need, add a `clear_shift` flag to the payload.
+			var status *string
+			if st.Status != nil && *st.Status != "" {
+				status = st.Status
+			}
 			_, err := tx.Exec(ctx,
-				`INSERT INTO event_staff (event_id, staff_id, fee_amount, role_override, notes)
-				VALUES ($1, $2, $3, $4, $5)
+				`INSERT INTO event_staff (event_id, staff_id, fee_amount, role_override, notes,
+					shift_start, shift_end, status)
+				VALUES ($1, $2, $3, $4, $5, $6, $7, COALESCE($8, 'confirmed'))
 				ON CONFLICT (event_id, staff_id) DO UPDATE SET
 					fee_amount = EXCLUDED.fee_amount,
 					role_override = EXCLUDED.role_override,
-					notes = EXCLUDED.notes`,
-				eventID, st.StaffID, st.FeeAmount, st.RoleOverride, st.Notes)
+					notes = EXCLUDED.notes,
+					shift_start = COALESCE(EXCLUDED.shift_start, event_staff.shift_start),
+					shift_end = COALESCE(EXCLUDED.shift_end, event_staff.shift_end),
+					status = COALESCE($8, event_staff.status)`,
+				eventID, st.StaffID, st.FeeAmount, st.RoleOverride, st.Notes,
+				st.ShiftStart, st.ShiftEnd, status)
 			if err != nil {
 				return err
 			}
@@ -549,7 +566,8 @@ func (r *EventRepo) MarkStaffNotificationResult(ctx context.Context, eventStaffI
 // from the staff catalog (name, role_label, phone, email) for display convenience.
 func (r *EventRepo) GetStaff(ctx context.Context, eventID uuid.UUID) ([]models.EventStaff, error) {
 	query := `SELECT es.id, es.event_id, es.staff_id, es.fee_amount, es.role_override,
-		es.notes, es.notification_sent_at, es.notification_last_result, es.created_at,
+		es.notes, es.shift_start, es.shift_end, es.status,
+		es.notification_sent_at, es.notification_last_result, es.created_at,
 		s.name, s.role_label, s.phone, s.email
 		FROM event_staff es
 		LEFT JOIN staff s ON es.staff_id = s.id
@@ -564,11 +582,15 @@ func (r *EventRepo) GetStaff(ctx context.Context, eventID uuid.UUID) ([]models.E
 	items := make([]models.EventStaff, 0)
 	for rows.Next() {
 		var es models.EventStaff
+		var status string
 		if err := rows.Scan(&es.ID, &es.EventID, &es.StaffID, &es.FeeAmount,
-			&es.RoleOverride, &es.Notes, &es.NotificationSentAt, &es.NotificationLastResult,
+			&es.RoleOverride, &es.Notes, &es.ShiftStart, &es.ShiftEnd, &status,
+			&es.NotificationSentAt, &es.NotificationLastResult,
 			&es.CreatedAt, &es.StaffName, &es.StaffRoleLabel, &es.StaffPhone, &es.StaffEmail); err != nil {
 			return nil, err
 		}
+		statusCopy := status
+		es.Status = &statusCopy
 		items = append(items, es)
 	}
 	if err := rows.Err(); err != nil {

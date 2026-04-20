@@ -120,6 +120,14 @@ public struct EventStaffDetailView: View {
                 }
             }
 
+            statusBadge(for: assignment.assignmentStatus)
+
+            if let shift = formatShift(start: assignment.shiftStart, end: assignment.shiftEnd) {
+                Label(shift, systemImage: "clock")
+                    .font(.caption)
+                    .foregroundStyle(SolennixColors.textSecondary)
+            }
+
             if let phone = assignment.staffPhone, !phone.isEmpty {
                 Label(phone, systemImage: "phone")
                     .font(.caption)
@@ -156,6 +164,74 @@ public struct EventStaffDetailView: View {
         .background(SolennixColors.card)
         .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
         .shadowSm()
+    }
+
+    // MARK: - Status Badge
+
+    private func statusBadge(for status: AssignmentStatus) -> some View {
+        HStack(spacing: 4) {
+            Circle()
+                .fill(statusColor(status))
+                .frame(width: 6, height: 6)
+            Text(statusLabel(status))
+                .font(.caption2)
+                .fontWeight(.semibold)
+                .foregroundStyle(statusColor(status))
+        }
+        .padding(.horizontal, Spacing.sm)
+        .padding(.vertical, 3)
+        .background(statusBg(status))
+        .clipShape(Capsule())
+    }
+
+    private func statusLabel(_ s: AssignmentStatus) -> String {
+        switch s {
+        case .pending:   return "Sin confirmar"
+        case .confirmed: return "Confirmado"
+        case .declined:  return "Rechazó"
+        case .cancelled: return "Cancelado"
+        }
+    }
+
+    private func statusColor(_ s: AssignmentStatus) -> Color {
+        switch s {
+        case .pending:   return SolennixColors.warning
+        case .confirmed: return SolennixColors.success
+        case .declined:  return SolennixColors.error
+        case .cancelled: return SolennixColors.textTertiary
+        }
+    }
+
+    private func statusBg(_ s: AssignmentStatus) -> Color {
+        switch s {
+        case .pending:   return SolennixColors.warningBg
+        case .confirmed: return SolennixColors.successBg
+        case .declined:  return SolennixColors.errorBg
+        case .cancelled: return SolennixColors.surfaceAlt
+        }
+    }
+
+    /// Formatea un rango de turno en HH:mm local para el usuario. Si uno
+    /// solo de los extremos esta presente, lo muestra con "—" del otro lado.
+    private func formatShift(start: String?, end: String?) -> String? {
+        let iso = ISO8601DateFormatter()
+        iso.formatOptions = [.withInternetDateTime]
+        let isoFrac = ISO8601DateFormatter()
+        isoFrac.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+
+        func parse(_ s: String?) -> String? {
+            guard let s, !s.isEmpty else { return nil }
+            let d = iso.date(from: s) ?? isoFrac.date(from: s)
+            return d.map { formatter.string(from: $0) }
+        }
+
+        let s = parse(start)
+        let e = parse(end)
+        if s == nil && e == nil { return nil }
+        return "\(s ?? "—") – \(e ?? "—")"
     }
 
     // MARK: - Computed

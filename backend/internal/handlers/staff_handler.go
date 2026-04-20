@@ -3,6 +3,7 @@ package handlers
 import (
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -149,4 +150,44 @@ func (h *StaffHandler) DeleteStaff(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// GetStaffAvailability returns staff with assignments inside a date window.
+// Staff without assignments in the window are omitted (considered free).
+//
+// GET /api/staff/availability?date=YYYY-MM-DD          (single day)
+// GET /api/staff/availability?start=YYYY-MM-DD&end=... (range, inclusive)
+func (h *StaffHandler) GetStaffAvailability(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+
+	start := r.URL.Query().Get("start")
+	end := r.URL.Query().Get("end")
+	if date := r.URL.Query().Get("date"); date != "" {
+		start, end = date, date
+	}
+
+	if start == "" || end == "" {
+		writeError(w, http.StatusBadRequest, "date or (start,end) is required")
+		return
+	}
+	if _, err := time.Parse("2006-01-02", start); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid start date, expected YYYY-MM-DD")
+		return
+	}
+	if _, err := time.Parse("2006-01-02", end); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid end date, expected YYYY-MM-DD")
+		return
+	}
+	if end < start {
+		writeError(w, http.StatusBadRequest, "end must be on or after start")
+		return
+	}
+
+	items, err := h.staffRepo.GetAvailability(r.Context(), userID, start, end)
+	if err != nil {
+		slog.Error("staff availability failed", "error", err, "user_id", userID)
+		writeError(w, http.StatusInternalServerError, "Failed to fetch availability")
+		return
+	}
+	writeJSON(w, http.StatusOK, items)
 }

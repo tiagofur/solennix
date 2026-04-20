@@ -76,6 +76,11 @@ public enum Endpoint {
         "/staff/\(id)"
     }
 
+    /// Reporte de disponibilidad de staff para una fecha o rango.
+    /// Consumido via `GET /api/staff/availability?date=YYYY-MM-DD` o
+    /// `?start=YYYY-MM-DD&end=YYYY-MM-DD`.
+    public static let staffAvailability = "/staff/availability"
+
     // MARK: - Products
 
     public static let products = "/products"

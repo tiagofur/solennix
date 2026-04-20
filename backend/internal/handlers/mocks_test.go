@@ -406,6 +406,14 @@ func (m *MockStaffRepo) Search(ctx context.Context, userID uuid.UUID, query stri
 	return args.Get(0).([]models.Staff), args.Error(1)
 }
 
+func (m *MockStaffRepo) GetAvailability(ctx context.Context, userID uuid.UUID, start, end string) ([]repository.StaffAvailability, error) {
+	args := m.Called(ctx, userID, start, end)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]repository.StaffAvailability), args.Error(1)
+}
+
 // ---------------------------------------------------------------------------
 // MockProductRepo — implements ProductRepository
 // ---------------------------------------------------------------------------

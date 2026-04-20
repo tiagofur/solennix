@@ -167,6 +167,19 @@ class EventFormViewModel @Inject constructor(
     private val _availableStaff = MutableStateFlow<List<Staff>>(emptyList())
     val availableStaff: StateFlow<List<Staff>> = _availableStaff.asStateFlow()
 
+    /**
+     * Mapa `staff_id → List<StaffAvailabilityAssignment>` para la fecha del evento.
+     * Permite O(1) lookup de ocupación en el picker. Se recarga cuando cambia
+     * [eventDate] o cuando el catálogo de staff se hidrata. Excluye el evento
+     * actual cuando se está editando (un colaborador ya asignado al mismo evento
+     * no está "ocupado" para esta vista).
+     */
+    private val _staffAvailability =
+        MutableStateFlow<Map<String, List<StaffAvailabilityAssignment>>>(emptyMap())
+    val staffAvailability: StateFlow<Map<String, List<StaffAvailabilityAssignment>>> =
+        _staffAvailability.asStateFlow()
+    private var availabilityJob: Job? = null
+
     // Step 6: Location & Details (moved to GeneralInfo in UI)
     var location by mutableStateOf("")
     var city by mutableStateOf("")
@@ -312,6 +325,8 @@ class EventFormViewModel @Inject constructor(
         } else {
             null
         }
+        // Refresca la señal de ocupación de colaboradores para la nueva fecha.
+        fetchStaffAvailability()
     }
 
     private fun loadUnavailableDates() {
@@ -361,6 +376,7 @@ class EventFormViewModel @Inject constructor(
             }
         }
         loadUnavailableDates()
+        fetchStaffAvailability()
     }
 
     private fun loadFromQuickQuote() {
@@ -609,7 +625,10 @@ class EventFormViewModel @Inject constructor(
                                 roleOverride = assignment.roleOverride ?: "",
                                 notes = assignment.notes ?: "",
                                 staffName = assignment.staffName,
-                                staffRoleLabel = assignment.staffRoleLabel
+                                staffRoleLabel = assignment.staffRoleLabel,
+                                shiftStart = assignment.shiftStart,
+                                shiftEnd = assignment.shiftEnd,
+                                status = assignment.status
                             )
                         )
                     }
@@ -939,9 +958,79 @@ class EventFormViewModel @Inject constructor(
                 roleOverride = "",
                 notes = "",
                 staffName = staff.name,
-                staffRoleLabel = staff.roleLabel
+                staffRoleLabel = staff.roleLabel,
+                // Defaulting a null: el backend aplica `confirmed` si no viene status.
+                shiftStart = null,
+                shiftEnd = null,
+                status = AssignmentStatus.CONFIRMED.raw
             )
         )
+    }
+
+    /**
+     * Setea el turno del colaborador para la fecha actual del evento. [startLocal]
+     * y [endLocal] son `LocalTime`; se combinan con [eventDate] y se convierten
+     * a ISO8601 UTC. Si [endLocal] es menor a [startLocal], se asume que el turno
+     * cruza medianoche y se corre un día.
+     */
+    fun updateStaffShift(
+        staffId: String,
+        startLocal: java.time.LocalTime?,
+        endLocal: java.time.LocalTime?
+    ) {
+        val index = selectedStaff.indexOfFirst { it.staffId == staffId }
+        if (index < 0) return
+        val zone = java.time.ZoneId.systemDefault()
+        val startIso = startLocal?.let { t ->
+            eventDate.atTime(t).atZone(zone).toInstant().toString()
+        }
+        val endIso = endLocal?.let { t ->
+            val baseDate =
+                if (startLocal != null && t.isBefore(startLocal)) eventDate.plusDays(1)
+                else eventDate
+            baseDate.atTime(t).atZone(zone).toInstant().toString()
+        }
+        selectedStaff[index] = selectedStaff[index].copy(
+            shiftStart = startIso,
+            shiftEnd = endIso
+        )
+    }
+
+    /** Limpia el turno registrado para la asignación. */
+    fun clearStaffShift(staffId: String) {
+        val index = selectedStaff.indexOfFirst { it.staffId == staffId }
+        if (index < 0) return
+        selectedStaff[index] = selectedStaff[index].copy(shiftStart = null, shiftEnd = null)
+    }
+
+    fun updateStaffStatus(staffId: String, status: AssignmentStatus) {
+        val index = selectedStaff.indexOfFirst { it.staffId == staffId }
+        if (index < 0) return
+        selectedStaff[index] = selectedStaff[index].copy(status = status.raw)
+    }
+
+    /**
+     * Dispara `GET /api/staff/availability?date=X` para [eventDate]. El resultado
+     * se publica en [staffAvailability]. No-op si el fetch falla — la UI no
+     * debe bloquear la asignación por no tener la señal de ocupación.
+     */
+    fun fetchStaffAvailability() {
+        availabilityJob?.cancel()
+        availabilityJob = viewModelScope.launch {
+            try {
+                val list = staffRepository.getStaffAvailability(date = eventDate.toString())
+                // Al editar, filtrar asignaciones del evento actual para no
+                // marcar como "ocupado" a alguien que ya está en este mismo
+                // evento.
+                val currentId = eventId
+                val map = list.associate { avail ->
+                    avail.staffId to avail.assignments.filter { it.eventId != currentId }
+                }.filterValues { it.isNotEmpty() }
+                _staffAvailability.value = map
+            } catch (_: Exception) {
+                // Silencioso: la UI puede vivir sin la señal.
+            }
+        }
     }
 
     fun removeStaffAssignment(staffId: String) {
@@ -1112,7 +1201,10 @@ class EventFormViewModel @Inject constructor(
                             staffId = it.staffId,
                             feeAmount = it.feeAmount,
                             roleOverride = it.roleOverride.takeIf { s -> s.isNotBlank() },
-                            notes = it.notes.takeIf { s -> s.isNotBlank() }
+                            notes = it.notes.takeIf { s -> s.isNotBlank() },
+                            shiftStart = it.shiftStart,
+                            shiftEnd = it.shiftEnd,
+                            status = it.status
                         )
                     }
                 )
@@ -1138,6 +1230,10 @@ data class SelectedStaffAssignment(
     val roleOverride: String,
     val notes: String,
     val staffName: String?,
-    val staffRoleLabel: String?
+    val staffRoleLabel: String?,
+    // Ola 1 — shift times en ISO8601 UTC. Null = sin turno registrado.
+    val shiftStart: String? = null,
+    val shiftEnd: String? = null,
+    val status: String? = null
 )
 
