@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -1353,7 +1354,12 @@ func (h *CRUDHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	// carry a denormalized user_id check on its own row in this query.
 	if product.StaffTeamID != nil && h.staffTeamRepo != nil {
 		if _, err := h.staffTeamRepo.GetByID(r.Context(), *product.StaffTeamID, userID); err != nil {
-			writeError(w, http.StatusBadRequest, "staff_team_id does not belong to this user")
+			if errors.Is(err, repository.ErrStaffTeamNotFound) {
+				writeError(w, http.StatusBadRequest, "staff_team_id does not belong to this user")
+				return
+			}
+			slog.Error("verify staff team ownership failed", "error", err, "user_id", userID)
+			writeError(w, http.StatusInternalServerError, "Failed to verify team ownership")
 			return
 		}
 	}
@@ -1389,7 +1395,12 @@ func (h *CRUDHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 
 	if product.StaffTeamID != nil && h.staffTeamRepo != nil {
 		if _, err := h.staffTeamRepo.GetByID(r.Context(), *product.StaffTeamID, userID); err != nil {
-			writeError(w, http.StatusBadRequest, "staff_team_id does not belong to this user")
+			if errors.Is(err, repository.ErrStaffTeamNotFound) {
+				writeError(w, http.StatusBadRequest, "staff_team_id does not belong to this user")
+				return
+			}
+			slog.Error("verify staff team ownership failed", "error", err, "user_id", userID)
+			writeError(w, http.StatusInternalServerError, "Failed to verify team ownership")
 			return
 		}
 	}
