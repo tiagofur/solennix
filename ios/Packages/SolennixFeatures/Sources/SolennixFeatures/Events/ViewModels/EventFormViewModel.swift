@@ -108,13 +108,28 @@ public struct SelectedStaffAssignment: Identifiable, Hashable {
     public var roleOverride: String
     public var notes: String
 
+    // MARK: - Ola 1 (turnos + estado)
+
+    /// Inicio del turno como `Date` local. Se serializa a ISO8601 UTC en el body.
+    /// Nil = no se capturo turno.
+    public var shiftStart: Date?
+    /// Fin del turno como `Date` local. `shiftEnd < shiftStart` significa que
+    /// cruza medianoche — el backend acepta ambos timestamps en UTC y deja
+    /// que el consumidor interprete.
+    public var shiftEnd: Date?
+    /// Status tipado. Default `.confirmed` — coherente con el fallback del backend.
+    public var status: AssignmentStatus
+
     public init(
         staffId: String,
         staffName: String = "",
         staffRoleLabel: String? = nil,
         feeAmount: Double = 0,
         roleOverride: String = "",
-        notes: String = ""
+        notes: String = "",
+        shiftStart: Date? = nil,
+        shiftEnd: Date? = nil,
+        status: AssignmentStatus = .confirmed
     ) {
         self.staffId = staffId
         self.staffName = staffName
@@ -122,6 +137,9 @@ public struct SelectedStaffAssignment: Identifiable, Hashable {
         self.feeAmount = feeAmount
         self.roleOverride = roleOverride
         self.notes = notes
+        self.shiftStart = shiftStart
+        self.shiftEnd = shiftEnd
+        self.status = status
     }
 }
 
@@ -473,6 +491,15 @@ public final class EventFormViewModel {
                 )
             }
 
+            let iso = ISO8601DateFormatter()
+            iso.formatOptions = [.withInternetDateTime]
+            let isoFractional = ISO8601DateFormatter()
+            isoFractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            func parseISO(_ s: String?) -> Date? {
+                guard let s, !s.isEmpty else { return nil }
+                return iso.date(from: s) ?? isoFractional.date(from: s)
+            }
+
             selectedStaff = eventStaff.map { es in
                 SelectedStaffAssignment(
                     staffId: es.staffId,
@@ -480,7 +507,10 @@ public final class EventFormViewModel {
                     staffRoleLabel: es.staffRoleLabel ?? staff.first(where: { $0.id == es.staffId })?.roleLabel,
                     feeAmount: es.feeAmount ?? 0,
                     roleOverride: es.roleOverride ?? "",
-                    notes: es.notes ?? ""
+                    notes: es.notes ?? "",
+                    shiftStart: parseISO(es.shiftStart),
+                    shiftEnd: parseISO(es.shiftEnd),
+                    status: es.assignmentStatus
                 )
             }
 
@@ -773,10 +803,11 @@ public final class EventFormViewModel {
                 "source": $0.source.rawValue,
                 "exclude_cost": $0.excludeCost
             ] },
-            "staff": selectedStaff.map { assignment in
+            "staff": selectedStaff.map { assignment -> [String: Any] in
                 var dict: [String: Any] = [
                     "staff_id": assignment.staffId,
                     "fee_amount": assignment.feeAmount,
+                    "status": assignment.status.rawValue,
                 ]
                 let trimmedRole = assignment.roleOverride.trimmingCharacters(in: .whitespacesAndNewlines)
                 if !trimmedRole.isEmpty {
@@ -785,6 +816,14 @@ public final class EventFormViewModel {
                 let trimmedNotes = assignment.notes.trimmingCharacters(in: .whitespacesAndNewlines)
                 if !trimmedNotes.isEmpty {
                     dict["notes"] = trimmedNotes
+                }
+                let iso = ISO8601DateFormatter()
+                iso.formatOptions = [.withInternetDateTime]
+                if let start = assignment.shiftStart {
+                    dict["shift_start"] = iso.string(from: start)
+                }
+                if let end = assignment.shiftEnd {
+                    dict["shift_end"] = iso.string(from: end)
                 }
                 return dict
             }
