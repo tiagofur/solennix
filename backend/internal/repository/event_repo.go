@@ -463,9 +463,14 @@ func (r *EventRepo) UpdateEventItems(ctx context.Context, eventID uuid.UUID,
 			}
 		}
 		for _, st := range *staff {
-			// status nil or empty string = preserve existing (UPSERT COALESCE keeps
-			// stored value on update; new rows fall back to 'confirmed'). This keeps
-			// older clients that don't know about `status` from clobbering RSVP state.
+			// Preserve-on-nil semantics for fields that legacy clients may not
+			// send at all. Without this, an older app version saving an event
+			// would clobber shift windows and RSVP state set by newer clients.
+			//
+			// Tradeoff: a client can no longer clear a previously-set shift by
+			// sending null alone — the UI must DELETE+re-add the assignment to
+			// clear a shift. Same reasoning as `status`. If explicit clearing
+			// becomes a real user need, add a `clear_shift` flag to the payload.
 			var status *string
 			if st.Status != nil && *st.Status != "" {
 				status = st.Status
@@ -478,8 +483,8 @@ func (r *EventRepo) UpdateEventItems(ctx context.Context, eventID uuid.UUID,
 					fee_amount = EXCLUDED.fee_amount,
 					role_override = EXCLUDED.role_override,
 					notes = EXCLUDED.notes,
-					shift_start = EXCLUDED.shift_start,
-					shift_end = EXCLUDED.shift_end,
+					shift_start = COALESCE(EXCLUDED.shift_start, event_staff.shift_start),
+					shift_end = COALESCE(EXCLUDED.shift_end, event_staff.shift_end),
 					status = COALESCE($8, event_staff.status)`,
 				eventID, st.StaffID, st.FeeAmount, st.RoleOverride, st.Notes,
 				st.ShiftStart, st.ShiftEnd, status)
