@@ -919,7 +919,7 @@ describe('EventForm', () => {
     expect(screen.getByText('Información General')).toBeInTheDocument();
     expect(screen.getByText('Productos')).toBeInTheDocument();
     expect(screen.getByText('Extras')).toBeInTheDocument();
-    expect(screen.getByText('Insumos y Equipo')).toBeInTheDocument();
+    expect(screen.getByText('Inventario y Personal')).toBeInTheDocument();
     expect(screen.getByText('Finanzas y Contrato')).toBeInTheDocument();
   });
 
