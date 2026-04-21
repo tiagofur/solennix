@@ -492,7 +492,6 @@
       }
     },
     "calendar.all_day" : {
-      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2044,6 +2043,9 @@
 
     },
     "Ordenar clientes" : {
+
+    },
+    "Ordenar eventos" : {
 
     },
     "Ordenar inventario" : {

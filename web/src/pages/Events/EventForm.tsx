@@ -19,9 +19,10 @@ import {
   CheckCircle,
   AlertCircle,
   Info,
-  Utensils,
-  PlusCircle,
   Package,
+  Sparkles,
+  ShoppingCart,
+  DollarSign,
 } from "lucide-react";
 import { logError } from "@/lib/errorHandler";
 import { Breadcrumb } from "@/components/Breadcrumb";
@@ -164,12 +165,15 @@ interface QuickQuoteState {
   numPeople?: number;
 }
 
+// Iconos unificados cross-platform (iOS SF Symbols + Android Material + lucide
+// aquí). Paso 4 cubre supplies + equipment + staff — mismo contenido que
+// Android/iOS StepInventoryAndPersonnel.
 const STEPS = [
   { id: 1, title: "Información General", icon: Info },
-  { id: 2, title: "Productos", icon: Utensils },
-  { id: 3, title: "Extras", icon: PlusCircle },
-  { id: 4, title: "Insumos y Equipo", icon: Package },
-  { id: 5, title: "Finanzas y Contrato", icon: FileText },
+  { id: 2, title: "Productos", icon: Package },
+  { id: 3, title: "Extras", icon: Sparkles },
+  { id: 4, title: "Inventario y Personal", icon: ShoppingCart },
+  { id: 5, title: "Finanzas y Contrato", icon: DollarSign },
 ];
 
 // Fields belonging to each step. Steps 2-4 manage local state (selectedProducts,

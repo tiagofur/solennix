@@ -50,7 +50,7 @@ fun EventFormScreen(
     onSearchClick: () -> Unit = {},
     onNavigateBack: () -> Unit
 ) {
-    val pagerState = rememberPagerState(pageCount = { 6 })
+    val pagerState = rememberPagerState(pageCount = { 5 })
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -59,11 +59,12 @@ fun EventFormScreen(
         snackbarHostState = snackbarHostState,
     )
 
-    // Trigger suggestions when entering equipment/supplies steps
+    // Inventario & Personal (page 3) carga ambos sets de sugerencias porque
+    // ahora vive todo junto en un solo paso.
     LaunchedEffect(pagerState.currentPage) {
-        when (pagerState.currentPage) {
-            3 -> viewModel.fetchEquipmentSuggestions()
-            4 -> viewModel.fetchSupplySuggestions()
+        if (pagerState.currentPage == 3) {
+            viewModel.fetchEquipmentSuggestions()
+            viewModel.fetchSupplySuggestions()
         }
     }
 
@@ -86,12 +87,12 @@ fun EventFormScreen(
             if (viewModel.loadError == null) {
                 BottomStepNavigation(
                     currentPage = pagerState.currentPage,
-                    totalPages = 6,
+                    totalPages = 5,
                     onNext = {
                         val error = viewModel.validateStep(pagerState.currentPage)
                         if (error != null) {
                             viewModel.saveError = error
-                        } else if (pagerState.currentPage < 5) {
+                        } else if (pagerState.currentPage < 4) {
                             scope.launch {
                                 pagerState.animateScrollToPage(pagerState.currentPage + 1)
                             }
@@ -122,10 +123,13 @@ fun EventFormScreen(
             }
             else -> {
                 Column(modifier = Modifier.padding(padding)) {
-                    LinearProgressIndicator(
-                        progress = { (pagerState.currentPage + 1) / 6f },
-                        modifier = Modifier.fillMaxWidth(),
-                        color = SolennixTheme.colors.primary
+                    EventFormStepIndicator(
+                        currentPage = pagerState.currentPage,
+                        onStepClick = { target ->
+                            if (target < pagerState.currentPage) {
+                                scope.launch { pagerState.animateScrollToPage(target) }
+                            }
+                        },
                     )
 
                     HorizontalPager(
@@ -137,9 +141,8 @@ fun EventFormScreen(
                             0 -> StepGeneralInfo(viewModel)
                             1 -> StepProducts(viewModel)
                             2 -> StepExtras(viewModel)
-                            3 -> StepEquipment(viewModel)
-                            4 -> StepSupplies(viewModel)
-                            5 -> StepSummary(viewModel, isEditMode = viewModel.isEditMode)
+                            3 -> StepInventoryAndPersonnel(viewModel)
+                            4 -> StepSummary(viewModel, isEditMode = viewModel.isEditMode)
                         }
                     }
                 }
@@ -228,7 +231,7 @@ private fun EventLoadErrorCard(
 @Composable
 fun BottomStepNavigation(
     currentPage: Int,
-    totalPages: Int = 6,
+    totalPages: Int = 5,
     onNext: () -> Unit,
     onBack: () -> Unit,
     isLoading: Boolean,
@@ -238,28 +241,138 @@ fun BottomStepNavigation(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         tonalElevation = 8.dp,
-        shadowElevation = 16.dp
+        shadowElevation = 16.dp,
     ) {
+        // Botones a tamaño M3 default (40dp). Antes estaban apretados con
+        // weight(1f) y forzados a ocupar toda la franja; se veían enormes.
         Row(
             modifier = Modifier
-                .padding(16.dp)
+                .padding(horizontal = 16.dp, vertical = 12.dp)
                 .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             if (currentPage > 0) {
-                OutlinedButton(onClick = onBack, modifier = Modifier.weight(1f)) {
+                TextButton(onClick = onBack) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
                     Text("Anterior")
                 }
-                Spacer(modifier = Modifier.width(16.dp))
+            } else {
+                Spacer(modifier = Modifier.width(1.dp))
             }
 
-            PremiumButton(
-                text = if (isLastPage) (if (isEditMode) "Guardar Cambios" else "Finalizar") else "Siguiente",
+            Button(
                 onClick = onNext,
-                modifier = Modifier.weight(1f),
-                icon = if (isLastPage) Icons.Default.Check else Icons.AutoMirrored.Filled.ArrowForward,
-                isLoading = isLoading
-            )
+                enabled = !isLoading,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = SolennixTheme.colors.primary,
+                ),
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        strokeWidth = 2.dp,
+                        color = Color.White,
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+                Text(
+                    text = if (isLastPage) (if (isEditMode) "Guardar Cambios" else "Finalizar") else "Siguiente",
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Icon(
+                    imageVector = if (isLastPage) Icons.Default.Check else Icons.AutoMirrored.Filled.ArrowForward,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Step indicator con iconos (no números) — mirror del patrón de Web.
+ * Los pasos anteriores son tappables para volver; los futuros están bloqueados
+ * hasta que se valide cada paso via onNext.
+ */
+@Composable
+private fun EventFormStepIndicator(
+    currentPage: Int,
+    onStepClick: (Int) -> Unit,
+) {
+    data class StepMeta(val icon: androidx.compose.ui.graphics.vector.ImageVector, val label: String)
+    val steps = listOf(
+        StepMeta(Icons.Default.Info, "General"),
+        StepMeta(Icons.Default.Inventory2, "Productos"),
+        StepMeta(Icons.Default.AutoAwesome, "Extras"),
+        StepMeta(Icons.Default.ShoppingCart, "Inventario"),
+        StepMeta(Icons.Default.Payments, "Finanzas"),
+    )
+    val progress = (currentPage + 1).toFloat() / steps.size.toFloat()
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        LinearProgressIndicator(
+            progress = { progress },
+            modifier = Modifier.fillMaxWidth(),
+            color = SolennixTheme.colors.primary,
+            trackColor = SolennixTheme.colors.borderLight,
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            steps.forEachIndexed { index, step ->
+                val isCompleted = index < currentPage
+                val isActive = index == currentPage
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable(enabled = index < currentPage) { onStepClick(index) },
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(
+                                when {
+                                    isCompleted -> SolennixTheme.colors.primary
+                                    isActive -> SolennixTheme.colors.primaryLight
+                                    else -> SolennixTheme.colors.surfaceAlt
+                                }
+                            ),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = if (isCompleted) Icons.Default.Check else step.icon,
+                            contentDescription = null,
+                            tint = when {
+                                isCompleted -> Color.White
+                                isActive -> SolennixTheme.colors.primary
+                                else -> SolennixTheme.colors.secondaryText
+                            },
+                            modifier = Modifier.size(18.dp),
+                        )
+                    }
+                    if (isActive) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = step.label,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = SolennixTheme.colors.primary,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -269,6 +382,9 @@ fun BottomStepNavigation(
 fun StepGeneralInfo(viewModel: EventFormViewModel) {
     var showClientPicker by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
+    var showStartTimePicker by remember { mutableStateOf(false) }
+    var showEndTimePicker by remember { mutableStateOf(false) }
+    var showStatusMenu by remember { mutableStateOf(false) }
     var showQuickClientDialog by remember { mutableStateOf(false) }
 
     val statusLabels = mapOf(
@@ -343,19 +459,17 @@ fun StepGeneralInfo(viewModel: EventFormViewModel) {
 
             AdaptiveFormRow(
                 left = {
-                    SolennixTextField(
-                        value = viewModel.startTime,
-                        onValueChange = { viewModel.startTime = it },
+                    TimePickerField(
                         label = "Hora Inicio",
-                        placeholder = "14:00"
+                        value = viewModel.startTime,
+                        onClick = { showStartTimePicker = true },
                     )
                 },
                 right = {
-                    SolennixTextField(
-                        value = viewModel.endTime,
-                        onValueChange = { viewModel.endTime = it },
+                    TimePickerField(
                         label = "Hora Fin",
-                        placeholder = "20:00"
+                        value = viewModel.endTime,
+                        onClick = { showEndTimePicker = true },
                     )
                 }
             )
@@ -405,24 +519,43 @@ fun StepGeneralInfo(viewModel: EventFormViewModel) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // ExposedDropdownMenu en vez de FilterChip row — 4 chips en una
+            // pantalla pequeña hacían wrap a 2 líneas. Un single-line dropdown
+            // es el patrón M3 cuando hay 3+ opciones exclusivas.
             Text("Estado del Evento", style = MaterialTheme.typography.labelMedium, color = SolennixTheme.colors.secondaryText)
-            Row(
+            ExposedDropdownMenuBox(
+                expanded = showStatusMenu,
+                onExpandedChange = { showStatusMenu = it },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                EventStatus.entries.forEach { status ->
-                    FilterChip(
-                        selected = viewModel.status == status,
-                        onClick = { viewModel.status = status },
-                        label = { Text(statusLabels[status] ?: status.name) },
-                        modifier = Modifier.weight(1f),
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = SolennixTheme.colors.primaryLight,
-                            selectedLabelColor = SolennixTheme.colors.primary
+                OutlinedTextField(
+                    value = statusLabels[viewModel.status] ?: viewModel.status.name,
+                    onValueChange = {},
+                    readOnly = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor(MenuAnchorType.PrimaryNotEditable),
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showStatusMenu) },
+                    shape = RoundedCornerShape(12.dp),
+                )
+                ExposedDropdownMenu(
+                    expanded = showStatusMenu,
+                    onDismissRequest = { showStatusMenu = false },
+                ) {
+                    EventStatus.entries.forEach { status ->
+                        DropdownMenuItem(
+                            text = { Text(statusLabels[status] ?: status.name) },
+                            onClick = {
+                                viewModel.status = status
+                                showStatusMenu = false
+                            },
+                            leadingIcon = if (viewModel.status == status) {
+                                { Icon(Icons.Default.Check, contentDescription = null, tint = SolennixTheme.colors.primary) }
+                            } else null,
                         )
-                    )
+                    }
                 }
             }
 
@@ -504,6 +637,28 @@ fun StepGeneralInfo(viewModel: EventFormViewModel) {
         ) {
             DatePicker(state = datePickerState)
         }
+    }
+
+    if (showStartTimePicker) {
+        TimePickerDialogM3(
+            initialTime = parseHHmmOrNull(viewModel.startTime),
+            onDismiss = { showStartTimePicker = false },
+            onConfirm = { hh, mm ->
+                viewModel.startTime = "%02d:%02d".format(hh, mm)
+                showStartTimePicker = false
+            },
+        )
+    }
+
+    if (showEndTimePicker) {
+        TimePickerDialogM3(
+            initialTime = parseHHmmOrNull(viewModel.endTime),
+            onDismiss = { showEndTimePicker = false },
+            onConfirm = { hh, mm ->
+                viewModel.endTime = "%02d:%02d".format(hh, mm)
+                showEndTimePicker = false
+            },
+        )
     }
 
     if (showQuickClientDialog) {
@@ -1000,20 +1155,20 @@ private fun ExtraCard(
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
+/**
+ * Sección Equipamiento + Personal, usada DENTRO de StepInventoryAndPersonnel.
+ * No wrapea con su propio scroll — el parent coordina el scroll compartido
+ * junto con SuppliesSection.
+ */
 @Composable
-fun StepEquipment(viewModel: EventFormViewModel) {
+private fun EquipmentAndStaffSection(viewModel: EventFormViewModel) {
     var showEquipmentPicker by remember { mutableStateOf(false) }
     val suggestions by viewModel.equipmentSuggestions.collectAsStateWithLifecycle()
     val conflicts by viewModel.equipmentConflicts.collectAsStateWithLifecycle()
     val isWideScreen = LocalIsWideScreen.current
 
-    AdaptiveCenteredContent(maxWidth = 800.dp) {
-        Column(
-            modifier = Modifier
-                .padding(24.dp)
-                .verticalScroll(rememberScrollState())
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Equipamiento", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.weight(1f))
                 IconButton(onClick = { showEquipmentPicker = true }) {
                     Icon(Icons.Default.AddCircle, contentDescription = "Añadir", tint = SolennixTheme.colors.primary)
@@ -1132,12 +1287,11 @@ fun StepEquipment(viewModel: EventFormViewModel) {
                 }
             }
 
-            // ===== Personal asignado =====
-            // Phase 1: todos los planes pueden asignar staff. El fee es por
-            // evento (no vive en Staff). Phase 2 activará el email notifier.
-            Spacer(modifier = Modifier.height(24.dp))
-            StaffAssignmentPanel(viewModel = viewModel)
-        }
+        // ===== Personal asignado =====
+        // Phase 1: todos los planes pueden asignar staff. El fee es por
+        // evento (no vive en Staff). Phase 2 activará el email notifier.
+        Spacer(modifier = Modifier.height(24.dp))
+        StaffAssignmentPanel(viewModel = viewModel)
     }
 
     if (showEquipmentPicker) {
@@ -1281,16 +1435,19 @@ private fun EquipmentPickerSheet(
     }
 }
 
+/**
+ * Sección Insumos — render-only, sin scroll propio. El scroll lo coordina
+ * StepInventoryAndPersonnel que la contiene junto a EquipmentAndStaffSection.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StepSupplies(viewModel: EventFormViewModel) {
+private fun SuppliesSection(viewModel: EventFormViewModel) {
     var showSupplyPicker by remember { mutableStateOf(false) }
     val suggestions by viewModel.supplySuggestions.collectAsStateWithLifecycle()
     val isWideScreen = LocalIsWideScreen.current
 
-    AdaptiveCenteredContent(maxWidth = 800.dp) {
-        Column(modifier = Modifier.padding(24.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Insumos", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.weight(1f))
                 IconButton(onClick = { showSupplyPicker = true }) {
                     Icon(Icons.Default.AddCircle, contentDescription = "Añadir", tint = SolennixTheme.colors.primary)
@@ -1349,11 +1506,12 @@ fun StepSupplies(viewModel: EventFormViewModel) {
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                // Nested scroll no permitido (el parent de InventoryAndPersonnel
+                // ya tiene verticalScroll). Column + forEach es equivalente —
+                // el dataset es chico (insumos de un solo evento).
+                Column(modifier = Modifier.fillMaxWidth()) {
                     if (isWideScreen) {
-                        val chunked = viewModel.selectedSupplies.chunked(2)
-                        items(chunked.size) { index ->
-                            val pair = chunked[index]
+                        viewModel.selectedSupplies.chunked(2).forEach { pair ->
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                                 Box(modifier = Modifier.weight(1f)) {
                                     SupplyCard(
@@ -1380,8 +1538,7 @@ fun StepSupplies(viewModel: EventFormViewModel) {
                             }
                         }
                     } else {
-                        items(viewModel.selectedSupplies.size) { index ->
-                            val supply = viewModel.selectedSupplies[index]
+                        viewModel.selectedSupplies.forEach { supply ->
                             SupplyCard(
                                 supply = supply,
                                 onQuantityChange = { viewModel.updateSupplyQuantity(supply.inventoryId, it) },
@@ -1393,7 +1550,6 @@ fun StepSupplies(viewModel: EventFormViewModel) {
                     }
                 }
             }
-        }
     }
 
     if (showSupplyPicker) {
@@ -1401,6 +1557,28 @@ fun StepSupplies(viewModel: EventFormViewModel) {
             viewModel = viewModel,
             onDismiss = { showSupplyPicker = false }
         )
+    }
+}
+
+/**
+ * Paso unificado de Inventario & Personal — replica el paso 4 de la web
+ * (EventSupplies → divider → EventEquipment → divider → EventStaff). Mismo
+ * scroll compartido para todo el paso.
+ */
+@Composable
+fun StepInventoryAndPersonnel(viewModel: EventFormViewModel) {
+    AdaptiveCenteredContent(maxWidth = 800.dp) {
+        Column(
+            modifier = Modifier
+                .padding(24.dp)
+                .verticalScroll(rememberScrollState())
+        ) {
+            SuppliesSection(viewModel)
+            Spacer(modifier = Modifier.height(32.dp))
+            HorizontalDivider(color = SolennixTheme.colors.divider)
+            Spacer(modifier = Modifier.height(32.dp))
+            EquipmentAndStaffSection(viewModel)
+        }
     }
 }
 
@@ -2292,6 +2470,75 @@ private fun parseHHmmOrNull(hhmm: String): java.time.LocalTime? = try {
 
 private fun formatTime(time: java.time.LocalTime): String =
     time.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"))
+
+/**
+ * Read-only OutlinedTextField con icono de reloj que abre el TimePicker M3
+ * al tap. Patrón nativo Android para selección de hora.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TimePickerField(
+    label: String,
+    value: String,
+    onClick: () -> Unit,
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = {},
+        label = { Text(label) },
+        readOnly = true,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        trailingIcon = {
+            IconButton(onClick = onClick) {
+                Icon(Icons.Default.Schedule, contentDescription = label)
+            }
+        },
+        shape = RoundedCornerShape(12.dp),
+        enabled = false,
+        colors = OutlinedTextFieldDefaults.colors(
+            disabledTextColor = SolennixTheme.colors.primaryText,
+            disabledBorderColor = SolennixTheme.colors.borderLight,
+            disabledLabelColor = SolennixTheme.colors.secondaryText,
+            disabledTrailingIconColor = SolennixTheme.colors.primary,
+            disabledContainerColor = SolennixTheme.colors.card,
+        ),
+    )
+}
+
+/**
+ * Diálogo nativo M3 TimePicker. Se abre en modo Input (teclado numérico)
+ * con toggle para switchear a dial. 24h por default siguiendo el locale.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TimePickerDialogM3(
+    initialTime: java.time.LocalTime?,
+    onDismiss: () -> Unit,
+    onConfirm: (Int, Int) -> Unit,
+) {
+    val state = rememberTimePickerState(
+        initialHour = initialTime?.hour ?: 18,
+        initialMinute = initialTime?.minute ?: 0,
+        is24Hour = true,
+    )
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Elegir hora") },
+        text = {
+            TimePicker(state = state)
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(state.hour, state.minute) }) {
+                Text("Aceptar")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancelar") }
+        },
+    )
+}
 
 private fun AssignmentStatus.uiLabel(): String = when (this) {
     AssignmentStatus.PENDING -> "Sin confirmar"

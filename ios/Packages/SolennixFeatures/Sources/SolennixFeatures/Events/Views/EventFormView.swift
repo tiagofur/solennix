@@ -25,7 +25,18 @@ public struct EventFormView: View {
         _viewModel = State(initialValue: prefilledViewModel)
     }
 
-    private let stepTitles = ["General", "Productos", "Extras", "Insumos", "Finanzas"]
+    private struct StepMeta {
+        let icon: String
+        let label: String
+    }
+
+    private let steps: [StepMeta] = [
+        StepMeta(icon: "info.circle.fill", label: "General"),
+        StepMeta(icon: "shippingbox.fill", label: "Productos"),
+        StepMeta(icon: "sparkles", label: "Extras"),
+        StepMeta(icon: "cart.fill", label: "Inventario"),
+        StepMeta(icon: "dollarsign.circle.fill", label: "Finanzas"),
+    ]
 
     public var body: some View {
         VStack(spacing: 0) {
@@ -97,39 +108,65 @@ public struct EventFormView: View {
     }
 
     // MARK: - Step Indicator
+    //
+    // Compact HIG-style: linear ProgressView + icon row. Solo el paso activo
+    // muestra la etiqueta debajo (una línea, sin duplicar vertical en iPhone
+    // base). Circles pasados → check, activo → icono primario, futuros → icono
+    // muted.
 
     private var stepIndicator: some View {
-        HStack(spacing: Spacing.sm) {
-            ForEach(1...5, id: \.self) { step in
-                VStack(spacing: Spacing.xs) {
-                    ZStack {
-                        Circle()
-                            .fill(step == viewModel.currentStep ? SolennixColors.primary : (step < viewModel.currentStep ? SolennixColors.primary.opacity(0.3) : SolennixColors.surfaceAlt))
-                            .frame(width: 28, height: 28)
+        let current = viewModel.currentStep
+        return VStack(spacing: Spacing.xs) {
+            ProgressView(value: Double(current), total: Double(steps.count))
+                .progressViewStyle(.linear)
+                .tint(SolennixColors.primary)
 
-                        Text("\(step)")
-                            .font(.caption)
-                            .fontWeight(.bold)
-                            .foregroundStyle(step == viewModel.currentStep ? .white : (step < viewModel.currentStep ? SolennixColors.primary : SolennixColors.textTertiary))
+            HStack(spacing: 0) {
+                ForEach(Array(steps.enumerated()), id: \.offset) { index, meta in
+                    let stepNumber = index + 1
+                    let isActive = stepNumber == current
+                    let isCompleted = stepNumber < current
+                    VStack(spacing: 4) {
+                        ZStack {
+                            Circle()
+                                .fill(
+                                    isCompleted
+                                        ? SolennixColors.primary
+                                        : (isActive ? SolennixColors.primary.opacity(0.15) : SolennixColors.surfaceAlt)
+                                )
+                                .frame(width: 28, height: 28)
+
+                            Image(systemName: isCompleted ? "checkmark" : meta.icon)
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(
+                                    isCompleted
+                                        ? .white
+                                        : (isActive ? SolennixColors.primary : SolennixColors.textTertiary)
+                                )
+                        }
+
+                        if isActive {
+                            Text(meta.label)
+                                .font(.caption2)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(SolennixColors.primary)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.8)
+                        }
                     }
-
-                    Text(stepTitles[step - 1])
-                        .font(.caption2)
-                        .foregroundStyle(step == viewModel.currentStep ? SolennixColors.primary : SolennixColors.textTertiary)
-                }
-                .frame(maxWidth: .infinity)
-
-                if step < 5 {
-                    Rectangle()
-                        .fill(step < viewModel.currentStep ? SolennixColors.primary.opacity(0.3) : SolennixColors.border)
-                        .frame(height: 1)
-                        .frame(maxWidth: 20)
-                        .offset(y: -8)
+                    .frame(maxWidth: .infinity)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        if stepNumber < current {
+                            viewModel.currentStep = stepNumber
+                        }
+                    }
                 }
             }
         }
         .padding(.horizontal, Spacing.md)
-        .padding(.vertical, Spacing.sm)
+        .padding(.top, Spacing.sm)
+        .padding(.bottom, Spacing.xs)
         .background(SolennixColors.background)
     }
 

@@ -315,6 +315,9 @@ struct Step1GeneralView: View {
     }
 
     // MARK: - Status Section
+    //
+    // Picker con .menu style = native iOS dropdown compacto. Antes eran 4 pills
+    // que apretaban el espacio horizontal junto con numPeople en iPhone base.
 
     private var statusSection: some View {
         VStack(alignment: .leading, spacing: Spacing.xs) {
@@ -323,27 +326,45 @@ struct Step1GeneralView: View {
                 .fontWeight(.medium)
                 .foregroundStyle(SolennixColors.text)
 
-            HStack(spacing: Spacing.sm) {
-                ForEach(EventStatus.allCases, id: \.self) { status in
-                    Button {
-                        viewModel.status = status
-                    } label: {
-                        Text(statusLabel(status))
-                            .font(.caption)
-                            .fontWeight(.semibold)
-                            .foregroundStyle(viewModel.status == status ? statusColor(status) : SolennixColors.textTertiary)
-                            .padding(.horizontal, Spacing.sm)
-                            .padding(.vertical, Spacing.xs)
-                            .background(viewModel.status == status ? statusBgColor(status) : SolennixColors.surfaceAlt)
-                            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: CornerRadius.sm)
-                                    .stroke(viewModel.status == status ? statusColor(status).opacity(0.3) : Color.clear, lineWidth: 1)
-                            )
+            Menu {
+                Picker("Estado", selection: $viewModel.status) {
+                    ForEach(EventStatus.allCases, id: \.self) { status in
+                        Label(statusLabel(status), systemImage: statusSymbol(status))
+                            .tag(status)
                     }
-                    .buttonStyle(.plain)
                 }
+            } label: {
+                HStack(spacing: Spacing.sm) {
+                    Circle()
+                        .fill(statusColor(viewModel.status))
+                        .frame(width: 10, height: 10)
+                    Text(statusLabel(viewModel.status))
+                        .font(.body)
+                        .foregroundStyle(SolennixColors.text)
+                    Spacer()
+                    Image(systemName: "chevron.up.chevron.down")
+                        .font(.caption)
+                        .foregroundStyle(SolennixColors.textTertiary)
+                }
+                .padding(.horizontal, Spacing.md)
+                .padding(.vertical, 14)
+                .background(SolennixColors.surface)
+                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                .overlay(
+                    RoundedRectangle(cornerRadius: CornerRadius.md)
+                        .stroke(SolennixColors.border, lineWidth: 1)
+                )
             }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private func statusSymbol(_ status: EventStatus) -> String {
+        switch status {
+        case .quoted: return "doc.text"
+        case .confirmed: return "checkmark.seal"
+        case .completed: return "checkmark.circle"
+        case .cancelled: return "xmark.circle"
         }
     }
 

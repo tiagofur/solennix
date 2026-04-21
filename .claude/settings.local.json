@@ -345,7 +345,27 @@
       "Bash(/Users/tiagofur/dev/eventosapp/android/gradlew -p /Users/tiagofur/dev/eventosapp/android :app:assembleDebug)",
       "Bash(gh run *)",
       "Bash(./gradlew testDebugUnitTest)",
-      "Bash(gh auth *)"
+      "Bash(gh auth *)",
+      "Bash(./gradlew testDebugUnitTest --continue)",
+      "Bash(gh label *)",
+      "Bash(/usr/libexec/java_home -V)",
+      "Bash(export JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home)",
+      "Bash(./gradlew :feature:events:compileDebugUnitTestKotlin)",
+      "Bash(brew --prefix openjdk)",
+      "Bash(brew --prefix openjdk@17)",
+      "Bash(JAVA_HOME=/opt/homebrew/opt/openjdk@17 ./gradlew :feature:events:compileDebugUnitTestKotlin)",
+      "Bash(JAVA_HOME=/opt/homebrew/opt/openjdk@17 ./gradlew :feature:events:testDebugUnitTest)",
+      "Bash(JAVA_HOME=/opt/homebrew/opt/openjdk@17 ./gradlew testDebugUnitTest)",
+      "Bash(JAVA_HOME=/opt/homebrew/opt/openjdk@17 ./gradlew :app:assembleDebug)",
+      "Bash(fd -u \"Package\\\\.resolved\" /Users/tiagofur/dev/eventosapp/ios)",
+      "Bash(JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home ./gradlew :feature:events:compileDebugKotlin)",
+      "Bash(xcodebuild -scheme Solennix -destination 'generic/platform=iOS Simulator' -quiet build)",
+      "Bash(xcodebuild -scheme Solennix -destination 'generic/platform=iOS Simulator' build)",
+      "Bash(rg -E '\\(error:|BUILD SUCC|BUILD FAIL\\)')",
+      "Bash(JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home ./gradlew :app:assembleDebug)",
+      "Bash(~/Library/Android/sdk/emulator/emulator -avd Pixel_10_Pro -no-snapshot-load)",
+      "Bash(echo \"Boot started \\(PID $!\\)\")",
+      "Bash(xcodebuild -scheme Solennix -destination 'platform=iOS Simulator,id=4277DB83-2869-41E5-8F8E-4410D01D8C95' -quiet build)"
     ]
   }
 }
