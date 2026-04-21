@@ -6,11 +6,13 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/tiagofur/solennix-backend/internal/models"
+	"github.com/tiagofur/solennix-backend/internal/repository"
 )
 
 // ---------------------------------------------------------------------------
@@ -297,4 +299,252 @@ func TestValidateEventStaff_MissingStaffID_Rejected(t *testing.T) {
 func TestValidateEventStaff_Valid_Accepted(t *testing.T) {
 	err := ValidateEventStaff(&models.EventStaff{StaffID: uuid.New()})
 	assert.NoError(t, err)
+}
+
+// ---------------------------------------------------------------------------
+// ValidateEventStaff — shift ordering (Ola 1)
+// ---------------------------------------------------------------------------
+
+func TestValidateEventStaff_ShiftOrdering(t *testing.T) {
+	t0 := time.Date(2026, 5, 1, 18, 0, 0, 0, time.UTC)
+	earlier := t0.Add(-2 * time.Hour)
+	later := t0.Add(2 * time.Hour)
+
+	tests := []struct {
+		name       string
+		shiftStart *time.Time
+		shiftEnd   *time.Time
+		wantErr    bool
+		errField   string
+	}{
+		{"end before start rejected", &t0, &earlier, true, "shift_end"},
+		{"end equal to start rejected", &t0, &t0, true, "shift_end"},
+		{"end after start accepted", &t0, &later, false, ""},
+		{"only shift_start accepted", &t0, nil, false, ""},
+		{"only shift_end accepted", nil, &t0, false, ""},
+		{"both nil accepted", nil, nil, false, ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ValidateEventStaff(&models.EventStaff{
+				StaffID:    uuid.New(),
+				ShiftStart: tt.shiftStart,
+				ShiftEnd:   tt.shiftEnd,
+			})
+			if tt.wantErr {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tt.errField)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+// ---------------------------------------------------------------------------
+// ValidateEventStaff — status enum (Ola 1)
+// ---------------------------------------------------------------------------
+
+func TestValidateEventStaff_StatusEnum(t *testing.T) {
+	pending := models.AssignmentStatusPending
+	confirmed := models.AssignmentStatusConfirmed
+	declined := models.AssignmentStatusDeclined
+	cancelled := models.AssignmentStatusCancelled
+	empty := ""
+	invalid := "foo"
+
+	tests := []struct {
+		name    string
+		status  *string
+		wantErr bool
+	}{
+		{"nil status accepted (preserve semantics)", nil, false},
+		{"empty status accepted (preserve semantics)", &empty, false},
+		{"pending accepted", &pending, false},
+		{"confirmed accepted", &confirmed, false},
+		{"declined accepted", &declined, false},
+		{"cancelled accepted", &cancelled, false},
+		{"unknown status rejected", &invalid, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ValidateEventStaff(&models.EventStaff{
+				StaffID: uuid.New(),
+				Status:  tt.status,
+			})
+			if tt.wantErr {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), "status")
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+// ---------------------------------------------------------------------------
+// GetStaffAvailability
+// ---------------------------------------------------------------------------
+
+func TestGetStaffAvailability_MissingParams_Returns400(t *testing.T) {
+	userID := uuid.New()
+	staffRepo := new(MockStaffRepo)
+
+	h := NewStaffHandler(staffRepo)
+	req := makeReqWithUserID(http.MethodGet, "/api/staff/availability", "", userID)
+	rr := httptest.NewRecorder()
+	h.GetStaffAvailability(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+	assert.Contains(t, rr.Body.String(), "date or (start,end) is required")
+	staffRepo.AssertNotCalled(t, "GetAvailability", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+}
+
+func TestGetStaffAvailability_OnlyStart_Returns400(t *testing.T) {
+	userID := uuid.New()
+	staffRepo := new(MockStaffRepo)
+
+	h := NewStaffHandler(staffRepo)
+	req := makeReqWithUserID(http.MethodGet, "/api/staff/availability?start=2026-05-01", "", userID)
+	rr := httptest.NewRecorder()
+	h.GetStaffAvailability(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+	staffRepo.AssertNotCalled(t, "GetAvailability", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+}
+
+func TestGetStaffAvailability_InvalidDateFormat_Returns400(t *testing.T) {
+	userID := uuid.New()
+	staffRepo := new(MockStaffRepo)
+
+	h := NewStaffHandler(staffRepo)
+	req := makeReqWithUserID(http.MethodGet, "/api/staff/availability?date=2026-13-40", "", userID)
+	rr := httptest.NewRecorder()
+	h.GetStaffAvailability(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+	assert.Contains(t, rr.Body.String(), "invalid")
+	staffRepo.AssertNotCalled(t, "GetAvailability", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+}
+
+func TestGetStaffAvailability_InvalidEndDate_Returns400(t *testing.T) {
+	userID := uuid.New()
+	staffRepo := new(MockStaffRepo)
+
+	h := NewStaffHandler(staffRepo)
+	req := makeReqWithUserID(http.MethodGet, "/api/staff/availability?start=2026-05-01&end=not-a-date", "", userID)
+	rr := httptest.NewRecorder()
+	h.GetStaffAvailability(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+	assert.Contains(t, rr.Body.String(), "invalid end date")
+	staffRepo.AssertNotCalled(t, "GetAvailability", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+}
+
+func TestGetStaffAvailability_EndBeforeStart_Returns400(t *testing.T) {
+	userID := uuid.New()
+	staffRepo := new(MockStaffRepo)
+
+	h := NewStaffHandler(staffRepo)
+	req := makeReqWithUserID(http.MethodGet, "/api/staff/availability?start=2026-05-10&end=2026-05-01", "", userID)
+	rr := httptest.NewRecorder()
+	h.GetStaffAvailability(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+	assert.Contains(t, rr.Body.String(), "on or after start")
+	staffRepo.AssertNotCalled(t, "GetAvailability", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+}
+
+func TestGetStaffAvailability_SingleDate_Success(t *testing.T) {
+	userID := uuid.New()
+	staffID := uuid.New()
+	staffRepo := new(MockStaffRepo)
+
+	expected := []repository.StaffAvailability{
+		{
+			StaffID:   staffID,
+			StaffName: "Maria Fotógrafa",
+			Assignments: []repository.StaffAvailabilityAssignment{
+				{
+					EventID:   uuid.New(),
+					EventName: "Boda Pérez",
+					EventDate: "2026-05-01",
+					Status:    "confirmed",
+				},
+			},
+		},
+	}
+	staffRepo.On("GetAvailability", mock.Anything, userID, "2026-05-01", "2026-05-01").Return(expected, nil)
+
+	h := NewStaffHandler(staffRepo)
+	req := makeReqWithUserID(http.MethodGet, "/api/staff/availability?date=2026-05-01", "", userID)
+	rr := httptest.NewRecorder()
+	h.GetStaffAvailability(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+
+	var got []repository.StaffAvailability
+	assert.NoError(t, json.NewDecoder(rr.Body).Decode(&got))
+	assert.Len(t, got, 1)
+	assert.Equal(t, staffID, got[0].StaffID)
+	assert.Equal(t, "Maria Fotógrafa", got[0].StaffName)
+	assert.Len(t, got[0].Assignments, 1)
+	assert.Equal(t, "Boda Pérez", got[0].Assignments[0].EventName)
+	staffRepo.AssertCalled(t, "GetAvailability", mock.Anything, userID, "2026-05-01", "2026-05-01")
+}
+
+func TestGetStaffAvailability_Range_Success(t *testing.T) {
+	userID := uuid.New()
+	staffRepo := new(MockStaffRepo)
+
+	staffRepo.On("GetAvailability", mock.Anything, userID, "2026-05-01", "2026-05-07").Return(
+		[]repository.StaffAvailability{}, nil,
+	)
+
+	h := NewStaffHandler(staffRepo)
+	req := makeReqWithUserID(http.MethodGet, "/api/staff/availability?start=2026-05-01&end=2026-05-07", "", userID)
+	rr := httptest.NewRecorder()
+	h.GetStaffAvailability(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	assert.Equal(t, "[]\n", rr.Body.String())
+	staffRepo.AssertCalled(t, "GetAvailability", mock.Anything, userID, "2026-05-01", "2026-05-07")
+}
+
+func TestGetStaffAvailability_DateOverridesStartEnd(t *testing.T) {
+	userID := uuid.New()
+	staffRepo := new(MockStaffRepo)
+
+	// `date` should win over `start`/`end` per handler semantics.
+	staffRepo.On("GetAvailability", mock.Anything, userID, "2026-05-15", "2026-05-15").Return(
+		[]repository.StaffAvailability{}, nil,
+	)
+
+	h := NewStaffHandler(staffRepo)
+	req := makeReqWithUserID(
+		http.MethodGet,
+		"/api/staff/availability?date=2026-05-15&start=2026-01-01&end=2026-12-31",
+		"", userID,
+	)
+	rr := httptest.NewRecorder()
+	h.GetStaffAvailability(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	staffRepo.AssertCalled(t, "GetAvailability", mock.Anything, userID, "2026-05-15", "2026-05-15")
+}
+
+func TestGetStaffAvailability_RepoError_Returns500(t *testing.T) {
+	userID := uuid.New()
+	staffRepo := new(MockStaffRepo)
+	staffRepo.On("GetAvailability", mock.Anything, userID, "2026-05-01", "2026-05-01").Return(nil, errTest)
+
+	h := NewStaffHandler(staffRepo)
+	req := makeReqWithUserID(http.MethodGet, "/api/staff/availability?date=2026-05-01", "", userID)
+	rr := httptest.NewRecorder()
+	h.GetStaffAvailability(rr, req)
+
+	assert.Equal(t, http.StatusInternalServerError, rr.Code)
+	assert.Contains(t, rr.Body.String(), "Failed to fetch availability")
 }
