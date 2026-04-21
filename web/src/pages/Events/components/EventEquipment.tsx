@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { Plus, Trash2, AlertTriangle, Lightbulb, Wrench } from 'lucide-react';
 import { EquipmentConflict, EquipmentSuggestion, InventoryItem } from '../../../types/entities';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 
 interface SelectedEquipment {
   inventory_id: string;
@@ -28,6 +30,11 @@ export const EventEquipment: React.FC<EventEquipmentProps> = ({
   onEquipmentChange,
   onQuickAddSuggestion,
 }) => {
+  const [pendingDeleteIndex, setPendingDeleteIndex] = useState<number | null>(null);
+  const pendingDeleteName = pendingDeleteIndex !== null
+    ? equipmentInventory.find(e => e.id === selectedEquipment[pendingDeleteIndex]?.inventory_id)?.ingredient_name
+    : null;
+
   const getEquipmentName = (inventoryId: string) => {
     return equipmentInventory.find(e => e.id === inventoryId)?.ingredient_name || '';
   };
@@ -96,6 +103,10 @@ export const EventEquipment: React.FC<EventEquipmentProps> = ({
       {/* Equipment list */}
       {selectedEquipment.map((item, index) => {
         const itemConflicts = getConflictsForItem(item.inventory_id);
+        const inventoryItem = equipmentInventory.find(e => e.id === item.inventory_id);
+        const overstock = !!inventoryItem
+          && inventoryItem.current_stock > 0
+          && item.quantity > inventoryItem.current_stock;
         return (
           <div
             key={index}
@@ -107,7 +118,7 @@ export const EventEquipment: React.FC<EventEquipmentProps> = ({
           >
             <button
               type="button"
-              onClick={() => onRemoveEquipment(index)}
+              onClick={() => setPendingDeleteIndex(index)}
               className="absolute top-2 right-2 text-text-secondary hover:text-error transition-colors"
               aria-label={`Eliminar equipo ${index + 1}`}
             >
@@ -158,7 +169,7 @@ export const EventEquipment: React.FC<EventEquipmentProps> = ({
             </div>
 
             {item.inventory_id && (
-              <div className="mt-2 flex items-center gap-2">
+              <div className="mt-2 flex items-center gap-2 flex-wrap">
                 <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-surface-alt text-text-secondary border border-border">
                   Sin costo - Activo reutilizable
                 </span>
@@ -166,6 +177,14 @@ export const EventEquipment: React.FC<EventEquipmentProps> = ({
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-warning/10 text-warning">
                     <AlertTriangle className="h-3 w-3" />
                     Conflicto
+                  </span>
+                )}
+                {/* Alerta inline cuando la cantidad supera el stock. Paridad
+                    con Insumos + mobile. Stock NO es date-aware (ver issue #96). */}
+                {overstock && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-error/10 text-error">
+                    <AlertTriangle className="h-3 w-3" />
+                    Insuficiente ({inventoryItem.current_stock} {inventoryItem.unit})
                   </span>
                 )}
               </div>
@@ -189,6 +208,21 @@ export const EventEquipment: React.FC<EventEquipmentProps> = ({
           </span>
         </div>
       )}
+
+      <ConfirmDialog
+        open={pendingDeleteIndex !== null}
+        title="¿Eliminar equipo?"
+        description={pendingDeleteName
+          ? `¿Quitar "${pendingDeleteName}" de este evento?`
+          : '¿Quitar este equipo del evento?'}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        onConfirm={() => {
+          if (pendingDeleteIndex !== null) onRemoveEquipment(pendingDeleteIndex);
+          setPendingDeleteIndex(null);
+        }}
+        onCancel={() => setPendingDeleteIndex(null)}
+      />
     </div>
   );
 };

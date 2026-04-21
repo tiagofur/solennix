@@ -55,6 +55,7 @@ describe('EventSupplies', () => {
     ];
     render(<EventSupplies {...defaultProps} selectedSupplies={supplies} onRemoveSupply={onRemoveSupply} />);
     fireEvent.click(screen.getByLabelText('Eliminar insumo 1'));
+    fireEvent.click(screen.getByRole('button', { name: /^Eliminar$/ }));
     expect(onRemoveSupply).toHaveBeenCalledWith(0);
   });
 

@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { Plus, Trash2, Lightbulb, Fuel } from 'lucide-react';
 import { SupplySuggestion, InventoryItem } from '../../../types/entities';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 
 interface SelectedSupply {
   inventory_id: string;
@@ -28,6 +30,11 @@ export const EventSupplies: React.FC<EventSuppliesProps> = ({
   onSupplyChange,
   onQuickAddSuggestion,
 }) => {
+  const [pendingDeleteIndex, setPendingDeleteIndex] = useState<number | null>(null);
+  const pendingDeleteName = pendingDeleteIndex !== null
+    ? supplyInventory.find(s => s.id === selectedSupplies[pendingDeleteIndex]?.inventory_id)?.ingredient_name
+    : null;
+
   const getSupplyItem = (inventoryId: string) => {
     return supplyInventory.find(s => s.id === inventoryId);
   };
@@ -85,7 +92,7 @@ export const EventSupplies: React.FC<EventSuppliesProps> = ({
           >
             <button
               type="button"
-              onClick={() => onRemoveSupply(index)}
+              onClick={() => setPendingDeleteIndex(index)}
               className="absolute top-2 right-2 text-text-secondary hover:text-error transition-colors"
               aria-label={`Eliminar insumo ${index + 1}`}
             >
@@ -226,6 +233,21 @@ export const EventSupplies: React.FC<EventSuppliesProps> = ({
           </span>
         </div>
       )}
+
+      <ConfirmDialog
+        open={pendingDeleteIndex !== null}
+        title="¿Eliminar insumo?"
+        description={pendingDeleteName
+          ? `¿Quitar "${pendingDeleteName}" de este evento?`
+          : '¿Quitar este insumo del evento?'}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        onConfirm={() => {
+          if (pendingDeleteIndex !== null) onRemoveSupply(pendingDeleteIndex);
+          setPendingDeleteIndex(null);
+        }}
+        onCancel={() => setPendingDeleteIndex(null)}
+      />
     </div>
   );
 };

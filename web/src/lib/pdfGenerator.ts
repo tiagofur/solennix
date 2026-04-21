@@ -195,22 +195,38 @@ export const generateBudgetPDF = (
   doc.setFontSize(10);
   doc.setTextColor(TEXT_COLOR);
 
+  // Compute discount honoring discount_type — antes se usaba event.discount
+  // directo, pero cuando discount_type === 'percent' ese valor es el %
+  // (ej: 10), no el monto. El PDF mostraba "-$10.00" para un 10% — cliente
+  // firmaba/recibia un numero que no coincidia con la pantalla de Finanzas.
+  const rawDiscount = event.discount || 0;
+  const taxAmount = event.tax_amount || 0;
+  const subtotalForDiscount = event.total_amount - taxAmount
+    + (event.discount_type === 'fixed' ? rawDiscount : 0);
+  const discountAmount = event.discount_type === 'percent'
+    ? subtotalForDiscount * rawDiscount / 100
+    : rawDiscount;
+  const preDiscountSubtotal = (event.total_amount - taxAmount) + discountAmount;
+
   doc.setFont('helvetica', 'normal');
   doc.text('Subtotal:', summaryX, currentY);
-  doc.text(formatCurrency(event.total_amount + (event.discount || 0)), pageWidth - 20, currentY, { align: 'right' });
+  doc.text(formatCurrency(preDiscountSubtotal), pageWidth - 20, currentY, { align: 'right' });
 
-  if (event.discount && event.discount > 0) {
+  if (rawDiscount > 0) {
     currentY += 7;
     doc.setTextColor(brandColor);
-    doc.text('Descuento:', summaryX, currentY);
-    doc.text(`-${formatCurrency(event.discount)}`, pageWidth - 20, currentY, { align: 'right' });
+    const discountLabel = event.discount_type === 'percent'
+      ? `Descuento (${rawDiscount}%):`
+      : 'Descuento:';
+    doc.text(discountLabel, summaryX, currentY);
+    doc.text(`-${formatCurrency(discountAmount)}`, pageWidth - 20, currentY, { align: 'right' });
     doc.setTextColor(TEXT_COLOR);
   }
 
   if (event.requires_invoice) {
     currentY += 7;
     doc.text(`IVA (${event.tax_rate || 16}%):`, summaryX, currentY);
-    doc.text(formatCurrency(event.tax_amount || 0), pageWidth - 20, currentY, { align: 'right' });
+    doc.text(formatCurrency(taxAmount), pageWidth - 20, currentY, { align: 'right' });
   }
 
 
@@ -621,17 +637,29 @@ export const generateInvoicePDF = (
   doc.setTextColor(TEXT_COLOR);
   doc.setFont('helvetica', 'normal');
 
-  // Subtotal before tax
-  const subtotalBeforeTax = event.total_amount - (event.tax_amount || 0);
+  // Honor discount_type — mismo fix que la cotizacion. Antes se mostraba
+  // event.discount directo (% como si fuera monto), divergia con Finanzas.
+  const rawDiscount = event.discount || 0;
+  const taxAmount = event.tax_amount || 0;
+  const subtotalForDiscount = event.total_amount - taxAmount
+    + (event.discount_type === 'fixed' ? rawDiscount : 0);
+  const discountAmount = event.discount_type === 'percent'
+    ? subtotalForDiscount * rawDiscount / 100
+    : rawDiscount;
+  const preDiscountSubtotal = (event.total_amount - taxAmount) + discountAmount;
+
   doc.text('Subtotal:', summaryX, currentY);
-  doc.text(formatCurrency(subtotalBeforeTax), pageWidth - 20, currentY, { align: 'right' });
+  doc.text(formatCurrency(preDiscountSubtotal), pageWidth - 20, currentY, { align: 'right' });
 
   currentY += 7;
 
-  if (event.discount && event.discount > 0) {
+  if (rawDiscount > 0) {
     doc.setTextColor(brandColor);
-    doc.text('Descuento:', summaryX, currentY);
-    doc.text(`-${formatCurrency(event.discount)}`, pageWidth - 20, currentY, { align: 'right' });
+    const discountLabel = event.discount_type === 'percent'
+      ? `Descuento (${rawDiscount}%):`
+      : 'Descuento:';
+    doc.text(discountLabel, summaryX, currentY);
+    doc.text(`-${formatCurrency(discountAmount)}`, pageWidth - 20, currentY, { align: 'right' });
     currentY += 7;
     doc.setTextColor(TEXT_COLOR);
   }
@@ -639,7 +667,7 @@ export const generateInvoicePDF = (
   // Tax (IVA)
   if (event.requires_invoice || event.tax_amount) {
     doc.text(`IVA (${event.tax_rate || 16}%):`, summaryX, currentY);
-    doc.text(formatCurrency(event.tax_amount || 0), pageWidth - 20, currentY, { align: 'right' });
+    doc.text(formatCurrency(taxAmount), pageWidth - 20, currentY, { align: 'right' });
     currentY += 7;
   }
 

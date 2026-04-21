@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Plus, Trash2, Users } from 'lucide-react';
 import { useFormContext } from 'react-hook-form';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 
 import { SortableItem } from '@/components/SortableItem';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 
 // Local type to avoid Supabase dependency
 interface Product {
@@ -43,6 +44,13 @@ export const EventProducts: React.FC<EventProductsProps> = ({
 }) => {
   const { watch } = useFormContext();
   const numPeople = watch('num_people');
+
+  // Indice del producto pendiente de eliminacion — null = no hay dialog.
+  // Paridad con mobile: antes el tap al trash borraba sin preguntar.
+  const [pendingDeleteIndex, setPendingDeleteIndex] = useState<number | null>(null);
+  const pendingDeleteProduct = pendingDeleteIndex !== null
+    ? products.find((p) => p.id === selectedProducts[pendingDeleteIndex]?.product_id)
+    : null;
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -83,7 +91,7 @@ export const EventProducts: React.FC<EventProductsProps> = ({
               <div className="bg-surface-alt p-4 rounded-xl relative group border border-border shadow-xs">
                 <button
                   type="button"
-                  onClick={() => onRemoveProduct(index)}
+                  onClick={() => setPendingDeleteIndex(index)}
                   className="absolute top-2 right-2 text-text-secondary hover:text-error transition-colors"
                   aria-label={`Eliminar producto ${index + 1}`}
                 >
@@ -218,6 +226,21 @@ export const EventProducts: React.FC<EventProductsProps> = ({
           ${selectedProducts.reduce((sum, item) => sum + (item.price - (item.discount || 0)) * item.quantity, 0).toFixed(2)}
         </span>
       </div>
+
+      <ConfirmDialog
+        open={pendingDeleteIndex !== null}
+        title="¿Eliminar producto?"
+        description={pendingDeleteProduct
+          ? `¿Quitar "${pendingDeleteProduct.name}" de este evento?`
+          : '¿Quitar este producto del evento?'}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        onConfirm={() => {
+          if (pendingDeleteIndex !== null) onRemoveProduct(pendingDeleteIndex);
+          setPendingDeleteIndex(null);
+        }}
+        onCancel={() => setPendingDeleteIndex(null)}
+      />
     </div>
   );
 };

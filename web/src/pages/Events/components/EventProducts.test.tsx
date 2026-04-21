@@ -47,6 +47,8 @@ describe('EventProducts', () => {
     expect(onProductChange).toHaveBeenCalledWith(0, 'quantity', 50);
 
     fireEvent.click(screen.getByRole('button', { name: /Eliminar producto 1/i }));
+    // Dialog de confirmación muestra un boton "Eliminar" sin aria-label.
+    fireEvent.click(screen.getByRole('button', { name: /^Eliminar$/ }));
     expect(onRemoveProduct).toHaveBeenCalledWith(0);
   });
 

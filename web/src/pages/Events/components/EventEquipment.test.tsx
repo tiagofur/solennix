@@ -203,6 +203,7 @@ describe('EventEquipment', () => {
 
     // Remove the second equipment (index 1)
     fireEvent.click(screen.getByRole('button', { name: /Eliminar equipo 2/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^Eliminar$/ }));
     expect(onRemoveEquipment).toHaveBeenCalledWith(1);
   });
 
@@ -564,6 +565,7 @@ describe('EventEquipment', () => {
 
     // Remove the first item (index 0)
     fireEvent.click(screen.getByRole('button', { name: /Eliminar equipo 1/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^Eliminar$/ }));
     expect(onRemoveEquipment).toHaveBeenCalledWith(0);
 
     // Equipment count: all 3 have inventory_id set

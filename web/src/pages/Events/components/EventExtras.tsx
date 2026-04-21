@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Plus, Trash2, ClipboardCheck } from 'lucide-react';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 
 import { SortableItem } from '@/components/SortableItem';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 
 export interface SelectedExtra {
   description: string;
@@ -33,6 +34,10 @@ export const EventExtras: React.FC<EventExtrasProps> = ({
     useSensor(KeyboardSensor),
   );
 
+  // Confirmacion previa al delete — paridad con mobile.
+  const [pendingDeleteIndex, setPendingDeleteIndex] = useState<number | null>(null);
+  const pendingDeleteExtra = pendingDeleteIndex !== null ? extras[pendingDeleteIndex] : null;
+
   // IDs determinísticos por índice — sin memoización para evitar
   // warnings del React Compiler sobre `[extras.length]` y porque el costo
   // de generar strings cortos es insignificante frente al riesgo de stale IDs.
@@ -59,7 +64,7 @@ export const EventExtras: React.FC<EventExtrasProps> = ({
               <div className="bg-surface-alt p-4 rounded-xl relative group mb-3 border border-border shadow-xs">
           <button
             type="button"
-            onClick={() => onRemoveExtra(index)}
+            onClick={() => setPendingDeleteIndex(index)}
             className="absolute top-2 right-2 text-text-secondary hover:text-error transition-colors"
             aria-label={`Eliminar extra ${index + 1}`}
           >
@@ -157,6 +162,21 @@ export const EventExtras: React.FC<EventExtrasProps> = ({
           ${extras.reduce((sum, item) => sum + item.price, 0).toFixed(2)}
         </span>
       </div>
+
+      <ConfirmDialog
+        open={pendingDeleteIndex !== null}
+        title="¿Eliminar extra?"
+        description={pendingDeleteExtra?.description
+          ? `¿Quitar "${pendingDeleteExtra.description}" de este evento?`
+          : '¿Quitar este extra del evento?'}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        onConfirm={() => {
+          if (pendingDeleteIndex !== null) onRemoveExtra(pendingDeleteIndex);
+          setPendingDeleteIndex(null);
+        }}
+        onCancel={() => setPendingDeleteIndex(null)}
+      />
     </div>
   );
 };

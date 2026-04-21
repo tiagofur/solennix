@@ -25,6 +25,7 @@ describe('EventExtras', () => {
     expect(onExtraChange).toHaveBeenCalledWith(0, 'description', 'Gasolina');
 
     fireEvent.click(screen.getByRole('button', { name: /Eliminar extra 1/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^Eliminar$/ }));
     expect(onRemoveExtra).toHaveBeenCalledWith(0);
 
     fireEvent.click(screen.getByRole('button', { name: /Agregar un extra adicional/i }));
