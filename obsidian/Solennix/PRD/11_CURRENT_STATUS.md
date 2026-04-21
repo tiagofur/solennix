@@ -357,6 +357,21 @@ Commits en rama `super-plan`: `d69df81`, `99c17bc`, `836eba6`.
 - 3 tests skipped por leak en aggregation de ingredientes del componente EventSummary — requiere refactor de la lógica a función pura (bloqueado por Fase 4 que abriría el componente)
 - 12 tests skipped por selectors/formatos desactualizados — requieren investigación individual
 
+### Deuda acumulada de los slices Dashboard / Calendar / Events (2026-04-20)
+
+Todos trackeados como GitHub issues ahora para poder priorizarlos individualmente y cerrarlos en slices futuros:
+
+| # | Título | Label |
+|---|---|---|
+| [#88](https://github.com/tiagofur/eventosapp/issues/88) | Events: mover filter/search mobile al endpoint `/api/events/search` | `type:refactor` |
+| [#89](https://github.com/tiagofur/eventosapp/issues/89) | iOS Events: pagination infra existe en VM pero no se dispara en UI | `type:refactor` |
+| [#90](https://github.com/tiagofur/eventosapp/issues/90) | Android: Paging3 infra huérfana tras el cambio a sort client-side | `type:refactor` |
+| [#91](https://github.com/tiagofur/eventosapp/issues/91) | Android Events list: soft-delete + undo toast (paridad con iOS) | `enhancement` |
+| [#92](https://github.com/tiagofur/eventosapp/issues/92) | Android: `feature:events` tests no compilan (VMs con nuevos params) | `type:bug` |
+| [#93](https://github.com/tiagofur/eventosapp/issues/93) | CI: agregar job de Android (gradle test + build) al pipeline | `type:chore` |
+| [#94](https://github.com/tiagofur/eventosapp/issues/94) | i18n: extraer strings de Dashboard al catálogo (ES + EN) | `enhancement` |
+| [#95](https://github.com/tiagofur/eventosapp/issues/95) | i18n: extraer strings de Events list al catálogo (ES + EN) | `enhancement` |
+
 **Gate verde en el pipeline completo**:
 - Backend: `go test ./...` + `redocly lint` verdes
 - Web: typecheck + lint (0 errors) + 1128 unit tests + build + Playwright (2 pass / 26 auto-skip)
