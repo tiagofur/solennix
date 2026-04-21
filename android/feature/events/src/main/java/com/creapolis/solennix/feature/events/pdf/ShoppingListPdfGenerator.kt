@@ -65,12 +65,15 @@ object ShoppingListPdfGenerator {
             purchaseItems.forEachIndexed { index, supply ->
                 val itemCost = supply.quantity * supply.unitCost
                 totalCost += itemCost
-                val name = supply.supplyName ?: supply.inventoryId
+                // Fallback al UUID pelado se veia feo en el PDF ("Insumo sin
+                // nombre" es mas amigable si supplyName viene nulo del backend).
+                val name = supply.supplyName?.takeIf { it.isNotBlank() } ?: "Insumo sin nombre"
+                val qtyText = "${supply.quantity}${supply.unit?.let { " $it" } ?: ""}"
 
                 manager.drawTableRow(
                     listOf(
                         name to colWidths[0],
-                        "${supply.quantity} ${supply.unit ?: ""}" to colWidths[1],
+                        qtyText to colWidths[1],
                         PdfConstants.formatCurrency(supply.unitCost) to colWidths[2],
                         PdfConstants.formatCurrency(itemCost) to colWidths[3]
                     ),

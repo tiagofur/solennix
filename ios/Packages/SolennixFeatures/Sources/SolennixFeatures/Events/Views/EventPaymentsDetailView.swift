@@ -131,7 +131,7 @@ public struct EventPaymentsDetailView: View {
                         }
 
                         if viewModel.depositBalance > 0.01 {
-                            PremiumButton(title: "$ Anticipo - \(viewModel.depositBalance.asMXN)", fullWidth: true) {
+                            PremiumButton(title: "Anticipo \(viewModel.depositBalance.asMXN)", fullWidth: true) {
                                 viewModel.payDeposit()
                             }
                         }

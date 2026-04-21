@@ -227,6 +227,9 @@ fun EventPaymentsScreen(
     val context = LocalContext.current
     var showPaymentModal by remember { mutableStateOf(false) }
     var paymentInitialAmount by remember { mutableStateOf<Double?>(null) }
+    // Pago seleccionado para confirmar eliminacion. null = no hay dialog abierto.
+    // Paridad con iOS — antes el tap al trash eliminaba sin confirmar.
+    var pendingDeletePaymentId by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
         topBar = {
@@ -286,18 +289,34 @@ fun EventPaymentsScreen(
                 }
             }
 
-            // Action buttons
+            // Action buttons — paridad con iOS: Registrar Pago + Liquidar en
+            // la misma fila, Anticipo como fila propia abajo si aplica.
             if (remaining > 0.01) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    PremiumButton(
-                        text = "Registrar Pago",
-                        onClick = {
-                            paymentInitialAmount = null
-                            showPaymentModal = true
-                        },
-                        modifier = Modifier.weight(1f),
-                        icon = Icons.Default.Add
-                    )
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        PremiumButton(
+                            text = "Registrar Pago",
+                            onClick = {
+                                paymentInitialAmount = null
+                                showPaymentModal = true
+                            },
+                            modifier = Modifier.weight(1f),
+                            icon = Icons.Default.Add
+                        )
+
+                        // Liquidar: pre-rellena el modal con el saldo restante.
+                        // Paridad con iOS — antes el usuario tenia que calcular
+                        // el saldo a mano en el modal.
+                        PremiumButton(
+                            text = "Liquidar ${remaining.asMXN()}",
+                            onClick = {
+                                paymentInitialAmount = remaining
+                                showPaymentModal = true
+                            },
+                            modifier = Modifier.weight(1f),
+                            icon = Icons.Default.Check
+                        )
+                    }
 
                     val depositPct = event.depositPercent
                     if (depositPct != null && depositPct > 0) {
@@ -309,12 +328,12 @@ fun EventPaymentsScreen(
                                     paymentInitialAmount = depositRemaining
                                     showPaymentModal = true
                                 },
-                                modifier = Modifier.weight(1f),
+                                modifier = Modifier.fillMaxWidth(),
                                 shape = MaterialTheme.shapes.medium
                             ) {
                                 Icon(Icons.Default.Savings, contentDescription = null, modifier = Modifier.size(18.dp))
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text("Anticipo")
+                                Text("Anticipo ${depositRemaining.asMXN()}")
                             }
                         }
                     }
@@ -366,7 +385,7 @@ fun EventPaymentsScreen(
                                     Text(payment.amount.asMXN(), style = MaterialTheme.typography.titleMedium, color = SolennixTheme.colors.success, fontWeight = FontWeight.Bold)
                                     Spacer(modifier = Modifier.width(8.dp))
                                     IconButton(
-                                        onClick = { viewModel.deletePayment(payment.id) },
+                                        onClick = { pendingDeletePaymentId = payment.id },
                                         modifier = Modifier.size(32.dp)
                                     ) {
                                         Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = SolennixTheme.colors.error, modifier = Modifier.size(18.dp))
@@ -392,6 +411,29 @@ fun EventPaymentsScreen(
                     showPaymentModal = false
                     paymentInitialAmount = null
                     Toast.makeText(context, "Pago registrado", Toast.LENGTH_SHORT).show()
+                }
+            )
+        }
+
+        // Confirmacion de eliminacion de pago — paridad con iOS.
+        pendingDeletePaymentId?.let { paymentId ->
+            AlertDialog(
+                onDismissRequest = { pendingDeletePaymentId = null },
+                title = { Text("¿Eliminar pago?") },
+                text = { Text("Esta accion no se puede deshacer.") },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            viewModel.deletePayment(paymentId)
+                            pendingDeletePaymentId = null
+                            Toast.makeText(context, "Pago eliminado", Toast.LENGTH_SHORT).show()
+                        }
+                    ) {
+                        Text("Eliminar", color = SolennixTheme.colors.error)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { pendingDeletePaymentId = null }) { Text("Cancelar") }
                 }
             )
         }

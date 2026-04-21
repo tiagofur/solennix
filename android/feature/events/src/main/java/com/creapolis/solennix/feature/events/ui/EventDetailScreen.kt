@@ -20,6 +20,8 @@ import androidx.compose.material.icons.automirrored.filled.PlaylistAddCheck
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -300,18 +302,32 @@ fun EventDetailScreen(
                                 onClick = { onPaymentsClick(event.id) }
                             )
 
-                            // Action Buttons
+                            // Action Buttons — paridad con iOS: Registrar Pago
+                            // + Liquidar en la misma fila, Anticipo como fila
+                            // propia abajo si hay saldo de anticipo pendiente.
                             if (remaining > 0.01) {
-                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    PremiumButton(
-                                        text = "Registrar Pago",
-                                        onClick = {
-                                            paymentInitialAmount = null
-                                            showPaymentModal = true
-                                        },
-                                        modifier = Modifier.weight(1f),
-                                        icon = Icons.Default.Add
-                                    )
+                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        PremiumButton(
+                                            text = "Registrar Pago",
+                                            onClick = {
+                                                paymentInitialAmount = null
+                                                showPaymentModal = true
+                                            },
+                                            modifier = Modifier.weight(1f),
+                                            icon = Icons.Default.Add
+                                        )
+
+                                        PremiumButton(
+                                            text = "Liquidar ${remaining.asMXN()}",
+                                            onClick = {
+                                                paymentInitialAmount = remaining
+                                                showPaymentModal = true
+                                            },
+                                            modifier = Modifier.weight(1f),
+                                            icon = Icons.Default.Check
+                                        )
+                                    }
 
                                     val depositPct = event.depositPercent
                                     if (depositPct != null && depositPct > 0) {
@@ -323,7 +339,7 @@ fun EventDetailScreen(
                                                     paymentInitialAmount = depositRemaining
                                                     showPaymentModal = true
                                                 },
-                                                modifier = Modifier.weight(1f),
+                                                modifier = Modifier.fillMaxWidth(),
                                                 shape = MaterialTheme.shapes.medium
                                             ) {
                                                 Icon(
@@ -332,7 +348,7 @@ fun EventDetailScreen(
                                                     modifier = Modifier.size(18.dp)
                                                 )
                                                 Spacer(modifier = Modifier.width(4.dp))
-                                                Text("Anticipo")
+                                                Text("Anticipo ${depositRemaining.asMXN()}")
                                             }
                                         }
                                     }
@@ -1534,6 +1550,24 @@ fun DocumentActionsGrid(
         updatedAt = ""
     )
     var isGenerating by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+
+    // Helper: mueve la generacion del PDF a IO-dispatcher para no freezar la
+    // UI. Los PDFs grandes (Contrato con productos + extras + clausulas) en
+    // main thread congelaban el boton por 1-2s en devices lentos.
+    val generatePdfAsync: (() -> File) -> Unit = { generator ->
+        isGenerating = true
+        scope.launch {
+            try {
+                val file = withContext(kotlinx.coroutines.Dispatchers.IO) { generator() }
+                onSharePdf(file)
+            } catch (e: Exception) {
+                Toast.makeText(context, "Error generando PDF: ${e.message}", Toast.LENGTH_SHORT).show()
+            } finally {
+                isGenerating = false
+            }
+        }
+    }
 
     Column(modifier = Modifier.fillMaxWidth()) {
         // First row
@@ -1543,9 +1577,8 @@ fun DocumentActionsGrid(
                 label = "Cotizaci\u00f3n",
                 modifier = Modifier.weight(1f),
                 onClick = {
-                    isGenerating = true
-                    try {
-                        val file = BudgetPdfGenerator.generate(
+                    generatePdfAsync {
+                        BudgetPdfGenerator.generate(
                             context = context,
                             event = event,
                             client = client,
@@ -1553,11 +1586,7 @@ fun DocumentActionsGrid(
                             extras = uiState.extras,
                             user = uiState.currentUser
                         )
-                        onSharePdf(file)
-                    } catch (e: Exception) {
-                        Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
                     }
-                    isGenerating = false
                 }
             )
             Spacer(modifier = Modifier.width(8.dp))
@@ -1566,9 +1595,8 @@ fun DocumentActionsGrid(
                 label = "Contrato",
                 modifier = Modifier.weight(1f),
                 onClick = {
-                    isGenerating = true
-                    try {
-                        val file = ContractPdfGenerator.generate(
+                    generatePdfAsync {
+                        ContractPdfGenerator.generate(
                             context = context,
                             event = event,
                             client = client,
@@ -1576,11 +1604,7 @@ fun DocumentActionsGrid(
                             extras = uiState.extras,
                             user = uiState.currentUser
                         )
-                        onSharePdf(file)
-                    } catch (e: Exception) {
-                        Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
                     }
-                    isGenerating = false
                 }
             )
             Spacer(modifier = Modifier.width(8.dp))
@@ -1589,9 +1613,8 @@ fun DocumentActionsGrid(
                 label = "Checklist",
                 modifier = Modifier.weight(1f),
                 onClick = {
-                    isGenerating = true
-                    try {
-                        val file = ChecklistPdfGenerator.generate(
+                    generatePdfAsync {
+                        ChecklistPdfGenerator.generate(
                             context = context,
                             event = event,
                             client = client,
@@ -1599,11 +1622,7 @@ fun DocumentActionsGrid(
                             inventoryItems = emptyList(),
                             user = uiState.currentUser
                         )
-                        onSharePdf(file)
-                    } catch (e: Exception) {
-                        Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
                     }
-                    isGenerating = false
                 }
             )
         }
@@ -1615,20 +1634,15 @@ fun DocumentActionsGrid(
                 label = "Pagos",
                 modifier = Modifier.weight(1f),
                 onClick = {
-                    isGenerating = true
-                    try {
-                        val file = PaymentReportPdfGenerator.generate(
+                    generatePdfAsync {
+                        PaymentReportPdfGenerator.generate(
                             context = context,
                             event = event,
                             client = client,
                             payments = uiState.payments,
                             user = uiState.currentUser
                         )
-                        onSharePdf(file)
-                    } catch (e: Exception) {
-                        Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
                     }
-                    isGenerating = false
                 }
             )
             Spacer(modifier = Modifier.width(8.dp))
@@ -1637,9 +1651,8 @@ fun DocumentActionsGrid(
                 label = "Factura",
                 modifier = Modifier.weight(1f),
                 onClick = {
-                    isGenerating = true
-                    try {
-                        val file = InvoicePdfGenerator.generate(
+                    generatePdfAsync {
+                        InvoicePdfGenerator.generate(
                             context = context,
                             event = event,
                             client = client,
@@ -1648,11 +1661,7 @@ fun DocumentActionsGrid(
                             payments = uiState.payments,
                             user = uiState.currentUser
                         )
-                        onSharePdf(file)
-                    } catch (e: Exception) {
-                        Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
                     }
-                    isGenerating = false
                 }
             )
             Spacer(modifier = Modifier.width(8.dp))
@@ -1661,20 +1670,15 @@ fun DocumentActionsGrid(
                 label = "Compras",
                 modifier = Modifier.weight(1f),
                 onClick = {
-                    isGenerating = true
-                    try {
-                        val file = ShoppingListPdfGenerator.generate(
+                    generatePdfAsync {
+                        ShoppingListPdfGenerator.generate(
                             context = context,
                             event = event,
                             client = client,
                             supplies = emptyList(),
                             user = uiState.currentUser
                         )
-                        onSharePdf(file)
-                    } catch (e: Exception) {
-                        Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
                     }
-                    isGenerating = false
                 }
             )
         }
@@ -1687,20 +1691,15 @@ fun DocumentActionsGrid(
                 label = "Equipo",
                 modifier = Modifier.weight(1f),
                 onClick = {
-                    isGenerating = true
-                    try {
-                        val file = EquipmentListPdfGenerator.generate(
+                    generatePdfAsync {
+                        EquipmentListPdfGenerator.generate(
                             context = context,
                             event = event,
                             client = client,
                             inventoryItems = emptyList(),
                             user = uiState.currentUser
                         )
-                        onSharePdf(file)
-                    } catch (e: Exception) {
-                        Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
                     }
-                    isGenerating = false
                 }
             )
             Spacer(modifier = Modifier.width(8.dp))

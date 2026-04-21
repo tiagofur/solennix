@@ -65,13 +65,16 @@ struct ContractPDFGenerator {
         let refundPercent = event.refundPercent ?? profile?.defaultRefundPercent ?? 0
         let totalPaid = payments.reduce(0) { $0 + $1.amount }
 
-        // Compute discount
-        let discountValue: Double
-        if event.discountType == .percent {
-            discountValue = event.totalAmount * (event.discount / 100) / max(1 - event.discount / 100 + event.taxRate / 100, 0.01)
-        } else {
-            discountValue = event.discount
-        }
+        // Compute discount. Usamos el MISMO subtotal/formula que
+        // EventFinancesDetailView para que el PDF matchee exacto los
+        // numeros que el usuario ve en la UI. Evita la situacion donde
+        // el cliente firma un contrato con un monto distinto al que se
+        // le mostro en la app.
+        let subtotalForDiscount = event.totalAmount - event.taxAmount
+            + (event.discountType == .fixed ? event.discount : 0)
+        let discountValue: Double = event.discountType == .percent
+            ? subtotalForDiscount * event.discount / 100
+            : event.discount
 
         // Compose complex tokens
         let scheduleValue: String = {

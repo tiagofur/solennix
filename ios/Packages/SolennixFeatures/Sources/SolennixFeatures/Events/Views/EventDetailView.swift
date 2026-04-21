@@ -751,7 +751,9 @@ public struct EventDetailView: View {
                     }
 
                     if let depositPct = event.depositPercent, depositPct > 0, viewModel.depositBalance > 0.01 {
-                        PremiumButton(title: "Registrar Anticipo (\(Int(depositPct))%) - \(viewModel.depositBalance.asMXN)", fullWidth: true) {
+                        // Titulo corto — el porcentaje ya se ve en la card
+                        // "Anticipo X%" arriba. Evita truncado en iPhone mini.
+                        PremiumButton(title: "Anticipo \(viewModel.depositBalance.asMXN)", fullWidth: true) {
                             viewModel.payDeposit()
                         }
                     }
