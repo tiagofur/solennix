@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -50,6 +50,28 @@ export const EventList: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const deleteEvent = useDeleteEvent();
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Focus the search input on "/" keydown (Linear/GitHub/Notion pattern).
+  // Skip when the user is already typing in another field so the shortcut
+  // never swallows a literal "/" they meant to type.
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key !== "/") return;
+      const t = e.target as HTMLElement | null;
+      const isEditable =
+        t?.tagName === "INPUT" ||
+        t?.tagName === "TEXTAREA" ||
+        t?.isContentEditable === true;
+      if (isEditable) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      e.preventDefault();
+      searchInputRef.current?.focus();
+      searchInputRef.current?.select();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
 
   // Read filters & pagination from URL (persistent, shareable)
   const searchTerm = searchParams.get("q") || "";
@@ -302,13 +324,22 @@ export const EventList: React.FC = () => {
         </div>
         <input
           id="event-search"
+          ref={searchInputRef}
           type="search"
-          className="block w-full pl-10 pr-8 py-2 border border-border rounded-xl leading-5 bg-card text-text placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary sm:text-sm transition duration-150 ease-in-out"
+          className="block w-full pl-10 pr-16 py-2 border border-border rounded-xl leading-5 bg-card text-text placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary sm:text-sm transition duration-150 ease-in-out"
           placeholder="Buscar eventos..."
           value={searchTerm}
           onChange={(e) => updateFilter("q", e.target.value)}
-          aria-label="Buscar eventos por cliente, servicio o ciudad"
+          aria-label="Buscar eventos por cliente, servicio o ciudad. Presioná la barra diagonal para enfocar."
         />
+        {/* Keyboard hint — hides once the input has content or has focus,
+            so it only shows in the at-rest state. `hidden sm:flex` to avoid
+            crowding on phones where physical keyboards aren't a thing. */}
+        {!searchTerm && (
+          <kbd className="absolute right-3 top-1/2 -translate-y-1/2 hidden sm:flex items-center justify-center h-5 min-w-[1.25rem] px-1.5 text-[10px] font-semibold text-text-tertiary bg-surface-alt border border-border rounded pointer-events-none select-none">
+            /
+          </kbd>
+        )}
         {searchTerm && (
           <button
             type="button"
