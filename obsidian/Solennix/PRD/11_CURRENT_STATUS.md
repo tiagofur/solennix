@@ -8,7 +8,7 @@ aliases:
   - Estado Actual
   - Current Status
 date: 2026-03-20
-updated: 2026-04-19
+updated: 2026-04-21
 status: active
 ---
 
@@ -16,6 +16,14 @@ status: active
 
 **Fecha:** Abril 2026
 **Version:** 1.2
+
+> [!info] 2026-04-21 — EventForm Paso 4: cards de equipamiento unificados iOS · Android + alerta de overstock inline
+> Paridad visual y funcional entre plataformas en el card de equipamiento del formulario de evento. iOS tenía una fila compacta sin stock; Android tenía dos filas con `Icons.Default.Close` (inconsistente con el trash del resto de la app) y mostraba el stock pero sin alerta cuando el usuario pedía más del disponible.
+> - **Layout unificado** (una sola fila): `nombre + "Stock: N · unit" debajo | stepper 44pt/dp | trash rojo`. iOS ahora lee `InventoryItem.currentStock` + `unit` vía lookup en `equipmentInventory` por `inventoryId`.
+> - **Trash icon**: Android cambió `Close` → `Delete` (paridad con cards de Productos/Extras).
+> - **Stepper grande**: subido a hit area 44pt/dp con glyph `.title2` / `26.dp` + width fija 36 + `monospacedDigit` / `fontFeatureSettings = "tnum"` — mismo patrón que Paso 2 (Productos). No bloquea ni impone caps: el usuario puede ordenar más del stock.
+> - **Alerta inline de overstock**: cuando `qty > stock`, texto de stock + número del stepper se pintan en rojo + ícono warning al lado del stock. Feedback no-bloqueante — el usuario puede querer ordenar más del disponible igual.
+> - **Limitación conocida (issue #96)**: el valor "Stock: N" es el **stock total del inventario** (`inventory.current_stock`), NO descuenta reservas de otros eventos en el mismo día. El banner de conflictos arriba ya avisa que HAY choque, pero no cuántas unidades están tomadas. El endpoint `GET /api/equipment/conflicts` devuelve solo event_name + date por conflicto, no qty. Para resolverlo hay que agregar un endpoint que devuelva `available_on_date` por inventory_id (ver issue #96 con plan de backend + iOS + Android + Web).
 
 > [!info] 2026-04-20 — Personal Ola 3: productos con equipo asociado (venta de "servicio de meseros")
 > Tercera y última ola de la expansión de Personal. Cierra el ciclo comercial: el organizador ya podía (1) catalogar colaboradores con costo (Phase 1), (2) organizar turnos y RSVP (Ola 1), (3) agrupar en equipos (Ola 2). Ahora puede (4) vender el servicio del equipo como Product con precio al cliente, manteniendo el costo interno por fee.
@@ -1152,6 +1160,7 @@ Refactors planificados para lograr paridad total entre las 6 plataformas (iPhone
 | Live Activity equivalente en Android               | Android               | Sin notificacion persistente durante eventos                              | 6-8h              | P2             |
 | Refactor Calendario: Toolbar simplificado          | iOS, Android, Web     | Toolbar pendiente: solo "Gestionar Bloqueos" + "Hoy"                      | 2-4h              | P2             |
 | Web: Calendar right-click bloqueo                  | Web                   | Falta right-click para bloqueo rapido de fechas                           | 2-3h              | P2             |
+| Stock de equipamiento no es date-aware (issue #96) | iOS, Android, Backend | Card muestra stock total del inventario, no descuenta reservas del mismo dia. Banner de conflictos avisa a alto nivel pero no cuantas unidades estan tomadas | 6-10h             | P2             |
 | Panel admin solo en web                            | iOS, Android          | Administracion solo desde navegador                                       | ➖                | P3 (aceptable) |
 
 > [!note] Brechas resueltas

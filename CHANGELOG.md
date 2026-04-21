@@ -9,13 +9,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
+### Added — Event form & detail polish (iOS · Android)
+
+#### Event Form (Nuevo/Editar Evento)
+- **Paso 1 (General)**: Número de personas default 0. El botón "Siguiente" queda deshabilitado hasta que se ponga ≥1. Evita crear eventos sin invitados por olvido.
+- **Paso 2 (Productos)**: Card rediseñado con header "Producto N" + trash rojo alineado a la derecha (paridad con Extras). Stepper con hit area 44pt/dp + ancho fijo del número (no salta el layout con 99+). Diálogo de confirmación antes de eliminar.
+- **Paso 3 (Extras)**: Corregido bug de tipeo en Costo/Precio — se podía tipear `2.` o `0.5` sin que el formatter lo pisara mid-typing. Switch para "Solo cobrar costo" unificado cross-platform.
+- **Paso 4 (Equipamiento)**: Unificado iOS · Android a single-row layout — nombre + `Stock: N · unit` debajo, stepper + trash rojo. Alerta inline (rojo + warning) cuando la cantidad supera el stock del inventario. Android cambió icon `Close` → `Delete` para consistencia.
+- **Paso 4 (Insumos)**: Stepper +/- para unidades contables (unidad, bolsa, caja, pack, etc.), text field decimal para unidades pesadas/líquidas (kg, L, g, ml). Switch para "Sin costo (reaprovechado)" reemplaza Checkbox en Android. En Android, vaciar el text field de cantidad ya no elimina el insumo (era el bug de `updateSupplyQuantity` que auto-borraba cuando qty=0).
+- **Paso 4 (Personal)**: Fee amount usa @State local — mismo patrón que Extras, permite tipear decimales sin que se pisen.
+- **Stepper híbrido (Paso 1, 2, 4)**: El número central ahora es tappable — abre teclado numérico para tipear directo. Evita 50+ clicks al poner 100 platos o 200 personas. +/- siguen funcionando.
+
+#### Event Detail
+- **iOS — Contract PDF discount math**: El contrato PDF usaba una fórmula inversa que daba un monto de descuento distinto al que muestra la UI de Finanzas. Ahora ambos usan la misma fórmula (`subtotal × discount%/100`). Evita contratos firmados con montos que no matchean lo que el cliente vio en la app.
+- **iOS — Botón "Anticipo" con texto corto**: Antes decía `"Registrar Anticipo (50%) - $12,500.00"` (se truncaba en iPhone mini). Ahora `"Anticipo $12,500.00"` — el porcentaje ya se muestra en la card de arriba.
+- **Android — Botón "Liquidar"**: Agregado en el hub y en la pantalla de Pagos. Pre-rellena el modal con el saldo pendiente. Antes el usuario tenía que calcular el saldo a mano. Paridad con iOS.
+- **Android — Diálogo de confirmación al borrar pago**: Antes tap al trash eliminaba sin preguntar. Ahora AlertDialog "¿Eliminar pago?" + Toast de confirmación.
+- **Android — PDFs en background thread**: Los 7 generadores (Cotización, Contrato, Checklist, Factura, Pagos, Compras, Equipo) ahora corren en `Dispatchers.IO`. Antes freezaban la UI 1-2s en devices lentos.
+- **Android — ShoppingList PDF fallback**: Si un insumo no tiene `supplyName`, ya no muestra el UUID crudo — ahora "Insumo sin nombre".
+
+### Added (pre-polish, pending release)
 - Comprehensive test coverage for subscription/payment flows (36 tests)
 - Password reset via email functionality with HTML templates
 - Security headers middleware (in progress)
 - Business logic validation for events/payments (in progress)
 
+### Fixed
+- **iOS — Crash en Paso 3 al eliminar un Extra**: El subview indexaba `viewModel.extras[index]` en modifiers (`.onChange`, `$bindings`). SwiftUI re-sampleaba esas expresiones antes de desmontar → out-of-bounds → crash. Refactoreado el subview para recibir `extra` por valor + callbacks.
+- **iOS — Mismo patrón de crash en Paso 4**: Preemptivamente refactoreados `SupplyRowView`, `EquipmentRowView`, `StaffRowView` con el mismo approach — ninguno indexa el array del VM en sus modifiers.
+- **Android — `updateSupplyQuantity` / `updateEquipmentQuantity`**: Quitada la lógica `if (newQuantity <= 0) removeX(...)`. Dejar el text field vacío transitoriamente ya no borra el item (paridad con iOS, que nunca tuvo ese comportamiento).
+
 ### Changed
+- **Android PremiumButton altura reducida**: `min 50dp → 48dp`, `max 64dp → 54dp` (`54 → 72dp` para font scale grande). Antes los botones primarios se veían ~22% más altos que los Material 3 estándar.
 - **BREAKING**: Auth tokens now use httpOnly cookies instead of localStorage
 - Auth middleware now accepts cookies OR Authorization header (backward compatible)
 
