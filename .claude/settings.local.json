@@ -365,7 +365,18 @@
       "Bash(JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home ./gradlew :app:assembleDebug)",
       "Bash(~/Library/Android/sdk/emulator/emulator -avd Pixel_10_Pro -no-snapshot-load)",
       "Bash(echo \"Boot started \\(PID $!\\)\")",
-      "Bash(xcodebuild -scheme Solennix -destination 'platform=iOS Simulator,id=4277DB83-2869-41E5-8F8E-4410D01D8C95' -quiet build)"
+      "Bash(xcodebuild -scheme Solennix -destination 'platform=iOS Simulator,id=4277DB83-2869-41E5-8F8E-4410D01D8C95' -quiet build)",
+      "Bash(xcodebuild -workspace Solennix.xcworkspace -scheme Solennix -destination 'generic/platform=iOS Simulator' -configuration Debug build)",
+      "Bash(export PATH=\"$HOME/Library/Android/sdk/platform-tools:$PATH\")",
+      "Bash(export PATH=\"$JAVA_HOME/bin:$HOME/Library/Android/sdk/platform-tools:$PATH\")",
+      "Bash(xcodebuild -project Solennix.xcodeproj -scheme Solennix -destination 'generic/platform=iOS Simulator' -configuration Debug build)",
+      "Bash(xcodebuild -project Solennix.xcodeproj -scheme Solennix -destination 'platform=iOS Simulator,id=4277DB83-2869-41E5-8F8E-4410D01D8C95' -configuration Debug -derivedDataPath build/DerivedData build)",
+      "Bash(/usr/libexec/PlistBuddy -c \"Print CFBundleIdentifier\" /Users/tiagofur/dev/eventosapp/ios/build/DerivedData/Build/Products/Debug-iphonesimulator/Solennix.app/Info.plist)",
+      "Bash(~/Library/Android/sdk/platform-tools/adb -s emulator-5554 install -r /Users/tiagofur/dev/eventosapp/android/app/build/outputs/apk/debug/app-debug.apk)",
+      "Bash(~/Library/Android/sdk/platform-tools/adb -s emulator-5554 shell pm list packages)",
+      "Bash(~/Library/Android/sdk/platform-tools/adb -s emulator-5554 shell monkey -p com.solennix.app -c android.intent.category.LAUNCHER 1)",
+      "Bash(~/Library/Android/sdk/platform-tools/adb -s emulator-5554 shell am force-stop com.solennix.app)",
+      "Bash(JAVA_HOME=\"/Applications/Android Studio.app/Contents/jbr/Contents/Home\" ./gradlew :feature:events:compileDebugKotlin)"
     ]
   }
 }
