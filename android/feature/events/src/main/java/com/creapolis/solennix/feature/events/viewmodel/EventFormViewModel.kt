@@ -70,8 +70,8 @@ class EventFormViewModel @Inject constructor(
     // Step 1: General Info
     var selectedClient by mutableStateOf<Client?>(null)
     var eventDate by mutableStateOf(LocalDate.now())
-    var startTime by mutableStateOf("14:00")
-    var endTime by mutableStateOf("20:00")
+    var startTime by mutableStateOf("")
+    var endTime by mutableStateOf("")
     var status by mutableStateOf(EventStatus.QUOTED)
     var serviceType by mutableStateOf("")
     var numPeople by mutableStateOf("0")
@@ -457,8 +457,8 @@ class EventFormViewModel @Inject constructor(
 
         // Step 1: General info
         eventDate = LocalDate.now()
-        startTime = source.startTime ?: "14:00"
-        endTime = source.endTime ?: "20:00"
+        startTime = source.startTime ?: ""
+        endTime = source.endTime ?: ""
         status = EventStatus.QUOTED
         serviceType = source.serviceType
         numPeople = source.numPeople.toString()
@@ -799,6 +799,59 @@ class EventFormViewModel @Inject constructor(
             price = effectivePrice,
             excludeUtility = excludeUtility,
             includeInChecklist = includeInChecklist
+        )
+    }
+
+    /**
+     * Agrega un extra en blanco para edición inline en el card — patrón iOS.
+     * No valida nada porque el usuario va a completar los campos en la UI.
+     * Si al guardar el evento la descripción está vacía, se descarta al
+     * mapear el payload.
+     */
+    fun addBlankExtra() {
+        eventExtras.add(
+            EventExtra(
+                id = UUID.randomUUID().toString(),
+                eventId = "",
+                description = "",
+                cost = 0.0,
+                price = 0.0,
+                excludeUtility = false,
+                includeInChecklist = true,
+                createdAt = "",
+            )
+        )
+    }
+
+    /**
+     * Update granular de un solo field. Mantiene invariante: si
+     * excludeUtility está on → price = cost. Si el usuario cambia cost con
+     * excludeUtility on, price se resync al nuevo cost (mirror del bug
+     * que vivía en iOS).
+     */
+    fun updateExtraFields(
+        id: String,
+        description: String? = null,
+        cost: Double? = null,
+        price: Double? = null,
+        excludeUtility: Boolean? = null,
+        includeInChecklist: Boolean? = null,
+    ) {
+        val existing = eventExtras.find { it.id == id } ?: return
+        val index = eventExtras.indexOf(existing)
+        val newExcludeUtility = excludeUtility ?: existing.excludeUtility
+        val newCost = cost ?: existing.cost
+        val newPrice = when {
+            newExcludeUtility -> newCost
+            price != null -> price
+            else -> existing.price
+        }
+        eventExtras[index] = existing.copy(
+            description = description ?: existing.description,
+            cost = newCost,
+            price = newPrice,
+            excludeUtility = newExcludeUtility,
+            includeInChecklist = includeInChecklist ?: existing.includeInChecklist,
         )
     }
 
@@ -1313,10 +1366,12 @@ class EventFormViewModel @Inject constructor(
                 }
 
                 // Save all items (products, extras, equipment, supplies, staff) in one request
+                // Filtramos extras sin descripción — son cards que el usuario
+                // creó pero no llenó (edición inline estilo iOS).
                 eventRepository.updateItems(
                     eventId = savedEvent.id,
                     products = selectedProducts.toList(),
-                    extras = eventExtras.toList(),
+                    extras = eventExtras.filter { it.description.isNotBlank() }.toList(),
                     equipment = selectedEquipment.toList(),
                     supplies = selectedSupplies.toList(),
                     staff = selectedStaff.map {

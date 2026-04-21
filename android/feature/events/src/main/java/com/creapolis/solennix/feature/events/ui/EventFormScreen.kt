@@ -1,6 +1,7 @@
 package com.creapolis.solennix.feature.events.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -398,8 +399,6 @@ fun StepGeneralInfo(viewModel: EventFormViewModel) {
         item {
             AdaptiveCenteredContent(maxWidth = 800.dp) {
             Column {
-            Text("Información General", style = MaterialTheme.typography.headlineSmall)
-            Spacer(modifier = Modifier.height(24.dp))
 
             // Client Selection
             Text("Cliente", style = MaterialTheme.typography.labelMedium, color = SolennixTheme.colors.secondaryText)
@@ -457,44 +456,52 @@ fun StepGeneralInfo(viewModel: EventFormViewModel) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            AdaptiveFormRow(
-                left = {
+            // Hora Inicio / Hora Fin — siempre 2 columnas inline (también en
+            // phone portrait). Son campos cortos y se leen mejor juntos.
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Box(modifier = Modifier.weight(1f)) {
                     TimePickerField(
                         label = "Hora Inicio",
                         value = viewModel.startTime,
                         onClick = { showStartTimePicker = true },
                     )
-                },
-                right = {
+                }
+                Box(modifier = Modifier.weight(1f)) {
                     TimePickerField(
                         label = "Hora Fin",
                         value = viewModel.endTime,
                         onClick = { showEndTimePicker = true },
                     )
                 }
-            )
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            AdaptiveFormRow(
-                left = {
+            // Servicio + Personas en una fila. Personas usa un stepper +/-
+            // nativo M3 (iconos IconButton) como en iOS, no text input libre.
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.Top,
+            ) {
+                Box(modifier = Modifier.weight(1f)) {
                     SolennixTextField(
                         value = viewModel.serviceType,
                         onValueChange = { viewModel.serviceType = it },
                         label = "Tipo de Servicio",
                         placeholder = "Ej: Boda, XV Años"
                     )
-                },
-                right = {
-                    SolennixTextField(
-                        value = viewModel.numPeople,
-                        onValueChange = { viewModel.numPeople = it },
-                        label = "Personas",
-                        placeholder = "0",
-                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+                }
+                Box(modifier = Modifier.weight(1f)) {
+                    GuestCountStepper(
+                        value = viewModel.numPeople.toIntOrNull() ?: 1,
+                        onValueChange = { viewModel.numPeople = it.toString() },
                     )
                 }
-            )
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -561,12 +568,24 @@ fun StepGeneralInfo(viewModel: EventFormViewModel) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            SolennixTextField(
+            // Notas: multiline con minLines = 3 para no apretar el área útil.
+            // SolennixTextField no expone minLines, por eso uso OutlinedTextField
+            // directo aquí (decisión puntual, no vale la pena extender la API
+            // del design system solo por esto).
+            OutlinedTextField(
                 value = viewModel.notes,
                 onValueChange = { viewModel.notes = it },
-                label = "Notas Adicionales",
-                placeholder = "Instrucciones especiales para el montaje...",
-                modifier = Modifier.height(120.dp)
+                label = { Text("Notas Adicionales") },
+                placeholder = { Text("Instrucciones especiales para el montaje...") },
+                modifier = Modifier.fillMaxWidth(),
+                minLines = 3,
+                maxLines = 6,
+                shape = MaterialTheme.shapes.small,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = SolennixTheme.colors.primary,
+                    focusedLabelColor = SolennixTheme.colors.primary,
+                    cursorColor = SolennixTheme.colors.primary,
+                ),
             )
             }
             }
@@ -610,6 +629,18 @@ fun StepGeneralInfo(viewModel: EventFormViewModel) {
                             },
                             modifier = Modifier.clickable {
                                 viewModel.selectedClient = client
+                                // Parity con iOS: si el evento aún no tiene
+                                // ubicación o ciudad, pre-rellenar desde el
+                                // perfil del cliente. Si ya tenían algo escrito,
+                                // respetar lo que el usuario puso.
+                                if (viewModel.location.isBlank()) {
+                                    client.address?.takeIf { it.isNotBlank() }
+                                        ?.let { viewModel.location = it }
+                                }
+                                if (viewModel.city.isBlank()) {
+                                    client.city?.takeIf { it.isNotBlank() }
+                                        ?.let { viewModel.city = it }
+                                }
                                 showClientPicker = false
                             }
                         )
@@ -710,10 +741,38 @@ fun StepProducts(viewModel: EventFormViewModel) {
 
     AdaptiveCenteredContent(maxWidth = 800.dp) {
     Column(modifier = Modifier.padding(24.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Productos y Menú", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.weight(1f))
-            IconButton(onClick = { showProductPicker = true }) {
-                Icon(Icons.Default.AddCircle, contentDescription = "Añadir", tint = SolennixTheme.colors.primary)
+        // Botón prominente de "Agregar Producto" — mismo patrón que iOS.
+        // Reemplaza el header "Productos y Menú" + icon button pequeño que
+        // saturaban visualmente el paso.
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { showProductPicker = true },
+            colors = CardDefaults.cardColors(
+                containerColor = SolennixTheme.colors.primaryLight,
+            ),
+            border = androidx.compose.foundation.BorderStroke(
+                1.dp,
+                SolennixTheme.colors.primary.copy(alpha = 0.3f),
+            ),
+            shape = MaterialTheme.shapes.medium,
+        ) {
+            Row(
+                modifier = Modifier.padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    Icons.Default.AddCircle,
+                    contentDescription = null,
+                    tint = SolennixTheme.colors.primary,
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    "Agregar Producto",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium,
+                    color = SolennixTheme.colors.primary,
+                )
             }
         }
 
@@ -742,34 +801,32 @@ fun StepProducts(viewModel: EventFormViewModel) {
         }
 
         if (viewModel.selectedProducts.isEmpty()) {
-            when {
-                viewModel.isLoadingProducts && availableProducts.isEmpty() -> {
-                    EmptyState(
-                        icon = Icons.Default.HourglassEmpty,
-                        title = "Cargando catálogo",
-                        message = "Estamos obteniendo tus productos...",
-                        actionText = "Actualizar",
-                        onAction = { viewModel.retryLoadProducts() }
-                    )
-                }
-                availableProducts.isEmpty() -> {
-                    EmptyState(
-                        icon = Icons.Default.RestaurantMenu,
-                        title = "Sin productos disponibles",
-                        message = "No hay productos en el catálogo para añadir al evento.",
-                        actionText = "Reintentar",
-                        onAction = { viewModel.retryLoadProducts() }
-                    )
-                }
-                else -> {
-                    EmptyState(
-                        icon = Icons.Default.RestaurantMenu,
-                        title = "Sin productos",
-                        message = "Añade platos o servicios al evento para calcular el presupuesto.",
-                        actionText = "Explorar Catálogo",
-                        onAction = { showProductPicker = true }
-                    )
-                }
+            // Empty state simplificado — una sola variante, sin botón de acción.
+            // El CTA ya está arriba como card prominente. Parity con iOS.
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 48.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Icon(
+                    Icons.Default.Inventory2,
+                    contentDescription = null,
+                    tint = SolennixTheme.colors.secondaryText,
+                    modifier = Modifier.size(48.dp),
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    "Sin productos",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = SolennixTheme.colors.secondaryText,
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    "Agrega productos al evento",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = SolennixTheme.colors.secondaryText,
+                )
             }
         } else {
             LazyColumn(modifier = Modifier.fillMaxSize()) {
@@ -785,8 +842,6 @@ fun StepProducts(viewModel: EventFormViewModel) {
                                     onQuantityChange = { viewModel.updateProductQuantity(pair[0].productId, it) },
                                     onDiscountChange = { viewModel.updateProductDiscount(pair[0].productId, it) },
                                     onRemove = { viewModel.removeProduct(pair[0].productId) },
-                                    onMoveUp = if (index * 2 > 0) { { viewModel.moveProduct(index * 2, index * 2 - 1) } } else null,
-                                    onMoveDown = if (index * 2 < viewModel.selectedProducts.size - 1) { { viewModel.moveProduct(index * 2, index * 2 + 1) } } else null
                                 )
                             }
                             if (pair.size > 1) {
@@ -797,8 +852,6 @@ fun StepProducts(viewModel: EventFormViewModel) {
                                         onQuantityChange = { viewModel.updateProductQuantity(pair[1].productId, it) },
                                         onDiscountChange = { viewModel.updateProductDiscount(pair[1].productId, it) },
                                         onRemove = { viewModel.removeProduct(pair[1].productId) },
-                                        onMoveUp = { viewModel.moveProduct(index * 2 + 1, index * 2) },
-                                        onMoveDown = if (index * 2 + 1 < viewModel.selectedProducts.size - 1) { { viewModel.moveProduct(index * 2 + 1, index * 2 + 2) } } else null
                                     )
                                 }
                             } else {
@@ -815,9 +868,38 @@ fun StepProducts(viewModel: EventFormViewModel) {
                             onQuantityChange = { viewModel.updateProductQuantity(item.productId, it) },
                             onDiscountChange = { viewModel.updateProductDiscount(item.productId, it) },
                             onRemove = { viewModel.removeProduct(item.productId) },
-                            onMoveUp = if (index > 0) { { viewModel.moveProduct(index, index - 1) } } else null,
-                            onMoveDown = if (index < viewModel.selectedProducts.size - 1) { { viewModel.moveProduct(index, index + 1) } } else null
                         )
+                    }
+                }
+
+                // Subtotal Productos — mismo patrón visual que iOS.
+                item {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = SolennixTheme.colors.surfaceAlt,
+                        ),
+                        shape = MaterialTheme.shapes.medium,
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                "Subtotal Productos",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium,
+                                color = SolennixTheme.colors.secondaryText,
+                                modifier = Modifier.weight(1f),
+                            )
+                            Text(
+                                viewModel.subtotalProducts.asMXN(),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = SolennixTheme.colors.primary,
+                            )
+                        }
                     }
                 }
             }
@@ -844,8 +926,6 @@ fun ProductSelectionItem(
     onQuantityChange: (Double) -> Unit,
     onDiscountChange: (Double) -> Unit,
     onRemove: () -> Unit,
-    onMoveUp: (() -> Unit)? = null,
-    onMoveDown: (() -> Unit)? = null
 ) {
     val product = availableProducts.find { it.id == item.productId } ?: return
     var discountText by remember(item.discount) { mutableStateOf(if (item.discount > 0) item.discount.toString() else "") }
@@ -860,25 +940,17 @@ fun ProductSelectionItem(
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                if (onMoveUp != null || onMoveDown != null) {
-                    Column {
-                        if (onMoveUp != null) {
-                            IconButton(onClick = onMoveUp, modifier = Modifier.size(24.dp)) {
-                                Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Subir")
-                            }
-                        }
-                        if (onMoveDown != null) {
-                            IconButton(onClick = onMoveDown, modifier = Modifier.size(24.dp)) {
-                                Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Bajar")
-                            }
-                        }
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                }
-                
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(product.name, style = MaterialTheme.typography.titleSmall)
-                    Text(item.unitPrice.asMXN(), style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.primary)
+                    Text(
+                        product.name,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium,
+                    )
+                    Text(
+                        "${item.unitPrice.asMXN()} c/u",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = SolennixTheme.colors.primary,
+                    )
                     product.staffTeamId?.takeIf { it.isNotBlank() }?.let {
                         Spacer(modifier = Modifier.height(4.dp))
                         AssistChip(
@@ -908,24 +980,59 @@ fun ProductSelectionItem(
                     }
                 }
 
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = { onQuantityChange(item.quantity - 1.0) }) {
-                        Icon(Icons.Default.Remove, contentDescription = "Menos", modifier = Modifier.size(18.dp))
+                // Stepper compacto — IconButton default es 48dp y quedaba
+                // con mucho aire alrededor del número. Lo achico a 32dp para
+                // acercar los botones al count, patrón más tight de iOS.
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                    IconButton(
+                        onClick = { onQuantityChange(item.quantity - 1.0) },
+                        enabled = item.quantity > 1,
+                        modifier = Modifier.size(32.dp),
+                    ) {
+                        Icon(
+                            Icons.Default.RemoveCircle,
+                            contentDescription = "Menos",
+                            tint = if (item.quantity > 1) SolennixTheme.colors.primary
+                                   else SolennixTheme.colors.secondaryText,
+                            modifier = Modifier.size(22.dp),
+                        )
                     }
-                    Text(item.quantity.toInt().toString(), style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(horizontal = 4.dp))
-                    IconButton(onClick = { onQuantityChange(item.quantity + 1.0) }) {
-                        Icon(Icons.Default.Add, contentDescription = "Mas", modifier = Modifier.size(18.dp))
+                    Text(
+                        item.quantity.toInt().toString(),
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    IconButton(
+                        onClick = { onQuantityChange(item.quantity + 1.0) },
+                        modifier = Modifier.size(32.dp),
+                    ) {
+                        Icon(
+                            Icons.Default.AddCircle,
+                            contentDescription = "Mas",
+                            tint = SolennixTheme.colors.primary,
+                            modifier = Modifier.size(22.dp),
+                        )
                     }
                 }
 
-                IconButton(onClick = onRemove) {
-                    Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = SolennixTheme.colors.error, modifier = Modifier.size(20.dp))
+                IconButton(
+                    onClick = onRemove,
+                    modifier = Modifier.size(32.dp),
+                ) {
+                    Icon(
+                        Icons.Default.Delete,
+                        contentDescription = "Eliminar",
+                        tint = SolennixTheme.colors.error,
+                        modifier = Modifier.size(18.dp),
+                    )
                 }
             }
 
-            // Per-product discount row
+            // Per-product discount row — sin height fija para que el label
+            // de Material flote arriba del border como en los otros fields.
+            Spacer(modifier = Modifier.height(8.dp))
             Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -936,17 +1043,17 @@ fun ProductSelectionItem(
                         val d = value.toDoubleOrNull() ?: 0.0
                         onDiscountChange(d)
                     },
-                    label = { Text("Descuento", style = MaterialTheme.typography.labelSmall) },
-                    modifier = Modifier.width(110.dp).height(52.dp),
-                    textStyle = MaterialTheme.typography.bodySmall,
+                    label = { Text("Descuento") },
+                    placeholder = { Text("0") },
+                    modifier = Modifier.width(140.dp),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal),
-                    shape = MaterialTheme.shapes.small
+                    shape = MaterialTheme.shapes.small,
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
                     text = "Total: ${lineTotal.asMXN()}",
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     color = if (item.discount > 0) SolennixTheme.colors.success else SolennixTheme.colors.primaryText
                 )
@@ -957,198 +1064,260 @@ fun ProductSelectionItem(
 
 @Composable
 fun StepExtras(viewModel: EventFormViewModel) {
-    var showAddExtra by remember { mutableStateOf(false) }
-    val isWideScreen = LocalIsWideScreen.current
-
     AdaptiveCenteredContent(maxWidth = 800.dp) {
     Column(modifier = Modifier.padding(24.dp)) {
-        Text("Cargos Extras y Descuentos", style = MaterialTheme.typography.headlineSmall)
-        Spacer(modifier = Modifier.height(24.dp))
-
-        if (showAddExtra) {
-            var extraDesc by remember { mutableStateOf("") }
-            var extraCost by remember { mutableStateOf("") }
-            var extraPrice by remember { mutableStateOf("") }
-            var extraExcludeUtility by remember { mutableStateOf(false) }
-            var extraIncludeInChecklist by remember { mutableStateOf(true) }
-
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
-                border = androidx.compose.foundation.BorderStroke(1.dp, SolennixTheme.colors.primary)
+        // Botón prominente "Agregar Extra" — mismo patrón que iOS y que
+        // StepProducts. Agrega un extra vacío que se edita in-place.
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { viewModel.addBlankExtra() },
+            colors = CardDefaults.cardColors(
+                containerColor = SolennixTheme.colors.primaryLight,
+            ),
+            border = androidx.compose.foundation.BorderStroke(
+                1.dp,
+                SolennixTheme.colors.primary.copy(alpha = 0.3f),
+            ),
+            shape = MaterialTheme.shapes.medium,
+        ) {
+            Row(
+                modifier = Modifier.padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Nuevo Cargo Extra", style = MaterialTheme.typography.titleMedium)
-                    Spacer(modifier = Modifier.height(16.dp))
-                    SolennixTextField(value = extraDesc, onValueChange = { extraDesc = it }, label = "Descripcion")
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        SolennixTextField(
-                            value = extraCost,
-                            onValueChange = {
-                                extraCost = it
-                                if (extraExcludeUtility) extraPrice = it
-                            },
-                            label = "Costo",
-                            keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal,
-                            modifier = Modifier.weight(1f)
-                        )
-                        SolennixTextField(
-                            value = extraPrice,
-                            onValueChange = { if (!extraExcludeUtility) extraPrice = it },
-                            label = "Precio",
-                            keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal,
-                            modifier = Modifier.weight(1f),
-                            enabled = !extraExcludeUtility
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Checkbox(
-                            checked = extraExcludeUtility,
-                            onCheckedChange = { checked ->
-                                extraExcludeUtility = checked
-                                if (checked) extraPrice = extraCost
-                            }
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Solo cobrar costo", style = MaterialTheme.typography.bodySmall)
-                    }
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Checkbox(
-                            checked = extraIncludeInChecklist,
-                            onCheckedChange = { extraIncludeInChecklist = it }
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Incluir en checklist", style = MaterialTheme.typography.bodySmall)
-                    }
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Row {
-                        TextButton(onClick = {
-                            showAddExtra = false
-                            extraExcludeUtility = false
-                            extraIncludeInChecklist = true
-                        }) { Text("Cancelar") }
-                        Spacer(modifier = Modifier.weight(1f))
-                        Button(onClick = {
-                            val c = extraCost.toDoubleOrNull() ?: 0.0
-                            val p = extraPrice.toDoubleOrNull() ?: 0.0
-                            viewModel.addExtra(extraDesc, c, p, extraExcludeUtility, extraIncludeInChecklist)
-                            extraDesc = ""
-                            extraCost = ""
-                            extraPrice = ""
-                            extraExcludeUtility = false
-                            extraIncludeInChecklist = true
-                            showAddExtra = false
-                        }) { Text("Anadir") }
-                    }
-                }
+                Icon(
+                    Icons.Default.AddCircle,
+                    contentDescription = null,
+                    tint = SolennixTheme.colors.primary,
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    "Agregar Extra",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium,
+                    color = SolennixTheme.colors.primary,
+                )
             }
-        } else {
-            PremiumButton(
-                text = "Anadir Cargo Extra",
-                onClick = { showAddExtra = true },
-                style = ButtonStyle.Secondary,
-                icon = Icons.Default.Add
-            )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        LazyColumn(modifier = Modifier.weight(1f)) {
-            if (isWideScreen) {
-                val chunkedExtras = viewModel.eventExtras.chunked(2)
-                items(chunkedExtras.size) { index ->
-                    val pair = chunkedExtras[index]
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        Box(modifier = Modifier.weight(1f)) {
-                            ExtraCard(
-                                extra = pair[0], 
-                                onRemove = { viewModel.removeExtra(pair[0].id) },
-                                onMoveUp = if (index * 2 > 0) { { viewModel.moveExtra(index * 2, index * 2 - 1) } } else null,
-                                onMoveDown = if (index * 2 < viewModel.eventExtras.size - 1) { { viewModel.moveExtra(index * 2, index * 2 + 1) } } else null
-                            )
-                        }
-                        if (pair.size > 1) {
-                            Box(modifier = Modifier.weight(1f)) {
-                                ExtraCard(
-                                    extra = pair[1], 
-                                    onRemove = { viewModel.removeExtra(pair[1].id) },
-                                    onMoveUp = { viewModel.moveExtra(index * 2 + 1, index * 2) },
-                                    onMoveDown = if (index * 2 + 1 < viewModel.eventExtras.size - 1) { { viewModel.moveExtra(index * 2 + 1, index * 2 + 2) } } else null
-                                )
-                            }
-                        } else {
-                            Spacer(modifier = Modifier.weight(1f))
-                        }
-                    }
-                }
-            } else {
-                items(viewModel.eventExtras.size) { index ->
-                    val extra = viewModel.eventExtras[index]
-                    ExtraCard(
+        if (viewModel.eventExtras.isEmpty()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 48.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Icon(
+                    Icons.Default.StarOutline,
+                    contentDescription = null,
+                    tint = SolennixTheme.colors.secondaryText,
+                    modifier = Modifier.size(48.dp),
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    "Sin extras",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = SolennixTheme.colors.secondaryText,
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    "Agrega servicios o items adicionales",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = SolennixTheme.colors.secondaryText,
+                )
+            }
+        } else {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                viewModel.eventExtras.forEachIndexed { index, extra ->
+                    EditableExtraCard(
+                        index = index,
                         extra = extra,
+                        onDescriptionChange = { viewModel.updateExtraFields(extra.id, description = it) },
+                        onCostChange = { viewModel.updateExtraFields(extra.id, cost = it) },
+                        onPriceChange = { viewModel.updateExtraFields(extra.id, price = it) },
+                        onExcludeUtilityChange = { viewModel.updateExtraFields(extra.id, excludeUtility = it) },
+                        onIncludeInChecklistChange = { viewModel.updateExtraFields(extra.id, includeInChecklist = it) },
                         onRemove = { viewModel.removeExtra(extra.id) },
-                        onMoveUp = if (index > 0) { { viewModel.moveExtra(index, index - 1) } } else null,
-                        onMoveDown = if (index < viewModel.eventExtras.size - 1) { { viewModel.moveExtra(index, index + 1) } } else null
                     )
+                }
+
+                // Subtotal Extras — parity con iOS.
+                Spacer(modifier = Modifier.height(4.dp))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = SolennixTheme.colors.surfaceAlt,
+                    ),
+                    shape = MaterialTheme.shapes.medium,
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            "Subtotal Extras",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
+                            color = SolennixTheme.colors.secondaryText,
+                            modifier = Modifier.weight(1f),
+                        )
+                        Text(
+                            viewModel.subtotalExtras.asMXN(),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = SolennixTheme.colors.primary,
+                        )
+                    }
                 }
             }
         }
-
     }
 }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ExtraCard(
+private fun EditableExtraCard(
+    index: Int,
     extra: com.creapolis.solennix.core.model.EventExtra,
+    onDescriptionChange: (String) -> Unit,
+    onCostChange: (Double) -> Unit,
+    onPriceChange: (Double) -> Unit,
+    onExcludeUtilityChange: (Boolean) -> Unit,
+    onIncludeInChecklistChange: (Boolean) -> Unit,
     onRemove: () -> Unit,
-    onMoveUp: (() -> Unit)? = null,
-    onMoveDown: (() -> Unit)? = null
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
-        colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
-        shape = MaterialTheme.shapes.medium
-    ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                if (onMoveUp != null || onMoveDown != null) {
-                    Column {
-                        if (onMoveUp != null) {
-                            IconButton(onClick = onMoveUp, modifier = Modifier.size(24.dp)) {
-                                Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Subir")
-                            }
-                        }
-                        if (onMoveDown != null) {
-                            IconButton(onClick = onMoveDown, modifier = Modifier.size(24.dp)) {
-                                Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Bajar")
-                            }
-                        }
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                }
+    // Texto del TextField "rebota" del modelo — si el usuario borra y escribe
+    // un valor inválido, mostramos lo que él tipeó pero al VM le mandamos el
+    // double parseado (fallback 0.0).
+    var costText by remember(extra.id, extra.cost) {
+        mutableStateOf(if (extra.cost > 0) "%g".format(extra.cost) else "")
+    }
+    var priceText by remember(extra.id, extra.price) {
+        mutableStateOf(if (extra.price > 0) "%g".format(extra.price) else "")
+    }
 
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(extra.description, style = MaterialTheme.typography.titleSmall)
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Text("Costo: ${extra.cost.asMXN()}", style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.secondaryText)
-                        Text("Precio: ${extra.price.asMXN()}", style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.primary)
-                    }
-                    if (extra.excludeUtility) {
-                        Text("Solo cobrar costo", style = MaterialTheme.typography.labelSmall, color = SolennixTheme.colors.warning)
-                    }
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
+        border = androidx.compose.foundation.BorderStroke(1.dp, SolennixTheme.colors.borderLight),
+        shape = MaterialTheme.shapes.medium,
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    "Extra ${index + 1}",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = SolennixTheme.colors.secondaryText,
+                    modifier = Modifier.weight(1f),
+                )
+                IconButton(onClick = onRemove, modifier = Modifier.size(32.dp)) {
+                    Icon(
+                        Icons.Default.Delete,
+                        contentDescription = "Eliminar",
+                        tint = SolennixTheme.colors.error,
+                        modifier = Modifier.size(18.dp),
+                    )
                 }
-                IconButton(onClick = onRemove) {
-                    Icon(Icons.Default.Close, contentDescription = "Quitar", tint = SolennixTheme.colors.error)
-                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            SolennixTextField(
+                value = extra.description,
+                onValueChange = onDescriptionChange,
+                label = "Descripcion",
+                placeholder = "Descripcion del extra",
+                leadingIcon = Icons.Default.Description,
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = costText,
+                    onValueChange = { value ->
+                        costText = value
+                        onCostChange(value.replace(",", ".").toDoubleOrNull() ?: 0.0)
+                    },
+                    label = { Text("Costo") },
+                    placeholder = { Text("0.00") },
+                    leadingIcon = { Text("$", color = SolennixTheme.colors.secondaryText) },
+                    keyboardOptions = KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal),
+                    singleLine = true,
+                    shape = MaterialTheme.shapes.small,
+                    modifier = Modifier.weight(1f),
+                )
+                OutlinedTextField(
+                    value = priceText,
+                    onValueChange = { value ->
+                        if (!extra.excludeUtility) {
+                            priceText = value
+                            onPriceChange(value.replace(",", ".").toDoubleOrNull() ?: 0.0)
+                        }
+                    },
+                    label = { Text("Precio") },
+                    placeholder = { Text("0.00") },
+                    leadingIcon = { Text("$", color = SolennixTheme.colors.secondaryText) },
+                    enabled = !extra.excludeUtility,
+                    keyboardOptions = KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal),
+                    singleLine = true,
+                    shape = MaterialTheme.shapes.small,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Toggles — M3 Switch en vez de Checkbox: más moderno y pareado
+            // con el Toggle nativo de iOS.
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    "Solo cobrar costo (sin utilidad)",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = SolennixTheme.colors.secondaryText,
+                    modifier = Modifier.weight(1f),
+                )
+                Switch(
+                    checked = extra.excludeUtility,
+                    onCheckedChange = {
+                        onExcludeUtilityChange(it)
+                        // Mantener sincronizado el texto local del price
+                        // cuando al toggle se fuerza price = cost.
+                        if (it) priceText = costText
+                    },
+                )
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    Icons.Default.Checklist,
+                    contentDescription = null,
+                    tint = SolennixTheme.colors.secondaryText,
+                    modifier = Modifier.size(16.dp),
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    "Incluir en checklist",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = SolennixTheme.colors.secondaryText,
+                    modifier = Modifier.weight(1f),
+                )
+                Switch(
+                    checked = extra.includeInChecklist,
+                    onCheckedChange = onIncludeInChecklistChange,
+                )
             }
         }
     }
@@ -1156,142 +1325,156 @@ private fun ExtraCard(
 
 @OptIn(ExperimentalMaterial3Api::class)
 /**
- * Sección Equipamiento + Personal, usada DENTRO de StepInventoryAndPersonnel.
- * No wrapea con su propio scroll — el parent coordina el scroll compartido
- * junto con SuppliesSection.
+ * Sección Equipamiento — reutilizable, conflictos, sugerencias. Sin Staff;
+ * ese va en StaffSection aparte. Usada dentro de StepInventoryAndPersonnel.
  */
 @Composable
-private fun EquipmentAndStaffSection(viewModel: EventFormViewModel) {
+private fun EquipmentSection(viewModel: EventFormViewModel) {
     var showEquipmentPicker by remember { mutableStateOf(false) }
     val suggestions by viewModel.equipmentSuggestions.collectAsStateWithLifecycle()
     val conflicts by viewModel.equipmentConflicts.collectAsStateWithLifecycle()
     val isWideScreen = LocalIsWideScreen.current
 
     Column(modifier = Modifier.fillMaxWidth()) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Equipamiento", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.weight(1f))
-                IconButton(onClick = { showEquipmentPicker = true }) {
-                    Icon(Icons.Default.AddCircle, contentDescription = "Añadir", tint = SolennixTheme.colors.primary)
+        Text(
+            "Equipamiento",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = SolennixTheme.colors.primaryText,
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Conflict warnings primero — son lo más urgente.
+        if (conflicts.isNotEmpty()) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.error.copy(alpha = 0.08f)),
+                border = androidx.compose.foundation.BorderStroke(1.dp, SolennixTheme.colors.error.copy(alpha = 0.3f)),
+                shape = MaterialTheme.shapes.medium
+            ) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Warning, contentDescription = null, tint = SolennixTheme.colors.error, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Conflictos de disponibilidad", style = MaterialTheme.typography.labelMedium, color = SolennixTheme.colors.error)
+                    }
+                    Spacer(modifier = Modifier.height(6.dp))
+                    conflicts.forEach { conflict ->
+                        Text(
+                            "${conflict.equipmentName} — ${conflict.serviceType}${if (!conflict.clientName.isNullOrBlank()) " (${conflict.clientName})" else ""}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = SolennixTheme.colors.error
+                        )
+                    }
                 }
             }
-
             Spacer(modifier = Modifier.height(12.dp))
+        }
 
-            // Suggestions banner
-            if (suggestions.isNotEmpty()) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.primary.copy(alpha = 0.08f)),
-                    shape = MaterialTheme.shapes.medium
-                ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Lightbulb, contentDescription = null, tint = SolennixTheme.colors.primary, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("Sugerencias", style = MaterialTheme.typography.labelMedium, color = SolennixTheme.colors.primary)
+        // Suggestions banner — warning tint para parity con Insumos + iOS.
+        if (suggestions.isNotEmpty()) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.warning.copy(alpha = 0.08f)),
+                shape = MaterialTheme.shapes.medium
+            ) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Lightbulb, contentDescription = null, tint = SolennixTheme.colors.warning, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Sugerencias por productos", style = MaterialTheme.typography.labelMedium, color = SolennixTheme.colors.warning)
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        suggestions.forEach { suggestion ->
+                            val alreadyAdded = viewModel.selectedEquipment.any { it.inventoryId == suggestion.id }
+                            FilterChip(
+                                selected = alreadyAdded,
+                                onClick = { if (!alreadyAdded) viewModel.addEquipmentFromSuggestion(suggestion) },
+                                label = { Text("${suggestion.ingredientName} (${suggestion.suggestedQuantity.toInt()})") },
+                                leadingIcon = if (alreadyAdded) { { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) } } else null
+                            )
                         }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(
-                            modifier = Modifier.horizontalScroll(rememberScrollState()),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            suggestions.forEach { suggestion ->
-                                val alreadyAdded = viewModel.selectedEquipment.any { it.inventoryId == suggestion.id }
-                                FilterChip(
-                                    selected = alreadyAdded,
-                                    onClick = { if (!alreadyAdded) viewModel.addEquipmentFromSuggestion(suggestion) },
-                                    label = { Text("${suggestion.ingredientName} (${suggestion.suggestedQuantity.toInt()})") },
-                                    leadingIcon = if (alreadyAdded) { { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) } } else null
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+
+        AddItemCard(label = "Agregar Equipamiento") { showEquipmentPicker = true }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        if (viewModel.selectedEquipment.isEmpty()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Icon(
+                    Icons.Default.Build,
+                    contentDescription = null,
+                    tint = SolennixTheme.colors.secondaryText,
+                    modifier = Modifier.size(48.dp),
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    "Sin equipamiento (opcional)",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = SolennixTheme.colors.secondaryText,
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    "Agrega equipo reutilizable para el evento",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = SolennixTheme.colors.secondaryText,
+                )
+            }
+        } else {
+            // Column + forEach — parent provee el verticalScroll.
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                if (isWideScreen) {
+                    val chunked = viewModel.selectedEquipment.chunked(2)
+                    chunked.forEach { pair ->
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                            Box(modifier = Modifier.weight(1f)) {
+                                EquipmentCard(
+                                    equipment = pair[0],
+                                    onQuantityChange = { viewModel.updateEquipmentQuantity(pair[0].inventoryId, it) },
+                                    onRemove = { viewModel.removeEquipment(pair[0].inventoryId) }
                                 )
                             }
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.height(12.dp))
-            }
-
-            // Conflict warnings
-            if (conflicts.isNotEmpty()) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.error.copy(alpha = 0.08f)),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, SolennixTheme.colors.error.copy(alpha = 0.3f)),
-                    shape = MaterialTheme.shapes.medium
-                ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Warning, contentDescription = null, tint = SolennixTheme.colors.error, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("Conflictos de disponibilidad", style = MaterialTheme.typography.labelMedium, color = SolennixTheme.colors.error)
-                        }
-                        Spacer(modifier = Modifier.height(6.dp))
-                        conflicts.forEach { conflict ->
-                            Text(
-                                "${conflict.equipmentName} — ${conflict.serviceType}${if (!conflict.clientName.isNullOrBlank()) " (${conflict.clientName})" else ""}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = SolennixTheme.colors.error
-                            )
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.height(12.dp))
-            }
-
-            if (viewModel.selectedEquipment.isEmpty()) {
-                EmptyState(
-                    icon = Icons.Default.Build,
-                    title = "Sin equipamiento (opcional)",
-                    message = "Podés continuar sin equipo o añadirlo para planificación más precisa.",
-                    actionText = "Añadir Equipamiento",
-                    onAction = { showEquipmentPicker = true }
-                )
-            } else {
-                // IMPORTANT: antes era LazyColumn.fillMaxSize(). Con el panel de
-                // Personal debajo y verticalScroll en el Column padre, no
-                // podemos anidar otro scroll vertical. El dataset es chico
-                // (equipo asignado a un evento), no amerita lazy.
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    if (isWideScreen) {
-                        val chunked = viewModel.selectedEquipment.chunked(2)
-                        chunked.forEach { pair ->
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                            if (pair.size > 1) {
                                 Box(modifier = Modifier.weight(1f)) {
                                     EquipmentCard(
-                                        equipment = pair[0],
-                                        onQuantityChange = { viewModel.updateEquipmentQuantity(pair[0].inventoryId, it) },
-                                        onRemove = { viewModel.removeEquipment(pair[0].inventoryId) }
+                                        equipment = pair[1],
+                                        onQuantityChange = { viewModel.updateEquipmentQuantity(pair[1].inventoryId, it) },
+                                        onRemove = { viewModel.removeEquipment(pair[1].inventoryId) }
                                     )
                                 }
-                                if (pair.size > 1) {
-                                    Box(modifier = Modifier.weight(1f)) {
-                                        EquipmentCard(
-                                            equipment = pair[1],
-                                            onQuantityChange = { viewModel.updateEquipmentQuantity(pair[1].inventoryId, it) },
-                                            onRemove = { viewModel.removeEquipment(pair[1].inventoryId) }
-                                        )
-                                    }
-                                } else {
-                                    Spacer(modifier = Modifier.weight(1f))
-                                }
+                            } else {
+                                Spacer(modifier = Modifier.weight(1f))
                             }
                         }
-                    } else {
-                        viewModel.selectedEquipment.forEach { eq ->
-                            EquipmentCard(
-                                equipment = eq,
-                                onQuantityChange = { viewModel.updateEquipmentQuantity(eq.inventoryId, it) },
-                                onRemove = { viewModel.removeEquipment(eq.inventoryId) }
-                            )
-                        }
+                    }
+                } else {
+                    viewModel.selectedEquipment.forEach { eq ->
+                        EquipmentCard(
+                            equipment = eq,
+                            onQuantityChange = { viewModel.updateEquipmentQuantity(eq.inventoryId, it) },
+                            onRemove = { viewModel.removeEquipment(eq.inventoryId) }
+                        )
                     }
                 }
             }
-
-        // ===== Personal asignado =====
-        // Phase 1: todos los planes pueden asignar staff. El fee es por
-        // evento (no vive en Staff). Phase 2 activará el email notifier.
-        Spacer(modifier = Modifier.height(24.dp))
-        StaffAssignmentPanel(viewModel = viewModel)
+        }
     }
 
     if (showEquipmentPicker) {
@@ -1299,6 +1482,25 @@ private fun EquipmentAndStaffSection(viewModel: EventFormViewModel) {
             viewModel = viewModel,
             onDismiss = { showEquipmentPicker = false }
         )
+    }
+}
+
+/**
+ * Sección Personal — wrapper con header y el StaffAssignmentPanel existente.
+ * Antes vivía dentro de EquipmentAndStaffSection. Separada ahora para que
+ * las 3 subsecciones (Insumos · Equipamiento · Personal) sean simétricas.
+ */
+@Composable
+private fun StaffSection(viewModel: EventFormViewModel) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            "Personal",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = SolennixTheme.colors.primaryText,
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        StaffAssignmentPanel(viewModel = viewModel)
     }
 }
 
@@ -1317,7 +1519,11 @@ private fun EquipmentCard(
         Column(modifier = Modifier.padding(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(equipment.equipmentName ?: "Equipo", style = MaterialTheme.typography.titleSmall)
+                    Text(
+                        equipment.equipmentName ?: "Equipo",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium,
+                    )
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         if (equipment.unit != null) {
                             Text("Unidad: ${equipment.unit}", style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.secondaryText)
@@ -1329,11 +1535,6 @@ private fun EquipmentCard(
                             }
                         }
                     }
-                    Text(
-                        "Sin costo — Activo reutilizable",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = SolennixTheme.colors.secondaryText
-                    )
                 }
                 IconButton(onClick = onRemove) {
                     Icon(Icons.Default.Close, contentDescription = "Quitar", tint = SolennixTheme.colors.error)
@@ -1447,109 +1648,154 @@ private fun SuppliesSection(viewModel: EventFormViewModel) {
     val isWideScreen = LocalIsWideScreen.current
 
     Column(modifier = Modifier.fillMaxWidth()) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Insumos", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.weight(1f))
-                IconButton(onClick = { showSupplyPicker = true }) {
-                    Icon(Icons.Default.AddCircle, contentDescription = "Añadir", tint = SolennixTheme.colors.primary)
-                }
-            }
+        Text(
+            "Insumos",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = SolennixTheme.colors.primaryText,
+        )
+        Spacer(modifier = Modifier.height(12.dp))
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Suggestions banner
-            if (suggestions.isNotEmpty()) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.warning.copy(alpha = 0.08f)),
-                    shape = MaterialTheme.shapes.medium
-                ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Lightbulb, contentDescription = null, tint = SolennixTheme.colors.warning, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("Sugerencias por productos", style = MaterialTheme.typography.labelMedium, color = SolennixTheme.colors.warning)
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(
-                            modifier = Modifier.horizontalScroll(rememberScrollState()),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            suggestions.forEach { suggestion ->
-                                val alreadyAdded = viewModel.selectedSupplies.any { it.inventoryId == suggestion.id }
-                                FilterChip(
-                                    selected = alreadyAdded,
-                                    onClick = { if (!alreadyAdded) viewModel.addSupplyFromSuggestion(suggestion) },
-                                    label = { Text("${suggestion.ingredientName} (${String.format("%.1f", suggestion.suggestedQuantity)})") },
-                                    leadingIcon = if (alreadyAdded) { { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) } } else null
-                                )
-                            }
-                        }
+        // Suggestions banner — siempre ANTES del botón para señalar lo
+        // recomendado primero.
+        if (suggestions.isNotEmpty()) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.warning.copy(alpha = 0.08f)),
+                shape = MaterialTheme.shapes.medium
+            ) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Lightbulb, contentDescription = null, tint = SolennixTheme.colors.warning, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Sugerencias por productos", style = MaterialTheme.typography.labelMedium, color = SolennixTheme.colors.warning)
                     }
-                }
-                Spacer(modifier = Modifier.height(12.dp))
-            }
-
-            if (viewModel.selectedSupplies.isEmpty()) {
-                EmptyState(
-                    icon = Icons.Default.Inventory2,
-                    title = "Sin insumos (opcional)",
-                    message = "Podés continuar sin insumos o añadirlos para costos más exactos.",
-                    actionText = "Añadir Insumos",
-                    onAction = { showSupplyPicker = true }
-                )
-            } else {
-                // Cost summary
-                Text(
-                    "Costo insumos: ${viewModel.costSupplies.asMXN()}",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = SolennixTheme.colors.secondaryText
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Nested scroll no permitido (el parent de InventoryAndPersonnel
-                // ya tiene verticalScroll). Column + forEach es equivalente —
-                // el dataset es chico (insumos de un solo evento).
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    if (isWideScreen) {
-                        viewModel.selectedSupplies.chunked(2).forEach { pair ->
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                                Box(modifier = Modifier.weight(1f)) {
-                                    SupplyCard(
-                                        supply = pair[0],
-                                        onQuantityChange = { viewModel.updateSupplyQuantity(pair[0].inventoryId, it) },
-                                        onSourceChange = { viewModel.updateSupplySource(pair[0].inventoryId, it) },
-                                        onExcludeCostChange = { viewModel.updateSupplyExcludeCost(pair[0].inventoryId, it) },
-                                        onRemove = { viewModel.removeSupply(pair[0].inventoryId) }
-                                    )
-                                }
-                                if (pair.size > 1) {
-                                    Box(modifier = Modifier.weight(1f)) {
-                                        SupplyCard(
-                                            supply = pair[1],
-                                            onQuantityChange = { viewModel.updateSupplyQuantity(pair[1].inventoryId, it) },
-                                            onSourceChange = { viewModel.updateSupplySource(pair[1].inventoryId, it) },
-                                            onExcludeCostChange = { viewModel.updateSupplyExcludeCost(pair[1].inventoryId, it) },
-                                            onRemove = { viewModel.removeSupply(pair[1].inventoryId) }
-                                        )
-                                    }
-                                } else {
-                                    Spacer(modifier = Modifier.weight(1f))
-                                }
-                            }
-                        }
-                    } else {
-                        viewModel.selectedSupplies.forEach { supply ->
-                            SupplyCard(
-                                supply = supply,
-                                onQuantityChange = { viewModel.updateSupplyQuantity(supply.inventoryId, it) },
-                                onSourceChange = { viewModel.updateSupplySource(supply.inventoryId, it) },
-                                onExcludeCostChange = { viewModel.updateSupplyExcludeCost(supply.inventoryId, it) },
-                                onRemove = { viewModel.removeSupply(supply.inventoryId) }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        suggestions.forEach { suggestion ->
+                            val alreadyAdded = viewModel.selectedSupplies.any { it.inventoryId == suggestion.id }
+                            FilterChip(
+                                selected = alreadyAdded,
+                                onClick = { if (!alreadyAdded) viewModel.addSupplyFromSuggestion(suggestion) },
+                                label = { Text("${suggestion.ingredientName} (${String.format("%.1f", suggestion.suggestedQuantity)})") },
+                                leadingIcon = if (alreadyAdded) { { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) } } else null
                             )
                         }
                     }
                 }
             }
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+
+        // Card prominente "Agregar Insumo" — mismo patrón que StepProducts.
+        AddItemCard(label = "Agregar Insumo") { showSupplyPicker = true }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        if (viewModel.selectedSupplies.isEmpty()) {
+            // Empty state sin action button — el CTA está arriba.
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Icon(
+                    Icons.Default.Inventory2,
+                    contentDescription = null,
+                    tint = SolennixTheme.colors.secondaryText,
+                    modifier = Modifier.size(48.dp),
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    "Sin insumos (opcional)",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = SolennixTheme.colors.secondaryText,
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    "Agrega consumibles del inventario",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = SolennixTheme.colors.secondaryText,
+                )
+            }
+        } else {
+            // Column + forEach — nested scroll no permitido (el parent ya
+            // tiene verticalScroll).
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                if (isWideScreen) {
+                    viewModel.selectedSupplies.chunked(2).forEach { pair ->
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                            Box(modifier = Modifier.weight(1f)) {
+                                SupplyCard(
+                                    supply = pair[0],
+                                    onQuantityChange = { viewModel.updateSupplyQuantity(pair[0].inventoryId, it) },
+                                    onSourceChange = { viewModel.updateSupplySource(pair[0].inventoryId, it) },
+                                    onExcludeCostChange = { viewModel.updateSupplyExcludeCost(pair[0].inventoryId, it) },
+                                    onRemove = { viewModel.removeSupply(pair[0].inventoryId) }
+                                )
+                            }
+                            if (pair.size > 1) {
+                                Box(modifier = Modifier.weight(1f)) {
+                                    SupplyCard(
+                                        supply = pair[1],
+                                        onQuantityChange = { viewModel.updateSupplyQuantity(pair[1].inventoryId, it) },
+                                        onSourceChange = { viewModel.updateSupplySource(pair[1].inventoryId, it) },
+                                        onExcludeCostChange = { viewModel.updateSupplyExcludeCost(pair[1].inventoryId, it) },
+                                        onRemove = { viewModel.removeSupply(pair[1].inventoryId) }
+                                    )
+                                }
+                            } else {
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
+                        }
+                    }
+                } else {
+                    viewModel.selectedSupplies.forEach { supply ->
+                        SupplyCard(
+                            supply = supply,
+                            onQuantityChange = { viewModel.updateSupplyQuantity(supply.inventoryId, it) },
+                            onSourceChange = { viewModel.updateSupplySource(supply.inventoryId, it) },
+                            onExcludeCostChange = { viewModel.updateSupplyExcludeCost(supply.inventoryId, it) },
+                            onRemove = { viewModel.removeSupply(supply.inventoryId) }
+                        )
+                    }
+                }
+            }
+
+            // Subtotal card — mismo patrón que StepProducts.
+            Spacer(modifier = Modifier.height(12.dp))
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.surfaceAlt),
+                shape = MaterialTheme.shapes.medium,
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        "Costo insumos",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = SolennixTheme.colors.secondaryText,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Text(
+                        viewModel.costSupplies.asMXN(),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = SolennixTheme.colors.primary,
+                    )
+                }
+            }
+        }
     }
 
     if (showSupplyPicker) {
@@ -1561,9 +1807,50 @@ private fun SuppliesSection(viewModel: EventFormViewModel) {
 }
 
 /**
- * Paso unificado de Inventario & Personal — replica el paso 4 de la web
- * (EventSupplies → divider → EventEquipment → divider → EventStaff). Mismo
- * scroll compartido para todo el paso.
+ * Card prominente reutilizable — mismo patrón visual que los "Agregar X"
+ * de StepProducts / StepExtras. Wrapper con `primaryLight` bg + icono
+ * AddCircle + label primary.
+ */
+@Composable
+private fun AddItemCard(label: String, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        colors = CardDefaults.cardColors(
+            containerColor = SolennixTheme.colors.primaryLight,
+        ),
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            SolennixTheme.colors.primary.copy(alpha = 0.3f),
+        ),
+        shape = MaterialTheme.shapes.medium,
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                Icons.Default.AddCircle,
+                contentDescription = null,
+                tint = SolennixTheme.colors.primary,
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                label,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium,
+                color = SolennixTheme.colors.primary,
+            )
+        }
+    }
+}
+
+/**
+ * Paso unificado de Inventario & Personal — 3 subsecciones apiladas
+ * (Insumos · Equipamiento · Personal) con el mismo patrón de Productos
+ * (card "Agregar X" prominente, banner de sugerencias, lista, subtotal).
+ * Scroll compartido para todo el paso.
  */
 @Composable
 fun StepInventoryAndPersonnel(viewModel: EventFormViewModel) {
@@ -1577,7 +1864,11 @@ fun StepInventoryAndPersonnel(viewModel: EventFormViewModel) {
             Spacer(modifier = Modifier.height(32.dp))
             HorizontalDivider(color = SolennixTheme.colors.divider)
             Spacer(modifier = Modifier.height(32.dp))
-            EquipmentAndStaffSection(viewModel)
+            EquipmentSection(viewModel)
+            Spacer(modifier = Modifier.height(32.dp))
+            HorizontalDivider(color = SolennixTheme.colors.divider)
+            Spacer(modifier = Modifier.height(32.dp))
+            StaffSection(viewModel)
         }
     }
 }
@@ -1772,36 +2063,41 @@ fun StepSummary(viewModel: EventFormViewModel, isEditMode: Boolean) {
             Text("Finanzas y Resumen", style = MaterialTheme.typography.headlineSmall)
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Discount section
+            // Discount section — tipo (%/$) como chips segmented ANTES del
+            // textfield (mismo patrón que iOS). Siempre una sola línea, no
+            // stackea en phone.
             Text("Descuento", style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(8.dp))
-            AdaptiveFormRow(
-                left = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        FilterChip(
-                            selected = viewModel.discountType == DiscountType.PERCENT,
-                            onClick = { viewModel.discountType = DiscountType.PERCENT },
-                            label = { Text("%") }
-                        )
-                        FilterChip(
-                            selected = viewModel.discountType == DiscountType.FIXED,
-                            onClick = { viewModel.discountType = DiscountType.FIXED },
-                            label = { Text("$") }
-                        )
-                    }
-                },
-                right = {
-                    SolennixTextField(
-                        value = viewModel.discount,
-                        onValueChange = { viewModel.discount = it },
-                        label = if (viewModel.discountType == DiscountType.PERCENT) "Descuento (%)" else "Descuento ($)",
-                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                // Toggle buttons compactos "%" / "$" — altura igual al field.
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(SolennixTheme.colors.surfaceAlt),
+                ) {
+                    DiscountTypeButton(
+                        label = "%",
+                        selected = viewModel.discountType == DiscountType.PERCENT,
+                        onClick = { viewModel.discountType = DiscountType.PERCENT },
+                    )
+                    DiscountTypeButton(
+                        label = "$",
+                        selected = viewModel.discountType == DiscountType.FIXED,
+                        onClick = { viewModel.discountType = DiscountType.FIXED },
                     )
                 }
-            )
+                SolennixTextField(
+                    value = viewModel.discount,
+                    onValueChange = { viewModel.discount = it },
+                    label = if (viewModel.discountType == DiscountType.PERCENT) "Descuento (%)" else "Descuento ($)",
+                    keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal,
+                    modifier = Modifier.weight(1f),
+                )
+            }
 
             Spacer(modifier = Modifier.height(20.dp))
 
@@ -1827,63 +2123,78 @@ fun StepSummary(viewModel: EventFormViewModel, isEditMode: Boolean) {
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Deposit section
+            // Deposit section — % a la izquierda, monto calculado a la
+            // derecha. Siempre una línea (no stackea), igual que iOS.
             Text("Anticipo", style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(8.dp))
-            AdaptiveFormRow(
-                left = {
-                    SolennixTextField(
-                        value = viewModel.depositPercent,
-                        onValueChange = { viewModel.depositPercent = it },
-                        label = "Anticipo (%)",
-                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
-                    )
-                },
-                right = {
-                    Text(
-                        "= ${depositAmount.asMXN()}",
-                        style = MaterialTheme.typography.titleSmall,
-                        color = SolennixTheme.colors.primary,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.padding(start = 12.dp, top = 16.dp)
-                    )
-                }
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                SolennixTextField(
+                    value = viewModel.depositPercent,
+                    onValueChange = { viewModel.depositPercent = it },
+                    label = "Anticipo (%)",
+                    keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal,
+                    modifier = Modifier.weight(1f),
+                )
+                Text(
+                    "= ${depositAmount.asMXN()}",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = SolennixTheme.colors.primary,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Cancellation policy
+            // Cancellation policy — 2 columnas inline siempre (no stackea).
             Text("Política de Cancelación", style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(8.dp))
-            AdaptiveFormRow(
-                left = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.Top,
+            ) {
+                Box(modifier = Modifier.weight(1f)) {
                     SolennixTextField(
                         value = viewModel.cancellationDays,
                         onValueChange = { viewModel.cancellationDays = it },
-                        label = "Días de anticipación",
-                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+                        label = "Días anticipación",
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Number,
                     )
-                },
-                right = {
+                }
+                Box(modifier = Modifier.weight(1f)) {
                     SolennixTextField(
                         value = viewModel.refundPercent,
                         onValueChange = { viewModel.refundPercent = it },
                         label = "Reembolso (%)",
-                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal,
                     )
                 }
-            )
+            }
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Notes
+            // Notes — multiline 3 líneas por default (SolennixTextField no
+            // expone minLines, uso OutlinedTextField directo aquí).
             Text("Notas", style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(8.dp))
-            SolennixTextField(
+            OutlinedTextField(
                 value = viewModel.notes,
                 onValueChange = { viewModel.notes = it },
-                label = "Notas del evento",
-                modifier = Modifier.fillMaxWidth()
+                label = { Text("Notas del evento") },
+                placeholder = { Text("Instrucciones especiales, observaciones...") },
+                modifier = Modifier.fillMaxWidth(),
+                minLines = 3,
+                maxLines = 6,
+                shape = MaterialTheme.shapes.small,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = SolennixTheme.colors.primary,
+                    focusedLabelColor = SolennixTheme.colors.primary,
+                    cursorColor = SolennixTheme.colors.primary,
+                ),
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -1963,6 +2274,36 @@ private fun SummaryRow(
     Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
         Text(label, style = MaterialTheme.typography.bodyMedium, color = SolennixTheme.colors.secondaryText, modifier = Modifier.weight(1f))
         Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, color = valueColor)
+    }
+}
+
+/**
+ * Botón segmentado compacto para el selector de tipo de descuento (% o $).
+ * Mismo patrón visual que el toggle de iOS en Step5: 44x36, background primary
+ * cuando seleccionado, surface alt cuando no.
+ */
+@Composable
+private fun DiscountTypeButton(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .size(width = 44.dp, height = 56.dp)
+            .clickable { onClick() }
+            .background(
+                if (selected) SolennixTheme.colors.primary
+                else Color.Transparent
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            label,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = if (selected) Color.White else SolennixTheme.colors.secondaryText,
+        )
     }
 }
 
@@ -2472,6 +2813,61 @@ private fun formatTime(time: java.time.LocalTime): String =
     time.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"))
 
 /**
+ * Stepper de invitados — usa OutlinedTextField read-only para quedar idéntico
+ * en altura y estilo a los demás fields (ej. "Tipo de Servicio"). Los botones
+ * -/+ son IconButton de tamaño M3 default (48dp touch target) — cómodos para
+ * el dedo. Label flota arriba como cualquier Material TextField.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun GuestCountStepper(
+    value: Int,
+    onValueChange: (Int) -> Unit,
+) {
+    OutlinedTextField(
+        value = value.toString(),
+        onValueChange = {},
+        readOnly = true,
+        label = { Text("Personas") },
+        textStyle = LocalTextStyle.current.copy(
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            fontWeight = FontWeight.SemiBold,
+        ),
+        leadingIcon = {
+            IconButton(
+                onClick = { if (value > 1) onValueChange(value - 1) },
+                enabled = value > 1,
+            ) {
+                Icon(
+                    Icons.Default.RemoveCircle,
+                    contentDescription = "Menos",
+                    tint = if (value > 1) SolennixTheme.colors.primary
+                           else SolennixTheme.colors.secondaryText,
+                    modifier = Modifier.size(28.dp),
+                )
+            }
+        },
+        trailingIcon = {
+            IconButton(onClick = { onValueChange(value + 1) }) {
+                Icon(
+                    Icons.Default.AddCircle,
+                    contentDescription = "Más",
+                    tint = SolennixTheme.colors.primary,
+                    modifier = Modifier.size(28.dp),
+                )
+            }
+        },
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.small,
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = SolennixTheme.colors.borderLight,
+            unfocusedBorderColor = SolennixTheme.colors.borderLight,
+            focusedLabelColor = SolennixTheme.colors.secondaryText,
+        ),
+    )
+}
+
+/**
  * Read-only OutlinedTextField con icono de reloj que abre el TimePicker M3
  * al tap. Patrón nativo Android para selección de hora.
  */
@@ -2482,8 +2878,14 @@ private fun TimePickerField(
     value: String,
     onClick: () -> Unit,
 ) {
+    val isBlank = value.isBlank()
+    // Cuando no hay hora cargada, mostramos "Opcional" como texto del field
+    // (iOS hace lo mismo). Truco: al pasar un value no vacío, el label flota
+    // al tope del OutlinedTextField aún con enabled=false; sin eso, el label
+    // quedaría en el medio y no se vería la pista de "opcional".
+    val displayValue = if (isBlank) "Opcional" else value
     OutlinedTextField(
-        value = value,
+        value = displayValue,
         onValueChange = {},
         label = { Text(label) },
         readOnly = true,
@@ -2498,7 +2900,8 @@ private fun TimePickerField(
         shape = RoundedCornerShape(12.dp),
         enabled = false,
         colors = OutlinedTextFieldDefaults.colors(
-            disabledTextColor = SolennixTheme.colors.primaryText,
+            disabledTextColor = if (isBlank) SolennixTheme.colors.secondaryText
+                                else SolennixTheme.colors.primaryText,
             disabledBorderColor = SolennixTheme.colors.borderLight,
             disabledLabelColor = SolennixTheme.colors.secondaryText,
             disabledTrailingIconColor = SolennixTheme.colors.primary,
