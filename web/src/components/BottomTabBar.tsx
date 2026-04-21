@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   Calendar,
-  CalendarCheck,
+  PartyPopper,
   Users,
   MoreHorizontal,
   Package,
@@ -16,7 +16,10 @@ import clsx from 'clsx';
 const TABS = [
   { name: 'Inicio', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Calendario', href: '/calendar', icon: Calendar },
-  { name: 'Eventos', href: '/events', icon: CalendarCheck },
+  // Events uses PartyPopper to match Android's Celebration icon — conveys
+  // "event / party" instead of "another calendar" which is what
+  // CalendarCheck read as next to the Calendario tab.
+  { name: 'Eventos', href: '/events', icon: PartyPopper },
   { name: 'Clientes', href: '/clients', icon: Users },
 ];
 

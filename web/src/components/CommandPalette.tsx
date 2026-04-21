@@ -8,7 +8,7 @@ import {
   Boxes,
   LayoutDashboard,
   Calendar,
-  CalendarCheck,
+  PartyPopper,
   Users,
   Settings,
   ArrowRight,
@@ -56,7 +56,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
     () => [
       { label: 'Dashboard', icon: LayoutDashboard, action: () => navigate('/dashboard'), group: 'Navegación' },
       { label: 'Calendario', icon: Calendar, action: () => navigate('/calendar'), group: 'Navegación' },
-      { label: 'Eventos', icon: CalendarCheck, action: () => navigate('/events'), group: 'Navegación' },
+      { label: 'Eventos', icon: PartyPopper, action: () => navigate('/events'), group: 'Navegación' },
       { label: 'Clientes', icon: Users, action: () => navigate('/clients'), group: 'Navegación' },
       { label: 'Productos', icon: Package, action: () => navigate('/products'), group: 'Navegación' },
       { label: 'Inventario', icon: Boxes, action: () => navigate('/inventory'), group: 'Navegación' },

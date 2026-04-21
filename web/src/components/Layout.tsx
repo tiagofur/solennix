@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import {
   LayoutDashboard,
   Calendar,
-  CalendarCheck,
+  PartyPopper,
   Users,
   Package,
   Boxes,
@@ -96,7 +96,7 @@ export const Layout: React.FC = () => {
   const navigation = [
     { name: 'Inicio', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Calendario', href: '/calendar', icon: Calendar },
-    { name: 'Eventos', href: '/events', icon: CalendarCheck },
+    { name: 'Eventos', href: '/events', icon: PartyPopper },
     { name: 'Clientes', href: '/clients', icon: Users },
     { name: 'Personal', href: '/staff', icon: UserCog },
     { name: 'Productos', href: '/products', icon: Package },

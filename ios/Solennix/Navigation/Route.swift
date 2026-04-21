@@ -18,7 +18,7 @@ public enum Tab: Int, Hashable, CaseIterable {
         switch self {
         case .home:     return "house.fill"
         case .calendar: return "calendar"
-        case .events:   return "calendar.badge.clock"
+        case .events:   return "party.popper.fill"
         case .clients:  return "person.2.fill"
         case .more:     return "ellipsis"
         }
@@ -55,7 +55,7 @@ public enum SidebarSection: String, Hashable, CaseIterable {
         switch self {
         case .dashboard:       return "house.fill"
         case .calendar:        return "calendar"
-        case .events:          return "calendar.badge.clock"
+        case .events:          return "party.popper.fill"
         case .clients:         return "person.2.fill"
         case .personnel:       return "person.3.fill"
         case .products:        return "shippingbox.fill"
