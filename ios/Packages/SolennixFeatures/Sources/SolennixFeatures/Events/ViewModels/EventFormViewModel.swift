@@ -80,19 +80,27 @@ public struct FormEquipmentConflict: Identifiable, Hashable, Codable {
     public let eventName: String
 }
 
+/// Sugerencia de equipo desde el backend. Campos alineados con el JSON
+/// (`ingredient_name`, `current_stock`, etc.) + snake_case strategy del
+/// APIClient. Antes tenía `inventoryId`/`name`/`suggestedQty` que no
+/// matcheaban el payload — el decode fallaba silencioso y la lista siempre
+/// venía vacía, por eso el usuario no veía las sugerencias.
 public struct FormEquipmentSuggestion: Identifiable, Hashable, Codable {
     public let id: String
-    public let inventoryId: String
-    public let name: String
-    public let suggestedQty: Int
+    public let ingredientName: String
+    public let currentStock: Double
+    public let unit: String
+    public let type: String
+    public let suggestedQuantity: Double
 }
 
 public struct FormSupplySuggestion: Identifiable, Hashable, Codable {
     public let id: String
-    public let inventoryId: String
-    public let name: String
-    public let suggestedQty: Double
+    public let ingredientName: String
+    public let currentStock: Double
+    public let unit: String
     public let unitCost: Double
+    public let suggestedQuantity: Double
 }
 
 // MARK: - Selected Staff Assignment
@@ -156,7 +164,7 @@ public final class EventFormViewModel {
     public var startTime: Date?
     public var endTime: Date?
     public var serviceType: String = ""
-    public var numPeople: Int = 1
+    public var numPeople: Int = 0
     public var status: EventStatus = .quoted
     public var discount: Double = 0
     public var discountType: DiscountType = .percent
@@ -182,6 +190,11 @@ public final class EventFormViewModel {
     public var equipmentConflicts: [FormEquipmentConflict] = []
     public var equipmentSuggestions: [FormEquipmentSuggestion] = []
     public var supplySuggestions: [FormSupplySuggestion] = []
+
+    /// Cache local de costos unitarios por producto (calculado sumando
+    /// ingredients × unitCost). Se popula cuando el usuario llega al Paso 5
+    /// o cambia `selectedProducts` — parity con Android (`_productUnitCosts`).
+    public var productUnitCosts: [String: Double] = [:]
 
     // Staff (Personal / Colaboradores)
     public var staff: [Staff] = []
@@ -333,6 +346,84 @@ public final class EventFormViewModel {
 
     public var suppliesCost: Double {
         selectedSupplies.filter { !$0.excludeCost }.reduce(0) { $0 + ($1.quantity * $1.unitCost) }
+    }
+
+    // MARK: - Profitability (parity con Android)
+    //
+    // Cada producto tiene un costo unitario derivado de sus ingredients
+    // (fetched async en `fetchProductCosts`). La ganancia neta es el revenue
+    // pre-IVA menos todos los costos (productos + extras + insumos con cost).
+    // El margen descuenta el revenue pass-through (extras con solo-costo) del
+    // denominador para que no lo infle falsamente.
+
+    public var hasPendingProductCosts: Bool {
+        let ids = Set(selectedProducts.map { $0.productId })
+        return ids.contains { productUnitCosts[$0] == nil }
+    }
+
+    public var costProducts: Double {
+        selectedProducts.reduce(0) { sum, p in
+            sum + (productUnitCosts[p.productId] ?? 0) * p.quantity
+        }
+    }
+
+    public var costExtras: Double {
+        extras.reduce(0) { $0 + $1.cost }
+    }
+
+    public var costSupplies: Double { suppliesCost }
+
+    public var totalCosts: Double {
+        costProducts + costExtras + costSupplies
+    }
+
+    public var netProfit: Double {
+        let revenue = total - (requiresInvoice ? taxAmount : 0)
+        return revenue - totalCosts
+    }
+
+    public var profitMargin: Double {
+        let revenue = total - (requiresInvoice ? taxAmount : 0)
+        let adjustedRevenue = revenue - passThroughExtrasSubtotal
+        guard adjustedRevenue > 0 else { return 0 }
+        return (netProfit / adjustedRevenue) * 100
+    }
+
+    /// Busca ingredients de cada producto seleccionado y calcula el costo
+    /// unitario sumando `quantityRequired × unitCost` de cada ingrediente
+    /// de tipo ingredient/supply. Cachea en `productUnitCosts`. Skip productos
+    /// ya cacheados.
+    @MainActor
+    public func fetchProductCosts() async {
+        let missing = selectedProducts
+            .map { $0.productId }
+            .filter { !$0.isEmpty && productUnitCosts[$0] == nil }
+            .reduce(into: Set<String>()) { $0.insert($1) }
+
+        guard !missing.isEmpty else { return }
+
+        for productId in missing {
+            do {
+                let ingredients: [ProductIngredient] = try await apiClient.getAll(
+                    Endpoint.productIngredients(productId)
+                )
+                let cost = ingredients
+                    .filter { ing in
+                        // Solo ingredients y supplies contribuyen al costo del
+                        // producto (equipment es reutilizable, no consumible).
+                        guard let type = ing.type else { return true }
+                        return type == .ingredient || type == .supply
+                    }
+                    .reduce(0) { sum, ing in
+                        sum + (ing.unitCost ?? 0) * ing.quantityRequired
+                    }
+                productUnitCosts[productId] = cost
+            } catch {
+                // No bloqueamos — asumimos 0 si no se pudo cargar. Android
+                // hace lo mismo para mantener la UI respondiendo.
+                productUnitCosts[productId] = 0
+            }
+        }
     }
 
     // MARK: - Load Initial Data
@@ -570,6 +661,11 @@ public final class EventFormViewModel {
         selectedProducts[index].quantity = max(1, quantity)
     }
 
+    public func updateProductDiscount(at index: Int, discount: Double) {
+        guard selectedProducts.indices.contains(index) else { return }
+        selectedProducts[index].discount = max(0, discount)
+    }
+
     public func moveProduct(from source: Int, to destination: Int) {
         guard selectedProducts.indices.contains(source),
               destination >= 0, destination <= selectedProducts.count,
@@ -616,6 +712,21 @@ public final class EventFormViewModel {
         selectedEquipment.remove(at: index)
     }
 
+    /// Agrega directamente un equipo desde una sugerencia del backend, sin
+    /// depender de que `equipmentInventory` esté cargado — parity con Android
+    /// (`addEquipmentFromSuggestion`). Si ya estaba agregado, no hace nada.
+    public func addEquipmentFromSuggestion(_ suggestion: FormEquipmentSuggestion) {
+        guard !selectedEquipment.contains(where: { $0.inventoryId == suggestion.id }) else { return }
+        selectedEquipment.append(
+            SelectedEquipmentItem(
+                inventoryId: suggestion.id,
+                name: suggestion.ingredientName,
+                quantity: max(1, Int(suggestion.suggestedQuantity.rounded())),
+                notes: ""
+            )
+        )
+    }
+
     // MARK: - Supply Management
 
     public func addSupply(item: InventoryItem, suggestedQty: Double) {
@@ -633,6 +744,24 @@ public final class EventFormViewModel {
                 )
             )
         }
+    }
+
+    /// Agrega directamente un insumo desde una sugerencia. Decide source
+    /// (`.stock` vs `.purchase`) comparando stock actual vs qty sugerida,
+    /// igual que Android. Parity con `addSupplyFromSuggestion` de Android.
+    public func addSupplyFromSuggestion(_ suggestion: FormSupplySuggestion) {
+        guard !selectedSupplies.contains(where: { $0.inventoryId == suggestion.id }) else { return }
+        let source: SupplySource = suggestion.currentStock >= suggestion.suggestedQuantity ? .stock : .purchase
+        selectedSupplies.append(
+            SelectedSupplyItem(
+                inventoryId: suggestion.id,
+                name: suggestion.ingredientName,
+                quantity: suggestion.suggestedQuantity,
+                unitCost: suggestion.unitCost,
+                source: source,
+                excludeCost: false
+            )
+        )
     }
 
     public func removeSupply(at index: Int) {

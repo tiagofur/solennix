@@ -11,22 +11,27 @@ struct Step1GeneralView: View {
 
     @State private var showClientPicker = false
     @State private var showQuickClientSheet = false
+    @State private var showDatePickerSheet = false
     @State private var clientSearch = ""
 
     var body: some View {
         ScrollView {
             VStack(spacing: Spacing.lg) {
-                // Client picker + Event date
-                AdaptiveFormRow {
-                    clientPickerSection
-                } right: {
-                    dateSection
+                // Cliente — ancho completo (antes estaba pareado con fecha).
+                clientPickerSection
+
+                // Fecha — ancho completo, parity con Android.
+                dateSection
+
+                // Hora Inicio / Hora Fin — siempre 2 columnas. Gap central =
+                // mismo tamaño que los márgenes laterales (Spacing.md).
+                HStack(alignment: .top, spacing: Spacing.md) {
+                    timeFieldSection(title: "Hora Inicio", binding: $viewModel.startTime)
+                    timeFieldSection(title: "Hora Fin", binding: $viewModel.endTime)
                 }
 
-                // Times + Service type
-                AdaptiveFormRow {
-                    timeSection
-                } right: {
+                // Tipo de Servicio + Personas
+                HStack(alignment: .top, spacing: Spacing.md) {
                     SolennixTextField(
                         label: "Tipo de Servicio",
                         text: $viewModel.serviceType,
@@ -35,16 +40,11 @@ struct Step1GeneralView: View {
                         errorMessage: !viewModel.serviceType.isEmpty && viewModel.serviceType.count < 2
                             ? "Minimo 2 caracteres" : nil
                     )
-                }
-
-                // Number of people + Status
-                AdaptiveFormRow {
                     peopleSection
-                } right: {
-                    statusSection
                 }
 
-                // Location + City
+                // Lugar + Ciudad — AdaptiveFormRow stackea en phone (son
+                // textos largos, no conviene apretar).
                 AdaptiveFormRow {
                     SolennixTextField(
                         label: "Lugar",
@@ -60,11 +60,21 @@ struct Step1GeneralView: View {
                         leftIcon: "building.2"
                     )
                 }
+
+                // Estado — ancho completo (Menu dropdown).
+                statusSection
+
+                // Notas adicionales — multiline, 3 líneas mínimo. Parity
+                // cross-platform con Android que ya tiene este campo.
+                notesSection
             }
             .padding(Spacing.md)
         }
         .sheet(isPresented: $showClientPicker) {
             clientPickerSheet
+        }
+        .sheet(isPresented: $showDatePickerSheet) {
+            datePickerSheet
         }
         .sheet(isPresented: $showQuickClientSheet) {
             QuickClientSheet(apiClient: viewModel.apiClient) { client in
@@ -215,14 +225,111 @@ struct Step1GeneralView: View {
                 .fontWeight(.medium)
                 .foregroundStyle(SolennixColors.text)
 
+            // Botón full-width con la fecha formateada (parity con Android).
+            // Al tap abre una sheet con DatePicker .graphical nativo. Esto da
+            // área de toque grande y texto legible en vez del botón compact
+            // chiquito que iOS pone por default.
+            Button {
+                showDatePickerSheet = true
+            } label: {
+                HStack(spacing: Spacing.sm) {
+                    Image(systemName: "calendar")
+                        .font(.body)
+                        .foregroundStyle(SolennixColors.primary)
+                        .frame(width: 20)
+
+                    Text(formattedEventDate)
+                        .font(.body)
+                        .foregroundStyle(SolennixColors.text)
+
+                    Spacer()
+
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(SolennixColors.textTertiary)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, Spacing.md)
+                .padding(.vertical, 14)
+                .background(SolennixColors.surface)
+                .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+                .overlay(
+                    RoundedRectangle(cornerRadius: CornerRadius.md)
+                        .stroke(SolennixColors.border, lineWidth: 1)
+                )
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private var formattedEventDate: String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale.autoupdatingCurrent
+        formatter.setLocalizedDateFormatFromTemplate("dMMMMyyyy")
+        return formatter.string(from: viewModel.eventDate)
+    }
+
+    // MARK: - Date Picker Sheet
+
+    private var datePickerSheet: some View {
+        NavigationStack {
             DatePicker(
-                "Fecha",
+                "Fecha del Evento",
                 selection: $viewModel.eventDate,
                 displayedComponents: .date
             )
-            .datePickerStyle(.compact)
+            .datePickerStyle(.graphical)
             .tint(SolennixColors.primary)
             .labelsHidden()
+            .padding()
+            .navigationTitle("Fecha del Evento")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Listo") { showDatePickerSheet = false }
+                        .fontWeight(.semibold)
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
+    }
+
+    // MARK: - Time Field (reutilizable por cada media columna)
+
+    private func timeFieldSection(title: String, binding: Binding<Date?>) -> some View {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
+            Text(title)
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .foregroundStyle(SolennixColors.text)
+
+            OptionalTimePicker(
+                selection: binding,
+                placeholder: "Opcional"
+            )
+        }
+    }
+
+    // MARK: - Notes Section
+
+    private var notesSection: some View {
+        VStack(alignment: .leading, spacing: Spacing.xs) {
+            Text("Notas Adicionales")
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .foregroundStyle(SolennixColors.text)
+
+            // TextField con axis: .vertical es el patrón nativo iOS 16+ para
+            // multiline inputs. reservesSpace hace que el field arranque ya
+            // con la altura de 3 líneas aunque esté vacío.
+            TextField(
+                "Instrucciones especiales para el montaje...",
+                text: $viewModel.notes,
+                axis: .vertical
+            )
+            .lineLimit(3, reservesSpace: true)
+            .font(.body)
+            .foregroundStyle(SolennixColors.text)
             .padding(.horizontal, Spacing.md)
             .padding(.vertical, Spacing.sm)
             .background(SolennixColors.surface)
@@ -231,36 +338,6 @@ struct Step1GeneralView: View {
                 RoundedRectangle(cornerRadius: CornerRadius.md)
                     .stroke(SolennixColors.border, lineWidth: 1)
             )
-        }
-    }
-
-    // MARK: - Time Section
-
-    private var timeSection: some View {
-        HStack(spacing: Spacing.md) {
-            VStack(alignment: .leading, spacing: Spacing.xs) {
-                Text("Hora Inicio")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                    .foregroundStyle(SolennixColors.text)
-
-                OptionalTimePicker(
-                    selection: $viewModel.startTime,
-                    placeholder: "Opcional"
-                )
-            }
-
-            VStack(alignment: .leading, spacing: Spacing.xs) {
-                Text("Hora Fin")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                    .foregroundStyle(SolennixColors.text)
-
-                OptionalTimePicker(
-                    selection: $viewModel.endTime,
-                    placeholder: "Opcional"
-                )
-            }
         }
     }
 
@@ -273,23 +350,29 @@ struct Step1GeneralView: View {
                 .fontWeight(.medium)
                 .foregroundStyle(SolennixColors.text)
 
-            HStack(spacing: Spacing.md) {
+            // Altura pareja con SolennixTextField (padding vertical 14 +
+            // icon 22pt ≈ 50pt). Hit area del botón cubre toda la zona
+            // horizontal hasta el número — el dedo pega fácil aunque el
+            // glyph sea moderado.
+            HStack(spacing: 0) {
                 Button {
-                    if viewModel.numPeople > 1 {
+                    if viewModel.numPeople > 0 {
                         viewModel.numPeople -= 1
                     }
                 } label: {
                     Image(systemName: "minus.circle.fill")
                         .font(.title2)
-                        .foregroundStyle(viewModel.numPeople > 1 ? SolennixColors.primary : SolennixColors.textTertiary)
+                        .foregroundStyle(viewModel.numPeople > 0 ? SolennixColors.primary : SolennixColors.textTertiary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .disabled(viewModel.numPeople <= 1)
+                .disabled(viewModel.numPeople <= 0)
 
                 Text("\(viewModel.numPeople)")
                     .font(.title3)
                     .fontWeight(.semibold)
-                    .foregroundStyle(SolennixColors.text)
+                    .foregroundStyle(viewModel.numPeople == 0 ? SolennixColors.textTertiary : SolennixColors.text)
                     .frame(minWidth: 40)
 
                 Button {
@@ -298,13 +381,13 @@ struct Step1GeneralView: View {
                     Image(systemName: "plus.circle.fill")
                         .font(.title2)
                         .foregroundStyle(SolennixColors.primary)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-
-                Spacer()
             }
             .padding(.horizontal, Spacing.md)
-            .padding(.vertical, Spacing.sm)
+            .padding(.vertical, 14)
             .background(SolennixColors.surface)
             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
             .overlay(
@@ -398,49 +481,103 @@ struct Step1GeneralView: View {
 
 // MARK: - Optional Time Picker
 
+/// Botón full-width que muestra la hora formateada (o "Opcional") y al tap
+/// abre una sheet con DatePicker.wheel nativo. Mismo patrón que dateSection.
 private struct OptionalTimePicker: View {
     @Binding var selection: Date?
     let placeholder: String
 
-    var body: some View {
-        HStack(spacing: Spacing.sm) {
-            if let binding = Binding($selection) {
-                DatePicker("", selection: binding, displayedComponents: .hourAndMinute)
-                    .datePickerStyle(.compact)
-                    .tint(SolennixColors.primary)
-                    .labelsHidden()
+    @State private var showPickerSheet = false
+    @State private var draftTime = Date()
 
-                Button {
-                    selection = nil
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.body)
-                        .foregroundStyle(SolennixColors.textTertiary)
-                }
-                .buttonStyle(.plain)
-            } else {
-                Button {
-                    selection = Date()
-                } label: {
-                    HStack(spacing: Spacing.xs) {
-                        Image(systemName: "clock")
-                            .foregroundStyle(SolennixColors.textTertiary)
-                        Text(placeholder)
+    var body: some View {
+        Button {
+            draftTime = selection ?? Date()
+            showPickerSheet = true
+        } label: {
+            HStack(spacing: Spacing.sm) {
+                Image(systemName: "clock")
+                    .font(.body)
+                    .foregroundStyle(selection != nil ? SolennixColors.primary : SolennixColors.textTertiary)
+                    .frame(width: 20)
+
+                Text(displayLabel)
+                    .font(.body)
+                    .foregroundStyle(selection != nil ? SolennixColors.text : SolennixColors.textTertiary)
+
+                Spacer()
+
+                if selection != nil {
+                    Button {
+                        selection = nil
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.body)
                             .foregroundStyle(SolennixColors.textTertiary)
                     }
-                    .font(.body)
+                    .buttonStyle(.plain)
+                } else {
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(SolennixColors.textTertiary)
                 }
-                .buttonStyle(.plain)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, Spacing.md)
+            .padding(.vertical, 14)
+            .background(SolennixColors.surface)
+            .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
+            .overlay(
+                RoundedRectangle(cornerRadius: CornerRadius.md)
+                    .stroke(SolennixColors.border, lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+        .sheet(isPresented: $showPickerSheet) {
+            pickerSheet
+        }
+    }
+
+    private var displayLabel: String {
+        guard let selection else { return placeholder }
+        let formatter = DateFormatter()
+        formatter.locale = Locale.autoupdatingCurrent
+        formatter.setLocalizedDateFormatFromTemplate("HHmm")
+        return formatter.string(from: selection)
+    }
+
+    private var pickerSheet: some View {
+        NavigationStack {
+            VStack {
+                DatePicker(
+                    "",
+                    selection: $draftTime,
+                    displayedComponents: .hourAndMinute
+                )
+                .datePickerStyle(.wheel)
+                .tint(SolennixColors.primary)
+                .labelsHidden()
+                .padding()
+
+                Spacer()
+            }
+            .navigationTitle("Hora")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Cancelar") { showPickerSheet = false }
+                        .foregroundStyle(SolennixColors.textSecondary)
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Listo") {
+                        selection = draftTime
+                        showPickerSheet = false
+                    }
+                    .fontWeight(.semibold)
+                }
             }
         }
-        .padding(.horizontal, Spacing.md)
-        .padding(.vertical, Spacing.sm)
-        .background(SolennixColors.surface)
-        .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
-        .overlay(
-            RoundedRectangle(cornerRadius: CornerRadius.md)
-                .stroke(SolennixColors.border, lineWidth: 1)
-        )
+        .presentationDetents([.height(320)])
     }
 }
 
