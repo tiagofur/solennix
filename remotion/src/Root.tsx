@@ -33,6 +33,8 @@ import { ChaosToOrder } from './marketing/ChaosToOrder';
 import { ChaosToOrderSquare } from './marketing/ChaosToOrderSquare';
 import { V02_Dashboard } from './marketing/V02Dashboard';
 import { V02_DashboardSquare } from './marketing/V02DashboardSquare';
+import { V02_Clients } from './marketing/V03Clients';
+import { V02_ClientsSquare } from './marketing/V03ClientsSquare';
 
 export const RemotionRoot = () => {
   return (
@@ -340,6 +342,22 @@ export const RemotionRoot = () => {
         <Composition
           id="V02-Dashboard-Square"
           component={V02_DashboardSquare}
+          durationInFrames={450}
+          fps={SOCIAL_FPS}
+          width={SOCIAL_FORMATS.FEED.width}
+          height={SOCIAL_FORMATS.FEED.height}
+        />
+        <Composition
+          id="V03-Clients-Reel"
+          component={V02_Clients}
+          durationInFrames={450}
+          fps={SOCIAL_FPS}
+          width={SOCIAL_FORMATS.REEL.width}
+          height={SOCIAL_FORMATS.REEL.height}
+        />
+        <Composition
+          id="V03-Clients-Square"
+          component={V02_ClientsSquare}
           durationInFrames={450}
           fps={SOCIAL_FPS}
           width={SOCIAL_FORMATS.FEED.width}
