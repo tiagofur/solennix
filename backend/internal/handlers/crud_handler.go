@@ -1467,15 +1467,21 @@ func (h *CRUDHandler) UpdateProductIngredients(w http.ResponseWriter, r *http.Re
 	}
 
 	// Validate all ingredients
+	seenInventory := make(map[uuid.UUID]bool)
 	for i, ingredient := range req.Ingredients {
 		if err := ValidateProductIngredient(&ingredient); err != nil {
 			writeError(w, http.StatusBadRequest, fmt.Sprintf("ingredients[%d]: %s", i, err.Error()))
 			return
 		}
+		if seenInventory[ingredient.InventoryID] {
+			writeError(w, http.StatusBadRequest, fmt.Sprintf("ingredients[%d]: duplicate inventory item %s", i, ingredient.InventoryID))
+			return
+		}
+		seenInventory[ingredient.InventoryID] = true
 	}
 
 	if err := h.productRepo.UpdateIngredients(r.Context(), id, req.Ingredients); err != nil {
-		writeError(w, http.StatusInternalServerError, "Failed to update ingredients")
+		writeError(w, http.StatusInternalServerError, "Failed to update ingredients: "+err.Error())
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
