@@ -136,7 +136,7 @@ public struct SettingsView: View {
         }
 
         NavigationLink(value: Route.changePassword) {
-            Label("Cambiar Contrasena", systemImage: "lock.rotation")
+            Label("Cambiar Contraseña", systemImage: "lock.rotation")
         }
 
         NavigationLink(value: Route.notificationPreferences) {
@@ -173,7 +173,7 @@ public struct SettingsView: View {
             legalSheetURL = IdentifiableURL(LegalURL.privacy)
         } label: {
             HStack {
-                Label("Politica de Privacidad", systemImage: "hand.raised")
+                Label("Política de Privacidad", systemImage: "hand.raised")
                     .foregroundStyle(SolennixColors.text)
                 Spacer()
                 Image(systemName: "arrow.up.right.square")
@@ -182,14 +182,14 @@ public struct SettingsView: View {
             }
             .contentShape(Rectangle())
         }
-        .accessibilityHint("Abre la politica de privacidad en Safari")
+        .accessibilityHint("Abre la política de privacidad en Safari")
 
         Button {
             HapticsHelper.play(.selection)
             legalSheetURL = IdentifiableURL(LegalURL.terms)
         } label: {
             HStack {
-                Label("Terminos de Servicio", systemImage: "doc.plaintext")
+                Label("Términos de Servicio", systemImage: "doc.plaintext")
                     .foregroundStyle(SolennixColors.text)
                 Spacer()
                 Image(systemName: "arrow.up.right.square")
@@ -198,7 +198,25 @@ public struct SettingsView: View {
             }
             .contentShape(Rectangle())
         }
-        .accessibilityHint("Abre los terminos de servicio en Safari")
+        .accessibilityHint("Abre los términos de servicio en Safari")
+
+        Button {
+            HapticsHelper.play(.selection)
+            if let url = URL(string: "https://solennix.creapolis.dev/eliminar-cuenta") {
+                legalSheetURL = IdentifiableURL(url)
+            }
+        } label: {
+            HStack {
+                Label("Eliminar Cuenta", systemImage: "trash")
+                    .foregroundStyle(SolennixColors.error)
+                Spacer()
+                Image(systemName: "arrow.up.right.square")
+                    .font(.caption)
+                    .foregroundStyle(SolennixColors.textTertiary)
+            }
+            .contentShape(Rectangle())
+        }
+        .accessibilityHint("Abre la página de solicitud de eliminación de cuenta en Safari")
     }
 
     // MARK: - User Header Section

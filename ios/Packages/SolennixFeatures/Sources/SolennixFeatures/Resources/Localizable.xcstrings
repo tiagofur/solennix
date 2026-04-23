@@ -20,12 +20,6 @@
         }
       }
     },
-    "(%@)" : {
-
-    },
-    "(%lld)" : {
-
-    },
     "(min: %lld)" : {
 
     },
@@ -62,6 +56,9 @@
       }
     },
     "%@, estado actual" : {
+
+    },
+    "%@/u" : {
 
     },
     "%@%%" : {
@@ -190,9 +187,6 @@
     "$" : {
 
     },
-    "$%@/u" : {
-
-    },
     "$0" : {
 
     },
@@ -274,10 +268,10 @@
     "Agregar cliente" : {
 
     },
-    "Agregar equipo" : {
+    "Agregar Equipamiento" : {
 
     },
-    "Agregar Equipo" : {
+    "Agregar equipo" : {
 
     },
     "Agregar equipo completo" : {
@@ -335,6 +329,9 @@
 
     },
     "Alertas de Stock" : {
+
+    },
+    "Algunos costos de productos siguen cargando. La rentabilidad puede ajustarse en segundos." : {
 
     },
     "Alta demanda esta semana." : {
@@ -1355,7 +1352,7 @@
     "COSTO EST." : {
 
     },
-    "Costo Insumos" : {
+    "Costo insumos" : {
 
     },
     "Costo Personal" : {
@@ -1548,6 +1545,9 @@
     "Entra" : {
 
     },
+    "Equipamiento" : {
+
+    },
     "Equipo" : {
 
     },
@@ -1555,9 +1555,6 @@
 
     },
     "Equipo asociado" : {
-
-    },
-    "Equipo sugerido" : {
 
     },
     "Equipos" : {
@@ -1810,9 +1807,6 @@
 
     },
     "Insumos por Evento — Del Stock" : {
-
-    },
-    "Insumos sugeridos" : {
 
     },
     "Intenta con otro termino de busqueda" : {
@@ -2150,6 +2144,9 @@
     "Producto" : {
 
     },
+    "Producto %lld" : {
+
+    },
     "Producto Activo" : {
 
     },
@@ -2187,6 +2184,9 @@
 
     },
     "Registrate" : {
+
+    },
+    "Rentabilidad" : {
 
     },
     "Requiere Factura (IVA)" : {
