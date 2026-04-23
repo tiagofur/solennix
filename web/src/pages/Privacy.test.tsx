@@ -31,33 +31,33 @@ describe('Privacy', () => {
     it('renders the page title', () => {
       renderPrivacy();
 
-      expect(screen.getByText('Politica de Privacidad')).toBeInTheDocument();
+      expect(screen.getByText('Política de Privacidad')).toBeInTheDocument();
     });
 
     it('renders the last updated date', () => {
       renderPrivacy();
 
-      expect(screen.getByText(/Ultima actualizacion: 1 de enero de 2025/)).toBeInTheDocument();
+      expect(screen.getByText(/Última actualización: 23 de abril de 2026/)).toBeInTheDocument();
     });
 
     it('renders section 1 - information we collect', () => {
       renderPrivacy();
 
-      expect(screen.getByText('1. Informacion que recopilamos')).toBeInTheDocument();
+      expect(screen.getByText('1. Información que recopilamos')).toBeInTheDocument();
       expect(
-        screen.getByText(/Recopilamos la informacion que nos proporcionas al registrarte/)
+        screen.getByText(/Recopilamos la información que nos proporcionas al registrarte/)
       ).toBeInTheDocument();
     });
 
     it('renders section 2 - how we use your information', () => {
       renderPrivacy();
 
-      expect(screen.getByText('2. Como usamos tu informacion')).toBeInTheDocument();
+      expect(screen.getByText('2. Cómo usamos tu información')).toBeInTheDocument();
       expect(screen.getByText('Proporcionar y mejorar los servicios de Solennix')).toBeInTheDocument();
-      expect(screen.getByText('Gestionar tu cuenta y suscripcion')).toBeInTheDocument();
+      expect(screen.getByText('Gestionar tu cuenta y suscripción')).toBeInTheDocument();
       expect(screen.getByText('Enviarte comunicaciones sobre el servicio')).toBeInTheDocument();
-      expect(screen.getByText('Procesar pagos a traves de proveedores seguros')).toBeInTheDocument();
-      expect(screen.getByText('Cumplir con obligaciones legales')).toBeInTheDocument();
+      expect(screen.getByText('Procesar pagos a través de proveedores seguros')).toBeInTheDocument();
+      expect(screen.getByText('Cumplir con obligaciones legales y regulatorias')).toBeInTheDocument();
     });
 
     it('renders section 3 - storage and security', () => {
@@ -72,37 +72,37 @@ describe('Privacy', () => {
     it('renders section 4 - sharing information', () => {
       renderPrivacy();
 
-      expect(screen.getByText('4. Compartir informacion')).toBeInTheDocument();
+      expect(screen.getByText('4. Compartir información')).toBeInTheDocument();
       expect(
-        screen.getByText(/No vendemos, intercambiamos ni transferimos tu informacion personal/)
+        screen.getByText(/No vendemos, intercambiamos ni transferimos tu información personal/)
       ).toBeInTheDocument();
     });
 
     it('renders section 5 - your rights', () => {
       renderPrivacy();
 
-      expect(screen.getByText('5. Tus derechos')).toBeInTheDocument();
-      expect(screen.getByText('Acceder a tu informacion personal')).toBeInTheDocument();
+      expect(screen.getByText('5. Tus derechos y eliminación de datos')).toBeInTheDocument();
+      expect(screen.getByText('Acceder a tu información personal')).toBeInTheDocument();
       expect(screen.getByText('Corregir datos inexactos')).toBeInTheDocument();
-      expect(screen.getByText('Solicitar la eliminacion de tu cuenta y datos')).toBeInTheDocument();
-      expect(screen.getByText('Exportar tus datos')).toBeInTheDocument();
+      expect(screen.getByText('Solicitar la eliminación de tu cuenta y todos tus datos asociados')).toBeInTheDocument();
+      expect(screen.getByText('Exportar tu información en un formato estándar')).toBeInTheDocument();
     });
 
     it('renders section 6 - cookies', () => {
       renderPrivacy();
 
-      expect(screen.getByText('6. Cookies y tecnologias similares')).toBeInTheDocument();
+      expect(screen.getByText('6. Cookies y tecnologías similares')).toBeInTheDocument();
       expect(
-        screen.getByText(/La aplicacion utiliza almacenamiento local seguro/)
+        screen.getByText(/La aplicación utiliza almacenamiento local seguro/)
       ).toBeInTheDocument();
     });
 
     it('renders section 7 - changes to policy', () => {
       renderPrivacy();
 
-      expect(screen.getByText('7. Cambios a esta politica')).toBeInTheDocument();
+      expect(screen.getByText('7. Cambios a esta política')).toBeInTheDocument();
       expect(
-        screen.getByText(/Podemos actualizar esta Politica de Privacidad periodicamente/)
+        screen.getByText(/Podemos actualizar esta Política de Privacidad periódicamente/)
       ).toBeInTheDocument();
     });
 
@@ -111,7 +111,7 @@ describe('Privacy', () => {
 
       expect(screen.getByText('8. Contacto')).toBeInTheDocument();
       expect(
-        screen.getByText(/Si tienes preguntas sobre esta politica/)
+        screen.getByText(/Si tienes preguntas sobre esta política/)
       ).toBeInTheDocument();
     });
 
