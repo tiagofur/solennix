@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 
 export const Privacy: React.FC = () => {
@@ -18,39 +18,39 @@ export const Privacy: React.FC = () => {
         </button>
 
         <h1 className="text-3xl font-black tracking-tight text-text mb-2">
-          Politica de Privacidad
+          Política de Privacidad
         </h1>
         <p className="text-sm text-text-secondary mb-10">
-          Ultima actualizacion: 1 de enero de 2025
+          Última actualización: 23 de abril de 2026
         </p>
 
         {/* Section 1 */}
         <div className="bg-card border border-border rounded-2xl p-6 mb-4 shadow-sm">
           <h2 className="text-lg font-semibold text-text mb-3">
-            1. Informacion que recopilamos
+            1. Información que recopilamos
           </h2>
           <p className="text-sm text-text-secondary leading-relaxed">
-            Recopilamos la informacion que nos proporcionas al registrarte en Solennix,
-            incluyendo tu nombre, correo electronico y datos de tu negocio. Tambien
-            recopilamos informacion sobre el uso de la aplicacion para mejorar
-            nuestros servicios.
+            Recopilamos la información que nos proporcionas al registrarte en Solennix,
+            incluyendo tu nombre, correo electrónico y datos de tu negocio. También
+            recopilamos información sobre el uso de la aplicación para mejorar
+            nuestros servicios y garantizar la seguridad de la plataforma.
           </p>
         </div>
 
         {/* Section 2 */}
         <div className="bg-card border border-border rounded-2xl p-6 mb-4 shadow-sm">
           <h2 className="text-lg font-semibold text-text mb-3">
-            2. Como usamos tu informacion
+            2. Cómo usamos tu información
           </h2>
           <p className="text-sm text-text-secondary leading-relaxed mb-3">
-            Utilizamos tu informacion para:
+            Utilizamos tu información para:
           </p>
           <ul className="text-sm text-text-secondary leading-relaxed space-y-1 list-disc list-inside">
             <li>Proporcionar y mejorar los servicios de Solennix</li>
-            <li>Gestionar tu cuenta y suscripcion</li>
+            <li>Gestionar tu cuenta y suscripción</li>
             <li>Enviarte comunicaciones sobre el servicio</li>
-            <li>Procesar pagos a traves de proveedores seguros</li>
-            <li>Cumplir con obligaciones legales</li>
+            <li>Procesar pagos a través de proveedores seguros</li>
+            <li>Cumplir con obligaciones legales y regulatorias</li>
           </ul>
         </div>
 
@@ -60,67 +60,69 @@ export const Privacy: React.FC = () => {
             3. Almacenamiento y seguridad
           </h2>
           <p className="text-sm text-text-secondary leading-relaxed">
-            Tus datos se almacenan en servidores seguros. Implementamos medidas tecnicas
-            y organizativas apropiadas para proteger tu informacion contra acceso
-            no autorizado, alteracion, divulgacion o destruccion.
+            Tus datos se almacenan en servidores seguros con cifrado de nivel industrial. 
+            Implementamos medidas técnicas y organizativas apropiadas para proteger tu 
+            información contra acceso no autorizado, alteración, divulgación o destrucción.
           </p>
         </div>
 
         {/* Section 4 */}
         <div className="bg-card border border-border rounded-2xl p-6 mb-4 shadow-sm">
           <h2 className="text-lg font-semibold text-text mb-3">
-            4. Compartir informacion
+            4. Compartir información
           </h2>
           <p className="text-sm text-text-secondary leading-relaxed">
-            No vendemos, intercambiamos ni transferimos tu informacion personal a
-            terceros sin tu consentimiento, excepto cuando sea necesario para proporcionar
-            el servicio (procesadores de pago, proveedores de infraestructura) o cuando
-            lo exija la ley.
+            No vendemos, intercambiamos ni transferimos tu información personal a
+            terceros con fines publicitarios. Compartimos datos únicamente cuando sea 
+            estrictamente necesario para proporcionar el servicio (procesadores de pago, 
+            proveedores de infraestructura) o cuando lo exija la ley.
           </p>
         </div>
 
         {/* Section 5 */}
         <div className="bg-card border border-border rounded-2xl p-6 mb-4 shadow-sm">
           <h2 className="text-lg font-semibold text-text mb-3">
-            5. Tus derechos
+            5. Tus derechos y eliminación de datos
           </h2>
           <p className="text-sm text-text-secondary leading-relaxed mb-3">
-            Tienes derecho a:
+            De acuerdo con las leyes de protección de datos, tienes derecho a:
           </p>
-          <ul className="text-sm text-text-secondary leading-relaxed space-y-1 list-disc list-inside">
-            <li>Acceder a tu informacion personal</li>
+          <ul className="text-sm text-text-secondary leading-relaxed space-y-1 list-disc list-inside mb-4">
+            <li>Acceder a tu información personal</li>
             <li>Corregir datos inexactos</li>
-            <li>Solicitar la eliminacion de tu cuenta y datos</li>
-            <li>Exportar tus datos</li>
+            <li>Solicitar la eliminación de tu cuenta y todos tus datos asociados</li>
+            <li>Oponerte al tratamiento de ciertos datos</li>
+            <li>Exportar tu información en un formato estándar</li>
           </ul>
-          <p className="text-sm text-text-secondary leading-relaxed mt-3">
-            Para ejercer estos derechos, contactanos en{' '}
-            <a href="mailto:hola@creapolis.dev" className="text-brand-orange hover:underline">
-              hola@creapolis.dev
-            </a>
+          <p className="text-sm text-text-secondary leading-relaxed">
+            Para ejercer tu derecho al borrado, puedes visitar nuestra página dedicada de{' '}
+            <Link to="/eliminar-cuenta" className="text-brand-orange font-bold hover:underline">
+              Solicitud de Eliminación de Cuenta
+            </Link> o contactarnos directamente.
           </p>
         </div>
 
         {/* Section 6 */}
         <div className="bg-card border border-border rounded-2xl p-6 mb-4 shadow-sm">
           <h2 className="text-lg font-semibold text-text mb-3">
-            6. Cookies y tecnologias similares
+            6. Cookies y tecnologías similares
           </h2>
           <p className="text-sm text-text-secondary leading-relaxed">
-            La aplicacion utiliza almacenamiento local seguro para mantener tu sesion
-            iniciada y preferencias. No utilizamos cookies de rastreo con fines publicitarios.
+            La aplicación utiliza almacenamiento local seguro para mantener tu sesión
+            iniciada y preferencias. No utilizamos cookies de rastreo con fines publicitarios 
+            ni compartimos hábitos de navegación con terceros.
           </p>
         </div>
 
         {/* Section 7 */}
         <div className="bg-card border border-border rounded-2xl p-6 mb-4 shadow-sm">
           <h2 className="text-lg font-semibold text-text mb-3">
-            7. Cambios a esta politica
+            7. Cambios a esta política
           </h2>
           <p className="text-sm text-text-secondary leading-relaxed">
-            Podemos actualizar esta Politica de Privacidad periodicamente. Te
-            notificaremos sobre cambios significativos a traves de la aplicacion
-            o por correo electronico.
+            Podemos actualizar esta Política de Privacidad periódicamente para reflejar 
+            cambios en el servicio o requisitos legales. Te notificaremos sobre cambios 
+            significativos a través de la aplicación o por correo electrónico.
           </p>
         </div>
 
@@ -130,7 +132,7 @@ export const Privacy: React.FC = () => {
             8. Contacto
           </h2>
           <p className="text-sm text-text-secondary leading-relaxed">
-            Si tienes preguntas sobre esta politica, contactanos:
+            Si tienes preguntas sobre esta política o el tratamiento de tus datos, contáctanos:
           </p>
           <p className="text-sm text-text-secondary leading-relaxed mt-2">
             Creapolis.Dev<br />

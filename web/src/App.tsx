@@ -20,6 +20,7 @@ const ResetPassword = React.lazy(() => import("@/pages/ResetPassword").then((m) 
 const About = React.lazy(() => import("@/pages/About").then((m) => ({ default: m.About })));
 const Privacy = React.lazy(() => import("@/pages/Privacy").then((m) => ({ default: m.Privacy })));
 const Terms = React.lazy(() => import("@/pages/Terms").then((m) => ({ default: m.Terms })));
+const AccountDeletion = React.lazy(() => import("@/pages/AccountDeletion").then((m) => ({ default: m.AccountDeletion })));
 const NotFound = React.lazy(() => import("@/pages/NotFound").then((m) => ({ default: m.NotFound })));
 
 const Dashboard = React.lazy(() => import("@/pages/Dashboard").then((m) => ({ default: m.Dashboard })));
@@ -87,6 +88,7 @@ function App() {
               <Route path="/about" element={<About />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
+              <Route path="/eliminar-cuenta" element={<AccountDeletion />} />
               <Route path="/form/:token" element={<PublicEventFormPage />} />
               <Route path="/client/:token" element={<ClientPortalPage />} />
 

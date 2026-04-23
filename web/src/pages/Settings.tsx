@@ -14,6 +14,7 @@ import {
   Info,
   Shield,
   Bell,
+  Trash2,
 } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import clsx from "clsx";
@@ -474,6 +475,18 @@ export const Settings: React.FC = () => {
                       )}
                     />
                   </button>
+                </div>
+
+                <div className="pt-6 border-t border-border">
+                  <Link
+                    to="/eliminar-cuenta"
+                    className="flex items-center gap-2 text-error font-bold hover:gap-3 transition-all"
+                  >
+                    Eliminar mi cuenta <Trash2 className="h-4 w-4" />
+                  </Link>
+                  <p className="text-xs text-text-secondary mt-1">
+                    Esta acción es irreversible y borrará todos tus datos permanentemente.
+                  </p>
                 </div>
               </div>
             </div>
@@ -946,6 +959,13 @@ export const Settings: React.FC = () => {
             >
               <Shield className="h-4 w-4 text-primary" />
               Política de Privacidad
+            </Link>
+            <Link
+              to="/eliminar-cuenta"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-surface-alt/50 text-text hover:bg-border transition-colors text-sm font-medium"
+            >
+              <Trash2 className="h-4 w-4 text-error" />
+              Eliminar Cuenta
             </Link>
           </div>
         </div>
