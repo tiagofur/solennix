@@ -15,6 +15,7 @@ public struct DashboardView: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var viewModel: DashboardViewModel?
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
+    @State private var showQuickQuote = false
 
     private var isIPad: Bool { sizeClass == .regular }
 
@@ -94,7 +95,9 @@ public struct DashboardView: View {
                     }
                     .disabled(!planLimitsManager.canCreateEvent)
 
-                    NavigationLink(value: Route.quickQuote) {
+                    Button {
+                        showQuickQuote = true
+                    } label: {
                         Label("Cotización Rápida", systemImage: "doc.text.magnifyingglass")
                     }
                 } label: {
@@ -115,6 +118,9 @@ public struct DashboardView: View {
             }
             await viewModel?.loadDashboard()
             await planLimitsManager.checkLimits()
+        }
+        .sheet(isPresented: $showQuickQuote) {
+            QuickQuoteView(apiClient: apiClient)
         }
         .overlay {
             if viewModel?.isLoading == true && viewModel?.eventsThisMonth.isEmpty == true && viewModel?.errorMessage == nil {

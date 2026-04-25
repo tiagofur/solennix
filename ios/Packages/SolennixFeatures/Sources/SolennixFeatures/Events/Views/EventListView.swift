@@ -16,6 +16,7 @@ public struct EventListView: View {
     @State private var viewModel: EventListViewModel
     @State private var showShareSheet = false
     @State private var csvFileURL: URL?
+    @State private var showQuickQuote = false
 
     // MARK: - Init
 
@@ -71,7 +72,9 @@ public struct EventListView: View {
                             Label("Nuevo Evento", systemImage: "calendar.badge.plus")
                         }
 
-                        NavigationLink(value: Route.quickQuote) {
+                        Button {
+                            showQuickQuote = true
+                        } label: {
                             Label("Cotización Rápida", systemImage: "doc.text.magnifyingglass")
                         }
                     } label: {
@@ -96,6 +99,9 @@ public struct EventListView: View {
                 if let url = csvFileURL {
                     ShareSheet(items: [url])
                 }
+            }
+            .sheet(isPresented: $showQuickQuote) {
+                QuickQuoteView(apiClient: apiClient)
             }
             .confirmationDialog(
                 "Eliminar evento",
