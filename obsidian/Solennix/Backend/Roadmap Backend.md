@@ -2,28 +2,29 @@
 
 #backend #roadmap #mejoras
 
-> [!success] 🆕 Jornada 2026-04-16 — 5 commits Backend (incluyendo Portal Cliente MVP + Business tier)
-> Ver [[../PRD/16_SPRINT_LOG_2026_04_16|Sprint Log del día]] y [[../00_DASHBOARD|Dashboard]].
+> [!success] 🆕 Actualizado 2026-04-26 — 45 migraciones · Dashboard KPIs server-side · Personal completo (Phase 1+2+Olas 1-3) · Portal Cliente
+> Ver [[../00_DASHBOARD|Dashboard]] para el panorama completo.
 >
-> | SHA | Commit | Impacto |
-> |---|---|---|
-> | `3ec4eba` | fix(backend): restore Apple Sign-In for new users | **P0 CRÍTICO** — bug silencioso en producción: new users con Apple Sign-In devolvían 500 |
-> | `a8a8dd4` | fix(backend): GetAll LIMIT + Apple token timeout | P1 — cap 1000 en unpaginated + timeout 10s en Apple token |
-> | `3a72812` | fix(backend): sort allowlist + rate limiter thread-safe + admin errors | P2/P3 — defense-in-depth SQL + mutex en ratelimit + envelope consistency |
-> | `8d521b2` | feat(backend): Business tier + 14-day Stripe trial | Feature — migration 040 + `StripeBusinessPriceID` opt-in + trial default + metadata propagation |
-> | `8dff4f3` | feat(backend): Portal Cliente MVP | 🎁 Feature nueva — migration 041 + model + repo + 4 endpoints — ver [[../PRD/15_PORTAL_CLIENTE_TRACKER]] |
+> **Hitos desde 2026-04-16:**
+> - Migration 040 (Business tier) → 045 (Product staff_team_id)
+> - Portal Cliente MVP: 4 endpoints + `PublicEventView` + 410 Gone
+> - Personal completo: staff CRUD → email Pro+ → turnos/RSVP → equipos → product+staff
+> - Dashboard KPIs server-side: `/api/dashboard/kpis`, `/revenue-chart`, `/events-by-status`
+> - Staff availability: `GET /api/staff/availability?date=`
+> - Staff teams: `GET/POST/PUT/DELETE /api/staff/teams[/{id}]`
 
-### Migraciones nuevas en DB (pendientes de aplicar en VPS)
+### Migraciones nuevas en DB (042-045 pendientes de aplicar en VPS)
 
-- **040** — `users_plan_check` amplía constraint para aceptar `'business'`.
-- **041** — crea tabla `event_public_links` con partial unique index.
+- **042** — crea tablas `staff` + `event_staff` con hooks Phase 2/3.
+- **043** — añade `shift_start`, `shift_end`, `status` a `event_staff` (Ola 1).
+- **044** — crea tablas `staff_teams` + `staff_team_members` (Ola 2).
+- **045** — añade `staff_team_id` FK nullable a `products` (Ola 3).
 
 > [!todo] Próximos sprints Backend
 > - **Sprint 7.C** — Enforcement matrix: gate con 403 `{type: "requires_paid_plan"}` en endpoints de features A/B/C/D/E/G/H/I según tier del organizer. Para feature A (Portal): el endpoint público lee `organizer.plan` y devuelve `basic_payload` o `full_payload`.
 > - **Sprint 9** — Tabla `payment_submissions` + 6 endpoints (3 públicos rate-limited + 3 organizer) para registro de pago por transferencia del cliente.
 > - **Sprint 10** — Tabla `event_reviews` + cron que envía email de review 48h post-evento.
-> - **Follow-up** — Documentar los 4 endpoints de Portal Cliente en `backend/docs/openapi.yaml`.
-> - **Follow-up** — Corregir `PRD/08 §4`: email provider es Resend, no SMTP.
+> - **Follow-up** — Documentar los endpoints de Portal Cliente, Staff, Staff Teams en `backend/docs/openapi.yaml`.
 
 > [!tip] Filosofía
 > Priorizado por **impacto en usuario** × **esfuerzo técnico**. Alineado con [[Roadmap Web]], [[Roadmap Android]] y [[Roadmap iOS]]. Cada fase deja la API en un estado shippable mejor que el anterior.
@@ -34,7 +35,7 @@
 
 | Capacidad | Backend | Web | iOS | Android | Gap |
 |-----------|---------|-----|-----|---------|-----|
-| CRUD básico (6 dominios) | ✅ | ✅ | ✅ | ✅ | — |
+| CRUD básico (6 dominios + staff) | ✅ | ✅ | ✅ | ✅ | — |
 | Auth multi-provider | ✅ | ✅ | ✅ | ✅ | — |
 | Event photos | ✅ | ✅ | ✅ | ✅ | — |
 | Equipment conflicts | ✅ | ✅ | ✅ | ✅ | — |
@@ -43,12 +44,14 @@
 | RevenueCat (mobile) | ✅ | — | ✅ | ✅ | — |
 | Push notifications | ✅ FCM+APNs | ✅ FCM | ✅ APNs | ✅ FCM | — |
 | Paginación | ✅ Server | ✅ Server | ✅ Server | ✅ Server | — |
-| Email transaccional | ⚠️ Solo reset | ✅ | ✅ | ✅ | **P1** |
+| Email transaccional | ✅ Welcome+reminder+payment+subscription+staff | ✅ | ✅ | ✅ | — |
 | File storage | ⚠️ Local | ✅ | ✅ | ✅ | **P1** |
-| Dashboard analytics | ✅ Server-side | ✅ KPIs | ✅ KPIs | ✅ KPIs | — |
+| Dashboard analytics (server-side) | ✅ KPIs+revenue+status | ✅ | ✅ | ✅ | — |
+| Staff + Teams | ✅ CRUD+availability+teams | ✅ | ✅ | ✅ | — |
+| Portal Cliente | ✅ 4 endpoints | ✅ | ✅ | ✅ | — |
 | API versioning | ✅ v1 + legacy | — | — | — | — |
 | Audit logging | ✅ Middleware | — | — | — | — |
-| Background jobs | ⚠️ 1 job | — | — | — | **P2** |
+| Background jobs | ⚠️ 2 jobs (push+email) | — | — | — | **P2** |
 
 ---
 

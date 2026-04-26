@@ -22,6 +22,7 @@ import com.creapolis.solennix.core.model.Product
 import com.creapolis.solennix.core.model.ProductIngredient
 import com.creapolis.solennix.core.model.StaffTeam
 import com.creapolis.solennix.core.network.ApiService
+import com.creapolis.solennix.core.network.SolennixException
 import com.creapolis.solennix.core.network.get
 import com.creapolis.solennix.core.network.post
 import com.creapolis.solennix.core.network.put
@@ -101,6 +102,7 @@ class ProductFormViewModel @Inject constructor(
     var isUploadingImage by mutableStateOf(false)
     var saveSuccess by mutableStateOf(false)
     var errorMessage by mutableStateOf<String?>(null)
+    var planLimitMessage by mutableStateOf<String?>(null)
 
     val isFormValid: Boolean
         get() = name.isNotBlank() && category.isNotBlank() && basePrice.toDoubleOrNull() != null
@@ -258,6 +260,8 @@ class ProductFormViewModel @Inject constructor(
                 }
 
                 saveSuccess = true
+            } catch (e: SolennixException.PlanLimitExceeded) {
+                planLimitMessage = e.message
             } catch (e: Exception) {
                 errorMessage = "Error al guardar producto: ${e.message}"
             } finally {

@@ -7,6 +7,9 @@ public enum APIError: LocalizedError, Sendable {
     case serverError(statusCode: Int, message: String)
     case decodingError
     case unknown
+    /// Thrown when the backend returns 403 `{ error: "plan_limit_exceeded" }`.
+    /// Carries the structured limit info so the UI can show a paywall.
+    case planLimitExceeded(message: String, limitType: String, current: Int, max: Int)
 
     public var errorDescription: String? {
         switch self {
@@ -20,6 +23,8 @@ public enum APIError: LocalizedError, Sendable {
             return "Error al procesar la respuesta del servidor."
         case .unknown:
             return "Ocurrio un error desconocido."
+        case .planLimitExceeded(let message, _, _, _):
+            return message
         }
     }
 
@@ -37,6 +42,8 @@ public enum APIError: LocalizedError, Sendable {
             return "Error al procesar la respuesta del servidor."
         case .unknown:
             return "Ocurrió un error inesperado. Intentá de nuevo."
+        case .planLimitExceeded(let message, _, _, _):
+            return message
         }
     }
 

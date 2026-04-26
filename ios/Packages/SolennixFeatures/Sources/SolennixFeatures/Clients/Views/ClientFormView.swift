@@ -13,6 +13,7 @@ public struct ClientFormView: View {
     @State private var viewModel: ClientFormViewModel
     @State private var selectedItem: PhotosPickerItem?
     @Environment(\.dismiss) private var dismiss
+    @Environment(PlanLimitsManager.self) private var planLimitsManager
 
     public init(clientId: String? = nil, apiClient: APIClient) {
         self.clientId = clientId
@@ -64,6 +65,21 @@ public struct ClientFormView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text(viewModel.errorMessage ?? "")
+        }
+        .sheet(isPresented: .init(
+            get: { viewModel.planLimitMessage != nil },
+            set: { if !$0 { viewModel.planLimitMessage = nil } }
+        )) {
+            PaywallSheet(
+                message: viewModel.planLimitMessage ?? "",
+                onUpgrade: {
+                    viewModel.planLimitMessage = nil
+                    dismiss()
+                },
+                onDismiss: {
+                    viewModel.planLimitMessage = nil
+                }
+            )
         }
         .task {
             if let id = clientId {

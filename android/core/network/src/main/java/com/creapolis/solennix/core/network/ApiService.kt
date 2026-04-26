@@ -21,13 +21,28 @@ data class UploadResponse(
 @Serializable
 data class ApiErrorResponse(
     val message: String,
-    val code: String? = null
+    val error: String? = null,
+    val code: String? = null,
+    val limit: ApiLimitInfo? = null
+)
+
+@Serializable
+data class ApiLimitInfo(
+    val type: String = "unknown",
+    val current: Int = 0,
+    val max: Int = 0
 )
 
 sealed class SolennixException(message: String, cause: Throwable? = null) : Exception(message, cause) {
     class Network(cause: Throwable) : SolennixException("Error de conexión. Verificá tu internet.", cause)
     class Server(val code: Int, message: String) : SolennixException(message)
     class Auth(message: String) : SolennixException(message)
+    class PlanLimitExceeded(
+        val limitType: String,
+        val current: Int,
+        val max: Int,
+        message: String
+    ) : SolennixException(message)
     class Unknown(message: String, cause: Throwable? = null) : SolennixException(message, cause)
 }
 
@@ -47,6 +62,17 @@ class ApiService @Inject constructor(
             val message = errorBody?.message ?: "Error del servidor (${e.response.status.value})"
             if (e.response.status == HttpStatusCode.Unauthorized) {
                 throw SolennixException.Auth(message)
+            }
+            // Detect structured plan_limit_exceeded response from backend
+            if (e.response.status == HttpStatusCode.Forbidden &&
+                errorBody?.error == "plan_limit_exceeded"
+            ) {
+                throw SolennixException.PlanLimitExceeded(
+                    limitType = errorBody.limit?.type ?: "unknown",
+                    current = errorBody.limit?.current ?: 0,
+                    max = errorBody.limit?.max ?: 0,
+                    message = message
+                )
             }
             throw SolennixException.Server(e.response.status.value, message)
         } catch (e: IOException) {

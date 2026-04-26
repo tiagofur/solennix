@@ -12,6 +12,7 @@ public struct EventFormView: View {
     @State private var viewModel: EventFormViewModel
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(PlanLimitsManager.self) private var planLimitsManager
 
     public init(eventId: String? = nil, apiClient: APIClient) {
         self.eventId = eventId
@@ -98,6 +99,22 @@ public struct EventFormView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text(viewModel.errorMessage ?? "")
+        }
+        .sheet(isPresented: .init(
+            get: { viewModel.planLimitMessage != nil },
+            set: { if !$0 { viewModel.planLimitMessage = nil } }
+        )) {
+            PaywallSheet(
+                message: viewModel.planLimitMessage ?? "",
+                onUpgrade: {
+                    viewModel.planLimitMessage = nil
+                    // Navigate to pricing via environment — close form first
+                    dismiss()
+                },
+                onDismiss: {
+                    viewModel.planLimitMessage = nil
+                }
+            )
         }
         .task {
             await viewModel.loadInitialData()
@@ -233,6 +250,12 @@ public struct EventFormView: View {
                             }
 
                             dismiss()
+                        } catch let error as APIError {
+                            if case .planLimitExceeded(let message, _, _, _) = error {
+                                viewModel.planLimitMessage = message
+                            } else {
+                                viewModel.errorMessage = error.localizedDescription
+                            }
                         } catch {
                             viewModel.errorMessage = error.localizedDescription
                         }

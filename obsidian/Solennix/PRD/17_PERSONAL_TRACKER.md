@@ -9,8 +9,8 @@ aliases:
   - Staff Tracker
   - Colaboradores
 date: 2026-04-16
-updated: 2026-04-17
-status: phase-2-done
+updated: 2026-04-26
+status: phase-2-done-olas-1-2-3-complete
 ---
 
 # 🤝 Personal / Colaboradores — Tracker
@@ -20,6 +20,15 @@ status: phase-2-done
 
 > [!success] Phase 2 cerrada 2026-04-17 — email al colaborador al asignar (Pro+)
 > Goroutine en `CRUDHandler.UpdateEventItems` manda email via Resend cuando el organizer es Pro+ y el colaborador marcó `notification_email_opt_in=true`. UPSERT pattern preserva `notification_sent_at` para que re-guardar el evento no dispare duplicados. **Commit `20a2d07`**.
+
+> [!success] Ola 1 cerrada 2026-04-19 — turnos + RSVP + disponibilidad
+> `event_staff` recibe `shift_start`/`shift_end` (TIMESTAMPTZ) + `status` (pending/confirmed/declined/cancelled). Backend endpoint `GET /api/staff/availability?date=`. Cross-platform: pickers de horario colapsables, badges de estado, indicador "Ocupado ese día". **Migration 043**.
+
+> [!success] Ola 2 cerrada 2026-04-19 — equipos (staff_teams)
+> Tablas `staff_teams` + `staff_team_members` con PK compuesta. Repo CRUD transaccional. Endpoints `/api/staff/teams`. Cross-platform: gestión de equipos, toggle `is_lead`, badge corona. **Migration 044**.
+
+> [!success] Ola 3 cerrada 2026-04-20 — Product con staff team
+> `products.staff_team_id` nullable FK. Tenant isolation via `SetStaffTeamRepo`. Cross-platform: selector "Equipo asociado" en Product form, chip "Incluye equipo" en EventForm. **Migration 045**.
 
 ---
 
@@ -39,7 +48,16 @@ Los organizadores tenían un problema silencioso: **dónde anotar al fotógrafo,
 | Ver asignados en EventDetail (read-only) | ✅ | ✅ | ✅ | ✅ `GET /events/{id}/staff` |
 | Fee opcional por asignación | ✅ | ✅ | ✅ | ✅ `event_staff.fee_amount` |
 | Toggle "notificar por email al asignar" | ✅ | ✅ | ✅ | ✅ `staff.notification_email_opt_in` |
-| **Email automático al colaborador al asignarlo (Phase 2, Pro+)** | ✅ *(trigger implícito en save)* | ✅ | ✅ | ✅ goroutine fire-and-forget + Resend |
+| **Email automático al colaborador al asignarlo (Phase 2, Pro+)** | ✅ | ✅ | ✅ | ✅ goroutine fire-and-forget + Resend |
+| **Turnos (shift_start/shift_end) (Ola 1)** | ✅ | ✅ | ✅ | ✅ migration 043 |
+| **RSVP status (pending/confirmed/declined/cancelled) (Ola 1)** | ✅ | ✅ | ✅ | ✅ enum + COALESCE UPSERT |
+| **Disponibilidad por fecha (Ola 1)** | ✅ | ✅ | ✅ | ✅ `GET /api/staff/availability?date=` |
+| **Equipos / cuadrillas (Ola 2)** | ✅ | ✅ | ✅ | ✅ `staff_teams` + `staff_team_members` |
+| **Toggle is_lead por miembro (Ola 2)** | ✅ | ✅ | ✅ | ✅ badge corona |
+| **Agregar equipo completo a evento (Ola 2)** | ✅ | ✅ | ✅ | ✅ expande miembros via UPSERT |
+| **Product con staff_team_id (Ola 3)** | ✅ | ✅ | ✅ | ✅ nullable FK + tenant isolation |
+| **Selector "Equipo asociado" en Product form (Ola 3)** | ✅ | ✅ | ✅ | — |
+| **Chip "Incluye equipo" en EventForm (Ola 3)** | ✅ | ✅ | ✅ | — |
 
 ---
 
@@ -49,12 +67,18 @@ Los organizadores tenían un problema silencioso: **dónde anotar al fotógrafo,
 flowchart LR
     P1[Phase 1<br/>CRUD + asignación<br/>✅ 2026-04-16]
     P2[Phase 2<br/>Email al colaborador<br/>Pro+ · ✅ 2026-04-17]
-    P3[Phase 3<br/>Login Business multi-user<br/>Business · hook ready]
+    O1[Ola 1<br/>Turnos + RSVP<br/>+ disponibilidad<br/>✅ 2026-04-19]
+    O2[Ola 2<br/>Equipos / cuadrillas<br/>✅ 2026-04-19]
+    O3[Ola 3<br/>Product + staff team<br/>✅ 2026-04-20]
+    P3[Phase 3<br/>Login Business<br/>multi-user · hook ready]
 
-    P1 --> P2 --> P3
+    P1 --> P2 --> O1 --> O2 --> O3 --> P3
 
     style P1 fill:#1B5E20,stroke:#4CAF50,color:#fff
     style P2 fill:#1B5E20,stroke:#4CAF50,color:#fff
+    style O1 fill:#1B5E20,stroke:#4CAF50,color:#fff
+    style O2 fill:#1B5E20,stroke:#4CAF50,color:#fff
+    style O3 fill:#1B5E20,stroke:#4CAF50,color:#fff
     style P3 fill:#6A1B9A,stroke:#CE93D8,color:#fff
 ```
 
@@ -140,7 +164,13 @@ CREATE TABLE event_staff (
 | `PUT` | `/api/staff/{id}` | Actualizar |
 | `DELETE` | `/api/staff/{id}` | Eliminar (cascade a event_staff) |
 | `GET` | `/api/events/{id}/staff` | Listar asignaciones con joined staff_name/role_label/phone/email |
-| `PUT` | `/api/events/{id}/items` | Ahora acepta `staff: [{staff_id, fee_amount?, role_override?, notes?}]` |
+| `PUT` | `/api/events/{id}/items` | Ahora acepta `staff: [{staff_id, fee_amount?, role_override?, notes?, shift_start?, shift_end?, status?}]` |
+| `GET` | `/api/staff/availability?date=` | Disponibilidad del staff en una fecha o rango (Ola 1) |
+| `GET` | `/api/staff/teams` | Listado de equipos con member_count (Ola 2) |
+| `POST` | `/api/staff/teams` | Crear equipo con miembros (Ola 2) |
+| `GET` | `/api/staff/teams/{id}` | Detalle de equipo con miembros joined (Ola 2) |
+| `PUT` | `/api/staff/teams/{id}` | Actualizar equipo — reemplaza miembros atómicamente (Ola 2) |
+| `DELETE` | `/api/staff/teams/{id}` | Eliminar equipo (cascade a miembros) (Ola 2) |
 
 ---
 
@@ -171,6 +201,58 @@ CREATE TABLE event_staff (
 3. **`MarkStaffNotificationResult`** escribe `'sent'` o `'failed:<reason>'` + stampa `notification_sent_at` incluso en fallo (evita retry storms). El organizer puede forzar retry removiendo y re-agregando al colaborador.
 4. **`EmailService.SendCollaboratorAssigned`** + template en español con event name, fecha, rol, honorarios (si hay).
 5. **Goroutine en `CRUDHandler.notifyAssignedStaff`**: fire-and-forget, nunca bloquea el save. Gate `if user.Plan == "basic" { return }`. Usa `BusinessName` del organizer si está, fallback a `Name`.
+
+---
+
+## ✅ Ola 1 — Turnos + RSVP + Disponibilidad (shipped 2026-04-19)
+
+**Migration 043:** `event_staff` recibe `shift_start`, `shift_end` (TIMESTAMPTZ nullables) y `status` (enum `pending | confirmed | declined | cancelled`, default `confirmed`).
+
+**Backend:**
+- `UpdateEventItems` usa `COALESCE($status, event_staff.status)` para preservar RSVP cuando un cliente viejo no envía el campo.
+- `GET /api/staff/availability?date=YYYY-MM-DD` (o rango `start`/`end`) devuelve staff con asignaciones `pending|confirmed` en la ventana.
+- Tests: `GetStaffAvailability` handler + `ValidateEventStaff` branches covered.
+
+**Cross-platform:**
+- Modelos extendidos con `shift_start`/`shift_end`/`status` (opcionales, retrocompatibles).
+- Step 4 del EventForm: pickers de horario colapsables ("Agregar horario (opcional)") + selector de estado con badges de color.
+- Indicador "Ocupado ese día" al lado de los nombres en el selector de staff.
+- Sin gating de plan — todos los planes.
+
+---
+
+## ✅ Ola 2 — Equipos / Cuadrillas (shipped 2026-04-19)
+
+**Migration 044:** `staff_teams` (user_id, name, role_label, notes) + `staff_team_members` (team_id, staff_id, is_lead, position) con PK compuesta. Cascade a ambos lados.
+
+**Backend:**
+- `StaffTeamRepo`: GetAll con `member_count` barato (sub-SELECT COUNT); GetByID con miembros joined; Create/Update/Delete transaccionales.
+- Validación de tenant antes de insertar cada miembro.
+- Endpoints: `GET/POST /api/staff/teams`, `GET/PUT/DELETE /api/staff/teams/{id}`.
+
+**Cross-platform:**
+- CRUD de equipos con pantalla propia accesible desde la lista de Personal (sin tab nuevo).
+- Miembros se eligen desde el catálogo existente con toggle `is_lead` por fila.
+- Badge de corona para el team lead.
+- Integración con EventForm: botón "Agregar equipo completo" en Step 4. Expande miembros a N filas en `event_staff` usando el mismo UPSERT de Ola 1. Sin duplicados.
+- Sin gating de plan.
+
+---
+
+## ✅ Ola 3 — Product con Staff Team (shipped 2026-04-20)
+
+**Migration 045:** `products.staff_team_id` nullable FK con `ON DELETE SET NULL`. Partial index para queries de "products con team".
+
+**Backend:**
+- `CRUDHandler.SetStaffTeamRepo` valida que el `staff_team_id` pertenezca al mismo user antes de persistir (tenant isolation).
+- Cliente orquesta expansión: cuando el organizador agrega un Product con team al EventForm, el cliente fetchea `/api/staff/teams/{id}`, expande miembros y los agrega a `selectedStaff`.
+
+**Cross-platform:**
+- Product form: selector opcional "Equipo asociado" (default "Sin equipo").
+- EventForm: chip "Incluye equipo" en la lista de productos.
+- Semantics snapshot-at-add-time: si el team se edita después, el evento NO se actualiza.
+- Coexiste con Recipe: un Product puede tener `staff_team_id` Y `recipe`.
+- Sin gating de plan.
 
 ---
 

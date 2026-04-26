@@ -8,14 +8,21 @@ aliases:
   - Estado Actual
   - Current Status
 date: 2026-03-20
-updated: 2026-04-21
+updated: 2026-04-26
 status: active
 ---
 
 # Estado Actual del Proyecto — Solennix
 
 **Fecha:** Abril 2026
-**Version:** 1.2
+**Version:** 1.3
+
+> [!info] 2026-04-26 — iOS Date Parity + Quick Quote Navigation Fix
+> Fix definitivo del offset de -1 día en fechas de eventos para iOS. `parseEventDate()` ahora usa timezone local consistente con Web y Android. Además, Quick Quote restaurado como `.sheet` modal (no NavigationLink push) resolviendo el rendering vacío causado por doble NavigationStack.
+> - **iOS date fix**: `aa83f998` — resolve date offset bug by using local timezone
+> - **iOS Quick Quote**: `58482efe` — restore quick quote modal presentation
+> - **Web date fix**: `bb109216` — centralize date-only string parsing to prevent timezone offset
+> - **iOS combined**: `023b7d03` — date parity and quick quote navigation fixes
 
 > [!info] 2026-04-23 — Google Play Compliance: Política de Privacidad + Eliminación de Cuenta (Paridad Total)
 > Implementación del flujo completo de cumplimiento para resolver el rechazo de Google Play Store. Aseguramos que el usuario tenga control total sobre sus datos tanto en la web como dentro de las aplicaciones móviles.
@@ -127,10 +134,10 @@ status: active
 
 | Plataforma                | Estado           | Notas                                                                                                                                                                                                                                                                            |
 | ------------------------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Backend (Go)              | Funcional ✅ + **MVP Contract Freeze cerrado 2026-04-10** | API completa, 37 migraciones, auth multi-proveedor, Stripe, RevenueCat, push notifications (FCM+APNs), paginacion server-side, dashboard analytics, FTS, audit logging, CSRF, refresh token rotation, **OpenAPI 1.0 cubriendo 100% de rutas del router y gateado en CI con @redocly/cli lint**, **event handlers a ≥85% coverage** (E1.B2), coverage handlers 78.6% |
-| Web (React)               | Funcional ✅ + **100% alineada con el contrato del backend 2026-04-10** | Todas las paginas principales, panel admin, cotizacion rapida. **`openapi-typescript` regenera los tipos desde `backend/docs/openapi.yaml` en cada `check`/`build`**; CI verifica que el archivo commiteado está sincronizado con el spec. Tests: 1128 unit + 2 e2e (Playwright skipea los 26 que requieren backend automáticamente). Ver E2.C1 Web en [[SUPER_PLAN/16_BACKEND_CONTRACT_READINESS]]. |
-| iOS (SwiftUI)             | En desarrollo 🔄 | Features principales + widgets (4 tipos) + Live Activity + 7 generadores PDF                                                                                                                                                                                                     |
-| Android (Jetpack Compose) | En desarrollo 🔄 + **Wave Rescate Play Store iniciado 2026-04-11** | Features principales, arquitectura modular multi-feature, 8 generadores PDF. **Blockers detectados**: Play Billing botón upgrade vacío, SSL pinning faltante, 7 silent catches, keystore password trivial. Ver sección "Wave Rescate Android" y [[../Android/Firma y Secretos de Release]].                                        |
+| Backend (Go)              | Funcional ✅ + **MVP Contract Freeze cerrado 2026-04-10** | API completa, 45 migraciones, auth multi-proveedor, Stripe, RevenueCat, push notifications (FCM+APNs), paginacion server-side, dashboard analytics (KPIs server-side), FTS, audit logging, CSRF, refresh token rotation, **OpenAPI 1.0 cubriendo 100% de rutas del router y gateado en CI con @redocly/cli lint**, **event handlers a ≥85% coverage** (E1.B2), coverage handlers 78.6%, **Personal completo (Phase 1+2+Olas 1-3)** |
+| Web (React)               | Funcional ✅ + **100% alineada con el contrato del backend 2026-04-10** | Todas las paginas principales, panel admin, cotizacion rapida. **`openapi-typescript` regenera los tipos desde `backend/docs/openapi.yaml` en cada `check`/`build`**; CI verifica que el archivo commiteado está sincronizado con el spec. Tests: 1128 unit + 2 e2e (Playwright skipea los 26 que requieren backend automáticamente). Ver E2.C1 Web en [[SUPER_PLAN/16_BACKEND_CONTRACT_READINESS]]. **Dashboard KPIs consume backend endpoints — zero client-side aggregation.** i18n foundation (i18next + ES/EN). |
+| iOS (SwiftUI)             | En desarrollo 🔄 · **v1.1.0** | Features principales + widgets (4 tipos) + Live Activity + 7 generadores PDF + **Dashboard KPIs server-side** + **Personal completo** + **Portal Cliente** + **i18n foundation** |
+| Android (Jetpack Compose) | En desarrollo 🔄 · **v1.1.2 (versionCode 5)** + **CI job activo** | Features principales, arquitectura modular multi-feature, 8 generadores PDF. **CI Android activo (gradle test + assembleDebug)**. **Dashboard KPIs server-side** + **Personal completo** + **Portal Cliente** + **i18n foundation** + **Google Play compliance**. |
 
 ---
 
@@ -192,6 +199,27 @@ status: active
 - ✅ Webhook Stripe (`POST /api/subscriptions/webhook/stripe`)
 - ✅ Webhook RevenueCat (`POST /api/subscriptions/webhook/revenuecat`)
 - ✅ Debug upgrade/downgrade (admin only)
+
+### Dashboard Analytics (server-side)
+
+- ✅ KPIs con monthly aggregates (`GET /api/dashboard/kpis`) — net_sales, cash_collected, VAT computed server-side
+- ✅ Revenue chart 6 meses (`GET /api/dashboard/revenue-chart?period=year`) — premium-only
+- ✅ Events by status (`GET /api/dashboard/events-by-status?scope=month|all`)
+- ✅ Activity log (`GET /api/dashboard/activity`)
+- ✅ Admin stats (`GET /api/admin/stats`)
+
+### Personal / Colaboradores
+
+- ✅ CRUD staff (`GET/POST /api/staff`, `GET/PUT/DELETE /api/staff/{id}`)
+- ✅ Staff en eventos (`PUT /api/events/{id}/items` con `staff[]`, `GET /api/events/{id}/staff`)
+- ✅ Disponibilidad (`GET /api/staff/availability?date=`)
+- ✅ Equipos (`GET/POST /api/staff/teams`, `GET/PUT/DELETE /api/staff/teams/{id}`)
+- ✅ Email automático al colaborador al asignarlo (Phase 2, Pro+)
+
+### Portal Cliente
+
+- ✅ CRUD public link (`POST/GET/DELETE /api/events/{id}/public-link`)
+- ✅ Vista pública (`GET /api/public/events/{token}`) — rate limited 10/min
 
 ### Busqueda
 
@@ -271,7 +299,7 @@ status: active
 - ✅ Configurable via STORAGE_PROVIDER=local|s3
 - ✅ S3Provider compatible con AWS S3, MinIO, DigitalOcean Spaces
 
-### Migraciones (32 total)
+### Migraciones (45 total)
 
 - ✅ 001: Tabla de usuarios
 - ✅ 002: Tabla de clientes
@@ -298,6 +326,20 @@ status: active
 - ✅ 027-029: Migraciones adicionales
 - ✅ 030: Indices de paginacion y rendimiento
 - ✅ 031: Tabla notification_log para deduplicacion de push
+- ✅ 032: Token blacklist persistente (revoked_tokens)
+- ✅ 033: Fulltext search (FTS5)
+- ✅ 034: Audit logs
+- ✅ 035: Refresh token families
+- ✅ 036: Live activity tokens
+- ✅ 037: Cleanup legacy plans
+- ✅ 038: Event form links
+- ✅ 039: Notification preferences
+- ✅ 040: Business plan tier
+- ✅ 041: Event public links (Portal Cliente)
+- ✅ 042: Staff + event_staff (Personal Phase 1+2+3 hooks)
+- ✅ 043: Event staff shift/status (Personal Ola 1)
+- ✅ 044: Staff teams + members (Personal Ola 2)
+- ✅ 045: Product staff_team_id (Personal Ola 3)
 
 ### MVP Contract Freeze — Cerrado 2026-04-10 ✅
 
@@ -960,12 +1002,14 @@ Primera pantalla de paridad post-Dashboard:
 | ----------------------------- | --- | ------- | --- | ------- | ---------------------------------------------------------------------------------------- |
 | Dashboard principal           | ✅  | ✅      | ✅  | ✅      |                                                                                          |
 | Header (saludo + fecha)       | ✅  | ✅      | ✅  | ➖      | Todas las plataformas tienen saludo + fecha                                              |
-| KPI cards (8)                 | ✅  | ✅      | ✅  | ✅      | Labels consistentes. Web: "Cobrado (mes)" vs mobile: "Cobrado" (menor)                   |
+| KPI cards (8) — server-side   | ✅  | ✅      | ✅  | ✅      | Backend `/api/dashboard/kpis` como source of truth. Cero client-side aggregation.        |
+| Revenue chart 6 meses (premium) | ✅ | ✅    | ✅  | ✅      | `/api/dashboard/revenue-chart?period=year`. Premium-only.                                 |
+| Events by status (backend)    | ✅  | ✅      | ✅  | ✅      | `/api/dashboard/events-by-status?scope=month\|all`                                       |
 | Alertas de Atencion           | ✅  | ✅      | ✅  | ✅      | 3 categorias paridad cross-platform: cobro por cerrar, evento vencido, cotizacion urgente |
-| Acciones inline en alertas    | ⏸️  | ✅      | ✅  | ➖      | Completar / Cancelar / "Pagar y completar" / "Solo completar" (esta ultima solo en evento vencido con saldo). Form/sheet reusable: android `PaymentModal` (core:designsystem), iOS `PaymentEntrySheet` (Common/Views). **Web: revertido tras PR #76** por bug financiero (auto-complete sin verificar monto); pendiente re-implementacion. La invalidacion de cache `byEventIds` que surgio del review se mergeo aparte (PR #78). |
+| Acciones inline en alertas    | ✅  | ✅      | ✅  | ➖      | Completar / Cancelar / "Pagar y completar" / "Solo completar". Web re-implemented with amount-check guard (PR #79). |
 | Quick Actions (2)             | ✅  | ✅      | ✅  | ➖      | Nuevo Evento + Nuevo Cliente en las 3 plataformas                                        |
-| Chart: Distribucion estados   | ✅  | ✅      | ✅  | ➖      |                                                                                          |
-| Chart: Comparacion financiera | ✅  | ✅      | ✅  | ➖      |                                                                                          |
+| Chart: Distribucion estados   | ✅  | ✅      | ✅  | ✅      | Desde backend (antes era client-side)                                                    |
+| Chart: Comparacion financiera | ✅  | ✅      | ✅  | ✅      | Zero-padded 6-month data from backend                                                    |
 | Stock Bajo                    | ✅  | ✅      | ✅  | ➖      | Regla unificada: `minimum > 0 && stock actual < stock minimo`; `stock==minimo` no alerta |
 | Proximos Eventos              | ✅  | ✅      | ✅  | ✅      |                                                                                          |
 | Onboarding Checklist          | ✅  | ✅      | ✅  | ➖      | Inline en las 3 plataformas                                                              |
@@ -1161,11 +1205,10 @@ Refactors planificados para lograr paridad total entre las 6 plataformas (iPhone
 | Push notifications no implementadas                | iOS, Android, Backend | Tokens registrados pero backend NO envia. Sin engagement ni recordatorios | 15-20h            | P1             |
 | ~~Plataforma de origen de suscripcion no visible~~ | ~~iOS, Android, Web~~ | ~~Implementado: badge de provider + instrucciones cross-platform~~        | ~~4-6h~~          | ~~Resuelto~~   |
 | Notificaciones email limitadas                     | Backend               | Solo reset de contrasena; sin recordatorios de eventos/pagos              | 10-15h            | P1             |
-| Deep linking incompleto en Android                 | Android               | Navegacion desde URLs externas limitada                                   | 4-6h              | P2             |
+| Stock de equipamiento no es date-aware (issue #96) | iOS, Android, Backend | Card muestra stock total del inventario, no descuenta reservas del mismo dia. Banner de conflictos avisa a alto nivel pero no cuantas unidades estan tomadas | 6-10h             | P2             |
 | Live Activity equivalente en Android               | Android               | Sin notificacion persistente durante eventos                              | 6-8h              | P2             |
 | Refactor Calendario: Toolbar simplificado          | iOS, Android, Web     | Toolbar pendiente: solo "Gestionar Bloqueos" + "Hoy"                      | 2-4h              | P2             |
 | Web: Calendar right-click bloqueo                  | Web                   | Falta right-click para bloqueo rapido de fechas                           | 2-3h              | P2             |
-| Stock de equipamiento no es date-aware (issue #96) | iOS, Android, Backend | Card muestra stock total del inventario, no descuenta reservas del mismo dia. Banner de conflictos avisa a alto nivel pero no cuantas unidades estan tomadas | 6-10h             | P2             |
 | Panel admin solo en web                            | iOS, Android          | Administracion solo desde navegador                                       | ➖                | P3 (aceptable) |
 
 > [!note] Brechas resueltas
@@ -1186,7 +1229,14 @@ Refactors planificados para lograr paridad total entre las 6 plataformas (iPhone
 > - ~~Web: Fotos de evento~~ — Tab de fotos con galeria, upload, lightbox y eliminacion
 > - ~~Web: Checklist interactivo~~ — Tab de checklist con secciones, checkboxes y progreso
 > - ~~Android: Checklist mostraba todo el inventario~~ — Corregido para mostrar solo items del evento (equipo, insumos, ingredientes). Layout tablet ajustado
-> - ~~Email transaccional limitado~~ — Backend ahora envía: welcome, event reminder (24h), payment receipt, subscription confirmation
+> - ~~Deep linking incompleto en Android~~ — Parser completo: auth/app separados, 11 hosts, subrutas de evento
+> - ~~Dashboard KPIs client-side~~ — Migrado a backend como source of truth (2026-04-20)
+> - ~~Web pending events CTAs revertidas~~ — Re-implementadas con amount-check guard (PR #79, 2026-04-21)
+> - ~~iOS date -1 day offset~~ — Fixed con local timezone parse (2026-04-26)
+> - ~~iOS Quick Quote rendering vacío~~ — Restaurado como .sheet modal (2026-04-26)
+> - ~~Google Play compliance~~ — Account deletion + privacy policy (2026-04-23)
+> - ~~CI Android inexistente~~ — Job gradle test + assembleDebug activo (2026-04-21)
+> - ~~Personal Ola 1/2/3~~ — Turnos + equipos + product-staff completos (2026-04-19/20)
 
 ---
 

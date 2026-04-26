@@ -18,6 +18,7 @@ import com.creapolis.solennix.core.data.repository.StaffTeamRepository
 import com.creapolis.solennix.core.designsystem.event.UiEvent
 import com.creapolis.solennix.core.model.*
 import com.creapolis.solennix.core.network.ApiService
+import com.creapolis.solennix.core.network.SolennixException
 import com.creapolis.solennix.core.network.get
 import com.creapolis.solennix.core.network.post
 import com.creapolis.solennix.core.network.put
@@ -321,6 +322,7 @@ class EventFormViewModel @Inject constructor(
     var isLoading by mutableStateOf(false)
     var saveSuccess by mutableStateOf(false)
     var saveError by mutableStateOf<String?>(null)
+    var planLimitMessage by mutableStateOf<String?>(null)
     var dateUnavailableWarning by mutableStateOf<String?>(null)
 
     private var _unavailableDates = mutableStateListOf<UnavailableDate>()
@@ -1387,6 +1389,8 @@ class EventFormViewModel @Inject constructor(
                 )
 
                 saveSuccess = true
+            } catch (e: SolennixException.PlanLimitExceeded) {
+                planLimitMessage = e.message
             } catch (e: Exception) {
                 saveError = e.message ?: "Error al guardar evento"
             } finally {

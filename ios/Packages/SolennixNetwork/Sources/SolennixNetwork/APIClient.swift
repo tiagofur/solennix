@@ -588,8 +588,21 @@ public actor APIClient {
         case 401:
             // Handled during token refresh flow
             throw APIError.unauthorized
-        case 403, 404:
-            // Try to extract error message from response body
+        case 403:
+            // Check for structured plan_limit_exceeded response
+            if let planError = extractPlanLimitError(from: data) {
+                // Don't show generic toast — let the ViewModel handle it with a paywall
+                throw planError
+            }
+            // Regular 403 — fall through to generic handling
+            let message = extractErrorMessage(from: data)
+            let err = APIError.serverError(
+                statusCode: response.statusCode,
+                message: message ?? "Request failed with status \(response.statusCode)"
+            )
+            showErrorToast(for: err)
+            throw err
+        case 404:
             let message = extractErrorMessage(from: data)
             let err = APIError.serverError(
                 statusCode: response.statusCode,
@@ -617,6 +630,22 @@ public actor APIClient {
             showErrorToast(for: .unknown)
             throw APIError.unknown
         }
+    }
+
+    /// Parse a 403 response body for `plan_limit_exceeded` structured error.
+    /// Backend returns: `{ "error": "plan_limit_exceeded", "message": "...", "limit": { "type": "...", "current": N, "max": N } }`
+    private func extractPlanLimitError(from data: Data) -> APIError? {
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let errorType = json["error"] as? String,
+              errorType == "plan_limit_exceeded" else {
+            return nil
+        }
+        let message = json["message"] as? String ?? "Has alcanzado el límite de tu plan."
+        let limitObj = json["limit"] as? [String: Any]
+        let limitType = limitObj?["type"] as? String ?? "unknown"
+        let current = limitObj?["current"] as? Int ?? 0
+        let max = limitObj?["max"] as? Int ?? 0
+        return .planLimitExceeded(message: message, limitType: limitType, current: current, max: max)
     }
 
     private func showErrorToast(for error: APIError) {

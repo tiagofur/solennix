@@ -168,6 +168,17 @@ fun EventFormScreen(
             }
         )
     }
+
+    viewModel.planLimitMessage?.let { message ->
+        UpgradePlanDialog(
+            message = message,
+            onUpgradeClick = {
+                viewModel.planLimitMessage = null
+                onNavigateBack()
+            },
+            onDismiss = { viewModel.planLimitMessage = null }
+        )
+    }
 }
 
 /**

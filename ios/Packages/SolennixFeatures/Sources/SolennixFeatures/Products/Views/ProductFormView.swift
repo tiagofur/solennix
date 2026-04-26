@@ -10,6 +10,7 @@ public struct ProductFormView: View {
 
     @State private var viewModel: ProductFormViewModel
     @Environment(\.dismiss) private var dismiss
+    @Environment(PlanLimitsManager.self) private var planLimitsManager
 
     public init(apiClient: APIClient, productId: String? = nil) {
         _viewModel = State(initialValue: ProductFormViewModel(apiClient: apiClient, productId: productId))
@@ -47,6 +48,21 @@ public struct ProductFormView: View {
             Button("OK") { viewModel.errorMessage = nil }
         } message: {
             Text(viewModel.errorMessage ?? "")
+        }
+        .sheet(isPresented: .init(
+            get: { viewModel.planLimitMessage != nil },
+            set: { if !$0 { viewModel.planLimitMessage = nil } }
+        )) {
+            PaywallSheet(
+                message: viewModel.planLimitMessage ?? "",
+                onUpgrade: {
+                    viewModel.planLimitMessage = nil
+                    dismiss()
+                },
+                onDismiss: {
+                    viewModel.planLimitMessage = nil
+                }
+            )
         }
     }
 

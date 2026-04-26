@@ -35,6 +35,7 @@ import com.creapolis.solennix.core.network.UrlResolver
 import com.creapolis.solennix.core.designsystem.component.PremiumButton
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.component.SolennixTextField
+import com.creapolis.solennix.core.designsystem.component.UpgradePlanDialog
 import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveCenteredContent
 import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveFormRow
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
@@ -201,5 +202,16 @@ fun ClientFormScreen(
                 }
             }
         }
+    }
+
+    viewModel.planLimitMessage?.let { message ->
+        UpgradePlanDialog(
+            message = message,
+            onUpgradeClick = {
+                viewModel.planLimitMessage = null
+                onNavigateBack()
+            },
+            onDismiss = { viewModel.planLimitMessage = null }
+        )
     }
 }

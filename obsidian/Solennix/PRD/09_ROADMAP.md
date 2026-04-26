@@ -8,7 +8,7 @@ aliases:
   - Roadmap
   - Timeline
 date: 2026-03-20
-updated: 2026-04-17
+updated: 2026-04-26
 status: active
 ---
 
@@ -26,13 +26,13 @@ status: active
 
 ---
 
-## Estado de hoy (2026-04-17)
+## Estado de hoy (2026-04-26)
 
 > [!info] Producto en producción
 > | Componente | Versión pública | Status |
 > |---|---|---|
-> | iOS | 1.0.2 en App Store MX | ✅ Live (próxima release 1.0.4+) |
-> | Android | 1.0.0 en Play Store | ✅ Live |
+> | iOS | 1.1.0 en App Store MX | ✅ Live |
+> | Android | 1.1.2 en Play Store | ✅ Live |
 > | Web | `solennix.com` | ✅ Live |
 > | Backend | `api.solennix.com` | ✅ Live |
 
@@ -57,20 +57,80 @@ status: active
 - Web: `lib/api.ts` detecta `403 plan_limit_exceeded` → toast + redirect a `/pricing`.
 - Web: `Pricing.tsx` con 3 cards (Básico / Pro / Business) + CTA "Probar 14 días gratis".
 
-#### Portal Cliente MVP (2026-04-16, [[14_CLIENT_EXPERIENCE_IDEAS|feature A]])
+#### Portal Cliente MVP (2026-04-16 → 04-17, ✅ cerrado)
 - Backend: migration 041 `event_public_links` + 4 endpoints (create/get/revoke + GET público).
 - Backend: `PublicEventView` curated shape, 410 Gone para revoked, auto-revoke al borrar evento.
 - Web: `/client/:token` → `ClientPortalPage.tsx` con countdown, payment progress bar, branding del organizer.
 - Web: `ClientPortalShareCard` en EventSummary (Copy + WhatsApp + Rotate + Revoke).
-
-#### Sprint 8 — iOS + Android Portal Cliente (✅ 2026-04-17)
-Paridad mobile cerrada. iOS `ClientPortalShareSheet.swift` (`ShareLink` + `confirmationDialog`). Android `ClientPortalShareBottomSheet.kt` (`ModalBottomSheet` + `ACTION_SEND`). Models idénticos en ambos stacks.
+- iOS: `ClientPortalShareSheet.swift` + `ClientPortalShareViewModel.swift` — commit `1f76702`
+- Android: `ClientPortalShareBottomSheet.kt` + `EventPublicLinkRepository.kt` — commit `a884733`
 
 #### Sprint 8.bis — Personal / Colaboradores Phase 1 (✅ 2026-04-16)
 Backend + Web + iOS + Android liberados con paridad.
 - Migration 042: tablas `staff` + `event_staff` con hooks Phase 2/3.
 - Phase 2 (email Pro+) shipped 2026-04-17 — goroutine en `UpdateEventItems` + Resend.
 - Phase 3 (login colaborador) pendiente — usa Pilar 5 D.
+
+#### Personal Ola 1 — Turnos + RSVP + Disponibilidad (✅ 2026-04-19)
+- Migration 043: `event_staff` recibe `shift_start`, `shift_end`, `status` (pending/confirmed/declined/cancelled).
+- Backend: `GET /api/staff/availability?date=` endpoint.
+- Cross-platform: pickers de horario colapsables, selector de estado con badges, indicador "Ocupado ese día".
+
+#### Personal Ola 2 — Equipos / Cuadrillas (✅ 2026-04-19)
+- Migration 044: `staff_teams` + `staff_team_members` con PK compuesta.
+- Repo `StaffTeamRepo`: CRUD transaccional con member_count.
+- Endpoints: `GET/POST /api/staff/teams`, `GET/PUT/DELETE /api/staff/teams/{id}`.
+- Cross-platform: CRUD equipos, miembros con toggle `is_lead`, badge de corona para team lead.
+
+#### Personal Ola 3 — Product con Staff Team (✅ 2026-04-20)
+- Migration 045: `products.staff_team_id` nullable FK con `ON DELETE SET NULL`.
+- Backend: `SetStaffTeamRepo` para validación de tenant isolation.
+- Cross-platform: selector "Equipo asociado" en Product form, chip "Incluye equipo" en EventForm.
+
+#### Dashboard KPIs Parity (✅ 2026-04-20)
+- Backend: `/api/dashboard/kpis` con monthly sales + VAT aggregates (CTE server-side).
+- Backend: `/api/dashboard/revenue-chart?period=year` (premium-only).
+- Backend: `/api/dashboard/events-by-status?scope=month|all`.
+- Las 3 plataformas consumen backend como source of truth — cero client-side aggregation para KPIs.
+
+#### Calendar i18n + Polish (✅ 2026-04-20)
+- i18n foundation: iOS `.xcstrings`, Android `strings.xml`, Web `i18next` + ES/EN.
+- Cross-platform: error handling, +N overflow, haptics, status filters.
+- Web: Set-based block lookup O(1).
+- Doc: [[PRD/19_I18N_STRATEGY|i18n Strategy]].
+
+#### Events List Parity (✅ 2026-04-21)
+- iOS: sort, inline status change, client-first card with time, party-popper icon.
+- Android: sort, row actions, inline status change.
+- Web: slash keyboard shortcut to focus Events search.
+
+#### Event Form Polish (✅ 2026-04-21)
+- Cross-platform: compact step indicator, native menu status picker.
+- Android: optional times, guest stepper, inline extras.
+- iOS: default num_people to 0.
+
+#### Pending Events CTAs Re-implemented (✅ 2026-04-21)
+- Web: re-implemented with amount-check guard (PR #79, after revert of PR #72/76).
+- iOS + Android: aligned with web.
+- Cache invalidation fix: PR #78.
+
+#### Google Play Compliance (✅ 2026-04-23)
+- Web: Account Deletion page + Privacy Policy updated.
+- iOS + Android: Settings entry points for account deletion.
+- Cross-platform: centralized URLs for privacy/terms/deletion.
+
+#### iOS Date Parity + Quick Quote Fix (✅ 2026-04-26)
+- iOS: date offset fix using local timezone.
+- iOS: Quick Quote restored as `.sheet` modal.
+- Web: centralized date-only string parsing.
+
+#### Deploy Hardening (✅ 2026-04-21)
+- Docker-compose security hardening.
+- CI: remove orphan containers before compose up.
+
+#### CI Android (✅ 2026-04-21)
+- Android job added to pipeline: `gradle test + assembleDebug`.
+- Google-services.json placeholder generation.
 
 ### Próximos sprints (Q2 2026)
 
@@ -112,7 +172,8 @@ Items pendientes: staff seats, portal cliente shape-based gate, payment submissi
 | Item | Status |
 |---|---|
 | CI tests web + backend | ✅ |
-| CI tests iOS / Android | ❌ |
+| CI tests Android (gradle test + assembleDebug) | ✅ |
+| CI tests iOS | ❌ |
 | CI lint + typecheck | ✅ web/backend |
 | CI E2E Playwright | ✅ web |
 | Auto-deploy VPS | 🟡 prepared, not activated |

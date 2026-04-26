@@ -110,6 +110,7 @@ public final class ProductFormViewModel {
     public var isLoading: Bool = false
     public var isSaving: Bool = false
     public var errorMessage: String?
+    @Published public var planLimitMessage: String?
 
     // MARK: - Validation
 
@@ -395,6 +396,15 @@ public final class ProductFormViewModel {
             HapticsHelper.play(.success)
             isSaving = false
             return true
+        } catch let error as APIError {
+            HapticsHelper.play(.error)
+            isSaving = false
+            if case .planLimitExceeded(let message, _, _, _) = error {
+                planLimitMessage = message
+            } else {
+                errorMessage = mapError(error)
+            }
+            return false
         } catch {
             HapticsHelper.play(.error)
             errorMessage = mapError(error)

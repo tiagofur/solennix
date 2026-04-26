@@ -2,22 +2,26 @@
 
 # Roadmap iOS — Hacia la Paridad y Más Allá
 
-> [!success] 🆕 Jornada 2026-04-16 — 5 commits iOS
-> Ver [[../PRD/16_SPRINT_LOG_2026_04_16|Sprint Log del día]] y [[../00_DASHBOARD|Dashboard]].
+> [!success] 🆕 Actualizado 2026-04-26 — v1.1.0 · Dashboard KPIs server-side · Personal completo · Portal Cliente · i18n foundation · Date parity fix
+> Ver [[../00_DASHBOARD|Dashboard]] para el panorama completo.
 >
-> | SHA | Commit | Impacto |
-> |---|---|---|
-> | `8277dc2` | fix(ios): APIClient timeout + SwiftData error propagation | P0 — estabilidad red + startup |
-> | `3b72e8e` | fix(ios): Dashboard .task + DateFormatter + safer regex | P1 — lifecycle hygiene |
-> | `f960e02` | fix(ios): Dashboard kpis preload | UX — cards <200ms |
-> | `62a5d6b` | perf(ios): DateFormatter cache + hot-path migration | Perf — render body |
-> | `0284923` | a11y(ios): VoiceOver pass Dashboard | A11y — KPICards + chart + buttons |
-> | `b4ad3e1` | fix(ios): removePhoto undo + utf8 force-unwraps | P2 — data integrity |
+> **Hitos desde 2026-04-16:**
+> - Dashboard KPIs consume backend — zero client-side aggregation
+> - Revenue chart 6 meses (premium-only)
+> - Personal completo: CRUD + turnos + equipos + product+staff
+> - Portal Cliente: `ClientPortalShareSheet` + `ShareLink` nativo
+> - Nav bar: `.searchable` unificado, large title fix, `.safeAreaInset` pattern
+> - Event form: compact step indicator, native menu status picker
+> - Events list: sort, inline status change, party-popper icon
+> - i18n foundation: `.xcstrings` con ES/EN (Calendar)
+> - Date parity fix: timezone-aware parsing
+> - Quick Quote: restored as `.sheet` modal (not push)
+> - Google Play compliance: account deletion entry point
 
 > [!todo] Próximos sprints iOS
 > - **Sprint 7.B** — Paywall modal reactivo a `plan_limit_exceeded` 403 con CTA contextual.
-> - **Sprint 8** — Portal Cliente ShareSheet nativo en EventDetailView (Copy + WhatsApp + Rotate + Revoke).
 > - **Sprint 9** — UI de registro de pagos por transferencia para el organizer (feature B).
+> - **i18n** — Extraer Dashboard + Events strings (issues #94, #95).
 
 > [!tip] Filosofía
 > Priorizado por **impacto en usuario** × **esfuerzo técnico**. Alineado con [[Roadmap Web]] y [[Roadmap Android]] para paridad cross-platform. iOS es la plataforma más madura — el foco está en pulir, completar integraciones, y testing.

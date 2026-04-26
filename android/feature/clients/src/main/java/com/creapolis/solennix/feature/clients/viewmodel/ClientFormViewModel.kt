@@ -16,6 +16,7 @@ import com.creapolis.solennix.core.data.util.ImageCompressor
 import com.creapolis.solennix.core.model.Client
 import com.creapolis.solennix.core.model.Plan
 import com.creapolis.solennix.core.network.ApiService
+import com.creapolis.solennix.core.network.SolennixException
 import com.creapolis.solennix.core.network.get
 import com.creapolis.solennix.core.network.post
 import com.creapolis.solennix.core.network.put
@@ -58,6 +59,7 @@ class ClientFormViewModel @Inject constructor(
     var isUploadingPhoto by mutableStateOf(false)
     var saveSuccess by mutableStateOf(false)
     var errorMessage by mutableStateOf<String?>(null)
+    var planLimitMessage by mutableStateOf<String?>(null)
 
     // Field-level validation tracking
     var hasAttemptedSubmit by mutableStateOf(false)
@@ -156,6 +158,8 @@ class ClientFormViewModel @Inject constructor(
                     clientRepository.createClient(client)
                 }
                 saveSuccess = true
+            } catch (e: SolennixException.PlanLimitExceeded) {
+                planLimitMessage = e.message
             } catch (e: Exception) {
                 errorMessage = "Error al guardar cliente: ${e.message}"
             } finally {
