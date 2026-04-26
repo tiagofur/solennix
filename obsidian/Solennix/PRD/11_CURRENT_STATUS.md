@@ -15,7 +15,14 @@ status: active
 # Estado Actual del Proyecto — Solennix
 
 **Fecha:** Abril 2026
-**Version:** 1.3
+**Version:** 1.4
+
+> [!info] 2026-04-26 — Sprint 7.B: Paywalls mobile coherentes (iOS + Android)
+> Parseo del error 403 `plan_limit_exceeded` del backend como error tipado en ambas plataformas móviles, con UI de upgrade coherente en los 3 formularios de creación (Event/Client/Product). Paridad total con Web.
+> - **iOS**: `APIError.planLimitExceeded(message:limitType:current:max:)` en `SolennixCore` + detección en `APIClient.validateResponse()` (antes del toast genérico) + `PaywallSheet.swift` componente reutilizable con lock icon, mensaje, CTA "Ver planes" y botón "Cerrar". Wired en `EventFormView`, `ClientFormView`, `ProductFormView` via `.sheet` + `PlanLimitsManager` environment.
+> - **Android**: `SolennixException.PlanLimitExceeded(limitType, current, max, message)` en `ApiService.kt` + detección en `wrapError()` (403 + `error == "plan_limit_exceeded"`) + `UpgradePlanDialog` (ya existía en `core:designsystem`) wired en `EventFormScreen`, `ClientFormScreen`, `ProductFormScreen`.
+> - **Coherencia**: Web ya tenía `PlanLimitExceededError` en `lib/api.ts` + `window.addEventListener('plan:limit-exceeded')` global. Ahora las 3 plataformas manejan el mismo error con la misma UX: catch del typed error → show paywall UI → dismiss o navigate to pricing.
+> - Commit: `d19959ea`
 
 > [!info] 2026-04-26 — iOS Date Parity + Quick Quote Navigation Fix
 > Fix definitivo del offset de -1 día en fechas de eventos para iOS. `parseEventDate()` ahora usa timezone local consistente con Web y Android. Además, Quick Quote restaurado como `.sheet` modal (no NavigationLink push) resolviendo el rendering vacío causado por doble NavigationStack.
@@ -689,6 +696,8 @@ Primera pantalla de paridad post-Dashboard:
 ### Plan Limits
 
 - ✅ PlanLimitsManager (verificacion de limites por plan)
+- ✅ PaywallSheet (UI de upgrade reactivo a 403 `plan_limit_exceeded`)
+- ✅ Enforcement en EventFormViewModel, ClientFormViewModel, ProductFormViewModel
 
 ### Pendiente iOS
 
@@ -1061,7 +1070,7 @@ Primera pantalla de paridad post-Dashboard:
 | Mostrar plataforma de origen             | ✅  | ✅      | ✅          | ✅      | Badge "Suscrito vía X" en pantalla de suscripción. Ver [[12_SUBSCRIPTION_PLATFORM_ORIGIN]]                                   |
 | Instrucciones cancelacion cross-platform | ✅  | ✅      | ✅          | ➖      | Instrucciones contextuales cuando provider ≠ plataforma actual                                                               |
 | Portal de gestion                        | ⬜  | ⬜      | ✅ (Stripe) | ✅      | Solo web                                                                                                                     |
-| Feature gating                           | ✅  | ✅      | 🔄          | ✅      | Backend enforced (403). iOS: PlanLimitsManager. Android: PlanLimitsManager + UpgradePlanDialog. Web: usePlanLimits (parcial) |
+| Feature gating                           | ✅  | ✅      | ✅          | ✅      | Backend enforced (403 `plan_limit_exceeded`). iOS: PlanLimitsManager + PaywallSheet. Android: PlanLimitsManager + UpgradePlanDialog. Web: PlanLimitExceededError + global listener. Las 3 plataformas capturan el 403 en formularios de creación. |
 | Webhook Stripe                           | ➖  | ➖      | ➖          | ✅      |                                                                                                                              |
 | Webhook RevenueCat                       | ➖  | ➖      | ➖          | ✅      |                                                                                                                              |
 
@@ -1237,6 +1246,7 @@ Refactors planificados para lograr paridad total entre las 6 plataformas (iPhone
 > - ~~Google Play compliance~~ — Account deletion + privacy policy (2026-04-23)
 > - ~~CI Android inexistente~~ — Job gradle test + assembleDebug activo (2026-04-21)
 > - ~~Personal Ola 1/2/3~~ — Turnos + equipos + product-staff completos (2026-04-19/20)
+> - ~~Mobile paywall 403 no capturado~~ — iOS PaywallSheet + Android UpgradePlanDialog wired en Event/Client/Product forms (2026-04-26)
 
 ---
 

@@ -134,10 +134,11 @@ Backend + Web + iOS + Android liberados con paridad.
 
 ### Próximos sprints (Q2 2026)
 
-#### Sprint 7.B — Client paywalls coherentes (mobile)
-- iOS: paywall modal reactivo a `plan_limit_exceeded`.
-- Android: wiring de `UpgradePlanDialog`.
-- Audit Android Play Billing integration.
+#### Sprint 7.B — Paywalls mobile coherentes (✅ 2026-04-26)
+- iOS: `APIError.planLimitExceeded` typed case + `APIClient` 403 parsing + `PaywallSheet` reutilizable wired en Event/Client/Product form.
+- Android: `SolennixException.PlanLimitExceeded` + `wrapError()` 403 detection + `UpgradePlanDialog` wired en Event/Client/Product form ViewModels + Screens.
+- Paridad con Web (ya tenía `PlanLimitExceededError` + global `plan:limit-exceeded` listener).
+- Commit: `d19959ea`.
 
 #### Sprint 7.C — Enforcement matrix completo
 > [!important] Regla global

@@ -106,6 +106,7 @@ gantt
     Pending events CTAs re-fix     :done, pe, 2026-04-21, 1d
     Google Play compliance         :done, gp, 2026-04-23, 1d
     iOS date parity                :done, dp, 2026-04-26, 1d
+    Sprint 7.B paywalls mobile     :done, sb, 2026-04-26, 1d
 ```
 
 ### 🎯 Sprints — barras de progreso
@@ -119,8 +120,8 @@ gantt
 | 5 | Backfill PRD (10 docs) | `████████████████████` 100% | ✅ cerrado |
 | 6 | Polish técnico (perf + a11y) | `████████████████████` 100% | ✅ cerrado |
 | 7.A | Pricing foundation (código) | `████████████████████` 100% | ✅ cerrado |
-| 7.B | Paywalls mobile coherentes | `░░░░░░░░░░░░░░░░░░░░` 0% | 📋 próximo sprint |
-| 7.C | Enforcement matrix completo | `░░░░░░░░░░░░░░░░░░░░` 0% | 📋 después de 7.B |
+| 7.B | Paywalls mobile coherentes | `████████████████████` 100% | ✅ cerrado |
+| 7.C | Enforcement matrix completo | `░░░░░░░░░░░░░░░░░░░░` 0% | 📋 próximo sprint |
 | **Portal Cliente MVP** | **4 stacks completos** | **`████████████████████` 100%** | ✅ cerrado |
 | **Personal Phase 1** | **Catálogo + asignación** | **`████████████████████` 100%** | ✅ cerrado |
 | **Personal Phase 2** | **Email Pro+ al colaborador** | **`████████████████████` 100%** | ✅ cerrado |
@@ -152,7 +153,7 @@ gantt
 | Plan Pro — cobro real | ⏳ | ⏳ | ⏳ | ✅ |
 | Plan Business — código | 🚧 | 🚧 | ✅ | ✅ |
 | Plan Business — cobro real | ⏳ | ⏳ | ⏳ | ✅ |
-| Paywall por `plan_limit_exceeded` | 📋 | 📋 | ✅ | ✅ |
+| Paywall por `plan_limit_exceeded` | ✅ | ✅ | ✅ | ✅ |
 | Trial 14 días web (Stripe) | — | — | ✅ | ✅ |
 | Trial 14 días mobile (IAP) | ⏳ | ⏳ | — | ✅ |
 
@@ -204,7 +205,7 @@ gantt
 timeline
     title Roadmap PRD/12 Client Experience
     section Q2 2026
-        Sprint 7.B  : Paywalls mobile coherentes
+        Sprint 7.B  : Paywalls mobile coherentes ✅
         Sprint 7.C  : Enforcement matrix completo
     section Q3 2026
         Sprint 9  : Feature B — Pagos por transferencia
@@ -259,6 +260,7 @@ pie showData
 | 2026-04-22 | Marketing videos V02 + V03 | 3 | — |
 | 2026-04-23 | Google Play compliance | 6 | — |
 | 2026-04-26 | iOS date parity + quick quote fix | 4 | — |
+| 2026-04-26 | Sprint 7.B paywalls mobile coherentes | 1 | — |
 
 ---
 
@@ -315,11 +317,10 @@ graph TB
 
 | Prioridad | Trabajo | Bloqueado en | Impacto |
 |:-:|---|---|---|
-| 🥇 | **Sprint 7.B — Paywalls mobile** | Sin bloqueo técnico | Paridad UX con web |
-| 🥈 | **Sprint 7.C — Enforcement tier matrix** | Sin bloqueo técnico | Activa el split Gratis/Pro real |
-| 🥉 | **Sprint 9 — Feature B pagos transferencia** | Sin bloqueo técnico | Cierra el ciclo de cobro |
-| 4º | **Sprint 10 — Feature I reseñas** | Sin bloqueo técnico | Marketing orgánico + retención |
-| 5º | **Sprint 4 — Activar deploy VPS** | Usuario configura secrets en GitHub | Activa auto-deploy CI/CD |
+| 🥇 | **Sprint 7.C — Enforcement tier matrix** | Sin bloqueo técnico | Activa el split Gratis/Pro real |
+| 🥈 | **Sprint 9 — Feature B pagos transferencia** | Sin bloqueo técnico | Cierra el ciclo de cobro |
+| 🥉 | **Sprint 10 — Feature I reseñas** | Sin bloqueo técnico | Marketing orgánico + retención |
+| 4º | **Sprint 4 — Activar deploy VPS** | Usuario configura secrets en GitHub | Activa auto-deploy CI/CD |
 
 ### Deuda técnica registrada (GitHub Issues)
 

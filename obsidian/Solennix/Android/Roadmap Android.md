@@ -18,7 +18,8 @@
 > - Android v1.1.2 submitted to Play Store
 
 > [!todo] Próximos sprints Android
-> - **Sprint 7.B** — `UpgradePlanDialog` wiring cuando API devuelve 403 `plan_limit_exceeded`.
+> - ~~**Sprint 7.B** — `UpgradePlanDialog` wiring cuando API devuelve 403 `plan_limit_exceeded`.~~ ✅ Cerrado 2026-04-26. `SolennixException.PlanLimitExceeded` + wired en Event/Client/Product form ViewModels + Screens.
+> - **Sprint 7.C** — Enforcement tier matrix completo.
 > - **Sprint 9** — UI registro de pagos por transferencia (feature B).
 > - **i18n** — Extraer Dashboard + Events strings (issues #94, #95).
 
