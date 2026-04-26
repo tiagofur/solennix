@@ -69,6 +69,7 @@ enum PDFConstants {
         let fmt = DateFormatter()
         fmt.locale = Locale(identifier: "es_MX")
         fmt.dateFormat = "d 'de' MMMM, yyyy"
+        fmt.timeZone = Date.mexicanTimeZone
         return fmt
     }()
 
@@ -92,7 +93,7 @@ enum PDFConstants {
     }
 
     static func formatDate(_ isoString: String) -> String {
-        if let date = isoDateFormatter.date(from: String(isoString.prefix(10))) {
+        if let date = Date.fromServerDay(isoString) {
             return dateFormatter.string(from: date)
         }
         return isoString

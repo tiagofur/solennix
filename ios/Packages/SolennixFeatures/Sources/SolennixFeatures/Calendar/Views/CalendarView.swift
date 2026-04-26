@@ -16,6 +16,7 @@ public struct CalendarView: View {
     @State private var showErrorAlert = false
     @State private var longPressedDate: Date?
     @State private var showBlockedDatesSheet = false
+    @State private var showQuickQuote = false
     @State private var hapticTrigger: Int = 0
     @Environment(PlanLimitsManager.self) private var planLimitsManager
     @Environment(\.apiClient) private var apiClient
@@ -67,7 +68,9 @@ public struct CalendarView: View {
                         }
                         .disabled(!planLimitsManager.canCreateEvent)
 
-                        NavigationLink(value: Route.quickQuote) {
+                        Button {
+                            showQuickQuote = true
+                        } label: {
                             Label(
                                 String(localized: "calendar.quick_quote", bundle: .module),
                                 systemImage: "doc.text.magnifyingglass"
@@ -104,6 +107,9 @@ public struct CalendarView: View {
         }
         .sheet(isPresented: $showBlockedDatesSheet) {
             BlockedDatesSheet(viewModel: viewModel)
+        }
+        .sheet(isPresented: $showQuickQuote) {
+            QuickQuoteView(apiClient: apiClient)
         }
         .sheet(isPresented: $showBlockSheet) {
             BlockDateSheet(

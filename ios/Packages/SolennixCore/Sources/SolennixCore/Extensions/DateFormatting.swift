@@ -4,8 +4,8 @@ import Foundation
 
 extension Date {
 
-    private static let mexicanLocale = Locale(identifier: "es_MX")
-    private static let mexicanTimeZone = TimeZone(identifier: "America/Mexico_City")!
+    public static let mexicanLocale = Locale(identifier: "es_MX")
+    public static let mexicanTimeZone = TimeZone(identifier: "America/Mexico_City")!
 
     // MARK: - ISO 8601 Parsing
 
@@ -118,8 +118,8 @@ extension Date {
         let f = DateFormatter()
         f.dateFormat = "yyyy-MM-dd"
         // Server dates are wall-clock dates (no time component). Parse them
-        // in UTC to keep them stable regardless of device timezone.
-        f.timeZone = TimeZone(identifier: "UTC")
+        // in Mexican timezone to keep them stable.
+        f.timeZone = mexicanTimeZone
         return f
     }()
 
