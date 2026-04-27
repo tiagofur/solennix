@@ -178,5 +178,13 @@
     "terms": "Terms of Use",
     "privacy": "Privacy Policy",
     "delete_account": "Data Deletion"
+  },
+  "entities": {
+    "product": "Product",
+    "extra": "Extra",
+    "client": "Client",
+    "event": "Event",
+    "staff": "Staff",
+    "inventory": "Supply"
   }
 }

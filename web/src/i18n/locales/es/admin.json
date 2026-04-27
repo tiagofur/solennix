@@ -1,0 +1,193 @@
+{
+  "dashboard": {
+    "title": "Panel de Administración",
+    "subtitle": "Vista general de la plataforma",
+    "actions": {
+      "manage_users": "Gestionar Usuarios",
+      "reload_stats": "Recargar estadísticas"
+    },
+    "errors": {
+      "loading_stats": "Error al cargar las estadísticas. Intenta recargar."
+    },
+    "stats": {
+      "total_users": "Total Usuarios",
+      "total_events": "Total Eventos",
+      "total_clients": "Total Clientes",
+      "total_products": "Total Productos",
+      "paid_users": "Usuarios Pagados",
+      "conversion_rate": "Tasa de Conversión",
+      "avg_events": "Eventos por Usuario",
+      "churn_rate": "Tasa Cancelación",
+      "clients_products": "Clientes / Productos",
+      "new_today": "hoy",
+      "new_week": "semana",
+      "conversion_help": "basic → plan pagado",
+      "avg_events_help": "promedio plataforma",
+      "churn_help": "subs canceladas vs total",
+      "platform_summary": "en toda la plataforma"
+    },
+    "charts": {
+      "plans_title": "Distribución de Planes",
+      "signups_title": "Nuevos Registros",
+      "subscriptions_title": "Suscripciones",
+      "no_data": "Sin datos disponibles",
+      "loading": "Cargando...",
+      "today": "Hoy",
+      "week": "Semana",
+      "month": "Mes"
+    },
+    "subscriptions": {
+      "active": "Activas",
+      "canceled": "Canceladas",
+      "trial": "Trial",
+      "past_due": "Vencidas",
+      "by_provider": "Por Proveedor",
+      "no_data": "Sin datos de suscripciones"
+    },
+    "top_users": {
+      "title": "Top Usuarios por Actividad",
+      "view_all": "Ver todos",
+      "no_users": "No hay usuarios registrados aún.",
+      "total_points": "{{count}} total",
+      "events": "Eventos",
+      "clients": "Clientes"
+    },
+    "growth": {
+      "title": "Resumen de Crecimiento",
+      "view_all": "Ver todos los usuarios",
+      "new_today": "Nuevos hoy",
+      "last_7_days": "Últimos 7 días",
+      "last_30_days": "Últimos 30 días",
+      "healthy": "saludable",
+      "below_avg": "por debajo",
+      "healthy_msg": "Ritmo de crecimiento saludable — {{week}} usuarios esta semana vs {{avg}} promedio semanal del mes.",
+      "below_avg_msg": "Crecimiento por debajo del promedio semanal del mes ({{avg}} usuarios)."
+    }
+  },
+  "users": {
+    "title": "Gestión de Usuarios",
+    "summary_one": "{{count}} usuario registrado",
+    "summary_other": "{{count}} usuarios registrados",
+    "actions": {
+      "back": "Volver al panel de admin",
+      "export_csv": "Exportar CSV",
+      "reload": "Recargar usuarios",
+      "gift": "Regalar",
+      "edit_gift": "Editar regalo",
+      "downgrade": "Rebajar",
+      "active_sub": "Suscripción activa",
+      "active_sub_help": "Suscripción pagada activa — gestionada por el proveedor de pagos"
+    },
+    "filters": {
+      "search_placeholder": "Buscar por nombre, email o negocio...",
+      "all": "Todos",
+      "basic": "Básico",
+      "pro": "Pro",
+      "business": "Business"
+    },
+    "stats": {
+      "active": "Activos (con actividad)",
+      "no_activity": "Sin actividad",
+      "paid_sub": "Con suscripción pagada",
+      "gifted_plans": "Planes regalo activos"
+    },
+    "table": {
+      "user": "Usuario",
+      "plan": "Plan",
+      "events": "Eventos",
+      "clients": "Clientes",
+      "products": "Productos",
+      "activity": "Actividad",
+      "created_at": "Registro",
+      "actions": "Acciones",
+      "loading": "Cargando usuarios...",
+      "no_results": "No se encontraron usuarios con esos filtros.",
+      "no_users": "No hay usuarios registrados aún.",
+      "gift": "Regalo",
+      "paid": "Pagado",
+      "status": {
+        "none": "Sin actividad",
+        "low": "Baja",
+        "medium": "Media",
+        "high": "Alta"
+      },
+      "expiry": {
+        "expired": "Expirado",
+        "today": "Expira hoy",
+        "in_days": "Expira en {{count}}d",
+        "until": "Hasta {{date}}"
+      },
+      "footer": {
+        "showing": "Mostrando {{filtered}} de {{total}} usuarios",
+        "sorted_by": "Ordenado por",
+        "fields": {
+          "name": "nombre",
+          "plan": "plan",
+          "activity": "actividad",
+          "created_at": "registro"
+        }
+      }
+    },
+    "gift_dialog": {
+      "title": "Regalar plan",
+      "plan_to_gift": "Plan a regalar",
+      "valid_until": "Válido hasta",
+      "no_expiry": "Sin vencimiento",
+      "no_expiry_help": "(permanente hasta que pague)",
+      "info_permanent": "Plan permanente hasta que el usuario adquiera una suscripción de pago.",
+      "info_temporary": "Al vencer, el plan regresa a Basic automáticamente. El usuario deberá suscribirse para continuar.",
+      "cancel": "Cancelar",
+      "confirm": "Confirmar regalo",
+      "errors": {
+        "select_date": "Selecciona una fecha de vencimiento o marca \"Sin vencimiento\"."
+      },
+      "messages": {
+        "success_permanent": "{{name}} ahora tiene plan {{plan}} (permanente)",
+        "success_temporary": "{{name}} tiene plan {{plan}} hasta {{date}}"
+      }
+    },
+    "downgrade_dialog": {
+      "title": "Rebajar plan",
+      "description": "¿Rebajar a {{name}} ({{email}}) al plan Basic?",
+      "confirm": "Rebajar",
+      "cancel": "Cancelar",
+      "success": "{{name}} ahora tiene plan Basic"
+    },
+    "csv": {
+      "headers": {
+        "name": "Nombre",
+        "email": "Email",
+        "business": "Negocio",
+        "plan": "Plan",
+        "expires": "Vence",
+        "events": "Eventos",
+        "clients": "Clientes",
+        "products": "Productos",
+        "total_activity": "Actividad Total",
+        "registration": "Registro"
+      },
+      "success": "{{count}} usuarios exportados"
+    }
+  },
+  "audit": {
+    "title": "Audit log de la plataforma",
+    "description": "Registro completo de acciones en todas las cuentas.",
+    "events_count": "{{count}} evento",
+    "events_count_plural": "{{count}} eventos",
+    "loading": "Cargando audit log...",
+    "error": "Error al cargar el audit log de la plataforma.",
+    "empty": "No hay eventos registrados en el audit log.",
+    "table": {
+      "date": "Fecha",
+      "user": "Usuario",
+      "action": "Acción",
+      "resource": "Recurso",
+      "detail": "Detalle"
+    },
+    "pagination": {
+      "page_info": "Página {{current}} de {{total}}",
+      "previous": "Anterior",
+      "next": "Siguiente"
+    }
+  }
+}

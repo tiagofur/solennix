@@ -12,6 +12,18 @@ import { logError } from "../../../lib/errorHandler";
 import { useTranslation } from "react-i18next";
 import { useMemo } from "react";
 
+interface QuickClientModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onClientCreated: (client: any) => void;
+}
+
+interface ClientFormData {
+  name: string;
+  phone: string;
+  email?: string;
+}
+
 export const QuickClientModal: React.FC<QuickClientModalProps> = ({
   isOpen,
   onClose,

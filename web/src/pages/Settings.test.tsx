@@ -5,7 +5,6 @@ import { Settings } from './Settings';
 import { logError } from '../lib/errorHandler';
 import { subscriptionService } from '../services/subscriptionService';
 import { api } from '../lib/api';
-import { DEFAULT_CONTRACT_TEMPLATE } from '../lib/contractTemplate';
 
 const mockUpdateProfile = vi.fn();
 let mockUser: Record<string, unknown> = {

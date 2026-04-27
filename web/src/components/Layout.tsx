@@ -20,7 +20,7 @@ import {
   Link2,
   UserCog,
 } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/hooks/useTheme';
 import { logError } from '@/lib/errorHandler';
 import clsx from 'clsx';

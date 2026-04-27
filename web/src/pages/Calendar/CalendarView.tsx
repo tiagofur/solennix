@@ -5,7 +5,6 @@ import "react-day-picker/style.css";
 import { useTranslation } from "react-i18next";
 import {
   unavailableDatesService,
-  UnavailableDate,
 } from "../../services/unavailableDatesService";
 import { UnavailableDatesModal } from "./components/UnavailableDatesModal";
 import { Link, useNavigate } from "react-router-dom";
@@ -149,7 +148,7 @@ export const CalendarView: React.FC = () => {
 
   const handleRetry = useCallback(() => {
     queryClient.invalidateQueries({
-      queryKey: queryKeys.events.dateRange(rangeStart, rangeEnd),
+      queryKey: queryKeys.events.all,
     });
     queryClient.invalidateQueries({
       queryKey: queryKeys.unavailableDates.byRange(rangeStart, rangeEnd),
@@ -181,7 +180,7 @@ export const CalendarView: React.FC = () => {
   // array of Date objects; now we build a Set once and expose both the
   // Date[] needed by react-day-picker's `modifiers` and a fast lookup
   // via the Set itself.
-  const { blockedDateSet, blockedDateList } = useMemo(() => {
+  const { blockedDateList } = useMemo(() => {
     const set = new Set<string>();
     const list: Date[] = [];
     for (const d of unavailableDates) {
@@ -196,7 +195,7 @@ export const CalendarView: React.FC = () => {
         current.setDate(current.getDate() + 1);
       }
     }
-    return { blockedDateSet: set, blockedDateList: list };
+    return { blockedDateList: list };
   }, [unavailableDates]);
 
   const modifiers: { unavailable: Date[] } = { unavailable: blockedDateList };
@@ -691,10 +690,10 @@ export const CalendarView: React.FC = () => {
           setIsManagingBlocks(false);
           setContextMenuDate(undefined);
         }}
-        onSave={(_newDate) => {
+        onSave={() => {
           refreshUnavailableRange();
         }}
-        onDelete={(_id) => {
+        onDelete={() => {
           refreshUnavailableRange();
         }}
         initialDate={contextMenuDate}

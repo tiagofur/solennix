@@ -1,0 +1,87 @@
+{
+  "event_form": {
+    "title": "Formulario de Evento",
+    "subtitle": "Cuéntanos sobre tu evento",
+    "client_info_title": "Tus datos",
+    "client_name_label": "Nombre *",
+    "client_name_placeholder": "Tu nombre completo",
+    "client_phone_label": "Teléfono *",
+    "client_phone_placeholder": "Tu número de teléfono",
+    "client_email_label": "Email",
+    "client_email_placeholder": "tu@email.com (opcional)",
+    "event_details_title": "Detalles del evento",
+    "event_date_label": "Fecha del evento *",
+    "service_type_label": "Tipo de evento *",
+    "service_type_placeholder": "Boda, XV Años, Corporativo...",
+    "num_people_label": "Número de personas *",
+    "num_people_placeholder": "150",
+    "location_label": "Ubicación",
+    "location_placeholder": "Salón, jardín, dirección...",
+    "city_label": "Ciudad",
+    "city_placeholder": "Ciudad",
+    "notes_label": "Notas o comentarios",
+    "notes_placeholder": "Cuéntanos más sobre lo que tienes en mente...",
+    "products_title": "Selecciona lo que necesitas",
+    "products_description": "Selecciona los productos que te interesan e indica la cantidad.",
+    "product_selected_one": "{{count}} producto seleccionado",
+    "product_selected_other": "{{count}} productos seleccionados",
+    "submit_button": "Enviar solicitud",
+    "submitting_button": "Enviando...",
+    "footer_note": "Tu información será enviada de forma segura al organizador.",
+    "expired": {
+      "title": "Enlace no disponible",
+      "description": "Este enlace ya fue utilizado o ha expirado. Contacta al organizador para solicitar uno nuevo.",
+      "security_note": "Los enlaces de formulario son de un solo uso y tienen una fecha de expiración para proteger tu seguridad."
+    },
+    "errors": {
+      "name_required": "El nombre es requerido",
+      "phone_required": "El teléfono es requerido",
+      "email_invalid": "Email inválido",
+      "date_required": "La fecha es requerida",
+      "service_type_required": "El tipo de evento es requerido",
+      "num_people_min": "Mínimo 1 persona",
+      "submit_failed": "Hubo un error al enviar. Intenta de nuevo.",
+      "connection_error": "Error de conexión. Verifica tu internet e intenta de nuevo."
+    }
+  },
+  "portal": {
+    "loading": "Cargando el portal...",
+    "organized_by": "Organizado por",
+    "default_organizer": "Tu organizador de eventos",
+    "hero_greeting": "Hola {{name}}, aquí está el detalle de tu evento:",
+    "hero_greeting_no_name": "Hola, aquí está el detalle de tu evento:",
+    "days_remaining_one": "{{count}} día restante",
+    "days_remaining_other": "{{count}} días restantes",
+    "it_is_today": "¡Es hoy!",
+    "days_ago_one": "Hace {{count}} día",
+    "days_ago_other": "Hace {{count}} días",
+    "details": {
+      "schedule": "Horario",
+      "location": "Ubicación",
+      "guests": "Invitados",
+      "guests_value": "{{count}} personas"
+    },
+    "payments": {
+      "title": "Estado de pagos",
+      "paid": "Pagado",
+      "total": "Total del evento",
+      "paid_percentage": "{{percent}}% pagado",
+      "pending_label": "Pendiente",
+      "footer_note": "Los pagos se actualizan al momento en que el organizador los registra. Cualquier duda, contactalos directamente."
+    },
+    "footer_note": "Portal privado del cliente · powered by Solennix",
+    "unavailable": {
+      "not_found_title": "Enlace no válido",
+      "not_found_desc": "No encontramos información con este enlace. Revisá el link o pedí al organizador que te lo reenvíe.",
+      "disabled_title": "Enlace no disponible",
+      "disabled_desc": "El organizador del evento deshabilitó este enlace o ya expiró. Contactalos para que te compartan uno nuevo.",
+      "security_note": "Los enlaces del portal del cliente son privados por evento — el organizador puede rotarlos en cualquier momento por seguridad."
+    }
+  },
+  "success": {
+    "title": "¡Solicitud enviada!",
+    "description": "Gracias por contactarnos. Hemos recibido tu información y nos pondremos en contacto contigo pronto.",
+    "organizer_note": "Un equipo de {{name}} revisará tu solicitud.",
+    "close": "Cerrar"
+  }
+}

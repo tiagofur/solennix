@@ -4,28 +4,23 @@ import {
   Users,
   Calendar,
   ShoppingBag,
-  UserPlus,
-  CreditCard,
   TrendingUp,
   TrendingDown,
-  RefreshCw,
-  Shield,
-  ArrowRight,
-  Crown,
   Activity,
   Percent,
+  Crown,
+  Shield,
+  ArrowRight,
+  RefreshCw,
   XCircle,
+  UserPlus,
+  CreditCard,
 } from "lucide-react";
-import clsx from "clsx";
-import { useQueryClient } from "@tanstack/react-query";
-import { useAdminStats, useAdminSubscriptions, useAdminUsers } from "@/hooks/queries/useAdminQueries";
-import { AdminAuditLogSection } from "@/components/AdminAuditLogSection";
-import { queryKeys } from "@/hooks/queries/queryKeys";
 import {
+  ResponsiveContainer,
   PieChart,
   Pie,
   Cell,
-  ResponsiveContainer,
   Tooltip,
   BarChart,
   Bar,
@@ -33,15 +28,22 @@ import {
   YAxis,
   CartesianGrid,
 } from "recharts";
+import { useTranslation } from "react-i18next";
+import { useQueryClient } from "@tanstack/react-query";
+import { useAdminStats, useAdminSubscriptions, useAdminUsers } from "@/hooks/queries/useAdminQueries";
+import { AdminAuditLogSection } from "@/components/AdminAuditLogSection";
+import { queryKeys } from "@/hooks/queries/queryKeys";
+import clsx from "clsx";
 
 export const AdminDashboard: React.FC = () => {
+  const { t } = useTranslation(["admin"]);
   const qc = useQueryClient();
   const { data: stats = null, isLoading: statsLoading, error: statsError } = useAdminStats();
   const { data: subs = null } = useAdminSubscriptions();
   const { data: usersData = [] } = useAdminUsers();
 
   const loading = statsLoading;
-  const error = statsError ? "Error al cargar las estadísticas. Intenta recargar." : null;
+  const error = statsError ? t("admin:dashboard.errors.loading_stats") : null;
 
   const topUsers = useMemo(() => {
     const sorted = [...usersData].sort(
@@ -78,13 +80,13 @@ export const AdminDashboard: React.FC = () => {
   const planDistribution = stats
     ? [
         {
-          name: "Básico",
+          name: t("admin:users.filters.basic"),
           value: stats.basic_users,
           color: "var(--color-text-tertiary)",
         },
-        { name: "Pro", value: stats.pro_users, color: "var(--color-primary)" },
+        { name: t("admin:users.filters.pro"), value: stats.pro_users, color: "var(--color-primary)" },
         {
-          name: "Business",
+          name: t("admin:users.filters.business"),
           value: stats.business_users,
           color: "var(--color-info)",
         },
@@ -100,17 +102,17 @@ export const AdminDashboard: React.FC = () => {
   const signupData = stats
     ? [
         {
-          name: "Hoy",
+          name: t("admin:dashboard.charts.today"),
           value: stats.new_users_today,
           color: "var(--color-success)",
         },
         {
-          name: "Semana",
+          name: t("admin:dashboard.charts.week"),
           value: stats.new_users_week,
           color: "var(--color-info)",
         },
         {
-          name: "Mes",
+          name: t("admin:dashboard.charts.month"),
           value: stats.new_users_month,
           color: "var(--color-warning)",
         },
@@ -128,10 +130,10 @@ export const AdminDashboard: React.FC = () => {
     };
     // Legacy 'premium' rows display as "Pro" — never render the word "Premium".
     const labels: Record<string, string> = {
-      basic: "Básico",
-      pro: "Pro",
-      business: "Business",
-      premium: "Pro",
+      basic: t("admin:users.filters.basic"),
+      pro: t("admin:users.filters.pro"),
+      business: t("admin:users.filters.business"),
+      premium: t("admin:users.filters.pro"),
     };
     const isPaid = plan === "pro" || plan === "business" || plan === "premium";
     return (
@@ -157,10 +159,10 @@ export const AdminDashboard: React.FC = () => {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-text">
-              Panel de Administración
+              {t("admin:dashboard.title")}
             </h1>
             <p className="text-sm text-text-secondary">
-              Vista general de la plataforma
+              {t("admin:dashboard.subtitle")}
             </p>
           </div>
         </div>
@@ -169,13 +171,13 @@ export const AdminDashboard: React.FC = () => {
             to="/admin/users"
             className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium text-white bg-primary hover:bg-primary-dark transition-colors shadow-sm"
           >
-            Gestionar Usuarios <ArrowRight className="h-4 w-4 ml-1" />
+            {t("admin:dashboard.actions.manage_users")} <ArrowRight className="h-4 w-4 ml-1" />
           </Link>
           <button
             type="button"
             onClick={() => qc.invalidateQueries({ queryKey: queryKeys.admin.stats })}
             className="p-2 text-text-secondary hover:text-primary transition-colors"
-            aria-label="Recargar estadísticas"
+            aria-label={t("admin:dashboard.actions.reload_stats")}
           >
             <RefreshCw
               className={clsx("h-5 w-5", loading && "animate-spin")}
@@ -201,7 +203,7 @@ export const AdminDashboard: React.FC = () => {
           <div className="flex items-center gap-2 mb-2">
             <Users className="h-4 w-4 text-info" />
             <p className="text-xs text-text-secondary uppercase tracking-wide">
-              Total Usuarios
+              {t("admin:dashboard.stats.total_users")}
             </p>
           </div>
           <p className="text-3xl font-black text-text">
@@ -210,10 +212,10 @@ export const AdminDashboard: React.FC = () => {
           <div className="flex items-center gap-1.5 mt-2 flex-wrap">
             <span className="text-xs bg-success/10 text-success px-1.5 py-0.5 rounded-md flex items-center gap-1">
               <UserPlus className="h-3 w-3" />+
-              {loading ? "..." : (stats?.new_users_today ?? 0)} hoy
+              {loading ? "..." : (stats?.new_users_today ?? 0)} {t("admin:dashboard.stats.new_today")}
             </span>
             <span className="text-xs text-text-secondary">
-              +{loading ? "..." : (stats?.new_users_week ?? 0)} semana
+              +{loading ? "..." : (stats?.new_users_week ?? 0)} {t("admin:dashboard.stats.new_week")}
             </span>
           </div>
         </div>
@@ -237,7 +239,7 @@ export const AdminDashboard: React.FC = () => {
               )}
             />
             <p className="text-xs text-text-secondary uppercase tracking-wide">
-              Usuarios Pagados
+              {t("admin:dashboard.stats.paid_users")}
             </p>
           </div>
           <p className="text-3xl font-black text-text">
@@ -252,7 +254,7 @@ export const AdminDashboard: React.FC = () => {
                   : "bg-surface-alt text-text-secondary",
               )}
             >
-              {loading ? "..." : conversionRate}% conversión
+              {loading ? "..." : conversionRate}% {t("admin:dashboard.stats.conversion_rate").toLowerCase()}
             </span>
           </div>
         </div>
@@ -262,14 +264,14 @@ export const AdminDashboard: React.FC = () => {
           <div className="flex items-center gap-2 mb-2">
             <Calendar className="h-4 w-4 text-success" />
             <p className="text-xs text-text-secondary uppercase tracking-wide">
-              Total Eventos
+              {t("admin:dashboard.stats.total_events")}
             </p>
           </div>
           <p className="text-3xl font-black text-text">
             {loading ? "..." : (stats?.total_events ?? 0)}
           </p>
           <p className="text-xs text-text-secondary mt-2">
-            {loading ? "" : `~${avgEventsPerUser} por usuario`}
+            {loading ? "" : `~${avgEventsPerUser} ${t("admin:dashboard.stats.avg_events").toLowerCase()}`}
           </p>
         </div>
 
@@ -278,7 +280,7 @@ export const AdminDashboard: React.FC = () => {
           <div className="flex items-center gap-2 mb-2">
             <ShoppingBag className="h-4 w-4 text-primary" />
             <p className="text-xs text-text-secondary uppercase tracking-wide">
-              Clientes / Productos
+              {t("admin:dashboard.stats.clients_products")}
             </p>
           </div>
           <div className="flex items-end gap-1.5">
@@ -293,7 +295,7 @@ export const AdminDashboard: React.FC = () => {
             </p>
           </div>
           <p className="text-xs text-text-secondary mt-2">
-            en toda la plataforma
+            {t("admin:dashboard.stats.platform_summary")}
           </p>
         </div>
       </div>
@@ -306,12 +308,12 @@ export const AdminDashboard: React.FC = () => {
           </div>
           <div>
             <p className="text-xs text-text-secondary uppercase tracking-wide">
-              Tasa de Conversión
+              {t("admin:dashboard.stats.conversion_rate")}
             </p>
             <p className="text-2xl font-black text-text mt-0.5">
               {loading ? "..." : `${conversionRate}%`}
             </p>
-            <p className="text-xs text-text-secondary">basic → plan pagado</p>
+            <p className="text-xs text-text-secondary">{t("admin:dashboard.stats.conversion_help")}</p>
           </div>
         </div>
 
@@ -321,12 +323,12 @@ export const AdminDashboard: React.FC = () => {
           </div>
           <div>
             <p className="text-xs text-text-secondary uppercase tracking-wide">
-              Eventos por Usuario
+              {t("admin:dashboard.stats.avg_events")}
             </p>
             <p className="text-2xl font-black text-text mt-0.5">
               {loading ? "..." : avgEventsPerUser}
             </p>
-            <p className="text-xs text-text-secondary">promedio plataforma</p>
+            <p className="text-xs text-text-secondary">{t("admin:dashboard.stats.avg_events_help")}</p>
           </div>
         </div>
 
@@ -357,7 +359,7 @@ export const AdminDashboard: React.FC = () => {
           </div>
           <div>
             <p className="text-xs text-text-secondary uppercase tracking-wide">
-              Tasa Cancelación
+              {t("admin:dashboard.stats.churn_rate")}
             </p>
             <p
               className={clsx(
@@ -370,7 +372,7 @@ export const AdminDashboard: React.FC = () => {
               {loading ? "..." : `${churnRate}%`}
             </p>
             <p className="text-xs text-text-secondary">
-              subs canceladas vs total
+              {t("admin:dashboard.stats.churn_help")}
             </p>
           </div>
         </div>
@@ -381,7 +383,7 @@ export const AdminDashboard: React.FC = () => {
         {/* Plan Distribution Pie */}
         <div className="bg-card shadow-sm border border-border rounded-2xl p-6">
           <h3 className="text-base font-semibold text-text mb-4">
-            Distribución de Planes
+            {t("admin:dashboard.charts.plans_title")}
           </h3>
           <div className="h-56">
             {loading ? (
@@ -421,7 +423,7 @@ export const AdminDashboard: React.FC = () => {
               </ResponsiveContainer>
             ) : (
               <div className="h-full flex items-center justify-center text-text-secondary text-sm">
-                Sin datos disponibles
+                {t("admin:dashboard.charts.no_data")}
               </div>
             )}
           </div>
@@ -445,7 +447,7 @@ export const AdminDashboard: React.FC = () => {
         {/* Signups Bar Chart */}
         <div className="bg-card shadow-sm border border-border rounded-2xl p-6">
           <h3 className="text-base font-semibold text-text mb-4">
-            Nuevos Registros
+            {t("admin:dashboard.charts.signups_title")}
           </h3>
           <div className="h-56">
             {loading ? (
@@ -500,7 +502,7 @@ export const AdminDashboard: React.FC = () => {
         <div className="bg-card shadow-sm border border-border rounded-2xl p-6">
           <h3 className="text-base font-semibold text-text mb-4 flex items-center gap-2">
             <CreditCard className="h-5 w-5 text-primary" aria-hidden="true" />
-            Suscripciones
+            {t("admin:dashboard.charts.subscriptions_title")}
           </h3>
           {loading ? (
             <div className="h-56 flex items-center justify-center">
@@ -514,7 +516,7 @@ export const AdminDashboard: React.FC = () => {
                     {subs.total_active}
                   </div>
                   <div className="text-xs text-text-secondary mt-1">
-                    Activas
+                    {t("admin:dashboard.subscriptions.active")}
                   </div>
                 </div>
                 <div className="bg-error/5 border border-error/20 rounded-2xl p-4 text-center">
@@ -522,27 +524,27 @@ export const AdminDashboard: React.FC = () => {
                     {subs.total_canceled}
                   </div>
                   <div className="text-xs text-text-secondary mt-1">
-                    Canceladas
+                    {t("admin:dashboard.subscriptions.canceled")}
                   </div>
                 </div>
                 <div className="bg-info/5 border border-info/20 rounded-2xl p-4 text-center">
                   <div className="text-2xl font-bold text-info">
                     {subs.total_trialing}
                   </div>
-                  <div className="text-xs text-text-secondary mt-1">Trial</div>
+                  <div className="text-xs text-text-secondary mt-1">{t("admin:dashboard.subscriptions.trial")}</div>
                 </div>
                 <div className="bg-warning/5 border border-warning/20 rounded-2xl p-4 text-center">
                   <div className="text-2xl font-bold text-warning">
                     {subs.total_past_due}
                   </div>
                   <div className="text-xs text-text-secondary mt-1">
-                    Vencidas
+                    {t("admin:dashboard.subscriptions.past_due")}
                   </div>
                 </div>
               </div>
               <div className="pt-3 border-t border-border">
                 <h4 className="text-xs font-medium text-text-secondary uppercase tracking-wider mb-3">
-                  Por Proveedor
+                  {t("admin:dashboard.subscriptions.by_provider")}
                 </h4>
                 <div className="space-y-2">
                   {[
@@ -578,7 +580,7 @@ export const AdminDashboard: React.FC = () => {
             </div>
           ) : (
             <div className="h-56 flex items-center justify-center text-text-secondary text-sm">
-              Sin datos de suscripciones
+              {t("admin:dashboard.subscriptions.no_data")}
             </div>
           )}
         </div>
@@ -590,14 +592,14 @@ export const AdminDashboard: React.FC = () => {
           <div className="flex items-center gap-2">
             <Activity className="h-5 w-5 text-primary" />
             <h3 className="text-lg font-semibold text-text">
-              Top Usuarios por Actividad
+              {t("admin:dashboard.top_users.title")}
             </h3>
           </div>
           <Link
             to="/admin/users"
             className="text-sm font-medium text-primary hover:text-primary-dark flex items-center gap-1 transition-colors"
           >
-            Ver todos <ArrowRight className="h-4 w-4" />
+            {t("admin:dashboard.top_users.view_all")} <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
 
@@ -614,7 +616,7 @@ export const AdminDashboard: React.FC = () => {
           <div className="text-center py-10">
             <Users className="h-9 w-9 text-text-secondary opacity-25 mx-auto mb-3" />
             <p className="text-sm text-text-secondary">
-              No hay usuarios registrados aún.
+              {t("admin:dashboard.top_users.no_users")}
             </p>
           </div>
         ) : (
@@ -655,11 +657,11 @@ export const AdminDashboard: React.FC = () => {
                         />
                       </div>
                       <div className="flex items-center gap-3 text-xs text-text-secondary shrink-0">
-                        <span title="Eventos">
+                        <span title={t("admin:dashboard.top_users.events")}>
                           <Calendar className="h-3 w-3 inline mr-0.5" />
                           {user.events_count}
                         </span>
-                        <span title="Clientes">
+                        <span title={t("admin:dashboard.top_users.clients")}>
                           <Users className="h-3 w-3 inline mr-0.5" />
                           {user.clients_count}
                         </span>
@@ -667,7 +669,7 @@ export const AdminDashboard: React.FC = () => {
                           className="font-bold text-text"
                           title="Actividad total"
                         >
-                          {score} total
+                          {t("admin:dashboard.top_users.total_points", { count: score })}
                         </span>
                       </div>
                     </div>
@@ -684,13 +686,13 @@ export const AdminDashboard: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
           <h3 className="text-lg font-semibold text-text flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-success" aria-hidden="true" />
-            Resumen de Crecimiento
+            {t("admin:dashboard.growth.title")}
           </h3>
           <Link
             to="/admin/users"
             className="text-sm font-medium text-primary hover:text-primary-dark flex items-center transition-colors"
           >
-            Ver todos los usuarios <ArrowRight className="h-4 w-4 ml-1" />
+            {t("admin:dashboard.growth.view_all")} <ArrowRight className="h-4 w-4 ml-1" />
           </Link>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -698,14 +700,14 @@ export const AdminDashboard: React.FC = () => {
             <div className="text-3xl font-bold text-success">
               {loading ? "..." : (stats?.new_users_today ?? 0)}
             </div>
-            <div className="text-sm text-text-secondary mt-2">Nuevos hoy</div>
+            <div className="text-sm text-text-secondary mt-2">{t("admin:dashboard.growth.new_today")}</div>
           </div>
           <div className="text-center p-6 bg-surface-alt rounded-2xl border border-border">
             <div className="text-3xl font-bold text-info">
               {loading ? "..." : (stats?.new_users_week ?? 0)}
             </div>
             <div className="text-sm text-text-secondary mt-2">
-              Últimos 7 días
+              {t("admin:dashboard.growth.last_7_days")}
             </div>
           </div>
           <div className="text-center p-6 bg-surface-alt rounded-2xl border border-border">
@@ -713,7 +715,7 @@ export const AdminDashboard: React.FC = () => {
               {loading ? "..." : (stats?.new_users_month ?? 0)}
             </div>
             <div className="text-sm text-text-secondary mt-2">
-              Últimos 30 días
+              {t("admin:dashboard.growth.last_30_days")}
             </div>
           </div>
         </div>
@@ -725,21 +727,19 @@ export const AdminDashboard: React.FC = () => {
               <>
                 <TrendingUp className="h-4 w-4 text-success" />
                 <p className="text-sm text-text-secondary">
-                  Ritmo de crecimiento{" "}
-                  <span className="font-semibold text-success">saludable</span>{" "}
-                  — {stats.new_users_week} usuarios esta semana vs{" "}
-                  {Math.round(stats.new_users_month / 4)} promedio semanal del
-                  mes.
+                  {t("admin:dashboard.growth.healthy_msg", { 
+                    week: stats.new_users_week, 
+                    avg: Math.round(stats.new_users_month / 4) 
+                  })}
                 </p>
               </>
             ) : (
               <>
                 <TrendingDown className="h-4 w-4 text-warning" />
                 <p className="text-sm text-text-secondary">
-                  Crecimiento{" "}
-                  <span className="font-semibold text-warning">por debajo</span>{" "}
-                  del promedio semanal del mes (
-                  {Math.round(stats.new_users_month / 4)} usuarios).
+                  {t("admin:dashboard.growth.below_avg_msg", { 
+                    avg: Math.round(stats.new_users_month / 4) 
+                  })}
                 </p>
               </>
             )}

@@ -5,6 +5,7 @@ import { RowActionMenu } from "@/components/RowActionMenu";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import Empty from "@/components/Empty";
 import { SkeletonTable } from "@/components/Skeleton";
+import { useTranslation } from "react-i18next";
 import {
   useDeleteStaffTeam,
   useStaffTeams,
@@ -12,6 +13,7 @@ import {
 
 export const StaffTeamList: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation(["staff"]);
   const { data: teams = [], isLoading } = useStaffTeams();
   const deleteTeam = useDeleteStaffTeam();
 
@@ -34,10 +36,10 @@ export const StaffTeamList: React.FC = () => {
     <div className="space-y-6">
       <ConfirmDialog
         open={confirmOpen}
-        title="Eliminar equipo"
-        description="El equipo se eliminará. Los colaboradores del equipo siguen disponibles en tu catálogo."
-        confirmText="Eliminar permanentemente"
-        cancelText="Cancelar"
+        title={t("staff:teams.list.delete_confirm.title")}
+        description={t("staff:teams.list.delete_confirm.description")}
+        confirmText={t("staff:teams.list.delete_confirm.confirm")}
+        cancelText={t("staff:teams.list.delete_confirm.cancel")}
         onConfirm={confirmDelete}
         onCancel={() => {
           setConfirmOpen(false);
@@ -49,14 +51,14 @@ export const StaffTeamList: React.FC = () => {
         to="/staff"
         className="inline-flex items-center text-sm text-primary hover:underline"
       >
-        <ArrowLeft className="h-4 w-4 mr-1" aria-hidden="true" /> Volver a Personal
+        <ArrowLeft className="h-4 w-4 mr-1" aria-hidden="true" /> {t("staff:teams.list.back")}
       </Link>
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-text tracking-tight">Equipos</h1>
+          <h1 className="text-2xl font-bold text-text tracking-tight">{t("staff:teams.list.title")}</h1>
           <p className="text-sm text-text-secondary mt-1">
-            Agrupá cuadrillas de colaboradores para asignarlas a un evento en un solo paso.
+            {t("staff:teams.list.description")}
           </p>
         </div>
         <Link
@@ -64,7 +66,7 @@ export const StaffTeamList: React.FC = () => {
           className="inline-flex items-center justify-center px-4 py-2 text-sm font-bold rounded-xl text-white premium-gradient shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all hover:scale-[1.02]"
         >
           <Plus className="h-5 w-5 mr-2" aria-hidden="true" />
-          Crear equipo
+          {t("staff:teams.list.new_team")}
         </Link>
       </div>
 
@@ -77,44 +79,46 @@ export const StaffTeamList: React.FC = () => {
         ) : teams.length === 0 ? (
           <Empty
             icon={Users}
-            title="Sin equipos todavía"
-            description="Agregá tu primera cuadrilla. Juntá fotógrafos, meseros o coordinadores y asignalos a un evento en un solo click."
+            title={t("staff:teams.list.empty.title")}
+            description={t("staff:teams.list.empty.description")}
             action={
               <Link
                 to="/staff/teams/new"
                 className="inline-flex items-center justify-center px-4 py-2 text-sm font-bold rounded-xl text-white premium-gradient shadow-md shadow-primary/20 hover:shadow-lg transition-all hover:scale-[1.02]"
               >
                 <Plus className="h-5 w-5 mr-2" aria-hidden="true" />
-                Crear equipo
+                {t("staff:teams.list.empty.action")}
               </Link>
             }
           />
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-border" aria-label="Tabla de equipos">
-              <caption className="sr-only">{teams.length} equipos</caption>
+              <caption className="sr-only">
+                {t("staff:teams.list.table.summary", { count: teams.length })}
+              </caption>
               <thead className="bg-surface-alt">
                 <tr>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-text-secondary">
-                    Nombre
+                    {t("staff:teams.list.table.name")}
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-text-secondary">
-                    Rol
+                    {t("staff:teams.list.table.role")}
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-text-secondary">
-                    Miembros
+                    {t("staff:teams.list.table.members")}
                   </th>
                   <th scope="col" className="relative px-6 py-3">
-                    <span className="sr-only">Acciones</span>
+                    <span className="sr-only">{t("staff:teams.list.table.actions")}</span>
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-card divide-y divide-border">
-                {teams.map((t) => (
+                {teams.map((team) => (
                   <tr
-                    key={t.id}
+                    key={team.id}
                     className="group hover:bg-surface-alt/50 cursor-pointer transition-colors"
-                    onClick={() => navigate(`/staff/teams/${t.id}`)}
+                    onClick={() => navigate(`/staff/teams/${team.id}`)}
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
@@ -124,15 +128,15 @@ export const StaffTeamList: React.FC = () => {
                         >
                           <Users className="h-5 w-5" />
                         </div>
-                        <div className="ml-4 text-sm font-semibold text-text">{t.name}</div>
+                        <div className="ml-4 text-sm font-semibold text-text">{team.name}</div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
-                      {t.role_label ?? "—"}
+                      {team.role_label ?? "—"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-text">
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-accent/10 text-accent dark:bg-accent/20">
-                        {t.member_count ?? 0}
+                        {team.member_count ?? 0}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -140,19 +144,19 @@ export const StaffTeamList: React.FC = () => {
                         <RowActionMenu
                           items={[
                             {
-                              label: "Ver detalle",
+                              label: t("staff:teams.list.table.view_detail"),
                               icon: Eye,
-                              onClick: () => navigate(`/staff/teams/${t.id}`),
+                              onClick: () => navigate(`/staff/teams/${team.id}`),
                             },
                             {
-                              label: "Editar",
+                              label: t("staff:teams.list.table.edit"),
                               icon: Edit,
-                              onClick: () => navigate(`/staff/teams/${t.id}/edit`),
+                              onClick: () => navigate(`/staff/teams/${team.id}/edit`),
                             },
                             {
-                              label: "Eliminar",
+                              label: t("staff:teams.list.table.delete"),
                               icon: Trash2,
-                              onClick: () => requestDelete(t.id),
+                              onClick: () => requestDelete(team.id),
                               variant: "destructive" as const,
                             },
                           ]}

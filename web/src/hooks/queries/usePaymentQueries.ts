@@ -64,10 +64,13 @@ export function useDeletePayment() {
 
   return useMutation({
     mutationKey: ['payments', 'delete'],
-    mutationFn: ({ id, eventId }: { id: string; eventId: string }) =>
+    mutationFn: ({ id }: { id: string; eventId?: string }) =>
       paymentService.delete(id),
     onSuccess: (_result, { eventId }) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.payments.byEvent(eventId) });
+      if (eventId) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.payments.byEvent(eventId) });
+      }
+      queryClient.invalidateQueries({ queryKey: queryKeys.payments.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.payments.byEventIdsPrefix });
       addToast('Pago eliminado correctamente.', 'success');
     },

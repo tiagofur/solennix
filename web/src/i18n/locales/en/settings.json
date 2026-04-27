@@ -16,6 +16,8 @@
     "change_password": "Change password",
     "dark_mode": "Dark Mode",
     "dark_mode_desc": "Application appearance",
+    "language": "Language",
+    "language_desc": "Interface language",
     "delete_account": "Delete my account",
     "delete_account_desc": "This action is irreversible and will permanently delete all your data.",
     "password_form": {
@@ -117,5 +119,8 @@
     "basic": "Basic",
     "pro": "Pro",
     "business": "Business"
+  },
+  "messages": {
+    "language_updated": "Language updated successfully"
   }
 }

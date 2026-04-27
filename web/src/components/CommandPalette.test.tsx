@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@tests/customRender';
+import { render, screen, fireEvent } from '@tests/customRender';
 import { CommandPalette } from './CommandPalette';
 
 const mockNavigate = vi.fn();

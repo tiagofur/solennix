@@ -8,7 +8,8 @@ import {
   ChevronUp,
   Users,
 } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from "react-i18next";
 import { productService } from "@/services/productService";
 import { logError } from "@/lib/errorHandler";
 import { generateBudgetPDF } from "@/lib/pdfGenerator";
@@ -312,7 +313,7 @@ export const QuickQuotePage: React.FC = () => {
       id: "",
       event_id: "",
       products: {
-        name: products.find((p) => p.id === sp.product_id)?.name || "Producto",
+        name: products.find((p) => p.id === sp.product_id)?.name || t("common:entities.product"),
       },
     }));
 

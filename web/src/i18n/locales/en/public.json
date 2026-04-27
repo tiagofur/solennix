@@ -1,0 +1,87 @@
+{
+  "event_form": {
+    "title": "Event Form",
+    "subtitle": "Tell us about your event",
+    "client_info_title": "Your details",
+    "client_name_label": "Name *",
+    "client_name_placeholder": "Your full name",
+    "client_phone_label": "Phone *",
+    "client_phone_placeholder": "Your phone number",
+    "client_email_label": "Email",
+    "client_email_placeholder": "you@email.com (optional)",
+    "event_details_title": "Event details",
+    "event_date_label": "Event date *",
+    "service_type_label": "Event type *",
+    "service_type_placeholder": "Wedding, Birthday, Corporate...",
+    "num_people_label": "Number of people *",
+    "num_people_placeholder": "150",
+    "location_label": "Location",
+    "location_placeholder": "Venue, garden, address...",
+    "city_label": "City",
+    "city_placeholder": "City",
+    "notes_label": "Notes or comments",
+    "notes_placeholder": "Tell us more about what you have in mind...",
+    "products_title": "Select what you need",
+    "products_description": "Select the products you are interested in and indicate the quantity.",
+    "product_selected_one": "{{count}} product selected",
+    "product_selected_other": "{{count}} products selected",
+    "submit_button": "Send request",
+    "submitting_button": "Sending...",
+    "footer_note": "Your information will be sent securely to the organizer.",
+    "expired": {
+      "title": "Link unavailable",
+      "description": "This link has already been used or has expired. Contact the organizer to request a new one.",
+      "security_note": "Form links are single-use and have an expiration date to protect your security."
+    },
+    "errors": {
+      "name_required": "Name is required",
+      "phone_required": "Phone is required",
+      "email_invalid": "Invalid email",
+      "date_required": "Date is required",
+      "service_type_required": "Event type is required",
+      "num_people_min": "Minimum 1 person",
+      "submit_failed": "There was an error sending. Try again.",
+      "connection_error": "Connection error. Check your internet and try again."
+    }
+  },
+  "portal": {
+    "loading": "Loading portal...",
+    "organized_by": "Organized by",
+    "default_organizer": "Your event organizer",
+    "hero_greeting": "Hi {{name}}, here are your event details:",
+    "hero_greeting_no_name": "Hi, here are your event details:",
+    "days_remaining_one": "{{count}} day remaining",
+    "days_remaining_other": "{{count}} days remaining",
+    "it_is_today": "It's today!",
+    "days_ago_one": "{{count}} day ago",
+    "days_ago_other": "{{count}} days ago",
+    "details": {
+      "schedule": "Schedule",
+      "location": "Location",
+      "guests": "Guests",
+      "guests_value": "{{count}} people"
+    },
+    "payments": {
+      "title": "Payment status",
+      "paid": "Paid",
+      "total": "Event total",
+      "paid_percentage": "{{percent}}% paid",
+      "pending_label": "Pending",
+      "footer_note": "Payments are updated when the organizer registers them. If you have any questions, contact them directly."
+    },
+    "footer_note": "Private client portal · powered by Solennix",
+    "unavailable": {
+      "not_found_title": "Invalid link",
+      "not_found_desc": "We could not find any information with this link. Check the link or ask the organizer to resend it.",
+      "disabled_title": "Link unavailable",
+      "disabled_desc": "The event organizer disabled this link or it has expired. Contact them to get a new one.",
+      "security_note": "Client portal links are private per event — the organizer can rotate them at any time for security."
+    }
+  },
+  "success": {
+    "title": "Request sent!",
+    "description": "Thank you for contacting us. We have received your information and will get in touch with you soon.",
+    "organizer_note": "A team from {{name}} will review your request.",
+    "close": "Close"
+  }
+}

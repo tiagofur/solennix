@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { eventService } from "@/services/eventService";
@@ -56,13 +56,7 @@ export const ProductDetails: React.FC = () => {
   const loading = productLoading;
   const error = productError ? t("products:form.validation.loading_error") : null;
 
-  useEffect(() => {
-    if (id && product) {
-      loadDemandForecast(id);
-    }
-  }, [id, product]);
-
-  const loadDemandForecast = async (productId: string) => {
+  const loadDemandForecast = useCallback(async (productId: string) => {
     try {
       setDemandLoading(true);
 
@@ -112,15 +106,21 @@ export const ProductDetails: React.FC = () => {
     } finally {
       setDemandLoading(false);
     }
-  };
+  }, [t]);
 
-  const handleDeleteProduct = () => {
+  useEffect(() => {
+    if (id && product) {
+      loadDemandForecast(id);
+    }
+  }, [id, product, loadDemandForecast]);
+
+  const handleDeleteProduct = useCallback(() => {
     if (!id) return;
     deleteProductMutation.mutate(id, {
       onSuccess: () => navigate("/products"),
       onSettled: () => setConfirmDeleteOpen(false),
     });
-  };
+  }, [id, deleteProductMutation, navigate]);
 
   if (loading) {
     return (

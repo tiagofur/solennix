@@ -1,5 +1,6 @@
 import React from "react";
 import { CheckCircle2, PartyPopper } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   organizerName?: string;
@@ -10,6 +11,8 @@ export const PublicFormSuccess: React.FC<Props> = ({
   organizerName,
   brandColor,
 }) => {
+  const { t } = useTranslation("public");
+
   return (
     <div className="min-h-screen bg-bg flex items-center justify-center p-4">
       <div className="max-w-md w-full text-center space-y-6">
@@ -25,17 +28,16 @@ export const PublicFormSuccess: React.FC<Props> = ({
 
         <div className="space-y-2">
           <h1 className="text-2xl font-bold text-text tracking-tight">
-            ¡Solicitud enviada!
+            {t("success.title")}
           </h1>
           <p className="text-text-secondary text-sm leading-relaxed">
             {organizerName ? (
               <>
                 <span className="font-medium text-text">{organizerName}</span>{" "}
-                ha recibido tu información y se pondrá en contacto contigo
-                pronto.
+                {t("success.organizer_note", { name: "" }).replace("{{name}}", "").trim()}
               </>
             ) : (
-              "El organizador ha recibido tu información y se pondrá en contacto contigo pronto."
+              t("success.description")
             )}
           </p>
         </div>
@@ -49,7 +51,7 @@ export const PublicFormSuccess: React.FC<Props> = ({
         >
           <PartyPopper className="h-5 w-5" />
           <span className="font-medium">
-            Gracias por tu interés
+            {t("success.close")}
           </span>
         </div>
       </div>

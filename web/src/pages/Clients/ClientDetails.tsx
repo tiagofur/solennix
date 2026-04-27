@@ -1,5 +1,26 @@
+import React, { useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
 import { enUS, es as esLocale } from "date-fns/locale";
+import {
+  ArrowLeft,
+  Edit,
+  Trash2,
+  Phone,
+  Mail,
+  MapPin,
+  DollarSign,
+  FileText,
+  Calendar,
+  Users,
+} from "lucide-react";
+import { Breadcrumb } from "@/components/Breadcrumb";
+import { OptimizedImage } from "@/components/OptimizedImage";
+import { StatusDropdown, EventStatus } from "@/components/StatusDropdown";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { useClient, useDeleteClient } from "@/hooks/queries/useClientQueries";
+import { useEventsByClient } from "@/hooks/queries/useEventQueries";
 
 export const ClientDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();

@@ -3,7 +3,6 @@ import { render, screen, waitFor } from '@tests/customRender';
 import { MemoryRouter } from 'react-router-dom';
 import { SearchPage } from './Search';
 import { searchService } from '../services/searchService';
-import { logError } from '../lib/errorHandler';
 
 let mockSearchParams = new URLSearchParams();
 
@@ -21,9 +20,6 @@ vi.mock('../services/searchService', () => ({
   },
 }));
 
-vi.mock('../lib/errorHandler', () => ({
-  logError: vi.fn(),
-}));
 
 describe('SearchPage', () => {
   beforeEach(() => {

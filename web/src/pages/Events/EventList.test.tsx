@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@tests/customRender';
+import { render, screen } from '@tests/customRender';
 import { MemoryRouter } from 'react-router-dom';
 import { EventList } from './EventList';
 

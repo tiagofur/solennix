@@ -1,9 +1,19 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import React, { useEffect, useState, useMemo } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ArrowLeft, ChevronDown, ChevronUp, Crown, Save, Search, Users, X } from "lucide-react";
+import {
+  ArrowLeft,
+  Users,
+  ChevronUp,
+  ChevronDown,
+  Crown,
+  X,
+  Search,
+  Save,
+} from "lucide-react";
 import {
   useCreateStaffTeam,
   useStaff,
@@ -13,36 +23,43 @@ import {
 import { useToast } from "@/hooks/useToast";
 import type { StaffTeamInsert, StaffTeamMemberInput } from "@/types/entities";
 
-const schema = z.object({
-  name: z.string().trim().min(1, "El nombre es obligatorio.").max(255, "Máximo 255 caracteres."),
-  role_label: z
-    .string()
-    .trim()
-    .max(255, "Máximo 255 caracteres.")
-    .optional()
-    .or(z.literal("")),
-  notes: z
-    .string()
-    .trim()
-    .max(5000, "Máximo 5000 caracteres.")
-    .optional()
-    .or(z.literal("")),
-});
-
-type FormValues = z.infer<typeof schema>;
-
-// Estado interno de cada miembro mientras editamos. position se persiste en
-// el submit a partir del orden del array — no se muestra en UI.
 interface MemberDraft {
   staff_id: string;
   is_lead: boolean;
 }
 
 export const StaffTeamForm: React.FC = () => {
+  const { t } = useTranslation(["staff"]);
   const { id } = useParams<{ id?: string }>();
   const isEdit = !!id;
   const navigate = useNavigate();
   const { addToast } = useToast();
+
+  const schema = useMemo(
+    () =>
+      z.object({
+        name: z
+          .string()
+          .trim()
+          .min(1, t("staff:teams.form.errors.name_required"))
+          .max(255, t("common:errors.max_length", { count: 255 })),
+        role_label: z
+          .string()
+          .trim()
+          .max(255, t("common:errors.max_length", { count: 255 }))
+          .optional()
+          .or(z.literal("")),
+        notes: z
+          .string()
+          .trim()
+          .max(5000, t("common:errors.max_length", { count: 5000 }))
+          .optional()
+          .or(z.literal("")),
+      }),
+    [t],
+  );
+
+  type FormValues = z.infer<typeof schema>;
 
   const { data: existing, isLoading: loadingTeam } = useStaffTeam(isEdit ? id : undefined);
   const { data: staffCatalog = [], isLoading: loadingStaff } = useStaff();
@@ -139,10 +156,10 @@ export const StaffTeamForm: React.FC = () => {
     try {
       if (isEdit && id) {
         await updateMut.mutateAsync({ id, data: payload });
-        addToast("Equipo actualizado.", "success");
+        addToast(t("staff:teams.form.messages.updated"), "success");
       } else {
         await createMut.mutateAsync(payload);
-        addToast("Equipo creado.", "success");
+        addToast(t("staff:teams.form.messages.created"), "success");
       }
       navigate("/staff/teams");
     } catch {
@@ -151,7 +168,7 @@ export const StaffTeamForm: React.FC = () => {
   };
 
   if (isEdit && loadingTeam) {
-    return <div className="text-text-secondary">Cargando equipo…</div>;
+    return <div className="text-text-secondary">{t("staff:teams.form.loading")}</div>;
   }
 
   const submitting = createMut.isPending || updateMut.isPending;
@@ -162,15 +179,15 @@ export const StaffTeamForm: React.FC = () => {
         to="/staff/teams"
         className="inline-flex items-center text-sm text-primary hover:underline"
       >
-        <ArrowLeft className="h-4 w-4 mr-1" aria-hidden="true" /> Volver a Equipos
+        <ArrowLeft className="h-4 w-4 mr-1" aria-hidden="true" /> {t("staff:teams.form.back_to_teams")}
       </Link>
 
       <div>
         <h1 className="text-2xl font-bold text-text tracking-tight">
-          {isEdit ? "Editar equipo" : "Crear equipo"}
+          {isEdit ? t("staff:teams.form.title_edit") : t("staff:teams.form.title_new")}
         </h1>
         <p className="text-sm text-text-secondary mt-1">
-          Agrupá colaboradores en una cuadrilla para asignarla a un evento en un solo paso.
+          {t("staff:teams.form.help_text")}
         </p>
       </div>
 
@@ -180,14 +197,14 @@ export const StaffTeamForm: React.FC = () => {
       >
         <div>
           <label htmlFor="team-name" className="block text-sm font-medium text-text">
-            Nombre <span className="text-danger">*</span>
+            {t("staff:teams.form.fields.name")} <span className="text-danger">*</span>
           </label>
           <input
             id="team-name"
             type="text"
             {...register("name")}
             className="mt-1 block w-full rounded-xl border border-border bg-surface-alt px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
-            placeholder="Cuadrilla principal · Equipo fotografía"
+            placeholder={t("staff:teams.form.fields.name_placeholder")}
             aria-invalid={errors.name ? "true" : "false"}
           />
           {errors.name && <p className="mt-1 text-sm text-danger">{errors.name.message}</p>}
@@ -195,14 +212,14 @@ export const StaffTeamForm: React.FC = () => {
 
         <div>
           <label htmlFor="team-role" className="block text-sm font-medium text-text">
-            Rol del equipo
+            {t("staff:teams.form.fields.role")}
           </label>
           <input
             id="team-role"
             type="text"
             {...register("role_label")}
             className="mt-1 block w-full rounded-xl border border-border bg-surface-alt px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
-            placeholder="Fotografía · Meseros · Coordinación"
+            placeholder={t("staff:teams.form.fields.role_placeholder")}
             aria-invalid={errors.role_label ? "true" : "false"}
           />
           {errors.role_label && (
@@ -212,14 +229,14 @@ export const StaffTeamForm: React.FC = () => {
 
         <div>
           <label htmlFor="team-notes" className="block text-sm font-medium text-text">
-            Notas
+            {t("staff:teams.form.fields.notes")}
           </label>
           <textarea
             id="team-notes"
             rows={3}
             {...register("notes")}
             className="mt-1 block w-full rounded-xl border border-border bg-surface-alt px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
-            placeholder="Tarifa habitual del equipo, indicaciones, lo que quieras recordar…"
+            placeholder={t("staff:teams.form.fields.notes_placeholder")}
             aria-invalid={errors.notes ? "true" : "false"}
           />
           {errors.notes && <p className="mt-1 text-sm text-danger">{errors.notes.message}</p>}
@@ -228,7 +245,7 @@ export const StaffTeamForm: React.FC = () => {
         <div className="space-y-4 pt-2 border-t border-border">
           <div className="flex items-center gap-2">
             <Users className="h-5 w-5 text-primary" aria-hidden="true" />
-            <h2 className="text-base font-semibold text-text">Miembros</h2>
+            <h2 className="text-base font-semibold text-text">{t("staff:teams.form.fields.members_title")}</h2>
             <span className="text-xs text-text-secondary">({members.length})</span>
           </div>
 
@@ -247,7 +264,7 @@ export const StaffTeamForm: React.FC = () => {
                         onClick={() => moveMember(idx, -1)}
                         disabled={idx === 0}
                         className="p-0.5 text-text-tertiary hover:text-text disabled:opacity-30"
-                        aria-label="Subir miembro"
+                        aria-label={t("staff:teams.form.fields.move_up")}
                       >
                         <ChevronUp className="h-4 w-4" aria-hidden="true" />
                       </button>
@@ -256,7 +273,7 @@ export const StaffTeamForm: React.FC = () => {
                         onClick={() => moveMember(idx, 1)}
                         disabled={idx === members.length - 1}
                         className="p-0.5 text-text-tertiary hover:text-text disabled:opacity-30"
-                        aria-label="Bajar miembro"
+                        aria-label={t("staff:teams.form.fields.move_down")}
                       >
                         <ChevronDown className="h-4 w-4" aria-hidden="true" />
                       </button>
@@ -269,7 +286,7 @@ export const StaffTeamForm: React.FC = () => {
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="text-sm font-medium text-text truncate">
-                        {staff?.name ?? "Colaborador sin nombre"}
+                        {staff?.name ?? t("staff:teams.form.fields.unknown_member")}
                       </div>
                       {staff?.role_label && (
                         <div className="text-xs text-text-secondary truncate">{staff.role_label}</div>
@@ -284,14 +301,14 @@ export const StaffTeamForm: React.FC = () => {
                       />
                       <span className="inline-flex items-center gap-1">
                         <Crown className="h-3.5 w-3.5" aria-hidden="true" />
-                        Lidera el equipo
+                        {t("staff:teams.form.fields.is_lead")}
                       </span>
                     </label>
                     <button
                       type="button"
                       onClick={() => removeMember(m.staff_id)}
                       className="p-1.5 rounded-lg text-danger hover:bg-danger/10 transition-colors"
-                      aria-label="Quitar del equipo"
+                      aria-label={t("staff:teams.form.fields.remove")}
                     >
                       <X className="h-4 w-4" aria-hidden="true" />
                     </button>
@@ -302,7 +319,7 @@ export const StaffTeamForm: React.FC = () => {
           )}
 
           <div>
-            <div className="text-sm font-medium text-text mb-2">Agregar colaboradores</div>
+            <div className="text-sm font-medium text-text mb-2">{t("staff:teams.form.fields.add_members")}</div>
             <div className="relative max-w-md">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Search className="h-4 w-4 text-text-secondary" aria-hidden="true" />
@@ -310,7 +327,7 @@ export const StaffTeamForm: React.FC = () => {
               <input
                 type="search"
                 className="block w-full pl-9 pr-3 py-2 border border-border rounded-xl bg-card text-text placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary sm:text-sm"
-                placeholder="Buscar por nombre o rol…"
+                placeholder={t("staff:teams.form.fields.search_placeholder")}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -318,10 +335,10 @@ export const StaffTeamForm: React.FC = () => {
 
             <div className="mt-3 max-h-72 overflow-y-auto rounded-xl border border-border divide-y divide-border">
               {loadingStaff ? (
-                <div className="p-3 text-sm text-text-secondary">Cargando colaboradores…</div>
+                <div className="p-3 text-sm text-text-secondary">{t("staff:teams.form.loading_staff")}</div>
               ) : filteredCatalog.length === 0 ? (
                 <div className="p-3 text-sm text-text-secondary">
-                  No hay colaboradores que coincidan.
+                  {t("staff:teams.form.no_staff_match")}
                 </div>
               ) : (
                 filteredCatalog.map((s) => {
@@ -356,7 +373,7 @@ export const StaffTeamForm: React.FC = () => {
             to="/staff/teams"
             className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-xl text-text-secondary bg-surface-alt hover:bg-card border border-border transition-colors"
           >
-            Cancelar
+            {t("staff:teams.form.actions.cancel")}
           </Link>
           <button
             type="submit"
@@ -364,7 +381,7 @@ export const StaffTeamForm: React.FC = () => {
             className="inline-flex items-center justify-center px-4 py-2 text-sm font-bold rounded-xl text-white premium-gradient shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all hover:scale-[1.02] disabled:opacity-60"
           >
             <Save className="h-4 w-4 mr-2" aria-hidden="true" />
-            {isEdit ? "Guardar cambios" : "Crear equipo"}
+            {isEdit ? t("staff:teams.form.actions.save") : t("staff:teams.form.actions.create")}
           </button>
         </div>
       </form>

@@ -1,92 +1,81 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import {
-  Users,
-  Search,
-  ArrowLeft,
-  Shield,
-  Crown,
-  RefreshCw,
-  AlertTriangle,
+import { 
+  Users, 
+  Search, 
+  Filter, 
+  Download, 
+  RefreshCw, 
+  ArrowLeft, 
+  Gift, 
+  X, 
+  Crown, 
+  Calendar, 
+  AlertTriangle, 
+  Activity, 
+  Shield, 
   CheckCircle,
-  Filter,
-  Download,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
-  Activity,
-  Gift,
-  X,
-  Calendar,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
-import { AdminUser } from '@/services/adminService';
-import { ConfirmDialog } from '@/components/ConfirmDialog';
-import { useToast } from '@/hooks/useToast';
-import clsx from 'clsx';
-import { format, parseISO, differenceInDays, isPast } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAdminUsers, useUpgradeUser } from '@/hooks/queries/useAdminQueries';
 import { queryKeys } from '@/hooks/queries/queryKeys';
+import { useToast } from '@/hooks/useToast';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { format, parseISO, isPast, differenceInDays } from 'date-fns';
+import { es, enUS } from 'date-fns/locale';
+import clsx from 'clsx';
+
+// ─────────────────────────────────────────────────────────────────────────
+// Internal Types & Constants
+// ─────────────────────────────────────────────────────────────────────────
 
 type PlanFilter = 'all' | 'basic' | 'pro' | 'premium';
 type SortField = 'name' | 'plan' | 'activity' | 'created_at';
 type SortDir = 'asc' | 'desc';
 
-const SortIcon = ({ field, sortField, sortDir }: { field: SortField; sortField: SortField; sortDir: SortDir }) => {
-  if (sortField !== field) return <ArrowUpDown className="h-3.5 w-3.5 text-text-secondary/50 ml-1" />;
-  return sortDir === 'asc'
-    ? <ArrowUp className="h-3.5 w-3.5 text-primary ml-1" />
-    : <ArrowDown className="h-3.5 w-3.5 text-primary ml-1" />;
-};
+interface AdminUser {
+  id: string;
+  name: string;
+  email: string;
+  business_name?: string;
+  plan: string;
+  role: string;
+  plan_expires_at?: string;
+  has_paid_subscription: boolean;
+  events_count: number;
+  clients_count: number;
+  products_count: number;
+  created_at: string;
+}
 
 interface GiftState {
   user: AdminUser;
-  plan: 'pro';
-  expiresAt: string; // YYYY-MM-DD
+  plan: 'pro' | 'premium';
+  expiresAt: string;
   noExpiry: boolean;
 }
 
-const activityScore = (u: AdminUser) =>
-  u.events_count + u.clients_count + u.products_count;
-
-const getActivityBadge = (u: AdminUser) => {
-  const score = activityScore(u);
-  if (score === 0)
-    return { label: 'Sin actividad', cls: 'bg-surface-alt text-text-secondary' };
-  if (score <= 5)
-    return { label: 'Baja', cls: 'bg-info/10 text-info' };
-  if (score <= 20)
-    return { label: 'Media', cls: 'bg-warning/10 text-warning' };
-  return { label: 'Alta', cls: 'bg-success/10 text-success' };
-};
-
-// Returns human-readable expiry label for a gift plan
-const getExpiryLabel = (expiresAt: string) => {
-  const date = parseISO(expiresAt);
-  if (isPast(date)) return { text: 'Expirado', cls: 'text-error', urgent: true };
-  const days = differenceInDays(date, new Date());
-  if (days === 0) return { text: 'Expira hoy', cls: 'text-warning', urgent: true };
-  if (days <= 7) return { text: `Expira en ${days}d`, cls: 'text-warning', urgent: true };
-  return {
-    text: `Hasta ${format(date, 'd MMM yy', { locale: es })}`,
-    cls: 'text-text-secondary',
-    urgent: false,
-  };
-};
-
-// Minimum date for the gift picker (tomorrow)
 const minGiftDate = () => {
   const d = new Date();
   d.setDate(d.getDate() + 1);
-  return d.toISOString().slice(0, 10);
+  return d.toISOString().split('T')[0];
+};
+
+const SortIcon = ({ field, sortField, sortDir }: { field: SortField; sortField: SortField; sortDir: SortDir }) => {
+  if (sortField !== field) return null;
+  return sortDir === 'asc' ? <ChevronUp className="h-3.5 w-3.5 ml-1" /> : <ChevronDown className="h-3.5 w-3.5 ml-1" />;
 };
 
 export const AdminUsers: React.FC = () => {
+  const { t, i18n } = useTranslation(['admin', 'common']);
+  const dateLocale = i18n.language === 'es' ? es : enUS;
   const qc = useQueryClient();
   const { data: users = [], isLoading: loading, error: usersError } = useAdminUsers();
   const upgradeUser = useUpgradeUser();
-  const error = usersError ? 'Error al cargar usuarios.' : null;
+  const error = usersError ? t('admin:users.table.loading') : null;
   const [searchQuery, setSearchQuery] = useState('');
   const [planFilter, setPlanFilter] = useState<PlanFilter>('all');
   const [sortField, setSortField] = useState<SortField>('created_at');
@@ -94,6 +83,34 @@ export const AdminUsers: React.FC = () => {
   const [gift, setGift] = useState<GiftState | null>(null);
   const [downgradeTarget, setDowngradeTarget] = useState<AdminUser | null>(null);
   const { addToast } = useToast();
+
+  const activityScore = (u: AdminUser) =>
+    u.events_count + u.clients_count + u.products_count;
+
+  const getActivityBadge = (u: AdminUser) => {
+    const score = activityScore(u);
+    if (score === 0)
+      return { label: t('admin:users.table.status.none'), cls: 'bg-surface-alt text-text-secondary' };
+    if (score <= 5)
+      return { label: t('admin:users.table.status.low'), cls: 'bg-info/10 text-info' };
+    if (score <= 20)
+      return { label: t('admin:users.table.status.medium'), cls: 'bg-warning/10 text-warning' };
+    return { label: t('admin:users.table.status.high'), cls: 'bg-success/10 text-success' };
+  };
+
+  // Returns human-readable expiry label for a gift plan
+  const getExpiryLabel = (expiresAt: string) => {
+    const date = parseISO(expiresAt);
+    if (isPast(date)) return { text: t('admin:users.table.expiry.expired'), cls: 'text-error', urgent: true };
+    const days = differenceInDays(date, new Date());
+    if (days === 0) return { text: t('admin:users.table.expiry.today'), cls: 'text-warning', urgent: true };
+    if (days <= 7) return { text: t('admin:users.table.expiry.in_days', { count: days }), cls: 'text-warning', urgent: true };
+    return {
+      text: t('admin:users.table.expiry.until', { date: format(date, 'd MMM yy', { locale: dateLocale }) }),
+      cls: 'text-text-secondary',
+      urgent: false,
+    };
+  };
 
   const saving = upgradeUser.isPending ? (upgradeUser.variables?.id ?? null) : null;
 
@@ -117,7 +134,7 @@ export const AdminUsers: React.FC = () => {
 
   const handleGiftConfirm = () => {
     if (!gift!.noExpiry && !gift!.expiresAt) {
-      addToast('Selecciona una fecha de vencimiento o marca "Sin vencimiento".', 'error');
+      addToast(t('admin:users.gift_dialog.errors.select_date'), 'error');
       return;
     }
 
@@ -130,8 +147,12 @@ export const AdminUsers: React.FC = () => {
       {
         onSuccess: () => {
           const label = gift!.noExpiry
-            ? `${userName} ahora tiene plan ${plan} (permanente)`
-            : `${userName} tiene plan ${plan} hasta ${format(parseISO(gift!.expiresAt!), 'd MMM yyyy', { locale: es })}`;
+            ? t('admin:users.gift_dialog.messages.success_permanent', { name: userName, plan })
+            : t('admin:users.gift_dialog.messages.success_temporary', { 
+                name: userName, 
+                plan, 
+                date: format(parseISO(gift!.expiresAt!), 'd MMM yyyy', { locale: dateLocale }) 
+              });
           addToast(label, 'success');
           setGift(null);
         },
@@ -150,13 +171,24 @@ export const AdminUsers: React.FC = () => {
     upgradeUser.mutate(
       { id: user.id, plan: 'basic', expiresAt: null },
       {
-        onSuccess: () => addToast(`${user.name} ahora tiene plan Basic`, 'success'),
+        onSuccess: () => addToast(t('admin:users.downgrade_dialog.success', { name: user.name }), 'success'),
       },
     );
   };
 
   const exportCSV = () => {
-    const headers = ['Nombre', 'Email', 'Negocio', 'Plan', 'Vence', 'Eventos', 'Clientes', 'Productos', 'Actividad Total', 'Registro'];
+    const headers = [
+      t('admin:users.csv.headers.name'), 
+      t('admin:users.csv.headers.email'), 
+      t('admin:users.csv.headers.business'), 
+      t('admin:users.csv.headers.plan'), 
+      t('admin:users.csv.headers.expires'), 
+      t('admin:users.csv.headers.events'), 
+      t('admin:users.csv.headers.clients'), 
+      t('admin:users.csv.headers.products'), 
+      t('admin:users.csv.headers.total_activity'), 
+      t('admin:users.csv.headers.registration')
+    ];
     const rows = filteredUsers.map((u) => [
       u.name,
       u.email,
@@ -167,7 +199,7 @@ export const AdminUsers: React.FC = () => {
       u.clients_count,
       u.products_count,
       activityScore(u),
-      format(parseISO(u.created_at), 'dd/MM/yyyy', { locale: es }),
+      format(parseISO(u.created_at), 'dd/MM/yyyy', { locale: dateLocale }),
     ]);
     const csv = [headers, ...rows]
       .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(','))
@@ -176,12 +208,12 @@ export const AdminUsers: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `usuarios-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `users-${new Date().toISOString().slice(0, 10)}.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    addToast(`${filteredUsers.length} usuarios exportados`, 'success');
+    addToast(t('admin:users.csv.success', { count: filteredUsers.length }), 'success');
   };
 
   // Filter
@@ -224,10 +256,15 @@ export const AdminUsers: React.FC = () => {
       pro: 'bg-primary/10 text-primary',
       premium: 'bg-primary/15 text-primary-dark',
     };
+    const labels: Record<string, string> = {
+      basic: t('admin:users.filters.basic'),
+      pro: t('admin:users.filters.pro'),
+      premium: t('admin:users.filters.pro'), // Display as Pro
+    };
     return (
       <span className={clsx('inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold', styles[plan] || styles.basic)}>
         {(plan === 'pro' || plan === 'premium') && <Crown className="h-3 w-3" />}
-        {plan.charAt(0).toUpperCase() + plan.slice(1)}
+        {labels[plan] || plan}
       </span>
     );
   };
@@ -236,10 +273,10 @@ export const AdminUsers: React.FC = () => {
     <div className="space-y-6">
       <ConfirmDialog
         open={!!downgradeTarget}
-        title="Rebajar plan"
-        description={downgradeTarget ? `¿Rebajar a ${downgradeTarget.name} (${downgradeTarget.email}) al plan Basic?` : ''}
-        confirmText="Rebajar"
-        cancelText="Cancelar"
+        title={t('admin:users.downgrade_dialog.title')}
+        description={downgradeTarget ? t('admin:users.downgrade_dialog.description', { name: downgradeTarget.name, email: downgradeTarget.email }) : ''}
+        confirmText={t('admin:users.downgrade_dialog.confirm')}
+        cancelText={t('admin:users.downgrade_dialog.cancel')}
         onConfirm={handleDowngradeConfirm}
         onCancel={() => setDowngradeTarget(null)}
       />
@@ -255,7 +292,7 @@ export const AdminUsers: React.FC = () => {
                   <Gift className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-text">Regalar plan</h2>
+                  <h2 className="text-lg font-bold text-text">{t('admin:users.gift_dialog.title')}</h2>
                   <p className="text-sm text-text-secondary">{gift.user.name}</p>
                 </div>
               </div>
@@ -271,18 +308,18 @@ export const AdminUsers: React.FC = () => {
             {/* Plan a regalar (Hardcoded) */}
             <div className="mb-4">
               <label className="text-xs font-semibold text-text-secondary uppercase tracking-wider block mb-2">
-                Plan a regalar
+                {t('admin:users.gift_dialog.plan_to_gift')}
               </label>
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-primary/40 bg-primary/10 text-primary text-sm font-semibold">
                 <Crown className="h-4 w-4" />
-                Pro
+                {t('admin:users.filters.pro')}
               </div>
             </div>
 
             {/* Expiry */}
             <div>
               <label className="text-xs font-semibold text-text-secondary uppercase tracking-wider block mb-2">
-                Válido hasta
+                {t('admin:users.gift_dialog.valid_until')}
               </label>
               <div className="space-y-3">
                 <div className="relative">
@@ -304,7 +341,7 @@ export const AdminUsers: React.FC = () => {
                     className="w-4 h-4 rounded border-border text-primary focus:ring-primary"
                   />
                   <span className="text-sm text-text-secondary">
-                    Sin vencimiento <span className="text-xs text-text-secondary">(permanente hasta que pague)</span>
+                    {t('admin:users.gift_dialog.no_expiry')} <span className="text-xs text-text-secondary">{t('admin:users.gift_dialog.no_expiry_help')}</span>
                   </span>
                 </label>
               </div>
@@ -315,8 +352,8 @@ export const AdminUsers: React.FC = () => {
               <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
               <span>
                 {gift.noExpiry
-                  ? 'Plan permanente hasta que el usuario adquiera una suscripción de pago.'
-                  : 'Al vencer, el plan regresa a Basic automáticamente. El usuario deberá suscribirse para continuar.'}
+                  ? t('admin:users.gift_dialog.info_permanent')
+                  : t('admin:users.gift_dialog.info_temporary')}
               </span>
             </div>
 
@@ -327,7 +364,7 @@ export const AdminUsers: React.FC = () => {
                 onClick={() => setGift(null)}
                 className="flex-1 px-4 py-3 rounded-2xl border border-border text-sm font-medium text-text-secondary hover:bg-surface-alt transition-colors"
               >
-                Cancelar
+                {t('admin:users.gift_dialog.cancel')}
               </button>
               <button
                 type="button"
@@ -340,7 +377,7 @@ export const AdminUsers: React.FC = () => {
                 ) : (
                   <Gift className="h-4 w-4" />
                 )}
-                Confirmar regalo
+                {t('admin:users.gift_dialog.confirm')}
               </button>
             </div>
           </div>
@@ -353,7 +390,7 @@ export const AdminUsers: React.FC = () => {
           <Link
             to="/admin"
             className="p-2 text-text-secondary hover:text-text hover:bg-surface-alt rounded-xl transition-colors"
-            aria-label="Volver al panel de admin"
+            aria-label={t('admin:users.actions.back')}
           >
             <ArrowLeft className="h-5 w-5" />
           </Link>
@@ -361,9 +398,9 @@ export const AdminUsers: React.FC = () => {
             <Users className="h-5 w-5" aria-hidden="true" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-text">Gestión de Usuarios</h1>
+            <h1 className="text-2xl font-bold text-text">{t('admin:users.title')}</h1>
             <p className="text-sm text-text-secondary">
-              {users.length} usuario{users.length !== 1 ? 's' : ''} registrado{users.length !== 1 ? 's' : ''}
+              {t('admin:users.summary', { count: users.length })}
             </p>
           </div>
         </div>
@@ -375,13 +412,13 @@ export const AdminUsers: React.FC = () => {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border border-border bg-card text-text-secondary hover:bg-surface-alt hover:text-text transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <Download className="h-4 w-4" />
-            Exportar CSV
+            {t('admin:users.actions.export_csv')}
           </button>
           <button
             type="button"
             onClick={() => qc.invalidateQueries({ queryKey: queryKeys.admin.users })}
             className="p-2 text-text-secondary hover:text-primary transition-colors"
-            aria-label="Recargar usuarios"
+            aria-label={t('admin:users.actions.reload')}
           >
             <RefreshCw className={clsx('h-5 w-5', loading && 'animate-spin')} aria-hidden="true" />
           </button>
@@ -400,10 +437,10 @@ export const AdminUsers: React.FC = () => {
       {!loading && users.length > 0 && (
         <div className="flex flex-wrap gap-3">
           {[
-            { label: 'Activos (con actividad)', value: users.filter((u) => activityScore(u) > 0).length, cls: 'bg-success/10 text-success border-success/20' },
-            { label: 'Sin actividad', value: users.filter((u) => activityScore(u) === 0).length, cls: 'bg-surface-alt text-text-secondary border-border' },
-            { label: 'Con suscripción pagada', value: users.filter((u) => u.has_paid_subscription).length, cls: 'bg-primary/10 text-primary border-primary/20' },
-            { label: 'Planes regalo activos', value: users.filter((u) => u.plan_expires_at && !isPast(parseISO(u.plan_expires_at))).length, cls: 'bg-warning/10 text-warning border-warning/20' },
+            { label: t('admin:users.stats.active'), value: users.filter((u) => activityScore(u) > 0).length, cls: 'bg-success/10 text-success border-success/20' },
+            { label: t('admin:users.stats.no_activity'), value: users.filter((u) => activityScore(u) === 0).length, cls: 'bg-surface-alt text-text-secondary border-border' },
+            { label: t('admin:users.stats.paid_sub'), value: users.filter((u) => u.has_paid_subscription).length, cls: 'bg-primary/10 text-primary border-primary/20' },
+            { label: t('admin:users.stats.gifted_plans'), value: users.filter((u) => u.plan_expires_at && !isPast(parseISO(u.plan_expires_at))).length, cls: 'bg-warning/10 text-warning border-warning/20' },
           ].map((chip) => (
             <div key={chip.label} className={clsx('inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border', chip.cls)}>
               <span className="font-bold text-sm">{chip.value}</span>
@@ -422,9 +459,9 @@ export const AdminUsers: React.FC = () => {
               type="search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Buscar por nombre, email o negocio..."
+              placeholder={t('admin:users.filters.search_placeholder')}
               className="w-full rounded-2xl border-0 bg-surface-alt py-3 pl-12 pr-4 text-sm text-text placeholder-text-tertiary focus:ring-2 focus:ring-primary focus:bg-surface transition-all"
-              aria-label="Buscar usuarios"
+              aria-label={t('admin:users.filters.search_placeholder')}
             />
           </div>
           <div className="flex items-center gap-1 bg-surface-alt rounded-2xl p-1">
@@ -441,7 +478,7 @@ export const AdminUsers: React.FC = () => {
                     : 'text-text-secondary hover:text-text hover:bg-surface',
                 )}
               >
-                {filter === 'all' ? 'Todos' : filter.charAt(0).toUpperCase() + filter.slice(1)}{' '}
+                {filter === 'all' ? t('admin:users.filters.all') : filter === 'basic' ? t('admin:users.filters.basic') : filter === 'pro' ? t('admin:users.filters.pro') : t('admin:users.filters.pro')}{' '}
                 <span className="opacity-70">({planCounts[filter]})</span>
               </button>
             ))}
@@ -452,33 +489,33 @@ export const AdminUsers: React.FC = () => {
       {/* Users Table */}
       <div className="bg-card shadow-sm border border-border rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-border" aria-label="Tabla de usuarios">
+          <table className="min-w-full divide-y divide-border" aria-label={t('admin:users.title')}>
             <thead className="bg-surface-alt">
               <tr>
                 <th className="px-6 py-4 text-left">
                   <button type="button" onClick={() => handleSort('name')} className="flex items-center text-xs font-medium text-text-secondary uppercase tracking-wider hover:text-text transition-colors">
-                    Usuario <SortIcon field="name" sortField={sortField} sortDir={sortDir} />
+                    {t('admin:users.table.user')} <SortIcon field="name" sortField={sortField} sortDir={sortDir} />
                   </button>
                 </th>
                 <th className="px-6 py-4 text-left">
                   <button type="button" onClick={() => handleSort('plan')} className="flex items-center text-xs font-medium text-text-secondary uppercase tracking-wider hover:text-text transition-colors">
-                    Plan <SortIcon field="plan" sortField={sortField} sortDir={sortDir} />
+                    {t('admin:users.table.plan')} <SortIcon field="plan" sortField={sortField} sortDir={sortDir} />
                   </button>
                 </th>
-                <th className="px-6 py-4 text-center text-xs font-medium text-text-secondary uppercase tracking-wider hidden md:table-cell">Eventos</th>
-                <th className="px-6 py-4 text-center text-xs font-medium text-text-secondary uppercase tracking-wider hidden md:table-cell">Clientes</th>
-                <th className="px-6 py-4 text-center text-xs font-medium text-text-secondary uppercase tracking-wider hidden lg:table-cell">Productos</th>
+                <th className="px-6 py-4 text-center text-xs font-medium text-text-secondary uppercase tracking-wider hidden md:table-cell">{t('admin:users.table.events')}</th>
+                <th className="px-6 py-4 text-center text-xs font-medium text-text-secondary uppercase tracking-wider hidden md:table-cell">{t('admin:users.table.clients')}</th>
+                <th className="px-6 py-4 text-center text-xs font-medium text-text-secondary uppercase tracking-wider hidden lg:table-cell">{t('admin:users.table.products')}</th>
                 <th className="px-6 py-4 text-center hidden lg:table-cell">
                   <button type="button" onClick={() => handleSort('activity')} className="flex items-center mx-auto text-xs font-medium text-text-secondary uppercase tracking-wider hover:text-text transition-colors">
-                    Actividad <SortIcon field="activity" sortField={sortField} sortDir={sortDir} />
+                    {t('admin:users.table.activity')} <SortIcon field="activity" sortField={sortField} sortDir={sortDir} />
                   </button>
                 </th>
                 <th className="px-6 py-4 text-left hidden lg:table-cell">
                   <button type="button" onClick={() => handleSort('created_at')} className="flex items-center text-xs font-medium text-text-secondary uppercase tracking-wider hover:text-text transition-colors">
-                    Registro <SortIcon field="created_at" sortField={sortField} sortDir={sortDir} />
+                    {t('admin:users.table.created_at')} <SortIcon field="created_at" sortField={sortField} sortDir={sortDir} />
                   </button>
                 </th>
-                <th className="px-6 py-4 text-right text-xs font-medium text-text-secondary uppercase tracking-wider">Acciones</th>
+                <th className="px-6 py-4 text-right text-xs font-medium text-text-secondary uppercase tracking-wider">{t('admin:users.table.actions')}</th>
               </tr>
             </thead>
             <tbody className="bg-card divide-y divide-border">
@@ -486,7 +523,7 @@ export const AdminUsers: React.FC = () => {
                 <tr>
                   <td colSpan={8} className="px-6 py-12 text-center">
                     <RefreshCw className="h-8 w-8 animate-spin text-text-tertiary mx-auto" />
-                    <p className="text-sm text-text-secondary mt-2">Cargando usuarios...</p>
+                    <p className="text-sm text-text-secondary mt-2">{t('admin:users.table.loading')}</p>
                   </td>
                 </tr>
               ) : sortedUsers.length === 0 ? (
@@ -495,8 +532,8 @@ export const AdminUsers: React.FC = () => {
                     <Users className="h-12 w-12 text-text-tertiary mx-auto mb-3" />
                     <p className="text-sm text-text-secondary">
                       {searchQuery || planFilter !== 'all'
-                        ? 'No se encontraron usuarios con esos filtros.'
-                        : 'No hay usuarios registrados aún.'}
+                        ? t('admin:users.table.no_results')
+                        : t('admin:users.table.no_users')}
                     </p>
                   </td>
                 </tr>
@@ -538,13 +575,13 @@ export const AdminUsers: React.FC = () => {
                             {isGifted && (
                               <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-xs font-medium bg-warning/10 text-warning border border-warning/20">
                                 <Gift className="h-3 w-3" />
-                                Regalo
+                                {t('admin:users.table.gift')}
                               </span>
                             )}
                           </div>
                           {user.has_paid_subscription && (
                             <span className="text-xs text-success flex items-center gap-1">
-                              <CheckCircle className="h-3 w-3" /> Pagado
+                              <CheckCircle className="h-3 w-3" /> {t('admin:users.table.paid')}
                             </span>
                           )}
                           {expiry && (
@@ -574,7 +611,7 @@ export const AdminUsers: React.FC = () => {
 
                       {/* Created at */}
                       <td className="px-6 py-4 text-sm text-text-secondary hidden lg:table-cell whitespace-nowrap">
-                        {format(parseISO(user.created_at), "d MMM ''yy", { locale: es })}
+                        {format(parseISO(user.created_at), "d MMM ''yy", { locale: dateLocale })}
                       </td>
 
                       {/* Actions */}
@@ -590,7 +627,7 @@ export const AdminUsers: React.FC = () => {
                               title="Regalar plan Pro o Premium con fecha de vencimiento"
                             >
                               {saving === user.id ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Gift className="h-3 w-3" />}
-                              Regalar
+                              {t('admin:users.actions.gift')}
                             </button>
                           )}
 
@@ -604,7 +641,7 @@ export const AdminUsers: React.FC = () => {
                               title="Extender o cambiar el regalo"
                             >
                               {saving === user.id ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Gift className="h-3 w-3" />}
-                              Editar regalo
+                              {t('admin:users.actions.edit_gift')}
                             </button>
                           )}
 
@@ -617,14 +654,14 @@ export const AdminUsers: React.FC = () => {
                               className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold bg-surface-alt text-text-secondary hover:bg-border transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               {saving === user.id && <RefreshCw className="h-3 w-3 animate-spin" />}
-                              Rebajar
+                              {t('admin:users.actions.downgrade')}
                             </button>
                           )}
 
                           {/* Paid subscription: no manual action allowed */}
                           {user.has_paid_subscription && (
-                            <span className="text-xs text-text-tertiary italic" title="Suscripción pagada activa — gestionada por el proveedor de pagos">
-                              Suscripción activa
+                            <span className="text-xs text-text-tertiary italic" title={t('admin:users.actions.active_sub_help')}>
+                              {t('admin:users.actions.active_sub')}
                             </span>
                           )}
                         </div>
@@ -640,12 +677,12 @@ export const AdminUsers: React.FC = () => {
         {!loading && sortedUsers.length > 0 && (
           <div className="px-6 py-3 bg-surface-alt border-t border-border flex items-center justify-between text-xs text-text-secondary">
             <span>
-              Mostrando {sortedUsers.length} de {users.length} usuario{users.length !== 1 ? 's' : ''}
+              {t('admin:users.table.footer.showing', { filtered: sortedUsers.length, total: users.length })}
             </span>
             <span>
-              Ordenado por{' '}
+              {t('admin:users.table.footer.sorted_by')}{' '}
               <strong className="text-text">
-                {sortField === 'name' ? 'nombre' : sortField === 'plan' ? 'plan' : sortField === 'activity' ? 'actividad' : 'registro'}
+                {sortField === 'name' ? t('admin:users.table.footer.fields.name') : sortField === 'plan' ? t('admin:users.table.footer.fields.plan') : sortField === 'activity' ? t('admin:users.table.footer.fields.activity') : t('admin:users.table.footer.fields.created_at')}
               </strong>{' '}
               ({sortDir === 'asc' ? '↑ asc' : '↓ desc'})
             </span>

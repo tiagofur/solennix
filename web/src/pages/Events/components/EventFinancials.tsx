@@ -63,7 +63,7 @@ export const EventFinancials: React.FC<EventFinancialsProps> = ({
                   aria-describedby="requires_invoice-description"
                 />
                 <span id="requires_invoice-description" className="text-sm text-text-secondary">
-                  {t('events:financials.invoice')} (Tax {taxRateValue}%)
+                  {t('events:financials.invoice')} ({t('events:financials.tax')} {taxRateValue}%)
                 </span>
               </div>
             </div>

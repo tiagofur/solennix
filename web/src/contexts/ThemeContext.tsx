@@ -1,20 +1,8 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { Theme } from "@/types/theme";
+import { ThemeContext } from "./ThemeContextInstance";
 
-type Theme = "light" | "dark";
-
-interface ThemeContextType {
-  theme: Theme;
-  toggleTheme: () => void;
-  isDark: boolean;
-}
-
-const ThemeContext = createContext<ThemeContextType>({
-  theme: "light",
-  toggleTheme: () => {},
-  isDark: false,
-});
-
-export const useThemeContext = () => useContext(ThemeContext);
+export { ThemeContext };
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -29,34 +17,22 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
       : "light";
   });
 
-  useEffect(() => {
-    document.documentElement.classList.remove("light", "dark");
-    document.documentElement.classList.add(theme);
-    localStorage.setItem("theme", theme);
+  const isDark = theme === "dark";
 
-    // Update Favicon based on theme contrast
-    // Light App -> Navy icon
-    // Dark App -> Beige icon
-    const favicon = document.querySelector('link[rel="icon"]');
-    if (favicon) {
-      favicon.setAttribute(
-        "href",
-        theme === "dark" ? "/icon-beige.svg" : "/icon-navy.svg",
-      );
-    }
+  useEffect(() => {
+    const root = window.document.documentElement;
+    root.classList.remove("light", "dark");
+    root.classList.add(theme);
+    localStorage.setItem("theme", theme);
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme((prevTheme) => (prevTheme === "light" ? "dark" : "light"));
-  };
-
-  const value = {
-    theme,
-    toggleTheme,
-    isDark: theme === "dark",
+    setTheme((prev) => (prev === "light" ? "dark" : "light"));
   };
 
   return (
-    <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
+    <ThemeContext.Provider value={{ theme, toggleTheme, isDark }}>
+      {children}
+    </ThemeContext.Provider>
   );
 };

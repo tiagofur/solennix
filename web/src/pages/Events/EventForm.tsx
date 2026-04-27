@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   useNavigate,
   useParams,
@@ -10,7 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { eventService } from "@/services/eventService";
 import { productService } from "@/services/productService";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import {
   ArrowLeft,
   Save,
@@ -44,7 +44,6 @@ import {
   EquipmentConflict,
   EquipmentSuggestion,
   SupplySuggestion,
-  InventoryItem,
   EventProduct,
   EventExtra,
   EventEquipment as EventEquipmentEntity,

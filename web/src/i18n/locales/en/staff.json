@@ -10,7 +10,8 @@
       "role": "Role",
       "contact": "Contact",
       "actions": "Actions",
-      "summary": "{{count}} members, page {{page}} of {{totalPages}}.",
+      "summary_one": "{{count}} member, page {{page}} of {{totalPages}}.",
+      "summary_other": "{{count}} members, page {{page}} of {{totalPages}}.",
       "view_detail": "View detail",
       "edit": "Edit",
       "delete": "Delete"
@@ -96,6 +97,93 @@
       "save": "Save changes",
       "create": "Create staff member",
       "cancel": "Cancel"
+    }
+  },
+  "teams": {
+    "list": {
+      "title": "Teams",
+      "description": "Group staff members into squads to assign them to an event in a single step.",
+      "new_team": "Create team",
+      "back": "Back to Staff",
+      "table": {
+        "name": "Name",
+        "role": "Role",
+        "members": "Members",
+        "actions": "Actions",
+        "summary_one": "{{count}} team",
+        "summary_other": "{{count}} teams",
+        "view_detail": "View detail",
+        "edit": "Edit",
+        "delete": "Delete"
+      },
+      "empty": {
+        "title": "No teams yet",
+        "description": "Add your first squad. Group photographers, waiters or coordinators and assign them to an event in one click.",
+        "action": "Create team"
+      },
+      "delete_confirm": {
+        "title": "Delete team",
+        "description": "The team will be removed. Staff members in the team remain available in your catalog.",
+        "confirm": "Permanently delete",
+        "cancel": "Cancel"
+      }
+    },
+    "details": {
+      "back": "Back to Teams",
+      "loading": "Loading…",
+      "not_found": "Team not found.",
+      "return_list": "Back to list",
+      "actions": {
+        "edit": "Edit",
+        "delete": "Delete"
+      },
+      "fields": {
+        "notes": "Notes"
+      },
+      "members": {
+        "title": "Members",
+        "empty": "This team has no members yet. Edit it to add them.",
+        "is_lead": "Team lead",
+        "view_profile": "View profile"
+      },
+      "delete_confirm": {
+        "title": "Delete team",
+        "description": "{{name}} will be removed. Staff members in the team remain in your catalog.",
+        "confirm": "Permanently delete",
+        "cancel": "Cancel"
+      }
+    },
+    "form": {
+      "title_new": "Create team",
+      "title_edit": "Edit team",
+      "help_text": "Group staff members into a squad to assign them to an event in a single step.",
+      "fields": {
+        "name": "Name",
+        "name_placeholder": "Main squad · Photography team",
+        "role": "Team role",
+        "role_placeholder": "Photography · Waiters · Coordination",
+        "notes": "Notes",
+        "notes_placeholder": "Typical team rate, instructions, anything you want to remember…",
+        "members_title": "Members",
+        "add_members": "Add staff members",
+        "search_placeholder": "Search by name or role…",
+        "move_up": "Move up",
+        "move_down": "Move down",
+        "remove": "Remove from team",
+        "is_lead": "Team lead"
+      },
+      "loading": "Loading team…",
+      "loading_staff": "Loading staff…",
+      "no_staff_match": "No matching staff members found.",
+      "messages": {
+        "created": "Team created.",
+        "updated": "Team updated."
+      },
+      "actions": {
+        "save": "Save changes",
+        "create": "Create team",
+        "cancel": "Cancel"
+      }
     }
   }
 }

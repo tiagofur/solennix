@@ -97,7 +97,7 @@ export const EventProducts: React.FC<EventProductsProps> = ({
                   type="button"
                   onClick={() => setPendingDeleteIndex(index)}
                   className="absolute top-2 right-2 text-text-secondary hover:text-error transition-colors"
-                  aria-label={`${t('common:action.remove')} product ${index + 1}`}
+                  aria-label={`${t('common:action.remove')} ${t('common:entities.product')} ${index + 1}`}
                 >
                   <Trash2 className="h-4 w-4" aria-hidden="true" />
                 </button>
@@ -122,7 +122,7 @@ export const EventProducts: React.FC<EventProductsProps> = ({
                     value={item.product_id}
                     onChange={(e) => onProductChange(index, 'product_id', e.target.value)}
                     className="block w-full text-sm border-border rounded-xl shadow-xs transition-shadow focus:ring-2 focus:ring-primary/20 bg-card text-text p-2 border"
-                    aria-label={`${t('common:action.select')} product ${index + 1}`}
+                    aria-label={`${t('common:action.select')} ${t('common:entities.product')} ${index + 1}`}
                   >
                     <option value="">{t('events:products.select_placeholder')}</option>
                     {products.map((p) => (
@@ -145,7 +145,7 @@ export const EventProducts: React.FC<EventProductsProps> = ({
                         value={item.quantity}
                         onChange={(e) => onProductChange(index, 'quantity', Number(e.target.value))}
                         className="flex-1 min-w-0 block w-full px-2 py-2 rounded-none rounded-l-xl text-sm border-border focus:ring-2 focus:ring-primary/20 border bg-card text-text transition-shadow"
-                        aria-label={`Quantity of product ${index + 1}`}
+                        aria-label={`${t('events:products.quantity')} ${t('common:entities.product')} ${index + 1}`}
                       />
                       <button
                         type="button"
@@ -168,7 +168,7 @@ export const EventProducts: React.FC<EventProductsProps> = ({
                       value={item.price}
                       readOnly
                       className="block w-full text-sm border-border rounded-xl shadow-xs bg-surface-alt text-text-secondary p-2 border cursor-not-allowed opacity-80"
-                      aria-label={`Unit price of product ${index + 1}`}
+                      aria-label={`${t('events:products.price')} ${t('common:entities.product')} ${index + 1}`}
                     />
                   </div>
 
@@ -187,7 +187,7 @@ export const EventProducts: React.FC<EventProductsProps> = ({
                         if (val >= 0 && val <= item.price) onProductChange(index, 'discount', val);
                       }}
                       className="block w-full text-sm border-border rounded-md shadow-xs focus:ring-primary/20 focus:border-primary p-2 border bg-card text-text"
-                      aria-label={`Unit discount of product ${index + 1}`}
+                      aria-label={`${t('events:products.discount')} ${t('common:entities.product')} ${index + 1}`}
                     />
                   </div>
 
@@ -208,7 +208,7 @@ export const EventProducts: React.FC<EventProductsProps> = ({
                         }
                       }}
                       className="block w-full text-sm border-border rounded-md shadow-xs focus:ring-primary/20 focus:border-primary p-2 border bg-card text-text font-bold"
-                      aria-label={`Total of product ${index + 1}`}
+                      aria-label={`${t('events:products.total')} ${t('common:entities.product')} ${index + 1}`}
                     />
                   </div>
                 </div>

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@tests/customRender';
+import { render } from '@tests/customRender';
 import { GoogleSignInButton } from './GoogleSignInButton';
 
 const mockCheckAuth = vi.fn();

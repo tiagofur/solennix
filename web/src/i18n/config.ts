@@ -3,8 +3,6 @@ import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 
 // --- Locale bundles ---------------------------------------------------
-// Each namespace maps to a JSON file under locales/{lang}/{ns}.json.
-// Add new namespaces here as screens get internationalised.
 import esCommon from "./locales/es/common.json";
 import enCommon from "./locales/en/common.json";
 
@@ -32,14 +30,30 @@ import enEvents from "./locales/en/events.json";
 import esQuotes from "./locales/es/quotes.json";
 import enQuotes from "./locales/en/quotes.json";
 
+import esStaff from "./locales/es/staff.json";
+import enStaff from "./locales/en/staff.json";
+
+import esAdmin from "./locales/es/admin.json";
+import enAdmin from "./locales/en/admin.json";
+
+import esSettings from "./locales/es/settings.json";
+import enSettings from "./locales/en/settings.json";
+
+import esSearch from "./locales/es/search.json";
+import enSearch from "./locales/en/search.json";
+
+import esPricing from "./locales/es/pricing.json";
+import enPricing from "./locales/en/pricing.json";
+
+import esStatic from "./locales/es/static.json";
+import enStatic from "./locales/en/static.json";
+
+import esPublic from "./locales/es/public.json";
+import enPublic from "./locales/en/public.json";
+
 /**
  * i18next setup — namespaces are added incrementally as each screen is
  * internationalised. `common` holds shared strings (buttons, nav, errors).
- *
- * Resolution order:
- *   1. Explicit localStorage preference (`i18nextLng`)
- *   2. Browser `navigator.language`
- *   3. Fallback to `es` (app's development language)
  */
 void i18n
   .use(LanguageDetector)
@@ -56,6 +70,13 @@ void i18n
         inventory: esInventory,
         events: esEvents,
         quotes: esQuotes,
+        staff: esStaff,
+        admin: esAdmin,
+        settings: esSettings,
+        search: esSearch,
+        pricing: esPricing,
+        static: esStatic,
+        public: esPublic,
       },
       en: {
         common: enCommon,
@@ -67,18 +88,38 @@ void i18n
         inventory: enInventory,
         events: enEvents,
         quotes: enQuotes,
+        staff: enStaff,
+        admin: enAdmin,
+        settings: enSettings,
+        search: enSearch,
+        pricing: enPricing,
+        static: enStatic,
+        public: enPublic,
       },
     },
     fallbackLng: "es",
-    // "es-MX", "en-US", "es-AR" all collapse to the 2-letter base locale
-    // we ship. Prevents empty translations for regional variants.
     load: "languageOnly",
     supportedLngs: ["es", "en"],
-    ns: ["common", "auth", "calendar", "dashboard"],
+    ns: [
+      "common",
+      "auth",
+      "calendar",
+      "dashboard",
+      "clients",
+      "products",
+      "inventory",
+      "events",
+      "quotes",
+      "staff",
+      "admin",
+      "settings",
+      "search",
+      "pricing",
+      "static",
+      "public",
+    ],
     defaultNS: "common",
     interpolation: {
-      // React already escapes; turning i18next's escape off avoids double-
-      // encoding of ampersands / quotes in translations.
       escapeValue: false,
     },
     detection: {

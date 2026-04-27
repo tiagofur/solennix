@@ -1,5 +1,6 @@
 import React from "react";
 import { Check, Minus, Plus } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface PublicProduct {
   id: string;
@@ -29,6 +30,7 @@ export const PublicProductCard: React.FC<Props> = ({
   onDecrement,
   onQuantityChange,
 }) => {
+  const { t } = useTranslation("public");
   return (
     <div
       className={`rounded-xl border p-3 transition-all cursor-pointer ${
@@ -97,7 +99,7 @@ export const PublicProductCard: React.FC<Props> = ({
               className="flex items-center gap-2 mt-2"
               onClick={(e) => e.stopPropagation()}
             >
-              <span className="text-xs text-text-secondary">Cantidad:</span>
+              <span className="text-xs text-text-secondary">{t("form.quantity")}:</span>
               <div className="flex items-center rounded-lg border border-border overflow-hidden">
                 <button
                   type="button"

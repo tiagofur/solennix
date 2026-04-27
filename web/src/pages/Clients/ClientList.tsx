@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Client } from "@/types/entities";
 import {
   Plus,
@@ -57,7 +58,7 @@ export const ClientList: React.FC = () => {
   const loading = isSearching ? allClientsQuery.isLoading : paginatedQuery.isLoading;
 
   // All clients for CSV export and search filtering
-  const allClients = allClientsQuery.data ?? [];
+  const allClients = useMemo(() => allClientsQuery.data ?? [], [allClientsQuery.data]);
 
   // Client-side filtered results (only used when searching)
   const filteredClients = useMemo(() => {
@@ -113,9 +114,11 @@ export const ClientList: React.FC = () => {
     : (paginatedQuery.data?.total ?? 0);
 
   // For the empty state and CSV export, we need to know if there are any clients at all
-  const hasAnyClients = isSearching
-    ? allClients.length > 0
-    : (paginatedQuery.data?.total ?? 0) > 0 || paginatedClients.length > 0;
+  const hasAnyClients = useMemo(() => {
+    return isSearching
+      ? allClients.length > 0
+      : (paginatedQuery.data?.total ?? 0) > 0 || paginatedClients.length > 0;
+  }, [isSearching, allClients.length, paginatedQuery.data?.total, paginatedClients.length]);
 
   const requestDelete = (id: string) => {
     setPendingDeleteId(id);
@@ -349,7 +352,7 @@ export const ClientList: React.FC = () => {
                           <div className="text-sm font-semibold text-text">
                             {client.name}
                           </div>
-                          <div className="text-xs text-text-secondary truncate max-w-[200px]">
+                          <div className="text-xs text-text-secondary truncate max-w-50">
                             {client.city || client.address || "—"}
                           </div>
                         </div>

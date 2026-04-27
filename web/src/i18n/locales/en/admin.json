@@ -1,0 +1,193 @@
+{
+  "dashboard": {
+    "title": "Admin Dashboard",
+    "subtitle": "Platform overview",
+    "actions": {
+      "manage_users": "Manage Users",
+      "reload_stats": "Reload statistics"
+    },
+    "errors": {
+      "loading_stats": "Error loading statistics. Try reloading."
+    },
+    "stats": {
+      "total_users": "Total Users",
+      "total_events": "Total Events",
+      "total_clients": "Total Clients",
+      "total_products": "Total Products",
+      "paid_users": "Paid Users",
+      "conversion_rate": "Conversion Rate",
+      "avg_events": "Events per User",
+      "churn_rate": "Churn Rate",
+      "clients_products": "Clients / Products",
+      "new_today": "today",
+      "new_week": "week",
+      "conversion_help": "basic → paid plan",
+      "avg_events_help": "platform average",
+      "churn_help": "canceled subs vs total",
+      "platform_summary": "across the platform"
+    },
+    "charts": {
+      "plans_title": "Plan Distribution",
+      "signups_title": "New Signups",
+      "subscriptions_title": "Subscriptions",
+      "no_data": "No data available",
+      "loading": "Loading...",
+      "today": "Today",
+      "week": "Week",
+      "month": "Month"
+    },
+    "subscriptions": {
+      "active": "Active",
+      "canceled": "Canceled",
+      "trial": "Trial",
+      "past_due": "Past Due",
+      "by_provider": "By Provider",
+      "no_data": "No subscription data available"
+    },
+    "top_users": {
+      "title": "Top Users by Activity",
+      "view_all": "View all",
+      "no_users": "No users registered yet.",
+      "total_points": "{{count}} total",
+      "events": "Events",
+      "clients": "Clients"
+    },
+    "growth": {
+      "title": "Growth Summary",
+      "view_all": "View all users",
+      "new_today": "New today",
+      "last_7_days": "Last 7 days",
+      "last_30_days": "Last 30 days",
+      "healthy": "healthy",
+      "below_avg": "below average",
+      "healthy_msg": "Healthy growth rate — {{week}} users this week vs {{avg}} monthly weekly average.",
+      "below_avg_msg": "Growth below the monthly weekly average ({{avg}} users)."
+    }
+  },
+  "users": {
+    "title": "User Management",
+    "summary_one": "{{count}} registered user",
+    "summary_other": "{{count}} registered users",
+    "actions": {
+      "back": "Back to admin dashboard",
+      "export_csv": "Export CSV",
+      "reload": "Reload users",
+      "gift": "Gift",
+      "edit_gift": "Edit gift",
+      "downgrade": "Downgrade",
+      "active_sub": "Active subscription",
+      "active_sub_help": "Active paid subscription — managed by payment provider"
+    },
+    "filters": {
+      "search_placeholder": "Search by name, email or business...",
+      "all": "All",
+      "basic": "Basic",
+      "pro": "Pro",
+      "business": "Business"
+    },
+    "stats": {
+      "active": "Active (with activity)",
+      "no_activity": "No activity",
+      "paid_sub": "With paid subscription",
+      "gifted_plans": "Active gifted plans"
+    },
+    "table": {
+      "user": "User",
+      "plan": "Plan",
+      "events": "Events",
+      "clients": "Clients",
+      "products": "Products",
+      "activity": "Activity",
+      "created_at": "Registration",
+      "actions": "Actions",
+      "loading": "Loading users...",
+      "no_results": "No users found with those filters.",
+      "no_users": "No users registered yet.",
+      "gift": "Gift",
+      "paid": "Paid",
+      "status": {
+        "none": "No activity",
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High"
+      },
+      "expiry": {
+        "expired": "Expired",
+        "today": "Expires today",
+        "in_days": "Expires in {{count}}d",
+        "until": "Until {{date}}"
+      },
+      "footer": {
+        "showing": "Showing {{filtered}} of {{total}} users",
+        "sorted_by": "Sorted by",
+        "fields": {
+          "name": "name",
+          "plan": "plan",
+          "activity": "activity",
+          "created_at": "registration"
+        }
+      }
+    },
+    "gift_dialog": {
+      "title": "Gift plan",
+      "plan_to_gift": "Plan to gift",
+      "valid_until": "Valid until",
+      "no_expiry": "No expiry",
+      "no_expiry_help": "(permanent until paid)",
+      "info_permanent": "Permanent plan until the user acquires a paid subscription.",
+      "info_temporary": "Upon expiry, the plan automatically returns to Basic. The user must subscribe to continue.",
+      "cancel": "Cancel",
+      "confirm": "Confirm gift",
+      "errors": {
+        "select_date": "Select an expiration date or check \"No expiry\"."
+      },
+      "messages": {
+        "success_permanent": "{{name}} now has {{plan}} plan (permanent)",
+        "success_temporary": "{{name}} has {{plan}} plan until {{date}}"
+      }
+    },
+    "downgrade_dialog": {
+      "title": "Downgrade plan",
+      "description": "Downgrade {{name}} ({{email}}) to Basic plan?",
+      "confirm": "Downgrade",
+      "cancel": "Cancel",
+      "success": "{{name}} now has Basic plan"
+    },
+    "csv": {
+      "headers": {
+        "name": "Name",
+        "email": "Email",
+        "business": "Business",
+        "plan": "Plan",
+        "expires": "Expires",
+        "events": "Events",
+        "clients": "Clients",
+        "products": "Products",
+        "total_activity": "Total Activity",
+        "registration": "Registration"
+      },
+      "success": "{{count}} users exported"
+    }
+  },
+  "audit": {
+    "title": "Platform Audit Log",
+    "description": "Complete record of actions across all accounts.",
+    "events_count": "{{count}} event",
+    "events_count_plural": "{{count}} events",
+    "loading": "Loading audit log...",
+    "error": "Error loading platform audit log.",
+    "empty": "No events registered in the audit log.",
+    "table": {
+      "date": "Date",
+      "user": "User",
+      "action": "Action",
+      "resource": "Resource",
+      "detail": "Detail"
+    },
+    "pagination": {
+      "page_info": "Page {{current}} of {{total}}",
+      "previous": "Previous",
+      "next": "Next"
+    }
+  }
+}

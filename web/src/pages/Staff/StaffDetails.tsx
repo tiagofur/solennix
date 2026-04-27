@@ -42,6 +42,8 @@ const formatEventDate = (ymd: string, locale: string): string => {
     month: "short",
     year: "numeric",
   });
+};
+
 // Tailwind palette mapping — stays off the brand gold/navy so badges feel
 // semantic rather than decorative.
 const STATUS_CLASSES: Record<AssignmentStatus, string> = {

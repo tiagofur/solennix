@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { Event, Payment, InventoryItem } from "../types/entities";
 import { addDays, format, startOfMonth, endOfMonth } from "date-fns";
@@ -24,7 +24,6 @@ import {
 import { logError } from "../lib/errorHandler";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEvents, useUpcomingEvents, useEventsByDateRange, useUpdateEventStatus } from "../hooks/queries/useEventQueries";
-import { useClients } from "../hooks/queries/useClientQueries";
 import { useInventoryItems } from "../hooks/queries/useInventoryQueries";
 import { usePaymentsByEventIds, useCreatePayment } from "../hooks/queries/usePaymentQueries";
 import {
@@ -475,11 +474,11 @@ function DashboardAttentionSection({
 // ── Monthly Revenue Trend Card (premium only) ────────────────────
 function MonthlyRevenueTrendCard({ points }: { points: DashboardRevenuePoint[] }) {
   const { t, i18n } = useTranslation(['dashboard']);
-  const monthLabels = i18n.language === 'en' 
-    ? ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"]
-    : ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
 
   const chartData = useMemo(() => {
+    const monthLabels = i18n.language === 'en' 
+      ? ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"]
+      : ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
     const byMonth = new Map(points.map((p) => [p.month, p.revenue]));
     const today = new Date();
     const bars: { name: string; value: number }[] = [];
@@ -493,7 +492,7 @@ function MonthlyRevenueTrendCard({ points }: { points: DashboardRevenuePoint[] }
       });
     }
     return bars;
-  }, [points, monthLabels]);
+  }, [points, i18n.language]);
 
   const moneyLocale = i18n.language === 'en' ? 'en-US' : 'es-MX';
 
@@ -545,35 +544,33 @@ export const Dashboard: React.FC = () => {
   const firstName = user?.name ? user.name.split(" ")[0] : t('common:user');
   const navigate = useNavigate();
 
-  const { isBasicPlan, canCreateEvent, eventsThisMonth, eventLimit: limit } = usePlanLimits();
+  const { isBasicPlan, eventsThisMonth, eventLimit: limit } = usePlanLimits();
 
   const moneyLocale = i18n.language === 'en' ? 'en-US' : 'es-MX';
-  const fmt = (n: number) => `$${n.toLocaleString(moneyLocale, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+  const fmt = useCallback((n: number) => `$${n.toLocaleString(moneyLocale, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`, [moneyLocale]);
 
   // ── Date range for current month ──
   const today = useMemo(() => new Date(), []);
   const monthStart = useMemo(() => format(startOfMonth(today), "yyyy-MM-dd"), [today]);
   const monthEnd = useMemo(() => format(endOfMonth(today), "yyyy-MM-dd"), [today]);
 
-  const { data: _eventsMonth, isLoading: loadingMonth } = useEventsByDateRange(monthStart, monthEnd);
+  const { isLoading: loadingMonth } = useEventsByDateRange(monthStart, monthEnd);
   const { data: _upcoming, isLoading: loadingUpcoming } = useUpcomingEvents(5);
   const { data: _allEvents, isLoading: loadingAttention } = useEvents();
   const { data: _inventory, isLoading: loadingInventory } = useInventoryItems();
-  const { data: _clients, isLoading: loadingClients } = useClients();
 
   const { data: kpis } = useDashboardKpis();
   const { data: revenueChartData } = useDashboardRevenueChart("year", !isBasicPlan);
   const { data: statusCountsData } = useDashboardEventsByStatus("month");
 
-  const inventoryData = _inventory ?? [];
-  const clients = _clients ?? [];
+  // Using _clients directly if needed or keep it as _clients
   const upcomingEvents = _upcoming ?? [];
-  const attentionEvents = (_allEvents ?? []) as DashboardEvent[];
+  const attentionEvents = useMemo(() => (_allEvents ?? []) as DashboardEvent[], [_allEvents]);
 
   // ── Derived: low stock items ──
   const lowStockItems = useMemo(
-    () => inventoryData.filter((item) => item.minimum_stock > 0 && item.current_stock <= item.minimum_stock),
-    [inventoryData],
+    () => (_inventory ?? []).filter((item) => item.minimum_stock > 0 && item.current_stock <= item.minimum_stock),
+    [_inventory],
   );
 
   // ── Derived: attention event IDs for payment query ──
@@ -581,8 +578,8 @@ export const Dashboard: React.FC = () => {
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
     const confirmedCutoff = addDays(todayStart, 7);
-    return attentionEvents
-      .filter((event) => {
+    return (_allEvents ?? [])
+      .filter((event: DashboardEvent) => {
         const eventDate = parseDashboardEventDate(event.event_date);
         const isConfirmedSoon =
           event.status === "confirmed" && eventDate >= todayStart && eventDate <= confirmedCutoff;
@@ -590,8 +587,8 @@ export const Dashboard: React.FC = () => {
           eventDate < todayStart && (event.status === "quoted" || event.status === "confirmed");
         return isConfirmedSoon || isPastActive;
       })
-      .map((event) => event.id);
-  }, [attentionEvents]);
+      .map((event: DashboardEvent) => event.id);
+  }, [_allEvents]);
   const { data: _attentionPayments } = usePaymentsByEventIds(attentionCandidateIds);
 
   const attentionPaidByEvent = useMemo(() => {
@@ -777,7 +774,7 @@ export const Dashboard: React.FC = () => {
       });
     }
     return alerts;
-  }, [loadingAttention, attentionEvents, attentionPaidByEvent, t]);
+  }, [loadingAttention, attentionEvents, attentionPaidByEvent, t, fmt]);
 
   return (
     <div className="space-y-8 pb-12">
@@ -806,7 +803,7 @@ export const Dashboard: React.FC = () => {
           <QuickActionLink
             icon={Zap}
             label={t('common:quick_actions.quick_quote')}
-            to="/quotes/quick"
+            to="/cotizacion-rapida"
           />
         </div>
       </div>
@@ -872,23 +869,23 @@ export const Dashboard: React.FC = () => {
         {/* Left Column: Charts */}
         <div className="lg:col-span-2 space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-card shadow-sm border border-border rounded-2xl p-6 flex flex-col h-[400px]">
+            <div className="bg-card shadow-sm border border-border rounded-2xl p-6 flex flex-col h-100">
               <h3 className="text-sm font-semibold text-text mb-6">{t('dashboard:status_chart.title')}</h3>
               <EventStatusBar data={statusChartData} loading={loadingMonth} />
             </div>
 
             {revenueChartData && <MonthlyRevenueTrendCard points={revenueChartData} />}
             {!revenueChartData && !isBasicPlan && (
-               <div className="bg-card shadow-sm border border-border rounded-2xl p-6 flex items-center justify-center h-[400px]">
+               <div className="bg-card shadow-sm border border-border rounded-2xl p-6 flex items-center justify-center h-100">
                  <RefreshCw className="h-6 w-6 animate-spin text-border" />
                </div>
             )}
             {isBasicPlan && (
-               <div className="bg-card shadow-sm border border-border border-dashed rounded-2xl p-8 flex flex-col items-center justify-center text-center gap-4 h-[400px]">
+               <div className="bg-card shadow-sm border border-border border-dashed rounded-2xl p-8 flex flex-col items-center justify-center text-center gap-4 h-100">
                  <div className="w-12 h-12 rounded-full bg-surface-alt flex items-center justify-center">
                    <TrendingUp className="h-6 w-6 text-text-tertiary" />
                  </div>
-                 <div className="max-w-[200px]">
+                 <div className="max-w-50">
                    <p className="text-sm font-bold text-text mb-1">Tendencias Pro</p>
                    <p className="text-xs text-text-secondary leading-relaxed">
                      Mejorá tu plan para ver gráficos de ingresos mensuales.

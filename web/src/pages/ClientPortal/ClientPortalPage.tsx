@@ -12,6 +12,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { ClientPortalUnavailable } from "./components/ClientPortalUnavailable";
+import { useTranslation } from "react-i18next";
 
 // ─────────────────────────────────────────────────────────────────────────
 // Types — mirror backend `PublicEventView` from
@@ -65,10 +66,11 @@ function parseLocalDate(dateStr: string): Date {
   return new Date(y, (m || 1) - 1, d || 1);
 }
 
-function formatLongDate(dateStr: string): string {
+function formatLongDate(dateStr: string, lng: string = "es"): string {
   try {
     const d = parseLocalDate(dateStr);
-    return d.toLocaleDateString("es-MX", {
+    const locale = lng.startsWith("en") ? "en-US" : "es-MX";
+    return d.toLocaleDateString(locale, {
       weekday: "long",
       day: "numeric",
       month: "long",
@@ -79,9 +81,10 @@ function formatLongDate(dateStr: string): string {
   }
 }
 
-function formatCurrency(value: number, currency: string): string {
+function formatCurrency(value: number, currency: string, lng: string = "es"): string {
   try {
-    return value.toLocaleString("es-MX", {
+    const locale = lng.startsWith("en") ? "en-US" : "es-MX";
+    return value.toLocaleString(locale, {
       style: "currency",
       currency,
       maximumFractionDigits: 0,
@@ -91,16 +94,16 @@ function formatCurrency(value: number, currency: string): string {
   }
 }
 
-function statusLabel(status: string): { label: string; tone: "ok" | "warn" | "info" | "done" } {
+function statusLabel(status: string, t: any): { label: string; tone: "ok" | "warn" | "info" | "done" } {
   switch (status) {
     case "confirmed":
-      return { label: "Confirmado", tone: "ok" };
+      return { label: t("common:status.confirmed"), tone: "ok" };
     case "quoted":
-      return { label: "Cotizado", tone: "warn" };
+      return { label: t("common:status.quoted"), tone: "warn" };
     case "completed":
-      return { label: "Realizado", tone: "done" };
+      return { label: t("common:status.completed"), tone: "done" };
     case "cancelled":
-      return { label: "Cancelado", tone: "info" };
+      return { label: t("common:status.cancelled"), tone: "info" };
     default:
       return { label: status, tone: "info" };
   }
@@ -119,6 +122,7 @@ function daysUntil(dateStr: string): number {
 // ─────────────────────────────────────────────────────────────────────────
 
 export const ClientPortalPage: React.FC = () => {
+  const { t, i18n } = useTranslation(["public", "common"]);
   const { token } = useParams<{ token: string }>();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<PortalData | null>(null);
@@ -176,7 +180,7 @@ export const ClientPortalPage: React.FC = () => {
           aria-live="polite"
         >
           <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
-          <span>Cargando el portal…</span>
+          <span>{t("portal.loading")}</span>
         </div>
       </div>
     );
@@ -194,15 +198,15 @@ export const ClientPortalPage: React.FC = () => {
   const days = daysUntil(event.event_date);
   const countdownLabel =
     days > 0
-      ? `${days} ${days === 1 ? "día" : "días"} restantes`
+      ? t("portal.days_remaining", { count: days })
       : days === 0
-        ? "¡Es hoy!"
-        : `Hace ${Math.abs(days)} ${Math.abs(days) === 1 ? "día" : "días"}`;
+        ? t("portal.it_is_today")
+        : t("portal.days_ago", { count: Math.abs(days) });
 
   const paidPct =
     payment.total > 0 ? Math.min(100, Math.round((payment.paid / payment.total) * 100)) : 0;
 
-  const st = statusLabel(event.status);
+  const st = statusLabel(event.status, t);
   const statusToneClass =
     st.tone === "ok"
       ? "bg-success/10 text-success"
@@ -227,7 +231,7 @@ export const ClientPortalPage: React.FC = () => {
           {organizer.logo_url ? (
             <img
               src={organizer.logo_url}
-              alt={organizer.business_name || "Logo del organizador"}
+              alt={organizer.business_name || t("portal.organized_by")}
               className="h-14 w-14 rounded-full object-cover border border-border bg-surface"
             />
           ) : (
@@ -241,10 +245,10 @@ export const ClientPortalPage: React.FC = () => {
           )}
           <div>
             <p className="text-xs uppercase tracking-widest text-text-tertiary mb-1">
-              Organizado por
+              {t("portal.organized_by")}
             </p>
             <h1 className="text-xl sm:text-2xl font-bold text-text">
-              {organizer.business_name || "Tu organizador de eventos"}
+              {organizer.business_name || t("portal.default_organizer")}
             </h1>
           </div>
         </header>
@@ -252,14 +256,15 @@ export const ClientPortalPage: React.FC = () => {
         {/* Hero: event type + countdown */}
         <section className="bg-card rounded-2xl border border-border shadow-sm p-6 sm:p-8 text-center">
           <p className="text-sm text-text-secondary mb-2">
-            {client.name ? `Hola ${client.name.split(" ")[0]},` : "Hola,"} aquí está el
-            detalle de tu evento:
+            {client.name 
+              ? t("portal.hero_greeting", { name: client.name.split(" ")[0] })
+              : t("portal.hero_greeting_no_name")}
           </p>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-text tracking-tight mb-3">
             {event.service_type}
           </h2>
           <p className="text-base sm:text-lg text-text-secondary capitalize">
-            {formatLongDate(event.event_date)}
+            {formatLongDate(event.event_date, i18n.language)}
           </p>
           <div
             className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold"
@@ -285,17 +290,17 @@ export const ClientPortalPage: React.FC = () => {
         {/* Details grid */}
         <section className="grid sm:grid-cols-2 gap-4">
           {(event.start_time || event.end_time) && (
-            <DetailCard icon={<Clock className="h-4 w-4" />} label="Horario">
+            <DetailCard icon={<Clock className="h-4 w-4" />} label={t("portal.details.schedule")}>
               {[event.start_time, event.end_time].filter(Boolean).join(" — ") || "—"}
             </DetailCard>
           )}
           {(event.location || event.city) && (
-            <DetailCard icon={<MapPin className="h-4 w-4" />} label="Ubicación">
+            <DetailCard icon={<MapPin className="h-4 w-4" />} label={t("portal.details.location")}>
               {[event.location, event.city].filter(Boolean).join(", ")}
             </DetailCard>
           )}
-          <DetailCard icon={<Users className="h-4 w-4" />} label="Invitados">
-            {event.num_people} personas
+          <DetailCard icon={<Users className="h-4 w-4" />} label={t("portal.details.guests")}>
+            {t("portal.details.guests_value", { count: event.num_people })}
           </DetailCard>
         </section>
 
@@ -303,24 +308,24 @@ export const ClientPortalPage: React.FC = () => {
         <section className="bg-card rounded-2xl border border-border shadow-sm p-6 sm:p-8">
           <div className="flex items-center gap-2 mb-4">
             <Wallet className="h-5 w-5 text-text-secondary" aria-hidden="true" />
-            <h3 className="text-lg font-semibold text-text">Estado de pagos</h3>
+            <h3 className="text-lg font-semibold text-text">{t("portal.payments.title")}</h3>
           </div>
 
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-4">
             <div>
               <p className="text-xs uppercase tracking-widest text-text-tertiary mb-1">
-                Pagado
+                {t("portal.payments.paid")}
               </p>
               <p className="text-2xl sm:text-3xl font-bold text-text">
-                {formatCurrency(payment.paid, payment.currency)}
+                {formatCurrency(payment.paid, payment.currency, i18n.language)}
               </p>
             </div>
             <div className="text-right">
               <p className="text-xs uppercase tracking-widest text-text-tertiary mb-1">
-                Total del evento
+                {t("portal.payments.total")}
               </p>
               <p className="text-base sm:text-lg text-text-secondary">
-                {formatCurrency(payment.total, payment.currency)}
+                {formatCurrency(payment.total, payment.currency, i18n.language)}
               </p>
             </div>
           </div>
@@ -331,7 +336,7 @@ export const ClientPortalPage: React.FC = () => {
             aria-valuenow={paidPct}
             aria-valuemin={0}
             aria-valuemax={100}
-            aria-label={`${paidPct}% pagado`}
+            aria-label={t("portal.payments.paid_percentage", { percent: paidPct })}
           >
             <div
               className="h-full rounded-full transition-all duration-500"
@@ -342,9 +347,9 @@ export const ClientPortalPage: React.FC = () => {
             />
           </div>
           <p className="mt-2 text-xs text-text-tertiary">
-            {paidPct}% pagado · Pendiente{" "}
+            {t("portal.payments.paid_percentage", { percent: paidPct })} · {t("portal.payments.pending_label")}{" "}
             <span className="font-semibold text-text-secondary">
-              {formatCurrency(payment.remaining, payment.currency)}
+              {formatCurrency(payment.remaining, payment.currency, i18n.language)}
             </span>
           </p>
 
@@ -354,15 +359,13 @@ export const ClientPortalPage: React.FC = () => {
               aria-hidden="true"
             />
             <p className="text-xs text-text-secondary leading-relaxed">
-              Los pagos se actualizan al momento en que el organizador los
-              registra. Cualquier duda, contactalos directamente.
+              {t("portal.payments.footer_note")}
             </p>
           </div>
         </section>
 
         <footer className="text-center text-xs text-text-tertiary pt-4">
-          Portal privado del cliente · powered by{" "}
-          <span className="font-semibold">Solennix</span>
+          {t("portal.footer_note")}
         </footer>
       </div>
     </div>

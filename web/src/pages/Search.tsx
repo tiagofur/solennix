@@ -33,13 +33,14 @@ export const SearchPage: React.FC = () => {
   const error = searchError ? t("search:error") : null;
 
   const totalResults = useMemo(() => {
+    const res = results ?? { clients: [], events: [], products: [], inventory: [] };
     return (
-      (safeResults.clients?.length || 0) +
-      (safeResults.events?.length || 0) +
-      (safeResults.products?.length || 0) +
-      (safeResults.inventory?.length || 0)
+      (res.clients?.length || 0) +
+      (res.events?.length || 0) +
+      (res.products?.length || 0) +
+      (res.inventory?.length || 0)
     );
-  }, [safeResults]);
+  }, [results]);
 
   if (!query) {
     return (

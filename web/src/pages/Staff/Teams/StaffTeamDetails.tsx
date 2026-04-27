@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Crown, Edit, Mail, Phone, Trash2, UserCog, Users } from "lucide-react";
+import { ArrowLeft, Users, UserCog, Edit, Trash2, Crown, Phone, Mail } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import {
   useDeleteStaffTeam,
   useStaffTeam,
@@ -8,19 +9,20 @@ import {
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 
 export const StaffTeamDetails: React.FC = () => {
+  const { t } = useTranslation(["staff"]);
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: team, isLoading } = useStaffTeam(id);
   const deleteMut = useDeleteStaffTeam();
   const [confirmOpen, setConfirmOpen] = useState(false);
 
-  if (isLoading) return <div className="text-text-secondary">Cargando…</div>;
+  if (isLoading) return <div className="text-text-secondary">{t("staff:teams.details.loading")}</div>;
   if (!team) {
     return (
       <div className="bg-card border border-border rounded-2xl p-6 text-text-secondary">
-        Equipo no encontrado.{" "}
+        {t("staff:teams.details.not_found")}{" "}
         <Link to="/staff/teams" className="text-primary hover:underline">
-          Volver al listado
+          {t("staff:teams.details.return_list")}
         </Link>
         .
       </div>
@@ -39,10 +41,10 @@ export const StaffTeamDetails: React.FC = () => {
     <div className="space-y-6">
       <ConfirmDialog
         open={confirmOpen}
-        title="Eliminar equipo"
-        description={`${team.name} se eliminará. Los colaboradores del equipo siguen en tu catálogo.`}
-        confirmText="Eliminar permanentemente"
-        cancelText="Cancelar"
+        title={t("staff:teams.details.delete_confirm.title")}
+        description={t("staff:teams.details.delete_confirm.description", { name: team.name })}
+        confirmText={t("staff:teams.details.delete_confirm.confirm")}
+        cancelText={t("staff:teams.details.delete_confirm.cancel")}
         onConfirm={onDelete}
         onCancel={() => setConfirmOpen(false)}
       />
@@ -51,7 +53,7 @@ export const StaffTeamDetails: React.FC = () => {
         to="/staff/teams"
         className="inline-flex items-center text-sm text-primary hover:underline"
       >
-        <ArrowLeft className="h-4 w-4 mr-1" aria-hidden="true" /> Volver a Equipos
+        <ArrowLeft className="h-4 w-4 mr-1" aria-hidden="true" /> {t("staff:teams.details.back")}
       </Link>
 
       <div className="bg-card border border-border rounded-2xl shadow-sm p-6">
@@ -75,21 +77,21 @@ export const StaffTeamDetails: React.FC = () => {
               to={`/staff/teams/${team.id}/edit`}
               className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium rounded-xl text-text bg-surface-alt hover:bg-card border border-border transition-colors"
             >
-              <Edit className="h-4 w-4 mr-2" aria-hidden="true" /> Editar
+              <Edit className="h-4 w-4 mr-2" aria-hidden="true" /> {t("staff:teams.details.actions.edit")}
             </Link>
             <button
               type="button"
               onClick={() => setConfirmOpen(true)}
               className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium rounded-xl text-danger bg-danger/10 hover:bg-danger/20 border border-danger/20 transition-colors"
             >
-              <Trash2 className="h-4 w-4 mr-2" aria-hidden="true" /> Eliminar
+              <Trash2 className="h-4 w-4 mr-2" aria-hidden="true" /> {t("staff:teams.details.actions.delete")}
             </button>
           </div>
         </div>
 
         {team.notes && (
           <div className="mt-6">
-            <dt className="text-xs font-semibold text-text-secondary uppercase tracking-wide">Notas</dt>
+            <dt className="text-xs font-semibold text-text-secondary uppercase tracking-wide">{t("staff:teams.details.fields.notes")}</dt>
             <dd className="mt-1 text-sm text-text whitespace-pre-wrap">{team.notes}</dd>
           </div>
         )}
@@ -98,13 +100,13 @@ export const StaffTeamDetails: React.FC = () => {
       <div className="bg-card border border-border rounded-2xl shadow-sm p-6">
         <div className="flex items-center gap-2 mb-4">
           <Users className="h-5 w-5 text-primary" aria-hidden="true" />
-          <h2 className="text-lg font-semibold text-text">Miembros</h2>
+          <h2 className="text-lg font-semibold text-text">{t("staff:teams.details.members.title")}</h2>
           <span className="ml-2 text-xs text-text-secondary">({members.length})</span>
         </div>
 
         {members.length === 0 ? (
           <p className="text-sm text-text-secondary">
-            Este equipo no tiene miembros todavía. Editalo para agregarlos.
+            {t("staff:teams.details.members.empty")}
           </p>
         ) : (
           <ul className="divide-y divide-border">
@@ -120,15 +122,15 @@ export const StaffTeamDetails: React.FC = () => {
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-medium text-text truncate">
-                        {m.staff_name ?? "Colaborador"}
+                        {m.staff_name ?? t("common:user")}
                       </span>
                       {m.is_lead && (
                         <span
                           className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-primary/15 text-primary"
-                          title="Lidera el equipo"
+                          title={t("staff:teams.details.members.is_lead")}
                         >
                           <Crown className="h-3 w-3" aria-hidden="true" />
-                          Lidera el equipo
+                          {t("staff:teams.details.members.is_lead")}
                         </span>
                       )}
                     </div>
@@ -153,7 +155,7 @@ export const StaffTeamDetails: React.FC = () => {
                   to={`/staff/${m.staff_id}`}
                   className="text-xs text-primary hover:underline shrink-0"
                 >
-                  Ver perfil
+                  {t("staff:teams.details.members.view_profile")}
                 </Link>
               </li>
             ))}

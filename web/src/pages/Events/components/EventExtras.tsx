@@ -71,7 +71,7 @@ export const EventExtras: React.FC<EventExtrasProps> = ({
             type="button"
             onClick={() => setPendingDeleteIndex(index)}
             className="absolute top-2 right-2 text-text-secondary hover:text-error transition-colors"
-            aria-label={`${t('common:action.remove')} extra ${index + 1}`}
+            aria-label={`${t('common:action.remove')} ${t('common:entities.extra')} ${index + 1}`}
           >
             <Trash2 className="h-4 w-4" aria-hidden="true" />
           </button>
@@ -87,7 +87,7 @@ export const EventExtras: React.FC<EventExtrasProps> = ({
               value={item.description}
               onChange={(e) => onExtraChange(index, 'description', e.target.value)}
               className="block w-full text-sm border-border rounded-xl shadow-xs transition-shadow focus:ring-2 focus:ring-primary/20 bg-card text-text p-2 border"
-              aria-label={`Description of extra ${index + 1}`}
+              aria-label={`${t('events:extras.description')} ${t('common:entities.extra')} ${index + 1}`}
             />
           </div>
 
@@ -132,7 +132,7 @@ export const EventExtras: React.FC<EventExtrasProps> = ({
                 value={item.cost}
                 onChange={(e) => onExtraChange(index, 'cost', Number(e.target.value))}
                 className="block w-full text-sm border-border rounded-xl shadow-xs transition-shadow focus:ring-2 focus:ring-primary/20 bg-card text-text p-2 border"
-                aria-label={`Cost of extra ${index + 1}`}
+                aria-label={`${t('events:extras.cost')} ${t('common:entities.extra')} ${index + 1}`}
               />
             </div>
             <div className="w-1/2">
@@ -148,7 +148,7 @@ export const EventExtras: React.FC<EventExtrasProps> = ({
                 className={`block w-full text-sm border-border rounded-xl shadow-xs transition-shadow focus:ring-2 focus:ring-primary/20 bg-card text-text p-2 border ${
                   item.exclude_utility ? 'bg-surface-alt' : ''
                 }`}
-                aria-label={`Charge price of extra ${index + 1}`}
+                aria-label={`${t('events:extras.price')} ${t('common:entities.extra')} ${index + 1}`}
               />
             </div>
           </div>

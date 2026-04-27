@@ -12,7 +12,7 @@ import clsx from "clsx";
 interface PaymentsProps {
   eventId: string;
   totalAmount: number;
-  userId: string;
+  userId?: string;
   eventStatus?: string;
   onStatusChange?: (newStatus: "quoted" | "confirmed" | "completed" | "cancelled") => void;
   eventData?: { deposit_percent?: number | null };
@@ -24,7 +24,7 @@ interface PaymentsProps {
 export const Payments: React.FC<PaymentsProps> = ({
   eventId,
   totalAmount,
-  userId,
+  userId: _userId,
   eventStatus,
   onStatusChange,
   eventData,

@@ -10,7 +10,8 @@
       "role": "Rol",
       "contact": "Contacto",
       "actions": "Acciones",
-      "summary": "{{count}} colaboradores, página {{page}} de {{totalPages}}.",
+      "summary_one": "{{count}} colaborador, página {{page}} de {{totalPages}}.",
+      "summary_other": "{{count}} colaboradores, página {{page}} de {{totalPages}}.",
       "view_detail": "Ver detalle",
       "edit": "Editar",
       "delete": "Eliminar"
@@ -96,6 +97,93 @@
       "save": "Guardar cambios",
       "create": "Crear colaborador",
       "cancel": "Cancelar"
+    }
+  },
+  "teams": {
+    "list": {
+      "title": "Equipos",
+      "description": "Agrupá cuadrillas de colaboradores para asignarlas a un evento en un solo paso.",
+      "new_team": "Crear equipo",
+      "back": "Volver a Personal",
+      "table": {
+        "name": "Nombre",
+        "role": "Rol",
+        "members": "Miembros",
+        "actions": "Acciones",
+        "summary_one": "{{count}} equipo",
+        "summary_other": "{{count}} equipos",
+        "view_detail": "Ver detalle",
+        "edit": "Editar",
+        "delete": "Eliminar"
+      },
+      "empty": {
+        "title": "Sin equipos todavía",
+        "description": "Agregá tu primera cuadrilla. Juntá fotógrafos, meseros o coordinadores y asignalos a un evento en un solo click.",
+        "action": "Crear equipo"
+      },
+      "delete_confirm": {
+        "title": "Eliminar equipo",
+        "description": "El equipo se eliminará. Los colaboradores del equipo siguen disponibles en tu catálogo.",
+        "confirm": "Eliminar permanentemente",
+        "cancel": "Cancelar"
+      }
+    },
+    "details": {
+      "back": "Volver a Equipos",
+      "loading": "Cargando…",
+      "not_found": "Equipo no encontrado.",
+      "return_list": "Volver al listado",
+      "actions": {
+        "edit": "Editar",
+        "delete": "Eliminar"
+      },
+      "fields": {
+        "notes": "Notas"
+      },
+      "members": {
+        "title": "Miembros",
+        "empty": "Este equipo no tiene miembros todavía. Editalo para agregarlos.",
+        "is_lead": "Lidera el equipo",
+        "view_profile": "Ver perfil"
+      },
+      "delete_confirm": {
+        "title": "Eliminar equipo",
+        "description": "{{name}} se eliminará. Los colaboradores del equipo siguen en tu catálogo.",
+        "confirm": "Eliminar permanentemente",
+        "cancel": "Cancelar"
+      }
+    },
+    "form": {
+      "title_new": "Crear equipo",
+      "title_edit": "Editar equipo",
+      "help_text": "Agrupá colaboradores en una cuadrilla para asignarla a un evento en un solo paso.",
+      "fields": {
+        "name": "Nombre",
+        "name_placeholder": "Cuadrilla principal · Equipo fotografía",
+        "role": "Rol del equipo",
+        "role_placeholder": "Fotografía · Meseros · Coordinación",
+        "notes": "Notas",
+        "notes_placeholder": "Tarifa habitual del equipo, indicaciones, lo que quieras recordar…",
+        "members_title": "Miembros",
+        "add_members": "Agregar colaboradores",
+        "search_placeholder": "Buscar por nombre o rol…",
+        "move_up": "Subir miembro",
+        "move_down": "Bajar miembro",
+        "remove": "Quitar del equipo",
+        "is_lead": "Lidera el equipo"
+      },
+      "loading": "Cargando equipo…",
+      "loading_staff": "Cargando colaboradores…",
+      "no_staff_match": "No hay colaboradores que coincidan.",
+      "messages": {
+        "created": "Equipo creado.",
+        "updated": "Equipo actualizado."
+      },
+      "actions": {
+        "save": "Guardar cambios",
+        "create": "Crear equipo",
+        "cancel": "Cancelar"
+      }
     }
   }
 }

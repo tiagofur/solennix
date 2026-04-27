@@ -38,7 +38,6 @@ interface EventStaffProps {
   onAddTeamMembers?: (rows: SelectedStaffAssignment[]) => void;
 }
 
-import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 export const EventStaff: React.FC<EventStaffProps> = ({

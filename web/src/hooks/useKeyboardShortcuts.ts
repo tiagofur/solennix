@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useState } from 'react';
+import { useEffect, useCallback, useMemo, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 interface Shortcut {
@@ -26,7 +26,7 @@ export function useKeyboardShortcuts() {
     pathname.startsWith(prefix),
   )?.[1];
 
-  const shortcuts: Shortcut[] = [
+  const shortcuts: Shortcut[] = useMemo(() => [
     // Global navigation
     { key: 'g d', label: 'G D', description: 'Ir al Dashboard', action: () => navigate('/dashboard') },
     { key: 'g e', label: 'G E', description: 'Ir a Eventos', action: () => navigate('/events') },
@@ -53,7 +53,7 @@ export function useKeyboardShortcuts() {
 
     // Help
     { key: '?', label: '?', description: 'Mostrar atajos de teclado', action: () => setHelpOpen((v) => !v) },
-  ];
+  ], [navigate, currentSection]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     // Skip if user is typing in an input, textarea, select, or contentEditable

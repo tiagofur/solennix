@@ -178,5 +178,13 @@
     "terms": "Términos de Uso",
     "privacy": "Política de Privacidad",
     "delete_account": "Eliminación de Datos"
+  },
+  "entities": {
+    "product": "Producto",
+    "extra": "Extra",
+    "client": "Cliente",
+    "event": "Evento",
+    "staff": "Personal",
+    "inventory": "Insumo"
   }
 }

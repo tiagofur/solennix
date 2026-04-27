@@ -45,14 +45,14 @@ export const StaffList: React.FC = () => {
   const filteredStaff = useMemo(() => {
     if (!isSearching) return [];
     const term = searchTerm.toLowerCase();
-    return allStaff.filter(
+    return (allStaffQuery.data ?? []).filter(
       (s) =>
         s.name.toLowerCase().includes(term) ||
         (s.role_label ?? "").toLowerCase().includes(term) ||
         (s.email ?? "").toLowerCase().includes(term) ||
         (s.phone ?? "").includes(searchTerm),
     );
-  }, [allStaff, searchTerm, isSearching]);
+  }, [allStaffQuery.data, searchTerm, isSearching]);
 
   const searchPage = Math.min(page, Math.max(1, Math.ceil(filteredStaff.length / ITEMS_PER_PAGE)));
   const searchPaginated = useMemo(

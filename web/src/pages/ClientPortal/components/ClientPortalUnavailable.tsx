@@ -1,5 +1,6 @@
 import React from "react";
 import { Link2Off, AlertCircle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   reason: "not-found" | "disabled";
@@ -12,12 +13,17 @@ interface Props {
  * than the Solennix team — the relationship here is with the organizer.
  */
 export const ClientPortalUnavailable: React.FC<Props> = ({ reason }) => {
+  const { t } = useTranslation("public");
+
   const heading =
-    reason === "not-found" ? "Enlace no válido" : "Enlace no disponible";
+    reason === "not-found" 
+      ? t("portal.unavailable.not_found_title") 
+      : t("portal.unavailable.disabled_title");
+
   const description =
     reason === "not-found"
-      ? "No encontramos información con este enlace. Revisá el link o pedí al organizador que te lo reenvíe."
-      : "El organizador del evento deshabilitó este enlace o ya expiró. Contactalos para que te compartan uno nuevo.";
+      ? t("portal.unavailable.not_found_desc")
+      : t("portal.unavailable.disabled_desc");
 
   return (
     <div className="min-h-screen bg-bg flex items-center justify-center p-4">
@@ -38,8 +44,7 @@ export const ClientPortalUnavailable: React.FC<Props> = ({ reason }) => {
         <div className="bg-surface-alt rounded-xl border border-border p-4 flex items-start gap-3">
           <AlertCircle className="h-5 w-5 text-text-tertiary shrink-0 mt-0.5" />
           <p className="text-xs text-text-secondary text-left">
-            Los enlaces del portal del cliente son privados por evento — el
-            organizador puede rotarlos en cualquier momento por seguridad.
+            {t("portal.unavailable.security_note")}
           </p>
         </div>
       </div>

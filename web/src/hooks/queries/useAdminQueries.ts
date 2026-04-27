@@ -3,6 +3,7 @@ import { adminService } from '@/services/adminService';
 import { queryKeys } from './queryKeys';
 import { useToast } from '@/hooks/useToast';
 import { logError, getErrorMessage } from '@/lib/errorHandler';
+export { useAdminAuditLogs } from './useActivityQueries';
 
 // ── Queries ──
 

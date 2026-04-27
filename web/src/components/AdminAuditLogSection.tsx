@@ -1,38 +1,25 @@
 import React, { useState } from "react";
+import { 
+  History, 
+  AlertTriangle, 
+  ChevronLeft, 
+  ChevronRight 
+} from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { useAdminAuditLogs } from "@/hooks/queries/useAdminQueries";
 import { format, parseISO } from "date-fns";
-import { es } from "date-fns/locale";
-import { AlertTriangle, ChevronLeft, ChevronRight, History } from "lucide-react";
-import { useAdminAuditLogs } from "@/hooks/queries/useActivityQueries";
+import { es, enUS } from "date-fns/locale";
 
-/**
- * Platform-wide audit log section for the Admin Dashboard.
- *
- * Consumes the backend's `/api/admin/audit-logs` endpoint (added during
- * the contract freeze; enforces admin role via middleware) and renders
- * a paginated, read-only table of every audit event on the platform.
- *
- * This is a new section appended at the bottom of `AdminDashboard.tsx`
- * using the same card style as the rest of the admin sections. Not a
- * redesign — just surfaces the existing backend endpoint.
- */
+const PAGE_SIZE = 10;
 
-const PAGE_SIZE = 20;
-
-function formatTimestamp(iso: string): string {
-  try {
-    return format(parseISO(iso), "d MMM yyyy, HH:mm", { locale: es });
-  } catch {
-    return iso;
-  }
-}
-
-function formatUserId(userId: string): string {
-  // Show only the first 8 chars of the UUID — the full id is available
-  // via hover (title attr) and this keeps the column narrow.
-  return userId.slice(0, 8);
+function formatUserId(id: string): string {
+  if (id.length <= 12) return id;
+  return `${id.slice(0, 6)}...${id.slice(-4)}`;
 }
 
 export const AdminAuditLogSection: React.FC = () => {
+  const { t, i18n } = useTranslation(["admin"]);
+  const dateLocale = i18n.language === "es" ? es : enUS;
   const [page, setPage] = useState(1);
   const { data, isLoading, isError } = useAdminAuditLogs(page, PAGE_SIZE);
 
@@ -43,6 +30,14 @@ export const AdminAuditLogSection: React.FC = () => {
   const goPrev = () => setPage((p) => Math.max(1, p - 1));
   const goNext = () => setPage((p) => Math.min(totalPages, p + 1));
 
+  function formatTimestamp(iso: string): string {
+    try {
+      return format(parseISO(iso), "d MMM yyyy, HH:mm", { locale: dateLocale });
+    } catch {
+      return iso;
+    }
+  }
+
   return (
     <div className="bg-card shadow-sm border border-border rounded-2xl overflow-hidden">
       <div className="flex items-center justify-between gap-4 px-6 py-4 border-b border-border">
@@ -51,15 +46,15 @@ export const AdminAuditLogSection: React.FC = () => {
             <History className="h-4.5 w-4.5 text-primary" aria-hidden="true" />
           </span>
           <div>
-            <h2 className="text-base font-semibold text-text">Audit log de la plataforma</h2>
+            <h2 className="text-base font-semibold text-text">{t("admin:audit.title")}</h2>
             <p className="text-xs text-text-secondary mt-0.5">
-              Registro completo de acciones en todas las cuentas.
+              {t("admin:audit.description")}
             </p>
           </div>
         </div>
         {total > 0 && (
           <span className="shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full bg-primary/10 text-primary">
-            {total.toLocaleString("es-MX")} evento{total === 1 ? "" : "s"}
+            {total.toLocaleString(i18n.language === "es" ? "es-MX" : "en-US")} {total === 1 ? t("admin:audit.events_count") : t("admin:audit.events_count_plural")}
           </span>
         )}
       </div>
@@ -67,35 +62,35 @@ export const AdminAuditLogSection: React.FC = () => {
       <div className="overflow-x-auto">
         {isLoading ? (
           <div className="p-8 text-center text-sm text-text-secondary" role="status" aria-live="polite">
-            Cargando audit log...
+            {t("admin:audit.loading")}
           </div>
         ) : isError ? (
           <div className="p-6 flex items-center gap-3 text-sm text-text-secondary">
             <AlertTriangle className="h-4 w-4 text-error shrink-0" aria-hidden="true" />
-            <span>Error al cargar el audit log de la plataforma.</span>
+            <span>{t("admin:audit.error")}</span>
           </div>
         ) : entries.length === 0 ? (
           <div className="p-8 text-center text-sm text-text-secondary">
-            No hay eventos registrados en el audit log.
+            {t("admin:audit.empty")}
           </div>
         ) : (
-          <table className="min-w-full divide-y divide-border" aria-label="Audit log de la plataforma">
+          <table className="min-w-full divide-y divide-border" aria-label={t("admin:audit.title")}>
             <thead className="bg-surface-alt">
               <tr>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wide">
-                  Fecha
+                  {t("admin:audit.table.date")}
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wide">
-                  Usuario
+                  {t("admin:audit.table.user")}
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wide">
-                  Acción
+                  {t("admin:audit.table.action")}
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wide">
-                  Recurso
+                  {t("admin:audit.table.resource")}
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wide">
-                  Detalle
+                  {t("admin:audit.table.detail")}
                 </th>
               </tr>
             </thead>
@@ -132,7 +127,7 @@ export const AdminAuditLogSection: React.FC = () => {
       {!isLoading && !isError && entries.length > 0 && totalPages > 1 && (
         <div className="flex items-center justify-between gap-3 px-6 py-3 border-t border-border">
           <span className="text-xs text-text-secondary">
-            Página {page} de {totalPages}
+            {t("admin:audit.pagination.page_info", { current: page, total: totalPages })}
           </span>
           <div className="flex items-center gap-2">
             <button
@@ -140,19 +135,19 @@ export const AdminAuditLogSection: React.FC = () => {
               onClick={goPrev}
               disabled={page <= 1}
               className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg border border-border text-text-secondary bg-card hover:bg-surface-alt disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              aria-label="Página anterior"
+              aria-label={t("admin:audit.pagination.previous")}
             >
               <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
-              Anterior
+              {t("admin:audit.pagination.previous")}
             </button>
             <button
               type="button"
               onClick={goNext}
               disabled={page >= totalPages}
               className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg border border-border text-text-secondary bg-card hover:bg-surface-alt disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              aria-label="Página siguiente"
+              aria-label={t("admin:audit.pagination.next")}
             >
-              Siguiente
+              {t("admin:audit.pagination.next")}
               <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
             </button>
           </div>

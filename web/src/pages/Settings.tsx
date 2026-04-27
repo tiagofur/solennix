@@ -3,21 +3,30 @@ import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import {
   User,
   CreditCard,
   Building,
   FileText,
   Image as ImageIcon,
-  ExternalLink,
-  Zap,
   Info,
   Shield,
   Bell,
   Trash2,
+  Zap,
+  CheckCircle2,
+  AlertCircle,
+  ExternalLink,
+  ChevronRight,
+  ShieldCheck,
+  History,
+  LogOut,
+  MapPin,
+  Lock,
+  Loader2,
 } from "lucide-react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import clsx from "clsx";
 import { logError } from "@/lib/errorHandler";
 import { api, getAssetUrl } from "@/lib/api";
@@ -55,7 +64,8 @@ const formatSubPrice = (sub: { amount_cents?: number | null; currency?: string |
 export const Settings: React.FC = () => {
   const { t, i18n } = useTranslation(["settings", "common"]);
   const { user: profile, updateProfile } = useAuth();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const {
     eventsThisMonth,
     eventLimit,
@@ -475,6 +485,30 @@ export const Settings: React.FC = () => {
                   </button>
                 </div>
 
+                <div className="flex items-center justify-between sm:justify-end gap-4">
+                  <div>
+                    <p className="font-bold text-text">{t("settings:profile.language")}</p>
+                    <p className="text-xs text-text-secondary">{t("settings:profile.language_desc")}</p>
+                  </div>
+                  <select
+                    value={i18n.language.split("-")[0]}
+                    onChange={async (e) => {
+                      const lang = e.target.value;
+                      await i18n.changeLanguage(lang);
+                      try {
+                        await updateProfile({ preferred_language: lang });
+                        addToast(t("settings:messages.language_updated"), "success");
+                      } catch (err) {
+                        logError("Error persisting language", err);
+                      }
+                    }}
+                    className="bg-surface-alt text-text font-bold text-sm px-4 py-2 rounded-xl border border-border focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                  >
+                    <option value="es">Español</option>
+                    <option value="en">English</option>
+                  </select>
+                </div>
+
                 <div className="pt-6 border-t border-border">
                   <Link
                     to="/eliminar-cuenta"
@@ -783,9 +817,6 @@ export const Settings: React.FC = () => {
             </div>
           )}
 
-            </div>
-          )}
-
           {activeTab === "subscription" && (
             <div className="bg-card shadow-sm rounded-2xl p-6 sm:p-8 space-y-8 border border-border">
               <div>
@@ -807,27 +838,26 @@ export const Settings: React.FC = () => {
                     <h4 className="font-bold text-text">
                       {t("settings:subscription.current_plan", {
                         plan:
-                          planLabels[subStatus?.plan_id || "basic"] ||
-                          (subStatus?.plan_id ?? t("settings:plans.basic")),
+                          planLabels[subStatus?.plan || "basic"] ||
+                          (subStatus?.plan ?? t("settings:plans.basic")),
                       })}
                     </h4>
                     <span
                       className={clsx(
                         "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold mt-1",
-                        subStatusLabels[subStatus?.status || "active"]?.color ||
+                        subStatusLabels[subStatus?.subscription?.status || "active"]?.color ||
                           "bg-surface-alt text-text-secondary"
                       )}
                     >
-                      {subStatusLabels[subStatus?.status || "active"]?.text ||
-                        subStatus?.status}
+                      {subStatusLabels[subStatus?.subscription?.status || "active"]?.text ||
+                        subStatus?.subscription?.status || t("settings:subscription.active")}
                     </span>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3">
                   <span className="text-xs font-bold text-text-secondary uppercase tracking-widest">
-                    {subStatus?.source_badge ||
-                      fallbackProviderLabels[subStatus?.provider || "stripe"].badge}
+                    {fallbackProviderLabels[subStatus?.subscription?.provider || "stripe"].badge}
                   </span>
                   <button
                     type="button"
@@ -854,26 +884,26 @@ export const Settings: React.FC = () => {
                     <Info className="h-5 w-5 shrink-0 mt-0.5" />
                     <div className="text-sm">
                       <p className="font-medium text-text">
-                        {subStatus?.cancel_instructions ||
-                          fallbackProviderLabels[subStatus?.provider || "stripe"]
+                        {subStatus?.subscription?.cancel_instructions ||
+                          fallbackProviderLabels[subStatus?.subscription?.provider || "stripe"]
                             .cancelInstructions}
                       </p>
-                      {subStatus?.status !== "canceled" && (
+                      {subStatus?.subscription?.status !== "canceled" && (
                         <div className="mt-2 space-y-1">
-                          {subStatus?.current_period_end && (
-                            <p className="text-text-secondary">
-                              {t("settings:subscription.next_payment", {
-                                date: formatSubDate(subStatus.current_period_end, i18n),
-                              })}
-                            </p>
-                          )}
-                          {formatSubPrice(subStatus, t) && (
-                            <p className="font-bold text-text">
-                              {t("settings:subscription.renewal_price", {
-                                price: formatSubPrice(subStatus, t),
-                              })}
-                            </p>
-                          )}
+                      {subStatus?.subscription?.current_period_end && (
+                        <p className="text-text-secondary">
+                          {t("settings:subscription.next_payment", {
+                            date: formatSubDate(subStatus.subscription.current_period_end, i18n),
+                          })}
+                        </p>
+                      )}
+                      {formatSubPrice(subStatus?.subscription, t) && (
+                        <p className="font-bold text-text">
+                          {t("settings:subscription.renewal_price", {
+                            price: formatSubPrice(subStatus.subscription, t),
+                          })}
+                        </p>
+                      )}
                         </div>
                       )}
                     </div>

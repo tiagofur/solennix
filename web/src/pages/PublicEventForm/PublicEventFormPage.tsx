@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -13,13 +13,12 @@ import {
   Mail,
   Send,
   Loader2,
-  Minus,
-  Plus,
   Package,
 } from "lucide-react";
 import { PublicFormExpired } from "./components/PublicFormExpired";
 import { PublicFormSuccess } from "./components/PublicFormSuccess";
 import { PublicProductCard } from "./components/PublicProductCard";
+import { useTranslation } from "react-i18next";
 
 interface PublicProduct {
   id: string;
@@ -46,19 +45,19 @@ interface SelectedProduct {
   quantity: number;
 }
 
-const schema = z.object({
-  client_name: z.string().min(2, "El nombre es requerido"),
-  client_phone: z.string().min(7, "El teléfono es requerido"),
-  client_email: z.string().email("Email inválido").optional().or(z.literal("")),
-  event_date: z.string().min(1, "La fecha es requerida"),
-  service_type: z.string().min(1, "El tipo de evento es requerido"),
-  num_people: z.string().min(1, "Mínimo 1 persona"),
+const createSchema = (t: any) => z.object({
+  client_name: z.string().min(2, t("event_form.errors.name_required")),
+  client_phone: z.string().min(7, t("event_form.errors.phone_required")),
+  client_email: z.string().email(t("event_form.errors.email_invalid")).optional().or(z.literal("")),
+  event_date: z.string().min(1, t("event_form.errors.date_required")),
+  service_type: z.string().min(1, t("event_form.errors.service_type_required")),
+  num_people: z.string().min(1, t("event_form.errors.num_people_min")),
   location: z.string().optional(),
   city: z.string().optional(),
   notes: z.string().optional(),
 });
 
-type FormValues = z.infer<typeof schema>;
+type FormValues = z.infer<ReturnType<typeof createSchema>>;
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
 
@@ -73,6 +72,9 @@ export const PublicEventFormPage: React.FC = () => {
   const [selectedProducts, setSelectedProducts] = useState<
     Map<string, number>
   >(new Map());
+
+  const { t } = useTranslation("public");
+  const schema = useMemo(() => createSchema(t), [t]);
 
   const {
     register,
@@ -179,13 +181,13 @@ export const PublicEventFormPage: React.FC = () => {
       if (!res.ok) {
         const data = await res.json().catch(() => null);
         setSubmitError(
-          data?.error || "Hubo un error al enviar. Intenta de nuevo."
+          data?.error || t("event_form.errors.submit_failed")
         );
         return;
       }
       setSuccess(true);
     } catch {
-      setSubmitError("Error de conexión. Verifica tu internet e intenta de nuevo.");
+      setSubmitError(t("event_form.errors.connection_error"));
     } finally {
       setSubmitting(false);
     }
@@ -247,10 +249,10 @@ export const PublicEventFormPage: React.FC = () => {
           )}
           <div>
             <h1 className="text-lg font-bold text-text">
-              {formData.organizer.business_name || "Formulario de Evento"}
+              {formData.organizer.business_name || t("event_form.title")}
             </h1>
             <p className="text-xs text-text-secondary">
-              Cuéntanos sobre tu evento
+              {t("event_form.subtitle")}
             </p>
           </div>
         </div>
@@ -274,19 +276,19 @@ export const PublicEventFormPage: React.FC = () => {
             style={{ color: brandColor }}
           >
             <User className="h-5 w-5" />
-            Tus datos
+            {t("event_form.client_info_title")}
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-text mb-1.5">
-                Nombre *
+                {t("event_form.client_name_label")}
               </label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-tertiary" />
                 <input
                   {...register("client_name")}
-                  placeholder="Tu nombre completo"
+                  placeholder={t("event_form.client_name_placeholder")}
                   className={`w-full pl-10 pr-4 py-3 rounded-xl border text-sm bg-card text-text placeholder-text-tertiary focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
                     errors.client_name
                       ? "border-error/30"
@@ -308,14 +310,14 @@ export const PublicEventFormPage: React.FC = () => {
 
             <div>
               <label className="block text-sm font-medium text-text mb-1.5">
-                Teléfono *
+                {t("event_form.client_phone_label")}
               </label>
               <div className="relative">
                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-tertiary" />
                 <input
                   {...register("client_phone")}
                   type="tel"
-                  placeholder="Tu número de teléfono"
+                  placeholder={t("event_form.client_phone_placeholder")}
                   className={`w-full pl-10 pr-4 py-3 rounded-xl border text-sm bg-card text-text placeholder-text-tertiary focus:outline-none focus:ring-2 focus:border-transparent transition-colors ${
                     errors.client_phone
                       ? "border-error/30"
@@ -332,14 +334,14 @@ export const PublicEventFormPage: React.FC = () => {
 
             <div className="sm:col-span-2">
               <label className="block text-sm font-medium text-text mb-1.5">
-                Email
+                {t("event_form.client_email_label")}
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-tertiary" />
                 <input
                   {...register("client_email")}
                   type="email"
-                  placeholder="tu@email.com (opcional)"
+                  placeholder={t("event_form.client_email_placeholder")}
                   className="w-full pl-10 pr-4 py-3 rounded-xl border border-border text-sm bg-card text-text placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-transparent transition-colors"
                 />
               </div>
@@ -359,13 +361,13 @@ export const PublicEventFormPage: React.FC = () => {
             style={{ color: brandColor }}
           >
             <Calendar className="h-5 w-5" />
-            Detalles del evento
+            {t("event_form.event_details_title")}
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-text mb-1.5">
-                Fecha del evento *
+                {t("event_form.event_date_label")}
               </label>
               <div className="relative">
                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-tertiary" />
@@ -386,13 +388,13 @@ export const PublicEventFormPage: React.FC = () => {
 
             <div>
               <label className="block text-sm font-medium text-text mb-1.5">
-                Tipo de evento *
+                {t("event_form.service_type_label")}
               </label>
               <div className="relative">
                 <FileText className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-tertiary" />
                 <input
                   {...register("service_type")}
-                  placeholder="Boda, XV Años, Corporativo..."
+                  placeholder={t("event_form.service_type_placeholder")}
                   className={`w-full pl-10 pr-4 py-3 rounded-xl border text-sm bg-card text-text placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-transparent transition-colors ${
                     errors.service_type ? "border-error/30" : "border-border"
                   }`}
@@ -407,7 +409,7 @@ export const PublicEventFormPage: React.FC = () => {
 
             <div>
               <label className="block text-sm font-medium text-text mb-1.5">
-                Número de personas *
+                {t("event_form.num_people_label")}
               </label>
               <div className="relative">
                 <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-tertiary" />
@@ -415,7 +417,7 @@ export const PublicEventFormPage: React.FC = () => {
                   {...register("num_people")}
                   type="number"
                   min={1}
-                  placeholder="150"
+                  placeholder={t("event_form.num_people_placeholder")}
                   className={`w-full pl-10 pr-4 py-3 rounded-xl border text-sm bg-card text-text placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-transparent transition-colors ${
                     errors.num_people ? "border-error/30" : "border-border"
                   }`}
@@ -430,13 +432,13 @@ export const PublicEventFormPage: React.FC = () => {
 
             <div>
               <label className="block text-sm font-medium text-text mb-1.5">
-                Ubicación
+                {t("event_form.location_label")}
               </label>
               <div className="relative">
                 <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-tertiary" />
                 <input
                   {...register("location")}
-                  placeholder="Salón, jardín, dirección..."
+                  placeholder={t("event_form.location_placeholder")}
                   className="w-full pl-10 pr-4 py-3 rounded-xl border border-border text-sm bg-card text-text placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-transparent transition-colors"
                 />
               </div>
@@ -444,13 +446,13 @@ export const PublicEventFormPage: React.FC = () => {
 
             <div>
               <label className="block text-sm font-medium text-text mb-1.5">
-                Ciudad
+                {t("event_form.city_label")}
               </label>
               <div className="relative">
                 <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-tertiary" />
                 <input
                   {...register("city")}
-                  placeholder="Ciudad"
+                  placeholder={t("event_form.city_placeholder")}
                   className="w-full pl-10 pr-4 py-3 rounded-xl border border-border text-sm bg-card text-text placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-transparent transition-colors"
                 />
               </div>
@@ -458,12 +460,12 @@ export const PublicEventFormPage: React.FC = () => {
 
             <div className="sm:col-span-2">
               <label className="block text-sm font-medium text-text mb-1.5">
-                Notas o comentarios
+                {t("event_form.notes_label")}
               </label>
               <textarea
                 {...register("notes")}
                 rows={3}
-                placeholder="Cuéntanos más sobre lo que tienes en mente..."
+                placeholder={t("event_form.notes_placeholder")}
                 className="w-full px-4 py-3 rounded-xl border border-border text-sm bg-card text-text placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-transparent transition-colors resize-none"
               />
             </div>
@@ -478,10 +480,10 @@ export const PublicEventFormPage: React.FC = () => {
               style={{ color: brandColor }}
             >
               <Package className="h-5 w-5" />
-              Selecciona lo que necesitas
+              {t("event_form.products_title")}
             </h2>
             <p className="text-sm text-text-secondary">
-              Selecciona los productos que te interesan e indica la cantidad.
+              {t("event_form.products_description")}
             </p>
 
             {Object.entries(categories).map(([category, products]) => (
@@ -519,9 +521,7 @@ export const PublicEventFormPage: React.FC = () => {
         {selectedProducts.size > 0 && (
           <div className="bg-surface-alt rounded-xl border border-border p-4">
             <p className="text-sm font-medium text-text">
-              {selectedProducts.size} producto
-              {selectedProducts.size !== 1 ? "s" : ""} seleccionado
-              {selectedProducts.size !== 1 ? "s" : ""}
+              {t(selectedProducts.size === 1 ? "event_form.product_selected" : "event_form.product_selected_plural", { count: selectedProducts.size })}
             </p>
           </div>
         )}
@@ -539,18 +539,18 @@ export const PublicEventFormPage: React.FC = () => {
           {submitting ? (
             <>
               <Loader2 className="h-5 w-5 animate-spin" />
-              Enviando...
+              {t("event_form.submitting_button")}
             </>
           ) : (
             <>
               <Send className="h-5 w-5" />
-              Enviar solicitud
+              {t("event_form.submit_button")}
             </>
           )}
         </button>
 
         <p className="text-center text-xs text-text-tertiary">
-          Tu información será enviada de forma segura al organizador.
+          {t("event_form.footer_note")}
         </p>
       </form>
     </div>

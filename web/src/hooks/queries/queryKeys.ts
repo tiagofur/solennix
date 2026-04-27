@@ -49,6 +49,7 @@ export const queryKeys = {
     team: (id: string) => ['staff', 'teams', id] as const,
   },
   payments: {
+    all: ['payments'] as const,
     byEvent: (eventId: string) => ['payments', 'event', eventId] as const,
     byDateRange: (start: string, end: string) => ['payments', 'range', start, end] as const,
     byEventIds: (eventIds: string[]) => ['payments', 'byEventIds', ...[...eventIds].sort()] as const,

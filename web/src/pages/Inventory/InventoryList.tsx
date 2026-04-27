@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { InventoryItem } from "../../types/entities";
 import {
   Plus,
@@ -13,7 +14,6 @@ import {
   ShoppingBasket,
   Fuel,
   Eye,
-  PlusCircle,
   ArrowUp,
   ArrowDown,
 } from "lucide-react";
@@ -67,6 +67,7 @@ const InlineStockCell: React.FC<{
   isLowStock: boolean;
   onSave: (newStock: number) => void;
 }> = ({ item, isLowStock, onSave }) => {
+  const { t } = useTranslation(["inventory"]);
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(String(item.current_stock));
 
@@ -115,7 +116,6 @@ const InlineStockCell: React.FC<{
   );
 };
 
-import { useTranslation } from "react-i18next";
 
 export const InventoryList: React.FC = () => {
   const { t, i18n } = useTranslation(["inventory", "common"]);

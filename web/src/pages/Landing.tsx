@@ -22,7 +22,6 @@ import {
   ArrowUp,
   Clock,
   Smartphone,
-  Play,
   Fingerprint,
   LayoutGrid,
   RefreshCw,

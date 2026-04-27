@@ -1,8 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { eventService } from "@/services/eventService";
 import { productService } from "@/services/productService";
-import { paymentService } from "@/services/paymentService";
 import { eventPaymentService } from "@/services/eventPaymentService";
 import { api } from "@/lib/api";
 import {
@@ -37,7 +35,7 @@ import {
 import { useToast } from "@/hooks/useToast";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { OptimizedImage } from "@/components/OptimizedImage";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import {
   generateBudgetPDF,
   generateContractPDF,
@@ -73,7 +71,7 @@ import { queryKeys } from "@/hooks/queries/queryKeys";
 import clsx from "clsx";
 import { ContractTemplateError, renderContractTemplate } from "@/lib/contractTemplate";
 import { renderFormattedReact } from "@/lib/inlineFormatting";
-import type { Event, Client, User, EventExtra, EventEquipment, EventSupply, EventStaff as EventStaffType, Payment, ProductIngredient } from "@/types/entities";
+import type { Event, Client, User, EventExtra, EventEquipment, EventSupply, EventStaff as EventStaffType, ProductIngredient } from "@/types/entities";
 
 // API response types — backend returns `client` (singular)
 type EventWithClient = Event & { client?: Client | null };
@@ -535,7 +533,6 @@ export const EventSummary: React.FC = () => {
                   type="button"
                   onClick={async () => {
                     try {
-                      const productIds = products.map((p: EventProductWithDetails) => p.product_id).filter(Boolean);
                       const productQuantities = new Map<string, number>();
                       products.forEach((p: EventProductWithDetails) => productQuantities.set(p.product_id, p.quantity || 0));
                       // Use cached ingredients from React Query instead of refetching

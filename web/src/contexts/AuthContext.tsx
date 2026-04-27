@@ -1,52 +1,12 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { logError } from '@/lib/errorHandler';
+import { User } from '@/types/auth';
+import { AuthContext } from './AuthContextInstance';
+import { useAuth } from '@/hooks/useAuth';
+import i18n from '@/i18n/config';
 
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  business_name?: string;
-  logo_url?: string;
-  brand_color?: string;
-  show_business_name_in_pdf?: boolean;
-  plan: string;
-  role?: string;
-  stripe_customer_id?: string;
-  default_deposit_percent?: number;
-  default_cancellation_days?: number;
-  default_refund_percent?: number;
-  contract_template?: string | null;
-  // Notification preferences
-  email_payment_receipt?: boolean;
-  email_event_reminder?: boolean;
-  email_subscription_updates?: boolean;
-  email_weekly_summary?: boolean;
-  email_marketing?: boolean;
-  push_enabled?: boolean;
-  push_event_reminder?: boolean;
-  push_payment_received?: boolean;
-}
-
-interface AuthContextType {
-  user: User | null;
-  profile: User | null;
-  loading: boolean;
-  checkAuth: () => Promise<void>;
-  signOut: () => void;
-  updateProfile: (data: Partial<User>) => Promise<void>;
-}
-
-const AuthContext = createContext<AuthContextType>({
-  user: null,
-  profile: null,
-  loading: true,
-  checkAuth: async () => {},
-  signOut: () => {},
-  updateProfile: async () => {},
-});
-
-export const useAuth = () => useContext(AuthContext);
+export { AuthContext, useAuth };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -76,6 +36,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     window.addEventListener('auth:logout', handleLogout);
     return () => window.removeEventListener('auth:logout', handleLogout);
   }, []);
+
+  useEffect(() => {
+    if (user?.preferred_language && i18n.language !== user.preferred_language) {
+      i18n.changeLanguage(user.preferred_language);
+    }
+  }, [user?.preferred_language]);
 
   const signOut = async () => {
     try {

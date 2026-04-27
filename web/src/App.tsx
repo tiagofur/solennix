@@ -80,7 +80,7 @@ function App() {
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <ErrorBoundary onError={(error, info) => logError('React ErrorBoundary', error)}>
+          <ErrorBoundary onError={(error) => logError('React ErrorBoundary', error)}>
           <Suspense fallback={<PageFallback />}>
             <Routes>
               <Route path="/" element={<Landing />} />

@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@tests/customRender';
 import { AdminRoute } from './AdminRoute';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 
-vi.mock('@/contexts/AuthContext', () => ({
+vi.mock('@/hooks/useAuth', () => ({
   useAuth: vi.fn(),
 }));
 
