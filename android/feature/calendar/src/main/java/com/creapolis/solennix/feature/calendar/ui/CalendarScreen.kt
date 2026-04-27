@@ -536,7 +536,15 @@ fun CalendarGrid(
                         parseFlexibleDate(it.eventDate) == date
                     }
                     val hasEvents = eventsOnDate.isNotEmpty()
-                    val overflow = eventsOnDate.size - 3
+
+                    /// CORREGIDO BUG OVERFLOW
+                    /// Antes: overflow = eventsOnDate.size - 3 (restaba siempre 3, incluso si <3 eventos únicos)
+                    /// Ahora: cuenta eventos ÚNICOS por status que SE RENDERIZARÁN como dots, restará esos:
+                    ///   - 5 eventos × "confirmed" → 1 dot azul → overflow = 4  
+                    ///   - 2 confirmed + 3 quoted = 2 dots (azul+gris) → overflow = 0  
+                    /// Fórmula: totalEvents - min(unique_statuses_count, 3)
+                    val uniqueDotsCount = eventsOnDate.groupBy { it.status }.values.coerceAtMost(3).size
+                    val overflow = maxOf(0, eventsOnDate.size - uniqueDotsCount)
 
                     val bgColor = when {
                         isSelected -> SolennixTheme.colors.primary

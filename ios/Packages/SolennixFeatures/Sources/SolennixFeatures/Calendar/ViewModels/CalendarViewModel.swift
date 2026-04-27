@@ -179,12 +179,16 @@ public final class CalendarViewModel {
     }
 
     /// Up to 3 status-colored dots for a given day, representing events on
-    /// that date. Honors `statusFilter` when set.
+    /// that date. Honors `statusFilter` when set. Each dot represents ONE UNIQUE STATUS
+    /// (not one event), so if there are 5 confirmed events today → still shows only 1 blue dot.
     public func eventDotsForDay(_ date: Date) -> [EventStatus] {
         let dateStr = Self.apiDateFormatter.string(from: date)
         let dayEvents = events
             .filter { $0.eventDate == dateStr }
             .filter { statusFilter == nil || $0.status == statusFilter }
+        
+        /// BEFORE (BUGGY): counted first 3 events regardless of status duplication
+        /// AFTER: collects unique statuses → render up to 3 dots (each dot = 1 unique status)
         var seen: Set<EventStatus> = []
         var dots: [EventStatus] = []
         for event in dayEvents {
@@ -193,6 +197,39 @@ public final class CalendarViewModel {
                 dots.append(event.status)
                 if dots.count >= 3 { break }
             }
+        }
+        return dots
+    }
+
+    /// Total number of events on a given day — used to render the `+N más`
+    /// overflow badge when there are more than 3 dots worth of data.
+    public func eventCountForDay(_ date: Date) -> Int {
+        let dateStr = Self.apiDateFormatter.string(from: date)
+        return events
+            .filter { $0.eventDate == dateStr }
+            .filter { statusFilter == nil || $0.status == statusFilter }
+            .count
+    }
+
+    /// CORREGIDO BUG OVERFLOW — Returns how many events are NOT rendered as dots.
+    /// Formula: totalEvents - min(uniqueStatusesCount, 3)
+    /// Examples:
+    ///   • 5 eventos × "confirmado" → 1 dot azul → overflow = 4
+    ///   • 2 confirmados + 3 cotizados = 2 dots (azul + gris) → overflow = 0
+    ///   • 1 confirmado + 1 cancelado = 2 dots → overflow = 0
+    public func eventOverflowForDay(_ date: Date) -> Int {
+        let dateStr = Self.apiDateFormatter.string(from: date)
+        guard !events.isEmpty else { return 0 }
+        
+        let dayEvents = events.filter { $0.eventDate == dateStr }
+            .filter { statusFilter == nil || $0.status == statusFilter }
+        let uniqueStatusCount = Set(dayEvents.map { $0.status }).count
+        
+        /// BEFORE (WRONG): return max(0, eventCountForDay(date) - 3)
+        /// — restaba 3 fijos incluso si solo se renderizaron 1-2 dots (<3 eventos únicos)
+        
+        return max(0, dayEvents.count - Swift.min(uniqueStatusCount, 3))
+    }
         }
         return dots
     }

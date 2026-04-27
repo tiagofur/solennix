@@ -252,7 +252,7 @@ public struct CalendarView: View {
                 CalendarGridView(
                     days: viewModel.daysInMonth,
                     eventDotsForDay: viewModel.eventDotsForDay,
-                    eventCountForDay: viewModel.eventCountForDay,
+                    eventOverflowForDay: viewModel.eventOverflowForDay,
                     isDateBlocked: viewModel.isDateBlocked,
                     selectedDate: viewModel.selectedDate,
                     onSelectDate: viewModel.selectDate,
@@ -316,7 +316,7 @@ public struct CalendarView: View {
                 CalendarGridView(
                     days: viewModel.daysInMonth,
                     eventDotsForDay: viewModel.eventDotsForDay,
-                    eventCountForDay: viewModel.eventCountForDay,
+                    eventOverflowForDay: viewModel.eventOverflowForDay,
                     isDateBlocked: viewModel.isDateBlocked,
                     selectedDate: viewModel.selectedDate,
                     onSelectDate: viewModel.selectDate,

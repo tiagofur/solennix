@@ -96,6 +96,10 @@ function makeDayButton(
 }
 
 export const CalendarView: React.FC = () => {
+  /// REFACTOR FASE 7C — Calendario simplificado (vista grilla + gestión disponibilidad)
+  /// Vista lista eliminada → funcionalidad migrada a sección "Eventos" con filtros
+  /// Toolbar centralizado ahora solo en topbar global; FAB global para crear evento/Quick Quote
+  
   const { t, i18n } = useTranslation("calendar");
   const dfnsLocale = useMemo(() => pickDateFnsLocale(i18n.language), [i18n.language]);
   const navigate = useNavigate();
@@ -129,48 +133,7 @@ export const CalendarView: React.FC = () => {
     () => ((eventsData as EventWithClient[] | undefined) ?? []),
     [eventsData],
   );
-  const unavailableDates = useMemo(
-    () => (unavailableData ?? []),
-    [unavailableData],
-  );
-
-  const loading = eventsLoading || unavailableLoading;
-  const isFetching = eventsFetching || unavailableFetching;
-
-  // Filtered event list respects the active status chip. Filtering
-  // happens client-side from the cached React Query data — no refetch,
-  // matching iOS & Android behavior.
-  const filteredEvents = useMemo(
-    () => (statusFilter === null ? events : events.filter((e) => e.status === statusFilter)),
-    [events, statusFilter],
-  );
-
-  // Surface query errors via toast (once per transition).
-  useEffect(() => {
-    if (eventsError) logError("CalendarView:events", eventsError);
-    if (unavailableError) logError("CalendarView:unavailable", unavailableError);
-  }, [eventsError, unavailableError]);
-
-  const hasError = !!eventsError || !!unavailableError;
-
-  const handleRetry = useCallback(() => {
-    queryClient.invalidateQueries({
-      queryKey: queryKeys.events.dateRange(rangeStart, rangeEnd),
-    });
-    queryClient.invalidateQueries({
-      queryKey: queryKeys.unavailableDates.byRange(rangeStart, rangeEnd),
-    });
-  }, [queryClient, rangeStart, rangeEnd]);
-
-  // Invalidate both month windows whenever a mutation changes availability,
-  // so the UI stays in sync without a manual refresh.
-  const refreshUnavailableRange = useCallback(() => {
-    queryClient.invalidateQueries({
-      queryKey: queryKeys.unavailableDates.byRange(rangeStart, rangeEnd),
-    });
-  }, [queryClient, rangeStart, rangeEnd]);
-
-  const handleMonthChange = (month: Date) => {
+  /// REFACTOR FASE 7C — Eliminado filteredEvents (filtrado por estado se maneja en sección Eventos)
     setCurrentMonth(startOfMonth(startOfDay(month)));
     setSelectedDate(undefined);
   };
@@ -261,7 +224,15 @@ export const CalendarView: React.FC = () => {
     (date: Date): { dots: string[]; overflow: number } => {
       const info = dayInfoByDate.get(format(date, "yyyy-MM-dd"));
       if (!info) return { dots: [], overflow: 0 };
-      return { dots: info.dots, overflow: Math.max(0, info.total - 3) };
+
+      /// CORREGIDO BUG OVERFLOW — Antes restaba siempre 3 (incorrecto cuando <3 eventos únicos)
+      /// Fórmula corregida: totalEvents - min(unique_statuses_count, 3)
+      /// Ejemplos:
+      ///   • 5 eventos × "confirmed" → 1 dot azul → overflow = 4
+      ///   • 2 confirmed + 3 quoted = 2 dots (azul+gris) → overflow = 0
+      const uniqueStatusCount = new Set(info.dots).size;
+      const renderedDotsCount = Math.min(uniqueStatusCount, 3);
+      return { dots: info.dots, overflow: Math.max(0, info.total - renderedDotsCount) };
     },
     [dayInfoByDate],
   );
@@ -276,31 +247,14 @@ export const CalendarView: React.FC = () => {
     [handleContextMenu, getDayInfo, overflowLabel],
   );
 
-  useEffect(() => {
-    if (!showCreateMenu) return;
-    const handler = (e: MouseEvent) => {
-      if (createMenuRef.current && !createMenuRef.current.contains(e.target as Node)) {
-        setShowCreateMenu(false);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [showCreateMenu]);
+  // No listener necesario — dropdown de crear evento eliminado en refactor FASE 7C
 
   const createMenuDate = selectedDate
     ? format(selectedDate, "yyyy-MM-dd")
     : format(new Date(), "yyyy-MM-dd");
 
-  const filterOptions: { key: StatusFilter; label: string }[] = [
-    { key: null, label: t("filter.all") },
-    { key: "quoted", label: t("filter.quoted") },
-    { key: "confirmed", label: t("filter.confirmed") },
-    { key: "completed", label: t("filter.completed") },
-    { key: "cancelled", label: t("filter.cancelled") },
-  ];
-
-  const statusLabel = (status: string): string => {
-    switch (status) {
+  /// REFACTOR FASE 7C — REMOVIDO dropdown crear evento/Quick Quote (ya están en FAB global)
+  /// Estado showCreateMenu y ref createMenuRef ya no necesarios
       case "confirmed": return t("status.confirmed");
       case "completed": return t("status.completed");
       case "cancelled": return t("status.cancelled");
@@ -312,114 +266,35 @@ export const CalendarView: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h1 className="text-2xl font-bold text-text">{t("title")}</h1>
-        <div className="flex items-center gap-3 flex-wrap">
-          {/* Create event / quick quote dropdown — mirrors iOS Menu(+) */}
-          <div ref={createMenuRef} className="relative">
-            <button
-              type="button"
-              onClick={() => setShowCreateMenu((v) => !v)}
-              className="inline-flex items-center justify-center px-4 py-2 text-sm font-bold rounded-xl text-white premium-gradient shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all hover:scale-[1.02]"
-              aria-haspopup="menu"
-              aria-expanded={showCreateMenu}
-              aria-label={t("new_event")}
-            >
-              <CalendarPlus className="h-4 w-4 mr-2" aria-hidden="true" />
-              {t("create_new")}
-              <ChevronDown
-                className={`h-3.5 w-3.5 ml-1.5 transition-transform duration-200 ${showCreateMenu ? "rotate-180" : ""}`}
-                aria-hidden="true"
-              />
-            </button>
+         <div className="flex items-center gap-3 flex-wrap">
+           {/* Botón gestionar bloqueos */}
+           <button
+             type="button"
+             onClick={() => {
+               setContextMenuDate(undefined);
+               setIsManagingBlocks(true);
+             }}
+             className="inline-flex items-center justify-center px-4 py-2 border border-border text-sm font-medium rounded-xl text-text bg-surface hover:bg-surface-alt shadow-sm transition-colors"
+             aria-label={t("manage_blocks")}
+           >
+             <Lock className="h-4 w-4 mr-2" aria-hidden="true" />
+             {t("manage_blocks")}
+           </button>
 
-            {showCreateMenu && (
-              <div
-                role="menu"
-                className="absolute right-0 mt-2 w-52 bg-card border border-border rounded-2xl shadow-xl z-20 overflow-hidden fade-in"
-              >
-                <Link
-                  to={`/events/new?date=${createMenuDate}`}
-                  role="menuitem"
-                  onClick={() => setShowCreateMenu(false)}
-                  className="flex items-center gap-3 px-4 py-3 text-sm text-text hover:bg-surface-alt transition-colors"
-                >
-                  <CalendarPlus className="h-4 w-4 text-primary shrink-0" aria-hidden="true" />
-                  <span>
-                    <span className="font-medium block">{t("new_event")}</span>
-                    <span className="text-xs text-text-secondary">
-                      {selectedDate
-                        ? format(selectedDate, "d MMMM", { locale: dfnsLocale })
-                        : t("select_date")}
-                    </span>
-                  </span>
-                </Link>
-                <div className="border-t border-border" />
-                <Link
-                  to="/cotizacion-rapida"
-                  role="menuitem"
-                  onClick={() => setShowCreateMenu(false)}
-                  className="flex items-center gap-3 px-4 py-3 text-sm text-text hover:bg-surface-alt transition-colors"
-                >
-                  <FileSearch className="h-4 w-4 text-primary shrink-0" aria-hidden="true" />
-                  <span>
-                    <span className="font-medium block">{t("quick_quote")}</span>
-                  </span>
-                </Link>
-              </div>
-            )}
-          </div>
+           {/* Botón Hoy */}
+           <button
+             type="button"
+             onClick={goToToday}
+             className="inline-flex items-center justify-center px-4 py-2 text-sm font-bold rounded-xl text-white premium-gradient shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all hover:scale-[1.02]"
+             aria-label={t("today")}
+           >
+             <CalendarDays className="h-4 w-4 mr-2" aria-hidden="true" />
+             {t("today")}
+           </button>
+         </div>
+       </div>
 
-          <button
-            type="button"
-            onClick={() => {
-              setContextMenuDate(undefined);
-              setIsManagingBlocks(true);
-            }}
-            className="inline-flex items-center justify-center px-4 py-2 border border-border text-sm font-medium rounded-xl text-text bg-surface hover:bg-surface-alt shadow-sm transition-colors"
-            aria-label={t("manage_blocks")}
-          >
-            <Lock className="h-4 w-4 mr-2" aria-hidden="true" />
-            {t("manage_blocks")}
-          </button>
-          <button
-            type="button"
-            onClick={goToToday}
-            className="inline-flex items-center justify-center px-4 py-2 text-sm font-bold rounded-xl text-white premium-gradient shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all hover:scale-[1.02]"
-            aria-label={t("today")}
-          >
-            <CalendarDays className="h-4 w-4 mr-2" aria-hidden="true" />
-            {t("today")}
-          </button>
-        </div>
-      </div>
-
-      {/* Status filter pills — mirror Android's M3 FilterChip row and iOS's
-          toolbar Menu. Best-of-class web pattern: pill buttons with an
-          active background, wrapping on narrow viewports. */}
-      <div
-        className="flex flex-wrap gap-2"
-        role="tablist"
-        aria-label={t("filter.all")}
-      >
-        {filterOptions.map((opt) => {
-          const active = statusFilter === opt.key;
-          return (
-            <button
-              key={opt.key ?? "all"}
-              type="button"
-              role="tab"
-              aria-selected={active}
-              onClick={() => setStatusFilter(opt.key)}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-colors ${
-                active
-                  ? "bg-primary text-white border-primary"
-                  : "bg-card text-text-secondary border-border hover:bg-surface-alt"
-              }`}
-            >
-              {opt.label}
-            </button>
-          );
-        })}
-      </div>
+       {/* REFACTOR FASE 7C — Eliminado filtros de estado (pertenecen a sección Eventos) */
 
       {/* Inline error banner with retry — React Query already retried on its
           own, so this is the user-visible recovery affordance for a sticky

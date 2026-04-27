@@ -40,7 +40,9 @@ public struct CalendarGridView: View {
     public init(
         days: [DateDay],
         eventDotsForDay: @escaping (Date) -> [EventStatus],
-        eventCountForDay: @escaping (Date) -> Int = { _ in 0 },
+        // BEFORE: eventCountForDay (total count, used wrongly for overflow calculation as `-3`)
+        // AFTER: eventOverflowForDay (pre-calculated by ViewModel: total - min(unique_statuses, 3))
+        eventOverflowForDay: @escaping (Date) -> Int = { _ in 0 },
         isDateBlocked: @escaping (Date) -> Bool = { _ in false },
         selectedDate: Date?,
         onSelectDate: @escaping (Date) -> Void,
@@ -48,7 +50,7 @@ public struct CalendarGridView: View {
     ) {
         self.days = days
         self.eventDotsForDay = eventDotsForDay
-        self.eventCountForDay = eventCountForDay
+        self.eventOverflowForDay = eventOverflowForDay
         self.isDateBlocked = isDateBlocked
         self.selectedDate = selectedDate
         self.onSelectDate = onSelectDate
@@ -76,9 +78,7 @@ public struct CalendarGridView: View {
                     DayCellView(
                         day: day,
                         dots: day.isCurrentMonth ? eventDotsForDay(day.date) : [],
-                        // Overflow count = events beyond the 3 rendered
-                        // dots. Capped at a positive number by DayCellView.
-                        overflow: day.isCurrentMonth ? max(0, eventCountForDay(day.date) - 3) : 0,
+                        overflow: day.isCurrentMonth ? max(0, eventOverflowForDay(day.date)) : 0,
                         isBlocked: day.isCurrentMonth ? isDateBlocked(day.date) : false
                     )
                     .onTapGesture {
