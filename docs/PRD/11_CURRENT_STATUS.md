@@ -141,7 +141,7 @@ status: active
 
 | Plataforma                | Estado           | Notas                                                                                                                                                                                                                                                                            |
 | ------------------------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Backend (Go)              | Funcional ✅ + **MVP Contract Freeze cerrado 2026-04-10** | API completa, 45 migraciones, auth multi-proveedor, Stripe, RevenueCat, push notifications (FCM+APNs), paginacion server-side, dashboard analytics (KPIs server-side), FTS, audit logging, CSRF, refresh token rotation, **OpenAPI 1.0 cubriendo 100% de rutas del router y gateado en CI con @redocly/cli lint**, **event handlers a ≥85% coverage** (E1.B2), coverage handlers 78.6%, **Personal completo (Phase 1+2+Olas 1-3)** |
+| Backend (Go)              | Funcional ✅ + **MVP Contract Freeze cerrado 2026-04-10** | API completa, 47 migraciones, auth multi-proveedor, Stripe, RevenueCat, push notifications (FCM+APNs), paginacion server-side, dashboard analytics (KPIs server-side), FTS, audit logging, CSRF, refresh token rotation, **OpenAPI parcial — 5 grupos de rutas sin documentar (formularios, portal, staff/teams)**, **event handlers a ≥85% coverage** (E1.B2), coverage handlers 78.6%, **Personal completo (Phase 1+2+Olas 1-3)** |
 | Web (React)               | Funcional ✅ + **100% alineada con el contrato del backend 2026-04-10** | Todas las paginas principales, panel admin, cotizacion rapida. **`openapi-typescript` regenera los tipos desde `backend/docs/openapi.yaml` en cada `check`/`build`**; CI verifica que el archivo commiteado está sincronizado con el spec. Tests: 1128 unit + 2 e2e (Playwright skipea los 26 que requieren backend automáticamente). Ver E2.C1 Web en [[SUPER_PLAN/16_BACKEND_CONTRACT_READINESS]]. **Dashboard KPIs consume backend endpoints — zero client-side aggregation.** i18n foundation (i18next + ES/EN). |
 | iOS (SwiftUI)             | En desarrollo 🔄 · **v1.1.0** | Features principales + widgets (4 tipos) + Live Activity + 7 generadores PDF + **Dashboard KPIs server-side** + **Personal completo** + **Portal Cliente** + **i18n foundation** |
 | Android (Jetpack Compose) | En desarrollo 🔄 · **v1.1.2 (versionCode 5)** + **CI job activo** | Features principales, arquitectura modular multi-feature, 8 generadores PDF. **CI Android activo (gradle test + assembleDebug)**. **Dashboard KPIs server-side** + **Personal completo** + **Portal Cliente** + **i18n foundation** + **Google Play compliance**. |
@@ -151,7 +151,7 @@ status: active
 ## 2. Backend — Implementado
 
 > [!abstract] Resumen
-> API REST completa en Go con autenticacion multi-proveedor, CRUD de todas las entidades, suscripciones bidireccionales (Stripe + RevenueCat), panel admin y 29 migraciones. Ver [[07_TECHNICAL_ARCHITECTURE_BACKEND]] para detalles de arquitectura.
+> API REST completa en Go con autenticacion multi-proveedor, CRUD de todas las entidades, suscripciones bidireccionales (Stripe + RevenueCat), panel admin y 47 migraciones. Ver [[07_TECHNICAL_ARCHITECTURE_BACKEND]] para detalles de arquitectura.
 
 ### Autenticacion y Usuarios
 
@@ -1109,7 +1109,7 @@ Primera pantalla de paridad post-Dashboard:
 | Lenguaje      | Go                                          | 1.24.7                   |                                                                    |
 | Router        | chi                                         | v5                       |                                                                    |
 | Base de datos | PostgreSQL                                  | 15+                      | pgx/v5 driver                                                      |
-| Migraciones   | Custom (embed.FS)                           | 29 migraciones           | Auto-apply on startup                                              |
+| Migraciones   | Custom (embed.FS)                           | 47 migraciones           | Auto-apply on startup                                              |
 | Pagos         | Stripe                                      | API actual               | Checkout Sessions + Webhooks                                       |
 | Suscripciones | RevenueCat SDK (iOS/Android) + Stripe (Web) | Webhooks bidireccionales | Cross-platform: compra en cualquier plataforma reconocida en todas |
 

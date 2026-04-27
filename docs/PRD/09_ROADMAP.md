@@ -231,7 +231,7 @@ Items pendientes: staff seats, portal cliente shape-based gate, payment submissi
 - ✅ CRUD: eventos, clientes, productos, inventario
 - ✅ Event items: products, extras, equipment, supplies
 - ✅ Middleware stack completo
-- ✅ 29 migraciones aplicadas
+- ✅ 47 migraciones aplicadas
 - ✅ File uploads + Search global
 
 ### Fase 2: Monetización ✅

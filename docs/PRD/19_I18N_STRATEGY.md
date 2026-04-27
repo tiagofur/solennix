@@ -8,7 +8,7 @@
 | Locale | Rol | Estado |
 | --- | --- | --- |
 | `es` | Source (Rioplatense / neutral LATAM) | Completo |
-| `en` | Secundario | Completo en Calendario, pendiente en el resto de pantallas |
+| `en` | Secundario | Completo en Web y Calendario. (Faltan namespaces como `search`) |
 
 Locales regionales (`es-MX`, `es-AR`, `en-US`, `en-GB`) colapsan al locale base de 2 letras. Los montos MXN siguen formateándose con `es-MX` independiente del idioma de UI (convención contable).
 
@@ -54,6 +54,7 @@ Locales regionales (`es-MX`, `es-AR`, `en-US`, `en-GB`) colapsan al locale base 
 - Locales: `web/src/i18n/locales/{es,en}/<namespace>.json`.
 - Consumo: `const { t, i18n } = useTranslation('calendar'); <h1>{t('title')}</h1>`.
 - Fechas via `date-fns`: helper `pickDateFnsLocale(i18n.language)` elige entre `es` / `enUS` según el idioma vigente.
+- **Persistencia**: El idioma se cambia en `Settings.tsx`, se guarda en la base de datos (`user.preferred_language`) y `AuthContext` sincroniza automáticamente la UI (`i18n.changeLanguage(user.preferred_language)`) al iniciar sesión.
 - Tests: [tests/setup.ts](web/tests/setup.ts) importa `../src/i18n/config` y pinea `i18n.changeLanguage('es')` para que las assertions sean deterministas (evita que el `navigator.language` del CI lleve los tests a EN).
 
 ## Qué NO localizamos
@@ -65,8 +66,8 @@ Locales regionales (`es-MX`, `es-AR`, `en-US`, `en-GB`) colapsan al locale base 
 
 ## Próximos slices
 
-1. **Extraer Dashboard** siguiendo este mismo patrón (7 namespaces estimados).
-2. **Agregar selector de idioma** en Settings (iOS: `@AppStorage("preferredLocale")`; Android: `LocaleManager.setApplicationLocales`; Web: `localStorage.setItem('i18nextLng', ...)`).
+1. **Completar catálogos EN**: Traducir los namespaces que faltan (ej: `search.json`).
+2. **Selector de idioma en Mobile**: Agregar el selector de idioma en Settings de iOS (`@AppStorage("preferredLocale")`) y Android (`LocaleManager.setApplicationLocales`), que sincronicen con el backend igual que la web.
 3. **Backend i18n** (opcional, lower priority): `Accept-Language` header routing + tabla de traducciones server-side para mensajes que se muestran al usuario crudos (validaciones de formularios).
 
 ## Verificación rápida

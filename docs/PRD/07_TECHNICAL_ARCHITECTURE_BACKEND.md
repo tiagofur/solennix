@@ -120,7 +120,7 @@ backend/
 │   │   ├── database_test.go           # Tests de conexion
 │   │   ├── migrate.go                 # Sistema de migraciones con go:embed
 │   │   ├── migrate_test.go            # Tests de migraciones
-│   │   └── migrations/                # Archivos SQL de migracion (029 migraciones)
+│   │   └── migrations/                # Archivos SQL de migracion (047 migraciones, 001-046 + doble 020_)
 │   │       ├── 001_create_users.up.sql
 │   │       ├── 001_create_users.down.sql
 │   │       ├── ...
