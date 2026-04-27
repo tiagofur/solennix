@@ -2,7 +2,7 @@
 
 #backend #roadmap #mejoras
 
-> [!success] 🆕 Actualizado 2026-04-26 — 45 migraciones · Dashboard KPIs server-side · Personal completo (Phase 1+2+Olas 1-3) · Portal Cliente
+> [!success] 🆕 Actualizado 2026-04-27 — 47 migraciones · Dashboard KPIs server-side · Personal completo (Phase 1+2+Olas 1-3) · Portal Cliente
 > Ver [[../00_DASHBOARD|Dashboard]] para el panorama completo.
 >
 > **Hitos desde 2026-04-16:**
@@ -51,7 +51,7 @@
 | Portal Cliente | ✅ 4 endpoints | ✅ | ✅ | ✅ | — |
 | API versioning | ✅ v1 + legacy | — | — | — | — |
 | Audit logging | ✅ Middleware | — | — | — | — |
-| Background jobs | ⚠️ 2 jobs (push+email) | — | — | — | **P2** |
+| Background jobs | ✅ 6 goroutines | — | — | — | — |
 
 ---
 

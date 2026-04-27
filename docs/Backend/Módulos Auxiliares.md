@@ -24,7 +24,7 @@ Documentación consolidada de cuatro módulos auxiliares del backend de Solennix
 > | Calendario | `UnavailableDateHandler` | Gestión de fechas no disponibles |
 > | Búsqueda Global | `SearchHandler` | Búsqueda unificada entre entidades |
 > | Uploads | `UploadHandler` | Subida y servicio de imágenes |
-> | Dispositivos | `DeviceHandler` | Registro de push tokens |
+> | Dispositivos | `DeviceHandler` | Registro de push tokens + envío real FCM/APNs |
 
 ---
 
@@ -97,7 +97,7 @@ UnavailableDate {
 ### Comportamiento Clave
 
 - **Resultados agrupados**: La respuesta devuelve los resultados separados por tipo de entidad, no como una lista plana.
-- **Estrategia actual — `ILIKE`**: Usa `ILIKE '%query%'` de PostgreSQL para matching case-insensitive. Funciona pero es un **full table scan** — no usa índices estándar.
+- **Estrategia actual — `ILIKE` + `pg_trgm`**: Cada categoría corre en una **goroutine paralela**. Dentro de cada repo, la query usa `ILIKE '%query%'` para matching case-insensitive combinado con `pg_trgm similarity()` para tolerancia de typos. Se aplica un **límite duro de 6 resultados por categoría** antes de retornar.
 - **Filtrado por `user_id`**: Cada búsqueda se restringe al usuario autenticado.
 
 > [!example] Ejemplo de Response
@@ -111,8 +111,8 @@ UnavailableDate {
 > }
 > ```
 
-> [!bug] Limitación de Performance
-> El uso de `ILIKE '%termino%'` con wildcard inicial impide el uso de índices B-tree. Para volúmenes grandes de datos, esto degrada significativamente. Ver [[Performance]] para el plan de mejora.
+> [!info] Implementación Paralela
+> `search_handler.go` lanza 4 goroutines simultáneas (clients, products, inventory, events) y recolecta via channels. El límite de 6 por categoría se aplica en cada `Search()` del repositorio. La extensión `pg_trgm` debe estar activa (`CREATE EXTENSION IF NOT EXISTS pg_trgm`).
 
 > [!roadmap] Mejora Planeada — Full-Text Search
 > Migrar a **PostgreSQL Full-Text Search** con índices `GIN`:
@@ -220,21 +220,14 @@ DeviceToken {
 - **Un token por dispositivo**: Si se registra un token que ya existe para el usuario, se actualiza en lugar de duplicar.
 - **Unregister elimina**: Al desregistrar, el token se borra de la base de datos.
 
-> [!danger] Estado de Implementación — Incompleto
-> Los endpoints de registro funcionan correctamente y los tokens **se almacenan** en la base de datos. Sin embargo:
+> [!success] Estado de Implementación — Completo
+> Los endpoints de registro funcionan correctamente y los tokens **se almacenan** en la base de datos. Además:
 >
-> - **NO se envían notificaciones push** — no existe integración con APNs ni FCM todavía
-> - **NO hay sistema de cola** — no hay mecanismo para procesar envíos asíncronos
-> - **NO hay templates** — no hay definición de tipos de notificación ni formatos
->
-> Este módulo es la **base** para el sistema de notificaciones, pero el envío real está pendiente. Ver [[Roadmap Backend]] para el timeline.
-
-> [!roadmap] Plan de Implementación de Notificaciones
-> 1. Integrar SDK de FCM (Android/Web) y APNs (iOS)
-> 2. Crear servicio de cola con workers asíncronos
-> 3. Definir templates de notificación (nuevo evento, recordatorio, pago recibido, etc.)
-> 4. Panel de preferencias de notificación por usuario
-> 5. Ver [[Integraciones]] para detalles de los servicios externos
+> - **FCM activo** — `services/push_service.go` envía a Android/Web vía `firebase-admin-go`; batch de hasta 500 tokens por envío con limpieza automática de tokens inválidos.
+> - **APNs activo** — envío a iOS vía `sideshow/apns2` con token-based auth.
+> - **`notification_service.go`** — templates de notificación definidos (evento próximo 24h/1h, pago pendiente, cotización sin confirmar) con dedupe via `notification_log`.
+> - **Background job** — `ProcessPendingReminders` corre cada 15 min para despachar recordatorios encolados.
+> - Las credenciales se inyectan vía `FCM_CREDENTIALS_JSON`, `APNS_KEY_PATH`, `APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_BUNDLE_ID`. Si no están configuradas, el servicio se deshabilita gracefully sin romper el servidor.
 
 ---
 
@@ -248,14 +241,15 @@ DeviceToken {
 │Calendar │ Search   │ Uploads  │ Devices         │
 │ Handler │ Handler  │ Handler  │ Handler         │
 ├─────────┼──────────┼──────────┼─────────────────┤
-│unavail. │ clients  │ disk     │ device_tokens   │
-│ _dates  │ products │ storage  │ table           │
-│ table   │ inventory│          │                 │
+│unavail. │ clients  │ Storage  │ device_tokens   │
+│ _dates  │ products │ Provider │ table           │
+│ table   │ inventory│(local/S3)│                 │
 │         │ events   │          │                 │
 └─────────┴──────────┴──────────┴─────────────────┘
          │          │          │          │
          ▼          ▼          ▼          ▼
-      PostgreSQL PostgreSQL  Local FS  PostgreSQL
+    PostgreSQL PostgreSQL  Local/S3  PostgreSQL
+                          + FCM/APNs
 ```
 
 ## Cross-References

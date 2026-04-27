@@ -3,7 +3,7 @@
 #backend #database #infraestructura
 
 > [!abstract] Resumen
-> **PostgreSQL 15** con **pgx/v5** connection pool. Sistema de migraciones custom con `go:embed` — sin herramientas externas. 29 migraciones que evolucionaron el schema desde usuarios hasta OAuth, push tokens y nullable passwords. Sin ORM: queries SQL directas con control total.
+> **PostgreSQL 15** con **pgx/v5** connection pool. Sistema de migraciones custom con `go:embed` — sin herramientas externas. 47 migraciones que evolucionaron el schema desde usuarios hasta OAuth, push tokens, event-forms, portal cliente y staff teams. Sin ORM: queries SQL directas con control total.
 
 ---
 
@@ -129,7 +129,7 @@ graph TD
 
 ---
 
-## Las 29 Migraciones
+## Las 47 Migraciones
 
 ```mermaid
 timeline

@@ -3,7 +3,7 @@
 #backend #arquitectura
 
 > [!abstract] Resumen
-> API REST en Go con arquitectura en capas inspirada en Clean Architecture. Sin ORM — queries SQL directas con pgx/v5. Inyección de dependencias via constructores. Autenticación JWT con cookies httpOnly.
+> API REST en Go con arquitectura en capas inspirada en Clean Architecture. Sin ORM — queries SQL directas con pgx/v5. Inyección de dependencias via constructores. Autenticación JWT con cookies httpOnly, storage desacoplado (local/S3) y 6 jobs de mantenimiento dentro del mismo proceso.
 
 ---
 
@@ -50,11 +50,14 @@ graph TB
         AuthH["AuthHandler<br/>Register, Login, OAuth, Password"]
         CRUDH["CRUDHandler<br/>Clients, Events, Products, Inventory, Payments"]
         SubH["SubscriptionHandler<br/>Stripe, RevenueCat, Webhooks"]
-        SearchH["SearchHandler<br/>Búsqueda global"]
-        UploadH["UploadHandler<br/>Imágenes + thumbnails"]
+        SearchH["SearchHandler<br/>Búsqueda global paralela"]
+        UploadH["UploadHandler<br/>Imágenes + StorageProvider"]
         AdminH["AdminHandler<br/>Stats, Users, Upgrades"]
         UnavailH["UnavailableDateHandler<br/>Fechas bloqueadas"]
         DeviceH["DeviceHandler<br/>Push notification tokens"]
+        StaffH["StaffHandler + StaffTeamHandler<br/>Personal, disponibilidad, equipos"]
+        PublicH["EventFormHandler + EventPublicLinkHandler<br/>Formularios y portal público"]
+        LiveH["LiveActivityHandler<br/>Tokens Dynamic Island"]
     end
 
     subgraph Services["Services (Lógica de Negocio)"]
@@ -79,7 +82,7 @@ graph TB
 
     subgraph DB["PostgreSQL"]
         Pool["pgxpool.Pool<br/>MaxConns: 20<br/>MinConns: 2"]
-        Migrations["29 migraciones<br/>go:embed, auto-apply"]
+        Migrations["47 migraciones .up.sql<br/>go:embed, auto-apply"]
     end
 
     Main --> Routes
@@ -142,7 +145,7 @@ backend/
 │   │   ├── database_test.go
 │   │   ├── migrate.go                 # go:embed migrations, auto-apply
 │   │   ├── migrate_test.go
-│   │   └── migrations/                # 29 archivos .up.sql
+│   │   └── migrations/                # 47 archivos .up.sql (001-046, con split 020a/020b)
 │   ├── handlers/                      # HTTP layer
 │   │   ├── auth_handler.go            # Auth completo (9 endpoints)
 │   │   ├── crud_handler.go            # CRUD 5 dominios (40+ endpoints)
@@ -150,8 +153,15 @@ backend/
 │   │   ├── search_handler.go          # Búsqueda global
 │   │   ├── upload_handler.go          # Imágenes + thumbnails
 │   │   ├── admin_handler.go           # Panel admin
+│   │   ├── audit_handler.go           # Activity feed + admin audit log
+│   │   ├── dashboard_handler.go       # KPIs y agregados server-side
 │   │   ├── unavailable_date_handler.go # Fechas bloqueadas
 │   │   ├── device_handler.go          # Device tokens
+│   │   ├── live_activity_handler.go   # Tokens para Live Activities iOS
+│   │   ├── event_form_handler.go      # Formularios públicos por token
+│   │   ├── event_public_link_handler.go # Portal cliente público
+│   │   ├── staff_handler.go           # Catálogo de personal + disponibilidad
+│   │   ├── staff_team_handler.go      # Equipos reutilizables
 │   │   ├── interfaces.go              # Interfaces de repos (DI)
 │   │   ├── validation.go              # Validaciones compartidas
 │   │   ├── helpers.go                 # JSON encode/decode, writeError
@@ -179,8 +189,17 @@ backend/
 │   │   ├── payment_repo.go
 │   │   ├── subscription_repo.go
 │   │   ├── admin_repo.go
+│   │   ├── audit_repo.go
+│   │   ├── dashboard_repo.go
 │   │   ├── unavailable_date_repo.go
 │   │   ├── device_repo.go
+│   │   ├── live_activity_token_repo.go
+│   │   ├── event_form_link_repo.go
+│   │   ├── event_public_link_repo.go
+│   │   ├── staff_repo.go
+│   │   ├── staff_team_repo.go
+│   │   ├── refresh_token_repo.go
+│   │   ├── revoked_token_repo.go
 │   │   └── *_test.go                  # Integration tests con DB real
 │   ├── router/
 │   │   ├── router.go                  # Definición completa de rutas
@@ -189,8 +208,16 @@ backend/
 │   └── services/                      # Business logic
 │       ├── auth_service.go            # JWT (3 tipos), bcrypt
 │       ├── email_service.go           # Resend + templates HTML
+│       ├── notification_service.go    # Push + emails periódicos
+│       ├── push_service.go            # FCM + APNs
+│       ├── live_activity_service.go   # APNs liveactivity updates
 │       ├── revenuecat_service.go      # Stripe↔RC sync
 │       └── *_test.go
+├── internal/storage/
+│   ├── storage.go                     # Interface de storage
+│   ├── local.go                       # Filesystem local + thumbnails
+│   ├── s3.go                          # S3 / MinIO / Spaces
+│   └── local_test.go
 ├── go.mod
 ├── Dockerfile                         # Multi-stage: golang:alpine → alpine
 └── docker-compose.yml                 # PostgreSQL 15 local

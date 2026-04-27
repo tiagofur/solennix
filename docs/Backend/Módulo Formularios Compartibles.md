@@ -161,6 +161,9 @@ sequenceDiagram
 
 ## Seguridad
 
+> [!warning] H4 — Inconsistencia de Códigos HTTP (Hallazgo de Auditoría 2026-04-27)
+> `GetFormData` devuelve **404** para token no encontrado, expirado o ya usado. `SubmitForm` devuelve **410 Gone** para los mismos estados. La semántica correcta sería unificar en **410** (el recurso existió pero ya no es válido) o al menos devolver el mismo código en ambos handlers. Registrado como deuda técnica.
+
 | Riesgo | Mitigacion |
 |--------|------------|
 | Enumeracion de tokens | `crypto/rand` 256 bits, no UUID predecible |

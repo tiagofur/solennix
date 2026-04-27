@@ -163,11 +163,22 @@ docker compose down
 | `REVENUECAT_WEBHOOK_SECRET` | No | — | Secret para webhooks de RevenueCat |
 | `REVENUECAT_API_KEY` | No | — | API key server-to-server de RevenueCat |
 
-### Administración y Storage
+### Storage
 
 | Variable | Requerida | Default | Descripción |
 | -------- | --------- | ------- | ----------- |
-| `UPLOAD_DIR` | No | `./uploads` | Directorio para archivos subidos |
+| `STORAGE_PROVIDER` | No | `local` | `local` o `s3` |
+| `UPLOAD_DIR` | No | `./uploads` | Directorio local para archivos subidos (solo `local`) |
+| `S3_BUCKET` | Cond. | — | Bucket S3/MinIO/DO Spaces (solo `s3`) |
+| `S3_REGION` | Cond. | — | Región del bucket |
+| `S3_ENDPOINT` | No | — | Override endpoint (MinIO, DO Spaces, etc.) |
+| `S3_PREFIX` | No | — | Prefijo de path dentro del bucket |
+| `S3_CDN_URL` | No | — | URL base del CDN para URLs públicas |
+
+### Administración
+
+| Variable | Requerida | Default | Descripción |
+| -------- | --------- | ------- | ----------- |
 | `BOOTSTRAP_ADMIN_EMAIL` | No | — | Email del usuario a promover a admin al arrancar |
 
 > [!warning] Mínimo para arrancar
@@ -209,18 +220,25 @@ sequenceDiagram
 
 ## Background Jobs
 
-> [!abstract] Tareas programadas que corren en segundo plano dentro del mismo proceso.
+> [!abstract] 6 goroutines de mantenimiento que corren en segundo plano dentro del mismo proceso (`cmd/server/main.go`).
 
 | Job | Frecuencia | Descripción |
 | --- | ---------- | ----------- |
-| **Expire Gifted Plans** | Cada 1 hora | Revierte planes regalados expirados al plan básico |
+| **ExpireGiftedPlans** | Cada 1 h | Revierte planes regalados expirados al plan básico |
+| **ProcessPendingReminders** | Cada 15 min | Despacha notificaciones push pendientes (FCM + APNs) |
+| **SendWeeklySummaryEmails** | Lunes 9 am UTC | Envía resumen semanal de eventos por email |
+| **SendMarketingEmails** | Viernes 9 am UTC | Envía emails de marketing programados |
+| **ExpireStaleFormLinks** | Cada 1 h | Marca como `expired` los `event_form_links` con `expires_at <= now()` |
+| **CleanupExpiredTokens** | Cada 1 h | Limpia tokens de reset/refresh y familias de refresh expiradas |
 
 ```mermaid
 flowchart LR
-    CRON["Ticker\n1 hora"] --> CHECK["Buscar gifted plans\ncon expiry <= now()"]
-    CHECK -->|"encontrados"| REVERT["Revertir a plan básico"]
-    CHECK -->|"ninguno"| WAIT["Esperar próximo tick"]
-    REVERT --> WAIT
+    T1["Ticker 1h"] --> EGP["ExpireGiftedPlans"]
+    T2["Ticker 15min"] --> PPR["ProcessPendingReminders\n(FCM + APNs)"]
+    T3["Cron Lun 9am"] --> WSE["WeeklySummaryEmails"]
+    T4["Cron Vie 9am"] --> SME["SendMarketingEmails"]
+    T5["Ticker 1h"] --> ESF["ExpireStaleFormLinks"]
+    T6["Ticker 1h"] --> CET["CleanupExpiredTokens"]
 ```
 
 ---
@@ -281,7 +299,7 @@ mindmap
 | --- | --------- | ----------- |
 | **Sin CI/CD** | 🔴 Alta | No hay pipeline de build/test/deploy automatizado |
 | **Sin orquestación** | 🔴 Alta | No hay K8s, ECS ni similar para manejar réplicas |
-| **Storage local** | 🟡 Media | `UPLOAD_DIR` usa filesystem local; no funciona con múltiples instancias |
+| **Storage local por default** | 🟡 Media | `STORAGE_PROVIDER=local` usa filesystem local; configurar `s3` para multi-instancia. S3 implementado pero `ThumbnailURL` devuelve la misma URL (sin pipeline de thumbnails real aún). |
 | **Sin DB health check** | 🟡 Media | `/health` solo verifica el server, no la conectividad con PostgreSQL |
 | **Sin métricas** | 🟡 Media | No hay endpoint `/metrics` para Prometheus |
 | **Sin log aggregation** | 🟡 Media | Logs van a stdout pero no hay centralización (ELK, Loki, etc.) |
