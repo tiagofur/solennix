@@ -28,6 +28,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Create CI secrets config placeholder
+        run: cp Config/Secrets.xcconfig.example Config/Secrets.xcconfig
+
       - name: Install XcodeGen
         run: brew install xcodegen
 
