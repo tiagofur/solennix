@@ -552,7 +552,7 @@ export const Dashboard: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const firstName = user?.name ? user.name.split(" ")[0] : "Usuario";
 
-  const { isBasicPlan, canCreateEvent, eventsThisMonth, limit } = usePlanLimits();
+  const { isBasicPlan, canCreateEvent, eventsThisMonth, eventLimit: limit } = usePlanLimits();
 
   // ── Date range for current month ──
   const today = useMemo(() => new Date(), []);

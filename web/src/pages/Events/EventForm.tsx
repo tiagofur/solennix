@@ -233,7 +233,7 @@ export const EventForm: React.FC = () => {
   const {
     canCreateEvent,
     eventsThisMonth,
-    limit,
+    eventLimit: limit,
     loading: limitsLoading,
   } = usePlanLimits();
 

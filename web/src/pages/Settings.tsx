@@ -102,7 +102,7 @@ export const Settings: React.FC = () => {
   const [searchParams] = useSearchParams();
   const {
     eventsThisMonth,
-    limit: eventLimit,
+    eventLimit,
     clientsCount,
     clientLimit,
     isBasicPlan

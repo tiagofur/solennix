@@ -332,7 +332,7 @@ export const ProductForm: React.FC = () => {
         <div className="flex justify-center mt-12">
           <UpgradeBanner
             type="limit-reached"
-            resource="productos"
+             resource="catalog"
             currentUsage={productsCount}
             limit={productLimit}
           />

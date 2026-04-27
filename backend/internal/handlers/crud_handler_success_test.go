@@ -179,7 +179,7 @@ func TestCreateEvent_BasicUser_AtLimit_Forbidden(t *testing.T) {
 	userRepo := new(MockFullUserRepo)
 
 	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Plan: "basic"}, nil)
-	eventRepo.On("CountCurrentMonth", mock.Anything, userID).Return(3, nil)
+	eventRepo.On("CountCurrentMonth", mock.Anything, userID).Return(4, nil)
 
 	h := newTestHandler(new(MockClientRepo), eventRepo, new(MockProductRepo), new(MockInventoryRepo), new(MockFullPaymentRepo), userRepo)
 
@@ -676,17 +676,15 @@ func TestCreateInventoryItem_BasicUser_UnderLimit_Success(t *testing.T) {
 	}
 }
 
-func TestCreateInventoryItem_BasicUser_AtCatalogLimit_Forbidden(t *testing.T) {
+func TestCreateInventoryItem_BasicUser_AtInventoryLimit_Forbidden(t *testing.T) {
 	userID := uuid.New()
-	productRepo := new(MockProductRepo)
 	inventoryRepo := new(MockInventoryRepo)
 	userRepo := new(MockFullUserRepo)
 
 	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Plan: "basic"}, nil)
-	productRepo.On("CountByUserID", mock.Anything, userID).Return(10, nil)
-	inventoryRepo.On("CountByUserID", mock.Anything, userID).Return(10, nil)
+	inventoryRepo.On("CountByUserID", mock.Anything, userID).Return(30, nil)
 
-	h := newTestHandler(new(MockClientRepo), new(MockFullEventRepo), productRepo, inventoryRepo, new(MockFullPaymentRepo), userRepo)
+	h := newTestHandler(new(MockClientRepo), new(MockFullEventRepo), new(MockProductRepo), inventoryRepo, new(MockFullPaymentRepo), userRepo)
 
 	body := `{"ingredient_name":"Flour","current_stock":100,"minimum_stock":10,"unit":"kg","type":"ingredient"}`
 	req := makeReqWithUserID(http.MethodPost, "/api/inventory", body, userID)
@@ -2033,28 +2031,8 @@ func TestCreateInventoryItem_GetUserError_Returns500(t *testing.T) {
 	}
 }
 
-func TestCreateInventoryItem_ProductCountError_Returns500(t *testing.T) {
-	userID := uuid.New()
-	productRepo := new(MockProductRepo)
-	userRepo := new(MockFullUserRepo)
-
-	userRepo.On("GetByID", mock.Anything, userID).Return(&models.User{ID: userID, Plan: "basic"}, nil)
-	productRepo.On("CountByUserID", mock.Anything, userID).Return(0, errTest)
-
-	h := newTestHandler(new(MockClientRepo), new(MockFullEventRepo), productRepo, new(MockInventoryRepo), new(MockFullPaymentRepo), userRepo)
-
-	body := `{"ingredient_name":"Flour","current_stock":100,"minimum_stock":10,"unit":"kg","type":"ingredient"}`
-	req := makeReqWithUserID(http.MethodPost, "/api/inventory", body, userID)
-	rr := httptest.NewRecorder()
-	h.CreateInventoryItem(rr, req)
-
-	if rr.Code != http.StatusInternalServerError {
-		t.Fatalf("status = %d, want %d, body=%s", rr.Code, http.StatusInternalServerError, rr.Body.String())
-	}
-	if !strings.Contains(rr.Body.String(), "product limits") {
-		t.Fatalf("body = %q, expected to contain 'product limits'", rr.Body.String())
-	}
-}
+// REMOVED: TestCreateInventoryItem_ProductCountError — CreateInventoryItem no longer checks productRepo.CountByUserID
+// (refactor FASE 7C: inventory has its own limit, not combined catalog limit)
 
 func TestCreateInventoryItem_InventoryCountError_Returns500(t *testing.T) {
 	userID := uuid.New()

@@ -1317,25 +1317,6 @@ func (h *CRUDHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check limits
-	user, err := h.userRepo.GetByID(r.Context(), userID)
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, "Failed to fetch user limits")
-		return
-	}
-
-	if user.Plan == "basic" {
-		productCount, err := h.productRepo.CountByUserID(r.Context(), userID)
-		if err != nil {
-			writeError(w, http.StatusInternalServerError, "Failed to verify product limits")
-			return
-		}
-		if productCount >= 15 {
-			writePlanLimitError(w, "products", productCount, 15)
-			return
-		}
-	}
-
 	// Validate business rules
 	if err := ValidateProduct(&product); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
@@ -1353,6 +1334,10 @@ func (h *CRUDHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 		productCount, err := h.productRepo.CountByUserID(r.Context(), userID)
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "Failed to verify product limits")
+			return
+		}
+		if productCount >= 15 {
+			writePlanLimitError(w, "products", productCount, 15)
 			return
 		}
 		inventoryCount, err := h.inventoryRepo.CountByUserID(r.Context(), userID)

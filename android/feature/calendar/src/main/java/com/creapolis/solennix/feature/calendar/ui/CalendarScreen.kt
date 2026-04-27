@@ -543,7 +543,7 @@ fun CalendarGrid(
                     ///   - 5 eventos × "confirmed" → 1 dot azul → overflow = 4  
                     ///   - 2 confirmed + 3 quoted = 2 dots (azul+gris) → overflow = 0  
                     /// Fórmula: totalEvents - min(unique_statuses_count, 3)
-                    val uniqueDotsCount = eventsOnDate.groupBy { it.status }.values.coerceAtMost(3).size
+                    val uniqueDotsCount = eventsOnDate.groupBy { it.status }.values.size.coerceAtMost(3)
                     val overflow = maxOf(0, eventsOnDate.size - uniqueDotsCount)
 
                     val bgColor = when {

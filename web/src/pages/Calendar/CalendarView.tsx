@@ -99,7 +99,7 @@ export const CalendarView: React.FC = () => {
   /// REFACTOR FASE 7C — Calendario simplificado (vista grilla + gestión disponibilidad)
   /// Vista lista eliminada → funcionalidad migrada a sección "Eventos" con filtros
   /// Toolbar centralizado ahora solo en topbar global; FAB global para crear evento/Quick Quote
-  
+
   const { t, i18n } = useTranslation("calendar");
   const dfnsLocale = useMemo(() => pickDateFnsLocale(i18n.language), [i18n.language]);
   const navigate = useNavigate();
@@ -133,7 +133,48 @@ export const CalendarView: React.FC = () => {
     () => ((eventsData as EventWithClient[] | undefined) ?? []),
     [eventsData],
   );
-  /// REFACTOR FASE 7C — Eliminado filteredEvents (filtrado por estado se maneja en sección Eventos)
+  const unavailableDates = useMemo(
+    () => (unavailableData ?? []),
+    [unavailableData],
+  );
+
+  const loading = eventsLoading || unavailableLoading;
+  const isFetching = eventsFetching || unavailableFetching;
+
+  // Filtered event list respects the active status chip. Filtering
+  // happens client-side from the cached React Query data — no refetch,
+  // matching iOS & Android behavior.
+  const filteredEvents = useMemo(
+    () => (statusFilter === null ? events : events.filter((e) => e.status === statusFilter)),
+    [events, statusFilter],
+  );
+
+  // Surface query errors via toast (once per transition).
+  useEffect(() => {
+    if (eventsError) logError("CalendarView:events", eventsError);
+    if (unavailableError) logError("CalendarView:unavailable", unavailableError);
+  }, [eventsError, unavailableError]);
+
+  const hasError = !!eventsError || !!unavailableError;
+
+  const handleRetry = useCallback(() => {
+    queryClient.invalidateQueries({
+      queryKey: queryKeys.events.dateRange(rangeStart, rangeEnd),
+    });
+    queryClient.invalidateQueries({
+      queryKey: queryKeys.unavailableDates.byRange(rangeStart, rangeEnd),
+    });
+  }, [queryClient, rangeStart, rangeEnd]);
+
+  // Invalidate both month windows whenever a mutation changes availability,
+  // so the UI stays in sync without a manual refresh.
+  const refreshUnavailableRange = useCallback(() => {
+    queryClient.invalidateQueries({
+      queryKey: queryKeys.unavailableDates.byRange(rangeStart, rangeEnd),
+    });
+  }, [queryClient, rangeStart, rangeEnd]);
+
+  const handleMonthChange = (month: Date) => {
     setCurrentMonth(startOfMonth(startOfDay(month)));
     setSelectedDate(undefined);
   };
@@ -224,7 +265,6 @@ export const CalendarView: React.FC = () => {
     (date: Date): { dots: string[]; overflow: number } => {
       const info = dayInfoByDate.get(format(date, "yyyy-MM-dd"));
       if (!info) return { dots: [], overflow: 0 };
-
       /// CORREGIDO BUG OVERFLOW — Antes restaba siempre 3 (incorrecto cuando <3 eventos únicos)
       /// Fórmula corregida: totalEvents - min(unique_statuses_count, 3)
       /// Ejemplos:
@@ -255,6 +295,9 @@ export const CalendarView: React.FC = () => {
 
   /// REFACTOR FASE 7C — REMOVIDO dropdown crear evento/Quick Quote (ya están en FAB global)
   /// Estado showCreateMenu y ref createMenuRef ya no necesarios
+
+  const statusLabel = (status: string): string => {
+    switch (status) {
       case "confirmed": return t("status.confirmed");
       case "completed": return t("status.completed");
       case "cancelled": return t("status.cancelled");
@@ -294,7 +337,7 @@ export const CalendarView: React.FC = () => {
          </div>
        </div>
 
-       {/* REFACTOR FASE 7C — Eliminado filtros de estado (pertenecen a sección Eventos) */
+       {/* REFACTOR FASE 7C — Eliminado filtros de estado (pertenecen a sección Eventos) */}
 
       {/* Inline error banner with retry — React Query already retried on its
           own, so this is the user-visible recovery affordance for a sticky

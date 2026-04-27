@@ -151,7 +151,7 @@ export const InventoryForm: React.FC = () => {
         <div className="flex justify-center mt-12">
           <UpgradeBanner
             type="limit-reached"
-            resource="inventario"
+             resource="catalog"
             currentUsage={inventoryCount}
             limit={inventoryLimit}
           />
