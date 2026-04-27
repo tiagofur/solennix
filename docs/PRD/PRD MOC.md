@@ -45,6 +45,8 @@
 - [[13_POST_MVP_ROADMAP|Roadmap Post-MVP (Etapa 2)]] — Notificaciones, reportes, portal del cliente, diferenciadores
 - [[14_CLIENT_EXPERIENCE_IDEAS|Ideas Experiencia Cliente (Exploración)]] — Clusters A–G: bidireccionalidad, transparencia, momentos en vivo, co-planificación, pagos, telemetría inversa, multi-destinatario
 - [[10_COLLABORATION_GUIDE|Guía de Colaboración]] — Workflow con Claude Code, prompts, reglas
+- [[21_CALENDAR_PARITY_AUDIT|🔍 Calendario Audit de Paridad]] — Auditoría cross-platform con gaps priorizados (2026-04-27)
+- [[22_DASHBOARD_REFACTOR_PLAN|🏗️ Dashboard Refactor Plan]] — Plan aprobado de unificación cross-platform
 
 ## Super Plan Cross-Platform
 
@@ -85,6 +87,7 @@ graph TB
     D["🏛️ 00_DASHBOARD<br/>Visual daily hub"]
     D --> SL["📅 16_SPRINT_LOG<br/>Jornada 2026-04-16"]
     D --> PCT["🎁 15_PORTAL_CLIENTE<br/>Feature A tracker"]
+    D --> CPA["📅 21_CALENDAR_PARITY<br/>Audit Calendario"]
 
     V[Visión] --> F[Features]
     V --> C[Competencia]
@@ -106,6 +109,7 @@ graph TB
     style D fill:#1B2A4A,stroke:#C4A265,color:#fff
     style SL fill:#C4A265,stroke:#1B2A4A,color:#1A1A1A
     style PCT fill:#C4A265,stroke:#1B2A4A,color:#1A1A1A
+    style CPA fill:#C4A265,stroke:#1B2A4A,color:#1A1A1A
     style V fill:#F5F4F1,stroke:#1B2A4A,color:#1A1A1A
     style F fill:#F5F4F1,stroke:#1B2A4A,color:#1A1A1A
     style S fill:#F5F4F1,stroke:#1B2A4A,color:#1A1A1A

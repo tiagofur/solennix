@@ -7,8 +7,8 @@ aliases:
   - Dashboard
   - Hub
   - Inicio
-date: 2026-04-26
-updated: 2026-04-26
+date: 2026-04-27
+updated: 2026-04-27
 status: active
 ---
 
@@ -17,7 +17,7 @@ status: active
 > [!tip] Este es tu punto de entrada diario
 > Abrí este archivo cada mañana para ver en **30 segundos** qué pasa con el producto. Todo lo demás se navega desde acá.
 
-**Última actualización:** 2026-04-26 · Sincronización completa post-jornadas 2026-04-17 a 2026-04-26. **104 commits** no reflejados en la documentación anterior.
+**Última actualización:** 2026-04-27 · Auditoría de paridad del Calendario completada. 11 gaps identificados (3 críticos, 4 medios, 4 bajos). CI verde.
 
 ---
 
@@ -50,6 +50,11 @@ status: active
 
 > [!success] 🌐 i18n Foundation — Calendario ES+EN
 > Desde 2026-04-20: strings extraídos a catálogos localizables en iOS (`.xcstrings`), Android (`strings.xml`) y Web (`i18next`). Ver [[PRD/19_I18N_STRATEGY|i18n Strategy]].
+
+> [!warning] 📅 Calendario — Paridad Auditada (2026-04-27)
+> 15 features con paridad completa · 11 gaps identificados (3 🔴 críticos · 4 🟡 medios · 4 🟢 bajos).
+> Críticos: Android sin crear evento · Android loading sin UI · iOS syntax error.
+> Ver [[PRD/21_CALENDAR_PARITY_AUDIT|Audit completo]].
 
 > [!success] 🔒 Google Play Compliance — Paridad total
 > Desde 2026-04-23: Account Deletion page + Privacy Policy actualizada + entry points en Settings de las 3 plataformas.
@@ -99,6 +104,8 @@ gantt
 
     section Calendar (04-20)
     Calendar i18n + polish         :done, ci, 2026-04-20, 1d
+    Calendar FASE 7C refactor      :done, c7, 2026-04-27, 1d
+    Calendar parity audit          :done, ca, after c7, 1d
 
     section Polish (04-21 → 04-26)
     Events list parity             :done, el, 2026-04-21, 1d
@@ -130,6 +137,8 @@ gantt
 | **Personal Ola 3** | **Product.staff_team_id** | **`████████████████████` 100%** | ✅ cerrado |
 | **Dashboard KPIs parity** | **Backend como source of truth** | **`████████████████████` 100%** | ✅ cerrado |
 | **Calendar i18n** | **ES+EN + polish** | **`████████████████████` 100%** | ✅ cerrado |
+| **Calendar FASE 7C** | **Overflow fix + refactor** | **`████████████████████` 100%** | ✅ cerrado |
+| **Calendar parity audit** | **Cross-platform gaps** | **`████████████████████` 100%** | ✅ audit completo, fixes pendientes |
 | **Events list parity** | **Sort, inline status, search** | **`████████████████████` 100%** | ✅ cerrado |
 | **Google Play compliance** | **Privacy + Account deletion** | **`████████████████████` 100%** | ✅ cerrado |
 | 9 | Feature B (payments transfer) | `░░░░░░░░░░░░░░░░░░░░` 0% | 📋 |
@@ -261,6 +270,8 @@ pie showData
 | 2026-04-23 | Google Play compliance | 6 | — |
 | 2026-04-26 | iOS date parity + quick quote fix | 4 | — |
 | 2026-04-26 | Sprint 7.B paywalls mobile coherentes | 1 | — |
+| 2026-04-27 | Calendar FASE 7C refactor + CI fixes | 5 | — |
+| 2026-04-27 | Calendar parity audit (11 gaps) | 0 | audit only |
 
 ---
 
@@ -320,6 +331,8 @@ graph TB
 | 🥇 | **Sprint 7.C — Enforcement tier matrix** | Sin bloqueo técnico | Activa el split Gratis/Pro real |
 | 🥈 | **Sprint 9 — Feature B pagos transferencia** | Sin bloqueo técnico | Cierra el ciclo de cobro |
 | 🥉 | **Sprint 10 — Feature I reseñas** | Sin bloqueo técnico | Marketing orgánico + retención |
+| 4º | **Sprint Dashboard refactor** | Sin bloqueo técnico | Ver [[PRD/22_DASHBOARD_REFACTOR_PLAN|Plan completo]] |
+| 5º | **Calendar parity fixes (G1-G7)** | Sin bloqueo técnico | Ver [[PRD/21_CALENDAR_PARITY_AUDIT|Audit]] |
 | 4º | **Sprint 4 — Activar deploy VPS** | Usuario configura secrets en GitHub | Activa auto-deploy CI/CD |
 
 ### Deuda técnica registrada (GitHub Issues)
@@ -335,6 +348,20 @@ graph TB
 | [#94](https://github.com/tiagofur/eventosapp/issues/94) | i18n: extraer strings de Dashboard al catálogo (ES + EN) | `enhancement` |
 | [#95](https://github.com/tiagofur/eventosapp/issues/95) | i18n: extraer strings de Events list al catálogo (ES + EN) | `enhancement` |
 | [#96](https://github.com/tiagofur/eventosapp/issues/96) | Stock equipamiento no es date-aware | `enhancement` |
+
+### 🔴 Calendario — Gaps de paridad (Audit 2026-04-27)
+
+> [!warning] Ver detalle completo en [[PRD/21_CALENDAR_PARITY_AUDIT|Audit de Paridad]]
+
+| ID | Gap | Plataforma | Prioridad |
+|----|-----|-----------|:---------:|
+| G1 | Crear evento desde calendario | Android | 🔴 |
+| G2 | Loading state UI | Android | 🔴 |
+| G3 | Syntax error CalendarViewModel | iOS | 🔴 |
+| G4 | Status filter eliminado | Web | 🟡 |
+| G5 | Botón Retry en error | iOS + Android | 🟡 |
+| G6 | Status dots por status (no por evento) | Android | 🟡 |
+| G7 | Plan limits guard al crear | Web + Android | 🟡 |
 
 ### 🔴 Bloqueantes que dependen de vos (2–4 h en dashboards externos)
 
@@ -368,6 +395,8 @@ graph TB
 > - 🤝 [[PRD/17_PERSONAL_TRACKER|Personal / Colaboradores Tracker]]
 > - 📝 [[PRD/16_SPRINT_LOG_2026_04_16|Sprint Log del 04-16]]
 > - 🌐 [[PRD/19_I18N_STRATEGY|i18n Strategy]]
+> - 📅 [[PRD/21_CALENDAR_PARITY_AUDIT|Calendario Audit de Paridad]]
+> - 🏗️ [[PRD/22_DASHBOARD_REFACTOR_PLAN|Dashboard Refactor Plan]]
 
 > [!info] Roadmaps por plataforma
 > - 🍏 [[iOS/Roadmap iOS]]
