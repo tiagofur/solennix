@@ -25,7 +25,8 @@
     "download": "Download",
     "upload": "Upload",
     "hide": "Hide",
-    "show": "Show"
+    "show": "Show",
+    "close_notification": "Close notification"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -169,5 +170,13 @@
     "go_dashboard": "Go to Dashboard",
     "aria_home": "Go to the home page",
     "aria_dashboard": "Go to the control panel"
+  },
+  "legal": {
+    "title": "Legal & Help",
+    "subtitle": "Quick access to our policies and technical support.",
+    "about": "About Solennix",
+    "terms": "Terms of Use",
+    "privacy": "Privacy Policy",
+    "delete_account": "Data Deletion"
   }
 }

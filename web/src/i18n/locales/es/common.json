@@ -25,7 +25,8 @@
     "download": "Descargar",
     "upload": "Subir",
     "hide": "Ocultar",
-    "show": "Mostrar"
+    "show": "Mostrar",
+    "close_notification": "Cerrar notificación"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -169,5 +170,13 @@
     "go_dashboard": "Ir al dashboard",
     "aria_home": "Ir a la página de inicio",
     "aria_dashboard": "Ir al panel de control"
+  },
+  "legal": {
+    "title": "Legal y Ayuda",
+    "subtitle": "Acceso rápido a nuestras políticas y soporte técnico.",
+    "about": "Acerca de Solennix",
+    "terms": "Términos de Uso",
+    "privacy": "Política de Privacidad",
+    "delete_account": "Eliminación de Datos"
   }
 }

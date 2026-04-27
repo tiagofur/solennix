@@ -3,6 +3,8 @@ import { useToast, ToastType } from '../hooks/useToast';
 import { CheckCircle, AlertCircle, Info, X } from 'lucide-react';
 import clsx from 'clsx';
 
+import { useTranslation } from 'react-i18next';
+
 const TOAST_ICONS: Record<ToastType, React.ReactNode> = {
   success: <CheckCircle className="h-5 w-5 text-success" aria-hidden="true" />,
   error: <AlertCircle className="h-5 w-5 text-error" aria-hidden="true" />,
@@ -17,6 +19,7 @@ const TOAST_STYLES: Record<ToastType, string> = {
 
 export const ToastContainer: React.FC = () => {
   const { toasts, removeToast } = useToast();
+  const { t } = useTranslation('common');
 
   return (
     <div className="fixed bottom-4 right-4 z-100 flex flex-col gap-2 pointer-events-none" aria-live="polite" aria-atomic="false">
@@ -37,9 +40,9 @@ export const ToastContainer: React.FC = () => {
             type="button"
             onClick={() => removeToast(toast.id)}
             className="ml-auto -mx-1.5 -my-1.5 p-1.5 inline-flex items-center justify-center h-8 w-8 rounded-lg text-text-secondary hover:text-text focus:outline-hidden"
-            aria-label="Cerrar notificación"
+            aria-label={t('action.close_notification')}
           >
-            <span className="sr-only">Cerrar</span>
+            <span className="sr-only">{t('action.close')}</span>
             <X className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
