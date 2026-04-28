@@ -22,7 +22,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@hookform/resolvers": "^5.2.2",
-    "@react-pdf/renderer": "^4.3.2",
+    "@react-pdf/renderer": "^4.5.1",
     "@sentry/react": "^10.49.0",
     "@tanstack/react-query": "^5.96.2",
     "@tanstack/react-query-devtools": "^5.96.2",
