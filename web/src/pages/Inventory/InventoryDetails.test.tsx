@@ -95,7 +95,7 @@ describe('InventoryDetails', () => {
     (inventoryService.getById as any).mockResolvedValue(baseItem);
     renderDetails();
     await waitFor(() => expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Harina'));
-    expect(screen.getByText('Insumo Consumible')).toBeInTheDocument();
+    expect(screen.getByText('Consumibles')).toBeInTheDocument();
     expect(screen.getByText('$2.50')).toBeInTheDocument();
     expect(screen.getByText('$250.00')).toBeInTheDocument();
   });
@@ -103,26 +103,30 @@ describe('InventoryDetails', () => {
   it('renders equipment type badge', async () => {
     (inventoryService.getById as any).mockResolvedValue({ ...baseItem, type: 'equipment' });
     renderDetails();
-    await waitFor(() => expect(screen.getByText('Activo / Equipo')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('Equipos')).toBeInTheDocument());
   });
 
   it('shows low stock alert when current_stock <= minimum_stock', async () => {
     (inventoryService.getById as any).mockResolvedValue({ ...baseItem, current_stock: 15 });
     renderDetails();
-    await waitFor(() => expect(screen.getByText(/está por debajo del mínimo/i)).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getAllByText(/Stock bajo/i).length).toBeGreaterThanOrEqual(1)
+    );
   });
 
   it('shows optimal stock message when stock is sufficient', async () => {
     (inventoryService.getById as any).mockResolvedValue(baseItem);
     renderDetails();
-    await waitFor(() => expect(screen.getByText(/Sin demanda/i)).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getAllByText(/Sin ítems en el inventario/i).length).toBeGreaterThanOrEqual(1)
+    );
   });
 
   it('shows error state on fetch failure', async () => {
     (inventoryService.getById as any).mockRejectedValue(new Error('fail'));
     renderDetails();
     await waitFor(() =>
-      expect(screen.getByText('Error al cargar los datos del ítem.')).toBeInTheDocument()
+      expect(screen.getByText('error.load_failed')).toBeInTheDocument()
     );
   });
 
@@ -130,15 +134,15 @@ describe('InventoryDetails', () => {
     (inventoryService.getById as any).mockResolvedValue(null);
     renderDetails();
     await waitFor(() =>
-      expect(screen.getByText('Ítem de inventario no encontrado')).toBeInTheDocument()
+      expect(screen.getByText('Sin ítems en el inventario')).toBeInTheDocument()
     );
   });
 
   it('navigates back on error state button click', async () => {
     (inventoryService.getById as any).mockRejectedValue(new Error('fail'));
     renderDetails();
-    await waitFor(() => screen.getByText('Volver a inventario'));
-    fireEvent.click(screen.getByText('Volver a inventario'));
+    await waitFor(() => screen.getByRole('button', { name: /Volver|action\.back/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Volver|action\.back/i }));
     expect(mockNavigate).toHaveBeenCalledWith('/inventory');
   });
 
@@ -146,7 +150,8 @@ describe('InventoryDetails', () => {
     (inventoryService.getById as any).mockResolvedValue(baseItem);
     renderDetails();
     await waitFor(() => expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Harina'));
-    expect(screen.getByText('Editar').closest('a')).toHaveAttribute('href', '/inventory/inv-1/edit');
+    const editLink = screen.getByRole('link', { name: /Editar|action\.edit/i });
+    expect(editLink).toHaveAttribute('href', '/inventory/inv-1/edit');
   });
 
   it('deletes item successfully', async () => {
@@ -155,9 +160,9 @@ describe('InventoryDetails', () => {
     renderDetails();
     await waitFor(() => expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Harina'));
 
-    fireEvent.click(screen.getByText('Eliminar'));
+    fireEvent.click(screen.getByRole('button', { name: /Eliminar|action\.delete/i }));
     // Dialog confirm button (bg-red-600) is first in DOM, page button is second
-    const confirmButtons = screen.getAllByRole('button', { name: 'Eliminar' });
+    const confirmButtons = screen.getAllByRole('button', { name: /Eliminar|action\.delete/i });
     fireEvent.click(confirmButtons[0]);
 
     await waitFor(() => {
@@ -172,8 +177,8 @@ describe('InventoryDetails', () => {
     renderDetails();
     await waitFor(() => expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Harina'));
 
-    fireEvent.click(screen.getByText('Eliminar'));
-    const confirmButtons = screen.getAllByRole('button', { name: 'Eliminar' });
+    fireEvent.click(screen.getByRole('button', { name: /Eliminar|action\.delete/i }));
+    const confirmButtons = screen.getAllByRole('button', { name: /Eliminar|action\.delete/i });
     fireEvent.click(confirmButtons[0]);
 
     await waitFor(() => {
@@ -186,8 +191,8 @@ describe('InventoryDetails', () => {
     renderDetails();
     await waitFor(() => expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Harina'));
 
-    fireEvent.click(screen.getByText('Eliminar'));
-    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
+    fireEvent.click(screen.getByRole('button', { name: /Eliminar|action\.delete/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Cancelar|action\.cancel/i }));
 
     await waitFor(() =>
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument()

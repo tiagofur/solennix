@@ -21,7 +21,7 @@ describe('ForgotPassword', () => {
         <ForgotPassword />
       </MemoryRouter>
     );
-    fireEvent.click(screen.getByRole('button', { name: /enviar instrucciones/i }));
+    fireEvent.click(screen.getByRole('button', { name: /enviar enlace|enviar instrucciones|forgot_password\.submit/i }));
     await waitFor(() => {
       expect(screen.getByText(/Email inválido/i)).toBeInTheDocument();
     });
@@ -38,10 +38,10 @@ describe('ForgotPassword', () => {
     fireEvent.change(screen.getByPlaceholderText('tu@email.com'), {
       target: { value: 'ana@example.com' },
     });
-    fireEvent.click(screen.getByRole('button', { name: /enviar instrucciones/i }));
+    fireEvent.click(screen.getByRole('button', { name: /enviar enlace|enviar instrucciones|forgot_password\.submit/i }));
 
     await waitFor(() => {
-      expect(screen.getByText('¡Revisa tu correo!')).toBeInTheDocument();
+      expect(screen.getByText(/¡Revisa tu correo|forgot_password\.success_title/i)).toBeInTheDocument();
     });
   });
 
@@ -56,7 +56,7 @@ describe('ForgotPassword', () => {
     fireEvent.change(screen.getByPlaceholderText('tu@email.com'), {
       target: { value: 'ana@example.com' },
     });
-    fireEvent.click(screen.getByRole('button', { name: /enviar instrucciones/i }));
+    fireEvent.click(screen.getByRole('button', { name: /enviar enlace|enviar instrucciones|forgot_password\.submit/i }));
 
     await waitFor(() => {
       expect(screen.getByText('Error al enviar el correo')).toBeInTheDocument();

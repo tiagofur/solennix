@@ -151,7 +151,7 @@ describe('ProductDetails', () => {
     (productService.getIngredients as any).mockResolvedValue([]);
     renderDetails();
     await waitFor(() => expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Paquete Premium'));
-    expect(screen.getByText('Editar').closest('a')).toHaveAttribute('href', '/products/prod-1/edit');
+    expect(screen.getByRole('link', { name: /Editar|action\.edit/i })).toHaveAttribute('href', '/products/prod-1/edit');
   });
 
   it('deletes product successfully', async () => {
@@ -161,9 +161,9 @@ describe('ProductDetails', () => {
     renderDetails();
     await waitFor(() => expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Paquete Premium'));
 
-    fireEvent.click(screen.getByText('Eliminar'));
+    fireEvent.click(screen.getByRole('button', { name: /Eliminar|action\.delete/i }));
     // Dialog confirm button (bg-red-600) is first in DOM, page button is second
-    const confirmButtons = screen.getAllByRole('button', { name: 'Eliminar' });
+    const confirmButtons = screen.getAllByRole('button', { name: /Eliminar|action\.delete/i });
     await act(async () => {
       fireEvent.click(confirmButtons[0]);
     });
@@ -181,8 +181,8 @@ describe('ProductDetails', () => {
     renderDetails();
     await waitFor(() => expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Paquete Premium'));
 
-    fireEvent.click(screen.getByText('Eliminar'));
-    const confirmButtons = screen.getAllByRole('button', { name: 'Eliminar' });
+    fireEvent.click(screen.getByRole('button', { name: /Eliminar|action\.delete/i }));
+    const confirmButtons = screen.getAllByRole('button', { name: /Eliminar|action\.delete/i });
     await act(async () => {
       fireEvent.click(confirmButtons[0]);
     });
@@ -198,8 +198,8 @@ describe('ProductDetails', () => {
     renderDetails();
     await waitFor(() => expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Paquete Premium'));
 
-    fireEvent.click(screen.getByText('Eliminar'));
-    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
+    fireEvent.click(screen.getByRole('button', { name: /Eliminar|action\.delete/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Cancelar|action\.cancel/i }));
 
     await waitFor(() =>
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument()

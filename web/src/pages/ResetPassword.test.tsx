@@ -193,12 +193,12 @@ describe('ResetPassword', () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText('¡Contraseña actualizada!')
+          screen.getByText('Contraseña restablecida')
         ).toBeInTheDocument();
       });
       expect(
         screen.getByText(
-          'Tu contraseña ha sido restablecida correctamente. Ya puedes iniciar sesión.'
+          'Tu contraseña ha sido actualizada exitosamente.'
         )
       ).toBeInTheDocument();
     });
@@ -218,11 +218,11 @@ describe('ResetPassword', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText('¡Contraseña actualizada!')).toBeInTheDocument();
+        expect(screen.getByText('Contraseña restablecida')).toBeInTheDocument();
       });
 
       const loginLink = screen.getByRole('link', {
-        name: /ir al inicio de sesión/i,
+        name: /ir a iniciar sesión/i,
       });
       expect(loginLink).toHaveAttribute('href', '/login');
     });
@@ -303,7 +303,7 @@ describe('ResetPassword', () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText('¡Contraseña actualizada!')
+          screen.getByText('Contraseña restablecida')
         ).toBeInTheDocument();
       });
       expect(screen.queryByText('Error del servidor')).not.toBeInTheDocument();
@@ -357,7 +357,7 @@ describe('ResetPassword', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText('Restableciendo...')).toBeInTheDocument();
+        expect(screen.getByText('Restableciendo contraseña...')).toBeInTheDocument();
       });
       expect(
         screen.getByRole('button', { name: /restableciendo/i })
@@ -367,7 +367,7 @@ describe('ResetPassword', () => {
       resolvePost!({ ok: true });
       await waitFor(() => {
         expect(
-          screen.getByText('¡Contraseña actualizada!')
+          screen.getByText('Contraseña restablecida')
         ).toBeInTheDocument();
       });
     });

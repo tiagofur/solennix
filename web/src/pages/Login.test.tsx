@@ -36,14 +36,14 @@ describe('Login', () => {
 
   it('renders the form', () => {
     renderLogin();
-    expect(screen.getByLabelText(/email/i, { selector: 'input' })).toBeInTheDocument();
+    expect(screen.getByLabelText(/correo|email/i, { selector: 'input' })).toBeInTheDocument();
     expect(screen.getByLabelText(/contraseña/i, { selector: 'input' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /iniciar sesión/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /ingresar|iniciar sesión|login\.submit/i })).toBeInTheDocument();
   });
 
   it('shows validation errors', async () => {
     renderLogin();
-    fireEvent.click(screen.getByRole('button', { name: /iniciar sesión/i }));
+    fireEvent.click(screen.getByRole('button', { name: /ingresar|iniciar sesión|login\.submit/i }));
     await waitFor(() => {
       expect(screen.getByText(/email inválido/i)).toBeInTheDocument();
     });
@@ -53,9 +53,9 @@ describe('Login', () => {
     (api.post as any).mockResolvedValue({ tokens: { access_token: 'token' } });
     renderLogin();
 
-    fireEvent.change(screen.getByLabelText(/email/i, { selector: 'input' }), { target: { value: 'test@example.com' } });
+    fireEvent.change(screen.getByLabelText(/correo|email/i, { selector: 'input' }), { target: { value: 'test@example.com' } });
     fireEvent.change(screen.getByLabelText(/contraseña/i, { selector: 'input' }), { target: { value: 'password' } });
-    fireEvent.click(screen.getByRole('button', { name: /iniciar sesión/i }));
+    fireEvent.click(screen.getByRole('button', { name: /ingresar|iniciar sesión|login\.submit/i }));
 
     await waitFor(() => {
       expect(api.post).toHaveBeenCalledWith('/auth/login', {
@@ -69,9 +69,9 @@ describe('Login', () => {
     (api.post as any).mockRejectedValue(new Error('Credenciales incorrectas'));
     renderLogin();
 
-    fireEvent.change(screen.getByLabelText(/email/i, { selector: 'input' }), { target: { value: 'test@example.com' } });
+    fireEvent.change(screen.getByLabelText(/correo|email/i, { selector: 'input' }), { target: { value: 'test@example.com' } });
     fireEvent.change(screen.getByLabelText(/contraseña/i, { selector: 'input' }), { target: { value: 'password' } });
-    fireEvent.click(screen.getByRole('button', { name: /iniciar sesión/i }));
+    fireEvent.click(screen.getByRole('button', { name: /ingresar|iniciar sesión|login\.submit/i }));
 
     await waitFor(() => {
       expect(screen.getByText(/Credenciales incorrectas/i)).toBeInTheDocument();

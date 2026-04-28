@@ -162,7 +162,7 @@ export const ProductDetails: React.FC = () => {
           onClick={() => navigate("/products")}
           className="mt-4 text-primary hover:underline"
         >
-          {t("common:action.back")}
+          {t("products:details.back_to_products")}
         </button>
       </div>
     );
@@ -380,10 +380,7 @@ export const ProductDetails: React.FC = () => {
                 <div>
                   <p className="text-xs text-text-secondary">{t("products:form.composition")}</p>
                   <p className="text-sm font-medium text-text">
-                    {
-                      ingredients.filter((i: ProductIngredientRow) => i.type === "ingredient")
-                        .length
-                    }{" "}
+                    {ingredients.length}{" "}
                     {t("products:list.ingredients")}
                     {ingredients.filter((i: ProductIngredientRow) => i.type === "supply")
                       .length > 0 &&
@@ -611,8 +608,7 @@ export const ProductDetails: React.FC = () => {
               </div>
             </div>
 
-            {ingredients.filter((i: ProductIngredientRow) => i.type === "ingredient").length ===
-            0 ? (
+            {ingredients.length === 0 ? (
               <div className="p-12 text-center">
                 <Package className="h-12 w-12 text-text-secondary mx-auto mb-4 opacity-20" />
                 <p className="text-text-secondary">
@@ -642,9 +638,7 @@ export const ProductDetails: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
-                    {ingredients
-                      .filter((i: ProductIngredientRow) => i.type === "ingredient")
-                      .map((ing: ProductIngredientRow) => (
+                    {ingredients.map((ing: ProductIngredientRow) => (
                         <tr
                           key={ing.inventory_id}
                           className="hover:bg-surface-alt/50 transition-colors"

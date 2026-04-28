@@ -1,19 +1,25 @@
 {
   "title": "Inventory",
   "new_item": "New Item",
+  "new_item_accessible": "New Item",
+  "edit_item_accessible": "Edit Item",
   "list": {
-    "search_placeholder": "Search items...",
+    "search_placeholder": "Search inventory...",
     "filter_type": "All types",
     "filter_category": "All categories",
-    "type_ingredient": "Ingredient/Item",
-    "type_equipment": "Machinery/Equipment",
-    "type_supply": "Event Supply",
-    "stock": "Stock",
+    "type_ingredient": "Consumables",
+    "type_equipment": "Equipment",
+    "type_supply": "Event Supplies",
+    "stock": "Current Stock",
     "min_stock": "Min Stock",
     "unit_cost": "Unit Cost",
     "last_update": "Last updated",
-    "no_results": "No items found",
-    "add_first": "Start by adding your first ingredient or equipment to the catalog.",
+    "no_results": "No inventory items",
+    "empty_title": "No inventory items",
+    "add_first": "Start by adding your first inventory item.",
+    "empty_action": "Add Item",
+    "name_column": "Item",
+    "search_desc": "No items match your search.",
     "export_csv": "Export Inventory",
     "edit_stock_aria": "Edit stock for {{name}}",
     "example_placeholder": "Ex: +10 or -5"
@@ -21,9 +27,10 @@
   "form": {
     "basic_info": "Basic Information",
     "name": "Item Name",
+    "name_accessible": "Item Name",
     "type": "Item Type",
     "category": "Category",
-    "unit": "Unit of Measure",
+    "unit": "Unit",
     "unit_placeholder": "e.g. kg, L, pcs",
     "financial_info": "Financial Information",
     "cost": "Unit Cost ($)",
@@ -33,11 +40,13 @@
     "stock_help": "We will notify you when the stock is lower than this value.",
     "validation": {
       "name_required": "Name is required",
+      "name_min": "Name must be at least 2 characters",
       "type_required": "Type is required",
       "category_required": "Category is required",
       "unit_required": "Unit is required",
       "cost_min": "Cost cannot be negative",
-      "stock_min": "Stock cannot be negative"
+      "stock_min": "Stock cannot be negative",
+      "minimum_stock_min": "Minimum stock cannot be negative"
     }
   },
   "details": {
@@ -48,8 +57,8 @@
       "stock_value": "Stock Value",
       "pending_usage": "Pending Usage",
       "forecast_usage": "7-day Usage",
-      "alert_title": "Stock Alert",
-      "alert_desc": "Stock is below minimum. You need to replenish soon."
+      "alert_title": "Low stock",
+      "alert_desc": "below minimum level. You need to replenish soon."
     },
     "history": "Movement History",
     "usage_in_products": "Used in Products",

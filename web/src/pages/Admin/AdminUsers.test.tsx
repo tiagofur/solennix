@@ -145,7 +145,8 @@ describe('AdminUsers', () => {
     // Clear search
     fireEvent.change(searchInput, { target: { value: '' } });
 
-    fireEvent.click(screen.getByText('Pro', { selector: 'button' }).closest('button') || screen.getByText('Pro', { selector: 'span' }).closest('button')!);
+    const proFilterBtn = screen.getAllByRole('button', { name: /Pro/i })[0];
+    fireEvent.click(proFilterBtn);
     fireEvent.click(screen.getByText('Todos').closest('button')!);
 
     const nameBtn = screen.getByText('Usuario').closest('button')!;
@@ -262,6 +263,8 @@ describe('AdminUsers', () => {
     // 7. Data Reload Error
     vi.mocked(adminService.getUsers).mockRejectedValueOnce(new Error('Load Err'));
     render(<MemoryRouter><AdminUsers /></MemoryRouter>);
-    await waitFor(() => expect(screen.getByText('Error al cargar usuarios.')).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByText('Error al cargar usuarios. Intenta recargar.')).toBeInTheDocument()
+    );
   });
 });

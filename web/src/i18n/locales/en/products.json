@@ -3,6 +3,13 @@
   "new_product": "New Product",
   "search_placeholder": "Search product...",
   "no_products": "No products found",
+  "list": {
+    "no_results": "Product not found",
+    "ingredients": "ingredients",
+    "quantity": "Quantity",
+    "units": "units",
+    "unknown": "Unknown item"
+  },
   "empty": {
     "title": "No products registered",
     "description": "Start by adding your first product.",
@@ -52,12 +59,23 @@
     "capacity_fixed": "Fixed: 1 piece always",
     "bring_to_event": "Bring to event",
     "reusable_no_cost": "No cost - Reusable",
+    "back_previous": "Go back to previous page",
+    "back_to_list": "Back to products list",
+    "upload_photo": "Upload product photo",
+    "remove_photo": "Remove product photo",
+    "add_ingredient_accessible": "Add another ingredient",
+    "add_equipment_accessible": "Add required equipment",
+    "add_supply_accessible": "Add fixed event supply",
+    "remove_ingredient": "Remove ingredient",
+    "remove_equipment": "Remove equipment",
+    "remove_supply": "Remove fixed supply",
     "validation": {
       "name_required": "Name is required",
       "name_min": "Name must be at least 2 characters",
       "price_required": "Price is required",
       "price_negative": "Price cannot be negative",
-      "category_required": "Category is required"
+      "category_required": "Category is required",
+      "loading_error": "Error loading product data."
     }
   },
   "details": {
@@ -66,6 +84,28 @@
     "recipe": "Recipe / Ingredients",
     "no_recipe": "This product does not have a defined recipe.",
     "quantity": "Qty.",
-    "example_placeholder": "Ex: 100"
+    "example_placeholder": "Ex: 100",
+    "delete_confirm_title": "Delete product",
+    "delete_confirm_desc": "Are you sure you want to delete this product? This action cannot be undone.",
+    "per_unit": "per unit",
+    "unit_cost": "Unit cost",
+    "in_supplies": "in supplies",
+    "margin": "Margin",
+    "margin_desc": "estimated",
+    "upcoming_events": "Upcoming events",
+    "demand_warning": "{{count}} upcoming units",
+    "demand_no_urgent": "Demand without urgency",
+    "demand_no_events": "No upcoming events",
+    "demand_high_this_week": "High demand this week.",
+    "estimated_revenue": "Estimated revenue",
+    "demand_forecast_summary": "{{units}} units across {{events}} events",
+    "demand_no_data": "No scheduled demand",
+    "demand_by_date": "Demand by date",
+    "total_demand": "Total demand",
+    "est_suffix": "estimated",
+    "no_ingredients": "This product has no configured ingredients.",
+    "configure_composition": "Configure composition",
+    "fixed_cost_per_event": "Fixed cost per event",
+    "back_to_products": "Back to products"
   }
 }

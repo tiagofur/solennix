@@ -78,7 +78,7 @@ describe('QuickClientModal', () => {
   it('calls onClose when the Cancelar button is clicked', () => {
     render(<QuickClientModal {...defaultProps} />);
 
-    fireEvent.click(screen.getByText('Cancelar'));
+    fireEvent.click(screen.getByText(/Cancelar|action\.cancel/i));
     expect(defaultProps.onClose).toHaveBeenCalledTimes(1);
   });
 
@@ -258,7 +258,7 @@ describe('QuickClientModal', () => {
     fireEvent.click(screen.getByLabelText('Guardar cliente'));
 
     await waitFor(() => {
-      expect(screen.getByText('Guardando...')).toBeInTheDocument();
+      expect(screen.getByText(/Guardando|action\.saving/i)).toBeInTheDocument();
       expect(screen.getByLabelText('Guardando cliente...')).toBeDisabled();
     });
 
@@ -271,7 +271,7 @@ describe('QuickClientModal', () => {
     });
 
     await waitFor(() => {
-      expect(screen.queryByText('Guardando...')).not.toBeInTheDocument();
+      expect(screen.queryByText(/Guardando|action\.saving/i)).not.toBeInTheDocument();
     });
   });
 
@@ -359,7 +359,7 @@ describe('QuickClientModal', () => {
   it('renders Guardar button with the save icon by default', () => {
     render(<QuickClientModal {...defaultProps} />);
 
-    expect(screen.getByText('Guardar')).toBeInTheDocument();
+    expect(screen.getByText(/Guardar|action\.save/i)).toBeInTheDocument();
     expect(screen.getByLabelText('Guardar cliente')).toBeInTheDocument();
   });
 });

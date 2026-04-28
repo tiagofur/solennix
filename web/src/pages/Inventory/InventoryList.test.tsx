@@ -27,7 +27,7 @@ vi.mock('../../hooks/useToast', () => ({
 }));
 
 /** Helper: open the RowActionMenu for a given row and click an action */
-async function openRowMenuAndClick(actionLabel: string | RegExp) {
+async function openRowMenuAndClick(actionLabel: RegExp) {
   // RowActionMenu renders a button with aria-label="Acciones"
   const menuButtons = screen.getAllByRole('button', { name: 'Acciones' });
   // Click the first (or only) one
@@ -181,10 +181,10 @@ describe('InventoryList', () => {
     });
 
     // Open RowActionMenu and click Eliminar
-    await openRowMenuAndClick('Eliminar');
+    await openRowMenuAndClick(/Eliminar|action\.delete/i);
 
     // ConfirmDialog opens with title "Eliminar ítem de inventario"
-    const confirmBtn = await screen.findByRole('button', { name: 'Eliminar permanentemente' });
+    const confirmBtn = await screen.findByRole('button', { name: /Eliminar permanentemente|actions\.delete_permanent/i });
     fireEvent.click(confirmBtn);
 
     await waitFor(() => {
@@ -229,10 +229,10 @@ describe('InventoryList', () => {
     expect(screen.getByText('$0.00')).toBeInTheDocument();
 
     // Open RowActionMenu and click Eliminar
-    await openRowMenuAndClick('Eliminar');
+    await openRowMenuAndClick(/Eliminar|action\.delete/i);
 
     // ConfirmDialog: click confirm button
-    const confirmBtn = await screen.findByRole('button', { name: 'Eliminar permanentemente' });
+    const confirmBtn = await screen.findByRole('button', { name: /Eliminar permanentemente|actions\.delete_permanent/i });
     fireEvent.click(confirmBtn);
 
     await waitFor(() => {
@@ -261,14 +261,14 @@ describe('InventoryList', () => {
     });
 
     // Open RowActionMenu and click Eliminar to open the ConfirmDialog
-    await openRowMenuAndClick('Eliminar');
+    await openRowMenuAndClick(/Eliminar|action\.delete/i);
 
     // ConfirmDialog should be visible
-    const cancelBtn = await screen.findByRole('button', { name: 'Cancelar' });
+    const cancelBtn = await screen.findByRole('button', { name: /Cancelar|action\.cancel/i });
     fireEvent.click(cancelBtn);
 
     // The confirm button should no longer be present (dialog closed)
-    expect(screen.queryByRole('button', { name: 'Eliminar permanentemente' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Eliminar permanentemente|actions\.delete_permanent/i })).not.toBeInTheDocument();
   });
 
   it('renders consumibles section with unit label', async () => {
@@ -581,7 +581,7 @@ describe('InventoryList', () => {
     // Edit is inside the RowActionMenu — open menu and verify the menuitem exists
     const menuButton = screen.getByRole('button', { name: 'Acciones' });
     fireEvent.click(menuButton);
-    const editMenuItem = await screen.findByRole('menuitem', { name: 'Editar' });
+    const editMenuItem = await screen.findByRole('menuitem', { name: /Editar|action\.edit/i });
     expect(editMenuItem).toBeInTheDocument();
   });
 

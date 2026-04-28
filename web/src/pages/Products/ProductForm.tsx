@@ -325,6 +325,7 @@ export const ProductForm: React.FC = () => {
           type="button"
           onClick={() => navigate(-1)}
           className="mb-6 flex items-center text-sm font-medium text-text-secondary hover:text-text transition-colors"
+          aria-label={t("products:form.back_previous")}
         >
           <ArrowLeft className="h-4 w-4 mr-1" aria-hidden="true" />
           {t("common:action.back")}
@@ -352,6 +353,7 @@ export const ProductForm: React.FC = () => {
             type="button"
             onClick={() => navigate("/products")}
             className="mr-4 p-2 rounded-full hover:bg-surface-alt text-text-secondary"
+            aria-label={t("products:form.back_to_list")}
           >
             <ArrowLeft className="h-5 w-5" aria-hidden="true" />
           </button>
@@ -393,6 +395,7 @@ export const ProductForm: React.FC = () => {
                       if (e.key === "Enter" || e.key === " ")
                         fileInputRef.current?.click();
                     }}
+                    aria-label={t("products:form.upload_photo")}
                   >
                     {imagePreview ? (
                       <img
@@ -412,6 +415,7 @@ export const ProductForm: React.FC = () => {
                       type="button"
                       onClick={removeImage}
                       className="absolute -top-1 -right-1 bg-error text-white rounded-full p-0.5 hover:bg-error/80 transition-colors"
+                      aria-label={t("products:form.remove_photo")}
                     >
                       <X className="h-3.5 w-3.5" />
                     </button>
@@ -530,6 +534,7 @@ export const ProductForm: React.FC = () => {
                   type="button"
                   onClick={() => handleRemoveIngredient(originalIndex)}
                   className="absolute top-1 right-1 text-text-secondary hover:text-error transition-colors"
+                  aria-label={t("products:form.remove_ingredient")}
                 >
                   <Trash2 className="h-4 w-4" aria-hidden="true" />
                 </button>
@@ -616,6 +621,7 @@ export const ProductForm: React.FC = () => {
               type="button"
               onClick={handleAddIngredient}
               className="w-full flex items-center justify-center px-4 py-3 border border-border shadow-sm text-sm font-medium rounded-xl text-text-secondary bg-card hover:bg-surface-alt transition-colors"
+              aria-label={t("products:form.add_ingredient_accessible")}
             >
               <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> {t("products:form.add_ingredient")}
             </button>
@@ -652,6 +658,7 @@ export const ProductForm: React.FC = () => {
                   type="button"
                   onClick={() => handleRemoveIngredient(originalIndex)}
                   className="absolute top-1 right-1 text-text-secondary hover:text-error transition-colors"
+                  aria-label={t("products:form.remove_equipment")}
                 >
                   <Trash2 className="h-4 w-4" aria-hidden="true" />
                 </button>
@@ -725,6 +732,7 @@ export const ProductForm: React.FC = () => {
               type="button"
               onClick={handleAddEquipment}
               className="w-full flex items-center justify-center px-4 py-3 border border-border shadow-sm text-sm font-medium rounded-xl text-text-secondary bg-card hover:bg-surface-alt transition-colors"
+              aria-label={t("products:form.add_equipment_accessible")}
             >
               <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> {t("products:form.add_equipment")}
             </button>
@@ -750,6 +758,7 @@ export const ProductForm: React.FC = () => {
                   type="button"
                   onClick={() => handleRemoveIngredient(originalIndex)}
                   className="absolute top-1 right-1 text-text-secondary hover:text-error transition-colors"
+                  aria-label={t("products:form.remove_supply")}
                 >
                   <Trash2 className="h-4 w-4" aria-hidden="true" />
                 </button>
@@ -819,6 +828,7 @@ export const ProductForm: React.FC = () => {
               type="button"
               onClick={handleAddSupply}
               className="w-full flex items-center justify-center px-4 py-3 border border-border shadow-sm text-sm font-medium rounded-xl text-text-secondary bg-card hover:bg-surface-alt transition-colors"
+              aria-label={t("products:form.add_supply_accessible")}
             >
               <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> {t("products:form.add_supply")}
             </button>

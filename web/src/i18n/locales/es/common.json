@@ -21,12 +21,15 @@
     "retry": "Reintentar",
     "loading": "Cargando...",
     "select": "Seleccionar",
+    "other": "Otro",
     "view": "Ver",
     "download": "Descargar",
     "upload": "Subir",
     "hide": "Ocultar",
     "show": "Mostrar",
-    "close_notification": "Cerrar notificación"
+    "close_notification": "Cerrar notificación",
+    "view_all": "Ver todos",
+    "view_alerts": "Ver alertas"
   },
   "actions": {
     "save": "Guardar",
@@ -112,7 +115,8 @@
     "pending": "Pendiente",
     "active": "Activo",
     "inactive": "Inactivo",
-    "select_status": "Seleccionar estado"
+    "select_status": "Seleccionar estado",
+    "loading": "Cargando"
   },
   "error": {
     "generic": "Algo salió mal",
@@ -176,6 +180,23 @@
     "amount_required": "Monto requerido",
     "reference_placeholder": "Ref. de pago..."
   },
+  "not_defined": "No definido",
+  "products": "Productos",
+  "product": "Producto",
+  "price": "Precio",
+  "total": "Total",
+  "description": "Descripción",
+  "supply": "Insumo",
+  "unit_short": "und",
+  "required": "Requerido",
+  "in_stock": "En stock",
+  "action": "Acción",
+  "subtotal": "Subtotal",
+  "equipment": "Equipo",
+  "staff": "Personal",
+  "buy": "Comprar",
+  "event": "Evento",
+  "uploading": "Subiendo",
   "format": {
     "bold": "Negrita (**texto**)",
     "italic": "Cursiva (*texto*)",

@@ -21,12 +21,15 @@
     "retry": "Retry",
     "loading": "Loading...",
     "select": "Select",
+    "other": "Other",
     "view": "View",
     "download": "Download",
     "upload": "Upload",
     "hide": "Hide",
     "show": "Show",
-    "close_notification": "Close notification"
+    "close_notification": "Close notification",
+    "view_all": "View all",
+    "view_alerts": "View alerts"
   },
   "actions": {
     "save": "Save",
@@ -112,7 +115,8 @@
     "pending": "Pending",
     "active": "Active",
     "inactive": "Inactive",
-    "select_status": "Select status"
+    "select_status": "Select status",
+    "loading": "Loading"
   },
   "error": {
     "generic": "Something went wrong",

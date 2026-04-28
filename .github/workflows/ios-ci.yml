@@ -33,10 +33,14 @@ jobs:
 
       - name: Select stable Xcode
         run: |
-          if [ -d /Applications/Xcode_15.4.app ]; then
-            sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
-          elif [ -d /Applications/Xcode_16.2.app ]; then
+          if [ -d /Applications/Xcode_16.2.app ]; then
             sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
+          elif [ -d /Applications/Xcode_15.4.app ]; then
+            sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
+          else
+            echo "No supported Xcode found"
+            ls -1 /Applications | grep Xcode || true
+            exit 1
           fi
           xcodebuild -version
 

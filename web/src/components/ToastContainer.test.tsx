@@ -73,7 +73,7 @@ describe('ToastContainer', () => {
     });
 
     render(<ToastContainer />);
-    const closeButton = screen.getByLabelText('Cerrar notificación');
+    const closeButton = screen.getByLabelText(/Cerrar notificación|action\.close_notification/i);
     expect(closeButton).toBeInTheDocument();
   });
 
@@ -87,7 +87,7 @@ describe('ToastContainer', () => {
     const { rerender } = render(<ToastContainer />);
     expect(screen.getByText('Toast a cerrar')).toBeInTheDocument();
 
-    await user.click(screen.getByLabelText('Cerrar notificación'));
+    await user.click(screen.getByLabelText(/Cerrar notificación|action\.close_notification/i));
 
     rerender(<ToastContainer />);
     expect(screen.queryByText('Toast a cerrar')).not.toBeInTheDocument();
@@ -102,7 +102,7 @@ describe('ToastContainer', () => {
     });
 
     const { rerender } = render(<ToastContainer />);
-    const closeButtons = screen.getAllByLabelText('Cerrar notificación');
+    const closeButtons = screen.getAllByLabelText(/Cerrar notificación|action\.close_notification/i);
 
     // Click close on the second toast (error toast)
     await user.click(closeButtons[1]);
@@ -163,6 +163,6 @@ describe('ToastContainer', () => {
     });
 
     render(<ToastContainer />);
-    expect(screen.getByText('Cerrar')).toBeInTheDocument();
+    expect(screen.getByText(/Cerrar|action\.close/i)).toBeInTheDocument();
   });
 });

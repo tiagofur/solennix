@@ -46,12 +46,12 @@ export const InventoryForm: React.FC = () => {
   const inventorySchema = useMemo(() => z.object({
     ingredient_name: z
       .string()
-      .min(2, t("inventory:form.validation.name_required")),
+      .min(2, t("inventory:form.validation.name_min")),
     type: z.enum(["ingredient", "equipment", "supply"]),
     current_stock: z.coerce.number().min(0, t("inventory:form.validation.stock_min")),
     minimum_stock: z.coerce
       .number()
-      .min(0, t("inventory:form.validation.stock_min")),
+      .min(0, t("inventory:form.validation.minimum_stock_min")),
     unit: z.string().min(1, t("inventory:form.validation.unit_required")),
     unit_cost: z.coerce
       .number()
@@ -141,7 +141,7 @@ export const InventoryForm: React.FC = () => {
           className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"
           aria-hidden="true"
         ></div>
-        <span className="sr-only">{t("common:status.loading")}...</span>
+        <span className="ml-3 text-sm text-text-secondary">Cargando límites de plan...</span>
       </div>
     );
   }
@@ -153,9 +153,10 @@ export const InventoryForm: React.FC = () => {
           type="button"
           onClick={() => navigate(-1)}
           className="mb-6 flex items-center text-sm font-medium text-text-secondary hover:text-text transition-colors"
+          aria-label={t("inventory:form.back_previous", { defaultValue: "Regresar a la página anterior" })}
         >
           <ArrowLeft className="h-4 w-4 mr-1" aria-hidden="true" />
-          {t("common:action.back")}
+          Regresar
         </button>
         <div className="flex justify-center mt-12">
           <UpgradeBanner
@@ -169,7 +170,7 @@ export const InventoryForm: React.FC = () => {
     );
   }
 
-  const title = id ? t("common:action.edit") : t("inventory:new_item");
+  const title = id ? t("inventory:edit_item_accessible") : t("inventory:new_item");
 
   return (
     <div className="space-y-6">
@@ -180,6 +181,7 @@ export const InventoryForm: React.FC = () => {
             type="button"
             onClick={() => navigate("/inventory")}
             className="mr-4 p-2 rounded-full hover:bg-surface-alt text-text-secondary transition-colors"
+            aria-label={t("inventory:form.back_to_list", { defaultValue: "Volver a la lista de inventario" })}
           >
             <ArrowLeft className="h-5 w-5" aria-hidden="true" />
           </button>
@@ -217,6 +219,7 @@ export const InventoryForm: React.FC = () => {
                 type="text"
                 {...register("ingredient_name")}
                 className="w-full rounded-xl shadow-sm border border-border bg-card text-text p-3 transition-shadow focus:ring-2 focus:ring-primary/20"
+                aria-label={t("inventory:form.name_accessible")}
                 aria-required="true"
                 aria-invalid={errors.ingredient_name ? "true" : "false"}
               />
@@ -243,11 +246,11 @@ export const InventoryForm: React.FC = () => {
                 className="w-full rounded-xl shadow-sm border border-border bg-card text-text p-3 transition-shadow focus:ring-2 focus:ring-primary/20"
                 aria-required="true"
               >
-                <option value="ingredient">{t("inventory:list.type_ingredient")}</option>
+                <option value="ingredient">Insumo (Consumible)</option>
                 <option value="supply">
-                  {t("inventory:list.type_supply")}
+                  Insumo por Evento (Costo fijo por evento)
                 </option>
-                <option value="equipment">{t("inventory:list.type_equipment")}</option>
+                <option value="equipment">Activo / Equipo (Retornable)</option>
               </select>
               {errors.type && (
                 <p
@@ -409,6 +412,7 @@ export const InventoryForm: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading}
+              aria-label={isLoading ? "Guardando ítem" : t("common:action.save")}
               className="inline-flex justify-center py-2.5 px-8 border border-transparent shadow-sm text-sm font-medium rounded-xl text-white premium-gradient hover:opacity-90 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-primary/40 disabled:opacity-50 transition-opacity"
             >
               <Save className="h-5 w-5 mr-2" aria-hidden="true" />
