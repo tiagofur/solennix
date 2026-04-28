@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useForm, Resolver } from "react-hook-form";
+import { useForm, Resolver, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useTranslation } from "react-i18next";
@@ -79,7 +79,7 @@ export const ProductForm: React.FC = () => {
     register,
     handleSubmit,
     reset,
-    watch,
+    control,
     formState: { errors },
   } = useForm<ProductFormData>({
     resolver: zodResolver(productSchema) as Resolver<ProductFormData>,
@@ -89,6 +89,8 @@ export const ProductForm: React.FC = () => {
       base_price: 0,
     },
   });
+
+  const watchedProductName = useWatch({ control, name: "name" });
 
   useEffect(() => {
     if (existingProduct) {
@@ -346,7 +348,7 @@ export const ProductForm: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <Breadcrumb items={[{ label: t("products:title"), href: '/products' }, { label: id ? (watch("name") || title) : title }]} />
+      <Breadcrumb items={[{ label: t("products:title"), href: '/products' }, { label: id ? (watchedProductName || title) : title }]} />
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center">
           <button

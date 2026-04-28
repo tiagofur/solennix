@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useTranslation } from "react-i18next";
@@ -46,11 +46,13 @@ export const ClientForm: React.FC = () => {
     register,
     handleSubmit,
     reset,
-    watch,
+    control,
     formState: { errors },
   } = useForm<ClientFormData>({
     resolver: zodResolver(clientSchema),
   });
+
+  const watchedName = useWatch({ control, name: "name" });
 
   useEffect(() => {
     if (existingClient) {
@@ -151,7 +153,7 @@ export const ClientForm: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <Breadcrumb items={[{ label: t("clients:title"), href: '/clients' }, { label: id ? (watch("name") || t("clients:details.edit")) : t("clients:new_client") }]} />
+      <Breadcrumb items={[{ label: t("clients:title"), href: '/clients' }, { label: id ? (watchedName || t("clients:details.edit")) : t("clients:new_client") }]} />
       <div className="flex items-center justify-between">
         <div className="flex items-center">
           <button

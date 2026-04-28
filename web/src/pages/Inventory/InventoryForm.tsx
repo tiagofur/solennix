@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useForm, Resolver } from "react-hook-form";
+import { useForm, Resolver, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useAuth } from "@/hooks/useAuth";
@@ -77,7 +77,7 @@ export const InventoryForm: React.FC = () => {
     handleSubmit,
     reset,
     setValue,
-    watch,
+    control,
     formState: { errors },
   } = useForm<InventoryFormData>({
     resolver: zodResolver(inventorySchema) as Resolver<InventoryFormData>,
@@ -89,6 +89,8 @@ export const InventoryForm: React.FC = () => {
       unit_cost: 0,
     },
   });
+
+  const watchedIngredientName = useWatch({ control, name: "ingredient_name" });
 
   useEffect(() => {
     if (existingItem) {
@@ -174,7 +176,7 @@ export const InventoryForm: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <Breadcrumb items={[{ label: t("inventory:title"), href: '/inventory' }, { label: id ? (watch("ingredient_name") || title) : title }]} />
+      <Breadcrumb items={[{ label: t("inventory:title"), href: '/inventory' }, { label: id ? (watchedIngredientName || title) : title }]} />
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center">
           <button
