@@ -64,6 +64,15 @@ func makeReqWithIDParam(method, path, body string, id string, userID uuid.UUID) 
 	return req.WithContext(ctx)
 }
 
+// chiRouteCtxWithParam returns a context carrying a chi route context with a
+// single named URL parameter. Useful for testing public (unauthenticated)
+// endpoints that need a URL path parameter but no user identity.
+func chiRouteCtxWithParam(paramName, paramValue string) context.Context {
+	rctx := chi.NewRouteContext()
+	rctx.URLParams.Add(paramName, paramValue)
+	return context.WithValue(context.Background(), chi.RouteCtxKey, rctx)
+}
+
 // proUser returns a mock user with "pro" plan.
 func proUser() *models.User {
 	return &models.User{ID: uuid.New(), Plan: "pro"}
