@@ -1693,6 +1693,432 @@ components:
         message:
           type: string
           description: Human-readable error message
+    EventFormLink:
+      type: object
+      required:
+        - id
+        - user_id
+        - token
+        - status
+        - expires_at
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        token:
+          type: string
+          description: 64-character hex token (256 bits of entropy)
+        label:
+          type: string
+          nullable: true
+          description: Optional human-readable label for the link
+          maxLength: 255
+        status:
+          type: string
+          enum: [active, used, expired]
+        submitted_event_id:
+          type: string
+          format: uuid
+          nullable: true
+        submitted_client_id:
+          type: string
+          format: uuid
+          nullable: true
+        expires_at:
+          type: string
+          format: date-time
+        used_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        url:
+          type: string
+          description: Computed shareable URL (not stored in DB)
+    EventFormLinkGenerateRequest:
+      type: object
+      properties:
+        label:
+          type: string
+          nullable: true
+          description: Optional human-readable label
+          maxLength: 255
+        ttl_days:
+          type: integer
+          minimum: 1
+          maximum: 30
+          description: Link validity in days (default 7)
+    PublicProduct:
+      type: object
+      required:
+        - id
+        - name
+        - category
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        category:
+          type: string
+        image_url:
+          type: string
+          nullable: true
+    PublicOrganizer:
+      type: object
+      properties:
+        business_name:
+          type: string
+          nullable: true
+        logo_url:
+          type: string
+          nullable: true
+        brand_color:
+          type: string
+          nullable: true
+    EventFormDataResponse:
+      type: object
+      required:
+        - organizer
+        - products
+        - link_id
+        - expires_at
+      properties:
+        organizer:
+          $ref: "#/components/schemas/PublicOrganizer"
+        products:
+          type: array
+          items:
+            $ref: "#/components/schemas/PublicProduct"
+        link_id:
+          type: string
+          format: uuid
+        expires_at:
+          type: string
+          format: date-time
+    EventFormSubmissionProduct:
+      type: object
+      required:
+        - product_id
+        - quantity
+      properties:
+        product_id:
+          type: string
+          format: uuid
+        quantity:
+          type: number
+          format: double
+          minimum: 1
+    EventFormSubmission:
+      type: object
+      required:
+        - client_name
+        - client_phone
+        - event_date
+        - service_type
+        - num_people
+      properties:
+        client_name:
+          type: string
+        client_phone:
+          type: string
+        client_email:
+          type: string
+          format: email
+          nullable: true
+        event_date:
+          type: string
+          description: Date in YYYY-MM-DD format
+        service_type:
+          type: string
+        num_people:
+          type: integer
+          minimum: 1
+        location:
+          type: string
+          nullable: true
+        city:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        products:
+          type: array
+          items:
+            $ref: "#/components/schemas/EventFormSubmissionProduct"
+    EventFormSubmitResponse:
+      type: object
+      required:
+        - success
+        - message
+        - event_id
+        - client_id
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        event_id:
+          type: string
+          format: uuid
+        client_id:
+          type: string
+          format: uuid
+    EventPublicLink:
+      type: object
+      required:
+        - id
+        - event_id
+        - user_id
+        - token
+        - status
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        event_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        token:
+          type: string
+          description: 64-character hex token
+        status:
+          type: string
+          enum: [active, revoked, expired]
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        revoked_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        url:
+          type: string
+          description: Computed client-portal URL (not stored in DB)
+    EventPublicLinkCreateRequest:
+      type: object
+      properties:
+        ttl_days:
+          type: integer
+          minimum: 1
+          maximum: 730
+          nullable: true
+          description: Link validity in days (1–730, up to 2 years). Omit or null for no expiry. Higher limit than EventFormLink because client-portal links are long-lived.
+    PublicEventDetails:
+      type: object
+      required:
+        - id
+        - service_type
+        - event_date
+        - num_people
+        - status
+      properties:
+        id:
+          type: string
+          format: uuid
+        service_type:
+          type: string
+        event_date:
+          type: string
+          description: Date in YYYY-MM-DD format
+        start_time:
+          type: string
+          nullable: true
+        end_time:
+          type: string
+          nullable: true
+        location:
+          type: string
+          nullable: true
+        city:
+          type: string
+          nullable: true
+        num_people:
+          type: integer
+        status:
+          type: string
+          enum: [quoted, confirmed, completed, cancelled]
+    PublicOrganizerBrand:
+      type: object
+      properties:
+        business_name:
+          type: string
+          nullable: true
+        logo_url:
+          type: string
+          nullable: true
+        brand_color:
+          type: string
+          nullable: true
+    PublicClientInfo:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+    PublicPaymentSummary:
+      type: object
+      required:
+        - total
+        - paid
+        - remaining
+        - currency
+      properties:
+        total:
+          type: number
+          format: double
+        paid:
+          type: number
+          format: double
+        remaining:
+          type: number
+          format: double
+        currency:
+          type: string
+          description: ISO 4217 currency code (e.g. MXN)
+    PublicEventView:
+      type: object
+      required:
+        - event
+        - organizer
+        - client
+        - payment
+      properties:
+        event:
+          $ref: "#/components/schemas/PublicEventDetails"
+        organizer:
+          $ref: "#/components/schemas/PublicOrganizerBrand"
+        client:
+          $ref: "#/components/schemas/PublicClientInfo"
+        payment:
+          $ref: "#/components/schemas/PublicPaymentSummary"
+    StaffTeamMember:
+      type: object
+      required:
+        - team_id
+        - staff_id
+        - is_lead
+        - position
+        - created_at
+      properties:
+        team_id:
+          type: string
+          format: uuid
+        staff_id:
+          type: string
+          format: uuid
+        is_lead:
+          type: boolean
+        position:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        staff_name:
+          type: string
+          nullable: true
+        staff_role_label:
+          type: string
+          nullable: true
+        staff_phone:
+          type: string
+          nullable: true
+        staff_email:
+          type: string
+          nullable: true
+    StaffTeam:
+      type: object
+      required:
+        - id
+        - user_id
+        - name
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        role_label:
+          type: string
+          nullable: true
+          description: Default role applied to each member when assigned to an event
+        notes:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        members:
+          type: array
+          items:
+            $ref: "#/components/schemas/StaffTeamMember"
+          description: Populated by GetTeam; absent in list responses
+        member_count:
+          type: integer
+          nullable: true
+          description: Populated in list responses; absent in detail responses
+    StaffTeamUpsertRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        role_label:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        members:
+          type: array
+          items:
+            type: object
+            required:
+              - staff_id
+            properties:
+              staff_id:
+                type: string
+                format: uuid
+              is_lead:
+                type: boolean
+              position:
+                type: integer
 paths:
   /health:
     get:
@@ -4064,6 +4490,552 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
         "500":
           description: Failed to get audit logs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/event-forms:
+    get:
+      operationId: listEventFormLinks
+      summary: List all shareable event form links for the authenticated user
+      responses:
+        "200":
+          description: List of event form links
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EventFormLink"
+        "401":
+          description: Unauthorized
+        "500":
+          description: Failed to list links
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: generateEventFormLink
+      summary: Create a new shareable event form link
+      description: |
+        Generates a cryptographically random token link that a prospective client
+        opens in a browser to fill out event details and select products (without prices).
+        On submission it creates a draft Event + Client for the organizer.
+        Basic plan users are limited to 3 active links.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EventFormLinkGenerateRequest"
+      responses:
+        "201":
+          description: Event form link created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventFormLink"
+        "400":
+          description: Validation error (e.g. ttl_days out of range or label too long)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "402":
+          description: Plan limit reached (basic plan allows max 3 active links)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Failed to create link
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/event-forms/{id}:
+    delete:
+      operationId: deleteEventFormLink
+      summary: Revoke (delete) a shareable event form link
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Link revoked
+        "400":
+          description: Invalid link ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "404":
+          description: Link not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Failed to delete link
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/events/{id}/public-link:
+    get:
+      operationId: getEventPublicLink
+      summary: Get the currently active client-portal link for an event
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Active public link
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventPublicLink"
+        "400":
+          description: Invalid event ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "404":
+          description: No active public link for this event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Failed to get public link
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: createOrRotateEventPublicLink
+      summary: Create or rotate the client-portal link for an event
+      description: |
+        Creates a new active public link, revoking any previously active one.
+        Repeated calls rotate the token, invalidating any URL already shared.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EventPublicLinkCreateRequest"
+      responses:
+        "201":
+          description: Public link created or rotated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventPublicLink"
+        "400":
+          description: Invalid event ID or ttl_days out of range
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "404":
+          description: Event not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Failed to create public link
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: revokeEventPublicLink
+      summary: Revoke the active client-portal link for an event
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Public link revoked
+        "400":
+          description: Invalid event ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "404":
+          description: No active public link to revoke
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Failed to revoke public link
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/public/event-forms/{token}:
+    get:
+      security: []
+      operationId: getEventFormData
+      summary: Get organizer branding and product catalog for a shareable event form
+      description: |
+        Public endpoint (no auth). Rate-limited to 10 requests/minute.
+        Returns organizer branding and active products (without prices) for the form.
+        Responds 410 Gone when the link has been used or expired.
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Form data including organizer branding and product catalog
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventFormDataResponse"
+        "400":
+          description: Token is required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Link not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "410":
+          description: Link has been used or has expired
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: link_invalid
+                  message:
+                    type: string
+        "500":
+          description: Failed to load form data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      security: []
+      operationId: submitEventForm
+      summary: Submit a public event form
+      description: |
+        Public endpoint (no auth). Rate-limited to 10 requests/minute.
+        Creates a Client + Event + EventProducts in a single transaction, then marks
+        the link as used. Links can only be submitted once.
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EventFormSubmission"
+      responses:
+        "201":
+          description: Form submitted successfully — draft event and client created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventFormSubmitResponse"
+        "400":
+          description: Validation error or invalid product ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Link not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Link has already been used
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: link_already_used
+                  message:
+                    type: string
+        "410":
+          description: Link has expired or is no longer valid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: link_invalid
+                  message:
+                    type: string
+        "500":
+          description: Failed to process form submission
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/public/events/{token}:
+    get:
+      security: []
+      operationId: getEventPortalData
+      summary: Get read-only client portal data for a shared event link
+      description: |
+        Public endpoint (no auth). Rate-limited to 10 requests/minute.
+        The token is the proof of access — no authentication required.
+        Responds 404 for unknown tokens and 410 Gone for revoked or expired links.
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Client portal data with event details, organizer branding, and payment summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicEventView"
+        "400":
+          description: Token is required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Link not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "410":
+          description: Link has been revoked, expired, or the associated event was deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Failed to load portal data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/staff/teams:
+    get:
+      operationId: listStaffTeams
+      summary: List all staff teams for the authenticated user
+      description: Returns team summaries with member counts but without full member rows.
+      responses:
+        "200":
+          description: List of staff teams
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StaffTeam"
+        "401":
+          description: Unauthorized
+        "500":
+          description: Failed to fetch teams
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: createStaffTeam
+      summary: Create a new staff team with optional initial members
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StaffTeamUpsertRequest"
+      responses:
+        "201":
+          description: Staff team created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffTeam"
+        "400":
+          description: Validation error or invalid member (unknown or cross-tenant staff)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "500":
+          description: Failed to create team
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/staff/teams/{id}:
+    get:
+      operationId: getStaffTeam
+      summary: Get a staff team with its full member list
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Staff team with members
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffTeam"
+        "400":
+          description: Invalid team ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "404":
+          description: Team not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Failed to fetch team
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      operationId: updateStaffTeam
+      summary: Update a staff team and atomically replace its members
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StaffTeamUpsertRequest"
+      responses:
+        "200":
+          description: Staff team updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffTeam"
+        "400":
+          description: Invalid team ID, validation error, or invalid member
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "404":
+          description: Team not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Failed to update team
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteStaffTeam
+      summary: Delete a staff team (members cascade via FK)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Team deleted
+        "400":
+          description: Invalid team ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+        "404":
+          description: Team not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Failed to delete team
           content:
             application/json:
               schema:

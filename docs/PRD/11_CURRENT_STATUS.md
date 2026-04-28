@@ -344,7 +344,7 @@ status: active
 - ✅ 030: Indices de paginacion y rendimiento
 - ✅ 031: Tabla notification_log para deduplicacion de push
 - ✅ 032: Token blacklist persistente (revoked_tokens)
-- ✅ 033: Fulltext search (FTS5)
+- ✅ 033: pg_trgm similarity search con índices GIN (gin_trgm_ops) — búsqueda híbrida ILIKE + similarity(), no FTS nativo
 - ✅ 034: Audit logs
 - ✅ 035: Refresh token families
 - ✅ 036: Live activity tokens

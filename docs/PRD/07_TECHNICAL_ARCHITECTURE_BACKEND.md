@@ -709,6 +709,14 @@ Rate limit: **30 requests/minuto** por IP.
 | ------ | ------------- | ------------------------- | ------------------------------------------------------------ |
 | `GET`  | `/api/search` | `SearchHandler.SearchAll` | Busqueda global en clientes, productos, inventario y eventos |
 
+**Contrato de comportamiento:**
+
+- **Estrategia híbrida**: cada entidad usa `ILIKE '%query%'` (case-insensitive) combinado con `pg_trgm similarity() > 0.3` (fuzzy). Los índices GIN con `gin_trgm_ops` (migración 033) aceleran ambas operaciones.
+- **Paralelismo**: el handler lanza 4 goroutines simultáneas (clients, products, inventory, events) coordinadas con `sync.WaitGroup`.
+- **Límite duro de 6 resultados por categoría**: cada repo devuelve hasta 10 candidatos; el handler trunca a 6 antes de serializar la respuesta.
+- **Filtrado por `user_id`**: todas las queries limitan resultados al usuario autenticado.
+- **FTS nativo** (`tsvector`/stemming en español) es deuda técnica planificada, no comportamiento actual.
+
 ### 6.16 Rutas de Uploads
 
 Rate limit: **5 requests/minuto** por IP.
