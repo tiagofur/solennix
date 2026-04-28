@@ -29,16 +29,90 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      service:
+        description: "Servicio a desplegar"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - all
+          - backend
+          - frontend
 
 concurrency:
   group: deploy-production
   cancel-in-progress: false
 
 jobs:
+  detect-changes:
+    name: Detect deploy scope
+    runs-on: ubuntu-latest
+    outputs:
+      deploy_backend: ${{ steps.scope.outputs.deploy_backend }}
+      deploy_frontend: ${{ steps.scope.outputs.deploy_frontend }}
+    steps:
+      - name: Resolve deploy scope
+        id: scope
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const eventName = context.eventName;
+
+            // Manual dispatch: explicit operator choice.
+            if (eventName === 'workflow_dispatch') {
+              const service = (context.payload.inputs?.service || 'all').toLowerCase();
+              core.setOutput('deploy_backend', service === 'all' || service === 'backend' ? 'true' : 'false');
+              core.setOutput('deploy_frontend', service === 'all' || service === 'frontend' ? 'true' : 'false');
+              core.info(`Manual deploy scope: ${service}`);
+              return;
+            }
+
+            // Automatic deploy after CI on main: infer from merged PR file list.
+            const prs = context.payload.workflow_run?.pull_requests || [];
+            if (prs.length === 0) {
+              // Direct push/squash without PR metadata -> safe default.
+              core.setOutput('deploy_backend', 'true');
+              core.setOutput('deploy_frontend', 'true');
+              core.info('No PR metadata found; defaulting to deploy all services.');
+              return;
+            }
+
+            const prNumber = prs[0].number;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              owner,
+              repo,
+              pull_number: prNumber,
+              per_page: 100,
+            });
+
+            const paths = files.map(f => f.filename);
+            const touchesBackend = paths.some(p => p.startsWith('backend/'));
+            const touchesFrontend = paths.some(p => p.startsWith('web/'));
+            const touchesDeployInfra = paths.some(
+              p => p.startsWith('infra/') || p === 'docker-compose.yml' || p.startsWith('.github/workflows/deploy.yml')
+            );
+
+            let deployBackend = touchesBackend;
+            let deployFrontend = touchesFrontend;
+
+            // Infra / compose changes can impact both services.
+            if (touchesDeployInfra) {
+              deployBackend = true;
+              deployFrontend = true;
+            }
+
+            core.setOutput('deploy_backend', deployBackend ? 'true' : 'false');
+            core.setOutput('deploy_frontend', deployFrontend ? 'true' : 'false');
+            core.info(`PR #${prNumber} -> backend=${deployBackend}, frontend=${deployFrontend}`);
+
   deploy:
     name: Deploy to VPS
+    needs: detect-changes
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success') && (needs.detect-changes.outputs.deploy_backend == 'true' || needs.detect-changes.outputs.deploy_frontend == 'true') }}
     timeout-minutes: 20
     environment:
       name: Production
@@ -51,6 +125,7 @@ jobs:
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT }}
+          envs: DEPLOY_BACKEND,DEPLOY_FRONTEND
           script: |
             set -euo pipefail
             cd "${{ secrets.VPS_APP_PATH }}"
@@ -58,34 +133,65 @@ jobs:
             git fetch origin main
             git checkout main
             git reset --hard origin/main
-            echo "→ Cleaning up orphan containers from previous compose versions"
-            docker rm -f solennix-frontend solennix-backend solennix-db 2>/dev/null || true
-            echo "→ Rebuilding containers"
+
+            if [ "${DEPLOY_BACKEND:-false}" = "true" ] && [ "${DEPLOY_FRONTEND:-false}" = "true" ]; then
+              echo "→ Deploy scope: all services"
+              DEPLOY_TARGET="all"
+            elif [ "${DEPLOY_BACKEND:-false}" = "true" ]; then
+              echo "→ Deploy scope: backend"
+              DEPLOY_TARGET="backend"
+            elif [ "${DEPLOY_FRONTEND:-false}" = "true" ]; then
+              echo "→ Deploy scope: frontend"
+              DEPLOY_TARGET="frontend"
+            else
+              echo "→ Nothing to deploy"
+              exit 0
+            fi
+
+            echo "→ Applying docker compose changes"
             if docker compose version >/dev/null 2>&1; then
               docker compose pull || true
-              docker compose up -d --build --remove-orphans
+              if [ "$DEPLOY_TARGET" = "all" ]; then
+                docker compose up -d --build --remove-orphans
+              elif [ "$DEPLOY_TARGET" = "backend" ]; then
+                docker compose up -d --build backend
+              else
+                docker compose up -d --build frontend
+              fi
               docker compose ps
             else
               docker-compose pull || true
-              docker-compose up -d --build --remove-orphans
+              if [ "$DEPLOY_TARGET" = "all" ]; then
+                docker-compose up -d --build --remove-orphans
+              elif [ "$DEPLOY_TARGET" = "backend" ]; then
+                docker-compose up -d --build backend
+              else
+                docker-compose up -d --build frontend
+              fi
               docker-compose ps
             fi
             echo "→ Cleaning dangling images"
             docker image prune -f || true
-            echo "✓ Deploy OK"
 
-      - name: Health check (post-deploy)
-        run: |
-          set -euo pipefail
-          HEALTHCHECK_URL="https://api.solennix.com/health"
-          echo "Checking ${HEALTHCHECK_URL}"
-          for i in {1..10}; do
-            if curl --fail --silent --show-error --max-time 10 "${HEALTHCHECK_URL}"; then
-              echo "Health check passed"
-              exit 0
+            if [ "$DEPLOY_TARGET" = "all" ] || [ "$DEPLOY_TARGET" = "backend" ]; then
+              echo "→ Running local backend healthcheck"
+              for i in {1..10}; do
+                if curl --fail --silent --show-error --max-time 10 "http://127.0.0.1:8080/health"; then
+                  echo "✓ Local backend healthcheck passed"
+                  break
+                fi
+                if [ "$i" -eq 10 ]; then
+                  echo "✗ Local backend healthcheck failed after retries"
+                  exit 1
+                fi
+                echo "Attempt ${i}/10 failed, retrying in 10s"
+                sleep 10
+              done
+            else
+              echo "→ Skipping backend healthcheck (frontend-only deploy)"
             fi
-            echo "Attempt ${i}/10 failed, retrying in 15s"
-            sleep 15
-          done
-          echo "Health check failed after retries"
-          exit 1
+
+            echo "✓ Deploy OK"
+        env:
+          DEPLOY_BACKEND: ${{ needs.detect-changes.outputs.deploy_backend }}
+          DEPLOY_FRONTEND: ${{ needs.detect-changes.outputs.deploy_frontend }}
