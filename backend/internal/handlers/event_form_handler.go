@@ -24,6 +24,7 @@ import (
 type EventFormLinkRepository interface {
 	Create(ctx context.Context, link *models.EventFormLink) error
 	GetByToken(ctx context.Context, token string) (*models.EventFormLink, error)
+	GetByTokenUnfiltered(ctx context.Context, token string) (*models.EventFormLink, error)
 	GetByUserID(ctx context.Context, userID uuid.UUID) ([]models.EventFormLink, error)
 	MarkUsedTx(ctx context.Context, tx pgx.Tx, linkID, eventID, clientID uuid.UUID) error
 	Delete(ctx context.Context, id, userID uuid.UUID) error
@@ -208,9 +209,19 @@ func (h *EventFormHandler) GetFormData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	link, err := h.linkRepo.GetByToken(r.Context(), token)
+	link, err := h.linkRepo.GetByTokenUnfiltered(r.Context(), token)
 	if err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{
+		if errors.Is(err, pgx.ErrNoRows) {
+			writeError(w, http.StatusNotFound, "Link not found")
+			return
+		}
+		slog.Error("Failed to get event form link", "error", err)
+		writeError(w, http.StatusInternalServerError, "Failed to load form")
+		return
+	}
+
+	if !isLinkUsable(link, time.Now()) {
+		writeJSON(w, http.StatusGone, map[string]string{
 			"error":   "link_invalid",
 			"message": "Este enlace ya no es válido o ha expirado.",
 		})
@@ -285,8 +296,18 @@ func (h *EventFormHandler) SubmitForm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	link, err := h.linkRepo.GetByToken(r.Context(), token)
+	link, err := h.linkRepo.GetByTokenUnfiltered(r.Context(), token)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			writeError(w, http.StatusNotFound, "Link not found")
+			return
+		}
+		slog.Error("Failed to get event form link", "error", err)
+		writeError(w, http.StatusInternalServerError, "Failed to process form")
+		return
+	}
+
+	if !isLinkUsable(link, time.Now()) {
 		writeJSON(w, http.StatusGone, map[string]string{
 			"error":   "link_invalid",
 			"message": "Este enlace ya no es válido o ha expirado.",
@@ -518,6 +539,11 @@ func (h *EventFormHandler) validateSubmission(req *EventFormSubmission) error {
 
 func (h *EventFormHandler) buildFormURL(token string) string {
 	return fmt.Sprintf("%s/form/%s", strings.TrimRight(h.frontendURL, "/"), token)
+}
+
+// isLinkUsable reports whether the link is active and not yet expired.
+func isLinkUsable(link *models.EventFormLink, now time.Time) bool {
+	return link.Status == "active" && link.ExpiresAt.After(now)
 }
 
 // generateFormToken creates a cryptographically random 64-character hex string (256 bits of entropy).

@@ -66,6 +66,22 @@ func (r *EventFormLinkRepo) GetByToken(ctx context.Context, token string) (*mode
 	return link, nil
 }
 
+// GetByTokenUnfiltered returns a link by token regardless of status or expiry.
+// Returns pgx.ErrNoRows only when the token has never existed.
+// Callers use this to distinguish 404 (never existed) from 410 (expired/used/disabled).
+func (r *EventFormLinkRepo) GetByTokenUnfiltered(ctx context.Context, token string) (*models.EventFormLink, error) {
+	query := fmt.Sprintf(`
+		SELECT %s FROM event_form_links
+		WHERE token = $1`, eventFormLinkColumns)
+
+	row := r.pool.QueryRow(ctx, query, token)
+	link, err := scanEventFormLink(row)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get event form link by token: %w", err)
+	}
+	return link, nil
+}
+
 // GetByUserID lists all links for an organizer, ordered by created_at DESC.
 func (r *EventFormLinkRepo) GetByUserID(ctx context.Context, userID uuid.UUID) ([]models.EventFormLink, error) {
 	query := fmt.Sprintf(`
