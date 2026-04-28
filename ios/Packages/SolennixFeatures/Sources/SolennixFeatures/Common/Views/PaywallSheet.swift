@@ -14,18 +14,18 @@ struct PaywallSheet: View {
             // Icon
             Image(systemName: "lock.fill")
                 .font(.system(size: 44))
-                .foregroundStyle(SolennixColors.accent)
+                .foregroundStyle(SolennixColors.primary)
                 .padding(.top, 8)
 
             // Title
             Text("Límite alcanzado")
                 .font(.title2.bold())
-                .foregroundStyle(SolennixColors.primaryText)
+                .foregroundStyle(SolennixColors.text)
 
             // Message from backend
             Text(message)
                 .font(.body)
-                .foregroundStyle(SolennixColors.secondaryText)
+                .foregroundStyle(SolennixColors.textSecondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 8)
 
@@ -38,7 +38,7 @@ struct PaywallSheet: View {
             Button("Cerrar") {
                 onDismiss()
             }
-            .foregroundStyle(SolennixColors.secondaryText)
+            .foregroundStyle(SolennixColors.textSecondary)
             .padding(.bottom, 8)
         }
         .padding(24)

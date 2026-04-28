@@ -77,6 +77,7 @@
   "subscription": {
     "title": "Subscription and Billing",
     "description": "Manage your current plan and payment methods.",
+    "current_plan_label": "Current Plan",
     "current_plan": "Your current plan is {{plan}}",
     "status": {
       "active": "Active",
@@ -100,6 +101,8 @@
     },
     "manage": "Manage Subscription",
     "next_payment": "Next payment: {{date}}",
+    "cancel_at_period_end": "Your subscription will cancel at the end of the period.",
+    "cancels_on": "Cancels on {{date}}",
     "renewal_price": "Renewal price: {{price}}",
     "usage": "Plan usage",
     "events": "Events this month",

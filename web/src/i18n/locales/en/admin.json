@@ -78,6 +78,9 @@
       "active_sub": "Active subscription",
       "active_sub_help": "Active paid subscription — managed by payment provider"
     },
+    "errors": {
+      "loading": "Error loading users. Try reloading."
+    },
     "filters": {
       "search_placeholder": "Search by name, email or business...",
       "all": "All",
@@ -119,6 +122,8 @@
       },
       "footer": {
         "showing": "Showing {{filtered}} of {{total}} users",
+        "showing_one": "Showing {{filtered}} of {{total}} user",
+        "showing_other": "Showing {{filtered}} of {{total}} users",
         "sorted_by": "Sorted by",
         "fields": {
           "name": "name",

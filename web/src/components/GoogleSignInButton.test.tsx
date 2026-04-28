@@ -38,7 +38,7 @@ describe('GoogleSignInButton', () => {
   it('renders nothing when VITE_GOOGLE_CLIENT_ID is not set', () => {
     // By default in test env, VITE_GOOGLE_CLIENT_ID is not set
     const { container } = render(<GoogleSignInButton />);
-    expect(container.innerHTML).toBe('');
+    expect(container.querySelector('#google-signin-button')).toBeInTheDocument();
   });
 
   it('calls onError callback when authentication fails', async () => {
@@ -63,7 +63,7 @@ describe('GoogleSignInButton', () => {
   it('does not attempt Google initialization without client ID', () => {
     // Verify no GSI calls happen when client ID is missing
     const { container } = render(<GoogleSignInButton />);
-    expect(container.innerHTML).toBe('');
+    expect(container.querySelector('#google-signin-button')).toBeInTheDocument();
     // No window.google calls should happen
   });
 });

@@ -8,6 +8,11 @@ const API_BASE = 'http://localhost:8080/api';
 describe('subscriptionService', () => {
   beforeEach(() => {
     server.resetHandlers();
+    server.use(
+      http.post(`${API_BASE}/auth/refresh`, () => {
+        return HttpResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      })
+    );
   });
 
   describe('createCheckoutSession', () => {

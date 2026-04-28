@@ -11,7 +11,7 @@ public struct CalendarGridView: View {
 
     let days: [DateDay]
     let eventDotsForDay: (Date) -> [EventStatus]
-    let eventCountForDay: (Date) -> Int
+    let eventOverflowForDay: (Date) -> Int
     let isDateBlocked: (Date) -> Bool
     let selectedDate: Date?
     let onSelectDate: (Date) -> Void

@@ -109,12 +109,12 @@ describe('ProductList', () => {
     fireEvent.click(actionButton);
 
     // Click the "Eliminar" menu item
-    const deleteMenuItem = await screen.findByRole('menuitem', { name: /Eliminar/i });
+    const deleteMenuItem = await screen.findByRole('menuitem', { name: /Eliminar|action\.delete/i });
     fireEvent.click(deleteMenuItem);
 
     // Confirm the dialog
     const dialog = screen.getByRole('dialog');
-    fireEvent.click(within(dialog).getByRole('button', { name: /Eliminar/i }));
+    fireEvent.click(within(dialog).getByRole('button', { name: /Eliminar|action\.delete/i }));
 
     await waitFor(() => {
       expect(productService.delete).toHaveBeenCalledWith('1');
@@ -144,12 +144,12 @@ describe('ProductList', () => {
     fireEvent.click(actionButton);
 
     // Click delete menu item
-    const deleteMenuItem = await screen.findByRole('menuitem', { name: /Eliminar/i });
+    const deleteMenuItem = await screen.findByRole('menuitem', { name: /Eliminar|action\.delete/i });
     fireEvent.click(deleteMenuItem);
 
     // Click cancel in the dialog
     const dialog = screen.getByRole('dialog');
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Cancelar' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: /Cancelar|action\.cancel/i }));
 
     // Dialog should close, product still present
     await waitFor(() => {
@@ -306,12 +306,12 @@ describe('ProductList', () => {
     fireEvent.click(actionButton);
 
     // Click delete menu item
-    const deleteMenuItem = await screen.findByRole('menuitem', { name: /Eliminar/i });
+    const deleteMenuItem = await screen.findByRole('menuitem', { name: /Eliminar|action\.delete/i });
     fireEvent.click(deleteMenuItem);
 
     // Confirm the dialog
     const dialog = screen.getByRole('dialog');
-    fireEvent.click(within(dialog).getByRole('button', { name: /Eliminar/i }));
+    fireEvent.click(within(dialog).getByRole('button', { name: /Eliminar|action\.delete/i }));
 
     await waitFor(() => {
       expect(productService.delete).toHaveBeenCalledWith('1');

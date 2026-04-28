@@ -78,6 +78,9 @@
       "active_sub": "Suscripción activa",
       "active_sub_help": "Suscripción pagada activa — gestionada por el proveedor de pagos"
     },
+    "errors": {
+      "loading": "Error al cargar usuarios. Intenta recargar."
+    },
     "filters": {
       "search_placeholder": "Buscar por nombre, email o negocio...",
       "all": "Todos",
@@ -119,6 +122,8 @@
       },
       "footer": {
         "showing": "Mostrando {{filtered}} de {{total}} usuarios",
+        "showing_one": "Mostrando {{filtered}} de {{total}} usuario",
+        "showing_other": "Mostrando {{filtered}} de {{total}} usuarios",
         "sorted_by": "Ordenado por",
         "fields": {
           "name": "nombre",

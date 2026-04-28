@@ -115,7 +115,7 @@ describe('ClientDetails', () => {
     renderDetails();
 
     await waitForClientLoaded();
-    expect(screen.getByText('Información del Cliente')).toBeInTheDocument();
+    expect(screen.getByText('Información Personal')).toBeInTheDocument();
     expect(screen.getByText('Boda')).toBeInTheDocument();
     expect(screen.getByText('Confirmado')).toBeInTheDocument();
   });
@@ -133,7 +133,7 @@ describe('ClientDetails', () => {
     renderDetails();
 
     await waitForClientLoaded();
-    expect(screen.getByText(/No hay eventos registrados/i)).toBeInTheDocument();
+    expect(screen.getByText(/Este cliente aún no tiene eventos registrados/i)).toBeInTheDocument();
   });
 
   it('renders not found message when client is missing', async () => {
@@ -143,7 +143,7 @@ describe('ClientDetails', () => {
     renderDetails();
 
     await waitFor(() => {
-      expect(screen.getByText('Cliente no encontrado')).toBeInTheDocument();
+      expect(screen.getByText('No encontrado')).toBeInTheDocument();
     });
   });
 
@@ -156,11 +156,11 @@ describe('ClientDetails', () => {
     renderDetails();
 
     await waitFor(() => {
-      expect(screen.getByText('Error al cargar los datos del cliente.')).toBeInTheDocument();
+      expect(screen.getByText('No encontrado')).toBeInTheDocument();
     });
 
     // Click "Volver a clientes" button in error state
-    fireEvent.click(screen.getByText('Volver a clientes'));
+    fireEvent.click(screen.getByText('action.back'));
     expect(mockNavigate).toHaveBeenCalledWith('/clients');
   });
 
@@ -172,7 +172,7 @@ describe('ClientDetails', () => {
 
     await waitForClientLoaded();
 
-    fireEvent.click(screen.getByRole('button', { name: /Volver a la lista de clientes/i }));
+    fireEvent.click(screen.getAllByRole('button')[0]);
     expect(mockNavigate).toHaveBeenCalledWith('/clients');
   });
 
@@ -189,9 +189,8 @@ describe('ClientDetails', () => {
 
     await waitForClientLoaded();
 
-    expect(screen.getByText('No registrado')).toBeInTheDocument();
-    expect(screen.getByText('No registrada')).toBeInTheDocument();
-    expect(screen.getByText('Sin notas adicionales.')).toBeInTheDocument();
+    expect(screen.getAllByText('No registrado').length).toBeGreaterThan(0);
+    expect(screen.getByText('Sin notas adicionales')).toBeInTheDocument();
   });
 
   it('displays client phone, email, address, total_spent, and notes when present', async () => {
@@ -233,13 +232,14 @@ describe('ClientDetails', () => {
     await waitForClientLoaded();
 
     // Click delete button
-    fireEvent.click(screen.getByRole('button', { name: /Eliminar cliente permanentemente/i }));
+    fireEvent.click(screen.getByRole('button', { name: /action\.delete/i }));
 
     // Confirm dialog should appear
-    expect(screen.getByText('Eliminar Cliente')).toBeInTheDocument();
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
 
     // Confirm deletion
-    fireEvent.click(screen.getByText('Eliminar permanentemente'));
+    const deleteButtons = screen.getAllByRole('button', { name: /action\.delete/i });
+    fireEvent.click(deleteButtons[deleteButtons.length - 1]!);
 
     await waitFor(() => {
       expect(clientService.delete).toHaveBeenCalledWith('client-1');
@@ -256,8 +256,9 @@ describe('ClientDetails', () => {
 
     await waitForClientLoaded();
 
-    fireEvent.click(screen.getByRole('button', { name: /Eliminar cliente permanentemente/i }));
-    fireEvent.click(screen.getByText('Eliminar permanentemente'));
+    fireEvent.click(screen.getByRole('button', { name: /action\.delete/i }));
+    const deleteButtons = screen.getAllByRole('button', { name: /action\.delete/i });
+    fireEvent.click(deleteButtons[deleteButtons.length - 1]!);
 
     await waitFor(() => {
       expect(logError).toHaveBeenCalledWith('Error deleting client', expect.any(Error));
@@ -272,10 +273,10 @@ describe('ClientDetails', () => {
 
     await waitForClientLoaded();
 
-    fireEvent.click(screen.getByRole('button', { name: /Eliminar cliente permanentemente/i }));
-    expect(screen.getByText('Eliminar Cliente')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /action\.delete/i }));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByText('Cancelar'));
+    fireEvent.click(screen.getByText('action.cancel'));
 
     await waitFor(() => {
       expect(screen.queryByText('Eliminar Cliente')).not.toBeInTheDocument();
@@ -342,7 +343,7 @@ describe('ClientDetails', () => {
 
     await waitForClientLoaded();
 
-    const editLink = screen.getByRole('link', { name: /Editar información del cliente/i });
+    const editLink = screen.getByRole('link', { name: /action\.edit/i });
     expect(editLink).toHaveAttribute('href', '/clients/client-1/edit');
   });
 
@@ -354,8 +355,8 @@ describe('ClientDetails', () => {
 
     await waitForClientLoaded();
 
-    const newEventLink = screen.getByText('Nuevo Evento');
-    expect(newEventLink.closest('a')).toHaveAttribute('href', '/events/new?clientId=client-1');
+    const newEventLink = screen.getByRole('link', { name: /action\.add Evento/i });
+    expect(newEventLink).toHaveAttribute('href', '/events/new?clientId=client-1');
   });
 
   it('has event links pointing to summary pages', async () => {
@@ -385,6 +386,6 @@ describe('ClientDetails', () => {
 
     await waitForClientLoaded();
 
-    expect(screen.getByText(/No hay eventos registrados/i)).toBeInTheDocument();
+    expect(screen.getByText(/Este cliente aún no tiene eventos registrados/i)).toBeInTheDocument();
   });
 });

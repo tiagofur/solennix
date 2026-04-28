@@ -10,13 +10,12 @@ test.describe('Authentication Flow', () => {
     // the form is there even when the backend is offline.
 
     await expect(page.getByRole('heading', { name: /iniciar sesión/i })).toBeVisible();
-    await expect(page.getByLabel('Email')).toBeVisible();
+    await expect(page.getByLabel('Correo electrónico')).toBeVisible();
     // exact:true excludes the "Mostrar contraseña" toggle button that
     // shares the same substring on its aria-label.
     await expect(page.getByLabel('Contraseña', { exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: /iniciar sesión/i })).toBeVisible();
-    // Login page links to Register via "Regístrate gratis"
-    await expect(page.getByRole('link', { name: /regístrate/i })).toBeVisible();
+    await expect(page.getByRole('link', { name: /crear cuenta/i })).toBeVisible();
   });
 
   test('register new user successfully', async ({ page }) => {
@@ -38,7 +37,7 @@ test.describe('Authentication Flow', () => {
 
     test.skip(await isSetupRequired(page), 'Backend not configured');
 
-    await page.getByLabel('Email').fill('invalid@example.com');
+    await page.getByLabel('Correo electrónico').fill('invalid@example.com');
     await page.getByLabel('Contraseña', { exact: true }).fill('wrongpassword');
     await page.getByRole('button', { name: /iniciar sesión/i }).click();
 

@@ -1,0 +1,91 @@
+- name: bug
+  color: d73a4a
+  description: Something is not working
+
+- name: enhancement
+  color: a2eeef
+  description: New feature or request
+
+- name: type:feature
+  color: 0e8a16
+  description: Feature work
+
+- name: type:bug
+  color: b60205
+  description: Bug fix work
+
+- name: type:refactor
+  color: 5319e7
+  description: Code refactor without behavior change
+
+- name: type:docs
+  color: 0075ca
+  description: Documentation updates
+
+- name: type:test
+  color: fbca04
+  description: Test additions or changes
+
+- name: type:infra
+  color: 1d76db
+  description: CI/CD or repository infrastructure
+
+- name: platform:ios
+  color: c5def5
+  description: iOS specific work
+
+- name: platform:android
+  color: bfdadc
+  description: Android specific work
+
+- name: platform:web
+  color: d4c5f9
+  description: Web specific work
+
+- name: platform:backend
+  color: f9d0c4
+  description: Backend specific work
+
+- name: platform:cross-platform
+  color: fef2c0
+  description: Changes impacting multiple platforms
+
+- name: priority:high
+  color: b60205
+  description: High priority
+
+- name: priority:medium
+  color: fbca04
+  description: Medium priority
+
+- name: priority:low
+  color: 0e8a16
+  description: Low priority
+
+- name: status:blocked
+  color: d93f0b
+  description: Blocked by dependency or decision
+
+- name: status:ready
+  color: 0e8a16
+  description: Ready for implementation
+
+- name: status:in-progress
+  color: 1d76db
+  description: Actively being worked on
+
+- name: status:review
+  color: 5319e7
+  description: In review
+
+- name: size:S
+  color: 0e8a16
+  description: Small change
+
+- name: size:M
+  color: fbca04
+  description: Medium change
+
+- name: size:L
+  color: d93f0b
+  description: Large change

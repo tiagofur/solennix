@@ -36,6 +36,7 @@
 
 ## Calidad
 
+- [[Auditoría Web 2026-04-27]] — Paridad con backend, UX premium y landing
 - [[Testing]] — Vitest, Playwright, MSW, estructura de tests
 - [[Accesibilidad]] — ARIA, focus, contraste, screen readers
 - [[Performance]] — Lazy loading, bundle size, CLS

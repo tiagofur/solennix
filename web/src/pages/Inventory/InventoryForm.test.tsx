@@ -79,7 +79,7 @@ describe('InventoryForm', () => {
 
   it('shows validation errors', async () => {
     renderForm();
-    fireEvent.click(screen.getByRole('button', { name: /guardar/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Guardar|action\.save/i }));
 
     await waitFor(() => {
       expect(screen.getByText(/El nombre debe tener al menos 2 caracteres/i)).toBeInTheDocument();
@@ -107,7 +107,7 @@ describe('InventoryForm', () => {
       target: { value: '10' },
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /guardar/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Guardar|action\.save/i }));
 
     await waitFor(() => {
       expect(inventoryService.create).toHaveBeenCalledWith({
@@ -144,7 +144,7 @@ describe('InventoryForm', () => {
     fireEvent.change(container.querySelector('input[name="current_stock"]')!, {
       target: { value: '7' },
     });
-    fireEvent.click(screen.getByRole('button', { name: /guardar/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Guardar|action\.save/i }));
 
     await waitFor(() => {
       expect(inventoryService.update).toHaveBeenCalledWith('inv-1', {
@@ -177,7 +177,7 @@ describe('InventoryForm', () => {
       expect((container.querySelector('input[name="ingredient_name"]') as HTMLInputElement).value).toBe('Horno');
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /guardar/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Guardar|action\.save/i }));
 
     await waitFor(() => {
       expect(inventoryService.update).toHaveBeenCalledWith('inv-1', {
@@ -214,7 +214,7 @@ describe('InventoryForm', () => {
       target: { value: 'kg' },
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /guardar/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Guardar|action\.save/i }));
 
     await waitFor(() => {
       expect(inventoryService.create).toHaveBeenCalled();
@@ -264,7 +264,7 @@ describe('InventoryForm', () => {
 
     renderForm();
 
-    fireEvent.click(screen.getByRole('button', { name: /Regresar a la página anterior/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Regresar a la página anterior|Volver/i }));
     expect(mockNavigate).toHaveBeenCalledWith(-1);
   });
 
@@ -322,14 +322,14 @@ describe('InventoryForm', () => {
   it('navigates to /inventory when clicking back arrow button', () => {
     renderForm();
 
-    fireEvent.click(screen.getByRole('button', { name: /Volver a la lista de inventario/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Volver a la lista de inventario|Volver/i }));
     expect(mockNavigate).toHaveBeenCalledWith('/inventory');
   });
 
   it('navigates to /inventory when clicking Cancelar button', () => {
     renderForm();
 
-    fireEvent.click(screen.getByText('Cancelar'));
+    fireEvent.click(screen.getByRole('button', { name: /Cancelar|action\.cancel/i }));
     expect(mockNavigate).toHaveBeenCalledWith('/inventory');
   });
 
@@ -375,10 +375,10 @@ describe('InventoryForm', () => {
       target: { value: 'kg' },
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /guardar/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Guardar|action\.save/i }));
 
     await waitFor(() => {
-      expect(screen.getByText('Guardando...')).toBeInTheDocument();
+      expect(screen.getByText(/Guardando|action\.saving/i)).toBeInTheDocument();
     });
 
     const submitBtn = screen.getByRole('button', { name: /Guardando ítem/i });
@@ -413,7 +413,7 @@ describe('InventoryForm', () => {
       target: { value: '5000' },
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /guardar/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Guardar|action\.save/i }));
 
     await waitFor(() => {
       expect(inventoryService.create).toHaveBeenCalledWith({
@@ -440,7 +440,7 @@ describe('InventoryForm', () => {
       target: { value: 'kg' },
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /guardar/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Guardar|action\.save/i }));
 
     await waitFor(() => {
       expect(inventoryService.create).toHaveBeenCalled();
@@ -464,7 +464,7 @@ describe('InventoryForm', () => {
   it('sets aria-invalid on fields with errors', async () => {
     const { container } = renderForm();
 
-    fireEvent.click(screen.getByRole('button', { name: /guardar/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Guardar|action\.save/i }));
 
     await waitFor(() => {
       expect(container.querySelector('input[name="ingredient_name"]')).toHaveAttribute('aria-invalid', 'true');
@@ -517,7 +517,7 @@ describe('InventoryForm', () => {
       target: { value: '-10' },
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /guardar/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Guardar|action\.save/i }));
 
     await waitFor(() => {
       expect(screen.getByText(/El stock no puede ser negativo/i)).toBeInTheDocument();

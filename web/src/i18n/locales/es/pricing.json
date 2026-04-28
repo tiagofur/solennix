@@ -13,6 +13,7 @@
       "price": "$0",
       "interval": "/mes",
       "current": "Plan Actual",
+      "current_label": "Plan Básico - Plan actual",
       "downgrade": "Downgrade"
     },
     "pro": {
@@ -27,7 +28,9 @@
       "old_price_month": "$199",
       "interval_month": "MXN/mes",
       "current": "Tu plan actual",
+      "current_label": "Plan Pro - Tu plan actual",
       "try_free": "Probar 14 días gratis",
+      "subscribe_label": "Suscribirse al Plan Pro",
       "processing": "Procesando..."
     },
     "business": {
@@ -38,7 +41,9 @@
       "price_month": "$499",
       "interval_month": "MXN/mes",
       "current": "Tu plan actual",
+      "current_label": "Plan Business - Tu plan actual",
       "try_free": "Probar 14 días gratis",
+      "subscribe_label": "Suscribirse al Plan Business",
       "processing": "Procesando..."
     }
   },
@@ -73,6 +78,6 @@
   "debug": {
     "upgrade_success": "Plan actualizado a Pro (Modo Debug)",
     "upgrade_error": "Error al actualizar plan en modo debug.",
-    "upgrade_button": "[Dev] Upgrade (Mode Debug)"
+    "upgrade_button": "Modo desarrollo - Actualizar a Pro sin pago"
   }
 }

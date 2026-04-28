@@ -41,14 +41,20 @@ describe('UnavailableDatesModal', () => {
     expect(screen.queryByText('Fechas No Disponibles')).not.toBeInTheDocument();
   });
 
-  it('renders modal title when open', () => {
+  it('renders modal title when open', async () => {
     render(<UnavailableDatesModal {...defaultProps} />);
     expect(screen.getByText('Fechas No Disponibles')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(mockGetDates).toHaveBeenCalled();
+    });
   });
 
-  it('calls onClose when close button clicked', () => {
+  it('calls onClose when close button clicked', async () => {
     const onClose = vi.fn();
     render(<UnavailableDatesModal {...defaultProps} onClose={onClose} />);
+    await waitFor(() => {
+      expect(mockGetDates).toHaveBeenCalled();
+    });
     // Close (X) button — aria-label is t('action.cancel') = "Cancelar".
     // getAllBy because the footer Close button carries the same label.
     fireEvent.click(screen.getAllByLabelText('Cancelar')[0]);

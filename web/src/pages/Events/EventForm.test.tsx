@@ -1,4 +1,5 @@
-import React, { useEffect, act } from 'react';
+import React, { useEffect } from 'react';
+import { act } from '@testing-library/react';
 import { render, screen, fireEvent, waitFor } from '@tests/customRender';
 import { EventForm } from './EventForm';
 import { eventService } from '../../services/eventService';
@@ -100,6 +101,13 @@ const mockUser = { id: 'user-1' };
 const mockProfile = { default_deposit_percent: 50, default_cancellation_days: 15, default_refund_percent: 0 };
 
 vi.mock('../../contexts/AuthContext', () => ({
+  useAuth: () => ({
+    user: mockUser,
+    profile: mockProfile,
+  }),
+}));
+
+vi.mock('@/hooks/useAuth', () => ({
   useAuth: () => ({
     user: mockUser,
     profile: mockProfile,
@@ -247,6 +255,23 @@ vi.mock('react-router-dom', async () => {
 });
 
 describe('EventForm', () => {
+  let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
+  const originalConsoleError = console.error;
+
+  beforeAll(() => {
+    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation((...args: any[]) => {
+      const first = args[0];
+      if (typeof first === 'string' && first.includes('The current testing environment is not configured to support act(...)')) {
+        return;
+      }
+      return originalConsoleError(...args);
+    });
+  });
+
+  afterAll(() => {
+    consoleErrorSpy.mockRestore();
+  });
+
   beforeEach(() => {
     mockNavigate.mockClear();
     mockParams = {};

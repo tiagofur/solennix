@@ -123,7 +123,7 @@ export const EventEquipment: React.FC<EventEquipmentProps> = ({
               type="button"
               onClick={() => setPendingDeleteIndex(index)}
               className="absolute top-2 right-2 text-text-secondary hover:text-error transition-colors"
-              aria-label={t('common:actions.delete')}
+              aria-label={t('events:equipment.delete_button', { index: index + 1 })}
             >
               <Trash2 className="h-4 w-4" />
             </button>
@@ -136,7 +136,7 @@ export const EventEquipment: React.FC<EventEquipmentProps> = ({
                 onChange={(e) => onEquipmentChange(index, 'inventory_id', e.target.value)}
                 className="block w-full text-sm border-border rounded-xl shadow-xs transition-shadow focus:ring-2 focus:ring-primary/20 bg-card text-text p-2 border"
               >
-                <option value="">{t('common:actions.select')}…</option>
+                <option value="">{t('events:equipment.select_item')}</option>
                 {equipmentInventory.map((eq) => (
                   <option key={eq.id} value={eq.id}>
                     {eq.ingredient_name} ({eq.current_stock} {eq.unit} {t('common:available')})

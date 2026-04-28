@@ -143,6 +143,8 @@ export const handlers = [
   // Staff (Personal/Colaboradores — Phase 1/2). Empty defaults; individual
   // tests can override with server.use(...) when they need specific data.
   http.get(`${API_BASE}/staff`, () => HttpResponse.json([])),
+  http.get(`${API_BASE}/staff/teams`, () => HttpResponse.json([])),
+  http.get(`${API_BASE}/staff/availability`, () => HttpResponse.json([])),
   http.get(`${API_BASE}/events/:id/staff`, () => HttpResponse.json([])),
   // Portal Cliente (PRD/12 feature A). 404 default = "no active link yet";
   // individual tests can override when they want has-link state.

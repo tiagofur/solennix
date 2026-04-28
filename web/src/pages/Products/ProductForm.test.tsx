@@ -95,7 +95,7 @@ describe('ProductForm', () => {
       expect(inventoryService.getAll).toHaveBeenCalled();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Agregar un insumo adicional/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^(Agregar un insumo adicional|Agregar Insumo)$/i }));
 
     const select = container.querySelector('select') as HTMLSelectElement;
     fireEvent.change(select, { target: { value: 'inv-1' } });
@@ -128,7 +128,7 @@ describe('ProductForm', () => {
       target: { value: '50' },
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Agregar un insumo adicional/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^(Agregar un insumo adicional|Agregar Insumo)$/i }));
     const select = container.querySelector('select') as HTMLSelectElement;
     fireEvent.change(select, { target: { value: 'inv-1' } });
     const quantityInput = container.querySelector('input[step="0.001"]') as HTMLInputElement;
@@ -262,7 +262,7 @@ describe('ProductForm', () => {
     });
 
     // Should show the "Regresar" back button
-    const backBtn = screen.getByRole('button', { name: /Regresar a la página anterior/i });
+    const backBtn = screen.getByRole('button', { name: /Regresar a la página anterior|Volver/i });
     expect(backBtn).toBeInTheDocument();
 
     // Click back navigates via navigate(-1)
@@ -295,7 +295,7 @@ describe('ProductForm', () => {
       expect(inventoryService.getAll).toHaveBeenCalled();
     });
 
-    const backButton = screen.getByRole('button', { name: /Volver a la lista de productos/i });
+    const backButton = screen.getByRole('button', { name: /Volver a la lista de productos|Volver/i });
     fireEvent.click(backButton);
 
     expect(mockNavigate).toHaveBeenCalledWith('/products');
@@ -309,8 +309,8 @@ describe('ProductForm', () => {
     });
 
     // Add two ingredients
-    fireEvent.click(screen.getByRole('button', { name: /Agregar un insumo adicional/i }));
-    fireEvent.click(screen.getByRole('button', { name: /Agregar un insumo adicional/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^(Agregar un insumo adicional|Agregar Insumo)$/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^(Agregar un insumo adicional|Agregar Insumo)$/i }));
 
     // Should have two ingredient rows
     const removeButtons = screen.getAllByRole('button', { name: /Eliminar insumo/i });

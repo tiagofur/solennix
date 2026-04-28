@@ -68,7 +68,7 @@ export const EventGeneralInfo: React.FC<EventGeneralInfoProps> = ({
               type="button"
               onClick={() => setIsQuickClientModalOpen(true)}
               className="inline-flex items-center text-xs font-medium text-primary hover:text-primary/80"
-              aria-label={t('events:general.new_client')}
+              aria-label={t('events:general.new_client_aria')}
             >
               <UserPlus className="h-3 w-3 mr-1" aria-hidden="true" />
               {t('events:general.new_client')}

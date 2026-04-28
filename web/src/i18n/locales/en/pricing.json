@@ -13,6 +13,7 @@
       "price": "$0",
       "interval": "/month",
       "current": "Current Plan",
+      "current_label": "Basic Plan - Current plan",
       "downgrade": "Downgrade"
     },
     "pro": {
@@ -27,7 +28,9 @@
       "old_price_month": "$199",
       "interval_month": "MXN/month",
       "current": "Your current plan",
+      "current_label": "Pro Plan - Your current plan",
       "try_free": "Try 14 days free",
+      "subscribe_label": "Subscribe to Pro Plan",
       "processing": "Processing..."
     },
     "business": {
@@ -38,7 +41,9 @@
       "price_month": "$499",
       "interval_month": "MXN/month",
       "current": "Your current plan",
+      "current_label": "Business Plan - Your current plan",
       "try_free": "Try 14 days free",
+      "subscribe_label": "Subscribe to Business Plan",
       "processing": "Processing..."
     }
   },

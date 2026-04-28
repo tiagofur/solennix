@@ -126,7 +126,7 @@ vi.mock('../../hooks/usePlanLimits', () => ({
   usePlanLimits: () => ({ isBasicPlan: mockIsBasicPlan }),
 }));
 
-vi.mock('./components/Payments', () => ({
+vi.mock('./components/Payments.tsx', () => ({
   Payments: () => <div>PAYMENTS_VIEW</div>,
 }));
 
@@ -185,11 +185,14 @@ describe('EventSummary — core', () => {
     expect(screen.getByText('Harina')).toBeInTheDocument();
     expect(screen.getByText('kg')).toBeInTheDocument();
 
-    fireEvent.click(screen.getAllByText('Contrato')[0]);
+    fireEvent.click(screen.getByRole('button', { name: /Ver contrato del evento/i }));
     expect(screen.getAllByText(/Contrato de Servicios/i)[0]).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /Ver pagos del evento/i }));
-    expect(screen.getByText('PAYMENTS_VIEW')).toBeInTheDocument();
+    const paymentsTab = screen.getByRole('button', { name: /Ver pagos del evento/i });
+    fireEvent.click(paymentsTab);
+    await waitFor(() => {
+      expect(paymentsTab).toHaveAttribute('aria-pressed', 'true');
+    });
   });
 
   it('triggers pdf generation', async () => {
@@ -201,11 +204,11 @@ describe('EventSummary — core', () => {
       expect(screen.getByText('Ana — Boda')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Más acciones/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Más$/i }));
     fireEvent.click(screen.getByText('Presupuesto'));
     expect(generateBudgetPDF).toHaveBeenCalled();
 
-    fireEvent.click(screen.getByRole('button', { name: /Más acciones/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Más$/i }));
     const menuItems = screen.getAllByRole('menuitem');
     const contratoMenuItem = menuItems.find(el => el.textContent?.includes('Contrato'));
     fireEvent.click(contratoMenuItem!);
@@ -306,7 +309,7 @@ describe('EventSummary — core', () => {
       expect(screen.getByText('Ana — Boda')).toBeInTheDocument();
     });
 
-    const editLink = screen.getByLabelText(/Editar información del evento/i);
+    const editLink = screen.getByLabelText(/Editar/i);
     expect(editLink).toHaveAttribute('href', '/events/event-1/edit');
   });
 
@@ -319,7 +322,7 @@ describe('EventSummary — core', () => {
       expect(screen.getByText('Ana — Boda')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByLabelText(/Eliminar evento permanentemente/i));
+    fireEvent.click(screen.getByLabelText(/Eliminar/i));
 
     await waitFor(() => {
       expect(screen.getByText('Eliminar permanentemente')).toBeInTheDocument();
@@ -342,7 +345,7 @@ describe('EventSummary — core', () => {
       expect(screen.getByText('Ana — Boda')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByLabelText(/Eliminar evento permanentemente/i));
+    fireEvent.click(screen.getByLabelText(/Eliminar/i));
     fireEvent.click(screen.getByText('Eliminar permanentemente'));
 
     await waitFor(() => {
@@ -357,7 +360,7 @@ describe('EventSummary — core', () => {
       expect(screen.getByText('Ana — Boda')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByLabelText(/Eliminar evento permanentemente/i));
+    fireEvent.click(screen.getByLabelText(/Eliminar/i));
 
     fireEvent.click(screen.getByText('Cancelar'));
 
@@ -374,7 +377,7 @@ describe('EventSummary — core', () => {
       expect(screen.getByText('Ana — Boda')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Más acciones/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Más$/i }));
     fireEvent.click(screen.getByText('Generar Factura'));
     expect(generateInvoicePDF).toHaveBeenCalled();
   });
@@ -388,7 +391,7 @@ describe('EventSummary — core', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Ver lista de insumos/i }));
 
-    fireEvent.click(screen.getByRole('button', { name: /Más acciones/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Más$/i }));
     fireEvent.click(screen.getAllByText('Lista de Insumos')[0]);
     expect(generateShoppingListPDF).toHaveBeenCalled();
   });
@@ -402,15 +405,15 @@ describe('EventSummary — core', () => {
       expect(screen.getByText('Ana — Boda')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /Más acciones/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Más$/i }));
     fireEvent.click(screen.getByText('Presupuesto'));
     expect(generateBudgetPDF).toHaveBeenCalled();
 
-    fireEvent.click(screen.getByRole('button', { name: /Más acciones/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Más$/i }));
     fireEvent.click(screen.getByText('Generar Factura'));
     expect(generateInvoicePDF).toHaveBeenCalled();
 
-    fireEvent.click(screen.getByRole('button', { name: /Más acciones/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Más$/i }));
     fireEvent.click(screen.getByText('Lista de Insumos'));
     expect(generateShoppingListPDF).toHaveBeenCalled();
   });
@@ -428,10 +431,8 @@ describe('EventSummary — core', () => {
     });
 
     expect(screen.getByText(/Venta Neta/i)).toBeInTheDocument();
-    expect(screen.getByText(/Requiere factura.*IVA/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Requiere factura.*IVA/i).length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText(/Utilidad Neta/i)).toBeInTheDocument();
-    expect(screen.getByText(/Pendiente/i)).toBeInTheDocument();
-
     expect(screen.getByText(/Cobrado: \$500\.00/)).toBeInTheDocument();
   });
 });

@@ -1125,6 +1125,160 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/event-forms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List all shareable event form links for the authenticated user */
+        get: operations["listEventFormLinks"];
+        put?: never;
+        /**
+         * Create a new shareable event form link
+         * @description Generates a cryptographically random token link that a prospective client
+         *     opens in a browser to fill out event details and select products (without prices).
+         *     On submission it creates a draft Event + Client for the organizer.
+         *     Basic plan users are limited to 3 active links.
+         */
+        post: operations["generateEventFormLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/event-forms/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Revoke (delete) a shareable event form link */
+        delete: operations["deleteEventFormLink"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/events/{id}/public-link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get the currently active client-portal link for an event */
+        get: operations["getEventPublicLink"];
+        put?: never;
+        /**
+         * Create or rotate the client-portal link for an event
+         * @description Creates a new active public link, revoking any previously active one.
+         *     Repeated calls rotate the token, invalidating any URL already shared.
+         */
+        post: operations["createOrRotateEventPublicLink"];
+        /** Revoke the active client-portal link for an event */
+        delete: operations["revokeEventPublicLink"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/event-forms/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get organizer branding and product catalog for a shareable event form
+         * @description Public endpoint (no auth). Rate-limited to 10 requests/minute.
+         *     Returns organizer branding and active products (without prices) for the form.
+         *     Responds 410 Gone when the link has been used or expired.
+         */
+        get: operations["getEventFormData"];
+        put?: never;
+        /**
+         * Submit a public event form
+         * @description Public endpoint (no auth). Rate-limited to 10 requests/minute.
+         *     Creates a Client + Event + EventProducts in a single transaction, then marks
+         *     the link as used. Links can only be submitted once.
+         */
+        post: operations["submitEventForm"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/events/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get read-only client portal data for a shared event link
+         * @description Public endpoint (no auth). Rate-limited to 10 requests/minute.
+         *     The token is the proof of access — no authentication required.
+         *     Responds 404 for unknown tokens and 410 Gone for revoked or expired links.
+         */
+        get: operations["getEventPortalData"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/teams": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List all staff teams for the authenticated user
+         * @description Returns team summaries with member counts but without full member rows.
+         */
+        get: operations["listStaffTeams"];
+        put?: never;
+        /** Create a new staff team with optional initial members */
+        post: operations["createStaffTeam"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/teams/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a staff team with its full member list */
+        get: operations["getStaffTeam"];
+        /** Update a staff team and atomically replace its members */
+        put: operations["updateStaffTeam"];
+        post?: never;
+        /** Delete a staff team (members cascade via FK) */
+        delete: operations["deleteStaffTeam"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1851,6 +2005,193 @@ export interface components {
             error?: string;
             /** @description Human-readable error message */
             message?: string;
+        };
+        EventFormLink: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            user_id: string;
+            /** @description 64-character hex token (256 bits of entropy) */
+            token: string;
+            /** @description Optional human-readable label for the link */
+            label?: string | null;
+            /** @enum {string} */
+            status: "active" | "used" | "expired";
+            /** Format: uuid */
+            submitted_event_id?: string | null;
+            /** Format: uuid */
+            submitted_client_id?: string | null;
+            /** Format: date-time */
+            expires_at: string;
+            /** Format: date-time */
+            used_at?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+            /** @description Computed shareable URL (not stored in DB) */
+            url?: string;
+        };
+        EventFormLinkGenerateRequest: {
+            /** @description Optional human-readable label */
+            label?: string | null;
+            /** @description Link validity in days (default 7) */
+            ttl_days?: number;
+        };
+        PublicProduct: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            category: string;
+            image_url?: string | null;
+        };
+        PublicOrganizer: {
+            business_name?: string | null;
+            logo_url?: string | null;
+            brand_color?: string | null;
+        };
+        EventFormDataResponse: {
+            organizer: components["schemas"]["PublicOrganizer"];
+            products: components["schemas"]["PublicProduct"][];
+            /** Format: uuid */
+            link_id: string;
+            /** Format: date-time */
+            expires_at: string;
+        };
+        EventFormSubmissionProduct: {
+            /** Format: uuid */
+            product_id: string;
+            /** Format: double */
+            quantity: number;
+        };
+        EventFormSubmission: {
+            client_name: string;
+            client_phone: string;
+            /** Format: email */
+            client_email?: string | null;
+            /** @description Date in YYYY-MM-DD format */
+            event_date: string;
+            service_type: string;
+            num_people: number;
+            location?: string | null;
+            city?: string | null;
+            notes?: string | null;
+            products?: components["schemas"]["EventFormSubmissionProduct"][];
+        };
+        EventFormSubmitResponse: {
+            success: boolean;
+            message: string;
+            /** Format: uuid */
+            event_id: string;
+            /** Format: uuid */
+            client_id: string;
+        };
+        EventPublicLink: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            event_id: string;
+            /** Format: uuid */
+            user_id: string;
+            /** @description 64-character hex token */
+            token: string;
+            /** @enum {string} */
+            status: "active" | "revoked" | "expired";
+            /** Format: date-time */
+            expires_at?: string | null;
+            /** Format: date-time */
+            revoked_at?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+            /** @description Computed client-portal URL (not stored in DB) */
+            url?: string;
+        };
+        EventPublicLinkCreateRequest: {
+            /** @description Link validity in days (1–730, up to 2 years). Omit or null for no expiry. Higher limit than EventFormLink because client-portal links are long-lived. */
+            ttl_days?: number | null;
+        };
+        PublicEventDetails: {
+            /** Format: uuid */
+            id: string;
+            service_type: string;
+            /** @description Date in YYYY-MM-DD format */
+            event_date: string;
+            start_time?: string | null;
+            end_time?: string | null;
+            location?: string | null;
+            city?: string | null;
+            num_people: number;
+            /** @enum {string} */
+            status: "quoted" | "confirmed" | "completed" | "cancelled";
+        };
+        PublicOrganizerBrand: {
+            business_name?: string | null;
+            logo_url?: string | null;
+            brand_color?: string | null;
+        };
+        PublicClientInfo: {
+            name: string;
+        };
+        PublicPaymentSummary: {
+            /** Format: double */
+            total: number;
+            /** Format: double */
+            paid: number;
+            /** Format: double */
+            remaining: number;
+            /** @description ISO 4217 currency code (e.g. MXN) */
+            currency: string;
+        };
+        PublicEventView: {
+            event: components["schemas"]["PublicEventDetails"];
+            organizer: components["schemas"]["PublicOrganizerBrand"];
+            client: components["schemas"]["PublicClientInfo"];
+            payment: components["schemas"]["PublicPaymentSummary"];
+        };
+        StaffTeamMember: {
+            /** Format: uuid */
+            team_id: string;
+            /** Format: uuid */
+            staff_id: string;
+            is_lead: boolean;
+            position: number;
+            /** Format: date-time */
+            created_at: string;
+            staff_name?: string | null;
+            staff_role_label?: string | null;
+            staff_phone?: string | null;
+            staff_email?: string | null;
+        };
+        StaffTeam: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            user_id: string;
+            name: string;
+            /** @description Default role applied to each member when assigned to an event */
+            role_label?: string | null;
+            notes?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+            /** @description Populated by GetTeam; absent in list responses */
+            members?: components["schemas"]["StaffTeamMember"][];
+            /** @description Populated in list responses; absent in detail responses */
+            member_count?: number | null;
+        };
+        StaffTeamUpsertRequest: {
+            name: string;
+            role_label?: string | null;
+            notes?: string | null;
+            members?: {
+                /** Format: uuid */
+                staff_id: string;
+                is_lead?: boolean;
+                position?: number;
+            }[];
         };
     };
     responses: never;
@@ -5161,6 +5502,778 @@ export interface operations {
                 };
             };
             /** @description Failed to get audit logs */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listEventFormLinks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description List of event form links */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventFormLink"][];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Failed to list links */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    generateEventFormLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["EventFormLinkGenerateRequest"];
+            };
+        };
+        responses: {
+            /** @description Event form link created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventFormLink"];
+                };
+            };
+            /** @description Validation error (e.g. ttl_days out of range or label too long) */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Plan limit reached (basic plan allows max 3 active links) */
+            402: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Failed to create link */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    deleteEventFormLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Link revoked */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid link ID */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Link not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Failed to delete link */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getEventPublicLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active public link */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventPublicLink"];
+                };
+            };
+            /** @description Invalid event ID */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No active public link for this event */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Failed to get public link */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    createOrRotateEventPublicLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["EventPublicLinkCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Public link created or rotated */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventPublicLink"];
+                };
+            };
+            /** @description Invalid event ID or ttl_days out of range */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Failed to create public link */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    revokeEventPublicLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Public link revoked */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid event ID */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No active public link to revoke */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Failed to revoke public link */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getEventFormData: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Form data including organizer branding and product catalog */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventFormDataResponse"];
+                };
+            };
+            /** @description Token is required */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Link not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Link has been used or has expired */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example link_invalid */
+                        error?: string;
+                        message?: string;
+                    };
+                };
+            };
+            /** @description Failed to load form data */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    submitEventForm: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventFormSubmission"];
+            };
+        };
+        responses: {
+            /** @description Form submitted successfully — draft event and client created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventFormSubmitResponse"];
+                };
+            };
+            /** @description Validation error or invalid product ID */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Link not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Link has already been used */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example link_already_used */
+                        error?: string;
+                        message?: string;
+                    };
+                };
+            };
+            /** @description Link has expired or is no longer valid */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @example link_invalid */
+                        error?: string;
+                        message?: string;
+                    };
+                };
+            };
+            /** @description Failed to process form submission */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getEventPortalData: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Client portal data with event details, organizer branding, and payment summary */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicEventView"];
+                };
+            };
+            /** @description Token is required */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Link not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Link has been revoked, expired, or the associated event was deleted */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Failed to load portal data */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listStaffTeams: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description List of staff teams */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffTeam"][];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Failed to fetch teams */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    createStaffTeam: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StaffTeamUpsertRequest"];
+            };
+        };
+        responses: {
+            /** @description Staff team created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffTeam"];
+                };
+            };
+            /** @description Validation error or invalid member (unknown or cross-tenant staff) */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Failed to create team */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getStaffTeam: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Staff team with members */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffTeam"];
+                };
+            };
+            /** @description Invalid team ID */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Team not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Failed to fetch team */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    updateStaffTeam: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StaffTeamUpsertRequest"];
+            };
+        };
+        responses: {
+            /** @description Staff team updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffTeam"];
+                };
+            };
+            /** @description Invalid team ID, validation error, or invalid member */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Team not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Failed to update team */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    deleteStaffTeam: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Team deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid team ID */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Team not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Failed to delete team */
             500: {
                 headers: {
                     [name: string]: unknown;

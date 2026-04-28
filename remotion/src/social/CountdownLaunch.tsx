@@ -10,12 +10,12 @@ const { fontFamily: cinzel } = loadCinzel();
 const { fontFamily: inter } = loadInter();
 
 /**
- * CountdownLaunch — Lanzamiento 3,2,1 explosivo
+ * CountdownLaunch — Promo evergreen 3,2,1 de alto impacto
  * Format: 9:16 Reel
  */
 export const CountdownLaunch: React.FC<CountdownLaunchProps> = ({
-  launchText = '¡NUEVA APP DISPONIBLE!',
-  subText = 'Descargala hoy y transformá tu negocio de eventos',
+  launchText = 'TODO EN ORDEN',
+  subText = 'Clientes, eventos, pagos y cotizaciones en una sola app',
 }) => {
   return (
     <AbsoluteFill style={{ background: SOCIAL_COLORS.navy, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

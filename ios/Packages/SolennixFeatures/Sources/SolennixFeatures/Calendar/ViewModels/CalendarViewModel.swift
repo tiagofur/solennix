@@ -201,16 +201,6 @@ public final class CalendarViewModel {
         return dots
     }
 
-    /// Total number of events on a given day — used to render the `+N más`
-    /// overflow badge when there are more than 3 dots worth of data.
-    public func eventCountForDay(_ date: Date) -> Int {
-        let dateStr = Self.apiDateFormatter.string(from: date)
-        return events
-            .filter { $0.eventDate == dateStr }
-            .filter { statusFilter == nil || $0.status == statusFilter }
-            .count
-    }
-
     /// CORREGIDO BUG OVERFLOW — Returns how many events are NOT rendered as dots.
     /// Formula: totalEvents - min(uniqueStatusesCount, 3)
     /// Examples:
@@ -229,9 +219,6 @@ public final class CalendarViewModel {
         /// — restaba 3 fijos incluso si solo se renderizaron 1-2 dots (<3 eventos únicos)
         
         return max(0, dayEvents.count - Swift.min(uniqueStatusCount, 3))
-    }
-        }
-        return dots
     }
 
     /// Formatted month title, e.g. "Marzo 2026".

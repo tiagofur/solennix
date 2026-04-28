@@ -97,7 +97,7 @@ export const EventProducts: React.FC<EventProductsProps> = ({
                   type="button"
                   onClick={() => setPendingDeleteIndex(index)}
                   className="absolute top-2 right-2 text-text-secondary hover:text-error transition-colors"
-                  aria-label={`${t('common:action.remove')} ${t('common:entities.product')} ${index + 1}`}
+                  aria-label={t('events:products.delete_button', { index: index + 1 })}
                 >
                   <Trash2 className="h-4 w-4" aria-hidden="true" />
                 </button>
@@ -151,7 +151,7 @@ export const EventProducts: React.FC<EventProductsProps> = ({
                         type="button"
                         onClick={() => onProductChange(index, 'quantity', Number(numPeople || 1))}
                         className="inline-flex items-center px-2 rounded-r-xl border border-l-0 border-border bg-surface-alt text-text-secondary sm:text-sm hover:bg-surface-alt transition-colors"
-                        aria-label="Equal quantity to number of people"
+                        aria-label={t('events:products.equal_quantity_to_people')}
                       >
                         <Users className="h-3 w-3" aria-hidden="true" />
                       </button>
@@ -229,7 +229,7 @@ export const EventProducts: React.FC<EventProductsProps> = ({
         type="button"
         onClick={onAddProduct}
         className="w-full flex items-center justify-center px-4 py-2 border border-border shadow-xs text-sm font-medium rounded-xl text-text-secondary bg-card hover:bg-surface-alt transition-colors"
-        aria-label={t('events:products.add')}
+        aria-label={t('events:products.add_button_aria')}
       >
         <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> {t('events:products.add')}
       </button>

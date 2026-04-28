@@ -32,7 +32,7 @@ describe('About', () => {
       renderAbout();
 
       expect(screen.getByText('Solennix')).toBeInTheDocument();
-      expect(screen.getByText('Version 1.0.0')).toBeInTheDocument();
+      expect(screen.getByText('Versión 1.0.0')).toBeInTheDocument();
     });
 
     it('renders the developer info section', () => {
@@ -65,11 +65,11 @@ describe('About', () => {
 
       expect(screen.getByText('Legal')).toBeInTheDocument();
 
-      const termsLink = screen.getByRole('link', { name: /Terminos y Condiciones/i });
+      const termsLink = screen.getByRole('link', { name: /Términos y Condiciones/i });
       expect(termsLink).toBeInTheDocument();
       expect(termsLink).toHaveAttribute('href', '/terms');
 
-      const privacyLink = screen.getByRole('link', { name: /Politica de Privacidad/i });
+      const privacyLink = screen.getByRole('link', { name: /Política de Privacidad/i });
       expect(privacyLink).toBeInTheDocument();
       expect(privacyLink).toHaveAttribute('href', '/privacy');
     });
@@ -79,7 +79,7 @@ describe('About', () => {
 
       expect(screen.getByText('Sobre la app')).toBeInTheDocument();
       expect(
-        screen.getByText(/Solennix es una aplicacion SaaS disenada para organizadores de eventos/)
+        screen.getByText(/Solennix es una aplicación SaaS diseñada para organizadores de eventos/)
       ).toBeInTheDocument();
     });
 

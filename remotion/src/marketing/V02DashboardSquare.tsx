@@ -148,7 +148,7 @@ export const V02_DashboardSquare: React.FC = () => {
             <div style={{ fontFamily: 'Cinzel', fontSize: 32, fontWeight: 400, color: COLORS.cream, letterSpacing: 1 }}>De un vistazo.</div>
           </div>
           <div style={{ background: COLORS.gold, padding: '16px 40px', borderRadius: 12, transform: `scale(${spring({ frame: frame - CTA_TEXT_START - 50, fps, config: { damping: 12 } })})` }}>
-            <span style={{ fontFamily:'Inter', fontSize: 20, fontWeight: 800, color:'#0a1628', textTransform: 'uppercase' }}>Probá gratis</span>
+            <span style={{ fontFamily:'Inter', fontSize: 20, fontWeight: 800, color:'#0a1628', textTransform: 'uppercase' }}>Mirá el demo</span>
           </div>
         </div>
       )}

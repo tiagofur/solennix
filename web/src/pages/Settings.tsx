@@ -836,12 +836,12 @@ export const Settings: React.FC = () => {
                   </div>
                   <div>
                     <h4 className="font-bold text-text">
-                      {t("settings:subscription.current_plan", {
-                        plan:
-                          planLabels[subStatus?.plan || "basic"] ||
-                          (subStatus?.plan ?? t("settings:plans.basic")),
-                      })}
+                      {t("settings:subscription.current_plan_label")}
                     </h4>
+                    <p className="text-sm font-semibold text-text-secondary mt-0.5">
+                      {planLabels[subStatus?.plan || "basic"] ||
+                        (subStatus?.plan ?? t("settings:plans.basic"))}
+                    </p>
                     <span
                       className={clsx(
                         "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold mt-1",
@@ -859,21 +859,26 @@ export const Settings: React.FC = () => {
                   <span className="text-xs font-bold text-text-secondary uppercase tracking-widest">
                     {fallbackProviderLabels[subStatus?.subscription?.provider || "stripe"].badge}
                   </span>
-                  <button
-                    type="button"
-                    onClick={handleManageSubscription}
-                    disabled={isPortalLoading}
-                    className="inline-flex items-center justify-center px-6 py-2.5 bg-primary text-white text-sm font-bold rounded-xl hover:bg-primary-dark transition-all shadow-md shadow-primary/20 hover:shadow-lg disabled:opacity-50"
-                  >
-                    {isPortalLoading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <>
-                        {t("settings:subscription.manage")}{" "}
-                        <ExternalLink className="ml-2 h-4 w-4" />
-                      </>
-                    )}
-                  </button>
+                  {subStatus?.has_stripe_account && (
+                    <button
+                      type="button"
+                      onClick={handleManageSubscription}
+                      disabled={isPortalLoading}
+                      className="inline-flex items-center justify-center px-6 py-2.5 bg-primary text-white text-sm font-bold rounded-xl hover:bg-primary-dark transition-all shadow-md shadow-primary/20 hover:shadow-lg disabled:opacity-50"
+                    >
+                      {isPortalLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          {t("common:action.loading")}
+                        </>
+                      ) : (
+                        <>
+                          {t("settings:subscription.manage")}{" "}
+                          <ExternalLink className="ml-2 h-4 w-4" />
+                        </>
+                      )}
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -890,9 +895,14 @@ export const Settings: React.FC = () => {
                       </p>
                       {subStatus?.subscription?.status !== "canceled" && (
                         <div className="mt-2 space-y-1">
+                      {subStatus?.subscription?.cancel_at_period_end && (
+                        <p className="font-semibold text-warning">
+                          {t("settings:subscription.cancel_at_period_end")}
+                        </p>
+                      )}
                       {subStatus?.subscription?.current_period_end && (
                         <p className="text-text-secondary">
-                          {t("settings:subscription.next_payment", {
+                          {t(subStatus?.subscription?.cancel_at_period_end ? "settings:subscription.cancels_on" : "settings:subscription.next_payment", {
                             date: formatSubDate(subStatus.subscription.current_period_end, i18n),
                           })}
                         </p>

@@ -72,6 +72,7 @@ import clsx from "clsx";
 import { ContractTemplateError, renderContractTemplate } from "@/lib/contractTemplate";
 import { renderFormattedReact } from "@/lib/inlineFormatting";
 import type { Event, Client, User, EventExtra, EventEquipment, EventSupply, EventStaff as EventStaffType, ProductIngredient } from "@/types/entities";
+import { aggregateIngredients } from "./lib/aggregateIngredients";
 
 // API response types — backend returns `client` (singular)
 type EventWithClient = Event & { client?: Client | null };
@@ -104,15 +105,6 @@ type ProductIngredientWithInventory = ProductIngredient & {
   inventory?: { ingredient_name?: string; unit?: string; unit_cost?: number; current_stock?: number } | null;
 };
 
-interface IngredientWithStock {
-  name: string;
-  quantity: number;
-  unit: string;
-  cost?: number;
-  currentStock?: number;
-  inventory_id?: string;
-}
-
 type ViewMode = "summary" | "ingredients" | "contract" | "payments" | "photos" | "checklist";
 
 
@@ -127,15 +119,22 @@ export const EventSummary: React.FC = () => {
   // ── 6 parallel queries via React Query ──
   const { data: eventRaw = null, isLoading: eventLoading } = useEvent(id);
   const event = eventRaw as EventWithClient | null;
-  const { data: products = [], isLoading: productsLoading } = useEventProducts(id);
-  const { data: extras = [] } = useEventExtras(id);
-  const { data: equipment = [] } = useEventEquipment(id);
-  const { data: supplies = [] } = useEventSupplies(id);
-  const { data: eventPhotos = [] } = useEventPhotos(id);
-  const { data: eventStaff = [] } = useEventStaff(id);
+  const { data: productsRaw = [], isLoading: productsLoading } = useEventProducts(id);
+  const products = Array.isArray(productsRaw) ? productsRaw : [];
+  const { data: extrasRaw = [] } = useEventExtras(id);
+  const extras = Array.isArray(extrasRaw) ? extrasRaw : [];
+  const { data: equipmentRaw = [] } = useEventEquipment(id);
+  const equipment = Array.isArray(equipmentRaw) ? equipmentRaw : [];
+  const { data: suppliesRaw = [] } = useEventSupplies(id);
+  const supplies = Array.isArray(suppliesRaw) ? suppliesRaw : [];
+  const { data: eventPhotosRaw = [] } = useEventPhotos(id);
+  const eventPhotos = Array.isArray(eventPhotosRaw) ? eventPhotosRaw : [];
+  const { data: eventStaffRaw = [] } = useEventStaff(id);
+  const eventStaff = Array.isArray(eventStaffRaw) ? eventStaffRaw : [];
   const addEventPhotoMutation = useAddEventPhoto(id);
   const deleteEventPhotoMutation = useDeleteEventPhoto(id);
-  const { data: payments = [] } = usePaymentsByEvent(id);
+  const { data: paymentsRaw = [] } = usePaymentsByEvent(id);
+  const payments = Array.isArray(paymentsRaw) ? paymentsRaw : [];
   const deleteEventMutation = useDeleteEvent();
 
   const loading = eventLoading || productsLoading;
@@ -167,34 +166,25 @@ export const EventSummary: React.FC = () => {
   }, [products]);
 
   // ── Dependent query: fetch all ingredients for event products ──
-  const { data: allProdIngredients = [] } = useQuery({
+  const { data: allProdIngredientsRaw = [], error: allProdIngredientsError } = useQuery({
     queryKey: queryKeys.products.ingredientsBatch(productIdsSorted),
     queryFn: () => productService.getIngredientsForProducts(productIdsSorted),
     enabled: productIdsSorted.length > 0,
   });
 
-  // ── Derived: aggregated ingredients (pure computation, no fetch) ──
-  const ingredients = useMemo(() => {
-    const prodIngredients = allProdIngredients.filter(
-      (ing: ProductIngredientWithInventory) => ing.type === 'ingredient',
-    );
-    const aggregated: Record<string, IngredientWithStock> = {};
-    prodIngredients.forEach((ing: ProductIngredientWithInventory) => {
-      const key = ing.inventory_id;
-      const quantity = productQuantities.get(ing.product_id) || 0;
-      const ingredientName = ing.ingredient_name ?? ing.inventory?.ingredient_name ?? '';
-      const unit = ing.unit ?? ing.inventory?.unit ?? '';
-      const unitCost = ing.unit_cost ?? ing.inventory?.unit_cost ?? 0;
-      const currentStock = ing.inventory?.current_stock ?? 0;
+  const allProdIngredients = Array.isArray(allProdIngredientsRaw) ? allProdIngredientsRaw : [];
 
-      if (!aggregated[key]) {
-        aggregated[key] = { name: ingredientName, unit, quantity: 0, cost: 0, currentStock };
-      }
-      aggregated[key].quantity += ing.quantity_required * quantity;
-      aggregated[key].cost += ing.quantity_required * quantity * unitCost;
-    });
-    return Object.values(aggregated);
-  }, [allProdIngredients, productQuantities]);
+  useEffect(() => {
+    if (allProdIngredientsError) {
+      logError("Error aggregating ingredients", allProdIngredientsError);
+    }
+  }, [allProdIngredientsError]);
+
+  // ── Derived: aggregated ingredients (pure computation, no fetch) ──
+  const ingredients = useMemo(
+    () => aggregateIngredients(allProdIngredients as ProductIngredientWithInventory[], productQuantities),
+    [allProdIngredients, productQuantities],
+  );
 
   // Photos are now fetched from the dedicated endpoint via useEventPhotos().
   // The legacy path that parsed event.photos as JSON was removed — the
@@ -909,8 +899,8 @@ export const EventSummary: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {products.map((p) => (
-                    <tr key={p.product_id} className="group hover:bg-surface-alt/50 transition-colors">
+                  {products.map((p, idx) => (
+                    <tr key={`${p.product_id}-${idx}`} className="group hover:bg-surface-alt/50 transition-colors">
                       <td className="py-4 px-1 font-bold text-text">{p.product_name || t('common:product')}</td>
                       <td className="py-4 px-1 text-right text-text-secondary">{p.quantity}</td>
                       <td className="py-4 px-1 text-right text-text-secondary font-medium">
@@ -941,8 +931,8 @@ export const EventSummary: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {extras.map((e) => (
-                    <tr key={e.id} className="hover:bg-surface-alt/50 transition-colors">
+                  {extras.map((e, idx) => (
+                    <tr key={e.id || `extra-${idx}`} className="hover:bg-surface-alt/50 transition-colors">
                       <td className="py-4 px-1 font-bold text-text">{e.description}</td>
                       <td className="py-4 px-1 text-right font-bold text-text">{e.price.toLocaleString(moneyLocale, { style: 'currency', currency: 'MXN' })}</td>
                     </tr>
@@ -970,8 +960,8 @@ export const EventSummary: React.FC = () => {
                 {t('events:summary.supplies_title')}
               </h2>
               <div className="space-y-3">
-                {supplies.map((s: EventSupply) => (
-                  <div key={s.id} className="flex items-center justify-between py-3 border-b border-border last:border-0">
+                {supplies.map((s: EventSupply, idx) => (
+                  <div key={s.id || `supply-${idx}`} className="flex items-center justify-between py-3 border-b border-border last:border-0">
                     <div>
                       <span className="font-bold text-text">{s.supply_name || t('common:supply')}</span>
                       <span className="text-text-secondary ml-2">
@@ -1019,8 +1009,8 @@ export const EventSummary: React.FC = () => {
                 {t('events:summary.assigned_equipment')}
               </h2>
               <div className="space-y-3">
-                {equipment.map((eq: EventEquipment) => (
-                  <div key={eq.id} className="flex items-center justify-between py-3 border-b border-border last:border-0">
+                {equipment.map((eq: EventEquipment, idx) => (
+                  <div key={eq.id || `equipment-${idx}`} className="flex items-center justify-between py-3 border-b border-border last:border-0">
                     <div>
                       <span className="font-bold text-text">{eq.equipment_name || t('common:equipment')}</span>
                       <span className="text-text-secondary ml-2">x{eq.quantity}</span>
@@ -1045,9 +1035,9 @@ export const EventSummary: React.FC = () => {
                 {t('events:summary.assigned_staff')}
               </h2>
               <div className="space-y-3">
-                {eventStaff.map((s: EventStaffType) => (
+                {eventStaff.map((s: EventStaffType, idx) => (
                   <button
-                    key={s.id}
+                    key={s.id || `staff-${idx}`}
                     type="button"
                     onClick={() => navigate(`/staff/${s.staff_id}`)}
                     className="w-full flex items-center justify-between py-3 border-b border-border last:border-0 text-left hover:bg-surface-alt/50 rounded-md px-2 -mx-2 transition-colors cursor-pointer print:pointer-events-none print:hover:bg-transparent"
@@ -1269,8 +1259,8 @@ export const EventSummary: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {supplies.filter((s: EventSupply) => s.source === 'purchase').map((s: EventSupply) => (
-                    <tr key={s.id} className="hover:bg-surface-alt/50 transition-colors">
+                  {supplies.filter((s: EventSupply) => s.source === 'purchase').map((s: EventSupply, idx) => (
+                    <tr key={s.id || `purchase-${idx}`} className="hover:bg-surface-alt/50 transition-colors">
                       <td className="py-3 font-medium text-text">
                         {s.supply_name || t('common:supply')}
                         <div className="text-xs text-text-secondary uppercase tracking-tight">{s.unit || t('common:unit_short')}</div>
@@ -1304,10 +1294,10 @@ export const EventSummary: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {supplies.filter((s: EventSupply) => s.source === 'stock').map((s: EventSupply) => {
+                  {supplies.filter((s: EventSupply) => s.source === 'stock').map((s: EventSupply, idx) => {
                     const needsMore = s.quantity > (s.current_stock || 0);
                     return (
-                      <tr key={s.id} className="hover:bg-surface-alt/50 transition-colors">
+                      <tr key={s.id || `stock-${idx}`} className="hover:bg-surface-alt/50 transition-colors">
                         <td className="py-3 font-medium text-text">
                           {s.supply_name || 'Insumo'}
                           <div className="text-xs text-text-secondary uppercase tracking-tight">{s.unit || 'und'}</div>
@@ -1456,7 +1446,7 @@ export const EventSummary: React.FC = () => {
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
               {eventPhotos.map((photo, idx) => (
-                <div key={photo.id} className="relative group aspect-square rounded-xl overflow-hidden bg-surface-alt">
+                <div key={photo.id || `photo-${idx}`} className="relative group aspect-square rounded-xl overflow-hidden bg-surface-alt">
                   <OptimizedImage
                     src={photo.url}
                     alt={`Foto ${idx + 1} del evento`}

@@ -290,7 +290,7 @@ export const RemotionRoot = () => {
           }}
         />
         <Composition
-          id="CountdownLaunch"
+          id="EvergreenPromo-Reel"
           component={CountdownLaunch}
           schema={CountdownLaunchSchema}
           durationInFrames={450}
@@ -298,8 +298,8 @@ export const RemotionRoot = () => {
           width={SOCIAL_FORMATS.REEL.width}
           height={SOCIAL_FORMATS.REEL.height}
           defaultProps={{
-            launchText: '¡NUEVA APP DISPONIBLE!',
-            subText: 'Descargala hoy y transformá tu negocio de eventos',
+            launchText: 'TODO EN ORDEN',
+            subText: 'Clientes, eventos, pagos y cotizaciones en una sola app',
           }}
         />
       </Folder>

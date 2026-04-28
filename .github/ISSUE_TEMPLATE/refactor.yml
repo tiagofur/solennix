@@ -1,0 +1,24 @@
+name: Refactor
+description: Technical debt or structural improvement
+labels: ["type:refactor", "type:infra", "status:ready", "priority:medium"]
+body:
+  - type: textarea
+    id: current
+    attributes:
+      label: Current limitation
+      description: What is hard to maintain today?
+    validations:
+      required: true
+
+  - type: textarea
+    id: target
+    attributes:
+      label: Target architecture or outcome
+    validations:
+      required: true
+
+  - type: textarea
+    id: risks
+    attributes:
+      label: Risks and migration plan
+      description: Include rollback strategy.

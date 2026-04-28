@@ -55,13 +55,16 @@ const pdfT = (key: string, lang: string = 'es'): string => {
       people: 'Personas:',
       not_defined: 'Por definir',
       products_services: 'Productos y Servicios',
+      product: 'Producto',
       description: 'Descripción',
       qty: 'Cant.',
       unit_price: 'Precio Unit.',
       total: 'Total',
       no_products: 'No hay productos o servicios registrados.',
+      no_concepts: 'No hay conceptos registrados.',
       subtotal: 'Subtotal:',
       discount: 'Descuento:',
+      discount_short: 'Desc.',
       tax: 'IVA',
       validity: 'Este presupuesto tiene una validez de 15 días.',
       provider_role: 'EL PROVEEDOR',
@@ -119,13 +122,16 @@ const pdfT = (key: string, lang: string = 'es'): string => {
       people: 'People:',
       not_defined: 'To be defined',
       products_services: 'Products & Services',
+      product: 'Product',
       description: 'Description',
       qty: 'Qty',
       unit_price: 'Unit Price',
       total: 'Total',
       no_products: 'No products or services registered.',
+      no_concepts: 'No concepts registered.',
       subtotal: 'Subtotal:',
       discount: 'Discount:',
+      discount_short: 'Disc.',
       tax: 'Tax',
       validity: 'This quote is valid for 15 days.',
       provider_role: 'THE PROVIDER',
@@ -170,6 +176,13 @@ const pdfT = (key: string, lang: string = 'es'): string => {
     }
   };
   return translations[lang]?.[key] || translations['es'][key] || key;
+};
+
+const pdfLabel = (key: string, lang: string = 'es'): string => pdfT(key, lang).replace(/:$/, '');
+
+const discountLabel = (discount: number, discountType: string | undefined, lang: string): string => {
+  const label = pdfLabel('discount', lang);
+  return discountType === 'percent' ? `${label} (${discount}%):` : `${label}:`;
 };
 
 // Helper para agregar encabezado común
@@ -353,10 +366,7 @@ export const generateBudgetPDF = (
   if (rawDiscount > 0) {
     currentY += 7;
     doc.setTextColor(brandColor);
-    const discountLabel = event.discount_type === 'percent'
-      ? `${pdfT('discount', lang)} (${rawDiscount}%):`
-      : `${pdfT('discount', lang)}:`;
-    doc.text(discountLabel, summaryX, currentY);
+    doc.text(discountLabel(rawDiscount, event.discount_type, lang), summaryX, currentY);
     doc.text(`-${formatCurrency(discountAmount, lang)}`, pageWidth - 20, currentY, { align: 'right' });
     doc.setTextColor(TEXT_COLOR);
   }
@@ -534,7 +544,7 @@ export const generatePaymentReportPDF = (
     autoTable(doc, {
       startY: currentY,
       margin: { left: 20, right: 20 },
-      head: [[pdfT('date', lang), pdfT('method', lang), pdfT('note', lang), pdfT('monto', lang)]],
+      head: [[pdfLabel('date', lang), pdfLabel('method', lang), pdfLabel('note', lang), pdfLabel('monto', lang)]],
       body: payments.map(p => {
         // Adjust timezone if needed or just display as YYYY-MM-DD
         const pDateStr = p.payment_date;
@@ -745,7 +755,7 @@ export const generateInvoicePDF = (
     autoTable(doc, {
       startY: currentY,
       margin: { left: 20, right: 20 },
-      head: [[pdfT('description', lang), pdfT('qty', lang), pdfT('unit_price', lang), pdfT('discount', lang), pdfT('subtotal', lang).replace(':', '')]],
+      head: [[pdfT('description', lang), pdfT('qty', lang), pdfT('unit_price', lang), pdfT('discount_short', lang), pdfLabel('subtotal', lang)]],
       body: body,
       headStyles: { fillColor: [245, 245, 245], textColor: brandColor },
       styles: { cellPadding: 2, fontSize: 9 },
@@ -762,7 +772,7 @@ export const generateInvoicePDF = (
     currentY = (doc as any).lastAutoTable.finalY + 10;
   } else {
     currentY += 10;
-    doc.text(pdfT('no_products', lang), 20, currentY);
+    doc.text(pdfT('no_concepts', lang), 20, currentY);
     currentY += 10;
   }
 
@@ -795,10 +805,7 @@ export const generateInvoicePDF = (
 
   if (rawDiscount > 0) {
     doc.setTextColor(brandColor);
-    const discountLabel = event.discount_type === 'percent'
-      ? `${pdfT('discount', lang)} (${rawDiscount}%):`
-      : `${pdfT('discount', lang)}:`;
-    doc.text(discountLabel, summaryX, currentY);
+    doc.text(discountLabel(rawDiscount, event.discount_type, lang), summaryX, currentY);
     doc.text(`-${formatCurrency(discountAmount, lang)}`, pageWidth - 20, currentY, { align: 'right' });
     currentY += 7;
     doc.setTextColor(TEXT_COLOR);

@@ -123,7 +123,7 @@ describe('EventGeneralInfo', () => {
     expect(screen.getByText('Ana Perez')).toBeInTheDocument();
     expect(screen.getByText(/Historial del Cliente/i)).toBeInTheDocument();
     expect(screen.getByText(/3 eventos realizados/i)).toBeInTheDocument();
-    expect(screen.getByText(/Total gastado: \$1200.50/i)).toBeInTheDocument();
+    expect(screen.getByText(/Total gastado: \$1,200.50/i)).toBeInTheDocument();
   });
 
   // ---------- NEW TESTS FOR COVERAGE ----------

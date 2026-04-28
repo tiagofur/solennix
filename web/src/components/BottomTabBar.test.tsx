@@ -35,7 +35,7 @@ describe('BottomTabBar', () => {
     mockLocation.mockReturnValue({ pathname: '/dashboard' });
 
     const { container } = renderBottomTabBar();
-    fireEvent.click(screen.getByRole('button', { name: /más opciones/i }));
+    fireEvent.click(screen.getByRole('button', { name: /más opciones|action\.more_options/i }));
 
     const overlay = container.querySelector('.fixed.inset-0');
     expect(overlay).toBeInTheDocument();

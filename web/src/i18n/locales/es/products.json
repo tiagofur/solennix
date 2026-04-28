@@ -3,6 +3,20 @@
   "new_product": "Nuevo Producto",
   "search_placeholder": "Buscar producto...",
   "no_products": "No se encontraron productos",
+  "list": {
+    "no_results": "Producto no encontrado",
+    "ingredients": "insumos",
+    "quantity": "Cantidad",
+    "units": "unidades",
+    "unknown": "Insumo desconocido"
+  },
+  "empty": {
+    "title": "Sin productos registrados",
+    "description": "Comienza agregando tu primer producto.",
+    "action": "Agregar Producto",
+    "no_results_title": "Sin productos registrados",
+    "no_results_description": "No hay productos que coincidan con tu búsqueda."
+  },
   "delete_confirm": "Se eliminará el producto y su receta. No se puede usar en nuevas cotizaciones. Esta acción no se puede deshacer.",
   "table": {
     "name": "Nombre",
@@ -45,12 +59,23 @@
     "capacity_fixed": "Fijo: 1 pieza siempre",
     "bring_to_event": "Llevar al evento",
     "reusable_no_cost": "Sin costo - Reutilizable",
+    "back_previous": "Regresar a la página anterior",
+    "back_to_list": "Volver a la lista de productos",
+    "upload_photo": "Subir foto del producto",
+    "remove_photo": "Quitar foto del producto",
+    "add_ingredient_accessible": "Agregar un insumo adicional",
+    "add_equipment_accessible": "Agregar equipo necesario",
+    "add_supply_accessible": "Agregar insumo fijo por evento",
+    "remove_ingredient": "Eliminar insumo",
+    "remove_equipment": "Eliminar equipo",
+    "remove_supply": "Eliminar insumo fijo",
     "validation": {
       "name_required": "El nombre es requerido",
       "name_min": "El nombre debe tener al menos 2 caracteres",
       "price_required": "El precio es requerido",
       "price_negative": "El precio no puede ser negativo",
-      "category_required": "La categoría es requerida"
+      "category_required": "La categoría es requerida",
+      "loading_error": "Error al cargar los datos del producto."
     }
   },
   "details": {
@@ -59,6 +84,28 @@
     "recipe": "Receta / Ingredientes",
     "no_recipe": "Este producto no tiene una receta definida.",
     "quantity": "Cant.",
-    "example_placeholder": "Ej: 100"
+    "example_placeholder": "Ej: 100",
+    "delete_confirm_title": "Eliminar producto",
+    "delete_confirm_desc": "¿Estás seguro de que deseas eliminar este producto? Esta acción no se puede deshacer.",
+    "per_unit": "por unidad",
+    "unit_cost": "Costo unitario",
+    "in_supplies": "en insumos",
+    "margin": "Margen",
+    "margin_desc": "estimado",
+    "upcoming_events": "Eventos próximos",
+    "demand_warning": "{{count}} unidades próximas",
+    "demand_no_urgent": "Demanda sin urgencia",
+    "demand_no_events": "Sin eventos próximos",
+    "demand_high_this_week": "Alta demanda esta semana.",
+    "estimated_revenue": "Ingreso estimado",
+    "demand_forecast_summary": "{{units}} unidades en {{events}} eventos",
+    "demand_no_data": "Sin demanda programada",
+    "demand_by_date": "Demanda por fecha",
+    "total_demand": "Demanda total",
+    "est_suffix": "estimado",
+    "no_ingredients": "Este producto no tiene insumos configurados.",
+    "configure_composition": "Configurar composición",
+    "fixed_cost_per_event": "Costo fijo por evento",
+    "back_to_products": "Volver a productos"
   }
 }

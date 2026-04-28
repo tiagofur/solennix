@@ -56,11 +56,7 @@ export default defineConfig({
     // `--expose-gc` habilita el `globalThis.gc()` que tests/setup.ts
     // invoca en afterEach para liberar memoria entre tests.
     pool: 'forks',
-    poolOptions: {
-      forks: {
-        execArgv: ['--max-old-space-size=6144', '--expose-gc'],
-      },
-    },
+    execArgv: ['--max-old-space-size=6144', '--expose-gc'],
   },
   resolve: {
     alias: {

@@ -75,7 +75,7 @@ export const AdminUsers: React.FC = () => {
   const qc = useQueryClient();
   const { data: users = [], isLoading: loading, error: usersError } = useAdminUsers();
   const upgradeUser = useUpgradeUser();
-  const error = usersError ? t('admin:users.table.loading') : null;
+  const error = usersError ? t('admin:users.errors.loading') : null;
   const [searchQuery, setSearchQuery] = useState('');
   const [planFilter, setPlanFilter] = useState<PlanFilter>('all');
   const [sortField, setSortField] = useState<SortField>('created_at');
@@ -677,7 +677,7 @@ export const AdminUsers: React.FC = () => {
         {!loading && sortedUsers.length > 0 && (
           <div className="px-6 py-3 bg-surface-alt border-t border-border flex items-center justify-between text-xs text-text-secondary">
             <span>
-              {t('admin:users.table.footer.showing', { filtered: sortedUsers.length, total: users.length })}
+              {t('admin:users.table.footer.showing', { count: sortedUsers.length, filtered: sortedUsers.length, total: users.length })}
             </span>
             <span>
               {t('admin:users.table.footer.sorted_by')}{' '}

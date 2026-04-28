@@ -100,7 +100,7 @@ export const Pricing: React.FC = () => {
               type="button"
               disabled
               className="w-full bg-surface-alt text-text-secondary font-medium py-3 px-4 rounded-xl cursor-not-allowed"
-              aria-label={t('pricing:plans.basic.name') + ' - ' + (isOnPaidPlan ? t('pricing:plans.basic.downgrade') : t('pricing:plans.basic.current'))}
+              aria-label={isOnPaidPlan ? `${t('pricing:plans.basic.name')} - ${t('pricing:plans.basic.downgrade')}` : t('pricing:plans.basic.current_label')}
             >
               {isOnPaidPlan ? t('pricing:plans.basic.downgrade') : t('pricing:plans.basic.current')}
             </button>
@@ -155,7 +155,7 @@ export const Pricing: React.FC = () => {
                 type="button"
                 disabled
                 className="w-full bg-white/20 backdrop-blur-sm text-white font-semibold py-3 px-4 rounded-xl cursor-not-allowed border border-white/30 flex items-center justify-center gap-2"
-                aria-label={t('pricing:plans.pro.name') + ' - ' + t('pricing:plans.pro.current')}
+                aria-label={t('pricing:plans.pro.current_label')}
               >
                 <Shield className="h-5 w-5" aria-hidden="true" />
                 {t('pricing:plans.pro.current')}
@@ -166,7 +166,7 @@ export const Pricing: React.FC = () => {
                 onClick={() => handleUpgrade('pro')}
                 disabled={upgradingPlan !== null || isOnBusiness}
                 className="w-full bg-white text-primary-dark hover:bg-primary-light font-bold py-3 px-4 rounded-xl shadow-lg transition-all duration-150 flex items-center justify-center gap-2 disabled:opacity-75 hover:shadow-xl"
-                aria-label={t('pricing:plans.pro.try_free')}
+                aria-label={t('pricing:plans.pro.subscribe_label')}
               >
                 {upgradingPlan === 'pro' ? (
                   t('pricing:plans.pro.processing')
@@ -235,7 +235,7 @@ export const Pricing: React.FC = () => {
                 type="button"
                 disabled
                 className="w-full bg-accent/10 text-accent font-semibold py-3 px-4 rounded-xl cursor-not-allowed border border-accent/30 flex items-center justify-center gap-2"
-                aria-label={t('pricing:plans.business.name') + ' - ' + t('pricing:plans.business.current')}
+                aria-label={t('pricing:plans.business.current_label')}
               >
                 <Shield className="h-5 w-5" aria-hidden="true" />
                 {t('pricing:plans.business.current')}
@@ -246,7 +246,7 @@ export const Pricing: React.FC = () => {
                 onClick={() => handleUpgrade('business')}
                 disabled={upgradingPlan !== null}
                 className="w-full bg-accent text-white hover:bg-accent/90 font-bold py-3 px-4 rounded-xl shadow-lg transition-all duration-150 flex items-center justify-center gap-2 disabled:opacity-75"
-                aria-label={t('pricing:plans.business.try_free')}
+                aria-label={t('pricing:plans.business.subscribe_label')}
               >
                 {upgradingPlan === 'business' ? (
                   t('pricing:plans.business.processing')

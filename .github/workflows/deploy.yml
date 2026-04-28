@@ -39,6 +39,9 @@ jobs:
     name: Deploy to VPS
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    timeout-minutes: 20
+    environment:
+      name: production
 
     steps:
       - name: Execute deployment script on VPS
@@ -70,3 +73,19 @@ jobs:
             echo "→ Cleaning dangling images"
             docker image prune -f || true
             echo "✓ Deploy OK"
+
+      - name: Health check (post-deploy)
+        run: |
+          set -euo pipefail
+          HEALTHCHECK_URL="https://api.solennix.com/health"
+          echo "Checking ${HEALTHCHECK_URL}"
+          for i in {1..10}; do
+            if curl --fail --silent --show-error --max-time 10 "${HEALTHCHECK_URL}"; then
+              echo "Health check passed"
+              exit 0
+            fi
+            echo "Attempt ${i}/10 failed, retrying in 15s"
+            sleep 15
+          done
+          echo "Health check failed after retries"
+          exit 1

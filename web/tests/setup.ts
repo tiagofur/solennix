@@ -8,12 +8,50 @@ import i18n from 'i18next';
 // Pin tests to Spanish so string assertions don't flip to English based
 // on the host's navigator.language (CI runners often default to en-US).
 void i18n.changeLanguage('es');
-import { vi, afterEach, beforeAll, afterAll } from 'vitest';
+import { vi, beforeEach, afterEach, beforeAll, afterAll } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import { server } from './mocks/server';
 
+// React 19 + Vitest/jsdom: explicitly mark act environment for async updates.
+// Prevents noisy "environment is not configured to support act(...)" warnings.
+(globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
+if (typeof window !== 'undefined') {
+  (window as any).IS_REACT_ACT_ENVIRONMENT = true;
+}
+
+const localStorageStore = new Map<string, string>();
+
+const localStorageMock = {
+  getItem: vi.fn((key: string) => localStorageStore.get(key) ?? null),
+  setItem: vi.fn((key: string, value: string) => {
+    localStorageStore.set(key, String(value));
+  }),
+  removeItem: vi.fn((key: string) => {
+    localStorageStore.delete(key);
+  }),
+  clear: vi.fn(() => {
+    localStorageStore.clear();
+  }),
+};
+
 beforeAll(() => {
   server.listen({ onUnhandledRequest: 'error' });
+});
+
+beforeEach(async () => {
+  localStorageStore.clear();
+  localStorageStore.set('i18nextLng', 'es');
+  localStorageMock.getItem.mockImplementation((key: string) => localStorageStore.get(key) ?? null);
+  localStorageMock.setItem.mockImplementation((key: string, value: string) => {
+    localStorageStore.set(key, String(value));
+  });
+  localStorageMock.removeItem.mockImplementation((key: string) => {
+    localStorageStore.delete(key);
+  });
+  localStorageMock.clear.mockImplementation(() => {
+    localStorageStore.clear();
+  });
+  await i18n.changeLanguage('es');
 });
 
 afterEach(() => {
@@ -43,13 +81,6 @@ vi.mock('import.meta.env', () => ({
   PROD: false,
 }));
 
-
-const localStorageMock = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-  clear: vi.fn(),
-};
 
 Object.defineProperty(window, 'localStorage', {
   value: localStorageMock,

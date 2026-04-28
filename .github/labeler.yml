@@ -1,0 +1,31 @@
+platform:ios:
+  - "ios/**"
+
+platform:android:
+  - "android/**"
+
+platform:web:
+  - "web/**"
+  - "remotion/**"
+
+platform:backend:
+  - "backend/**"
+
+platform:cross-platform:
+  - "docs/PRD/**"
+  - "openspec/**"
+
+type:docs:
+  - "docs/**"
+  - "README.md"
+  - "AGENTS.md"
+  - "CLAUDE.md"
+
+type:infra:
+  - ".github/**"
+  - "infra/**"
+  - "docker-compose.yml"
+
+type:test:
+  - "testsprite_tests/**"
+  - "**/*test*"

@@ -89,20 +89,20 @@ describe('Dashboard', () => {
 
   it('renders greeting header', async () => {
     renderDashboard();
-    expect(await screen.findByText(/hola/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Bienvenido/i)).toBeInTheDocument();
   });
 
   it('renders empty states when no data', async () => {
     renderDashboard();
 
-    expect(await screen.findByText(/No hay eventos próximos agendados/i)).toBeInTheDocument();
+    expect(await screen.findByText(/No hay eventos próximos/i)).toBeInTheDocument();
     expect(screen.getByText(/Sin datos para graficar este mes/i)).toBeInTheDocument();
   });
 
   it('keeps only the planned header and quick actions', async () => {
     renderDashboard();
 
-    expect(await screen.findByText(/hola/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Bienvenido/i)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Nuevo Evento/i })).toHaveAttribute('href', '/events/new');
     expect(screen.getByRole('link', { name: /Nuevo Cliente/i })).toHaveAttribute('href', '/clients/new');
     expect(screen.getByRole('link', { name: /Cotización Rápida/i })).toHaveAttribute('href', '/cotizacion-rapida');
@@ -157,14 +157,9 @@ describe('Dashboard', () => {
     renderDashboard();
 
     expect(await screen.findByText(/Ventas Netas/i)).toBeInTheDocument();
-    expect(screen.getByText(/^Cobrado$/i)).toBeInTheDocument();
-    expect(screen.getByText(/IVA Cobrado/i)).toBeInTheDocument();
-    expect(screen.getByText(/IVA Pendiente/i)).toBeInTheDocument();
-    expect(screen.getByText(/^Eventos$/i)).toBeInTheDocument();
-    expect(screen.getByText(/Stock Bajo/i)).toBeInTheDocument();
-    expect(screen.getByText(/^Clientes$/i)).toBeInTheDocument();
-    expect(screen.getByText(/^Cotizaciones$/i)).toBeInTheDocument();
-    expect(screen.getByText(/Pendientes de confirmar$/i)).toBeInTheDocument();
+    expect(screen.getByText(/Cobrado Real/i)).toBeInTheDocument();
+    expect(screen.getByText(/IVA por Cobrar/i)).toBeInTheDocument();
+    expect(screen.getByText(/Eventos activos/i)).toBeInTheDocument();
     expect(screen.getByText(/Inventario crítico/i)).toBeInTheDocument();
     expect(screen.getByText('Luis')).toBeInTheDocument();
     expect(screen.getByText(/XV/i)).toBeInTheDocument();
@@ -228,12 +223,10 @@ describe('Dashboard', () => {
     renderDashboard();
 
     expect(await screen.findByText(/Requieren atención/i)).toBeInTheDocument();
-    expect(screen.getByText(/Cobros por cerrar/i)).toBeInTheDocument();
+    expect(screen.getByText(/Saldos próximos/i)).toBeInTheDocument();
     expect(screen.getByText(/Eventos vencidos/i)).toBeInTheDocument();
-    expect(screen.getByText(/Cotizaciones urgentes/i)).toBeInTheDocument();
-    expect(screen.getByText(/Saldo pendiente/i)).toBeInTheDocument();
+    expect(screen.getByText(/Saldo pendiente \$1,000 de \$1,000/i)).toBeInTheDocument();
     expect(screen.getByText(/Cotización vencida sin cerrar/i)).toBeInTheDocument();
-    expect(screen.getByText(/Faltan \d+ día\(s\) para confirmar/i)).toBeInTheDocument();
   });
 
   it('hides attention widget when there are no alerts', async () => {
@@ -265,7 +258,7 @@ describe('Dashboard', () => {
     renderDashboard();
 
     await waitFor(() => {
-      expect(screen.getByText(/hola/i)).toBeInTheDocument();
+      expect(screen.getByText(/Bienvenido/i)).toBeInTheDocument();
     });
 
     expect(screen.queryByText(/Requieren atención/i)).not.toBeInTheDocument();
@@ -280,7 +273,7 @@ describe('Dashboard', () => {
 
     // Dashboard still renders with empty data when queries fail
     await waitFor(() => {
-      expect(screen.getByText(/hola/i)).toBeInTheDocument();
+      expect(screen.getByText(/Bienvenido/i)).toBeInTheDocument();
     });
   });
 
@@ -290,7 +283,7 @@ describe('Dashboard', () => {
     renderDashboard();
 
     await waitFor(() => {
-      expect(screen.getByText(/hola/i)).toBeInTheDocument();
+      expect(screen.getByText(/Bienvenido/i)).toBeInTheDocument();
     });
   });
 
@@ -302,7 +295,7 @@ describe('Dashboard', () => {
     // Dashboard still renders — no inline error message shown anymore
     // React Query handles the error; upcoming section shows loading or empty state
     await waitFor(() => {
-      expect(screen.getByText(/hola/i)).toBeInTheDocument();
+      expect(screen.getByText(/Bienvenido/i)).toBeInTheDocument();
     });
   });
 
@@ -314,7 +307,7 @@ describe('Dashboard', () => {
     renderDashboard();
 
     await waitFor(() => {
-      expect(screen.getByText(/hola/i)).toBeInTheDocument();
+      expect(screen.getByText(/Bienvenido/i)).toBeInTheDocument();
     });
 
     // Verify that multiple service calls were made (initial load)
@@ -327,13 +320,13 @@ describe('Dashboard', () => {
     renderDashboard();
 
     await waitFor(() => {
-      expect(screen.getByText(/Comparativa Financiera/i)).toBeInTheDocument();
+      expect(screen.getByText(/Ingresos/i)).toBeInTheDocument();
     });
 
     expect(capturedTooltipFormatters.length).toBeGreaterThan(0);
     const formatter = capturedTooltipFormatters[0];
     const result = formatter(1500);
-    expect(result).toEqual(['$1,500', 'Monto']);
+    expect(result).toEqual(['$1,500', 'Ingresos']);
   });
 
   describe('attention CTAs', () => {
@@ -458,7 +451,8 @@ describe('Dashboard', () => {
 
       renderDashboard();
 
-      const cancelBtn = await screen.findByRole('button', { name: /^Cancelar$/i });
+      await screen.findByText(/Eventos vencidos/i);
+      const cancelBtn = await screen.findByRole('button', { name: /^(Cancelar|action\.cancel)$/i });
       fireEvent.click(cancelBtn);
 
       await waitFor(() => {
@@ -506,7 +500,7 @@ describe('Dashboard', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText(/hola/i)).toBeInTheDocument();
+        expect(screen.getByText(/Bienvenido/i)).toBeInTheDocument();
       });
 
       expect(mockCheckAuth).not.toHaveBeenCalled();

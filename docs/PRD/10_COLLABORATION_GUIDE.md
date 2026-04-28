@@ -8,7 +8,7 @@ aliases:
   - Guía de Colaboración
   - Collaboration Guide
 date: 2026-03-20
-updated: 2026-04-17
+updated: 2026-04-27
 status: active
 ---
 
@@ -109,6 +109,16 @@ graph TD
     style E fill:#1B2A4A,stroke:#C4A265,color:#F5F0E8
     style I fill:#C4A265,stroke:#1B2A4A,color:#1A1A1A
 ```
+
+## Guardrails de Repositorio (GitHub)
+
+- `main` debe operar con PR obligatorio + checks requeridos + resolucion de conversaciones
+- Deploy de produccion debe usar GitHub Environment `production` y health check post-deploy
+- PRs deben usar template obligatorio (What / Why / Scope / Checklist / Risk)
+- Issues deben entrar por forms (`bug`, `feature`, `refactor`) con labels base
+- Labels se sincronizan desde `.github/labels.yml` via workflow dedicado
+- Dependencias se mantienen por Dependabot semanal (web/remotion/backend/android/actions)
+- CI iOS minimo activo para paridad (`xcodegen`, resolve paquetes, build simulador)
 
 ---
 

@@ -1,0 +1,38 @@
+name: Feature request
+description: Propose a product or engineering improvement
+labels: ["enhancement", "type:feature", "status:ready", "priority:medium"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem to solve
+      description: What pain point are we addressing?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the proposed behavior and scope.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: platforms
+    attributes:
+      label: Platform impact
+      options:
+        - label: iOS
+        - label: Android
+        - label: Web
+        - label: Backend
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      placeholder: |
+        - Given ...
+        - When ...
+        - Then ...

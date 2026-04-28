@@ -10,7 +10,7 @@ aliases:
   - Arquitectura Web
   - Web Architecture
 date: 2026-03-20
-updated: 2026-04-17
+updated: 2026-04-27
 status: active
 platform: Web
 ---
@@ -25,6 +25,9 @@ platform: Web
 
 > [!abstract] Resumen
 > SPA construida con **React 19 + TypeScript** sobre **Vite**, con **Tailwind CSS** para estilos, estado client vía **React Context** (AuthContext, ThemeContext), estado server vía **TanStack React Query 5**, y **zod + react-hook-form** para formularios tipados. Arquitectura por capas: Pages → Hooks/Contexts → Services → Backend API (Go). Ver tambien [[07_TECHNICAL_ARCHITECTURE_BACKEND]] para la contraparte del servidor.
+
+> [!warning] Auditoría 2026-04-27
+> La web tiene paridad funcional alta, pero no debe describirse todavía como 100% alineada al contrato OpenAPI. Formularios públicos, portal cliente y staff teams dependen de rutas backend que siguen incompletas en `backend/docs/openapi.yaml`; ver [[../Web/Auditoría Web 2026-04-27]]. El cliente web usa `/api` como default (`VITE_API_URL || http://localhost:8080/api`), aunque el backend también monta `/api/v1` como prefijo compatible/canónico.
 
 > [!warning] Corrección 2026-04-16
 > La tabla de abajo menciona "Zustand 5.0.11". **No está en uso a 2026-04-16** — la app migró a React Query + Context. CLAUDE.md todavía dice "Zustand"; actualizar ambos cuando se consolide. HTTP es `fetch` nativo (clase `ApiClient` en `lib/api.ts`), no Axios.
@@ -102,7 +105,7 @@ graph TD
     end
 
     subgraph Backend["Backend API (Go)"]
-        REST["REST endpoints en /api/v1/*"]
+        REST["REST endpoints en /api/* y /api/v1/*"]
     end
 
     UI -->|"useContext / hooks"| State
@@ -333,7 +336,7 @@ Regla funcional de stock bajo (Web): `minimum_stock > 0 && current_stock < minim
 > - **Autenticacion automatica**: adjunta el token JWT desde `localStorage` en el header `Authorization: Bearer`
 > - **Refresh de token**: intercepta respuestas 401, intenta renovar con el refresh token, y reintenta la peticion original
 > - **Logout automatico**: si el refresh falla, emite evento `auth:logout` para limpiar el estado
-> - **Base URL configurable**: apunta al backend Go (`/api/v1/`)
+> - **Base URL configurable**: apunta al backend Go (`/api` por default en web; backend tambien monta `/api/v1`)
 
 ---
 

@@ -71,7 +71,7 @@ export const EventExtras: React.FC<EventExtrasProps> = ({
             type="button"
             onClick={() => setPendingDeleteIndex(index)}
             className="absolute top-2 right-2 text-text-secondary hover:text-error transition-colors"
-            aria-label={`${t('common:action.remove')} ${t('common:entities.extra')} ${index + 1}`}
+            aria-label={t('events:extras.delete_button', { index: index + 1 })}
           >
             <Trash2 className="h-4 w-4" aria-hidden="true" />
           </button>
@@ -148,7 +148,7 @@ export const EventExtras: React.FC<EventExtrasProps> = ({
                 className={`block w-full text-sm border-border rounded-xl shadow-xs transition-shadow focus:ring-2 focus:ring-primary/20 bg-card text-text p-2 border ${
                   item.exclude_utility ? 'bg-surface-alt' : ''
                 }`}
-                aria-label={`${t('events:extras.price')} ${t('common:entities.extra')} ${index + 1}`}
+                aria-label={t('events:extras.price_aria', { index: index + 1 })}
               />
             </div>
           </div>
@@ -162,7 +162,7 @@ export const EventExtras: React.FC<EventExtrasProps> = ({
         type="button"
         onClick={onAddExtra}
         className="w-full flex items-center justify-center px-4 py-2 border border-border shadow-xs text-sm font-medium rounded-xl text-text-secondary bg-card hover:bg-surface-alt transition-colors"
-        aria-label={t('events:extras.add')}
+        aria-label={t('events:extras.add_button_aria')}
       >
         <Plus className="h-4 w-4 mr-2" aria-hidden="true" /> {t('events:extras.add')}
       </button>

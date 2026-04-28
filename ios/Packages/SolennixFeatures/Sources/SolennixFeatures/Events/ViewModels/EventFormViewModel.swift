@@ -206,7 +206,7 @@ public final class EventFormViewModel {
     public var isLoading: Bool = false
     public var isSaving: Bool = false
     public var errorMessage: String?
-    @Published public var planLimitMessage: String?
+    public var planLimitMessage: String?
 
     // MARK: - Edit Mode
 

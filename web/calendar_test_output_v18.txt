@@ -1,7 +1,0 @@
-
-> eventos@0.0.0 test:run
-> vitest run src/pages/Calendar/CalendarView.test.tsx
-
-
-[1m[46m RUN [49m[22m [36mv4.0.18 [39m[90mC:/Users/tfurt/source/repos/eventosapp/web[39m
-

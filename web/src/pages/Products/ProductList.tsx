@@ -209,11 +209,15 @@ export const ProductList: React.FC = () => {
         ) : filteredProducts.length === 0 ? (
           <Empty
             icon={UtensilsCrossed}
-            title={t("products:no_products")}
+            title={
+              searchTerm || selectedCategory
+                ? t("products:empty.no_results_title")
+                : t("products:empty.title")
+            }
             description={
               searchTerm || selectedCategory
-                ? t("common:command_palette.no_results")
-                : t("products:details.no_recipe")
+                ? t("products:empty.no_results_description")
+                : t("products:empty.description")
             }
             action={
               !searchTerm && !selectedCategory ? (
@@ -222,7 +226,7 @@ export const ProductList: React.FC = () => {
                   className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-xl text-white premium-gradient hover:opacity-90"
                 >
                   <Plus className="h-5 w-5 mr-2" />
-                  {t("products:new_product")}
+                  {t("products:empty.action")}
                 </Link>
               ) : undefined
             }

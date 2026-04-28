@@ -8,6 +8,7 @@ export default defineConfig({
   },
   use: {
     baseURL: 'http://localhost:5173',
+    locale: 'es-MX',
     trace: 'on-first-retry',
   },
   webServer: {

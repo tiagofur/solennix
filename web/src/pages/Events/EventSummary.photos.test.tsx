@@ -112,7 +112,7 @@ vi.mock('../../hooks/usePlanLimits', () => ({
   usePlanLimits: () => ({ isBasicPlan: false }),
 }));
 
-vi.mock('./components/Payments', () => ({
+vi.mock('./components/Payments.tsx', () => ({
   Payments: () => <div>PAYMENTS_VIEW</div>,
 }));
 
@@ -169,7 +169,7 @@ describe('EventSummary — photos', () => {
 
     expect(screen.getByText('Fotos del Evento')).toBeInTheDocument();
     expect(screen.getByText('No hay fotos del evento.')).toBeInTheDocument();
-    expect(screen.getByText('Agrega fotos para documentar tu trabajo.')).toBeInTheDocument();
+    expect(screen.getByText('Agregá fotos para documentar tu trabajo.')).toBeInTheDocument();
     expect(screen.getByText('Agregar Fotos')).toBeInTheDocument();
   });
 
@@ -216,7 +216,7 @@ describe('EventSummary — photos', () => {
     expect(screen.getByRole('dialog', { name: /Vista ampliada/i })).toBeInTheDocument();
     expect(screen.getByAltText('Foto ampliada del evento')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /Cerrar vista ampliada/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Cerrar/i }));
 
     await waitFor(() => {
       expect(screen.queryByRole('dialog', { name: /Vista ampliada/i })).not.toBeInTheDocument();
@@ -438,7 +438,11 @@ describe('EventSummary — photos', () => {
     });
 
     resolveUpload!({ url: 'https://example.com/uploaded.jpg' });
-    (eventService.update as any).mockResolvedValue({});
+    (eventService.addEventPhoto as any).mockResolvedValue({
+      id: 'photo-uploading',
+      url: 'https://example.com/uploaded.jpg',
+      created_at: '2026-04-01T00:00:00Z',
+    });
 
     await waitFor(() => {
       expect(screen.queryByText('Subiendo...')).not.toBeInTheDocument();

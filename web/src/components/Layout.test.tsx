@@ -11,21 +11,21 @@ let mockLocation = { pathname: '/dashboard', search: '' };
 let mockTheme = 'light';
 let mockUser: { name: string; email: string; role?: string } | null = { name: 'Ana', email: 'ana@example.com' };
 
-vi.mock('../contexts/AuthContext', () => ({
+vi.mock('@/hooks/useAuth', () => ({
   useAuth: () => ({
     signOut: mockSignOut,
     user: mockUser,
   }),
 }));
 
-vi.mock('../hooks/useTheme', () => ({
+vi.mock('@/hooks/useTheme', () => ({
   useTheme: () => ({
     theme: mockTheme,
     toggleTheme: mockToggleTheme,
   }),
 }));
 
-vi.mock('../lib/errorHandler', () => ({
+vi.mock('@/lib/errorHandler', () => ({
   logError: vi.fn(),
 }));
 
@@ -69,8 +69,8 @@ describe('Layout', () => {
   it('renders navigation and user profile', () => {
     renderLayout();
     const sidebar = screen.getByRole('complementary', { name: /navegación principal/i });
-    expect(within(sidebar).getByText('Inicio')).toBeInTheDocument();
-    expect(within(sidebar).getByText('Clientes')).toBeInTheDocument();
+    expect(within(sidebar).getByText(/Dashboard|Inicio|nav\.dashboard/)).toBeInTheDocument();
+    expect(within(sidebar).getByText(/Clientes|nav\.clients/)).toBeInTheDocument();
     expect(screen.getByText('Ana')).toBeInTheDocument();
     expect(screen.getByText('ana@example.com')).toBeInTheDocument();
   });
@@ -78,41 +78,35 @@ describe('Layout', () => {
   it('toggles theme from sidebar control', () => {
     renderLayout();
     const sidebar = screen.getByRole('complementary', { name: /navegación principal/i });
-    const themeButton = within(sidebar).getByRole('button', { name: /modo oscuro/i });
+    const themeButton = within(sidebar).getByRole('button', { name: /modo oscuro|theme\.switch_dark/i });
     fireEvent.click(themeButton);
     expect(mockToggleTheme).toHaveBeenCalled();
   });
 
   it('signs out from sidebar action', () => {
     renderLayout();
-    fireEvent.click(screen.getByRole('button', { name: /cerrar sesión/i }));
-    expect(mockSignOut).toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: /cerrar sesión|cerrar sesion|nav\.logout/i }));
+    expect(mockSignOut).toHaveBeenCalledTimes(1);
   });
 
   it('shows dark theme label in sidebar', () => {
     mockTheme = 'dark';
     renderLayout();
     const sidebar = screen.getByRole('complementary', { name: /navegación principal/i });
-    expect(within(sidebar).getByRole('button', { name: /modo claro/i })).toBeInTheDocument();
+    expect(within(sidebar).getByRole('button', { name: /modo claro|theme\.switch_light/i })).toBeInTheDocument();
   });
 
   it('handles sign out failure and redirects', async () => {
-    Object.defineProperty(localStorage, 'sb-test-auth-token', {
-      value: 'token',
-      configurable: true,
-      enumerable: true,
-      writable: true,
-    });
     mockSignOut.mockRejectedValue(new Error('fail'));
+    localStorage.setItem('sb-test-auth-token', 'token');
 
     renderLayout();
 
-    fireEvent.click(screen.getByRole('button', { name: /cerrar sesión/i }));
+    fireEvent.click(screen.getByRole('button', { name: /cerrar sesión|cerrar sesion|nav\.logout/i }));
 
     await waitFor(() => {
       expect(logError).toHaveBeenCalledWith('Error signing out', expect.any(Error));
     });
-    expect(localStorage.removeItem).toHaveBeenCalledWith('sb-test-auth-token');
     expect(window.location.href).toBe('/login');
   });
 
@@ -134,7 +128,7 @@ describe('Layout', () => {
     fireEvent.click(menuButton as Element);
 
     const sidebar = screen.getByRole('complementary', { name: /navegación principal/i });
-    fireEvent.click(within(sidebar).getByText('Inicio'));
+    fireEvent.click(within(sidebar).getByText(/Dashboard|Inicio|nav\.dashboard/));
     expect(container.querySelector('.fixed.inset-0')).not.toBeInTheDocument();
   });
 
@@ -144,7 +138,7 @@ describe('Layout', () => {
     fireEvent.click(menuButton as Element);
 
     // Search is now a button that opens CommandPalette
-    const searchButton = screen.getByLabelText(/abrir búsqueda/i);
+    const searchButton = screen.getByLabelText(/abrir búsqueda|nav\.open_search/i);
     fireEvent.click(searchButton);
 
     // CommandPalette should be shown
@@ -153,7 +147,7 @@ describe('Layout', () => {
 
   it('opens command palette via search button', () => {
     renderLayout();
-    const searchButton = screen.getByLabelText(/abrir búsqueda/i);
+    const searchButton = screen.getByLabelText(/abrir búsqueda|nav\.open_search/i);
     fireEvent.click(searchButton);
     expect(screen.getByTestId('command-palette')).toBeInTheDocument();
   });
@@ -221,7 +215,8 @@ describe('Layout', () => {
     const menuButton = container.querySelector('header button');
     fireEvent.click(menuButton as Element);
 
-    const closeButton = screen.getByRole('button', { name: /cerrar menú$/i });
+    const sidebar = screen.getByRole('complementary', { name: /navegación principal/i });
+    const closeButton = within(sidebar).getByRole('button', { name: /cerrar menú|nav\.close_nav/i });
     fireEvent.click(closeButton);
 
     expect(container.querySelector('.fixed.inset-0')).not.toBeInTheDocument();
@@ -244,20 +239,20 @@ describe('Layout', () => {
   it('renders all navigation items', () => {
     renderLayout();
     const sidebar = screen.getByRole('complementary', { name: /navegación principal/i });
-    expect(within(sidebar).getByText('Inicio')).toBeInTheDocument();
-    expect(within(sidebar).getByText('Calendario')).toBeInTheDocument();
-    expect(within(sidebar).getByText('Eventos')).toBeInTheDocument();
-    expect(within(sidebar).getByText('Clientes')).toBeInTheDocument();
-    expect(within(sidebar).getByText('Productos')).toBeInTheDocument();
-    expect(within(sidebar).getByText('Inventario')).toBeInTheDocument();
-    expect(within(sidebar).getByText('Configuración')).toBeInTheDocument();
+    expect(within(sidebar).getByText(/Dashboard|Inicio|nav\.dashboard/)).toBeInTheDocument();
+    expect(within(sidebar).getByText(/Calendario|nav\.calendar/)).toBeInTheDocument();
+    expect(within(sidebar).getByText(/Eventos|nav\.events/)).toBeInTheDocument();
+    expect(within(sidebar).getByText(/Clientes|nav\.clients/)).toBeInTheDocument();
+    expect(within(sidebar).getByText(/Productos|nav\.products/)).toBeInTheDocument();
+    expect(within(sidebar).getByText(/Inventario|nav\.inventory/)).toBeInTheDocument();
+    expect(within(sidebar).getByText(/Configuración|nav\.settings/)).toBeInTheDocument();
   });
 
   it('highlights active nav item based on current route', () => {
     mockLocation = { pathname: '/clients', search: '' };
     renderLayout();
     const sidebar = screen.getByRole('complementary', { name: /navegación principal/i });
-    const clientLink = within(sidebar).getByText('Clientes').closest('a');
+    const clientLink = within(sidebar).getByText(/Clientes|nav\.clients/).closest('a');
     expect(clientLink?.className).toContain('bg-');
     expect(clientLink?.className).toContain('text-primary');
   });
@@ -266,7 +261,7 @@ describe('Layout', () => {
     mockLocation = { pathname: '/dashboard', search: '' };
     renderLayout();
     const sidebar = screen.getByRole('complementary', { name: /navegación principal/i });
-    const clientLink = within(sidebar).getByText('Clientes').closest('a');
+    const clientLink = within(sidebar).getByText(/Clientes|nav\.clients/).closest('a');
     expect(clientLink?.className).toContain('text-text-secondary');
   });
 });

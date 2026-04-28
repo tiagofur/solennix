@@ -8,7 +8,7 @@ aliases:
   - Estado Actual
   - Current Status
 date: 2026-03-20
-updated: 2026-04-26
+updated: 2026-04-27
 status: active
 ---
 
@@ -16,6 +16,16 @@ status: active
 
 **Fecha:** Abril 2026
 **Version:** 1.4
+
+> [!info] 2026-04-27 — Repo Governance and CI/CD Guardrails
+> Se endurecio la gobernanza del repositorio para reducir merges incompletos y mejorar trazabilidad de cambios:
+> - **Templates y ownership**: `pull_request_template.md`, `ISSUE_TEMPLATE/*`, `CODEOWNERS`.
+> - **Automatizacion de mantenimiento**: `dependabot.yml` (npm web/remotion, gomod, gradle, actions), workflow de sync de labels, workflow de triage (labels por path + size + defaults de issues), workflow de release por tags.
+> - **CI/CD**: `CI Pipeline` ahora con `concurrency` para cancelar corridas obsoletas; nuevo workflow `iOS CI` (xcodegen + resolve SPM + build simulator sin signing); deploy a produccion con `environment: production`, timeout y health check post-deploy.
+> - **Pendiente en Settings** (no versionable por PR): branch protection de `main`, required checks, environment protection rules, secret scanning/push protection, merge policy squash-only, auto-merge y delete branch on merge.
+
+> [!info] 2026-04-27 — Auditoría Web: paridad backend + UX/landing
+> Se auditó la app web contra el backend real y se documentó el estado en [[../Web/Auditoría Web 2026-04-27]]. Resultado: paridad funcional alta, pero contrato OpenAPI todavía parcial para formularios públicos, portal cliente y staff teams. La web funciona con tipos/manual fetch en esos flujos, pero no puede declararse 100% protegida por OpenAPI hasta cerrar el drift. Oportunidades principales: widgets Dashboard para `top-clients`, `product-demand`, `forecast`; hooks React Query para portal link/unavailable date mutations; landing más orientada al poder operativo real de Solennix.
 
 > [!info] 2026-04-26 — Sprint 7.B: Paywalls mobile coherentes (iOS + Android)
 > Parseo del error 403 `plan_limit_exceeded` del backend como error tipado en ambas plataformas móviles, con UI de upgrade coherente en los 3 formularios de creación (Event/Client/Product). Paridad total con Web.
@@ -141,8 +151,8 @@ status: active
 
 | Plataforma                | Estado           | Notas                                                                                                                                                                                                                                                                            |
 | ------------------------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Backend (Go)              | Funcional ✅ + **MVP Contract Freeze cerrado 2026-04-10** | API completa, 47 migraciones, auth multi-proveedor, Stripe, RevenueCat, push notifications (FCM+APNs), paginacion server-side, dashboard analytics (KPIs server-side), búsqueda híbrida (ILIKE + pg_trgm), audit logging, CSRF, refresh token rotation, **OpenAPI parcial — 5 grupos de rutas sin documentar (formularios, portal, staff/teams)**, **event handlers a ≥85% coverage** (E1.B2), coverage handlers 78.6%, **Personal completo (Phase 1+2+Olas 1-3)** |
-| Web (React)               | Funcional ✅ + **100% alineada con el contrato del backend 2026-04-10** | Todas las paginas principales, panel admin, cotizacion rapida. **`openapi-typescript` regenera los tipos desde `backend/docs/openapi.yaml` en cada `check`/`build`**; CI verifica que el archivo commiteado está sincronizado con el spec. Tests: 1128 unit + 2 e2e (Playwright skipea los 26 que requieren backend automáticamente). Ver E2.C1 Web en [[SUPER_PLAN/16_BACKEND_CONTRACT_READINESS]]. **Dashboard KPIs consume backend endpoints — zero client-side aggregation.** i18n foundation (i18next + ES/EN). |
+| Backend (Go)              | Funcional ✅ + **MVP Contract Freeze cerrado 2026-04-10** | API completa, 47 migraciones, auth multi-proveedor, Stripe, RevenueCat, push notifications (FCM+APNs), paginacion server-side, dashboard analytics (KPIs server-side), FTS, audit logging, CSRF, refresh token rotation, **OpenAPI parcial — 5 grupos de rutas sin documentar (formularios, portal, staff/teams)**, **event handlers a ≥85% coverage** (E1.B2), coverage handlers 78.6%, **Personal completo (Phase 1+2+Olas 1-3)** |
+| Web (React)               | Funcional ✅ + **paridad funcional alta; contrato en revisión 2026-04-27** | Todas las paginas principales, panel admin, cotizacion rapida, formularios públicos y portal cliente. `npm run check` regenera tipos desde `backend/docs/openapi.yaml`, pero el spec sigue parcial para rutas públicas nuevas y staff teams; esos flujos web usan tipos/manual fetch hasta cerrar #99. Tests: 95 archivos unit/component en `web/src` + 6 e2e/integration en `web/tests`. Dashboard consume KPIs/revenue/status/activity desde backend; quedan sin UI `top-clients`, `product-demand`, `forecast`. i18n foundation (i18next + ES/EN). |
 | iOS (SwiftUI)             | En desarrollo 🔄 · **v1.1.0** | Features principales + widgets (4 tipos) + Live Activity + 7 generadores PDF + **Dashboard KPIs server-side** + **Personal completo** + **Portal Cliente** + **i18n foundation** |
 | Android (Jetpack Compose) | En desarrollo 🔄 · **v1.1.2 (versionCode 5)** + **CI job activo** | Features principales, arquitectura modular multi-feature, 8 generadores PDF. **CI Android activo (gradle test + assembleDebug)**. **Dashboard KPIs server-side** + **Personal completo** + **Portal Cliente** + **i18n foundation** + **Google Play compliance**. |
 

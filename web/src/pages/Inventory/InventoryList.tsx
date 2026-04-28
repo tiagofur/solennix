@@ -251,7 +251,7 @@ export const InventoryList: React.FC = () => {
     setSort: React.Dispatch<React.SetStateAction<{ key: SortKey; order: SortOrder }>>,
   ) => {
     const sortLabels: Record<SortKey, string> = {
-      ingredient_name: t("inventory:form.name"),
+      ingredient_name: t("inventory:form.name_accessible"),
       current_stock: t("inventory:list.stock"),
       minimum_stock: t("inventory:list.min_stock"),
       unit_cost: t("inventory:list.unit_cost"),
@@ -319,7 +319,7 @@ export const InventoryList: React.FC = () => {
               onClick={() => onSort("ingredient_name")}
               aria-sort={getSortAriaSort("ingredient_name", sort)}
             >
-              {t("inventory:form.name")} {renderSortIcon("ingredient_name", sort)}
+              {t("inventory:list.name_column")} {renderSortIcon("ingredient_name", sort)}
             </th>
             <th
               scope="col"
@@ -419,7 +419,7 @@ export const InventoryList: React.FC = () => {
         open={confirmOpen}
         title={t("inventory:details.delete_confirm_title")}
         description={t("inventory:details.delete_confirm_desc")}
-        confirmText={t("common:action.delete")}
+        confirmText={t("common:actions.delete_permanent")}
         cancelText={t("common:action.cancel")}
         onConfirm={confirmDelete}
         onCancel={() => {
@@ -487,7 +487,7 @@ export const InventoryList: React.FC = () => {
           />
           <div className="text-sm flex-1">
             <span className="font-bold">{t("inventory:details.stats.alert_title")}:</span>{" "}
-            {lowStockItems.length} {t("inventory:title").toLowerCase()} {t("inventory:details.stats.alert_desc")}
+            {lowStockItems.length} {lowStockItems.length === 1 ? "ítem" : "ítems"} {t("inventory:details.stats.alert_desc")}
           </div>
           <span className="text-xs font-semibold underline shrink-0">
             {showLowStockOnly ? t("common:action.view_all") : t("common:action.view_alerts")}
@@ -526,10 +526,10 @@ export const InventoryList: React.FC = () => {
         <div className="bg-card shadow-sm overflow-hidden rounded-2xl border border-border">
           <Empty
             icon={Package}
-            title={t("inventory:list.no_results")}
+            title={!searchTerm && !showLowStockOnly ? t("inventory:list.empty_title") : t("inventory:list.no_results")}
             description={
               searchTerm || showLowStockOnly
-                ? showLowStockOnly ? t("inventory:list.no_alerts") : t("inventory:list.no_results")
+                ? showLowStockOnly ? t("inventory:list.no_alerts") : t("inventory:list.search_desc")
                 : t("inventory:list.add_first")
             }
             action={
@@ -539,7 +539,8 @@ export const InventoryList: React.FC = () => {
                   className="inline-flex items-center justify-center px-4 py-2 text-sm font-bold rounded-xl text-white premium-gradient shadow-md shadow-primary/20 hover:shadow-lg transition-all hover:scale-[1.02]"
                 >
                   <Plus className="h-5 w-5 mr-2" aria-hidden="true" />
-                  {t("inventory:new_item")}
+                  <span aria-hidden="true">{t("inventory:list.empty_action")}</span>
+                  <span className="sr-only">{t("inventory:new_item_accessible")}</span>
                 </Link>
               ) : undefined
             }
@@ -566,7 +567,7 @@ export const InventoryList: React.FC = () => {
             <div className="bg-card shadow-sm overflow-hidden rounded-2xl border border-border">
               {ingredients.length === 0 ? (
                 <div className="px-6 py-8 text-center text-sm text-text-secondary">
-                  {t("inventory:list.no_results")}
+                  No hay insumos registrados
                 </div>
               ) : (
                 <>
@@ -595,7 +596,7 @@ export const InventoryList: React.FC = () => {
             <div className="bg-card shadow-sm overflow-hidden rounded-2xl border border-border">
               {supplies.length === 0 ? (
                 <div className="px-6 py-8 text-center text-sm text-text-secondary">
-                  {t("inventory:list.no_results")}
+                  No hay insumos registrados
                 </div>
               ) : (
                 <>
@@ -625,7 +626,7 @@ export const InventoryList: React.FC = () => {
             <div className="bg-card shadow-sm overflow-hidden rounded-2xl border border-border">
               {equipment.length === 0 ? (
                 <div className="px-6 py-8 text-center text-sm text-text-secondary">
-                  {t("inventory:list.no_results")}
+                  No hay insumos registrados
                 </div>
               ) : (
                 <>

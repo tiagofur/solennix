@@ -155,8 +155,8 @@ export const TestimonialTemplateSchema = z.object({
 export type TestimonialTemplateProps = z.infer<typeof TestimonialTemplateSchema>;
 
 export const CountdownLaunchSchema = z.object({
-  launchText: z.string().default('¡NUEVA APP DISPONIBLE!'),
-  subText: z.string().default('Descargala hoy y transformá tu negocio de eventos'),
+  launchText: z.string().default('TODO EN ORDEN'),
+  subText: z.string().default('Clientes, eventos, pagos y cotizaciones en una sola app'),
 });
 export type CountdownLaunchProps = z.infer<typeof CountdownLaunchSchema>;
 
@@ -165,4 +165,3 @@ export const ChaosToOrderSchema = z.object({
   url: z.string().default('solennix.com'),
 });
 export type ChaosToOrderProps = z.infer<typeof ChaosToOrderSchema>;
-

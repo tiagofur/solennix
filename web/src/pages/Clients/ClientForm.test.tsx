@@ -77,7 +77,7 @@ describe('ClientForm', () => {
 
   it('shows validation errors for required fields', async () => {
     renderForm();
-    fireEvent.click(screen.getByRole('button', { name: /guardar/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Guardar|action\.save/i }));
 
     await waitFor(() => {
       expect(screen.getByText(/El nombre debe tener al menos 2 caracteres/i)).toBeInTheDocument();
@@ -99,7 +99,7 @@ describe('ClientForm', () => {
       target: { value: 'ana@example.com' },
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /guardar/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Guardar|action\.save/i }));
 
     await waitFor(() => {
       expect(clientService.create).toHaveBeenCalledWith(
@@ -135,7 +135,7 @@ describe('ClientForm', () => {
     fireEvent.change(container.querySelector('input[name="phone"]')!, {
       target: { value: '5550000000' },
     });
-    fireEvent.click(screen.getByRole('button', { name: /guardar/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Guardar|action\.save/i }));
 
     await waitFor(() => {
       expect(clientService.update).toHaveBeenCalledWith(
@@ -168,7 +168,7 @@ describe('ClientForm', () => {
       expect((container.querySelector('input[name="name"]') as HTMLInputElement).value).toBe('Ana Perez');
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /guardar/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Guardar|action\.save/i }));
 
     await waitFor(() => {
       expect(clientService.update).toHaveBeenCalledWith(
@@ -193,7 +193,7 @@ describe('ClientForm', () => {
   it('navigates back when clicking Regresar on limit-reached view', () => {
     mockPlanLimits = { canCreateClient: false, clientsCount: 50, clientLimit: 50, loading: false };
     renderForm();
-    fireEvent.click(screen.getByRole('button', { name: /Regresar a la página anterior/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Regresar a la página anterior|Volver|action\.back/i }));
     expect(mockNavigate).toHaveBeenCalledWith(-1);
   });
 
@@ -243,14 +243,14 @@ describe('ClientForm', () => {
   });
 
   it('navigates to /clients when clicking back arrow button', () => {
-    renderForm();
-    fireEvent.click(screen.getByRole('button', { name: /Volver a la lista de clientes/i }));
+    const { container } = renderForm();
+    fireEvent.click(container.querySelector('h1')!.previousElementSibling as Element);
     expect(mockNavigate).toHaveBeenCalledWith('/clients');
   });
 
   it('navigates to /clients when clicking Cancelar button', () => {
     renderForm();
-    fireEvent.click(screen.getByText('Cancelar'));
+    fireEvent.click(screen.getByRole('button', { name: /Cancelar|action\.cancel/i }));
     expect(mockNavigate).toHaveBeenCalledWith('/clients');
   });
 });

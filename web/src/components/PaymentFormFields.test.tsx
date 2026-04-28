@@ -44,8 +44,7 @@ describe("PaymentFormFields", () => {
     const onSubmit = vi.fn();
     render(<PaymentFormFields initialAmount={0} onSubmit={onSubmit} />);
     fireEvent.click(screen.getByRole("button", { name: /Confirmar Pago/i }));
-    // Give react-hook-form time to run validation
-    await new Promise((r) => setTimeout(r, 50));
+    await waitFor(() => expect(onSubmit).not.toHaveBeenCalled());
     expect(onSubmit).not.toHaveBeenCalled();
   });
 

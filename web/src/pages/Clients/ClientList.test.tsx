@@ -66,7 +66,7 @@ const renderList = () =>
   );
 
 // Helper to open the RowActionMenu and click a menu item
-const openRowMenuAndClick = async (rowText: string, menuItemLabel: string) => {
+const openRowMenuAndClick = async (rowText: string, menuItemLabel: RegExp) => {
   const row = screen.getByText(rowText).closest('tr')!;
   const actionsButton = within(row).getByLabelText('Acciones');
   fireEvent.click(actionsButton);
@@ -75,7 +75,7 @@ const openRowMenuAndClick = async (rowText: string, menuItemLabel: string) => {
     expect(screen.getByRole('menu')).toBeInTheDocument();
   });
 
-  fireEvent.click(screen.getByText(menuItemLabel));
+  fireEvent.click(screen.getByRole('menuitem', { name: menuItemLabel }));
 };
 
 describe('ClientList', () => {
@@ -132,7 +132,7 @@ describe('ClientList', () => {
       expect(screen.getByText('Juan Lopez')).toBeInTheDocument();
     });
 
-    fireEvent.change(screen.getByPlaceholderText('Buscar clientes...'), {
+    fireEvent.change(screen.getByPlaceholderText('Buscar cliente por nombre o correo...'), {
       target: { value: 'Ana' },
     });
 
@@ -184,11 +184,11 @@ describe('ClientList', () => {
     });
 
     // Open RowActionMenu and click Eliminar
-    await openRowMenuAndClick('Ana Perez', 'Eliminar');
+    await openRowMenuAndClick('Ana Perez', /Eliminar|action\.delete/i);
 
     // ConfirmDialog should appear
     const dialog = screen.getByRole('dialog');
-    fireEvent.click(within(dialog).getByText('Eliminar permanentemente'));
+    fireEvent.click(within(dialog).getByRole('button', { name: /Eliminar|action\.delete/i }));
 
     await waitFor(() => {
       expect(clientService.delete).toHaveBeenCalledWith('1');
@@ -227,10 +227,10 @@ describe('ClientList', () => {
       expect(screen.getByText('Ana Perez')).toBeInTheDocument();
     });
 
-    await openRowMenuAndClick('Ana Perez', 'Eliminar');
+    await openRowMenuAndClick('Ana Perez', /Eliminar|action\.delete/i);
 
     const dialog = screen.getByRole('dialog');
-    fireEvent.click(within(dialog).getByText('Eliminar permanentemente'));
+    fireEvent.click(within(dialog).getByRole('button', { name: /Eliminar|action\.delete/i }));
 
     // Client should still be visible after failed deletion (React Query invalidates)
     await waitFor(() => {
@@ -257,10 +257,10 @@ describe('ClientList', () => {
       expect(screen.getByText('Ana Perez')).toBeInTheDocument();
     });
 
-    await openRowMenuAndClick('Ana Perez', 'Eliminar');
+    await openRowMenuAndClick('Ana Perez', /Eliminar|action\.delete/i);
 
     const dialog = screen.getByRole('dialog');
-    fireEvent.click(within(dialog).getByText('Cancelar'));
+    fireEvent.click(within(dialog).getByRole('button', { name: /Cancelar|action\.cancel/i }));
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
@@ -285,7 +285,7 @@ describe('ClientList', () => {
     });
 
     // Open RowActionMenu and click Editar — it navigates to edit route
-    await openRowMenuAndClick('Ana Perez', 'Editar');
+    await openRowMenuAndClick('Ana Perez', /Editar|action\.edit/i);
     // The menu item's onClick navigates via the RowActionMenu handler
     expect(mockNavigate).toHaveBeenCalledWith('/clients/1/edit');
   });
@@ -309,12 +309,12 @@ describe('ClientList', () => {
       expect(screen.getByText('Ana Perez')).toBeInTheDocument();
     });
 
-    fireEvent.change(screen.getByPlaceholderText('Buscar clientes...'), {
+    fireEvent.change(screen.getByPlaceholderText('Buscar cliente por nombre o correo...'), {
       target: { value: 'zzzznonexistent' },
     });
 
     expect(screen.getByText('No se encontraron clientes')).toBeInTheDocument();
-    expect(screen.getByText(/No hay clientes que coincidan/i)).toBeInTheDocument();
+    expect(screen.getByText('No se encontraron resultados')).toBeInTheDocument();
   });
 
   it('sorts by total_events column and shows sort icons', async () => {
@@ -382,7 +382,7 @@ describe('ClientList', () => {
       expect(screen.getByText('Ana Perez')).toBeInTheDocument();
     });
 
-    const totalHeader = screen.getByText('Total Gastado').closest('th')!;
+    const totalHeader = screen.getByText('Total').closest('th')!;
 
     fireEvent.click(totalHeader);
     expect(totalHeader.getAttribute('aria-sort')).toBe('ascending');

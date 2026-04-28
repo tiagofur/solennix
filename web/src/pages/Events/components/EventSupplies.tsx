@@ -98,7 +98,7 @@ export const EventSupplies: React.FC<EventSuppliesProps> = ({
               type="button"
               onClick={() => setPendingDeleteIndex(index)}
               className="absolute top-2 right-2 text-text-secondary hover:text-error transition-colors"
-              aria-label={t('common:actions.delete')}
+              aria-label={t('events:supplies.delete_button', { index: index + 1 })}
             >
               <Trash2 className="h-4 w-4" />
             </button>
@@ -118,7 +118,7 @@ export const EventSupplies: React.FC<EventSuppliesProps> = ({
                 }}
                 className="block w-full text-sm border-border rounded-xl shadow-xs transition-shadow focus:ring-2 focus:ring-primary/20 bg-card text-text p-2 border"
               >
-                <option value="">{t('common:actions.select')}…</option>
+                <option value="">{t('events:supplies.select_item')}</option>
                 {supplyInventory.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.ingredient_name} ({s.current_stock} {s.unit} {t('common:available')} — {s.unit_cost?.toLocaleString(moneyLocale, { style: 'currency', currency: 'MXN' })}/{s.unit})
