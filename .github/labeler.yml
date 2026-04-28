@@ -1,31 +1,47 @@
 platform:ios:
-  - "ios/**"
+  - changed-files:
+      - any-glob-to-any-file:
+          - "ios/**"
 
 platform:android:
-  - "android/**"
+  - changed-files:
+      - any-glob-to-any-file:
+          - "android/**"
 
 platform:web:
-  - "web/**"
-  - "remotion/**"
+  - changed-files:
+      - any-glob-to-any-file:
+          - "web/**"
+          - "remotion/**"
 
 platform:backend:
-  - "backend/**"
+  - changed-files:
+      - any-glob-to-any-file:
+          - "backend/**"
 
 platform:cross-platform:
-  - "docs/PRD/**"
-  - "openspec/**"
+  - changed-files:
+      - any-glob-to-any-file:
+          - "docs/PRD/**"
+          - "openspec/**"
 
 type:docs:
-  - "docs/**"
-  - "README.md"
-  - "AGENTS.md"
-  - "CLAUDE.md"
+  - changed-files:
+      - any-glob-to-any-file:
+          - "docs/**"
+          - "README.md"
+          - "AGENTS.md"
+          - "CLAUDE.md"
 
 type:infra:
-  - ".github/**"
-  - "infra/**"
-  - "docker-compose.yml"
+  - changed-files:
+      - any-glob-to-any-file:
+          - ".github/**"
+          - "infra/**"
+          - "docker-compose.yml"
 
 type:test:
-  - "testsprite_tests/**"
-  - "**/*test*"
+  - changed-files:
+      - any-glob-to-any-file:
+          - "testsprite_tests/**"
+          - "**/*test*"

@@ -41,7 +41,7 @@ jobs:
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     timeout-minutes: 20
     environment:
-      name: production
+      name: Production
 
     steps:
       - name: Execute deployment script on VPS
