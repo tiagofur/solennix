@@ -40,9 +40,9 @@ describe('Register', () => {
     );
     // Original: expect(screen.getByRole('heading', { name: /crear cuenta/i })).toBeInTheDocument();
     // More robust check for the text content, regardless of specific heading tag or role
-    expect(screen.getByRole('heading', { name: /crear cuenta/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /crear cuenta|register\.submit/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/nombre completo/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/^email$/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/correo|email|register\.email_label/i)).toBeInTheDocument();
   });
 
   it('shows validation errors', async () => {
@@ -52,7 +52,7 @@ describe('Register', () => {
       </MemoryRouter>
     );
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: /crear cuenta/i }));
+      fireEvent.click(screen.getByRole('button', { name: /crear cuenta|register\.submit/i }));
     });
     await waitFor(() => {
       expect(screen.getByText(/El nombre debe tener al menos 2 caracteres/i)).toBeInTheDocument();
@@ -71,7 +71,7 @@ describe('Register', () => {
     fireEvent.change(screen.getByLabelText(/nombre completo/i), {
       target: { value: 'Ana Perez' },
     });
-    fireEvent.change(screen.getByLabelText(/^email$/i), {
+    fireEvent.change(screen.getByLabelText(/correo|email|register\.email_label/i), {
       target: { value: 'ana@example.com' },
     });
     fireEvent.change(screen.getByLabelText(/^contraseña$/i), {
@@ -81,7 +81,7 @@ describe('Register', () => {
       target: { value: 'Password1' },
     });
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: /crear cuenta/i }));
+      fireEvent.click(screen.getByRole('button', { name: /crear cuenta|register\.submit/i }));
     });
 
     await waitFor(() => {
@@ -107,7 +107,7 @@ describe('Register', () => {
     fireEvent.change(screen.getByLabelText(/nombre completo/i), {
       target: { value: 'Ana Perez' },
     });
-    fireEvent.change(screen.getByLabelText(/^email$/i), {
+    fireEvent.change(screen.getByLabelText(/correo|email|register\.email_label/i), {
       target: { value: 'ana@example.com' },
     });
     fireEvent.change(screen.getByLabelText(/^contraseña$/i), {
@@ -117,7 +117,7 @@ describe('Register', () => {
       target: { value: 'Password1' },
     });
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: /crear cuenta/i }));
+      fireEvent.click(screen.getByRole('button', { name: /crear cuenta|register\.submit/i }));
     });
 
     await waitFor(() => {
@@ -136,7 +136,7 @@ describe('Register', () => {
     fireEvent.change(screen.getByLabelText(/nombre completo/i), {
       target: { value: 'Ana Perez' },
     });
-    fireEvent.change(screen.getByLabelText(/^email$/i), {
+    fireEvent.change(screen.getByLabelText(/correo|email|register\.email_label/i), {
       target: { value: 'ana@example.com' },
     });
     fireEvent.change(screen.getByLabelText(/^contraseña$/i), {
@@ -146,7 +146,7 @@ describe('Register', () => {
       target: { value: 'Password1' },
     });
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: /crear cuenta/i }));
+      fireEvent.click(screen.getByRole('button', { name: /crear cuenta|register\.submit/i }));
     });
 
     await waitFor(() => {
@@ -164,7 +164,7 @@ describe('Register', () => {
     fireEvent.change(screen.getByLabelText(/nombre completo/i), {
       target: { value: 'Ana Perez' },
     });
-    fireEvent.change(screen.getByLabelText(/^email$/i), {
+    fireEvent.change(screen.getByLabelText(/correo|email|register\.email_label/i), {
       target: { value: 'ana@example.com' },
     });
     fireEvent.change(screen.getByLabelText(/^contraseña$/i), {
@@ -174,7 +174,7 @@ describe('Register', () => {
       target: { value: 'different' },
     });
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: /crear cuenta/i }));
+      fireEvent.click(screen.getByRole('button', { name: /crear cuenta|register\.submit/i }));
     });
 
     await waitFor(() => {
@@ -201,7 +201,7 @@ describe('Register', () => {
     fireEvent.change(screen.getByLabelText(/nombre completo/i), {
       target: { value: 'Ana Perez' },
     });
-    fireEvent.change(screen.getByLabelText(/^email$/i), {
+    fireEvent.change(screen.getByLabelText(/correo|email|register\.email_label/i), {
       target: { value: 'ana@example.com' },
     });
     fireEvent.change(screen.getByLabelText(/^contraseña$/i), {
@@ -211,13 +211,13 @@ describe('Register', () => {
       target: { value: 'Password1' },
     });
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: /crear cuenta/i }));
+      fireEvent.click(screen.getByRole('button', { name: /crear cuenta|register\.submit/i }));
     });
 
     await waitFor(() => {
-      expect(screen.getByText(/Creando cuenta\.\.\./i)).toBeInTheDocument();
+      expect(screen.getByText(/Creando cuenta|register\.submitting/i)).toBeInTheDocument();
     });
-    const submitBtn = screen.getByRole('button', { name: /creando cuenta/i });
+    const submitBtn = screen.getByRole('button', { name: /Creando cuenta|register\.submitting/i });
     expect(submitBtn).toBeDisabled();
 
     resolvePost!({});

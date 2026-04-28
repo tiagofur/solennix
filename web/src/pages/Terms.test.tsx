@@ -31,13 +31,13 @@ describe('Terms', () => {
     it('renders the page title', () => {
       renderTerms();
 
-      expect(screen.getByText('Terminos y Condiciones')).toBeInTheDocument();
+      expect(screen.getByText('Términos y Condiciones')).toBeInTheDocument();
     });
 
     it('renders the last updated date', () => {
       renderTerms();
 
-      expect(screen.getByText(/Ultima actualizacion: 1 de enero de 2025/)).toBeInTheDocument();
+      expect(screen.getByText(/Última actualización: 1 de enero de 2025/)).toBeInTheDocument();
     });
 
     it('renders section 1 - use of service', () => {
@@ -47,7 +47,7 @@ describe('Terms', () => {
       expect(
         screen.getByText(/Al usar Solennix, aceptas estos términos/)
       ).toBeInTheDocument();
-      expect(screen.getByText('Proporcionar informacion veraz al registrarte')).toBeInTheDocument();
+      expect(screen.getByText('Proporcionar información veraz al registrarte')).toBeInTheDocument();
       expect(screen.getByText('Mantener la confidencialidad de tu cuenta')).toBeInTheDocument();
       expect(screen.getByText('No usar el servicio para actividades ilegales')).toBeInTheDocument();
       expect(screen.getByText('No intentar acceder a datos de otros usuarios')).toBeInTheDocument();
@@ -56,26 +56,26 @@ describe('Terms', () => {
     it('renders section 2 - subscription and payments', () => {
       renderTerms();
 
-      expect(screen.getByText('2. Suscripcion y pagos')).toBeInTheDocument();
+      expect(screen.getByText('2. Suscripción y pagos')).toBeInTheDocument();
       expect(
-        screen.getByText(/Solennix ofrece planes de suscripcion mensual/)
+        screen.getByText(/Solennix ofrece planes de suscripción mensual/)
       ).toBeInTheDocument();
-      expect(screen.getByText('El plan Basico es gratuito con funcionalidades limitadas')).toBeInTheDocument();
+      expect(screen.getByText('El plan Básico es gratuito con funcionalidades limitadas')).toBeInTheDocument();
       expect(screen.getByText('El plan Pro incluye todas las funcionalidades sin restricciones')).toBeInTheDocument();
-      expect(screen.getByText('Los precios pueden variar segun tu region')).toBeInTheDocument();
-      expect(screen.getByText('Las suscripciones se renuevan automaticamente salvo cancelacion')).toBeInTheDocument();
+      expect(screen.getByText('Los precios pueden variar según tu región')).toBeInTheDocument();
+      expect(screen.getByText('Las suscripciones se renuevan automáticamente salvo cancelación')).toBeInTheDocument();
     });
 
     it('renders section 3 - cancellation', () => {
       renderTerms();
 
-      expect(screen.getByText('3. Cancelacion')).toBeInTheDocument();
+      expect(screen.getByText('3. Cancelación')).toBeInTheDocument();
       expect(
-        screen.getByText(/Puedes cancelar tu suscripcion en cualquier momento/)
+        screen.getByText(/Puedes cancelar tu suscripción en cualquier momento/)
       ).toBeInTheDocument();
-      expect(screen.getByText('Mantendras acceso hasta el final del periodo pagado')).toBeInTheDocument();
+      expect(screen.getByText('Mantendrás acceso hasta el final del periodo pagado')).toBeInTheDocument();
       expect(screen.getByText('No se realizan reembolsos proporcionales')).toBeInTheDocument();
-      expect(screen.getByText('Tus datos se conservan por 30 dias adicionales')).toBeInTheDocument();
+      expect(screen.getByText('Tus datos se conservan por 30 días adicionales')).toBeInTheDocument();
       expect(screen.getByText('Puedes exportar tus datos antes de eliminar la cuenta')).toBeInTheDocument();
     });
 
@@ -100,11 +100,11 @@ describe('Terms', () => {
     it('renders section 6 - limitation of liability', () => {
       renderTerms();
 
-      expect(screen.getByText('6. Limitacion de responsabilidad')).toBeInTheDocument();
+      expect(screen.getByText('6. Limitación de responsabilidad')).toBeInTheDocument();
       expect(screen.getByText('No garantizamos que el servicio sea libre de errores')).toBeInTheDocument();
-      expect(screen.getByText('No somos responsables de perdidas de datos por causas ajenas a nosotros')).toBeInTheDocument();
-      expect(screen.getByText('Nuestra responsabilidad total no superara el monto pagado en los ultimos 3 meses de servicio')).toBeInTheDocument();
-      expect(screen.getByText('No somos responsables de danos indirectos o consecuentes')).toBeInTheDocument();
+      expect(screen.getByText('No somos responsables de pérdidas de datos por causas ajenas a nosotros')).toBeInTheDocument();
+      expect(screen.getByText('Nuestra responsabilidad total no superará el monto pagado en los últimos 3 meses de servicio')).toBeInTheDocument();
+      expect(screen.getByText('No somos responsables de daños indirectos o consecuentes')).toBeInTheDocument();
     });
 
     it('renders section 7 - modifications', () => {

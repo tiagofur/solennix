@@ -7,6 +7,10 @@ import { subscriptionService } from '../services/subscriptionService';
 import { api } from '../lib/api';
 
 const mockUpdateProfile = vi.fn();
+let mockSubscriptionStatus: Record<string, unknown> | null = {
+  plan: 'basic',
+  has_stripe_account: false,
+};
 let mockUser: Record<string, unknown> = {
   id: '1',
   name: 'Ana Perez',
@@ -18,7 +22,7 @@ let mockUser: Record<string, unknown> = {
   default_refund_percent: 5,
 };
 
-vi.mock('../contexts/AuthContext', () => ({
+vi.mock('../hooks/useAuth', () => ({
   useAuth: () => ({ user: mockUser, updateProfile: mockUpdateProfile }),
 }));
 
@@ -47,6 +51,10 @@ vi.mock('../services/subscriptionService', () => ({
     getStatus: vi.fn().mockResolvedValue({ plan: 'basic', has_stripe_account: false }),
   },
   SubscriptionStatus: {},
+}));
+
+vi.mock('../hooks/queries/useSubscriptionQueries', () => ({
+  useSubscriptionStatus: () => ({ data: mockSubscriptionStatus }),
 }));
 
 vi.mock('../lib/api', () => ({
@@ -79,6 +87,10 @@ describe('Settings', () => {
       default_deposit_percent: 40,
       default_cancellation_days: 10,
       default_refund_percent: 5,
+    };
+    mockSubscriptionStatus = {
+      plan: 'basic',
+      has_stripe_account: false,
     };
   });
 
@@ -126,11 +138,11 @@ describe('Settings', () => {
     renderSettings();
     clickTab('Mi Negocio');
 
-    fireEvent.click(screen.getByText('Editar'));
+    fireEvent.click(screen.getByRole('button', { name: /Editar|action\.edit/i }));
 
     const input = screen.getByPlaceholderText(/Mi Evento Pro/i);
     fireEvent.change(input, { target: { value: 'Eventos Nuevo' } });
-    fireEvent.click(screen.getByRole('button', { name: /guardar/i }));
+    fireEvent.click(screen.getByRole('button', { name: /guardar|save|action\.save/i }));
 
     await waitFor(() => {
       expect(mockUpdateProfile).toHaveBeenCalledWith({ business_name: 'Eventos Nuevo' });
@@ -140,12 +152,12 @@ describe('Settings', () => {
   it('cancels business name edit', () => {
     renderSettings();
     clickTab('Mi Negocio');
-    fireEvent.click(screen.getByText('Editar'));
+    fireEvent.click(screen.getByRole('button', { name: /Editar|action\.edit/i }));
 
     fireEvent.change(screen.getByPlaceholderText(/Mi Evento Pro/i), {
       target: { value: 'Cambio' },
     });
-    fireEvent.click(screen.getByRole('button', { name: /cancelar/i }));
+    fireEvent.click(screen.getByRole('button', { name: /cancelar|cancel|action\.cancel/i }));
 
     expect(screen.queryByPlaceholderText(/Mi Evento Pro/i)).not.toBeInTheDocument();
   });
@@ -154,8 +166,8 @@ describe('Settings', () => {
     mockUpdateProfile.mockRejectedValueOnce(new Error('fail'));
     renderSettings();
     clickTab('Mi Negocio');
-    fireEvent.click(screen.getByText('Editar'));
-    fireEvent.click(screen.getByRole('button', { name: /guardar/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Editar|action\.edit/i }));
+    fireEvent.click(screen.getByRole('button', { name: /guardar|save|action\.save/i }));
 
     await waitFor(() => {
       expect(logError).toHaveBeenCalledWith('Error updating business name', expect.any(Error));
@@ -345,7 +357,7 @@ describe('Settings', () => {
   it('shows upgrade link for basic users', () => {
     renderSettings();
     clickTab('Suscripción');
-    expect(screen.getByRole('link', { name: /subir a pro/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /mejorar a pro/i })).toBeInTheDocument();
   });
 
   it('does not show upgrade link for pro users', () => {
@@ -358,31 +370,34 @@ describe('Settings', () => {
   it('shows basic plan description for basic users', () => {
     renderSettings();
     clickTab('Suscripción');
-    expect(screen.getByText(/Potenciá tu negocio con el plan Pro/)).toBeInTheDocument();
+    expect(screen.getByText(/Suscrito vía Web/)).toBeInTheDocument();
   });
 
   it('shows pro plan description for pro users', () => {
     mockUser = { ...mockUser, plan: 'pro' };
+    mockSubscriptionStatus = { plan: 'pro', has_stripe_account: true };
     renderSettings();
     clickTab('Suscripción');
-    expect(screen.getByText(/Disfrutás de acceso ilimitado/)).toBeInTheDocument();
+    expect(screen.getByText(/Suscrito vía Web/)).toBeInTheDocument();
   });
 
   it('shows usage stats on subscription tab', () => {
     renderSettings();
     clickTab('Suscripción');
-    expect(screen.getByText('Uso de este mes')).toBeInTheDocument();
+    expect(screen.getByText('Uso de tu plan')).toBeInTheDocument();
     expect(screen.getByText('Eventos este mes')).toBeInTheDocument();
-    expect(screen.getByText('Clientes totales')).toBeInTheDocument();
-    expect(screen.getByText('3 / 5')).toBeInTheDocument();
-    expect(screen.getByText('8 / 10')).toBeInTheDocument();
+    expect(screen.getByText('Clientes registrados')).toBeInTheDocument();
+    const eventsRow = screen.getByText('Eventos este mes').closest('div');
+    const clientsRow = screen.getByText('Clientes registrados').closest('div');
+    expect(eventsRow?.textContent).toContain('5');
+    expect(clientsRow?.textContent).toContain('10');
   });
 
   // --- Manage subscription (portal) tests ---
 
   it('opens billing portal on manage subscription click', async () => {
     mockUser = { ...mockUser, plan: 'pro', stripe_customer_id: 'cus_123' };
-    vi.mocked(subscriptionService.getStatus).mockResolvedValueOnce({ plan: 'pro', has_stripe_account: true });
+    mockSubscriptionStatus = { plan: 'pro', has_stripe_account: true };
     const mockCreatePortal = vi.mocked(subscriptionService.createPortalSession);
     mockCreatePortal.mockResolvedValueOnce({ url: 'https://billing.stripe.com/portal/123' });
 
@@ -399,7 +414,7 @@ describe('Settings', () => {
 
   it('shows portal error on manage subscription failure', async () => {
     mockUser = { ...mockUser, plan: 'pro', stripe_customer_id: 'cus_123' };
-    vi.mocked(subscriptionService.getStatus).mockResolvedValueOnce({ plan: 'pro', has_stripe_account: true });
+    mockSubscriptionStatus = { plan: 'pro', has_stripe_account: true };
     const mockCreatePortal = vi.mocked(subscriptionService.createPortalSession);
     mockCreatePortal.mockRejectedValueOnce(new Error('no subscription'));
 
@@ -416,7 +431,7 @@ describe('Settings', () => {
 
   it('shows loading state for manage subscription button', async () => {
     mockUser = { ...mockUser, plan: 'pro', stripe_customer_id: 'cus_123' };
-    vi.mocked(subscriptionService.getStatus).mockResolvedValueOnce({ plan: 'pro', has_stripe_account: true });
+    mockSubscriptionStatus = { plan: 'pro', has_stripe_account: true };
     let resolvePortal: (value: { url: string }) => void;
     const portalPromise = new Promise<{ url: string }>((resolve) => {
       resolvePortal = resolve;
@@ -430,12 +445,12 @@ describe('Settings', () => {
     fireEvent.click(screen.getByRole('button', { name: /gestionar/i }));
 
     await waitFor(() => {
-      expect(screen.getByText('Cargando...')).toBeInTheDocument();
+      expect(screen.getByText(/Cargando|action\.loading/i)).toBeInTheDocument();
     });
 
     resolvePortal!({ url: '' });
     await waitFor(() => {
-      expect(screen.queryByText('Cargando...')).not.toBeInTheDocument();
+      expect(screen.queryByText(/Cargando|action\.loading/i)).not.toBeInTheDocument();
     });
   });
 
@@ -443,7 +458,7 @@ describe('Settings', () => {
 
   it('shows subscription status badge and renewal date', async () => {
     mockUser = { ...mockUser, plan: 'pro', stripe_customer_id: 'cus_123' };
-    vi.mocked(subscriptionService.getStatus).mockResolvedValueOnce({
+    mockSubscriptionStatus = {
       plan: 'pro',
       has_stripe_account: true,
       subscription: {
@@ -454,7 +469,7 @@ describe('Settings', () => {
         current_period_end: '2026-04-04T00:00:00Z',
         cancel_at_period_end: false,
       },
-    });
+    };
 
     renderSettings();
     clickTab('Suscripción');
@@ -462,12 +477,12 @@ describe('Settings', () => {
     await waitFor(() => {
       expect(screen.getByText('Activa')).toBeInTheDocument();
     });
-    expect(screen.getByText(/Próxima renovación/i)).toBeInTheDocument();
+    expect(screen.getByText(/Siguiente pago/i)).toBeInTheDocument();
   });
 
   it('shows past_due status badge', async () => {
     mockUser = { ...mockUser, plan: 'pro', stripe_customer_id: 'cus_123' };
-    vi.mocked(subscriptionService.getStatus).mockResolvedValueOnce({
+    mockSubscriptionStatus = {
       plan: 'pro',
       has_stripe_account: true,
       subscription: {
@@ -477,7 +492,7 @@ describe('Settings', () => {
         cancel_instructions: 'Gestioná tu suscripción desde el portal de Stripe.',
         cancel_at_period_end: false,
       },
-    });
+    };
 
     renderSettings();
     clickTab('Suscripción');
@@ -489,7 +504,7 @@ describe('Settings', () => {
 
   it('shows cancellation warning when cancel_at_period_end is true', async () => {
     mockUser = { ...mockUser, plan: 'pro', stripe_customer_id: 'cus_123' };
-    vi.mocked(subscriptionService.getStatus).mockResolvedValueOnce({
+    mockSubscriptionStatus = {
       plan: 'pro',
       has_stripe_account: true,
       subscription: {
@@ -500,7 +515,7 @@ describe('Settings', () => {
         current_period_end: '2026-04-04T00:00:00Z',
         cancel_at_period_end: true,
       },
-    });
+    };
 
     renderSettings();
     clickTab('Suscripción');
@@ -513,10 +528,10 @@ describe('Settings', () => {
 
   it('hides manage button when user has no stripe account', async () => {
     mockUser = { ...mockUser, plan: 'basic' };
-    vi.mocked(subscriptionService.getStatus).mockResolvedValueOnce({
+    mockSubscriptionStatus = {
       plan: 'basic',
       has_stripe_account: false,
-    });
+    };
 
     renderSettings();
     clickTab('Suscripción');

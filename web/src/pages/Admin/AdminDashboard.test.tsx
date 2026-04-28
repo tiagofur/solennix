@@ -4,6 +4,10 @@ import { AdminDashboard } from './AdminDashboard';
 import { adminService } from '@/services/adminService';
 import { MemoryRouter } from 'react-router-dom';
 
+vi.mock('@/components/AdminAuditLogSection', () => ({
+  AdminAuditLogSection: () => <div data-testid="admin-audit-log-section" />,
+}));
+
 // Mock the adminService
 vi.mock('@/services/adminService', () => ({
   adminService: {
@@ -116,11 +120,11 @@ describe('AdminDashboard', () => {
 
     await waitFor(() => {
       // conversionRate: (30/101)*100 = 29.7%
-      expect(screen.getAllByText('29.7% conversión')[0]).toBeInTheDocument();
+      expect(screen.getAllByText(/29\.7%/)[0]).toBeInTheDocument();
       // avgEventsPerUser: 100/101 = 1.0
-      expect(screen.getByText('~1.0 por usuario')).toBeInTheDocument();
+      expect(screen.getByText(/~1\.0/)).toBeInTheDocument();
       // churnRate: (3 / (19+3))*100 = 13.6%
-      expect(screen.getByText('13.6%')).toBeInTheDocument();
+      expect(screen.getAllByText(/13\.6%/)[0]).toBeInTheDocument();
     });
   });
 

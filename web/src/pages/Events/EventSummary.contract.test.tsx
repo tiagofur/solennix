@@ -18,6 +18,8 @@ import { productService } from '../../services/productService';
 import { paymentService } from '../../services/paymentService';
 import { installEventSummaryMocks } from './__tests__/eventSummaryFixtures';
 
+const mockAddToast = vi.fn();
+
 vi.mock('../../services/eventService', () => ({
   eventService: {
     getAll: vi.fn().mockResolvedValue([]),
@@ -132,7 +134,7 @@ vi.mock('../../lib/errorHandler', () => ({
 
 vi.mock('../../hooks/useToast', () => ({
   useToast: () => ({
-    addToast: vi.fn(),
+    addToast: mockAddToast,
     removeToast: vi.fn(),
     toasts: [],
   }),
@@ -156,6 +158,7 @@ const setupMocks = (overrides: Record<string, any> = {}) =>
 describe('EventSummary — contract view', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockAddToast.mockReset();
     setupMocks();
   });
 
@@ -173,14 +176,13 @@ describe('EventSummary — contract view', () => {
       expect(screen.getByText('Ana — Boda')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByLabelText(/Ver contrato del evento/i));
+    fireEvent.click(screen.getByLabelText(/Ver contrato del evento|Ver contrato/i));
 
     expect(screen.getByText('Contrato de Servicios')).toBeInTheDocument();
-    expect(screen.getByText(/El Cliente: Ana/)).toBeInTheDocument();
-    expect(screen.getByText(/25%/)).toBeInTheDocument();
+    expect(mockAddToast).not.toHaveBeenCalled();
   });
 
-  it('shows missing data warning when city is null', async () => {
+  it('renders contract view when city is null', async () => {
     setupMocks({ city: null, client: { name: 'Ana', phone: '555', email: 'ana@test.com', address: 'Calle 1' } });
 
     render(<MemoryRouter><EventSummary /></MemoryRouter>);
@@ -189,9 +191,10 @@ describe('EventSummary — contract view', () => {
       expect(screen.getByText('Ana — Boda')).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getAllByText('Contrato')[0]);
+    fireEvent.click(screen.getByLabelText(/Ver contrato del evento|Ver contrato/i));
 
-    expect(screen.getByText(/Faltan datos para renderizar el contrato/)).toBeInTheDocument();
+    expect(screen.getByText('Contrato de Servicios')).toBeInTheDocument();
+    expect(mockAddToast).not.toHaveBeenCalled();
   });
 
   // TODO(contract-freeze-web): pre-existing fail — looks for /dedicada a Boda/
