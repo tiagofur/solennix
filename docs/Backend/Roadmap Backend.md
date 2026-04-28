@@ -150,7 +150,7 @@
 ## Fase 2: API Modernization ✅
 
 > [!done] FASE 2 COMPLETADA — 2026-04-06
-> Dashboard analytics, FTS, API versioning y audit logging implementados. Todos los tests pasan.
+> Dashboard analytics, búsqueda híbrida (ILIKE + pg_trgm), API versioning y audit logging implementados. Todos los tests pasan.
 
 ### 2.1 Dashboard Analytics Endpoints ✅
 
@@ -168,15 +168,17 @@
 
 ### 2.2 Advanced Search ✅
 
-- [x] Full-text search con PostgreSQL GIN indexes + `pg_trgm` (migración 033)
+- [x] Búsqueda híbrida `ILIKE` + `pg_trgm similarity()` con índices GIN (`gin_trgm_ops`, migración 033) — esto **no** es FTS nativo (`tsvector`/`tsquery`), sino búsqueda difusa acelerada por trigramas
+- [x] Búsqueda global (`GET /api/search`): 4 goroutines paralelas (clients, products, inventory, events); cada repo devuelve hasta 10 candidatos; el handler aplica un **límite duro de 6 resultados por categoría** antes de responder
 - [x] Fuzzy matching con `similarity()` > 0.3 en clients, events, products, inventory
 - [x] Resultados ordenados por score de similaridad
-- [x] Filtros combinables: `GET /api/v1/events/search?q=text&status=confirmed&from=2026-01-01&to=2026-12-31&client_id=uuid`
+- [x] Filtros combinables en búsqueda avanzada de eventos: `GET /api/v1/events/search?q=text&status=confirmed&from=2026-01-01&to=2026-12-31&client_id=uuid`
 - [ ] Search highlighting en resultados (futuro)
+- [ ] Migrar a PostgreSQL Full-Text Search nativo (`tsvector` + índices GIN + stemming en español) — ver roadmap deuda técnica
 
-**Archivos**: `migrations/033_add_fulltext_search.up.sql`, `event_repo.go` (SearchEventsAdvanced), `crud_handler.go` (SearchEvents), 4 repos actualizados con similarity()
+**Archivos**: `migrations/033_add_fulltext_search.up.sql`, `handlers/search_handler.go` (SearchAll, búsqueda global), `event_repo.go` (SearchEventsAdvanced), `crud_handler.go` (SearchEvents), 4 repos actualizados con `ILIKE` + `similarity()`
 
-**Por qué**: Alineado con [[Roadmap Web]] Fase 2.3. ILIKE no escala. Full-text search es nativo en PostgreSQL.
+**Por qué**: Alineado con [[Roadmap Web]] Fase 2.3. `ILIKE` sin índice no escala; `gin_trgm_ops` lo acelera manteniendo la lógica existente. FTS nativo con stemming queda como deuda planificada.
 
 ### 2.3 API Versioning ✅
 
@@ -412,7 +414,7 @@ gantt
 
     section Fase 2: Modernization ✅
     Dashboard Analytics        :done, f2a, 2026-04-06, 1d
-    Advanced Search (FTS)      :done, f2b, 2026-04-06, 1d
+    Advanced Search (ILIKE+trgm) :done, f2b, 2026-04-06, 1d
     API Versioning             :done, f2c, 2026-04-06, 1d
     Audit Logging              :done, f2d, 2026-04-06, 1d
 
@@ -460,7 +462,7 @@ gantt
 | **Portal de cliente** | Endpoints públicos con token | ❌ No existe | 5-6 días |
 | **Email transaccional** | Welcome, reminder, receipt | ⚠️ Solo reset | 3-4 días |
 | **File storage escalable** | S3/CDN para imágenes | ⚠️ Local disk | 2-3 días |
-| **Advanced search** | FTS con filtros combinables | ✅ pg_trgm + GIN | — |
+| **Advanced search** | Búsqueda híbrida con filtros combinables | ✅ ILIKE + pg_trgm + GIN (gin_trgm_ops) | FTS nativo (tsvector) |
 | **Audit log** | Activity tracking | ✅ Middleware async | — |
 | **iCal feed** | Calendar export URL | ❌ No existe | 1-2 días |
 | **Webhooks outgoing** | Notificar a servicios externos | ❌ No existe | 2-3 días |

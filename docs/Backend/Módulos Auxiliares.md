@@ -112,7 +112,7 @@ UnavailableDate {
 > ```
 
 > [!info] Implementación Paralela
-> `search_handler.go` lanza 4 goroutines simultáneas (clients, products, inventory, events) y recolecta via channels. El límite de 6 por categoría se aplica en cada `Search()` del repositorio. La extensión `pg_trgm` debe estar activa (`CREATE EXTENSION IF NOT EXISTS pg_trgm`).
+> `search_handler.go` lanza 4 goroutines simultáneas (clients, products, inventory, events) y recolecta via `sync.WaitGroup`. Cada `Search()` en el repositorio devuelve hasta 10 candidatos; el **límite de 6 por categoría se aplica en el handler** tras reunir todos los resultados (`result.clients = result.clients[:6]`, etc.). La extensión `pg_trgm` y los índices GIN (`gin_trgm_ops`) deben estar activos — migración `033_add_fulltext_search`.
 
 > [!roadmap] Mejora Planeada — Full-Text Search
 > Migrar a **PostgreSQL Full-Text Search** con índices `GIN`:

@@ -141,7 +141,7 @@ status: active
 
 | Plataforma                | Estado           | Notas                                                                                                                                                                                                                                                                            |
 | ------------------------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Backend (Go)              | Funcional ✅ + **MVP Contract Freeze cerrado 2026-04-10** | API completa, 47 migraciones, auth multi-proveedor, Stripe, RevenueCat, push notifications (FCM+APNs), paginacion server-side, dashboard analytics (KPIs server-side), FTS, audit logging, CSRF, refresh token rotation, **OpenAPI parcial — 5 grupos de rutas sin documentar (formularios, portal, staff/teams)**, **event handlers a ≥85% coverage** (E1.B2), coverage handlers 78.6%, **Personal completo (Phase 1+2+Olas 1-3)** |
+| Backend (Go)              | Funcional ✅ + **MVP Contract Freeze cerrado 2026-04-10** | API completa, 47 migraciones, auth multi-proveedor, Stripe, RevenueCat, push notifications (FCM+APNs), paginacion server-side, dashboard analytics (KPIs server-side), búsqueda híbrida (ILIKE + pg_trgm), audit logging, CSRF, refresh token rotation, **OpenAPI parcial — 5 grupos de rutas sin documentar (formularios, portal, staff/teams)**, **event handlers a ≥85% coverage** (E1.B2), coverage handlers 78.6%, **Personal completo (Phase 1+2+Olas 1-3)** |
 | Web (React)               | Funcional ✅ + **100% alineada con el contrato del backend 2026-04-10** | Todas las paginas principales, panel admin, cotizacion rapida. **`openapi-typescript` regenera los tipos desde `backend/docs/openapi.yaml` en cada `check`/`build`**; CI verifica que el archivo commiteado está sincronizado con el spec. Tests: 1128 unit + 2 e2e (Playwright skipea los 26 que requieren backend automáticamente). Ver E2.C1 Web en [[SUPER_PLAN/16_BACKEND_CONTRACT_READINESS]]. **Dashboard KPIs consume backend endpoints — zero client-side aggregation.** i18n foundation (i18next + ES/EN). |
 | iOS (SwiftUI)             | En desarrollo 🔄 · **v1.1.0** | Features principales + widgets (4 tipos) + Live Activity + 7 generadores PDF + **Dashboard KPIs server-side** + **Personal completo** + **Portal Cliente** + **i18n foundation** |
 | Android (Jetpack Compose) | En desarrollo 🔄 · **v1.1.2 (versionCode 5)** + **CI job activo** | Features principales, arquitectura modular multi-feature, 8 generadores PDF. **CI Android activo (gradle test + assembleDebug)**. **Dashboard KPIs server-side** + **Personal completo** + **Portal Cliente** + **i18n foundation** + **Google Play compliance**. |
@@ -334,7 +334,7 @@ status: active
 - ✅ 030: Indices de paginacion y rendimiento
 - ✅ 031: Tabla notification_log para deduplicacion de push
 - ✅ 032: Token blacklist persistente (revoked_tokens)
-- ✅ 033: Fulltext search (FTS5)
+- ✅ 033: pg_trgm similarity search con índices GIN (gin_trgm_ops) — búsqueda híbrida ILIKE + similarity(), no FTS nativo
 - ✅ 034: Audit logs
 - ✅ 035: Refresh token families
 - ✅ 036: Live activity tokens
