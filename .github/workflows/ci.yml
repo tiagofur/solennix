@@ -11,9 +11,36 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  changes:
+    name: Detect Changed Areas
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      web: ${{ steps.filter.outputs.web }}
+      android: ${{ steps.filter.outputs.android }}
+      ci: ${{ steps.filter.outputs.ci }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Detect file changes
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+            web:
+              - 'web/**'
+            android:
+              - 'android/**'
+            ci:
+              - '.github/workflows/ci.yml'
+
   backend:
     name: Backend Tests
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.ci == 'true'
     defaults:
       run:
         working-directory: ./backend
@@ -52,6 +79,8 @@ jobs:
   frontend:
     name: Frontend Tests
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.web == 'true' || needs.changes.outputs.ci == 'true'
     defaults:
       run:
         working-directory: ./web
@@ -102,6 +131,8 @@ jobs:
   frontend-e2e:
     name: Frontend E2E Tests
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.web == 'true' || needs.changes.outputs.ci == 'true'
     defaults:
       run:
         working-directory: ./web
@@ -141,6 +172,8 @@ jobs:
   android:
     name: Android Tests
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.android == 'true' || needs.changes.outputs.ci == 'true'
     defaults:
       run:
         working-directory: ./android
