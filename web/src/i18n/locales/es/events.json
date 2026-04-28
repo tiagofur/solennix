@@ -125,8 +125,14 @@
   "quick_client": {
     "title": "Nuevo Cliente Rápido",
     "name": "Nombre Completo",
+    "name_placeholder": "Nombre del cliente",
     "phone": "Teléfono",
+    "phone_placeholder": "Teléfono del cliente",
     "email": "Email",
+    "email_placeholder": "cliente@email.com",
+    "save": "Guardar cliente",
+    "saving": "Guardando cliente...",
+    "error_creating": "Error al crear el cliente",
     "validation": {
       "name_min": "El nombre debe tener al menos 2 caracteres",
       "phone_min": "El teléfono debe tener al menos 10 dígitos",

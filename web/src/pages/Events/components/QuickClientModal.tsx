@@ -173,23 +173,23 @@ export const QuickClientModal: React.FC<QuickClientModalProps> = ({
             onClick={onClose}
             className="inline-flex justify-center px-6 py-2.5 rounded-xl border border-border bg-surface-alt text-text-secondary font-bold hover:bg-surface transition-colors"
           >
-            {t('common:actions.cancel')}
+            {t('common:action.cancel')}
           </button>
           <button
             type="submit"
             disabled={isLoading}
             className="inline-flex items-center justify-center px-6 py-2.5 rounded-xl premium-gradient text-white font-black shadow-lg shadow-primary/20 hover:opacity-90 transition-all disabled:opacity-50"
-            aria-label={isLoading ? t('common:actions.saving') : t('common:actions.save')}
+            aria-label={isLoading ? t('events:quick_client.saving') : t('events:quick_client.save')}
           >
             {isLoading ? (
               <>
                 <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4" />
-                {t('common:actions.saving')}
+                {t('common:action.saving')}
               </>
             ) : (
               <>
                 <Save className="-ml-1 mr-2 h-4 w-4" />
-                {t('common:actions.save')}
+                {t('common:action.save')}
               </>
             )}
           </button>

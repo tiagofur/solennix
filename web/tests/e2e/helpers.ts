@@ -76,7 +76,7 @@ export async function isSetupRequired(page: Page): Promise<boolean> {
  * match to be strict, which selects only the input.
  */
 export async function login(page: Page, email: string, password: string) {
-  await page.getByLabel('Email').fill(email);
+  await page.getByLabel('Correo electrónico').fill(email);
   await page.getByLabel('Contraseña', { exact: true }).fill(password);
   await page.getByRole('button', { name: /iniciar sesión/i }).click();
 
@@ -96,7 +96,7 @@ export async function register(page: Page, email: string, password: string, name
   }
 
   await page.getByLabel('Nombre').fill(name);
-  await page.getByLabel('Email').fill(email);
+  await page.getByLabel('Correo electrónico').fill(email);
   // See the note in login() about `exact: true` on the password field.
   await page.getByLabel('Contraseña', { exact: true }).fill(password);
   await page.getByLabel('Confirmar Contraseña').fill(password);
