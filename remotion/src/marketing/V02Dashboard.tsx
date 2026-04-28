@@ -275,7 +275,7 @@ const V02_Main = () => {
                 color:'#0a1628',
                 textTransform: 'uppercase',
                 letterSpacing: 2
-              }}>Probá gratis</span>
+              }}>Mirá el demo</span>
           </div>
 
         </div>
