@@ -4798,18 +4798,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-        "409":
-          description: Link has already been used
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: link_already_used
-                  message:
-                    type: string
         "410":
           description: Link has expired or is no longer valid
           content:

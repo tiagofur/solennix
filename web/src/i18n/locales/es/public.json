@@ -33,6 +33,10 @@
       "description": "Este enlace ya fue utilizado o ha expirado. Contacta al organizador para solicitar uno nuevo.",
       "security_note": "Los enlaces de formulario son de un solo uso y tienen una fecha de expiración para proteger tu seguridad."
     },
+    "not_found": {
+      "title": "Enlace no válido",
+      "description": "No encontramos este enlace. Revisá el link o pedile al organizador que te lo vuelva a compartir."
+    },
     "errors": {
       "name_required": "El nombre es requerido",
       "phone_required": "El teléfono es requerido",

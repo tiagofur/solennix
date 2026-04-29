@@ -66,7 +66,7 @@ export const PublicEventFormPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState<FormData | null>(null);
-  const [expired, setExpired] = useState(false);
+  const [formUnavailableReason, setFormUnavailableReason] = useState<"expired" | "not_found" | null>(null);
   const [success, setSuccess] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [selectedProducts, setSelectedProducts] = useState<
@@ -98,7 +98,11 @@ export const PublicEventFormPage: React.FC = () => {
           { signal: controller.signal }
         );
         if (!res.ok) {
-          setExpired(true);
+          if (res.status === 404) {
+            setFormUnavailableReason("not_found");
+          } else {
+            setFormUnavailableReason("expired");
+          }
           return;
         }
         const data: FormData = await res.json();
@@ -107,7 +111,7 @@ export const PublicEventFormPage: React.FC = () => {
         // Ignore aborts from unmount/token change; surface everything else
         // as an expired/unavailable form.
         if ((err as { name?: string })?.name === "AbortError") return;
-        setExpired(true);
+        setFormUnavailableReason("expired");
       } finally {
         if (!controller.signal.aborted) {
           setLoading(false);
@@ -175,7 +179,7 @@ export const PublicEventFormPage: React.FC = () => {
       );
 
       if (res.status === 410 || res.status === 409) {
-        setExpired(true);
+        setFormUnavailableReason("expired");
         return;
       }
       if (!res.ok) {
@@ -203,8 +207,8 @@ export const PublicEventFormPage: React.FC = () => {
     );
   }
 
-  if (expired) {
-    return <PublicFormExpired />;
+  if (formUnavailableReason) {
+    return <PublicFormExpired reason={formUnavailableReason} />;
   }
 
   if (success) {
@@ -217,7 +221,7 @@ export const PublicEventFormPage: React.FC = () => {
   }
 
   if (!formData) {
-    return <PublicFormExpired />;
+    return <PublicFormExpired reason="expired" />;
   }
 
   // Group products by category
