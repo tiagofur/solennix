@@ -812,7 +812,7 @@ export const Dashboard: React.FC = () => {
       </div>
 
       <OnboardingChecklist />
-      <UpgradeBanner type="upsell" currentUsage={eventsThisMonth} limit={limit} />
+      {isBasicPlan && <UpgradeBanner type="upsell" currentUsage={eventsThisMonth} limit={limit} />}
 
       {/* ── ATTENTION SECTION ── */}
       <DashboardAttentionSection

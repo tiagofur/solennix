@@ -17,6 +17,12 @@ status: active
 **Fecha:** Abril 2026
 **Version:** 1.5
 
+> [!info] 2026-04-29 — i18n parity planning reset (issue #202 + #203–#209)
+> La estrategia de multilanguage dejó de organizarse por plataforma y pasó a slices cross-platform con una copy matrix canónica. Objetivo: asegurar misma intención y terminología entre iOS, Android y Web, permitiendo variantes mobile más cortas sólo cuando el espacio lo exija.
+> - **Epic**: #202 `feat(cross-platform): complete product-wide i18n parity`
+> - **Slices activos**: #94 Dashboard, #95 Events list, #203 governance/matrix, #204 event detail + form, #205 auth + settings, #206 clients, #207 products + inventory, #208 public flows, #209 final sweep.
+> - **Documento fuente**: [[19_I18N_STRATEGY]] ahora define copy governance, canonical vs compact variants y checklist de review por slice.
+
 > [!success] 2026-04-29 — Sprint 7.E: Payment Submissions Phase 1 (issue #191, backend + web service ✅)
 > Implementación de la capa de infraestructura para que clientes (vía portal público tokenizado) envíen comprobantes de transferencias bancarias y organizadores revisen/aprueben. Backend completo + Web service listos. UI (cliente portal + organizer inbox) pendiente para Fase 2.
 > - **Backend model**: `PaymentSubmission` struct con fields: event_id, client_id, user_id, amount, transfer_ref, receipt_file_url, status (pending|approved|rejected), reviewed_by, reviewed_at, rejection_reason, linked_payment_id.

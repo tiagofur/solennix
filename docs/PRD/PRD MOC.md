@@ -37,6 +37,7 @@
 - [[06_TECHNICAL_ARCHITECTURE_ANDROID|Arquitectura Android]] — Kotlin + Compose + Hilt + Multi-module
 - [[07_TECHNICAL_ARCHITECTURE_BACKEND|Arquitectura Backend]] — Go + Chi + PostgreSQL + pgx
 - [[08_TECHNICAL_ARCHITECTURE_WEB|Arquitectura Web]] — React 19 + TypeScript + Vite + Tailwind
+- [[19_I18N_STRATEGY|i18n Strategy]] — Infraestructura multi-idioma + copy matrix canónica + governance cross-platform
 - [[Web MOC]] — Documentación detallada de la app web (módulos, design system, hooks)
 
 ## Planificación

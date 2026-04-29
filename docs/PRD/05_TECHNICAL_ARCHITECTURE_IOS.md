@@ -44,6 +44,7 @@ platform: iOS
 > - [[PRD MOC]] — Indice general del PRD
 > - [[01_PRODUCT_VISION]] — Vision del producto
 > - [[02_FEATURES]] — Features y tabla de paridad
+> - [[19_I18N_STRATEGY]] — Estrategia de i18n, copy matrix y reglas de paridad semántica
 > - [[06_TECHNICAL_ARCHITECTURE_ANDROID]] — Arquitectura Android
 > - [[07_TECHNICAL_ARCHITECTURE_BACKEND]] — Arquitectura Backend
 > - [[08_TECHNICAL_ARCHITECTURE_WEB]] — Arquitectura Web

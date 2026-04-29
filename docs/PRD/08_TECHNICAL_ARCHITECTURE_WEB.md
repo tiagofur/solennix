@@ -44,7 +44,7 @@ platform: Web
 > | PWA              | vite-plugin-pwa                    | 1.2.x          |
 > | OpenAPI codegen  | openapi-typescript                 | 7.4.x          |
 
-**Documentos relacionados:** [[PRD MOC]] · [[01_PRODUCT_VISION]] · [[02_FEATURES]] · [[11_CURRENT_STATUS]]
+**Documentos relacionados:** [[PRD MOC]] · [[01_PRODUCT_VISION]] · [[02_FEATURES]] · [[11_CURRENT_STATUS]] · [[19_I18N_STRATEGY]]
 **Arquitecturas hermanas:** [[05_TECHNICAL_ARCHITECTURE_IOS]] · [[06_TECHNICAL_ARCHITECTURE_ANDROID]] · [[07_TECHNICAL_ARCHITECTURE_BACKEND]]
 
 ---
