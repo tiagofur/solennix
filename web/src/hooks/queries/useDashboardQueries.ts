@@ -1,7 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { dashboardService } from "@/services/dashboardService";
 import type { DashboardEventStatusScope, DashboardRevenuePeriod } from "@/types/dashboard";
+import type { components } from "@/types/api";
 import { queryKeys } from "./queryKeys";
+
+type TopClient = components["schemas"]["TopClient"];
+type ProductDemandItem = components["schemas"]["ProductDemandItem"];
+type ForecastDataPoint = components["schemas"]["ForecastDataPoint"];
 
 /**
  * Backend-aggregated KPIs for the dashboard header (sales, VAT, counts).
@@ -48,5 +53,38 @@ export function useDashboardEventsByStatus(
     queryKey: queryKeys.dashboard.eventsByStatus(scope),
     queryFn: () => dashboardService.getEventsByStatus(scope),
     staleTime: 30_000,
+  });
+}
+
+/**
+ * Top clients by total spent — analytics widget for dashboard.
+ */
+export function useTopClients(limit: number = 10) {
+  return useQuery({
+    queryKey: queryKeys.dashboard.topClients(limit),
+    queryFn: () => dashboardService.getTopClients(limit),
+    staleTime: 10 * 60_000,
+  });
+}
+
+/**
+ * Product demand — most used products and revenue — analytics widget.
+ */
+export function useProductDemand() {
+  return useQuery({
+    queryKey: queryKeys.dashboard.productDemand,
+    queryFn: () => dashboardService.getProductDemand(),
+    staleTime: 10 * 60_000,
+  });
+}
+
+/**
+ * Revenue forecast for confirmed/quoted future events — analytics widget.
+ */
+export function useForecast() {
+  return useQuery({
+    queryKey: queryKeys.dashboard.forecast,
+    queryFn: () => dashboardService.getForecast(),
+    staleTime: 10 * 60_000,
   });
 }

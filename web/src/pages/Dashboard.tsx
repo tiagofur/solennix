@@ -43,6 +43,9 @@ import { OnboardingChecklist } from "../components/OnboardingChecklist";
 import { RecentActivityCard } from "../components/RecentActivityCard";
 import { UpgradeBanner } from "../components/UpgradeBanner";
 import { usePlanLimits } from "../hooks/usePlanLimits";
+import { TopClientsWidget } from "../components/TopClientsWidget";
+import { ProductDemandWidget } from "../components/ProductDemandWidget";
+import { ForecastWidget } from "../components/ForecastWidget";
 import {
   BarChart,
   Bar,
@@ -897,6 +900,13 @@ export const Dashboard: React.FC = () => {
           </div>
 
           <RecentActivityCard />
+
+          {/* Analytics Widgets */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <TopClientsWidget />
+            <ProductDemandWidget />
+            <ForecastWidget />
+          </div>
         </div>
 
         {/* Right Column: Sideboards */}

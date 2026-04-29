@@ -86,5 +86,8 @@ export const queryKeys = {
     kpis: ['dashboard', 'kpis'] as const,
     revenueChart: (period: string) => ['dashboard', 'revenueChart', period] as const,
     eventsByStatus: (scope: string) => ['dashboard', 'eventsByStatus', scope] as const,
+    topClients: (limit: number) => ['dashboard', 'topClients', limit] as const,
+    productDemand: ['dashboard', 'productDemand'] as const,
+    forecast: ['dashboard', 'forecast'] as const,
   },
 } as const;

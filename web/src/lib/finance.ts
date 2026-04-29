@@ -19,3 +19,18 @@ export const getEventNetSales = (
   return Math.max(0, total - tax)
 }
 
+export const formatCurrency = (amount: number | string, currency: string = "MXN"): string => {
+  const numAmount = typeof amount === "string" ? parseFloat(amount) : amount;
+  
+  if (isNaN(numAmount)) {
+    return "$0.00";
+  }
+
+  return numAmount.toLocaleString("es-MX", {
+    style: "currency",
+    currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+};
+

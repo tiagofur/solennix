@@ -44,6 +44,14 @@
   "inventory": {
     "no_items": "Healthy stock in all items"
   },
+  "topClients": "Top Clients",
+  "noClients": "No client data yet",
+  "productDemand": "Product Demand",
+  "noProducts": "No product data yet",
+  "forecast": "Revenue Forecast",
+  "noForecast": "No forecast data available",
+  "totalRevenue": "Projected Revenue",
+  "confirmedEvents": "Confirmed",
   "messages": {
     "event_completed": "Event marked as completed.",
     "event_cancelled": "Event cancelled.",

@@ -1,4 +1,5 @@
 import { api } from "../lib/api";
+import type { components } from "../types/api";
 import type {
   DashboardEventStatusCount,
   DashboardEventStatusScope,
@@ -6,6 +7,10 @@ import type {
   DashboardRevenuePeriod,
   DashboardRevenuePoint,
 } from "../types/dashboard";
+
+type TopClient = components["schemas"]["TopClient"];
+type ProductDemandItem = components["schemas"]["ProductDemandItem"];
+type ForecastDataPoint = components["schemas"]["ForecastDataPoint"];
 
 export const dashboardService = {
   async getKpis(): Promise<DashboardKpis> {
@@ -26,5 +31,17 @@ export const dashboardService = {
     return api.get<DashboardEventStatusCount[]>("/dashboard/events-by-status", {
       scope,
     });
+  },
+
+  async getTopClients(limit: number = 10): Promise<TopClient[]> {
+    return api.get<TopClient[]>("/dashboard/top-clients", { limit: limit.toString() });
+  },
+
+  async getProductDemand(): Promise<ProductDemandItem[]> {
+    return api.get<ProductDemandItem[]>("/dashboard/product-demand");
+  },
+
+  async getForecast(): Promise<ForecastDataPoint[]> {
+    return api.get<ForecastDataPoint[]>("/dashboard/forecast");
   },
 };

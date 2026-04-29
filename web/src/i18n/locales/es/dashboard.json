@@ -44,6 +44,14 @@
   "inventory": {
     "no_items": "Stock saludable en todos los ítems"
   },
+  "topClients": "Top Clientes",
+  "noClients": "Sin datos de clientes aún",
+  "productDemand": "Demanda de Productos",
+  "noProducts": "Sin datos de productos aún",
+  "forecast": "Proyección de Ingresos",
+  "noForecast": "Sin proyecciones disponibles",
+  "totalRevenue": "Ingresos Proyectados",
+  "confirmedEvents": "Eventos Confirmados",
   "messages": {
     "event_completed": "Evento marcado como completado.",
     "event_cancelled": "Evento cancelado.",
