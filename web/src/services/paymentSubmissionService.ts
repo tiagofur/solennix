@@ -53,16 +53,11 @@ class PaymentSubmissionService {
     if (transferRef) formData.append('transfer_ref', transferRef);
     if (receiptFile) formData.append('receipt_file', receiptFile);
 
-    const response = await api.post<{ data: PaymentSubmission }>(
+    const response = await api.postFormData<{ data: PaymentSubmission }>(
       `/public/events/${token}/payment-submissions`,
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }
+      formData
     );
-    return response.data.data;
+    return response.data;
   }
 
   /**
@@ -77,13 +72,11 @@ class PaymentSubmissionService {
     const response = await api.get<{ data: PaymentSubmission[] }>(
       `/public/events/${token}/payment-submissions`,
       {
-        params: {
-          event_id: eventId,
-          client_id: clientId,
-        },
+        event_id: eventId,
+        client_id: clientId,
       }
     );
-    return response.data.data || [];
+    return response.data || [];
   }
 
   /**
@@ -94,7 +87,7 @@ class PaymentSubmissionService {
     const response = await api.get<{ data: PaymentSubmission[] }>(
       '/organizer/payment-submissions'
     );
-    return response.data.data || [];
+    return response.data || [];
   }
 
   /**
@@ -106,14 +99,14 @@ class PaymentSubmissionService {
     status: 'approved' | 'rejected',
     rejectionReason?: string
   ): Promise<PaymentSubmission> {
-    const response = await api.patch<{ data: PaymentSubmission }>(
+    const response = await api.put<{ data: PaymentSubmission }>(
       `/organizer/payment-submissions/${submissionId}`,
       {
         status,
         rejection_reason: rejectionReason,
       }
     );
-    return response.data.data;
+    return response.data;
   }
 }
 
