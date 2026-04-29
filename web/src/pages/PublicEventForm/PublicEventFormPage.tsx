@@ -19,22 +19,14 @@ import { PublicFormExpired } from "./components/PublicFormExpired";
 import { PublicFormSuccess } from "./components/PublicFormSuccess";
 import { PublicProductCard } from "./components/PublicProductCard";
 import { useTranslation } from "react-i18next";
+import { components } from "@/types/api";
 
-interface PublicProduct {
-  id: string;
-  name: string;
-  category: string;
-  image_url?: string;
-}
-
-interface Organizer {
-  business_name?: string;
-  logo_url?: string;
-  brand_color?: string;
-}
+// Generated types from OpenAPI spec
+type PublicProduct = components["schemas"]["PublicProduct"];
+type PublicOrganizer = components["schemas"]["PublicOrganizer"];
 
 interface FormData {
-  organizer: Organizer;
+  organizer: PublicOrganizer;
   products: PublicProduct[];
   link_id: string;
   expires_at: string;

@@ -13,49 +13,10 @@ import {
 } from "lucide-react";
 import { ClientPortalUnavailable } from "./components/ClientPortalUnavailable";
 import { useTranslation } from "react-i18next";
+import { components } from "@/types/api";
 
-// ─────────────────────────────────────────────────────────────────────────
-// Types — mirror backend `PublicEventView` from
-// handlers/event_public_link_handler.go. We intentionally do NOT import
-// the generated OpenAPI types because the public-portal endpoint is not
-// yet documented in openapi.yaml; we'll migrate once it lands there.
-// ─────────────────────────────────────────────────────────────────────────
-
-interface PortalEvent {
-  id: string;
-  service_type: string;
-  event_date: string; // yyyy-MM-dd
-  start_time?: string | null;
-  end_time?: string | null;
-  location?: string | null;
-  city?: string | null;
-  num_people: number;
-  status: string;
-}
-
-interface PortalOrganizer {
-  business_name?: string;
-  logo_url?: string;
-  brand_color?: string;
-}
-
-interface PortalClient {
-  name: string;
-}
-
-interface PortalPayment {
-  total: number;
-  paid: number;
-  remaining: number;
-  currency: string;
-}
-
-interface PortalData {
-  event: PortalEvent;
-  organizer: PortalOrganizer;
-  client: PortalClient;
-  payment: PortalPayment;
-}
+// Generated type from OpenAPI spec
+type PortalData = components["schemas"]["PublicEventView"];
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
 
