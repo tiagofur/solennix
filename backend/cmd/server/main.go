@@ -100,6 +100,7 @@ func main() {
 	liveActivityRepo := repository.NewLiveActivityTokenRepo(pool)
 	eventFormLinkRepo := repository.NewEventFormLinkRepo(pool)
 	eventPublicLinkRepo := repository.NewEventPublicLinkRepo(pool)
+	paymentSubmissionRepo := repository.NewPaymentSubmissionRepo(pool)
 	staffRepo := repository.NewStaffRepo(pool)
 	staffTeamRepo := repository.NewStaffTeamRepo(pool)
 
@@ -157,11 +158,12 @@ func main() {
 	liveActivityHandler := handlers.NewLiveActivityHandler(liveActivityRepo)
 	eventFormHandler := handlers.NewEventFormHandler(eventFormLinkRepo, productRepo, userRepo, cfg.FrontendURL, pool)
 	eventPublicLinkHandler := handlers.NewEventPublicLinkHandler(eventPublicLinkRepo, eventRepo, clientRepo, userRepo, paymentRepo, cfg.FrontendURL)
+	paymentSubmissionHandler := handlers.NewPaymentSubmissionHandler(paymentSubmissionRepo, paymentRepo, pool)
 	staffHandler := handlers.NewStaffHandler(staffRepo, userRepo)
 	staffTeamHandler := handlers.NewStaffTeamHandler(staffTeamRepo)
 
 	// Create router
-	r := router.New(authHandler, crudHandler, subHandler, searchHandler, eventPaymentHandler, uploadHandler, adminHandler, dashboardHandler, auditHandler, unavailHandler, deviceHandler, liveActivityHandler, eventFormHandler, eventPublicLinkHandler, staffHandler, staffTeamHandler, authService, userRepo, auditRepo, pool, cfg.CORSAllowedOrigins, cfg.UploadDir)
+	r := router.New(authHandler, crudHandler, subHandler, searchHandler, eventPaymentHandler, uploadHandler, adminHandler, dashboardHandler, auditHandler, unavailHandler, deviceHandler, liveActivityHandler, eventFormHandler, eventPublicLinkHandler, paymentSubmissionHandler, staffHandler, staffTeamHandler, authService, userRepo, auditRepo, pool, cfg.CORSAllowedOrigins, cfg.UploadDir)
 
 	// Background job: expire gifted plans that have passed their expiry date.
 	// Runs once at startup then every hour.
