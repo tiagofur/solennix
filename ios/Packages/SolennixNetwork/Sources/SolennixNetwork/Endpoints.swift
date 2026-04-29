@@ -152,6 +152,8 @@ public enum Endpoint {
     // MARK: - Uploads
 
     public static let uploadImage = "/uploads/image"
+    public static let uploadPresign = "/uploads/presign"
+    public static let uploadComplete = "/uploads/complete"
 
     // MARK: - Profile
 

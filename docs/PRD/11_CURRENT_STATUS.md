@@ -27,13 +27,12 @@ status: active
 > [!info] 2026-04-27 — Auditoría Web: paridad backend + UX/landing
 > Se auditó la app web contra el backend real y se documentó el estado en [[../Web/Auditoría Web 2026-04-27]]. Resultado: paridad funcional alta, pero contrato OpenAPI todavía parcial para formularios públicos, portal cliente y staff teams. La web funciona con tipos/manual fetch en esos flujos, pero no puede declararse 100% protegida por OpenAPI hasta cerrar el drift. Oportunidades principales: widgets Dashboard para `top-clients`, `product-demand`, `forecast`; hooks React Query para portal link/unavailable date mutations; landing más orientada al poder operativo real de Solennix.
 
-> [!info] 2026-04-28 — Fix semántica pública de formularios (issue #176)
-> Se unificó la semántica HTTP para links de formulario público en backend y web:
-> - **Backend** (`event_form_handler.go`): cuando `MarkUsedTx` detecta carrera de “ya usado” (`pgx.ErrNoRows`), ahora responde `410 Gone` con `error: link_invalid` (antes devolvía `409 link_already_used`).
-> - **Contrato OpenAPI**: removida respuesta `409` de `POST /api/public/event-forms/{token}`; estado inválido/expirado/usado consolidado en `410`.
-> - **Web** (`PublicEventFormPage` + `PublicFormExpired`): `GET` inicial ahora distingue `404` (link no encontrado) de `410` (inválido/expirado/usado) y muestra copy específica en ambos casos.
-> - **i18n**: nuevas claves `event_form.not_found.*` en `es/public.json` y `en/public.json`.
-
+> [!info] 2026-04-28 — Backend uploads: contrato de presigned S3 (issue #178)
+> Se extendió el dominio de uploads en backend para habilitar direct upload a S3 sin romper compatibilidad:
+> - **Storage contract**: `storage.FileResult` ahora incluye metadata opcional (`object_key`, `thumbnail_object_key`, `content_type`) y se agregó `PresignCapableProvider` con `PresignUpload` + `CompletePresignedUpload`.
+> - **S3 provider**: implementa presign (`PUT`, 15 min) y finalización con generación de thumbnail post-upload.
+> - **HTTP API**: nuevos endpoints autenticados `POST /api/uploads/presign` y `POST /api/uploads/complete`; `POST /api/uploads/image` mantiene payload legacy y suma campos nuevos opcionales.
+> - **OpenAPI + tests**: se documentaron request/response nuevos (`UploadPresignRequest`, `UploadPresignResponse`, `UploadCompleteRequest`) y se agregaron contract tests + tests de handler para provider soportado/no soportado.
 > [!info] 2026-04-26 — Sprint 7.B: Paywalls mobile coherentes (iOS + Android)
 > Parseo del error 403 `plan_limit_exceeded` del backend como error tipado en ambas plataformas móviles, con UI de upgrade coherente en los 3 formularios de creación (Event/Client/Product). Paridad total con Web.
 > - **iOS**: `APIError.planLimitExceeded(message:limitType:current:max:)` en `SolennixCore` + detección en `APIClient.validateResponse()` (antes del toast genérico) + `PaywallSheet.swift` componente reutilizable con lock icon, mensaje, CTA "Ver planes" y botón "Cerrar". Wired en `EventFormView`, `ClientFormView`, `ProductFormView` via `.sheet` + `PlanLimitsManager` environment.

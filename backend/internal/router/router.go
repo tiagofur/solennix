@@ -155,6 +155,8 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 		r.Group(func(r chi.Router) {
 			r.Use(mw.RateLimit(5, 1*time.Minute))
 			r.Post("/uploads/image", uploadHandler.UploadImage)
+			r.Post("/uploads/presign", uploadHandler.PresignImage)
+			r.Post("/uploads/complete", uploadHandler.CompletePresignedUpload)
 		})
 
 		// Users

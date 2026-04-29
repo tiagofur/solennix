@@ -12,6 +12,7 @@ import (
 	"log/slog"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -141,6 +142,114 @@ func (p *S3Provider) Save(userID, originalFilename string, data io.Reader) (*Fil
 	}, nil
 }
 
+func (p *S3Provider) PresignUpload(userID, originalFilename, contentType string) (*PresignResult, error) {
+	if !strings.HasPrefix(strings.ToLower(contentType), "image/") {
+		return nil, fmt.Errorf("only image content types are allowed")
+	}
+
+	ext := strings.ToLower(filepath.Ext(originalFilename))
+	if ext == "" {
+		ext = extFromContentType(contentType)
+	}
+	allowedExts := map[string]bool{".jpg": true, ".jpeg": true, ".png": true, ".gif": true, ".webp": true}
+	if !allowedExts[ext] {
+		ext = extFromContentType(contentType)
+	}
+
+	filename := fmt.Sprintf("%s%s", uuid.New().String(), ext)
+	objectKey := fmt.Sprintf("%s/%s", userID, filename)
+	fullObjectKey := p.prefixed(objectKey)
+
+	presigner := s3.NewPresignClient(p.client)
+	expires := 15 * time.Minute
+	out, err := presigner.PresignPutObject(context.Background(), &s3.PutObjectInput{
+		Bucket:      aws.String(p.bucket),
+		Key:         aws.String(fullObjectKey),
+		ContentType: aws.String(contentType),
+	}, func(opts *s3.PresignOptions) {
+		opts.Expires = expires
+	})
+	if err != nil {
+		return nil, fmt.Errorf("presign upload: %w", err)
+	}
+
+	return &PresignResult{
+		UploadURL:        out.URL,
+		Method:           "PUT",
+		Headers:          map[string]string{"Content-Type": contentType},
+		ObjectKey:        objectKey,
+		ExpiresInSeconds: int(expires.Seconds()),
+		ContentType:      contentType,
+	}, nil
+}
+
+func (p *S3Provider) CompletePresignedUpload(userID, objectKey string) (*FileResult, error) {
+	objectKey = strings.TrimPrefix(strings.TrimSpace(objectKey), "/")
+	if objectKey == "" {
+		return nil, fmt.Errorf("object key is required")
+	}
+	if !strings.HasPrefix(objectKey, userID+"/") {
+		return nil, fmt.Errorf("object key does not belong to user")
+	}
+
+	fullObjectKey := p.prefixed(objectKey)
+	obj, err := p.client.GetObject(context.Background(), &s3.GetObjectInput{
+		Bucket: aws.String(p.bucket),
+		Key:    aws.String(fullObjectKey),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("get uploaded object: %w", err)
+	}
+	defer obj.Body.Close()
+
+	buf, err := io.ReadAll(obj.Body)
+	if err != nil {
+		return nil, fmt.Errorf("read uploaded object: %w", err)
+	}
+
+	filename := filepath.Base(objectKey)
+	ext := strings.ToLower(filepath.Ext(filename))
+	thumbFilename := fmt.Sprintf("thumb_%s.jpg", strings.TrimSuffix(filename, ext))
+	thumbnailObjectKey := fmt.Sprintf("%s/thumbnails/%s", userID, thumbFilename)
+	fullThumbnailObjectKey := p.prefixed(thumbnailObjectKey)
+
+	thumbnailUploaded := false
+	if thumbBuf, thumbErr := generateThumbnailBytes(buf); thumbErr == nil {
+		_, putErr := p.client.PutObject(context.Background(), &s3.PutObjectInput{
+			Bucket:      aws.String(p.bucket),
+			Key:         aws.String(fullThumbnailObjectKey),
+			Body:        bytes.NewReader(thumbBuf),
+			ContentType: aws.String("image/jpeg"),
+		})
+		if putErr != nil {
+			slog.Warn("S3 thumbnail upload failed after presigned completion", "error", putErr)
+		} else {
+			thumbnailUploaded = true
+		}
+	} else {
+		slog.Warn("S3 thumbnail generation failed after presigned completion", "error", thumbErr)
+	}
+
+	thumbnailURL := p.publicURL(fullObjectKey)
+	if thumbnailUploaded {
+		thumbnailURL = p.publicURL(fullThumbnailObjectKey)
+	}
+
+	resolvedContentType := aws.ToString(obj.ContentType)
+	if resolvedContentType == "" {
+		resolvedContentType = detectContentTypeFromExt(ext)
+	}
+
+	return &FileResult{
+		URL:                p.publicURL(fullObjectKey),
+		ThumbnailURL:       thumbnailURL,
+		Filename:           filename,
+		ObjectKey:          objectKey,
+		ThumbnailObjectKey: thumbnailObjectKey,
+		ContentType:        resolvedContentType,
+	}, nil
+}
+
 func (p *S3Provider) Delete(path string) error {
 	originalKey := p.normalizeToFullKey(path)
 
@@ -218,6 +327,22 @@ func deriveThumbnailKey(originalKey string) string {
 	}
 
 	return fmt.Sprintf("%s/thumbnails/thumb_%s.jpg", dir, name)
+}
+
+func extFromContentType(contentType string) string {
+	ct := strings.ToLower(strings.TrimSpace(strings.Split(contentType, ";")[0]))
+	switch ct {
+	case "image/png":
+		return ".png"
+	case "image/gif":
+		return ".gif"
+	case "image/webp":
+		return ".webp"
+	case "image/jpeg", "image/jpg":
+		return ".jpg"
+	default:
+		return ".jpg"
+	}
 }
 
 func generateThumbnailBytes(original []byte) ([]byte, error) {

@@ -66,6 +66,8 @@ object Endpoints {
 
     // Uploads
     const val UPLOAD_IMAGE = "uploads/image"
+    const val UPLOAD_PRESIGN = "uploads/presign"
+    const val UPLOAD_COMPLETE = "uploads/complete"
 
     // Profile
     const val UPDATE_PROFILE = "users/me"

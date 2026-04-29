@@ -21,7 +21,7 @@ platform: Backend
 > [[PRD MOC]] | [[01_PRODUCT_VISION]] | [[02_FEATURES]] | [[05_TECHNICAL_ARCHITECTURE_IOS]] | [[06_TECHNICAL_ARCHITECTURE_ANDROID]] | [[08_TECHNICAL_ARCHITECTURE_WEB]] | [[11_CURRENT_STATUS]] | [[04_MONETIZATION]]
 
 **Version:** 1.0
-**Fecha:** 2026-03-20 · **Última actualización:** 2026-04-17
+**Fecha:** 2026-03-20 · **Última actualización:** 2026-04-28
 **Plataforma:** Go REST API + PostgreSQL
 
 > [!success] Producción (2026-04-16)
@@ -37,6 +37,14 @@ platform: Backend
 > | **040** | Stripe trial 14d (`trial_ends_at`, `is_in_trial`) | 7.A |
 > | **041** | `event_public_links` (Portal Cliente MVP) | Portal MVP |
 > | **042** | `staff` + `event_staff` (Personal Phase 1) | 8.bis |
+
+> [!info] Uploads S3 presigned (2026-04-28)
+>
+> El módulo de uploads soporta dos flujos:
+> - **Legacy multipart**: `POST /api/uploads/image` (proxy upload por backend).
+> - **Direct-to-storage** (S3): `POST /api/uploads/presign` (firma URL `PUT`) + `POST /api/uploads/complete` (finalización y thumbnail).
+>
+> Compatibilidad: `UploadImageResponse` conserva `url`, `thumbnail_url`, `filename` y agrega metadata opcional `object_key`, `thumbnail_object_key`, `content_type`.
 
 ---
 

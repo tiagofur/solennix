@@ -1405,6 +1405,48 @@ components:
           type: string
           nullable: true
           description: MIME type for the original upload (retrocompatible optional field).
+    UploadPresignRequest:
+      type: object
+      required:
+        - filename
+        - content_type
+      properties:
+        filename:
+          type: string
+        content_type:
+          type: string
+    UploadPresignResponse:
+      type: object
+      required:
+        - upload_url
+        - method
+        - headers
+        - object_key
+        - expires_in_seconds
+        - content_type
+      properties:
+        upload_url:
+          type: string
+        method:
+          type: string
+          example: PUT
+        headers:
+          type: object
+          additionalProperties:
+            type: string
+        object_key:
+          type: string
+        expires_in_seconds:
+          type: integer
+        content_type:
+          type: string
+    UploadCompleteRequest:
+      type: object
+      required:
+        - object_key
+      properties:
+        object_key:
+          type: string
     SearchResponse:
       type: object
       required:
@@ -4121,6 +4163,56 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /api/uploads/presign:
+    post:
+      operationId: presignImageUpload
+      summary: Create presigned upload URL for images
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UploadPresignRequest"
+      responses:
+        "200":
+          description: Presigned upload details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadPresignResponse"
+        "400":
+          description: Invalid request or provider not supported
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+  /api/uploads/complete:
+    post:
+      operationId: completePresignedUpload
+      summary: Finalize a presigned image upload
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UploadCompleteRequest"
+      responses:
+        "200":
+          description: Presigned upload finalized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadImageResponse"
+        "400":
+          description: Invalid request or finalize failure
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
   /api/search:
     get:
       operationId: searchAll

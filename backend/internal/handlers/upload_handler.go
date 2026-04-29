@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
@@ -18,6 +19,15 @@ type UploadHandler struct {
 	uploadDir string
 	userRepo  UserRepository
 	storage   storage.Provider // optional, falls back to legacy disk write
+}
+
+type presignImageRequest struct {
+	Filename    string `json:"filename"`
+	ContentType string `json:"content_type"`
+}
+
+type completePresignedUploadRequest struct {
+	ObjectKey string `json:"object_key"`
 }
 
 func NewUploadHandler(uploadDir string, userRepo UserRepository) *UploadHandler {
@@ -151,4 +161,84 @@ func (h *UploadHandler) UploadImage(w http.ResponseWriter, r *http.Request) {
 	// Legacy fallback: direct disk write (should not reach here in production)
 	slog.Warn("No storage provider configured, using legacy disk write")
 	writeError(w, http.StatusInternalServerError, "Storage not configured")
+}
+
+// PresignImage handles POST /api/uploads/presign
+// Returns a signed URL and object key for direct-to-storage uploads.
+func (h *UploadHandler) PresignImage(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+
+	var req presignImageRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+	if strings.TrimSpace(req.Filename) == "" {
+		writeError(w, http.StatusBadRequest, "filename is required")
+		return
+	}
+	if !strings.HasPrefix(strings.ToLower(strings.TrimSpace(req.ContentType)), "image/") {
+		writeError(w, http.StatusBadRequest, "content_type must be an image MIME type")
+		return
+	}
+
+	presignProvider, ok := h.storage.(storage.PresignCapableProvider)
+	if !ok {
+		writeError(w, http.StatusBadRequest, "Presigned uploads are available only with S3 storage provider")
+		return
+	}
+
+	result, err := presignProvider.PresignUpload(userID.String(), req.Filename, req.ContentType)
+	if err != nil {
+		slog.Error("Failed to create presigned upload", "error", err)
+		writeError(w, http.StatusInternalServerError, "Failed to create presigned upload")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"upload_url":         result.UploadURL,
+		"method":             result.Method,
+		"headers":            result.Headers,
+		"object_key":         result.ObjectKey,
+		"expires_in_seconds": result.ExpiresInSeconds,
+		"content_type":       result.ContentType,
+	})
+}
+
+// CompletePresignedUpload handles POST /api/uploads/complete
+// Finalizes a previously uploaded object and returns standard media payload.
+func (h *UploadHandler) CompletePresignedUpload(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+
+	var req completePresignedUploadRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+	if strings.TrimSpace(req.ObjectKey) == "" {
+		writeError(w, http.StatusBadRequest, "object_key is required")
+		return
+	}
+
+	presignProvider, ok := h.storage.(storage.PresignCapableProvider)
+	if !ok {
+		writeError(w, http.StatusBadRequest, "Presigned uploads are available only with S3 storage provider")
+		return
+	}
+
+	result, err := presignProvider.CompletePresignedUpload(userID.String(), req.ObjectKey)
+	if err != nil {
+		slog.Error("Failed to finalize presigned upload", "error", err)
+		writeError(w, http.StatusBadRequest, "Failed to finalize upload")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]string{
+		"url":                  result.URL,
+		"thumbnail_url":        result.ThumbnailURL,
+		"filename":             result.Filename,
+		"object_key":           result.ObjectKey,
+		"thumbnail_object_key": result.ThumbnailObjectKey,
+		"content_type":         result.ContentType,
+	})
 }

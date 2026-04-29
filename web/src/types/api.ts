@@ -881,6 +881,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/uploads/presign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create presigned upload URL for images */
+        post: operations["presignImageUpload"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/uploads/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Finalize a presigned image upload */
+        post: operations["completePresignedUpload"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/search": {
         parameters: {
             query?: never;
@@ -1874,6 +1908,26 @@ export interface components {
             url: string;
             thumbnail_url: string;
             filename: string;
+            object_key?: string | null;
+            thumbnail_object_key?: string | null;
+            content_type?: string | null;
+        };
+        UploadPresignRequest: {
+            filename: string;
+            content_type: string;
+        };
+        UploadPresignResponse: {
+            upload_url: string;
+            method: string;
+            headers: {
+                [key: string]: string;
+            };
+            object_key: string;
+            expires_in_seconds: number;
+            content_type: string;
+        };
+        UploadCompleteRequest: {
+            object_key: string;
         };
         SearchResponse: {
             clients: components["schemas"]["Client"][];
@@ -4969,6 +5023,86 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
+            };
+        };
+    };
+    presignImageUpload: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UploadPresignRequest"];
+            };
+        };
+        responses: {
+            /** @description Presigned upload details */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UploadPresignResponse"];
+                };
+            };
+            /** @description Invalid request or provider not supported */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    completePresignedUpload: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UploadCompleteRequest"];
+            };
+        };
+        responses: {
+            /** @description Presigned upload finalized */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UploadImageResponse"];
+                };
+            };
+            /** @description Invalid request or finalize failure */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

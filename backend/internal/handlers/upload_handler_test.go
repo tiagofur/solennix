@@ -6,6 +6,7 @@ import (
 	"image"
 	"image/color"
 	"image/png"
+	"io"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
@@ -20,6 +21,34 @@ import (
 	"github.com/tiagofur/solennix-backend/internal/storage"
 	"github.com/tiagofur/solennix-backend/internal/middleware"
 )
+
+type mockPresignProvider struct{}
+
+func (m *mockPresignProvider) Save(userID, originalFilename string, data io.Reader) (*storage.FileResult, error) {
+	return &storage.FileResult{URL: "/api/uploads/u/f.jpg", ThumbnailURL: "/api/uploads/u/thumbnails/thumb_f.jpg", Filename: "f.jpg"}, nil
+}
+func (m *mockPresignProvider) Delete(path string) error { return nil }
+func (m *mockPresignProvider) URL(path string) string   { return "/api/uploads/" + path }
+func (m *mockPresignProvider) PresignUpload(userID, originalFilename, contentType string) (*storage.PresignResult, error) {
+	return &storage.PresignResult{
+		UploadURL:        "https://s3.example.com/signed",
+		Method:           "PUT",
+		Headers:          map[string]string{"Content-Type": contentType},
+		ObjectKey:        userID + "/abc.jpg",
+		ExpiresInSeconds: 900,
+		ContentType:      contentType,
+	}, nil
+}
+func (m *mockPresignProvider) CompletePresignedUpload(userID, objectKey string) (*storage.FileResult, error) {
+	return &storage.FileResult{
+		URL:                "https://cdn.example.com/uploads/" + objectKey,
+		ThumbnailURL:       "https://cdn.example.com/uploads/" + userID + "/thumbnails/thumb_abc.jpg",
+		Filename:           "abc.jpg",
+		ObjectKey:          objectKey,
+		ThumbnailObjectKey: userID + "/thumbnails/thumb_abc.jpg",
+		ContentType:        "image/jpeg",
+	}, nil
+}
 
 func TestNewUploadHandler(t *testing.T) {
 	dir := t.TempDir()
@@ -371,6 +400,67 @@ func TestUploadImage_MultipleFileExtensions(t *testing.T) {
 			assert.Contains(t, rr.Body.String(), tc.wantExt)
 		})
 	}
+}
+
+func TestPresignImage_UnsupportedProvider_Returns400(t *testing.T) {
+	dir := t.TempDir()
+	h := NewUploadHandler(dir, nil) // local provider by default
+	userID := uuid.New()
+
+	req := httptest.NewRequest(http.MethodPost, "/api/uploads/presign", strings.NewReader(`{"filename":"photo.jpg","content_type":"image/jpeg"}`))
+	req.Header.Set("Content-Type", "application/json")
+	req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, userID))
+	rr := httptest.NewRecorder()
+
+	h.PresignImage(rr, req)
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+	assert.Contains(t, rr.Body.String(), "Presigned uploads")
+}
+
+func TestPresignImage_Success(t *testing.T) {
+	h := NewUploadHandler(t.TempDir(), nil)
+	h.SetStorageProvider(&mockPresignProvider{})
+	userID := uuid.New()
+
+	req := httptest.NewRequest(http.MethodPost, "/api/uploads/presign", strings.NewReader(`{"filename":"photo.jpg","content_type":"image/jpeg"}`))
+	req.Header.Set("Content-Type", "application/json")
+	req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, userID))
+	rr := httptest.NewRecorder()
+
+	h.PresignImage(rr, req)
+	assert.Equal(t, http.StatusOK, rr.Code)
+	assert.Contains(t, rr.Body.String(), "upload_url")
+	assert.Contains(t, rr.Body.String(), "object_key")
+}
+
+func TestCompletePresignedUpload_UnsupportedProvider_Returns400(t *testing.T) {
+	h := NewUploadHandler(t.TempDir(), nil)
+	userID := uuid.New()
+
+	req := httptest.NewRequest(http.MethodPost, "/api/uploads/complete", strings.NewReader(`{"object_key":"u/abc.jpg"}`))
+	req.Header.Set("Content-Type", "application/json")
+	req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, userID))
+	rr := httptest.NewRecorder()
+
+	h.CompletePresignedUpload(rr, req)
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+	assert.Contains(t, rr.Body.String(), "Presigned uploads")
+}
+
+func TestCompletePresignedUpload_Success(t *testing.T) {
+	h := NewUploadHandler(t.TempDir(), nil)
+	h.SetStorageProvider(&mockPresignProvider{})
+	userID := uuid.New()
+
+	req := httptest.NewRequest(http.MethodPost, "/api/uploads/complete", strings.NewReader(`{"object_key":"`+userID.String()+`/abc.jpg"}`))
+	req.Header.Set("Content-Type", "application/json")
+	req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, userID))
+	rr := httptest.NewRecorder()
+
+	h.CompletePresignedUpload(rr, req)
+	assert.Equal(t, http.StatusOK, rr.Code)
+	assert.Contains(t, rr.Body.String(), "thumbnail_object_key")
+	assert.Contains(t, rr.Body.String(), "content_type")
 }
 
 // ---------------------------------------------------------------------------
