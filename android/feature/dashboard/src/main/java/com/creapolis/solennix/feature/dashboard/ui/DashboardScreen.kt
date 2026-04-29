@@ -325,6 +325,34 @@ fun DashboardScreen(
                     }
                 }
 
+                // Analytics Widgets
+                item {
+                    Spacer(modifier = Modifier.height(24.dp))
+                    TopClientsWidget(
+                        clients = uiState.topClients,
+                        isLoading = uiState.isRefreshing,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    ProductDemandWidget(
+                        products = uiState.productDemand,
+                        isLoading = uiState.isRefreshing,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    ForecastWidget(
+                        forecast = uiState.forecast,
+                        isLoading = uiState.isRefreshing,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
                 item {
                     Spacer(modifier = Modifier.height(32.dp))
                 }
