@@ -1354,6 +1354,8 @@ Visualización + registro de pago por transferencia con approve/reject. Reemplaz
 | Predicción de demanda       |   [Todas]   |    P3     | Sugerencias de stock basadas en eventos futuros             |
 | Multi-moneda                |   [Todas]   |    P2     | MXN, USD, COP, ARS, BRL, PEN                                |
 | Multi-idioma                |   [Todas]   |    P3     | Español, Inglés, Portugués                                  |
+| Asistentes de Voz (Siri)    |   [iOS]     |    P2     | Comandos "¿Qué eventos tengo hoy?" vía Siri Shortcuts       |
+| Asistentes de Voz (Google)  |  [Android]  |    P2     | Acciones de voz "¿Mis próximos eventos?" vía Google Actions  |
 
 ### Pilar 5: Experiencia del Cliente (Exploración)
 

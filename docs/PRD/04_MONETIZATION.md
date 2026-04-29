@@ -135,7 +135,7 @@ El usuario obtiene una experiencia funcional y util en el tier gratuito — sufi
 | Generacion de PDFs | Disponible (con marca de agua) | Cotizaciones, contratos y checklists funcionales pero con branding Solennix |
 | Gestion de pagos | Disponible | Registro manual de pagos recibidos por evento |
 | Widgets de iOS | NO disponible | Diferenciador premium de alto valor percibido |
-| Comandos de Siri | NO disponible | Feature aspiracional para power users |
+| Asistentes de Voz (Siri iOS + Google Android) | NO disponible | Feature aspiracional para power users |
 | Soporte prioritario | NO disponible | Incentivo adicional para conversion |
 | Reportes avanzados | NO disponible | Analytics y metricas detalladas solo para Premium |
 
@@ -154,7 +154,7 @@ El usuario obtiene una experiencia funcional y util en el tier gratuito — sufi
 | Dashboard | Completo con analytics avanzados |
 | Generacion de PDFs | Sin marca de agua, con branding personalizado del negocio |
 | Widgets de iOS | Todos disponibles (eventos proximos, metricas, accesos rapidos) |
-| Comandos de Siri | Disponibles |
+| Asistentes de Voz (Siri iOS + Google Android) | Disponibles |
 | Soporte prioritario | Respuesta en menos de 24 horas |
 | Reportes avanzados | Metricas de ingresos, analisis por cliente, tendencias |
 | Live Activities (iOS) | Seguimiento en tiempo real de eventos en curso |
@@ -623,7 +623,7 @@ flowchart TD
 |---------|---------------|------------------|
 | Generacion de PDFs sin marca de agua | Disponible para todos | Agregar marca de agua para plan Basico |
 | Widgets de iOS | Accesibles sin restriccion | Agregar gate — mostrar upgrade prompt |
-| Comandos de Siri | Accesibles sin restriccion | Agregar gate |
+| Asistentes de Voz (Siri iOS + Google Android) | No implementados aun | Implementar con gate desde inicio: Siri (iOS P2), Google (Android P2) |
 | Reportes avanzados | No implementados aun | Implementar con gate desde el inicio |
 | Live Activities | Accesibles sin restriccion | Evaluar si gatear o dejar como feature general |
 | Sync con backend (RevenueCat) | `syncWithRevenueCat()` es un placeholder vacio | Implementar envio de recibo al backend para validacion server-side |

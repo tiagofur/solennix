@@ -534,7 +534,61 @@ gantt
     Timeline del evento        :p2b, 2026-08, 2026-09
     Calendar sync              :p2c, 2026-09, 2026-10
     Colaboración               :p2d, 2026-10, 2026-11
+    Siri Shortcuts (iOS)       :p2e, 2026-11, 2026-12
+    Google Assistant (Android) :p2f, 2026-11, 2026-12
 ```
+
+---
+
+## 10. Voice Assistants — Siri Shortcuts (iOS) + Google Actions (Android)
+
+> [!abstract] Feature Premium (P2) — Habilita consultas por voz
+> Integración nativa con asistentes de voz del sistema para operaciones comunes sin abrir la app.
+
+### iOS: Siri Shortcuts (AppIntents Framework)
+
+| Comando                        | Resultado                                   | Endpoint backend               |
+| ------------------------------ | ------------------------------------------- | ------------------------------ |
+| "¿Qué eventos tengo hoy?"      | Lista de eventos del día con horarios       | `GET /api/events?date=2026-04-29` |
+| "¿Qué eventos vienen?"         | Próximos 5 eventos confirmados              | `GET /api/events?limit=5&status=confirmed` |
+| "¿Cuánto vendí este mes?"      | Total de ingresos MXN/USD                   | `GET /api/dashboard/kpis?period=month` |
+| "¿Cuántos eventos tengo?"      | Conteo por status (pendiente/confirmado/completado) | `GET /api/events/summary?period=month` |
+| "¿Qué me falta en inventario?" | Items bajo stock mínimo                      | `GET /api/inventory?status=low_stock` |
+
+**Archivos:**
+- `ios/Packages/SolennixIntents/` — Package AppIntents framework
+- `Sources/.../Intents/TodayEventsIntent.swift` — Intent para "eventos hoy"
+- `Sources/.../Intents/UpcomingEventsIntent.swift` — Intent para "próximos eventos"
+- `Sources/.../Intents/MonthlyRevenueIntent.swift` — Intent para "vendido este mes"
+- `Sources/.../Intents/EventCountIntent.swift` — Intent para "cuántos eventos"
+- `Sources/.../Intents/LowStockIntent.swift` — Intent para "inventario bajo"
+
+**CoreSpotlight Indexing:**
+- Eventos, Clientes, Productos indexados para búsqueda del sistema
+- Deep links a detail views vía `Route.eventDetail(id:)` pattern
+
+**Feature Gating:** Mostrar upgrade prompt "Plan Pro requerido" si `user.plan == .basic`
+
+**Estimación:** 3–4 semanas (backend sin cambios; solo iOS AppIntents + CoreSpotlight)
+
+---
+
+### Android: Google Actions (App Actions)
+
+| Comando                              | Resultado                                   | Endpoint backend               |
+| ------------------------------------ | ------------------------------------------- | ------------------------------ |
+| "Abre Solennix" → "mis próximos eventos" | Lista de próximos 5 eventos confirmados | `GET /api/events?limit=5&status=confirmed` |
+| "Dile a Solennix cuánto vendí"       | Total de ingresos MXN del mes               | `GET /api/dashboard/kpis?period=month` |
+| "Pregunta a Solennix por mi inventario" | Items bajo stock                           | `GET /api/inventory?status=low_stock` |
+
+**Archivos:**
+- `android/app/src/main/res/xml/actions.xml` — BII (Built-in Intent) mappings
+- `android/feature/events/src/main/.../AppActionsHandler.kt` — Handler para acciones
+- `android/core/network/.../AppActionsRepository.kt` — Data layer para acciones
+
+**Feature Gating:** Verificar `user.plan != Plan.BASIC` antes de ejecutar acción; mostrar toast "Plan Pro requerido"
+
+**Estimación:** 3–4 semanas (backend sin cambios; solo Android App Actions + BII integration)
 
 ---
 
