@@ -5,7 +5,13 @@
 > [!info] Plataforma
 > **Stack**: Go 1.24 + Chi v5 + PostgreSQL 15 + pgx/v5 + StorageProvider (local/S3) + FCM/APNs
 > **Estado**: Producción (API completa + OAuth Google/Apple + refresh rotation + dashboard server-side + Personal + Portal Cliente + formularios públicos)
-> **Última actualización**: 2026-04-27 — Auditoría backend cerrada
+> **Última actualización**: 2026-04-29
+
+---
+
+## Estado operativo
+
+- [[Estado Plataforma|Estado actual del Backend]]
 
 ---
 
