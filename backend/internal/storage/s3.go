@@ -4,6 +4,10 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"image"
+	_ "image/gif"
+	"image/jpeg"
+	_ "image/png"
 	"io"
 	"log/slog"
 	"path/filepath"
@@ -12,7 +16,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/google/uuid"
+	"golang.org/x/image/draw"
+	_ "golang.org/x/image/webp"
 )
 
 // S3Provider stores files in AWS S3 or S3-compatible storage (MinIO, DigitalOcean Spaces, etc.).
@@ -78,7 +85,11 @@ func (p *S3Provider) Save(userID, originalFilename string, data io.Reader) (*Fil
 		ext = ".jpg"
 	}
 	filename := fmt.Sprintf("%s%s", uuid.New().String(), ext)
-	key := fmt.Sprintf("%s%s/%s", p.prefix, userID, filename)
+	objectKey := fmt.Sprintf("%s/%s", userID, filename)
+	fullObjectKey := p.prefixed(objectKey)
+	thumbFilename := fmt.Sprintf("thumb_%s.jpg", strings.TrimSuffix(filename, ext))
+	thumbnailObjectKey := fmt.Sprintf("%s/thumbnails/%s", userID, thumbFilename)
+	fullThumbnailObjectKey := p.prefixed(thumbnailObjectKey)
 
 	// Read all data into memory for S3 upload
 	buf, err := io.ReadAll(data)
@@ -86,19 +97,11 @@ func (p *S3Provider) Save(userID, originalFilename string, data io.Reader) (*Fil
 		return nil, fmt.Errorf("read file data: %w", err)
 	}
 
-	contentType := "image/jpeg"
-	switch ext {
-	case ".png":
-		contentType = "image/png"
-	case ".gif":
-		contentType = "image/gif"
-	case ".webp":
-		contentType = "image/webp"
-	}
+	contentType := detectContentTypeFromExt(ext)
 
 	_, err = p.client.PutObject(context.Background(), &s3.PutObjectInput{
 		Bucket:      aws.String(p.bucket),
-		Key:         aws.String(key),
+		Key:         aws.String(fullObjectKey),
 		Body:        bytes.NewReader(buf),
 		ContentType: aws.String(contentType),
 	})
@@ -106,26 +109,149 @@ func (p *S3Provider) Save(userID, originalFilename string, data io.Reader) (*Fil
 		return nil, fmt.Errorf("upload to S3: %w", err)
 	}
 
-	// TODO: Generate thumbnail via Lambda or server-side processing
-	// For now, return the same URL for both
-	url := fmt.Sprintf("%s/%s", p.cdnURL, key)
+	thumbnailUploaded := false
+	if thumbBuf, thumbErr := generateThumbnailBytes(buf); thumbErr == nil {
+		_, err = p.client.PutObject(context.Background(), &s3.PutObjectInput{
+			Bucket:      aws.String(p.bucket),
+			Key:         aws.String(fullThumbnailObjectKey),
+			Body:        bytes.NewReader(thumbBuf),
+			ContentType: aws.String("image/jpeg"),
+		})
+		if err != nil {
+			slog.Warn("S3 thumbnail upload failed, falling back to original URL", "error", err)
+		} else {
+			thumbnailUploaded = true
+		}
+	} else {
+		slog.Warn("S3 thumbnail generation failed, falling back to original URL", "error", thumbErr)
+	}
+
+	thumbnailURL := p.publicURL(fullObjectKey)
+	if thumbnailUploaded {
+		thumbnailURL = p.publicURL(fullThumbnailObjectKey)
+	}
 
 	return &FileResult{
-		URL:          url,
-		ThumbnailURL: url, // Placeholder until thumbnail pipeline is set up
-		Filename:     filename,
+		URL:                p.publicURL(fullObjectKey),
+		ThumbnailURL:       thumbnailURL,
+		Filename:           filename,
+		ObjectKey:          objectKey,
+		ThumbnailObjectKey: thumbnailObjectKey,
+		ContentType:        contentType,
 	}, nil
 }
 
 func (p *S3Provider) Delete(path string) error {
-	key := p.prefix + path
-	_, err := p.client.DeleteObject(context.Background(), &s3.DeleteObjectInput{
+	originalKey := p.normalizeToFullKey(path)
+
+	deleteKeys := []string{originalKey}
+	if thumbKey := deriveThumbnailKey(originalKey); thumbKey != "" {
+		deleteKeys = append(deleteKeys, thumbKey)
+	}
+
+	objects := make([]types.ObjectIdentifier, 0, len(deleteKeys))
+	seen := map[string]bool{}
+	for _, k := range deleteKeys {
+		k = strings.TrimSpace(k)
+		if k == "" || seen[k] {
+			continue
+		}
+		seen[k] = true
+		objects = append(objects, types.ObjectIdentifier{Key: aws.String(k)})
+	}
+
+	if len(objects) == 0 {
+		return nil
+	}
+
+	_, err := p.client.DeleteObjects(context.Background(), &s3.DeleteObjectsInput{
 		Bucket: aws.String(p.bucket),
-		Key:    aws.String(key),
+		Delete: &types.Delete{Objects: objects, Quiet: aws.Bool(true)},
 	})
-	return err
+	if err != nil {
+		return fmt.Errorf("delete S3 objects: %w", err)
+	}
+
+	return nil
 }
 
 func (p *S3Provider) URL(path string) string {
-	return fmt.Sprintf("%s/%s%s", p.cdnURL, p.prefix, path)
+	return p.publicURL(p.normalizeToFullKey(path))
+}
+
+func (p *S3Provider) normalizeToFullKey(path string) string {
+	if strings.HasPrefix(path, strings.TrimRight(p.cdnURL, "/")+"/") {
+		path = strings.TrimPrefix(path, strings.TrimRight(p.cdnURL, "/")+"/")
+	}
+	path = strings.TrimPrefix(path, "/")
+	if strings.HasPrefix(path, p.prefix) {
+		return path
+	}
+	return p.prefixed(path)
+}
+
+func (p *S3Provider) prefixed(path string) string {
+	path = strings.TrimPrefix(path, "/")
+	return p.prefix + path
+}
+
+func (p *S3Provider) publicURL(fullKey string) string {
+	return fmt.Sprintf("%s/%s", strings.TrimRight(p.cdnURL, "/"), strings.TrimPrefix(fullKey, "/"))
+}
+
+func deriveThumbnailKey(originalKey string) string {
+	if originalKey == "" {
+		return ""
+	}
+
+	key := strings.TrimPrefix(originalKey, "/")
+	dir := filepath.Dir(key)
+	filename := filepath.Base(key)
+	ext := filepath.Ext(filename)
+	name := strings.TrimSuffix(filename, ext)
+	if name == "" {
+		return ""
+	}
+
+	if strings.HasSuffix(dir, "/thumbnails") {
+		return key
+	}
+
+	return fmt.Sprintf("%s/thumbnails/thumb_%s.jpg", dir, name)
+}
+
+func generateThumbnailBytes(original []byte) ([]byte, error) {
+	srcImg, _, err := image.Decode(bytes.NewReader(original))
+	if err != nil {
+		return nil, fmt.Errorf("decode image: %w", err)
+	}
+
+	bounds := srcImg.Bounds()
+	imgW, imgH := bounds.Dx(), bounds.Dy()
+	maxDim := 200
+
+	var newW, newH int
+	if imgW > imgH {
+		newW = maxDim
+		newH = int(float64(imgH) * float64(maxDim) / float64(imgW))
+	} else {
+		newH = maxDim
+		newW = int(float64(imgW) * float64(maxDim) / float64(imgH))
+	}
+	if newW < 1 {
+		newW = 1
+	}
+	if newH < 1 {
+		newH = 1
+	}
+
+	thumb := image.NewRGBA(image.Rect(0, 0, newW, newH))
+	draw.ApproxBiLinear.Scale(thumb, thumb.Bounds(), srcImg, srcImg.Bounds(), draw.Over, nil)
+
+	var out bytes.Buffer
+	if err := jpeg.Encode(&out, thumb, &jpeg.Options{Quality: 80}); err != nil {
+		return nil, fmt.Errorf("encode thumbnail: %w", err)
+	}
+
+	return out.Bytes(), nil
 }

@@ -138,9 +138,12 @@ func (h *UploadHandler) UploadImage(w http.ResponseWriter, r *http.Request) {
 		}
 		slog.Info("Image uploaded", "user_id", userID, "filename", result.Filename)
 		writeJSON(w, http.StatusOK, map[string]string{
-			"url":           result.URL,
-			"thumbnail_url": result.ThumbnailURL,
-			"filename":      result.Filename,
+			"url":                  result.URL,
+			"thumbnail_url":        result.ThumbnailURL,
+			"filename":             result.Filename,
+			"object_key":           result.ObjectKey,
+			"thumbnail_object_key": result.ThumbnailObjectKey,
+			"content_type":         result.ContentType,
 		})
 		return
 	}

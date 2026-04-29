@@ -63,9 +63,12 @@ func (p *LocalProvider) Save(userID, originalFilename string, data io.Reader) (*
 	GenerateThumbnail(dstPath, userThumbDir, thumbFilename)
 
 	return &FileResult{
-		URL:          fmt.Sprintf("%s/%s/%s", p.urlPrefix, userID, filename),
-		ThumbnailURL: fmt.Sprintf("%s/%s/thumbnails/%s", p.urlPrefix, userID, thumbFilename),
-		Filename:     filename,
+		URL:                fmt.Sprintf("%s/%s/%s", p.urlPrefix, userID, filename),
+		ThumbnailURL:       fmt.Sprintf("%s/%s/thumbnails/%s", p.urlPrefix, userID, thumbFilename),
+		Filename:           filename,
+		ObjectKey:          fmt.Sprintf("%s/%s", userID, filename),
+		ThumbnailObjectKey: fmt.Sprintf("%s/thumbnails/%s", userID, thumbFilename),
+		ContentType:        detectContentTypeFromExt(ext),
 	}, nil
 }
 
@@ -76,6 +79,19 @@ func (p *LocalProvider) Delete(path string) error {
 
 func (p *LocalProvider) URL(path string) string {
 	return fmt.Sprintf("%s/%s", p.urlPrefix, path)
+}
+
+func detectContentTypeFromExt(ext string) string {
+	switch ext {
+	case ".png":
+		return "image/png"
+	case ".gif":
+		return "image/gif"
+	case ".webp":
+		return "image/webp"
+	default:
+		return "image/jpeg"
+	}
 }
 
 // GenerateThumbnail creates a 200x200 max JPEG thumbnail maintaining aspect ratio.

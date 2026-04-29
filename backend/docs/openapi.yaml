@@ -1393,6 +1393,18 @@ components:
           type: string
         filename:
           type: string
+        object_key:
+          type: string
+          nullable: true
+          description: Storage key/path for the original object (retrocompatible optional field).
+        thumbnail_object_key:
+          type: string
+          nullable: true
+          description: Storage key/path for the thumbnail object (retrocompatible optional field).
+        content_type:
+          type: string
+          nullable: true
+          description: MIME type for the original upload (retrocompatible optional field).
     SearchResponse:
       type: object
       required:
