@@ -12,7 +12,7 @@ data class TopClient(
     val id: String,
     val name: String,
     @SerialName("total_spent") val totalSpent: Double,
-    @SerialName("event_count") val eventCount: Int
+    @SerialName("total_events") val totalEvents: Int
 )
 
 /**
@@ -35,5 +35,5 @@ data class ProductDemandItem(
 data class ForecastDataPoint(
     val month: String, // "YYYY-MM"
     @SerialName("confirmed_revenue") val confirmedRevenue: Double,
-    @SerialName("confirmed_event_count") val confirmedEventCount: Int
+    @SerialName("confirmed_events") val confirmedEvents: Int
 )
