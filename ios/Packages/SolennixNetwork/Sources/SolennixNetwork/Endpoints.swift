@@ -145,6 +145,15 @@ public enum Endpoint {
     /// with the rest of the month-scoped KPI cards.
     public static let dashboardEventsByStatus = "/dashboard/events-by-status"
 
+    /// Top clients by total spent
+    public static let dashboardTopClients = "/dashboard/top-clients"
+
+    /// Products by demand (times used)
+    public static let dashboardProductDemand = "/dashboard/product-demand"
+
+    /// Revenue forecast by month
+    public static let dashboardForecast = "/dashboard/forecast"
+
     // MARK: - Search
 
     public static let search = "/search"

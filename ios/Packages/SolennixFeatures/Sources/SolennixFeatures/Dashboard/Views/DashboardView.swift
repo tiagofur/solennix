@@ -82,6 +82,24 @@ public struct DashboardView: View {
                 // Upcoming Events
                 upcomingEventsSection
 
+                // Analytics Widgets
+                if let vm = viewModel {
+                    TopClientsWidgetView(
+                        clients: vm.topClients,
+                        isLoading: vm.isLoading
+                    )
+
+                    ProductDemandWidgetView(
+                        products: vm.productDemand,
+                        isLoading: vm.isLoading
+                    )
+
+                    ForecastWidgetView(
+                        forecast: vm.forecast,
+                        isLoading: vm.isLoading
+                    )
+                }
+
                 Spacer(minLength: Spacing.xxl)
             }
         }

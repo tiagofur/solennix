@@ -106,6 +106,15 @@ public final class DashboardViewModel {
     /// prefer `kpis?.*` over computing from the full lists when available.
     public var kpis: DashboardKPIs?
 
+    /// Top clients by total spent, fetched from `GET /api/dashboard/top-clients`.
+    public var topClients: [TopClient] = []
+
+    /// Products by demand (times used), fetched from `GET /api/dashboard/product-demand`.
+    public var productDemand: [ProductDemandItem] = []
+
+    /// Revenue forecast by month, fetched from `GET /api/dashboard/forecast`.
+    public var forecast: [ForecastDataPoint] = []
+
     /// Map of client ID -> Client for joining event data with client names.
     public var clientMap: [String: Client] = [:]
 
@@ -287,6 +296,11 @@ public final class DashboardViewModel {
         // Kept in parallel with the same-named iOS/Android/Web card so all
         // three platforms show identical confirmed / completed / quoted counts.
         await loadEventStatusCounts()
+
+        // Analytics widgets: top clients, product demand, forecast
+        await loadTopClients()
+        await loadProductDemand()
+        await loadForecast()
 
         if encounteredError {
             if clients.isEmpty && loadedAllEvents.isEmpty && products.isEmpty {
@@ -582,6 +596,38 @@ public final class DashboardViewModel {
             }
         }
         eventStatusCounts = map
+    }
+
+    // MARK: - Analytics Widgets
+
+    /// Fetch top clients by total spent
+    @MainActor
+    public func loadTopClients() async {
+        do {
+            topClients = try await apiClient.getTopClients(limit: 5)
+        } catch {
+            NSLog("[Dashboard] ⚠️ top-clients failed: %@", String(describing: error))
+        }
+    }
+
+    /// Fetch products by demand (times used)
+    @MainActor
+    public func loadProductDemand() async {
+        do {
+            productDemand = try await apiClient.getProductDemand()
+        } catch {
+            NSLog("[Dashboard] ⚠️ product-demand failed: %@", String(describing: error))
+        }
+    }
+
+    /// Fetch revenue forecast by month
+    @MainActor
+    public func loadForecast() async {
+        do {
+            forecast = try await apiClient.getForecast()
+        } catch {
+            NSLog("[Dashboard] ⚠️ forecast failed: %@", String(describing: error))
+        }
     }
 }
 
