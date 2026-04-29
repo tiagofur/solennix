@@ -1,6 +1,10 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Share2, Copy, CheckCircle2, RefreshCw, Link2Off, Loader2, ExternalLink } from "lucide-react";
-import { eventPublicLinkService, EventPublicLink } from "../../../services/eventPublicLinkService";
+import {
+  useCreateOrRotateEventPublicLink,
+  useEventPublicLink,
+  useRevokeEventPublicLink,
+} from "../../../hooks/queries/useEventPublicLinkQueries";
 import { useToast } from "../../../hooks/useToast";
 import { logError } from "../../../lib/errorHandler";
 
@@ -19,39 +23,20 @@ interface Props {
  * yet) is treated as a normal state, not an error.
  */
 export const ClientPortalShareCard: React.FC<Props> = ({ eventId }) => {
-  const [link, setLink] = useState<EventPublicLink | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState(false);
+  const { data: link, isLoading: loading } = useEventPublicLink(eventId);
+  const createOrRotate = useCreateOrRotateEventPublicLink(eventId);
+  const revokeLink = useRevokeEventPublicLink(eventId);
+
+  const busy = createOrRotate.isPending || revokeLink.isPending;
   const [copied, setCopied] = useState(false);
   const { addToast } = useToast();
 
-  const refresh = useCallback(async () => {
-    try {
-      const l = await eventPublicLinkService.getActive(eventId);
-      setLink(l);
-    } catch {
-      // 404 = no active link yet. Any other failure is already toast-ed
-      // by the api interceptor; nothing extra to do here.
-      setLink(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [eventId]);
-
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
-
   const handleGenerate = async () => {
     try {
-      setBusy(true);
-      const l = await eventPublicLinkService.createOrRotate(eventId);
-      setLink(l);
+      await createOrRotate.mutateAsync({});
       addToast("Enlace generado. Compartilo con tu cliente.", "success");
     } catch (err) {
       logError("ClientPortalShareCard:generate", err);
-    } finally {
-      setBusy(false);
     }
   };
 
@@ -64,14 +49,10 @@ export const ClientPortalShareCard: React.FC<Props> = ({ eventId }) => {
       return;
     }
     try {
-      setBusy(true);
-      const l = await eventPublicLinkService.createOrRotate(eventId);
-      setLink(l);
+      await createOrRotate.mutateAsync({});
       addToast("Enlace rotado. El anterior ya no funciona.", "success");
     } catch (err) {
       logError("ClientPortalShareCard:rotate", err);
-    } finally {
-      setBusy(false);
     }
   };
 
@@ -84,14 +65,10 @@ export const ClientPortalShareCard: React.FC<Props> = ({ eventId }) => {
       return;
     }
     try {
-      setBusy(true);
-      await eventPublicLinkService.revoke(eventId);
-      setLink(null);
+      await revokeLink.mutateAsync(undefined);
       addToast("Enlace deshabilitado.", "info");
     } catch (err) {
       logError("ClientPortalShareCard:revoke", err);
-    } finally {
-      setBusy(false);
     }
   };
 

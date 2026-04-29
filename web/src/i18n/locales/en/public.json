@@ -33,6 +33,10 @@
       "description": "This link has already been used or has expired. Contact the organizer to request a new one.",
       "security_note": "Form links are single-use and have an expiration date to protect your security."
     },
+    "not_found": {
+      "title": "Invalid link",
+      "description": "We couldn't find this link. Check the URL or ask the organizer to share it again."
+    },
     "errors": {
       "name_required": "Name is required",
       "phone_required": "Phone is required",

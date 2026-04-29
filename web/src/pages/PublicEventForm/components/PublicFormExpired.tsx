@@ -2,8 +2,14 @@ import React from "react";
 import { Clock, AlertCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-export const PublicFormExpired: React.FC = () => {
+interface PublicFormExpiredProps {
+  reason?: "expired" | "not_found";
+}
+
+export const PublicFormExpired: React.FC<PublicFormExpiredProps> = ({ reason = "expired" }) => {
   const { t } = useTranslation("public");
+  const titleKey = reason === "not_found" ? "event_form.not_found.title" : "event_form.expired.title";
+  const descriptionKey = reason === "not_found" ? "event_form.not_found.description" : "event_form.expired.description";
 
   return (
     <div className="min-h-screen bg-bg flex items-center justify-center p-4">
@@ -14,10 +20,10 @@ export const PublicFormExpired: React.FC = () => {
 
         <div className="space-y-2">
           <h1 className="text-2xl font-bold text-text tracking-tight">
-            {t("event_form.expired.title")}
+            {t(titleKey)}
           </h1>
           <p className="text-text-secondary text-sm leading-relaxed">
-            {t("event_form.expired.description")}
+            {t(descriptionKey)}
           </p>
         </div>
 

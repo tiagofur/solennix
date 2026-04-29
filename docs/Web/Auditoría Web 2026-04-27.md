@@ -135,18 +135,17 @@ La web consume 4 familias: KPIs, revenue chart, events-by-status y activity. Que
 **Severidad:** Media  
 **Categoría:** UX pública / semántica HTTP
 
-`PublicEventFormPage` marca cualquier `!res.ok` como `expired`. En submit sí distingue `410` y `409` como expirado/usado, pero en `GET` inicial no diferencia:
+`PublicEventFormPage` marcaba cualquier `!res.ok` como `expired`. Con el fix de semántica HTTP, submit usa `410` para link inválido/expirado/usado y `GET` inicial ahora diferencia `404` (no encontrado) vs `410` (inválido/expirado):
 
-- token inexistente
-- link expirado
-- link usado
-- error temporal del servidor
+- token inexistente (`404`)
+- link expirado/usado (`410`)
+- error temporal del servidor (fallback UX de no disponible)
 
-Esto coincide con la deuda backend H4: unificar `404` vs `410` para links públicos.
+Esto quedó alineado con backend H4 mediante issue #176.
 
 **Impacto:** un cliente puede ver un mensaje de link expirado aunque el problema sea un token incorrecto o una falla temporal. Para un flujo público, esa confusión pega directo en confianza.
 
-**Acción recomendada:** después del fix backend #102, ajustar la web para mostrar estados separados: “no encontrado”, “expirado/usado” y “no pudimos cargar, intentá de nuevo”.
+**Estado actual:** implementado en #176 para “no encontrado” vs “expirado/usado”. Queda como mejora futura separar explícitamente “no pudimos cargar, intentá de nuevo” cuando el error sea temporal de red/servidor.
 
 ---
 

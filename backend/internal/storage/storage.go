@@ -9,9 +9,9 @@ type FileResult struct {
 	URL                string // Public URL for the full-size file
 	ThumbnailURL       string // Public URL for the thumbnail (empty if not applicable)
 	Filename           string // Generated filename
-	ObjectKey          string // Storage key/path for the original file
-	ThumbnailObjectKey string // Storage key/path for the thumbnail file
-	ContentType        string // MIME type for the original file
+	ObjectKey          string // Storage object key/path for original file (relative to provider root)
+	ThumbnailObjectKey string // Storage object key/path for thumbnail (relative to provider root)
+	ContentType        string // MIME type for original file
 }
 
 // PresignResult is returned when clients initiate a direct-to-storage upload.

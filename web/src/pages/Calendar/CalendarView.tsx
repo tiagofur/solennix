@@ -3,13 +3,14 @@ import { useQueryClient } from "@tanstack/react-query";
 import { DayPicker, type DayButtonProps } from "react-day-picker";
 import "react-day-picker/style.css";
 import { useTranslation } from "react-i18next";
-import {
-  unavailableDatesService,
-} from "../../services/unavailableDatesService";
 import { UnavailableDatesModal } from "./components/UnavailableDatesModal";
 import { Link, useNavigate } from "react-router-dom";
 import { useEventsByDateRange } from "../../hooks/queries/useEventQueries";
-import { useUnavailableDatesByRange } from "../../hooks/queries/useUnavailableDatesQueries";
+import {
+  useCreateUnavailableDates,
+  useDeleteUnavailableDate,
+  useUnavailableDatesByRange,
+} from "../../hooks/queries/useUnavailableDatesQueries";
 import { queryKeys } from "../../hooks/queries/queryKeys";
 import {
   Calendar,
@@ -119,6 +120,8 @@ export const CalendarView: React.FC = () => {
     useEventsByDateRange(rangeStart, rangeEnd);
   const { data: unavailableData, isLoading: unavailableLoading, isFetching: unavailableFetching, error: unavailableError } =
     useUnavailableDatesByRange(rangeStart, rangeEnd);
+  const createUnavailableDates = useCreateUnavailableDates();
+  const deleteUnavailableDate = useDeleteUnavailableDate();
 
   const events = useMemo(
     () => ((eventsData as EventWithClient[] | undefined) ?? []),
@@ -214,7 +217,7 @@ export const CalendarView: React.FC = () => {
   const handleUnblock = async () => {
     if (!selectedUnavailable) return;
     try {
-      await unavailableDatesService.removeDate(selectedUnavailable.id);
+      await deleteUnavailableDate.mutateAsync(selectedUnavailable.id);
       refreshUnavailableRange();
       addToast(t("unblock.confirm"), "success");
       setSelectedDate(undefined);
@@ -696,6 +699,8 @@ export const CalendarView: React.FC = () => {
         onDelete={() => {
           refreshUnavailableRange();
         }}
+        createUnavailableDates={createUnavailableDates.mutateAsync}
+        deleteUnavailableDate={deleteUnavailableDate.mutateAsync}
         initialDate={contextMenuDate}
       />
 

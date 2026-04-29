@@ -21,6 +21,8 @@ interface UnavailableDatesModalProps {
   onClose: () => void;
   onSave: (date: UnavailableDate) => void;
   onDelete: (id: string) => void;
+  createUnavailableDates?: (data: { start_date: string; end_date: string; reason?: string }) => Promise<UnavailableDate>;
+  deleteUnavailableDate?: (id: string) => Promise<void>;
   initialDate?: string; // yyyy-MM-dd, pre-fills the add form (e.g. from right-click)
 }
 
@@ -29,6 +31,8 @@ export const UnavailableDatesModal: React.FC<UnavailableDatesModalProps> = ({
   onClose,
   onSave,
   onDelete,
+  createUnavailableDates,
+  deleteUnavailableDate,
   initialDate,
 }) => {
   const { t, i18n } = useTranslation('calendar');
@@ -70,7 +74,11 @@ export const UnavailableDatesModal: React.FC<UnavailableDatesModalProps> = ({
   const handleDelete = async (id: string) => {
     setDeletingId(id);
     try {
-      await unavailableDatesService.removeDate(id);
+      if (deleteUnavailableDate) {
+        await deleteUnavailableDate(id);
+      } else {
+        await unavailableDatesService.removeDate(id);
+      }
       setBlocks((prev) => prev.filter((b) => b.id !== id));
       onDelete(id);
       addToast(t('action.delete'), 'success');
@@ -86,7 +94,9 @@ export const UnavailableDatesModal: React.FC<UnavailableDatesModalProps> = ({
     e.preventDefault();
     try {
       setLoading(true);
-      const newDate = await unavailableDatesService.addDates(formData);
+      const newDate = createUnavailableDates
+        ? await createUnavailableDates(formData)
+        : await unavailableDatesService.addDates(formData);
       addToast(t('block.save'), 'success');
       setBlocks((prev) => [...prev, newDate].sort((a, b) => a.start_date.localeCompare(b.start_date)));
       onSave(newDate);

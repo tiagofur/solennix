@@ -51,7 +51,7 @@ import {
   ProductIngredient,
 } from "@/types/entities";
 import { UpgradeBanner } from "@/components/UpgradeBanner";
-import { unavailableDatesService } from "@/services/unavailableDatesService";
+import { useUnavailableDatesByRange } from "@/hooks/queries/useUnavailableDatesQueries";
 import { parseEventDate } from "@/lib/dateUtils";
 
 // Local types to avoid Supabase dependency
@@ -64,13 +64,6 @@ interface Client {
   city?: string | null;
   total_events: number | null;
   total_spent: number | null;
-}
-
-interface UnavailableDate {
-  id: string;
-  start_date: string;
-  end_date: string;
-  reason?: string;
 }
 
 interface Product {
@@ -258,8 +251,14 @@ export const EventForm: React.FC = () => {
   } = usePlanLimits();
 
   // Unavailable Dates
-  const [unavailableDates, setUnavailableDates] = useState<UnavailableDate[]>(
-    [],
+  const endOfNextYear = useMemo(() => {
+    const d = new Date();
+    d.setFullYear(d.getFullYear() + 1);
+    return d.toISOString().split("T")[0];
+  }, []);
+  const { data: unavailableDates = [] } = useUnavailableDatesByRange(
+    "2020-01-01",
+    endOfNextYear,
   );
 
   // Local state for items
@@ -391,15 +390,6 @@ export const EventForm: React.FC = () => {
     }).catch(() => { /* empty list on error — parity with equipment */ });
     return () => { cancelled = true; };
   }, [id]);
-
-  // Load unavailable dates (kept as direct call — small, calendar-specific)
-  useEffect(() => {
-    const endOfNextYear = new Date();
-    endOfNextYear.setFullYear(endOfNextYear.getFullYear() + 1);
-    unavailableDatesService.getDates("2020-01-01", endOfNextYear.toISOString().split("T")[0])
-      .then(setUnavailableDates)
-      .catch((err) => logError("Error loading unavailable dates", err));
-  }, []);
 
   useEffect(() => {
     const clientIdParam = searchParams.get("clientId");

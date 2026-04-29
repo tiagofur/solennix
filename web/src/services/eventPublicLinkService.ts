@@ -30,6 +30,19 @@ export const eventPublicLinkService = {
   },
 
   /**
+   * Same as getActive, but returns null for the expected "no link yet" state.
+   * Useful for React Query consumers that model absence as data, not error.
+   */
+  getActiveOrNull: async (eventId: string): Promise<EventPublicLink | null> => {
+    try {
+      return await api.get<EventPublicLink>(`/events/${eventId}/public-link`);
+    } catch (err) {
+      if (isNotFoundError(err)) return null;
+      throw err;
+    }
+  },
+
+  /**
    * Creates a new active link, revoking any previous one. Use this for
    * both first-time creation and rotation — same endpoint either way.
    * Omit `ttlDays` to create a link that never expires (the organizer
@@ -50,3 +63,9 @@ export const eventPublicLinkService = {
     await api.delete<void>(`/events/${eventId}/public-link`);
   },
 };
+
+function isNotFoundError(err: unknown): boolean {
+  if (!(err instanceof Error)) return false;
+  const msg = err.message.toLowerCase();
+  return msg.includes("404") || msg.includes("not found");
+}

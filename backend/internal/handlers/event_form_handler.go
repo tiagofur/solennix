@@ -448,9 +448,9 @@ func (h *EventFormHandler) SubmitForm(w http.ResponseWriter, r *http.Request) {
 	// Mark link as used (atomic — prevents double submission)
 	if err := h.linkRepo.MarkUsedTx(r.Context(), tx, link.ID, event.ID, client.ID); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			writeJSON(w, http.StatusConflict, map[string]string{
-				"error":   "link_already_used",
-				"message": "Este enlace ya fue utilizado.",
+			writeJSON(w, http.StatusGone, map[string]string{
+				"error":   "link_invalid",
+				"message": "Este enlace ya no es válido o ha expirado.",
 			})
 			return
 		}
