@@ -1908,8 +1908,11 @@ export interface components {
             url: string;
             thumbnail_url: string;
             filename: string;
+            /** @description Storage key/path for the original object (retrocompatible optional field). */
             object_key?: string | null;
+            /** @description Storage key/path for the thumbnail object (retrocompatible optional field). */
             thumbnail_object_key?: string | null;
+            /** @description MIME type for the original upload (retrocompatible optional field). */
             content_type?: string | null;
         };
         UploadPresignRequest: {
@@ -1918,6 +1921,7 @@ export interface components {
         };
         UploadPresignResponse: {
             upload_url: string;
+            /** @example PUT */
             method: string;
             headers: {
                 [key: string]: string;
@@ -6066,19 +6070,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Link has already been used */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @example link_already_used */
-                        error?: string;
-                        message?: string;
-                    };
                 };
             };
             /** @description Link has expired or is no longer valid */
