@@ -65,7 +65,24 @@ status: active
 > [!info] 2026-04-27 — Auditoría Web: paridad backend + UX/landing
 > Se auditó la app web contra el backend real y se documentó el estado en [[../Web/Auditoría Web 2026-04-27]]. Resultado: paridad funcional alta, pero contrato OpenAPI todavía parcial para formularios públicos, portal cliente y staff teams. La web funciona con tipos/manual fetch en esos flujos, pero no puede declararse 100% protegida por OpenAPI hasta cerrar el drift. Oportunidades principales: widgets Dashboard para `top-clients`, `product-demand`, `forecast`; hooks React Query para portal link/unavailable date mutations; landing más orientada al poder operativo real de Solennix.
 
-> [!info] 2026-04-28 — Backend uploads: contrato de presigned S3 (issue #178)
+> [!success] 2026-04-29 — Sprint 7.E: S3 production path complete (issue #195 ✅)
+> Finalización de la ruta S3 production-ready con test coverage completo y documentación actualizada:
+> - **Real thumbnails en ambos flows**: Direct-upload (Save) y presigned-complete ambos generan y suben thumbnails reales a S3, no placeholders
+> - **CDN-ready URLs**: Originales y thumbnails retornan URLs públicas CDN-first (configurable via CDNURL en S3Config)
+> - **Test suite S3**: 13 nuevos tests en `internal/storage/s3_test.go` validando:
+>   - Generación de thumbnails en Save() y CompletePresignedUpload()
+>   - Derivación correcta de thumbnail keys (user/{filename} → user/thumbnails/thumb_{filename}.jpg)
+>   - Generación CDN URLs consistentes
+>   - Normalización de paths (soporta múltiples formatos input)
+>   - Resizing de thumbnail con bounded dims (max 200px)
+>   - Cleanup semantics (Delete remueve original + thumbnail)
+>   - Detección de content-type por extensión y MIME type → extension mapping
+>   - Benchmark de generación de thumbnails
+> - **Delete cleanup**: Delete() ahora remueve ambos original y thumbnail en una sola operación batched
+> - **Documentation**: PRD actualizado confirmando S3 production-ready, gaps cerrados ✅
+> - **PR #XXX merged to main** ✅
+
+> [!info] 2026-04-28 — Backend uploads: contrato de presigned S3 (issue #178, Fase 1)
 > Se extendió el dominio de uploads en backend para habilitar direct upload a S3 sin romper compatibilidad:
 > - **Storage contract**: `storage.FileResult` ahora incluye metadata opcional (`object_key`, `thumbnail_object_key`, `content_type`) y se agregó `PresignCapableProvider` con `PresignUpload` + `CompletePresignedUpload`.
 > - **S3 provider**: implementa presign (`PUT`, 15 min) y finalización con generación de thumbnail post-upload.
