@@ -1,13 +1,9 @@
 import React from "react";
 import { Check, Minus, Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { components } from "@/types/api";
 
-interface PublicProduct {
-  id: string;
-  name: string;
-  category: string;
-  image_url?: string;
-}
+type PublicProduct = components["schemas"]["PublicProduct"];
 
 interface Props {
   product: PublicProduct;
