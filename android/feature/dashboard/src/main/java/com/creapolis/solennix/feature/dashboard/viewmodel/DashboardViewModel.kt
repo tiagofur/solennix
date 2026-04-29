@@ -20,6 +20,9 @@ import com.creapolis.solennix.core.model.InventoryItem
 import com.creapolis.solennix.core.model.Payment
 import com.creapolis.solennix.core.model.Plan
 import com.creapolis.solennix.core.model.Product
+import com.creapolis.solennix.core.model.TopClient
+import com.creapolis.solennix.core.model.ProductDemandItem
+import com.creapolis.solennix.core.model.ForecastDataPoint
 import com.creapolis.solennix.core.network.AuthManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -85,7 +88,13 @@ data class DashboardUiState(
     val paymentModalEvent: PendingEvent? = null,
     val transientMessage: String? = null,
     /** Last 6 months of revenue — populated from /dashboard/revenue-chart?period=year. Premium users only. */
-    val monthlyRevenueTrend: List<DashboardRevenuePoint> = emptyList()
+    val monthlyRevenueTrend: List<DashboardRevenuePoint> = emptyList(),
+    /** Top clients by total spent from /dashboard/top-clients */
+    val topClients: List<com.creapolis.solennix.core.model.TopClient> = emptyList(),
+    /** Products by demand from /dashboard/product-demand */
+    val productDemand: List<com.creapolis.solennix.core.model.ProductDemandItem> = emptyList(),
+    /** Revenue forecast from /dashboard/forecast */
+    val forecast: List<com.creapolis.solennix.core.model.ForecastDataPoint> = emptyList(),
 )
 
 @HiltViewModel
@@ -109,6 +118,9 @@ class DashboardViewModel @Inject constructor(
     private val _kpis = MutableStateFlow<DashboardKPIs?>(null)
     private val _monthlyRevenueTrend = MutableStateFlow<List<DashboardRevenuePoint>>(emptyList())
     private val _statusCountsFromBackend = MutableStateFlow<List<DashboardEventStatusCount>?>(null)
+    private val _topClients = MutableStateFlow<List<TopClient>>(emptyList())
+    private val _productDemand = MutableStateFlow<List<ProductDemandItem>>(emptyList())
+    private val _forecast = MutableStateFlow<List<ForecastDataPoint>>(emptyList())
 
     private val dataFlow = combine(
         eventRepository.getUpcomingEvents(5),
@@ -132,12 +144,22 @@ class DashboardViewModel @Inject constructor(
     private data class DashboardAggregates(
         val kpis: DashboardKPIs?,
         val revenueTrend: List<DashboardRevenuePoint>,
-        val statusRows: List<DashboardEventStatusCount>?
+        val statusRows: List<DashboardEventStatusCount>?,
+        val topClients: List<TopClient>,
+        val productDemand: List<ProductDemandItem>,
+        val forecast: List<ForecastDataPoint>
     )
 
     private val dashboardAggregatesFlow: Flow<DashboardAggregates> =
-        combine(_kpis, _monthlyRevenueTrend, _statusCountsFromBackend) { kpis, trend, status ->
-            DashboardAggregates(kpis, trend, status)
+        combine(
+            _kpis,
+            _monthlyRevenueTrend,
+            _statusCountsFromBackend,
+            _topClients,
+            _productDemand,
+            _forecast
+        ) { kpis, trend, status, topClients, productDemand, forecast ->
+            DashboardAggregates(kpis, trend, status, topClients, productDemand, forecast)
         }
 
     val uiState: StateFlow<DashboardUiState> = combine(
@@ -150,6 +172,9 @@ class DashboardViewModel @Inject constructor(
         val kpis = aggregates.kpis
         val revenueTrend = aggregates.revenueTrend
         val statusRows = aggregates.statusRows
+        val topClients = aggregates.topClients
+        val productDemand = aggregates.productDemand
+        val forecast = aggregates.forecast
         val (paymentModalEvent, transientMessage) = modalAndMsg
 
         val now = java.time.LocalDate.now()
@@ -275,7 +300,10 @@ class DashboardViewModel @Inject constructor(
             // always shows 6 bars (parity with iOS / Web). Without padding,
             // new accounts or gap months make the chart collapse and look
             // broken.
-            monthlyRevenueTrend = buildTrailingSixMonthTrend(revenueTrend, now)
+            monthlyRevenueTrend = buildTrailingSixMonthTrend(revenueTrend, now),
+            topClients = topClients,
+            productDemand = productDemand,
+            forecast = forecast
         )
     }.stateIn(
         scope = viewModelScope,
@@ -325,6 +353,27 @@ class DashboardViewModel @Inject constructor(
                 _statusCountsFromBackend.value = dashboardRepository.getEventsByStatus("month")
             } catch (e: Exception) {
                 Log.w(TAG, "events-by-status fetch failed", e)
+            }
+        }
+        viewModelScope.launch {
+            try {
+                _topClients.value = dashboardRepository.getTopClients(5)
+            } catch (e: Exception) {
+                Log.w(TAG, "top-clients fetch failed", e)
+            }
+        }
+        viewModelScope.launch {
+            try {
+                _productDemand.value = dashboardRepository.getProductDemand()
+            } catch (e: Exception) {
+                Log.w(TAG, "product-demand fetch failed", e)
+            }
+        }
+        viewModelScope.launch {
+            try {
+                _forecast.value = dashboardRepository.getForecast()
+            } catch (e: Exception) {
+                Log.w(TAG, "forecast fetch failed", e)
             }
         }
     }
