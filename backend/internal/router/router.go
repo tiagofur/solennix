@@ -18,6 +18,7 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 	adminHandler *handlers.AdminHandler, dashboardHandler *handlers.DashboardHandler, auditHandler *handlers.AuditHandler, unavailHandler *handlers.UnavailableDateHandler, deviceHandler *handlers.DeviceHandler,
 	liveActivityHandler *handlers.LiveActivityHandler, eventFormHandler *handlers.EventFormHandler,
 	eventPublicLinkHandler *handlers.EventPublicLinkHandler,
+	paymentSubmissionHandler *handlers.PaymentSubmissionHandler,
 	staffHandler *handlers.StaffHandler,
 	staffTeamHandler *handlers.StaffTeamHandler,
 	authService *services.AuthService, userRepo *repository.UserRepo, auditRepo mw.AuditLogger, pool *pgxpool.Pool, corsOrigins []string, uploadDir string) http.Handler {
@@ -141,6 +142,10 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 	apiRouter.Route("/public/events", func(r chi.Router) {
 		r.Use(mw.RateLimit(10, 1*time.Minute))
 		r.Get("/{token}", eventPublicLinkHandler.GetPortalData)
+		
+		// Payment submissions (client portal) — tokenized access
+		r.Post("/{token}/payment-submissions", paymentSubmissionHandler.CreatePublic)
+		r.Get("/{token}/payment-submissions", paymentSubmissionHandler.GetHistoryPublic)
 	})
 
 	// Protected routes
@@ -260,6 +265,12 @@ func New(authHandler *handlers.AuthHandler, crudHandler *handlers.CRUDHandler, s
 			r.Get("/{id}", crudHandler.GetPayment)
 			r.Put("/{id}", crudHandler.UpdatePayment)
 			r.Delete("/{id}", crudHandler.DeletePayment)
+		})
+
+		// Payment Submissions (organizer review inbox)
+		r.Route("/payment-submissions", func(r chi.Router) {
+			r.Get("/", paymentSubmissionHandler.GetPendingOrganizerInbox)
+			r.Patch("/{id}", paymentSubmissionHandler.ReviewSubmission)
 		})
 
 		// Unavailable Dates

@@ -433,3 +433,27 @@ type EventPublicLink struct {
 	UpdatedAt time.Time  `json:"updated_at"`
 	URL       string     `json:"url,omitempty"` // Computed, not stored
 }
+
+// PaymentSubmission represents a client's transfer payment submission from the public portal.
+// Organizers review and approve (creating a Payment row) or reject with notes.
+type PaymentSubmission struct {
+	ID              uuid.UUID  `json:"id"`
+	EventID         uuid.UUID  `json:"event_id"`
+	ClientID        uuid.UUID  `json:"client_id"`
+	UserID          uuid.UUID  `json:"user_id"`        // Organizer (event owner)
+	Amount          float64    `json:"amount"`
+	TransferRef     *string    `json:"transfer_ref,omitempty"`     // Bank transfer reference / confirmation number
+	ReceiptFileURL  *string    `json:"receipt_file_url,omitempty"` // S3 or CDN path to receipt photo
+	Status          string     `json:"status"`                      // "pending" | "approved" | "rejected"
+	SubmittedAt     time.Time  `json:"submitted_at"`
+	ReviewedBy      *uuid.UUID `json:"reviewed_by,omitempty"`       // Organizer who approved/rejected
+	ReviewedAt      *time.Time `json:"reviewed_at,omitempty"`
+	RejectionReason *string    `json:"rejection_reason,omitempty"`
+	LinkedPaymentID *uuid.UUID `json:"linked_payment_id,omitempty"` // Payment row created on approval
+	CreatedAt       time.Time  `json:"created_at"`
+	UpdatedAt       time.Time  `json:"updated_at"`
+
+	// Joined data (populated by queries with joins)
+	ClientName *string `json:"client_name,omitempty"`
+	EventLabel *string `json:"event_label,omitempty"`
+}
