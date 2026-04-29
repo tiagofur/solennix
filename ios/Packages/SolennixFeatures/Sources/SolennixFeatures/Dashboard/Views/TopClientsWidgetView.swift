@@ -75,18 +75,19 @@ struct TopClientsWidgetView: View {
 }
 
 struct Skeleton: View {
+    @State private var isShimmering = false
+
     var body: some View {
         Color(.systemGray3)
-            .opacity(0.5)
+            .opacity(isShimmering ? 0.5 : 0.3)
             .cornerRadius(4)
-            .shimmer()
-    }
-}
-
-extension View {
-    func shimmer() -> some View {
-        self.redacted(reason: .placeholder)
-            .shimmering()
+            .animation(
+                Animation.easeInOut(duration: 1).repeatForever(autoreverses: true),
+                value: isShimmering
+            )
+            .onAppear {
+                isShimmering = true
+            }
     }
 }
 

@@ -150,21 +150,34 @@ class DashboardViewModel @Inject constructor(
         val forecast: List<ForecastDataPoint>
     )
 
+    // Combine first 3 flows into aggregate
     private val dashboardAggregatesFlow: Flow<DashboardAggregates> =
         combine(
             _kpis,
             _monthlyRevenueTrend,
-            _statusCountsFromBackend,
+            _statusCountsFromBackend
+        ) { kpis, trend, status ->
+            DashboardAggregates(kpis, trend, status, emptyList(), emptyList(), emptyList())
+        }
+    
+    // Combine with analytics flows
+    private val dashboardWithAnalyticsFlow: Flow<DashboardAggregates> =
+        combine(
+            dashboardAggregatesFlow,
             _topClients,
             _productDemand,
             _forecast
-        ) { kpis, trend, status, topClients, productDemand, forecast ->
-            DashboardAggregates(kpis, trend, status, topClients, productDemand, forecast)
+        ) { agg, topClients, productDemand, forecast ->
+            agg.copy(
+                topClients = topClients,
+                productDemand = productDemand,
+                forecast = forecast
+            )
         }
 
     val uiState: StateFlow<DashboardUiState> = combine(
         enrichedDataFlow,
-        dashboardAggregatesFlow,
+        dashboardWithAnalyticsFlow,
         _isRefreshing,
         _updatingEventId,
         combine(_paymentModalEvent, _transientMessage) { modal, msg -> modal to msg }
