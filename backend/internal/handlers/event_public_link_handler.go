@@ -220,6 +220,10 @@ type PublicPaymentSummary struct {
 // for tokens that have been revoked or expired, so the web client can
 // distinguish "wrong URL" from "link was disabled by the organizer".
 //
+// Returns shape-based response:
+//   - Gratis: basic event + organizer brand + client name + payment total
+//   - Pro/Business: full response including all event details, client info, payment breakdown
+//
 // GET /api/public/events/{token}
 func (h *EventPublicLinkHandler) GetPortalData(w http.ResponseWriter, r *http.Request) {
 	token := chi.URLParam(r, "token")
@@ -267,6 +271,9 @@ func (h *EventPublicLinkHandler) GetPortalData(w http.ResponseWriter, r *http.Re
 		return
 	}
 
+	// Check if plan is still active (gratis is always active, paid plans check expiry)
+	planActive := h.isPlanActive(organizer)
+
 	var clientName string
 	if event.ClientID != uuid.Nil {
 		client, err := h.clientRepo.GetByID(r.Context(), event.ClientID, link.UserID)
@@ -291,37 +298,8 @@ func (h *EventPublicLinkHandler) GetPortalData(w http.ResponseWriter, r *http.Re
 		remaining = 0
 	}
 
-	view := PublicEventView{
-		Event: PublicEventDetails{
-			ID:          event.ID,
-			ServiceType: event.ServiceType,
-			// event.EventDate is already stored as a "YYYY-MM-DD" string; slice
-			// defensively in case an ISO datetime ever slips through (e.g.,
-			// from a direct insert).
-			EventDate: firstTenChars(event.EventDate),
-			StartTime: event.StartTime,
-			EndTime:   event.EndTime,
-			Location:  event.Location,
-			City:      event.City,
-			NumPeople: event.NumPeople,
-			Status:    event.Status,
-		},
-		Organizer: PublicOrganizerBrand{
-			BusinessName: organizer.BusinessName,
-			LogoURL:      organizer.LogoURL,
-			BrandColor:   organizer.BrandColor,
-		},
-		Client: PublicClientInfo{
-			Name: clientName,
-		},
-		Payment: PublicPaymentSummary{
-			Total:     event.TotalAmount,
-			Paid:      paid,
-			Remaining: remaining,
-			Currency:  "MXN",
-		},
-	}
-
+	// Build response based on plan tier
+	view := h.buildPublicEventView(organizer, planActive, event, clientName, paid, remaining)
 	writeJSON(w, http.StatusOK, view)
 }
 
@@ -345,4 +323,76 @@ func firstTenChars(s string) string {
 		return s
 	}
 	return s[:10]
+}
+
+// isPlanActive checks if the organizer's subscription plan is currently active.
+// Gratis plans are always active; paid plans check expiry date.
+func (h *EventPublicLinkHandler) isPlanActive(organizer *models.User) bool {
+	if organizer.Plan == "gratis" {
+		return true
+	}
+	if organizer.PlanExpiresAt == nil {
+		return true // No expiry set, plan is active
+	}
+	return time.Now().Before(*organizer.PlanExpiresAt)
+}
+
+// buildPublicEventView constructs the PublicEventView response based on plan tier.
+// Gratis: returns basic event details and payment summary only.
+// Pro/Business: returns full event details, client info, and payment summary.
+func (h *EventPublicLinkHandler) buildPublicEventView(
+	organizer *models.User,
+	planActive bool,
+	event *models.Event,
+	clientName string,
+	paid float64,
+	remaining float64,
+) PublicEventView {
+	paymentSummary := PublicPaymentSummary{
+		Total:     event.TotalAmount,
+		Paid:      paid,
+		Remaining: remaining,
+		Currency:  "MXN",
+	}
+
+	organizerBrand := PublicOrganizerBrand{
+		BusinessName: organizer.BusinessName,
+		LogoURL:      organizer.LogoURL,
+		BrandColor:   organizer.BrandColor,
+	}
+
+	// Gratis (or expired plan): basic shape
+	if organizer.Plan == "gratis" || !planActive {
+		return PublicEventView{
+			Event: PublicEventDetails{
+				ID:        event.ID,
+				EventDate: firstTenChars(event.EventDate),
+				Status:    event.Status,
+				// Redact: ServiceType, StartTime, EndTime, Location, City, NumPeople
+			},
+			Organizer: organizerBrand,
+			Client:    PublicClientInfo{}, // No client details for free tier
+			Payment:   paymentSummary,
+		}
+	}
+
+	// Pro/Business: full shape
+	return PublicEventView{
+		Event: PublicEventDetails{
+			ID:          event.ID,
+			ServiceType: event.ServiceType,
+			EventDate:   firstTenChars(event.EventDate),
+			StartTime:   event.StartTime,
+			EndTime:     event.EndTime,
+			Location:    event.Location,
+			City:        event.City,
+			NumPeople:   event.NumPeople,
+			Status:      event.Status,
+		},
+		Organizer: organizerBrand,
+		Client: PublicClientInfo{
+			Name: clientName,
+		},
+		Payment: paymentSummary,
+	}
 }

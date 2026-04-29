@@ -8,7 +8,7 @@ aliases:
   - Hub
   - Inicio
 date: 2026-04-27
-updated: 2026-04-27
+updated: 2026-04-29
 status: active
 ---
 
@@ -17,7 +17,18 @@ status: active
 > [!tip] Este es tu punto de entrada diario
 > Abrí este archivo cada mañana para ver en **30 segundos** qué pasa con el producto. Todo lo demás se navega desde acá.
 
-**Última actualización:** 2026-04-27 · Auditoría de paridad del Calendario completada. 11 gaps identificados (3 críticos, 4 medios, 4 bajos). CI verde.
+**Última actualización:** 2026-04-29 · Estructura de documentación mejorada. Estado Plataforma creado para cada área.
+
+---
+
+## 📱 Estado por plataforma
+
+- **[[iOS/Estado Plataforma|iOS]]** — Status actual de iPhone/iPad
+- **[[Android/Estado Plataforma|Android]]** — Status actual de Android
+- **[[Web/Estado Plataforma|Web]]** — Status actual de la web
+- **[[Backend/Estado Plataforma|Backend]]** — Status actual de API y servicios
+
+---
 
 ---
 

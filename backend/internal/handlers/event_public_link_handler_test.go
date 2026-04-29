@@ -664,3 +664,214 @@ func TestGetPortalData_PaymentRepoError_FallsBackToZero(t *testing.T) {
 	assert.Equal(t, float64(0), resp.Payment.Paid)
 	assert.Equal(t, float64(20000), resp.Payment.Remaining)
 }
+
+// ---------------------------------------------------------------------------
+// Tier-based gating (gratis vs pro/business)
+// ---------------------------------------------------------------------------
+
+// Gratis plan returns basic shape: only event ID, date, status, organizer brand, no client details
+func TestGetPortalData_GratisPlan_ReturnsBasicShape(t *testing.T) {
+	userID := uuid.New()
+	eventID := uuid.New()
+	clientID := uuid.New()
+
+	linkRepo := new(MockEventPublicLinkRepo)
+	eventRepo := new(MockFullEventRepo)
+	clientRepo := new(MockClientRepo)
+	userRepo := new(MockFullUserRepo)
+	paymentRepo := new(MockFullPaymentRepo)
+
+	biz := "Eventos Divinos"
+	link := activePublicLink(eventID, userID)
+	event := &models.Event{
+		ID:          eventID,
+		UserID:      userID,
+		ClientID:    clientID,
+		ServiceType: "Boda",
+		EventDate:   "2026-12-01",
+		StartTime:   &[]string{"14:00"}[0],
+		EndTime:     &[]string{"22:00"}[0],
+		Location:    &[]string{"Salón de Eventos"}[0],
+		City:        &[]string{"CDMX"}[0],
+		NumPeople:   150,
+		Status:      "confirmed",
+		TotalAmount: 50000,
+	}
+	organizer := &models.User{
+		ID:           userID,
+		Plan:         "gratis",
+		BusinessName: &biz,
+	}
+	client := &models.Client{ID: clientID, UserID: userID, Name: "María López"}
+	payments := []models.Payment{
+		{ID: uuid.New(), UserID: userID, EventID: eventID, Amount: 15000},
+	}
+
+	linkRepo.On("GetByToken", mock.Anything, "portaltoken").Return(link, nil)
+	eventRepo.On("GetByID", mock.Anything, eventID, userID).Return(event, nil)
+	userRepo.On("GetByID", mock.Anything, userID).Return(organizer, nil)
+	clientRepo.On("GetByID", mock.Anything, clientID, userID).Return(client, nil)
+	paymentRepo.On("GetByEventID", mock.Anything, userID, eventID).Return(payments, nil)
+
+	h := newPublicLinkHandler(linkRepo, eventRepo, clientRepo, userRepo, paymentRepo)
+	req := makePublicReqWithTokenParam(http.MethodGet, "/api/public/events/portaltoken", "portaltoken", "")
+	rr := httptest.NewRecorder()
+	h.GetPortalData(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+
+	var resp PublicEventView
+	assert.NoError(t, json.Unmarshal(rr.Body.Bytes(), &resp))
+
+	// Gratis should have basic details only
+	assert.Equal(t, eventID, resp.Event.ID)
+	assert.Equal(t, "2026-12-01", resp.Event.EventDate)
+	assert.Equal(t, "confirmed", resp.Event.Status)
+
+	// Redacted fields for gratis
+	assert.Empty(t, resp.Event.ServiceType) // Should be empty/redacted
+	assert.Nil(t, resp.Event.StartTime)
+	assert.Nil(t, resp.Event.EndTime)
+	assert.Nil(t, resp.Event.Location)
+	assert.Nil(t, resp.Event.City)
+	assert.Equal(t, 0, resp.Event.NumPeople) // Gratis gets zero, not the actual count
+
+	// Organizer brand is visible
+	assert.Equal(t, "Eventos Divinos", *resp.Organizer.BusinessName)
+
+	// Client details hidden for gratis
+	assert.Empty(t, resp.Client.Name)
+
+	// Payment info visible
+	assert.Equal(t, float64(50000), resp.Payment.Total)
+	assert.Equal(t, float64(15000), resp.Payment.Paid)
+}
+
+// Pro plan returns full shape with all event details
+func TestGetPortalData_ProPlan_ReturnsFullShape(t *testing.T) {
+	userID := uuid.New()
+	eventID := uuid.New()
+	clientID := uuid.New()
+
+	linkRepo := new(MockEventPublicLinkRepo)
+	eventRepo := new(MockFullEventRepo)
+	clientRepo := new(MockClientRepo)
+	userRepo := new(MockFullUserRepo)
+	paymentRepo := new(MockFullPaymentRepo)
+
+	biz := "Eventos Divinos"
+	link := activePublicLink(eventID, userID)
+	event := &models.Event{
+		ID:          eventID,
+		UserID:      userID,
+		ClientID:    clientID,
+		ServiceType: "Boda",
+		EventDate:   "2026-12-01",
+		StartTime:   &[]string{"14:00"}[0],
+		EndTime:     &[]string{"22:00"}[0],
+		Location:    &[]string{"Salón de Eventos"}[0],
+		City:        &[]string{"CDMX"}[0],
+		NumPeople:   150,
+		Status:      "confirmed",
+		TotalAmount: 50000,
+	}
+	organizer := &models.User{
+		ID:           userID,
+		Plan:         "pro",
+		BusinessName: &biz,
+	}
+	client := &models.Client{ID: clientID, UserID: userID, Name: "María López"}
+	payments := []models.Payment{
+		{ID: uuid.New(), UserID: userID, EventID: eventID, Amount: 15000},
+		{ID: uuid.New(), UserID: userID, EventID: eventID, Amount: 10000},
+	}
+
+	linkRepo.On("GetByToken", mock.Anything, "portaltoken").Return(link, nil)
+	eventRepo.On("GetByID", mock.Anything, eventID, userID).Return(event, nil)
+	userRepo.On("GetByID", mock.Anything, userID).Return(organizer, nil)
+	clientRepo.On("GetByID", mock.Anything, clientID, userID).Return(client, nil)
+	paymentRepo.On("GetByEventID", mock.Anything, userID, eventID).Return(payments, nil)
+
+	h := newPublicLinkHandler(linkRepo, eventRepo, clientRepo, userRepo, paymentRepo)
+	req := makePublicReqWithTokenParam(http.MethodGet, "/api/public/events/portaltoken", "portaltoken", "")
+	rr := httptest.NewRecorder()
+	h.GetPortalData(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+
+	var resp PublicEventView
+	assert.NoError(t, json.Unmarshal(rr.Body.Bytes(), &resp))
+
+	// Pro should have full details
+	assert.Equal(t, "Boda", resp.Event.ServiceType)
+	assert.Equal(t, "2026-12-01", resp.Event.EventDate)
+	assert.Equal(t, &[]string{"14:00"}[0], resp.Event.StartTime)
+	assert.Equal(t, &[]string{"22:00"}[0], resp.Event.EndTime)
+	assert.Equal(t, &[]string{"Salón de Eventos"}[0], resp.Event.Location)
+	assert.Equal(t, &[]string{"CDMX"}[0], resp.Event.City)
+	assert.Equal(t, 150, resp.Event.NumPeople)
+	assert.Equal(t, "confirmed", resp.Event.Status)
+
+	// Organizer brand visible
+	assert.Equal(t, "Eventos Divinos", *resp.Organizer.BusinessName)
+
+	// Client details visible
+	assert.Equal(t, "María López", resp.Client.Name)
+
+	// Payment info visible
+	assert.Equal(t, float64(50000), resp.Payment.Total)
+	assert.Equal(t, float64(25000), resp.Payment.Paid)
+	assert.Equal(t, float64(25000), resp.Payment.Remaining)
+}
+
+// Expired plan falls back to basic shape
+func TestGetPortalData_ExpiredPlan_ReturnsBasicShape(t *testing.T) {
+	userID := uuid.New()
+	eventID := uuid.New()
+
+	linkRepo := new(MockEventPublicLinkRepo)
+	eventRepo := new(MockFullEventRepo)
+	clientRepo := new(MockClientRepo)
+	userRepo := new(MockFullUserRepo)
+	paymentRepo := new(MockFullPaymentRepo)
+
+	biz := "Eventos Divinos"
+	link := activePublicLink(eventID, userID)
+	event := &models.Event{
+		ID:          eventID,
+		UserID:      userID,
+		ServiceType: "Boda",
+		EventDate:   "2026-12-01",
+		NumPeople:   150,
+		Status:      "confirmed",
+		TotalAmount: 50000,
+	}
+	// Organizer has Pro plan but it expired yesterday
+	past := time.Now().Add(-24 * time.Hour)
+	organizer := &models.User{
+		ID:            userID,
+		Plan:          "pro",
+		PlanExpiresAt: &past,
+		BusinessName:  &biz,
+	}
+
+	linkRepo.On("GetByToken", mock.Anything, "portaltoken").Return(link, nil)
+	eventRepo.On("GetByID", mock.Anything, eventID, userID).Return(event, nil)
+	userRepo.On("GetByID", mock.Anything, userID).Return(organizer, nil)
+	paymentRepo.On("GetByEventID", mock.Anything, userID, eventID).Return(nil, nil)
+
+	h := newPublicLinkHandler(linkRepo, eventRepo, clientRepo, userRepo, paymentRepo)
+	req := makePublicReqWithTokenParam(http.MethodGet, "/api/public/events/portaltoken", "portaltoken", "")
+	rr := httptest.NewRecorder()
+	h.GetPortalData(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+
+	var resp PublicEventView
+	assert.NoError(t, json.Unmarshal(rr.Body.Bytes(), &resp))
+
+	// Expired plan should return basic shape
+	assert.Empty(t, resp.Event.ServiceType)
+	assert.Equal(t, 0, resp.Event.NumPeople)
+	assert.Equal(t, "Eventos Divinos", *resp.Organizer.BusinessName)
+}

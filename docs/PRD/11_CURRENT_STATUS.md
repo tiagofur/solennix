@@ -8,7 +8,7 @@ aliases:
   - Estado Actual
   - Current Status
 date: 2026-03-20
-updated: 2026-04-28
+updated: 2026-04-29
 status: active
 ---
 
@@ -16,6 +16,22 @@ status: active
 
 **Fecha:** Abril 2026
 **Version:** 1.4
+
+> [!info] 2026-04-29 — Sprint 7.C: Tier Enforcement Inicial (issue #190, partial)
+> Implementación de la primera fase de gating por tier en el flujo cliente: el backend retorna diferentes shapes de datos según el plan del organizador, y el Web UI muestra un upgrade banner cuando es gratis.
+> - **Backend (payload gating)**: `GET /api/public/events/{token}` retorna shape-based responses:
+>   - **Gratis**: ID evento, fecha, estado, marca del organizador (sin horario, ubicación, cantidad de invitados, info del cliente)
+>   - **Pro/Business**: shape completo (todos los detalles, info del cliente, resumen de pagos)
+>   - **Expiración**: planes pagos vencidos caen a shape básico (gratis)
+> - **Helper functions**: `IsPlanActive()` para verificar vigencia de plan, `RequiresPaidPlan()` para validar acceso a features premium, `PlanTiers` matriz documentando features por tier (Gratis vs Pro/Business).
+> - **Web UI**: banner "Acceso limitado" en el ClientPortal cuando `event.service_type` vacío (indicador de gratis). Link a planes con CTA "Ver planes". Translations en español (es) e inglés (en).
+> - **Test coverage**: 3 nuevos tests en event_public_link_handler_test.go validando shape gratis, full shape pro, y expiración.
+> - **Pendiente (Fase 2 & 3)**:
+>   - [ ] Endpoints premium gated: `/api/events/{id}/milestones`, `/api/events/{id}/chat`, `/api/contracts/*`, `/api/rsvp/*`, `/api/reviews/*` — require `RequiresPaidPlan()` middleware
+>   - [ ] iOS / Android paywall UI (bloqueado, para próxima fase) — ambas plataformas ya pueden detectar response shape vacía y mostrar upgrade CTA
+>   - [ ] Feature gating a nivel de UI: milestones, chat, firma, RSVP, reviews —hidden en Gratis
+>   - [ ] Payment submission block (para Fase 3 junto con #191)
+> - **Commits**: `feat(backend): tier-based portal payload gating`, `feat(web): add paywall UI for gratis tier in client portal`, `feat(backend): add plan-gating utilities and tier enforcement matrix`
 
 > [!info] 2026-04-27 — Repo Governance and CI/CD Guardrails
 > Se endurecio la gobernanza del repositorio para reducir merges incompletos y mejorar trazabilidad de cambios:

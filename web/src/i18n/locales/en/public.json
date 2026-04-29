@@ -52,6 +52,7 @@
     "loading": "Loading portal...",
     "organized_by": "Organized by",
     "default_organizer": "Your event organizer",
+    "event": "Event",
     "hero_greeting": "Hi {{name}}, here are your event details:",
     "hero_greeting_no_name": "Hi, here are your event details:",
     "days_remaining_one": "{{count}} day remaining",
@@ -59,6 +60,11 @@
     "it_is_today": "It's today!",
     "days_ago_one": "{{count}} day ago",
     "days_ago_other": "{{count}} days ago",
+    "upgrade": {
+      "title": "Limited access",
+      "description": "The organizer has a free plan. To access all event details (schedules, location, number of guests), the organizer needs to upgrade their plan.",
+      "cta": "View plans"
+    },
     "details": {
       "schedule": "Schedule",
       "location": "Location",

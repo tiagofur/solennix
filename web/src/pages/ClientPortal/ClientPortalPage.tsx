@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   CircleDashed,
   AlertCircle,
+  Zap,
 } from "lucide-react";
 import { ClientPortalUnavailable } from "./components/ClientPortalUnavailable";
 import { useTranslation } from "react-i18next";
@@ -156,6 +157,11 @@ export const ClientPortalPage: React.FC = () => {
   }
 
   const { event, organizer, client, payment } = data;
+  
+  // Detect if this portal is showing a limited (gratis) view.
+  // Gratis organizers get a redacted response: no service_type, no location, no schedule, no num_people.
+  const isGratisView = !event.service_type;
+
   const days = daysUntil(event.event_date);
   const countdownLabel =
     days > 0
@@ -222,7 +228,7 @@ export const ClientPortalPage: React.FC = () => {
               : t("portal.hero_greeting_no_name")}
           </p>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-text tracking-tight mb-3">
-            {event.service_type}
+            {event.service_type || t("portal.event")}
           </h2>
           <p className="text-base sm:text-lg text-text-secondary capitalize">
             {formatLongDate(event.event_date, i18n.language)}
@@ -247,6 +253,31 @@ export const ClientPortalPage: React.FC = () => {
             </span>
           </div>
         </section>
+
+        {/* Gratis upgrade banner — appears when organizer has a free plan */}
+        {isGratisView && (
+          <section className="bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20 rounded-2xl p-6 sm:p-8">
+            <div className="flex items-start gap-4">
+              <div className="shrink-0">
+                <Zap className="h-6 w-6 text-primary" aria-hidden="true" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-lg font-semibold text-text mb-1">
+                  {t("portal.upgrade.title")}
+                </h3>
+                <p className="text-sm text-text-secondary mb-4">
+                  {t("portal.upgrade.description")}
+                </p>
+                <a
+                  href={`${import.meta.env.VITE_APP_URL || "https://solennix.app"}/pricing`}
+                  className="inline-block px-4 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-colors"
+                >
+                  {t("portal.upgrade.cta")}
+                </a>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* Details grid */}
         <section className="grid sm:grid-cols-2 gap-4">
