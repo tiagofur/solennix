@@ -79,6 +79,9 @@ object Endpoints {
     const val DASHBOARD_KPIS = "dashboard/kpis"
     const val DASHBOARD_REVENUE_CHART = "dashboard/revenue-chart"
     const val DASHBOARD_EVENTS_BY_STATUS = "dashboard/events-by-status"
+    const val DASHBOARD_TOP_CLIENTS = "dashboard/top-clients"
+    const val DASHBOARD_PRODUCT_DEMAND = "dashboard/product-demand"
+    const val DASHBOARD_FORECAST = "dashboard/forecast"
 
     // Event Form Links
     const val EVENT_FORM_LINKS = "event-forms"
