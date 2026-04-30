@@ -370,7 +370,7 @@ describe('EventSummary — core', () => {
     expect(eventService.delete).not.toHaveBeenCalled();
   });
 
-  it('triggers invoice PDF generation in summary view', async () => {
+  it('does not expose invoice PDF generation in summary view', async () => {
     render(<MemoryRouter><EventSummary /></MemoryRouter>);
 
     await waitFor(() => {
@@ -378,8 +378,8 @@ describe('EventSummary — core', () => {
     });
 
     fireEvent.click(screen.getByRole('button', { name: /Más$/i }));
-    fireEvent.click(screen.getByText('Generar Factura'));
-    expect(generateInvoicePDF).toHaveBeenCalled();
+    expect(screen.queryByText('Generar Factura')).not.toBeInTheDocument();
+    expect(generateInvoicePDF).not.toHaveBeenCalled();
   });
 
   it('triggers shopping list PDF generation in ingredients view', async () => {
@@ -410,10 +410,9 @@ describe('EventSummary — core', () => {
     expect(generateBudgetPDF).toHaveBeenCalled();
 
     fireEvent.click(screen.getByRole('button', { name: /Más$/i }));
-    fireEvent.click(screen.getByText('Generar Factura'));
-    expect(generateInvoicePDF).toHaveBeenCalled();
+    expect(screen.queryByText('Generar Factura')).not.toBeInTheDocument();
+    expect(generateInvoicePDF).not.toHaveBeenCalled();
 
-    fireEvent.click(screen.getByRole('button', { name: /Más$/i }));
     fireEvent.click(screen.getByText('Lista de Insumos'));
     expect(generateShoppingListPDF).toHaveBeenCalled();
   });
@@ -431,7 +430,7 @@ describe('EventSummary — core', () => {
     });
 
     expect(screen.getByText(/Venta Neta/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/Requiere factura.*IVA/i).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText(/^IVA$/i)).toBeInTheDocument();
     expect(screen.getByText(/Utilidad Neta/i)).toBeInTheDocument();
     expect(screen.getByText(/Cobrado: \$500\.00/)).toBeInTheDocument();
   });

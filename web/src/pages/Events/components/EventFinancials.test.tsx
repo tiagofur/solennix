@@ -35,7 +35,7 @@ describe('EventFinancials', () => {
       />
     );
 
-    expect(screen.getByText('IVA (16%):')).toBeInTheDocument();
+    expect(screen.getByText('Total del Evento:')).toBeInTheDocument();
     expect(screen.getByText('$232.00')).toBeInTheDocument();
   });
 
@@ -202,7 +202,8 @@ describe('EventFinancials', () => {
       </FormWrapperMinimal>,
     );
 
-    // Should still show "IVA (16%)" from the fallback
-    expect(screen.getByText('IVA (16%):')).toBeInTheDocument();
+    // tax_rate still falls back internally even though there is no visible IVA summary row anymore
+    expect(screen.getByText('Total del Evento:')).toBeInTheDocument();
+    expect(screen.getByText('$116.00')).toBeInTheDocument();
   });
 });

@@ -168,7 +168,7 @@ describe('EventSummary — header & display variants', () => {
     ['with only start_time', { start_time: '15:00', end_time: null }, { present: ['Horario', 'No definido'] }],
     ['with location', { location: 'Hacienda del Sol' }, { present: ['Hacienda del Sol'] }],
     ['without location', { location: null }, { absent: ['Ubicación:'] }],
-    ['with requires_invoice false', { requires_invoice: false }, { present: ['No requiere factura'] }],
+    ['with requires_invoice false', { requires_invoice: false }, { absent: ['Generar Factura'] }],
   ];
   it.each(displayVariantCases)('renders event %s', async (_label, overrides, expectations) => {
     setupMocks(overrides);
