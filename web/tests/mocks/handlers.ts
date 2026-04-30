@@ -103,6 +103,9 @@ export const handlers = [
   http.get(`${API_BASE}/dashboard/revenue-chart`, () => HttpResponse.json([])),
   http.get(`${API_BASE}/dashboard/events-by-status`, () => HttpResponse.json([])),
   http.get(`${API_BASE}/dashboard/activity`, () => HttpResponse.json([])),
+  http.get(`${API_BASE}/dashboard/top-clients`, () => HttpResponse.json([])),
+  http.get(`${API_BASE}/dashboard/product-demand`, () => HttpResponse.json([])),
+  http.get(`${API_BASE}/dashboard/forecast`, () => HttpResponse.json([])),
   http.get(`${API_BASE}/clients`, () => HttpResponse.json(mockStore.clients)),
   http.get(`${API_BASE}/clients/:id`, ({ params }) => {
     const client = mockStore.clients.find((c) => c.id === params.id);

@@ -5,10 +5,31 @@ import '@testing-library/jest-dom/vitest';
 // returns real Spanish strings in tests (matching production default).
 import i18n, { i18nReady } from '../src/i18n/config';
 
+const TEST_NAMESPACES = [
+  'common',
+  'auth',
+  'calendar',
+  'dashboard',
+  'clients',
+  'products',
+  'inventory',
+  'events',
+  'quotes',
+  'staff',
+  'admin',
+  'settings',
+  'search',
+  'pricing',
+  'static',
+  'public',
+] as const;
+
 await i18nReady;
 // Pin tests to Spanish so string assertions don't flip to English based
 // on the host's navigator.language (CI runners often default to en-US).
 await i18n.changeLanguage('es');
+await i18n.loadNamespaces(TEST_NAMESPACES);
+await i18n.reloadResources(['es', 'en'], TEST_NAMESPACES);
 import { vi, beforeEach, afterEach, beforeAll, afterAll } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import { server } from './mocks/server';
@@ -53,6 +74,8 @@ beforeEach(async () => {
     localStorageStore.clear();
   });
   await i18n.changeLanguage('es');
+  await i18n.loadNamespaces(TEST_NAMESPACES);
+  await i18n.reloadResources(['es', 'en'], TEST_NAMESPACES);
 });
 
 afterEach(() => {
