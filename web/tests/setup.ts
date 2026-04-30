@@ -1,9 +1,10 @@
 /// <reference types="@testing-library/jest-dom" />
 
 import '@testing-library/jest-dom/vitest';
-// Initialize the SAME i18n singleton used by the app before any component
-// imports so tests don't split between two different react-i18next instances.
-import i18n, { i18nReady } from '../src/i18n/config';
+// Initialize the SAME i18n module path used by the app/tests before any
+// component imports so Vitest doesn't evaluate `i18n/config` twice under
+// different specifiers.
+import i18n, { i18nReady } from '@/i18n/config';
 
 const TEST_NAMESPACES = [
   'common',
