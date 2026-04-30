@@ -30,9 +30,9 @@ public struct EventListView: View {
     public var body: some View {
         eventList
             .background(SolennixColors.surfaceGrouped)
-            .navigationTitle("Eventos")
+            .navigationTitle(tr("events.list.title", "Eventos"))
             .navigationBarTitleDisplayMode(.large)
-            .searchable(text: $viewModel.searchQuery, prompt: "Buscar eventos")
+            .searchable(text: $viewModel.searchQuery, prompt: tr("events.list.search_placeholder", "Buscar eventos..."))
             .safeAreaInset(edge: .top, spacing: 0) {
                 // Only static banners live in safeAreaInset. Nested horizontal
                 // ScrollViews (filter chips) must stay inside the primary
@@ -57,32 +57,32 @@ public struct EventListView: View {
                     // on the active field; tapping the same field flips the
                     // ASC/DESC direction (mirrors Web's sortable columns).
                     Menu {
-                        sortMenuButton(field: .eventDate, label: "Fecha")
-                        sortMenuButton(field: .serviceType, label: "Servicio")
-                        sortMenuButton(field: .clientName, label: "Cliente")
-                        sortMenuButton(field: .totalAmount, label: "Total")
+                        sortMenuButton(field: .eventDate, label: tr("events.list.sort.date", "Fecha"))
+                        sortMenuButton(field: .serviceType, label: tr("events.list.sort.service", "Servicio"))
+                        sortMenuButton(field: .clientName, label: tr("events.list.sort.client", "Cliente"))
+                        sortMenuButton(field: .totalAmount, label: tr("events.list.sort.total", "Total"))
                     } label: {
                         Image(systemName: "arrow.up.arrow.down")
                             .font(.body)
                             .foregroundStyle(SolennixColors.primary)
-                            .accessibilityLabel("Ordenar eventos")
+                            .accessibilityLabel(tr("events.list.sort.menu", "Ordenar eventos"))
                     }
 
                     Menu {
                         NavigationLink(value: Route.eventForm()) {
-                            Label("Nuevo Evento", systemImage: "calendar.badge.plus")
+                            Label(tr("events.list.new_event", "Nuevo evento"), systemImage: "calendar.badge.plus")
                         }
 
                         Button {
                             showQuickQuote = true
                         } label: {
-                            Label("Cotización Rápida", systemImage: "doc.text.magnifyingglass")
+                            Label(tr("events.list.quick_quote", "Cotización rápida"), systemImage: "doc.text.magnifyingglass")
                         }
                     } label: {
                         Image(systemName: "plus")
                             .font(.body)
                             .foregroundStyle(SolennixColors.primary)
-                            .accessibilityLabel("Crear evento o cotización")
+                            .accessibilityLabel(tr("events.list.create_event_or_quote", "Crear evento o cotización"))
                     }
 
                     Button {
@@ -91,7 +91,7 @@ public struct EventListView: View {
                         Image(systemName: "square.and.arrow.up")
                             .font(.body)
                             .foregroundStyle(SolennixColors.primary)
-                            .accessibilityLabel("Exportar eventos a CSV")
+                            .accessibilityLabel(tr("events.list.export_csv_aria", "Exportar eventos a CSV"))
                     }
                 }
             }
@@ -105,15 +105,19 @@ public struct EventListView: View {
                 QuickQuoteView(apiClient: apiClient)
             }
             .confirmationDialog(
-                "Eliminar evento",
+                tr("events.list.delete_confirm.title", "Eliminar evento"),
                 isPresented: $viewModel.showDeleteConfirm,
                 presenting: viewModel.deleteTarget
             ) { event in
-                Button("Eliminar", role: .destructive) {
+                Button(tr("events.list.actions.delete", "Eliminar"), role: .destructive) {
                     HapticsHelper.play(.success)
                     guard let removed = viewModel.softDeleteEvent(event) else { return }
                     toastManager.showUndo(
-                        message: "\(event.serviceType) eliminado",
+                        message: String(
+                            format: tr("events.list.delete_confirm.undo_message", "%@ eliminado"),
+                            locale: FeatureL10n.locale,
+                            event.serviceType
+                        ),
                         onUndo: {
                             viewModel.restoreEvent(removed.event, at: removed.index)
                             HapticsHelper.play(.success)
@@ -123,9 +127,15 @@ public struct EventListView: View {
                         }
                     )
                 }
-                Button("Cancelar", role: .cancel) {}
+                Button(tr("events.list.delete_confirm.cancel", "Cancelar"), role: .cancel) {}
             } message: { event in
-                Text("Se eliminara \"\(event.serviceType)\". Podras deshacer durante unos segundos.")
+                Text(
+                    String(
+                        format: tr("events.list.delete_confirm.description_named", "Se eliminará \"%@\". Podrás deshacer durante unos segundos."),
+                        locale: FeatureL10n.locale,
+                        event.serviceType
+                    )
+                )
             }
             .overlay {
                 if viewModel.isLoading && viewModel.events.isEmpty {
@@ -199,7 +209,7 @@ public struct EventListView: View {
                 HStack(spacing: Spacing.xs) {
                     Image(systemName: "line.3.horizontal.decrease.circle")
                         .font(.subheadline)
-                    Text("Filtros")
+                    Text(tr("events.list.filters.title", "Filtros"))
                         .font(.caption)
                         .fontWeight(.medium)
 
@@ -220,7 +230,7 @@ public struct EventListView: View {
                         Button {
                             viewModel.clearAdvancedFilters()
                         } label: {
-                            Text("Limpiar")
+                            Text(tr("events.list.filters.clear", "Limpiar"))
                                 .font(.caption)
                                 .foregroundStyle(SolennixColors.error)
                         }
@@ -242,7 +252,7 @@ public struct EventListView: View {
 
                     // Date range
                     HStack {
-                        Text("Desde")
+                        Text(tr("events.list.filters.from", "Desde"))
                             .font(.caption)
                             .fontWeight(.medium)
                             .foregroundStyle(SolennixColors.textSecondary)
@@ -267,7 +277,7 @@ public struct EventListView: View {
                             Button {
                                 viewModel.dateRangeStart = Calendar.current.date(byAdding: .month, value: -1, to: Date()) ?? Date()
                             } label: {
-                                Text("Seleccionar")
+                                Text(tr("events.list.filters.select", "Seleccionar"))
                                     .font(.caption)
                                     .foregroundStyle(SolennixColors.primary)
                             }
@@ -277,7 +287,7 @@ public struct EventListView: View {
                     }
 
                     HStack {
-                        Text("Hasta")
+                        Text(tr("events.list.filters.to", "Hasta"))
                             .font(.caption)
                             .fontWeight(.medium)
                             .foregroundStyle(SolennixColors.textSecondary)
@@ -302,7 +312,7 @@ public struct EventListView: View {
                             Button {
                                 viewModel.dateRangeEnd = Date()
                             } label: {
-                                Text("Seleccionar")
+                                Text(tr("events.list.filters.select", "Seleccionar"))
                                     .font(.caption)
                                     .foregroundStyle(SolennixColors.primary)
                             }
@@ -323,7 +333,13 @@ public struct EventListView: View {
 
     private var resultCount: some View {
         HStack {
-            Text("\(viewModel.filteredEvents.count) eventos")
+            Text(
+                String(
+                    format: tr("events.list.result_count", "%lld eventos"),
+                    locale: FeatureL10n.locale,
+                    viewModel.filteredEvents.count
+                )
+            )
                 .font(.caption)
                 .foregroundStyle(SolennixColors.textSecondary)
             Spacer()
@@ -355,9 +371,9 @@ public struct EventListView: View {
         if let error = viewModel.errorMessage, filtered.isEmpty, !viewModel.isLoading {
             EmptyStateView(
                 icon: "wifi.exclamationmark",
-                title: "Error al cargar",
+                title: tr("events.list.error.load_title", "Error al cargar"),
                 message: error,
-                actionTitle: "Reintentar"
+                actionTitle: tr("events.list.error.retry", "Reintentar")
             ) {
                 Task { await viewModel.loadEvents() }
             }
@@ -373,21 +389,21 @@ public struct EventListView: View {
                     .buttonStyle(.plain)
                     .contextMenu {
                         NavigationLink(value: Route.eventForm(id: event.id)) {
-                            Label("Editar", systemImage: "pencil")
+                            Label(tr("events.list.actions.edit", "Editar"), systemImage: "pencil")
                         }
                         NavigationLink(value: Route.eventChecklist(id: event.id)) {
-                            Label("Checklist", systemImage: "checklist")
+                            Label(tr("events.list.actions.checklist", "Checklist"), systemImage: "checklist")
                         }
                         // Inline status change — mirrors Web's inline
                         // dropdown. Each option marks the current one with
                         // a checkmark and skips the API call if unchanged.
                         Menu {
-                            statusChangeButton(event: event, status: .quoted,    label: "Cotizado")
-                            statusChangeButton(event: event, status: .confirmed, label: "Confirmado")
-                            statusChangeButton(event: event, status: .completed, label: "Completado")
-                            statusChangeButton(event: event, status: .cancelled, label: "Cancelado")
+                            statusChangeButton(event: event, status: .quoted,    label: tr("events.list.status.quoted", "Cotizado"))
+                            statusChangeButton(event: event, status: .confirmed, label: tr("events.list.status.confirmed", "Confirmado"))
+                            statusChangeButton(event: event, status: .completed, label: tr("events.list.status.completed", "Completado"))
+                            statusChangeButton(event: event, status: .cancelled, label: tr("events.list.status.cancelled", "Cancelado"))
                         } label: {
-                            Label("Cambiar estado", systemImage: "arrow.triangle.2.circlepath")
+                            Label(tr("events.list.actions.change_status", "Cambiar estado"), systemImage: "arrow.triangle.2.circlepath")
                         }
                         Divider()
                         Button(role: .destructive) {
@@ -395,7 +411,7 @@ public struct EventListView: View {
                             viewModel.deleteTarget = event
                             viewModel.showDeleteConfirm = true
                         } label: {
-                            Label("Eliminar", systemImage: "trash")
+                            Label(tr("events.list.actions.delete", "Eliminar"), systemImage: "trash")
                         }
                     }
                 }
@@ -411,21 +427,21 @@ public struct EventListView: View {
                     .buttonStyle(.plain)
                     .contextMenu {
                         NavigationLink(value: Route.eventForm(id: event.id)) {
-                            Label("Editar", systemImage: "pencil")
+                            Label(tr("events.list.actions.edit", "Editar"), systemImage: "pencil")
                         }
                         NavigationLink(value: Route.eventChecklist(id: event.id)) {
-                            Label("Checklist", systemImage: "checklist")
+                            Label(tr("events.list.actions.checklist", "Checklist"), systemImage: "checklist")
                         }
                         // Inline status change — mirrors Web's inline
                         // dropdown. Each option marks the current one with
                         // a checkmark and skips the API call if unchanged.
                         Menu {
-                            statusChangeButton(event: event, status: .quoted,    label: "Cotizado")
-                            statusChangeButton(event: event, status: .confirmed, label: "Confirmado")
-                            statusChangeButton(event: event, status: .completed, label: "Completado")
-                            statusChangeButton(event: event, status: .cancelled, label: "Cancelado")
+                            statusChangeButton(event: event, status: .quoted,    label: tr("events.list.status.quoted", "Cotizado"))
+                            statusChangeButton(event: event, status: .confirmed, label: tr("events.list.status.confirmed", "Confirmado"))
+                            statusChangeButton(event: event, status: .completed, label: tr("events.list.status.completed", "Completado"))
+                            statusChangeButton(event: event, status: .cancelled, label: tr("events.list.status.cancelled", "Cancelado"))
                         } label: {
-                            Label("Cambiar estado", systemImage: "arrow.triangle.2.circlepath")
+                            Label(tr("events.list.actions.change_status", "Cambiar estado"), systemImage: "arrow.triangle.2.circlepath")
                         }
                         Divider()
                         Button(role: .destructive) {
@@ -433,7 +449,7 @@ public struct EventListView: View {
                             viewModel.deleteTarget = event
                             viewModel.showDeleteConfirm = true
                         } label: {
-                            Label("Eliminar", systemImage: "trash")
+                            Label(tr("events.list.actions.delete", "Eliminar"), systemImage: "trash")
                         }
                     }
                 }
@@ -451,7 +467,7 @@ public struct EventListView: View {
                 .font(.system(size: 40))
                 .foregroundStyle(SolennixColors.textTertiary)
 
-            Text("No se encontraron eventos")
+            Text(tr("events.list.empty.no_results_title", "No se encontraron eventos"))
                 .font(.subheadline)
                 .foregroundStyle(SolennixColors.textSecondary)
 
@@ -461,7 +477,7 @@ public struct EventListView: View {
                     viewModel.searchQuery = ""
                     viewModel.clearAdvancedFilters()
                 } label: {
-                    Text("Limpiar filtros")
+                    Text(tr("events.list.filters.clear_all", "Limpiar filtros"))
                         .font(.subheadline)
                         .fontWeight(.semibold)
                         .foregroundStyle(SolennixColors.primary)
@@ -538,15 +554,20 @@ public struct EventListView: View {
 
             // Bottom row: people count + total amount
             HStack {
-                Label("\(event.numPeople) personas", systemImage: "person.2")
+                Label(
+                    String(
+                        format: tr("events.list.people_count", "%lld personas"),
+                        locale: FeatureL10n.locale,
+                        event.numPeople
+                    ),
+                    systemImage: "person.2"
+                )
                     .font(.caption)
                     .foregroundStyle(SolennixColors.textSecondary)
 
                 Spacer()
 
-                Text(Self.amountFormatter.string(
-                    from: NSNumber(value: event.totalAmount)
-                ) ?? "$0")
+                Text(formattedAmount(event.totalAmount))
                     .font(.subheadline)
                     .fontWeight(.bold)
                     .foregroundStyle(SolennixColors.primary)
@@ -599,30 +620,30 @@ public struct EventListView: View {
 
     /// Zero-decimal MXN for list cards — same convention as dashboard +
     /// calendar. Cents live on the event detail screen.
-    private static let amountFormatter: NumberFormatter = {
+    private func formattedAmount(_ value: Double) -> String {
         let f = NumberFormatter()
         f.numberStyle = .currency
-        f.locale = Locale(identifier: "es_MX")
+        f.locale = FeatureL10n.locale
         f.maximumFractionDigits = 0
         f.minimumFractionDigits = 0
-        return f
-    }()
+        return f.string(from: NSNumber(value: value)) ?? "$0"
+    }
 
     /// Shorter date format for list rows — the card carries so much info
     /// now that the long "Viernes 15 de Marzo, 2025" crowds the row. Users
     /// get "15 mar 2025" which is enough to scan quickly.
-    private static let displayDateFormatter: DateFormatter = {
+    private func formattedDisplayDate(_ date: Date) -> String {
         let f = DateFormatter()
-        f.locale = Locale.autoupdatingCurrent
+        f.locale = FeatureL10n.locale
         f.setLocalizedDateFormatFromTemplate("dMMMyyyy")
-        return f
-    }()
+        return f.string(from: date).capitalized(with: FeatureL10n.locale)
+    }
 
     /// Build the "18:00 - 20:00" time label (or "Todo el día" when the
     /// event has no start_time).
     private func formattedTimeRange(_ event: Event) -> String {
         guard let start = event.startTime, !start.isEmpty else {
-            return "Todo el día"
+            return tr("events.list.all_day", "Todo el día")
         }
         let startTrim = String(start.prefix(5))
         if let end = event.endTime, !end.isEmpty {
@@ -646,18 +667,22 @@ public struct EventListView: View {
     private func formattedEventDate(_ dateStr: String) -> String {
         // Try date-only format first, then ISO datetime
         if let date = Self.apiDateFormatter.date(from: dateStr) {
-            return Self.displayDateFormatter.string(from: date).capitalized
+            return formattedDisplayDate(date)
         }
         if let date = Self.apiDateTimeFormatter.date(from: dateStr) {
-            return Self.displayDateFormatter.string(from: date).capitalized
+            return formattedDisplayDate(date)
         }
         return dateStr
+    }
+
+    private func tr(_ key: String, _ value: String) -> String {
+        FeatureL10n.text(key, value)
     }
 
     private func exportCsv() {
         let content = viewModel.generateCsvContent()
         let tempDir = FileManager.default.temporaryDirectory
-        let fileURL = tempDir.appendingPathComponent("eventos_solennix.csv")
+        let fileURL = tempDir.appendingPathComponent(tr("events.list.csv_filename", "eventos_solennix.csv"))
         do {
             try content.write(to: fileURL, atomically: true, encoding: .utf8)
             csvFileURL = fileURL

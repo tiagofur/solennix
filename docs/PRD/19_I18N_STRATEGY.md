@@ -1,14 +1,14 @@
 # i18n Strategy
 
 > [!abstract] Resumen
-> Solennix se construye multi-idioma desde el Calendario (slice inicial, 2026-04-20). Cada plataforma usa su infraestructura nativa; los idiomas shipped por default son **ES (source / development language)** y **EN**. El selector de idioma per-usuario queda pendiente para un slice posterior — por ahora el device / navigator locale gobierna. Desde 2026-04-29 la estrategia ya no se organiza por plataforma sino por **slice cross-platform** con una **copy matrix canónica** para evitar drift semántico entre iOS, Android y Web.
+> Solennix se construye multi-idioma desde el Calendario (slice inicial, 2026-04-20). Cada plataforma usa su infraestructura nativa; los idiomas shipped por default son **ES (source / development language)** y **EN**. Desde 2026-04-29 la estrategia ya no se organiza por plataforma sino por **slice cross-platform** con una **copy matrix canónica** para evitar drift semántico entre iOS, Android y Web. El selector de idioma per-usuario queda pendiente para un slice posterior — por ahora el device / navigator locale gobierna.
 
 ## Tracker de ejecución
 
 - **Epic**: #202 — `feat(cross-platform): complete product-wide i18n parity`
 - **Slices activos**:
   - #94 — Dashboard
-  - #95 — Events list
+  - #95 — Events list ✅ implementado en web + iOS + Android; issue cerrado
   - #203 — Canonical copy matrix + governance
   - #204 — Event detail + event form
   - #205 — Auth + settings
@@ -274,6 +274,76 @@ Si un string visible al usuario no entra en el inventario, el issue está incomp
 | Clients | delete_client_description | Esta acción no se puede deshacer. | This action cannot be undone. | No se puede deshacer. | Can't be undone. | Si el nombre del cliente está en contexto visual, esta versión corta alcanza |
 | Clients | delete_client_named_description | Se eliminará este cliente. Esta acción no se puede deshacer. | This client will be deleted. This action cannot be undone. | No se puede deshacer. | Can't be undone. | Evitar textos distintos por plataforma salvo por contexto UI |
 | Clients | retry | Reintentar | Retry | Reintentar | Retry | — |
+| Products | title | Productos | Products | Productos | Products | — |
+| Products | new_product | Nuevo producto | New product | Nuevo | New | Compact permitida |
+| Products | add_product | Agregar producto | Add product | Agregar | Add | `Nuevo producto` preferido como CTA principal |
+| Products | search_placeholder | Buscar productos... | Search products... | Buscar... | Search... | No usar `Filtrar productos...` como placeholder principal |
+| Products | export_csv | Exportar CSV | Export CSV | Exportar | Export | Compact permitida |
+| Products | name | Nombre | Name | Nombre | Name | — |
+| Products | category | Categoría | Category | Categoría | Category | — |
+| Products | base_price | Precio base | Base price | Precio | Price | Compact permitida |
+| Products | active_product | Producto activo | Active product | Activo | Active | Compact permitida en toggles/cards |
+| Products | visible_in_quotes | Visible en cotizaciones | Visible in quotes | Visible | Visible | Compact permitida |
+| Products | image_optional | Imagen (opcional) | Image (optional) | Imagen | Image | Compact permitida |
+| Products | select_image | Seleccionar imagen | Select image | Imagen | Image | Compact sólo en botones chicos |
+| Products | change_image | Cambiar imagen | Change image | Cambiar | Change | Compact permitida |
+| Products | uploading_image | Subiendo imagen... | Uploading image... | Subiendo... | Uploading... | Compact permitida |
+| Products | composition_ingredients | Composición / insumos | Composition / ingredients | Composición | Composition | Mantener slash, no inventar 2 labels distintas por plataforma |
+| Products | composition_description | Solo los insumos generan costo al producto. | Only ingredients contribute product cost. | Solo genera costo. | Cost-driving only. | Compact permitida como helper corto |
+| Products | required_equipment | Equipo necesario | Required equipment | Equipo | Equipment | Compact permitida |
+| Products | required_equipment_description | Activos reutilizables. No se incluyen en el costo. | Reusable assets. They are not included in cost. | Sin costo | No cost | Compact sólo como badge/helper mínimo |
+| Products | event_supplies | Insumos por evento | Event supplies | Insumos evento | Event supplies | Compact permitida |
+| Products | event_supplies_description | Costo fijo por evento. | Fixed cost per event. | Costo fijo | Fixed cost | Compact permitida |
+| Products | add | Agregar | Add | Agregar | Add | — |
+| Products | quantity | Cantidad | Quantity | Cant. | Qty | Compact sólo en tablas muy densas |
+| Products | estimated_cost | Costo estimado | Estimated cost | Costo est. | Est. cost | Compact permitida |
+| Products | associated_team | Equipo asociado | Associated team | Equipo | Team | Compact permitida |
+| Products | no_team | Sin equipo | No team | Sin equipo | No team | — |
+| Products | select_item | Seleccionar ítem | Select item | Seleccionar | Select | Compact permitida |
+| Products | stock | Stock | Stock | Stock | Stock | — |
+| Products | details | Detalles | Details | Detalles | Details | — |
+| Products | edit_product | Editar producto | Edit product | Editar | Edit | Compact permitida |
+| Products | delete_product_title | Eliminar producto | Delete product | Eliminar | Delete | Título completo en dialog |
+| Products | delete_product_description | Esta acción no se puede deshacer. | This action cannot be undone. | No se puede deshacer. | Can't be undone. | Mantener copy destructiva breve y clara |
+| Products | inactive | Inactivo | Inactive | Inactivo | Inactive | — |
+| Products | unit_cost | Costo por unidad | Cost per unit | Costo/u | Unit cost | Compact permitida |
+| Products | estimated_margin | Margen estimado | Estimated margin | Margen est. | Est. margin | Compact permitida |
+| Products | upcoming_events | Próximos eventos | Upcoming events | Próximos | Upcoming | Compact permitida |
+| Products | no_products | Sin productos | No products | Sin productos | No products | — |
+| Products | no_results | Sin resultados | No results | Sin resultados | No results | — |
+| Products | create_first_product | Agrega tu primer producto al catálogo | Add your first product to the catalog | Crear producto | Create product | Compact permitida en empty state |
+| Products | no_match_filters | No se encontraron productos que coincidan con los filtros aplicados | No products matched the applied filters | Sin coincidencias | No matches | Compact permitida |
+| Inventory | title | Inventario | Inventory | Inventario | Inventory | — |
+| Inventory | new_item | Nuevo ítem | New item | Nuevo | New | Compact permitida |
+| Inventory | add_item | Agregar ítem | Add item | Agregar | Add | `Nuevo ítem` preferido como CTA principal |
+| Inventory | search_placeholder | Buscar inventario... | Search inventory... | Buscar... | Search... | No usar `Filtrar inventario...` como placeholder principal |
+| Inventory | low_stock | Stock bajo | Low stock | Stock bajo | Low stock | — |
+| Inventory | adjust_stock | Ajustar stock | Adjust stock | Ajustar | Adjust | Compact permitida |
+| Inventory | confirm | Confirmar | Confirm | Confirmar | Confirm | — |
+| Inventory | name | Nombre | Name | Nombre | Name | No usar `Nombre del item` como canonical corto |
+| Inventory | item_name | Nombre del ítem | Item name | Nombre | Item name | Compact permitida |
+| Inventory | type | Tipo | Type | Tipo | Type | — |
+| Inventory | ingredient | Consumible | Consumable | Consumible | Consumable | Reemplaza `Ingrediente` si el dominio se refiere a stock consumible general |
+| Inventory | supply | Insumo por evento | Event supply | Insumo evento | Event supply | Compact permitida |
+| Inventory | equipment | Equipo | Equipment | Equipo | Equipment | No usar `Activo / Equipo` como canonical corto |
+| Inventory | current_stock | Stock actual | Current stock | Stock | Stock | Compact permitida |
+| Inventory | minimum_stock | Stock mínimo | Minimum stock | Mínimo | Minimum | Compact permitida |
+| Inventory | unit | Unidad | Unit | Unidad | Unit | — |
+| Inventory | unit_cost | Costo unitario | Unit cost | Costo | Cost | Compact permitida |
+| Inventory | stock_value | Valor en stock | Stock value | Valor stock | Stock value | Compact permitida |
+| Inventory | minimum_recommended | Mínimo recomendado | Recommended minimum | Mínimo rec. | Recommended min. | Compact permitida |
+| Inventory | demand_next_7_days | Demanda próximos 7 días | Demand next 7 days | Demanda 7 días | 7-day demand | Compact permitida |
+| Inventory | consumption_section | Consumibles | Consumables | Consumibles | Consumables | Canonical para la sección de ingredientes consumibles |
+| Inventory | supplies_section | Insumos por evento | Event supplies | Insumos evento | Event supplies | Compact permitida |
+| Inventory | equipment_section | Equipos | Equipment | Equipos | Equipment | — |
+| Inventory | no_inventory | Sin inventario | No inventory | Sin inventario | No inventory | — |
+| Inventory | no_results | Sin resultados | No results | Sin resultados | No results | — |
+| Inventory | no_low_stock_items | No hay ítems con stock bajo | No low-stock items | Sin stock bajo | No low stock | Compact permitida |
+| Inventory | create_first_item | Agrega tu primer ítem al inventario | Add your first item to inventory | Crear ítem | Create item | Compact permitida |
+| Inventory | delete_item_title | Eliminar ítem | Delete item | Eliminar | Delete | Título completo en dialog |
+| Inventory | delete_item_description | Esta acción no se puede deshacer. | This action cannot be undone. | No se puede deshacer. | Can't be undone. | Mantener copy destructiva breve y clara |
+| Inventory | details | Ver detalles | View details | Detalles | Details | Compact permitida |
+| Inventory | save | Guardar | Save | Guardar | Save | — |
 
 ### Inventario operativo por slice
 
@@ -298,6 +368,7 @@ Notas de normalización:
 - `Dashboard` no debe aparecer en UI ES; sólo en docs técnicas o nombres de archivo.
 - `Guardar Pago` no es preferido; `Registrar pago` es el canonical. `Pagar y completar` queda aprobado como compact variant.
 - `Ventas Netas` se normaliza a `Ventas netas` en sentence case para todos los catálogos nuevos.
+- **Estado 2026-04-29**: slice implementado cross-platform. Web/iOS/Android ya consumen catálogo/localized resources para Dashboard principal, widgets, alertas de atención, KPIs, modal/payment actions y labels accesibles; además se removieron hardcodes de fecha/mes y locales fijos dentro del slice.
 
 #### Events list
 
@@ -329,6 +400,7 @@ Notas de normalización:
 - `Buscar eventos...` es el placeholder canonical para search textual. `Filtrar eventos...` confunde search con filtros estructurados.
 - `Servicio` es la label corta aprobada. `Tipo de servicio` queda para export/table layouts donde haya espacio.
 - `Nuevo evento` y `Cotización rápida` usan sentence case en catálogos nuevos.
+- **Estado 2026-04-29**: slice implementado cross-platform. Web, iOS y Android ya consumen catálogo/localized resources para título, search, filtros, estados, sort, acciones por fila, delete confirm, empty states, export CSV, `Todo el día`, contador de personas, errores visibles y labels accesibles. Además se removieron hardcodes de locale en moneda/fecha dentro del slice (`Intl.NumberFormat` en Web, `.autoupdatingCurrent` en iOS, resources + `Locale.getDefault()` en Android).
 
 #### Auth / Settings
 
@@ -359,6 +431,7 @@ Notas de normalización:
 - `Gestionar plan` queda como CTA canonical corta. `Suscripción` queda para sección/tab, no necesariamente para el botón principal.
 - `Cerrar sesión` es canonical; `Salir` sólo como compact secondary variant.
 - `Correo electrónico` es el canonical completo; `Correo` queda aprobado como compact label si el layout mobile se rompe.
+- **Estado 2026-04-29**: slice implementado cross-platform. Web, iOS y Android ya consumen copy localizada en auth + settings, incluyendo subflows de perfil/contraseña/negocio/notificaciones/contrato/about/privacy/subscription. Mobile además ya soporta selector de idioma persistido (`preferred_language`) con sync real al backend y aplicación de locale app-level.
 
 #### Clients
 
@@ -404,7 +477,42 @@ Notas de normalización:
 
 Los siguientes dominios deben agregarse a la matrix en la próxima iteración de #203:
 
-- **Products / Inventory**: stock, costo, precio, unidad, receta, equipo, insumo
+- **Sin pendientes en la matrix base**. La próxima iteración ya puede dedicarse a refinar keys por slice concreto o edge cases.
+
+#### Products / Inventory
+
+Strings visibles detectados en código actual:
+
+- `Productos` / `Inventario`
+- `Nuevo producto` / `Nuevo ítem`
+- `Agregar producto` / `Agregar item de inventario`
+- `Buscar productos` / `Buscar inventario`
+- `Filtrar productos por nombre o categoría...`
+- `Filtrar inventario por nombre...`
+- `CSV` / `Exportar CSV`
+- `Nombre` / `Categoría` / `Precio Base` / `Tipo` / `Unidad`
+- `Producto activo` / `Visible en cotizaciones`
+- `Imagen del Producto` / `Seleccionar Imagen` / `Cambiar Imagen` / `Subiendo...`
+- `Composición / Insumos` / `Equipo Necesario` / `Insumos por Evento`
+- `Cantidad` / `Costo est.` / `Equipo asociado` / `Sin equipo`
+- `Seleccionar Item` / `Stock`
+- `Eliminar producto` / `Detalle del Producto` / `Inactivo`
+- `Costo / Unidad` / `Margen Est.` / `Próx. Eventos`
+- `Stock bajo` / `Ajustar Stock`
+- `Consumibles` / `Insumos por Evento` / `Equipos`
+- `Sin productos` / `Sin inventario` / `Sin resultados`
+- `No se encontraron productos que coincidan con los filtros aplicados`
+- `No hay items con stock bajo`
+- `Costo Unitario` / `Stock Actual` / `Stock Mínimo` / `Valor en Stock`
+- `Demanda próximos 7 días`
+
+Notas de normalización:
+
+- Para nuevos catálogos usamos `Buscar productos...` y `Buscar inventario...`, no `Filtrar ...`, cuando el control es búsqueda textual.
+- `Nuevo producto` y `Nuevo ítem` quedan como CTAs primarias canónicas. `Agregar ...` queda como variante secundaria o accessibility label.
+- Unificamos sentence case y tildes: `Precio base`, `Categoría`, `Ítem`, `Costo unitario`, `Próximos eventos`.
+- `Consumibles` queda como canonical para el grupo de stock gastable general; evita drift con `Ingredientes` cuando la pantalla no está hablando sólo de recetas.
+- `Equipo` / `Equipos` es preferido para UI general. `Activo / equipo` puede existir como helper explicativo, no como label principal.
 
 ## Checklist de review por slice
 
@@ -462,11 +570,9 @@ Los siguientes dominios deben agregarse a la matrix en la próxima iteración de
 ## Próximos slices
 
 1. **#203 — Canonical copy matrix + governance**: completar esta matrix y convertirla en criterio obligatorio de review.
-2. **#94 / #95**: cerrar Dashboard y Events list con paridad real en iOS, Android y Web.
-3. **#204 / #205 / #206 / #207 / #208**: expandir el mismo patrón por flujo.
-4. **#209 — Final sweep**: barrido final de strings hardcodeados, drift semántico y fallbacks.
-5. **Selector de idioma en Mobile**: Agregar el selector de idioma en Settings de iOS (`@AppStorage("preferredLocale")`) y Android (`LocaleManager.setApplicationLocales`), que sincronicen con el backend igual que la web.
-6. **Backend i18n** (opcional, lower priority): `Accept-Language` header routing + tabla de traducciones server-side para mensajes que se muestran al usuario crudos (validaciones de formularios).
+2. **#205 / #206 / #207 / #208**: expandir el mismo patrón por flujo.
+3. **#209 — Final sweep**: barrido final de strings hardcodeados, drift semántico y fallbacks.
+4. **Backend i18n** (opcional, lower priority): `Accept-Language` header routing + tabla de traducciones server-side para mensajes que se muestran al usuario crudos (validaciones de formularios).
 
 ## Verificación rápida
 

@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
-import { es } from "date-fns/locale";
+import { es, enUS } from "date-fns/locale";
 import { Event } from "../../types/entities";
 import {
   Search,
@@ -31,22 +31,16 @@ import {
   useEventSearch,
 } from "../../hooks/queries/useEventQueries";
 import type { EventSearchFilters } from "../../services/eventService";
+import { useTranslation } from "react-i18next";
 
 type EventWithClient = Event & { client?: { name: string } | null };
 
 type StatusFilter = "all" | EventStatus;
 
-const STATUS_CHIPS: { label: string; value: StatusFilter }[] = [
-  { label: "Todos", value: "all" },
-  { label: "Cotizado", value: "quoted" },
-  { label: "Confirmado", value: "confirmed" },
-  { label: "Completado", value: "completed" },
-  { label: "Cancelado", value: "cancelled" },
-];
-
 const ITEMS_PER_PAGE = 10;
 
 export const EventList: React.FC = () => {
+  const { t, i18n } = useTranslation(["events"]);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const deleteEvent = useDeleteEvent();
@@ -187,6 +181,29 @@ export const EventList: React.FC = () => {
 
   const sortKey = hasFilters ? clientPagination.sortKey : urlSort;
   const sortOrder = hasFilters ? clientPagination.sortOrder : urlOrder;
+  const dateLocale = i18n.language === "en" ? enUS : es;
+  const statusChips: { label: string; value: StatusFilter }[] = useMemo(
+    () => [
+      { label: t("events:list.status.all"), value: "all" },
+      { label: t("events:list.status.quoted"), value: "quoted" },
+      { label: t("events:list.status.confirmed"), value: "confirmed" },
+      { label: t("events:list.status.completed"), value: "completed" },
+      { label: t("events:list.status.cancelled"), value: "cancelled" },
+    ],
+    [t],
+  );
+  const csvRows = hasFilters ? filteredEvents : allEvents;
+  const hasActiveFilters = !!(searchTerm || statusFilter !== "all" || dateFrom || dateTo);
+  const currencyFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat(i18n.language === "en" ? "en-US" : "es-MX", {
+        style: "currency",
+        currency: "MXN",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }),
+    [i18n.language],
+  );
 
   const handlePageChange = useCallback((page: number) => {
     if (hasFilters) {
@@ -229,8 +246,8 @@ export const EventList: React.FC = () => {
 
   const formatDate = (dateStr: string) => {
     try {
-      return format(new Date(dateStr + "T12:00:00"), "d 'de' MMM yyyy", {
-        locale: es,
+      return format(new Date(dateStr + "T12:00:00"), i18n.language === "en" ? "MMM d, yyyy" : "d 'de' MMM yyyy", {
+        locale: dateLocale,
       });
     } catch {
       return dateStr;
@@ -238,16 +255,16 @@ export const EventList: React.FC = () => {
   };
 
   const formatCurrency = (value: number) =>
-    `$${value.toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
+    currencyFormatter.format(value);
 
   return (
     <div className="space-y-6">
       <ConfirmDialog
         open={confirmOpen}
-        title="Eliminar evento"
-        description="Se eliminarán todos los datos del evento, incluyendo pagos y archivos. Esta acción no se puede deshacer."
-        confirmText="Eliminar permanentemente"
-        cancelText="Cancelar"
+        title={t("events:list.delete_confirm.title")}
+        description={t("events:list.delete_confirm.description")}
+        confirmText={t("events:list.delete_confirm.confirm")}
+        cancelText={t("events:list.delete_confirm.cancel")}
         onConfirm={confirmDelete}
         onCancel={() => {
           setConfirmOpen(false);
@@ -257,7 +274,7 @@ export const EventList: React.FC = () => {
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h1 className="text-2xl font-bold text-text tracking-tight">
-          Eventos{" "}
+          {t("events:list.title")}{" "}
           {!loading && headerCount > 0 && (
             <span className="text-base font-semibold text-text-secondary">
               ({headerCount})
@@ -265,37 +282,37 @@ export const EventList: React.FC = () => {
           )}
         </h1>
         <div className="flex flex-wrap items-center gap-2">
-          {allEvents.length > 0 && (
+          {csvRows.length > 0 && (
             <button
               type="button"
               onClick={() =>
                 exportToCsv(
-                  "eventos",
+                  t("events:list.csv.file_name"),
                   [
-                    "Fecha",
-                    "Cliente",
-                    "Tipo de Servicio",
-                    "Personas",
-                    "Estado",
-                    "Total",
-                    "Ciudad",
+                    t("events:list.csv.headers.date"),
+                    t("events:list.csv.headers.client"),
+                    t("events:list.csv.headers.service_type"),
+                    t("events:list.csv.headers.people"),
+                    t("events:list.csv.headers.status"),
+                    t("events:list.csv.headers.total"),
+                    t("events:list.csv.headers.city"),
                   ],
-                  allEvents.map((e) => [
-                    formatDate(e.event_date),
-                    e.client?.name ?? "",
-                    e.service_type,
-                    e.num_people,
-                    e.status,
-                    e.total_amount.toFixed(2),
-                    e.city ?? "",
-                  ]),
-                )
+                   csvRows.map((e) => [
+                     formatDate(e.event_date),
+                     e.client?.name ?? "",
+                     e.service_type,
+                     e.num_people,
+                     t(`events:list.status.${e.status as EventStatus}`),
+                     formatCurrency(e.total_amount),
+                     e.city ?? "",
+                   ]),
+                 )
               }
               className="inline-flex items-center justify-center px-4 py-2 border border-border text-sm font-medium rounded-xl text-text-secondary bg-card hover:bg-surface-alt shadow-sm transition-colors"
-              aria-label="Exportar eventos a CSV"
+              aria-label={t("events:list.export_csv_aria")}
             >
               <Download className="h-4 w-4 mr-2" aria-hidden="true" />
-              Exportar CSV
+              {t("events:list.export_csv")}
             </button>
           )}
           <Link
@@ -303,22 +320,22 @@ export const EventList: React.FC = () => {
             className="hidden lg:inline-flex items-center justify-center px-4 py-2 border border-border text-sm font-bold rounded-xl text-text-secondary bg-card hover:bg-surface-alt shadow-sm transition-colors"
           >
             <Zap className="h-4 w-4 mr-2" aria-hidden="true" />
-            Cotización Rápida
+            {t("events:list.quick_quote")}
           </Link>
           <Link
             to="/events/new"
             className="hidden lg:inline-flex items-center justify-center px-4 py-2 text-sm font-bold rounded-xl text-white premium-gradient shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all hover:scale-[1.02]"
           >
             <CalendarPlus className="h-5 w-5 mr-2" aria-hidden="true" />
-            Nuevo Evento
+            {t("events:list.new_event")}
           </Link>
         </div>
       </div>
 
       <div className="relative max-w-md">
-        <label htmlFor="event-search" className="sr-only">
-          Buscar eventos
-        </label>
+          <label htmlFor="event-search" className="sr-only">
+          {t("events:list.search_placeholder")}
+          </label>
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
           <Search className="h-5 w-5 text-text-secondary" aria-hidden="true" />
         </div>
@@ -327,10 +344,10 @@ export const EventList: React.FC = () => {
           ref={searchInputRef}
           type="search"
           className="block w-full pl-10 pr-16 py-2 border border-border rounded-xl leading-5 bg-card text-text placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary sm:text-sm transition duration-150 ease-in-out"
-          placeholder="Buscar eventos..."
+          placeholder={t("events:list.search_placeholder")}
           value={searchTerm}
           onChange={(e) => updateFilter("q", e.target.value)}
-          aria-label="Buscar eventos por cliente, servicio o ciudad. Presioná la barra diagonal para enfocar."
+          aria-label={t("events:list.search_aria")}
         />
         {/* Keyboard hint — hides once the input has content or has focus,
             so it only shows in the at-rest state. `hidden sm:flex` to avoid
@@ -345,7 +362,7 @@ export const EventList: React.FC = () => {
             type="button"
             onClick={() => updateFilter("q", "")}
             className="absolute inset-y-0 right-0 pr-3 flex items-center text-text-secondary hover:text-text transition-colors"
-            aria-label="Limpiar búsqueda"
+            aria-label={t("events:list.search_clear")}
           >
             <X className="h-4 w-4" aria-hidden="true" />
           </button>
@@ -354,7 +371,7 @@ export const EventList: React.FC = () => {
 
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex flex-wrap gap-2">
-          {STATUS_CHIPS.map((chip) => (
+          {statusChips.map((chip) => (
             <button
               key={chip.value}
               type="button"
@@ -371,31 +388,31 @@ export const EventList: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2 ml-auto">
-          <label htmlFor="date-from" className="sr-only">Desde</label>
+          <label htmlFor="date-from" className="sr-only">{t("events:list.date_filter.from")}</label>
           <input
             id="date-from"
             type="date"
             value={dateFrom}
             onChange={(e) => updateFilter("from", e.target.value)}
             className="text-xs border border-border rounded-lg px-2 py-1 bg-card text-text focus:ring-2 focus:ring-primary/20 focus:border-primary"
-            aria-label="Filtrar desde fecha"
+            aria-label={t("events:list.date_filter.from_aria")}
           />
           <span className="text-xs text-text-secondary">—</span>
-          <label htmlFor="date-to" className="sr-only">Hasta</label>
+          <label htmlFor="date-to" className="sr-only">{t("events:list.date_filter.to")}</label>
           <input
             id="date-to"
             type="date"
             value={dateTo}
             onChange={(e) => updateFilter("to", e.target.value)}
             className="text-xs border border-border rounded-lg px-2 py-1 bg-card text-text focus:ring-2 focus:ring-primary/20 focus:border-primary"
-            aria-label="Filtrar hasta fecha"
+            aria-label={t("events:list.date_filter.to_aria")}
           />
           {(dateFrom || dateTo) && (
             <button
               type="button"
               onClick={() => { updateFilter("from", ""); updateFilter("to", ""); }}
               className="text-xs text-text-secondary hover:text-error transition-colors"
-              aria-label="Limpiar filtro de fechas"
+              aria-label={t("events:list.date_filter.clear_aria")}
             >
               <X className="h-3.5 w-3.5" aria-hidden="true" />
             </button>
@@ -420,23 +437,23 @@ export const EventList: React.FC = () => {
           <Empty
             icon={CalendarDays}
             title={
-              searchTerm || statusFilter !== "all"
-                ? "No se encontraron eventos"
-                : "Sin eventos registrados"
+              hasActiveFilters
+                ? t("events:list.empty.no_results_title")
+                : t("events:list.empty.no_events_title")
             }
             description={
-              searchTerm || statusFilter !== "all"
-                ? "No hay eventos que coincidan. Prueba con otro estado o borrando el texto de búsqueda."
-                : "Comienza creando tu primer evento."
+              hasActiveFilters
+                ? t("events:list.empty.no_results_description")
+                : t("events:list.empty.no_events_description")
             }
             action={
-              !searchTerm && statusFilter === "all" ? (
+              !hasActiveFilters ? (
                 <Link
                   to="/events/new"
                   className="inline-flex items-center justify-center px-4 py-2 text-sm font-bold rounded-xl text-white premium-gradient shadow-md shadow-primary/20 hover:shadow-lg transition-all hover:scale-[1.02]"
                 >
                   <CalendarPlus className="h-5 w-5 mr-2" aria-hidden="true" />
-                  Crear Evento
+                  {t("events:list.empty.create_event")}
                 </Link>
               ) : undefined
             }
@@ -445,11 +462,14 @@ export const EventList: React.FC = () => {
           <div className="overflow-x-auto">
             <table
               className="min-w-full divide-y divide-border"
-              aria-label="Tabla de eventos"
+              aria-label={t("events:list.table.aria")}
             >
               <caption className="sr-only">
-                Lista de eventos con {totalItems} resultados. Mostrando página{" "}
-                {currentPage} de {totalPages}.
+                {t("events:list.table.caption", {
+                  total: totalItems,
+                  page: currentPage,
+                  pages: totalPages,
+                })}
               </caption>
               <thead className="bg-surface-alt">
                 <tr>
@@ -459,13 +479,13 @@ export const EventList: React.FC = () => {
                     onClick={() => handleSort("event_date")}
                     aria-sort={getSortAriaSort("event_date")}
                   >
-                    Fecha {renderSortIcon("event_date")}
+                    {t("events:list.table.date")} {renderSortIcon("event_date")}
                   </th>
                   <th
                     scope="col"
                     className="px-6 py-3 text-left text-xs font-semibold text-text-secondary"
                   >
-                    Cliente
+                    {t("events:list.table.client")}
                   </th>
                   <th
                     scope="col"
@@ -473,13 +493,13 @@ export const EventList: React.FC = () => {
                     onClick={() => handleSort("service_type")}
                     aria-sort={getSortAriaSort("service_type")}
                   >
-                    Servicio {renderSortIcon("service_type")}
+                    {t("events:list.table.service")} {renderSortIcon("service_type")}
                   </th>
                   <th
                     scope="col"
                     className="px-6 py-3 text-left text-xs font-semibold text-text-secondary"
                   >
-                    Estado
+                    {t("events:list.table.status")}
                   </th>
                   <th
                     scope="col"
@@ -487,10 +507,10 @@ export const EventList: React.FC = () => {
                     onClick={() => handleSort("total_amount")}
                     aria-sort={getSortAriaSort("total_amount")}
                   >
-                    Total {renderSortIcon("total_amount")}
+                    {t("events:list.table.total")} {renderSortIcon("total_amount")}
                   </th>
                   <th scope="col" className="relative px-6 py-3">
-                    <span className="sr-only">Acciones</span>
+                    <span className="sr-only">{t("events:list.table.actions")}</span>
                   </th>
                 </tr>
               </thead>
@@ -514,7 +534,7 @@ export const EventList: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-semibold text-text">
-                        {event.client?.name ?? "—"}
+                        {event.client?.name ?? t("events:list.table.no_client")}
                       </div>
                       {event.city && (
                         <div className="text-xs text-text-secondary truncate max-w-[180px]">
@@ -527,8 +547,12 @@ export const EventList: React.FC = () => {
                         {event.service_type}
                       </div>
                       <div className="text-xs text-text-secondary">
-                        {event.num_people}{" "}
-                        {event.num_people === 1 ? "persona" : "personas"}
+                        {t(
+                          event.num_people === 1
+                            ? "events:list.table.people_one"
+                            : "events:list.table.people_other",
+                          { count: event.num_people },
+                        )}
                       </div>
                     </td>
                     <td
@@ -548,19 +572,19 @@ export const EventList: React.FC = () => {
                         <RowActionMenu
                           items={[
                             {
-                              label: "Ver Resumen",
+                               label: t("events:list.actions.view_summary"),
                               icon: Eye,
                               onClick: () =>
                                 navigate(`/events/${event.id}/summary`),
                             },
                             {
-                              label: "Editar",
+                               label: t("events:list.actions.edit"),
                               icon: Edit,
                               onClick: () =>
                                 navigate(`/events/${event.id}/edit`),
                             },
                             {
-                              label: "Eliminar",
+                               label: t("events:list.actions.delete"),
                               icon: Trash2,
                               onClick: () => requestDelete(event.id),
                               variant: "destructive" as const,

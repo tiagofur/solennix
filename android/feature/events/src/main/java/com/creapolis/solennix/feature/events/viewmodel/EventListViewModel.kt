@@ -1,6 +1,8 @@
 package com.creapolis.solennix.feature.events.viewmodel
 
+import android.content.Context
 import android.util.Log
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.creapolis.solennix.core.data.repository.ClientRepository
@@ -10,7 +12,9 @@ import com.creapolis.solennix.core.model.Event
 import com.creapolis.solennix.core.model.EventStatus
 import com.creapolis.solennix.core.model.extensions.asMXN
 import com.creapolis.solennix.core.model.extensions.parseFlexibleDate
+import com.creapolis.solennix.feature.events.R
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -59,9 +63,12 @@ data class EventStatusFilter(
 @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class EventListViewModel @Inject constructor(
+    @ApplicationContext private val appContext: Context,
     private val eventRepository: EventRepository,
     private val clientRepository: ClientRepository
 ) : ViewModel() {
+
+    private fun tr(@StringRes id: Int, vararg args: Any): String = appContext.getString(id, *args)
 
     private val _searchQuery = MutableStateFlow("")
     private val _selectedStatus = MutableStateFlow<EventStatus?>(null)
@@ -189,11 +196,11 @@ class EventListViewModel @Inject constructor(
     private fun buildStatusFilters(events: List<Event>): List<EventStatusFilter> {
         val counts = events.groupingBy { it.status }.eachCount()
         return listOf(
-            EventStatusFilter(null, "Todos", events.size),
-            EventStatusFilter(EventStatus.QUOTED, "Cotizado", counts[EventStatus.QUOTED] ?: 0),
-            EventStatusFilter(EventStatus.CONFIRMED, "Confirmado", counts[EventStatus.CONFIRMED] ?: 0),
-            EventStatusFilter(EventStatus.COMPLETED, "Completado", counts[EventStatus.COMPLETED] ?: 0),
-            EventStatusFilter(EventStatus.CANCELLED, "Cancelado", counts[EventStatus.CANCELLED] ?: 0)
+            EventStatusFilter(null, tr(R.string.events_list_status_all), events.size),
+            EventStatusFilter(EventStatus.QUOTED, tr(R.string.events_list_status_quoted), counts[EventStatus.QUOTED] ?: 0),
+            EventStatusFilter(EventStatus.CONFIRMED, tr(R.string.events_list_status_confirmed), counts[EventStatus.CONFIRMED] ?: 0),
+            EventStatusFilter(EventStatus.COMPLETED, tr(R.string.events_list_status_completed), counts[EventStatus.COMPLETED] ?: 0),
+            EventStatusFilter(EventStatus.CANCELLED, tr(R.string.events_list_status_cancelled), counts[EventStatus.CANCELLED] ?: 0)
         )
     }
 
@@ -249,7 +256,7 @@ class EventListViewModel @Inject constructor(
                 eventRepository.updateEvent(event.copy(status = newStatus))
             } catch (e: Exception) {
                 Log.w(TAG, "updateEventStatus failed for ${event.id}", e)
-                _error.value = e.message ?: "No se pudo cambiar el estado"
+                _error.value = e.message ?: tr(R.string.events_list_error_change_status)
             } finally {
                 _updatingStatusEventId.value = null
             }
@@ -267,7 +274,7 @@ class EventListViewModel @Inject constructor(
                 eventRepository.deleteEvent(event.id)
             } catch (e: Exception) {
                 Log.w(TAG, "deleteEvent failed for ${event.id}", e)
-                _error.value = e.message ?: "No se pudo eliminar el evento"
+                _error.value = e.message ?: tr(R.string.events_list_error_delete)
             }
         }
     }
@@ -279,12 +286,21 @@ class EventListViewModel @Inject constructor(
         // column was always empty) and EventListViewModel does not have a
         // PaymentRepository to compute them. Export only what we can honestly
         // fill; adding Pagado back requires pulling payment aggregates.
-        sb.appendLine("Nombre,Fecha,Cliente,Estado,Total,Lugar")
+        sb.appendLine(
+            listOf(
+                tr(R.string.events_list_csv_header_name),
+                tr(R.string.events_list_csv_header_date),
+                tr(R.string.events_list_csv_header_client),
+                tr(R.string.events_list_csv_header_status),
+                tr(R.string.events_list_csv_header_total),
+                tr(R.string.events_list_csv_header_location)
+            ).joinToString(",")
+        )
         val statusLabels = mapOf(
-            EventStatus.QUOTED to "Cotizado",
-            EventStatus.CONFIRMED to "Confirmado",
-            EventStatus.COMPLETED to "Completado",
-            EventStatus.CANCELLED to "Cancelado"
+            EventStatus.QUOTED to tr(R.string.events_list_status_quoted),
+            EventStatus.CONFIRMED to tr(R.string.events_list_status_confirmed),
+            EventStatus.COMPLETED to tr(R.string.events_list_status_completed),
+            EventStatus.CANCELLED to tr(R.string.events_list_status_cancelled)
         )
         // Apply the same filters the user sees in the list before exporting.
         // Previously CSV always wrote the full events cache, silently ignoring
@@ -321,7 +337,7 @@ class EventListViewModel @Inject constructor(
                 eventRepository.syncEvents()
                 clientRepository.syncClients()
             } catch (e: Exception) {
-                _error.value = e.message ?: "Ocurrió un error al sincronizar"
+                _error.value = e.message ?: tr(R.string.events_list_error_sync)
             } finally {
                 _isRefreshing.value = false
             }

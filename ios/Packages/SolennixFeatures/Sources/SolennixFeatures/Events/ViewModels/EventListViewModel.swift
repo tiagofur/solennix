@@ -68,7 +68,7 @@ public final class EventListViewModel {
     }
 
     public func clientName(for clientId: String) -> String {
-        clientMap[clientId]?.name ?? "Cliente"
+        clientMap[clientId]?.name ?? tr("events.list.client_fallback", "Cliente")
     }
 
     // MARK: - Status Filters
@@ -76,11 +76,11 @@ public final class EventListViewModel {
     public var statusFilters: [(status: EventStatus?, label: String, count: Int)] {
         let counts = Dictionary(grouping: events, by: { $0.status }).mapValues { $0.count }
         return [
-            (nil, "Todos", events.count),
-            (.quoted, "Cotizado", counts[.quoted] ?? 0),
-            (.confirmed, "Confirmado", counts[.confirmed] ?? 0),
-            (.completed, "Completado", counts[.completed] ?? 0),
-            (.cancelled, "Cancelado", counts[.cancelled] ?? 0)
+            (nil, tr("events.list.status.all", "Todos"), events.count),
+            (.quoted, tr("events.list.status.quoted", "Cotizado"), counts[.quoted] ?? 0),
+            (.confirmed, tr("events.list.status.confirmed", "Confirmado"), counts[.confirmed] ?? 0),
+            (.completed, tr("events.list.status.completed", "Completado"), counts[.completed] ?? 0),
+            (.cancelled, tr("events.list.status.cancelled", "Cancelado"), counts[.cancelled] ?? 0)
         ]
     }
 
@@ -201,7 +201,7 @@ public final class EventListViewModel {
                 events = cached
                 isShowingCachedData = true
             } else {
-                errorMessage = "Error cargando eventos"
+                errorMessage = tr("events.list.error.load_failed", "Error cargando eventos")
             }
         }
         isLoading = false
@@ -233,7 +233,7 @@ public final class EventListViewModel {
             try await apiClient.delete(Endpoint.event(event.id))
         } catch {
             events.append(event)
-            errorMessage = "Error al eliminar el evento"
+            errorMessage = tr("events.list.error.delete_failed", "Error al eliminar el evento")
         }
     }
 
@@ -258,17 +258,27 @@ public final class EventListViewModel {
                 events[index] = updated
             }
         } catch {
-            errorMessage = "No se pudo cambiar el estado"
+            errorMessage = tr("events.list.error.status_change_failed", "No se pudo cambiar el estado")
         }
     }
 
     // MARK: - CSV Export
 
     public func generateCsvContent() -> String {
-        var csv = "Nombre,Fecha,Cliente,Estado,Total,Personas,Lugar\n"
+        var csv = [
+            tr("events.list.csv.header_name", "Nombre"),
+            tr("events.list.csv.header_date", "Fecha"),
+            tr("events.list.csv.header_client", "Cliente"),
+            tr("events.list.csv.header_status", "Estado"),
+            tr("events.list.csv.header_total", "Total"),
+            tr("events.list.csv.header_people", "Personas"),
+            tr("events.list.csv.header_location", "Lugar")
+        ].joined(separator: ",") + "\n"
         let statusLabels: [EventStatus: String] = [
-            .quoted: "Cotizado", .confirmed: "Confirmado",
-            .completed: "Completado", .cancelled: "Cancelado"
+            .quoted: tr("events.list.status.quoted", "Cotizado"),
+            .confirmed: tr("events.list.status.confirmed", "Confirmado"),
+            .completed: tr("events.list.status.completed", "Completado"),
+            .cancelled: tr("events.list.status.cancelled", "Cancelado")
         ]
         for event in filteredEvents {
             let name = event.serviceType.escapingCsv
@@ -281,6 +291,10 @@ public final class EventListViewModel {
             csv += "\(name),\(date),\(client),\(status),\(total),\(people),\(location)\n"
         }
         return csv
+    }
+
+    private func tr(_ key: String, _ value: String) -> String {
+        FeatureL10n.text(key, value)
     }
 }
 
