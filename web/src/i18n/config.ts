@@ -61,7 +61,7 @@ if (!isTest) {
  * i18next setup — namespaces are added incrementally as each screen is
  * internationalised. `common` holds shared strings (buttons, nav, errors).
  */
-void i18n
+export const i18nReady = i18n
   .use(initReactI18next)
   .init({
     initAsync: false,
@@ -128,6 +128,9 @@ void i18n
     defaultNS: "common",
     interpolation: {
       escapeValue: false,
+    },
+    react: {
+      useSuspense: false,
     },
     detection: isTest ? undefined : {
       order: ["localStorage", "navigator"],
