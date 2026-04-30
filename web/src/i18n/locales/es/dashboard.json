@@ -1,18 +1,19 @@
 {
-  "title": "Inicio",
-  "welcome": "Hola, {{name}}",
+  "title": "Dashboard",
+  "welcome": "Bienvenido, {{name}}",
   "greeting": {
     "generic": "Hola"
   },
   "kpis": {
-    "net_sales": "Ventas netas",
-    "cash_collected": "Cobrado",
-    "vat_collected": "IVA cobrado",
-    "vat_outstanding": "IVA pendiente",
-    "active_events": "Eventos del mes",
-    "low_stock": "Stock bajo",
-    "new_clients": "Clientes",
+    "net_sales": "Ventas Netas",
+    "cash_collected": "Cobrado Real",
+    "vat_outstanding": "IVA por Cobrar",
+    "total_revenue": "Ingresos totales",
+    "active_events": "Eventos activos",
+    "new_clients": "Nuevos clientes",
     "average_ticket": "Ticket promedio",
+    "vat_collected": "IVA cobrado",
+    "low_stock": "Stock bajo",
     "quotes": "Cotizaciones",
     "subtitle": {
       "confirmed_completed": "Eventos confirmados y completados",
@@ -22,15 +23,15 @@
     }
   },
   "status_chart": {
-    "title": "Estado de eventos",
+    "title": "Estado de Eventos",
     "events_this_month": "eventos este mes",
-    "no_data": "Sin eventos este mes",
-    "create_first": "Crea tu primer evento",
+    "no_data": "Sin datos para graficar este mes",
+    "create_first": "Crear primer evento",
     "distribution_aria": "Estado de eventos: {{segments}}",
     "segment_title": "{{name}}: {{value}}"
   },
   "revenue_chart": {
-    "title": "Ingresos — últimos 6 meses",
+    "title": "Ingresos — Últimos 6 meses",
     "aria_label": "Gráfico de ingresos por mes en los últimos 6 meses",
     "revenue": "Ingresos",
     "pro_title": "Tendencias Pro",
@@ -61,6 +62,7 @@
   },
   "upcoming": {
     "title": "Próximos eventos",
+    "no_events": "No hay eventos próximos",
     "empty": "Sin eventos próximos",
     "view": "Ver"
   },
@@ -70,6 +72,14 @@
     "low_stock_talkback": "Stock bajo: {{name}}, actual {{current}} {{unit}}",
     "no_items": "Stock saludable en todos los ítems"
   },
+  "topClients": "Top Clientes",
+  "noClients": "Sin datos de clientes aún",
+  "productDemand": "Demanda de Productos",
+  "noProducts": "Sin datos de productos aún",
+  "forecast": "Proyección de Ingresos",
+  "noForecast": "Sin proyecciones disponibles",
+  "totalRevenue": "Ingresos Proyectados",
+  "confirmedEvents": "Eventos Confirmados",
   "widgets": {
     "top_clients": {
       "title": "Clientes principales",
@@ -100,7 +110,7 @@
     "payment_complete_manual": "Pago registrado. Marcá el evento como completado manualmente."
   },
   "event": {
-    "no_client": "Cliente",
+    "no_client": "Sin cliente",
     "pax": "pax",
     "summary_talkback": "{{client}}{{separator}}{{service}}, fecha {{date}}, estado {{status}}"
   }

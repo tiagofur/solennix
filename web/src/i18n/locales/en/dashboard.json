@@ -1,18 +1,19 @@
 {
-  "title": "Home",
-  "welcome": "Hello, {{name}}",
+  "title": "Dashboard",
+  "welcome": "Welcome, {{name}}",
   "greeting": {
     "generic": "Hello"
   },
   "kpis": {
-    "net_sales": "Net sales",
-    "cash_collected": "Collected",
-    "vat_collected": "VAT collected",
-    "vat_outstanding": "VAT due",
-    "active_events": "Events this month",
-    "low_stock": "Low stock",
-    "new_clients": "Clients",
+    "net_sales": "Net Sales",
+    "cash_collected": "Cash Collected",
+    "vat_outstanding": "VAT Outstanding",
+    "total_revenue": "Total revenue",
+    "active_events": "Active events",
+    "new_clients": "New clients",
     "average_ticket": "Average ticket",
+    "vat_collected": "VAT collected",
+    "low_stock": "Low stock",
     "quotes": "Quotes",
     "subtitle": {
       "confirmed_completed": "Confirmed and completed events",
@@ -22,15 +23,15 @@
     }
   },
   "status_chart": {
-    "title": "Event status",
+    "title": "Event Status",
     "events_this_month": "events this month",
-    "no_data": "No events this month",
-    "create_first": "Create your first event",
+    "no_data": "No data to display this month",
+    "create_first": "Create first event",
     "distribution_aria": "Event status: {{segments}}",
     "segment_title": "{{name}}: {{value}}"
   },
   "revenue_chart": {
-    "title": "Revenue — last 6 months",
+    "title": "Revenue — Last 6 months",
     "aria_label": "Revenue chart for the last 6 months",
     "revenue": "Revenue",
     "pro_title": "Pro trends",
@@ -38,29 +39,30 @@
     "view_plans": "View plans"
   },
   "attention": {
-    "title": "Need attention",
-    "description": "Upcoming or overdue events with pending follow-up.",
+    "title": "Need Attention",
+    "description": "Upcoming or past-due events with pending actions.",
     "alerts_count_one": "1 alert",
     "alerts_count_other": "{{count}} alerts",
     "pending_balance": "Pending balance {{pending}} of {{total}}",
     "pending_balance_label": "Pending balance",
     "past_confirmed": "Past event still confirmed",
     "past_quoted": "Expired quote without closing",
-    "register_payment": "Record payment",
-    "register_payment_and_complete": "Record payment and complete",
-    "pay_and_complete": "Pay & complete",
-    "complete_only": "Complete only",
+    "register_payment": "Register payment",
+    "register_payment_and_complete": "Register payment and complete",
+    "pay_and_complete": "Pay and complete",
+    "complete_only": "Just complete",
     "complete": "Complete",
     "view": "View",
-    "view_detail": "View details",
+    "view_detail": "View detail",
     "confirmed_payment_title": "Upcoming balances",
     "confirmed_payment_desc": "Confirmed events in the next 7 days with pending balance.",
-    "past_active_title": "Overdue events",
+    "past_active_title": "Past-due events",
     "past_active_desc": "Events that already passed but haven't been completed or cancelled.",
     "pending_event_talkback": "Pending event: {{service}}, date {{date}}, reason {{reason}}"
   },
   "upcoming": {
     "title": "Upcoming events",
+    "no_events": "No upcoming events",
     "empty": "No upcoming events",
     "view": "View"
   },
@@ -68,8 +70,16 @@
     "title": "Inventory alerts",
     "stock_current": "Current stock: {{current}} {{unit}}",
     "low_stock_talkback": "Low stock: {{name}}, current {{current}} {{unit}}",
-    "no_items": "Healthy stock across all items"
+    "no_items": "Healthy stock in all items"
   },
+  "topClients": "Top Clients",
+  "noClients": "No client data yet",
+  "productDemand": "Product Demand",
+  "noProducts": "No product data yet",
+  "forecast": "Revenue Forecast",
+  "noForecast": "No forecast data available",
+  "totalRevenue": "Projected Revenue",
+  "confirmedEvents": "Confirmed",
   "widgets": {
     "top_clients": {
       "title": "Top clients",
@@ -95,12 +105,12 @@
   "messages": {
     "event_completed": "Event marked as completed.",
     "event_cancelled": "Event cancelled.",
-    "payment_registered": "Payment recorded.",
-    "payment_partial": "Partial payment recorded. Pay the full balance to mark the event as completed.",
-    "payment_complete_manual": "Payment recorded. Mark the event as completed manually."
+    "payment_registered": "Payment registered.",
+    "payment_partial": "Partial payment registered. Pay full balance to mark event as completed.",
+    "payment_complete_manual": "Payment registered. Mark event as completed manually."
   },
   "event": {
-    "no_client": "Client",
+    "no_client": "No client",
     "pax": "pax",
     "summary_talkback": "{{client}}{{separator}}{{service}}, date {{date}}, status {{status}}"
   }
