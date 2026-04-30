@@ -5,10 +5,14 @@ struct ForecastWidgetView: View {
     let forecast: [ForecastDataPoint]
     let isLoading: Bool
 
+    private func tr(_ key: String, _ value: String) -> String {
+        FeatureL10n.text(key, value)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Label("Proyección de Ingresos", systemImage: "chart.line.uptrend.xyaxis")
+                Label(tr("dashboard.widgets.forecast.title", "Pronóstico"), systemImage: "chart.line.uptrend.xyaxis")
                     .font(.subheadline)
                     .fontWeight(.semibold)
                 Spacer()
@@ -23,7 +27,7 @@ struct ForecastWidgetView: View {
                 }
                 .padding(.vertical, 8)
             } else if forecast.isEmpty {
-                Text("Sin proyecciones disponibles")
+                Text(tr("dashboard.widgets.forecast.empty", "Sin pronóstico disponible"))
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .frame(maxWidth: .infinity, alignment: .center)
@@ -32,10 +36,10 @@ struct ForecastWidgetView: View {
                 // Summary grid
                 HStack(spacing: 12) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Ingresos Proyectados")
+                        Text(tr("dashboard.widgets.forecast.projected_revenue", "Ingresos proyectados"))
                             .font(.caption)
                             .foregroundColor(.secondary)
-                        Text(formatMXN(forecast.reduce(0) { $0 + $1.confirmedRevenue }))
+                        Text(DashboardFormatting.currencyMXN(forecast.reduce(0) { $0 + $1.confirmedRevenue }))
                             .font(.headline)
                             .fontWeight(.semibold)
                     }
@@ -45,7 +49,7 @@ struct ForecastWidgetView: View {
                     .cornerRadius(8)
 
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Confirmados")
+                        Text(tr("dashboard.widgets.forecast.confirmed_events", "Eventos confirmados"))
                             .font(.caption)
                             .foregroundColor(.secondary)
                         Text("\(forecast.reduce(0) { $0 + $1.confirmedEventCount })")
@@ -62,16 +66,24 @@ struct ForecastWidgetView: View {
                     ForEach(forecast.prefix(6), id: \.month) { point in
                         VStack(alignment: .leading, spacing: 4) {
                             HStack {
-                                Text(formatMonth(point.month))
+                                Text(DashboardFormatting.monthYear(from: point.month))
                                     .font(.subheadline)
                                     .fontWeight(.medium)
                                 Spacer()
-                                Text(formatMXN(point.confirmedRevenue))
+                                Text(DashboardFormatting.currencyMXN(point.confirmedRevenue))
                                     .font(.subheadline)
                                     .fontWeight(.semibold)
                             }
                             HStack {
-                                Text("\(point.confirmedEventCount) evento\(point.confirmedEventCount == 1 ? "" : "s")")
+                                Text(String.localizedStringWithFormat(
+                                    tr(
+                                        point.confirmedEventCount == 1
+                                            ? "dashboard.widgets.forecast.events_one"
+                                            : "dashboard.widgets.forecast.events_other",
+                                        point.confirmedEventCount == 1 ? "%lld evento" : "%lld eventos"
+                                    ),
+                                    point.confirmedEventCount
+                                ))
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                                 Spacer()
@@ -92,29 +104,6 @@ struct ForecastWidgetView: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(Color(.systemGray5), lineWidth: 1)
         )
-    }
-
-    private func formatMXN(_ amount: Double) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = "MXN"
-        formatter.currencySymbol = "$"
-        formatter.maximumFractionDigits = 0
-        return formatter.string(from: NSNumber(value: amount)) ?? "$0"
-    }
-
-    private func formatMonth(_ monthStr: String) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM"
-        formatter.locale = Locale(identifier: "es_MX")
-        
-        if let date = formatter.date(from: monthStr) {
-            let displayFormatter = DateFormatter()
-            displayFormatter.dateFormat = "MMM yyyy"
-            displayFormatter.locale = Locale(identifier: "es_MX")
-            return displayFormatter.string(from: date).capitalized
-        }
-        return monthStr
     }
 }
 

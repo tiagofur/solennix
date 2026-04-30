@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="dashboard_title">Home</string>
+    <string name="dashboard_refresh">Refresh</string>
+    <string name="dashboard_upgrade_banner">Grow your business with the Pro plan: unlimited events, inventory, and more.</string>
+    <string name="dashboard_attention_title">Need attention</string>
+    <string name="dashboard_attention_title_with_count">Need attention (%1$d)</string>
+    <string name="dashboard_attention_confirmed_payment_title">Upcoming balances</string>
+    <string name="dashboard_attention_overdue_event_kind">Overdue event</string>
+    <string name="dashboard_attention_quote_urgent_kind">Urgent quote</string>
+    <string name="dashboard_attention_register_payment">Record payment</string>
+    <string name="dashboard_attention_register_payment_and_complete">Record payment and complete</string>
+    <string name="dashboard_attention_pay_and_complete">Pay &amp; complete</string>
+    <string name="dashboard_attention_complete_only">Complete only</string>
+    <string name="dashboard_attention_complete">Complete</string>
+    <string name="dashboard_attention_view">View</string>
+    <string name="dashboard_attention_view_detail">View details</string>
+    <string name="dashboard_action_cancel">Cancel</string>
+    <string name="dashboard_message_event_completed">Event marked as completed</string>
+    <string name="dashboard_message_event_cancelled">Event cancelled</string>
+    <string name="dashboard_message_payment_registered">Payment recorded</string>
+    <string name="dashboard_message_payment_registered_and_completed">Payment recorded and event completed</string>
+    <string name="dashboard_message_payment_complete_manual">Payment recorded. Mark the event as completed manually.</string>
+    <string name="dashboard_error_status_change_failed">We couldn’t update the event status. Please try again soon.</string>
+    <string name="dashboard_error_payment_failed">We couldn’t record the payment. Please try again soon.</string>
+    <string name="dashboard_error_payment_requirements">Amount and payment method are required</string>
+    <string name="dashboard_kpi_net_sales">Net sales</string>
+    <string name="dashboard_kpi_collected">Collected</string>
+    <string name="dashboard_kpi_vat_collected">VAT collected</string>
+    <string name="dashboard_kpi_vat_outstanding">VAT due</string>
+    <string name="dashboard_kpi_events_this_month">Events this month</string>
+    <string name="dashboard_kpi_low_stock">Low stock</string>
+    <string name="dashboard_kpi_clients">Clients</string>
+    <string name="dashboard_kpi_quotes">Quotes</string>
+    <string name="dashboard_kpi_confirmed_completed">Confirmed and completed events</string>
+    <string name="dashboard_kpi_this_month">This month</string>
+    <string name="dashboard_kpi_due">Due</string>
+    <string name="dashboard_kpi_total">Total</string>
+    <string name="dashboard_quick_new_event">New event</string>
+    <string name="dashboard_quick_new_client">New client</string>
+    <string name="dashboard_inventory_alerts">Inventory alerts</string>
+    <string name="dashboard_upcoming_events">Upcoming events</string>
+    <string name="dashboard_event_status">Event status</string>
+    <string name="dashboard_financial_comparison">Financial comparison</string>
+    <string name="dashboard_revenue_last_6_months">Revenue — last 6 months</string>
+    <string name="dashboard_chart_count_percentage">%1$d (%2$d%%)</string>
+    <string name="dashboard_this_month">This month</string>
+    <string name="dashboard_status_quoted">Quoted</string>
+    <string name="dashboard_status_confirmed">Confirmed</string>
+    <string name="dashboard_status_completed">Completed</string>
+    <string name="dashboard_status_cancelled">Cancelled</string>
+    <string name="dashboard_low_stock_current">Current stock: %1$s %2$s</string>
+    <string name="dashboard_greeting_with_name">Hello, %1$s</string>
+    <string name="dashboard_greeting_generic">Hello</string>
+    <string name="dashboard_greeting_date_pattern">EEEE, MMMM d</string>
+    <string name="dashboard_month_short_pattern">MMM</string>
+    <string name="dashboard_payment_save">Save payment</string>
+    <string name="dashboard_a11y_pending_event">%1$s: %2$s, date %3$s, reason %4$s</string>
+    <string name="dashboard_a11y_event_with_client">%1$s, %2$s, date %3$s, status %4$s</string>
+    <string name="dashboard_a11y_event">%1$s, date %2$s, status %3$s</string>
+    <string name="dashboard_a11y_inventory_alert">%1$s, %2$s %3$s</string>
+
+    <string name="dashboard_widget_top_clients_title">Top clients</string>
+    <string name="dashboard_widget_top_clients_empty">No client data yet</string>
+    <plurals name="dashboard_widget_top_clients_events">
+        <item quantity="one">%1$d event</item>
+        <item quantity="other">%1$d events</item>
+    </plurals>
+
+    <string name="dashboard_widget_product_demand_title">Product demand</string>
+    <string name="dashboard_widget_product_demand_empty">No product data yet</string>
+    <plurals name="dashboard_widget_product_demand_uses">
+        <item quantity="one">%1$d use</item>
+        <item quantity="other">%1$d uses</item>
+    </plurals>
+
+    <string name="dashboard_widget_forecast_title">Revenue forecast</string>
+    <string name="dashboard_widget_forecast_empty">No forecast available</string>
+    <plurals name="dashboard_widget_forecast_events">
+        <item quantity="one">%1$d event</item>
+        <item quantity="other">%1$d events</item>
+    </plurals>
+</resources>

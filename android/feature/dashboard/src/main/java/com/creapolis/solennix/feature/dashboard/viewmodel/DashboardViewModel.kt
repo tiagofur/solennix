@@ -1,8 +1,10 @@
 package com.creapolis.solennix.feature.dashboard.viewmodel
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.creapolis.solennix.feature.dashboard.R
 import com.creapolis.solennix.core.data.repository.ClientRepository
 import com.creapolis.solennix.core.data.repository.DashboardRepository
 import com.creapolis.solennix.core.data.repository.EventRepository
@@ -25,6 +27,7 @@ import com.creapolis.solennix.core.model.ProductDemandItem
 import com.creapolis.solennix.core.model.ForecastDataPoint
 import com.creapolis.solennix.core.network.AuthManager
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -99,6 +102,7 @@ data class DashboardUiState(
 
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
+    @ApplicationContext private val appContext: Context,
     private val eventRepository: EventRepository,
     private val inventoryRepository: InventoryRepository,
     private val clientRepository: ClientRepository,
@@ -107,6 +111,8 @@ class DashboardViewModel @Inject constructor(
     private val dashboardRepository: DashboardRepository,
     private val authManager: AuthManager
 ) : ViewModel() {
+
+    private fun tr(id: Int, vararg args: Any): String = appContext.getString(id, *args)
 
     private val _isRefreshing = MutableStateFlow(false)
     private val _updatingEventId = MutableStateFlow<String?>(null)
@@ -219,19 +225,19 @@ class DashboardViewModel @Inject constructor(
                     hasPending
                 ) {
                     pendingEvents.add(
-                        PendingEvent(event, PendingEventReason.PAYMENT_DUE, "Cobro por cerrar", pendingAmount)
+                        PendingEvent(event, PendingEventReason.PAYMENT_DUE, tr(R.string.dashboard_attention_confirmed_payment_title), pendingAmount)
                     )
                 } else if (eventDate.isBefore(now) &&
                     (event.status == EventStatus.QUOTED || event.status == EventStatus.CONFIRMED)
                 ) {
                     pendingEvents.add(
-                        PendingEvent(event, PendingEventReason.OVERDUE_EVENT, "Evento vencido", pendingAmount)
+                        PendingEvent(event, PendingEventReason.OVERDUE_EVENT, tr(R.string.dashboard_attention_overdue_event_kind), pendingAmount)
                     )
                 } else if (event.status == EventStatus.QUOTED &&
                     !eventDate.isBefore(now) && !eventDate.isAfter(fourteenDaysFromNow)
                 ) {
                     pendingEvents.add(
-                        PendingEvent(event, PendingEventReason.QUOTE_URGENT, "Cotización urgente", pendingAmount)
+                        PendingEvent(event, PendingEventReason.QUOTE_URGENT, tr(R.string.dashboard_attention_quote_urgent_kind), pendingAmount)
                     )
                 }
             } catch (_: Exception) { }
@@ -428,13 +434,13 @@ class DashboardViewModel @Inject constructor(
                 val event = eventRepository.getEvent(eventId) ?: return@launch
                 eventRepository.updateEvent(event.copy(status = newStatus))
                 _transientMessage.value = when (newStatus) {
-                    EventStatus.COMPLETED -> "Evento marcado como completado"
-                    EventStatus.CANCELLED -> "Evento cancelado"
+                    EventStatus.COMPLETED -> tr(R.string.dashboard_message_event_completed)
+                    EventStatus.CANCELLED -> tr(R.string.dashboard_message_event_cancelled)
                     else -> null
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "updateEventStatus failed for event=$eventId", e)
-                _transientMessage.value = "No pudimos actualizar el estado del evento. Reintentá en un momento."
+                _transientMessage.value = tr(R.string.dashboard_error_status_change_failed)
             } finally {
                 _updatingEventId.value = null
             }
@@ -450,7 +456,7 @@ class DashboardViewModel @Inject constructor(
         autoComplete: Boolean
     ) {
         if (amount <= 0 || method.isBlank()) {
-            _transientMessage.value = "Monto y método de pago son requeridos"
+            _transientMessage.value = tr(R.string.dashboard_error_payment_requirements)
             return
         }
         // Auto-complete only when the entered amount actually settles the
@@ -478,18 +484,18 @@ class DashboardViewModel @Inject constructor(
                     try {
                         val refreshed = eventRepository.getEvent(pendingEvent.event.id) ?: pendingEvent.event
                         eventRepository.updateEvent(refreshed.copy(status = EventStatus.COMPLETED))
-                        _transientMessage.value = "Pago registrado y evento completado"
+                        _transientMessage.value = tr(R.string.dashboard_message_payment_registered_and_completed)
                     } catch (statusErr: Exception) {
                         Log.w(TAG, "Auto-complete after payment failed for event=${pendingEvent.event.id}", statusErr)
-                        _transientMessage.value = "Pago registrado. Marcá el evento como completado manualmente."
+                        _transientMessage.value = tr(R.string.dashboard_message_payment_complete_manual)
                     }
                 } else {
-                    _transientMessage.value = "Pago registrado correctamente"
+                    _transientMessage.value = tr(R.string.dashboard_message_payment_registered)
                 }
                 _paymentModalEvent.value = null
             } catch (e: Exception) {
                 Log.e(TAG, "registerPayment failed for event=${pendingEvent.event.id}", e)
-                _transientMessage.value = "No pudimos registrar el pago. Reintentá en un momento."
+                _transientMessage.value = tr(R.string.dashboard_error_payment_failed)
             } finally {
                 _updatingEventId.value = null
             }

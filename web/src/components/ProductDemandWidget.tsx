@@ -14,7 +14,7 @@ export function ProductDemandWidget() {
         <div className="flex items-center gap-3 mb-4">
           <Package className="w-5 h-5 text-primary" />
           <h3 className="text-sm font-semibold text-foreground">
-            {t("dashboard.productDemand", "Product Demand")}
+            {t("dashboard:widgets.product_demand.title")}
           </h3>
         </div>
         <div className="space-y-3">
@@ -32,12 +32,12 @@ export function ProductDemandWidget() {
         <div className="flex items-center gap-3 mb-4">
           <Package className="w-5 h-5 text-primary" />
           <h3 className="text-sm font-semibold text-foreground">
-            {t("dashboard.productDemand", "Product Demand")}
+            {t("dashboard:widgets.product_demand.title")}
           </h3>
         </div>
         <div className="flex items-center gap-3 text-error text-sm">
           <AlertTriangle className="w-4 h-4 shrink-0" />
-          <span>{t("common.error", "Error loading data")}</span>
+          <span>{t("common:error.generic")}</span>
         </div>
       </div>
     );
@@ -49,11 +49,11 @@ export function ProductDemandWidget() {
         <div className="flex items-center gap-3 mb-4">
           <Package className="w-5 h-5 text-primary" />
           <h3 className="text-sm font-semibold text-foreground">
-            {t("dashboard.productDemand", "Product Demand")}
+            {t("dashboard:widgets.product_demand.title")}
           </h3>
         </div>
         <p className="text-sm text-foreground-secondary">
-          {t("dashboard.noProducts", "No product data yet")}
+          {t("dashboard:widgets.product_demand.empty")}
         </p>
       </div>
     );
@@ -64,7 +64,7 @@ export function ProductDemandWidget() {
       <div className="flex items-center gap-3 mb-4">
         <Package className="w-5 h-5 text-primary" />
         <h3 className="text-sm font-semibold text-foreground">
-          {t("dashboard.productDemand", "Product Demand")}
+          {t("dashboard:widgets.product_demand.title")}
         </h3>
       </div>
       <div className="space-y-3">
@@ -79,7 +79,7 @@ export function ProductDemandWidget() {
               </p>
               <p className="text-xs text-foreground-secondary">
                 {item.times_used}{" "}
-                {t("common.uses", "use", { count: item.times_used })}
+                {t("dashboard:widgets.product_demand.uses", { count: item.times_used })}
               </p>
             </div>
             <p className="text-sm font-semibold text-primary whitespace-nowrap ml-2">

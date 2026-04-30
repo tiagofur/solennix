@@ -1,25 +1,41 @@
 {
-  "title": "Dashboard",
-  "welcome": "Bienvenido, {{name}}",
+  "title": "Inicio",
+  "welcome": "Hola, {{name}}",
+  "greeting": {
+    "generic": "Hola"
+  },
   "kpis": {
-    "net_sales": "Ventas Netas",
-    "cash_collected": "Cobrado Real",
-    "vat_outstanding": "IVA por Cobrar",
-    "total_revenue": "Ingresos totales",
-    "active_events": "Eventos activos",
-    "new_clients": "Nuevos clientes",
-    "average_ticket": "Ticket promedio"
+    "net_sales": "Ventas netas",
+    "cash_collected": "Cobrado",
+    "vat_collected": "IVA cobrado",
+    "vat_outstanding": "IVA pendiente",
+    "active_events": "Eventos del mes",
+    "low_stock": "Stock bajo",
+    "new_clients": "Clientes",
+    "average_ticket": "Ticket promedio",
+    "quotes": "Cotizaciones",
+    "subtitle": {
+      "confirmed_completed": "Eventos confirmados y completados",
+      "this_month": "Este mes",
+      "due": "Por cobrar",
+      "total": "Total"
+    }
   },
   "status_chart": {
-    "title": "Estado de Eventos",
+    "title": "Estado de eventos",
     "events_this_month": "eventos este mes",
-    "no_data": "Sin datos para graficar este mes",
-    "create_first": "Crear primer evento"
+    "no_data": "Sin eventos este mes",
+    "create_first": "Crea tu primer evento",
+    "distribution_aria": "Estado de eventos: {{segments}}",
+    "segment_title": "{{name}}: {{value}}"
   },
   "revenue_chart": {
-    "title": "Ingresos — Últimos 6 meses",
+    "title": "Ingresos — últimos 6 meses",
     "aria_label": "Gráfico de ingresos por mes en los últimos 6 meses",
-    "revenue": "Ingresos"
+    "revenue": "Ingresos",
+    "pro_title": "Tendencias Pro",
+    "pro_description": "Mejorá tu plan para ver gráficos de ingresos mensuales.",
+    "view_plans": "Ver planes"
   },
   "attention": {
     "title": "Requieren atención",
@@ -27,31 +43,55 @@
     "alerts_count_one": "1 alerta",
     "alerts_count_other": "{{count}} alertas",
     "pending_balance": "Saldo pendiente {{pending}} de {{total}}",
+    "pending_balance_label": "Saldo pendiente",
     "past_confirmed": "Evento pasado aún confirmado",
     "past_quoted": "Cotización vencida sin cerrar",
     "register_payment": "Registrar pago",
+    "register_payment_and_complete": "Registrar pago y completar",
     "pay_and_complete": "Pagar y completar",
     "complete_only": "Solo completar",
+    "complete": "Completar",
+    "view": "Ver",
     "view_detail": "Ver detalle",
     "confirmed_payment_title": "Saldos próximos",
     "confirmed_payment_desc": "Eventos confirmados en los próximos 7 días con saldo pendiente.",
     "past_active_title": "Eventos vencidos",
-    "past_active_desc": "Eventos que ya pasaron pero no han sido completados o cancelados."
+    "past_active_desc": "Eventos que ya pasaron pero no han sido completados o cancelados.",
+    "pending_event_talkback": "Evento pendiente: {{service}}, fecha {{date}}, motivo {{reason}}"
   },
   "upcoming": {
-    "no_events": "No hay eventos próximos"
+    "title": "Próximos eventos",
+    "empty": "Sin eventos próximos",
+    "view": "Ver"
   },
   "inventory": {
+    "title": "Alertas de inventario",
+    "stock_current": "Stock actual: {{current}} {{unit}}",
+    "low_stock_talkback": "Stock bajo: {{name}}, actual {{current}} {{unit}}",
     "no_items": "Stock saludable en todos los ítems"
   },
-  "topClients": "Top Clientes",
-  "noClients": "Sin datos de clientes aún",
-  "productDemand": "Demanda de Productos",
-  "noProducts": "Sin datos de productos aún",
-  "forecast": "Proyección de Ingresos",
-  "noForecast": "Sin proyecciones disponibles",
-  "totalRevenue": "Ingresos Proyectados",
-  "confirmedEvents": "Eventos Confirmados",
+  "widgets": {
+    "top_clients": {
+      "title": "Clientes principales",
+      "empty": "Sin datos de clientes aún",
+      "events_one": "{{count}} evento",
+      "events_other": "{{count}} eventos"
+    },
+    "product_demand": {
+      "title": "Demanda de productos",
+      "empty": "Sin datos de productos aún",
+      "uses_one": "{{count}} uso",
+      "uses_other": "{{count}} usos"
+    },
+    "forecast": {
+      "title": "Proyección de ingresos",
+      "empty": "Sin proyecciones disponibles",
+      "projected_revenue": "Ingresos proyectados",
+      "confirmed_events": "Confirmados",
+      "events_one": "{{count}} evento",
+      "events_other": "{{count}} eventos"
+    }
+  },
   "messages": {
     "event_completed": "Evento marcado como completado.",
     "event_cancelled": "Evento cancelado.",
@@ -60,7 +100,8 @@
     "payment_complete_manual": "Pago registrado. Marcá el evento como completado manualmente."
   },
   "event": {
-    "no_client": "Sin cliente",
-    "pax": "pax"
+    "no_client": "Cliente",
+    "pax": "pax",
+    "summary_talkback": "{{client}}{{separator}}{{service}}, fecha {{date}}, estado {{status}}"
   }
 }

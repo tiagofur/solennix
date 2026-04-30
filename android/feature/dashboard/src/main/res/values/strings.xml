@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="dashboard_title">Inicio</string>
+    <string name="dashboard_refresh">Actualizar</string>
+    <string name="dashboard_upgrade_banner">Potenciá tu negocio con el plan Pro: eventos ilimitados, inventario y más.</string>
+    <string name="dashboard_attention_title">Requieren atención</string>
+    <string name="dashboard_attention_title_with_count">Requieren atención (%1$d)</string>
+    <string name="dashboard_attention_confirmed_payment_title">Saldos próximos</string>
+    <string name="dashboard_attention_overdue_event_kind">Evento vencido</string>
+    <string name="dashboard_attention_quote_urgent_kind">Cotización urgente</string>
+    <string name="dashboard_attention_register_payment">Registrar pago</string>
+    <string name="dashboard_attention_register_payment_and_complete">Registrar pago y completar</string>
+    <string name="dashboard_attention_pay_and_complete">Pagar y completar</string>
+    <string name="dashboard_attention_complete_only">Solo completar</string>
+    <string name="dashboard_attention_complete">Completar</string>
+    <string name="dashboard_attention_view">Ver</string>
+    <string name="dashboard_attention_view_detail">Ver detalle</string>
+    <string name="dashboard_action_cancel">Cancelar</string>
+    <string name="dashboard_message_event_completed">Evento marcado como completado</string>
+    <string name="dashboard_message_event_cancelled">Evento cancelado</string>
+    <string name="dashboard_message_payment_registered">Pago registrado correctamente</string>
+    <string name="dashboard_message_payment_registered_and_completed">Pago registrado y evento completado</string>
+    <string name="dashboard_message_payment_complete_manual">Pago registrado. Marcá el evento como completado manualmente.</string>
+    <string name="dashboard_error_status_change_failed">No pudimos actualizar el estado del evento. Reintentá en un momento.</string>
+    <string name="dashboard_error_payment_failed">No pudimos registrar el pago. Reintentá en un momento.</string>
+    <string name="dashboard_error_payment_requirements">Monto y método de pago son requeridos</string>
+    <string name="dashboard_kpi_net_sales">Ventas netas</string>
+    <string name="dashboard_kpi_collected">Cobrado</string>
+    <string name="dashboard_kpi_vat_collected">IVA cobrado</string>
+    <string name="dashboard_kpi_vat_outstanding">IVA pendiente</string>
+    <string name="dashboard_kpi_events_this_month">Eventos del mes</string>
+    <string name="dashboard_kpi_low_stock">Stock bajo</string>
+    <string name="dashboard_kpi_clients">Clientes</string>
+    <string name="dashboard_kpi_quotes">Cotizaciones</string>
+    <string name="dashboard_kpi_confirmed_completed">Eventos confirmados y completados</string>
+    <string name="dashboard_kpi_this_month">Este mes</string>
+    <string name="dashboard_kpi_due">Por cobrar</string>
+    <string name="dashboard_kpi_total">Total</string>
+    <string name="dashboard_quick_new_event">Nuevo evento</string>
+    <string name="dashboard_quick_new_client">Nuevo cliente</string>
+    <string name="dashboard_inventory_alerts">Alertas de inventario</string>
+    <string name="dashboard_upcoming_events">Próximos eventos</string>
+    <string name="dashboard_event_status">Estado de eventos</string>
+    <string name="dashboard_financial_comparison">Comparativa financiera</string>
+    <string name="dashboard_revenue_last_6_months">Ingresos — últimos 6 meses</string>
+    <string name="dashboard_chart_count_percentage">%1$d (%2$d%%)</string>
+    <string name="dashboard_this_month">Este mes</string>
+    <string name="dashboard_status_quoted">Cotizado</string>
+    <string name="dashboard_status_confirmed">Confirmado</string>
+    <string name="dashboard_status_completed">Completado</string>
+    <string name="dashboard_status_cancelled">Cancelado</string>
+    <string name="dashboard_low_stock_current">Stock actual: %1$s %2$s</string>
+    <string name="dashboard_greeting_with_name">Hola, %1$s</string>
+    <string name="dashboard_greeting_generic">Hola</string>
+    <string name="dashboard_greeting_date_pattern">"EEEE d 'de' MMMM"</string>
+    <string name="dashboard_month_short_pattern">MMM</string>
+    <string name="dashboard_payment_save">Guardar pago</string>
+    <string name="dashboard_a11y_pending_event">%1$s: %2$s, fecha %3$s, motivo %4$s</string>
+    <string name="dashboard_a11y_event_with_client">%1$s, %2$s, fecha %3$s, estado %4$s</string>
+    <string name="dashboard_a11y_event">%1$s, fecha %2$s, estado %3$s</string>
+    <string name="dashboard_a11y_inventory_alert">%1$s, %2$s %3$s</string>
+
+    <string name="dashboard_widget_top_clients_title">Clientes principales</string>
+    <string name="dashboard_widget_top_clients_empty">Sin datos de clientes aún</string>
+    <plurals name="dashboard_widget_top_clients_events">
+        <item quantity="one">%1$d evento</item>
+        <item quantity="other">%1$d eventos</item>
+    </plurals>
+
+    <string name="dashboard_widget_product_demand_title">Demanda de productos</string>
+    <string name="dashboard_widget_product_demand_empty">Sin datos de productos aún</string>
+    <plurals name="dashboard_widget_product_demand_uses">
+        <item quantity="one">%1$d uso</item>
+        <item quantity="other">%1$d usos</item>
+    </plurals>
+
+    <string name="dashboard_widget_forecast_title">Proyección de ingresos</string>
+    <string name="dashboard_widget_forecast_empty">Sin proyecciones disponibles</string>
+    <plurals name="dashboard_widget_forecast_events">
+        <item quantity="one">%1$d evento</item>
+        <item quantity="other">%1$d eventos</item>
+    </plurals>
+</resources>

@@ -5,10 +5,14 @@ struct ProductDemandWidgetView: View {
     let products: [ProductDemandItem]
     let isLoading: Bool
 
+    private func tr(_ key: String, _ value: String) -> String {
+        FeatureL10n.text(key, value)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Label("Demanda de Productos", systemImage: "chart.bar")
+                Label(tr("dashboard.widgets.product_demand.title", "Demanda de productos"), systemImage: "chart.bar")
                     .font(.subheadline)
                     .fontWeight(.semibold)
                 Spacer()
@@ -23,7 +27,7 @@ struct ProductDemandWidgetView: View {
                     .padding(.vertical, 8)
                 }
             } else if products.isEmpty {
-                Text("Sin datos de productos aún")
+                Text(tr("dashboard.widgets.product_demand.empty", "Sin demanda registrada"))
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .frame(maxWidth: .infinity, alignment: .center)
@@ -37,11 +41,19 @@ struct ProductDemandWidgetView: View {
                                 .fontWeight(.medium)
                                 .lineLimit(1)
                             HStack {
-                                Text("\(product.timesUsed) uso\(product.timesUsed == 1 ? "" : "s")")
+                                Text(String.localizedStringWithFormat(
+                                    tr(
+                                        product.timesUsed == 1
+                                            ? "dashboard.widgets.product_demand.uses_one"
+                                            : "dashboard.widgets.product_demand.uses_other",
+                                        product.timesUsed == 1 ? "%lld uso" : "%lld usos"
+                                    ),
+                                    product.timesUsed
+                                ))
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                                 Spacer()
-                                Text(formatMXN(product.totalRevenue))
+                                Text(DashboardFormatting.currencyMXN(product.totalRevenue))
                                     .font(.caption)
                                     .fontWeight(.semibold)
                                     .foregroundColor(.primary)
@@ -62,15 +74,6 @@ struct ProductDemandWidgetView: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(Color(.systemGray5), lineWidth: 1)
         )
-    }
-
-    private func formatMXN(_ amount: Double) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = "MXN"
-        formatter.currencySymbol = "$"
-        formatter.maximumFractionDigits = 0
-        return formatter.string(from: NSNumber(value: amount)) ?? "$0"
     }
 }
 

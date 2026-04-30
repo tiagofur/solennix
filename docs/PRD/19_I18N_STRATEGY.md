@@ -6,8 +6,8 @@
 ## Tracker de ejecución
 
 - **Epic**: #202 — `feat(cross-platform): complete product-wide i18n parity`
-- **Slices activos**:
-  - #94 — Dashboard
+- **Slices**:
+  - #94 — Dashboard ✅ implementado en web + iOS + Android; issue cerrado
   - #95 — Events list
   - #203 — Canonical copy matrix + governance
   - #204 — Event detail + event form

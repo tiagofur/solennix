@@ -1,4 +1,5 @@
 import Foundation
+import Observation
 import SolennixCore
 import SolennixNetwork
 
@@ -33,6 +34,10 @@ public struct PendingEventWithReason: Identifiable {
 @Observable
 public final class PendingEventsViewModel {
     let apiClient: APIClient
+
+    private func tr(_ key: String, _ value: String) -> String {
+        FeatureL10n.text(key, value)
+    }
 
     public var pendingEvents: [PendingEventWithReason] = []
     public var isLoading: Bool = true
@@ -88,7 +93,7 @@ public final class PendingEventsViewModel {
                         PendingEventWithReason(
                             event: event,
                             reason: .paymentDue,
-                            reasonLabel: "Cobro por cerrar",
+                            reasonLabel: tr("dashboard.attention.confirmed_payment_title", "Pago pendiente"),
                             pendingAmount: pendingAmount
                         )
                     )
@@ -101,7 +106,7 @@ public final class PendingEventsViewModel {
                         PendingEventWithReason(
                             event: event,
                             reason: .overdueEvent,
-                            reasonLabel: "Evento vencido",
+                            reasonLabel: tr("dashboard.attention.overdue_event_kind", "Vencido"),
                             pendingAmount: pendingAmount
                         )
                     )
@@ -114,7 +119,7 @@ public final class PendingEventsViewModel {
                         PendingEventWithReason(
                             event: event,
                             reason: .quoteUrgent,
-                            reasonLabel: "Cotización urgente",
+                            reasonLabel: tr("dashboard.attention.quote_urgent_kind", "Cotización urgente"),
                             pendingAmount: pendingAmount
                         )
                     )
@@ -143,10 +148,10 @@ public final class PendingEventsViewModel {
                 isPresented = false
             }
             transientMessage = newStatus == .completed
-                ? "Evento marcado como completado"
-                : "Evento cancelado"
+                ? tr("dashboard.messages.event_completed", "Evento completado")
+                : tr("dashboard.messages.event_cancelled", "Evento cancelado")
         } catch {
-            transientMessage = "Error al actualizar el estado"
+            transientMessage = tr("dashboard.error.status_change_failed", "No se pudo cambiar el estado")
             print("Error updating event status: \(error)")
         }
         updatingEventId = nil
@@ -181,7 +186,7 @@ public final class PendingEventsViewModel {
     public func registerPayment() async {
         guard let pendingEvent = paymentSheetEvent else { return }
         guard let amount = Double(paymentAmount.replacingOccurrences(of: ",", with: ".")), amount > 0 else {
-            transientMessage = "Monto inválido"
+            transientMessage = tr("dashboard.error.invalid_amount", "Monto inválido")
             return
         }
 
@@ -224,7 +229,7 @@ public final class PendingEventsViewModel {
                 userInfo: [
                     "payment_id": payment.id,
                     "event_id": pendingEvent.event.id,
-                    "client_name": "Cliente",
+                    "client_name": tr("dashboard.event.no_client", "Cliente"),
                     "amount": payment.amount
                 ]
             )
@@ -234,12 +239,12 @@ public final class PendingEventsViewModel {
                     let statusBody = ["status": EventStatus.completed.rawValue]
                     let _: Event = try await apiClient.put(Endpoint.event(pendingEvent.event.id), body: statusBody)
                     pendingEvents.removeAll { $0.event.id == pendingEvent.event.id }
-                    transientMessage = "Pago registrado y evento completado"
+                    transientMessage = tr("dashboard.messages.payment_registered_and_completed", "Pago registrado y evento completado")
                 } catch {
-                    transientMessage = "Pago registrado. Marcá el evento como completado manualmente."
+                    transientMessage = tr("dashboard.messages.payment_complete_manual", "Pago registrado. Completa el evento manualmente")
                 }
             } else {
-                transientMessage = "Pago registrado correctamente"
+                transientMessage = tr("dashboard.messages.payment_registered", "Pago registrado")
                 // Reload to reflect the new balance: the affected pending
                 // event may now be fully paid (and should drop off the list)
                 // or simply show a smaller pendingAmount on the next open.
@@ -252,7 +257,7 @@ public final class PendingEventsViewModel {
             dismissPaymentSheet()
         } catch {
             HapticsHelper.play(.error)
-            transientMessage = "Error al registrar el pago"
+            transientMessage = tr("dashboard.error.payment_failed", "No se pudo registrar el pago")
         }
 
         isSavingPayment = false
