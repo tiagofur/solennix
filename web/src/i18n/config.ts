@@ -51,15 +51,21 @@ import enStatic from "./locales/en/static.json";
 import esPublic from "./locales/es/public.json";
 import enPublic from "./locales/en/public.json";
 
+const isTest = import.meta.env.MODE === "test";
+
+if (!isTest) {
+  i18n.use(LanguageDetector);
+}
+
 /**
  * i18next setup — namespaces are added incrementally as each screen is
  * internationalised. `common` holds shared strings (buttons, nav, errors).
  */
 void i18n
-  .use(LanguageDetector)
   .use(initReactI18next)
   .init({
     initAsync: false,
+    lng: isTest ? "es" : undefined,
     resources: {
       es: {
         common: esCommon,
@@ -123,7 +129,7 @@ void i18n
     interpolation: {
       escapeValue: false,
     },
-    detection: {
+    detection: isTest ? undefined : {
       order: ["localStorage", "navigator"],
       caches: ["localStorage"],
       lookupLocalStorage: "i18nextLng",
