@@ -3,26 +3,7 @@
 import '@testing-library/jest-dom/vitest';
 // Initialize i18next before any component imports so `useTranslation`
 // returns real Spanish strings in tests (matching production default).
-import i18n, { i18nReady } from '../src/i18n/config';
-
-const TEST_NAMESPACES = [
-  'common',
-  'auth',
-  'calendar',
-  'dashboard',
-  'clients',
-  'products',
-  'inventory',
-  'events',
-  'quotes',
-  'staff',
-  'admin',
-  'settings',
-  'search',
-  'pricing',
-  'static',
-  'public',
-] as const;
+import i18n, { i18nReady, TEST_NAMESPACES } from './testI18n';
 
 await i18nReady;
 // Pin tests to Spanish so string assertions don't flip to English based
