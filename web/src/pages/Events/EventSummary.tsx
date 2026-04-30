@@ -491,18 +491,6 @@ export const EventSummary: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => {
-                    generateInvoicePDF(event, profile as UserProfile | null, products, extras, i18n.language);
-                    setActionsDropdownOpen(false);
-                  }}
-                  className="w-full flex items-center px-4 py-2.5 text-sm text-text hover:bg-surface-alt dark:hover:bg-surface transition-colors"
-                  role="menuitem"
-                >
-                  <FileText className="h-5 w-5 mr-3 text-text-secondary" />
-                  {t('events:summary.actions.invoice')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
                     const purchaseSupplies = supplies
                       .filter((s: EventSupply) => s.source === 'purchase')
                       .map((s: EventSupply) => ({
@@ -849,14 +837,6 @@ export const EventSummary: React.FC = () => {
                     <Building className="h-3.5 w-3.5" /> {t('events:general.location')}
                   </dt>
                   <dd className="mt-1 font-bold text-text">{event.location || t('common:not_defined')}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs font-semibold text-text-tertiary uppercase tracking-wide flex items-center gap-1.5">
-                    <Receipt className="h-3.5 w-3.5" /> {t('events:financials.invoice')}
-                  </dt>
-                  <dd className="mt-1 font-bold text-text">
-                    {event.requires_invoice ? t('events:financials.requires_invoice_rate', { rate: event.tax_rate || 16 }) : t('events:financials.no_invoice')}
-                  </dd>
                 </div>
                 {event.deposit_percent > 0 && (
                   <div>
