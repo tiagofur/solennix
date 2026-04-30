@@ -25,6 +25,7 @@ import kotlinx.coroutines.withContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -49,6 +50,7 @@ import com.creapolis.solennix.core.model.extensions.asMXN
 import com.creapolis.solennix.core.model.extensions.formatQuantity
 import com.creapolis.solennix.core.model.extensions.toPaymentMethodLabel
 import com.creapolis.solennix.core.network.UrlResolver
+import com.creapolis.solennix.feature.events.R
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
@@ -132,7 +134,7 @@ fun EventDetailScreen(
         modifier = sharedBoundsModifier,
         topBar = {
             SolennixTopAppBar(
-                title = { Text("Detalle del Evento") },
+                title = { Text(stringResource(R.string.events_detail_title)) },
                 onSearchClick = onSearchClick,
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
@@ -148,7 +150,7 @@ fun EventDetailScreen(
                             IconButton(onClick = { showMoreMenu = true }) {
                                 Icon(
                                     imageVector = Icons.Default.MoreVert,
-                                    contentDescription = "Más acciones"
+                                    contentDescription = stringResource(R.string.events_detail_more_actions)
                                 )
                             }
                             DropdownMenu(
@@ -156,7 +158,7 @@ fun EventDetailScreen(
                                 onDismissRequest = { showMoreMenu = false }
                             ) {
                                 DropdownMenuItem(
-                                    text = { Text("Editar") },
+                                    text = { Text(stringResource(R.string.events_detail_action_edit)) },
                                     leadingIcon = {
                                         Icon(Icons.Default.Edit, contentDescription = null)
                                     },
@@ -166,7 +168,7 @@ fun EventDetailScreen(
                                     }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text("Duplicar evento") },
+                                    text = { Text(stringResource(R.string.events_detail_action_duplicate)) },
                                     leadingIcon = {
                                         Icon(Icons.Default.ContentCopy, contentDescription = null)
                                     },
@@ -178,7 +180,7 @@ fun EventDetailScreen(
                                     }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text("Compartir por WhatsApp") },
+                                    text = { Text(stringResource(R.string.events_detail_action_share_whatsapp)) },
                                     leadingIcon = {
                                         Icon(Icons.Default.Share, contentDescription = null)
                                     },
@@ -196,7 +198,7 @@ fun EventDetailScreen(
                                 DropdownMenuItem(
                                     text = {
                                         Text(
-                                            "Eliminar",
+                                            stringResource(R.string.events_detail_action_delete),
                                             color = SolennixTheme.colors.error
                                         )
                                     },
@@ -395,7 +397,7 @@ fun EventDetailScreen(
                     onConfirm = { amount, method, notes, date ->
                         viewModel.addPayment(amount, method, notes, date)
                         showPaymentModal = false
-                        Toast.makeText(context, "Pago registrado", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, context.getString(R.string.events_detail_payments_add_success), Toast.LENGTH_SHORT).show()
                     }
                 )
             }
@@ -428,8 +430,8 @@ fun EventDetailScreen(
             if (showDeleteDialog) {
                 AlertDialog(
                     onDismissRequest = { showDeleteDialog = false },
-                    title = { Text("Eliminar evento") },
-                    text = { Text("\u00bfEliminar este evento? Esta acci\u00f3n no se puede deshacer.") },
+                    title = { Text(stringResource(R.string.events_detail_delete_title)) },
+                    text = { Text(stringResource(R.string.events_detail_delete_message)) },
                     confirmButton = {
                         TextButton(
                             onClick = {
@@ -438,12 +440,12 @@ fun EventDetailScreen(
                             },
                             colors = ButtonDefaults.textButtonColors(contentColor = SolennixTheme.colors.error)
                         ) {
-                            Text("Eliminar")
+                            Text(stringResource(R.string.events_detail_action_delete))
                         }
                     },
                     dismissButton = {
                         TextButton(onClick = { showDeleteDialog = false }) {
-                            Text("Cancelar")
+                            Text(stringResource(R.string.events_list_cancel))
                         }
                     }
                 )
@@ -2294,4 +2296,3 @@ private fun SummaryNavCard(
         }
     }
 }
-

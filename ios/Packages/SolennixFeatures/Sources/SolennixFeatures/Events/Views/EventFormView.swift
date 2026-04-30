@@ -31,13 +31,13 @@ public struct EventFormView: View {
         let label: String
     }
 
-    private let steps: [StepMeta] = [
-        StepMeta(icon: "info.circle.fill", label: "General"),
-        StepMeta(icon: "shippingbox.fill", label: "Productos"),
-        StepMeta(icon: "sparkles", label: "Extras"),
-        StepMeta(icon: "cart.fill", label: "Inventario"),
-        StepMeta(icon: "dollarsign.circle.fill", label: "Finanzas"),
-    ]
+    private var steps: [StepMeta] {[
+        StepMeta(icon: "info.circle.fill", label: tr("events.form.step.general", "General")),
+        StepMeta(icon: "shippingbox.fill", label: tr("events.form.step.products", "Productos")),
+        StepMeta(icon: "sparkles", label: tr("events.form.step.extras", "Extras")),
+        StepMeta(icon: "cart.fill", label: tr("events.form.step.inventory", "Inventario")),
+        StepMeta(icon: "dollarsign.circle.fill", label: tr("events.form.step.finances", "Finanzas")),
+    ]}
 
     public var body: some View {
         VStack(spacing: 0) {
@@ -74,12 +74,12 @@ public struct EventFormView: View {
             navigationButtons
         }
         .background(SolennixColors.surfaceGrouped)
-        .navigationTitle(eventId != nil ? "Editar Evento" : "Nuevo Evento")
+        .navigationTitle(eventId != nil ? tr("events.form.title_edit", "Editar evento") : tr("events.form.title_new", "Nuevo evento"))
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                Button("Cancelar") {
+                Button(tr("events.form.cancel", "Cancelar")) {
                     dismiss()
                 }
                 .foregroundStyle(SolennixColors.text)
@@ -87,16 +87,16 @@ public struct EventFormView: View {
         }
         .overlay {
             if viewModel.isLoading {
-                ProgressView("Cargando...")
+                ProgressView(tr("events.form.loading", "Cargando..."))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(SolennixColors.background.opacity(0.6))
             }
         }
-        .alert("Error", isPresented: .init(
+        .alert(tr("events.form.error_title", "Error"), isPresented: .init(
             get: { viewModel.errorMessage != nil },
             set: { if !$0 { viewModel.errorMessage = nil } }
         )) {
-            Button("OK", role: .cancel) {}
+            Button(tr("events.form.ok", "OK"), role: .cancel) {}
         } message: {
             Text(viewModel.errorMessage ?? "")
         }
@@ -197,7 +197,7 @@ public struct EventFormView: View {
                 } label: {
                     HStack(spacing: Spacing.xs) {
                         Image(systemName: "chevron.left")
-                        Text("Anterior")
+                        Text(tr("events.form.previous", "Anterior"))
                     }
                     .font(.subheadline)
                     .fontWeight(.medium)
@@ -220,7 +220,7 @@ public struct EventFormView: View {
                     viewModel.nextStep()
                 } label: {
                     HStack(spacing: Spacing.xs) {
-                        Text("Siguiente")
+                        Text(tr("events.form.next", "Siguiente"))
                         Image(systemName: "chevron.right")
                     }
                     .font(.subheadline)
@@ -235,7 +235,7 @@ public struct EventFormView: View {
                 .opacity(viewModel.currentStep == 1 && !viewModel.isStep1Valid ? 0.5 : 1.0)
             } else {
                 PremiumButton(
-                    title: "Guardar",
+                    title: tr("events.form.save", "Guardar"),
                     isLoading: viewModel.isSaving,
                     isDisabled: !viewModel.isStep1Valid,
                     fullWidth: false
@@ -266,6 +266,10 @@ public struct EventFormView: View {
         .padding(.horizontal, Spacing.md)
         .padding(.vertical, Spacing.sm)
         .background(SolennixColors.background)
+    }
+
+    private func tr(_ key: String, _ value: String) -> String {
+        FeatureL10n.text(key, value)
     }
 }
 

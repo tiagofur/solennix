@@ -3,6 +3,14 @@ import SolennixCore
 import SolennixDesign
 import SolennixNetwork
 
+private func tr(_ key: String, _ value: String) -> String {
+    FeatureL10n.text(key, value)
+}
+
+private func trf(_ key: String, _ value: String, _ arg: String) -> String {
+    String(format: tr(key, value), locale: FeatureL10n.locale, arg)
+}
+
 // MARK: - Step 3: Extras
 
 struct Step3ExtrasView: View {
@@ -20,7 +28,7 @@ struct Step3ExtrasView: View {
                         Image(systemName: "plus.circle.fill")
                             .foregroundStyle(SolennixColors.primary)
 
-                        Text("Agregar Extra")
+                        Text(tr("events.form.extras.add", "Agregar extra"))
                             .font(.subheadline)
                             .fontWeight(.medium)
                             .foregroundStyle(SolennixColors.primary)
@@ -43,11 +51,11 @@ struct Step3ExtrasView: View {
                             .font(.largeTitle)
                             .foregroundStyle(SolennixColors.textTertiary)
 
-                        Text("Sin extras")
+                        Text(tr("events.form.extras.empty_title", "Sin extras"))
                             .font(.subheadline)
                             .foregroundStyle(SolennixColors.textSecondary)
 
-                        Text("Agrega servicios o items adicionales")
+                        Text(tr("events.form.extras.empty_desc", "Agrega servicios o ítems adicionales"))
                             .font(.caption)
                             .foregroundStyle(SolennixColors.textTertiary)
                     }
@@ -92,7 +100,7 @@ struct Step3ExtrasView: View {
                                 }
                             )
                             .draggable(extra.id.uuidString) {
-                                Text(extra.description.isEmpty ? "Extra \(index + 1)" : extra.description)
+                                Text(extra.description.isEmpty ? trf("events.form.extras.row_title", "Extra %@", String(index + 1)) : extra.description)
                                     .padding(Spacing.sm)
                                     .background(SolennixColors.card)
                                     .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm))
@@ -109,7 +117,7 @@ struct Step3ExtrasView: View {
 
                 if !viewModel.extras.isEmpty {
                     HStack {
-                        Text("Subtotal Extras")
+                        Text(tr("events.form.finances.subtotal_extras", "Subtotal extras"))
                             .font(.subheadline)
                             .fontWeight(.medium)
                             .foregroundStyle(SolennixColors.textSecondary)
@@ -162,7 +170,7 @@ private struct ExtraRowView: View {
     var body: some View {
         VStack(spacing: Spacing.sm) {
             HStack {
-                Text("Extra \(index + 1)")
+                Text(trf("events.form.extras.row_title", "Extra %@", String(index + 1)))
                     .font(.caption)
                     .fontWeight(.semibold)
                     .foregroundStyle(SolennixColors.textSecondary)
@@ -180,18 +188,18 @@ private struct ExtraRowView: View {
             }
 
             SolennixTextField(
-                label: "Descripcion",
+                label: tr("events.form.extras.description", "Descripción"),
                 text: Binding(
                     get: { extra.description },
                     set: onDescriptionChange
                 ),
-                placeholder: "Descripcion del extra",
+                placeholder: tr("events.form.extras.description_placeholder", "Descripción del extra"),
                 leftIcon: "text.alignleft"
             )
 
             HStack(spacing: Spacing.sm) {
                 VStack(alignment: .leading, spacing: Spacing.xs) {
-                    Text("Costo")
+                    Text(tr("events.form.extras.cost", "Costo"))
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)
 
@@ -203,7 +211,7 @@ private struct ExtraRowView: View {
                 }
 
                 VStack(alignment: .leading, spacing: Spacing.xs) {
-                    Text("Precio")
+                    Text(tr("events.form.extras.price", "Precio"))
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)
 
@@ -230,7 +238,7 @@ private struct ExtraRowView: View {
                 get: { extra.excludeUtility },
                 set: onExcludeUtilityChange
             )) {
-                Text("Solo cobrar costo (sin utilidad)")
+                Text(tr("events.form.extras.exclude_utility", "Solo cobrar costo (sin utilidad)"))
                     .font(.caption)
                     .foregroundStyle(SolennixColors.textSecondary)
             }
@@ -248,7 +256,7 @@ private struct ExtraRowView: View {
                 set: onIncludeInChecklistChange
             )) {
                 Label {
-                    Text("Incluir en checklist")
+                    Text(tr("events.form.extras.include_checklist", "Incluir en checklist"))
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)
                 } icon: {
@@ -281,7 +289,7 @@ private struct ExtraRowView: View {
                 .font(.body)
                 .foregroundStyle(SolennixColors.textTertiary)
 
-            TextField("0.00", text: text)
+            TextField(tr("events.form.extras.amount_placeholder", "0.00"), text: text)
                 .keyboardType(.decimalPad)
                 .font(.body)
                 .foregroundStyle(SolennixColors.text)

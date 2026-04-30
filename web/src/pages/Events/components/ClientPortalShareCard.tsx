@@ -7,6 +7,7 @@ import {
 } from "../../../hooks/queries/useEventPublicLinkQueries";
 import { useToast } from "../../../hooks/useToast";
 import { logError } from "../../../lib/errorHandler";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   eventId: string;
@@ -23,6 +24,7 @@ interface Props {
  * yet) is treated as a normal state, not an error.
  */
 export const ClientPortalShareCard: React.FC<Props> = ({ eventId }) => {
+  const { t } = useTranslation(["events"]);
   const { data: link, isLoading: loading } = useEventPublicLink(eventId);
   const createOrRotate = useCreateOrRotateEventPublicLink(eventId);
   const revokeLink = useRevokeEventPublicLink(eventId);
@@ -34,7 +36,7 @@ export const ClientPortalShareCard: React.FC<Props> = ({ eventId }) => {
   const handleGenerate = async () => {
     try {
       await createOrRotate.mutateAsync({});
-      addToast("Enlace generado. Compartilo con tu cliente.", "success");
+      addToast(t("events:summary.share.success_generate"), "success");
     } catch (err) {
       logError("ClientPortalShareCard:generate", err);
     }
@@ -43,14 +45,14 @@ export const ClientPortalShareCard: React.FC<Props> = ({ eventId }) => {
   const handleRotate = async () => {
     if (
       !window.confirm(
-        "Al rotar el enlace, el que ya compartiste dejará de funcionar. ¿Continuamos?",
+        t("events:summary.share.confirm_rotate"),
       )
     ) {
       return;
     }
     try {
       await createOrRotate.mutateAsync({});
-      addToast("Enlace rotado. El anterior ya no funciona.", "success");
+      addToast(t("events:summary.share.success_rotate"), "success");
     } catch (err) {
       logError("ClientPortalShareCard:rotate", err);
     }
@@ -59,14 +61,14 @@ export const ClientPortalShareCard: React.FC<Props> = ({ eventId }) => {
   const handleRevoke = async () => {
     if (
       !window.confirm(
-        "Se va a deshabilitar el enlace para el cliente. ¿Estás seguro?",
+        t("events:summary.share.confirm_revoke"),
       )
     ) {
       return;
     }
     try {
       await revokeLink.mutateAsync(undefined);
-      addToast("Enlace deshabilitado.", "info");
+      addToast(t("events:summary.share.success_revoke"), "info");
     } catch (err) {
       logError("ClientPortalShareCard:revoke", err);
     }
@@ -78,7 +80,7 @@ export const ClientPortalShareCard: React.FC<Props> = ({ eventId }) => {
       await navigator.clipboard.writeText(link.url);
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2000);
-      addToast("Enlace copiado al portapapeles.", "success");
+      addToast(t("events:summary.share.success_copy"), "success");
     } catch (err) {
       logError("ClientPortalShareCard:copy", err);
     }
@@ -87,7 +89,7 @@ export const ClientPortalShareCard: React.FC<Props> = ({ eventId }) => {
   const handleShareWhatsApp = () => {
     if (!link) return;
     const text = encodeURIComponent(
-      `Hola! Acá podés ver los detalles de tu evento: ${link.url}`,
+      t("events:summary.share.whatsapp_message", { url: link.url }),
     );
     window.open(`https://wa.me/?text=${text}`, "_blank", "noopener,noreferrer");
   };
@@ -100,11 +102,10 @@ export const ClientPortalShareCard: React.FC<Props> = ({ eventId }) => {
         </div>
         <div>
           <h3 className="text-base font-semibold text-text">
-            Portal del cliente
+            {t("events:summary.share.title")}
           </h3>
           <p className="text-sm text-text-secondary">
-            Un enlace privado para que tu cliente vea el evento, el estado de
-            pagos y los detalles clave.
+            {t("events:summary.share.description")}
           </p>
         </div>
       </div>
@@ -112,7 +113,7 @@ export const ClientPortalShareCard: React.FC<Props> = ({ eventId }) => {
       {loading ? (
         <div className="flex items-center gap-2 text-sm text-text-tertiary">
           <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-          Cargando…
+          {t("events:summary.share.loading")}
         </div>
       ) : link ? (
         <div className="space-y-3">
@@ -130,12 +131,12 @@ export const ClientPortalShareCard: React.FC<Props> = ({ eventId }) => {
               {copied ? (
                 <>
                   <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-                  Copiado
+                  {t("events:summary.share.copied")}
                 </>
               ) : (
                 <>
                   <Copy className="h-4 w-4" aria-hidden="true" />
-                  Copiar enlace
+                  {t("events:summary.share.copy")}
                 </>
               )}
             </button>
@@ -147,7 +148,7 @@ export const ClientPortalShareCard: React.FC<Props> = ({ eventId }) => {
               className="inline-flex items-center gap-1.5 px-3 py-2 bg-surface-alt border border-border text-text text-sm font-medium rounded-lg hover:bg-surface transition-colors disabled:opacity-60"
             >
               <ExternalLink className="h-4 w-4" aria-hidden="true" />
-              Compartir por WhatsApp
+              {t("events:summary.share.whatsapp")}
             </button>
 
             <button
@@ -155,10 +156,10 @@ export const ClientPortalShareCard: React.FC<Props> = ({ eventId }) => {
               onClick={handleRotate}
               disabled={busy}
               className="inline-flex items-center gap-1.5 px-3 py-2 bg-surface-alt border border-border text-text-secondary text-sm font-medium rounded-lg hover:bg-surface transition-colors disabled:opacity-60"
-              title="Invalida el enlace anterior y genera uno nuevo"
+              title={t("events:summary.share.rotate_title")}
             >
               <RefreshCw className="h-4 w-4" aria-hidden="true" />
-              Rotar
+              {t("events:summary.share.rotate")}
             </button>
 
             <button
@@ -168,7 +169,7 @@ export const ClientPortalShareCard: React.FC<Props> = ({ eventId }) => {
               className="inline-flex items-center gap-1.5 px-3 py-2 text-error text-sm font-medium rounded-lg hover:bg-error/10 transition-colors disabled:opacity-60"
             >
               <Link2Off className="h-4 w-4" aria-hidden="true" />
-              Deshabilitar
+              {t("events:summary.share.revoke")}
             </button>
           </div>
         </div>
@@ -184,7 +185,7 @@ export const ClientPortalShareCard: React.FC<Props> = ({ eventId }) => {
           ) : (
             <Share2 className="h-4 w-4" aria-hidden="true" />
           )}
-          Generar enlace para el cliente
+          {t("events:summary.share.generate")}
         </button>
       )}
     </section>

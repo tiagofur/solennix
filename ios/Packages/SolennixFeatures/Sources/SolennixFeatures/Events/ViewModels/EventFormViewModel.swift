@@ -217,6 +217,10 @@ public final class EventFormViewModel {
 
     public let apiClient: APIClient
 
+    private func tr(_ key: String, _ defaultValue: String) -> String {
+        FeatureL10n.text(key, defaultValue)
+    }
+
     // MARK: - Prefill Support (Duplicate Event)
 
     private struct PrefillData {
@@ -1043,8 +1047,8 @@ public final class EventFormViewModel {
 
     private func mapError(_ error: Error) -> String {
         if let apiError = error as? APIError {
-            return apiError.errorDescription ?? "Ocurrio un error inesperado."
+            return apiError.errorDescription ?? tr("events.form.error.unexpected", "Ocurrió un error inesperado.")
         }
-        return "Ocurrio un error inesperado. Intenta de nuevo."
+        return tr("events.form.error.retry", "Ocurrió un error inesperado. Intenta de nuevo.")
     }
 }

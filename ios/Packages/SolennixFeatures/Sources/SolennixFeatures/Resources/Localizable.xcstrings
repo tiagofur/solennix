@@ -2584,6 +2584,4182 @@
     },
     "Ya tienes cuenta?" : {
 
+    },
+    "events.detail.action.delete" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Delete event"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Eliminar evento"
+                      }
+                }
+          }
+    },
+    "events.detail.action.duplicate" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Duplicate event"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Duplicar evento"
+                      }
+                }
+          }
+    },
+    "events.detail.action.edit" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Edit"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Editar"
+                      }
+                }
+          }
+    },
+    "events.detail.action.edit_event" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Edit event"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Editar evento"
+                      }
+                }
+          }
+    },
+    "events.detail.action.more" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Event actions"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Acciones del evento"
+                      }
+                }
+          }
+    },
+    "events.detail.action.share_whatsapp" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Share on WhatsApp"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Compartir por WhatsApp"
+                      }
+                }
+          }
+    },
+    "events.detail.card.checklist" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Load checklist"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Checklist de carga"
+                      }
+                }
+          }
+    },
+    "events.detail.card.contract" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "View contract"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Ver contrato"
+                      }
+                }
+          }
+    },
+    "events.detail.card.equipment" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Equipment"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Equipo"
+                      }
+                }
+          }
+    },
+    "events.detail.card.extras" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Extras"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Extras"
+                      }
+                }
+          }
+    },
+    "events.detail.card.finances" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Finances"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Finanzas"
+                      }
+                }
+          }
+    },
+    "events.detail.card.payments" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Payments"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Pagos"
+                      }
+                }
+          }
+    },
+    "events.detail.card.photos" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Photos"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Fotos"
+                      }
+                }
+          }
+    },
+    "events.detail.card.products" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Products"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Productos"
+                      }
+                }
+          }
+    },
+    "events.detail.card.shopping" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Shopping"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Compras"
+                      }
+                }
+          }
+    },
+    "events.detail.card.staff" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Staff"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Personal"
+                      }
+                }
+          }
+    },
+    "events.detail.card.supplies" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Supplies"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Insumos"
+                      }
+                }
+          }
+    },
+    "events.detail.client_fallback" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Client"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Cliente"
+                      }
+                }
+          }
+    },
+    "events.detail.delete.confirm" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Delete"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Eliminar"
+                      }
+                }
+          }
+    },
+    "events.detail.delete.message" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Are you sure you want to delete this event? This action cannot be undone."
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Estas seguro de que quieres eliminar este evento? Esta accion no se puede deshacer."
+                      }
+                }
+          }
+    },
+    "events.detail.delete.title" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Delete event"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Eliminar evento"
+                      }
+                }
+          }
+    },
+    "events.detail.deposit" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Deposit"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Anticipo"
+                      }
+                }
+          }
+    },
+    "events.detail.documents.checklist" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Checklist"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Checklist"
+                      }
+                }
+          }
+    },
+    "events.detail.documents.contract" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Contract"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Contrato"
+                      }
+                }
+          }
+    },
+    "events.detail.documents.equipment" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Equipment list"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Lista de equipo"
+                      }
+                }
+          }
+    },
+    "events.detail.documents.filename.checklist" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Checklist_%@.pdf"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Checklist_%@.pdf"
+                      }
+                }
+          }
+    },
+    "events.detail.documents.filename.contract" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Contract_%@.pdf"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Contrato_%@.pdf"
+                      }
+                }
+          }
+    },
+    "events.detail.documents.filename.equipment" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Equipment_%@.pdf"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Equipo_%@.pdf"
+                      }
+                }
+          }
+    },
+    "events.detail.documents.filename.invoice" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Invoice_%@.pdf"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Factura_%@.pdf"
+                      }
+                }
+          }
+    },
+    "events.detail.documents.filename.payments" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Payments_%@.pdf"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Pagos_%@.pdf"
+                      }
+                }
+          }
+    },
+    "events.detail.documents.filename.quote" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Quote_%@.pdf"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Cotización_%@.pdf"
+                      }
+                }
+          }
+    },
+    "events.detail.documents.filename.supplies" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Supplies_%@.pdf"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Insumos_%@.pdf"
+                      }
+                }
+          }
+    },
+    "events.detail.documents.invoice" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Invoice"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Factura"
+                      }
+                }
+          }
+    },
+    "events.detail.documents.payments" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Payments"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Pagos"
+                      }
+                }
+          }
+    },
+    "events.detail.documents.quote" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Quote"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Cotización"
+                      }
+                }
+          }
+    },
+    "events.detail.documents.supplies" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Supplies list"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Lista de insumos"
+                      }
+                }
+          }
+    },
+    "events.detail.documents.title" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Generate documents"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Generar documentos"
+                      }
+                }
+          }
+    },
+    "events.detail.error.add_payment" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Error recording payment"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Error al registrar el pago"
+                      }
+                }
+          }
+    },
+    "events.detail.error.change_status" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Error changing status"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Error al cambiar el estado"
+                      }
+                }
+          }
+    },
+    "events.detail.error.client_unavailable" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Client unavailable"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Cliente no disponible"
+                      }
+                }
+          }
+    },
+    "events.detail.error.delete_event" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Error deleting event"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Error al eliminar el evento"
+                      }
+                }
+          }
+    },
+    "events.detail.error.delete_payment" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Error deleting payment"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Error al eliminar el pago"
+                      }
+                }
+          }
+    },
+    "events.detail.error.delete_photo" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Error deleting photo"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Error al eliminar la foto"
+                      }
+                }
+          }
+    },
+    "events.detail.error.load" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Error loading the event"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Error cargando el evento"
+                      }
+                }
+          }
+    },
+    "events.detail.error.load_fallback" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Could not load the event"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "No se pudo cargar el evento"
+                      }
+                }
+          }
+    },
+    "events.detail.error.save_pdf" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Could not save the PDF"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "No se pudo guardar el PDF"
+                      }
+                }
+          }
+    },
+    "events.detail.error.share_sheet" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Could not present the share sheet"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "No se pudo presentar el compartir"
+                      }
+                }
+          }
+    },
+    "events.detail.error.title" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Error"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Error"
+                      }
+                }
+          }
+    },
+    "events.detail.error.upload_photos" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Error uploading photos"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Error al subir las fotos"
+                      }
+                }
+          }
+    },
+    "events.detail.finances.discount" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Discount"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Descuento"
+                      }
+                }
+          }
+    },
+    "events.detail.finances.discount_percent" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Discount %@%%"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Descuento %@%%"
+                      }
+                }
+          }
+    },
+    "events.detail.finances.profit" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Profit"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Utilidad"
+                      }
+                }
+          }
+    },
+    "events.detail.finances.tax" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Tax %@%%"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "IVA %@%%"
+                      }
+                }
+          }
+    },
+    "events.detail.finances.total" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Total"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Total"
+                      }
+                }
+          }
+    },
+    "events.detail.info.city" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "City"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Ciudad"
+                      }
+                }
+          }
+    },
+    "events.detail.info.date" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Date"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Fecha"
+                      }
+                }
+          }
+    },
+    "events.detail.info.location" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Location"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Ubicación"
+                      }
+                }
+          }
+    },
+    "events.detail.info.people" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "People"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Personas"
+                      }
+                }
+          }
+    },
+    "events.detail.info.schedule" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Schedule"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Horario"
+                      }
+                }
+          }
+    },
+    "events.detail.live_activity.start" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Start live activity"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Iniciar actividad en vivo"
+                      }
+                }
+          }
+    },
+    "events.detail.live_activity.stop" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Stop live activity"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Detener actividad en vivo"
+                      }
+                }
+          }
+    },
+    "events.detail.loading" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Loading event..."
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Cargando evento..."
+                      }
+                }
+          }
+    },
+    "events.detail.notes" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Notes"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Notas"
+                      }
+                }
+          }
+    },
+    "events.detail.payments.action.deposit" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Deposit %@"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Anticipo %@"
+                      }
+                }
+          }
+    },
+    "events.detail.payments.action.record" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Record payment"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Registrar pago"
+                      }
+                }
+          }
+    },
+    "events.detail.payments.action.settle" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Settle %@"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Liquidar %@"
+                      }
+                }
+          }
+    },
+    "events.detail.payments.deposit.covered" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Deposit covered"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Anticipo cubierto"
+                      }
+                }
+          }
+    },
+    "events.detail.payments.deposit.missing" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "%@ remaining"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Faltan %@"
+                      }
+                }
+          }
+    },
+    "events.detail.payments.deposit.title" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Deposit %@%%"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Anticipo %@%%"
+                      }
+                }
+          }
+    },
+    "events.detail.payments.deposit_card" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Deposit %@%%: %@"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Anticipo %@%%: %@"
+                      }
+                }
+          }
+    },
+    "events.detail.payments.empty" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "No payments recorded"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "No hay pagos registrados"
+                      }
+                }
+          }
+    },
+    "events.detail.payments.error.load" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Could not load payments"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "No se pudieron cargar los pagos"
+                      }
+                }
+          }
+    },
+    "events.detail.payments.history_title" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Payment history"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Historial de pagos"
+                      }
+                }
+          }
+    },
+    "events.detail.payments.kpi.balance" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Balance"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Saldo"
+                      }
+                }
+          }
+    },
+    "events.detail.payments.kpi.paid" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Paid"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Pagado"
+                      }
+                }
+          }
+    },
+    "events.detail.payments.kpi.total" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Total"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Total"
+                      }
+                }
+          }
+    },
+    "events.detail.payments.loading" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Loading..."
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Cargando..."
+                      }
+                }
+          }
+    },
+    "events.detail.payments.method.card" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Card"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Tarjeta"
+                      }
+                }
+          }
+    },
+    "events.detail.payments.method.cash" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Cash"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Efectivo"
+                      }
+                }
+          }
+    },
+    "events.detail.payments.method.check" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Check"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Cheque"
+                      }
+                }
+          }
+    },
+    "events.detail.payments.method.transfer" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Transfer"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Transferencia"
+                      }
+                }
+          }
+    },
+    "events.detail.payments.progress" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "%@ charged"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "%@ cobrado"
+                      }
+                }
+          }
+    },
+    "events.detail.payments.sheet.amount" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Amount"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Monto"
+                      }
+                }
+          }
+    },
+    "events.detail.payments.sheet.method" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Payment method"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Método de pago"
+                      }
+                }
+          }
+    },
+    "events.detail.payments.sheet.notes_optional" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Notes (optional)"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Notas (opcional)"
+                      }
+                }
+          }
+    },
+    "events.detail.payments.sheet.notes_placeholder" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Payment notes"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Notas del pago"
+                      }
+                }
+          }
+    },
+    "events.detail.payments.sheet.save" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Save payment"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Guardar pago"
+                      }
+                }
+          }
+    },
+    "events.detail.payments.sheet.title" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Record payment"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Registrar pago"
+                      }
+                }
+          }
+    },
+    "events.detail.payments.title" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Payments"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Pagos"
+                      }
+                }
+          }
+    },
+    "events.detail.product_fallback" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Product"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Producto"
+                      }
+                }
+          }
+    },
+    "events.detail.share.close" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Close"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Cerrar"
+                      }
+                }
+          }
+    },
+    "events.detail.share.confirm_revoke" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "The client link will be disabled. Are you sure?"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Se va a deshabilitar el enlace para el cliente. ¿Estás seguro?"
+                      }
+                }
+          }
+    },
+    "events.detail.share.confirm_rotate" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Rotating the link will make the one you already shared stop working. Continue?"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Al rotar el enlace, el que ya compartiste dejará de funcionar. ¿Continuamos?"
+                      }
+                }
+          }
+    },
+    "events.detail.share.copied" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Copied"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Copiado"
+                      }
+                }
+          }
+    },
+    "events.detail.share.copy" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Copy link"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Copiar enlace"
+                      }
+                }
+          }
+    },
+    "events.detail.share.description" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "A private link so your client can view the event, payment status, and key details."
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Un enlace privado para que tu cliente vea el evento, el estado de pagos y los detalles clave."
+                      }
+                }
+          }
+    },
+    "events.detail.share.empty" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "You haven't generated a link for this event yet."
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Todavía no generaste un enlace para este evento."
+                      }
+                }
+          }
+    },
+    "events.detail.share.expires" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Expires on %@"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Vence el %@"
+                      }
+                }
+          }
+    },
+    "events.detail.share.generate" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Generate client link"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Generar enlace para el cliente"
+                      }
+                }
+          }
+    },
+    "events.detail.share.loading" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Loading…"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Cargando…"
+                      }
+                }
+          }
+    },
+    "events.detail.share.message" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Hi! You can view your event details here: %@"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Hola! Acá podés ver los detalles de tu evento: %@"
+                      }
+                }
+          }
+    },
+    "events.detail.share.no_expiration" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "This link does not expire. You can disable it whenever you want."
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Este enlace no tiene vencimiento. Podés deshabilitarlo cuando quieras."
+                      }
+                }
+          }
+    },
+    "events.detail.share.revoke" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Disable link"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Deshabilitar enlace"
+                      }
+                }
+          }
+    },
+    "events.detail.share.revoke_short" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Disable"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Deshabilitar"
+                      }
+                }
+          }
+    },
+    "events.detail.share.rotate" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Rotate link"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Rotar enlace"
+                      }
+                }
+          }
+    },
+    "events.detail.share.share" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Share"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Compartir"
+                      }
+                }
+          }
+    },
+    "events.detail.share.subject" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Client portal — Solennix"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Portal del cliente — Solennix"
+                      }
+                }
+          }
+    },
+    "events.detail.share.success_copy" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Link copied to clipboard."
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Enlace copiado al portapapeles."
+                      }
+                }
+          }
+    },
+    "events.detail.share.success_generate" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Link generated. Share it with your client."
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Enlace generado. Compartilo con tu cliente."
+                      }
+                }
+          }
+    },
+    "events.detail.share.success_revoke" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Link disabled."
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Enlace deshabilitado."
+                      }
+                }
+          }
+    },
+    "events.detail.share.success_rotate" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Link rotated. The previous one no longer works."
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Enlace rotado. El anterior ya no funciona."
+                      }
+                }
+          }
+    },
+    "events.detail.share.title" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Client portal"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Portal del cliente"
+                      }
+                }
+          }
+    },
+    "events.detail.share.whatsapp_balance" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "⏳ Pending balance: %@"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "⏳ Saldo pendiente: %@"
+                      }
+                }
+          }
+    },
+    "events.detail.share.whatsapp_client" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "👤 Client: %@"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "👤 Cliente: %@"
+                      }
+                }
+          }
+    },
+    "events.detail.share.whatsapp_date" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "📅 Date: %@"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "📅 Fecha: %@"
+                      }
+                }
+          }
+    },
+    "events.detail.share.whatsapp_header" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "*Event summary — Solennix*"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "*Resumen de evento — Solennix*"
+                      }
+                }
+          }
+    },
+    "events.detail.share.whatsapp_location" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "📍 Location: %@"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "📍 Lugar: %@"
+                      }
+                }
+          }
+    },
+    "events.detail.share.whatsapp_paid" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "✅ Paid: %@"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "✅ Pagado: %@"
+                      }
+                }
+          }
+    },
+    "events.detail.share.whatsapp_people" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "👥 People: %@ PAX"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "👥 Personas: %@ PAX"
+                      }
+                }
+          }
+    },
+    "events.detail.share.whatsapp_total" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "💰 Total: %@"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "💰 Total: %@"
+                      }
+                }
+          }
+    },
+    "events.detail.shopping.pending_count" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "%@ to buy"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "%@ por comprar"
+                      }
+                }
+          }
+    },
+    "events.detail.status.cancelled" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Cancelled"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Cancelado"
+                      }
+                }
+          }
+    },
+    "events.detail.status.change_message" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Select the new event status"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Selecciona el nuevo estado del evento"
+                      }
+                }
+          }
+    },
+    "events.detail.status.change_title" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Change status"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Cambiar estado"
+                      }
+                }
+          }
+    },
+    "events.detail.status.completed" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Completed"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Completado"
+                      }
+                }
+          }
+    },
+    "events.detail.status.confirmed" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Confirmed"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Confirmado"
+                      }
+                }
+          }
+    },
+    "events.detail.status.quoted" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Quoted"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Cotizado"
+                      }
+                }
+          }
+    },
+    "events.detail.supplies.fallback" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Supply"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Insumo"
+                      }
+                }
+          }
+    },
+    "events.detail.title" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Event detail"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Detalle del evento"
+                      }
+                }
+          }
+    },
+    "events.form.cancel" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Cancel"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Cancelar"
+                      }
+                }
+          }
+    },
+    "events.form.error.retry" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "An unexpected error occurred. Try again."
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Ocurrió un error inesperado. Intenta de nuevo."
+                      }
+                }
+          }
+    },
+    "events.form.error.unexpected" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "An unexpected error occurred."
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Ocurrió un error inesperado."
+                      }
+                }
+          }
+    },
+    "events.form.error_title" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Error"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Error"
+                      }
+                }
+          }
+    },
+    "events.form.extras.add" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Add extra"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Agregar extra"
+                      }
+                }
+          }
+    },
+    "events.form.extras.amount_placeholder" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "0.00"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "0.00"
+                      }
+                }
+          }
+    },
+    "events.form.extras.cost" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Cost"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Costo"
+                      }
+                }
+          }
+    },
+    "events.form.extras.description" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Description"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Descripción"
+                      }
+                }
+          }
+    },
+    "events.form.extras.description_placeholder" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Extra description"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Descripción del extra"
+                      }
+                }
+          }
+    },
+    "events.form.extras.empty_desc" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Add services or additional items"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Agrega servicios o ítems adicionales"
+                      }
+                }
+          }
+    },
+    "events.form.extras.empty_title" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "No extras"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Sin extras"
+                      }
+                }
+          }
+    },
+    "events.form.extras.exclude_utility" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Only charge cost (no margin)"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Solo cobrar costo (sin utilidad)"
+                      }
+                }
+          }
+    },
+    "events.form.extras.include_checklist" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Include in checklist"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Incluir en checklist"
+                      }
+                }
+          }
+    },
+    "events.form.extras.price" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Price"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Precio"
+                      }
+                }
+          }
+    },
+    "events.form.extras.row_title" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Extra %@"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Extra %@"
+                      }
+                }
+          }
+    },
+    "events.form.finances.cancellation_days" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Days in advance"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Días anticipación"
+                      }
+                }
+          }
+    },
+    "events.form.finances.cancellation_policy" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Cancellation policy"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Política de cancelación"
+                      }
+                }
+          }
+    },
+    "events.form.finances.days" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "days"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "días"
+                      }
+                }
+          }
+    },
+    "events.form.finances.deposit" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Deposit"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Anticipo"
+                      }
+                }
+          }
+    },
+    "events.form.finances.deposit_label" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Deposit (%@%%)"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Anticipo (%@%%)"
+                      }
+                }
+          }
+    },
+    "events.form.finances.discount" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Discount"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Descuento"
+                      }
+                }
+          }
+    },
+    "events.form.finances.invoice" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Requires invoice (tax)"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Requiere factura (IVA)"
+                      }
+                }
+          }
+    },
+    "events.form.finances.margin" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Margin"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Margen"
+                      }
+                }
+          }
+    },
+    "events.form.finances.net_profit" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Net profit"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Ganancia neta"
+                      }
+                }
+          }
+    },
+    "events.form.finances.notes" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Notes"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Notas"
+                      }
+                }
+          }
+    },
+    "events.form.finances.pending_costs" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Some product costs are still loading. Profitability may adjust in a few seconds."
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Algunos costos de productos siguen cargando. La rentabilidad puede ajustarse en segundos."
+                      }
+                }
+          }
+    },
+    "events.form.finances.profitability" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Profitability"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Rentabilidad"
+                      }
+                }
+          }
+    },
+    "events.form.finances.refund" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Refund"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Reembolso"
+                      }
+                }
+          }
+    },
+    "events.form.finances.subtotal_extras" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Extras subtotal"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Subtotal extras"
+                      }
+                }
+          }
+    },
+    "events.form.finances.subtotal_products" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Products subtotal"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Subtotal productos"
+                      }
+                }
+          }
+    },
+    "events.form.finances.summary" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Summary"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Resumen"
+                      }
+                }
+          }
+    },
+    "events.form.finances.tax_label" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Tax (%@%%)"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "IVA (%@%%)"
+                      }
+                }
+          }
+    },
+    "events.form.finances.tax_rate" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Tax rate:"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Tasa IVA:"
+                      }
+                }
+          }
+    },
+    "events.form.finances.total" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Total"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Total"
+                      }
+                }
+          }
+    },
+    "events.form.finances.total_costs" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Total costs"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Costos totales"
+                      }
+                }
+          }
+    },
+    "events.form.general.add_client" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Add"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Agregar"
+                      }
+                }
+          }
+    },
+    "events.form.general.city" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "City"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Ciudad"
+                      }
+                }
+          }
+    },
+    "events.form.general.city_placeholder" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "City (optional)"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Ciudad (opcional)"
+                      }
+                }
+          }
+    },
+    "events.form.general.client" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Client"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Cliente"
+                      }
+                }
+          }
+    },
+    "events.form.general.done" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Done"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Listo"
+                      }
+                }
+          }
+    },
+    "events.form.general.end_time" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "End time"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Hora fin"
+                      }
+                }
+          }
+    },
+    "events.form.general.event_date" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Event date"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Fecha del evento"
+                      }
+                }
+          }
+    },
+    "events.form.general.location" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Location"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Lugar"
+                      }
+                }
+          }
+    },
+    "events.form.general.location_placeholder" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Event location (optional)"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Lugar del evento (opcional)"
+                      }
+                }
+          }
+    },
+    "events.form.general.notes" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Additional notes"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Notas adicionales"
+                      }
+                }
+          }
+    },
+    "events.form.general.notes_placeholder" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Special setup instructions..."
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Instrucciones especiales para el montaje..."
+                      }
+                }
+          }
+    },
+    "events.form.general.optional" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Optional"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Opcional"
+                      }
+                }
+          }
+    },
+    "events.form.general.people" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Number of people"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Número de personas"
+                      }
+                }
+          }
+    },
+    "events.form.general.search_client" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Search client"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Buscar cliente"
+                      }
+                }
+          }
+    },
+    "events.form.general.select_client" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Select client"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Seleccionar cliente"
+                      }
+                }
+          }
+    },
+    "events.form.general.select_client_title" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Select client"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Seleccionar cliente"
+                      }
+                }
+          }
+    },
+    "events.form.general.service_min" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Minimum 2 characters"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Mínimo 2 caracteres"
+                      }
+                }
+          }
+    },
+    "events.form.general.service_placeholder" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "e.g. Banquet, Coffee Break"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Ej: Banquete, Coffee Break"
+                      }
+                }
+          }
+    },
+    "events.form.general.service_type" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Service type"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Tipo de servicio"
+                      }
+                }
+          }
+    },
+    "events.form.general.start_time" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Start time"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Hora inicio"
+                      }
+                }
+          }
+    },
+    "events.form.general.status" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Status"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Estado"
+                      }
+                }
+          }
+    },
+    "events.form.inventory.add_equipment" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Add equipment"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Agregar equipamiento"
+                      }
+                }
+          }
+    },
+    "events.form.inventory.add_supply" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Add supply"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Agregar insumo"
+                      }
+                }
+          }
+    },
+    "events.form.inventory.availability_conflicts" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Availability conflicts"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Conflictos de disponibilidad"
+                      }
+                }
+          }
+    },
+    "events.form.inventory.available_value_unit" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Available: %@ %@"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Disponible: %@ %@"
+                      }
+                }
+          }
+    },
+    "events.form.inventory.conflict_item" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "%@ already reserved for \"%@\""
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "%@ ya reservado para \"%@\""
+                      }
+                }
+          }
+    },
+    "events.form.inventory.empty_equipment_desc" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Add reusable equipment for the event"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Agrega equipo reutilizable para el evento"
+                      }
+                }
+          }
+    },
+    "events.form.inventory.empty_equipment_title" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "No equipment (optional)"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Sin equipamiento (opcional)"
+                      }
+                }
+          }
+    },
+    "events.form.inventory.empty_supplies_desc" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Add inventory consumables"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Agrega consumibles del inventario"
+                      }
+                }
+          }
+    },
+    "events.form.inventory.empty_supplies_title" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "No supplies (optional)"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Sin insumos (opcional)"
+                      }
+                }
+          }
+    },
+    "events.form.inventory.equipment" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Equipment"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Equipamiento"
+                      }
+                }
+          }
+    },
+    "events.form.inventory.exclude_cost" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "No cost (reused)"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Sin costo (reaprovechado)"
+                      }
+                }
+          }
+    },
+    "events.form.inventory.quantity" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Quantity"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Cantidad"
+                      }
+                }
+          }
+    },
+    "events.form.inventory.quantity_placeholder" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "0"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "0"
+                      }
+                }
+          }
+    },
+    "events.form.inventory.search_equipment" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Search equipment"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Buscar equipo"
+                      }
+                }
+          }
+    },
+    "events.form.inventory.search_supply" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Search supply"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Buscar insumo"
+                      }
+                }
+          }
+    },
+    "events.form.inventory.source" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Source"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Fuente"
+                      }
+                }
+          }
+    },
+    "events.form.inventory.source_purchase" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Purchase"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Compra"
+                      }
+                }
+          }
+    },
+    "events.form.inventory.source_stock" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Stock"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Stock"
+                      }
+                }
+          }
+    },
+    "events.form.inventory.staff" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Staff"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Personal"
+                      }
+                }
+          }
+    },
+    "events.form.inventory.stock_value" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Stock: %@"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Stock: %@"
+                      }
+                }
+          }
+    },
+    "events.form.inventory.stock_value_unit" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Stock: %@ %@"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Stock: %@ %@"
+                      }
+                }
+          }
+    },
+    "events.form.inventory.suggestions" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Suggestions based on products"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Sugerencias por productos"
+                      }
+                }
+          }
+    },
+    "events.form.inventory.supplies" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Supplies"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Insumos"
+                      }
+                }
+          }
+    },
+    "events.form.inventory.supplies_cost" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Supplies cost"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Costo insumos"
+                      }
+                }
+          }
+    },
+    "events.form.inventory.unit_cost" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "%@/u"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "%@/u"
+                      }
+                }
+          }
+    },
+    "events.form.loading" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Loading..."
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Cargando..."
+                      }
+                }
+          }
+    },
+    "events.form.next" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Next"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Siguiente"
+                      }
+                }
+          }
+    },
+    "events.form.ok" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "OK"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "OK"
+                      }
+                }
+          }
+    },
+    "events.form.previous" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Previous"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Anterior"
+                      }
+                }
+          }
+    },
+    "events.form.products.add" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Add product"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Agregar producto"
+                      }
+                }
+          }
+    },
+    "events.form.products.delete_fallback" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "this product"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "este producto"
+                      }
+                }
+          }
+    },
+    "events.form.products.delete_named" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Delete %@?"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "¿Eliminar %@?"
+                      }
+                }
+          }
+    },
+    "events.form.products.delete_title" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Delete product?"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "¿Eliminar producto?"
+                      }
+                }
+          }
+    },
+    "events.form.products.empty_desc" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Add products to the event"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Agrega productos al evento"
+                      }
+                }
+          }
+    },
+    "events.form.products.empty_title" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "No products"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Sin productos"
+                      }
+                }
+          }
+    },
+    "events.form.products.includes_team" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Includes team"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Incluye equipo"
+                      }
+                }
+          }
+    },
+    "events.form.products.row_title" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Product %@"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Producto %@"
+                      }
+                }
+          }
+    },
+    "events.form.products.search" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Search product"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Buscar producto"
+                      }
+                }
+          }
+    },
+    "events.form.products.subtotal" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Products subtotal"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Subtotal productos"
+                      }
+                }
+          }
+    },
+    "events.form.products.total" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Total: %@"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Total: %@"
+                      }
+                }
+          }
+    },
+    "events.form.products.unit_price" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "%@ each"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "%@ c/u"
+                      }
+                }
+          }
+    },
+    "events.form.save" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Save"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Guardar"
+                      }
+                }
+          }
+    },
+    "events.form.staff.add_person" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Add staff"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Agregar personal"
+                      }
+                }
+          }
+    },
+    "events.form.staff.add_team" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Add full team"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Agregar equipo completo"
+                      }
+                }
+          }
+    },
+    "events.form.staff.add_team_short" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Add team"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Agregar equipo"
+                      }
+                }
+          }
+    },
+    "events.form.staff.amount_placeholder" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "0.00"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "0.00"
+                      }
+                }
+          }
+    },
+    "events.form.staff.busy" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Busy that day"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Ocupado ese día"
+                      }
+                }
+          }
+    },
+    "events.form.staff.empty_message" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Add collaborators from the Staff menu to assign them to this event"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Agrega colaboradores desde el menú Personal para asignarlos a este evento"
+                      }
+                }
+          }
+    },
+    "events.form.staff.empty_teams_message" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Group your waiters or photographers into teams from Staff > Teams to assign them with one tap."
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Agrupá a tu equipo de meseros o fotógrafos desde Personal > Equipos para asignarlos con un solo toque."
+                      }
+                }
+          }
+    },
+    "events.form.staff.empty_teams_title" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "No teams yet"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Sin equipos todavía"
+                      }
+                }
+          }
+    },
+    "events.form.staff.empty_title" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "No staff"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Sin personal"
+                      }
+                }
+          }
+    },
+    "events.form.staff.fee" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Cost (MXN)"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Costo (MXN)"
+                      }
+                }
+          }
+    },
+    "events.form.staff.loading_teams" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Loading teams..."
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Cargando equipos..."
+                      }
+                }
+          }
+    },
+    "events.form.staff.member_plural" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "%@ members"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "%@ miembros"
+                      }
+                }
+          }
+    },
+    "events.form.staff.member_singular" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "1 member"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "1 miembro"
+                      }
+                }
+          }
+    },
+    "events.form.staff.notes" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Notes (optional)"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Notas (opcional)"
+                      }
+                }
+          }
+    },
+    "events.form.staff.notes_placeholder" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Assignment notes"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Notas de la asignación"
+                      }
+                }
+          }
+    },
+    "events.form.staff.role_override" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Role in this event (optional)"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Rol en este evento (opcional)"
+                      }
+                }
+          }
+    },
+    "events.form.staff.role_placeholder" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "e.g. Bar lead"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Ej: Líder de barra"
+                      }
+                }
+          }
+    },
+    "events.form.staff.search" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Search staff"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Buscar personal"
+                      }
+                }
+          }
+    },
+    "events.form.staff.shift" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Add schedule (optional)"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Agregar horario (opcional)"
+                      }
+                }
+          }
+    },
+    "events.form.staff.shift_end" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Ends"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Sale"
+                      }
+                }
+          }
+    },
+    "events.form.staff.shift_start" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Starts"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Entra"
+                      }
+                }
+          }
+    },
+    "events.form.staff.status.cancelled" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Cancelled"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Cancelado"
+                      }
+                }
+          }
+    },
+    "events.form.staff.status.confirmed" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Confirmed"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Confirmado"
+                      }
+                }
+          }
+    },
+    "events.form.staff.status.declined" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Declined"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Rechazó"
+                      }
+                }
+          }
+    },
+    "events.form.staff.status.pending" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Unconfirmed"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Sin confirmar"
+                      }
+                }
+          }
+    },
+    "events.form.staff.team_picker_hint" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Select a team to assign all its members. Already assigned members will be ignored."
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Seleccioná un equipo para asignar a todos sus miembros. Los que ya estén asignados se ignoran."
+                      }
+                }
+          }
+    },
+    "events.form.staff.total_cost" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Staff cost"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Costo personal"
+                      }
+                }
+          }
+    },
+    "events.form.step.extras" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Extras"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Extras"
+                      }
+                }
+          }
+    },
+    "events.form.step.finances" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Finances"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Finanzas"
+                      }
+                }
+          }
+    },
+    "events.form.step.general" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "General"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "General"
+                      }
+                }
+          }
+    },
+    "events.form.step.inventory" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Inventory"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Inventario"
+                      }
+                }
+          }
+    },
+    "events.form.step.products" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Products"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Productos"
+                      }
+                }
+          }
+    },
+    "events.form.title_edit" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Edit event"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Editar evento"
+                      }
+                }
+          }
+    },
+    "events.form.title_new" : {
+          "localizations": {
+                "en": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "New event"
+                      }
+                },
+                "es": {
+                      "stringUnit": {
+                            "state": "translated",
+                            "value": "Nuevo evento"
+                      }
+                }
+          }
     }
   },
   "version" : "1.0"

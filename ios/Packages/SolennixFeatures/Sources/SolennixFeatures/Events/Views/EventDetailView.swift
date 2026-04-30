@@ -30,32 +30,32 @@ public struct EventDetailView: View {
     public var body: some View {
         Group {
             if viewModel.isLoading && viewModel.event == nil {
-                ProgressView("Cargando evento...")
+                ProgressView(tr("events.detail.loading", "Cargando evento..."))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if let event = viewModel.event {
                 scrollContent(event)
             } else {
                 EmptyStateView(
                     icon: "exclamationmark.triangle",
-                    title: "Error",
-                    message: viewModel.errorMessage ?? "No se pudo cargar el evento"
+                    title: tr("events.detail.error.title", "Error"),
+                    message: viewModel.errorMessage ?? tr("events.detail.error.load_fallback", "No se pudo cargar el evento")
                 )
             }
         }
         .background(SolennixColors.surfaceGrouped)
-        .navigationTitle("Detalle del Evento")
+        .navigationTitle(tr("events.detail.title", "Detalle del evento"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
                     NavigationLink(value: Route.eventForm(id: eventId)) {
-                        Label("Editar", systemImage: "pencil")
+                        Label(tr("events.detail.action.edit", "Editar"), systemImage: "pencil")
                     }
 
                     Button {
                         duplicateEvent()
                     } label: {
-                        Label("Duplicar Evento", systemImage: "doc.on.doc")
+                        Label(tr("events.detail.action.duplicate", "Duplicar evento"), systemImage: "doc.on.doc")
                     }
 
                     Divider()
@@ -63,7 +63,7 @@ public struct EventDetailView: View {
                     Button {
                         shareOnWhatsApp()
                     } label: {
-                        Label("Compartir por WhatsApp", systemImage: "square.and.arrow.up")
+                        Label(tr("events.detail.action.share_whatsapp", "Compartir por WhatsApp"), systemImage: "square.and.arrow.up")
                     }
 
                     Divider()
@@ -71,39 +71,39 @@ public struct EventDetailView: View {
                     Button(role: .destructive) {
                         viewModel.showDeleteConfirm = true
                     } label: {
-                        Label("Eliminar Evento", systemImage: "trash")
+                        Label(tr("events.detail.action.delete", "Eliminar evento"), systemImage: "trash")
                     }
                 } label: {
                     Image(systemName: "ellipsis.circle")
-                        .accessibilityLabel("Acciones del evento")
+                        .accessibilityLabel(tr("events.detail.action.more", "Acciones del evento"))
                 }
             }
         }
         .confirmationDialog(
-            "Cambiar estado",
+            tr("events.detail.status.change_title", "Cambiar estado"),
             isPresented: $viewModel.showStatusSheet
         ) {
-            Button("Cotizado") { Task { await viewModel.changeStatus(.quoted, eventId: eventId) } }
-            Button("Confirmado") { Task { await viewModel.changeStatus(.confirmed, eventId: eventId) } }
-            Button("Completado") { Task { await viewModel.changeStatus(.completed, eventId: eventId) } }
-            Button("Cancelado", role: .destructive) { Task { await viewModel.changeStatus(.cancelled, eventId: eventId) } }
-            Button("Cancelar", role: .cancel) {}
+            Button(tr("events.detail.status.quoted", "Cotizado")) { Task { await viewModel.changeStatus(.quoted, eventId: eventId) } }
+            Button(tr("events.detail.status.confirmed", "Confirmado")) { Task { await viewModel.changeStatus(.confirmed, eventId: eventId) } }
+            Button(tr("events.detail.status.completed", "Completado")) { Task { await viewModel.changeStatus(.completed, eventId: eventId) } }
+            Button(tr("events.detail.status.cancelled", "Cancelado"), role: .destructive) { Task { await viewModel.changeStatus(.cancelled, eventId: eventId) } }
+            Button(tr("events.form.cancel", "Cancelar"), role: .cancel) {}
         } message: {
-            Text("Selecciona el nuevo estado del evento")
+            Text(tr("events.detail.status.change_message", "Selecciona el nuevo estado del evento"))
         }
         .confirmationDialog(
-            "Eliminar evento",
+            tr("events.detail.delete.title", "Eliminar evento"),
             isPresented: $viewModel.showDeleteConfirm
         ) {
-            Button("Eliminar", role: .destructive) {
+            Button(tr("events.detail.delete.confirm", "Eliminar"), role: .destructive) {
                 Task {
                     let deleted = await viewModel.deleteEvent(eventId: eventId)
                     if deleted { dismiss() }
                 }
             }
-            Button("Cancelar", role: .cancel) {}
+            Button(tr("events.form.cancel", "Cancelar"), role: .cancel) {}
         } message: {
-            Text("Estas seguro de que quieres eliminar este evento? Esta accion no se puede deshacer.")
+            Text(tr("events.detail.delete.message", "Estas seguro de que quieres eliminar este evento? Esta accion no se puede deshacer."))
         }
         .sheet(isPresented: $viewModel.showPaymentSheet) {
             paymentSheet
@@ -188,20 +188,20 @@ public struct EventDetailView: View {
 
             // Quick info grid
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: Spacing.sm) {
-                quickInfoItem(icon: "calendar", label: "Fecha", value: formatDateShort(event.eventDate))
+                quickInfoItem(icon: "calendar", label: tr("events.detail.info.date", "Fecha"), value: formatDateShort(event.eventDate))
 
                 if let startTime = event.startTime {
                     let timeText = [startTime, event.endTime].compactMap { $0 }.joined(separator: " - ")
-                    quickInfoItem(icon: "clock", label: "Horario", value: timeText)
+                    quickInfoItem(icon: "clock", label: tr("events.detail.info.schedule", "Horario"), value: timeText)
                 }
 
-                quickInfoItem(icon: "person.2", label: "Personas", value: "\(event.numPeople) PAX")
+                quickInfoItem(icon: "person.2", label: tr("events.detail.info.people", "Personas"), value: "\(event.numPeople) PAX")
 
                 if let location = event.location, !location.isEmpty {
                     let fullLocation = [location, event.city].compactMap { $0?.isEmpty == true ? nil : $0 }.joined(separator: ", ")
-                    quickInfoItem(icon: "mappin", label: "Ubicacion", value: fullLocation)
+                    quickInfoItem(icon: "mappin", label: tr("events.detail.info.location", "Ubicación"), value: fullLocation)
                 } else if let city = event.city, !city.isEmpty {
-                    quickInfoItem(icon: "mappin", label: "Ciudad", value: city)
+                    quickInfoItem(icon: "mappin", label: tr("events.detail.info.city", "Ciudad"), value: city)
                 }
             }
         }
@@ -296,7 +296,7 @@ public struct EventDetailView: View {
                         .font(.body)
                         .foregroundStyle(SolennixColors.primary)
 
-                    Text("Finanzas")
+                    Text(tr("events.detail.card.finances", "Finanzas"))
                         .font(.headline)
                         .foregroundStyle(SolennixColors.text)
 
@@ -311,7 +311,7 @@ public struct EventDetailView: View {
 
                 HStack(spacing: Spacing.md) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("TOTAL")
+                        Text(tr("events.detail.finances.total", "Total"))
                             .font(.caption2)
                             .foregroundStyle(SolennixColors.textTertiary)
                             .textCase(.uppercase)
@@ -324,7 +324,7 @@ public struct EventDetailView: View {
                     Spacer()
 
                     VStack(alignment: .trailing, spacing: 2) {
-                        Text("UTILIDAD")
+                        Text(tr("events.detail.finances.profit", "Utilidad"))
                             .font(.caption2)
                             .foregroundStyle(SolennixColors.textTertiary)
                             .textCase(.uppercase)
@@ -343,15 +343,15 @@ public struct EventDetailView: View {
 
                 if event.discount > 0 {
                     let discountLabel = event.discountType == .percent
-                        ? "Descuento \(Int(event.discount))%"
-                        : "Descuento"
+                        ? trf("events.detail.finances.discount_percent", "Descuento %@%%", String(Int(event.discount)))
+                        : tr("events.detail.finances.discount", "Descuento")
                     Text(discountLabel)
                         .font(.caption)
                         .foregroundStyle(SolennixColors.error)
                 }
 
                 if event.requiresInvoice {
-                    Text("IVA \(Int(event.taxRate))%")
+                    Text(trf("events.detail.finances.tax", "IVA %@%%", String(Int(event.taxRate))))
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)
                 }
@@ -374,7 +374,7 @@ public struct EventDetailView: View {
                         .font(.body)
                         .foregroundStyle(SolennixColors.success)
 
-                    Text("Pagos")
+                    Text(tr("events.detail.card.payments", "Pagos"))
                         .font(.headline)
                         .foregroundStyle(SolennixColors.text)
 
@@ -399,13 +399,13 @@ public struct EventDetailView: View {
                 // Mini KPIs
                 HStack(spacing: Spacing.sm) {
                     miniKpi(
-                        label: "Pagado",
+                        label: tr("events.detail.payments.kpi.paid", "Pagado"),
                         value: viewModel.totalPaid.asMXN,
                         color: SolennixColors.success,
                         bgColor: SolennixColors.successBg
                     )
                     miniKpi(
-                        label: "Saldo",
+                        label: tr("events.detail.payments.kpi.balance", "Saldo"),
                         value: viewModel.remaining.asMXN,
                         color: viewModel.isFullyPaid ? SolennixColors.success : SolennixColors.error,
                         bgColor: viewModel.isFullyPaid ? SolennixColors.successBg : SolennixColors.errorBg
@@ -442,7 +442,7 @@ public struct EventDetailView: View {
                         Image(systemName: isDepositMet ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
                             .font(.caption)
                             .foregroundStyle(isDepositMet ? SolennixColors.success : SolennixColors.warning)
-                        Text("Anticipo \(Int(depositPercent))%: \(depositAmount.asMXN)")
+                        Text(trf2("events.detail.payments.deposit_card", "Anticipo %@%%: %@", String(Int(depositPercent)), depositAmount.asMXN))
                             .font(.caption)
                             .foregroundStyle(isDepositMet ? SolennixColors.success : SolennixColors.warning)
                     }
@@ -462,7 +462,7 @@ public struct EventDetailView: View {
         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: Spacing.sm) {
             summaryNavCard(
                 icon: "bag.fill",
-                title: "Productos",
+                title: tr("events.detail.card.products", "Productos"),
                 count: viewModel.products.count,
                 color: SolennixColors.primary,
                 route: Route.eventProducts(id: eventId)
@@ -470,7 +470,7 @@ public struct EventDetailView: View {
 
             summaryNavCard(
                 icon: "sparkles",
-                title: "Extras",
+                title: tr("events.detail.card.extras", "Extras"),
                 count: viewModel.extras.count,
                 color: SolennixColors.info,
                 route: Route.eventExtras(id: eventId)
@@ -478,7 +478,7 @@ public struct EventDetailView: View {
 
             summaryNavCard(
                 icon: "drop.fill",
-                title: "Insumos",
+                title: tr("events.detail.card.supplies", "Insumos"),
                 count: viewModel.supplies.count,
                 color: SolennixColors.warning,
                 route: Route.eventSupplies(id: eventId)
@@ -486,7 +486,7 @@ public struct EventDetailView: View {
 
             summaryNavCard(
                 icon: "wrench.and.screwdriver.fill",
-                title: "Equipo",
+                title: tr("events.detail.card.equipment", "Equipo"),
                 count: viewModel.equipment.count,
                 color: SolennixColors.success,
                 route: Route.eventEquipment(id: eventId)
@@ -494,7 +494,7 @@ public struct EventDetailView: View {
 
             summaryNavCard(
                 icon: "cart.fill",
-                title: "Compras",
+                title: tr("events.detail.card.shopping", "Compras"),
                 subtitle: shoppingListSubtitle,
                 color: SolennixColors.error,
                 route: Route.eventShoppingList(id: eventId)
@@ -502,7 +502,7 @@ public struct EventDetailView: View {
 
             summaryNavCard(
                 icon: "person.3.fill",
-                title: "Personal",
+                title: tr("events.detail.card.staff", "Personal"),
                 count: viewModel.eventStaff.count,
                 color: SolennixColors.info,
                 route: Route.eventStaff(id: eventId)
@@ -529,7 +529,7 @@ public struct EventDetailView: View {
                         }
                     }
 
-                    Text("Fotos")
+                    Text(tr("events.detail.card.photos", "Fotos"))
                         .font(.subheadline)
                         .fontWeight(.semibold)
                         .foregroundStyle(SolennixColors.text)
@@ -598,7 +598,7 @@ public struct EventDetailView: View {
     private var shoppingListSubtitle: String? {
         let purchaseCount = viewModel.supplies.filter { $0.source == .purchase }.count
         if purchaseCount > 0 {
-            return "\(purchaseCount) por comprar"
+            return trf("events.detail.shopping.pending_count", "%@ por comprar", String(purchaseCount))
         }
         return nil
     }
@@ -611,7 +611,7 @@ public struct EventDetailView: View {
             NavigationLink(value: Route.eventPhotos(id: eventId)) {
                 VStack(alignment: .leading, spacing: Spacing.sm) {
                     HStack {
-                        Text("Fotos")
+                        Text(tr("events.detail.card.photos", "Fotos"))
                             .font(.headline)
                             .foregroundStyle(SolennixColors.text)
                         Spacer()
@@ -667,7 +667,7 @@ public struct EventDetailView: View {
             HStack {
                 Image(systemName: "checklist")
                     .font(.body)
-                Text("Checklist de Carga")
+                Text(tr("events.detail.card.checklist", "Checklist de carga"))
                     .font(.body)
                     .fontWeight(.medium)
                 Spacer()
@@ -689,7 +689,7 @@ public struct EventDetailView: View {
             HStack {
                 Image(systemName: "doc.richtext")
                     .font(.body)
-                Text("Ver Contrato")
+                Text(tr("events.detail.card.contract", "Ver contrato"))
                     .font(.body)
                     .fontWeight(.medium)
                 Spacer()
@@ -717,7 +717,7 @@ public struct EventDetailView: View {
             HStack {
                 Image(systemName: "person.2.circle")
                     .font(.body)
-                Text("Portal del cliente")
+                Text(tr("events.detail.share.title", "Portal del cliente"))
                     .font(.body)
                     .fontWeight(.medium)
                 Spacer()
@@ -741,11 +741,11 @@ public struct EventDetailView: View {
             if viewModel.remaining > 0.01 {
                 VStack(spacing: Spacing.sm) {
                     HStack(spacing: Spacing.sm) {
-                        PremiumButton(title: "Registrar Pago", fullWidth: true) {
+                        PremiumButton(title: tr("events.detail.payments.action.record", "Registrar pago"), fullWidth: true) {
                             viewModel.showPaymentSheet = true
                         }
 
-                        PremiumButton(title: "Liquidar \(viewModel.remaining.asMXN)", fullWidth: true) {
+                        PremiumButton(title: trf("events.detail.payments.action.settle", "Liquidar %@", viewModel.remaining.asMXN), fullWidth: true) {
                             viewModel.payRemaining()
                         }
                     }
@@ -753,7 +753,7 @@ public struct EventDetailView: View {
                     if let depositPct = event.depositPercent, depositPct > 0, viewModel.depositBalance > 0.01 {
                         // Titulo corto — el porcentaje ya se ve en la card
                         // "Anticipo X%" arriba. Evita truncado en iPhone mini.
-                        PremiumButton(title: "Anticipo \(viewModel.depositBalance.asMXN)", fullWidth: true) {
+                        PremiumButton(title: trf("events.detail.payments.action.deposit", "Anticipo %@", viewModel.depositBalance.asMXN), fullWidth: true) {
                             viewModel.payDeposit()
                         }
                     }
@@ -780,7 +780,7 @@ public struct EventDetailView: View {
                         .foregroundStyle(viewModel.isLiveActivityActive ? SolennixColors.error : .white)
                         .symbolEffect(.pulse, isActive: viewModel.isLiveActivityActive)
 
-                    Text(viewModel.isLiveActivityActive ? "Detener Actividad en Vivo" : "Iniciar Actividad en Vivo")
+                    Text(viewModel.isLiveActivityActive ? tr("events.detail.live_activity.stop", "Detener actividad en vivo") : tr("events.detail.live_activity.start", "Iniciar actividad en vivo"))
                         .font(.body)
                         .fontWeight(.medium)
                         .foregroundStyle(viewModel.isLiveActivityActive ? SolennixColors.error : .white)
@@ -810,7 +810,7 @@ public struct EventDetailView: View {
 
     private var actionButtonsRow3: some View {
         NavigationLink(value: Route.eventForm(id: eventId)) {
-            actionButton(icon: "pencil", label: "Editar Evento", fg: SolennixColors.info)
+            actionButton(icon: "pencil", label: tr("events.detail.action.edit_event", "Editar evento"), fg: SolennixColors.info)
         }
     }
 
@@ -839,7 +839,7 @@ public struct EventDetailView: View {
                 Image(systemName: "note.text")
                     .font(.caption)
                     .foregroundStyle(SolennixColors.primary)
-                Text("Notas")
+                Text(tr("events.detail.notes", "Notas"))
                     .font(.caption)
                     .fontWeight(.semibold)
                     .foregroundStyle(SolennixColors.textSecondary)
@@ -903,13 +903,13 @@ public struct EventDetailView: View {
     private var paymentSheet: some View {
         NavigationStack {
             VStack(spacing: Spacing.lg) {
-                Text("Registrar Pago")
+                Text(tr("events.detail.payments.sheet.title", "Registrar pago"))
                     .font(.title3)
                     .fontWeight(.bold)
                     .foregroundStyle(SolennixColors.text)
 
                 VStack(alignment: .leading, spacing: Spacing.xs) {
-                    Text("Monto")
+                    Text(tr("events.detail.payments.sheet.amount", "Monto"))
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)
 
@@ -924,7 +924,7 @@ public struct EventDetailView: View {
                 }
 
                 VStack(alignment: .leading, spacing: Spacing.xs) {
-                    Text("Metodo de pago")
+                    Text(tr("events.detail.payments.sheet.method", "Método de pago"))
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)
 
@@ -955,11 +955,11 @@ public struct EventDetailView: View {
                 }
 
                 VStack(alignment: .leading, spacing: Spacing.xs) {
-                    Text("Notas (opcional)")
+                    Text(tr("events.detail.payments.sheet.notes_optional", "Notas (opcional)"))
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)
 
-                    TextField("Notas del pago", text: $viewModel.paymentNotes)
+                    TextField(tr("events.detail.payments.sheet.notes_placeholder", "Notas del pago"), text: $viewModel.paymentNotes)
                         .font(.body)
                         .foregroundStyle(SolennixColors.text)
                         .padding(Spacing.md)
@@ -970,7 +970,7 @@ public struct EventDetailView: View {
                 Spacer()
 
                 PremiumButton(
-                    title: "Guardar Pago",
+                    title: tr("events.detail.payments.sheet.save", "Guardar pago"),
                     isLoading: viewModel.isSavingPayment,
                     isDisabled: viewModel.paymentAmount.isEmpty
                 ) {
@@ -981,7 +981,7 @@ public struct EventDetailView: View {
             .background(SolennixColors.background)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancelar") {
+                    Button(tr("events.form.cancel", "Cancelar")) {
                         viewModel.showPaymentSheet = false
                     }
                     .foregroundStyle(SolennixColors.primary)
@@ -999,7 +999,7 @@ public struct EventDetailView: View {
                 Image(systemName: "doc.text.fill")
                     .font(.body)
                     .foregroundStyle(SolennixColors.primary)
-                Text("Generar Documentos")
+                Text(tr("events.detail.documents.title", "Generar documentos"))
                     .font(.headline)
                     .foregroundStyle(SolennixColors.text)
             }
@@ -1050,24 +1050,36 @@ public struct EventDetailView: View {
         return (date.formatted(style: "MMM"), date.formatted(style: "d"))
     }
 
+    private func tr(_ key: String, _ value: String) -> String {
+        FeatureL10n.text(key, value)
+    }
+
+    private func trf(_ key: String, _ value: String, _ arg: String) -> String {
+        String(format: tr(key, value), locale: FeatureL10n.locale, arg)
+    }
+
+    private func trf2(_ key: String, _ value: String, _ arg1: String, _ arg2: String) -> String {
+        String(format: tr(key, value), locale: FeatureL10n.locale, arg1, arg2)
+    }
+
     private var paymentMethods: [(key: String, label: String)] {
         [
-            ("cash", "Efectivo"),
-            ("transfer", "Transferencia"),
-            ("card", "Tarjeta"),
-            ("check", "Cheque"),
+            ("cash", tr("events.detail.payments.method.cash", "Efectivo")),
+            ("transfer", tr("events.detail.payments.method.transfer", "Transferencia")),
+            ("card", tr("events.detail.payments.method.card", "Tarjeta")),
+            ("check", tr("events.detail.payments.method.check", "Cheque")),
         ]
     }
 
     private var pdfOptions: [(key: String, label: String, icon: String)] {
         [
-            ("cotizacion", "Cotizacion", "doc.text"),
-            ("contrato", "Contrato", "doc.richtext"),
-            ("insumos", "Lista de Insumos", "list.clipboard"),
-            ("equipo", "Lista de Equipo", "wrench.and.screwdriver"),
-            ("checklist", "Checklist", "checklist"),
-            ("pagos", "Pagos", "dollarsign.circle"),
-            ("factura", "Factura", "doc.badge.arrow.up"),
+            ("cotizacion", tr("events.detail.documents.quote", "Cotización"), "doc.text"),
+            ("contrato", tr("events.detail.documents.contract", "Contrato"), "doc.richtext"),
+            ("insumos", tr("events.detail.documents.supplies", "Lista de insumos"), "list.clipboard"),
+            ("equipo", tr("events.detail.documents.equipment", "Lista de equipo"), "wrench.and.screwdriver"),
+            ("checklist", tr("events.detail.documents.checklist", "Checklist"), "checklist"),
+            ("pagos", tr("events.detail.documents.payments", "Pagos"), "dollarsign.circle"),
+            ("factura", tr("events.detail.documents.invoice", "Factura"), "doc.badge.arrow.up"),
         ]
     }
 
@@ -1082,10 +1094,10 @@ public struct EventDetailView: View {
         switch key {
         case "cotizacion":
             guard let client = viewModel.client else {
-                toastManager.show(message: "Cliente no disponible", type: .error)
+                toastManager.show(message: tr("events.detail.error.client_unavailable", "Cliente no disponible"), type: .error)
                 return
             }
-            filename = "Cotizacion_\(event.serviceType).pdf"
+            filename = trf("events.detail.documents.filename.quote", "Quote_%@.pdf", sanitizedFileComponent(event.serviceType))
             pdfData = BudgetPDFGenerator.generate(
                 event: event,
                 client: client,
@@ -1096,10 +1108,10 @@ public struct EventDetailView: View {
             )
         case "contrato":
             guard let client = viewModel.client else {
-                toastManager.show(message: "Cliente no disponible", type: .error)
+                toastManager.show(message: tr("events.detail.error.client_unavailable", "Cliente no disponible"), type: .error)
                 return
             }
-            filename = "Contrato_\(client.name.replacingOccurrences(of: " ", with: "_")).pdf"
+            filename = trf("events.detail.documents.filename.contract", "Contract_%@.pdf", sanitizedFileComponent(client.name))
             pdfData = ContractPDFGenerator.generate(
                 event: event,
                 client: client,
@@ -1111,19 +1123,19 @@ public struct EventDetailView: View {
         case "insumos":
             let ingredients = viewModel.supplies.map { s in
                 ShoppingListPDFGenerator.Ingredient(
-                    name: s.supplyName ?? "Insumo",
+                    name: s.supplyName ?? tr("events.detail.supplies.fallback", "Insumo"),
                     quantity: s.quantity,
                     unit: s.unit ?? ""
                 )
             }
-            filename = "Insumos_\(event.serviceType).pdf"
+            filename = trf("events.detail.documents.filename.supplies", "Supplies_%@.pdf", sanitizedFileComponent(event.serviceType))
             pdfData = ShoppingListPDFGenerator.generate(
                 event: event,
                 profile: profile,
                 ingredients: ingredients
             )
         case "equipo":
-            filename = "Equipo_\(event.serviceType).pdf"
+            filename = trf("events.detail.documents.filename.equipment", "Equipment_%@.pdf", sanitizedFileComponent(event.serviceType))
             pdfData = EquipmentListPDFGenerator.generate(
                 event: event,
                 client: viewModel.client,
@@ -1133,12 +1145,12 @@ public struct EventDetailView: View {
         case "checklist":
             let ingredients = viewModel.supplies.map { s in
                 ShoppingListPDFGenerator.Ingredient(
-                    name: s.supplyName ?? "Insumo",
+                    name: s.supplyName ?? tr("events.detail.supplies.fallback", "Insumo"),
                     quantity: s.quantity,
                     unit: s.unit ?? ""
                 )
             }
-            filename = "Checklist_\(event.serviceType).pdf"
+            filename = trf("events.detail.documents.filename.checklist", "Checklist_%@.pdf", sanitizedFileComponent(event.serviceType))
             pdfData = ChecklistPDFGenerator.generate(
                 event: event,
                 client: viewModel.client,
@@ -1151,10 +1163,10 @@ public struct EventDetailView: View {
             )
         case "pagos":
             guard let client = viewModel.client else {
-                toastManager.show(message: "Cliente no disponible", type: .error)
+                toastManager.show(message: tr("events.detail.error.client_unavailable", "Cliente no disponible"), type: .error)
                 return
             }
-            filename = "Pagos_\(client.name.replacingOccurrences(of: " ", with: "_")).pdf"
+            filename = trf("events.detail.documents.filename.payments", "Payments_%@.pdf", sanitizedFileComponent(client.name))
             pdfData = PaymentReportPDFGenerator.generate(
                 event: event,
                 client: client,
@@ -1163,10 +1175,10 @@ public struct EventDetailView: View {
             )
         case "factura":
             guard let client = viewModel.client else {
-                toastManager.show(message: "Cliente no disponible", type: .error)
+                toastManager.show(message: tr("events.detail.error.client_unavailable", "Cliente no disponible"), type: .error)
                 return
             }
-            filename = "Factura_\(client.name.replacingOccurrences(of: " ", with: "_")).pdf"
+            filename = trf("events.detail.documents.filename.invoice", "Invoice_%@.pdf", sanitizedFileComponent(client.name))
             pdfData = InvoicePDFGenerator.generate(
                 event: event,
                 client: client,
@@ -1183,12 +1195,12 @@ public struct EventDetailView: View {
         do {
             try pdfData.write(to: tempURL)
         } catch {
-            toastManager.show(message: "No se pudo guardar el PDF", type: .error)
+            toastManager.show(message: tr("events.detail.error.save_pdf", "No se pudo guardar el PDF"), type: .error)
             return
         }
 
         guard let presenter = topMostViewController() else {
-            toastManager.show(message: "No se pudo presentar el compartir", type: .error)
+            toastManager.show(message: tr("events.detail.error.share_sheet", "No se pudo presentar el compartir"), type: .error)
             return
         }
 
@@ -1237,17 +1249,17 @@ public struct EventDetailView: View {
         HapticsHelper.play(.selection)
 
         let displayDate = Date.fromServerDay(event.eventDate)
-            .map { $0.formatted(style: "d 'de' MMMM, yyyy") } ?? event.eventDate
+            .map { $0.formatted(date: .long, time: .omitted) } ?? event.eventDate
 
-        let clientName = viewModel.client?.name ?? "Cliente"
+        let clientName = viewModel.client?.name ?? tr("events.detail.client_fallback", "Cliente")
 
         var lines = [
-            "*Resumen de Evento — Solennix*",
+            tr("events.detail.share.whatsapp_header", "*Event summary — Solennix*"),
             "",
             "📋 *\(event.serviceType)*",
-            "👤 Cliente: \(clientName)",
-            "📅 Fecha: \(displayDate)",
-            "👥 Personas: \(event.numPeople) PAX",
+            trf("events.detail.share.whatsapp_client", "👤 Client: %@", clientName),
+            trf("events.detail.share.whatsapp_date", "📅 Date: %@", displayDate),
+            trf("events.detail.share.whatsapp_people", "👥 People: %@ PAX", String(event.numPeople)),
         ]
 
         let locationParts = [event.location, event.city]
@@ -1256,22 +1268,30 @@ public struct EventDetailView: View {
                 return v
             }
         if !locationParts.isEmpty {
-            lines.append("📍 Lugar: \(locationParts.joined(separator: ", "))")
+            lines.append(trf("events.detail.share.whatsapp_location", "📍 Location: %@", locationParts.joined(separator: ", ")))
         }
 
         lines += [
             "",
-            "💰 Total: \(event.totalAmount.asMXN)",
-            "✅ Pagado: \(viewModel.totalPaid.asMXN)",
+            trf("events.detail.share.whatsapp_total", "💰 Total: %@", event.totalAmount.asMXN),
+            trf("events.detail.share.whatsapp_paid", "✅ Paid: %@", viewModel.totalPaid.asMXN),
         ]
         if viewModel.remaining > 0.01 {
-            lines.append("⏳ Saldo pendiente: \(viewModel.remaining.asMXN)")
+            lines.append(trf("events.detail.share.whatsapp_balance", "⏳ Pending balance: %@", viewModel.remaining.asMXN))
         }
 
         let message = lines.joined(separator: "\n")
         guard let encoded = message.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
               let url = URL(string: "whatsapp://send?text=\(encoded)") else { return }
         UIApplication.shared.open(url)
+    }
+
+    private func sanitizedFileComponent(_ value: String) -> String {
+        value
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: "/", with: "-")
+            .replacingOccurrences(of: ":", with: "-")
+            .replacingOccurrences(of: " ", with: "_")
     }
 }
 
