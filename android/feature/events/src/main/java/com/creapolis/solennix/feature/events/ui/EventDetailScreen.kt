@@ -60,7 +60,6 @@ import com.creapolis.solennix.feature.events.pdf.BudgetPdfGenerator
 import com.creapolis.solennix.feature.events.pdf.ChecklistPdfGenerator
 import com.creapolis.solennix.feature.events.pdf.ContractPdfGenerator
 import com.creapolis.solennix.feature.events.pdf.EquipmentListPdfGenerator
-import com.creapolis.solennix.feature.events.pdf.InvoicePdfGenerator
 import com.creapolis.solennix.feature.events.pdf.PaymentReportPdfGenerator
 import com.creapolis.solennix.feature.events.pdf.ShoppingListPdfGenerator
 import com.creapolis.solennix.feature.events.viewmodel.EventDetailUiState
@@ -1648,24 +1647,7 @@ fun DocumentActionsGrid(
                 }
             )
             Spacer(modifier = Modifier.width(8.dp))
-            ActionButton(
-                icon = Icons.Default.Receipt,
-                label = "Factura",
-                modifier = Modifier.weight(1f),
-                onClick = {
-                    generatePdfAsync {
-                        InvoicePdfGenerator.generate(
-                            context = context,
-                            event = event,
-                            client = client,
-                            products = uiState.products,
-                            extras = uiState.extras,
-                            payments = uiState.payments,
-                            user = uiState.currentUser
-                        )
-                    }
-                }
-            )
+            Spacer(modifier = Modifier.weight(1f))
             Spacer(modifier = Modifier.width(8.dp))
             ActionButton(
                 icon = Icons.Default.ShoppingCart,

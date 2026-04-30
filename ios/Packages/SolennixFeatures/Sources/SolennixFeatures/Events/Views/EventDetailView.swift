@@ -1079,7 +1079,6 @@ public struct EventDetailView: View {
             ("equipo", tr("events.detail.documents.equipment", "Lista de equipo"), "wrench.and.screwdriver"),
             ("checklist", tr("events.detail.documents.checklist", "Checklist"), "checklist"),
             ("pagos", tr("events.detail.documents.payments", "Pagos"), "dollarsign.circle"),
-            ("factura", tr("events.detail.documents.invoice", "Factura"), "doc.badge.arrow.up"),
         ]
     }
 
@@ -1172,20 +1171,6 @@ public struct EventDetailView: View {
                 client: client,
                 profile: profile,
                 payments: viewModel.payments
-            )
-        case "factura":
-            guard let client = viewModel.client else {
-                toastManager.show(message: tr("events.detail.error.client_unavailable", "Cliente no disponible"), type: .error)
-                return
-            }
-            filename = trf("events.detail.documents.filename.invoice", "Invoice_%@.pdf", sanitizedFileComponent(client.name))
-            pdfData = InvoicePDFGenerator.generate(
-                event: event,
-                client: client,
-                profile: profile,
-                products: viewModel.products,
-                extras: viewModel.extras,
-                productNames: productNames
             )
         default:
             return

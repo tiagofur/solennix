@@ -41,7 +41,6 @@ import {
   generateContractPDF,
   generateShoppingListPDF,
   generateChecklistPDF,
-  generateInvoicePDF,
   generatePaymentReportPDF,
 } from "@/lib/pdfGenerator";
 import { logError } from "@/lib/errorHandler";
@@ -487,18 +486,6 @@ export const EventSummary: React.FC = () => {
                 >
                   <Download className="h-5 w-5 mr-3 text-text-secondary" />
                   {t('events:summary.actions.budget')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    generateInvoicePDF(event, profile as UserProfile | null, products, extras, i18n.language);
-                    setActionsDropdownOpen(false);
-                  }}
-                  className="w-full flex items-center px-4 py-2.5 text-sm text-text hover:bg-surface-alt dark:hover:bg-surface transition-colors"
-                  role="menuitem"
-                >
-                  <FileText className="h-5 w-5 mr-3 text-text-secondary" />
-                  {t('events:summary.actions.invoice')}
                 </button>
                 <button
                   type="button"
