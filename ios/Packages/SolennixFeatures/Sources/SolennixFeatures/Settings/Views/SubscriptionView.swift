@@ -20,6 +20,10 @@ public struct SubscriptionView: View {
         _viewModel = State(initialValue: SettingsViewModel(apiClient: apiClient, authManager: authManager))
     }
 
+    private func tr(_ key: String, _ value: String) -> String {
+        FeatureL10n.text(key, value)
+    }
+
     public var body: some View {
         ScrollView {
             VStack(spacing: Spacing.lg) {
@@ -50,7 +54,7 @@ public struct SubscriptionView: View {
             .frame(maxWidth: .infinity)
         }
         .background(SolennixColors.surfaceGrouped)
-        .navigationTitle("Suscripcion")
+        .navigationTitle(tr("settings.subscription.title", "Suscripción"))
         .navigationBarTitleDisplayMode(.inline)
         .task {
             await viewModel.loadUser()
@@ -70,7 +74,7 @@ public struct SubscriptionView: View {
         return VStack(alignment: .leading, spacing: Spacing.sm) {
             HStack {
                 VStack(alignment: .leading, spacing: Spacing.xs) {
-                    Text("Plan actual")
+                    Text(tr("settings.subscription.current_plan", "Plan actual"))
                         .font(.subheadline)
                         .foregroundStyle(SolennixColors.primary)
 
@@ -106,21 +110,18 @@ public struct SubscriptionView: View {
 
     // MARK: - Current Plan Card Helpers
 
-    /// Builds the human-readable renewal line from the backend response.
-    /// Returns "Se renueva el ..." — or "Vence el ..." when
-    /// `cancelAtPeriodEnd` is true.
     private func renewalLine(_ sub: SubscriptionInfo?) -> String? {
         guard let iso = sub?.currentPeriodEnd, !iso.isEmpty else { return nil }
         let isoFormatter = ISO8601DateFormatter()
         isoFormatter.formatOptions = [.withInternetDateTime]
         guard let date = isoFormatter.date(from: iso) else { return nil }
         let displayFormatter = DateFormatter()
-        displayFormatter.locale = Locale(identifier: "es")
-        displayFormatter.dateFormat = "d 'de' MMMM 'de' yyyy"
+        displayFormatter.locale = FeatureL10n.locale
+        displayFormatter.dateStyle = .long
         let formatted = displayFormatter.string(from: date)
         return (sub?.cancelAtPeriodEnd == true)
-            ? "Vence el \(formatted)"
-            : "Se renueva el \(formatted)"
+            ? FeatureL10n.format("settings.subscription.expires_on", "Vence el %@", formatted)
+            : FeatureL10n.format("settings.subscription.renews_on", "Se renueva el %@", formatted)
     }
 
     /// Formats the price line when the backend exposes it (Stripe provider).
@@ -131,12 +132,12 @@ public struct SubscriptionView: View {
         }
         let interval: String
         switch sub?.billingInterval {
-        case "month": interval = "/mes"
-        case "year": interval = "/año"
+        case "month": interval = tr("settings.subscription.interval_month", "/mes")
+        case "year": interval = tr("settings.subscription.interval_year", "/año")
         default: interval = ""
         }
         let amount = Double(cents) / 100.0
-        let formatted = String(format: "%.2f", amount)
+        let formatted = String(format: "%.2f", locale: FeatureL10n.locale, amount)
         return "\(currency.uppercased()) \(formatted)\(interval)"
     }
 
@@ -149,7 +150,7 @@ public struct SubscriptionView: View {
             Image(systemName: "crown.fill")
                 .foregroundStyle(SolennixColors.warning)
 
-            Text(cancelPending ? "Cancela al vencer" : "Suscripción activa")
+            Text(cancelPending ? tr("settings.subscription.cancel_pending", "Cancela al vencer") : tr("settings.subscription.active_title", "Suscripción activa"))
                 .font(.subheadline)
                 .fontWeight(.semibold)
 
@@ -159,7 +160,7 @@ public struct SubscriptionView: View {
                 Image(systemName: cancelPending ? "exclamationmark.triangle.fill" : "checkmark.seal.fill")
                     .foregroundStyle(accent)
 
-                Text(cancelPending ? "Pendiente" : "Activo")
+                Text(cancelPending ? tr("settings.subscription.pending", "Pendiente") : tr("settings.subscription.active", "Activo"))
                     .font(.caption)
                     .fontWeight(.bold)
                     .foregroundStyle(accent)
@@ -178,7 +179,7 @@ public struct SubscriptionView: View {
 
     private var featuresSection: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
-            Text("Funciones incluidas")
+            Text(tr("settings.subscription.features_included", "Funciones incluidas"))
                 .font(.headline)
                 .foregroundStyle(SolennixColors.text)
 
@@ -216,9 +217,9 @@ public struct SubscriptionView: View {
         // enum only when talking to an older backend that did not yet
         // populate `source_badge` / `cancel_instructions`.
         let badgeText = (sub.sourceBadge?.isEmpty == false ? sub.sourceBadge : nil)
-            ?? sub.provider.fallbackBadge
+            ?? providerBadgeFallback(sub.provider)
         let instructionsText = (sub.cancelInstructions?.isEmpty == false ? sub.cancelInstructions : nil)
-            ?? sub.provider.fallbackCancelInstructions
+            ?? providerCancelFallback(sub.provider)
 
         return VStack(spacing: Spacing.sm) {
             // Provider badge
@@ -263,6 +264,25 @@ public struct SubscriptionView: View {
         }
     }
 
+    private func providerBadgeFallback(_ provider: SubscriptionProvider) -> String {
+        switch provider {
+        case .stripe: return tr("settings.subscription.provider_web", "Suscrito vía web")
+        case .apple: return tr("settings.subscription.provider_ios", "Suscrito vía App Store")
+        case .google: return tr("settings.subscription.provider_android", "Suscrito vía Google Play")
+        }
+    }
+
+    private func providerCancelFallback(_ provider: SubscriptionProvider) -> String {
+        switch provider {
+        case .stripe:
+            return tr("settings.subscription.cancel_web", "Tu suscripción fue realizada desde la web. Para cancelarla, ingresá a solennix.com > Configuración > Suscripción.")
+        case .apple:
+            return tr("settings.subscription.cancel_ios", "Para cancelar, abrí Configuración > tu Apple ID > Suscripciones en tu iPhone o iPad.")
+        case .google:
+            return tr("settings.subscription.cancel_android", "Tu suscripción fue realizada desde Android. Para cancelarla, abrí Google Play Store > Pagos y suscripciones.")
+        }
+    }
+
     // MARK: - Actions Section
 
     private var actionsSection: some View {
@@ -272,7 +292,7 @@ public struct SubscriptionView: View {
                 NavigationLink(value: Route.pricing) {
                     HStack {
                         Image(systemName: "arrow.up.circle.fill")
-                        Text("Mejorar plan")
+                        Text(tr("settings.subscription.upgrade_plan", "Mejorar plan"))
                             .fontWeight(.semibold)
                     }
                     .foregroundStyle(.white)
@@ -288,7 +308,7 @@ public struct SubscriptionView: View {
             NavigationLink(value: Route.pricing) {
                 HStack {
                     Image(systemName: "list.bullet.rectangle")
-                    Text("Ver todos los planes")
+                    Text(tr("settings.subscription.view_all_plans", "Ver todos los planes"))
                 }
                 .font(.subheadline)
                 .foregroundStyle(SolennixColors.primary)
@@ -307,7 +327,7 @@ public struct SubscriptionView: View {
                 } label: {
                     HStack {
                         Image(systemName: "gearshape")
-                        Text("Administrar suscripcion")
+                        Text(tr("settings.subscription.manage", "Administrar suscripción"))
                     }
                     .font(.subheadline)
                     .foregroundStyle(SolennixColors.textSecondary)
@@ -323,7 +343,7 @@ public struct SubscriptionView: View {
             } label: {
                 HStack {
                     Image(systemName: "arrow.clockwise")
-                    Text("Restaurar compras")
+                    Text(tr("settings.subscription.restore_purchases", "Restaurar compras"))
                 }
                 .font(.subheadline)
                 .foregroundStyle(SolennixColors.textSecondary)
@@ -343,13 +363,13 @@ public struct SubscriptionView: View {
     /// and cannot distinguish Pro from Business, so the user model wins.
     private var currentPlanName: String {
         guard let user = viewModel.user else {
-            return subscriptionManager.isPremium ? "Pro" : "Básico"
+            return subscriptionManager.isPremium ? tr("settings.plan.pro", "Pro") : tr("settings.plan.basic", "Básico")
         }
         switch user.plan {
         case .basic:
-            return subscriptionManager.isPremium ? "Pro" : "Básico"
-        case .pro, .premium: return "Pro"
-        case .business: return "Business"
+            return subscriptionManager.isPremium ? tr("settings.plan.pro", "Pro") : tr("settings.plan.basic", "Básico")
+        case .pro, .premium: return tr("settings.plan.pro", "Pro")
+        case .business: return tr("settings.plan.business", "Business")
         }
     }
 
@@ -360,23 +380,23 @@ public struct SubscriptionView: View {
     private var currentPlanFeatures: [String] {
         if isPremiumUser {
             return [
-                "Productos ilimitados",
-                "Clientes ilimitados",
-                "Eventos ilimitados",
-                "Widgets de iOS",
-                "Comandos de Siri",
-                "Soporte prioritario",
-                "Sin marca de agua en PDFs",
-                "Marca personalizada"
+                tr("settings.subscription.feature.unlimited_products", "Productos ilimitados"),
+                tr("settings.subscription.feature.unlimited_clients", "Clientes ilimitados"),
+                tr("settings.subscription.feature.unlimited_events", "Eventos ilimitados"),
+                tr("settings.subscription.feature.ios_widgets", "Widgets de iOS"),
+                tr("settings.subscription.feature.siri_shortcuts", "Comandos de Siri"),
+                tr("settings.subscription.feature.priority_support", "Soporte prioritario"),
+                tr("settings.subscription.feature.no_pdf_watermark", "Sin marca de agua en PDFs"),
+                tr("settings.subscription.feature.custom_branding", "Marca personalizada")
             ]
         } else {
             return [
-                "Hasta 20 productos",
-                "Hasta 50 clientes",
-                "Hasta 3 eventos por mes",
-                "Generacion de contratos",
-                "Calendario de eventos",
-                "Reportes basicos"
+                tr("settings.subscription.feature.up_to_20_products", "Hasta 20 productos"),
+                tr("settings.subscription.feature.up_to_50_clients", "Hasta 50 clientes"),
+                tr("settings.subscription.feature.up_to_3_events", "Hasta 3 eventos por mes"),
+                tr("settings.subscription.feature.contract_generation", "Generación de contratos"),
+                tr("settings.subscription.feature.event_calendar", "Calendario de eventos"),
+                tr("settings.subscription.feature.basic_reports", "Reportes básicos")
             ]
         }
     }
@@ -393,9 +413,9 @@ public struct SubscriptionView: View {
                     HapticsHelper.play(.selection)
                     legalSheetURL = IdentifiableURL(LegalURL.terms)
                 } label: {
-                    Text("Terminos")
+                    Text(tr("settings.subscription.terms", "Términos"))
                 }
-                .accessibilityHint("Abre los terminos de uso en Safari")
+                .accessibilityHint(tr("settings.subscription.terms_hint", "Abre los términos de uso en Safari"))
 
                 Text("•")
                     .foregroundStyle(SolennixColors.textTertiary)
@@ -404,16 +424,16 @@ public struct SubscriptionView: View {
                     HapticsHelper.play(.selection)
                     legalSheetURL = IdentifiableURL(LegalURL.privacy)
                 } label: {
-                    Text("Privacidad")
+                    Text(tr("settings.subscription.privacy", "Privacidad"))
                 }
-                .accessibilityHint("Abre la politica de privacidad en Safari")
+                .accessibilityHint(tr("settings.subscription.privacy_hint", "Abre la política de privacidad en Safari"))
             }
             .font(.subheadline)
             .fontWeight(.semibold)
             .foregroundStyle(SolennixColors.primary)
             .buttonStyle(.plain)
 
-            Text("© 2025 Solennix por Creapolis")
+            Text(tr("settings.subscription.footer", "© 2025 Solennix por Creapolis"))
                 .font(.caption2)
                 .foregroundStyle(SolennixColors.textTertiary)
         }

@@ -27,6 +27,7 @@ struct SolennixApp: App {
     @State private var backgroundTaskManager: BackgroundTaskManager?
 
     @AppStorage("appearance") private var appearance: String = "system"
+    @AppStorage("preferredLocale") private var preferredLocale: String = ""
     @AppStorage("hasRequestedPushAuthorization") private var hasRequestedPushAuthorization = false
     @Environment(\.scenePhase) private var scenePhase
 
@@ -128,6 +129,7 @@ struct SolennixApp: App {
                     }
                 }
                 .environment(cacheManager)
+                .environment(\.locale, preferredLocale.isEmpty ? .autoupdatingCurrent : Locale(identifier: preferredLocale))
                 .task {
                     // Ensure auth manager is set on the actor before checking auth
                     await apiClient.setAuthManager(authManager)
@@ -135,6 +137,7 @@ struct SolennixApp: App {
 
                     // Login to RevenueCat with user ID so entitlements are synced
                     if let user = authManager.currentUser {
+                        preferredLocale = user.preferredLanguage ?? preferredLocale
                         await subscriptionManager.login(userID: user.id)
                         // If backend says pro but RC doesn't know yet (web purchase),
                         // force premium status locally
@@ -159,6 +162,7 @@ struct SolennixApp: App {
                     // transitions that happen AFTER launch — matching Android parity.
                     if case .authenticated(let user) = newState {
                         Task {
+                            preferredLocale = user.preferredLanguage ?? preferredLocale
                             await subscriptionManager.login(userID: user.id)
                             if user.plan != .basic {
                                 subscriptionManager.setBackendPremiumStatus(true)

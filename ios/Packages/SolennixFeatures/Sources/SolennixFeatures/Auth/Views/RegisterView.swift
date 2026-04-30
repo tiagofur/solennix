@@ -18,6 +18,10 @@ public struct RegisterView: View {
 
     public init() {}
 
+    private func tr(_ key: String, _ value: String) -> String {
+        FeatureL10n.text(key, value)
+    }
+
     public var body: some View {
         Group {
             if sizeClass == .regular {
@@ -27,7 +31,7 @@ public struct RegisterView: View {
             }
         }
         .background(SolennixColors.surfaceGrouped.ignoresSafeArea())
-        .navigationTitle("Crear Cuenta")
+        .navigationTitle(tr("auth.register.title", "Crear cuenta"))
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             if viewModel == nil {
@@ -50,7 +54,7 @@ public struct RegisterView: View {
                 termsText
 
                 PremiumButton(
-                    title: "Crear Cuenta",
+                    title: tr("auth.register.submit", "Crear cuenta"),
                     isLoading: viewModel?.isLoading ?? false,
                     isDisabled: !(viewModel?.isRegisterValid ?? false)
                 ) {
@@ -83,7 +87,7 @@ public struct RegisterView: View {
                 VStack(spacing: Spacing.xl) {
                     Spacer(minLength: Spacing.xxl)
 
-                    Text("Crear Cuenta")
+                    Text(tr("auth.register.title", "Crear cuenta"))
                         .font(.title2)
                         .fontWeight(.semibold)
                         .foregroundStyle(SolennixColors.text)
@@ -95,7 +99,7 @@ public struct RegisterView: View {
                         .frame(maxWidth: 440)
 
                     PremiumButton(
-                        title: "Crear Cuenta",
+                        title: tr("auth.register.submit", "Crear cuenta"),
                         isLoading: viewModel?.isLoading ?? false,
                         isDisabled: !(viewModel?.isRegisterValid ?? false)
                     ) {
@@ -128,18 +132,18 @@ public struct RegisterView: View {
                 .ignoresSafeArea()
 
             VStack(alignment: .leading, spacing: Spacing.xl) {
-                Text("Unete a Solennix")
+                Text(tr("auth.register.brand.title", "Únete a Solennix"))
                     .font(.solennixSubtitle)
                     .foregroundStyle(.white)
 
-                Text("Tu plataforma para gestionar eventos de manera profesional")
+                Text(tr("auth.register.brand.subtitle", "Tu plataforma para gestionar eventos de manera profesional"))
                     .font(.body)
                     .foregroundStyle(.white.opacity(0.85))
 
                 VStack(alignment: .leading, spacing: Spacing.md) {
-                    FeaturePill(icon: "gift.fill", text: "Gratis", description: "Comienza sin costo")
-                    FeaturePill(icon: "lock.shield.fill", text: "Seguro", description: "Tus datos protegidos")
-                    FeaturePill(icon: "arrow.up.right", text: "Escalable", description: "Crece a tu ritmo")
+                    FeaturePill(icon: "gift.fill", text: tr("auth.register.feature.free", "Gratis"), description: tr("auth.register.feature.free_desc", "Comienza sin costo"))
+                    FeaturePill(icon: "lock.shield.fill", text: tr("auth.register.feature.secure", "Seguro"), description: tr("auth.register.feature.secure_desc", "Tus datos protegidos"))
+                    FeaturePill(icon: "arrow.up.right", text: tr("auth.register.feature.scalable", "Escalable"), description: tr("auth.register.feature.scalable_desc", "Crece a tu ritmo"))
                 }
                 .padding(.top, Spacing.sm)
             }
@@ -157,23 +161,23 @@ public struct RegisterView: View {
             }
 
             SolennixTextField(
-                label: "Nombre",
+                label: tr("auth.register.name_label", "Nombre completo"),
                 text: Binding(
                     get: { viewModel?.name ?? "" },
                     set: { viewModel?.name = $0 }
                 ),
-                placeholder: "Tu nombre completo",
+                placeholder: tr("auth.register.name_placeholder", "Tu nombre"),
                 leftIcon: "person",
                 textContentType: .name
             )
 
             SolennixTextField(
-                label: "Correo electronico",
+                label: tr("auth.register.email_label", "Correo electrónico"),
                 text: Binding(
                     get: { viewModel?.email ?? "" },
                     set: { viewModel?.email = $0 }
                 ),
-                placeholder: "tu@email.com",
+                placeholder: tr("auth.register.email_placeholder", "tu@email.com"),
                 leftIcon: "envelope",
                 textContentType: .emailAddress,
                 keyboardType: .emailAddress,
@@ -181,24 +185,24 @@ public struct RegisterView: View {
             )
 
             SolennixTextField(
-                label: "Contrasena",
+                label: tr("auth.register.password_label", "Contraseña"),
                 text: Binding(
                     get: { viewModel?.password ?? "" },
                     set: { viewModel?.password = $0 }
                 ),
-                placeholder: "Minimo 8 caracteres",
+                placeholder: tr("auth.register.password_placeholder", "Mínimo 8 caracteres"),
                 leftIcon: "lock",
                 isSecure: true,
                 textContentType: .newPassword
             )
 
             SolennixTextField(
-                label: "Confirmar contrasena",
+                label: tr("auth.register.confirm_password_label", "Confirmar contraseña"),
                 text: Binding(
                     get: { viewModel?.confirmPassword ?? "" },
                     set: { viewModel?.confirmPassword = $0 }
                 ),
-                placeholder: "Repite tu contrasena",
+                placeholder: tr("auth.register.confirm_password_placeholder", "Repite tu contraseña"),
                 leftIcon: "lock",
                 isSecure: true,
                 textContentType: .newPassword
@@ -213,33 +217,33 @@ public struct RegisterView: View {
 
     private var termsText: some View {
         HStack(spacing: 4) {
-            Text("Al registrarte aceptas nuestros")
+            Text(tr("auth.register.terms_intro", "Al registrarte aceptas nuestros"))
                 .foregroundStyle(SolennixColors.textSecondary)
 
             Button {
                 HapticsHelper.play(.selection)
                 legalSheetURL = IdentifiableURL(LegalURL.terms)
             } label: {
-                Text("Terminos")
+                Text(tr("auth.register.terms_link", "Términos"))
                     .foregroundStyle(SolennixColors.primary)
                     .underline()
             }
             .buttonStyle(.plain)
-            .accessibilityHint("Abre los terminos de uso en Safari")
+            .accessibilityHint(tr("auth.register.terms_hint", "Abre los términos de uso en Safari"))
 
-            Text("y")
+            Text(tr("auth.register.and", "y"))
                 .foregroundStyle(SolennixColors.textSecondary)
 
             Button {
                 HapticsHelper.play(.selection)
                 legalSheetURL = IdentifiableURL(LegalURL.privacy)
             } label: {
-                Text("Privacidad")
+                Text(tr("auth.register.privacy_link", "Privacidad"))
                     .foregroundStyle(SolennixColors.primary)
                     .underline()
             }
             .buttonStyle(.plain)
-            .accessibilityHint("Abre la politica de privacidad en Safari")
+            .accessibilityHint(tr("auth.register.privacy_hint", "Abre la política de privacidad en Safari"))
         }
         .font(.caption)
         .multilineTextAlignment(.center)
@@ -253,7 +257,7 @@ public struct RegisterView: View {
                 .fill(SolennixColors.separator)
                 .frame(height: 1)
 
-            Text("o continua con")
+            Text(tr("auth.register.or_separator", "o continuá con"))
                 .font(.footnote)
                 .foregroundStyle(SolennixColors.textSecondary)
                 .fixedSize()
@@ -275,7 +279,7 @@ public struct RegisterView: View {
                 HStack(spacing: Spacing.sm) {
                     Image(systemName: "apple.logo")
                         .font(.title3)
-                    Text("Continuar con Apple")
+                    Text(tr("auth.social.apple.continue", "Continuar con Apple"))
                         .font(.body)
                         .fontWeight(.medium)
                 }
@@ -296,7 +300,7 @@ public struct RegisterView: View {
                         .font(.title3)
                         .fontWeight(.bold)
                         .foregroundStyle(.red)
-                    Text("Continuar con Google")
+                    Text(tr("auth.social.google.continue", "Continuar con Google"))
                         .font(.body)
                         .fontWeight(.medium)
                         .foregroundStyle(SolennixColors.text)
@@ -321,9 +325,9 @@ public struct RegisterView: View {
             dismiss()
         } label: {
             HStack(spacing: Spacing.xs) {
-                Text("Ya tienes cuenta?")
+                Text(tr("auth.register.has_account", "¿Ya tienes cuenta?"))
                     .foregroundStyle(SolennixColors.textSecondary)
-                Text("Inicia sesion")
+                Text(tr("auth.register.sign_in", "Iniciar sesión"))
                     .fontWeight(.semibold)
                     .foregroundStyle(SolennixColors.primary)
             }

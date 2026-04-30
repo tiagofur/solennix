@@ -18,6 +18,10 @@ public struct ResetPasswordView: View {
         self.token = token
     }
 
+    private func tr(_ key: String, _ value: String) -> String {
+        FeatureL10n.text(key, value)
+    }
+
     public var body: some View {
         Group {
             if sizeClass == .regular {
@@ -27,7 +31,7 @@ public struct ResetPasswordView: View {
             }
         }
         .background(SolennixColors.surfaceGrouped.ignoresSafeArea())
-        .navigationTitle("Nueva Contrasena")
+        .navigationTitle(tr("auth.reset_password.title", "Restablecer contraseña"))
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             if viewModel == nil {
@@ -96,7 +100,7 @@ public struct ResetPasswordView: View {
                     .font(.solennixTitle)
                     .foregroundStyle(.white)
 
-                Text("Crea una nueva contrasena segura")
+                Text(tr("auth.reset_password.brand.subtitle", "Crea una nueva contraseña segura"))
                     .font(.body)
                     .foregroundStyle(.white.opacity(0.85))
 
@@ -109,7 +113,7 @@ public struct ResetPasswordView: View {
                             .background(.white.opacity(0.2))
                             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
 
-                        Text("Minimo 8 caracteres")
+                        Text(tr("auth.reset_password.brand.feature_min", "Mínimo 8 caracteres"))
                             .font(.body)
                             .foregroundStyle(.white)
                     }
@@ -122,7 +126,7 @@ public struct ResetPasswordView: View {
                             .background(.white.opacity(0.2))
                             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
 
-                        Text("Mayusculas, minusculas y numeros")
+                        Text(tr("auth.reset_password.brand.feature_rules", "Mayúsculas, minúsculas y números"))
                             .font(.body)
                             .foregroundStyle(.white)
                     }
@@ -143,7 +147,7 @@ public struct ResetPasswordView: View {
                     .font(.system(size: 48))
                     .foregroundStyle(SolennixColors.primary)
 
-                Text("Ingresa tu nueva contrasena. Debe tener al menos 8 caracteres, una mayuscula, una minuscula y un numero.")
+                Text(tr("auth.reset_password.subtitle", "Ingresa tu nueva contraseña. Debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número."))
                     .font(.body)
                     .foregroundStyle(SolennixColors.textSecondary)
                     .multilineTextAlignment(.center)
@@ -156,31 +160,31 @@ public struct ResetPasswordView: View {
             }
 
             SolennixTextField(
-                label: "Nueva contrasena",
+                label: tr("auth.reset_password.password_label", "Nueva contraseña"),
                 text: Binding(
                     get: { viewModel?.password ?? "" },
                     set: { viewModel?.password = $0 }
                 ),
-                placeholder: "Minimo 8 caracteres",
+                placeholder: tr("auth.reset_password.password_placeholder", "Mínimo 8 caracteres"),
                 leftIcon: "lock",
                 isSecure: true,
                 textContentType: .newPassword
             )
 
             SolennixTextField(
-                label: "Confirmar contrasena",
+                label: tr("auth.reset_password.confirm_label", "Confirmar contraseña"),
                 text: Binding(
                     get: { viewModel?.confirmPassword ?? "" },
                     set: { viewModel?.confirmPassword = $0 }
                 ),
-                placeholder: "Repite tu contrasena",
+                placeholder: tr("auth.reset_password.confirm_placeholder", "Repite tu contraseña"),
                 leftIcon: "lock",
                 isSecure: true,
                 textContentType: .newPassword
             )
 
             PremiumButton(
-                title: "Restablecer Contrasena",
+                title: tr("auth.reset_password.submit", "Restablecer contraseña"),
                 isLoading: viewModel?.isLoading ?? false,
                 isDisabled: !(viewModel?.isResetValid ?? false)
             ) {
@@ -200,12 +204,12 @@ public struct ResetPasswordView: View {
                 .foregroundStyle(SolennixColors.success)
 
             VStack(spacing: Spacing.sm) {
-                Text("Contrasena actualizada")
+                Text(tr("auth.reset_password.success_title", "Contraseña actualizada"))
                     .font(.title2)
                     .fontWeight(.semibold)
                     .foregroundStyle(SolennixColors.text)
 
-                Text("Tu contrasena ha sido restablecida exitosamente. Ya puedes iniciar sesion con tu nueva contrasena.")
+                Text(tr("auth.reset_password.success_message", "Tu contraseña ha sido restablecida exitosamente. Ya puedes iniciar sesión con tu nueva contraseña."))
                     .font(.body)
                     .foregroundStyle(SolennixColors.textSecondary)
                     .multilineTextAlignment(.center)
@@ -214,7 +218,7 @@ public struct ResetPasswordView: View {
             Button {
                 dismiss()
             } label: {
-                Text("Ir al login")
+                Text(tr("auth.reset_password.go_to_login", "Ir al inicio de sesión"))
                     .font(.headline)
                     .foregroundStyle(SolennixColors.primary)
                     .frame(maxWidth: .infinity)

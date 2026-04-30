@@ -14,9 +14,9 @@ public enum AppearanceTheme: String, CaseIterable, Identifiable {
     
     public var displayName: String {
         switch self {
-        case .system: return "Predeterminado del Sistema"
-        case .light: return "Claro"
-        case .dark: return "Oscuro"
+        case .system: return FeatureL10n.text("settings.theme.system_default", "Predeterminado del sistema")
+        case .light: return FeatureL10n.text("settings.theme.light", "Claro")
+        case .dark: return FeatureL10n.text("settings.theme.dark", "Oscuro")
         }
     }
 }
@@ -28,9 +28,12 @@ public struct SettingsView: View {
     @State private var viewModel: SettingsViewModel
     @State private var showLogoutConfirm: Bool = false
     @State private var legalSheetURL: IdentifiableURL?
+    @State private var selectedLanguage: String = "es"
 
     @AppStorage("appearance") private var appearance: String = "system"
+    @AppStorage("preferredLocale") private var preferredLocale: String = ""
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(ToastManager.self) private var toastManager
 
     public init(apiClient: APIClient, authManager: AuthManager) {
         _viewModel = State(initialValue: SettingsViewModel(apiClient: apiClient, authManager: authManager))
@@ -44,21 +47,34 @@ public struct SettingsView: View {
             .tint(SolennixColors.primary)
             .scrollContentBackground(.hidden)
             .background(SolennixColors.surfaceGrouped)
-            .navigationTitle("Ajustes")
+            .navigationTitle(tr("settings.title", "Ajustes"))
             .navigationBarTitleDisplayMode(.large)
             .confirmationDialog(
-                "Cerrar Sesión",
+                tr("settings.action.logout", "Cerrar sesión"),
                 isPresented: $showLogoutConfirm
             ) {
-                Button("Cerrar Sesión", role: .destructive) {
+                Button(tr("settings.action.logout", "Cerrar sesión"), role: .destructive) {
                     Task { await viewModel.logout() }
                 }
-                Button("Cancelar", role: .cancel) {}
+                Button(tr("common.cancel", "Cancelar"), role: .cancel) {}
             } message: {
-                Text("¿Estás seguro de que quieres cerrar sesión?")
+                Text(tr("settings.logout.confirmation", "¿Estás seguro de que quieres cerrar sesión?"))
             }
-            .refreshable { await viewModel.loadUser() }
-            .task { await viewModel.loadUser() }
+            .refreshable {
+                await viewModel.loadUser()
+                syncSelectedLanguage()
+            }
+            .task {
+                await viewModel.loadUser()
+                syncSelectedLanguage()
+            }
+            .onChange(of: viewModel.user?.preferredLanguage) { _, _ in
+                syncSelectedLanguage()
+            }
+            .onChange(of: selectedLanguage) { oldValue, newValue in
+                guard oldValue != newValue else { return }
+                Task { await persistLanguageChange(from: oldValue, to: newValue) }
+            }
             .sheet(item: $legalSheetURL) { wrapper in
                 SafariView(url: wrapper.url)
                     .ignoresSafeArea()
@@ -74,23 +90,23 @@ public struct SettingsView: View {
                 userHeaderSection(user)
             }
 
-            Section("Apariencia") {
+            Section(tr("settings.section.appearance", "Apariencia")) {
                 appearanceContent
             }
 
-            Section("Cuenta") {
+            Section(tr("settings.section.account", "Cuenta")) {
                 accountContent
             }
 
-            Section("Suscripción") {
+            Section(tr("settings.section.subscription", "Suscripción")) {
                 subscriptionContent
             }
 
-            Section("Negocio") {
+            Section(tr("settings.section.business", "Negocio")) {
                 businessContent
             }
 
-            Section("Legal") {
+            Section(tr("settings.section.legal", "Legal")) {
                 legalContent
             }
 
@@ -101,7 +117,7 @@ public struct SettingsView: View {
                 } label: {
                     HStack {
                         Image(systemName: "rectangle.portrait.and.arrow.right")
-                        Text("Cerrar Sesión")
+                        Text(tr("settings.action.logout", "Cerrar sesión"))
                     }
                 }
             }
@@ -109,7 +125,7 @@ public struct SettingsView: View {
             // App version
             Section {
                 HStack {
-                    Text("Versión")
+                    Text(tr("settings.version", "Versión"))
                     Spacer()
                     Text(Bundle.main.appVersion)
                         .foregroundStyle(SolennixColors.textSecondary)
@@ -122,25 +138,30 @@ public struct SettingsView: View {
 
     @ViewBuilder
     private var appearanceContent: some View {
-        Picker(selection: $appearance, label: Label("Tema", systemImage: "paintbrush")) {
+        Picker(selection: $appearance, label: Label(tr("settings.theme.label", "Tema"), systemImage: "paintbrush")) {
             ForEach(AppearanceTheme.allCases) { theme in
                 Text(theme.displayName).tag(theme.rawValue)
             }
+        }
+
+        Picker(selection: $selectedLanguage, label: Label(tr("settings.profile.language", "Idioma"), systemImage: "globe")) {
+            Text(tr("settings.language.option.es", "Español")).tag("es")
+            Text(tr("settings.language.option.en", "English")).tag("en")
         }
     }
 
     @ViewBuilder
     private var accountContent: some View {
         NavigationLink(value: Route.editProfile) {
-            Label("Editar Perfil", systemImage: "person.circle")
+            Label(tr("settings.action.edit_profile", "Editar perfil"), systemImage: "person.circle")
         }
 
         NavigationLink(value: Route.changePassword) {
-            Label("Cambiar Contraseña", systemImage: "lock.rotation")
+            Label(tr("settings.action.change_password", "Cambiar contraseña"), systemImage: "lock.rotation")
         }
 
         NavigationLink(value: Route.notificationPreferences) {
-            Label("Notificaciones", systemImage: "bell.badge")
+            Label(tr("settings.tab.notifications", "Notificaciones"), systemImage: "bell.badge")
         }
     }
 
@@ -154,18 +175,18 @@ public struct SettingsView: View {
     @ViewBuilder
     private var businessContent: some View {
         NavigationLink(value: Route.businessSettings) {
-            Label("Ajustes del Negocio", systemImage: "building.2")
+            Label(tr("settings.action.business_settings", "Ajustes del negocio"), systemImage: "building.2")
         }
 
         NavigationLink(value: Route.contractDefaults) {
-            Label("Valores del Contrato", systemImage: "doc.text")
+            Label(tr("settings.action.contract_defaults", "Valores del contrato"), systemImage: "doc.text")
         }
     }
 
     @ViewBuilder
     private var legalContent: some View {
         NavigationLink(value: Route.about) {
-            Label("Acerca de", systemImage: "info.circle")
+            Label(tr("settings.action.about", "Acerca de"), systemImage: "info.circle")
         }
 
         Button {
@@ -175,7 +196,7 @@ public struct SettingsView: View {
             }
         } label: {
             HStack {
-                Label("Política de Privacidad", systemImage: "hand.raised")
+                Label(tr("settings.action.privacy_policy", "Política de privacidad"), systemImage: "hand.raised")
                     .foregroundStyle(SolennixColors.text)
                 Spacer()
                 Image(systemName: "arrow.up.right.square")
@@ -184,14 +205,14 @@ public struct SettingsView: View {
             }
             .contentShape(Rectangle())
         }
-        .accessibilityHint("Abre la política de privacidad en Safari")
+        .accessibilityHint(tr("settings.legal.privacy_hint", "Abre la política de privacidad en Safari"))
 
         Button {
             HapticsHelper.play(.selection)
             legalSheetURL = IdentifiableURL(LegalURL.terms)
         } label: {
             HStack {
-                Label("Términos de Servicio", systemImage: "doc.plaintext")
+                Label(tr("settings.action.terms_conditions", "Términos y condiciones"), systemImage: "doc.plaintext")
                     .foregroundStyle(SolennixColors.text)
                 Spacer()
                 Image(systemName: "arrow.up.right.square")
@@ -200,7 +221,7 @@ public struct SettingsView: View {
             }
             .contentShape(Rectangle())
         }
-        .accessibilityHint("Abre los términos de servicio en Safari")
+        .accessibilityHint(tr("settings.legal.terms_hint", "Abre los términos de servicio en Safari"))
 
         Button {
             HapticsHelper.play(.selection)
@@ -209,7 +230,7 @@ public struct SettingsView: View {
             }
         } label: {
             HStack {
-                Label("Eliminar Cuenta", systemImage: "trash")
+                Label(tr("settings.action.delete_account", "Eliminar cuenta"), systemImage: "trash")
                     .foregroundStyle(SolennixColors.error)
                 Spacer()
                 Image(systemName: "arrow.up.right.square")
@@ -218,7 +239,7 @@ public struct SettingsView: View {
             }
             .contentShape(Rectangle())
         }
-        .accessibilityHint("Abre la página de solicitud de eliminación de cuenta en Safari")
+        .accessibilityHint(tr("settings.legal.delete_hint", "Abre la página de solicitud de eliminación de cuenta en Safari"))
     }
 
     // MARK: - User Header Section
@@ -268,7 +289,7 @@ public struct SettingsView: View {
 
     private var planRow: some View {
         HStack {
-            Label("Gestionar Plan", systemImage: "star")
+            Label(tr("settings.action.manage_plan", "Gestionar plan"), systemImage: "star")
 
             Spacer()
 
@@ -276,6 +297,37 @@ public struct SettingsView: View {
                 PlanBadge(plan: user.plan)
             }
         }
+    }
+
+    private func syncSelectedLanguage() {
+        let stored = normalizedLanguage(preferredLocale)
+        let userLanguage = normalizedLanguage(viewModel.user?.preferredLanguage ?? "")
+        let resolved = stored.isEmpty ? (userLanguage.isEmpty ? "es" : userLanguage) : stored
+        if selectedLanguage != resolved {
+            selectedLanguage = resolved
+        }
+    }
+
+    private func normalizedLanguage(_ value: String) -> String {
+        let code = value.split(separator: "-").first.map(String.init) ?? value
+        return ["es", "en"].contains(code) ? code : ""
+    }
+
+    @MainActor
+    private func persistLanguageChange(from oldValue: String, to newValue: String) async {
+        preferredLocale = newValue
+        let success = await viewModel.updatePreferredLanguage(newValue)
+        if success {
+            toastManager.show(message: tr("settings.profile.language_updated", "Idioma actualizado"), type: .success)
+        } else {
+            preferredLocale = oldValue
+            selectedLanguage = oldValue
+            toastManager.show(message: viewModel.errorMessage ?? tr("common.error.retry", "Ocurrió un error inesperado. Intenta de nuevo."), type: .error)
+        }
+    }
+
+    private func tr(_ key: String, _ value: String) -> String {
+        FeatureL10n.text(key, value)
     }
 }
 
@@ -291,9 +343,9 @@ public struct PlanBadge: View {
 
     private var planLabel: String {
         switch plan {
-        case .basic: return "Básico"
-        case .pro, .premium: return "Pro"
-        case .business: return "Business"
+        case .basic: return FeatureL10n.text("settings.plan.basic", "Básico")
+        case .pro, .premium: return FeatureL10n.text("settings.plan.pro", "Pro")
+        case .business: return FeatureL10n.text("settings.plan.business", "Business")
         }
     }
 

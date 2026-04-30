@@ -21,6 +21,10 @@ private struct NotificationPreferencesBody: Encodable {
 @Observable
 public final class NotificationPreferencesViewModel {
 
+    private func tr(_ key: String, _ value: String) -> String {
+        FeatureL10n.text(key, value)
+    }
+
     // MARK: - Properties
 
     public var isLoading: Bool = false
@@ -110,8 +114,8 @@ public final class NotificationPreferencesViewModel {
 
     private func mapError(_ error: Error) -> String {
         if let apiError = error as? APIError {
-            return apiError.errorDescription ?? "Ocurrio un error inesperado."
+            return apiError.errorDescription ?? tr("common.error.unexpected", "Ocurrió un error inesperado.")
         }
-        return "Ocurrio un error inesperado. Intenta de nuevo."
+        return tr("common.error.retry", "Ocurrió un error inesperado. Intenta de nuevo.")
     }
 }

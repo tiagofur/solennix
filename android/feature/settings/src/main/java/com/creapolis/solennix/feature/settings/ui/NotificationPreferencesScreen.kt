@@ -1,5 +1,6 @@
 package com.creapolis.solennix.feature.settings.ui
 
+import com.creapolis.solennix.feature.settings.R
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -27,7 +28,7 @@ fun NotificationPreferencesScreen(
     Scaffold(
         topBar = {
             SolennixTopAppBar(
-                title = { Text("Notificaciones") },
+                title = { Text(stringResource(R.string.settings_notifications_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
@@ -64,35 +65,35 @@ fun NotificationPreferencesScreen(
                 }
 
                 // Email section
-                SectionHeader("Correos Electronicos")
+                SectionHeader(stringResource(R.string.settings_notifications_email_section))
 
                 PreferenceSwitch(
-                    label = "Recibos de Pago",
-                    description = "Recibe un correo cuando se registra un pago",
+                    label = stringResource(R.string.settings_notifications_email_payment_receipt),
+                    description = stringResource(R.string.settings_notifications_email_payment_receipt_hint),
                     checked = viewModel.emailPaymentReceipt,
                     onCheckedChange = { viewModel.togglePreference { viewModel.emailPaymentReceipt = it } }
                 )
                 PreferenceSwitch(
-                    label = "Recordatorio de Eventos",
-                    description = "Recibe un correo 24h antes de tu evento",
+                    label = stringResource(R.string.settings_notifications_email_event_reminder),
+                    description = stringResource(R.string.settings_notifications_email_event_reminder_hint),
                     checked = viewModel.emailEventReminder,
                     onCheckedChange = { viewModel.togglePreference { viewModel.emailEventReminder = it } }
                 )
                 PreferenceSwitch(
-                    label = "Actualizaciones de Suscripcion",
-                    description = "Correos sobre cambios en tu plan",
+                    label = stringResource(R.string.settings_notifications_email_subscription_updates),
+                    description = stringResource(R.string.settings_notifications_email_subscription_updates_hint),
                     checked = viewModel.emailSubscriptionUpdates,
                     onCheckedChange = { viewModel.togglePreference { viewModel.emailSubscriptionUpdates = it } }
                 )
                 PreferenceSwitch(
-                    label = "Resumen Semanal",
-                    description = "Resumen de actividad de la semana",
+                    label = stringResource(R.string.settings_notifications_email_weekly_summary),
+                    description = stringResource(R.string.settings_notifications_email_weekly_summary_hint),
                     checked = viewModel.emailWeeklySummary,
                     onCheckedChange = { viewModel.togglePreference { viewModel.emailWeeklySummary = it } }
                 )
                 PreferenceSwitch(
-                    label = "Noticias y Tips",
-                    description = "Novedades y consejos de Solennix",
+                    label = stringResource(R.string.settings_notifications_email_marketing),
+                    description = stringResource(R.string.settings_notifications_email_marketing_hint),
                     checked = viewModel.emailMarketing,
                     onCheckedChange = { viewModel.togglePreference { viewModel.emailMarketing = it } }
                 )
@@ -100,11 +101,11 @@ fun NotificationPreferencesScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 // Push section
-                SectionHeader("Notificaciones Push")
+                SectionHeader(stringResource(R.string.settings_notifications_push_section))
 
                 PreferenceSwitch(
-                    label = "Notificaciones Push",
-                    description = "Habilitar o deshabilitar todas las notificaciones push",
+                    label = stringResource(R.string.settings_notifications_push_enabled),
+                    description = stringResource(R.string.settings_notifications_push_enabled_hint),
                     checked = viewModel.pushEnabled,
                     onCheckedChange = { viewModel.togglePreference { viewModel.pushEnabled = it } }
                 )
@@ -112,15 +113,15 @@ fun NotificationPreferencesScreen(
                 val pushAlpha = if (viewModel.pushEnabled) 1f else 0.5f
                 Column(modifier = Modifier.alpha(pushAlpha)) {
                     PreferenceSwitch(
-                        label = "Recordatorio de Eventos",
-                        description = "Notificacion push antes de tu evento",
+                        label = stringResource(R.string.settings_notifications_push_event_reminder),
+                        description = stringResource(R.string.settings_notifications_push_event_reminder_hint),
                         checked = viewModel.pushEventReminder,
                         onCheckedChange = { if (viewModel.pushEnabled) viewModel.togglePreference { viewModel.pushEventReminder = it } },
                         enabled = viewModel.pushEnabled
                     )
                     PreferenceSwitch(
-                        label = "Pago Recibido",
-                        description = "Notificacion push cuando se registra un pago",
+                        label = stringResource(R.string.settings_notifications_push_payment_received),
+                        description = stringResource(R.string.settings_notifications_push_payment_received_hint),
                         checked = viewModel.pushPaymentReceived,
                         onCheckedChange = { if (viewModel.pushEnabled) viewModel.togglePreference { viewModel.pushPaymentReceived = it } },
                         enabled = viewModel.pushEnabled

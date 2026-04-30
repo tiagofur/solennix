@@ -13,10 +13,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.creapolis.solennix.feature.auth.R
 import com.creapolis.solennix.core.designsystem.theme.SolennixGold
 import com.creapolis.solennix.core.designsystem.theme.SolennixGoldDark
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
@@ -53,7 +55,7 @@ fun AuthBrandingPanel(modifier: Modifier = Modifier) {
             // Main copy in center
             Column {
                 Text(
-                    text = "Gestiona tus eventos\ncomo un profesional",
+                    text = stringResource(R.string.auth_branding_headline),
                     style = MaterialTheme.typography.headlineLarge.copy(
                         fontWeight = FontWeight.Black,
                         lineHeight = 40.sp
@@ -62,7 +64,7 @@ fun AuthBrandingPanel(modifier: Modifier = Modifier) {
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "Organiza, cotiza y controla cada detalle de tus celebraciones desde un solo lugar.",
+                    text = stringResource(R.string.auth_branding_description),
                     style = MaterialTheme.typography.bodyLarge,
                     color = Color.White.copy(alpha = 0.85f)
                 )
@@ -72,17 +74,17 @@ fun AuthBrandingPanel(modifier: Modifier = Modifier) {
                 // Feature highlights
                 FeatureHighlight(
                     icon = Icons.Default.Event,
-                    text = "Gestión completa de eventos"
+                    text = stringResource(R.string.auth_branding_feature_events)
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 FeatureHighlight(
                     icon = Icons.Default.Description,
-                    text = "Cotizaciones y contratos profesionales"
+                    text = stringResource(R.string.auth_branding_feature_quotes)
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 FeatureHighlight(
                     icon = Icons.Default.Inventory,
-                    text = "Control de inventario en tiempo real"
+                    text = stringResource(R.string.auth_branding_feature_inventory)
                 )
             }
 
@@ -93,7 +95,7 @@ fun AuthBrandingPanel(modifier: Modifier = Modifier) {
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
                 Text(
-                    text = "Más de 500 organizadores confían en Solennix",
+                    text = stringResource(R.string.auth_branding_social_proof),
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.White.copy(alpha = 0.7f),
                     textAlign = TextAlign.Start

@@ -9,11 +9,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.creapolis.solennix.feature.auth.R
 import com.creapolis.solennix.core.designsystem.component.PremiumButton
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.component.SolennixTextField
@@ -47,10 +49,10 @@ private fun ForgotPasswordFormContent(
         topBar = {
             if (!isWideScreen) {
                 SolennixTopAppBar(
-                    title = { Text("Recuperar Contraseña") },
+                    title = { Text(stringResource(R.string.auth_forgot_title)) },
                     navigationIcon = {
                         IconButton(onClick = onNavigateBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.auth_nav_back))
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
@@ -75,11 +77,11 @@ private fun ForgotPasswordFormContent(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.auth_nav_back))
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Recuperar Contraseña",
+                        text = stringResource(R.string.auth_forgot_title),
                         style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
                         color = SolennixTheme.colors.primaryText
                     )
@@ -96,26 +98,26 @@ private fun ForgotPasswordFormContent(
                 )
                 Spacer(modifier = Modifier.height(24.dp))
                 Text(
-                    text = "Revisá tu correo",
+                    text = stringResource(R.string.auth_forgot_success_title),
                     style = MaterialTheme.typography.headlineSmall,
                     color = SolennixTheme.colors.primaryText,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Te enviamos un enlace para restablecer tu contraseña a ${viewModel.forgotEmail}.",
+                    text = stringResource(R.string.auth_forgot_success_message, viewModel.forgotEmail),
                     style = MaterialTheme.typography.bodyMedium,
                     color = SolennixTheme.colors.secondaryText,
                     textAlign = TextAlign.Center
                 )
                 Spacer(modifier = Modifier.height(48.dp))
                 PremiumButton(
-                    text = "Volver al Inicio",
+                    text = stringResource(R.string.auth_forgot_back_home),
                     onClick = onNavigateBack
                 )
             } else {
                 Text(
-                    text = "Ingresá tu correo y te enviamos un enlace para recuperar el acceso a tu cuenta.",
+                    text = stringResource(R.string.auth_forgot_subtitle),
                     style = MaterialTheme.typography.bodyMedium,
                     color = SolennixTheme.colors.secondaryText,
                     textAlign = TextAlign.Center
@@ -126,8 +128,8 @@ private fun ForgotPasswordFormContent(
                 SolennixTextField(
                     value = viewModel.forgotEmail,
                     onValueChange = { viewModel.forgotEmail = it },
-                    label = "Correo Electrónico",
-                    placeholder = "ejemplo@correo.com",
+                    label = stringResource(R.string.auth_forgot_email_label),
+                    placeholder = stringResource(R.string.auth_forgot_email_placeholder),
                     leadingIcon = Icons.Default.Email,
                     keyboardType = KeyboardType.Email,
                     imeAction = ImeAction.Done
@@ -136,7 +138,7 @@ private fun ForgotPasswordFormContent(
                 Spacer(modifier = Modifier.height(32.dp))
 
                 PremiumButton(
-                    text = "Enviar Enlace",
+                    text = stringResource(R.string.auth_forgot_submit),
                     onClick = { viewModel.forgotPassword() },
                     isLoading = viewModel.isLoading,
                     enabled = viewModel.forgotEmail.isNotBlank()

@@ -14,14 +14,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.creapolis.solennix.feature.auth.R
 import com.creapolis.solennix.core.designsystem.component.ButtonStyle
 import com.creapolis.solennix.core.designsystem.component.PremiumButton
 import com.creapolis.solennix.core.designsystem.component.SolennixTextField
@@ -97,7 +96,7 @@ private fun LoginFormContent(
             }
 
             Text(
-                text = "CADA DETALLE IMPORTA",
+                text = stringResource(R.string.auth_branding_headline),
                 style = TaglineStyle,
                 color = SolennixTheme.colors.secondaryText,
                 textAlign = TextAlign.Center,
@@ -109,13 +108,13 @@ private fun LoginFormContent(
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "Iniciar Sesión",
+                text = stringResource(R.string.auth_login_title),
                 style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
                 color = SolennixTheme.colors.primaryText
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Ingresá tus credenciales para continuar",
+                text = stringResource(R.string.auth_login_subtitle),
                 style = MaterialTheme.typography.bodyMedium,
                 color = SolennixTheme.colors.secondaryText
             )
@@ -127,11 +126,10 @@ private fun LoginFormContent(
         SolennixTextField(
             value = viewModel.loginEmail,
             onValueChange = { viewModel.loginEmail = it },
-            label = "Correo Electrónico",
-            placeholder = "ejemplo@correo.com",
+            label = stringResource(R.string.auth_login_email_label),
+            placeholder = stringResource(R.string.auth_login_email_placeholder),
             leadingIcon = Icons.Default.Email,
-            keyboardType = KeyboardType.Email,
-            errorMessage = if (viewModel.errorMessage?.contains("Email", ignoreCase = true) == true) viewModel.errorMessage else null
+            keyboardType = KeyboardType.Email
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -139,11 +137,10 @@ private fun LoginFormContent(
         SolennixTextField(
             value = viewModel.loginPassword,
             onValueChange = { viewModel.loginPassword = it },
-            label = "Contraseña",
+            label = stringResource(R.string.auth_login_password_label),
             leadingIcon = Icons.Default.Lock,
             isPassword = true,
-            imeAction = ImeAction.Done,
-            errorMessage = if (viewModel.errorMessage?.contains("Contraseña", ignoreCase = true) == true) viewModel.errorMessage else null
+            imeAction = ImeAction.Done
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -153,7 +150,7 @@ private fun LoginFormContent(
             modifier = Modifier.align(Alignment.End)
         ) {
             Text(
-                text = "¿Olvidaste tu contraseña?",
+                text = stringResource(R.string.auth_login_forgot_password),
                 color = SolennixTheme.colors.primary,
                 style = MaterialTheme.typography.labelLarge
             )
@@ -162,7 +159,7 @@ private fun LoginFormContent(
         Spacer(modifier = Modifier.height(24.dp))
 
         PremiumButton(
-            text = "Iniciar Sesión",
+            text = stringResource(R.string.auth_login_submit),
             onClick = { viewModel.login() },
             isLoading = viewModel.isLoading,
             enabled = viewModel.isLoginValid
@@ -186,7 +183,7 @@ private fun LoginFormContent(
         ) {
             HorizontalDivider(modifier = Modifier.weight(1f))
             Text(
-                text = " o continuá con ",
+                text = " ${stringResource(R.string.auth_login_or_separator)} ",
                 modifier = Modifier.padding(horizontal = 8.dp),
                 color = SolennixTheme.colors.secondaryText,
                 style = MaterialTheme.typography.labelMedium
@@ -224,13 +221,13 @@ private fun LoginFormContent(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "¿No tenés cuenta? ",
+                text = "${stringResource(R.string.auth_login_no_account)} ",
                 color = SolennixTheme.colors.secondaryText,
                 style = MaterialTheme.typography.bodyMedium
             )
             TextButton(onClick = onNavigateToRegister) {
                 Text(
-                    text = "Crear Cuenta",
+                    text = stringResource(R.string.auth_login_create_account),
                     color = SolennixTheme.colors.primary,
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.bodyMedium

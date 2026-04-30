@@ -4,13 +4,15 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import com.creapolis.solennix.core.data.locale.AppLocaleManager
 import com.creapolis.solennix.core.data.repository.SettingsRepository
 import com.creapolis.solennix.core.network.AuthManager
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
@@ -22,7 +24,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class MainActivity : FragmentActivity() {
+class MainActivity : AppCompatActivity() {
 
     @Inject
     lateinit var settingsRepository: SettingsRepository
@@ -55,10 +57,17 @@ class MainActivity : FragmentActivity() {
             val themeConfig by settingsRepository.themeConfig.collectAsStateWithLifecycle(
                 initialValue = ThemeConfig.SYSTEM_DEFAULT
             )
+            val appLanguage by settingsRepository.appLanguage.collectAsStateWithLifecycle(initialValue = "")
+            val currentUser by authManager.currentUser.collectAsStateWithLifecycle()
             val darkTheme = when (themeConfig) {
                 ThemeConfig.LIGHT -> false
                 ThemeConfig.DARK -> true
                 ThemeConfig.SYSTEM_DEFAULT -> isSystemInDarkTheme()
+            }
+
+            LaunchedEffect(appLanguage, currentUser?.preferredLanguage) {
+                val resolvedLanguage = appLanguage.ifBlank { currentUser?.preferredLanguage.orEmpty() }
+                AppLocaleManager.applyLanguage(this@MainActivity, resolvedLanguage)
             }
 
             SolennixTheme(darkTheme = darkTheme) {
