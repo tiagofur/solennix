@@ -10,7 +10,7 @@
   - #94 — Dashboard ✅ implementado en web + iOS + Android; issue cerrado
   - #95 — Events list
   - #203 — Canonical copy matrix + governance
-  - #204 — Event detail + event form
+  - #204 — Event detail + event form ✅ implementado en web + iOS + Android; issue cerrado
   - #205 — Auth + settings
   - #206 — Clients
   - #207 — Products + inventory
@@ -433,6 +433,29 @@ Notas de normalización:
 
 - `IVA` queda como label canonical corta del resumen financiero actual en web. Copy o tests que esperen `Requiere factura (IVA ...)` dentro de `EventSummary` están desactualizados tras la remoción previa del invoice UI (#215).
 - Mientras el flujo de eventos web comparta un solo catálogo, `events.json` debe incluir al menos `list`, `form`, `general`, `products`, `extras`, `financials`, `summary`, `staff`, `supplies`, `equipment`, `quick_client` y `client_portal_share`.
+
+#### Event detail + event form
+
+Strings visibles detectados en código actual:
+
+- `Detalle del evento` / `Editar evento` / `Nuevo evento`
+- `Pagos`, `Registrar pago`, `Anticipo`, `Liquidar`, `Historial de pagos`
+- `Contrato`, `Checklist`, `Lista de insumos`, `Fotos del evento`, `Portal del cliente`
+- `Duplicar evento`, `Compartir por WhatsApp`, `Eliminar evento`
+- `Información general`, `Productos`, `Extras`, `Inventario y personal`, `Finanzas y contrato`
+- `Seleccionar cliente`, `Fecha del evento`, `Hora`, `Tipo de servicio`, `Ubicación`, `Ciudad`
+- `Agregar producto`, `Agregar extra`, `Agregar equipo`, `Agregar insumo`, `Agregar colaborador`
+- `Rentabilidad`, `IVA`, `Descuento`, `Notas del evento`, `Política de cancelación`
+- `Link del cliente`, `Copiar enlace`, `Rotar`, `Deshabilitar`
+
+Notas de normalización:
+
+- `Detalle del evento` queda como título canonical para el hub del evento; no mezclar con `Resumen del evento` como título principal.
+- `Registrar pago` sigue siendo el canonical; `Guardar pago` no se usa en nuevas superficies.
+- `Portal del cliente` es el nombre canonical del share link organizer-facing; evitar variantes como `Link del cliente` como título principal.
+- `Inventario y personal` se mantiene como label del paso agrupado cross-platform aunque adentro existan subsecciones `Insumos`, `Equipamiento` y `Personal`.
+- `Nuevo evento` / `Editar evento` usan sentence case y se comparten entre toolbar, títulos y breadcrumbs.
+- **Estado 2026-04-29**: slice implementado cross-platform. Web, iOS y Android ya consumen catálogo/localized resources para detail hub, event form, payments, client portal share, checklist, contrato, fotos, staff, equipment, supplies y validaciones visibles.
 
 #### Auth / Settings
 

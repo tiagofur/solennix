@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -29,6 +30,7 @@ import com.creapolis.solennix.core.model.SupplySource
 import com.creapolis.solennix.core.model.extensions.asMXN
 import com.creapolis.solennix.core.model.extensions.formatQuantity
 import com.creapolis.solennix.core.model.extensions.toPaymentMethodLabel
+import com.creapolis.solennix.feature.events.R
 import com.creapolis.solennix.feature.events.viewmodel.EventDetailViewModel
 
 // ==================== Finances Detail Screen ====================
@@ -44,10 +46,10 @@ fun EventFinancesScreen(
     Scaffold(
         topBar = {
             SolennixTopAppBar(
-                title = { Text("Finanzas") },
+                title = { Text(stringResource(R.string.events_detail_finances_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.events_detail_back))
                     }
                 }
             )
@@ -89,7 +91,7 @@ fun EventFinancesScreen(
                     modifier = Modifier.padding(24.dp).fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text("TOTAL COBRADO", style = MaterialTheme.typography.labelSmall, color = SolennixTheme.colors.secondaryText)
+                    Text(stringResource(R.string.events_detail_finances_total_charged).uppercase(), style = MaterialTheme.typography.labelSmall, color = SolennixTheme.colors.secondaryText)
                     Text(
                         event.totalAmount.asMXN(),
                         style = MaterialTheme.typography.headlineLarge,
@@ -106,17 +108,17 @@ fun EventFinancesScreen(
                 shape = MaterialTheme.shapes.medium
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
-                    FinancialMetricRow("Venta Bruta", netSales.asMXN())
+                    FinancialMetricRow(stringResource(R.string.events_detail_finances_gross_sales), netSales.asMXN())
 
                     if (event.taxAmount > 0) {
-                        FinancialMetricRow("IVA (${event.taxRate.toInt()}%)", event.taxAmount.asMXN())
+                        FinancialMetricRow(stringResource(R.string.events_detail_finances_tax, event.taxRate.toInt()), event.taxAmount.asMXN())
                     }
 
-                    FinancialMetricRow("Total Cobrado", event.totalAmount.asMXN(), SolennixTheme.colors.primary, true)
+                    FinancialMetricRow(stringResource(R.string.events_detail_finances_total_charged), event.totalAmount.asMXN(), SolennixTheme.colors.primary, true)
 
                     if (event.depositPercent != null && event.depositPercent!! > 0) {
                         FinancialMetricRow(
-                            "Anticipo (${event.depositPercent!!.toInt()}%)",
+                            stringResource(R.string.events_detail_finances_deposit, event.depositPercent!!.toInt()),
                             depositAmount.asMXN(),
                             if (isDepositMet) SolennixTheme.colors.success else SolennixTheme.colors.warning
                         )
@@ -124,7 +126,7 @@ fun EventFinancesScreen(
 
                     if (event.discount > 0) {
                         val discountLabel = if (event.discountType == DiscountType.PERCENT)
-                            "Descuento (${event.discount.toInt()}%)" else "Descuento"
+                            stringResource(R.string.events_detail_finances_discount_percent, event.discount.toInt()) else stringResource(R.string.events_detail_finances_discount)
                         val discountAmount = if (event.discountType == DiscountType.PERCENT)
                             netSales * event.discount / 100 else event.discount
                         FinancialMetricRow(discountLabel, "-${discountAmount.asMXN()}", SolennixTheme.colors.error)
@@ -135,18 +137,18 @@ fun EventFinancesScreen(
                         color = SolennixTheme.colors.secondaryText.copy(alpha = 0.2f)
                     )
 
-                    FinancialMetricRow("Costos", supplyCost.asMXN(), SolennixTheme.colors.error)
-                    FinancialMetricRow("Utilidad Neta", profit.asMXN(), SolennixTheme.colors.success, true)
-                    FinancialMetricRow("Margen", "${margin.toInt()}%", SolennixTheme.colors.info, true)
+                    FinancialMetricRow(stringResource(R.string.events_detail_finances_costs), supplyCost.asMXN(), SolennixTheme.colors.error)
+                    FinancialMetricRow(stringResource(R.string.events_detail_finances_net_profit), profit.asMXN(), SolennixTheme.colors.success, true)
+                    FinancialMetricRow(stringResource(R.string.events_detail_finances_margin), "${margin.toInt()}%", SolennixTheme.colors.info, true)
 
                     HorizontalDivider(
                         modifier = Modifier.padding(vertical = 8.dp),
                         color = SolennixTheme.colors.secondaryText.copy(alpha = 0.2f)
                     )
 
-                    FinancialMetricRow("Pagado", totalPaid.asMXN(), SolennixTheme.colors.success)
+                    FinancialMetricRow(stringResource(R.string.events_detail_finances_paid), totalPaid.asMXN(), SolennixTheme.colors.success)
                     FinancialMetricRow(
-                        "Pendiente",
+                        stringResource(R.string.events_detail_finances_pending),
                         remaining.asMXN(),
                         if (remaining > 0) SolennixTheme.colors.error else SolennixTheme.colors.success,
                         true
@@ -166,7 +168,7 @@ fun EventFinancesScreen(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text("Progreso de Cobro", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                            Text(stringResource(R.string.events_detail_finances_progress), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                             Text("${(progress * 100).toInt()}%", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = SolennixTheme.colors.primary)
                         }
                         Spacer(modifier = Modifier.height(8.dp))
@@ -234,10 +236,10 @@ fun EventPaymentsScreen(
     Scaffold(
         topBar = {
             SolennixTopAppBar(
-                title = { Text("Pagos") },
+                title = { Text(stringResource(R.string.events_detail_payments_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.events_detail_back))
                     }
                 }
             )
@@ -265,9 +267,9 @@ fun EventPaymentsScreen(
         ) {
             // KPIs
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                KpiCard("Total", event.totalAmount.asMXN(), SolennixTheme.colors.primary, Modifier.weight(1f))
-                KpiCard("Pagado", totalPaid.asMXN(), SolennixTheme.colors.success, Modifier.weight(1f))
-                KpiCard("Saldo", remaining.asMXN(), if (remaining <= 0.01) SolennixTheme.colors.success else SolennixTheme.colors.error, Modifier.weight(1f))
+                KpiCard(stringResource(R.string.events_detail_payments_kpi_total), event.totalAmount.asMXN(), SolennixTheme.colors.primary, Modifier.weight(1f))
+                KpiCard(stringResource(R.string.events_detail_payments_kpi_paid), totalPaid.asMXN(), SolennixTheme.colors.success, Modifier.weight(1f))
+                KpiCard(stringResource(R.string.events_detail_payments_kpi_balance), remaining.asMXN(), if (remaining <= 0.01) SolennixTheme.colors.success else SolennixTheme.colors.error, Modifier.weight(1f))
             }
 
             // Progress
@@ -285,7 +287,7 @@ fun EventPaymentsScreen(
                         strokeCap = androidx.compose.ui.graphics.StrokeCap.Round
                     )
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text("${(progress * 100).toInt()}% cobrado", style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.secondaryText)
+                    Text(stringResource(R.string.events_detail_payments_progress, (progress * 100).toInt()), style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.secondaryText)
                 }
             }
 
@@ -295,7 +297,7 @@ fun EventPaymentsScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         PremiumButton(
-                            text = "Registrar Pago",
+                            text = stringResource(R.string.events_detail_payments_record),
                             onClick = {
                                 paymentInitialAmount = null
                                 showPaymentModal = true
@@ -308,7 +310,7 @@ fun EventPaymentsScreen(
                         // Paridad con iOS — antes el usuario tenia que calcular
                         // el saldo a mano en el modal.
                         PremiumButton(
-                            text = "Liquidar ${remaining.asMXN()}",
+                            text = stringResource(R.string.events_detail_payments_settle, remaining.asMXN()),
                             onClick = {
                                 paymentInitialAmount = remaining
                                 showPaymentModal = true
@@ -333,7 +335,7 @@ fun EventPaymentsScreen(
                             ) {
                                 Icon(Icons.Default.Savings, contentDescription = null, modifier = Modifier.size(18.dp))
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text("Anticipo ${depositRemaining.asMXN()}")
+                                Text(stringResource(R.string.events_detail_payments_deposit, depositRemaining.asMXN()))
                             }
                         }
                     }
@@ -347,7 +349,7 @@ fun EventPaymentsScreen(
                 shape = MaterialTheme.shapes.medium
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
-                    Text("Historial de Pagos", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.events_detail_payments_history), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     Spacer(modifier = Modifier.height(12.dp))
 
                     if (uiState.payments.isEmpty()) {
@@ -357,7 +359,7 @@ fun EventPaymentsScreen(
                         ) {
                             Icon(Icons.Default.Payments, contentDescription = null, tint = SolennixTheme.colors.secondaryText, modifier = Modifier.size(48.dp))
                             Spacer(modifier = Modifier.height(8.dp))
-                            Text("No hay pagos registrados", style = MaterialTheme.typography.bodyMedium, color = SolennixTheme.colors.secondaryText)
+                            Text(stringResource(R.string.events_detail_payments_empty), style = MaterialTheme.typography.bodyMedium, color = SolennixTheme.colors.secondaryText)
                         }
                     } else {
                         uiState.payments.forEach { payment ->
@@ -388,7 +390,7 @@ fun EventPaymentsScreen(
                                         onClick = { pendingDeletePaymentId = payment.id },
                                         modifier = Modifier.size(32.dp)
                                     ) {
-                                        Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = SolennixTheme.colors.error, modifier = Modifier.size(18.dp))
+                                        Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.events_detail_payments_delete_a11y), tint = SolennixTheme.colors.error, modifier = Modifier.size(18.dp))
                                     }
                                 }
                             }
@@ -410,7 +412,7 @@ fun EventPaymentsScreen(
                     viewModel.addPayment(amount, method, notes, date)
                     showPaymentModal = false
                     paymentInitialAmount = null
-                    Toast.makeText(context, "Pago registrado", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.events_detail_payments_add_success), Toast.LENGTH_SHORT).show()
                 }
             )
         }
@@ -419,21 +421,21 @@ fun EventPaymentsScreen(
         pendingDeletePaymentId?.let { paymentId ->
             AlertDialog(
                 onDismissRequest = { pendingDeletePaymentId = null },
-                title = { Text("¿Eliminar pago?") },
-                text = { Text("Esta accion no se puede deshacer.") },
+                title = { Text(stringResource(R.string.events_detail_payments_delete_title)) },
+                text = { Text(stringResource(R.string.events_detail_payments_delete_message)) },
                 confirmButton = {
                     TextButton(
                         onClick = {
                             viewModel.deletePayment(paymentId)
                             pendingDeletePaymentId = null
-                            Toast.makeText(context, "Pago eliminado", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.events_detail_payments_delete_success), Toast.LENGTH_SHORT).show()
                         }
                     ) {
-                        Text("Eliminar", color = SolennixTheme.colors.error)
+                        Text(stringResource(R.string.events_detail_payments_delete), color = SolennixTheme.colors.error)
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = { pendingDeletePaymentId = null }) { Text("Cancelar") }
+                    TextButton(onClick = { pendingDeletePaymentId = null }) { Text(stringResource(R.string.events_list_cancel)) }
                 }
             )
         }
@@ -614,10 +616,10 @@ fun EventSuppliesScreen(
     Scaffold(
         topBar = {
             SolennixTopAppBar(
-                title = { Text("Insumos del Evento") },
+                title = { Text(stringResource(R.string.events_detail_supplies_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.events_detail_back))
                     }
                 }
             )
@@ -638,21 +640,21 @@ fun EventSuppliesScreen(
         ) {
             if (supplies.isEmpty()) {
                 Box(Modifier.fillMaxWidth().padding(vertical = 48.dp), contentAlignment = Alignment.Center) {
-                    Text("Sin insumos asignados", style = MaterialTheme.typography.bodyMedium, color = SolennixTheme.colors.secondaryText)
+                    Text(stringResource(R.string.events_detail_supplies_empty), style = MaterialTheme.typography.bodyMedium, color = SolennixTheme.colors.secondaryText)
                 }
             } else {
                 // Summary
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    KpiCard("Total", "${supplies.size}", SolennixTheme.colors.warning, Modifier.weight(1f))
-                    KpiCard("Stock", "$stockCount", SolennixTheme.colors.success, Modifier.weight(1f))
-                    KpiCard("Compra", "$purchaseCount", SolennixTheme.colors.error, Modifier.weight(1f))
-                    KpiCard("Costo", totalCost.asMXN(), SolennixTheme.colors.warning, Modifier.weight(1f))
+                    KpiCard(stringResource(R.string.events_detail_supplies_kpi_total), "${supplies.size}", SolennixTheme.colors.warning, Modifier.weight(1f))
+                    KpiCard(stringResource(R.string.events_detail_supplies_kpi_stock), "$stockCount", SolennixTheme.colors.success, Modifier.weight(1f))
+                    KpiCard(stringResource(R.string.events_detail_supplies_kpi_purchase), "$purchaseCount", SolennixTheme.colors.error, Modifier.weight(1f))
+                    KpiCard(stringResource(R.string.events_detail_supplies_kpi_cost), totalCost.asMXN(), SolennixTheme.colors.warning, Modifier.weight(1f))
                 }
 
                 supplies.forEach { supply ->
                     val sourceLabel = when (supply.source) {
-                        SupplySource.STOCK -> "Almacen"
-                        SupplySource.PURCHASE -> "Compra"
+                        SupplySource.STOCK -> stringResource(R.string.events_detail_supplies_source_stock)
+                        SupplySource.PURCHASE -> stringResource(R.string.events_detail_supplies_source_purchase)
                     }
                     val sourceColor = when (supply.source) {
                         SupplySource.STOCK -> SolennixTheme.colors.success
@@ -669,7 +671,7 @@ fun EventSuppliesScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(supply.supplyName ?: "Insumo", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+                                Text(supply.supplyName ?: stringResource(R.string.events_detail_supplies_fallback), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
                                 Surface(shape = MaterialTheme.shapes.small, color = sourceColor.copy(alpha = 0.12f)) {
                                     Text(sourceLabel, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), style = MaterialTheme.typography.labelSmall, color = sourceColor)
                                 }
@@ -699,10 +701,10 @@ fun EventEquipmentScreen(
     Scaffold(
         topBar = {
             SolennixTopAppBar(
-                title = { Text("Equipo Asignado") },
+                title = { Text(stringResource(R.string.events_detail_equipment_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.events_detail_back))
                     }
                 }
             )
@@ -720,12 +722,15 @@ fun EventEquipmentScreen(
         ) {
             if (equipment.isEmpty()) {
                 Box(Modifier.fillMaxWidth().padding(vertical = 48.dp), contentAlignment = Alignment.Center) {
-                    Text("Sin equipo asignado", style = MaterialTheme.typography.bodyMedium, color = SolennixTheme.colors.secondaryText)
+                    Text(stringResource(R.string.events_detail_equipment_empty), style = MaterialTheme.typography.bodyMedium, color = SolennixTheme.colors.secondaryText)
                 }
             } else {
                 Surface(shape = MaterialTheme.shapes.medium, color = SolennixTheme.colors.success.copy(alpha = 0.1f)) {
                     Text(
-                        "${equipment.size} equipos asignados",
+                        stringResource(
+                            if (equipment.size == 1) R.string.events_detail_equipment_count_one else R.string.events_detail_equipment_count_other,
+                            equipment.size
+                        ),
                         modifier = Modifier.fillMaxWidth().padding(16.dp),
                         style = MaterialTheme.typography.bodyMedium,
                         color = SolennixTheme.colors.secondaryText
@@ -743,7 +748,7 @@ fun EventEquipmentScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(item.equipmentName ?: "Equipo", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+                                Text(item.equipmentName ?: stringResource(R.string.events_detail_equipment_fallback), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
                                 if (!item.notes.isNullOrEmpty()) {
                                     Text(item.notes!!, style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.secondaryText)
                                 }
@@ -778,10 +783,10 @@ fun EventShoppingListScreen(
     Scaffold(
         topBar = {
             SolennixTopAppBar(
-                title = { Text("Lista de Compras") },
+                title = { Text(stringResource(R.string.events_detail_shopping_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.events_detail_back))
                     }
                 }
             )
@@ -811,7 +816,7 @@ fun EventShoppingListScreen(
                         modifier = Modifier.padding(20.dp).fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text("LISTA DE INSUMOS", style = MaterialTheme.typography.labelSmall, color = SolennixTheme.colors.secondaryText)
+                        Text(stringResource(R.string.events_detail_shopping_header).uppercase(), style = MaterialTheme.typography.labelSmall, color = SolennixTheme.colors.secondaryText)
                         Text(event.serviceType, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                         Text(event.eventDate, style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.secondaryText)
                     }
@@ -820,7 +825,7 @@ fun EventShoppingListScreen(
 
             // Purchase supplies
             if (purchaseSupplies.isNotEmpty()) {
-                Text("Insumos por Comprar", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                Text(stringResource(R.string.events_detail_shopping_purchase), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                 purchaseSupplies.forEach { supply ->
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -832,8 +837,8 @@ fun EventShoppingListScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(supply.supplyName ?: "Insumo", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
-                                Text("${supply.quantity.formatQuantity()} ${supply.unit ?: "und"}", style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.secondaryText)
+                                Text(supply.supplyName ?: stringResource(R.string.events_detail_supplies_fallback), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+                                Text("${supply.quantity.formatQuantity()} ${supply.unit ?: stringResource(R.string.events_detail_unit_each)}", style = MaterialTheme.typography.bodySmall, color = SolennixTheme.colors.secondaryText)
                             }
                             Text(
                                 (supply.quantity * supply.unitCost).asMXN(),
@@ -848,7 +853,7 @@ fun EventShoppingListScreen(
 
             // Stock supplies
             if (stockSupplies.isNotEmpty()) {
-                Text("Del Stock", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                Text(stringResource(R.string.events_detail_shopping_stock), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                 stockSupplies.forEach { supply ->
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -859,7 +864,7 @@ fun EventShoppingListScreen(
                             modifier = Modifier.padding(16.dp).fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(supply.supplyName ?: "Insumo", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
+                            Text(supply.supplyName ?: stringResource(R.string.events_detail_supplies_fallback), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
                             Text("x${supply.quantity.formatQuantity()}", style = MaterialTheme.typography.bodyMedium, color = SolennixTheme.colors.success, fontWeight = FontWeight.Medium)
                         }
                     }
@@ -871,7 +876,7 @@ fun EventShoppingListScreen(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(Icons.Default.ShoppingCart, contentDescription = null, tint = SolennixTheme.colors.secondaryText, modifier = Modifier.size(48.dp))
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text("Sin compras requeridas", style = MaterialTheme.typography.bodyMedium, color = SolennixTheme.colors.secondaryText)
+                        Text(stringResource(R.string.events_detail_shopping_empty), style = MaterialTheme.typography.bodyMedium, color = SolennixTheme.colors.secondaryText)
                     }
                 }
             }
@@ -1270,10 +1275,10 @@ fun EventStaffScreen(
     Scaffold(
         topBar = {
             SolennixTopAppBar(
-                title = { Text("Personal asignado") },
+                title = { Text(stringResource(R.string.events_detail_staff_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.events_detail_back))
                     }
                 }
             )
@@ -1297,7 +1302,7 @@ fun EventStaffScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        "Sin personal asignado",
+                        stringResource(R.string.events_detail_staff_empty),
                         style = MaterialTheme.typography.bodyMedium,
                         color = SolennixTheme.colors.secondaryText
                     )
@@ -1310,7 +1315,10 @@ fun EventStaffScreen(
                 ) {
                     Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                         Text(
-                            "${staff.size} " + if (staff.size == 1) "colaborador asignado" else "colaboradores asignados",
+                            stringResource(
+                                if (staff.size == 1) R.string.events_detail_staff_count_one else R.string.events_detail_staff_count_other,
+                                staff.size
+                            ),
                             style = MaterialTheme.typography.titleSmall,
                             color = SolennixTheme.colors.primaryText,
                             fontWeight = FontWeight.SemiBold
@@ -1318,7 +1326,7 @@ fun EventStaffScreen(
                         if (totalFee > 0.0) {
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                "Costo total: ${totalFee.asMXN()}",
+                                stringResource(R.string.events_detail_staff_total_cost, totalFee.asMXN()),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = SolennixTheme.colors.primary
                             )
@@ -1338,7 +1346,7 @@ fun EventStaffScreen(
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        assignment.staffName ?: "Colaborador",
+                                        assignment.staffName ?: stringResource(R.string.events_detail_staff_fallback),
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.SemiBold,
                                         color = SolennixTheme.colors.primaryText
@@ -1420,10 +1428,10 @@ fun EventStaffScreen(
 private fun AssignmentStatusBadge(rawStatus: String?) {
     val status = AssignmentStatus.fromString(rawStatus)
     val (label, color) = when (status) {
-        AssignmentStatus.PENDING -> "Sin confirmar" to Color(0xFFB7791F)
-        AssignmentStatus.CONFIRMED -> "Confirmado" to Color(0xFF2F855A)
-        AssignmentStatus.DECLINED -> "Rechazó" to Color(0xFFC53030)
-        AssignmentStatus.CANCELLED -> "Cancelado" to Color(0xFF718096)
+        AssignmentStatus.PENDING -> stringResource(R.string.events_detail_staff_status_pending) to Color(0xFFB7791F)
+        AssignmentStatus.CONFIRMED -> stringResource(R.string.events_detail_staff_status_confirmed) to Color(0xFF2F855A)
+        AssignmentStatus.DECLINED -> stringResource(R.string.events_detail_staff_status_declined) to Color(0xFFC53030)
+        AssignmentStatus.CANCELLED -> stringResource(R.string.events_detail_staff_status_cancelled) to Color(0xFF718096)
     }
     Surface(
         shape = MaterialTheme.shapes.small,

@@ -28,8 +28,21 @@ status: active
 > [!info] 2026-04-29 — i18n parity planning reset (issue #202 + #203–#209)
 > La estrategia de multilanguage dejó de organizarse por plataforma y pasó a slices cross-platform con una copy matrix canónica. Objetivo: asegurar misma intención y terminología entre iOS, Android y Web, permitiendo variantes mobile más cortas sólo cuando el espacio lo exija.
 > - **Epic**: #202 `feat(cross-platform): complete product-wide i18n parity`
-> - **Slices**: #94 Dashboard ✅ cerrado, #95 Events list, #203 governance/matrix, #204 event detail + form, #205 auth + settings, #206 clients, #207 products + inventory, #208 public flows ✅ listo para merge en PR #225, #209 final sweep.
+> - **Slices**: #94 Dashboard ✅ cerrado, #95 Events list, #203 governance/matrix, #204 event detail + form ✅ implementado cross-platform, #205 auth + settings, #206 clients, #207 products + inventory, #208 public flows ✅ listo para merge en PR #225, #209 final sweep.
 > - **Documento fuente**: [[19_I18N_STRATEGY]] ahora define copy governance, canonical vs compact variants y checklist de review por slice.
+
+> [!success] 2026-04-29 — i18n slice #204 event detail + form ✅
+> Paridad real de i18n cerrada para Event detail + Event form en Web, iOS y Android.
+> - **Web**: `EventSummary`, `EventForm`, `Payments` y `ClientPortalShareCard` consumen copy localizada en `events.json` para detalle, formulario, pagos, share link, checklist, contrato y fotos.
+> - **iOS**: `EventDetailView`, `EventFormView`, steps del formulario, `EventPaymentsDetailView` y `ClientPortalShareSheet` migraron a `FeatureL10n` con claves `events.detail.*` y `events.form.*`.
+> - **Android**: `EventDetailScreen`, `EventDetailSubScreens`, `EventFormScreen` y viewmodels usan `stringResource` / `strings.xml` ES+EN para detalle, formulario, pagos, staff, supplies y documentos.
+
+> [!success] 2026-04-29 — iOS i18n runtime application fix ✅
+> Corrección del problema donde cambiar idioma en iOS no se aplicaba de forma consistente dentro de la app.
+> - **Runtime locale**: `SolennixApp` inyecta `\.locale` desde `@AppStorage("preferredLocale")`, sincronizado con `User.preferredLanguage`.
+> - **SPM resources**: `SolennixFeatures` usa `FeatureL10n` para resolver `Localizable.xcstrings` con `bundle: .module` y el locale elegido por el usuario.
+> - **Coverage**: navegación, Dashboard, Calendar, Events, Auth y Settings migrados a claves localizadas; verificación local: 815 usos iOS de `FeatureL10n`, 0 claves faltantes.
+> - **Persistencia**: selector de idioma en Settings guarda `preferred_language` vía `PUT /api/users/me`.
 
 > [!success] 2026-05-01 — i18n slice #208 public/client-facing flows listo para merge (PR #225)
 > El slice cross-platform de Quick Quote + organizer-facing Client Portal Share quedó refrescado sobre `main`, con CI verde en PR `#225` y sin hacer build local.
@@ -45,7 +58,6 @@ status: active
 > - **Android**: nuevo catálogo por feature `android/feature/clients/src/main/res/values*/strings.xml`; `ClientListScreen`, `ClientDetailScreen`, `ClientFormScreen` y sus ViewModels ahora consumen resources para títulos, placeholders, diálogos destructivos, validaciones, CSV, plan-limit copy y errores visibles al usuario.
 > - **iOS**: `ClientListView`, `ClientDetailView`, `ClientFormView` y sus ViewModels migrados a `String(localized:, bundle: .module)` con nuevas keys `clients.*` en `Localizable.xcstrings`; se alinearon empty states, sort labels, errores, confirmaciones y copy de acciones con la matrix canónica.
 > - **Scope explícito**: `QuickQuoteView.swift` y `QuickQuoteScreen.kt` NO entraron en `#206` porque el issue acepta sólo list/detail/form; requieren slice propio para no mezclar alcance.
-
 > [!success] 2026-04-29 — Sprint 7.E: Payment Submissions Phase 1 (issue #191, backend + web service ✅)
 > Implementación de la capa de infraestructura para que clientes (vía portal público tokenizado) envíen comprobantes de transferencias bancarias y organizadores revisen/aprueben. Backend completo + Web service listos. UI (cliente portal + organizer inbox) pendiente para Fase 2.
 > - **Backend model**: `PaymentSubmission` struct con fields: event_id, client_id, user_id, amount, transfer_ref, receipt_file_url, status (pending|approved|rejected), reviewed_by, reviewed_at, rejection_reason, linked_payment_id.
