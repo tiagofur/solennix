@@ -15,6 +15,10 @@ public struct LoginView: View {
 
     public init() {}
 
+    private func tr(_ key: String, _ value: String) -> String {
+        FeatureL10n.text(key, value)
+    }
+
     public var body: some View {
         Group {
             if sizeClass == .regular {
@@ -68,7 +72,7 @@ public struct LoginView: View {
                 VStack(spacing: Spacing.xl) {
                     Spacer(minLength: Spacing.xxxl)
 
-                    Text("Inicia sesion")
+                    Text(tr("auth.login.title", "Iniciar sesión"))
                         .font(.title2)
                         .fontWeight(.semibold)
                         .foregroundStyle(SolennixColors.text)
@@ -102,7 +106,7 @@ public struct LoginView: View {
                 .font(.solennixTitle)
                 .foregroundStyle(SolennixColors.primary)
 
-            Text("CADA DETALLE IMPORTA")
+            Text(tr("auth.login.tagline", "CADA DETALLE IMPORTA"))
                 .font(.caption)
                 .fontWeight(.light)
                 .tracking(5.5)
@@ -124,14 +128,14 @@ public struct LoginView: View {
                     .font(.solennixTitle)
                     .foregroundStyle(.white)
 
-                Text("Cada detalle importa")
+                Text(tr("auth.login.brand.subtitle", "Cada detalle importa"))
                     .font(.body)
                     .foregroundStyle(.white.opacity(0.85))
 
                 VStack(alignment: .leading, spacing: Spacing.md) {
-                    BrandFeatureRow(icon: "calendar", text: "Gestiona eventos de principio a fin")
-                    BrandFeatureRow(icon: "person.2.fill", text: "CRM integrado para tus clientes")
-                    BrandFeatureRow(icon: "chart.bar.fill", text: "Reportes financieros en tiempo real")
+                    BrandFeatureRow(icon: "calendar", text: tr("auth.login.brand.feature_events", "Gestiona eventos de principio a fin"))
+                    BrandFeatureRow(icon: "person.2.fill", text: tr("auth.login.brand.feature_clients", "CRM integrado para tus clientes"))
+                    BrandFeatureRow(icon: "chart.bar.fill", text: tr("auth.login.brand.feature_reports", "Reportes financieros en tiempo real"))
                 }
                 .padding(.top, Spacing.sm)
             }
@@ -149,12 +153,12 @@ public struct LoginView: View {
             }
 
             SolennixTextField(
-                label: "Correo electronico",
+                label: tr("auth.login.email_label", "Correo electrónico"),
                 text: Binding(
                     get: { viewModel?.email ?? "" },
                     set: { viewModel?.email = $0 }
                 ),
-                placeholder: "tu@email.com",
+                placeholder: tr("auth.login.email_placeholder", "tu@email.com"),
                 leftIcon: "envelope",
                 textContentType: .emailAddress,
                 keyboardType: .emailAddress,
@@ -162,19 +166,19 @@ public struct LoginView: View {
             )
 
             SolennixTextField(
-                label: "Contrasena",
+                label: tr("auth.login.password_label", "Contraseña"),
                 text: Binding(
                     get: { viewModel?.password ?? "" },
                     set: { viewModel?.password = $0 }
                 ),
-                placeholder: "Tu contrasena",
+                placeholder: tr("auth.login.password_placeholder", "Tu contraseña"),
                 leftIcon: "lock",
                 isSecure: true,
                 textContentType: .password
             )
 
             PremiumButton(
-                title: "Iniciar Sesion",
+                title: tr("auth.login.submit", "Ingresar"),
                 isLoading: viewModel?.isLoading ?? false,
                 isDisabled: !(viewModel?.isLoginValid ?? false)
             ) {
@@ -192,7 +196,7 @@ public struct LoginView: View {
         NavigationLink {
             ForgotPasswordView()
         } label: {
-            Text("Olvidaste tu contrasena?")
+            Text(tr("auth.login.forgot_password", "¿Olvidaste tu contraseña?"))
                 .font(.body)
                 .foregroundStyle(SolennixColors.primary)
         }
@@ -206,7 +210,7 @@ public struct LoginView: View {
                 .fill(SolennixColors.separator)
                 .frame(height: 1)
 
-            Text("o continua con")
+            Text(tr("auth.login.or_separator", "o continuá con"))
                 .font(.footnote)
                 .foregroundStyle(SolennixColors.textSecondary)
                 .fixedSize()
@@ -228,7 +232,7 @@ public struct LoginView: View {
                 HStack(spacing: Spacing.sm) {
                     Image(systemName: "apple.logo")
                         .font(.title3)
-                    Text("Continuar con Apple")
+                    Text(tr("auth.social.apple.continue", "Continuar con Apple"))
                         .font(.body)
                         .fontWeight(.medium)
                 }
@@ -249,7 +253,7 @@ public struct LoginView: View {
                         .font(.title3)
                         .fontWeight(.bold)
                         .foregroundStyle(.red)
-                    Text("Continuar con Google")
+                    Text(tr("auth.social.google.continue", "Continuar con Google"))
                         .font(.body)
                         .fontWeight(.medium)
                         .foregroundStyle(SolennixColors.text)
@@ -274,9 +278,9 @@ public struct LoginView: View {
             RegisterView()
         } label: {
             HStack(spacing: Spacing.xs) {
-                Text("No tienes cuenta?")
+                Text(tr("auth.login.no_account", "¿No tienes cuenta?"))
                     .foregroundStyle(SolennixColors.textSecondary)
-                Text("Registrate")
+                Text(tr("auth.login.create_account", "Crear cuenta"))
                     .fontWeight(.semibold)
                     .foregroundStyle(SolennixColors.primary)
             }

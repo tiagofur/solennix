@@ -1,19 +1,21 @@
 package com.creapolis.solennix.feature.settings.viewmodel
 
+import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.creapolis.solennix.feature.settings.R
 import com.creapolis.solennix.core.data.util.ImageCompressor
 import com.creapolis.solennix.core.model.User
 import com.creapolis.solennix.core.network.ApiService
 import com.creapolis.solennix.core.network.get
-import com.creapolis.solennix.core.network.post
 import com.creapolis.solennix.core.network.put
 import com.creapolis.solennix.core.network.AuthManager
 import com.creapolis.solennix.core.network.Endpoints
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -30,6 +32,7 @@ private data class BusinessSettingsPayload(
 
 @HiltViewModel
 class BusinessSettingsViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val authManager: AuthManager,
     private val apiService: ApiService
 ) : ViewModel() {
@@ -63,7 +66,7 @@ class BusinessSettingsViewModel @Inject constructor(
                 if (cachedUser != null) {
                     populateFromUser(cachedUser)
                 }
-                errorMessage = "Error al cargar los datos: ${e.message}"
+                errorMessage = context.getString(R.string.settings_error_load_data, e.message ?: e.javaClass.simpleName)
             } finally {
                 isLoading = false
             }
@@ -91,7 +94,7 @@ class BusinessSettingsViewModel @Inject constructor(
                 authManager.storeUser(updatedUser)
                 saveSuccess = true
             } catch (e: Exception) {
-                errorMessage = "Error al guardar: ${e.message}"
+                errorMessage = context.getString(R.string.settings_error_save, e.message ?: e.javaClass.simpleName)
             } finally {
                 isSaving = false
             }
@@ -121,7 +124,7 @@ class BusinessSettingsViewModel @Inject constructor(
                 authManager.storeUser(updatedUser)
                 logoUrl = response.url
             } catch (e: Exception) {
-                errorMessage = "Error al subir el logo: ${e.message}"
+                errorMessage = context.getString(R.string.settings_business_logo_error, e.message ?: e.javaClass.simpleName)
             } finally {
                 isUploadingLogo = false
             }

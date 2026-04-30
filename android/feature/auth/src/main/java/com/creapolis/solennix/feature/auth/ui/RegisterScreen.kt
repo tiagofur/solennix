@@ -11,11 +11,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.creapolis.solennix.feature.auth.R
 import com.creapolis.solennix.core.designsystem.component.PremiumButton
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.component.SolennixTextField
@@ -58,10 +60,10 @@ private fun RegisterFormContent(
         topBar = {
             if (!isWideScreen) {
                 SolennixTopAppBar(
-                    title = { Text("Crear Cuenta", style = MaterialTheme.typography.titleLarge) },
+                    title = { Text(stringResource(R.string.auth_register_title), style = MaterialTheme.typography.titleLarge) },
                     navigationIcon = {
                         IconButton(onClick = onNavigateBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.auth_nav_back))
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
@@ -86,11 +88,11 @@ private fun RegisterFormContent(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.auth_nav_back))
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Crear Cuenta",
+                        text = stringResource(R.string.auth_register_title),
                         style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
                         color = SolennixTheme.colors.primaryText
                     )
@@ -99,7 +101,7 @@ private fun RegisterFormContent(
             }
 
             Text(
-                text = "Unite a Solennix y gestioná tus eventos como un profesional.",
+                text = stringResource(R.string.auth_register_subtitle),
                 style = MaterialTheme.typography.bodyMedium,
                 color = SolennixTheme.colors.secondaryText,
                 textAlign = TextAlign.Center
@@ -110,8 +112,8 @@ private fun RegisterFormContent(
             SolennixTextField(
                 value = viewModel.registerName,
                 onValueChange = { viewModel.registerName = it },
-                label = "Nombre Completo",
-                placeholder = "Juan Pérez",
+                label = stringResource(R.string.auth_register_name_label),
+                placeholder = stringResource(R.string.auth_register_name_placeholder),
                 leadingIcon = Icons.Default.Person
             )
 
@@ -120,8 +122,8 @@ private fun RegisterFormContent(
             SolennixTextField(
                 value = viewModel.registerEmail,
                 onValueChange = { viewModel.registerEmail = it },
-                label = "Correo Electrónico",
-                placeholder = "ejemplo@correo.com",
+                label = stringResource(R.string.auth_register_email_label),
+                placeholder = stringResource(R.string.auth_register_email_placeholder),
                 leadingIcon = Icons.Default.Email,
                 keyboardType = KeyboardType.Email
             )
@@ -131,7 +133,7 @@ private fun RegisterFormContent(
             SolennixTextField(
                 value = viewModel.registerPassword,
                 onValueChange = { viewModel.registerPassword = it },
-                label = "Contraseña",
+                label = stringResource(R.string.auth_register_password_label),
                 leadingIcon = Icons.Default.Lock,
                 isPassword = true
             )
@@ -141,7 +143,7 @@ private fun RegisterFormContent(
             SolennixTextField(
                 value = viewModel.registerConfirmPassword,
                 onValueChange = { viewModel.registerConfirmPassword = it },
-                label = "Confirmar Contraseña",
+                label = stringResource(R.string.auth_register_confirm_password_label),
                 leadingIcon = Icons.Default.Lock,
                 isPassword = true,
                 imeAction = ImeAction.Done
@@ -154,15 +156,15 @@ private fun RegisterFormContent(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                FeaturePill(text = "Gratis", icon = Icons.Default.Star)
-                FeaturePill(text = "Seguro", icon = Icons.Default.Shield)
-                FeaturePill(text = "Escalable", icon = Icons.Default.TrendingUp)
+                FeaturePill(text = stringResource(R.string.auth_register_feature_free), icon = Icons.Default.Star)
+                FeaturePill(text = stringResource(R.string.auth_register_feature_secure), icon = Icons.Default.Shield)
+                FeaturePill(text = stringResource(R.string.auth_register_feature_scalable), icon = Icons.Default.TrendingUp)
             }
 
             Spacer(modifier = Modifier.height(40.dp))
 
             PremiumButton(
-                text = "Crear Cuenta",
+                text = stringResource(R.string.auth_register_submit),
                 onClick = { viewModel.register() },
                 isLoading = viewModel.isLoading,
                 enabled = viewModel.isRegisterValid
@@ -181,7 +183,7 @@ private fun RegisterFormContent(
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "Al registrarte, aceptás nuestros Términos de Servicio y Política de Privacidad.",
+                text = stringResource(R.string.auth_register_terms_notice),
                 style = MaterialTheme.typography.labelSmall,
                 color = SolennixTheme.colors.tertiaryText,
                 textAlign = TextAlign.Center,

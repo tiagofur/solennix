@@ -9,6 +9,10 @@ import SolennixNetwork
 @Observable
 public final class AuthViewModel {
 
+    private func tr(_ key: String, _ value: String) -> String {
+        FeatureL10n.text(key, value)
+    }
+
     // MARK: - Form Fields
 
     public var email: String = ""
@@ -68,11 +72,11 @@ public final class AuthViewModel {
         // Validate
         let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedEmail.isEmpty else {
-            errorMessage = "El correo electronico es requerido"
+            errorMessage = tr("auth.validation.email_required", "El correo es requerido")
             return
         }
         guard !password.isEmpty else {
-            errorMessage = "La contrasena es requerida"
+            errorMessage = tr("auth.validation.password_required", "La contraseña es requerida")
             return
         }
 
@@ -96,19 +100,19 @@ public final class AuthViewModel {
         let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
 
         guard trimmedName.count >= 2 else {
-            errorMessage = "El nombre debe tener al menos 2 caracteres"
+            errorMessage = tr("auth.validation.name_min_2", "El nombre debe tener al menos 2 caracteres")
             return
         }
         guard !trimmedEmail.isEmpty else {
-            errorMessage = "El correo electronico es requerido"
+            errorMessage = tr("auth.validation.email_required", "El correo es requerido")
             return
         }
         guard isPasswordComplex(password) else {
-            errorMessage = "La contrasena debe tener al menos 8 caracteres, una mayuscula, una minuscula y un numero"
+            errorMessage = tr("auth.validation.password_min_8", "La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número")
             return
         }
         guard password == confirmPassword else {
-            errorMessage = "Las contrasenas no coinciden"
+            errorMessage = tr("auth.validation.password_mismatch", "Las contraseñas no coinciden")
             return
         }
 
@@ -189,9 +193,9 @@ public final class AuthViewModel {
             await signInWithGoogle(idToken: result.idToken, fullName: result.fullName)
         } catch let error as GoogleSignInError {
             if case .cancelled = error { return }
-            errorMessage = error.errorDescription
+            errorMessage = mapError(error)
         } catch {
-            errorMessage = "Error al iniciar sesion con Google"
+            errorMessage = tr("auth.social.google.error", "Error al iniciar sesión con Google")
         }
     }
 
@@ -202,7 +206,7 @@ public final class AuthViewModel {
         let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
 
         guard !trimmedEmail.isEmpty else {
-            errorMessage = "El correo electronico es requerido"
+            errorMessage = tr("auth.validation.email_required", "El correo es requerido")
             return
         }
 
@@ -229,11 +233,11 @@ public final class AuthViewModel {
     @MainActor
     public func resetPassword(token: String) async {
         guard isPasswordComplex(password) else {
-            errorMessage = "La contrasena debe tener al menos 8 caracteres, una mayuscula, una minuscula y un numero"
+            errorMessage = tr("auth.validation.password_min_8", "La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula y un número")
             return
         }
         guard password == confirmPassword else {
-            errorMessage = "Las contrasenas no coinciden"
+            errorMessage = tr("auth.validation.password_mismatch", "Las contraseñas no coinciden")
             return
         }
 
@@ -283,21 +287,47 @@ public final class AuthViewModel {
     // MARK: - Error Mapping
 
     private func mapError(_ error: Error) -> String {
+        if let googleError = error as? GoogleSignInError {
+            switch googleError {
+            case .missingIDToken:
+                return tr("auth.social.google.missing_token", "No se recibió el token de identidad de Google.")
+            case .cancelled:
+                return tr("auth.social.google.cancelled", "Inicio de sesión con Google cancelado.")
+            case .failed:
+                return tr("auth.social.google.error", "Error al iniciar sesión con Google")
+            }
+        }
+
+        if let appleError = error as? AppleSignInError {
+            switch appleError {
+            case .invalidCredential:
+                return tr("auth.social.apple.invalid_credential", "Credencial de Apple inválida.")
+            case .missingIdentityToken:
+                return tr("auth.social.apple.missing_identity_token", "No se recibió el token de identidad de Apple.")
+            case .missingAuthorizationCode:
+                return tr("auth.social.apple.missing_authorization_code", "No se recibió el código de autorización de Apple.")
+            case .cancelled:
+                return tr("auth.social.apple.cancelled", "Inicio de sesión con Apple cancelado.")
+            case .failed:
+                return tr("auth.social.apple.error", "Error al iniciar sesión con Apple")
+            }
+        }
+
         if let apiError = error as? APIError {
             switch apiError {
             case .unauthorized:
-                return "Credenciales invalidas. Verifica tu correo y contrasena."
+                return tr("auth.error.invalid_credentials", "Credenciales inválidas. Verifica tu correo y contraseña.")
             case .serverError(let statusCode, let message):
                 if statusCode == 409 {
-                    return "Ya existe una cuenta con este correo electronico."
+                    return tr("auth.error.email_taken", "Ya existe una cuenta con este correo electrónico.")
                 }
                 return message
             case .networkError:
-                return "Error de conexion. Verifica tu internet e intenta de nuevo."
+                return tr("auth.error.network", "Error de conexión. Verifica tu internet e intenta de nuevo.")
             default:
-                return apiError.errorDescription ?? "Ocurrio un error inesperado."
+                return apiError.errorDescription ?? tr("auth.error.unexpected", "Ocurrió un error inesperado.")
             }
         }
-        return "Ocurrio un error inesperado. Intenta de nuevo."
+        return tr("auth.error.retry", "Ocurrió un error inesperado. Intenta de nuevo.")
     }
 }

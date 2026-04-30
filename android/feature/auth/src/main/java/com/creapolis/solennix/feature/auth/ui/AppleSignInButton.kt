@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -85,7 +86,7 @@ fun AppleSignInButton(
         onClick = {
             if (redirectUri == null || redirectUri.startsWith("YOUR_")) {
                 Log.e("AppleSignIn", "Apple redirect URI not configured in strings.xml")
-                onError?.invoke("Apple Sign-In no está configurado")
+                onError?.invoke(context.getString(R.string.auth_social_apple_not_configured))
                 return@OutlinedButton
             }
             isLoading = true
@@ -122,7 +123,7 @@ fun AppleSignInButton(
             }
             Spacer(modifier = Modifier.width(12.dp))
             Text(
-                text = "Continuar con Apple",
+                text = stringResource(R.string.auth_social_apple_continue),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Medium
             )
@@ -139,6 +140,7 @@ private fun AppleSignInDialog(
     onCancel: () -> Unit,
     onError: (String) -> Unit
 ) {
+    val context = LocalContext.current
     val state = remember { UUID.randomUUID().toString() }
 
     val authUrl = remember(clientId, redirectUri, state) {
@@ -180,12 +182,12 @@ private fun AppleSignInDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Iniciar sesión con Apple",
+                        text = stringResource(R.string.auth_social_apple_dialog_title),
                         style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.padding(start = 8.dp)
                     )
                     IconButton(onClick = onCancel) {
-                        Icon(Icons.Default.Close, contentDescription = "Cerrar")
+                        Icon(Icons.Default.Close, contentDescription = stringResource(R.string.auth_social_apple_close))
                     }
                 }
 
@@ -240,7 +242,7 @@ private fun AppleSignInDialog(
                                         return true
                                     }
                                     if (error != null) {
-                                        onError("Error al iniciar sesión con Apple")
+                                        onError(context.getString(R.string.auth_social_apple_error))
                                         return true
                                     }
 
@@ -255,7 +257,7 @@ private fun AppleSignInDialog(
 
                                     val returnedState = params["state"]
                                     if (returnedState != null && returnedState != state) {
-                                        onError("Error de seguridad. Intentá de nuevo.")
+                                        onError(context.getString(R.string.auth_social_apple_security_error))
                                         return
                                     }
 
@@ -266,7 +268,7 @@ private fun AppleSignInDialog(
                                             null // Apple only sends name on first auth via form_post
                                         )
                                     } else {
-                                        onError("No se recibió el token de Apple")
+                                        onError(context.getString(R.string.auth_social_apple_missing_token))
                                     }
                                 }
                             }

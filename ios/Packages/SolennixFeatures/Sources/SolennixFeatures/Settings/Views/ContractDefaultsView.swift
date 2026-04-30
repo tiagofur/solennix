@@ -17,16 +17,20 @@ public struct ContractDefaultsView: View {
         _viewModel = State(initialValue: BusinessSettingsViewModel(apiClient: apiClient))
     }
 
+    private func tr(_ key: String, _ value: String) -> String {
+        FeatureL10n.text(key, value)
+    }
+
     public var body: some View {
         Group {
             if viewModel.isLoading {
-                ProgressView("Cargando...")
+                ProgressView(tr("settings.loading", "Cargando..."))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 formContent
             }
         }
-        .navigationTitle("Valores del Contrato")
+        .navigationTitle(tr("settings.action.contract_defaults", "Valores del contrato"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -52,7 +56,7 @@ public struct ContractDefaultsView: View {
             Section {
                 VStack(alignment: .leading, spacing: Spacing.sm) {
                     HStack {
-                        Text("Porcentaje de anticipo")
+                        Text(tr("settings.contract.deposit_percent", "Porcentaje de anticipo"))
                         Spacer()
                         Text("\(Int(viewModel.depositPercent))%")
                             .font(.headline)
@@ -60,20 +64,20 @@ public struct ContractDefaultsView: View {
                     }
 
                     Slider(value: $viewModel.depositPercent, in: 0...100, step: 5) {
-                        Text("Anticipo")
+                        Text(tr("settings.contract.deposit", "Anticipo"))
                     }
                 }
             } header: {
-                Text("Anticipo")
+                Text(tr("settings.contract.deposit", "Anticipo"))
             } footer: {
-                Text("Porcentaje del total que solicitas como anticipo al confirmar un evento.")
+                Text(tr("settings.contract.deposit_hint", "Porcentaje del total que solicitas como anticipo al confirmar un evento."))
             }
 
             // Cancellation section
             Section {
                 VStack(alignment: .leading, spacing: Spacing.sm) {
                     HStack {
-                        Text("Dias de anticipacion")
+                        Text(tr("settings.contract.cancellation_days", "Días de anticipación"))
                         Spacer()
                         Text("\(Int(viewModel.cancellationDays)) dias")
                             .font(.headline)
@@ -81,20 +85,20 @@ public struct ContractDefaultsView: View {
                     }
 
                     Slider(value: $viewModel.cancellationDays, in: 1...30, step: 1) {
-                        Text("Dias")
+                        Text(tr("settings.contract.days", "Días"))
                     }
                 }
             } header: {
-                Text("Cancelacion")
+                Text(tr("settings.contract.cancellation", "Cancelación"))
             } footer: {
-                Text("Numero minimo de dias antes del evento para permitir cancelacion con reembolso.")
+                Text(tr("settings.contract.cancellation_hint", "Número mínimo de días antes del evento para permitir cancelación con reembolso."))
             }
 
             // Refund section
             Section {
                 VStack(alignment: .leading, spacing: Spacing.sm) {
                     HStack {
-                        Text("Porcentaje de reembolso")
+                        Text(tr("settings.contract.refund_percent", "Porcentaje de reembolso"))
                         Spacer()
                         Text("\(Int(viewModel.refundPercent))%")
                             .font(.headline)
@@ -102,13 +106,13 @@ public struct ContractDefaultsView: View {
                     }
 
                     Slider(value: $viewModel.refundPercent, in: 0...100, step: 5) {
-                        Text("Reembolso")
+                        Text(tr("settings.contract.refund", "Reembolso"))
                     }
                 }
             } header: {
-                Text("Reembolso")
+                Text(tr("settings.contract.refund", "Reembolso"))
             } footer: {
-                Text("Porcentaje del anticipo que devuelves en caso de cancelacion dentro del plazo permitido.")
+                Text(tr("settings.contract.refund_hint", "Porcentaje del anticipo que devuelves en caso de cancelación dentro del plazo permitido."))
             }
 
             // Contract template section
@@ -119,7 +123,7 @@ public struct ContractDefaultsView: View {
                     } label: {
                         HStack(spacing: 4) {
                             Image(systemName: "plus")
-                            Text("Insertar Variable")
+                            Text(tr("settings.contract.insert_variable", "Insertar variable"))
                         }
                         .font(.caption)
                         .fontWeight(.semibold)
@@ -141,22 +145,22 @@ public struct ContractDefaultsView: View {
                     .clipShape(RoundedRectangle(cornerRadius: CornerRadius.sm))
                 }
             } header: {
-                Text("Plantilla del Contrato")
+                Text(tr("settings.contract.template", "Plantilla del contrato"))
             } footer: {
-                Text("Las variables como [Nombre del cliente] se reemplazan automaticamente con los datos del evento al generar el contrato.")
+                Text(tr("settings.contract.template_hint", "Las variables como [Nombre del cliente] se reemplazan automáticamente con los datos del evento al generar el contrato."))
             }
 
             // Preview section
             Section {
                 VStack(alignment: .leading, spacing: Spacing.md) {
-                    Text("Vista previa de terminos")
+                    Text(tr("settings.contract.preview_terms", "Vista previa de términos"))
                         .font(.subheadline)
                         .fontWeight(.medium)
 
                     VStack(alignment: .leading, spacing: Spacing.sm) {
-                        previewRow(label: "Anticipo requerido", value: "\(Int(viewModel.depositPercent))% del total")
-                        previewRow(label: "Cancelacion sin penalizacion", value: "\(Int(viewModel.cancellationDays)) dias antes")
-                        previewRow(label: "Reembolso por cancelacion", value: "\(Int(viewModel.refundPercent))% del anticipo")
+                        previewRow(label: tr("settings.contract.preview.deposit_required", "Anticipo requerido"), value: "\(Int(viewModel.depositPercent))% del total")
+                        previewRow(label: tr("settings.contract.preview.cancellation", "Cancelación sin penalización"), value: "\(Int(viewModel.cancellationDays)) dias antes")
+                        previewRow(label: tr("settings.contract.preview.refund", "Reembolso por cancelación"), value: "\(Int(viewModel.refundPercent))% del anticipo")
                     }
                     .padding(Spacing.md)
                     .background(SolennixColors.surface)
@@ -207,7 +211,7 @@ public struct ContractDefaultsView: View {
             if viewModel.isSaving {
                 ProgressView()
             } else {
-                Text("Guardar")
+                Text(tr("common.save", "Guardar"))
                     .fontWeight(.semibold)
             }
         }
@@ -275,7 +279,7 @@ private struct ContractVariablePickerSheet: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: Spacing.lg) {
-                    Text("Haz clic en una variable para insertarla en tu contrato")
+                    Text(FeatureL10n.text("settings.contract.variable_picker_hint", "Haz clic en una variable para insertarla en tu contrato"))
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)
                         .padding(.horizontal, Spacing.md)
@@ -316,11 +320,11 @@ private struct ContractVariablePickerSheet: View {
                 .padding(.vertical, Spacing.md)
             }
             .background(SolennixColors.surfaceGrouped)
-            .navigationTitle("Insertar Variable")
+            .navigationTitle(FeatureL10n.text("settings.contract.insert_variable", "Insertar variable"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cerrar") { dismiss() }
+                    Button(FeatureL10n.text("common.close", "Cerrar")) { dismiss() }
                 }
             }
         }

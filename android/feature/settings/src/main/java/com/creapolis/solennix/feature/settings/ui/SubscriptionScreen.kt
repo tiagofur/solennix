@@ -3,6 +3,7 @@ package com.creapolis.solennix.feature.settings.ui
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
+import com.creapolis.solennix.feature.settings.R
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -15,6 +16,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -33,26 +35,8 @@ import com.creapolis.solennix.feature.settings.billing.BillingState
 import com.creapolis.solennix.feature.settings.viewmodel.SubscriptionViewModel
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import java.util.Locale
-
-private val PRO_FEATURES = listOf(
-    PlanFeature("Eventos ilimitados", true),
-    PlanFeature("Clientes ilimitados", true),
-    PlanFeature("Productos ilimitados", true),
-    PlanFeature("Reportes avanzados", true),
-    PlanFeature("Widgets de inicio", true),
-    PlanFeature("Marca personalizada", true),
-    PlanFeature("Soporte prioritario", true),
-)
-
-private val BASIC_FEATURES = listOf(
-    PlanFeature("3 eventos por mes", true),
-    PlanFeature("50 clientes", true),
-    PlanFeature("20 productos", true),
-    PlanFeature("Reportes básicos", true),
-    PlanFeature("Marca personalizada", false),
-    PlanFeature("Soporte prioritario", false),
-)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,8 +46,32 @@ fun SubscriptionScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val configuration = LocalConfiguration.current
     val activity = context as? Activity
     val snackbarHostState = remember { SnackbarHostState() }
+    val proPlanName = stringResource(R.string.settings_subscription_plan_pro)
+    val basicPlanName = stringResource(R.string.settings_subscription_plan_basic)
+    val proFeatures = remember(configuration) {
+        listOf(
+            PlanFeature(context.getString(R.string.settings_subscription_pro_feature_events), true),
+            PlanFeature(context.getString(R.string.settings_subscription_pro_feature_clients), true),
+            PlanFeature(context.getString(R.string.settings_subscription_pro_feature_products), true),
+            PlanFeature(context.getString(R.string.settings_subscription_pro_feature_reports), true),
+            PlanFeature(context.getString(R.string.settings_subscription_pro_feature_widgets), true),
+            PlanFeature(context.getString(R.string.settings_subscription_pro_feature_branding), true),
+            PlanFeature(context.getString(R.string.settings_subscription_pro_feature_support), true),
+        )
+    }
+    val basicFeatures = remember(configuration) {
+        listOf(
+            PlanFeature(context.getString(R.string.settings_subscription_basic_feature_events), true),
+            PlanFeature(context.getString(R.string.settings_subscription_basic_feature_clients), true),
+            PlanFeature(context.getString(R.string.settings_subscription_basic_feature_products), true),
+            PlanFeature(context.getString(R.string.settings_subscription_basic_feature_reports), true),
+            PlanFeature(context.getString(R.string.settings_subscription_basic_feature_branding), false),
+            PlanFeature(context.getString(R.string.settings_subscription_basic_feature_support), false),
+        )
+    }
 
     LaunchedEffect(Unit) {
         viewModel.initBilling()
@@ -78,7 +86,7 @@ fun SubscriptionScreen(
     Scaffold(
         topBar = {
             SolennixTopAppBar(
-                title = { Text("Planes y Suscripción") },
+                title = { Text(stringResource(R.string.settings_subscription_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
@@ -93,7 +101,7 @@ fun SubscriptionScreen(
                         enabled = uiState.purchasingPackageId == null
                     ) {
                         Text(
-                            "Restaurar",
+                            stringResource(R.string.settings_subscription_restore),
                             color = SolennixTheme.colors.primary,
                             style = MaterialTheme.typography.labelLarge
                         )
@@ -169,7 +177,7 @@ fun SubscriptionScreen(
                                 Spacer(modifier = Modifier.width(8.dp))
                                 TextButton(onClick = { viewModel.onRetry("billing:fetchOfferings") }) {
                                     Text(
-                                        "Reintentar",
+                                        stringResource(R.string.settings_subscription_retry),
                                         color = SolennixTheme.colors.error,
                                         fontWeight = FontWeight.Bold
                                     )
@@ -186,7 +194,7 @@ fun SubscriptionScreen(
             // Plan Cards
             item {
                 Text(
-                    text = "Elegí tu plan",
+                    text = stringResource(R.string.settings_subscription_choose_plan),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = SolennixTheme.colors.primaryText
@@ -196,10 +204,10 @@ fun SubscriptionScreen(
             // Basic Plan (Free)
             item {
                 PlanCard(
-                    planName = "Básico",
-                    price = "Gratis",
+                    planName = basicPlanName,
+                    price = stringResource(R.string.settings_subscription_price_free),
                     period = "",
-                    features = BASIC_FEATURES,
+                    features = basicFeatures,
                     isCurrentPlan = !uiState.hasActiveSubscription,
                     isRecommended = false,
                     isPurchasing = false,
@@ -215,13 +223,13 @@ fun SubscriptionScreen(
                     val isYearly = rcPackage.identifier.contains("annual", ignoreCase = true) ||
                             rcPackage.identifier.contains("yearly", ignoreCase = true)
                     PlanCard(
-                        planName = "Pro",
+                        planName = proPlanName,
                         price = price,
-                        period = if (isYearly) "/año" else "/mes",
-                        features = PRO_FEATURES,
-                        isCurrentPlan = uiState.currentPlanName == "Pro",
+                        period = if (isYearly) stringResource(R.string.settings_subscription_interval_year) else stringResource(R.string.settings_subscription_interval_month),
+                        features = proFeatures,
+                        isCurrentPlan = uiState.currentPlanName == proPlanName,
                         isRecommended = isYearly,
-                        savingsText = if (isYearly) "Ahorrá 20%" else null,
+                        savingsText = if (isYearly) stringResource(R.string.settings_subscription_savings_20) else null,
                         isPurchasing = uiState.purchasingPackageId == rcPackage.identifier,
                         isAnyPurchaseInProgress = uiState.purchasingPackageId != null,
                         onClick = {
@@ -234,11 +242,11 @@ fun SubscriptionScreen(
                 // Matches iOS fallback prices: $6.99/month, $49.99/year
                 item(key = "pro_monthly_fallback") {
                     PlanCard(
-                        planName = "Pro",
-                        price = "US\$ 6.99",
-                        period = "/mes",
-                        features = PRO_FEATURES,
-                        isCurrentPlan = uiState.currentPlanName == "Pro",
+                        planName = proPlanName,
+                        price = stringResource(R.string.settings_subscription_fallback_price_monthly),
+                        period = stringResource(R.string.settings_subscription_interval_month),
+                        features = proFeatures,
+                        isCurrentPlan = uiState.currentPlanName == proPlanName,
                         isRecommended = false,
                         isPurchasing = false,
                         isAnyPurchaseInProgress = true, // disable clicks — no RC to handle purchase
@@ -247,13 +255,13 @@ fun SubscriptionScreen(
                 }
                 item(key = "pro_yearly_fallback") {
                     PlanCard(
-                        planName = "Pro",
-                        price = "US\$ 49.99",
-                        period = "/año",
-                        features = PRO_FEATURES,
-                        isCurrentPlan = uiState.currentPlanName == "Pro",
+                        planName = proPlanName,
+                        price = stringResource(R.string.settings_subscription_fallback_price_yearly),
+                        period = stringResource(R.string.settings_subscription_interval_year),
+                        features = proFeatures,
+                        isCurrentPlan = uiState.currentPlanName == proPlanName,
                         isRecommended = true,
-                        savingsText = "Ahorrá 40%",
+                        savingsText = stringResource(R.string.settings_subscription_savings_40),
                         isPurchasing = false,
                         isAnyPurchaseInProgress = true, // disable clicks — no RC to handle purchase
                         onClick = { }
@@ -281,7 +289,7 @@ fun SubscriptionScreen(
                             modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Administrar suscripción")
+                        Text(stringResource(R.string.settings_subscription_manage))
                     }
                 }
             }
@@ -291,7 +299,7 @@ fun SubscriptionScreen(
                 Column {
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "Preguntas frecuentes",
+                        text = stringResource(R.string.settings_subscription_faq_title),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = SolennixTheme.colors.primaryText
@@ -302,36 +310,36 @@ fun SubscriptionScreen(
             item {
                 val cancelAnswer = when (uiState.provider) {
                     SubscriptionProvider.STRIPE ->
-                        "Sí, podés cancelar tu suscripción cuando quieras. Como te suscribiste desde la web, ingresá a solennix.com > Configuración > Suscripción."
+                        stringResource(R.string.settings_subscription_faq_cancel_answer_web)
                     SubscriptionProvider.APPLE ->
-                        "Sí, podés cancelar tu suscripción cuando quieras. Como te suscribiste desde iOS, abrí Configuración > tu Apple ID > Suscripciones en tu iPhone o iPad."
+                        stringResource(R.string.settings_subscription_faq_cancel_answer_ios)
                     else ->
-                        "Sí, podés cancelar tu suscripción cuando quieras desde la configuración de tu cuenta de Google Play."
+                        stringResource(R.string.settings_subscription_faq_cancel_answer_android)
                 }
                 FaqItem(
-                    question = "¿Puedo cancelar en cualquier momento?",
+                    question = stringResource(R.string.settings_subscription_faq_cancel_question),
                     answer = cancelAnswer
                 )
             }
 
             item {
                 FaqItem(
-                    question = "¿Qué pasa con mis datos si cancelo?",
-                    answer = "Tus datos se mantienen, pero vas a tener acceso limitado según el plan Básico."
+                    question = stringResource(R.string.settings_subscription_faq_data_question),
+                    answer = stringResource(R.string.settings_subscription_faq_data_answer)
                 )
             }
 
             item {
                 FaqItem(
-                    question = "¿Hay prueba gratuita?",
-                    answer = "Sí, el plan Pro incluye 14 días de prueba gratis. Se renueva automáticamente al precio del plan elegido a menos que canceles al menos 24 horas antes de que termine el período de prueba."
+                    question = stringResource(R.string.settings_subscription_faq_trial_question),
+                    answer = stringResource(R.string.settings_subscription_faq_trial_answer)
                 )
             }
 
             item {
                 FaqItem(
-                    question = "¿Puedo cambiar de plan?",
-                    answer = "Sí, podés actualizar o degradar tu plan en cualquier momento."
+                    question = stringResource(R.string.settings_subscription_faq_change_question),
+                    answer = stringResource(R.string.settings_subscription_faq_change_answer)
                 )
             }
 
@@ -339,7 +347,7 @@ fun SubscriptionScreen(
             item {
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "La suscripción se renueva automáticamente. Podés cancelar en cualquier momento desde Google Play > Suscripciones. Solennix es un producto de Creapolis.",
+                    text = stringResource(R.string.settings_subscription_legal),
                     style = MaterialTheme.typography.labelSmall,
                     color = SolennixTheme.colors.tertiaryText,
                     modifier = Modifier.padding(horizontal = 8.dp)
@@ -357,12 +365,9 @@ fun ProviderInfoSection(
     sourceBadge: String?,
     cancelInstructions: String?,
 ) {
-    // Server-authored strings are the source of truth. The enum values are
-    // kept as a fallback so the UI degrades gracefully when talking to an
-    // older backend that does not yet return these fields.
-    val badgeText = sourceBadge?.takeIf { it.isNotBlank() } ?: provider.fallbackBadge
+    val badgeText = sourceBadge?.takeIf { it.isNotBlank() } ?: providerBadgeFallback(provider)
     val instructionsText =
-        cancelInstructions?.takeIf { it.isNotBlank() } ?: provider.fallbackCancelInstructions
+        cancelInstructions?.takeIf { it.isNotBlank() } ?: providerCancelFallback(provider)
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         // Provider badge
@@ -430,8 +435,9 @@ fun CurrentPlanCard(
     isActive: Boolean,
     subscription: SubscriptionInfo? = null,
 ) {
-    val renewalLine = subscription?.let { renewalLine(it) }
-    val priceLine = subscription?.let { priceLine(it) }
+    val locale = LocalConfiguration.current.locales[0] ?: Locale.getDefault()
+    val renewalLine = subscription?.let { renewalLine(it, locale) }
+    val priceLine = subscription?.let { priceLine(it, locale) }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -453,7 +459,7 @@ fun CurrentPlanCard(
             ) {
                 Column {
                     Text(
-                        text = "Plan actual",
+                        text = stringResource(R.string.settings_subscription_plan_current),
                         style = MaterialTheme.typography.labelMedium,
                         color = SolennixTheme.colors.primary
                     )
@@ -474,7 +480,7 @@ fun CurrentPlanCard(
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Text(
-                            text = if (cancelPending) "Cancela al vencer" else "Activo",
+                            text = if (cancelPending) stringResource(R.string.settings_subscription_status_cancel_pending) else stringResource(R.string.settings_subscription_status_active),
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                             color = if (cancelPending)
                                 SolennixTheme.colors.warning
@@ -504,42 +510,31 @@ fun CurrentPlanCard(
     }
 }
 
-/**
- * Builds the human-readable renewal line from the backend response.
- *
- * Examples: "Se renueva el 14 de mayo de 2026" — or when cancelAtPeriodEnd
- * is true: "Vence el 14 de mayo de 2026". Returns null when the backend
- * did not populate a period end date.
- */
-private fun renewalLine(subscription: SubscriptionInfo): String? {
+@Composable
+private fun renewalLine(subscription: SubscriptionInfo, locale: Locale): String? {
     val iso = subscription.currentPeriodEnd?.takeIf { it.isNotBlank() } ?: return null
     val formatted = runCatching {
         val parsed = OffsetDateTime.parse(iso)
-        parsed.format(
-            DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy", Locale("es"))
-        )
+        parsed.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(locale))
     }.getOrNull() ?: return null
     return if (subscription.cancelAtPeriodEnd) {
-        "Vence el $formatted"
+        stringResource(R.string.settings_subscription_expires_on, formatted)
     } else {
-        "Se renueva el $formatted"
+        stringResource(R.string.settings_subscription_renews_on, formatted)
     }
 }
 
-/**
- * Formats the price line when the backend exposes it (Stripe provider).
- * Returns null for Apple/Google, where the price is shown by the store.
- */
-private fun priceLine(subscription: SubscriptionInfo): String? {
+@Composable
+private fun priceLine(subscription: SubscriptionInfo, locale: Locale): String? {
     val cents = subscription.amountCents ?: return null
     val currency = subscription.currency ?: return null
     val interval = when (subscription.billingInterval) {
-        "month" -> "/mes"
-        "year" -> "/año"
+        "month" -> stringResource(R.string.settings_subscription_interval_month)
+        "year" -> stringResource(R.string.settings_subscription_interval_year)
         else -> ""
     }
     val amount = cents / 100.0
-    val formatted = String.format(Locale("es"), "%.2f", amount)
+    val formatted = String.format(locale, "%.2f", amount)
     return "${currency.uppercase(Locale.ROOT)} $formatted$interval"
 }
 
@@ -619,7 +614,7 @@ fun PlanCard(
                             shape = RoundedCornerShape(8.dp)
                         ) {
                             Text(
-                                text = "Recomendado",
+                                text = stringResource(R.string.settings_subscription_recommended),
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                                 color = Color.White,
                                 style = MaterialTheme.typography.labelSmall,
@@ -688,9 +683,9 @@ fun PlanCard(
                             color = Color.White
                         )
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text("Procesando...")
+                        Text(stringResource(R.string.settings_subscription_processing))
                     } else {
-                        Text("Seleccionar plan")
+                        Text(stringResource(R.string.settings_subscription_select_plan))
                     }
                 }
             } else {
@@ -705,11 +700,25 @@ fun PlanCard(
                         contentDescription = stringResource(DesignSystemR.string.cd_check)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Plan actual")
+                    Text(stringResource(R.string.settings_subscription_current_plan_button))
                 }
             }
         }
     }
+}
+
+@Composable
+private fun providerBadgeFallback(provider: SubscriptionProvider): String = when (provider) {
+    SubscriptionProvider.STRIPE -> stringResource(R.string.settings_subscription_provider_web)
+    SubscriptionProvider.APPLE -> stringResource(R.string.settings_subscription_provider_ios)
+    SubscriptionProvider.GOOGLE -> stringResource(R.string.settings_subscription_provider_android)
+}
+
+@Composable
+private fun providerCancelFallback(provider: SubscriptionProvider): String = when (provider) {
+    SubscriptionProvider.STRIPE -> stringResource(R.string.settings_subscription_cancel_web)
+    SubscriptionProvider.APPLE -> stringResource(R.string.settings_subscription_cancel_ios)
+    SubscriptionProvider.GOOGLE -> stringResource(R.string.settings_subscription_cancel_android)
 }
 
 @Composable

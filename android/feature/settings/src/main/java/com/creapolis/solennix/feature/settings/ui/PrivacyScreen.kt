@@ -1,5 +1,6 @@
 package com.creapolis.solennix.feature.settings.ui
 
+import com.creapolis.solennix.feature.settings.R
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -9,8 +10,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.creapolis.solennix.core.designsystem.R as DesignSystemR
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveCenteredContent
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
@@ -26,10 +29,10 @@ fun PrivacyScreen(
     Scaffold(
         topBar = {
             SolennixTopAppBar(
-                title = { Text("Política de Privacidad") },
+                title = { Text(stringResource(R.string.settings_privacy_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(DesignSystemR.string.cd_back))
                     }
                 }
             )
@@ -44,57 +47,57 @@ fun PrivacyScreen(
                 .padding(16.dp)
         ) {
             Text(
-                text = "Última actualización: 23 de abril de 2026",
+                text = stringResource(R.string.settings_privacy_last_updated),
                 style = MaterialTheme.typography.bodySmall,
                 color = SolennixTheme.colors.secondaryText,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
             PolicySection(
-                title = "1. Información que Recopilamos",
-                content = "Recopilamos información que nos proporcionas directamente, como tu nombre, correo electrónico, información de tu negocio y datos de tus clientes y eventos. También recopilamos información automáticamente sobre cómo usas la aplicación para mejorar nuestros servicios y garantizar la seguridad."
+                title = stringResource(R.string.settings_privacy_section_1_title),
+                content = stringResource(R.string.settings_privacy_section_1_content)
             )
 
             PolicySection(
-                title = "2. Uso de la Información",
-                content = "Utilizamos la información recopilada para:\n• Proporcionar y mejorar nuestros servicios\n• Gestionar tu cuenta y suscripción\n• Enviar notificaciones importantes sobre eventos y pagos\n• Procesar pagos de forma segura\n• Cumplir con obligaciones legales y regulatorias"
+                title = stringResource(R.string.settings_privacy_section_2_title),
+                content = stringResource(R.string.settings_privacy_section_2_content)
             )
 
             PolicySection(
-                title = "3. Almacenamiento de Datos",
-                content = "Tus datos se almacenan de forma segura en servidores con cifrado de nivel industrial. Implementamos medidas de seguridad técnicas y organizativas para proteger tu información personal contra acceso no autorizado, pérdida o alteración."
+                title = stringResource(R.string.settings_privacy_section_3_title),
+                content = stringResource(R.string.settings_privacy_section_3_content)
             )
 
             PolicySection(
-                title = "4. Compartir Información",
-                content = "No vendemos ni compartimos tu información personal con terceros para fines publicitarios. Solo compartimos datos con proveedores de servicios esenciales (pagos, infraestructura) o cuando sea requerido por ley."
+                title = stringResource(R.string.settings_privacy_section_4_title),
+                content = stringResource(R.string.settings_privacy_section_4_content)
             )
 
             PolicySection(
-                title = "5. Tus Derechos y Eliminación",
-                content = "Tienes derecho a acceder, corregir y solicitar la eliminación de tus datos personales. Para ejercer tu derecho al borrado, puedes iniciar el proceso desde la configuración de la cuenta o visitar nuestra página web pública de eliminación:\ncreapolis.dev/delete-account"
+                title = stringResource(R.string.settings_privacy_section_5_title),
+                content = stringResource(R.string.settings_privacy_section_5_content)
             )
 
             TextButton(
                 onClick = { uriHandler.openUri("https://creapolis.dev/delete-account") },
                 modifier = Modifier.padding(bottom = 16.dp)
             ) {
-                Text("Ir a página de eliminación de cuenta", color = SolennixTheme.colors.primary)
+                Text(stringResource(R.string.settings_privacy_delete_account_cta), color = SolennixTheme.colors.primary)
             }
 
             PolicySection(
-                title = "6. Cookies y Tecnologías Similares",
-                content = "Utilizamos almacenamiento local seguro para mantener tu sesión iniciada y tus preferencias. No utilizamos tecnologías de rastreo con fines comerciales ni compartimos hábitos de navegación."
+                title = stringResource(R.string.settings_privacy_section_6_title),
+                content = stringResource(R.string.settings_privacy_section_6_content)
             )
 
             PolicySection(
-                title = "7. Cambios a esta Política",
-                content = "Podemos actualizar esta política ocasionalmente para reflejar cambios en el servicio o requisitos legales. Te notificaremos sobre cambios significativos a través de la aplicación o por correo electrónico."
+                title = stringResource(R.string.settings_privacy_section_7_title),
+                content = stringResource(R.string.settings_privacy_section_7_content)
             )
 
             PolicySection(
-                title = "8. Contacto",
-                content = "Si tienes preguntas sobre esta política de privacidad o sobre el tratamiento de tus datos, contáctanos en:\nhola@creapolis.dev"
+                title = stringResource(R.string.settings_privacy_section_8_title),
+                content = stringResource(R.string.settings_privacy_section_8_content)
             )
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -121,4 +124,3 @@ private fun PolicySection(title: String, content: String) {
         )
     }
 }
-

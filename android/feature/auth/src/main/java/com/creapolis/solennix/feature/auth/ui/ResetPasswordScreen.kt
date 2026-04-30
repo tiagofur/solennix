@@ -9,10 +9,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.creapolis.solennix.feature.auth.R
 import com.creapolis.solennix.core.designsystem.component.PremiumButton
 import com.creapolis.solennix.core.designsystem.component.SolennixTextField
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
@@ -62,33 +64,33 @@ private fun ResetPasswordFormContent(
             )
             Spacer(modifier = Modifier.height(24.dp))
             Text(
-                text = "Contraseña actualizada",
+                text = stringResource(R.string.auth_reset_success_title),
                 style = MaterialTheme.typography.headlineSmall,
                 color = SolennixTheme.colors.primaryText,
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Tu contraseña fue restablecida con éxito. Ya podés iniciar sesión.",
+                text = stringResource(R.string.auth_reset_success_message),
                 style = MaterialTheme.typography.bodyMedium,
                 color = SolennixTheme.colors.secondaryText,
                 textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(48.dp))
             PremiumButton(
-                text = "Ir a Login",
+                text = stringResource(R.string.auth_reset_go_to_login),
                 onClick = onNavigateToLogin
             )
         } else {
             Text(
-                text = "Restablecer Contraseña",
+                text = stringResource(R.string.auth_reset_title),
                 style = MaterialTheme.typography.headlineMedium,
                 color = SolennixTheme.colors.primaryText,
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Ingresá tu nueva contraseña a continuación.",
+                text = stringResource(R.string.auth_reset_subtitle),
                 style = MaterialTheme.typography.bodyMedium,
                 color = SolennixTheme.colors.secondaryText,
                 textAlign = TextAlign.Center
@@ -106,7 +108,7 @@ private fun ResetPasswordFormContent(
                         SolennixTextField(
                             value = viewModel.newPassword,
                             onValueChange = { viewModel.newPassword = it },
-                            label = "Nueva Contraseña",
+                            label = stringResource(R.string.auth_reset_new_password_label),
                             leadingIcon = Icons.Default.Lock,
                             isPassword = true
                         )
@@ -115,7 +117,7 @@ private fun ResetPasswordFormContent(
                         SolennixTextField(
                             value = viewModel.confirmNewPassword,
                             onValueChange = { viewModel.confirmNewPassword = it },
-                            label = "Confirmar Nueva Contraseña",
+                            label = stringResource(R.string.auth_reset_confirm_password_label),
                             leadingIcon = Icons.Default.Lock,
                             isPassword = true,
                             imeAction = ImeAction.Done
@@ -126,7 +128,7 @@ private fun ResetPasswordFormContent(
                 SolennixTextField(
                     value = viewModel.newPassword,
                     onValueChange = { viewModel.newPassword = it },
-                    label = "Nueva Contrasena",
+                    label = stringResource(R.string.auth_reset_new_password_label),
                     leadingIcon = Icons.Default.Lock,
                     isPassword = true
                 )
@@ -136,7 +138,7 @@ private fun ResetPasswordFormContent(
                 SolennixTextField(
                     value = viewModel.confirmNewPassword,
                     onValueChange = { viewModel.confirmNewPassword = it },
-                    label = "Confirmar Nueva Contrasena",
+                    label = stringResource(R.string.auth_reset_confirm_password_label),
                     leadingIcon = Icons.Default.Lock,
                     isPassword = true,
                     imeAction = ImeAction.Done
@@ -146,7 +148,7 @@ private fun ResetPasswordFormContent(
             Spacer(modifier = Modifier.height(32.dp))
 
             PremiumButton(
-                text = "Restablecer",
+                text = stringResource(R.string.auth_reset_submit),
                 onClick = { viewModel.resetPassword() },
                 isLoading = viewModel.isLoading,
                 enabled = viewModel.newPassword.length >= 8

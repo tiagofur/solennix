@@ -14,6 +14,10 @@ public struct ForgotPasswordView: View {
 
     public init() {}
 
+    private func tr(_ key: String, _ value: String) -> String {
+        FeatureL10n.text(key, value)
+    }
+
     public var body: some View {
         Group {
             if sizeClass == .regular {
@@ -23,7 +27,7 @@ public struct ForgotPasswordView: View {
             }
         }
         .background(SolennixColors.surfaceGrouped.ignoresSafeArea())
-        .navigationTitle("Recuperar Contrasena")
+        .navigationTitle(tr("auth.forgot_password.title", "Recuperar contraseña"))
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             if viewModel == nil {
@@ -92,7 +96,7 @@ public struct ForgotPasswordView: View {
                     .font(.solennixTitle)
                     .foregroundStyle(.white)
 
-                Text("Recupera el acceso a tu cuenta")
+                Text(tr("auth.forgot_password.brand.subtitle", "Recupera el acceso a tu cuenta"))
                     .font(.body)
                     .foregroundStyle(.white.opacity(0.85))
 
@@ -105,7 +109,7 @@ public struct ForgotPasswordView: View {
                             .background(.white.opacity(0.2))
                             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
 
-                        Text("Te enviaremos un enlace seguro")
+                        Text(tr("auth.forgot_password.brand.feature_email", "Te enviaremos un enlace seguro"))
                             .font(.body)
                             .foregroundStyle(.white)
                     }
@@ -118,7 +122,7 @@ public struct ForgotPasswordView: View {
                             .background(.white.opacity(0.2))
                             .clipShape(RoundedRectangle(cornerRadius: CornerRadius.md))
 
-                        Text("Tus datos siempre protegidos")
+                        Text(tr("auth.forgot_password.brand.feature_secure", "Tus datos siempre protegidos"))
                             .font(.body)
                             .foregroundStyle(.white)
                     }
@@ -139,7 +143,7 @@ public struct ForgotPasswordView: View {
                     .font(.system(size: 48))
                     .foregroundStyle(SolennixColors.primary)
 
-                Text("Ingresa tu correo electronico y te enviaremos un enlace para restablecer tu contrasena.")
+                Text(tr("auth.forgot_password.subtitle", "Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña."))
                     .font(.body)
                     .foregroundStyle(SolennixColors.textSecondary)
                     .multilineTextAlignment(.center)
@@ -152,12 +156,12 @@ public struct ForgotPasswordView: View {
             }
 
             SolennixTextField(
-                label: "Correo electronico",
+                label: tr("auth.forgot_password.email_label", "Correo electrónico"),
                 text: Binding(
                     get: { viewModel?.email ?? "" },
                     set: { viewModel?.email = $0 }
                 ),
-                placeholder: "tu@email.com",
+                placeholder: tr("auth.forgot_password.email_placeholder", "tu@email.com"),
                 leftIcon: "envelope",
                 textContentType: .emailAddress,
                 keyboardType: .emailAddress,
@@ -165,7 +169,7 @@ public struct ForgotPasswordView: View {
             )
 
             PremiumButton(
-                title: "Enviar Enlace",
+                title: tr("auth.forgot_password.submit", "Enviar enlace"),
                 isLoading: viewModel?.isLoading ?? false,
                 isDisabled: !(viewModel?.isForgotValid ?? false)
             ) {
@@ -175,7 +179,7 @@ public struct ForgotPasswordView: View {
             Button {
                 dismiss()
             } label: {
-                Text("Volver al login")
+                Text(tr("auth.forgot_password.back_to_login", "Volver al inicio de sesión"))
                     .font(.body)
                     .foregroundStyle(SolennixColors.primary)
             }
@@ -193,12 +197,12 @@ public struct ForgotPasswordView: View {
                 .foregroundStyle(SolennixColors.success)
 
             VStack(spacing: Spacing.sm) {
-                Text("Revisa tu email")
+                Text(tr("auth.forgot_password.success_title", "Revisa tu correo"))
                     .font(.title2)
                     .fontWeight(.semibold)
                     .foregroundStyle(SolennixColors.text)
 
-                Text("Si existe una cuenta con ese correo, recibiras un enlace para restablecer tu contrasena.")
+                Text(tr("auth.forgot_password.success_message", "Si existe una cuenta con ese correo, recibirás un enlace para restablecer tu contraseña."))
                     .font(.body)
                     .foregroundStyle(SolennixColors.textSecondary)
                     .multilineTextAlignment(.center)
@@ -207,7 +211,7 @@ public struct ForgotPasswordView: View {
             Button {
                 dismiss()
             } label: {
-                Text("Volver al login")
+                Text(tr("auth.forgot_password.back_to_login", "Volver al inicio de sesión"))
                     .font(.headline)
                     .foregroundStyle(SolennixColors.primary)
                     .frame(maxWidth: .infinity)

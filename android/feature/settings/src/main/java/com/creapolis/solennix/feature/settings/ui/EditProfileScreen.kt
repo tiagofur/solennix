@@ -1,5 +1,6 @@
 package com.creapolis.solennix.feature.settings.ui
 
+import com.creapolis.solennix.feature.settings.R
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -12,8 +13,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.creapolis.solennix.core.designsystem.R as DesignSystemR
 import com.creapolis.solennix.core.designsystem.component.PremiumButton
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.component.SolennixTextField
@@ -39,10 +42,10 @@ fun EditProfileScreen(
     Scaffold(
         topBar = {
             SolennixTopAppBar(
-                title = { Text("Editar Perfil") },
+                title = { Text(stringResource(R.string.settings_edit_profile_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(DesignSystemR.string.cd_back))
                     }
                 }
             )
@@ -67,7 +70,7 @@ fun EditProfileScreen(
                     .padding(16.dp)
             ) {
                 Text(
-                    text = "Información Personal",
+                    text = stringResource(R.string.settings_profile_personal_info),
                     style = MaterialTheme.typography.labelLarge,
                     color = SolennixTheme.colors.primary,
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -85,7 +88,7 @@ fun EditProfileScreen(
                                 SolennixTextField(
                                     value = viewModel.name,
                                     onValueChange = { viewModel.name = it },
-                                    label = "Nombre *",
+                                    label = stringResource(R.string.settings_profile_name_label) + " *",
                                     leadingIcon = Icons.Default.Person,
                                     errorMessage = viewModel.nameError
                                 )
@@ -94,7 +97,7 @@ fun EditProfileScreen(
                                 SolennixTextField(
                                     value = viewModel.email,
                                     onValueChange = { viewModel.email = it },
-                                    label = "Correo Electrónico *",
+                                    label = stringResource(R.string.settings_profile_email_label) + " *",
                                     leadingIcon = Icons.Default.Email,
                                     keyboardType = KeyboardType.Email,
                                     errorMessage = viewModel.emailError
@@ -107,7 +110,7 @@ fun EditProfileScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = "Tu nombre aparecerá en los contratos y documentos que generes.",
+                    text = stringResource(R.string.settings_profile_personal_info_hint),
                     style = MaterialTheme.typography.bodySmall,
                     color = SolennixTheme.colors.secondaryText,
                     modifier = Modifier.padding(horizontal = 4.dp)
@@ -125,7 +128,7 @@ fun EditProfileScreen(
                 }
 
                 PremiumButton(
-                    text = "Guardar",
+                    text = stringResource(R.string.common_save),
                     onClick = { viewModel.saveProfile() },
                     isLoading = viewModel.isSaving,
                     enabled = !viewModel.isSaving
