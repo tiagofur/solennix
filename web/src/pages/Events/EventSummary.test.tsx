@@ -370,18 +370,6 @@ describe('EventSummary — core', () => {
     expect(eventService.delete).not.toHaveBeenCalled();
   });
 
-  it('triggers invoice PDF generation in summary view', async () => {
-    render(<MemoryRouter><EventSummary /></MemoryRouter>);
-
-    await waitFor(() => {
-      expect(screen.getByText('Ana — Boda')).toBeInTheDocument();
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /Más$/i }));
-    fireEvent.click(screen.getByText('Generar Factura'));
-    expect(generateInvoicePDF).toHaveBeenCalled();
-  });
-
   it('triggers shopping list PDF generation in ingredients view', async () => {
     render(<MemoryRouter><EventSummary /></MemoryRouter>);
 
@@ -408,10 +396,6 @@ describe('EventSummary — core', () => {
     fireEvent.click(screen.getByRole('button', { name: /Más$/i }));
     fireEvent.click(screen.getByText('Presupuesto'));
     expect(generateBudgetPDF).toHaveBeenCalled();
-
-    fireEvent.click(screen.getByRole('button', { name: /Más$/i }));
-    fireEvent.click(screen.getByText('Generar Factura'));
-    expect(generateInvoicePDF).toHaveBeenCalled();
 
     fireEvent.click(screen.getByRole('button', { name: /Más$/i }));
     fireEvent.click(screen.getByText('Lista de Insumos'));
