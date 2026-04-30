@@ -4,16 +4,16 @@ import { useTranslation } from "react-i18next";
 import { TrendingUp, AlertTriangle } from "lucide-react";
 import { formatCurrency } from "@/lib/finance";
 import { format, parse } from "date-fns";
-import { es } from "date-fns/locale";
+import { enUS, es } from "date-fns/locale";
 
 export function ForecastWidget() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { data, isLoading, error } = useForecast();
 
   const formatMonthYear = (monthStr: string) => {
     try {
       const parsed = parse(monthStr, "yyyy-MM", new Date());
-      return format(parsed, "MMM yyyy", { locale: es });
+      return format(parsed, "MMM yyyy", { locale: i18n.language === "en" ? enUS : es });
     } catch {
       return monthStr;
     }
@@ -25,7 +25,7 @@ export function ForecastWidget() {
         <div className="flex items-center gap-3 mb-4">
           <TrendingUp className="w-5 h-5 text-primary" />
           <h3 className="text-sm font-semibold text-foreground">
-            {t("dashboard.forecast", "Revenue Forecast")}
+            {t("dashboard:widgets.forecast.title")}
           </h3>
         </div>
         <div className="space-y-3">
@@ -43,12 +43,12 @@ export function ForecastWidget() {
         <div className="flex items-center gap-3 mb-4">
           <TrendingUp className="w-5 h-5 text-primary" />
           <h3 className="text-sm font-semibold text-foreground">
-            {t("dashboard.forecast", "Revenue Forecast")}
+            {t("dashboard:widgets.forecast.title")}
           </h3>
         </div>
         <div className="flex items-center gap-3 text-error text-sm">
           <AlertTriangle className="w-4 h-4 shrink-0" />
-          <span>{t("common.error", "Error loading data")}</span>
+          <span>{t("common:error.generic")}</span>
         </div>
       </div>
     );
@@ -60,11 +60,11 @@ export function ForecastWidget() {
         <div className="flex items-center gap-3 mb-4">
           <TrendingUp className="w-5 h-5 text-primary" />
           <h3 className="text-sm font-semibold text-foreground">
-            {t("dashboard.forecast", "Revenue Forecast")}
+            {t("dashboard:widgets.forecast.title")}
           </h3>
         </div>
         <p className="text-sm text-foreground-secondary">
-          {t("dashboard.noForecast", "No forecast data yet")}
+          {t("dashboard:widgets.forecast.empty")}
         </p>
       </div>
     );
@@ -78,7 +78,7 @@ export function ForecastWidget() {
       <div className="flex items-center gap-3 mb-4">
         <TrendingUp className="w-5 h-5 text-primary" />
         <h3 className="text-sm font-semibold text-foreground">
-          {t("dashboard.forecast", "Revenue Forecast")}
+          {t("dashboard:widgets.forecast.title")}
         </h3>
       </div>
 
@@ -86,7 +86,7 @@ export function ForecastWidget() {
       <div className="grid grid-cols-2 gap-3 mb-4 p-3 bg-surface-alt rounded-lg">
         <div>
           <p className="text-xs text-foreground-secondary">
-            {t("dashboard.totalRevenue", "Total Revenue")}
+            {t("dashboard:widgets.forecast.projected_revenue")}
           </p>
           <p className="text-sm font-semibold text-primary">
             {formatCurrency(totalRevenue)}
@@ -94,7 +94,7 @@ export function ForecastWidget() {
         </div>
         <div>
           <p className="text-xs text-foreground-secondary">
-            {t("dashboard.confirmedEvents", "Confirmed")}
+            {t("dashboard:widgets.forecast.confirmed_events")}
           </p>
           <p className="text-sm font-semibold text-primary">{totalEvents}</p>
         </div>

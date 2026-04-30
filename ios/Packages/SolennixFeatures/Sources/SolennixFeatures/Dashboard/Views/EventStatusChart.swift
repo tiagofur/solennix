@@ -17,6 +17,10 @@ public struct EventStatusChart: View {
         statusCounts.values.reduce(0, +)
     }
 
+    private func tr(_ key: String, _ value: String) -> String {
+        FeatureL10n.text(key, value)
+    }
+
     /// Ordered statuses for consistent display.
     private var orderedStatuses: [EventStatus] {
         [.quoted, .confirmed, .completed, .cancelled].filter { statusCounts[$0, default: 0] > 0 }
@@ -24,7 +28,7 @@ public struct EventStatusChart: View {
 
     public var body: some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
-            Text("Estado de Eventos")
+            Text(tr("dashboard.event_status", "Estado de eventos"))
                 .font(.subheadline)
                 .fontWeight(.semibold)
                 .foregroundStyle(SolennixColors.text)
@@ -73,7 +77,7 @@ public struct EventStatusChart: View {
         // the user hears "Estado de Eventos: 3 cotizados, 5 confirmados, 2
         // completados, 1 cancelado" instead of ~12 unlabeled pieces.
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Estado de eventos del mes")
+        .accessibilityLabel(tr("dashboard.event_status_accessibility", "Estado de eventos del mes"))
         .accessibilityValue(accessibilitySummary)
     }
 
@@ -96,10 +100,10 @@ public struct EventStatusChart: View {
 
     private func labelForStatus(_ status: EventStatus) -> String {
         switch status {
-        case .quoted:    return "Cotizado"
-        case .confirmed: return "Confirmado"
-        case .completed: return "Completado"
-        case .cancelled: return "Cancelado"
+        case .quoted:    return tr("dashboard.status.quoted", "Cotizado")
+        case .confirmed: return tr("dashboard.status.confirmed", "Confirmado")
+        case .completed: return tr("dashboard.status.completed", "Completado")
+        case .cancelled: return tr("dashboard.status.cancelled", "Cancelado")
         }
     }
 }

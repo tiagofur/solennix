@@ -19,6 +19,10 @@ public struct DashboardView: View {
 
     private var isIPad: Bool { sizeClass == .regular }
 
+    private func tr(_ key: String, _ value: String) -> String {
+        FeatureL10n.text(key, value)
+    }
+
     public init() {}
 
     public var body: some View {
@@ -103,26 +107,26 @@ public struct DashboardView: View {
                 Spacer(minLength: Spacing.xxl)
             }
         }
-        .navigationTitle("Inicio")
+        .navigationTitle(tr("dashboard.title", "Inicio"))
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
                     NavigationLink(value: Route.eventForm()) {
-                        Label("Nuevo Evento", systemImage: "calendar.badge.plus")
+                        Label(tr("dashboard.quick_new_event", "Nuevo evento"), systemImage: "calendar.badge.plus")
                     }
                     .disabled(!planLimitsManager.canCreateEvent)
 
                     Button {
                         showQuickQuote = true
                     } label: {
-                        Label("Cotización Rápida", systemImage: "doc.text.magnifyingglass")
+                        Label(tr("dashboard.quick_quote", "Cotización rápida"), systemImage: "doc.text.magnifyingglass")
                     }
                 } label: {
                     Image(systemName: "plus")
                         .font(.body)
                         .foregroundStyle(SolennixColors.primary)
-                        .accessibilityLabel("Crear evento o cotización")
+                        .accessibilityLabel(tr("dashboard.create_event_or_quote", "Crear evento o cotización"))
                 }
             }
         }
@@ -167,7 +171,7 @@ public struct DashboardView: View {
         if !planLimitsManager.canCreateEvent {
             UpgradeBannerView(
                 type: .limitReached,
-                resource: "Eventos",
+                resource: tr("dashboard.plan_limit_resource", "Eventos"),
                 currentUsage: planLimitsManager.eventsThisMonth,
                 limit: PlanLimitsManager.freePlanEventLimit
             ) {
@@ -206,14 +210,17 @@ public struct DashboardView: View {
     private var greetingText: String {
         if case .authenticated(let user) = authManager.authState {
             let firstName = user.name.components(separatedBy: " ").first ?? user.name
-            return "Hola, \(firstName)"
+            return String(
+                format: tr("dashboard.welcome", "Hola, %@"),
+                locale: FeatureL10n.locale,
+                firstName
+            )
         }
-        return "Hola"
+        return tr("dashboard.greeting.generic", "Hola")
     }
 
     private var currentDateString: String {
-        let str = Date().formatted(style: "EEEE d 'de' MMMM")
-        return str.prefix(1).uppercased() + str.dropFirst()
+        DashboardFormatting.greetingDate()
     }
 
     // MARK: - Quick Actions
@@ -225,7 +232,7 @@ public struct DashboardView: View {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 160), spacing: Spacing.md)], spacing: Spacing.md) {
                     quickActionItem(
                         icon: "plus.circle.fill",
-                        label: "Nuevo Evento",
+                        label: tr("dashboard.quick_new_event", "Nuevo evento"),
                         color: planLimitsManager.canCreateEvent ? SolennixColors.primary : SolennixColors.textTertiary,
                         enabled: planLimitsManager.canCreateEvent,
                         destination: Route.eventForm()
@@ -233,7 +240,7 @@ public struct DashboardView: View {
 
                     quickActionItem(
                         icon: "person.badge.plus",
-                        label: "Nuevo Cliente",
+                        label: tr("dashboard.quick_new_client", "Nuevo cliente"),
                         color: planLimitsManager.canCreateClient ? SolennixColors.statusConfirmed : SolennixColors.textTertiary,
                         enabled: planLimitsManager.canCreateClient,
                         destination: Route.clientForm()
@@ -244,7 +251,7 @@ public struct DashboardView: View {
                 HStack(spacing: Spacing.md) {
                     quickActionItem(
                         icon: "plus.circle.fill",
-                        label: "Nuevo Evento",
+                        label: tr("dashboard.quick_new_event", "Nuevo evento"),
                         color: planLimitsManager.canCreateEvent ? SolennixColors.primary : SolennixColors.textTertiary,
                         enabled: planLimitsManager.canCreateEvent,
                         destination: Route.eventForm()
@@ -252,7 +259,7 @@ public struct DashboardView: View {
 
                     quickActionItem(
                         icon: "person.badge.plus",
-                        label: "Nuevo Cliente",
+                        label: tr("dashboard.quick_new_client", "Nuevo cliente"),
                         color: planLimitsManager.canCreateClient ? SolennixColors.statusConfirmed : SolennixColors.textTertiary,
                         enabled: planLimitsManager.canCreateClient,
                         destination: Route.clientForm()
@@ -323,8 +330,8 @@ public struct DashboardView: View {
     @ViewBuilder
     private func kpiCardItems(flexible: Bool) -> some View {
         KPICardView(
-            title: "Ventas Netas",
-            value: viewModel?.netSalesThisMonth.asMXN ?? "$0",
+            title: tr("dashboard.kpi.net_sales", "Ventas netas"),
+            value: DashboardFormatting.currencyMXN(viewModel?.netSalesThisMonth ?? 0),
             icon: "dollarsign.circle",
             iconColor: SolennixColors.kpiGreen,
             iconBgColor: SolennixColors.kpiGreenBg,
@@ -332,8 +339,8 @@ public struct DashboardView: View {
         )
 
         KPICardView(
-            title: "Cobrado",
-            value: viewModel?.cashCollectedThisMonth.asMXN ?? "$0",
+            title: tr("dashboard.kpi.collected", "Cobrado"),
+            value: DashboardFormatting.currencyMXN(viewModel?.cashCollectedThisMonth ?? 0),
             icon: "banknote",
             iconColor: SolennixColors.kpiOrange,
             iconBgColor: SolennixColors.kpiOrangeBg,
@@ -341,8 +348,8 @@ public struct DashboardView: View {
         )
 
         KPICardView(
-            title: "IVA Cobrado",
-            value: viewModel?.vatCollectedThisMonth.asMXN ?? "$0",
+            title: tr("dashboard.kpi.vat_collected", "IVA cobrado"),
+            value: DashboardFormatting.currencyMXN(viewModel?.vatCollectedThisMonth ?? 0),
             icon: "percent",
             iconColor: SolennixColors.kpiBlue,
             iconBgColor: SolennixColors.kpiBlueBg,
@@ -350,8 +357,8 @@ public struct DashboardView: View {
         )
 
         KPICardView(
-            title: "IVA Pendiente",
-            value: viewModel?.vatOutstandingThisMonth.asMXN ?? "$0",
+            title: tr("dashboard.kpi.vat_outstanding", "IVA pendiente"),
+            value: DashboardFormatting.currencyMXN(viewModel?.vatOutstandingThisMonth ?? 0),
             icon: "exclamationmark.circle",
             iconColor: SolennixColors.kpiBlue,
             iconBgColor: SolennixColors.kpiBlueBg,
@@ -359,7 +366,7 @@ public struct DashboardView: View {
         )
 
         KPICardView(
-            title: "Eventos del Mes",
+            title: tr("dashboard.kpi.events_this_month", "Eventos del mes"),
             value: "\(viewModel?.eventsThisMonthCount ?? 0)",
             icon: "calendar",
             iconColor: SolennixColors.kpiOrange,
@@ -368,7 +375,7 @@ public struct DashboardView: View {
         )
 
         KPICardView(
-            title: "Stock Bajo",
+            title: tr("dashboard.kpi.low_stock", "Stock bajo"),
             value: "\(viewModel?.lowStockCount ?? 0)",
             icon: "archivebox",
             iconColor: (viewModel?.lowStockCount ?? 0) > 0
@@ -381,7 +388,7 @@ public struct DashboardView: View {
         )
 
         KPICardView(
-            title: "Clientes",
+            title: tr("dashboard.kpi.clients_total", "Clientes"),
             value: "\(viewModel?.totalClients ?? 0)",
             icon: "person.2",
             iconColor: SolennixColors.kpiBlue,
@@ -390,7 +397,7 @@ public struct DashboardView: View {
         )
 
         KPICardView(
-            title: "Cotizaciones",
+            title: tr("dashboard.kpi.quotes", "Cotizaciones"),
             value: "\(viewModel?.pendingQuotes ?? 0)",
             icon: "doc.text.magnifyingglass",
             iconColor: SolennixColors.kpiOrange,
@@ -444,7 +451,7 @@ public struct DashboardView: View {
             HStack {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .foregroundStyle(SolennixColors.warning)
-                Text("Alertas de Stock")
+                Text(tr("dashboard.inventory_alerts", "Alertas de inventario"))
                     .font(.headline)
                     .foregroundStyle(SolennixColors.text)
             }
@@ -479,7 +486,7 @@ public struct DashboardView: View {
                     .fontWeight(.medium)
                     .foregroundStyle(SolennixColors.text)
 
-                Text("Stock: \(Int(item.currentStock))/\(Int(item.minimumStock)) \(item.unit)")
+                Text("\(Int(item.currentStock))/\(Int(item.minimumStock)) \(item.unit)")
                     .font(.caption)
                     .foregroundStyle(SolennixColors.textSecondary)
             }
@@ -500,7 +507,7 @@ public struct DashboardView: View {
 
     private var upcomingEventsSection: some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
-            Text("Proximos Eventos")
+            Text(tr("dashboard.upcoming_events", "Próximos eventos"))
                 .font(.headline)
                 .foregroundStyle(SolennixColors.text)
                 .padding(.horizontal, isIPad ? 0 : Spacing.md)
@@ -528,7 +535,7 @@ public struct DashboardView: View {
 
                     // Event info
                     VStack(alignment: .leading, spacing: Spacing.xs) {
-                        Text(viewModel?.clientName(for: event.clientId) ?? "Cliente")
+                        Text(viewModel?.clientName(for: event.clientId) ?? tr("dashboard.event.no_client", "Cliente"))
                             .font(.subheadline)
                             .fontWeight(.semibold)
                             .foregroundStyle(SolennixColors.text)
@@ -538,7 +545,13 @@ public struct DashboardView: View {
                                 .font(.caption)
                                 .foregroundStyle(SolennixColors.textSecondary)
 
-                            Text("\(event.numPeople) personas")
+                            Text(
+                                String(
+                                    format: tr("dashboard.event.people", "%lld personas"),
+                                    locale: FeatureL10n.locale,
+                                    event.numPeople
+                                )
+                            )
                                 .font(.caption)
                                 .foregroundStyle(SolennixColors.textTertiary)
                         }
@@ -562,10 +575,10 @@ public struct DashboardView: View {
         let isUpdating = viewModel?.updatingEventId == event.id
 
         return Menu {
-            upcomingEventStatusButton(title: "Cotizado", status: .quoted, event: event)
-            upcomingEventStatusButton(title: "Confirmado", status: .confirmed, event: event)
-            upcomingEventStatusButton(title: "Completado", status: .completed, event: event)
-            upcomingEventStatusButton(title: "Cancelado", status: .cancelled, event: event, role: .destructive)
+            upcomingEventStatusButton(title: tr("dashboard.status.quoted", "Cotizado"), status: .quoted, event: event)
+            upcomingEventStatusButton(title: tr("dashboard.status.confirmed", "Confirmado"), status: .confirmed, event: event)
+            upcomingEventStatusButton(title: tr("dashboard.status.completed", "Completado"), status: .completed, event: event)
+            upcomingEventStatusButton(title: tr("dashboard.status.cancelled", "Cancelado"), status: .cancelled, event: event, role: .destructive)
         } label: {
             HStack(spacing: Spacing.xs) {
                 if isUpdating {
@@ -608,8 +621,8 @@ public struct DashboardView: View {
             }
         }
         .accessibilityLabel(event.status == status
-            ? "\(title), estado actual"
-            : "Cambiar a \(title.lowercased())")
+            ? String(format: tr("dashboard.status.current", "%@, estado actual"), locale: FeatureL10n.locale, title)
+            : String(format: tr("dashboard.status.change_to", "Cambiar a %@"), locale: FeatureL10n.locale, title.lowercased()))
     }
 
     private func dateBox(for dateString: String) -> some View {
@@ -632,10 +645,7 @@ public struct DashboardView: View {
     }
 
     private func parseDateComponents(_ dateString: String) -> (month: String, day: String) {
-        guard let date = Date.fromServerDay(dateString) else {
-            return ("---", "--")
-        }
-        return (date.formatted(style: "MMM"), date.formatted(style: "d"))
+        DashboardFormatting.monthDayComponents(from: dateString)
     }
 
     private var emptyEventsState: some View {
@@ -644,7 +654,7 @@ public struct DashboardView: View {
                 .font(.system(size: 40))
                 .foregroundStyle(SolennixColors.textTertiary)
 
-            Text("Sin eventos proximos")
+            Text(tr("dashboard.upcoming.empty", "Sin eventos próximos"))
                 .font(.subheadline)
                 .foregroundStyle(SolennixColors.textSecondary)
         }
@@ -666,14 +676,14 @@ public struct DashboardView: View {
             VStack(alignment: .leading, spacing: Spacing.md) {
                 // No leading icon — Android and Web use a plain title,
                 // keeping the three dashboards visually consistent.
-                Text("Ingresos — Últimos 6 meses")
+                Text(tr("dashboard.revenue_last_6_months", "Ingresos — últimos 6 meses"))
                     .font(.headline)
                     .foregroundStyle(SolennixColors.text)
 
                 Chart(vm.monthlyRevenueTrend) { point in
                     BarMark(
-                        x: .value("Mes", point.month),
-                        y: .value("Ingresos", point.revenue)
+                        x: .value(tr("dashboard.chart.month", "Mes"), point.month),
+                        y: .value(tr("dashboard.chart.revenue", "Ingresos"), point.revenue)
                     )
                     .foregroundStyle(SolennixGradient.premium)
                     .cornerRadius(6)
@@ -682,7 +692,7 @@ public struct DashboardView: View {
                     AxisMarks(position: .leading) { value in
                         AxisValueLabel {
                             if let d = value.as(Double.self) {
-                                Text(d == 0 ? "$0" : "\(Int(d / 1000))k")
+                                Text(DashboardFormatting.compactCurrencyMXN(d))
                                     .font(.caption2)
                                     .foregroundStyle(SolennixColors.textTertiary)
                             }

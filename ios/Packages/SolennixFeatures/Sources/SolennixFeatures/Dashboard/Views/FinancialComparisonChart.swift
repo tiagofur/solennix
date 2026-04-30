@@ -20,18 +20,22 @@ public struct FinancialComparisonChart: View {
         max(netSales, cashCollected, vatOutstanding, 1)
     }
 
+    private func tr(_ key: String, _ value: String) -> String {
+        FeatureL10n.text(key, value)
+    }
+
     public var body: some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
             // Header
             HStack {
-                Text("Comparativa Financiera")
+                Text(tr("dashboard.financial_comparison", "Comparativa financiera"))
                     .font(.subheadline)
                     .fontWeight(.semibold)
                     .foregroundStyle(SolennixColors.text)
 
                 Spacer()
 
-                Text("Este mes")
+                Text(tr("dashboard.this_month", "Este mes"))
                     .font(.caption2)
                     .foregroundStyle(SolennixColors.primary)
                     .padding(.horizontal, Spacing.sm)
@@ -44,21 +48,21 @@ public struct FinancialComparisonChart: View {
             GeometryReader { geometry in
                 VStack(alignment: .leading, spacing: Spacing.sm) {
                     barRow(
-                        label: "Ventas Netas",
+                        label: tr("dashboard.kpi.net_sales", "Ventas netas"),
                         value: netSales,
                         color: SolennixColors.kpiGreen,
                         maxWidth: geometry.size.width
                     )
 
                     barRow(
-                        label: "Cobrado Real",
+                        label: tr("dashboard.kpi.collected", "Cobrado"),
                         value: cashCollected,
                         color: SolennixColors.primary,
                         maxWidth: geometry.size.width
                     )
 
                     barRow(
-                        label: "IVA por Cobrar",
+                        label: tr("dashboard.kpi.vat_outstanding", "IVA pendiente"),
                         value: vatOutstanding,
                         color: SolennixColors.error,
                         maxWidth: geometry.size.width
@@ -84,7 +88,7 @@ public struct FinancialComparisonChart: View {
 
                 Spacer()
 
-                Text(value.asMXN)
+                Text(DashboardFormatting.currencyMXN(value))
                     .font(.caption)
                     .fontWeight(.semibold)
                     .foregroundStyle(SolennixColors.text)

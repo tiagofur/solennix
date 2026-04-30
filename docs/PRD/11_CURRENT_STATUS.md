@@ -20,7 +20,7 @@ status: active
 > [!info] 2026-04-29 — i18n parity planning reset (issue #202 + #203–#209)
 > La estrategia de multilanguage dejó de organizarse por plataforma y pasó a slices cross-platform con una copy matrix canónica. Objetivo: asegurar misma intención y terminología entre iOS, Android y Web, permitiendo variantes mobile más cortas sólo cuando el espacio lo exija.
 > - **Epic**: #202 `feat(cross-platform): complete product-wide i18n parity`
-> - **Slices activos**: #94 Dashboard, #95 Events list, #203 governance/matrix, #204 event detail + form, #205 auth + settings, #206 clients, #207 products + inventory, #208 public flows, #209 final sweep.
+> - **Slices**: #94 Dashboard ✅ cerrado, #95 Events list, #203 governance/matrix, #204 event detail + form, #205 auth + settings, #206 clients, #207 products + inventory, #208 public flows, #209 final sweep.
 > - **Documento fuente**: [[19_I18N_STRATEGY]] ahora define copy governance, canonical vs compact variants y checklist de review por slice.
 
 > [!success] 2026-04-29 — Sprint 7.E: Payment Submissions Phase 1 (issue #191, backend + web service ✅)
@@ -1946,3 +1946,8 @@ Si queremos parar las alertas temporal o definitivamente:
 - **Pausa temporal:** Dashboard → Monitoring → cada monitor → botón **Pause**
 - **Eliminar definitivo:** Monitoring → `⋮` → **Delete** (ids 802870461 y 802870486)
 - **Cerrar cuenta:** Settings → Account → Delete account (elimina también la status page 1067498)
+> [!success] 2026-04-29 — i18n slice #94 dashboard ✅
+> Paridad real de i18n cerrada para Dashboard en Web, iOS y Android.
+> - **Web**: `Dashboard.tsx` y widgets (`ForecastWidget`, `ProductDemandWidget`, `TopClientsWidget`) ya consumen `dashboard.json` ES/EN, incluyendo acciones inline de atención y labels accesibles.
+> - **iOS**: Dashboard principal, KPIs, alertas, modal de eventos pendientes, charts y widgets consumen catálogo localizado; además se removieron locales fijos para fechas y montos con `DashboardFormatting` + `FeatureL10n.locale`.
+> - **Android**: `DashboardScreen`, widgets y `DashboardViewModel` migrados a `stringResource` / resources ES+EN, con labels alineadas a la copy matrix.

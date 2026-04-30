@@ -11,10 +11,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.ProductDemandItem
+import com.creapolis.solennix.feature.dashboard.R
 
 @Composable
 fun ProductDemandWidget(
@@ -29,7 +32,7 @@ fun ProductDemandWidget(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                "Productos en Demanda",
+                stringResource(R.string.dashboard_widget_product_demand_title),
                 style = MaterialTheme.typography.titleSmall,
                 color = SolennixTheme.colors.primaryText,
                 fontWeight = FontWeight.SemiBold
@@ -59,7 +62,7 @@ fun ProductDemandWidget(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            "No hay datos aún",
+                            stringResource(R.string.dashboard_widget_product_demand_empty),
                             style = MaterialTheme.typography.bodySmall,
                             color = SolennixTheme.colors.secondaryText
                         )
@@ -94,7 +97,7 @@ fun ProductDemandWidget(
                                             fontWeight = FontWeight.Medium
                                         )
                                         Text(
-                                            "${product.timesUsed} en cotizaciones",
+                                            pluralStringResource(R.plurals.dashboard_widget_product_demand_uses, product.timesUsed, product.timesUsed),
                                             style = MaterialTheme.typography.labelSmall,
                                             color = SolennixTheme.colors.secondaryText
                                         )

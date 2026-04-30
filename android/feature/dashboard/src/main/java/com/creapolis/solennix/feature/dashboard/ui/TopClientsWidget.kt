@@ -11,11 +11,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.TopClient
 import com.creapolis.solennix.core.model.extensions.asMXNCompact
+import com.creapolis.solennix.feature.dashboard.R
 
 @Composable
 fun TopClientsWidget(
@@ -30,7 +33,7 @@ fun TopClientsWidget(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                "Clientes Principales",
+                stringResource(R.string.dashboard_widget_top_clients_title),
                 style = MaterialTheme.typography.titleSmall,
                 color = SolennixTheme.colors.primaryText,
                 fontWeight = FontWeight.SemiBold
@@ -60,7 +63,7 @@ fun TopClientsWidget(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            "No hay datos aún",
+                            stringResource(R.string.dashboard_widget_top_clients_empty),
                             style = MaterialTheme.typography.bodySmall,
                             color = SolennixTheme.colors.secondaryText
                         )
@@ -95,7 +98,7 @@ fun TopClientsWidget(
                                             fontWeight = FontWeight.Medium
                                         )
                                         Text(
-                                            "${client.totalEvents} eventos",
+                                            pluralStringResource(R.plurals.dashboard_widget_top_clients_events, client.totalEvents, client.totalEvents),
                                             style = MaterialTheme.typography.labelSmall,
                                             color = SolennixTheme.colors.secondaryText
                                         )

@@ -13,11 +13,11 @@ public enum DashboardAttentionEventKind: String, Sendable, Hashable {
     public var title: String {
         switch self {
         case .pendingPayment:
-            return "Pago pendiente"
+            return FeatureL10n.text("dashboard.attention.pending_payment_kind", "Pago pendiente")
         case .overdueEvent:
-            return "Evento vencido"
+            return FeatureL10n.text("dashboard.attention.overdue_event_kind", "Vencido")
         case .unconfirmedEvent:
-            return "Sin confirmar"
+            return FeatureL10n.text("dashboard.attention.unconfirmed_event_kind", "Sin confirmar")
         }
     }
 
@@ -146,9 +146,13 @@ public final class DashboardViewModel {
     public var vatCollectedThisMonth: Double { kpis?.vatCollectedThisMonth ?? 0 }
     public var vatOutstandingThisMonth: Double { kpis?.vatOutstandingThisMonth ?? 0 }
 
+    private static func tr(_ key: String, _ value: String) -> String {
+        FeatureL10n.text(key, value)
+    }
+
     /// Resolve a client name from the client map.
     public func clientName(for clientId: String) -> String {
-        clientMap[clientId]?.name ?? "Cliente"
+        clientMap[clientId]?.name ?? Self.tr("dashboard.event.no_client", "Cliente")
     }
 
     // MARK: - Data Loading
@@ -165,7 +169,7 @@ public final class DashboardViewModel {
         guard let startOfMonth = calendar.date(from: components),
               let endOfMonth = calendar.date(byAdding: DateComponents(month: 1, day: -1), to: startOfMonth)
         else {
-            errorMessage = "Error calculando rango de fechas"
+            errorMessage = Self.tr("dashboard.error.invalid_date_range", "Rango de fechas inválido")
             isLoading = false
             return
         }
@@ -304,9 +308,9 @@ public final class DashboardViewModel {
 
         if encounteredError {
             if clients.isEmpty && loadedAllEvents.isEmpty && products.isEmpty {
-                errorMessage = "No se pudo cargar el dashboard"
+                errorMessage = Self.tr("dashboard.error.load_failed", "Error al cargar dashboard")
             } else {
-                errorMessage = "Algunos datos no se pudieron cargar"
+                errorMessage = Self.tr("dashboard.error.partial_load", "Algunos datos no se pudieron cargar")
             }
         }
 
@@ -343,9 +347,9 @@ public final class DashboardViewModel {
             HapticsHelper.play(.error)
 
             if let apiError = error as? APIError {
-                errorMessage = apiError.errorDescription ?? "Error al cambiar el estado"
+                errorMessage = apiError.errorDescription ?? Self.tr("dashboard.error.status_change_failed", "No se pudo cambiar el estado")
             } else {
-                errorMessage = "Error al cambiar el estado"
+                errorMessage = Self.tr("dashboard.error.status_change_failed", "No se pudo cambiar el estado")
             }
         }
     }
@@ -446,7 +450,7 @@ public final class DashboardViewModel {
             return DashboardAttentionEvent(
                 event: event,
                 kind: kind,
-                clientName: clientMap[event.clientId]?.name ?? "Cliente",
+                clientName: clientMap[event.clientId]?.name ?? Self.tr("dashboard.event.no_client", "Cliente"),
                 totalPaid: totalPaid,
                 outstandingAmount: outstandingAmount,
                 daysFromToday: daysFromToday
@@ -545,10 +549,6 @@ public final class DashboardViewModel {
         keyFormatter.timeZone = TimeZone(secondsFromGMT: 0)
         keyFormatter.dateFormat = "yyyy-MM"
 
-        let labelFormatter = DateFormatter()
-        labelFormatter.dateFormat = "MMM"
-        labelFormatter.locale = Locale(identifier: "es_MX")
-
         let byMonth: [String: DashboardRevenuePoint] = Dictionary(
             uniqueKeysWithValues: serverPoints.map { ($0.month, $0) }
         )
@@ -562,7 +562,7 @@ public final class DashboardViewModel {
             let key = keyFormatter.string(from: monthStart)
             let point = byMonth[key]
             return MonthlyRevenueTrendPoint(
-                month: labelFormatter.string(from: monthStart).capitalized,
+                month: DashboardFormatting.monthYear(from: key),
                 monthDate: monthStart,
                 revenue: point?.revenue ?? 0,
                 eventCount: point?.eventCount ?? 0
@@ -628,19 +628,5 @@ public final class DashboardViewModel {
         } catch {
             NSLog("[Dashboard] ⚠️ forecast failed: %@", String(describing: error))
         }
-    }
-}
-
-// MARK: - Currency Formatting
-
-public extension Double {
-    /// Format as Mexican Peso currency string.
-    var asMXN: String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = "MXN"
-        formatter.currencySymbol = "$"
-        formatter.maximumFractionDigits = 0
-        return formatter.string(from: NSNumber(value: self)) ?? "$0"
     }
 }

@@ -1,5 +1,6 @@
 package com.creapolis.solennix.feature.dashboard.ui
 
+import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -26,6 +27,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -44,11 +46,19 @@ import com.creapolis.solennix.core.model.EventStatus
 import com.creapolis.solennix.core.model.InventoryItem
 import com.creapolis.solennix.core.model.extensions.asMXNCompact
 import com.creapolis.solennix.core.model.extensions.parseFlexibleDate
+import com.creapolis.solennix.feature.dashboard.R
 import com.creapolis.solennix.feature.dashboard.viewmodel.DashboardViewModel
 import com.creapolis.solennix.feature.dashboard.viewmodel.MIN_PENDING_AMOUNT
 import com.creapolis.solennix.feature.dashboard.viewmodel.PendingEvent
 import com.creapolis.solennix.feature.dashboard.viewmodel.PendingEventReason
 import com.creapolis.solennix.feature.dashboard.viewmodel.StatusCount
+import java.text.NumberFormat
+import java.time.LocalDate
+import java.time.YearMonth
+import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
+import java.util.Currency
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,11 +92,11 @@ fun DashboardScreen(
     Scaffold(
         topBar = {
             SolennixSectionTopAppBar(
-                title = "Inicio",
+                title = stringResource(R.string.dashboard_title),
                 onSearchClick = onSearchClick,
                 actions = {
                     IconButton(onClick = { viewModel.refresh() }) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Actualizar")
+                        Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.dashboard_refresh))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors()
@@ -136,7 +146,7 @@ fun DashboardScreen(
                 if (uiState.isBasicPlan) {
                     item {
                         UpgradeBanner(
-                            message = "Potenciá tu negocio con el plan Pro: eventos ilimitados, inventario y más.",
+                            message = stringResource(R.string.dashboard_upgrade_banner),
                             style = UpgradeBannerStyle.PROMO,
                             onUpgradeClick = onUpgradeClick
                         )
@@ -154,7 +164,7 @@ fun DashboardScreen(
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
                                 Text(
-                                    text = "Requieren atención (${uiState.pendingEvents.size})",
+                                    text = stringResource(R.string.dashboard_attention_title_with_count, uiState.pendingEvents.size),
                                     style = MaterialTheme.typography.titleSmall,
                                     color = SolennixTheme.colors.warning,
                                     fontWeight = FontWeight.SemiBold
@@ -185,14 +195,14 @@ fun DashboardScreen(
                 item {
                     if (isWideScreen) {
                         val kpiItems = listOf(
-                            Triple("Ventas Netas", uiState.revenueThisMonth.asMXNCompact(), Triple(Icons.Default.AttachMoney, SolennixTheme.colors.kpiGreen, "Eventos confirmados y completados")),
-                            Triple("Cobrado", uiState.cashCollected.asMXNCompact(), Triple(Icons.Default.Payments, SolennixTheme.colors.kpiOrange, "Este mes")),
-                            Triple("IVA Cobrado", uiState.vatCollected.asMXNCompact(), Triple(Icons.Default.Receipt, SolennixTheme.colors.kpiBlue, "Este mes")),
-                            Triple("IVA Pendiente", uiState.vatOutstanding.asMXNCompact(), Triple(Icons.Default.ReceiptLong, SolennixTheme.colors.kpiBlue, "Por cobrar")),
-                            Triple("Eventos del Mes", uiState.eventsThisMonth.toString(), Triple(Icons.Default.CalendarMonth, SolennixTheme.colors.kpiOrange, null)),
-                            Triple("Stock Bajo", uiState.lowStockCount.toString(), Triple(Icons.Default.Inventory2, if (uiState.lowStockCount > 0) SolennixTheme.colors.kpiOrange else SolennixTheme.colors.kpiGreen, null)),
-                            Triple("Clientes", uiState.totalClients.toString(), Triple(Icons.Default.People, SolennixTheme.colors.kpiBlue, "Total")),
-                            Triple("Cotizaciones", uiState.pendingQuotes.toString(), Triple(Icons.Default.RequestQuote, SolennixTheme.colors.kpiOrange, null))
+                            Triple(stringResource(R.string.dashboard_kpi_net_sales), uiState.revenueThisMonth.asMXNCompact(), Triple(Icons.Default.AttachMoney, SolennixTheme.colors.kpiGreen, stringResource(R.string.dashboard_kpi_confirmed_completed))),
+                            Triple(stringResource(R.string.dashboard_kpi_collected), uiState.cashCollected.asMXNCompact(), Triple(Icons.Default.Payments, SolennixTheme.colors.kpiOrange, stringResource(R.string.dashboard_kpi_this_month))),
+                            Triple(stringResource(R.string.dashboard_kpi_vat_collected), uiState.vatCollected.asMXNCompact(), Triple(Icons.Default.Receipt, SolennixTheme.colors.kpiBlue, stringResource(R.string.dashboard_kpi_this_month))),
+                            Triple(stringResource(R.string.dashboard_kpi_vat_outstanding), uiState.vatOutstanding.asMXNCompact(), Triple(Icons.Default.ReceiptLong, SolennixTheme.colors.kpiBlue, stringResource(R.string.dashboard_kpi_due))),
+                            Triple(stringResource(R.string.dashboard_kpi_events_this_month), uiState.eventsThisMonth.toString(), Triple(Icons.Default.CalendarMonth, SolennixTheme.colors.kpiOrange, null)),
+                            Triple(stringResource(R.string.dashboard_kpi_low_stock), uiState.lowStockCount.toString(), Triple(Icons.Default.Inventory2, if (uiState.lowStockCount > 0) SolennixTheme.colors.kpiOrange else SolennixTheme.colors.kpiGreen, null)),
+                            Triple(stringResource(R.string.dashboard_kpi_clients), uiState.totalClients.toString(), Triple(Icons.Default.People, SolennixTheme.colors.kpiBlue, stringResource(R.string.dashboard_kpi_total))),
+                            Triple(stringResource(R.string.dashboard_kpi_quotes), uiState.pendingQuotes.toString(), Triple(Icons.Default.RequestQuote, SolennixTheme.colors.kpiOrange, null))
                         )
                         Column(modifier = Modifier.padding(vertical = 8.dp)) {
                             kpiItems.chunked(4).forEach { rowItems ->
@@ -234,14 +244,14 @@ fun DashboardScreen(
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             Spacer(modifier = Modifier.width(4.dp))
-                            KPICard(title = "Ventas Netas", value = uiState.revenueThisMonth.asMXNCompact(), icon = Icons.Default.AttachMoney, iconColor = SolennixTheme.colors.kpiGreen, subtitle = "Eventos confirmados y completados", modifier = cardModifier)
-                            KPICard(title = "Cobrado", value = uiState.cashCollected.asMXNCompact(), icon = Icons.Default.Payments, iconColor = SolennixTheme.colors.kpiOrange, subtitle = "Este mes", modifier = cardModifier)
-                            KPICard(title = "IVA Cobrado", value = uiState.vatCollected.asMXNCompact(), icon = Icons.Default.Receipt, iconColor = SolennixTheme.colors.kpiBlue, subtitle = "Este mes", modifier = cardModifier)
-                            KPICard(title = "IVA Pendiente", value = uiState.vatOutstanding.asMXNCompact(), icon = Icons.Default.ReceiptLong, iconColor = SolennixTheme.colors.kpiBlue, subtitle = "Por cobrar", modifier = cardModifier)
-                            KPICard(title = "Eventos del Mes", value = uiState.eventsThisMonth.toString(), icon = Icons.Default.CalendarMonth, iconColor = SolennixTheme.colors.kpiOrange, modifier = cardModifier)
-                            KPICard(title = "Stock Bajo", value = uiState.lowStockCount.toString(), icon = Icons.Default.Inventory2, iconColor = if (uiState.lowStockCount > 0) SolennixTheme.colors.kpiOrange else SolennixTheme.colors.kpiGreen, modifier = cardModifier)
-                            KPICard(title = "Clientes", value = uiState.totalClients.toString(), icon = Icons.Default.People, iconColor = SolennixTheme.colors.kpiBlue, subtitle = "Total", modifier = cardModifier)
-                            KPICard(title = "Cotizaciones", value = uiState.pendingQuotes.toString(), icon = Icons.Default.RequestQuote, iconColor = SolennixTheme.colors.kpiOrange, modifier = cardModifier)
+                            KPICard(title = stringResource(R.string.dashboard_kpi_net_sales), value = uiState.revenueThisMonth.asMXNCompact(), icon = Icons.Default.AttachMoney, iconColor = SolennixTheme.colors.kpiGreen, subtitle = stringResource(R.string.dashboard_kpi_confirmed_completed), modifier = cardModifier)
+                            KPICard(title = stringResource(R.string.dashboard_kpi_collected), value = uiState.cashCollected.asMXNCompact(), icon = Icons.Default.Payments, iconColor = SolennixTheme.colors.kpiOrange, subtitle = stringResource(R.string.dashboard_kpi_this_month), modifier = cardModifier)
+                            KPICard(title = stringResource(R.string.dashboard_kpi_vat_collected), value = uiState.vatCollected.asMXNCompact(), icon = Icons.Default.Receipt, iconColor = SolennixTheme.colors.kpiBlue, subtitle = stringResource(R.string.dashboard_kpi_this_month), modifier = cardModifier)
+                            KPICard(title = stringResource(R.string.dashboard_kpi_vat_outstanding), value = uiState.vatOutstanding.asMXNCompact(), icon = Icons.Default.ReceiptLong, iconColor = SolennixTheme.colors.kpiBlue, subtitle = stringResource(R.string.dashboard_kpi_due), modifier = cardModifier)
+                            KPICard(title = stringResource(R.string.dashboard_kpi_events_this_month), value = uiState.eventsThisMonth.toString(), icon = Icons.Default.CalendarMonth, iconColor = SolennixTheme.colors.kpiOrange, modifier = cardModifier)
+                            KPICard(title = stringResource(R.string.dashboard_kpi_low_stock), value = uiState.lowStockCount.toString(), icon = Icons.Default.Inventory2, iconColor = if (uiState.lowStockCount > 0) SolennixTheme.colors.kpiOrange else SolennixTheme.colors.kpiGreen, modifier = cardModifier)
+                            KPICard(title = stringResource(R.string.dashboard_kpi_clients), value = uiState.totalClients.toString(), icon = Icons.Default.People, iconColor = SolennixTheme.colors.kpiBlue, subtitle = stringResource(R.string.dashboard_kpi_total), modifier = cardModifier)
+                            KPICard(title = stringResource(R.string.dashboard_kpi_quotes), value = uiState.pendingQuotes.toString(), icon = Icons.Default.RequestQuote, iconColor = SolennixTheme.colors.kpiOrange, modifier = cardModifier)
                             Spacer(modifier = Modifier.width(4.dp))
                         }
                     }
@@ -251,8 +261,8 @@ fun DashboardScreen(
                 item {
                     Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        QuickActionButton("Nuevo Evento", Icons.Default.Event, SolennixTheme.colors.primary, onNewEventClick, Modifier.weight(1f))
-                        QuickActionButton("Nuevo Cliente", Icons.Default.PersonAdd, SolennixTheme.colors.kpiBlue, onNewClientClick, Modifier.weight(1f))
+                        QuickActionButton(stringResource(R.string.dashboard_quick_new_event), Icons.Default.Event, SolennixTheme.colors.primary, onNewEventClick, Modifier.weight(1f))
+                        QuickActionButton(stringResource(R.string.dashboard_quick_new_client), Icons.Default.PersonAdd, SolennixTheme.colors.kpiBlue, onNewClientClick, Modifier.weight(1f))
                     }
                 }
 
@@ -294,7 +304,7 @@ fun DashboardScreen(
                     item {
                         Spacer(modifier = Modifier.height(24.dp))
                         Text(
-                            text = "Alertas de Inventario",
+                            text = stringResource(R.string.dashboard_inventory_alerts),
                             modifier = Modifier.semantics { heading() },
                             style = MaterialTheme.typography.titleMedium,
                             color = SolennixTheme.colors.primaryText
@@ -310,7 +320,7 @@ fun DashboardScreen(
                     item {
                         Spacer(modifier = Modifier.height(24.dp))
                         Text(
-                            text = "Próximos Eventos",
+                            text = stringResource(R.string.dashboard_upcoming_events),
                             modifier = Modifier.semantics { heading() },
                             style = MaterialTheme.typography.titleMedium,
                             color = SolennixTheme.colors.primaryText
@@ -364,9 +374,9 @@ fun DashboardScreen(
             val isOverdueWithBalance =
                 pe.reason == PendingEventReason.OVERDUE_EVENT && pe.pendingAmount > MIN_PENDING_AMOUNT
             val (modalTitle, confirmLabel) = if (isOverdueWithBalance) {
-                "Registrar pago y completar" to "Pagar y completar"
+                stringResource(R.string.dashboard_attention_register_payment_and_complete) to stringResource(R.string.dashboard_attention_pay_and_complete)
             } else {
-                "Registrar pago" to "Guardar Pago"
+                stringResource(R.string.dashboard_attention_register_payment) to stringResource(R.string.dashboard_payment_save)
             }
             PaymentModal(
                 remaining = pe.pendingAmount,
@@ -394,6 +404,7 @@ fun EventStatusDistributionCard(
     statusCounts: List<StatusCount>,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -406,7 +417,7 @@ fun EventStatusDistributionCard(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                "Estado de Eventos",
+                stringResource(R.string.dashboard_event_status),
                 style = MaterialTheme.typography.titleSmall,
                 color = SolennixTheme.colors.primaryText,
                 fontWeight = FontWeight.SemiBold
@@ -446,13 +457,17 @@ fun EventStatusDistributionCard(
                                 .background(statusColor(statusCount.status))
                         )
                         Text(
-                            text = statusLabel(statusCount.status),
+                            text = statusLabel(statusCount.status, context),
                             style = MaterialTheme.typography.bodyMedium,
                             color = SolennixTheme.colors.primaryText
                         )
                     }
                     Text(
-                        text = "${statusCount.count} (${(statusCount.percentage * 100).toInt()}%)",
+                        text = stringResource(
+                            R.string.dashboard_chart_count_percentage,
+                            statusCount.count,
+                            (statusCount.percentage * 100).toInt()
+                        ),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
                         color = SolennixTheme.colors.secondaryText
@@ -473,12 +488,12 @@ private fun statusColor(status: EventStatus): Color {
     }
 }
 
-private fun statusLabel(status: EventStatus): String {
+private fun statusLabel(status: EventStatus, context: Context): String {
     return when (status) {
-        EventStatus.QUOTED -> "Cotizado"
-        EventStatus.CONFIRMED -> "Confirmado"
-        EventStatus.COMPLETED -> "Completado"
-        EventStatus.CANCELLED -> "Cancelado"
+        EventStatus.QUOTED -> context.getString(R.string.dashboard_status_quoted)
+        EventStatus.CONFIRMED -> context.getString(R.string.dashboard_status_confirmed)
+        EventStatus.COMPLETED -> context.getString(R.string.dashboard_status_completed)
+        EventStatus.CANCELLED -> context.getString(R.string.dashboard_status_cancelled)
     }
 }
 
@@ -491,13 +506,14 @@ fun PendingEventItem(
     onCancel: () -> Unit = {},
     onRegisterPayment: () -> Unit = {}
 ) {
+    val context = LocalContext.current
     val hasPending = pendingEvent.pendingAmount > MIN_PENDING_AMOUNT
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
             .semantics(mergeDescendants = true) {
-                contentDescription = pendingEventTalkBackLabel(pendingEvent)
+                contentDescription = pendingEventTalkBackLabel(pendingEvent, context)
             }
             .clickable(enabled = !isUpdating, onClick = onClick),
         colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
@@ -577,8 +593,8 @@ private fun PendingEventActions(
                     onClick = onRegisterPayment,
                     enabled = !isUpdating,
                     colors = ButtonDefaults.buttonColors(containerColor = SolennixTheme.colors.primary)
-                ) { Text("Registrar pago") }
-                TextButton(onClick = onViewDetail, enabled = !isUpdating) { Text("Ver") }
+                ) { Text(stringResource(R.string.dashboard_attention_register_payment)) }
+                TextButton(onClick = onViewDetail, enabled = !isUpdating) { Text(stringResource(R.string.dashboard_attention_view)) }
             }
             PendingEventReason.OVERDUE_EVENT -> {
                 if (hasPending) {
@@ -586,28 +602,28 @@ private fun PendingEventActions(
                         onClick = onRegisterPayment,
                         enabled = !isUpdating,
                         colors = ButtonDefaults.buttonColors(containerColor = SolennixTheme.colors.primary)
-                    ) { Text("Pagar y completar") }
+                    ) { Text(stringResource(R.string.dashboard_attention_pay_and_complete)) }
                     OutlinedButton(
                         onClick = onCancel,
                         enabled = !isUpdating,
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = SolennixTheme.colors.error)
-                    ) { Text("Cancelar") }
-                    TextButton(onClick = onComplete, enabled = !isUpdating) { Text("Solo completar") }
+                    ) { Text(stringResource(R.string.dashboard_action_cancel)) }
+                    TextButton(onClick = onComplete, enabled = !isUpdating) { Text(stringResource(R.string.dashboard_attention_complete_only)) }
                 } else {
                     Button(
                         onClick = onComplete,
                         enabled = !isUpdating,
                         colors = ButtonDefaults.buttonColors(containerColor = SolennixTheme.colors.success)
-                    ) { Text("Completar") }
+                    ) { Text(stringResource(R.string.dashboard_attention_complete)) }
                     OutlinedButton(
                         onClick = onCancel,
                         enabled = !isUpdating,
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = SolennixTheme.colors.error)
-                    ) { Text("Cancelar") }
+                    ) { Text(stringResource(R.string.dashboard_action_cancel)) }
                 }
             }
             PendingEventReason.QUOTE_URGENT -> {
-                TextButton(onClick = onViewDetail, enabled = !isUpdating) { Text("Ver detalle") }
+                TextButton(onClick = onViewDetail, enabled = !isUpdating) { Text(stringResource(R.string.dashboard_attention_view_detail)) }
             }
         }
 
@@ -624,12 +640,13 @@ private fun PendingEventActions(
 
 @Composable
 fun EventListItem(event: Event, clientName: String? = null, onClick: () -> Unit = {}) {
+    val context = LocalContext.current
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
             .semantics(mergeDescendants = true) {
-                contentDescription = dashboardEventTalkBackLabel(event, clientName)
+                contentDescription = dashboardEventTalkBackLabel(event, clientName, context)
             }
             .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
@@ -665,10 +682,12 @@ private fun DashboardGreetingHeader(
     userName: String,
     modifier: Modifier = Modifier
 ) {
-    val today = remember {
-        val now = java.time.LocalDate.now()
-        val formatter = java.time.format.DateTimeFormatter
-            .ofPattern("EEEE d 'de' MMMM", java.util.Locale("es", "MX"))
+    val context = LocalContext.current
+    val locale = currentAppLocale(context)
+    val today = remember(locale) {
+        val now = LocalDate.now()
+        val formatter = DateTimeFormatter
+            .ofPattern(context.getString(R.string.dashboard_greeting_date_pattern), locale)
         now.format(formatter).replaceFirstChar { it.uppercase() }
     }
     Row(
@@ -677,7 +696,7 @@ private fun DashboardGreetingHeader(
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = if (userName.isNotEmpty()) "Hola, $userName" else "Hola",
+                text = if (userName.isNotEmpty()) context.getString(R.string.dashboard_greeting_with_name, userName) else context.getString(R.string.dashboard_greeting_generic),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = SolennixTheme.colors.primaryText
@@ -721,13 +740,16 @@ private fun QuickActionButton(
 
 @Composable
 private fun DateBox(dateString: String, modifier: Modifier = Modifier) {
-    val (month, day) = remember(dateString) {
+    val context = LocalContext.current
+    val locale = currentAppLocale(context)
+    val (month, day) = remember(dateString, locale) {
         val parsed = try {
             parseFlexibleDate(dateString)
         } catch (_: Exception) { null }
         if (parsed != null) {
             val monthAbbr = parsed.month.getDisplayName(
-                java.time.format.TextStyle.SHORT, java.util.Locale("es", "MX")
+                TextStyle.SHORT,
+                locale
             ).replaceFirstChar { it.uppercase() }
             monthAbbr to parsed.dayOfMonth.toString()
         } else "" to ""
@@ -746,9 +768,11 @@ private fun DateBox(dateString: String, modifier: Modifier = Modifier) {
 
 @Composable
 private fun MonthlyRevenueTrendCard(points: List<com.creapolis.solennix.core.model.DashboardRevenuePoint>) {
+    val context = LocalContext.current
+    val locale = currentAppLocale(context)
     val maxRevenue = points.maxOfOrNull { it.revenue }?.takeIf { it > 0 } ?: 1.0
-    val monthLabelFormatter = remember {
-        java.time.format.DateTimeFormatter.ofPattern("MMM", java.util.Locale("es", "MX"))
+    val monthLabelFormatter = remember(locale) {
+        DateTimeFormatter.ofPattern(context.getString(R.string.dashboard_month_short_pattern), locale)
     }
     // 4 gridlines + baseline at $0 → matches iOS's AxisMarks(leading) look.
     // We pick nice round fractions of the max so labels are "$0", "2k",
@@ -757,14 +781,7 @@ private fun MonthlyRevenueTrendCard(points: List<com.creapolis.solennix.core.mod
         listOf(0.0, 0.25, 0.5, 0.75, 1.0).map { it * maxRevenue }
     }
     val yAxisLabelFormatter: (Double) -> String = remember {
-        { value ->
-            when {
-                value == 0.0 -> "$0"
-                value >= 1_000_000 -> "${(value / 1_000_000).toInt()}M"
-                value >= 1_000 -> "${(value / 1_000).toInt()}k"
-                else -> "${value.toInt()}"
-            }
-        }
+        { value -> formatAxisCurrencyLabel(value, locale) }
     }
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -773,7 +790,7 @@ private fun MonthlyRevenueTrendCard(points: List<com.creapolis.solennix.core.mod
     ) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(
-                "Ingresos — Últimos 6 meses",
+                stringResource(R.string.dashboard_revenue_last_6_months),
                 style = MaterialTheme.typography.titleSmall,
                 color = SolennixTheme.colors.primaryText,
                 fontWeight = FontWeight.SemiBold
@@ -814,7 +831,7 @@ private fun MonthlyRevenueTrendCard(points: List<com.creapolis.solennix.core.mod
                     points.forEach { point ->
                         val fraction = (point.revenue / maxRevenue).coerceIn(0.0, 1.0).toFloat()
                         val monthLabel = try {
-                            val parsed = java.time.YearMonth.parse(point.month)
+                            val parsed = YearMonth.parse(point.month)
                             parsed.format(monthLabelFormatter).replaceFirstChar { it.uppercase() }
                         } catch (_: Exception) {
                             point.month
@@ -864,11 +881,11 @@ private fun FinancialComparisonCard(
         colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
         shape = MaterialTheme.shapes.large) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("Comparativa Financiera", style = MaterialTheme.typography.titleSmall,
+            Text(stringResource(R.string.dashboard_financial_comparison), style = MaterialTheme.typography.titleSmall,
                 color = SolennixTheme.colors.primaryText, fontWeight = FontWeight.SemiBold)
-            FinancialBar("Ventas Netas", revenueThisMonth, maxValue, SolennixTheme.colors.kpiGreen)
-            FinancialBar("Cobrado Real", cashCollected, maxValue, SolennixTheme.colors.primary)
-            FinancialBar("IVA por Cobrar", vatOutstanding, maxValue, SolennixTheme.colors.kpiRed)
+            FinancialBar(stringResource(R.string.dashboard_kpi_net_sales), revenueThisMonth, maxValue, SolennixTheme.colors.kpiGreen)
+            FinancialBar(stringResource(R.string.dashboard_kpi_collected), cashCollected, maxValue, SolennixTheme.colors.primary)
+            FinancialBar(stringResource(R.string.dashboard_kpi_vat_outstanding), vatOutstanding, maxValue, SolennixTheme.colors.kpiRed)
         }
     }
 }
@@ -892,12 +909,13 @@ private fun FinancialBar(label: String, value: Double, maxValue: Double, barColo
 
 @Composable
 fun InventoryAlertItem(item: InventoryItem, onClick: () -> Unit = {}) {
+    val context = LocalContext.current
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
             .semantics(mergeDescendants = true) {
-                contentDescription = inventoryAlertTalkBackLabel(item)
+                contentDescription = inventoryAlertTalkBackLabel(item, context)
             }
             .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(containerColor = SolennixTheme.colors.card),
@@ -921,7 +939,7 @@ fun InventoryAlertItem(item: InventoryItem, onClick: () -> Unit = {}) {
                     color = SolennixTheme.colors.primaryText
                 )
                 Text(
-                    text = "Stock actual: ${item.currentStock} ${item.unit}",
+                    text = stringResource(R.string.dashboard_low_stock_current, item.currentStock.toString(), item.unit),
                     style = MaterialTheme.typography.bodySmall,
                     color = SolennixTheme.colors.error
                 )
@@ -930,24 +948,62 @@ fun InventoryAlertItem(item: InventoryItem, onClick: () -> Unit = {}) {
     }
 }
 
-internal fun pendingEventTalkBackLabel(pendingEvent: PendingEvent): String {
-    return buildString {
-        append("Evento pendiente")
-        append(": ${pendingEvent.event.serviceType}")
-        append(", fecha ${pendingEvent.event.eventDate}")
-        append(", motivo ${pendingEvent.reasonLabel}")
-    }
+internal fun pendingEventTalkBackLabel(pendingEvent: PendingEvent, context: Context): String {
+    return context.getString(
+        R.string.dashboard_a11y_pending_event,
+        pendingEvent.reasonLabel,
+        pendingEvent.event.serviceType,
+        pendingEvent.event.eventDate,
+        pendingEvent.reasonLabel
+    )
 }
 
-internal fun dashboardEventTalkBackLabel(event: Event, clientName: String?): String {
-    return buildString {
-        clientName?.takeIf { it.isNotBlank() }?.let { append("$it, ") }
-        append(event.serviceType)
-        append(", fecha ${event.eventDate}")
-        append(", estado ${statusLabel(event.status)}")
-    }
+internal fun dashboardEventTalkBackLabel(event: Event, clientName: String?, context: Context): String {
+    return clientName
+        ?.takeIf { it.isNotBlank() }
+        ?.let {
+            context.getString(
+                R.string.dashboard_a11y_event_with_client,
+                it,
+                event.serviceType,
+                event.eventDate,
+                statusLabel(event.status, context)
+            )
+        }
+        ?: context.getString(
+            R.string.dashboard_a11y_event,
+            event.serviceType,
+            event.eventDate,
+            statusLabel(event.status, context)
+        )
 }
 
-internal fun inventoryAlertTalkBackLabel(item: InventoryItem): String {
-    return "Stock bajo: ${item.ingredientName}, actual ${item.currentStock} ${item.unit}"
+internal fun inventoryAlertTalkBackLabel(item: InventoryItem, context: Context): String {
+    return context.getString(
+        R.string.dashboard_a11y_inventory_alert,
+        item.ingredientName,
+        item.currentStock.toString(),
+        item.unit
+    )
+}
+
+private fun currentAppLocale(context: Context): Locale {
+    return context.resources.configuration.locales[0] ?: Locale.getDefault()
+}
+
+private fun formatAxisCurrencyLabel(value: Double, locale: Locale): String {
+    val currencySymbol = Currency.getInstance("MXN").getSymbol(locale)
+    if (value == 0.0) return "${currencySymbol}0"
+    val absValue = kotlin.math.abs(value)
+    val (divisor, suffix) = when {
+        absValue >= 1_000_000 -> 1_000_000.0 to "M"
+        absValue >= 1_000 -> 1_000.0 to "K"
+        else -> 1.0 to ""
+    }
+    val formatter = NumberFormat.getNumberInstance(locale).apply {
+        maximumFractionDigits = if (divisor == 1.0 || absValue / divisor >= 10) 0 else 1
+        minimumFractionDigits = 0
+    }
+
+    return "$currencySymbol${formatter.format(value / divisor)}$suffix"
 }
