@@ -23,6 +23,13 @@ status: active
 > - **Slices activos**: #94 Dashboard, #95 Events list, #203 governance/matrix, #204 event detail + form, #205 auth + settings, #206 clients, #207 products + inventory, #208 public flows, #209 final sweep.
 > - **Documento fuente**: [[19_I18N_STRATEGY]] ahora define copy governance, canonical vs compact variants y checklist de review por slice.
 
+> [!success] 2026-04-30 — Slice #206 Clients i18n parity (list + detail + form)
+> Se cerró la localización cross-platform del flujo de Clientes en Web, iOS y Android para lista, detalle y formulario. Quick Quote quedó fuera del slice y sigue como deuda explícita para otro issue.
+> - **Web**: `clients.json` ES/EN ampliado con labels de ciudad, total, servicio, invitados, export CSV, empty/search states, CTA de crear evento y errores de foto; `ClientList.tsx`, `ClientDetails.tsx` y `ClientForm.tsx` ya consumen el catálogo sin hardcodes funcionales en esas pantallas.
+> - **Android**: nuevo catálogo por feature `android/feature/clients/src/main/res/values*/strings.xml`; `ClientListScreen`, `ClientDetailScreen`, `ClientFormScreen` y sus ViewModels ahora consumen resources para títulos, placeholders, diálogos destructivos, validaciones, CSV, plan-limit copy y errores visibles al usuario.
+> - **iOS**: `ClientListView`, `ClientDetailView`, `ClientFormView` y sus ViewModels migrados a `String(localized:, bundle: .module)` con nuevas keys `clients.*` en `Localizable.xcstrings`; se alinearon empty states, sort labels, errores, confirmaciones y copy de acciones con la matrix canónica.
+> - **Scope explícito**: `QuickQuoteView.swift` y `QuickQuoteScreen.kt` NO entraron en `#206` porque el issue acepta sólo list/detail/form; requieren slice propio para no mezclar alcance.
+
 > [!success] 2026-04-29 — Sprint 7.E: Payment Submissions Phase 1 (issue #191, backend + web service ✅)
 > Implementación de la capa de infraestructura para que clientes (vía portal público tokenizado) envíen comprobantes de transferencias bancarias y organizadores revisen/aprueben. Backend completo + Web service listos. UI (cliente portal + organizer inbox) pendiente para Fase 2.
 > - **Backend model**: `PaymentSubmission` struct con fields: event_id, client_id, user_id, amount, transfer_ref, receipt_file_url, status (pending|approved|rejected), reviewed_by, reviewed_at, rejection_reason, linked_payment_id.

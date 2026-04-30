@@ -1,5 +1,6 @@
 package com.creapolis.solennix.feature.clients.viewmodel
 
+import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -10,7 +11,9 @@ import com.creapolis.solennix.core.data.repository.ClientRepository
 import com.creapolis.solennix.core.data.repository.EventRepository
 import com.creapolis.solennix.core.model.Client
 import com.creapolis.solennix.core.model.Event
+import com.creapolis.solennix.feature.clients.R
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -30,6 +33,7 @@ data class ClientDetailUiState(
 class ClientDetailViewModel @Inject constructor(
     private val clientRepository: ClientRepository,
     private val eventRepository: EventRepository,
+    @ApplicationContext private val context: Context,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -52,7 +56,12 @@ class ClientDetailViewModel @Inject constructor(
                 val client = clientRepository.getClient(clientId)
                 _uiState.update { it.copy(client = client, isLoading = false) }
             } catch (e: Exception) {
-                _uiState.update { it.copy(errorMessage = e.message, isLoading = false) }
+                _uiState.update {
+                    it.copy(
+                        errorMessage = context.getString(R.string.clients_load_error),
+                        isLoading = false
+                    )
+                }
             }
         }
     }
@@ -91,7 +100,14 @@ class ClientDetailViewModel @Inject constructor(
                 clientRepository.deleteClient(clientId)
                 deleteSuccess = true
             } catch (e: Exception) {
-                _uiState.update { it.copy(errorMessage = "Error al eliminar cliente: ${e.message}") }
+                _uiState.update {
+                    it.copy(
+                        errorMessage = context.getString(
+                            R.string.clients_delete_error,
+                            e.message ?: ""
+                        )
+                    )
+                }
             }
         }
     }

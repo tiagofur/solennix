@@ -74,7 +74,7 @@ export const ClientForm: React.FC = () => {
     if (!file) return;
 
     if (file.size > 10 * 1024 * 1024) {
-      setError(t("common:error.generic")); // Or add specific key if needed
+      setError(t("clients:form.validation.photo_too_large"));
       return;
     }
 
@@ -87,7 +87,7 @@ export const ClientForm: React.FC = () => {
       onSuccess: (result) => setPhotoUrl(result.url),
       onError: (err) => {
         logError("Error uploading photo", err);
-        setError(t("common:error.network"));
+        setError(t("clients:form.validation.photo_upload_error"));
         setPhotoPreview(photoUrl); // revert preview
       },
     });
@@ -216,7 +216,7 @@ export const ClientForm: React.FC = () => {
                   className="hidden"
                   onChange={handlePhotoChange}
                 />
-                <p className="text-xs text-text-secondary text-center mt-2">Photo (optional)</p>
+                <p className="text-xs text-text-secondary text-center mt-2">{t("clients:form.photo_optional")}</p>
               </div>
             </div>
 
@@ -292,14 +292,14 @@ export const ClientForm: React.FC = () => {
 
             <div className="sm:col-span-2">
               <label htmlFor="city" className="block text-sm font-medium text-text-secondary mb-2">
-                City
+                {t("clients:form.city")}
               </label>
               <input
                 id="city"
                 type="text"
                 {...register("city")}
                 className="w-full shadow-sm rounded-xl p-3 border border-border bg-card text-text transition-shadow focus:ring-2 focus:ring-primary/20"
-                placeholder="City"
+                placeholder={t("clients:form.city")}
               />
             </div>
 
