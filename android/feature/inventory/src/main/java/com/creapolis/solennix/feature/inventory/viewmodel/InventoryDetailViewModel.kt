@@ -12,6 +12,7 @@ import com.creapolis.solennix.core.data.repository.ProductRepository
 import com.creapolis.solennix.core.model.EventStatus
 import com.creapolis.solennix.core.model.InventoryItem
 import com.creapolis.solennix.core.model.InventoryType
+import com.creapolis.solennix.feature.inventory.InventoryStrings
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -151,7 +152,7 @@ class InventoryDetailViewModel @Inject constructor(
                                         InventoryDemandEntry(
                                             eventId = event.id,
                                             eventDate = event.eventDate.take(10),
-                                            eventName = event.serviceType ?: "Evento",
+                                            eventName = event.serviceType ?: InventoryStrings.fallbackEvent,
                                             quantity = eventDemand,
                                             unit = item.unit
                                         )
@@ -183,7 +184,7 @@ class InventoryDetailViewModel @Inject constructor(
                 adjustmentSuccess = true
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    errorMessage = "Error al ajustar stock: ${e.message}"
+                    errorMessage = InventoryStrings.adjustStockError(e.message)
                 )
             }
         }
@@ -195,7 +196,7 @@ class InventoryDetailViewModel @Inject constructor(
                 inventoryRepository.deleteInventoryItem(itemId)
                 deleteSuccess = true
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(errorMessage = "Error al eliminar item: ${e.message}")
+                _uiState.value = _uiState.value.copy(errorMessage = InventoryStrings.deleteError(e.message))
             }
         }
     }

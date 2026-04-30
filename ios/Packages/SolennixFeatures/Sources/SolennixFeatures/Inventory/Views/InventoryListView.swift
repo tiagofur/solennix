@@ -20,9 +20,9 @@ public struct InventoryListView: View {
     public var body: some View {
         content
             .background(SolennixColors.surfaceGrouped)
-            .navigationTitle("Inventario")
+            .navigationTitle(InventoryStrings.title)
             .navigationBarTitleDisplayMode(.large)
-            .searchable(text: $viewModel.searchText, prompt: "Buscar inventario")
+            .searchable(text: $viewModel.searchText, prompt: InventoryStrings.searchPrompt)
             .safeAreaInset(edge: .top, spacing: 0) {
                 VStack(spacing: 0) {
                     if viewModel.isShowingCachedData {
@@ -31,7 +31,7 @@ public struct InventoryListView: View {
                     if !planLimitsManager.canCreateInventoryItem {
                         UpgradeBannerView(
                             type: .limitReached,
-                            resource: "Inventario",
+                            resource: InventoryStrings.inventoryResource,
                             currentUsage: planLimitsManager.inventoryCount,
                             limit: PlanLimitsManager.inventoryLimit
                         ) {
@@ -51,7 +51,7 @@ public struct InventoryListView: View {
                         Image(systemName: "plus.circle")
                             .font(.body)
                             .foregroundStyle(planLimitsManager.canCreateInventoryItem ? SolennixColors.primary : SolennixColors.textTertiary)
-                            .accessibilityLabel("Agregar item de inventario")
+                            .accessibilityLabel(InventoryStrings.addAccessibility)
                     }
                     .disabled(!planLimitsManager.canCreateInventoryItem)
 
@@ -61,15 +61,15 @@ public struct InventoryListView: View {
             }
         }
             .confirmationDialog(
-                "Eliminar item",
+                InventoryStrings.deleteTitle,
                 isPresented: $viewModel.showDeleteConfirm,
                 presenting: viewModel.deleteTarget
             ) { item in
-                Button("Eliminar", role: .destructive) {
+                Button(InventoryStrings.deleteAction, role: .destructive) {
                     HapticsHelper.play(.success)
                     guard let removed = viewModel.softDeleteItem(item) else { return }
                     toastManager.showUndo(
-                        message: "\(item.ingredientName) eliminado",
+                        message: InventoryStrings.deletedMessage(item.ingredientName),
                         onUndo: {
                             viewModel.restoreItem(removed.item, at: removed.index)
                             HapticsHelper.play(.success)
@@ -79,9 +79,9 @@ public struct InventoryListView: View {
                         }
                     )
                 }
-                Button("Cancelar", role: .cancel) {}
+                Button(InventoryStrings.cancel, role: .cancel) {}
             } message: { item in
-                Text("Se eliminara \"\(item.ingredientName)\". Podras deshacer durante unos segundos.")
+                Text(InventoryStrings.deletePrompt(item.ingredientName))
             }
             .sheet(isPresented: $viewModel.showStockAdjustment) {
                 stockAdjustmentSheet
@@ -100,9 +100,9 @@ public struct InventoryListView: View {
         if let error = viewModel.errorMessage, viewModel.items.isEmpty, !viewModel.isLoading {
             EmptyStateView(
                 icon: "wifi.exclamationmark",
-                title: "Error al cargar",
+                title: InventoryStrings.errorLoadingTitle,
                 message: error,
-                actionTitle: "Reintentar"
+                actionTitle: InventoryStrings.retry
             ) {
                 Task { await viewModel.loadItems() }
             }
@@ -112,19 +112,19 @@ public struct InventoryListView: View {
             if viewModel.searchText.isEmpty && !viewModel.showLowStockOnly {
                 EmptyStateView(
                     icon: "archivebox",
-                    title: "Sin inventario",
-                    message: "Agrega tu primer item al inventario",
-                    actionTitle: "Nuevo Item"
+                    title: InventoryStrings.emptyTitle,
+                    message: InventoryStrings.emptyMessage,
+                    actionTitle: InventoryStrings.emptyAction
                 ) {
                     // FAB handles navigation
                 }
             } else {
                 EmptyStateView(
                     icon: "magnifyingglass",
-                    title: "Sin resultados",
+                    title: InventoryStrings.filteredEmptyTitle,
                     message: viewModel.showLowStockOnly
-                        ? "No hay items con stock bajo"
-                        : "No se encontraron items que coincidan con la busqueda"
+                        ? InventoryStrings.lowStockEmptyMessage
+                        : InventoryStrings.filteredEmptyMessage
                 )
             }
         } else {
@@ -147,13 +147,13 @@ public struct InventoryListView: View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: Spacing.lg) {
                 if !viewModel.ingredientItems.isEmpty {
-                    inventoryGridSection(title: "Ingredientes", items: viewModel.ingredientItems)
+                    inventoryGridSection(title: InventoryStrings.ingredients, items: viewModel.ingredientItems)
                 }
                 if !viewModel.equipmentItems.isEmpty {
-                    inventoryGridSection(title: "Equipo", items: viewModel.equipmentItems)
+                    inventoryGridSection(title: InventoryStrings.equipment, items: viewModel.equipmentItems)
                 }
                 if !viewModel.supplyItems.isEmpty {
-                    inventoryGridSection(title: "Insumos", items: viewModel.supplyItems)
+                    inventoryGridSection(title: InventoryStrings.supplies, items: viewModel.supplyItems)
                 }
             }
             .padding(.horizontal, Spacing.md)
@@ -178,15 +178,15 @@ public struct InventoryListView: View {
                     .buttonStyle(.plain)
                     .contextMenu {
                         NavigationLink(value: Route.inventoryForm(id: item.id)) {
-                            Label("Editar", systemImage: "pencil")
+                            Label(InventoryStrings.edit, systemImage: "pencil")
                         }
                         Button {
                             viewModel.prepareAdjustment(for: item)
                         } label: {
-                            Label("Ajustar Stock", systemImage: "plusminus")
+                            Label(InventoryStrings.adjustStock, systemImage: "plusminus")
                         }
                         NavigationLink(value: Route.inventoryDetail(id: item.id)) {
-                            Label("Ver Detalle", systemImage: "eye")
+                            Label(InventoryStrings.viewDetail, systemImage: "eye")
                         }
                         Divider()
                         Button(role: .destructive) {
@@ -194,7 +194,7 @@ public struct InventoryListView: View {
                             viewModel.deleteTarget = item
                             viewModel.showDeleteConfirm = true
                         } label: {
-                            Label("Eliminar", systemImage: "trash")
+                            Label(InventoryStrings.deleteAction, systemImage: "trash")
                         }
                     }
                 }
@@ -214,7 +214,7 @@ public struct InventoryListView: View {
                     .lineLimit(1)
 
                 HStack(spacing: Spacing.sm) {
-                    Text("\(Int(item.currentStock)) \(item.unit)")
+                    Text(InventoryStrings.quantityWithUnit(Int(item.currentStock), unit: item.unit))
                         .font(.caption)
                         .foregroundStyle(
                             item.minimumStock > 0 && item.currentStock < item.minimumStock
@@ -223,7 +223,7 @@ public struct InventoryListView: View {
                         )
 
                     if item.minimumStock > 0 && item.currentStock < item.minimumStock {
-                        Text("(min: \(Int(item.minimumStock)))")
+                        Text(InventoryStrings.minLabel(Int(item.minimumStock)))
                             .font(.caption2)
                             .foregroundStyle(SolennixColors.textTertiary)
                     }
@@ -248,7 +248,7 @@ public struct InventoryListView: View {
         List {
             // Ingredients section
             if !viewModel.ingredientItems.isEmpty {
-                Section("Ingredientes") {
+                Section(InventoryStrings.ingredients) {
                     ForEach(viewModel.ingredientItems) { item in
                         inventoryRow(item)
                     }
@@ -257,7 +257,7 @@ public struct InventoryListView: View {
 
             // Equipment section
             if !viewModel.equipmentItems.isEmpty {
-                Section("Equipo") {
+                Section(InventoryStrings.equipment) {
                     ForEach(viewModel.equipmentItems) { item in
                         inventoryRow(item)
                     }
@@ -266,7 +266,7 @@ public struct InventoryListView: View {
 
             // Supplies section
             if !viewModel.supplyItems.isEmpty {
-                Section("Insumos") {
+                Section(InventoryStrings.supplies) {
                     ForEach(viewModel.supplyItems) { item in
                         inventoryRow(item)
                     }
@@ -295,7 +295,7 @@ public struct InventoryListView: View {
                         .lineLimit(1)
 
                     HStack(spacing: Spacing.sm) {
-                        Text("\(Int(item.currentStock)) \(item.unit)")
+                        Text(InventoryStrings.quantityWithUnit(Int(item.currentStock), unit: item.unit))
                             .font(.caption)
                             .foregroundStyle(
                                 item.minimumStock > 0 && item.currentStock < item.minimumStock
@@ -304,7 +304,7 @@ public struct InventoryListView: View {
                             )
 
                         if item.minimumStock > 0 && item.currentStock < item.minimumStock {
-                            Text("(min: \(Int(item.minimumStock)))")
+                            Text(InventoryStrings.minLabel(Int(item.minimumStock)))
                                 .font(.caption2)
                                 .foregroundStyle(SolennixColors.textTertiary)
                         }
@@ -328,11 +328,11 @@ public struct InventoryListView: View {
                 viewModel.deleteTarget = item
                 viewModel.showDeleteConfirm = true
             } label: {
-                Label("Eliminar", systemImage: "trash")
+                Label(InventoryStrings.deleteAction, systemImage: "trash")
             }
 
             NavigationLink(value: Route.inventoryForm(id: item.id)) {
-                Label("Editar", systemImage: "pencil")
+                Label(InventoryStrings.edit, systemImage: "pencil")
             }
             .tint(.blue)
         }
@@ -340,21 +340,21 @@ public struct InventoryListView: View {
             Button {
                 viewModel.prepareAdjustment(for: item)
             } label: {
-                Label("Ajustar", systemImage: "plusminus")
+                Label(InventoryStrings.adjust, systemImage: "plusminus")
             }
             .tint(.orange)
         }
         .contextMenu {
             NavigationLink(value: Route.inventoryForm(id: item.id)) {
-                Label("Editar", systemImage: "pencil")
+                Label(InventoryStrings.edit, systemImage: "pencil")
             }
             Button {
                 viewModel.prepareAdjustment(for: item)
             } label: {
-                Label("Ajustar Stock", systemImage: "plusminus")
+                Label(InventoryStrings.adjustStock, systemImage: "plusminus")
             }
             NavigationLink(value: Route.inventoryDetail(id: item.id)) {
-                Label("Ver Detalle", systemImage: "eye")
+                Label(InventoryStrings.viewDetail, systemImage: "eye")
             }
             Divider()
             Button(role: .destructive) {
@@ -362,7 +362,7 @@ public struct InventoryListView: View {
                 viewModel.deleteTarget = item
                 viewModel.showDeleteConfirm = true
             } label: {
-                Label("Eliminar", systemImage: "trash")
+                Label(InventoryStrings.deleteAction, systemImage: "trash")
             }
         }
     }
@@ -387,12 +387,12 @@ public struct InventoryListView: View {
 
     private var skeletonList: some View {
         List {
-            Section("Ingredientes") {
+            Section(InventoryStrings.ingredients) {
                 ForEach(0..<3, id: \.self) { _ in
                     skeletonRow
                 }
             }
-            Section("Equipo") {
+            Section(InventoryStrings.equipment) {
                 ForEach(0..<2, id: \.self) { _ in
                     skeletonRow
                 }
@@ -434,7 +434,7 @@ public struct InventoryListView: View {
             HStack(spacing: 4) {
                 Image(systemName: viewModel.showLowStockOnly ? "exclamationmark.triangle.fill" : "exclamationmark.triangle")
                     .foregroundStyle(viewModel.showLowStockOnly ? SolennixColors.warning : SolennixColors.textTertiary)
-                    .accessibilityLabel(viewModel.showLowStockOnly ? "Ocultar stock bajo" : "Mostrar stock bajo")
+                    .accessibilityLabel(viewModel.showLowStockOnly ? InventoryStrings.hideLowStock : InventoryStrings.showLowStock)
 
                 if viewModel.lowStockCount > 0 {
                     Text("\(viewModel.lowStockCount)")
@@ -454,7 +454,7 @@ public struct InventoryListView: View {
 
     private var sortMenu: some View {
         Menu {
-            Picker("Ordenar por", selection: $viewModel.sortKey) {
+            Picker(InventoryStrings.sortTitle, selection: $viewModel.sortKey) {
                 ForEach(InventorySortKey.allCases, id: \.self) { key in
                     Text(key.label).tag(key)
                 }
@@ -466,7 +466,7 @@ public struct InventoryListView: View {
                 viewModel.sortAscending.toggle()
             } label: {
                 Label(
-                    viewModel.sortAscending ? "Ascendente" : "Descendente",
+                    viewModel.sortAscending ? InventoryStrings.sortAscending : InventoryStrings.sortDescending,
                     systemImage: viewModel.sortAscending ? "arrow.up" : "arrow.down"
                 )
             }
@@ -474,7 +474,7 @@ public struct InventoryListView: View {
             Image(systemName: "arrow.up.arrow.down")
                 .font(.body)
                 .foregroundStyle(SolennixColors.primary)
-                .accessibilityLabel("Ordenar inventario")
+                .accessibilityLabel(InventoryStrings.sortAccessibility)
         }
     }
 
@@ -488,14 +488,14 @@ public struct InventoryListView: View {
                         .font(.title3)
                         .fontWeight(.semibold)
 
-                    Text("Stock actual: \(Int(item.currentStock)) \(item.unit)")
+                    Text(InventoryStrings.stockActual(Int(item.currentStock), unit: item.unit))
                         .font(.subheadline)
                         .foregroundStyle(SolennixColors.textSecondary)
 
                     Divider()
 
                     HStack {
-                        Text("Nuevo stock:")
+                        Text(InventoryStrings.newStock)
 
                         TextField("0", value: $viewModel.adjustmentQuantity, format: .number)
                             .keyboardType(.decimalPad)
@@ -529,16 +529,16 @@ public struct InventoryListView: View {
                 Spacer()
             }
             .padding(Spacing.lg)
-            .navigationTitle("Ajustar Stock")
+            .navigationTitle(InventoryStrings.adjustStock)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancelar") {
+                    Button(InventoryStrings.cancel) {
                         viewModel.showStockAdjustment = false
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Guardar") {
+                    Button(InventoryStrings.save) {
                         Task { await viewModel.saveStockAdjustment() }
                     }
                     .fontWeight(.semibold)

@@ -17,7 +17,7 @@ public struct InventoryFormView: View {
     public var body: some View {
         Group {
             if viewModel.isLoading {
-                ProgressView("Cargando...")
+                ProgressView(InventoryStrings.loading)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 formContent
@@ -25,7 +25,7 @@ public struct InventoryFormView: View {
         }
         .scrollContentBackground(.hidden)
         .background(SolennixColors.surfaceGrouped)
-        .navigationTitle(viewModel.isEditing ? "Editar Item" : "Nuevo Item")
+        .navigationTitle(viewModel.isEditing ? InventoryStrings.editItemTitle : InventoryStrings.newItemTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -40,11 +40,11 @@ public struct InventoryFormView: View {
     private var formContent: some View {
         Form {
             // Basic info
-            Section("Informacion") {
+            Section(InventoryStrings.informationTitle) {
                 AdaptiveFormRow {
                     // Name
                     VStack(alignment: .leading, spacing: Spacing.xs) {
-                        TextField("Nombre", text: $viewModel.ingredientName)
+                        TextField(InventoryStrings.namePlaceholder, text: $viewModel.ingredientName)
 
                         if let error = viewModel.nameError {
                             Text(error)
@@ -54,19 +54,19 @@ public struct InventoryFormView: View {
                     }
                 } right: {
                     // Type
-                    Picker("Tipo", selection: $viewModel.type) {
-                        Text("Ingrediente").tag(InventoryType.ingredient)
-                        Text("Equipo").tag(InventoryType.equipment)
-                        Text("Insumo").tag(InventoryType.supply)
+                    Picker(InventoryStrings.type, selection: $viewModel.type) {
+                        Text(InventoryStrings.ingredientType).tag(InventoryType.ingredient)
+                        Text(InventoryStrings.equipmentType).tag(InventoryType.equipment)
+                        Text(InventoryStrings.supplyType).tag(InventoryType.supply)
                     }
                 }
             }
 
             // Stock
-            Section("Stock") {
+            Section(InventoryStrings.stockTitle) {
                 AdaptiveFormRow {
                     HStack {
-                        Text("Stock actual")
+                        Text(InventoryStrings.currentStockTitle)
                         Spacer()
                         TextField("0", value: $viewModel.currentStock, format: .number)
                             .keyboardType(.decimalPad)
@@ -75,7 +75,7 @@ public struct InventoryFormView: View {
                     }
                 } right: {
                     HStack {
-                        Text("Stock minimo")
+                        Text(InventoryStrings.minimumStockTitle)
                         Spacer()
                         TextField("0", value: $viewModel.minimumStock, format: .number)
                             .keyboardType(.decimalPad)
@@ -92,7 +92,7 @@ public struct InventoryFormView: View {
             }
 
             // Unit
-            Section("Unidad de Medida") {
+            Section(InventoryStrings.unitTitle) {
                 ForEach(InventoryFormViewModel.unitGroups, id: \.0) { group in
                     VStack(alignment: .leading, spacing: Spacing.sm) {
                         Text(group.0)
@@ -128,10 +128,10 @@ public struct InventoryFormView: View {
             }
 
             // Cost
-            Section("Costo (Opcional)") {
+            Section(InventoryStrings.costOptionalTitle) {
                 HStack {
                     Text("$")
-                    TextField("Costo por unidad", value: $viewModel.unitCost, format: .number)
+                    TextField(InventoryStrings.costPlaceholder, value: $viewModel.unitCost, format: .number)
                         .keyboardType(.decimalPad)
                 }
             }
@@ -152,7 +152,7 @@ public struct InventoryFormView: View {
             if viewModel.isSaving {
                 ProgressView()
             } else {
-                Text("Guardar")
+                Text(InventoryStrings.save)
                     .fontWeight(.semibold)
             }
         }

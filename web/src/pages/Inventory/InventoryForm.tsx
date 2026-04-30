@@ -31,16 +31,16 @@ export const InventoryForm: React.FC = () => {
   const [isCustomUnit, setIsCustomUnit] = useState(false);
 
   const COMMON_UNITS = useMemo(() => [
-    { value: "pieza", label: t("inventory:form.unit_pieza", { defaultValue: "Pieza (pza)" }) },
-    { value: "kg", label: t("inventory:form.unit_kg", { defaultValue: "Kilogramos (kg)" }) },
-    { value: "g", label: t("inventory:form.unit_g", { defaultValue: "Gramos (g)" }) },
-    { value: "l", label: t("inventory:form.unit_l", { defaultValue: "Litros (l)" }) },
-    { value: "ml", label: t("inventory:form.unit_ml", { defaultValue: "Mililitros (ml)" }) },
-    { value: "caja", label: t("inventory:form.unit_caja", { defaultValue: "Caja" }) },
-    { value: "paquete", label: t("inventory:form.unit_paquete", { defaultValue: "Paquete" }) },
-    { value: "servicio", label: t("inventory:form.unit_servicio", { defaultValue: "Servicio" }) },
-    { value: "hora", label: t("inventory:form.unit_hora", { defaultValue: "Hora" }) },
-    { value: "dia", label: t("inventory:form.unit_dia", { defaultValue: "Día" }) },
+    { value: "pieza", label: t("inventory:form.unit_pieza") },
+    { value: "kg", label: t("inventory:form.unit_kg") },
+    { value: "g", label: t("inventory:form.unit_g") },
+    { value: "l", label: t("inventory:form.unit_l") },
+    { value: "ml", label: t("inventory:form.unit_ml") },
+    { value: "caja", label: t("inventory:form.unit_caja") },
+    { value: "paquete", label: t("inventory:form.unit_paquete") },
+    { value: "servicio", label: t("inventory:form.unit_servicio") },
+    { value: "hora", label: t("inventory:form.unit_hora") },
+    { value: "dia", label: t("inventory:form.unit_dia") },
   ], [t]);
 
   const inventorySchema = useMemo(() => z.object({
@@ -141,7 +141,7 @@ export const InventoryForm: React.FC = () => {
           className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"
           aria-hidden="true"
         ></div>
-        <span className="ml-3 text-sm text-text-secondary">Cargando límites de plan...</span>
+        <span className="ml-3 text-sm text-text-secondary">{t("inventory:form.loading_limits")}</span>
       </div>
     );
   }
@@ -153,10 +153,10 @@ export const InventoryForm: React.FC = () => {
           type="button"
           onClick={() => navigate(-1)}
           className="mb-6 flex items-center text-sm font-medium text-text-secondary hover:text-text transition-colors"
-          aria-label={t("inventory:form.back_previous", { defaultValue: "Regresar a la página anterior" })}
+          aria-label={t("inventory:form.back_previous")}
         >
           <ArrowLeft className="h-4 w-4 mr-1" aria-hidden="true" />
-          Regresar
+          {t("common:action.back")}
         </button>
         <div className="flex justify-center mt-12">
           <UpgradeBanner
@@ -181,7 +181,7 @@ export const InventoryForm: React.FC = () => {
             type="button"
             onClick={() => navigate("/inventory")}
             className="mr-4 p-2 rounded-full hover:bg-surface-alt text-text-secondary transition-colors"
-            aria-label={t("inventory:form.back_to_list", { defaultValue: "Volver a la lista de inventario" })}
+            aria-label={t("inventory:form.back_to_list")}
           >
             <ArrowLeft className="h-5 w-5" aria-hidden="true" />
           </button>
@@ -246,11 +246,11 @@ export const InventoryForm: React.FC = () => {
                 className="w-full rounded-xl shadow-sm border border-border bg-card text-text p-3 transition-shadow focus:ring-2 focus:ring-primary/20"
                 aria-required="true"
               >
-                <option value="ingredient">Insumo (Consumible)</option>
+                <option value="ingredient">{t("inventory:form.type_ingredient")}</option>
                 <option value="supply">
-                  Insumo por Evento (Costo fijo por evento)
+                  {t("inventory:form.type_supply")}
                 </option>
-                <option value="equipment">Activo / Equipo (Retornable)</option>
+                <option value="equipment">{t("inventory:form.type_equipment")}</option>
               </select>
               {errors.type && (
                 <p
@@ -412,7 +412,7 @@ export const InventoryForm: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading}
-              aria-label={isLoading ? "Guardando ítem" : t("common:action.save")}
+              aria-label={isLoading ? t("common:action.saving") : t("common:action.save")}
               className="inline-flex justify-center py-2.5 px-8 border border-transparent shadow-sm text-sm font-medium rounded-xl text-white premium-gradient hover:opacity-90 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-primary/40 disabled:opacity-50 transition-opacity"
             >
               <Save className="h-5 w-5 mr-2" aria-hidden="true" />

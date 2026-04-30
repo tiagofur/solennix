@@ -58,7 +58,7 @@ public struct RecipeSection: View {
                 Button(action: onAdd) {
                     HStack(spacing: 4) {
                         Image(systemName: "plus")
-                        Text("Agregar")
+                        Text(ProductStrings.add)
                     }
                     .font(.caption)
                     .fontWeight(.semibold)
@@ -73,7 +73,7 @@ public struct RecipeSection: View {
 
             // Items
             if items.isEmpty {
-                Text("No hay elementos agregados")
+                Text(ProductStrings.noItemsAdded)
                     .font(.body)
                     .foregroundStyle(SolennixColors.textTertiary)
                     .italic()
@@ -144,18 +144,18 @@ struct RecipeItemRow: View {
                         .foregroundStyle(selectedItem != nil ? SolennixColors.primary : SolennixColors.textTertiary)
 
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(selectedItem?.ingredientName ?? "Seleccionar item...")
+                        Text(selectedItem?.ingredientName ?? ProductStrings.selectItem)
                             .font(.subheadline)
                             .foregroundStyle(selectedItem != nil ? SolennixColors.text : SolennixColors.textTertiary)
 
                         if let inv = selectedItem {
                             HStack(spacing: Spacing.sm) {
-                                Text("Stock: \(Int(inv.currentStock)) \(inv.unit)")
+                                Text(ProductStrings.stockWithUnit(Int(inv.currentStock), unit: inv.unit))
                                     .font(.caption)
                                     .foregroundStyle(SolennixColors.textSecondary)
 
                                 if showCost, let cost = inv.unitCost, cost > 0 {
-                                    Text("· \(cost.formatted(.currency(code: "MXN")))/\(inv.unit)")
+                                    Text(ProductStrings.costPerUnit(cost.formatted(.currency(code: "MXN")), unit: inv.unit))
                                         .font(.caption)
                                         .foregroundStyle(SolennixColors.textSecondary)
                                 }
@@ -194,7 +194,7 @@ struct RecipeItemRow: View {
             // Quantity, cost, and remove
             HStack(spacing: Spacing.sm) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Cantidad")
+                        Text(ProductStrings.quantity)
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textTertiary)
 
@@ -220,7 +220,7 @@ struct RecipeItemRow: View {
                 if showCost, let cost = estimatedCost {
                     Spacer()
                     VStack(alignment: .trailing, spacing: 2) {
-                        Text("Costo est.")
+                        Text(ProductStrings.estimatedCostShort)
                             .font(.caption)
                             .foregroundStyle(SolennixColors.textTertiary)
                         Text(cost.formatted(.currency(code: "MXN")))
@@ -278,7 +278,7 @@ private struct InventoryPickerSheet: View {
                                 .font(.body)
                                 .foregroundStyle(SolennixColors.text)
 
-                            Text("Stock: \(Int(item.currentStock)) \(item.unit)")
+                            Text(ProductStrings.stockWithUnit(Int(item.currentStock), unit: item.unit))
                                 .font(.caption)
                                 .foregroundStyle(SolennixColors.textSecondary)
                         }
@@ -302,12 +302,12 @@ private struct InventoryPickerSheet: View {
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
             .background(SolennixColors.surfaceGrouped)
-            .searchable(text: $searchText, prompt: "Buscar item...")
-            .navigationTitle("Seleccionar Item")
+            .searchable(text: $searchText, prompt: ProductStrings.searchItemPrompt)
+            .navigationTitle(ProductStrings.selectItemTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancelar") { dismiss() }
+                    Button(ProductStrings.cancel) { dismiss() }
                 }
             }
         }

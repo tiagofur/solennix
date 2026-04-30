@@ -29,6 +29,7 @@ import com.creapolis.solennix.core.network.put
 import com.creapolis.solennix.core.network.AuthManager
 import com.creapolis.solennix.core.network.Endpoints
 import com.creapolis.solennix.core.data.util.ImageCompressor
+import com.creapolis.solennix.feature.products.ProductStrings
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -144,7 +145,7 @@ class ProductFormViewModel @Inject constructor(
                     limitCheckResult = planLimitsManager.canCreateProduct(plan)
                 }
             } catch (e: Exception) {
-                errorMessage = "Error al cargar datos: ${e.message}"
+                errorMessage = ProductStrings.loadDataError(e.message)
             } finally {
                 isLoading = false
             }
@@ -186,7 +187,7 @@ class ProductFormViewModel @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            errorMessage = "Error al cargar producto: ${e.message}"
+            errorMessage = ProductStrings.loadProductError(e.message)
         }
     }
 
@@ -263,7 +264,7 @@ class ProductFormViewModel @Inject constructor(
             } catch (e: SolennixException.PlanLimitExceeded) {
                 planLimitMessage = e.message
             } catch (e: Exception) {
-                errorMessage = "Error al guardar producto: ${e.message}"
+                errorMessage = ProductStrings.saveProductError(e.message)
             } finally {
                 isSaving = false
             }
@@ -296,10 +297,10 @@ class ProductFormViewModel @Inject constructor(
                     )
                     imageUrl = response.url
                 } else {
-                    errorMessage = "No se pudo leer la imagen seleccionada"
+                    errorMessage = ProductStrings.imageReadError
                 }
             } catch (e: Exception) {
-                errorMessage = "Error al subir imagen: ${e.message}"
+                errorMessage = ProductStrings.imageUploadError(e.message)
             } finally {
                 isUploadingImage = false
             }

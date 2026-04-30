@@ -24,10 +24,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.extensions.asMXN
+import com.creapolis.solennix.feature.products.ProductStrings
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
-import java.util.Locale
 
 data class DemandDataPoint(
     val eventId: String,
@@ -74,13 +73,13 @@ fun DemandForecastChart(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Demanda por Fecha",
+                        text = ProductStrings.demandByDate,
                         style = MaterialTheme.typography.titleMedium,
                         color = colors.primaryText
                     )
                 }
                 Text(
-                    text = "Eventos confirmados",
+                    text = ProductStrings.confirmedEvents,
                     style = MaterialTheme.typography.labelSmall,
                     color = colors.secondaryText
                 )
@@ -105,13 +104,13 @@ fun DemandForecastChart(
 
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(
-                        text = "Próximos ${dataPoints.size} eventos",
+                        text = ProductStrings.upcomingEventsCount(dataPoints.size),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Medium,
                         color = colors.primaryText
                     )
                     Text(
-                        text = "Total: $totalQuantity unidades para $totalPeople personas",
+                        text = ProductStrings.totalSummary(totalQuantity, totalPeople),
                         style = MaterialTheme.typography.bodySmall,
                         color = colors.secondaryText
                     )
@@ -142,26 +141,26 @@ fun DemandForecastChart(
                     ) {
                         Column {
                             Text(
-                                text = "TOTAL DEMANDA",
+                                text = ProductStrings.totalDemand,
                                 style = MaterialTheme.typography.labelSmall,
                                 color = colors.secondaryText
                             )
                             Text(
-                                text = "${dataPoints.size} evento${if (dataPoints.size != 1) "s" else ""}",
+                                text = ProductStrings.eventCount(dataPoints.size),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = colors.secondaryText
                             )
                         }
                         Column(horizontalAlignment = Alignment.End) {
                             Text(
-                                text = "$totalQuantity unidades",
+                                text = ProductStrings.quantityUnits(totalQuantity),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = colors.primaryText
                             )
                             if (totalRevenue > 0) {
                                 Text(
-                                    text = "${totalRevenue.asMXN()} est.",
+                                    text = ProductStrings.estimatedRevenueShort(totalRevenue.asMXN()),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = colors.secondaryText
                                 )
@@ -184,7 +183,7 @@ private fun DemandBarChart(
     modifier: Modifier = Modifier
 ) {
     val maxQuantity = dataPoints.maxOf { it.quantity }.coerceAtLeast(1)
-    val dateFormatter = DateTimeFormatter.ofPattern("d MMM", Locale("es"))
+    val dateFormatter = ProductStrings.shortDateFormatter()
 
     val textMeasurer = rememberTextMeasurer()
     val labelStyle = TextStyle(
@@ -254,7 +253,7 @@ private fun DemandEventRow(
     today: LocalDate,
     colors: com.creapolis.solennix.core.designsystem.theme.SolennixColorScheme
 ) {
-    val dateFormatter = DateTimeFormatter.ofPattern("d 'de' MMMM", Locale("es"))
+    val dateFormatter = ProductStrings.longDateFormatter()
     val eventDate = try {
         LocalDate.parse(point.eventDate)
     } catch (_: Exception) {
@@ -310,10 +309,10 @@ private fun DemandEventRow(
                     )
                     // Urgency badge
                     when (diffDays) {
-                        0 -> UrgencyBadge("Hoy", colors.primary)
-                        1 -> UrgencyBadge("Mañana", Color(0xFFFF9800))
+                        0 -> UrgencyBadge(ProductStrings.today, colors.primary)
+                        1 -> UrgencyBadge(ProductStrings.tomorrow, Color(0xFFFF9800))
                         in 2..7 -> Text(
-                            text = "en $diffDays días",
+                            text = ProductStrings.inDays(diffDays),
                             style = MaterialTheme.typography.labelSmall,
                             color = colors.secondaryText
                         )
@@ -349,7 +348,7 @@ private fun DemandEventRow(
 
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    text = "${point.quantity} uds",
+                    text = ProductStrings.quantityUnits(point.quantity),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     color = colors.primaryText
@@ -397,12 +396,12 @@ private fun DemandEmptyState(
             tint = colors.tertiaryText
         )
         Text(
-            text = "Sin eventos próximos",
+            text = ProductStrings.noUpcomingEvents,
             style = MaterialTheme.typography.bodyMedium,
             color = colors.secondaryText
         )
         Text(
-            text = "Este producto no está incluido en ningún evento próximo",
+            text = ProductStrings.noUpcomingEventsDescription,
             style = MaterialTheme.typography.bodySmall,
             color = colors.tertiaryText
         )
