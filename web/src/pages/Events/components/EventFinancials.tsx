@@ -51,24 +51,6 @@ export const EventFinancials: React.FC<EventFinancialsProps> = ({
         <div>
           <div className="space-y-4">
             <div className="bg-card p-4 rounded-xl shadow-xs border border-border">
-              <label htmlFor="requires_invoice" className="block text-sm font-medium text-text-secondary mb-2">
-                {t('events:financials.invoice')}
-              </label>
-              <div className="flex items-center gap-3">
-                <input
-                  id="requires_invoice"
-                  type="checkbox"
-                  {...register('requires_invoice')}
-                  className="h-4 w-4 text-primary border-border rounded-sm focus:ring-primary bg-card"
-                  aria-describedby="requires_invoice-description"
-                />
-                <span id="requires_invoice-description" className="text-sm text-text-secondary">
-                  {t('events:financials.invoice')} ({t('events:financials.tax')} {taxRateValue}%)
-                </span>
-              </div>
-            </div>
-
-            <div className="bg-card p-4 rounded-xl shadow-xs border border-border">
               <div className="flex items-center justify-between mb-2">
                 <label htmlFor="discount" className="text-sm font-medium text-text-secondary">
                   {t('events:financials.discount')}
@@ -186,13 +168,6 @@ export const EventFinancials: React.FC<EventFinancialsProps> = ({
                     return amount.toLocaleString(moneyLocale, { minimumFractionDigits: 2 });
                   })()}
                 </span>
-              </div>
-            )}
-
-            {requiresInvoiceValue && (
-              <div className="flex justify-between text-text-secondary">
-                <span>{t('events:financials.tax')} ({taxRateValue}%):</span>
-                <span>${taxAmountValue.toLocaleString(moneyLocale, { minimumFractionDigits: 2 })}</span>
               </div>
             )}
 

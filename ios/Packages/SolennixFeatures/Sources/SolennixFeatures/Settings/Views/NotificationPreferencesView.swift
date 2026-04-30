@@ -13,9 +13,13 @@ public struct NotificationPreferencesView: View {
         _viewModel = State(initialValue: NotificationPreferencesViewModel(apiClient: apiClient, authManager: authManager))
     }
 
+    private func tr(_ key: String, _ value: String) -> String {
+        FeatureL10n.text(key, value)
+    }
+
     public var body: some View {
         content
-            .navigationTitle("Notificaciones")
+            .navigationTitle(tr("settings.tab.notifications", "Notificaciones"))
             .navigationBarTitleDisplayMode(.inline)
             .scrollContentBackground(.hidden)
             .background(SolennixColors.surfaceGrouped)
@@ -48,55 +52,55 @@ public struct NotificationPreferencesView: View {
             // Email preferences
             Section {
                 preferenceToggle(
-                    "Recibos de Pago",
-                    description: "Recibe un correo cuando se registra un pago",
+                    tr("settings.notifications.email_payment_receipt", "Recibos de pago"),
+                    description: tr("settings.notifications.email_payment_receipt_hint", "Recibe un correo cuando se registra un pago"),
                     icon: "creditcard",
                     keyPath: \.emailPaymentReceipt
                 )
 
                 preferenceToggle(
-                    "Recordatorio de Eventos",
-                    description: "Recibe un correo 24h antes de tu evento",
+                    tr("settings.notifications.email_event_reminder", "Recordatorio de eventos"),
+                    description: tr("settings.notifications.email_event_reminder_hint", "Recibe un correo 24h antes de tu evento"),
                     icon: "calendar.badge.clock",
                     keyPath: \.emailEventReminder
                 )
 
                 preferenceToggle(
-                    "Actualizaciones de Suscripcion",
-                    description: "Correos sobre cambios en tu plan",
+                    tr("settings.notifications.email_subscription_updates", "Actualizaciones de suscripción"),
+                    description: tr("settings.notifications.email_subscription_updates_hint", "Correos sobre cambios en tu plan"),
                     icon: "star",
                     keyPath: \.emailSubscriptionUpdates
                 )
 
                 preferenceToggle(
-                    "Resumen Semanal",
-                    description: "Resumen de actividad de la semana",
+                    tr("settings.notifications.email_weekly_summary", "Resumen semanal"),
+                    description: tr("settings.notifications.email_weekly_summary_hint", "Resumen de actividad de la semana"),
                     icon: "chart.bar",
                     keyPath: \.emailWeeklySummary
                 )
 
                 preferenceToggle(
-                    "Noticias y Tips",
-                    description: "Novedades y consejos de Solennix",
+                    tr("settings.notifications.email_marketing", "Noticias y tips"),
+                    description: tr("settings.notifications.email_marketing_hint", "Novedades y consejos de Solennix"),
                     icon: "megaphone",
                     keyPath: \.emailMarketing
                 )
             } header: {
-                Text("Correos Electronicos")
+                Text(tr("settings.notifications.email_section", "Correos electrónicos"))
             }
 
             // Push preferences
             Section {
                 preferenceToggle(
-                    "Notificaciones Push",
-                    description: "Habilitar o deshabilitar todas las notificaciones push",
+                    tr("settings.notifications.push_enabled", "Notificaciones push"),
+                    description: tr("settings.notifications.push_enabled_hint", "Habilitar o deshabilitar todas las notificaciones push"),
                     icon: "bell.badge",
                     keyPath: \.pushEnabled
                 )
 
                 preferenceToggle(
-                    "Recordatorio de Eventos",
-                    description: "Notificacion push antes de tu evento",
+                    tr("settings.notifications.push_event_reminder", "Recordatorio de eventos"),
+                    description: tr("settings.notifications.push_event_reminder_hint", "Notificación push antes de tu evento"),
                     icon: "calendar.badge.clock",
                     keyPath: \.pushEventReminder
                 )
@@ -104,15 +108,15 @@ public struct NotificationPreferencesView: View {
                 .opacity(viewModel.pushEnabled ? 1 : 0.5)
 
                 preferenceToggle(
-                    "Pago Recibido",
-                    description: "Notificacion push cuando se registra un pago",
+                    tr("settings.notifications.push_payment_received", "Pago recibido"),
+                    description: tr("settings.notifications.push_payment_received_hint", "Notificación push cuando se registra un pago"),
                     icon: "creditcard.fill",
                     keyPath: \.pushPaymentReceived
                 )
                 .disabled(!viewModel.pushEnabled)
                 .opacity(viewModel.pushEnabled ? 1 : 0.5)
             } header: {
-                Text("Notificaciones Push")
+                Text(tr("settings.notifications.push_section", "Notificaciones push"))
             }
         }
     }

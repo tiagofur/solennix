@@ -6,9 +6,9 @@
 ## Tracker de ejecución
 
 - **Epic**: #202 — `feat(cross-platform): complete product-wide i18n parity`
-- **Slices activos**:
-  - #94 — Dashboard
-  - #95 — Events list ✅ implementado en web + iOS + Android; issue cerrado
+- **Slices**:
+  - #94 — Dashboard ✅ implementado en web + iOS + Android; issue cerrado
+  - #95 — Events list
   - #203 — Canonical copy matrix + governance
   - #204 — Event detail + event form
   - #205 — Auth + settings
@@ -368,7 +368,6 @@ Notas de normalización:
 - `Dashboard` no debe aparecer en UI ES; sólo en docs técnicas o nombres de archivo.
 - `Guardar Pago` no es preferido; `Registrar pago` es el canonical. `Pagar y completar` queda aprobado como compact variant.
 - `Ventas Netas` se normaliza a `Ventas netas` en sentence case para todos los catálogos nuevos.
-- **Estado 2026-04-29**: slice implementado cross-platform. Web/iOS/Android ya consumen catálogo/localized resources para Dashboard principal, widgets, alertas de atención, KPIs, modal/payment actions y labels accesibles; además se removieron hardcodes de fecha/mes y locales fijos dentro del slice.
 
 #### Events list
 
@@ -400,7 +399,6 @@ Notas de normalización:
 - `Buscar eventos...` es el placeholder canonical para search textual. `Filtrar eventos...` confunde search con filtros estructurados.
 - `Servicio` es la label corta aprobada. `Tipo de servicio` queda para export/table layouts donde haya espacio.
 - `Nuevo evento` y `Cotización rápida` usan sentence case en catálogos nuevos.
-- **Estado 2026-04-29**: slice implementado cross-platform. Web, iOS y Android ya consumen catálogo/localized resources para título, search, filtros, estados, sort, acciones por fila, delete confirm, empty states, export CSV, `Todo el día`, contador de personas, errores visibles y labels accesibles. Además se removieron hardcodes de locale en moneda/fecha dentro del slice (`Intl.NumberFormat` en Web, `.autoupdatingCurrent` en iOS, resources + `Locale.getDefault()` en Android).
 
 #### Auth / Settings
 
@@ -431,7 +429,6 @@ Notas de normalización:
 - `Gestionar plan` queda como CTA canonical corta. `Suscripción` queda para sección/tab, no necesariamente para el botón principal.
 - `Cerrar sesión` es canonical; `Salir` sólo como compact secondary variant.
 - `Correo electrónico` es el canonical completo; `Correo` queda aprobado como compact label si el layout mobile se rompe.
-- **Estado 2026-04-29**: slice implementado cross-platform. Web, iOS y Android ya consumen copy localizada en auth + settings, incluyendo subflows de perfil/contraseña/negocio/notificaciones/contrato/about/privacy/subscription. Mobile además ya soporta selector de idioma persistido (`preferred_language`) con sync real al backend y aplicación de locale app-level.
 
 #### Clients
 
@@ -477,42 +474,7 @@ Notas de normalización:
 
 Los siguientes dominios deben agregarse a la matrix en la próxima iteración de #203:
 
-- **Sin pendientes en la matrix base**. La próxima iteración ya puede dedicarse a refinar keys por slice concreto o edge cases.
-
-#### Products / Inventory
-
-Strings visibles detectados en código actual:
-
-- `Productos` / `Inventario`
-- `Nuevo producto` / `Nuevo ítem`
-- `Agregar producto` / `Agregar item de inventario`
-- `Buscar productos` / `Buscar inventario`
-- `Filtrar productos por nombre o categoría...`
-- `Filtrar inventario por nombre...`
-- `CSV` / `Exportar CSV`
-- `Nombre` / `Categoría` / `Precio Base` / `Tipo` / `Unidad`
-- `Producto activo` / `Visible en cotizaciones`
-- `Imagen del Producto` / `Seleccionar Imagen` / `Cambiar Imagen` / `Subiendo...`
-- `Composición / Insumos` / `Equipo Necesario` / `Insumos por Evento`
-- `Cantidad` / `Costo est.` / `Equipo asociado` / `Sin equipo`
-- `Seleccionar Item` / `Stock`
-- `Eliminar producto` / `Detalle del Producto` / `Inactivo`
-- `Costo / Unidad` / `Margen Est.` / `Próx. Eventos`
-- `Stock bajo` / `Ajustar Stock`
-- `Consumibles` / `Insumos por Evento` / `Equipos`
-- `Sin productos` / `Sin inventario` / `Sin resultados`
-- `No se encontraron productos que coincidan con los filtros aplicados`
-- `No hay items con stock bajo`
-- `Costo Unitario` / `Stock Actual` / `Stock Mínimo` / `Valor en Stock`
-- `Demanda próximos 7 días`
-
-Notas de normalización:
-
-- Para nuevos catálogos usamos `Buscar productos...` y `Buscar inventario...`, no `Filtrar ...`, cuando el control es búsqueda textual.
-- `Nuevo producto` y `Nuevo ítem` quedan como CTAs primarias canónicas. `Agregar ...` queda como variante secundaria o accessibility label.
-- Unificamos sentence case y tildes: `Precio base`, `Categoría`, `Ítem`, `Costo unitario`, `Próximos eventos`.
-- `Consumibles` queda como canonical para el grupo de stock gastable general; evita drift con `Ingredientes` cuando la pantalla no está hablando sólo de recetas.
-- `Equipo` / `Equipos` es preferido para UI general. `Activo / equipo` puede existir como helper explicativo, no como label principal.
+- **Products / Inventory**: stock, costo, precio, unidad, receta, equipo, insumo
 
 ## Checklist de review por slice
 
@@ -570,9 +532,11 @@ Notas de normalización:
 ## Próximos slices
 
 1. **#203 — Canonical copy matrix + governance**: completar esta matrix y convertirla en criterio obligatorio de review.
-2. **#205 / #206 / #207 / #208**: expandir el mismo patrón por flujo.
-3. **#209 — Final sweep**: barrido final de strings hardcodeados, drift semántico y fallbacks.
-4. **Backend i18n** (opcional, lower priority): `Accept-Language` header routing + tabla de traducciones server-side para mensajes que se muestran al usuario crudos (validaciones de formularios).
+2. **#94 / #95**: cerrar Dashboard y Events list con paridad real en iOS, Android y Web.
+3. **#204 / #205 / #206 / #207 / #208**: expandir el mismo patrón por flujo.
+4. **#209 — Final sweep**: barrido final de strings hardcodeados, drift semántico y fallbacks.
+5. **Selector de idioma en Mobile**: Agregar el selector de idioma en Settings de iOS (`@AppStorage("preferredLocale")`) y Android (`LocaleManager.setApplicationLocales`), que sincronicen con el backend igual que la web.
+6. **Backend i18n** (opcional, lower priority): `Accept-Language` header routing + tabla de traducciones server-side para mensajes que se muestran al usuario crudos (validaciones de formularios).
 
 ## Verificación rápida
 

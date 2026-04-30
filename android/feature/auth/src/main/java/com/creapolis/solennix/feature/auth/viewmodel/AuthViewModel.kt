@@ -1,5 +1,8 @@
 package com.creapolis.solennix.feature.auth.viewmodel
 
+import android.content.Context
+import android.util.Log
+import androidx.annotation.StringRes
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -16,10 +19,11 @@ import com.creapolis.solennix.core.network.put
 import com.creapolis.solennix.core.network.AuthManager
 import com.creapolis.solennix.core.network.Endpoints
 import com.creapolis.solennix.core.network.runCatchingApi
-import android.util.Log
+import com.creapolis.solennix.feature.auth.R
 import com.revenuecat.purchases.Purchases
 import com.revenuecat.purchases.logInWith
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,9 +33,12 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
+    @ApplicationContext private val appContext: Context,
     val authManager: AuthManager,
     private val apiService: ApiService
 ) : ViewModel() {
+
+    private fun tr(@StringRes id: Int, vararg args: Any): String = appContext.getString(id, *args)
 
     val authState: StateFlow<AuthManager.AuthState> = authManager.authState
 
@@ -75,7 +82,7 @@ class AuthViewModel @Inject constructor(
                 syncRevenueCat(response.user.id)
                 _loginSuccess.tryEmit(Unit)
             } catch (e: ApiError) {
-                errorMessage = e.userMessage(context = ErrorContext.LOGIN)
+                errorMessage = e.userMessage(appContext = appContext, context = ErrorContext.LOGIN)
             } finally {
                 isLoading = false
             }
@@ -115,7 +122,7 @@ class AuthViewModel @Inject constructor(
                 syncRevenueCat(response.user.id)
                 _loginSuccess.tryEmit(Unit)
             } catch (e: ApiError) {
-                errorMessage = e.userMessage(context = ErrorContext.REGISTER)
+                errorMessage = e.userMessage(appContext = appContext, context = ErrorContext.REGISTER)
             } finally {
                 isLoading = false
             }
@@ -137,7 +144,7 @@ class AuthViewModel @Inject constructor(
                 }
                 forgotSuccess = true
             } catch (e: ApiError) {
-                errorMessage = e.userMessage(context = ErrorContext.FORGOT_PASSWORD)
+                errorMessage = e.userMessage(appContext = appContext, context = ErrorContext.FORGOT_PASSWORD)
             } finally {
                 isLoading = false
             }
@@ -164,7 +171,7 @@ class AuthViewModel @Inject constructor(
                 }
                 resetSuccess = true
             } catch (e: ApiError) {
-                errorMessage = e.userMessage(context = ErrorContext.RESET_PASSWORD)
+                errorMessage = e.userMessage(appContext = appContext, context = ErrorContext.RESET_PASSWORD)
             } finally {
                 isLoading = false
             }
@@ -224,7 +231,7 @@ class AuthViewModel @Inject constructor(
                 syncRevenueCat(response.user.id)
                 _loginSuccess.tryEmit(Unit)
             } catch (e: ApiError) {
-                errorMessage = e.userMessage(context = ErrorContext.SOCIAL_LOGIN)
+                errorMessage = e.userMessage(appContext = appContext, context = ErrorContext.SOCIAL_LOGIN)
             } finally {
                 isLoading = false
             }
@@ -247,7 +254,7 @@ class AuthViewModel @Inject constructor(
                 syncRevenueCat(response.user.id)
                 _loginSuccess.tryEmit(Unit)
             } catch (e: ApiError) {
-                errorMessage = e.userMessage(context = ErrorContext.SOCIAL_LOGIN)
+                errorMessage = e.userMessage(appContext = appContext, context = ErrorContext.SOCIAL_LOGIN)
             } finally {
                 isLoading = false
             }
@@ -265,24 +272,22 @@ private enum class ErrorContext {
 }
 
 /** Maps [ApiError] to a user-facing Spanish message depending on the auth operation context. */
-private fun ApiError.userMessage(context: ErrorContext): String = when (this) {
+private fun ApiError.userMessage(appContext: Context, context: ErrorContext): String = when (this) {
     is ApiError.Unauthorized -> when (context) {
-        ErrorContext.LOGIN -> "Email o contraseña incorrectos"
-        ErrorContext.RESET_PASSWORD -> "Enlace inválido o expirado"
-        else -> "Sesión expirada. Iniciá sesión de nuevo."
+        ErrorContext.LOGIN -> appContext.getString(R.string.auth_error_invalid_credentials)
+        ErrorContext.RESET_PASSWORD -> appContext.getString(R.string.auth_error_invalid_or_expired_link)
+        else -> appContext.getString(R.string.auth_error_session_expired)
     }
     is ApiError.Conflict -> when (context) {
-        ErrorContext.REGISTER -> "Ya existe una cuenta con este email"
-        else -> "Conflicto con los datos enviados. Intentá de nuevo."
+        ErrorContext.REGISTER -> appContext.getString(R.string.auth_error_email_taken)
+        else -> appContext.getString(R.string.auth_error_conflict)
     }
-    is ApiError.Forbidden -> "No tenés permisos para realizar esta acción."
-    is ApiError.NotFound -> "Servicio no disponible. Intentá más tarde."
-    is ApiError.ValidationError -> "Datos inválidos. Revisá los campos e intentá de nuevo."
-    is ApiError.NetworkError -> "Error de conexión. Verificá tu internet."
-    is ApiError.ServerError -> "Error del servidor. Intentá más tarde."
-    is ApiError.DecodingError -> "Error inesperado. Intentá de nuevo."
-    is ApiError.SecurityError ->
-        "No pudimos verificar la conexión segura con el servidor. " +
-            "Posible red comprometida. Intentá desde otra red."
-    is ApiError.Unknown -> "Error inesperado. Intentá de nuevo."
+    is ApiError.Forbidden -> appContext.getString(R.string.auth_error_forbidden)
+    is ApiError.NotFound -> appContext.getString(R.string.auth_error_not_found)
+    is ApiError.ValidationError -> appContext.getString(R.string.auth_error_validation)
+    is ApiError.NetworkError -> appContext.getString(R.string.auth_error_network)
+    is ApiError.ServerError -> appContext.getString(R.string.auth_error_server)
+    is ApiError.DecodingError -> appContext.getString(R.string.auth_error_decoding)
+    is ApiError.SecurityError -> appContext.getString(R.string.auth_error_security)
+    is ApiError.Unknown -> appContext.getString(R.string.auth_error_unknown)
 }

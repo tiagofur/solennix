@@ -9,7 +9,7 @@ aliases:
   - Arquitectura iOS
   - iOS Architecture
 date: 2026-03-20
-updated: 2026-04-17
+updated: 2026-04-29
 status: active
 platform: iOS
 ---
@@ -17,7 +17,7 @@ platform: iOS
 # Arquitectura Tecnica: Solennix iOS
 
 > [!info] Stack Principal
-> **Fecha:** Marzo 2026 · **Última actualización:** 2026-04-17
+> **Fecha:** Marzo 2026 · **Última actualización:** 2026-04-29
 > **Plataformas:** iOS 17+ / iPadOS 17+ / macOS 14+ (Designed for iPad)
 > **Lenguaje:** Swift 5.9+
 > **Framework UI:** SwiftUI
@@ -73,6 +73,7 @@ platform: iOS
 | Almacenamiento seguro   | Keychain Services                              | iOS 17         |
 | Conectividad            | NWPathMonitor (Network framework)              | iOS 17         |
 | Apple Sign-In           | AuthenticationServices                         | iOS 17         |
+| i18n                    | `Localizable.xcstrings` + `FeatureL10n`        | iOS 17         |
 
 ### Decisiones clave
 
@@ -83,6 +84,7 @@ platform: iOS
 > - **Actor-based networking:** `APIClient` es un `actor` de Swift, garantizando seguridad de hilos sin locks manuales ni `DispatchQueue`.
 > - **SwiftData solo para cache:** SwiftData se usa exclusivamente para cache offline (no como fuente de verdad). La fuente de verdad es siempre el backend via API REST.
 > - **XcodeGen:** El archivo `project.yml` genera el `.xcodeproj`, eliminando conflictos de merge en el archivo de proyecto y facilitando la gestion de targets.
+> - **i18n dinamico en runtime:** El target principal inyecta `\.locale` desde `@AppStorage("preferredLocale")`; `SolennixFeatures` resuelve strings con `FeatureL10n` sobre `Localizable.xcstrings` usando `bundle: .module`. El idioma se sincroniza con `User.preferredLanguage` y se persiste via `PUT /api/users/me` (`preferred_language`).
 
 ---
 

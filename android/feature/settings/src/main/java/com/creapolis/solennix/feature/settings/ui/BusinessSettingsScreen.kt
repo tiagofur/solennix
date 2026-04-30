@@ -1,6 +1,7 @@
 package com.creapolis.solennix.feature.settings.ui
 
 import android.net.Uri
+import com.creapolis.solennix.feature.settings.R
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -29,12 +30,14 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
+import com.creapolis.solennix.core.designsystem.R as DesignSystemR
 import com.creapolis.solennix.core.designsystem.component.PremiumButton
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.component.SolennixTextField
@@ -75,10 +78,10 @@ fun BusinessSettingsScreen(
     Scaffold(
         topBar = {
             SolennixTopAppBar(
-                title = { Text("Ajustes del Negocio") },
+                title = { Text(stringResource(R.string.settings_business_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(DesignSystemR.string.cd_back))
                     }
                 }
             )
@@ -104,7 +107,7 @@ fun BusinessSettingsScreen(
             ) {
                 // Logo Section
                 Text(
-                    text = "Logo",
+                    text = stringResource(R.string.settings_business_logo),
                     style = MaterialTheme.typography.labelLarge,
                     color = SolennixTheme.colors.primary,
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -129,7 +132,7 @@ fun BusinessSettingsScreen(
                                     .data(resolvedLogoUrl)
                                     .crossfade(true)
                                     .build(),
-                                contentDescription = "Logo del negocio",
+                                contentDescription = stringResource(R.string.settings_business_logo_description),
                                 modifier = Modifier
                                     .size(100.dp)
                                     .clip(RoundedCornerShape(12.dp)),
@@ -166,7 +169,7 @@ fun BusinessSettingsScreen(
                                     color = SolennixTheme.colors.primary
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("Subiendo...")
+                                Text(stringResource(R.string.settings_business_logo_uploading))
                             } else {
                                 Icon(
                                     Icons.Default.PhotoCamera,
@@ -175,8 +178,8 @@ fun BusinessSettingsScreen(
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    if (viewModel.logoUrl != null) "Cambiar Logo"
-                                    else "Subir Logo"
+                                    if (viewModel.logoUrl != null) stringResource(R.string.settings_business_logo_change)
+                                    else stringResource(R.string.settings_business_logo_upload)
                                 )
                             }
                         }
@@ -186,7 +189,7 @@ fun BusinessSettingsScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = "Tu logo aparecerá en los contratos y cotizaciones que generes.",
+                    text = stringResource(R.string.settings_business_logo_hint),
                     style = MaterialTheme.typography.bodySmall,
                     color = SolennixTheme.colors.secondaryText,
                     modifier = Modifier.padding(horizontal = 4.dp)
@@ -202,7 +205,7 @@ fun BusinessSettingsScreen(
                     // Business Name Section
                     Column {
                         Text(
-                            text = "Nombre del Negocio",
+                            text = stringResource(R.string.settings_business_name_section),
                             style = MaterialTheme.typography.labelLarge,
                             color = SolennixTheme.colors.primary,
                             modifier = Modifier.padding(bottom = 8.dp)
@@ -218,7 +221,7 @@ fun BusinessSettingsScreen(
                                 SolennixTextField(
                                     value = viewModel.businessName,
                                     onValueChange = { viewModel.businessName = it },
-                                    label = "Nombre del negocio",
+                                    label = stringResource(R.string.settings_business_name_label),
                                     leadingIcon = Icons.Default.Business
                                 )
 
@@ -230,7 +233,7 @@ fun BusinessSettingsScreen(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        text = "Mostrar en PDFs",
+                                        text = stringResource(R.string.settings_business_show_pdfs),
                                         style = MaterialTheme.typography.bodyLarge,
                                         color = SolennixTheme.colors.primaryText
                                     )
@@ -248,7 +251,7 @@ fun BusinessSettingsScreen(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         Text(
-                            text = "Si activás esta opción, tu nombre comercial aparecerá en los documentos en lugar de tu nombre personal.",
+                            text = stringResource(R.string.settings_business_show_pdfs_hint),
                             style = MaterialTheme.typography.bodySmall,
                             color = SolennixTheme.colors.secondaryText,
                             modifier = Modifier.padding(horizontal = 4.dp)
@@ -259,7 +262,7 @@ fun BusinessSettingsScreen(
                     // Brand Color Section
                     Column {
                         Text(
-                            text = "Identidad Visual",
+                            text = stringResource(R.string.settings_business_identity_section),
                             style = MaterialTheme.typography.labelLarge,
                             color = SolennixTheme.colors.primary,
                             modifier = Modifier.padding(bottom = 8.dp)
@@ -273,7 +276,7 @@ fun BusinessSettingsScreen(
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
                                 Text(
-                                    text = "Color de marca",
+                                    text = stringResource(R.string.settings_business_brand_color),
                                     style = MaterialTheme.typography.bodyLarge,
                                     color = SolennixTheme.colors.primaryText,
                                     modifier = Modifier.padding(bottom = 12.dp)
@@ -308,7 +311,7 @@ fun BusinessSettingsScreen(
 
                                     TextButton(onClick = { showColorPicker = true }) {
                                         Text(
-                                            text = "Personalizar",
+                                            text = stringResource(R.string.settings_business_customize),
                                             color = SolennixTheme.colors.primary
                                         )
                                     }
@@ -319,7 +322,7 @@ fun BusinessSettingsScreen(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         Text(
-                            text = "Este color se usara como acento en los documentos PDF que generes.",
+                            text = stringResource(R.string.settings_business_brand_color_hint),
                             style = MaterialTheme.typography.bodySmall,
                             color = SolennixTheme.colors.secondaryText,
                             modifier = Modifier.padding(horizontal = 4.dp)
@@ -351,7 +354,7 @@ fun BusinessSettingsScreen(
                 }
 
                 PremiumButton(
-                    text = "Guardar",
+                    text = stringResource(R.string.common_save),
                     onClick = { viewModel.saveBusinessSettings() },
                     isLoading = viewModel.isSaving,
                     enabled = !viewModel.isSaving
@@ -397,7 +400,7 @@ private fun ColorPickerDialog(
                     .fillMaxWidth()
             ) {
                 Text(
-                    text = "Selector de color",
+                    text = stringResource(R.string.settings_business_color_picker_title),
                     style = MaterialTheme.typography.titleLarge,
                     color = SolennixTheme.colors.primaryText
                 )
@@ -422,7 +425,7 @@ private fun ColorPickerDialog(
 
                 // Hue slider
                 ColorSliderRow(
-                    label = "Tono",
+                    label = stringResource(R.string.settings_business_color_hue),
                     value = hue,
                     onValueChange = { hue = it },
                     valueRange = 0f..360f,
@@ -431,7 +434,7 @@ private fun ColorPickerDialog(
 
                 // Saturation slider
                 ColorSliderRow(
-                    label = "Saturación",
+                    label = stringResource(R.string.settings_business_color_saturation),
                     value = saturation,
                     onValueChange = { saturation = it },
                     valueRange = 0f..1f,
@@ -443,7 +446,7 @@ private fun ColorPickerDialog(
 
                 // Brightness slider
                 ColorSliderRow(
-                    label = "Brillo",
+                    label = stringResource(R.string.settings_business_color_brightness),
                     value = value,
                     onValueChange = { value = it },
                     valueRange = 0f..1f,
@@ -470,7 +473,7 @@ private fun ColorPickerDialog(
                             }
                         }
                     },
-                    label = { Text("Código HEX") },
+                    label = { Text(stringResource(R.string.settings_business_color_hex)) },
                     singleLine = true,
                     textStyle = MaterialTheme.typography.bodyLarge.copy(
                         fontFamily = FontFamily.Monospace
@@ -492,14 +495,14 @@ private fun ColorPickerDialog(
                 ) {
                     TextButton(onClick = onDismiss) {
                         Text(
-                            text = "Cancelar",
+                            text = stringResource(R.string.common_cancel),
                             color = SolennixTheme.colors.secondaryText
                         )
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     TextButton(onClick = { onConfirm(hexInput) }) {
                         Text(
-                            text = "Aceptar",
+                            text = stringResource(R.string.common_accept),
                             color = SolennixTheme.colors.primary
                         )
                     }

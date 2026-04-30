@@ -25,6 +25,10 @@ private struct ContractDefaultsBody: Encodable {
 @Observable
 public final class BusinessSettingsViewModel {
 
+    private func tr(_ key: String, _ value: String) -> String {
+        FeatureL10n.text(key, value)
+    }
+
     // MARK: - Properties
 
     public var user: User?
@@ -150,7 +154,7 @@ public final class BusinessSettingsViewModel {
 
         do {
             guard let data = try await selectedPhoto.loadTransferable(type: Data.self) else {
-                errorMessage = "No se pudo cargar la imagen"
+                errorMessage = tr("settings.business.logo.load_error", "No se pudo cargar la imagen")
                 isUploadingLogo = false
                 return
             }
@@ -177,9 +181,9 @@ public final class BusinessSettingsViewModel {
 
     private func mapError(_ error: Error) -> String {
         if let apiError = error as? APIError {
-            return apiError.errorDescription ?? "Ocurrio un error inesperado."
+            return apiError.errorDescription ?? tr("common.error.unexpected", "Ocurrió un error inesperado.")
         }
-        return "Ocurrio un error inesperado. Intenta de nuevo."
+        return tr("common.error.retry", "Ocurrió un error inesperado. Intenta de nuevo.")
     }
 }
 

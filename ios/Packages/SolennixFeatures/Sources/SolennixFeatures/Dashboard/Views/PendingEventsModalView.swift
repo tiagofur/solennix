@@ -6,6 +6,10 @@ import SolennixNetwork
 public struct PendingEventsModalView: View {
     @State private var viewModel: PendingEventsViewModel
 
+    private func tr(_ key: String, _ value: String) -> String {
+        FeatureL10n.text(key, value)
+    }
+
     public init(apiClient: APIClient) {
         _viewModel = State(initialValue: PendingEventsViewModel(apiClient: apiClient))
     }
@@ -37,7 +41,7 @@ public struct PendingEventsModalView: View {
                 set: { if !$0 { viewModel.consumeTransientMessage() } }
             )
         ) {
-            Button("OK", role: .cancel) { viewModel.consumeTransientMessage() }
+            Button(tr("dashboard.action.ok", "OK"), role: .cancel) { viewModel.consumeTransientMessage() }
         }
     }
 
@@ -58,12 +62,18 @@ public struct PendingEventsModalView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Eventos Pendientes de Cierre")
+                    Text(tr("dashboard.pending_modal.title", "Eventos pendientes de cierre"))
                         .font(.title3)
                         .fontWeight(.bold)
                         .foregroundStyle(SolennixColors.text)
 
-                    Text("Tienes \(viewModel.pendingEvents.count) evento(s) que requieren tu atencion.")
+                    Text(
+                        String(
+                            format: tr("dashboard.pending_modal.description", "Tienes %@ evento(s) que requieren tu atención."),
+                            locale: FeatureL10n.locale,
+                            String(viewModel.pendingEvents.count)
+                        )
+                    )
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)
                 }
@@ -103,7 +113,7 @@ public struct PendingEventsModalView: View {
                     viewModel.isPresented = false
                 }
             } label: {
-                Text("Cerrar por ahora")
+                Text(tr("dashboard.pending_modal.close_for_now", "Cerrar por ahora"))
                     .font(.body)
                     .fontWeight(.medium)
                     .foregroundStyle(SolennixColors.textSecondary)
@@ -160,7 +170,7 @@ public struct PendingEventsModalView: View {
         case .paymentDue:
             HStack(spacing: Spacing.sm) {
                 primaryButton(
-                    title: "Registrar pago",
+                    title: tr("dashboard.attention.register_payment", "Registrar pago"),
                     icon: "dollarsign.circle",
                     isLoading: isUpdating,
                     disabled: disabled
@@ -173,7 +183,7 @@ public struct PendingEventsModalView: View {
             VStack(spacing: Spacing.sm) {
                 if pendingEvent.hasPendingPayment {
                     primaryButton(
-                        title: "Pagar y completar",
+                        title: tr("dashboard.attention.pay_and_complete", "Pagar y completar"),
                         icon: "dollarsign.circle",
                         isLoading: isUpdating,
                         disabled: disabled
@@ -191,7 +201,7 @@ public struct PendingEventsModalView: View {
                                 await viewModel.updateEventStatus(eventId: pendingEvent.event.id, newStatus: .completed)
                             }
                         } label: {
-                            Text("Solo completar")
+                            Text(tr("dashboard.attention.complete_only", "Solo completar"))
                                 .font(.caption)
                                 .fontWeight(.semibold)
                                 .foregroundStyle(SolennixColors.textSecondary)
@@ -213,7 +223,7 @@ public struct PendingEventsModalView: View {
                                     ProgressView().controlSize(.small).tint(.white)
                                 } else {
                                     Image(systemName: "checkmark.circle")
-                                    Text("Completar")
+                                    Text(tr("dashboard.attention.complete", "Completar"))
                                 }
                             }
                             .font(.caption)
@@ -238,7 +248,7 @@ public struct PendingEventsModalView: View {
         case .quoteUrgent:
             HStack {
                 Spacer()
-                Text("Pendiente de confirmar")
+                Text(tr("dashboard.attention.unconfirmed_event_kind", "Sin confirmar"))
                     .font(.caption)
                     .foregroundStyle(SolennixColors.textSecondary)
                 Spacer()
@@ -279,7 +289,7 @@ public struct PendingEventsModalView: View {
         Button(action: action) {
             HStack(spacing: 4) {
                 Image(systemName: "xmark.circle")
-                Text("Cancelar")
+                Text(tr("dashboard.action.cancel", "Cancelar"))
             }
             .font(.caption)
             .fontWeight(.bold)
@@ -300,11 +310,11 @@ public struct PendingEventsModalView: View {
 
     private func paymentSheet(for pendingEvent: PendingEventWithReason) -> some View {
         let confirmLabel = pendingEvent.reason == .overdueEvent && pendingEvent.hasPendingPayment
-            ? "Pagar y completar"
-            : "Guardar Pago"
+            ? tr("dashboard.attention.pay_and_complete", "Pagar y completar")
+            : tr("dashboard.payment.save_payment", "Guardar pago")
         let title = pendingEvent.reason == .overdueEvent && pendingEvent.hasPendingPayment
-            ? "Registrar pago y completar"
-            : "Registrar Pago"
+            ? tr("dashboard.attention.register_payment_and_complete", "Registrar pago y completar")
+            : tr("dashboard.attention.register_payment", "Registrar pago")
 
         return PaymentEntrySheet(
             amount: $viewModel.paymentAmount,

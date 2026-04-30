@@ -15,16 +15,20 @@ public struct EditProfileView: View {
         _viewModel = State(initialValue: SettingsViewModel(apiClient: apiClient, authManager: authManager))
     }
 
+    private func tr(_ key: String, _ value: String) -> String {
+        FeatureL10n.text(key, value)
+    }
+
     public var body: some View {
         Group {
             if viewModel.isLoading {
-                ProgressView("Cargando...")
+                ProgressView(tr("settings.loading", "Cargando..."))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 formContent
             }
         }
-        .navigationTitle("Editar Perfil")
+        .navigationTitle(tr("settings.action.edit_profile", "Editar perfil"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -42,7 +46,7 @@ public struct EditProfileView: View {
                 AdaptiveFormRow {
                     // Name field
                     VStack(alignment: .leading, spacing: Spacing.xs) {
-                        TextField("Nombre", text: $viewModel.editName)
+                        TextField(tr("settings.profile.name_label", "Nombre"), text: $viewModel.editName)
                             .textContentType(.name)
                             .autocorrectionDisabled()
 
@@ -55,7 +59,7 @@ public struct EditProfileView: View {
                 } right: {
                     // Email field
                     VStack(alignment: .leading, spacing: Spacing.xs) {
-                        TextField("Correo electronico", text: $viewModel.editEmail)
+                        TextField(tr("settings.profile.email_label", "Correo electrónico"), text: $viewModel.editEmail)
                             .textContentType(.emailAddress)
                             .keyboardType(.emailAddress)
                             .autocapitalization(.none)
@@ -69,9 +73,9 @@ public struct EditProfileView: View {
                     }
                 }
             } header: {
-                Text("Informacion Personal")
+                Text(tr("settings.profile.personal_info", "Información personal"))
             } footer: {
-                Text("Tu nombre aparecera en los contratos y documentos que generes.")
+                Text(tr("settings.profile.personal_info_hint", "Tu nombre aparecerá en los contratos y documentos que generes."))
             }
 
             // Error message
@@ -101,7 +105,7 @@ public struct EditProfileView: View {
             if viewModel.isSavingProfile {
                 ProgressView()
             } else {
-                Text("Guardar")
+                Text(tr("common.save", "Guardar"))
                     .fontWeight(.semibold)
             }
         }

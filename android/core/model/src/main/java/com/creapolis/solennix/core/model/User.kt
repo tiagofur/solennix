@@ -8,6 +8,7 @@ data class User(
     val id: String,
     val email: String,
     val name: String,
+    @SerialName("preferred_language") val preferredLanguage: String? = null,
     @SerialName("business_name") val businessName: String? = null,
     @SerialName("logo_url") val logoUrl: String? = null,
     @SerialName("brand_color") val brandColor: String? = null,

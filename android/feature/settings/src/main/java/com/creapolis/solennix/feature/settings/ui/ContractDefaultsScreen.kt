@@ -1,5 +1,6 @@
 package com.creapolis.solennix.feature.settings.ui
 
+import com.creapolis.solennix.feature.settings.R
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -17,9 +18,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import com.creapolis.solennix.core.designsystem.R as DesignSystemR
 import com.creapolis.solennix.core.designsystem.component.PremiumButton
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveCenteredContent
@@ -45,10 +48,10 @@ fun ContractDefaultsScreen(
     Scaffold(
         topBar = {
             SolennixTopAppBar(
-                title = { Text("Valores del Contrato") },
+                title = { Text(stringResource(R.string.settings_contract_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(DesignSystemR.string.cd_back))
                     }
                 }
             )
@@ -74,7 +77,7 @@ fun ContractDefaultsScreen(
             ) {
                 // Deposit Section
                 Text(
-                    text = "Anticipo",
+                    text = stringResource(R.string.settings_contract_deposit),
                     style = MaterialTheme.typography.labelLarge,
                     color = SolennixTheme.colors.primary,
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -93,12 +96,12 @@ fun ContractDefaultsScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Porcentaje de anticipo",
+                                text = stringResource(R.string.settings_contract_deposit_percent),
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = SolennixTheme.colors.primaryText
                             )
                             Text(
-                                text = "${viewModel.depositPercent.roundToInt()}%",
+                                text = stringResource(R.string.settings_contract_deposit_percent_value, viewModel.depositPercent.roundToInt()),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = SolennixTheme.colors.primary
                             )
@@ -122,7 +125,7 @@ fun ContractDefaultsScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = "Porcentaje del total que solicitas como anticipo al confirmar un evento.",
+                    text = stringResource(R.string.settings_contract_deposit_hint),
                     style = MaterialTheme.typography.bodySmall,
                     color = SolennixTheme.colors.secondaryText,
                     modifier = Modifier.padding(horizontal = 4.dp)
@@ -132,7 +135,7 @@ fun ContractDefaultsScreen(
 
                 // Cancellation Section
                 Text(
-                    text = "Cancelacion",
+                    text = stringResource(R.string.settings_contract_cancellation),
                     style = MaterialTheme.typography.labelLarge,
                     color = SolennixTheme.colors.primary,
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -151,12 +154,12 @@ fun ContractDefaultsScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Dias de anticipacion",
+                                text = stringResource(R.string.settings_contract_cancellation_days),
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = SolennixTheme.colors.primaryText
                             )
                             Text(
-                                text = "${viewModel.cancellationDays.roundToInt()} dias",
+                                text = stringResource(R.string.settings_contract_days_value, viewModel.cancellationDays.roundToInt()),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = SolennixTheme.colors.primary
                             )
@@ -180,7 +183,7 @@ fun ContractDefaultsScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = "Numero minimo de dias antes del evento para permitir cancelacion con reembolso.",
+                    text = stringResource(R.string.settings_contract_cancellation_hint),
                     style = MaterialTheme.typography.bodySmall,
                     color = SolennixTheme.colors.secondaryText,
                     modifier = Modifier.padding(horizontal = 4.dp)
@@ -190,7 +193,7 @@ fun ContractDefaultsScreen(
 
                 // Refund Section
                 Text(
-                    text = "Reembolso",
+                    text = stringResource(R.string.settings_contract_refund),
                     style = MaterialTheme.typography.labelLarge,
                     color = SolennixTheme.colors.primary,
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -209,12 +212,12 @@ fun ContractDefaultsScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Porcentaje de reembolso",
+                                text = stringResource(R.string.settings_contract_refund_percent),
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = SolennixTheme.colors.primaryText
                             )
                             Text(
-                                text = "${viewModel.refundPercent.roundToInt()}%",
+                                text = stringResource(R.string.settings_contract_deposit_percent_value, viewModel.refundPercent.roundToInt()),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = SolennixTheme.colors.primary
                             )
@@ -238,7 +241,7 @@ fun ContractDefaultsScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = "Porcentaje del anticipo que devuelves en caso de cancelacion dentro del plazo permitido.",
+                    text = stringResource(R.string.settings_contract_refund_hint),
                     style = MaterialTheme.typography.bodySmall,
                     color = SolennixTheme.colors.secondaryText,
                     modifier = Modifier.padding(horizontal = 4.dp)
@@ -248,7 +251,7 @@ fun ContractDefaultsScreen(
 
                 // Contract Template Section
                 Text(
-                    text = "Plantilla de Contrato",
+                    text = stringResource(R.string.settings_contract_template),
                     style = MaterialTheme.typography.labelLarge,
                     color = SolennixTheme.colors.primary,
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -271,7 +274,7 @@ fun ContractDefaultsScreen(
                                 textFieldValue = it
                                 viewModel.contractTemplate = it.text
                             },
-                            label = { Text("Texto de la plantilla del contrato") },
+                            label = { Text(stringResource(R.string.settings_contract_template_field)) },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .heightIn(min = 150.dp),
@@ -285,7 +288,7 @@ fun ContractDefaultsScreen(
                         Spacer(modifier = Modifier.height(12.dp))
 
                         Text(
-                            text = "Tokens disponibles (toca para insertar):",
+                            text = stringResource(R.string.settings_contract_tokens_title),
                             style = MaterialTheme.typography.labelMedium,
                             color = SolennixTheme.colors.secondaryText,
                             modifier = Modifier.padding(bottom = 8.dp)
@@ -366,7 +369,7 @@ fun ContractDefaultsScreen(
                             )
                         ) {
                             Text(
-                                text = "Restaurar predeterminado",
+                                text = stringResource(R.string.settings_contract_restore_default),
                                 style = MaterialTheme.typography.labelMedium
                             )
                         }
@@ -376,7 +379,7 @@ fun ContractDefaultsScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = "Personalizá el texto de tus contratos. Usá los tokens para insertar datos del evento automáticamente.",
+                    text = stringResource(R.string.settings_contract_template_hint),
                     style = MaterialTheme.typography.bodySmall,
                     color = SolennixTheme.colors.secondaryText,
                     modifier = Modifier.padding(horizontal = 4.dp)
@@ -403,7 +406,7 @@ fun ContractDefaultsScreen(
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Vista Previa")
+                    Text(stringResource(R.string.settings_contract_preview))
                 }
 
                 if (showPreviewDialog) {
@@ -417,7 +420,7 @@ fun ContractDefaultsScreen(
 
                 // Terms Preview Section
                 Text(
-                    text = "Vista Previa de Terminos",
+                    text = stringResource(R.string.settings_contract_preview_terms),
                     style = MaterialTheme.typography.labelLarge,
                     color = SolennixTheme.colors.primary,
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -437,18 +440,18 @@ fun ContractDefaultsScreen(
                         ) {
                             Column(modifier = Modifier.padding(12.dp)) {
                                 PreviewRow(
-                                    label = "Anticipo requerido",
-                                    value = "${viewModel.depositPercent.roundToInt()}% del total"
+                                    label = stringResource(R.string.settings_contract_preview_deposit_required),
+                                    value = stringResource(R.string.settings_contract_preview_deposit_required_value, viewModel.depositPercent.roundToInt())
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 PreviewRow(
-                                    label = "Cancelacion sin penalizacion",
-                                    value = "${viewModel.cancellationDays.roundToInt()} dias antes"
+                                    label = stringResource(R.string.settings_contract_preview_cancellation),
+                                    value = stringResource(R.string.settings_contract_preview_cancellation_value, viewModel.cancellationDays.roundToInt())
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 PreviewRow(
-                                    label = "Reembolso por cancelacion",
-                                    value = "${viewModel.refundPercent.roundToInt()}% del anticipo"
+                                    label = stringResource(R.string.settings_contract_preview_refund),
+                                    value = stringResource(R.string.settings_contract_preview_refund_value, viewModel.refundPercent.roundToInt())
                                 )
                             }
                         }
@@ -467,7 +470,7 @@ fun ContractDefaultsScreen(
                 }
 
                 PremiumButton(
-                    text = "Guardar",
+                    text = stringResource(R.string.common_save),
                     onClick = { viewModel.saveContractDefaults() },
                     isLoading = viewModel.isSaving,
                     enabled = !viewModel.isSaving
@@ -521,7 +524,7 @@ private fun ContractTemplatePreviewDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "Vista Previa del Contrato",
+                text = stringResource(R.string.settings_contract_preview_dialog_title),
                 style = MaterialTheme.typography.titleMedium,
                 color = SolennixTheme.colors.primaryText
             )
@@ -530,7 +533,7 @@ private fun ContractTemplatePreviewDialog(
             Column {
                 if (template.isBlank()) {
                     Text(
-                        text = "La plantilla está vacía. Escribí el texto del contrato y usá los tokens para insertar datos automáticamente.",
+                        text = stringResource(R.string.settings_contract_preview_empty),
                         style = MaterialTheme.typography.bodyMedium,
                         color = SolennixTheme.colors.secondaryText
                     )
@@ -551,7 +554,7 @@ private fun ContractTemplatePreviewDialog(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
-                        text = "Datos de ejemplo utilizados:",
+                        text = stringResource(R.string.settings_contract_preview_sample_data),
                         style = MaterialTheme.typography.labelSmall,
                         color = SolennixTheme.colors.secondaryText,
                         modifier = Modifier.padding(bottom = 4.dp)
@@ -572,7 +575,7 @@ private fun ContractTemplatePreviewDialog(
         confirmButton = {
             TextButton(onClick = onDismiss) {
                 Text(
-                    "Cerrar",
+                    stringResource(R.string.common_close),
                     color = SolennixTheme.colors.primary
                 )
             }

@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.credentials.CredentialManager
@@ -55,7 +56,7 @@ fun GoogleSignInButton(
         onClick = {
             if (webClientId == null || webClientId.startsWith("YOUR_")) {
                 Log.e("GoogleSignIn", "Google Web Client ID not configured in strings.xml")
-                onError?.invoke("Google Sign-In no está configurado")
+                onError?.invoke(context.getString(R.string.auth_social_google_not_configured))
                 return@OutlinedButton
             }
 
@@ -98,24 +99,24 @@ fun GoogleSignInButton(
                             "type=${e::class.java.name} msg=${e.message}",
                         e
                     )
-                    onError?.invoke("No hay cuentas de Google disponibles o la app no está registrada")
+                    onError?.invoke(context.getString(R.string.auth_social_google_no_accounts))
                 } catch (e: GetCredentialException) {
                     Log.e(
                         "GoogleSignIn",
                         "GetCredentialException: type=${e.type} errorClass=${e::class.java.name} msg=${e.message}",
                         e
                     )
-                    onError?.invoke("Error al iniciar sesión con Google")
+                    onError?.invoke(context.getString(R.string.auth_social_google_error))
                 } catch (e: GoogleIdTokenParsingException) {
                     Log.e("GoogleSignIn", "Failed to parse Google ID token", e)
-                    onError?.invoke("Error al procesar la respuesta de Google")
+                    onError?.invoke(context.getString(R.string.auth_social_google_parse_error))
                 } catch (e: Exception) {
                     Log.e(
                         "GoogleSignIn",
                         "Unexpected Google Sign-In failure: class=${e::class.java.name} msg=${e.message}",
                         e
                     )
-                    onError?.invoke("Error al iniciar sesión con Google")
+                    onError?.invoke(context.getString(R.string.auth_social_google_error))
                 } finally {
                     isLoading = false
                 }
@@ -152,7 +153,7 @@ fun GoogleSignInButton(
             }
             Spacer(modifier = Modifier.width(12.dp))
             Text(
-                text = "Continuar con Google",
+                text = stringResource(R.string.auth_social_google_continue),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Medium,
                 color = GoogleTextColor,

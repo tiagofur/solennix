@@ -3,6 +3,10 @@ import Observation
 import SolennixCore
 import SolennixNetwork
 
+private struct PreferredLanguagePayload: Encodable {
+    let preferredLanguage: String
+}
+
 // MARK: - Settings View Model
 
 @Observable
@@ -68,12 +72,12 @@ public final class SettingsViewModel {
         emailError = nil
 
         if editName.trimmingCharacters(in: .whitespacesAndNewlines).count < 2 {
-            nameError = "El nombre debe tener al menos 2 caracteres"
+            nameError = FeatureL10n.text("auth.validation.name_min_2", "El nombre debe tener al menos 2 caracteres")
         }
 
         let emailRegex = #"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"#
         if !(editEmail.range(of: emailRegex, options: .regularExpression).map({ _ in true }) ?? false) {
-            emailError = "Por favor ingresa un email valido"
+            emailError = FeatureL10n.text("settings.validation.email_invalid", "Por favor ingresa un email válido")
         }
 
         return nameError == nil && emailError == nil
@@ -109,17 +113,17 @@ public final class SettingsViewModel {
         passwordError = nil
 
         if currentPassword.isEmpty {
-            passwordError = "Ingresa tu contrasena actual"
+            passwordError = FeatureL10n.text("settings.validation.current_password_required", "Ingresa tu contraseña actual")
             return false
         }
 
         if newPassword.count < 8 {
-            passwordError = "La nueva contrasena debe tener al menos 8 caracteres"
+            passwordError = FeatureL10n.text("settings.validation.new_password_min", "La nueva contraseña debe tener al menos 8 caracteres")
             return false
         }
 
         if newPassword != confirmPassword {
-            passwordError = "Las contrasenas no coinciden"
+            passwordError = FeatureL10n.text("settings.validation.passwords_mismatch", "Las contraseñas no coinciden")
             return false
         }
 
@@ -165,12 +169,29 @@ public final class SettingsViewModel {
         user = nil
     }
 
+    @MainActor
+    public func updatePreferredLanguage(_ language: String) async -> Bool {
+        isLoading = true
+        errorMessage = nil
+
+        do {
+            try await authManager.updateProfile(data: PreferredLanguagePayload(preferredLanguage: language))
+            user = authManager.currentUser
+            isLoading = false
+            return true
+        } catch {
+            errorMessage = mapError(error)
+            isLoading = false
+            return false
+        }
+    }
+
     // MARK: - Error Mapping
 
     private func mapError(_ error: Error) -> String {
         if let apiError = error as? APIError {
-            return apiError.errorDescription ?? "Ocurrio un error inesperado."
+            return apiError.errorDescription ?? FeatureL10n.text("common.error.unexpected", "Ocurrió un error inesperado.")
         }
-        return "Ocurrio un error inesperado. Intenta de nuevo."
+        return FeatureL10n.text("common.error.retry", "Ocurrió un error inesperado. Intenta de nuevo.")
     }
 }

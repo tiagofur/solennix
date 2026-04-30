@@ -1,18 +1,20 @@
 package com.creapolis.solennix.feature.settings.viewmodel
 
+import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.creapolis.solennix.feature.settings.R
 import com.creapolis.solennix.core.model.User
 import com.creapolis.solennix.core.network.ApiService
 import com.creapolis.solennix.core.network.get
-import com.creapolis.solennix.core.network.post
 import com.creapolis.solennix.core.network.put
 import com.creapolis.solennix.core.network.AuthManager
 import com.creapolis.solennix.core.network.Endpoints
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.launch
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -64,6 +66,7 @@ private data class ContractDefaultsPayload(
 
 @HiltViewModel
 class ContractDefaultsViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val authManager: AuthManager,
     private val apiService: ApiService
 ) : ViewModel() {
@@ -95,7 +98,7 @@ class ContractDefaultsViewModel @Inject constructor(
                 if (cachedUser != null) {
                     populateFromUser(cachedUser)
                 }
-                errorMessage = "Error al cargar los datos: ${e.message}"
+                errorMessage = context.getString(R.string.settings_error_load_data, e.message ?: e.javaClass.simpleName)
             } finally {
                 isLoading = false
             }
@@ -124,7 +127,7 @@ class ContractDefaultsViewModel @Inject constructor(
                 authManager.storeUser(updatedUser)
                 saveSuccess = true
             } catch (e: Exception) {
-                errorMessage = "Error al guardar: ${e.message}"
+                errorMessage = context.getString(R.string.settings_error_save, e.message ?: e.javaClass.simpleName)
             } finally {
                 isSaving = false
             }

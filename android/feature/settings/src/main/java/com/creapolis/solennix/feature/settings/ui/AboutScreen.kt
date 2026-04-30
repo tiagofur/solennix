@@ -1,8 +1,6 @@
 package com.creapolis.solennix.feature.settings.ui
 
-import android.content.Intent
-import android.net.Uri
-import androidx.compose.foundation.Image
+import com.creapolis.solennix.feature.settings.R
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -12,12 +10,14 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.creapolis.solennix.core.designsystem.R as DesignSystemR
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveCenteredContent
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
@@ -29,14 +29,19 @@ fun AboutScreen(
 ) {
     val scrollState = rememberScrollState()
     val context = LocalContext.current
+    val versionName = remember(context) {
+        runCatching {
+            context.packageManager.getPackageInfo(context.packageName, 0).versionName
+        }.getOrDefault("1.0.0") ?: "1.0.0"
+    }
 
     Scaffold(
         topBar = {
             SolennixTopAppBar(
-                title = { Text("Acerca de") },
+                title = { Text(stringResource(R.string.settings_about_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(DesignSystemR.string.cd_back))
                     }
                 }
             )
@@ -77,7 +82,7 @@ fun AboutScreen(
             )
 
             Text(
-                text = "Versión 1.0.0",
+                text = stringResource(R.string.settings_about_version_value, versionName),
                 style = MaterialTheme.typography.bodyMedium,
                 color = SolennixTheme.colors.secondaryText
             )
@@ -92,7 +97,7 @@ fun AboutScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "Solennix es la plataforma premium para organizadores de eventos. Gestiona clientes, crea cotizaciones, maneja inventario y genera contratos profesionales.",
+                        text = stringResource(R.string.settings_about_description),
                         style = MaterialTheme.typography.bodyMedium,
                         color = SolennixTheme.colors.secondaryText,
                         textAlign = TextAlign.Center
@@ -103,7 +108,7 @@ fun AboutScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "Desarrollado por",
+                text = stringResource(R.string.settings_about_developed_by),
                 style = MaterialTheme.typography.labelLarge,
                 color = SolennixTheme.colors.primary
             )
@@ -120,7 +125,7 @@ fun AboutScreen(
 
             // Links Section
             Text(
-                text = "Enlaces",
+                text = stringResource(R.string.settings_about_links),
                 style = MaterialTheme.typography.labelLarge,
                 color = SolennixTheme.colors.primary,
                 modifier = Modifier
@@ -136,7 +141,7 @@ fun AboutScreen(
             ) {
                 Column {
                     ListItem(
-                        headlineContent = { Text("Sitio Web") },
+                        headlineContent = { Text(stringResource(R.string.settings_about_website)) },
                         leadingContent = {
                             Icon(
                                 Icons.Default.Language,
@@ -149,7 +154,7 @@ fun AboutScreen(
                     HorizontalDivider(color = SolennixTheme.colors.divider.copy(alpha = 0.5f))
 
                     ListItem(
-                        headlineContent = { Text("Soporte") },
+                        headlineContent = { Text(stringResource(R.string.settings_about_support)) },
                         leadingContent = {
                             Icon(
                                 Icons.Default.Email,
@@ -165,7 +170,7 @@ fun AboutScreen(
             Spacer(modifier = Modifier.height(48.dp))
 
             Text(
-                text = "© 2026 Creapolis. Todos los derechos reservados.",
+                text = stringResource(R.string.settings_about_copyright),
                 style = MaterialTheme.typography.bodySmall,
                 color = SolennixTheme.colors.tertiaryText,
                 textAlign = TextAlign.Center

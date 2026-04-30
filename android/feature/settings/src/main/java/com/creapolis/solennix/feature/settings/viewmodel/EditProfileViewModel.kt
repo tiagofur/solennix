@@ -1,23 +1,26 @@
 package com.creapolis.solennix.feature.settings.viewmodel
 
+import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.creapolis.solennix.feature.settings.R
 import com.creapolis.solennix.core.model.User
 import com.creapolis.solennix.core.network.ApiService
 import com.creapolis.solennix.core.network.get
-import com.creapolis.solennix.core.network.post
 import com.creapolis.solennix.core.network.put
 import com.creapolis.solennix.core.network.AuthManager
 import com.creapolis.solennix.core.network.Endpoints
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class EditProfileViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val authManager: AuthManager,
     private val apiService: ApiService
 ) : ViewModel() {
@@ -33,12 +36,12 @@ class EditProfileViewModel @Inject constructor(
     var hasAttemptedSubmit by mutableStateOf(false)
 
     val nameError: String?
-        get() = if (hasAttemptedSubmit && name.isBlank()) "El nombre es requerido" else null
+        get() = if (hasAttemptedSubmit && name.isBlank()) context.getString(R.string.settings_profile_name_required) else null
 
     val emailError: String?
         get() = when {
-            hasAttemptedSubmit && email.isBlank() -> "El correo es requerido"
-            hasAttemptedSubmit && email.isNotBlank() && !isValidEmail(email) -> "Formato de correo inválido"
+            hasAttemptedSubmit && email.isBlank() -> context.getString(R.string.settings_profile_email_required)
+            hasAttemptedSubmit && email.isNotBlank() && !isValidEmail(email) -> context.getString(R.string.settings_profile_email_invalid)
             else -> null
         }
 
@@ -67,7 +70,7 @@ class EditProfileViewModel @Inject constructor(
                 if (cachedUser != null) {
                     populateFromUser(cachedUser)
                 }
-                errorMessage = "Error al cargar los datos: ${e.message}"
+                errorMessage = context.getString(R.string.settings_error_load_data, e.message ?: e.javaClass.simpleName)
             } finally {
                 isLoading = false
             }
@@ -95,7 +98,7 @@ class EditProfileViewModel @Inject constructor(
                 authManager.storeUser(updatedUser)
                 saveSuccess = true
             } catch (e: Exception) {
-                errorMessage = "Error al guardar: ${e.message}"
+                errorMessage = context.getString(R.string.settings_error_save, e.message ?: e.javaClass.simpleName)
             } finally {
                 isSaving = false
             }

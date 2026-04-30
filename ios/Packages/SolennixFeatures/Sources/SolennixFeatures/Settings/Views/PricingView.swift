@@ -51,7 +51,7 @@ public struct PricingView: View {
             .padding(Spacing.lg)
         }
         .background(SolennixColors.surfaceGrouped)
-        .navigationTitle("Planes y Precios")
+        .navigationTitle(FeatureL10n.text("Planes y Precios", "Planes y Precios"))
         .navigationBarTitleDisplayMode(.inline)
         .task {
             await viewModel.loadUser()
@@ -61,8 +61,8 @@ public struct PricingView: View {
             await subscriptionManager.loadOfferings()
             await subscriptionManager.checkEntitlementStatus()
         }
-        .alert("Error", isPresented: $showError) {
-            Button("Aceptar", role: .cancel) {}
+        .alert(FeatureL10n.text("Error", "Error"), isPresented: $showError) {
+            Button(FeatureL10n.text("Aceptar", "Aceptar"), role: .cancel) {}
         } message: {
             Text(purchaseErrorMessage)
         }
@@ -78,13 +78,13 @@ public struct PricingView: View {
         VStack(spacing: Spacing.md) {
             if let user = viewModel.user {
                 HStack {
-                    Text("Tu plan actual:")
+                    Text(FeatureL10n.text("Tu plan actual:", "Tu plan actual:"))
                     PlanBadge(plan: user.plan)
                 }
                 .font(.subheadline)
             }
 
-            Text("Elige el plan que mejor se adapte a tu negocio")
+            Text(FeatureL10n.text("Elige el plan que mejor se adapte a tu negocio", "Elige el plan que mejor se adapte a tu negocio"))
                 .font(.headline)
                 .multilineTextAlignment(.center)
         }
@@ -98,7 +98,7 @@ public struct PricingView: View {
                 Image(systemName: "crown.fill")
                     .foregroundStyle(SolennixColors.warning)
 
-                Text("Suscripción Pro activa")
+                Text(FeatureL10n.text("Suscripción Pro activa", "Suscripción Pro activa"))
                     .font(.subheadline)
                     .fontWeight(.semibold)
 
@@ -198,7 +198,7 @@ public struct PricingView: View {
                             .fontWeight(.bold)
 
                         if isRecommended {
-                            Text("Recomendado")
+                    Text(FeatureL10n.text("Recomendado", "Recomendado"))
                                 .font(.caption2)
                                 .fontWeight(.semibold)
                                 .foregroundStyle(.white)
@@ -392,7 +392,7 @@ public struct PricingView: View {
             } label: {
                 HStack {
                     Image(systemName: "arrow.clockwise")
-                    Text("Restaurar compras")
+                    Text(FeatureL10n.text("Restaurar compras", "Restaurar compras"))
                 }
                 .font(.subheadline)
                 .foregroundStyle(SolennixColors.primary)
@@ -409,7 +409,7 @@ public struct PricingView: View {
                 } label: {
                     HStack {
                         Image(systemName: "gearshape")
-                        Text("Administrar suscripcion")
+                        Text(FeatureL10n.text("Administrar suscripcion", "Administrar suscripcion"))
                     }
                     .font(.subheadline)
                     .foregroundStyle(SolennixColors.textSecondary)
@@ -463,7 +463,7 @@ public struct PricingView: View {
 
     private var featureComparisonSection: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
-            Text("Comparacion de funciones")
+            Text(FeatureL10n.text("Comparacion de funciones", "Comparacion de funciones"))
                 .font(.headline)
 
             VStack(spacing: 0) {
@@ -522,7 +522,7 @@ public struct PricingView: View {
 
     private var faqSection: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
-            Text("Preguntas frecuentes")
+            Text(FeatureL10n.text("Preguntas frecuentes", "Preguntas frecuentes"))
                 .font(.headline)
 
             faqItem(
@@ -564,12 +564,12 @@ public struct PricingView: View {
 
     private var subscriptionDisclosureSection: some View {
         VStack(alignment: .leading, spacing: Spacing.xs) {
-            Text("Informacion de suscripcion")
+            Text(FeatureL10n.text("Informacion de suscripcion", "Informacion de suscripcion"))
                 .font(.subheadline)
                 .fontWeight(.bold)
                 .foregroundStyle(SolennixColors.text)
 
-            Text("El pago se cargara a tu cuenta de Apple ID al confirmar la compra. La suscripcion se renovara automaticamente a menos que sea cancelada al menos 24 horas antes del final del periodo actual. Se cobrara a tu cuenta la renovacion dentro de las 24 horas anteriores al final del periodo actual, al precio del plan seleccionado. Las suscripciones pueden ser administradas por el usuario y la renovacion automatica puede desactivarse yendo a los Ajustes de la cuenta del App Store despues de la compra. No se permite la cancelacion de la suscripcion actual durante el periodo activo.")
+            Text(FeatureL10n.text("El pago se cargara a tu cuenta de Apple ID al confirmar la compra. La suscripcion se renovara automaticamente a menos que sea cancelada al menos 24 horas antes del final del periodo actual. Se cobrara a tu cuenta la renovacion dentro de las 24 horas anteriores al final del periodo actual, al precio del plan seleccionado. Las suscripciones pueden ser administradas por el usuario y la renovacion automatica puede desactivarse yendo a los Ajustes de la cuenta del App Store despues de la compra. No se permite la cancelacion de la suscripcion actual durante el periodo activo.", "El pago se cargara a tu cuenta de Apple ID al confirmar la compra. La suscripcion se renovara automaticamente a menos que sea cancelada al menos 24 horas antes del final del periodo actual. Se cobrara a tu cuenta la renovacion dentro de las 24 horas anteriores al final del periodo actual, al precio del plan seleccionado. Las suscripciones pueden ser administradas por el usuario y la renovacion automatica puede desactivarse yendo a los Ajustes de la cuenta del App Store despues de la compra. No se permite la cancelacion de la suscripcion actual durante el periodo activo."))
                 .font(.caption2)
                 .foregroundStyle(SolennixColors.textSecondary)
                 .lineSpacing(2)
@@ -588,7 +588,7 @@ public struct PricingView: View {
                     HapticsHelper.play(.selection)
                     legalSheetURL = IdentifiableURL(LegalURL.terms)
                 } label: {
-                    Text("Terminos de Uso (EULA)")
+                    Text(FeatureL10n.text("Terminos de Uso (EULA)", "Terminos de Uso (EULA)"))
                 }
                 .accessibilityHint("Abre los terminos de uso en Safari")
 
@@ -599,7 +599,7 @@ public struct PricingView: View {
                     HapticsHelper.play(.selection)
                     legalSheetURL = IdentifiableURL(LegalURL.privacy)
                 } label: {
-                    Text("Privacidad")
+                    Text(FeatureL10n.text("Privacidad", "Privacidad"))
                 }
                 .accessibilityHint("Abre la politica de privacidad en Safari")
             }
@@ -608,7 +608,7 @@ public struct PricingView: View {
             .foregroundStyle(SolennixColors.primary)
             .buttonStyle(.plain)
 
-            Text("Solennix es un producto de Creapolis")
+            Text(FeatureL10n.text("Solennix es un producto de Creapolis", "Solennix es un producto de Creapolis"))
                 .font(.caption2)
                 .foregroundStyle(SolennixColors.textTertiary)
         }

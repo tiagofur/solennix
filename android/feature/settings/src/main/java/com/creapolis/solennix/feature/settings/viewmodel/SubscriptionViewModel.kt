@@ -1,6 +1,7 @@
 package com.creapolis.solennix.feature.settings.viewmodel
 
 import android.app.Activity
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.revenuecat.purchases.Package
@@ -12,9 +13,11 @@ import com.creapolis.solennix.core.network.ApiService
 import com.creapolis.solennix.core.network.AuthManager
 import com.creapolis.solennix.core.network.Endpoints
 import com.creapolis.solennix.core.network.get
+import com.creapolis.solennix.feature.settings.R
 import com.creapolis.solennix.feature.settings.billing.BillingManager
 import com.creapolis.solennix.feature.settings.billing.BillingState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -29,7 +32,7 @@ import javax.inject.Inject
 data class SubscriptionUiState(
     val billingState: BillingState = BillingState.NotReady,
     val proPackages: List<Package> = emptyList(),
-    val currentPlanName: String = "Básico",
+    val currentPlanName: String = "",
     val hasActiveSubscription: Boolean = false,
     val purchasingPackageId: String? = null,
     val provider: SubscriptionProvider? = null,
@@ -38,6 +41,7 @@ data class SubscriptionUiState(
 
 @HiltViewModel
 class SubscriptionViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val billingManager: BillingManager,
     private val authManager: AuthManager,
     private val apiService: ApiService,
@@ -91,11 +95,11 @@ class SubscriptionViewModel @Inject constructor(
         // show the literal plan the user is on. `PREMIUM` is a legacy DB value
         // that predates the Pro/Business split and is rendered as "Pro".
         val currentPlan = when {
-            user?.plan == com.creapolis.solennix.core.model.Plan.BUSINESS -> "Business"
-            hasSubscription -> "Pro"
-            user?.plan == com.creapolis.solennix.core.model.Plan.PRO -> "Pro"
-            user?.plan == com.creapolis.solennix.core.model.Plan.PREMIUM -> "Pro"
-            else -> "Básico"
+            user?.plan == com.creapolis.solennix.core.model.Plan.BUSINESS -> context.getString(R.string.settings_subscription_plan_business)
+            hasSubscription -> context.getString(R.string.settings_subscription_plan_pro)
+            user?.plan == com.creapolis.solennix.core.model.Plan.PRO -> context.getString(R.string.settings_subscription_plan_pro)
+            user?.plan == com.creapolis.solennix.core.model.Plan.PREMIUM -> context.getString(R.string.settings_subscription_plan_pro)
+            else -> context.getString(R.string.settings_subscription_plan_basic)
         }
 
         SubscriptionUiState(

@@ -498,27 +498,11 @@ export const QuickQuotePage: React.FC = () => {
               />
             </div>
 
-            {/* Discount & Invoice controls */}
+            {/* Discount controls */}
             <div className="bg-card p-4 sm:p-6 rounded-xl shadow-xs border border-border space-y-4">
               <h3 className="text-lg font-medium text-text">
                 {t("quotes:discount_invoice")}
               </h3>
-
-              <div className="flex items-center gap-3">
-                <input
-                  id="requires-invoice"
-                  type="checkbox"
-                  checked={requiresInvoice}
-                  onChange={(e) => setRequiresInvoice(e.target.checked)}
-                  className="h-4 w-4 text-primary border-border rounded-sm focus:ring-primary bg-card"
-                />
-                <label
-                  htmlFor="requires-invoice"
-                  className="text-sm text-text-secondary"
-                >
-                  {t("quotes:invoice_required", { rate: taxRate })}
-                </label>
-              </div>
 
               <div>
                 <div className="flex items-center justify-between mb-2">
@@ -581,13 +565,6 @@ export const QuickQuotePage: React.FC = () => {
                       {discountType === "percent" ? `(${discountValue}%)` : ""}:
                     </span>
                     <span>-${financials.discountAmount.toLocaleString(moneyLocale, { minimumFractionDigits: 2 })}</span>
-                  </div>
-                )}
-
-                {requiresInvoice && (
-                  <div className="flex justify-between text-text-secondary">
-                    <span>{t("quotes:invoice_required", { rate: taxRate })}:</span>
-                    <span>${financials.taxAmount.toLocaleString(moneyLocale, { minimumFractionDigits: 2 })}</span>
                   </div>
                 )}
 

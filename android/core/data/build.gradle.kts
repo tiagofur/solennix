@@ -54,6 +54,7 @@ dependencies {
 
     // ExifInterface
     implementation(libs.androidx.exifinterface)
+    implementation(libs.appcompat)
 
     // Hilt
     implementation(libs.hilt.android)

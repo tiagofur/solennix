@@ -95,6 +95,37 @@ function parseDashboardEventDate(eventDate: string) {
   return new Date(`${eventDate}T12:00:00`);
 }
 
+function capitalizeFirst(value: string) {
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function formatDashboardHeaderDate(date: Date, locale: string) {
+  return capitalizeFirst(
+    new Intl.DateTimeFormat(locale, {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+    }).format(date),
+  );
+}
+
+function formatCompactCurrency(value: number, locale: string) {
+  const compact = new Intl.NumberFormat(locale, {
+    notation: "compact",
+    maximumFractionDigits: 0,
+  }).format(value);
+
+  const currencySymbol = new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency: "MXN",
+    maximumFractionDigits: 0,
+  })
+    .formatToParts(0)
+    .find((part) => part.type === "currency")?.value ?? "$";
+
+  return `${currencySymbol}${compact}`;
+}
+
 // ── Skeleton loader ──────────────────────────────────────────────
 function SkeletonKpi({ compact = false }: { compact?: boolean }) {
   if (compact) {
@@ -212,17 +243,17 @@ function EventStatusBar({ data, loading }: { data: StatusSegment[]; loading: boo
     );
   }
   return (
-    <div className="flex-1 flex flex-col justify-center gap-6">
-      <div className="text-center">
-        <span className="text-4xl font-black text-text">{total}</span>
-        <p className="text-xs text-text-secondary mt-1">{t('dashboard:status_chart.events_this_month')}</p>
-      </div>
+      <div className="flex-1 flex flex-col justify-center gap-6">
+        <div className="text-center">
+          <span className="text-4xl font-black text-text">{total}</span>
+          <p className="text-xs text-text-secondary mt-1">{t('dashboard:status_chart.events_this_month')}</p>
+        </div>
       <div className="flex h-3 rounded-full overflow-hidden w-full" role="img"
-        aria-label={`Distribución: ${data.map(d => `${d.name} ${d.value}`).join(', ')}`}>
+        aria-label={t('dashboard:status_chart.distribution_aria', { segments: data.map(d => `${d.name} ${d.value}`).join(', ') })}>
         {data.map((seg) => (
           <div key={seg.name} className="h-full transition-all duration-500"
             style={{ width: `${(seg.value / total) * 100}%`, backgroundColor: seg.color }}
-            title={`${seg.name}: ${seg.value}`} />
+            title={t('dashboard:status_chart.segment_title', { name: seg.name, value: seg.value })} />
         ))}
       </div>
       <div className="flex flex-wrap gap-x-4 gap-y-2 justify-center">
@@ -239,7 +270,7 @@ function EventStatusBar({ data, loading }: { data: StatusSegment[]; loading: boo
 
 // ── Upcoming Event Card ─────────────────────────────────────────
 function UpcomingEventCard({ event }: { event: DashboardEvent }) {
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation(['dashboard']);
   const navigate = useNavigate();
   const dateObj = new Date(event.event_date + "T12:00:00");
   const dateLocale = i18n.language === 'en' ? enUS : es;
@@ -254,8 +285,8 @@ function UpcomingEventCard({ event }: { event: DashboardEvent }) {
         <span className="text-lg font-bold text-primary leading-tight">{format(dateObj, "d")}</span>
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-text truncate">{event.client?.name ?? "—"}</p>
-        <p className="text-xs text-text-secondary truncate mt-0.5">{event.service_type} · {event.num_people} pax</p>
+        <p className="text-sm font-semibold text-text truncate">{event.client?.name ?? t('dashboard:event.no_client')}</p>
+        <p className="text-xs text-text-secondary truncate mt-0.5">{event.service_type} · {event.num_people} {t('dashboard:event.pax')}</p>
       </div>
       <div onClick={(e) => e.stopPropagation()}>
         <StatusDropdown eventId={event.id} currentStatus={event.status as EventStatus} />
@@ -477,27 +508,25 @@ function DashboardAttentionSection({
 // ── Monthly Revenue Trend Card (premium only) ────────────────────
 function MonthlyRevenueTrendCard({ points }: { points: DashboardRevenuePoint[] }) {
   const { t, i18n } = useTranslation(['dashboard']);
+  const localeCode = i18n.language === 'en' ? 'en-US' : 'es-MX';
 
   const chartData = useMemo(() => {
-    const monthLabels = i18n.language === 'en' 
-      ? ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"]
-      : ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
     const byMonth = new Map(points.map((p) => [p.month, p.revenue]));
     const today = new Date();
     const bars: { name: string; value: number }[] = [];
     for (let offset = 5; offset >= 0; offset--) {
       const d = new Date(today.getFullYear(), today.getMonth() - offset, 1);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-      const label = monthLabels[d.getMonth()];
+      const label = new Intl.DateTimeFormat(localeCode, { month: 'short' }).format(d);
       bars.push({
-        name: label.charAt(0).toUpperCase() + label.slice(1),
+        name: capitalizeFirst(label.replace('.', '')),
         value: byMonth.get(key) ?? 0,
       });
     }
     return bars;
-  }, [points, i18n.language]);
+  }, [points, localeCode]);
 
-  const moneyLocale = i18n.language === 'en' ? 'en-US' : 'es-MX';
+  const moneyLocale = localeCode;
 
   return (
     <div className="bg-card shadow-sm border border-border rounded-2xl p-6 flex flex-col">
@@ -518,7 +547,7 @@ function MonthlyRevenueTrendCard({ points }: { points: DashboardRevenuePoint[] }
               axisLine={false}
               tickLine={false}
               tick={{ fill: "var(--color-text-tertiary)", fontSize: 11 }}
-              tickFormatter={(value: number) => value === 0 ? "$0" : `${Math.round(value / 1000)}k`}
+              tickFormatter={(value: number) => formatCompactCurrency(value, moneyLocale)}
               width={48}
             />
             <Tooltip
@@ -788,7 +817,7 @@ export const Dashboard: React.FC = () => {
             {t('dashboard:welcome', { name: firstName })}
           </h1>
           <p className="text-text-secondary text-sm font-medium">
-            {format(today, "EEEE, d 'de' MMMM", { locale: i18n.language === 'en' ? enUS : es })}
+            {formatDashboardHeaderDate(today, moneyLocale)}
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
@@ -888,15 +917,15 @@ export const Dashboard: React.FC = () => {
                  <div className="w-12 h-12 rounded-full bg-surface-alt flex items-center justify-center">
                    <TrendingUp className="h-6 w-6 text-text-tertiary" />
                  </div>
-                 <div className="max-w-50">
-                   <p className="text-sm font-bold text-text mb-1">Tendencias Pro</p>
-                   <p className="text-xs text-text-secondary leading-relaxed">
-                     Mejorá tu plan para ver gráficos de ingresos mensuales.
-                   </p>
-                 </div>
-                 <button onClick={() => navigate("/profile/pricing")} className="text-xs font-bold text-primary hover:underline">Ver planes</button>
-               </div>
-            )}
+                  <div className="max-w-50">
+                    <p className="text-sm font-bold text-text mb-1">{t('dashboard:revenue_chart.pro_title')}</p>
+                    <p className="text-xs text-text-secondary leading-relaxed">
+                      {t('dashboard:revenue_chart.pro_description')}
+                    </p>
+                  </div>
+                  <button onClick={() => navigate("/profile/pricing")} className="text-xs font-bold text-primary hover:underline">{t('dashboard:revenue_chart.view_plans')}</button>
+                </div>
+             )}
           </div>
 
           <RecentActivityCard />
@@ -1008,7 +1037,7 @@ export const Dashboard: React.FC = () => {
               </div>
               <p className="text-base font-bold text-text">{paymentModal.event.client?.name ?? t('dashboard:event.no_client')}</p>
               <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
-                <span className="text-sm text-text-secondary">{t('dashboard:attention.pending_balance').split('{{pending}}')[0]}</span>
+                <span className="text-sm text-text-secondary">{t('dashboard:attention.pending_balance_label')}</span>
                 <span className="text-lg font-black text-error">{fmt(paymentModal.pendingAmount)}</span>
               </div>
             </div>

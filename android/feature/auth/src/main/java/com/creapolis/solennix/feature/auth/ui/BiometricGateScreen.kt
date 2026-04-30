@@ -15,10 +15,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
+import com.creapolis.solennix.feature.auth.R
 import com.creapolis.solennix.core.designsystem.component.PremiumButton
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.network.AuthManager
@@ -59,10 +61,14 @@ fun BiometricGateScreen(
         }
     )
 
+    val promptTitle = stringResource(R.string.auth_biometric_prompt_title)
+    val promptSubtitle = stringResource(R.string.auth_biometric_prompt_subtitle)
+    val promptCancel = stringResource(R.string.auth_biometric_prompt_cancel)
+
     val promptInfo = BiometricPrompt.PromptInfo.Builder()
-        .setTitle("Desbloqueá Solennix")
-        .setSubtitle("Usá tu huella o rostro para continuar")
-        .setNegativeButtonText("Cerrar Sesión")
+        .setTitle(promptTitle)
+        .setSubtitle(promptSubtitle)
+        .setNegativeButtonText(promptCancel)
         .build()
 
     LaunchedEffect(Unit) {
@@ -92,7 +98,7 @@ fun BiometricGateScreen(
             )
             Spacer(modifier = Modifier.height(if (isWideScreen) 32.dp else 24.dp))
             Text(
-                text = "Acceso Protegido",
+                text = stringResource(R.string.auth_biometric_title),
                 style = if (isWideScreen) MaterialTheme.typography.headlineMedium
                 else MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
@@ -100,14 +106,14 @@ fun BiometricGateScreen(
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Confirmá tu identidad para continuar utilizando la aplicación.",
+                text = stringResource(R.string.auth_biometric_description),
                 style = MaterialTheme.typography.bodyMedium,
                 color = SolennixTheme.colors.secondaryText,
                 textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(48.dp))
             PremiumButton(
-                text = "Intentar de nuevo",
+                text = stringResource(R.string.auth_biometric_retry),
                 onClick = { biometricPrompt.authenticate(promptInfo) }
             )
         }

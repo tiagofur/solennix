@@ -6,6 +6,10 @@ struct AttentionEventsCard: View {
 
     let events: [DashboardAttentionEvent]
 
+    private func tr(_ key: String, _ value: String) -> String {
+        FeatureL10n.text(key, value)
+    }
+
     var body: some View {
         if !events.isEmpty {
             VStack(alignment: .leading, spacing: Spacing.md) {
@@ -39,7 +43,7 @@ struct AttentionEventsCard: View {
                     .foregroundStyle(SolennixColors.warning)
             }
 
-            Text("Requieren atencion")
+            Text(tr("dashboard.attention.title", "Requieren atención"))
                 .font(.headline)
                 .foregroundStyle(SolennixColors.text)
 
@@ -75,7 +79,7 @@ struct AttentionEventsCard: View {
                         .foregroundStyle(SolennixColors.textTertiary)
 
                     if shouldShowPendingAmount(for: attentionEvent) {
-                        Text(attentionEvent.outstandingAmount.asMXN)
+                        Text(DashboardFormatting.currencyMXN(attentionEvent.outstandingAmount))
                             .font(.caption)
                             .fontWeight(.semibold)
                             .foregroundStyle(SolennixColors.warning)
@@ -101,18 +105,28 @@ struct AttentionEventsCard: View {
         // chip, label, icon.
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityLabel(for: attentionEvent))
-        .accessibilityHint("Abrir detalle del evento")
+        .accessibilityHint(tr("dashboard.attention.open_detail_hint", "Abrir detalle del evento"))
     }
 
     private func accessibilityLabel(for attentionEvent: DashboardAttentionEvent) -> String {
         var parts = [
             attentionEvent.kind.title,
             attentionEvent.event.serviceType,
-            "de \(attentionEvent.clientName)",
+            String(
+                format: tr("dashboard.attention.from_client", "de %@"),
+                locale: FeatureL10n.locale,
+                attentionEvent.clientName
+            ),
             compactDate(for: attentionEvent.event.eventDate),
         ]
         if shouldShowPendingAmount(for: attentionEvent) {
-            parts.append("restan \(attentionEvent.outstandingAmount.asMXN)")
+            parts.append(
+                String(
+                    format: tr("dashboard.attention.remaining_amount", "restan %@"),
+                    locale: FeatureL10n.locale,
+                    DashboardFormatting.currencyMXN(attentionEvent.outstandingAmount)
+                )
+            )
         }
         return parts.joined(separator: ", ")
     }
@@ -133,11 +147,7 @@ struct AttentionEventsCard: View {
     }
 
     private func compactDate(for dateString: String) -> String {
-        guard let date = Self.inputDateFormatter.date(from: String(dateString.prefix(10))) else {
-            return String(dateString.prefix(10))
-        }
-
-        return Self.outputDateFormatter.string(from: date)
+        DashboardFormatting.compactDate(from: dateString)
     }
 
     private func reasonForegroundColor(for kind: DashboardAttentionEventKind) -> Color {
@@ -161,23 +171,6 @@ struct AttentionEventsCard: View {
             return SolennixColors.primaryLight
         }
     }
-
-    private static let inputDateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.calendar = Calendar(identifier: .gregorian)
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.timeZone = TimeZone(secondsFromGMT: 0)
-        formatter.dateFormat = "yyyy-MM-dd"
-        return formatter
-    }()
-
-    private static let outputDateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.calendar = Calendar(identifier: .gregorian)
-        formatter.locale = Locale(identifier: "es_MX")
-        formatter.dateFormat = "d MMM"
-        return formatter
-    }()
 }
 
 #Preview("Attention Events Card") {

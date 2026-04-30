@@ -14,7 +14,7 @@ export function TopClientsWidget() {
         <div className="flex items-center gap-3 mb-4">
           <Users className="w-5 h-5 text-primary" />
           <h3 className="text-sm font-semibold text-foreground">
-            {t("dashboard.topClients", "Top Clients")}
+            {t("dashboard:widgets.top_clients.title")}
           </h3>
         </div>
         <div className="space-y-3">
@@ -32,12 +32,12 @@ export function TopClientsWidget() {
         <div className="flex items-center gap-3 mb-4">
           <Users className="w-5 h-5 text-primary" />
           <h3 className="text-sm font-semibold text-foreground">
-            {t("dashboard.topClients", "Top Clients")}
+            {t("dashboard:widgets.top_clients.title")}
           </h3>
         </div>
         <div className="flex items-center gap-3 text-error text-sm">
           <AlertTriangle className="w-4 h-4 shrink-0" />
-          <span>{t("common.error", "Error loading data")}</span>
+          <span>{t("common:error.generic")}</span>
         </div>
       </div>
     );
@@ -49,11 +49,11 @@ export function TopClientsWidget() {
         <div className="flex items-center gap-3 mb-4">
           <Users className="w-5 h-5 text-primary" />
           <h3 className="text-sm font-semibold text-foreground">
-            {t("dashboard.topClients", "Top Clients")}
+            {t("dashboard:widgets.top_clients.title")}
           </h3>
         </div>
         <p className="text-sm text-foreground-secondary">
-          {t("dashboard.noClients", "No client data yet")}
+          {t("dashboard:widgets.top_clients.empty")}
         </p>
       </div>
     );
@@ -64,7 +64,7 @@ export function TopClientsWidget() {
       <div className="flex items-center gap-3 mb-4">
         <Users className="w-5 h-5 text-primary" />
         <h3 className="text-sm font-semibold text-foreground">
-          {t("dashboard.topClients", "Top Clients")}
+          {t("dashboard:widgets.top_clients.title")}
         </h3>
       </div>
       <div className="space-y-3">
@@ -79,7 +79,7 @@ export function TopClientsWidget() {
               </p>
               <p className="text-xs text-foreground-secondary">
                 {client.total_events}{" "}
-                {t("common.events", "event", { count: client.total_events })}
+                {t("dashboard:widgets.top_clients.events", { count: client.total_events })}
               </p>
             </div>
             <p className="text-sm font-semibold text-primary whitespace-nowrap ml-2">

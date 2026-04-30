@@ -1,66 +1,107 @@
 {
-  "title": "Dashboard",
-  "welcome": "Welcome, {{name}}",
+  "title": "Home",
+  "welcome": "Hello, {{name}}",
+  "greeting": {
+    "generic": "Hello"
+  },
   "kpis": {
-    "net_sales": "Net Sales",
-    "cash_collected": "Cash Collected",
-    "vat_outstanding": "VAT Outstanding",
-    "total_revenue": "Total revenue",
-    "active_events": "Active events",
-    "new_clients": "New clients",
-    "average_ticket": "Average ticket"
+    "net_sales": "Net sales",
+    "cash_collected": "Collected",
+    "vat_collected": "VAT collected",
+    "vat_outstanding": "VAT due",
+    "active_events": "Events this month",
+    "low_stock": "Low stock",
+    "new_clients": "Clients",
+    "average_ticket": "Average ticket",
+    "quotes": "Quotes",
+    "subtitle": {
+      "confirmed_completed": "Confirmed and completed events",
+      "this_month": "This month",
+      "due": "Due",
+      "total": "Total"
+    }
   },
   "status_chart": {
-    "title": "Event Status",
+    "title": "Event status",
     "events_this_month": "events this month",
-    "no_data": "No data to display this month",
-    "create_first": "Create first event"
+    "no_data": "No events this month",
+    "create_first": "Create your first event",
+    "distribution_aria": "Event status: {{segments}}",
+    "segment_title": "{{name}}: {{value}}"
   },
   "revenue_chart": {
-    "title": "Revenue — Last 6 months",
+    "title": "Revenue — last 6 months",
     "aria_label": "Revenue chart for the last 6 months",
-    "revenue": "Revenue"
+    "revenue": "Revenue",
+    "pro_title": "Pro trends",
+    "pro_description": "Upgrade your plan to view monthly revenue charts.",
+    "view_plans": "View plans"
   },
   "attention": {
-    "title": "Need Attention",
-    "description": "Upcoming or past-due events with pending actions.",
+    "title": "Need attention",
+    "description": "Upcoming or overdue events with pending follow-up.",
     "alerts_count_one": "1 alert",
     "alerts_count_other": "{{count}} alerts",
     "pending_balance": "Pending balance {{pending}} of {{total}}",
+    "pending_balance_label": "Pending balance",
     "past_confirmed": "Past event still confirmed",
     "past_quoted": "Expired quote without closing",
-    "register_payment": "Register payment",
-    "pay_and_complete": "Pay and complete",
-    "complete_only": "Just complete",
-    "view_detail": "View detail",
+    "register_payment": "Record payment",
+    "register_payment_and_complete": "Record payment and complete",
+    "pay_and_complete": "Pay & complete",
+    "complete_only": "Complete only",
+    "complete": "Complete",
+    "view": "View",
+    "view_detail": "View details",
     "confirmed_payment_title": "Upcoming balances",
     "confirmed_payment_desc": "Confirmed events in the next 7 days with pending balance.",
-    "past_active_title": "Past-due events",
-    "past_active_desc": "Events that already passed but haven't been completed or cancelled."
+    "past_active_title": "Overdue events",
+    "past_active_desc": "Events that already passed but haven't been completed or cancelled.",
+    "pending_event_talkback": "Pending event: {{service}}, date {{date}}, reason {{reason}}"
   },
   "upcoming": {
-    "no_events": "No upcoming events"
+    "title": "Upcoming events",
+    "empty": "No upcoming events",
+    "view": "View"
   },
   "inventory": {
-    "no_items": "Healthy stock in all items"
+    "title": "Inventory alerts",
+    "stock_current": "Current stock: {{current}} {{unit}}",
+    "low_stock_talkback": "Low stock: {{name}}, current {{current}} {{unit}}",
+    "no_items": "Healthy stock across all items"
   },
-  "topClients": "Top Clients",
-  "noClients": "No client data yet",
-  "productDemand": "Product Demand",
-  "noProducts": "No product data yet",
-  "forecast": "Revenue Forecast",
-  "noForecast": "No forecast data available",
-  "totalRevenue": "Projected Revenue",
-  "confirmedEvents": "Confirmed",
+  "widgets": {
+    "top_clients": {
+      "title": "Top clients",
+      "empty": "No client data yet",
+      "events_one": "{{count}} event",
+      "events_other": "{{count}} events"
+    },
+    "product_demand": {
+      "title": "Product demand",
+      "empty": "No product data yet",
+      "uses_one": "{{count}} use",
+      "uses_other": "{{count}} uses"
+    },
+    "forecast": {
+      "title": "Revenue forecast",
+      "empty": "No forecast available",
+      "projected_revenue": "Projected revenue",
+      "confirmed_events": "Confirmed",
+      "events_one": "{{count}} event",
+      "events_other": "{{count}} events"
+    }
+  },
   "messages": {
     "event_completed": "Event marked as completed.",
     "event_cancelled": "Event cancelled.",
-    "payment_registered": "Payment registered.",
-    "payment_partial": "Partial payment registered. Pay full balance to mark event as completed.",
-    "payment_complete_manual": "Payment registered. Mark event as completed manually."
+    "payment_registered": "Payment recorded.",
+    "payment_partial": "Partial payment recorded. Pay the full balance to mark the event as completed.",
+    "payment_complete_manual": "Payment recorded. Mark the event as completed manually."
   },
   "event": {
-    "no_client": "No client",
-    "pax": "pax"
+    "no_client": "Client",
+    "pax": "pax",
+    "summary_talkback": "{{client}}{{separator}}{{service}}, date {{date}}, status {{status}}"
   }
 }

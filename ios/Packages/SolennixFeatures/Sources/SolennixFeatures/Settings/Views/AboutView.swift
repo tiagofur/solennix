@@ -11,6 +11,10 @@ public struct AboutView: View {
 
     public init() {}
 
+    private func tr(_ key: String, _ value: String) -> String {
+        FeatureL10n.text(key, value)
+    }
+
     public var body: some View {
         ScrollView {
             AdaptiveCenteredContent(maxWidth: 600) {
@@ -34,7 +38,7 @@ public struct AboutView: View {
             }
         }
         .background(SolennixColors.surfaceGrouped)
-        .navigationTitle("Acerca de")
+        .navigationTitle(tr("settings.action.about", "Acerca de"))
         .navigationBarTitleDisplayMode(.inline)
         .sheet(item: $legalSheetURL) { wrapper in
             SafariView(url: wrapper.url)
@@ -55,7 +59,7 @@ public struct AboutView: View {
                 .font(.largeTitle)
                 .fontWeight(.bold)
 
-            Text("Gestion de eventos simplificada")
+            Text(tr("settings.about.subtitle", "Gestión de eventos simplificada"))
                 .font(.subheadline)
                 .foregroundStyle(SolennixColors.textSecondary)
         }
@@ -66,10 +70,10 @@ public struct AboutView: View {
 
     private var appInfoSection: some View {
         VStack(spacing: Spacing.sm) {
-            infoRow(label: "Version", value: Bundle.main.appVersion)
-            infoRow(label: "Desarrollado por", value: "Creapolis")
-            infoRow(label: "Sitio web", value: "solennix.com", isLink: true)
-            infoRow(label: "Soporte", value: "soporte@solennix.com", isLink: true)
+            infoRow(label: tr("settings.about.version", "Versión"), value: Bundle.main.appVersion)
+            infoRow(label: tr("settings.about.developed_by", "Desarrollado por"), value: "Creapolis")
+            infoRow(label: tr("settings.about.website", "Sitio web"), value: "solennix.com", isLink: true)
+            infoRow(label: tr("settings.about.support", "Soporte"), value: "soporte@solennix.com", isLink: true)
         }
         .padding(Spacing.md)
         .background(SolennixColors.card)
@@ -103,7 +107,7 @@ public struct AboutView: View {
                 legalSheetURL = IdentifiableURL(LegalURL.terms)
             } label: {
                 HStack {
-                    Text("Terminos de Uso (EULA)")
+                    Text(tr("settings.about.terms_eula", "Términos de uso (EULA)"))
                     Spacer()
                     Image(systemName: "arrow.up.right.square")
                         .font(.caption)
@@ -112,7 +116,7 @@ public struct AboutView: View {
                 .padding(Spacing.md)
                 .contentShape(Rectangle())
             }
-            .accessibilityHint("Abre los terminos de uso en Safari")
+            .accessibilityHint(tr("settings.about.terms_hint", "Abre los términos de uso en Safari"))
 
             Divider()
                 .padding(.leading, Spacing.md)
@@ -122,7 +126,7 @@ public struct AboutView: View {
                 legalSheetURL = IdentifiableURL(LegalURL.privacy)
             } label: {
                 HStack {
-                    Text("Politica de Privacidad")
+                    Text(tr("settings.about.privacy_policy", "Política de privacidad"))
                     Spacer()
                     Image(systemName: "arrow.up.right.square")
                         .font(.caption)
@@ -131,7 +135,7 @@ public struct AboutView: View {
                 .padding(Spacing.md)
                 .contentShape(Rectangle())
             }
-            .accessibilityHint("Abre la politica de privacidad en Safari")
+            .accessibilityHint(tr("settings.about.privacy_hint", "Abre la política de privacidad en Safari"))
         }
         .font(.subheadline)
         .foregroundStyle(SolennixColors.text)
@@ -144,7 +148,7 @@ public struct AboutView: View {
 
     private var socialLinksSection: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
-            Text("Siguenos")
+            Text(tr("settings.about.follow_us", "Síguenos"))
                 .font(.headline)
 
             HStack(spacing: Spacing.lg) {
@@ -181,15 +185,15 @@ public struct AboutView: View {
 
     private var creditsSection: some View {
         VStack(spacing: Spacing.md) {
-            Text("Agradecimientos")
+            Text(tr("settings.about.credits", "Agradecimientos"))
                 .font(.headline)
 
-            Text("Gracias a todos nuestros usuarios por confiar en Solennix para gestionar sus eventos. Tu retroalimentacion nos ayuda a mejorar constantemente.")
+            Text(tr("settings.about.credits_message", "Gracias a todos nuestros usuarios por confiar en Solennix para gestionar sus eventos. Tu retroalimentación nos ayuda a mejorar constantemente."))
                 .font(.subheadline)
                 .foregroundStyle(SolennixColors.textSecondary)
                 .multilineTextAlignment(.center)
 
-            Text("Hecho con amor en Mexico")
+            Text(tr("settings.about.made_in", "Hecho con amor en México"))
                 .font(.caption)
                 .foregroundStyle(SolennixColors.textTertiary)
         }

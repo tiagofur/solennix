@@ -1,5 +1,6 @@
 package com.creapolis.solennix.feature.settings.ui
 
+import com.creapolis.solennix.feature.settings.R
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -10,8 +11,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import com.creapolis.solennix.core.designsystem.R as DesignSystemR
 import com.creapolis.solennix.core.designsystem.component.PremiumButton
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.component.SolennixTextField
@@ -36,10 +39,10 @@ fun ChangePasswordScreen(
     Scaffold(
         topBar = {
             SolennixTopAppBar(
-                title = { Text("Cambiar Contraseña") },
+                title = { Text(stringResource(R.string.settings_change_password_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(DesignSystemR.string.cd_back))
                     }
                 }
             )
@@ -54,7 +57,7 @@ fun ChangePasswordScreen(
                 .padding(16.dp)
         ) {
             Text(
-                text = "Seguridad",
+                text = stringResource(R.string.settings_password_security),
                 style = MaterialTheme.typography.labelLarge,
                 color = SolennixTheme.colors.primary,
                 modifier = Modifier.padding(bottom = 8.dp)
@@ -70,7 +73,7 @@ fun ChangePasswordScreen(
                     SolennixTextField(
                         value = viewModel.currentPassword,
                         onValueChange = { viewModel.currentPassword = it },
-                        label = "Contraseña Actual *",
+                        label = stringResource(R.string.settings_password_current_label),
                         leadingIcon = Icons.Default.Lock,
                         isPassword = true,
                         errorMessage = viewModel.currentPasswordError
@@ -80,7 +83,7 @@ fun ChangePasswordScreen(
                     SolennixTextField(
                         value = viewModel.newPassword,
                         onValueChange = { viewModel.newPassword = it },
-                        label = "Nueva Contraseña *",
+                        label = stringResource(R.string.settings_password_new_label),
                         leadingIcon = Icons.Default.Lock,
                         isPassword = true,
                         errorMessage = viewModel.newPasswordError
@@ -90,7 +93,7 @@ fun ChangePasswordScreen(
                     SolennixTextField(
                         value = viewModel.confirmPassword,
                         onValueChange = { viewModel.confirmPassword = it },
-                        label = "Confirmar Contraseña *",
+                        label = stringResource(R.string.settings_password_confirm_label),
                         leadingIcon = Icons.Default.Lock,
                         isPassword = true,
                         imeAction = ImeAction.Done,
@@ -102,7 +105,7 @@ fun ChangePasswordScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "La contraseña debe tener al menos 8 caracteres.",
+                text = stringResource(R.string.settings_password_hint),
                 style = MaterialTheme.typography.bodySmall,
                 color = SolennixTheme.colors.secondaryText,
                 modifier = Modifier.padding(horizontal = 4.dp)
@@ -120,7 +123,7 @@ fun ChangePasswordScreen(
             }
 
             PremiumButton(
-                text = "Cambiar Contraseña",
+                text = stringResource(R.string.settings_action_change_password),
                 onClick = { viewModel.changePassword() },
                 isLoading = viewModel.isSaving,
                 enabled = !viewModel.isSaving

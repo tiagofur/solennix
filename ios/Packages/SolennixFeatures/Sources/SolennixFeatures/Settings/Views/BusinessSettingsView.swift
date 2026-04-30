@@ -16,16 +16,20 @@ public struct BusinessSettingsView: View {
         _viewModel = State(initialValue: BusinessSettingsViewModel(apiClient: apiClient))
     }
 
+    private func tr(_ key: String, _ value: String) -> String {
+        FeatureL10n.text(key, value)
+    }
+
     public var body: some View {
         Group {
             if viewModel.isLoading {
-                ProgressView("Cargando...")
+                ProgressView(tr("settings.loading", "Cargando..."))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 formContent
             }
         }
-        .navigationTitle("Ajustes del Negocio")
+        .navigationTitle(tr("settings.action.business_settings", "Ajustes del negocio"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -84,7 +88,7 @@ public struct BusinessSettingsView: View {
                                         .progressViewStyle(.circular)
                                 } else {
                                     Image(systemName: "photo")
-                                    Text(viewModel.logoUrl != nil ? "Cambiar Logo" : "Subir Logo")
+                                    Text(viewModel.logoUrl != nil ? tr("settings.business.logo.change", "Cambiar logo") : tr("settings.business.logo.upload", "Subir logo"))
                                 }
                             }
                             .font(.subheadline)
@@ -97,31 +101,31 @@ public struct BusinessSettingsView: View {
                 }
                 .padding(.vertical, Spacing.md)
             } header: {
-                Text("Logo")
+                Text(tr("settings.business.logo.title", "Logo"))
             } footer: {
-                Text("Tu logo aparecera en los contratos y cotizaciones que generes.")
+                Text(tr("settings.business.logo.hint", "Tu logo aparecerá en los contratos y cotizaciones que generes."))
             }
 
             // Business name + Brand color section (2-col on iPad)
             Section {
                 AdaptiveFormRow {
                     VStack(alignment: .leading, spacing: Spacing.sm) {
-                        TextField("Nombre del negocio", text: $viewModel.businessName)
-                        Toggle("Mostrar en PDFs", isOn: $viewModel.showBusinessNameInPdf)
-                        Text("Si activas esta opcion, tu nombre comercial aparecera en los documentos en lugar de tu nombre personal.")
+                        TextField(tr("settings.business.name_label", "Nombre del negocio"), text: $viewModel.businessName)
+                        Toggle(tr("settings.business.show_in_pdfs", "Mostrar en PDFs"), isOn: $viewModel.showBusinessNameInPdf)
+                        Text(tr("settings.business.show_in_pdfs_hint", "Si activas esta opción, tu nombre comercial aparecerá en los documentos en lugar de tu nombre personal."))
                             .font(.caption)
                             .foregroundStyle(SolennixColors.textTertiary)
                     }
                 } right: {
                     VStack(alignment: .leading, spacing: Spacing.sm) {
-                        ColorPicker("Color de marca", selection: $viewModel.brandColor)
-                        Text("Este color se usara como acento en los documentos PDF que generes.")
+                        ColorPicker(tr("settings.business.brand_color", "Color de marca"), selection: $viewModel.brandColor)
+                        Text(tr("settings.business.brand_color_hint", "Este color se usará como acento en los documentos PDF que generes."))
                             .font(.caption)
                             .foregroundStyle(SolennixColors.textTertiary)
                     }
                 }
             } header: {
-                Text("Negocio e Identidad Visual")
+                Text(tr("settings.business.identity_section", "Negocio e identidad visual"))
             }
 
             // Error message
@@ -165,7 +169,7 @@ public struct BusinessSettingsView: View {
             if viewModel.isSaving {
                 ProgressView()
             } else {
-                Text("Guardar")
+                Text(tr("common.save", "Guardar"))
                     .fontWeight(.semibold)
             }
         }
