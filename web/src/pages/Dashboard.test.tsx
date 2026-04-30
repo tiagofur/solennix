@@ -320,10 +320,13 @@ describe('Dashboard', () => {
     renderDashboard();
 
     await waitFor(() => {
-      expect(screen.getByText(/Ingresos/i)).toBeInTheDocument();
+      expect(screen.getByText(/Ingresos — Últimos 6 meses/i)).toBeInTheDocument();
     });
 
-    expect(capturedTooltipFormatters.length).toBeGreaterThan(0);
+    await waitFor(() => {
+      expect(capturedTooltipFormatters.length).toBeGreaterThan(0);
+    });
+
     const formatter = capturedTooltipFormatters[0];
     const result = formatter(1500);
     expect(result).toEqual(['$1,500', 'Ingresos']);
