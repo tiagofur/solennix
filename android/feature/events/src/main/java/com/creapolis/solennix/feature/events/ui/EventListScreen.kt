@@ -3,6 +3,7 @@ package com.creapolis.solennix.feature.events.ui
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
+import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalSharedTransitionApi
@@ -58,14 +59,22 @@ import com.creapolis.solennix.feature.events.viewmodel.EventSortField
 import com.creapolis.solennix.feature.events.viewmodel.EventStatusFilter
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import kotlinx.coroutines.delay
 import java.io.File
 import com.creapolis.solennix.core.model.extensions.parseFlexibleDate
+import com.creapolis.solennix.feature.events.R
 import java.time.format.DateTimeFormatter
 import java.util.*
 
-private fun exportEventsCsv(context: Context, csvContent: String) {
+private fun exportEventsCsv(
+    context: Context,
+    csvContent: String,
+    subject: String,
+    chooserTitle: String,
+    errorMessage: (String) -> String
+) {
     try {
         val file = File(context.cacheDir, "eventos.csv")
         file.writeText(csvContent)
@@ -77,12 +86,12 @@ private fun exportEventsCsv(context: Context, csvContent: String) {
         val intent = Intent(Intent.ACTION_SEND).apply {
             type = "text/csv"
             putExtra(Intent.EXTRA_STREAM, uri)
-            putExtra(Intent.EXTRA_SUBJECT, "Eventos - Exportación CSV")
+            putExtra(Intent.EXTRA_SUBJECT, subject)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
-        context.startActivity(Intent.createChooser(intent, "Exportar Eventos"))
+        context.startActivity(Intent.createChooser(intent, chooserTitle))
     } catch (e: Exception) {
-        Toast.makeText(context, "Error al exportar: ${e.message}", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, errorMessage(e.message.orEmpty()), Toast.LENGTH_SHORT).show()
     }
 }
 
@@ -99,6 +108,9 @@ fun EventListScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
+    val retryLabel = stringResource(R.string.events_list_retry)
+    val exportCsvSubject = stringResource(R.string.events_list_export_csv_subject)
+    val exportCsvChooser = stringResource(R.string.events_list_export_csv_chooser)
     // Sheets + dialogs for row actions + sort. We keep them in one place
     // at the screen level so the event card itself stays purely visual.
     var showSortSheet by remember { mutableStateOf(false) }
@@ -115,7 +127,7 @@ fun EventListScreen(
         uiState.error?.let {
             val result = snackbarHostState.showSnackbar(
                 message = it,
-                actionLabel = "Reintentar",
+                actionLabel = retryLabel,
                 duration = SnackbarDuration.Short
             )
             if (result == SnackbarResult.ActionPerformed) {
@@ -129,24 +141,32 @@ fun EventListScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             SolennixTopAppBar(
-                title = { Text("Eventos") },
+                title = { Text(stringResource(R.string.events_list_title)) },
                 onSearchClick = onSearchClick,
                 navigationIcon = {
                     if (showBackButton) {
                         IconButton(onClick = onNavigateBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Regresar")
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.events_list_back))
                         }
                     }
                 },
                 actions = {
                     IconButton(onClick = { showSortSheet = true }) {
-                        Icon(Icons.AutoMirrored.Filled.Sort, contentDescription = "Ordenar eventos")
+                        Icon(Icons.AutoMirrored.Filled.Sort, contentDescription = stringResource(R.string.events_list_sort_menu))
                     }
                     IconButton(onClick = {
                         val csv = viewModel.generateCsvContent()
-                        exportEventsCsv(context, csv)
+                        exportEventsCsv(
+                            context = context,
+                            csvContent = csv,
+                            subject = exportCsvSubject,
+                            chooserTitle = exportCsvChooser,
+                            errorMessage = { message ->
+                                context.getString(R.string.events_list_export_csv_error, message)
+                            }
+                        )
                     }) {
-                        Icon(Icons.Default.FileDownload, contentDescription = "Exportar CSV")
+                        Icon(Icons.Default.FileDownload, contentDescription = stringResource(R.string.events_list_export_csv))
                     }
                 }
             )
@@ -171,12 +191,12 @@ fun EventListScreen(
                         value = uiState.searchQuery,
                         onValueChange = { viewModel.onSearchQueryChange(it) },
                         modifier = Modifier.weight(1f),
-                        placeholder = { Text("Filtrar eventos...") },
+                        placeholder = { Text(stringResource(R.string.events_list_search_placeholder)) },
                         leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                         trailingIcon = {
                             if (uiState.searchQuery.isNotEmpty()) {
                                 IconButton(onClick = { viewModel.onSearchQueryChange("") }) {
-                                    Icon(Icons.Default.Clear, contentDescription = "Limpiar")
+                                    Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.events_list_clear_search))
                                 }
                             }
                         },
@@ -202,7 +222,7 @@ fun EventListScreen(
                     ) {
                         Icon(
                             Icons.Default.DateRange, 
-                            contentDescription = "Rango de fechas",
+                            contentDescription = stringResource(R.string.events_list_date_range),
                             tint = if (uiState.startDate != null) 
                                 SolennixTheme.colors.primary 
                             else SolennixTheme.colors.secondaryText
@@ -223,17 +243,17 @@ fun EventListScreen(
                                     }
                                     viewModel.onDateRangeChange(start, end)
                                     showDateRangePicker = false
-                                }) { Text("Aplicar") }
+                                }) { Text(stringResource(R.string.events_list_apply)) }
                             },
                             dismissButton = {
-                                TextButton(onClick = { showDateRangePicker = false }) { Text("Cancelar") }
+                                TextButton(onClick = { showDateRangePicker = false }) { Text(stringResource(R.string.events_list_cancel)) }
                             }
                         ) {
                             DateRangePicker(
                                 state = dateRangePickerState,
                                 modifier = Modifier.height(400.dp),
-                                title = { Text("Seleccioná el rango") },
-                                headline = { Text("Filtro de fechas") },
+                                title = { Text(stringResource(R.string.events_list_select_range)) },
+                                headline = { Text(stringResource(R.string.events_list_date_filter_headline)) },
                                 showModeToggle = false,
                                 colors = DatePickerDefaults.colors(
                                     selectedDayContainerColor = SolennixTheme.colors.primary,
@@ -256,8 +276,8 @@ fun EventListScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         if (uiState.startDate != null) {
-                            val formatter = DateTimeFormatter.ofPattern("dd/MM", Locale("es", "MX"))
-                            val label = "${uiState.startDate!!.format(formatter)} - ${uiState.endDate?.format(formatter) ?: "..."}"
+                            val formatter = DateTimeFormatter.ofPattern("dd/MM", Locale.getDefault())
+                            val label = "${uiState.startDate!!.format(formatter)} - ${uiState.endDate?.format(formatter) ?: "…"}"
                             FilterChip(
                                 selected = true,
                                 onClick = { viewModel.onDateRangeChange(null, null) },
@@ -267,7 +287,7 @@ fun EventListScreen(
                         }
                         
                         TextButton(onClick = { viewModel.clearFilters() }) {
-                            Text("Limpiar todo", style = MaterialTheme.typography.labelSmall)
+                            Text(stringResource(R.string.events_list_clear_all), style = MaterialTheme.typography.labelSmall)
                         }
                     }
                 }
@@ -332,11 +352,11 @@ fun EventListScreen(
                         "loading" -> EventListSkeleton()
                         "empty" -> EmptyState(
                             icon = Icons.Default.EventBusy,
-                            title = if (uiState.searchQuery.isNotEmpty()) "Sin resultados" else "Sin eventos",
+                            title = if (uiState.searchQuery.isNotEmpty()) stringResource(R.string.events_list_empty_results) else stringResource(R.string.events_list_empty_events),
                             message = if (uiState.searchQuery.isNotEmpty())
-                                "No se encontraron eventos con ese filtro"
+                                stringResource(R.string.events_list_empty_results_message)
                             else
-                                "Crea tu primer evento para comenzar"
+                                stringResource(R.string.events_list_empty_events_message)
                         )
                         else -> AdaptiveCardGrid(
                             contentPadding = PaddingValues(vertical = 8.dp),
@@ -428,21 +448,21 @@ fun EventListScreen(
     deleteConfirmEvent?.let { event ->
         AlertDialog(
             onDismissRequest = { deleteConfirmEvent = null },
-            title = { Text("Eliminar evento") },
+            title = { Text(stringResource(R.string.events_list_delete_title)) },
             text = {
-                Text("Se eliminará \"${event.serviceType}\". Esta acción no se puede deshacer.")
+                Text(stringResource(R.string.events_list_delete_description, event.serviceType))
             },
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.deleteEvent(event)
                     deleteConfirmEvent = null
                 }) {
-                    Text("Eliminar", color = SolennixTheme.colors.error)
+                    Text(stringResource(R.string.events_list_delete), color = SolennixTheme.colors.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { deleteConfirmEvent = null }) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.events_list_cancel))
                 }
             }
         )
@@ -459,10 +479,10 @@ private fun SortBottomSheet(
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val options = listOf(
-        EventSortField.EVENT_DATE to "Fecha",
-        EventSortField.SERVICE_TYPE to "Servicio",
-        EventSortField.CLIENT_NAME to "Cliente",
-        EventSortField.TOTAL_AMOUNT to "Total"
+        EventSortField.EVENT_DATE to R.string.events_list_sort_date,
+        EventSortField.SERVICE_TYPE to R.string.events_list_sort_service,
+        EventSortField.CLIENT_NAME to R.string.events_list_sort_client,
+        EventSortField.TOTAL_AMOUNT to R.string.events_list_sort_total
     )
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -476,13 +496,13 @@ private fun SortBottomSheet(
                 .padding(bottom = 32.dp)
         ) {
             Text(
-                "Ordenar por",
+                stringResource(R.string.events_list_sort_by),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = SolennixTheme.colors.primaryText
             )
             Spacer(modifier = Modifier.height(12.dp))
-            options.forEach { (field, label) ->
+            options.forEach { (field, labelRes) ->
                 val isActive = field == activeField
                 Row(
                     modifier = Modifier
@@ -492,7 +512,7 @@ private fun SortBottomSheet(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        label,
+                        stringResource(labelRes),
                         modifier = Modifier.weight(1f),
                         style = MaterialTheme.typography.bodyLarge,
                         color = if (isActive) SolennixTheme.colors.primary
@@ -502,7 +522,7 @@ private fun SortBottomSheet(
                     if (isActive) {
                         Icon(
                             if (ascending) Icons.Default.ArrowUpward else Icons.Default.ArrowDownward,
-                            contentDescription = if (ascending) "Ascendente" else "Descendente",
+                            contentDescription = stringResource(if (ascending) R.string.events_list_sort_ascending else R.string.events_list_sort_descending),
                             tint = SolennixTheme.colors.primary
                         )
                     }
@@ -537,7 +557,7 @@ private fun RowActionsBottomSheet(
             // context for which row they're acting on.
             Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
                 Text(
-                    clientName ?: "Cliente",
+                    clientName ?: stringResource(R.string.events_list_client_fallback),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = SolennixTheme.colors.primaryText,
@@ -553,15 +573,15 @@ private fun RowActionsBottomSheet(
             }
             HorizontalDivider(color = SolennixTheme.colors.divider)
 
-            RowActionItem(icon = Icons.Default.Edit, label = "Editar", onClick = onEdit)
+            RowActionItem(icon = Icons.Default.Edit, label = stringResource(R.string.events_list_action_edit), onClick = onEdit)
             RowActionItem(
                 icon = Icons.Default.SwapVert,
-                label = "Cambiar estado",
+                label = stringResource(R.string.events_list_action_change_status),
                 onClick = onChangeStatus
             )
             RowActionItem(
                 icon = Icons.Default.Delete,
-                label = "Eliminar",
+                label = stringResource(R.string.events_list_action_delete),
                 destructive = true,
                 onClick = onDelete
             )
@@ -599,10 +619,10 @@ private fun StatusChangeBottomSheet(
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val options = listOf(
-        EventStatus.QUOTED to "Cotizado",
-        EventStatus.CONFIRMED to "Confirmado",
-        EventStatus.COMPLETED to "Completado",
-        EventStatus.CANCELLED to "Cancelado"
+        EventStatus.QUOTED to R.string.events_list_status_quoted,
+        EventStatus.CONFIRMED to R.string.events_list_status_confirmed,
+        EventStatus.COMPLETED to R.string.events_list_status_completed,
+        EventStatus.CANCELLED to R.string.events_list_status_cancelled
     )
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -616,13 +636,13 @@ private fun StatusChangeBottomSheet(
                 .padding(bottom = 32.dp)
         ) {
             Text(
-                "Cambiar estado",
+                stringResource(R.string.events_list_status_change_title),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = SolennixTheme.colors.primaryText
             )
             Spacer(modifier = Modifier.height(12.dp))
-            options.forEach { (status, label) ->
+            options.forEach { (status, labelRes) ->
                 val isActive = status == event.status
                 Row(
                     modifier = Modifier
@@ -632,7 +652,7 @@ private fun StatusChangeBottomSheet(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        label,
+                        stringResource(labelRes),
                         modifier = Modifier.weight(1f),
                         style = MaterialTheme.typography.bodyLarge,
                         color = if (isActive) SolennixTheme.colors.primary
@@ -786,20 +806,33 @@ private fun EventListItem(
     onClick: () -> Unit,
     onLongClick: () -> Unit
 ) {
+    val context = LocalContext.current
+    val allDayLabel = stringResource(R.string.events_list_all_day)
+    val clientFallback = stringResource(R.string.events_list_client_fallback)
     val eventDate = remember(event.eventDate) {
         val dateFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.getDefault())
         parseFlexibleDate(event.eventDate)?.format(dateFormatter) ?: event.eventDate
     }
-    val timeLabel = remember(event.startTime, event.endTime) {
+    val timeLabel = remember(event.startTime, event.endTime, allDayLabel) {
         val start = event.startTime
         when {
-            start.isNullOrEmpty() -> "Todo el día"
+            start.isNullOrEmpty() -> allDayLabel
             !event.endTime.isNullOrEmpty() -> "${start.take(5)} - ${event.endTime!!.take(5)}"
             else -> start.take(5)
         }
     }
-    val accessibilitySummary = remember(event, clientName, eventDate) {
-        eventCardTalkBackLabel(event, clientName, eventDate)
+    val locationLabel = remember(event.location, event.city) {
+        listOfNotNull(event.location?.takeIf { it.isNotEmpty() }, event.city?.takeIf { it.isNotEmpty() }).joinToString(", ")
+    }
+    val accessibilitySummary = remember(event, clientName, eventDate, locationLabel, timeLabel) {
+        eventCardTalkBackLabel(
+            context = context,
+            event = event,
+            clientName = clientName,
+            formattedDate = eventDate,
+            timeLabel = timeLabel,
+            locationLabel = locationLabel
+        )
     }
     val haptic = LocalHapticFeedback.current
 
@@ -837,7 +870,7 @@ private fun EventListItem(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = clientName ?: "Cliente",
+                    text = clientName ?: clientFallback,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = SolennixTheme.colors.primaryText,
@@ -914,7 +947,7 @@ private fun EventListItem(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = listOfNotNull(location, event.city?.takeIf { it.isNotEmpty() }).joinToString(", "),
+                        text = locationLabel,
                         style = MaterialTheme.typography.bodySmall,
                         color = SolennixTheme.colors.secondaryText,
                         maxLines = 1,
@@ -942,13 +975,13 @@ private fun EventListItem(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "${event.numPeople} personas",
+                        text = stringResource(R.string.events_list_people_count, event.numPeople),
                         style = MaterialTheme.typography.bodySmall,
                         color = SolennixTheme.colors.secondaryText
                     )
                 }
                 Text(
-                    text = "$${String.format("%,.0f", event.totalAmount)}",
+                    text = event.totalAmount.asMXN(),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = SolennixTheme.colors.primary
@@ -958,15 +991,48 @@ private fun EventListItem(
     }
 }
 
-internal fun eventCardTalkBackLabel(event: Event, clientName: String?, formattedDate: String): String {
-    return buildString {
-        append(event.serviceType)
-        append(", estado ${event.status.name.lowercase()}")
-        append(", fecha $formattedDate")
-        append(", hora ${event.startTime ?: "todo el día"}")
-        clientName?.takeIf { it.isNotBlank() }?.let { append(", cliente $it") }
-        event.location?.takeIf { it.isNotBlank() }?.let { append(", ubicación $it") }
-        append(", ${event.numPeople} personas")
-        append(", total ${event.totalAmount.asMXN()}")
+private fun localizedEventStatus(context: Context, status: EventStatus): String = when (status) {
+    EventStatus.QUOTED -> context.getString(R.string.events_list_status_quoted)
+    EventStatus.CONFIRMED -> context.getString(R.string.events_list_status_confirmed)
+    EventStatus.COMPLETED -> context.getString(R.string.events_list_status_completed)
+    EventStatus.CANCELLED -> context.getString(R.string.events_list_status_cancelled)
+}
+
+internal fun eventCardTalkBackLabel(
+    context: Context,
+    event: Event,
+    clientName: String?,
+    formattedDate: String,
+    timeLabel: String,
+    locationLabel: String
+): String {
+    val resolvedClient = clientName?.takeIf { it.isNotBlank() }
+        ?: context.getString(R.string.events_list_client_fallback)
+    val localizedStatus = localizedEventStatus(context, event.status)
+    val total = event.totalAmount.asMXN()
+
+    return if (locationLabel.isNotBlank()) {
+        context.getString(
+            R.string.events_list_a11y_summary,
+            event.serviceType,
+            localizedStatus,
+            formattedDate,
+            timeLabel,
+            resolvedClient,
+            locationLabel,
+            event.numPeople,
+            total
+        )
+    } else {
+        context.getString(
+            R.string.events_list_a11y_summary_no_location,
+            event.serviceType,
+            localizedStatus,
+            formattedDate,
+            timeLabel,
+            resolvedClient,
+            event.numPeople,
+            total
+        )
     }
 }

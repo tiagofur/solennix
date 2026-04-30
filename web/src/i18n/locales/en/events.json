@@ -1,172 +1,69 @@
 {
-  "form": {
-    "title_new": "New Event",
-    "title_edit": "Edit Event",
-    "steps": {
-      "general": "General Information",
-      "products": "Products",
-      "extras": "Extras",
-      "inventory_staff": "Inventory and Staff",
-      "financials": "Financials and Contract"
-    },
-    "validation": {
-      "client_required": "Select a client",
-      "date_required": "Select a date",
-      "service_required": "Service type required",
-      "people_min": "Minimum 1 person"
-    }
-  },
-  "general": {
-    "client": "Client",
-    "new_client": "New Client",
-    "select_client": "Select client",
-    "client_history": "Client History:",
-    "new_client_aria": "Quickly create new client",
-    "events_performed": "events performed",
-    "total_spent": "Total spent:",
-    "event_date": "Event Date",
-    "start_time": "Start Time",
-    "end_time": "End Time",
-    "service_type": "Service Type",
-    "service_placeholder": "e.g. Decoration, Banquet, Photography",
-    "num_people": "Number of People",
-    "status": "Status",
-    "location": "Event Location",
-    "location_placeholder": "Event address (optional, defaults to client address)",
-    "city": "Event City",
-    "city_placeholder": "Event city (for contract)",
-    "all_day": "all day",
-    "date_unavailable": "This date is not available due to holidays or manual block. Please select another date.",
-    "status_options": {
+  "list": {
+    "title": "Events",
+    "search_placeholder": "Search events...",
+    "search_aria": "Search events by client, service, or city. Press slash to focus.",
+    "search_clear": "Clear search",
+    "export_csv": "Export CSV",
+    "export_csv_aria": "Export events to CSV",
+    "quick_quote": "Quick quote",
+    "new_event": "New event",
+    "status": {
+      "all": "All",
       "quoted": "Quoted",
       "confirmed": "Confirmed",
       "completed": "Completed",
       "cancelled": "Cancelled"
-    }
-  },
-  "products": {
-    "title": "Product Selection",
-    "add": "Add Product",
-    "add_button_aria": "Add another product",
-    "subtotal": "Products Subtotal",
-    "quantity": "Qty.",
-    "price": "Unit Price",
-    "discount": "Unit Disc.",
-    "total": "Total",
-    "unit_cost": "Est. unit cost",
-    "select_placeholder": "Select product",
-    "delete_confirm_title": "Delete product?",
-    "delete_button": "Delete product {{index}}",
-    "delete_confirm_desc": "Remove \"{{name}}\" from this event?",
-    "delete_confirm_desc_generic": "Remove this product from the event?",
-    "equal_quantity_to_people": "Match quantity to number of guests",
-    "include_team": "Includes team",
-    "include_team_tooltip": "This product automatically adds associated team members as staff"
-  },
-  "extras": {
-    "title": "Extras (Transport, Staff, etc.)",
-    "add": "Add Extra",
-    "add_button_aria": "Add another extra",
-    "subtotal": "Extras Subtotal",
-    "description": "Description",
-    "cost": "Cost (Expense)",
-    "price": "Price (Charge)",
-    "price_aria": "Charge price for extra {{index}}",
-    "exclude_utility": "Charge cost only (No profit)",
-    "include_checklist": "Include in checklist",
-    "delete_button": "Delete extra {{index}}",
-    "delete_confirm_title": "Remove extra?",
-    "delete_confirm_desc": "Remove \"{{name}}\" from this event?",
-    "delete_confirm_desc_generic": "Remove this extra from the event?"
-  },
-  "financials": {
-    "title": "Financial Setup and Contract",
-    "discount": "Global Discount",
-    "discount_type": "Discount Type",
-    "discount_fixed": "Fixed Amount ($)",
-    "discount_percent": "Percentage (%)",
-    "invoice": "Requires Invoice? (+Tax)",
-    "tax_rate": "Tax Rate (%)",
-    "deposit_percent": "Deposit Percentage (%)",
-    "cancellation_days": "Cancellation Deadline (Days)",
-    "refund_percent": "Refund Percentage (%)",
-    "notes": "Event Notes",
-    "notes_placeholder": "Internal notes or for the contract...",
-    "subtotal": "Subtotal",
-    "tax": "Tax",
-    "total": "Event Total",
-    "profit_metrics": "Profitability Metrics (Internal)",
-    "est_cost": "Estimated Cost:",
-    "est_profit": "Estimated Profit:",
-    "est_margin": "Profit Margin:"
-  },
-  "staff": {
-    "title": "Staff and Collaborators",
-    "add": "Assign Staff",
-    "select_staff": "Select member",
-    "role": "Role / Position",
-    "fee": "Fee / Payment",
-    "shift_start": "Shift Start",
-    "shift_end": "Shift End",
-    "delete_confirm_title": "Remove staff?",
-    "delete_confirm_desc": "Remove \"{{name}}\" from this event?"
-  },
-  "supplies": {
-    "title": "Event Supplies",
-    "description": "Calculate consumable supplies per event and decide whether they come from stock or need purchase.",
-    "add": "Add Event Supply",
-    "label": "Supply",
-    "select_item": "Select supply",
-    "suggestions": "Supplies suggested by your products",
-    "source_stock": "From Inventory",
-    "source_purchase": "To Purchase",
-    "source": "Source",
-    "unit_cost": "Unit Cost",
-    "cost_unit": "Unit cost",
-    "exclude_cost": "Do not include in total cost",
-    "no_cost": "No cost",
-    "total_cost": "Total event supplies cost",
-    "delete_button": "Delete supply {{index}}",
-    "delete_confirm_title": "Remove supply?",
-    "delete_confirm_desc": "Remove \"{{name}}\" from this event?",
-    "delete_confirm_desc_generic": "Remove this supply from the event?"
-  },
-  "equipment": {
-    "title": "Equipment Assignment",
-    "description": "Assign reusable equipment and assets to this event.",
-    "add": "Add Equipment",
-    "label": "Equipment",
-    "select_item": "Select equipment",
-    "conflicts": "Availability Conflicts",
-    "conflicts_detected": "Equipment conflicts detected",
-    "in_use": "in use in another event",
-    "suggestions": "Equipment suggested by your products",
-    "no_items": "No equipment assigned yet",
-    "notes_placeholder": "Equipment notes...",
-    "no_cost": "No cost - Reusable asset",
-    "conflict": "Conflict",
-    "assigned": "equipment item(s) assigned",
-    "no_impact": "no cost impact",
-    "delete_button": "Delete equipment {{index}}",
-    "delete_confirm_title": "Delete equipment?",
-    "delete_confirm_desc": "Remove \"{{name}}\" from this event?",
-    "delete_confirm_desc_generic": "Remove this equipment from the event?"
-  },
-  "quick_client": {
-    "title": "New Quick Client",
-    "name": "Full Name",
-    "name_placeholder": "Client name",
-    "phone": "Phone",
-    "phone_placeholder": "Client phone",
-    "email": "Email",
-    "email_placeholder": "client@email.com",
-    "save": "Save client",
-    "saving": "Saving client...",
-    "error_creating": "Error creating client",
-    "validation": {
-      "name_min": "Name must be at least 2 characters",
-      "phone_min": "Phone must be at least 10 digits",
-      "email_invalid": "Invalid email"
+    },
+    "date_filter": {
+      "from": "From",
+      "to": "To",
+      "from_aria": "Filter from date",
+      "to_aria": "Filter to date",
+      "clear_aria": "Clear date filter"
+    },
+    "empty": {
+      "no_results_title": "No events found",
+      "no_results_description": "No events matched. Try another status or clear the search text.",
+      "no_events_title": "No events yet",
+      "no_events_description": "Start by creating your first event.",
+      "create_event": "Create event"
+    },
+    "table": {
+      "aria": "Events table",
+      "caption": "Events list with {{total}} results. Showing page {{page}} of {{pages}}.",
+      "date": "Date",
+      "client": "Client",
+      "service": "Service",
+      "status": "Status",
+      "total": "Total",
+      "actions": "Actions",
+      "people_one": "{{count}} person",
+      "people_other": "{{count}} people",
+      "no_client": "Client"
+    },
+    "actions": {
+      "view_summary": "View summary",
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "delete_confirm": {
+      "title": "Delete event",
+      "description": "All event data, including payments and files, will be deleted. This action cannot be undone.",
+      "confirm": "Delete permanently",
+      "cancel": "Cancel"
+    },
+    "csv": {
+      "file_name": "events",
+      "headers": {
+        "date": "Date",
+        "client": "Client",
+        "service_type": "Service type",
+        "people": "People",
+        "status": "Status",
+        "total": "Total",
+        "city": "City"
+      }
     }
   }
 }
