@@ -56,6 +56,10 @@ export default defineConfig({
     // `--expose-gc` habilita el `globalThis.gc()` que tests/setup.ts
     // invoca en afterEach para liberar memoria entre tests.
     pool: 'forks',
+    // CI sigue mostrando estado compartido/no determinístico entre archivos
+    // de tests de eventos aunque localmente pasen. Serializar archivos prioriza
+    // estabilidad sobre velocidad y elimina la fuente de flakiness.
+    fileParallelism: false,
     execArgv: ['--max-old-space-size=6144', '--expose-gc'],
   },
   resolve: {
