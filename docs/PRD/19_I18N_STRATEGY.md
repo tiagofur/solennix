@@ -1,7 +1,7 @@
 # i18n Strategy
 
 > [!abstract] Resumen
-> Solennix se construye multi-idioma desde el Calendario (slice inicial, 2026-04-20). Cada plataforma usa su infraestructura nativa; los idiomas shipped por default son **ES (source / development language)** y **EN**. El selector de idioma per-usuario queda pendiente para un slice posterior — por ahora el device / navigator locale gobierna. Desde 2026-04-29 la estrategia ya no se organiza por plataforma sino por **slice cross-platform** con una **copy matrix canónica** para evitar drift semántico entre iOS, Android y Web.
+> Solennix se construye multi-idioma desde el Calendario (slice inicial, 2026-04-20). Cada plataforma usa su infraestructura nativa; los idiomas shipped por default son **ES (source / development language)** y **EN**. Desde 2026-04-29 la estrategia ya no se organiza por plataforma sino por **slice cross-platform** con una **copy matrix canónica** para evitar drift semántico entre iOS, Android y Web. El selector de idioma per-usuario queda pendiente para un slice posterior — por ahora el device / navigator locale gobierna.
 
 ## Tracker de ejecución
 
@@ -274,6 +274,76 @@ Si un string visible al usuario no entra en el inventario, el issue está incomp
 | Clients | delete_client_description | Esta acción no se puede deshacer. | This action cannot be undone. | No se puede deshacer. | Can't be undone. | Si el nombre del cliente está en contexto visual, esta versión corta alcanza |
 | Clients | delete_client_named_description | Se eliminará este cliente. Esta acción no se puede deshacer. | This client will be deleted. This action cannot be undone. | No se puede deshacer. | Can't be undone. | Evitar textos distintos por plataforma salvo por contexto UI |
 | Clients | retry | Reintentar | Retry | Reintentar | Retry | — |
+| Products | title | Productos | Products | Productos | Products | — |
+| Products | new_product | Nuevo producto | New product | Nuevo | New | Compact permitida |
+| Products | add_product | Agregar producto | Add product | Agregar | Add | `Nuevo producto` preferido como CTA principal |
+| Products | search_placeholder | Buscar productos... | Search products... | Buscar... | Search... | No usar `Filtrar productos...` como placeholder principal |
+| Products | export_csv | Exportar CSV | Export CSV | Exportar | Export | Compact permitida |
+| Products | name | Nombre | Name | Nombre | Name | — |
+| Products | category | Categoría | Category | Categoría | Category | — |
+| Products | base_price | Precio base | Base price | Precio | Price | Compact permitida |
+| Products | active_product | Producto activo | Active product | Activo | Active | Compact permitida en toggles/cards |
+| Products | visible_in_quotes | Visible en cotizaciones | Visible in quotes | Visible | Visible | Compact permitida |
+| Products | image_optional | Imagen (opcional) | Image (optional) | Imagen | Image | Compact permitida |
+| Products | select_image | Seleccionar imagen | Select image | Imagen | Image | Compact sólo en botones chicos |
+| Products | change_image | Cambiar imagen | Change image | Cambiar | Change | Compact permitida |
+| Products | uploading_image | Subiendo imagen... | Uploading image... | Subiendo... | Uploading... | Compact permitida |
+| Products | composition_ingredients | Composición / insumos | Composition / ingredients | Composición | Composition | Mantener slash, no inventar 2 labels distintas por plataforma |
+| Products | composition_description | Solo los insumos generan costo al producto. | Only ingredients contribute product cost. | Solo genera costo. | Cost-driving only. | Compact permitida como helper corto |
+| Products | required_equipment | Equipo necesario | Required equipment | Equipo | Equipment | Compact permitida |
+| Products | required_equipment_description | Activos reutilizables. No se incluyen en el costo. | Reusable assets. They are not included in cost. | Sin costo | No cost | Compact sólo como badge/helper mínimo |
+| Products | event_supplies | Insumos por evento | Event supplies | Insumos evento | Event supplies | Compact permitida |
+| Products | event_supplies_description | Costo fijo por evento. | Fixed cost per event. | Costo fijo | Fixed cost | Compact permitida |
+| Products | add | Agregar | Add | Agregar | Add | — |
+| Products | quantity | Cantidad | Quantity | Cant. | Qty | Compact sólo en tablas muy densas |
+| Products | estimated_cost | Costo estimado | Estimated cost | Costo est. | Est. cost | Compact permitida |
+| Products | associated_team | Equipo asociado | Associated team | Equipo | Team | Compact permitida |
+| Products | no_team | Sin equipo | No team | Sin equipo | No team | — |
+| Products | select_item | Seleccionar ítem | Select item | Seleccionar | Select | Compact permitida |
+| Products | stock | Stock | Stock | Stock | Stock | — |
+| Products | details | Detalles | Details | Detalles | Details | — |
+| Products | edit_product | Editar producto | Edit product | Editar | Edit | Compact permitida |
+| Products | delete_product_title | Eliminar producto | Delete product | Eliminar | Delete | Título completo en dialog |
+| Products | delete_product_description | Esta acción no se puede deshacer. | This action cannot be undone. | No se puede deshacer. | Can't be undone. | Mantener copy destructiva breve y clara |
+| Products | inactive | Inactivo | Inactive | Inactivo | Inactive | — |
+| Products | unit_cost | Costo por unidad | Cost per unit | Costo/u | Unit cost | Compact permitida |
+| Products | estimated_margin | Margen estimado | Estimated margin | Margen est. | Est. margin | Compact permitida |
+| Products | upcoming_events | Próximos eventos | Upcoming events | Próximos | Upcoming | Compact permitida |
+| Products | no_products | Sin productos | No products | Sin productos | No products | — |
+| Products | no_results | Sin resultados | No results | Sin resultados | No results | — |
+| Products | create_first_product | Agrega tu primer producto al catálogo | Add your first product to the catalog | Crear producto | Create product | Compact permitida en empty state |
+| Products | no_match_filters | No se encontraron productos que coincidan con los filtros aplicados | No products matched the applied filters | Sin coincidencias | No matches | Compact permitida |
+| Inventory | title | Inventario | Inventory | Inventario | Inventory | — |
+| Inventory | new_item | Nuevo ítem | New item | Nuevo | New | Compact permitida |
+| Inventory | add_item | Agregar ítem | Add item | Agregar | Add | `Nuevo ítem` preferido como CTA principal |
+| Inventory | search_placeholder | Buscar inventario... | Search inventory... | Buscar... | Search... | No usar `Filtrar inventario...` como placeholder principal |
+| Inventory | low_stock | Stock bajo | Low stock | Stock bajo | Low stock | — |
+| Inventory | adjust_stock | Ajustar stock | Adjust stock | Ajustar | Adjust | Compact permitida |
+| Inventory | confirm | Confirmar | Confirm | Confirmar | Confirm | — |
+| Inventory | name | Nombre | Name | Nombre | Name | No usar `Nombre del item` como canonical corto |
+| Inventory | item_name | Nombre del ítem | Item name | Nombre | Item name | Compact permitida |
+| Inventory | type | Tipo | Type | Tipo | Type | — |
+| Inventory | ingredient | Consumible | Consumable | Consumible | Consumable | Reemplaza `Ingrediente` si el dominio se refiere a stock consumible general |
+| Inventory | supply | Insumo por evento | Event supply | Insumo evento | Event supply | Compact permitida |
+| Inventory | equipment | Equipo | Equipment | Equipo | Equipment | No usar `Activo / Equipo` como canonical corto |
+| Inventory | current_stock | Stock actual | Current stock | Stock | Stock | Compact permitida |
+| Inventory | minimum_stock | Stock mínimo | Minimum stock | Mínimo | Minimum | Compact permitida |
+| Inventory | unit | Unidad | Unit | Unidad | Unit | — |
+| Inventory | unit_cost | Costo unitario | Unit cost | Costo | Cost | Compact permitida |
+| Inventory | stock_value | Valor en stock | Stock value | Valor stock | Stock value | Compact permitida |
+| Inventory | minimum_recommended | Mínimo recomendado | Recommended minimum | Mínimo rec. | Recommended min. | Compact permitida |
+| Inventory | demand_next_7_days | Demanda próximos 7 días | Demand next 7 days | Demanda 7 días | 7-day demand | Compact permitida |
+| Inventory | consumption_section | Consumibles | Consumables | Consumibles | Consumables | Canonical para la sección de ingredientes consumibles |
+| Inventory | supplies_section | Insumos por evento | Event supplies | Insumos evento | Event supplies | Compact permitida |
+| Inventory | equipment_section | Equipos | Equipment | Equipos | Equipment | — |
+| Inventory | no_inventory | Sin inventario | No inventory | Sin inventario | No inventory | — |
+| Inventory | no_results | Sin resultados | No results | Sin resultados | No results | — |
+| Inventory | no_low_stock_items | No hay ítems con stock bajo | No low-stock items | Sin stock bajo | No low stock | Compact permitida |
+| Inventory | create_first_item | Agrega tu primer ítem al inventario | Add your first item to inventory | Crear ítem | Create item | Compact permitida |
+| Inventory | delete_item_title | Eliminar ítem | Delete item | Eliminar | Delete | Título completo en dialog |
+| Inventory | delete_item_description | Esta acción no se puede deshacer. | This action cannot be undone. | No se puede deshacer. | Can't be undone. | Mantener copy destructiva breve y clara |
+| Inventory | details | Ver detalles | View details | Detalles | Details | Compact permitida |
+| Inventory | save | Guardar | Save | Guardar | Save | — |
 
 ### Inventario operativo por slice
 
