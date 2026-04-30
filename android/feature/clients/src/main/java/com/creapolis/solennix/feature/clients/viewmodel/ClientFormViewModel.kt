@@ -22,7 +22,9 @@ import com.creapolis.solennix.core.network.post
 import com.creapolis.solennix.core.network.put
 import com.creapolis.solennix.core.network.AuthManager
 import com.creapolis.solennix.core.network.Endpoints
+import com.creapolis.solennix.feature.clients.R
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -35,6 +37,7 @@ class ClientFormViewModel @Inject constructor(
     private val apiService: ApiService,
     private val planLimitsManager: PlanLimitsManager,
     private val authManager: AuthManager,
+    @ApplicationContext private val context: Context,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -65,18 +68,18 @@ class ClientFormViewModel @Inject constructor(
     var hasAttemptedSubmit by mutableStateOf(false)
 
     val nameError: String?
-        get() = if (hasAttemptedSubmit && name.isBlank()) "El nombre es requerido" else null
+        get() = if (hasAttemptedSubmit && name.isBlank()) context.getString(R.string.clients_name_required) else null
 
     val phoneError: String?
         get() = when {
-            hasAttemptedSubmit && phone.isBlank() -> "El teléfono es requerido"
-            hasAttemptedSubmit && phone.isNotBlank() && !isValidPhone(phone) -> "Formato de teléfono inválido (mínimo 10 dígitos)"
+            hasAttemptedSubmit && phone.isBlank() -> context.getString(R.string.clients_phone_required)
+            hasAttemptedSubmit && phone.isNotBlank() && !isValidPhone(phone) -> context.getString(R.string.clients_phone_invalid)
             else -> null
         }
 
     val emailError: String?
         get() = when {
-            email.isNotBlank() && !isValidEmail(email) -> "Formato de correo inválido"
+            email.isNotBlank() && !isValidEmail(email) -> context.getString(R.string.clients_email_invalid)
             else -> null
         }
 
@@ -121,7 +124,7 @@ class ClientFormViewModel @Inject constructor(
                     photoUrl = client.photoUrl ?: ""
                 }
             } catch (e: Exception) {
-                errorMessage = "Error al cargar cliente: ${e.message}"
+                errorMessage = context.getString(R.string.clients_load_error)
             } finally {
                 isLoading = false
             }
@@ -161,7 +164,7 @@ class ClientFormViewModel @Inject constructor(
             } catch (e: SolennixException.PlanLimitExceeded) {
                 planLimitMessage = e.message
             } catch (e: Exception) {
-                errorMessage = "Error al guardar cliente: ${e.message}"
+                errorMessage = context.getString(R.string.clients_save_error, e.message ?: "")
             } finally {
                 isSaving = false
             }
@@ -194,10 +197,10 @@ class ClientFormViewModel @Inject constructor(
                     )
                     photoUrl = response.url
                 } else {
-                    errorMessage = "No se pudo leer la imagen seleccionada"
+                    errorMessage = context.getString(R.string.clients_photo_read_error)
                 }
             } catch (e: Exception) {
-                errorMessage = "Error al subir foto: ${e.message}"
+                errorMessage = context.getString(R.string.clients_photo_upload_error, e.message ?: "")
             } finally {
                 isUploadingPhoto = false
             }

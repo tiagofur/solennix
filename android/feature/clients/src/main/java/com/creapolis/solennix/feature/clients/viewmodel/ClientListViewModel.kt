@@ -1,5 +1,6 @@
 package com.creapolis.solennix.feature.clients.viewmodel
 
+import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -12,16 +13,19 @@ import com.creapolis.solennix.core.model.Client
 import com.creapolis.solennix.core.model.Plan
 import com.creapolis.solennix.core.model.extensions.asMXN
 import com.creapolis.solennix.core.network.AuthManager
+import com.creapolis.solennix.feature.clients.R
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import androidx.annotation.StringRes
 
-enum class ClientSortOption(val label: String) {
-    NAME_ASC("Nombre (A-Z)"),
-    NAME_DESC("Nombre (Z-A)"),
-    MOST_EVENTS("Más eventos"),
-    HIGHEST_SPENT("Mayor gasto")
+enum class ClientSortOption(@StringRes val labelRes: Int) {
+    NAME_ASC(R.string.clients_sort_name_asc),
+    NAME_DESC(R.string.clients_sort_name_desc),
+    MOST_EVENTS(R.string.clients_sort_most_events),
+    HIGHEST_SPENT(R.string.clients_sort_highest_spent)
 }
 
 data class ClientListUiState(
@@ -36,7 +40,8 @@ data class ClientListUiState(
 class ClientListViewModel @Inject constructor(
     private val clientRepository: ClientRepository,
     private val planLimitsManager: PlanLimitsManager,
-    private val authManager: AuthManager
+    private val authManager: AuthManager,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     // Plan limit check
@@ -46,10 +51,12 @@ class ClientListViewModel @Inject constructor(
         get() = limitCheckResult is LimitCheckResult.LimitReached
     val nearLimitMessage: String?
         get() = (limitCheckResult as? LimitCheckResult.NearLimit)?.let { result ->
-            "Te quedan ${result.remaining} clientes disponibles en tu plan actual."
+            context.getString(R.string.clients_limit_near, result.remaining)
         }
     val limitReachedMessage: String?
-        get() = (limitCheckResult as? LimitCheckResult.LimitReached)?.message
+        get() = (limitCheckResult as? LimitCheckResult.LimitReached)?.let { result ->
+            context.getString(R.string.clients_limit_reached, result.limit)
+        }
 
     private val _searchQuery = MutableStateFlow("")
     private val _isRefreshing = MutableStateFlow(false)
@@ -112,7 +119,15 @@ class ClientListViewModel @Inject constructor(
     fun generateCsvContent(): String {
         val clients = uiState.value.clients
         val sb = StringBuilder()
-        sb.appendLine("Nombre,Email,Teléfono,Eventos,Total Gastado")
+        sb.appendLine(
+            listOf(
+                context.getString(R.string.clients_csv_header_name),
+                context.getString(R.string.clients_csv_header_email),
+                context.getString(R.string.clients_csv_header_phone),
+                context.getString(R.string.clients_csv_header_events),
+                context.getString(R.string.clients_csv_header_total_spent)
+            ).joinToString(",")
+        )
         clients.forEach { client ->
             val name = client.name.escapeCsv()
             val email = (client.email ?: "").escapeCsv()
