@@ -27,6 +27,7 @@ import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveDetailLayout
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.extensions.asMXN
+import com.creapolis.solennix.feature.inventory.InventoryStrings
 import com.creapolis.solennix.feature.inventory.viewmodel.InventoryDetailViewModel
 import com.creapolis.solennix.feature.inventory.viewmodel.InventoryDemandEntry
 import java.time.LocalDate
@@ -58,16 +59,16 @@ fun InventoryDetailScreen(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Eliminar Item") },
-            text = { Text("¿Estás seguro de que deseas eliminar este item del inventario? Esta acción no se puede deshacer.") },
+            title = { Text(InventoryStrings.deleteItemTitle) },
+            text = { Text(InventoryStrings.deleteItemMessage) },
             confirmButton = {
                 TextButton(
                     onClick = { showDeleteDialog = false; viewModel.deleteItem() },
                     colors = ButtonDefaults.textButtonColors(contentColor = SolennixTheme.colors.error)
-                ) { Text("Eliminar") }
+                ) { Text(InventoryStrings.menuDelete) }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) { Text("Cancelar") }
+                TextButton(onClick = { showDeleteDialog = false }) { Text(InventoryStrings.cancel) }
             }
         )
     }
@@ -95,7 +96,7 @@ fun InventoryDetailScreen(
     Scaffold(
         topBar = {
             SolennixTopAppBar(
-                title = { Text("Detalle de Inventario") },
+                title = { Text(InventoryStrings.detailTitle) },
                 onSearchClick = onSearchClick,
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
@@ -155,9 +156,9 @@ fun InventoryDetailScreen(
                 else -> colors.primary
             }
             val typeLabel = when (item.type.name) {
-                "EQUIPMENT" -> "Activo / Equipo"
-                "SUPPLY" -> "Insumo por Evento"
-                else -> "Insumo Consumible"
+                "EQUIPMENT" -> InventoryStrings.detailTypeEquipment
+                "SUPPLY" -> InventoryStrings.detailTypeSupply
+                else -> InventoryStrings.detailTypeIngredient
             }
             val isCritical = uiState.demand7Days > 0 && uiState.stockAfter7Days < 0
             val stockColor = when {
@@ -193,11 +194,11 @@ fun InventoryDetailScreen(
                             InventoryKpiCard(
                                 icon = Icons.Default.Inventory2,
                                 iconColor = stockColor,
-                                label = "Stock Actual",
+                                label = InventoryStrings.currentStock,
                                 value = "${item.currentStock.let { if (it == it.toLong().toDouble()) it.toLong().toString() else "%.1f".format(it) }}",
                                 subtitle = item.unit,
                                 valueColor = stockColor,
-                                extraLabel = if (uiState.isLowStock) "Bajo mínimo" else null,
+                                extraLabel = if (uiState.isLowStock) InventoryStrings.belowMinimum else null,
                                 extraColor = if (isCritical) colors.error else colors.warning,
                                 iconContentDescription = stringResource(DesignSystemR.string.cd_scale),
                                 modifier = Modifier.weight(1f)
@@ -205,7 +206,7 @@ fun InventoryDetailScreen(
                             InventoryKpiCard(
                                 icon = Icons.Default.TrendingDown,
                                 iconColor = colors.secondaryText,
-                                label = "Stock Mínimo",
+                                label = InventoryStrings.minimumStock,
                                 value = "${item.minimumStock.let { if (it == it.toLong().toDouble()) it.toLong().toString() else "%.1f".format(it) }}",
                                 subtitle = item.unit,
                                 iconContentDescription = stringResource(DesignSystemR.string.cd_warning),
@@ -216,18 +217,18 @@ fun InventoryDetailScreen(
                             InventoryKpiCard(
                                 icon = Icons.Default.AttachMoney,
                                 iconColor = colors.primary,
-                                label = "Costo Unitario",
+                                label = InventoryStrings.unitCost,
                                 value = item.unitCost?.asMXN() ?: "—",
-                                subtitle = "por ${item.unit}",
+                                subtitle = InventoryStrings.perUnit(item.unit),
                                 iconContentDescription = stringResource(DesignSystemR.string.cd_savings),
                                 modifier = Modifier.weight(1f)
                             )
                             InventoryKpiCard(
                                 icon = Icons.Default.Assessment,
                                 iconColor = colors.primary,
-                                label = "Valor en Stock",
+                                label = InventoryStrings.stockValue,
                                 value = if (item.unitCost != null) uiState.stockValue.asMXN() else "—",
-                                subtitle = "valor total",
+                                subtitle = InventoryStrings.totalValue,
                                 iconContentDescription = stringResource(DesignSystemR.string.cd_visibility),
                                 modifier = Modifier.weight(1f)
                             )
@@ -286,7 +287,7 @@ fun InventoryDetailScreen(
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Ajustar Stock", fontWeight = FontWeight.SemiBold)
+                            Text(InventoryStrings.adjustStock, fontWeight = FontWeight.SemiBold)
                         }
                     }
                 )
@@ -384,12 +385,12 @@ private fun SmartStockAlert(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = when {
-                        isCritical -> "¡Stock insuficiente para los próximos 7 días!"
-                        isWarning -> "Stock quedará bajo el mínimo tras eventos próximos"
-                        isLowOnly -> "Stock por debajo del mínimo recomendado"
-                        demand7Days > 0 -> "Stock suficiente para los próximos 7 días"
-                        hasDemand -> "Sin demanda en los próximos 7 días"
-                        else -> "Sin eventos próximos"
+                        isCritical -> InventoryStrings.critical7Days
+                        isWarning -> InventoryStrings.belowMinAfterEvents
+                        isLowOnly -> InventoryStrings.belowMinRecommended
+                        demand7Days > 0 -> InventoryStrings.enough7Days
+                        hasDemand -> InventoryStrings.noDemand7Days
+                        else -> InventoryStrings.noUpcomingEvents
                     },
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
@@ -398,9 +399,9 @@ private fun SmartStockAlert(
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = when {
-                        isCritical -> "Necesitas ${demand7Days.let { if (it == it.toLong().toDouble()) it.toLong().toString() else "%.1f".format(it) }} $unit en los próximos 7 días. Tienes ${currentStock.let { if (it == it.toLong().toDouble()) it.toLong().toString() else "%.1f".format(it) }} $unit. Faltan ${(-stockAfter7Days).let { if (it == it.toLong().toDouble()) it.toLong().toString() else "%.1f".format(it) }} $unit."
-                        isLowOnly -> "Tu stock actual (${currentStock.let { if (it == it.toLong().toDouble()) it.toLong().toString() else "%.1f".format(it) }} $unit) está por debajo del mínimo recomendado (${minimumStock.let { if (it == it.toLong().toDouble()) it.toLong().toString() else "%.1f".format(it) }} $unit)."
-                        else -> "Stock actual: ${currentStock.let { if (it == it.toLong().toDouble()) it.toLong().toString() else "%.1f".format(it) }} $unit"
+                        isCritical -> InventoryStrings.shortageMessage(demand7Days, currentStock, -stockAfter7Days, unit)
+                        isLowOnly -> InventoryStrings.lowStockMessage(currentStock, minimumStock, unit)
+                        else -> InventoryStrings.currentStockMessage(currentStock, unit)
                     },
                     style = MaterialTheme.typography.bodySmall,
                     color = colors.secondaryText
@@ -430,7 +431,7 @@ private fun StockHealthBars(
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             // Stock Actual bar
             HealthBar(
-                label = "Stock Actual",
+                label = InventoryStrings.currentStock,
                 value = "${currentStock.let { if (it == it.toLong().toDouble()) it.toLong().toString() else "%.1f".format(it) }} $unit",
                 fraction = (currentStock / maxBar).toFloat().coerceIn(0f, 1f),
                 barColor = when {
@@ -441,7 +442,7 @@ private fun StockHealthBars(
             )
             // Mínimo bar
             HealthBar(
-                label = "Mínimo Recomendado",
+                label = InventoryStrings.recommendedMinimum,
                 value = "${minimumStock.let { if (it == it.toLong().toDouble()) it.toLong().toString() else "%.1f".format(it) }} $unit",
                 fraction = (minimumStock / maxBar).toFloat().coerceIn(0f, 1f),
                 barColor = Color(0xFFFF9800)
@@ -449,7 +450,7 @@ private fun StockHealthBars(
             // Demand bar (only if demand exists)
             if (demand7Days > 0) {
                 HealthBar(
-                    label = "Demanda próximos 7 días",
+                    label = InventoryStrings.demandNext7Days,
                     value = "${demand7Days.let { if (it == it.toLong().toDouble()) it.toLong().toString() else "%.1f".format(it) }} $unit",
                     fraction = (demand7Days / maxBar).toFloat().coerceIn(0f, 1f),
                     barColor = if (stockAfter7Days < 0) colors.error else Color(0xFFFF9800)
@@ -508,9 +509,9 @@ private fun DemandForecastCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.CalendarMonth, contentDescription = null, tint = colors.primary, modifier = Modifier.size(20.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Demanda por Fecha", style = MaterialTheme.typography.titleMedium, color = colors.primaryText)
+                    Text(InventoryStrings.demandByDate, style = MaterialTheme.typography.titleMedium, color = colors.primaryText)
                 }
-                Text("Eventos confirmados", style = MaterialTheme.typography.labelSmall, color = colors.secondaryText)
+                Text(InventoryStrings.confirmedEvents, style = MaterialTheme.typography.labelSmall, color = colors.secondaryText)
             }
 
             if (entries.isEmpty()) {
@@ -520,11 +521,15 @@ private fun DemandForecastCard(
                 ) {
                     Icon(Icons.Default.CalendarMonth, contentDescription = null, modifier = Modifier.size(32.dp), tint = colors.tertiaryText)
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text("Sin eventos confirmados que usen este ítem.", style = MaterialTheme.typography.bodySmall, color = colors.secondaryText)
+                    Text(InventoryStrings.noConfirmedEventsUsingItem, style = MaterialTheme.typography.bodySmall, color = colors.secondaryText)
                 }
             } else {
                 val today = LocalDate.now()
-                val dateFormatter = DateTimeFormatter.ofPattern("d 'de' MMMM", Locale("es"))
+                    val dateFormatter = if (Locale.getDefault().language.startsWith("en")) {
+                        DateTimeFormatter.ofPattern("MMMM d", Locale.ENGLISH)
+                    } else {
+                        DateTimeFormatter.ofPattern("d 'de' MMMM", Locale("es"))
+                    }
                 var accumulated = currentStock
 
                 entries.forEach { entry ->
@@ -555,9 +560,9 @@ private fun DemandForecastCard(
                                     color = colors.primaryText
                                 )
                                 when (diffDays) {
-                                    0 -> BadgeLabel("Hoy", colors.primary)
-                                    1 -> BadgeLabel("Mañana", Color(0xFFFF9800))
-                                    in 2..7 -> Text("en $diffDays días", style = MaterialTheme.typography.labelSmall, color = colors.secondaryText)
+                                    0 -> BadgeLabel(InventoryStrings.today, colors.primary)
+                                    1 -> BadgeLabel(InventoryStrings.tomorrow, Color(0xFFFF9800))
+                                    in 2..7 -> Text(InventoryStrings.inDays(diffDays), style = MaterialTheme.typography.labelSmall, color = colors.secondaryText)
                                 }
                             }
                         }
@@ -576,7 +581,7 @@ private fun DemandForecastCard(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("Total demanda", style = MaterialTheme.typography.labelSmall, color = colors.secondaryText)
+                    Text(InventoryStrings.totalDemand, style = MaterialTheme.typography.labelSmall, color = colors.secondaryText)
                     val total = entries.sumOf { it.quantity }
                     Text(
                         "${total.let { if (it == it.toLong().toDouble()) it.toLong().toString() else "%.1f".format(it) }} $unit",
@@ -624,10 +629,10 @@ private fun StockAdjustmentSheet(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text("Ajustar Stock", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            Text(InventoryStrings.adjustStock, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
             Text(itemName, style = MaterialTheme.typography.titleSmall, color = SolennixTheme.colors.primaryText)
             Text(
-                "Stock actual: ${currentStock.let { if (it == it.toLong().toDouble()) it.toLong().toString() else "%.1f".format(it) }} $unit",
+                InventoryStrings.currentStockMessage(currentStock, unit),
                 style = MaterialTheme.typography.bodySmall,
                 color = SolennixTheme.colors.secondaryText
             )
@@ -635,7 +640,7 @@ private fun StockAdjustmentSheet(
             HorizontalDivider()
 
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Nuevo stock:", style = MaterialTheme.typography.bodyMedium)
+                Text(InventoryStrings.newStock, style = MaterialTheme.typography.bodyMedium)
                 OutlinedTextField(
                     value = adjustmentValue,
                     onValueChange = onValueChange,
@@ -662,8 +667,8 @@ private fun StockAdjustmentSheet(
             }
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = onDismiss, modifier = Modifier.weight(1f)) { Text("Cancelar") }
-                Button(onClick = onSave, modifier = Modifier.weight(1f)) { Text("Guardar") }
+                OutlinedButton(onClick = onDismiss, modifier = Modifier.weight(1f)) { Text(InventoryStrings.cancel) }
+                Button(onClick = onSave, modifier = Modifier.weight(1f)) { Text(InventoryStrings.save) }
             }
 
             Spacer(modifier = Modifier.height(8.dp))

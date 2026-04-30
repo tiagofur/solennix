@@ -132,7 +132,7 @@ export const ProductForm: React.FC = () => {
     if (!file) return;
 
     if (file.size > 10 * 1024 * 1024) {
-      setError(t("clients:form.photo_too_large"));
+      setError(t("products:form.photo_too_large"));
       return;
     }
 
@@ -144,7 +144,7 @@ export const ProductForm: React.FC = () => {
       onSuccess: (result) => setImageUrl(result.url),
       onError: (err) => {
         logError("Error uploading product image", err);
-        setError(t("clients:form.photo_upload_error"));
+        setError(t("products:form.photo_upload_error"));
         setImagePreview(imageUrl);
       },
     });
@@ -590,7 +590,7 @@ export const ProductForm: React.FC = () => {
                   </div>
                   <div className="w-1/2 text-right">
                     <span className="text-xs text-text-secondary block">
-                      {t("products:form.cost")} Est.
+                      {t("products:form.cost")} {t("products:details.estimated_short")}
                     </span>
                     <span className="text-sm font-medium text-text">
                       ${(item.quantity_required * item.unit_cost).toFixed(2)}
@@ -814,7 +814,7 @@ export const ProductForm: React.FC = () => {
                   </div>
                   <div className="w-1/2 text-right">
                     <span className="text-xs text-text-secondary block">
-                      {t("products:form.cost")} Est.
+                      {t("products:form.cost")} {t("products:details.estimated_short")}
                     </span>
                     <span className="text-sm font-medium text-text">
                       ${(item.quantity_required * item.unit_cost).toFixed(2)}
@@ -860,7 +860,7 @@ export const ProductForm: React.FC = () => {
               htmlFor="staff-team-select"
               className="block text-sm font-medium text-text-secondary"
             >
-              Equipo Responsable
+                    {t("products:form.responsible_team")}
             </label>
             <select
               id="staff-team-select"
@@ -868,12 +868,12 @@ export const ProductForm: React.FC = () => {
               onChange={(e) => setStaffTeamId(e.target.value || null)}
               className="block w-full p-3 text-sm border-border rounded-xl shadow-sm bg-card text-text transition-shadow focus:ring-2 focus:ring-primary/20"
             >
-              <option value="">(Ninguno)</option>
+              <option value="">{t("products:form.no_team")}</option>
               {staffTeams.map((team) => (
                 <option key={team.id} value={team.id}>
                   {team.name}
                   {team.role_label ? ` · ${team.role_label}` : ""}
-                  {team.member_count != null ? ` · ${team.member_count} miembros` : ""}
+                  {team.member_count != null ? ` · ${t("products:form.members_count", { count: team.member_count })}` : ""}
                 </option>
               ))}
             </select>
@@ -887,7 +887,7 @@ export const ProductForm: React.FC = () => {
             onClick={() => navigate("/products")}
             className="bg-card py-2.5 px-6 border border-border rounded-xl shadow-sm text-sm font-medium text-text-secondary hover:bg-surface-alt transition-colors"
           >
-            Cancelar
+            {t("common:action.cancel")}
           </button>
           <button
             type="submit"
@@ -895,11 +895,11 @@ export const ProductForm: React.FC = () => {
             disabled={isLoading}
             className="inline-flex justify-center py-2.5 px-8 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white premium-gradient hover:opacity-90 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 transition-opacity"
             aria-label={
-              isLoading ? "Guardando producto..." : "Guardar producto"
+              isLoading ? t("products:form.saving_product") : t("products:form.save_product")
             }
           >
             <Save className="h-5 w-5 mr-2" aria-hidden="true" />
-            {isLoading ? "Guardando..." : "Guardar Producto"}
+            {isLoading ? t("common:action.saving") : t("products:form.save_product")}
           </button>
         </div>
       </div>

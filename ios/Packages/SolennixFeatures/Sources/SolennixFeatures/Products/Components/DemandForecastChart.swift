@@ -65,11 +65,11 @@ public struct DemandForecastChart: View {
             HStack {
                 Image(systemName: "chart.bar.fill")
                     .foregroundStyle(SolennixColors.primary)
-                Text("Demanda por Fecha")
+                Text(ProductStrings.demandByDate)
                     .font(.headline)
                     .foregroundStyle(SolennixColors.text)
                 Spacer()
-                Text("Eventos confirmados")
+                Text(ProductStrings.confirmedEvents)
                     .font(.caption2)
                     .foregroundStyle(SolennixColors.textSecondary)
             }
@@ -96,12 +96,12 @@ public struct DemandForecastChart: View {
 
                 // Summary
                 VStack(alignment: .leading, spacing: Spacing.xs) {
-                    Text("Proximos \(dataPoints.count) eventos")
+                    Text(ProductStrings.upcomingEventsCount(dataPoints.count))
                         .font(.subheadline)
                         .fontWeight(.medium)
                         .foregroundStyle(SolennixColors.text)
 
-                    Text("Total: \(totalQuantity) unidades para \(totalPeople) personas")
+                    Text(ProductStrings.quantityForPeople(quantity: totalQuantity, people: totalPeople))
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)
                 }
@@ -131,11 +131,11 @@ public struct DemandForecastChart: View {
                                     .foregroundStyle(SolennixColors.text)
 
                                 if diffDays == 0 {
-                                    urgencyBadge("Hoy", color: SolennixColors.primary)
+                                    urgencyBadge(ProductStrings.today, color: SolennixColors.primary)
                                 } else if diffDays == 1 {
-                                    urgencyBadge("Manana", color: .orange)
+                                    urgencyBadge(ProductStrings.tomorrow, color: .orange)
                                 } else if diffDays > 1 && diffDays <= 7 {
-                                    Text("en \(diffDays) dias")
+                                    Text(ProductStrings.inDays(diffDays))
                                         .font(.caption2)
                                         .foregroundStyle(SolennixColors.textSecondary)
                                 }
@@ -161,7 +161,7 @@ public struct DemandForecastChart: View {
                         Spacer()
 
                         VStack(alignment: .trailing, spacing: 2) {
-                            Text("\(point.quantity) uds")
+                            Text(ProductStrings.quantityUnits(point.quantity))
                                 .font(.subheadline)
                                 .fontWeight(.bold)
                                 .foregroundStyle(SolennixColors.text)
@@ -188,10 +188,10 @@ public struct DemandForecastChart: View {
 
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("TOTAL DEMANDA")
+                            Text(ProductStrings.totalDemandUpper)
                                 .font(.caption2)
                                 .foregroundStyle(SolennixColors.textSecondary)
-                            Text("\(dataPoints.count) evento\(dataPoints.count != 1 ? "s" : "")")
+                            Text(ProductStrings.eventCount(dataPoints.count))
                                 .font(.caption)
                                 .foregroundStyle(SolennixColors.textSecondary)
                         }
@@ -199,13 +199,13 @@ public struct DemandForecastChart: View {
                         Spacer()
 
                         VStack(alignment: .trailing, spacing: 2) {
-                            Text("\(totalQuantity) unidades")
+                            Text(ProductStrings.quantityUnits(totalQuantity))
                                 .font(.subheadline)
                                 .fontWeight(.bold)
                                 .foregroundStyle(SolennixColors.text)
 
                             if totalRevenue > 0 {
-                                Text("\(totalRevenue.formatted(.currency(code: "MXN"))) est.")
+                                Text(ProductStrings.estimatedAmount(totalRevenue.formatted(.currency(code: "MXN"))))
                                     .font(.caption)
                                     .foregroundStyle(SolennixColors.textSecondary)
                             }
@@ -220,11 +220,11 @@ public struct DemandForecastChart: View {
                         .font(.system(size: 32))
                         .foregroundStyle(SolennixColors.textTertiary)
 
-                    Text("Sin eventos proximos")
+                    Text(ProductStrings.noUpcomingEvents)
                         .font(.subheadline)
                         .foregroundStyle(SolennixColors.textSecondary)
 
-                    Text("Este producto no esta incluido en ningun evento proximo")
+                    Text(ProductStrings.noUpcomingEventsDescription)
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textTertiary)
                         .multilineTextAlignment(.center)

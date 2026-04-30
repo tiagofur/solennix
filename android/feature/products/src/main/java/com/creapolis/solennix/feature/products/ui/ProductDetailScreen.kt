@@ -28,6 +28,7 @@ import com.creapolis.solennix.core.model.InventoryType
 import com.creapolis.solennix.core.model.ProductIngredient
 import com.creapolis.solennix.core.model.extensions.asMXN
 import com.creapolis.solennix.core.network.UrlResolver
+import com.creapolis.solennix.feature.products.ProductStrings
 import com.creapolis.solennix.feature.products.viewmodel.ProductDetailViewModel
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
@@ -52,8 +53,8 @@ fun ProductDetailScreen(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Eliminar producto") },
-            text = { Text("¿Estás seguro de que deseas eliminar este producto? Esta acción no se puede deshacer.") },
+            title = { Text(ProductStrings.deleteTitle) },
+            text = { Text(ProductStrings.deleteMessage) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -62,12 +63,12 @@ fun ProductDetailScreen(
                     },
                     colors = ButtonDefaults.textButtonColors(contentColor = SolennixTheme.colors.error)
                 ) {
-                    Text("Eliminar")
+                    Text(ProductStrings.confirmDelete)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Cancelar")
+                    Text(ProductStrings.cancel)
                 }
             }
         )
@@ -76,7 +77,7 @@ fun ProductDetailScreen(
     Scaffold(
         topBar = {
             SolennixTopAppBar(
-                title = { Text("Detalle del Producto") },
+                title = { Text(ProductStrings.detailTitle) },
                 onSearchClick = onSearchClick,
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
@@ -178,7 +179,7 @@ fun ProductDetailScreen(
                             color = colors.error.copy(alpha = 0.1f)
                         ) {
                             Text(
-                                text = "Inactivo",
+                                text = ProductStrings.inactive,
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 color = colors.error,
@@ -198,17 +199,17 @@ fun ProductDetailScreen(
                             KpiCard(
                                 icon = Icons.Default.AttachMoney,
                                 iconColor = colors.primary,
-                                label = "Precio Base",
+                                label = ProductStrings.basePrice,
                                 value = product.basePrice.asMXN(),
-                                subtitle = "por unidad",
+                                subtitle = ProductStrings.perUnit,
                                 modifier = Modifier.weight(1f)
                             )
                             KpiCard(
                                 icon = Icons.Default.Layers,
                                 iconColor = colors.secondaryText,
-                                label = "Costo / Unidad",
+                                label = ProductStrings.unitCost,
                                 value = uiState.unitCost.asMXN(),
-                                subtitle = "en insumos",
+                                subtitle = ProductStrings.inSupplies,
                                 modifier = Modifier.weight(1f)
                             )
                         }
@@ -224,18 +225,18 @@ fun ProductDetailScreen(
                             KpiCard(
                                 icon = Icons.Default.TrendingUp,
                                 iconColor = marginColor,
-                                label = "Margen Est.",
+                                label = ProductStrings.marginEstimated,
                                 value = "%.1f%%".format(uiState.margin),
-                                subtitle = "utilidad estimada",
+                                subtitle = ProductStrings.marginSubtitle,
                                 valueColor = marginColor,
                                 modifier = Modifier.weight(1f)
                             )
                             KpiCard(
                                 icon = Icons.Default.CalendarMonth,
                                 iconColor = colors.primary,
-                                label = "Próx. Eventos",
+                                label = ProductStrings.upcomingEvents,
                                 value = "${demandData.size}",
-                                subtitle = "confirmados",
+                                subtitle = ProductStrings.confirmed,
                                 modifier = Modifier.weight(1f)
                             )
                         }
@@ -261,12 +262,12 @@ fun ProductDetailScreen(
                         // Composition / Ingredients table
                         if (uiState.ingredientItems.isNotEmpty()) {
                             CompositionSection(
-                                title = "Composición / Insumos",
+                                title = ProductStrings.compositionTitle,
                                 icon = Icons.Default.Layers,
                                 iconColor = colors.primary,
                                 items = uiState.ingredientItems,
                                 showCost = true,
-                                totalLabel = "Costo Total por Unidad",
+                                totalLabel = ProductStrings.totalUnitCost,
                                 totalValue = uiState.unitCost,
                                 colors = colors
                             )
@@ -275,14 +276,14 @@ fun ProductDetailScreen(
                         // Per-event supplies table
                         if (uiState.supplyItems.isNotEmpty()) {
                             CompositionSection(
-                                title = "Insumos por Evento",
+                                title = ProductStrings.suppliesTitle,
                                 icon = Icons.Default.LocalGasStation,
                                 iconColor = Color(0xFFFF9800),
                                 items = uiState.supplyItems,
                                 showCost = true,
-                                badge = "Costo fijo por evento",
+                                badge = ProductStrings.fixedCostPerEvent,
                                 badgeColor = Color(0xFFFF9800),
-                                totalLabel = "Costo por Evento",
+                                totalLabel = ProductStrings.totalEventCost,
                                 totalValue = uiState.perEventCost,
                                 totalValueColor = Color(0xFFFF9800),
                                 colors = colors
@@ -292,12 +293,12 @@ fun ProductDetailScreen(
                         // Equipment table
                         if (uiState.equipmentItems.isNotEmpty()) {
                             CompositionSection(
-                                title = "Equipo Necesario",
+                                title = ProductStrings.equipmentTitle,
                                 icon = Icons.Default.Build,
                                 iconColor = Color(0xFF2196F3),
                                 items = uiState.equipmentItems,
                                 showCost = false,
-                                badge = "Sin costo - Reutilizable",
+                                badge = ProductStrings.reusableNoCost,
                                 badgeColor = Color(0xFF2196F3),
                                 colors = colors
                             )
@@ -411,9 +412,9 @@ private fun SmartAlertSection(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = when {
-                        isHighDemand -> "$demand7Days unidades en los próximos 7 días"
-                        demandData.isNotEmpty() -> "Sin demanda inmediata"
-                        else -> "Sin eventos próximos"
+                        isHighDemand -> ProductStrings.unitsNext7Days(demand7Days)
+                        demandData.isNotEmpty() -> ProductStrings.noImmediateDemand
+                        else -> ProductStrings.noUpcomingEvents
                     },
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
@@ -423,11 +424,11 @@ private fun SmartAlertSection(
                 Text(
                     text = when {
                         isHighDemand && estimatedRevenue > 0 ->
-                            "Alta demanda esta semana. Ingreso estimado total: ${estimatedRevenue.asMXN()}"
-                        isHighDemand -> "Alta demanda esta semana."
+                            ProductStrings.totalRevenueMessage(estimatedRevenue.asMXN())
+                        isHighDemand -> ProductStrings.highDemandThisWeek
                         demandData.isNotEmpty() ->
-                            "$totalDemand unidades en ${demandData.size} evento${if (demandData.size != 1) "s" else ""} próximos."
-                        else -> "No hay eventos confirmados que incluyan este producto."
+                            ProductStrings.upcomingEventsSummary(totalDemand, demandData.size)
+                        else -> ProductStrings.noConfirmedEventsIncludingProduct
                     },
                     style = MaterialTheme.typography.bodySmall,
                     color = colors.secondaryText
@@ -453,22 +454,22 @@ private fun GeneralInfoCard(
     ) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(
-                text = "INFORMACIÓN GENERAL",
+                text = ProductStrings.generalInfo,
                 style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.SemiBold,
                 color = colors.secondaryText
             )
-            InfoRow(Icons.Default.Label, "Categoría", category, colors)
+            InfoRow(Icons.Default.Label, ProductStrings.category, category, colors)
             HorizontalDivider(color = colors.divider)
-            InfoRow(Icons.Default.AttachMoney, "Precio Base", basePrice.asMXN(), colors)
+            InfoRow(Icons.Default.AttachMoney, ProductStrings.basePrice, basePrice.asMXN(), colors)
             HorizontalDivider(color = colors.divider)
 
             val compositionText = buildString {
-                append("$ingredientCount insumos")
-                if (supplyCount > 0) append(", $supplyCount insumo(s) por evento")
-                if (equipmentCount > 0) append(", $equipmentCount equipo(s)")
+                append("$ingredientCount ${ProductStrings.composition.lowercase()}")
+                if (supplyCount > 0) append(", $supplyCount ${ProductStrings.suppliesTitle.lowercase()}")
+                if (equipmentCount > 0) append(", $equipmentCount ${ProductStrings.equipmentTitle.lowercase()}")
             }
-            InfoRow(Icons.Default.Layers, "Composición", compositionText, colors)
+            InfoRow(Icons.Default.Layers, ProductStrings.composition, compositionText, colors)
         }
     }
 }
@@ -563,14 +564,14 @@ private fun CompositionSection(
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
                 Text(
-                    text = "INSUMO",
+                    text = ProductStrings.ingredientHeader,
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = colors.secondaryText,
                     modifier = Modifier.weight(1f)
                 )
                 Text(
-                    text = "CANTIDAD",
+                    text = ProductStrings.quantityHeader,
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = colors.secondaryText
@@ -578,7 +579,7 @@ private fun CompositionSection(
                 if (showCost) {
                     Spacer(modifier = Modifier.width(24.dp))
                     Text(
-                        text = "COSTO EST.",
+                        text = ProductStrings.estimatedCostHeader,
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = colors.secondaryText
@@ -596,7 +597,7 @@ private fun CompositionSection(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = ingredient.ingredientName ?: "Insumo",
+                        text = ingredient.ingredientName ?: ProductStrings.unknownIngredient,
                         style = MaterialTheme.typography.bodyMedium,
                         color = colors.primaryText,
                         modifier = Modifier.weight(1f)
