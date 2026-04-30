@@ -99,7 +99,7 @@ final class ProductDetailViewModel {
                 let eventProducts: [EventProduct] = try await apiClient.get(Endpoint.eventProducts(event.id))
                 if let ep = eventProducts.first(where: { $0.productId == productId }) {
                     // Fetch client name
-                    var clientName = "Cliente"
+                    var clientName = String(localized: "clients.title", defaultValue: "Cliente", bundle: .module)
                     if !event.clientId.isEmpty {
                         do {
                             let client: Client = try await apiClient.get(Endpoint.client(event.clientId))
@@ -139,9 +139,9 @@ final class ProductDetailViewModel {
 
     private func mapError(_ error: Error) -> String {
         if let apiError = error as? APIError {
-            return apiError.errorDescription ?? "Ocurrio un error inesperado."
+            return apiError.errorDescription ?? ProductStrings.unexpectedError
         }
-        return "Ocurrio un error inesperado. Intenta de nuevo."
+        return ProductStrings.unexpectedRetryError
     }
 }
 
@@ -160,38 +160,38 @@ public struct ProductDetailView: View {
     public var body: some View {
         Group {
             if viewModel.isLoading && viewModel.product == nil {
-                ProgressView("Cargando...")
+                ProgressView(ProductStrings.loading)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if let product = viewModel.product {
                 detailContent(product)
             } else if let error = viewModel.errorMessage {
                 ContentUnavailableView(
-                    "Error",
+                    ProductStrings.errorTitle,
                     systemImage: "exclamationmark.triangle",
                     description: Text(error)
                 )
             } else {
                 ContentUnavailableView(
-                    "Producto no encontrado",
+                    ProductStrings.notFoundTitle,
                     systemImage: "shippingbox",
-                    description: Text("No se pudo cargar la informacion del producto.")
+                    description: Text(ProductStrings.notFoundMessage)
                 )
             }
         }
         .background(SolennixColors.surfaceGrouped)
-        .navigationTitle(viewModel.product?.name ?? "Producto")
+        .navigationTitle(viewModel.product?.name ?? ProductStrings.title)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
                     NavigationLink(value: Route.productForm(id: viewModel.productId)) {
-                        Label("Editar", systemImage: "pencil")
+                        Label(ProductStrings.edit, systemImage: "pencil")
                     }
 
                     Button(role: .destructive) {
                         viewModel.showDeleteConfirm = true
                     } label: {
-                        Label("Eliminar", systemImage: "trash")
+                        Label(ProductStrings.deleteAction, systemImage: "trash")
                     }
                 } label: {
                     Image(systemName: "ellipsis.circle")
@@ -199,19 +199,19 @@ public struct ProductDetailView: View {
             }
         }
         .confirmationDialog(
-            "Eliminar producto",
+            ProductStrings.deleteTitle,
             isPresented: $viewModel.showDeleteConfirm
         ) {
-            Button("Eliminar", role: .destructive) {
+            Button(ProductStrings.deleteAction, role: .destructive) {
                 Task {
                     if await viewModel.deleteProduct() {
                         dismiss()
                     }
                 }
             }
-            Button("Cancelar", role: .cancel) {}
+            Button(ProductStrings.cancel, role: .cancel) {}
         } message: {
-            Text("Estas seguro de que quieres eliminar \"\(viewModel.product?.name ?? "")\"? Esta accion no se puede deshacer.")
+            Text(ProductStrings.deletePrompt(viewModel.product?.name ?? ""))
         }
         .refreshable { await viewModel.loadData() }
         .task { await viewModel.loadData() }
@@ -230,28 +230,28 @@ public struct ProductDetailView: View {
                     generalInfoSection(product)
                 } right: {
                     // Right: Ingredients/recipe, cost breakdown
-                    if !viewModel.ingredientItems.isEmpty {
-                        compositionSection(
-                            title: "Composicion / Insumos",
+                        if !viewModel.ingredientItems.isEmpty {
+                            compositionSection(
+                            title: ProductStrings.compositionTitle,
                             icon: "square.stack.3d.up.fill",
                             iconColor: SolennixColors.primary,
                             items: viewModel.ingredientItems,
                             showCost: true,
-                            totalLabel: "Costo Total por Unidad",
+                            totalLabel: ProductStrings.totalUnitCost,
                             totalValue: viewModel.unitCost
                         )
                     }
 
                     if !viewModel.supplyItems.isEmpty {
                         compositionSection(
-                            title: "Insumos por Evento",
+                            title: ProductStrings.suppliesTitle,
                             icon: "flame.fill",
                             iconColor: .orange,
                             items: viewModel.supplyItems,
                             showCost: true,
-                            badge: "Costo fijo por evento",
+                            badge: ProductStrings.fixedCostPerEvent,
                             badgeColor: .orange,
-                            totalLabel: "Costo por Evento",
+                            totalLabel: ProductStrings.costPerEvent,
                             totalValue: viewModel.perEventCost,
                             totalColor: .orange
                         )
@@ -259,12 +259,12 @@ public struct ProductDetailView: View {
 
                     if !viewModel.equipmentItems.isEmpty {
                         compositionSection(
-                            title: "Equipo Necesario",
+                            title: ProductStrings.equipmentTitle,
                             icon: "wrench.and.screwdriver.fill",
                             iconColor: .blue,
                             items: viewModel.equipmentItems,
                             showCost: false,
-                            badge: "Sin costo - Reutilizable",
+                            badge: ProductStrings.reusableNoCost,
                             badgeColor: .blue
                         )
                     }
@@ -311,8 +311,8 @@ public struct ProductDetailView: View {
                     .background(SolennixColors.primary.opacity(0.1))
                     .clipShape(Capsule())
 
-                if !product.isActive {
-                    Text("Inactivo")
+                        if !product.isActive {
+                    Text(ProductStrings.inactive)
                         .font(.caption)
                         .fontWeight(.semibold)
                         .foregroundStyle(SolennixColors.error)
@@ -335,16 +335,16 @@ public struct ProductDetailView: View {
                 kpiCard(
                     icon: "dollarsign.circle.fill",
                     iconColor: SolennixColors.primary,
-                    label: "Precio Base",
+                    label: ProductStrings.basePrice,
                     value: product.basePrice.formatted(.currency(code: "MXN")),
-                    subtitle: "por unidad"
+                    subtitle: ProductStrings.perUnit
                 )
                 kpiCard(
                     icon: "square.stack.3d.up.fill",
                     iconColor: SolennixColors.textSecondary,
-                    label: "Costo / Unidad",
+                    label: ProductStrings.unitCost,
                     value: viewModel.unitCost.formatted(.currency(code: "MXN")),
-                    subtitle: "en insumos"
+                    subtitle: ProductStrings.inSupplies
                 )
             }
             HStack(spacing: Spacing.sm) {
@@ -353,17 +353,17 @@ public struct ProductDetailView: View {
                 kpiCard(
                     icon: "arrow.up.right",
                     iconColor: marginColor,
-                    label: "Margen Est.",
+                    label: ProductStrings.marginEstimated,
                     value: String(format: "%.1f%%", viewModel.margin),
-                    subtitle: "utilidad estimada",
+                    subtitle: ProductStrings.profitEstimated,
                     valueColor: marginColor
                 )
                 kpiCard(
                     icon: "calendar",
                     iconColor: SolennixColors.primary,
-                    label: "Prox. Eventos",
+                    label: ProductStrings.upcomingEvents,
                     value: "\(viewModel.demandData.count)",
-                    subtitle: "confirmados"
+                    subtitle: ProductStrings.confirmed
                 )
             }
         }
@@ -416,8 +416,8 @@ public struct ProductDetailView: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(isHighDemand
-                     ? "\(viewModel.demand7Days) unidades en los proximos 7 dias"
-                     : viewModel.demandData.isEmpty ? "Sin eventos proximos" : "Sin demanda inmediata"
+                     ? ProductStrings.unitsNext7Days(viewModel.demand7Days)
+                     : viewModel.demandData.isEmpty ? ProductStrings.noUpcomingEvents : ProductStrings.noImmediateDemand
                 )
                 .font(.subheadline)
                 .fontWeight(.semibold)
@@ -425,20 +425,20 @@ public struct ProductDetailView: View {
 
                 if isHighDemand {
                     if viewModel.estimatedRevenue > 0 {
-                        Text("Alta demanda esta semana. Ingreso estimado total: \(viewModel.estimatedRevenue.formatted(.currency(code: "MXN")))")
+                        Text(ProductStrings.revenueMessage(viewModel.estimatedRevenue.formatted(.currency(code: "MXN"))))
                             .font(.caption)
                             .foregroundStyle(SolennixColors.textSecondary)
                     } else {
-                        Text("Alta demanda esta semana.")
+                        Text(ProductStrings.highDemandWeek)
                             .font(.caption)
                             .foregroundStyle(SolennixColors.textSecondary)
                     }
                 } else if !viewModel.demandData.isEmpty {
-                    Text("\(viewModel.totalDemand) unidades en \(viewModel.demandData.count) evento\(viewModel.demandData.count != 1 ? "s" : "") proximos.")
+                    Text(ProductStrings.demandSummary(units: viewModel.totalDemand, events: viewModel.demandData.count))
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)
                 } else {
-                    Text("No hay eventos confirmados que incluyan este producto.")
+                    Text(ProductStrings.noConfirmedEvents)
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)
                 }
@@ -459,7 +459,7 @@ public struct ProductDetailView: View {
 
     private func generalInfoSection(_ product: Product) -> some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
-            Text("INFORMACION GENERAL")
+            Text(ProductStrings.generalInfo)
                 .font(.caption)
                 .fontWeight(.semibold)
                 .foregroundStyle(SolennixColors.textSecondary)
@@ -469,7 +469,7 @@ public struct ProductDetailView: View {
                 Image(systemName: "tag.fill")
                     .foregroundStyle(SolennixColors.primary)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Categoria")
+                    Text(ProductStrings.category)
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)
                     Text(product.category)
@@ -485,7 +485,7 @@ public struct ProductDetailView: View {
                 Image(systemName: "dollarsign.circle.fill")
                     .foregroundStyle(SolennixColors.primary)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Precio Base")
+                    Text(ProductStrings.basePrice)
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)
                     Text(product.basePrice.formatted(.currency(code: "MXN")))
@@ -501,21 +501,15 @@ public struct ProductDetailView: View {
                 Image(systemName: "square.stack.3d.up.fill")
                     .foregroundStyle(SolennixColors.primary)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Composicion")
+                    Text(ProductStrings.composition)
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)
 
-                    let compositionText: String = {
-                        var parts: [String] = []
-                        parts.append("\(viewModel.ingredientItems.count) insumos")
-                        if !viewModel.supplyItems.isEmpty {
-                            parts.append("\(viewModel.supplyItems.count) insumo(s) por evento")
-                        }
-                        if !viewModel.equipmentItems.isEmpty {
-                            parts.append("\(viewModel.equipmentItems.count) equipo(s)")
-                        }
-                        return parts.joined(separator: ", ")
-                    }()
+                    let compositionText = ProductStrings.compositionSummary(
+                        ingredients: viewModel.ingredientItems.count,
+                        supplies: viewModel.supplyItems.count,
+                        equipment: viewModel.equipmentItems.count
+                    )
 
                     Text(compositionText)
                         .font(.subheadline)
@@ -573,17 +567,17 @@ public struct ProductDetailView: View {
 
             // Table header
             HStack {
-                Text("INSUMO")
+                Text(ProductStrings.ingredientHeader)
                     .font(.caption2)
                     .fontWeight(.semibold)
                     .foregroundStyle(SolennixColors.textSecondary)
                 Spacer()
-                Text("CANTIDAD")
+                Text(ProductStrings.quantityHeader)
                     .font(.caption2)
                     .fontWeight(.semibold)
                     .foregroundStyle(SolennixColors.textSecondary)
                 if showCost {
-                    Text("COSTO EST.")
+                    Text(ProductStrings.estimatedCostHeader)
                         .font(.caption2)
                         .fontWeight(.semibold)
                         .foregroundStyle(SolennixColors.textSecondary)
@@ -598,11 +592,11 @@ public struct ProductDetailView: View {
             ForEach(items) { ingredient in
                 Divider().opacity(0.5)
                 HStack {
-                    Text(ingredient.ingredientName ?? "Insumo")
+                    Text(ingredient.ingredientName ?? ProductStrings.unknownItem)
                         .font(.subheadline)
                         .foregroundStyle(SolennixColors.text)
                     Spacer()
-                    Text("\(Int(ingredient.quantityRequired)) \(ingredient.unit ?? "und")")
+                    Text("\(Int(ingredient.quantityRequired)) \(ingredient.unit ?? ProductStrings.unitFallback)")
                         .font(.subheadline)
                         .fontWeight(.bold)
                         .foregroundStyle(SolennixColors.text)

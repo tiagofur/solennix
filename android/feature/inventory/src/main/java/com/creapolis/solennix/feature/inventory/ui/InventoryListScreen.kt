@@ -43,6 +43,7 @@ import com.creapolis.solennix.core.designsystem.event.UiEventSnackbarHandler
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.InventoryItem
 import com.creapolis.solennix.core.model.extensions.asMXN
+import com.creapolis.solennix.feature.inventory.InventoryStrings
 import com.creapolis.solennix.feature.inventory.viewmodel.InventoryListViewModel
 import com.creapolis.solennix.feature.inventory.viewmodel.InventorySortKey
 
@@ -84,9 +85,9 @@ fun InventoryListScreen(
                 modifier = Modifier.padding(start = 24.dp, end = 24.dp, bottom = 40.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Text("Ajustar Stock", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text(InventoryStrings.adjustStock, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 Text(
-                    "${item.ingredientName} — ${item.currentStock} ${item.unit}",
+                    InventoryStrings.currentStockWithUnit(item.ingredientName, item.currentStock, item.unit),
                     style = MaterialTheme.typography.bodyMedium,
                     color = SolennixTheme.colors.secondaryText
                 )
@@ -110,7 +111,7 @@ fun InventoryListScreen(
                 OutlinedTextField(
                     value = adjustmentInput,
                     onValueChange = { adjustmentInput = it },
-                    label = { Text("Cantidad (+ suma, − resta)") },
+                    label = { Text(InventoryStrings.quantityAdjustHint) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
@@ -128,7 +129,7 @@ fun InventoryListScreen(
                     enabled = adjustmentInput.toDoubleOrNull() != null,
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = SolennixTheme.colors.primary)
-                ) { Text("Confirmar") }
+                ) { Text(InventoryStrings.confirm) }
             }
         }
     }
@@ -136,7 +137,7 @@ fun InventoryListScreen(
     Scaffold(
         topBar = {
             SolennixTopAppBar(
-                title = { Text("Inventario") },
+                title = { Text(InventoryStrings.title) },
                 onSearchClick = onSearchClick,
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
@@ -150,7 +151,7 @@ fun InventoryListScreen(
                     FilterChip(
                         selected = uiState.lowStockOnly,
                         onClick = { viewModel.onLowStockToggle(!uiState.lowStockOnly) },
-                        label = { Text("Stock bajo") },
+                        label = { Text(InventoryStrings.lowStock) },
                         leadingIcon = if (uiState.lowStockOnly) {
                             {
                                 Icon(
@@ -198,7 +199,7 @@ fun InventoryListScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp),
-                    placeholder = { Text("Filtrar inventario por nombre...") },
+                    placeholder = { Text(InventoryStrings.searchPlaceholder) },
                     leadingIcon = {
                         Icon(
                             Icons.Default.Search,
@@ -225,10 +226,10 @@ fun InventoryListScreen(
                     )
                     InventorySortKey.entries.forEach { key ->
                         val label = when (key) {
-                            InventorySortKey.NAME -> "Nombre"
-                            InventorySortKey.CURRENT_STOCK -> "Stock"
-                            InventorySortKey.MINIMUM_STOCK -> "Mínimo"
-                            InventorySortKey.UNIT_COST -> "Costo"
+                            InventorySortKey.NAME -> InventoryStrings.sortName
+                            InventorySortKey.CURRENT_STOCK -> InventoryStrings.sortStock
+                            InventorySortKey.MINIMUM_STOCK -> InventoryStrings.sortMinimum
+                            InventorySortKey.UNIT_COST -> InventoryStrings.sortCost
                         }
                         val isSelected = uiState.sortKey == key
                         FilterChip(
@@ -262,7 +263,7 @@ fun InventoryListScreen(
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(
                             text = if (uiState.searchQuery.isNotBlank() || uiState.lowStockOnly)
-                                "Sin resultados para el filtro" else "Sin inventario",
+                                InventoryStrings.emptyFiltered else InventoryStrings.emptyInventory,
                             style = MaterialTheme.typography.bodyLarge,
                             color = SolennixTheme.colors.secondaryText
                         )
@@ -270,11 +271,11 @@ fun InventoryListScreen(
                 } else {
                     val allSections = buildList {
                         if (uiState.ingredientItems.isNotEmpty())
-                            add(Triple("Consumibles", Icons.Default.ShoppingBasket, uiState.ingredientItems))
+                            add(Triple(InventoryStrings.ingredients, Icons.Default.ShoppingBasket, uiState.ingredientItems))
                         if (uiState.supplyItems.isNotEmpty())
-                            add(Triple("Insumos por Evento", Icons.Default.Kitchen, uiState.supplyItems))
+                            add(Triple(InventoryStrings.supplies, Icons.Default.Kitchen, uiState.supplyItems))
                         if (uiState.equipmentItems.isNotEmpty())
-                            add(Triple("Equipos", Icons.Outlined.Build, uiState.equipmentItems))
+                            add(Triple(InventoryStrings.equipment, Icons.Outlined.Build, uiState.equipmentItems))
                     }
 
                     AdaptiveCardGrid(
@@ -304,7 +305,7 @@ fun InventoryListScreen(
                             if (uiState.ingredientItems.isNotEmpty()) {
                                 item {
                                     InventorySection(
-                                        title = "Consumibles",
+                                        title = InventoryStrings.ingredients,
                                         icon = Icons.Default.ShoppingBasket,
                                         itemCount = uiState.ingredientItems.size,
                                         items = uiState.ingredientItems,
@@ -322,7 +323,7 @@ fun InventoryListScreen(
                             if (uiState.supplyItems.isNotEmpty()) {
                                 item {
                                     InventorySection(
-                                        title = "Insumos por Evento",
+                                        title = InventoryStrings.supplies,
                                         icon = Icons.Default.Kitchen,
                                         itemCount = uiState.supplyItems.size,
                                         items = uiState.supplyItems,
@@ -340,7 +341,7 @@ fun InventoryListScreen(
                             if (uiState.equipmentItems.isNotEmpty()) {
                                 item {
                                     InventorySection(
-                                        title = "Equipos",
+                                        title = InventoryStrings.equipment,
                                         icon = Icons.Outlined.Build,
                                         itemCount = uiState.equipmentItems.size,
                                         items = uiState.equipmentItems,
@@ -520,7 +521,7 @@ private fun InventoryListItem(
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = item.ingredientName, style = MaterialTheme.typography.titleMedium, color = SolennixTheme.colors.primaryText)
                 Text(
-                    text = "Stock: ${item.currentStock} ${item.unit}",
+                    text = InventoryStrings.stockLabel(item.currentStock, item.unit),
                     style = MaterialTheme.typography.bodySmall,
                     color = SolennixTheme.colors.secondaryText
                 )
@@ -542,7 +543,7 @@ private fun InventoryListItem(
                             tint = SolennixTheme.colors.warning
                         )
                         Text(
-                            text = "Stock bajo",
+                            text = InventoryStrings.lowStock,
                             color = SolennixTheme.colors.warning,
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Medium
@@ -554,23 +555,23 @@ private fun InventoryListItem(
 
         DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
             DropdownMenuItem(
-                text = { Text("Ver Detalles") },
+                text = { Text(InventoryStrings.viewDetails) },
                 leadingIcon = { Icon(Icons.Default.Visibility, contentDescription = null) },
                 onClick = { showMenu = false; onClick() }
             )
             DropdownMenuItem(
-                text = { Text("Ajustar Stock") },
+                text = { Text(InventoryStrings.menuAdjustStock) },
                 leadingIcon = { Icon(Icons.Default.Tune, contentDescription = null) },
                 onClick = { showMenu = false; onAdjust() }
             )
             DropdownMenuItem(
-                text = { Text("Editar") },
+                text = { Text(InventoryStrings.menuEdit) },
                 leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) },
                 onClick = { showMenu = false; onEdit() }
             )
             HorizontalDivider()
             DropdownMenuItem(
-                text = { Text("Eliminar", color = SolennixTheme.colors.error) },
+                text = { Text(InventoryStrings.menuDelete, color = SolennixTheme.colors.error) },
                 leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null, tint = SolennixTheme.colors.error) },
                 onClick = { showMenu = false; onDelete() }
             )
@@ -637,7 +638,7 @@ private fun InventoryGridCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Stock: ${item.currentStock} ${item.unit}",
+                        text = InventoryStrings.stockLabel(item.currentStock, item.unit),
                         style = MaterialTheme.typography.bodySmall,
                         color = SolennixTheme.colors.secondaryText
                     )
@@ -665,7 +666,7 @@ private fun InventoryGridCard(
                                         tint = SolennixTheme.colors.warning
                                     )
                                     Text(
-                                        text = "Bajo",
+                                        text = InventoryStrings.lowBadge,
                                         color = SolennixTheme.colors.warning,
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = FontWeight.Medium
@@ -680,23 +681,23 @@ private fun InventoryGridCard(
 
         DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
             DropdownMenuItem(
-                text = { Text("Ver Detalles") },
+                text = { Text(InventoryStrings.viewDetails) },
                 leadingIcon = { Icon(Icons.Default.Visibility, contentDescription = null) },
                 onClick = { showMenu = false; onClick() }
             )
             DropdownMenuItem(
-                text = { Text("Ajustar Stock") },
+                text = { Text(InventoryStrings.menuAdjustStock) },
                 leadingIcon = { Icon(Icons.Default.Tune, contentDescription = null) },
                 onClick = { showMenu = false; onAdjust() }
             )
             DropdownMenuItem(
-                text = { Text("Editar") },
+                text = { Text(InventoryStrings.menuEdit) },
                 leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) },
                 onClick = { showMenu = false; onEdit() }
             )
             HorizontalDivider()
             DropdownMenuItem(
-                text = { Text("Eliminar", color = SolennixTheme.colors.error) },
+                text = { Text(InventoryStrings.menuDelete, color = SolennixTheme.colors.error) },
                 leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null, tint = SolennixTheme.colors.error) },
                 onClick = { showMenu = false; onDelete() }
             )

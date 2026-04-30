@@ -6,6 +6,7 @@ import com.creapolis.solennix.core.data.repository.InventoryRepository
 import com.creapolis.solennix.core.designsystem.event.UiEvent
 import com.creapolis.solennix.core.model.InventoryItem
 import com.creapolis.solennix.core.model.InventoryType
+import com.creapolis.solennix.feature.inventory.InventoryStrings
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -120,7 +121,7 @@ class InventoryListViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiEvents.tryEmit(
                     UiEvent.Error(
-                        message = "No se pudo sincronizar el inventario. Mostrando datos en caché.",
+                        message = InventoryStrings.syncInventoryFailed,
                         retryActionId = ACTION_REFRESH,
                     )
                 )
@@ -135,7 +136,7 @@ class InventoryListViewModel @Inject constructor(
         pendingDeleteJob?.cancel()
         _uiEvents.tryEmit(
             UiEvent.PendingDelete(
-                message = "Item eliminado",
+                message = InventoryStrings.itemDeleted,
                 undoActionId = "$ACTION_DELETE:$id",
             )
         )
@@ -158,7 +159,7 @@ class InventoryListViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiEvents.tryEmit(
                     UiEvent.Error(
-                        message = "No se pudo borrar el item",
+                        message = InventoryStrings.deleteItemFailed,
                         retryActionId = "$ACTION_DELETE:$id",
                     )
                 )
@@ -180,7 +181,7 @@ class InventoryListViewModel @Inject constructor(
                 lastAdjustRequest = item to delta
                 _uiEvents.tryEmit(
                     UiEvent.Error(
-                        message = "No se pudo ajustar el stock de ${item.ingredientName}",
+                        message = InventoryStrings.adjustStockFailed(item.ingredientName),
                         retryActionId = ACTION_ADJUST_STOCK,
                     )
                 )

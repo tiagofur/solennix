@@ -122,20 +122,20 @@ export const ProductList: React.FC = () => {
               type="button"
               onClick={() =>
                 exportToCsv(
-                  "productos",
-                  [t("products:table.name"), t("products:table.category"), t("products:table.price"), "Activo"],
+                  t("products:list.csv_filename"),
+                  [t("products:table.name"), t("products:table.category"), t("products:table.price"), t("products:list.active_header")],
                   products.map((p) => [
                     p.name,
                     p.category,
                     p.base_price.toFixed(2),
-                    p.is_active ? "Sí" : "No",
+                    p.is_active ? t("products:status.active") : t("products:status.inactive"),
                   ]),
                 )
               }
               className="inline-flex items-center justify-center px-4 py-2 border border-border text-sm font-medium rounded-xl text-text-secondary bg-card hover:bg-surface-alt shadow-sm transition-colors"
             >
               <Download className="h-4 w-4 mr-2" aria-hidden="true" />
-              CSV
+              {t("products:list.export_csv")}
             </button>
           )}
           <Link
@@ -159,7 +159,7 @@ export const ProductList: React.FC = () => {
           id="product-search"
           type="search"
           className="block w-full pl-10 pr-8 py-2 border border-border rounded-xl leading-5 bg-card text-text placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary sm:text-sm transition duration-150 ease-in-out"
-          placeholder={t("products:search_placeholder")}
+          placeholder={t("products:search_by_name_or_category")}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
