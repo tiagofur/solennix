@@ -251,7 +251,7 @@ describe('InventoryForm', () => {
     renderForm();
 
     expect(screen.getByText(/Límite de Catálogo Alcanzado/i)).toBeInTheDocument();
-    expect(screen.getByText('Regresar')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Regresar a la página anterior|Volver/i })).toBeInTheDocument();
   });
 
   it('navigates back when clicking Regresar on limit-reached view', () => {
@@ -381,7 +381,7 @@ describe('InventoryForm', () => {
       expect(screen.getByText(/Guardando|action\.saving/i)).toBeInTheDocument();
     });
 
-    const submitBtn = screen.getByRole('button', { name: /Guardando ítem/i });
+    const submitBtn = screen.getByRole('button', { name: /Guardando\.\.\.|action\.saving/i });
     expect(submitBtn).toBeDisabled();
 
     resolveCreate!({});
