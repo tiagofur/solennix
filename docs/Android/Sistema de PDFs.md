@@ -3,7 +3,7 @@
 # Sistema de PDFs
 
 > [!abstract] Resumen
-> Generación de documentos PDF desde el detalle de eventos: presupuestos, contratos, facturas, listas de compras, checklists, listas de equipamiento y reportes de pagos. El código existe pero **falta la librería de PDF**.
+> Generación de documentos PDF desde el detalle de eventos: presupuestos, contratos, listas de compras, checklists, listas de equipamiento y reportes de pagos. El código existe pero **falta la librería de PDF**.
 
 ---
 
@@ -13,7 +13,6 @@
 |-----------|-----------|-----------|
 | Presupuesto | `BudgetPdfGenerator` | Productos + extras + totales |
 | Contrato | `ContractPdfGenerator` | Términos + datos del negocio + cliente |
-| Factura | `InvoicePdfGenerator` | Detalle financiero + pagos |
 | Lista de compras | `ShoppingListPdfGenerator` | Insumos e ingredientes necesarios |
 | Checklist | `ChecklistPdfGenerator` | Tareas del evento |
 | Lista de equipamiento | `EquipmentListPdfGenerator` | Equipamiento asignado |

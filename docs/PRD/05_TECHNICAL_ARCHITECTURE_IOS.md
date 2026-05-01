@@ -868,11 +868,10 @@ Factory que crea el `ModelContainer` con los tres modelos registrados. Usado en 
 
 ## 11. Generacion de PDFs
 
-La app genera 8 tipos de PDF para diferentes documentos de negocio. Todos residen en `SolennixFeatures/Events/PDFGenerators/` y `SolennixFeatures/Clients/PDFGenerators/`.
+La app genera 7 tipos de PDF para diferentes documentos de negocio. Todos residen en `SolennixFeatures/Events/PDFGenerators/` y `SolennixFeatures/Clients/PDFGenerators/`.
 
 | Generador         | Archivo                           | Descripcion                            |
 | ----------------- | --------------------------------- | -------------------------------------- |
-| Factura           | `InvoicePDFGenerator.swift`       | Factura detallada del evento           |
 | Contrato          | `ContractPDFGenerator.swift`      | Contrato de servicio con terminos      |
 | Presupuesto       | `BudgetPDFGenerator.swift`        | Cotizacion detallada para el cliente   |
 | Checklist         | `ChecklistPDFGenerator.swift`     | Lista de tareas del evento             |

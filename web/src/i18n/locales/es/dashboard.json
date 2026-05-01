@@ -62,6 +62,7 @@
   "upcoming": {
     "title": "Próximos eventos",
     "empty": "Sin eventos próximos",
+    "no_events": "Sin eventos próximos",
     "view": "Ver"
   },
   "inventory": {

@@ -199,7 +199,7 @@ describe('EventList', () => {
         <EventList />
       </MemoryRouter>
     );
-    expect(screen.getByText('Nuevo Evento')).toBeInTheDocument();
+    expect(screen.getByText('Nuevo evento')).toBeInTheDocument();
   });
 
   it('renders Cotización Rápida link', () => {
@@ -208,7 +208,7 @@ describe('EventList', () => {
         <EventList />
       </MemoryRouter>
     );
-    expect(screen.getByText('Cotización Rápida')).toBeInTheDocument();
+    expect(screen.getByText('Cotización rápida')).toBeInTheDocument();
   });
 
   it('renders status dropdowns for events', () => {

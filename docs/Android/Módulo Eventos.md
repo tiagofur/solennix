@@ -145,14 +145,13 @@ Desde el detalle del evento se pueden generar múltiples documentos:
 |-----------|-----------|
 | Presupuesto | Productos + extras + totales |
 | Contrato | Términos + condiciones del usuario |
-| Factura | Detalle de pagos y saldos |
 | Lista de compras | Insumos necesarios |
 | Checklist | Tareas pendientes del evento |
 | Lista de equipamiento | Equipo asignado |
 | Reporte de pagos | Historial de abonos |
 
 > [!warning] Dependencia faltante
-> El código de generación de PDF existe (`InvoicePdfGenerator`, etc.) pero no se ha importado una librería de PDF. La funcionalidad puede fallar en runtime.
+> El código de generación de PDF existe pero no se ha importado una librería de PDF. La funcionalidad puede fallar en runtime.
 
 ---
 
