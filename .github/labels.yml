@@ -18,6 +18,10 @@
   color: 5319e7
   description: Code refactor without behavior change
 
+- name: type:chore
+  color: cfd3d7
+  description: Maintenance/tooling
+
 - name: type:docs
   color: 0075ca
   description: Documentation updates
@@ -69,6 +73,10 @@
 - name: status:ready
   color: 0e8a16
   description: Ready for implementation
+
+- name: status:approved
+  color: 0e8a16
+  description: Approved for implementation
 
 - name: status:in-progress
   color: 1d76db

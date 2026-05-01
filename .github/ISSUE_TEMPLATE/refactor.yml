@@ -1,7 +1,13 @@
 name: Refactor
 description: Technical debt or structural improvement
-labels: ["type:refactor", "type:infra", "status:ready", "priority:medium"]
+labels: ["type:refactor", "status:ready", "priority:medium"]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Issues start with `status:ready`.
+        Move them to `status:approved` once the target architecture and migration plan are approved.
+
   - type: textarea
     id: current
     attributes:
@@ -22,3 +28,5 @@ body:
     attributes:
       label: Risks and migration plan
       description: Include rollback strategy.
+    validations:
+      required: true
