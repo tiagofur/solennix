@@ -71,6 +71,7 @@
     "title_edit": "Editar Evento",
     "back_to_calendar_aria": "Volver al calendario",
     "progress_aria": "Progreso del formulario de evento",
+    "previous": "Volver al paso anterior del formulario",
     "next": "Siguiente",
     "loading": "Cargando...",
     "save": "Guardar Evento",

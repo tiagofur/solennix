@@ -71,6 +71,7 @@
     "title_edit": "Edit Event",
     "back_to_calendar_aria": "Back to calendar",
     "progress_aria": "Event form progress",
+    "previous": "Go back to previous form step",
     "next": "Next",
     "loading": "Loading...",
     "save": "Save Event",

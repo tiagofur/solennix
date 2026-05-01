@@ -353,8 +353,7 @@ describe('Payments', () => {
     expect(screen.getByText('Tarjeta')).toBeInTheDocument();
     // Unknown method rendered as-is
     expect(screen.getByText('Cheque')).toBeInTheDocument();
-    // Null notes and empty notes both render '-'
-    expect(screen.getAllByText('-').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(1);
   });
 
   it('handles load error gracefully', async () => {
