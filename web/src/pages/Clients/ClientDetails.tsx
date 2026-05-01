@@ -191,7 +191,7 @@ export const ClientDetails: React.FC = () => {
             </div>
             <div className="sm:col-span-1">
               <dt className="text-sm font-medium text-text-secondary flex items-center">
-                <Mail className="h-4 w-4 mr-2" aria-hidden="true" /> Email
+                <Mail className="h-4 w-4 mr-2" aria-hidden="true" /> {t("clients:details.email")}
               </dt>
               <dd className="mt-1 text-sm">
                 {client.email ? (
@@ -217,7 +217,7 @@ export const ClientDetails: React.FC = () => {
             {client.city && (
               <div className="sm:col-span-1">
                 <dt className="text-sm font-medium text-text-secondary flex items-center">
-                  <MapPin className="h-4 w-4 mr-2" aria-hidden="true" /> City
+                  <MapPin className="h-4 w-4 mr-2" aria-hidden="true" /> {t("clients:details.city")}
                 </dt>
                 <dd className="mt-1 text-sm text-text">{client.city}</dd>
               </div>
@@ -259,7 +259,7 @@ export const ClientDetails: React.FC = () => {
             to={`/events/new?clientId=${client.id}`}
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-bold rounded-xl text-white premium-gradient shadow-sm transition-colors"
           >
-            {t("common:action.add")} {t("common:nav.events").slice(0,-1)}
+            {t("clients:details.create_event")}
           </Link>
         </div>
         <div className="border-t border-border">
@@ -294,7 +294,7 @@ export const ClientDetails: React.FC = () => {
                       scope="col"
                       className="px-6 py-3 text-left text-xs font-medium text-text-secondary "
                     >
-                      Servicio
+                      {t("clients:table.service")}
                     </th>
                     <th
                       scope="col"
@@ -302,14 +302,14 @@ export const ClientDetails: React.FC = () => {
                     >
                       <span className="flex items-center gap-1">
                         <Users className="h-3.5 w-3.5" aria-hidden="true" />{" "}
-                        pax
+                         {t("clients:table.guests")}
                       </span>
                     </th>
                     <th
                       scope="col"
                       className="px-6 py-3 text-left text-xs font-medium text-text-secondary "
                     >
-                      Estado
+                      {t("clients:table.status")}
                     </th>
                     <th
                       scope="col"
@@ -320,7 +320,7 @@ export const ClientDetails: React.FC = () => {
                           className="h-3.5 w-3.5"
                           aria-hidden="true"
                         />{" "}
-                        Total
+                        {t("clients:table.total")}
                       </span>
                     </th>
                   </tr>
@@ -348,7 +348,7 @@ export const ClientDetails: React.FC = () => {
                         </Link>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary">
-                        {event.num_people} pax
+                        {event.num_people} {t("clients:table.guests").toLowerCase()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                         <StatusDropdown

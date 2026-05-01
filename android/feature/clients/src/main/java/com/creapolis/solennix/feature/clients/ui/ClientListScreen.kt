@@ -25,6 +25,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -39,6 +41,7 @@ import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.network.UrlResolver
 import com.creapolis.solennix.core.model.Client
 import com.creapolis.solennix.core.model.extensions.asMXN
+import com.creapolis.solennix.feature.clients.R
 import com.creapolis.solennix.feature.clients.viewmodel.ClientListViewModel
 import com.creapolis.solennix.feature.clients.viewmodel.ClientSortOption
 import java.io.File
@@ -55,12 +58,16 @@ private fun exportClientsCsv(context: Context, csvContent: String) {
         val intent = Intent(Intent.ACTION_SEND).apply {
             type = "text/csv"
             putExtra(Intent.EXTRA_STREAM, uri)
-            putExtra(Intent.EXTRA_SUBJECT, "Clientes - Exportación CSV")
+            putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.clients_export_subject))
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
-        context.startActivity(Intent.createChooser(intent, "Exportar Clientes"))
+        context.startActivity(Intent.createChooser(intent, context.getString(R.string.clients_export_chooser)))
     } catch (e: Exception) {
-        Toast.makeText(context, "Error al exportar: ${e.message}", Toast.LENGTH_SHORT).show()
+        Toast.makeText(
+            context,
+            context.getString(R.string.clients_export_error, e.message ?: ""),
+            Toast.LENGTH_SHORT
+        ).show()
     }
 }
 
@@ -97,14 +104,14 @@ fun ClientListScreen(
     Scaffold(
         topBar = {
             SolennixTopAppBar(
-                title = { Text("Clientes") },
+                title = { Text(stringResource(R.string.clients_title)) },
                 onSearchClick = onSearchClick,
                 actions = {
                     IconButton(onClick = {
                         val csv = viewModel.generateCsvContent()
                         exportClientsCsv(context, csv)
                     }) {
-                        Icon(Icons.Default.FileDownload, contentDescription = "Exportar CSV")
+                        Icon(Icons.Default.FileDownload, contentDescription = stringResource(R.string.clients_export_csv))
                     }
                 }
             )
@@ -118,7 +125,7 @@ fun ClientListScreen(
                 containerColor = SolennixTheme.colors.primary,
                 contentColor = Color.White
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Agregar Cliente")
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.clients_add_client))
             }
         },
         contentWindowInsets = WindowInsets(0)
@@ -145,7 +152,7 @@ fun ClientListScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp),
-                    placeholder = { Text("Filtrar clientes por nombre o teléfono...") },
+                    placeholder = { Text(stringResource(R.string.clients_search_placeholder)) },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                     shape = MaterialTheme.shapes.medium,
                     singleLine = true
@@ -163,7 +170,7 @@ fun ClientListScreen(
                         FilterChip(
                             selected = uiState.sortOption == option,
                             onClick = { viewModel.onSortOptionChange(option) },
-                            label = { Text(option.label) },
+                            label = { Text(stringResource(option.labelRes)) },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = SolennixTheme.colors.primaryLight,
                                 selectedLabelColor = SolennixTheme.colors.primary
@@ -238,7 +245,9 @@ fun ClientListItem(
                 color = SolennixTheme.colors.secondaryText
             )
             val statsItems = mutableListOf<String>()
-            client.totalEvents?.let { if (it > 0) statsItems.add("$it eventos") }
+            client.totalEvents?.let {
+                if (it > 0) statsItems.add(pluralStringResource(R.plurals.clients_event_count, it, it))
+            }
             client.totalSpent?.let { if (it > 0.0) statsItems.add(it.asMXN()) }
             if (statsItems.isNotEmpty()) {
                 Text(

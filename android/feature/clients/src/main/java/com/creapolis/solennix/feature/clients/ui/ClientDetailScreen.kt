@@ -11,9 +11,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.creapolis.solennix.core.designsystem.R as DesignSystemR
 import com.creapolis.solennix.core.designsystem.component.Avatar
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.component.KPICard
@@ -24,6 +26,7 @@ import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.network.UrlResolver
 import com.creapolis.solennix.core.model.Event
 import com.creapolis.solennix.core.model.extensions.asMXN
+import com.creapolis.solennix.feature.clients.R
 import com.creapolis.solennix.feature.clients.viewmodel.ClientDetailViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -49,20 +52,20 @@ fun ClientDetailScreen(
     Scaffold(
         topBar = {
             SolennixTopAppBar(
-                title = { Text("Detalle del Cliente") },
+                title = { Text(stringResource(R.string.clients_detail_title)) },
                 onSearchClick = onSearchClick,
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(DesignSystemR.string.cd_back))
                     }
                 },
                 actions = {
                     uiState.client?.let { client ->
                         IconButton(onClick = { onEditClick(client.id) }) {
-                            Icon(Icons.Default.Edit, contentDescription = "Editar")
+                            Icon(Icons.Default.Edit, contentDescription = stringResource(DesignSystemR.string.cd_edit))
                         }
                         IconButton(onClick = { showDeleteDialog = true }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = SolennixTheme.colors.error)
+                            Icon(Icons.Default.Delete, contentDescription = stringResource(DesignSystemR.string.cd_delete), tint = SolennixTheme.colors.error)
                         }
                     }
                 }
@@ -126,20 +129,20 @@ fun ClientDetailScreen(
                             shape = MaterialTheme.shapes.medium
                         ) {
                             Column(modifier = Modifier.padding(20.dp)) {
-                                Text(text = "Información de Contacto", style = MaterialTheme.typography.titleMedium, color = SolennixTheme.colors.primaryText)
+                                Text(text = stringResource(R.string.clients_contact_info), style = MaterialTheme.typography.titleMedium, color = SolennixTheme.colors.primaryText)
                                 Spacer(modifier = Modifier.height(16.dp))
-                                InfoRow(icon = Icons.Default.Phone, label = "Teléfono", value = client.phone)
+                                InfoRow(icon = Icons.Default.Phone, label = stringResource(R.string.clients_label_phone), value = client.phone)
                                 HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
-                                InfoRow(icon = Icons.Default.Email, label = "Email", value = client.email ?: "No proporcionado")
+                                InfoRow(icon = Icons.Default.Email, label = stringResource(R.string.clients_label_email), value = client.email ?: stringResource(R.string.clients_not_provided))
                                 val addr = client.address
                                 if (!addr.isNullOrBlank()) {
                                     HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
-                                    InfoRow(icon = Icons.Default.LocationOn, label = "Dirección", value = addr)
+                                    InfoRow(icon = Icons.Default.LocationOn, label = stringResource(R.string.clients_label_address), value = addr)
                                 }
                                 val cCity = client.city
                                 if (!cCity.isNullOrBlank()) {
                                     HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
-                                    InfoRow(icon = Icons.Default.LocationCity, label = "Ciudad", value = cCity)
+                                    InfoRow(icon = Icons.Default.LocationCity, label = stringResource(R.string.clients_label_city), value = cCity)
                                 }
                             }
                         }
@@ -152,7 +155,7 @@ fun ClientDetailScreen(
                                 shape = MaterialTheme.shapes.medium
                             ) {
                                 Column(modifier = Modifier.padding(20.dp)) {
-                                    Text(text = "Notas", style = MaterialTheme.typography.titleMedium, color = SolennixTheme.colors.primaryText)
+                                    Text(text = stringResource(R.string.clients_notes), style = MaterialTheme.typography.titleMedium, color = SolennixTheme.colors.primaryText)
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Text(text = cNotes, style = MaterialTheme.typography.bodyMedium, color = SolennixTheme.colors.secondaryText)
                                 }
@@ -161,7 +164,7 @@ fun ClientDetailScreen(
                     },
                     right = {
                         // Stats
-                        Text(text = "Estadisticas", style = MaterialTheme.typography.titleMedium, color = SolennixTheme.colors.primaryText)
+                        Text(text = stringResource(R.string.clients_stats_title), style = MaterialTheme.typography.titleMedium, color = SolennixTheme.colors.primaryText)
 
                         if (uiState.isEventsLoading) {
                             Box(modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp), contentAlignment = Alignment.Center) {
@@ -169,11 +172,11 @@ fun ClientDetailScreen(
                             }
                         } else {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                KPICard(title = "Total Eventos", value = uiState.totalEvents.toString(), icon = Icons.Default.Event, iconColor = SolennixTheme.colors.kpiBlue, modifier = Modifier.weight(1f))
-                                KPICard(title = "Total Gastado", value = uiState.totalSpent.asMXN(), icon = Icons.Default.AttachMoney, iconColor = SolennixTheme.colors.kpiGreen, modifier = Modifier.weight(1f))
+                                KPICard(title = stringResource(R.string.clients_csv_header_events), value = uiState.totalEvents.toString(), icon = Icons.Default.Event, iconColor = SolennixTheme.colors.kpiBlue, modifier = Modifier.weight(1f))
+                                KPICard(title = stringResource(R.string.clients_stats_total_spent), value = uiState.totalSpent.asMXN(), icon = Icons.Default.AttachMoney, iconColor = SolennixTheme.colors.kpiGreen, modifier = Modifier.weight(1f))
                             }
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                KPICard(title = "Promedio", value = uiState.averagePerEvent.asMXN(), icon = Icons.Default.TrendingUp, iconColor = SolennixTheme.colors.kpiOrange, modifier = Modifier.weight(1f))
+                                KPICard(title = stringResource(R.string.clients_stats_average), value = uiState.averagePerEvent.asMXN(), icon = Icons.Default.TrendingUp, iconColor = SolennixTheme.colors.kpiOrange, modifier = Modifier.weight(1f))
                                 Spacer(modifier = Modifier.weight(1f))
                             }
                         }
@@ -184,7 +187,7 @@ fun ClientDetailScreen(
 
                 // --- Event History Section ---
                 Text(
-                    text = "Historial de Eventos",
+                    text = stringResource(R.string.clients_events_history),
                     style = MaterialTheme.typography.titleMedium,
                     color = SolennixTheme.colors.primaryText
                 )
@@ -217,7 +220,7 @@ fun ClientDetailScreen(
                             )
                             Spacer(modifier = Modifier.height(12.dp))
                             Text(
-                                text = "Sin eventos registrados",
+                                text = stringResource(R.string.clients_no_events),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = SolennixTheme.colors.secondaryText
                             )
@@ -240,8 +243,8 @@ fun ClientDetailScreen(
             if (showDeleteDialog) {
                 AlertDialog(
                     onDismissRequest = { showDeleteDialog = false },
-                    title = { Text("Eliminar cliente") },
-                    text = { Text("¿Eliminar este cliente? Esta acción no se puede deshacer.") },
+                    title = { Text(stringResource(R.string.clients_delete_title)) },
+                    text = { Text(stringResource(R.string.clients_delete_message)) },
                     confirmButton = {
                         TextButton(
                             onClick = {
@@ -250,12 +253,12 @@ fun ClientDetailScreen(
                             },
                             colors = ButtonDefaults.textButtonColors(contentColor = SolennixTheme.colors.error)
                         ) {
-                            Text("Eliminar")
+                            Text(stringResource(R.string.clients_delete_confirm))
                         }
                     },
                     dismissButton = {
                         TextButton(onClick = { showDeleteDialog = false }) {
-                            Text("Cancelar")
+                            Text(stringResource(R.string.clients_delete_cancel))
                         }
                     }
                 )
@@ -303,7 +306,7 @@ private fun EventHistoryItem(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "${event.numPeople} personas",
+                    text = "${event.numPeople} ${stringResource(R.string.clients_people_suffix)}",
                     style = MaterialTheme.typography.bodySmall,
                     color = SolennixTheme.colors.secondaryText
                 )

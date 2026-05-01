@@ -1,3 +1,6 @@
+## Linked Issue
+- Closes #
+
 ## What
 - 
 
@@ -13,6 +16,8 @@
 
 ## Checklist
 - [ ] Issue linked
+- [ ] Linked issue has `status:approved`
+- [ ] Exactly one `type:*` label on the PR
 - [ ] Tests added/updated
 - [ ] CI green
 - [ ] Cross-platform parity reviewed

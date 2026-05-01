@@ -2,6 +2,12 @@ name: Feature request
 description: Propose a product or engineering improvement
 labels: ["enhancement", "type:feature", "status:ready", "priority:medium"]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Issues start with `status:ready`.
+        Move them to `status:approved` once scope is reviewed and approved for implementation.
+
   - type: textarea
     id: problem
     attributes:
@@ -36,3 +42,5 @@ body:
         - Given ...
         - When ...
         - Then ...
+    validations:
+      required: true

@@ -1,17 +1,26 @@
 {
   "title": "Clients",
   "new_client": "New Client",
-  "search_placeholder": "Search client by name or email...",
+  "search_placeholder": "Search client by name, email, or phone...",
   "no_clients": "No clients found",
+  "empty_description": "Add your first client to get started",
+  "search_no_results": "No clients matched your search",
   "client_added": "Client added successfully",
   "client_updated": "Client updated successfully",
   "client_deleted": "Client deleted successfully",
   "delete_confirm": "Are you sure you want to delete this client? This action cannot be undone.",
+  "export_file_name": "clients",
+  "event_singular": "event",
+  "event_plural": "events",
   "table": {
     "name": "Name",
     "contact": "Contact",
     "events": "Events",
     "last_event": "Last event",
+    "service": "Service",
+    "guests": "Guests",
+    "status": "Status",
+    "total": "Total",
     "actions": "Actions"
   },
   "form": {
@@ -21,13 +30,17 @@
     "email": "Email address",
     "phone": "Phone",
     "address": "Address",
+    "city": "City",
     "notes": "Notes",
+    "photo_optional": "Photo (optional)",
     "notes_placeholder": "Additional information about the client...",
     "validation": {
       "name_required": "Name is required",
       "name_min": "Name must be at least 2 characters",
       "phone_min": "Phone must be at least 10 digits",
-      "email_invalid": "Invalid email address. Use format: name@domain.com"
+      "email_invalid": "Invalid email address. Use format: name@domain.com",
+      "photo_too_large": "Photo must be smaller than 10 MB",
+      "photo_upload_error": "Could not upload photo"
     }
   },
   "details": {
@@ -40,6 +53,9 @@
     "registered": "Registered",
     "not_registered": "Not registered",
     "no_notes": "No additional notes",
-    "total_spent": "Total Spent"
+    "total_spent": "Total Spent",
+    "email": "Email",
+    "city": "City",
+    "create_event": "Create event"
   }
 }
