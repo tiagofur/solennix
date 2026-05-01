@@ -23,7 +23,7 @@ import { EventSummary } from './EventSummary';
 import { eventService } from '../../services/eventService';
 import { productService } from '../../services/productService';
 import { paymentService } from '../../services/paymentService';
-import { generateBudgetPDF, generateContractPDF, generateInvoicePDF, generateShoppingListPDF } from '../../lib/pdfGenerator';
+import { generateBudgetPDF, generateContractPDF, generateShoppingListPDF } from '../../lib/pdfGenerator';
 import { logError } from '../../lib/errorHandler';
 import { installEventSummaryMocks } from './__tests__/eventSummaryFixtures';
 
@@ -111,7 +111,6 @@ vi.mock('../../services/subscriptionService', () => ({
 vi.mock('../../lib/pdfGenerator', () => ({
   generateBudgetPDF: vi.fn(),
   generateContractPDF: vi.fn(),
-  generateInvoicePDF: vi.fn(),
   generateShoppingListPDF: vi.fn(),
   generatePaymentReportPDF: vi.fn(),
 }));
@@ -370,18 +369,6 @@ describe('EventSummary — core', () => {
     expect(eventService.delete).not.toHaveBeenCalled();
   });
 
-  it('triggers invoice PDF generation in summary view', async () => {
-    render(<MemoryRouter><EventSummary /></MemoryRouter>);
-
-    await waitFor(() => {
-      expect(screen.getByText('Ana — Boda')).toBeInTheDocument();
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /Más$/i }));
-    fireEvent.click(screen.getByText('Generar Factura'));
-    expect(generateInvoicePDF).toHaveBeenCalled();
-  });
-
   it('triggers shopping list PDF generation in ingredients view', async () => {
     render(<MemoryRouter><EventSummary /></MemoryRouter>);
 
@@ -408,10 +395,6 @@ describe('EventSummary — core', () => {
     fireEvent.click(screen.getByRole('button', { name: /Más$/i }));
     fireEvent.click(screen.getByText('Presupuesto'));
     expect(generateBudgetPDF).toHaveBeenCalled();
-
-    fireEvent.click(screen.getByRole('button', { name: /Más$/i }));
-    fireEvent.click(screen.getByText('Generar Factura'));
-    expect(generateInvoicePDF).toHaveBeenCalled();
 
     fireEvent.click(screen.getByRole('button', { name: /Más$/i }));
     fireEvent.click(screen.getByText('Lista de Insumos'));

@@ -33,7 +33,6 @@ priority: high
 | Contrato | `generateContractPDF` | `ContractPDFGenerator` | `ContractPdfGenerator` | ⚠️ Tokens distintos |
 | Lista de Insumos | `generateShoppingListPDF` | `ShoppingListPDFGenerator` | `ShoppingListPdfGenerator` | ⚠️ Datos distintos |
 | Reporte de Pagos | `generatePaymentReportPDF` | `PaymentReportPDFGenerator` | `PaymentReportPdfGenerator` | ⚠️ Parcial |
-| Factura | `generateInvoicePDF` | `InvoicePDFGenerator` | `InvoicePdfGenerator` | ⚠️ Android tiene payment history |
 | Checklist | `generateChecklistPDF` | `ChecklistPDFGenerator` | `ChecklistPdfGenerator` | ⚠️ Android usa InventoryItem[] |
 | Lista de Equipo | **NO EXISTE** | `EquipmentListPDFGenerator` | `EquipmentListPdfGenerator` | ❌ Falta en Web |
 
@@ -96,7 +95,6 @@ backend/internal/
 │   ├── contract.go             # Contrato (template tokens)
 │   ├── shopping_list.go        # Lista de Insumos
 │   ├── payment_report.go       # Reporte de Pagos
-│   ├── invoice.go              # Factura
 │   ├── checklist.go            # Checklist de Carga
 │   ├── equipment_list.go       # Lista de Equipo (NUEVO)
 │   └── template_tokens.go      # Token resolution (24 tokens)
@@ -115,7 +113,6 @@ GET /api/events/:id/pdf/budget          → Presupuesto
 GET /api/events/:id/pdf/contract        → Contrato
 GET /api/events/:id/pdf/shopping-list   → Lista de Insumos
 GET /api/events/:id/pdf/payment-report  → Reporte de Pagos
-GET /api/events/:id/pdf/invoice         → Factura
 GET /api/events/:id/pdf/checklist       → Checklist de Carga
 GET /api/events/:id/pdf/equipment-list  → Lista de Equipo
 ```
@@ -444,7 +441,6 @@ Estos son los tokens que el backend resuelve Y que todas las apps muestran:
 ### Fase 2 — Backend PDFs Financieros (4-5 días)
 
 - [ ] `internal/pdf/budget.go` — Presupuesto
-- [ ] `internal/pdf/invoice.go` — Factura
 - [ ] `internal/pdf/payment_report.go` — Reporte de Pagos
 - [ ] Lógica financiera: discount (percent/fixed), IVA, depósito
 - [ ] Tests unitarios de cada PDF con golden files

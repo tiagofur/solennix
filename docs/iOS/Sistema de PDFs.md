@@ -14,7 +14,6 @@
 | Cotización rápida | `QuickQuotePDFGenerator` | Productos + extras sin evento formal |
 | Presupuesto | `BudgetPDFGenerator` | Productos + extras + totales del evento |
 | Contrato | `ContractPDFGenerator` | Términos + datos negocio + cliente |
-| Factura | `InvoicePDFGenerator` | Detalle financiero + pagos |
 | Lista de compras | `ShoppingListPDFGenerator` | Insumos e ingredientes necesarios |
 | Checklist | `ChecklistPDFGenerator` | Tareas del evento |
 | Lista de equipamiento | `EquipmentListPDFGenerator` | Equipo asignado |
@@ -68,7 +67,6 @@ sequenceDiagram
 |---------|-----------|
 | `QuickQuotePDFGenerator.swift` | `SolennixFeatures/Common/PDFs/` |
 | `BudgetPDFGenerator.swift` | `SolennixFeatures/Common/PDFs/` |
-| `InvoicePDFGenerator.swift` | `SolennixFeatures/Common/PDFs/` |
 | `ContractPDFGenerator.swift` | `SolennixFeatures/Common/PDFs/` |
 | `ShoppingListPDFGenerator.swift` | `SolennixFeatures/Common/PDFs/` |
 | `ChecklistPDFGenerator.swift` | `SolennixFeatures/Common/PDFs/` |

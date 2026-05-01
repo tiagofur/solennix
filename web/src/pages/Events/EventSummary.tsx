@@ -41,7 +41,6 @@ import {
   generateContractPDF,
   generateShoppingListPDF,
   generateChecklistPDF,
-  generateInvoicePDF,
   generatePaymentReportPDF,
 } from "@/lib/pdfGenerator";
 import { logError } from "@/lib/errorHandler";

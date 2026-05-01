@@ -13,7 +13,6 @@
 |------|---------|-----------|
 | **Presupuesto** | Budget/Quote | Productos, extras, subtotales, descuento, impuesto, total |
 | **Contrato** | Contract | Template personalizado con tokens sustituidos |
-| **Factura** | Invoice | Ítems detallados, pagos realizados, saldo pendiente |
 | **Lista de Compras** | Shopping List | Ingredientes y materiales necesarios por producto |
 | **Checklist** | Event Checklist | Tareas para el día del evento |
 | **Reporte de Pagos** | Payment Report | Historial completo de pagos del evento |

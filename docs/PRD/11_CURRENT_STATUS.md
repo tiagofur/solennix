@@ -731,7 +731,6 @@ Primera pantalla de paridad post-Dashboard:
 - ✅ Lista de compras (ShoppingListPDFGenerator)
 - ✅ Checklist (ChecklistPDFGenerator)
 - ✅ Reporte de pagos (PaymentReportPDFGenerator)
-- ✅ Factura (InvoicePDFGenerator)
 - ✅ Lista de equipamiento (EquipmentListPDFGenerator)
 
 ### Widgets (4 tipos)
@@ -884,7 +883,6 @@ Primera pantalla de paridad post-Dashboard:
 - ✅ Lista de compras (ShoppingListPdfGenerator)
 - ✅ Checklist (ChecklistPdfGenerator)
 - ✅ Reporte de pagos (PaymentReportPdfGenerator)
-- ✅ Factura (InvoicePdfGenerator)
 - ✅ Lista de equipamiento (EquipmentListPdfGenerator)
 - ✅ Cotizacion rapida (QuickQuotePdfGenerator)
 
@@ -971,7 +969,7 @@ Primera pantalla de paridad post-Dashboard:
 > [!note] Items completados Android
 >
 > - ~~Widgets (Glance)~~ — QuickActionsWidget implementado con eventos del dia + acciones rapidas
-> - ~~Generacion de PDF~~ — 8 generadores implementados: Budget, Contract, Shopping, Checklist, PaymentReport, Invoice, Equipment, QuickQuote
+> - ~~Generacion de PDF~~ — 7 generadores implementados: Budget, Contract, Shopping, Checklist, PaymentReport, Equipment, QuickQuote
 > - ~~RevenueCat SDK integrado~~ — SDK agregado y `Purchases.sharedInstance` inicializado (compra real NO implementada — ver Wave Rescate Bloque C)
 > - ~~Google Sign-In mock~~ — Reemplazado mock con Credential Manager real
 > - ~~Shared element transitions lista→detalle~~ — SharedTransitionLayout + sharedBounds via LocalSharedTransitionScope/LocalNavAnimatedVisibilityScope. Key pattern: `event_card_{id}`
@@ -1121,7 +1119,6 @@ Primera pantalla de paridad post-Dashboard:
 | Lista de compras PDF      | ✅  | ✅      | ✅  | ➖      | Web: generateShoppingListPDF              |
 | Checklist PDF             | ✅  | ✅      | ✅  | ➖      | Web: generateChecklistPDF                 |
 | Reporte de pagos PDF      | ✅  | ✅      | ✅  | ➖      | Web: generatePaymentReportPDF             |
-| Factura PDF               | ✅  | ✅      | ✅  | ➖      | Web: generateInvoicePDF                   |
 | Lista de equipamiento PDF | ✅  | ✅      | ⬜  | ➖      | Web pendiente                             |
 | Cotizacion rapida PDF     | ✅  | ✅      | ⬜  | ➖      | Web pendiente                             |
 

@@ -262,7 +262,6 @@ android/
 │   │       ├── PdfConstants.kt            # Constantes compartidas
 │   │       ├── BudgetPdfGenerator.kt      # Cotización PDF
 │   │       ├── ContractPdfGenerator.kt    # Contrato PDF
-│   │       ├── InvoicePdfGenerator.kt     # Factura PDF
 │   │       ├── ChecklistPdfGenerator.kt   # Checklist PDF
 │   │       ├── EquipmentListPdfGenerator.kt   # Lista de equipo PDF
 │   │       ├── ShoppingListPdfGenerator.kt    # Lista de compras PDF
@@ -457,7 +456,7 @@ Capa de acceso a datos que combina API remota + cache local:
 | `EventChecklistScreen` | `EventChecklistViewModel` | Checklist de preparación del evento                                                   |
 | `PhotoGallerySheet`    | —                         | Bottom sheet para galería de fotos                                                    |
 
-**Generadores PDF**: `BudgetPdfGenerator`, `ContractPdfGenerator`, `InvoicePdfGenerator`, `ChecklistPdfGenerator`, `EquipmentListPdfGenerator`, `ShoppingListPdfGenerator`, `PaymentReportPdfGenerator`
+**Generadores PDF**: `BudgetPdfGenerator`, `ContractPdfGenerator`, `ChecklistPdfGenerator`, `EquipmentListPdfGenerator`, `ShoppingListPdfGenerator`, `PaymentReportPdfGenerator`
 
 ### 5.4 `feature:clients` — Gestión de Clientes
 
@@ -913,7 +912,7 @@ object DatabaseModule {
 > [!note] Generación de PDFs Nativa
 > **Decisión**: Generación de PDFs usando Android Canvas/PDF nativo, sin librerías de terceros.
 >
-> **Razón**: Menor tamaño de APK, sin dependencias externas, control total sobre el layout. Los PDFs generados incluyen: cotizaciones, contratos, facturas, checklists, listas de equipo, listas de compras, y reportes de pagos.
+> **Razón**: Menor tamaño de APK, sin dependencias externas, control total sobre el layout. Los PDFs generados incluyen: cotizaciones, contratos, checklists, listas de equipo, listas de compras, y reportes de pagos.
 
 > [!note] Deep Links con Esquema Custom
 > **Decisión**: Esquema `solennix://` para deep links.

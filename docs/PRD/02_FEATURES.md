@@ -114,7 +114,7 @@ El formulario de creacion/edicion de eventos esta dividido en pasos para reducir
 #### Pricing con IVA y descuentos
 
 - **Descuento global**: Porcentaje (`discount_type: 'percent'`) o monto fijo (`discount_type: 'fixed'`).
-- **IVA configurable**: `tax_rate` y `tax_amount` calculados. Facturacion opcional (`requires_invoice`).
+- **IVA configurable**: `tax_rate` y `tax_amount` calculados. El campo `requires_invoice` controla si aplica IVA al evento.
 - **Deposito**: Porcentaje configurable (`deposit_percent`) heredado de la configuracion del negocio o personalizado por evento.
 - **Condiciones de cancelacion**: Dias de anticipacion (`cancellation_days`) y porcentaje de reembolso (`refund_percent`).
 
@@ -558,7 +558,6 @@ Cada alerta muestra: nombre del evento, fecha, razon (badge), monto pendiente cu
 
 | Tipo               | Archivo iOS                       | Archivo Android                | Descripcion                                            |
 | ------------------ | --------------------------------- | ------------------------------ | ------------------------------------------------------ |
-| Cotizacion/Factura | `InvoicePDFGenerator.swift`       | `InvoicePdfGenerator.kt`       | Documento de cotizacion con productos, extras, totales |
 | Contrato           | `ContractPDFGenerator.swift`      | `ContractPdfGenerator.kt`      | Contrato con plantilla personalizable del usuario      |
 | Presupuesto        | `BudgetPDFGenerator.swift`        | `BudgetPdfGenerator.kt`        | Desglose de costos y margenes de ganancia              |
 | Checklist          | `ChecklistPDFGenerator.swift`     | `ChecklistPdfGenerator.kt`     | Lista de verificacion para el dia del evento           |
@@ -1221,7 +1220,6 @@ Visualización + registro de pago por transferencia con approve/reject. Reemplaz
 
 | Feature            | iOS | Android | Web | Backend | Notas                        |
 | ------------------ | --- | ------- | --- | ------- | ---------------------------- |
-| Cotizacion/Factura | ✅  | ✅      | ✅  | ➖      | Generado en cliente          |
 | Contrato           | ✅  | ✅      | ✅  | ➖      | Con plantilla personalizable |
 | Presupuesto        | ✅  | ✅      | ✅  | ➖      |                              |
 | Checklist          | ✅  | ✅      | ✅  | ➖      |                              |
