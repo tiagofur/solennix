@@ -20,9 +20,9 @@ public struct ProductListView: View {
     public var body: some View {
         content
             .background(SolennixColors.surfaceGrouped)
-            .navigationTitle("Productos")
+            .navigationTitle(ProductStrings.title)
             .navigationBarTitleDisplayMode(.large)
-            .searchable(text: $viewModel.searchText, prompt: "Buscar productos")
+            .searchable(text: $viewModel.searchText, prompt: ProductStrings.searchPrompt)
             .safeAreaInset(edge: .top, spacing: 0) {
                 // Only static banners live in safeAreaInset. The CategoryChips
                 // (a horizontal ScrollView) is placed inside the main list so
@@ -54,7 +54,7 @@ public struct ProductListView: View {
                         Image(systemName: "plus.circle")
                             .font(.body)
                             .foregroundStyle(planLimitsManager.canCreateProduct ? SolennixColors.primary : SolennixColors.textTertiary)
-                            .accessibilityLabel("Agregar producto")
+                            .accessibilityLabel(ProductStrings.addProductAccessibility)
                     }
                     .disabled(!planLimitsManager.canCreateProduct)
 
@@ -63,15 +63,15 @@ public struct ProductListView: View {
             }
         }
             .confirmationDialog(
-                "Eliminar producto",
+                ProductStrings.deleteTitle,
                 isPresented: $viewModel.showDeleteConfirm,
                 presenting: viewModel.deleteTarget
             ) { product in
-                Button("Eliminar", role: .destructive) {
+                Button(ProductStrings.deleteAction, role: .destructive) {
                     HapticsHelper.play(.success)
                     guard let removed = viewModel.softDeleteProduct(product) else { return }
                     toastManager.showUndo(
-                        message: "\(product.name) eliminado",
+                        message: ProductStrings.deletedMessage(product.name),
                         onUndo: {
                             viewModel.restoreProduct(removed.product, at: removed.index)
                             HapticsHelper.play(.success)
@@ -81,9 +81,9 @@ public struct ProductListView: View {
                         }
                     )
                 }
-                Button("Cancelar", role: .cancel) {}
+                Button(ProductStrings.cancel, role: .cancel) {}
             } message: { product in
-                Text("Se eliminara \"\(product.name)\". Podras deshacer durante unos segundos.")
+                Text(ProductStrings.deletePrompt(product.name))
             }
             .task {
                 viewModel.setCacheManager(cacheManager)
@@ -99,9 +99,9 @@ public struct ProductListView: View {
         if let error = viewModel.errorMessage, viewModel.products.isEmpty, !viewModel.isLoading {
             EmptyStateView(
                 icon: "wifi.exclamationmark",
-                title: "Error al cargar",
+                title: ProductStrings.errorLoadingTitle,
                 message: error,
-                actionTitle: "Reintentar"
+                actionTitle: ProductStrings.retry
             ) {
                 Task { await viewModel.loadProducts() }
             }
@@ -111,17 +111,17 @@ public struct ProductListView: View {
             if viewModel.searchText.isEmpty && viewModel.selectedCategory == nil {
                 EmptyStateView(
                     icon: "shippingbox",
-                    title: "Sin productos",
-                    message: "Agrega tu primer producto al catalogo",
-                    actionTitle: "Nuevo Producto"
+                    title: ProductStrings.emptyTitle,
+                    message: ProductStrings.emptyMessage,
+                    actionTitle: ProductStrings.emptyAction
                 ) {
                     // FAB handles navigation
                 }
             } else {
                 EmptyStateView(
                     icon: "magnifyingglass",
-                    title: "Sin resultados",
-                    message: "No se encontraron productos que coincidan con los filtros aplicados"
+                    title: ProductStrings.filteredEmptyTitle,
+                    message: ProductStrings.filteredEmptyMessage
                 )
             }
         } else {
@@ -164,10 +164,10 @@ public struct ProductListView: View {
                     .buttonStyle(.plain)
                     .contextMenu {
                         NavigationLink(value: Route.productForm(id: product.id)) {
-                            Label("Editar", systemImage: "pencil")
+                            Label(ProductStrings.edit, systemImage: "pencil")
                         }
                         NavigationLink(value: Route.productDetail(id: product.id)) {
-                            Label("Ver Detalle", systemImage: "eye")
+                            Label(ProductStrings.viewDetail, systemImage: "eye")
                         }
                         Divider()
                         Button(role: .destructive) {
@@ -175,7 +175,7 @@ public struct ProductListView: View {
                             viewModel.deleteTarget = product
                             viewModel.showDeleteConfirm = true
                         } label: {
-                            Label("Eliminar", systemImage: "trash")
+                            Label(ProductStrings.deleteAction, systemImage: "trash")
                         }
                     }
                 }
@@ -212,20 +212,20 @@ public struct ProductListView: View {
                         viewModel.deleteTarget = product
                         viewModel.showDeleteConfirm = true
                     } label: {
-                        Label("Eliminar", systemImage: "trash")
+                        Label(ProductStrings.deleteAction, systemImage: "trash")
                     }
 
                     NavigationLink(value: Route.productForm(id: product.id)) {
-                        Label("Editar", systemImage: "pencil")
+                        Label(ProductStrings.edit, systemImage: "pencil")
                     }
                     .tint(.blue)
                 }
                 .contextMenu {
                     NavigationLink(value: Route.productForm(id: product.id)) {
-                        Label("Editar", systemImage: "pencil")
+                        Label(ProductStrings.edit, systemImage: "pencil")
                     }
                     NavigationLink(value: Route.productDetail(id: product.id)) {
-                        Label("Ver Detalle", systemImage: "eye")
+                        Label(ProductStrings.viewDetail, systemImage: "eye")
                     }
                     Divider()
                     Button(role: .destructive) {
@@ -233,7 +233,7 @@ public struct ProductListView: View {
                         viewModel.deleteTarget = product
                         viewModel.showDeleteConfirm = true
                     } label: {
-                        Label("Eliminar", systemImage: "trash")
+                        Label(ProductStrings.deleteAction, systemImage: "trash")
                     }
                 }
             }
@@ -285,7 +285,7 @@ public struct ProductListView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 2))
 
                         if !product.isActive {
-                            Text("Inactivo")
+                            Text(ProductStrings.inactive)
                                 .font(.caption2)
                                 .fontWeight(.semibold)
                                 .foregroundStyle(SolennixColors.error)
@@ -356,7 +356,7 @@ public struct ProductListView: View {
 
     private var sortMenu: some View {
         Menu {
-            Picker("Ordenar por", selection: $viewModel.sortKey) {
+            Picker(ProductStrings.sortTitle, selection: $viewModel.sortKey) {
                 ForEach(ProductSortKey.allCases, id: \.self) { key in
                     Text(key.label).tag(key)
                 }
@@ -368,7 +368,7 @@ public struct ProductListView: View {
                 viewModel.sortAscending.toggle()
             } label: {
                 Label(
-                    viewModel.sortAscending ? "Ascendente" : "Descendente",
+                    viewModel.sortAscending ? ProductStrings.sortAscending : ProductStrings.sortDescending,
                     systemImage: viewModel.sortAscending ? "arrow.up" : "arrow.down"
                 )
             }
@@ -376,7 +376,7 @@ public struct ProductListView: View {
             Image(systemName: "arrow.up.arrow.down")
                 .font(.body)
                 .foregroundStyle(SolennixColors.primary)
-                .accessibilityLabel("Ordenar productos")
+                .accessibilityLabel(ProductStrings.sortAccessibility)
         }
     }
 

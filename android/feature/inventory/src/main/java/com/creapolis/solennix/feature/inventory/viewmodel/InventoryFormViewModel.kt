@@ -13,6 +13,7 @@ import com.creapolis.solennix.core.model.InventoryItem
 import com.creapolis.solennix.core.model.InventoryType
 import com.creapolis.solennix.core.model.Plan
 import com.creapolis.solennix.core.network.AuthManager
+import com.creapolis.solennix.feature.inventory.InventoryStrings
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -69,7 +70,7 @@ class InventoryFormViewModel @Inject constructor(
                         feature = "inventory",
                         current = inventoryCount,
                         limit = limits.totalInventory,
-                        message = "Has alcanzado el límite de ${limits.totalInventory} ítems de inventario en tu plan."
+                        message = InventoryStrings.limitReached(limits.totalInventory)
                     )
                     inventoryCount >= limits.totalInventory - 3 -> LimitCheckResult.NearLimit(
                         feature = "inventory",
@@ -99,7 +100,7 @@ class InventoryFormViewModel @Inject constructor(
                     type = item.type
                 }
             } catch (e: Exception) {
-                errorMessage = "Error al cargar item: ${e.message}"
+                errorMessage = InventoryStrings.loadItemError(e.message)
             } finally {
                 isLoading = false
             }
@@ -132,7 +133,7 @@ class InventoryFormViewModel @Inject constructor(
                 }
                 saveSuccess = true
             } catch (e: Exception) {
-                errorMessage = "Error al guardar item: ${e.message}"
+                errorMessage = InventoryStrings.saveItemError(e.message)
             } finally {
                 isSaving = false
             }

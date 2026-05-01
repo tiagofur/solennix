@@ -46,11 +46,13 @@ public final class InventoryFormViewModel {
 
     // MARK: - Unit Options
 
-    public static let unitGroups: [(String, [String])] = [
-        ("Peso", ["kg", "g", "oz", "lb"]),
-        ("Volumen", ["L", "ml", "galon"]),
-        ("Conteo", ["piezas", "unidades", "docenas", "porciones"])
-    ]
+    public static var unitGroups: [(String, [String])] {
+        [
+            (InventoryStrings.weightGroup, ["kg", "g", "oz", "lb"]),
+            (InventoryStrings.volumeGroup, ["L", "ml", "galon"]),
+            (InventoryStrings.countGroup, ["piezas", "unidades", "docenas", "porciones"])
+        ]
+    }
 
     // MARK: - Mode
 
@@ -104,19 +106,19 @@ public final class InventoryFormViewModel {
         stockError = nil
 
         if ingredientName.trimmingCharacters(in: .whitespacesAndNewlines).count < 2 {
-            nameError = "El nombre debe tener al menos 2 caracteres"
+            nameError = InventoryStrings.validationNameMin
         }
 
         if currentStock < 0 {
-            stockError = "El stock no puede ser negativo"
+            stockError = InventoryStrings.validationStockNegative
         }
 
         if minimumStock < 0 {
-            stockError = "El stock mínimo no puede ser negativo"
+            stockError = InventoryStrings.validationMinimumNegative
         }
 
         if let cost = unitCost, cost < 0 {
-            stockError = "El costo unitario no puede ser negativo"
+            stockError = InventoryStrings.validationCostNegative
         }
 
         return nameError == nil && stockError == nil
@@ -162,8 +164,8 @@ public final class InventoryFormViewModel {
 
     private func mapError(_ error: Error) -> String {
         if let apiError = error as? APIError {
-            return apiError.errorDescription ?? "Ocurrio un error inesperado."
+            return apiError.errorDescription ?? InventoryStrings.unexpectedError
         }
-        return "Ocurrio un error inesperado. Intenta de nuevo."
+        return InventoryStrings.unexpectedRetryError
     }
 }

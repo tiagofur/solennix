@@ -228,11 +228,11 @@ public final class ProductFormViewModel {
         categoryError = nil
 
         if name.trimmingCharacters(in: .whitespacesAndNewlines).count < 2 {
-            nameError = "El nombre debe tener al menos 2 caracteres"
+            nameError = ProductStrings.validationNameMin
         }
 
         if category.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            categoryError = "La categoria es requerida"
+            categoryError = ProductStrings.validationCategoryRequired
         }
 
         return nameError == nil && categoryError == nil
@@ -321,7 +321,7 @@ public final class ProductFormViewModel {
                 localImageData = data
             }
         } catch {
-            errorMessage = "Error al cargar la imagen"
+            errorMessage = ProductStrings.imageLoadError
         }
 
         // Clear selection to allow re-selecting the same photo
@@ -417,8 +417,8 @@ public final class ProductFormViewModel {
 
     private func mapError(_ error: Error) -> String {
         if let apiError = error as? APIError {
-            return apiError.errorDescription ?? "Ocurrio un error inesperado."
+            return apiError.errorDescription ?? ProductStrings.unexpectedError
         }
-        return "Ocurrio un error inesperado. Intenta de nuevo."
+        return ProductStrings.unexpectedRetryError
     }
 }

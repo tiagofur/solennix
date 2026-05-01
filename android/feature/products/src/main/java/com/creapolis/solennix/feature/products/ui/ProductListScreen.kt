@@ -55,6 +55,7 @@ import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
 import com.creapolis.solennix.core.model.Product
 import com.creapolis.solennix.core.model.extensions.asMXN
 import com.creapolis.solennix.core.network.UrlResolver
+import com.creapolis.solennix.feature.products.ProductStrings
 import com.creapolis.solennix.feature.products.viewmodel.ProductListViewModel
 import com.creapolis.solennix.feature.products.viewmodel.ProductSortKey
 
@@ -99,7 +100,7 @@ fun ProductListScreen(
     Scaffold(
         topBar = {
             SolennixTopAppBar(
-                title = { Text("Productos") },
+                title = { Text(ProductStrings.title) },
                 onSearchClick = onSearchClick,
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
@@ -151,7 +152,7 @@ fun ProductListScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp),
-                    placeholder = { Text("Filtrar productos por nombre o categoría...") },
+                    placeholder = { Text(ProductStrings.searchPlaceholder) },
                     leadingIcon = {
                         Icon(
                             Icons.Default.Search,
@@ -178,9 +179,9 @@ fun ProductListScreen(
                     )
                     ProductSortKey.entries.forEach { key ->
                         val label = when (key) {
-                            ProductSortKey.NAME -> "Nombre"
-                            ProductSortKey.PRICE -> "Precio"
-                            ProductSortKey.CATEGORY -> "Categoría"
+                            ProductSortKey.NAME -> ProductStrings.sortName
+                            ProductSortKey.PRICE -> ProductStrings.sortPrice
+                            ProductSortKey.CATEGORY -> ProductStrings.sortCategory
                         }
                         val isSelected = uiState.sortKey == key
                         FilterChip(
@@ -216,7 +217,7 @@ fun ProductListScreen(
                         FilterChip(
                             selected = uiState.selectedCategory == null,
                             onClick = { viewModel.onCategoryFilterChange(null) },
-                            label = { Text("Todos") },
+                            label = { Text(ProductStrings.filterAll) },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = SolennixTheme.colors.primaryLight,
                                 selectedLabelColor = SolennixTheme.colors.primary
@@ -409,7 +410,7 @@ fun ProductGridItem(
             onDismissRequest = { menuExpanded = false }
         ) {
             DropdownMenuItem(
-                text = { Text("Editar") },
+                text = { Text(ProductStrings.menuEdit) },
                 leadingIcon = {
                     Icon(
                         Icons.Default.Edit,
@@ -419,7 +420,7 @@ fun ProductGridItem(
                 onClick = { menuExpanded = false; onEdit() }
             )
             DropdownMenuItem(
-                text = { Text("Eliminar", color = MaterialTheme.colorScheme.error) },
+                text = { Text(ProductStrings.menuDelete, color = MaterialTheme.colorScheme.error) },
                 leadingIcon = {
                     Icon(
                         Icons.Default.Delete,
@@ -500,7 +501,7 @@ fun ProductListItem(
             onDismissRequest = { menuExpanded = false }
         ) {
             DropdownMenuItem(
-                text = { Text("Detalles") },
+                text = { Text(ProductStrings.menuDetails) },
                 leadingIcon = {
                     Icon(
                         Icons.Default.Info,
@@ -510,7 +511,7 @@ fun ProductListItem(
                 onClick = { menuExpanded = false; onClick() }
             )
             DropdownMenuItem(
-                text = { Text("Editar") },
+                text = { Text(ProductStrings.menuEdit) },
                 leadingIcon = {
                     Icon(
                         Icons.Default.Edit,
@@ -520,7 +521,7 @@ fun ProductListItem(
                 onClick = { menuExpanded = false; onEdit() }
             )
             DropdownMenuItem(
-                text = { Text("Eliminar", color = MaterialTheme.colorScheme.error) },
+                text = { Text(ProductStrings.menuDelete, color = MaterialTheme.colorScheme.error) },
                 leadingIcon = {
                     Icon(
                         Icons.Default.Delete,
