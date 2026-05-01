@@ -138,11 +138,11 @@ public final class ClientFormViewModel {
     @MainActor
     public func validateAndSave() async -> Client? {
         guard isNameValid else {
-            errorMessage = "El nombre debe tener al menos 2 caracteres"
+            errorMessage = String(localized: "clients.form.validation.name_min", defaultValue: "El nombre debe tener al menos 2 caracteres", bundle: .module)
             return nil
         }
         guard isPhoneValid else {
-            errorMessage = "El telefono debe tener al menos 10 digitos"
+            errorMessage = String(localized: "clients.form.validation.phone_min", defaultValue: "El teléfono debe tener al menos 10 dígitos", bundle: .module)
             return nil
         }
 
@@ -175,8 +175,9 @@ public final class ClientFormViewModel {
 
     private func mapError(_ error: Error) -> String {
         if let apiError = error as? APIError {
-            return apiError.errorDescription ?? "Ocurrio un error inesperado."
+            return apiError.errorDescription
+                ?? String(localized: "clients.error.unexpected", defaultValue: "Ocurrió un error inesperado.", bundle: .module)
         }
-        return "Ocurrio un error inesperado. Intenta de nuevo."
+        return String(localized: "clients.error.unexpected_retry", defaultValue: "Ocurrió un error inesperado. Intenta de nuevo.", bundle: .module)
     }
 }

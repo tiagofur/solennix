@@ -314,7 +314,7 @@ describe('ClientDetails', () => {
     await waitForClientLoaded();
 
     expect(screen.getByText('Fiesta')).toBeInTheDocument();
-    expect(screen.getByText(/75 pax/i)).toBeInTheDocument();
+    expect(screen.getByText(/75 invitados/i)).toBeInTheDocument();
     expect(screen.getByText('$4,500.00')).toBeInTheDocument();
     // Date is formatted with date-fns es locale — check for "junio" month name
     expect(screen.getByText(/jun/i)).toBeInTheDocument();
@@ -355,7 +355,7 @@ describe('ClientDetails', () => {
 
     await waitForClientLoaded();
 
-    const newEventLink = screen.getByRole('link', { name: /action\.add Evento/i });
+    const newEventLink = screen.getByRole('link', { name: /Crear evento/i });
     expect(newEventLink).toHaveAttribute('href', '/events/new?clientId=client-1');
   });
 

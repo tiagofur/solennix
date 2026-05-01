@@ -187,15 +187,15 @@ export const ClientList: React.FC = () => {
               type="button"
               onClick={() =>
                 exportToCsv(
-                  "clientes",
+                  t("clients:export_file_name"),
                   [
                     t("clients:form.name"),
                     t("clients:form.phone"),
                     t("clients:form.email"),
                     t("clients:form.address"),
-                    "Ciudad", // Assuming this is fixed or add it to i18n
+                    t("clients:form.city"),
                     t("clients:table.events"),
-                    "Total Gastado",
+                    t("clients:details.total_spent"),
                     t("clients:form.notes"),
                   ],
                   allClients.map((c) => [
@@ -264,8 +264,8 @@ export const ClientList: React.FC = () => {
             title={t("clients:no_clients")}
             description={
               searchTerm
-                ? t("common:command_palette.no_results")
-                : t("clients:details.no_events")
+                ? t("clients:search_no_results")
+                : t("clients:empty_description")
             }
             action={
               !searchTerm ? (
@@ -318,7 +318,7 @@ export const ClientList: React.FC = () => {
                     onClick={() => handleSort("total_spent")}
                     aria-sort={getSortAriaSort("total_spent")}
                   >
-                    Total {renderSortIcon("total_spent")}
+                      {t("clients:table.total")} {renderSortIcon("total_spent")}
                   </th>
                   <th scope="col" className="relative px-6 py-3">
                     <span className="sr-only">{t("clients:table.actions")}</span>
@@ -391,7 +391,9 @@ export const ClientList: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full bg-success/10 text-success">
                         {client.total_events}{" "}
-                        {client.total_events === 1 ? t("common:nav.events").slice(0,-1).toLowerCase() : t("common:nav.events").toLowerCase()}
+                        {client.total_events === 1
+                          ? t("clients:event_singular")
+                          : t("clients:event_plural")}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-text">
