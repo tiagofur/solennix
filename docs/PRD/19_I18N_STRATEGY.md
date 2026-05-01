@@ -14,7 +14,7 @@
   - #205 — Auth + settings
   - #206 — Clients
   - #207 — Products + inventory
-  - #208 — Public/client-facing flows
+  - #208 — Public/client-facing flows ✅ PR #225 en estado `CLEAN` tras refresh sobre `main`
   - #209 — Final hardcoded-string parity sweep
 
 > [!info] 2026-04-30 — Web baseline repair under issue #230
@@ -23,6 +23,7 @@
 > - Se agregó `dashboard.upcoming.no_events` en ES/EN para alinear catálogo y consumo real del Dashboard.
 > - Se ajustaron tests stale de Dashboard / EventList / EventSummary para reflejar el wording vigente (`Hola, {{name}}`, `Nuevo evento`, `Cotización rápida`, `Cobrado`, `IVA pendiente`, `Eventos del mes`).
 > - Validación focalizada: **111 tests PASS** en 7 suites web baseline relacionadas.
+> - Estado final: mergeado vía PR `#231`; follow-ups `#226/#229` y `#232/#233` quedaron absorbidos y cerrados.
 
 ## Principio rector
 

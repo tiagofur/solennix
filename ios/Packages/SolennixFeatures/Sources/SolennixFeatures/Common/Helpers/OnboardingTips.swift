@@ -21,11 +21,13 @@ public struct NewEventTip: Tip {
 
 public struct QuickQuoteTip: Tip {
     public var title: Text {
-        Text("Cotización Rápida")
+        Text(QuickQuoteStrings.title)
     }
     
     public var message: Text? {
-        Text("Usa esta herramienta para generar un presupuesto en el momento sin necesidad de crear el cliente primero.")
+        Text(FeatureL10n.languageCode == "en"
+            ? "Use this tool to create a quote instantly without creating the client first."
+            : "Usa esta herramienta para generar un presupuesto en el momento sin necesidad de crear el cliente primero.")
     }
     
     public var image: Image? {
@@ -62,4 +64,3 @@ public struct TipsHelper {
         ])
     }
 }
-

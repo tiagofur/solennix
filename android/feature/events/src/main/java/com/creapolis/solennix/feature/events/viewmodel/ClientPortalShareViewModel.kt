@@ -1,11 +1,14 @@
 package com.creapolis.solennix.feature.events.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.creapolis.solennix.core.data.repository.EventPublicLinkRepository
 import com.creapolis.solennix.core.model.EventPublicLink
 import com.creapolis.solennix.core.network.SolennixException
+import com.creapolis.solennix.feature.events.R
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -43,7 +46,8 @@ data class ClientPortalShareUiState(
  */
 @HiltViewModel
 class ClientPortalShareViewModel @Inject constructor(
-    private val repository: EventPublicLinkRepository
+    private val repository: EventPublicLinkRepository,
+    @ApplicationContext private val appContext: Context
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ClientPortalShareUiState())
@@ -64,7 +68,7 @@ class ClientPortalShareViewModel @Inject constructor(
                     it.copy(
                         link = null,
                         isLoading = false,
-                        error = e.message ?: "No pudimos cargar el enlace."
+                        error = e.message ?: appContext.getString(R.string.events_client_portal_load_error)
                     )
                 }
             }
@@ -83,7 +87,7 @@ class ClientPortalShareViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         isBusy = false,
-                        error = e.message ?: "No pudimos generar el enlace."
+                        error = e.message ?: appContext.getString(R.string.events_client_portal_generate_error)
                     )
                 }
             }
@@ -102,7 +106,7 @@ class ClientPortalShareViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         isBusy = false,
-                        error = e.message ?: "No pudimos rotar el enlace."
+                        error = e.message ?: appContext.getString(R.string.events_client_portal_rotate_error)
                     )
                 }
             }
@@ -121,7 +125,7 @@ class ClientPortalShareViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         isBusy = false,
-                        error = e.message ?: "No pudimos deshabilitar el enlace."
+                        error = e.message ?: appContext.getString(R.string.events_client_portal_disable_error)
                     )
                 }
             }

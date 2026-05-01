@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cd_back">Back</string>
+    <string name="cd_add">Add</string>
+    <string name="cd_edit">Edit</string>
+    <string name="cd_delete">Delete</string>
+    <string name="cd_search">Search</string>
+    <string name="cd_warning">Warning</string>
+    <string name="cd_visibility">View details</string>
+    <string name="cd_tune">Adjust</string>
+    <string name="cd_calendar">Calendar</string>
+    <string name="cd_more">More options</string>
+    <string name="cd_close">Close</string>
+    <string name="cd_check">Done</string>
+    <string name="cd_logout">Sign out</string>
+    <string name="cd_restart">Restart</string>
+    <string name="cd_category">Category</string>
+    <string name="cd_scale">Unit of measure</string>
+    <string name="cd_savings">Price</string>
+    <string name="quick_actions_quote">Quick quote</string>
+    <string name="quick_actions_new_event">New Event</string>
+    <string name="quick_actions_open">Quick actions</string>
+    <string name="quick_actions_close">Close menu</string>
+</resources>

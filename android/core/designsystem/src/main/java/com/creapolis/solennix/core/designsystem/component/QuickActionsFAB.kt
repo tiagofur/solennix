@@ -32,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.creapolis.solennix.core.designsystem.theme.SolennixElevation
 import com.creapolis.solennix.core.designsystem.theme.SolennixTheme
@@ -73,7 +74,7 @@ fun QuickActionsFAB(
                         shadowElevation = 2.dp
                     ) {
                         Text(
-                            "Cotización Rápida",
+                            stringResource(R.string.quick_actions_quote),
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                             style = MaterialTheme.typography.labelMedium,
                             color = SolennixTheme.colors.primaryText
@@ -87,7 +88,7 @@ fun QuickActionsFAB(
                         containerColor = SolennixTheme.colors.primary,
                         contentColor = Color.White
                     ) {
-                        Icon(Icons.Default.Bolt, contentDescription = "Cotización Rápida")
+                        Icon(Icons.Default.Bolt, contentDescription = stringResource(R.string.quick_actions_quote))
                     }
                 }
 
@@ -102,7 +103,7 @@ fun QuickActionsFAB(
                         shadowElevation = 2.dp
                     ) {
                         Text(
-                            "Nuevo Evento",
+                            stringResource(R.string.quick_actions_new_event),
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                             style = MaterialTheme.typography.labelMedium,
                             color = SolennixTheme.colors.primaryText
@@ -116,7 +117,7 @@ fun QuickActionsFAB(
                         containerColor = SolennixTheme.colors.primary,
                         contentColor = Color.White
                     ) {
-                        Icon(Icons.Default.Celebration, contentDescription = "Nuevo Evento")
+                        Icon(Icons.Default.Celebration, contentDescription = null)
                     }
                 }
             }
@@ -132,7 +133,7 @@ fun QuickActionsFAB(
         ) {
             Icon(
                 Icons.Default.Add,
-                contentDescription = if (expanded) "Cerrar menú" else "Acciones rápidas",
+                contentDescription = if (expanded) stringResource(R.string.quick_actions_close) else stringResource(R.string.quick_actions_open),
                 tint = Color.White,
                 modifier = Modifier.rotate(rotation)
             )

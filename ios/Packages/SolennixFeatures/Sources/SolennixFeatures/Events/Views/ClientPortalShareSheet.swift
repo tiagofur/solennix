@@ -65,38 +65,38 @@ public struct ClientPortalShareSheet: View {
                 .padding(Spacing.lg)
             }
             .background(SolennixColors.background)
-            .navigationTitle("Portal del cliente")
+            .navigationTitle(ClientPortalShareStrings.title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cerrar") { dismiss() }
+                    Button(QuickQuoteStrings.close) { dismiss() }
                         .foregroundStyle(SolennixColors.primary)
                 }
             }
             .task { await viewModel.refresh() }
             .confirmationDialog(
-                "Rotar enlace",
+                ClientPortalShareStrings.rotateLink,
                 isPresented: $showRotateConfirm,
                 titleVisibility: .visible
             ) {
-                Button("Rotar enlace", role: .destructive) {
+                Button(ClientPortalShareStrings.rotateLink, role: .destructive) {
                     Task { await handleRotate() }
                 }
-                Button("Cancelar", role: .cancel) {}
+                Button(ClientPortalShareStrings.cancel, role: .cancel) {}
             } message: {
-                Text("Al rotar el enlace, el que ya compartiste dejará de funcionar. ¿Continuamos?")
+                Text(ClientPortalShareStrings.rotateMessage)
             }
             .confirmationDialog(
-                "Deshabilitar enlace",
+                ClientPortalShareStrings.disableLink,
                 isPresented: $showRevokeConfirm,
                 titleVisibility: .visible
             ) {
-                Button("Deshabilitar", role: .destructive) {
+                Button(ClientPortalShareStrings.disable, role: .destructive) {
                     Task { await handleRevoke() }
                 }
-                Button("Cancelar", role: .cancel) {}
+                Button(ClientPortalShareStrings.cancel, role: .cancel) {}
             } message: {
-                Text("Se va a deshabilitar el enlace para el cliente. ¿Estás seguro?")
+                Text(ClientPortalShareStrings.disableMessage)
             }
             .onChange(of: viewModel.errorMessage) { _, newValue in
                 if let message = newValue {
@@ -122,11 +122,11 @@ public struct ClientPortalShareSheet: View {
             }
 
             VStack(alignment: .leading, spacing: Spacing.xs) {
-                Text("Portal del cliente")
+                Text(ClientPortalShareStrings.title)
                     .font(.headline)
                     .foregroundStyle(SolennixColors.text)
 
-                Text("Un enlace privado para que tu cliente vea el evento, el estado de pagos y los detalles clave.")
+                Text(ClientPortalShareStrings.description)
                     .font(.caption)
                     .foregroundStyle(SolennixColors.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -141,7 +141,7 @@ public struct ClientPortalShareSheet: View {
     private var loadingState: some View {
         HStack(spacing: Spacing.sm) {
             ProgressView()
-            Text("Cargando…")
+            Text(ClientPortalShareStrings.loading)
                 .font(.caption)
                 .foregroundStyle(SolennixColors.textTertiary)
         }
@@ -163,7 +163,7 @@ public struct ClientPortalShareSheet: View {
             if let expiresAt = link.expiresAt, !expiresAt.isEmpty {
                 expirationLabel(expiresAt)
             } else {
-                Text("Este enlace no tiene vencimiento. Podés deshabilitarlo cuando quieras.")
+                Text(ClientPortalShareStrings.noExpiry)
                     .font(.caption2)
                     .foregroundStyle(SolennixColors.textTertiary)
             }
@@ -194,7 +194,7 @@ public struct ClientPortalShareSheet: View {
             } label: {
                 HStack(spacing: Spacing.sm) {
                     Image(systemName: copied ? "checkmark.circle.fill" : "doc.on.doc")
-                    Text(copied ? "Copiado" : "Copiar enlace")
+                    Text(copied ? ClientPortalShareStrings.copied : ClientPortalShareStrings.copyLink)
                         .fontWeight(.semibold)
                 }
                 .frame(maxWidth: .infinity)
@@ -209,12 +209,12 @@ public struct ClientPortalShareSheet: View {
             if let shareURL = URL(string: link.url) {
                 ShareLink(
                     item: shareURL,
-                    subject: Text("Portal del cliente — Solennix"),
-                    message: Text("Hola! Acá podés ver los detalles de tu evento: \(link.url)")
+                    subject: Text(ClientPortalShareStrings.shareSubject),
+                    message: Text(ClientPortalShareStrings.shareMessage(link.url))
                 ) {
                     HStack(spacing: Spacing.sm) {
                         Image(systemName: "square.and.arrow.up")
-                        Text("Compartir")
+                        Text(ClientPortalShareStrings.share)
                             .fontWeight(.semibold)
                     }
                     .frame(maxWidth: .infinity)
@@ -236,7 +236,7 @@ public struct ClientPortalShareSheet: View {
             } label: {
                 HStack(spacing: Spacing.sm) {
                     Image(systemName: "arrow.triangle.2.circlepath")
-                    Text("Rotar enlace")
+                    Text(ClientPortalShareStrings.rotateLink)
                         .fontWeight(.medium)
                 }
                 .frame(maxWidth: .infinity)
@@ -261,7 +261,7 @@ public struct ClientPortalShareSheet: View {
                     } else {
                         Image(systemName: "link.badge.minus")
                     }
-                    Text("Deshabilitar")
+                    Text(ClientPortalShareStrings.disable)
                         .fontWeight(.medium)
                 }
                 .frame(maxWidth: .infinity)
@@ -279,7 +279,7 @@ public struct ClientPortalShareSheet: View {
         return HStack(spacing: Spacing.xs) {
             Image(systemName: "clock")
                 .font(.caption2)
-            Text("Vence el \(formatted)")
+            Text("\(ClientPortalShareStrings.expiryPrefix) \(formatted)")
                 .font(.caption2)
         }
         .foregroundStyle(SolennixColors.textTertiary)
@@ -289,13 +289,13 @@ public struct ClientPortalShareSheet: View {
 
     private var emptyState: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
-            Text("Todavía no generaste un enlace para este evento.")
+            Text(ClientPortalShareStrings.emptyState)
                 .font(.subheadline)
                 .foregroundStyle(SolennixColors.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
 
             PremiumButton(
-                title: "Generar enlace para el cliente",
+                title: ClientPortalShareStrings.generateLink,
                 isLoading: viewModel.isBusy
             ) {
                 Task { await handleCreate() }
@@ -312,7 +312,7 @@ public struct ClientPortalShareSheet: View {
     private func handleCopy(_ url: String) {
         UIPasteboard.general.string = url
         withAnimation(.easeInOut(duration: 0.2)) { copied = true }
-        toastManager.show(message: "Enlace copiado al portapapeles.", type: .success)
+        toastManager.show(message: ClientPortalShareStrings.copyToast, type: .success)
         Task {
             try? await Task.sleep(nanoseconds: 2_000_000_000)
             await MainActor.run {
@@ -325,7 +325,7 @@ public struct ClientPortalShareSheet: View {
     private func handleCreate() async {
         let ok = await viewModel.createOrRotate()
         if ok {
-            toastManager.show(message: "Enlace generado. Compartilo con tu cliente.", type: .success)
+            toastManager.show(message: ClientPortalShareStrings.generatedToast, type: .success)
         }
     }
 
@@ -333,7 +333,7 @@ public struct ClientPortalShareSheet: View {
     private func handleRotate() async {
         let ok = await viewModel.createOrRotate()
         if ok {
-            toastManager.show(message: "Enlace rotado. El anterior ya no funciona.", type: .success)
+            toastManager.show(message: ClientPortalShareStrings.rotatedToast, type: .success)
         }
     }
 
@@ -341,7 +341,7 @@ public struct ClientPortalShareSheet: View {
     private func handleRevoke() async {
         let ok = await viewModel.revoke()
         if ok {
-            toastManager.show(message: "Enlace deshabilitado.", type: .info)
+            toastManager.show(message: ClientPortalShareStrings.disabledToast, type: .info)
         }
     }
 

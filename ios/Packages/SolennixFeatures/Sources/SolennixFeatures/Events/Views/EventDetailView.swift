@@ -717,7 +717,7 @@ public struct EventDetailView: View {
             HStack {
                 Image(systemName: "person.2.circle")
                     .font(.body)
-                Text("Portal del cliente")
+                Text(ClientPortalShareStrings.title)
                     .font(.body)
                     .fontWeight(.medium)
                 Spacer()

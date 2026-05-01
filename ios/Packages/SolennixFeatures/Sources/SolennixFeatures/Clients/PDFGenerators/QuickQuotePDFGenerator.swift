@@ -51,34 +51,31 @@ struct QuickQuotePDFGenerator {
             context.beginPage()
 
             // MARK: Header
-            var y = PDFConstants.drawHeader(context: context, title: "Cotización Rápida", profile: profile)
+            var y = PDFConstants.drawHeader(context: context, title: QuickQuoteStrings.title, profile: profile)
 
             // MARK: Quote Info
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "d 'de' MMMM, yyyy"
-            dateFormatter.locale = Locale(identifier: "es_MX")
-            let todayStr = dateFormatter.string(from: Date())
+            let todayStr = QuickQuoteStrings.formattedDate(from: Date())
 
             let leftItems: [(String, String)] = [
-                ("Fecha:", todayStr),
-                ("Personas:", "\(numPeople)")
+                (QuickQuoteStrings.pdfDate, todayStr),
+                (QuickQuoteStrings.pdfPeople, "\(numPeople)")
             ]
             var rightItems: [(String, String)] = []
             if let name = clientName, !name.isEmpty {
-                rightItems.append(("Cliente:", name))
+                rightItems.append((QuickQuoteStrings.pdfClient, name))
             }
             if let phone = clientPhone, !phone.isEmpty {
-                rightItems.append(("Tel:", phone))
+                rightItems.append((QuickQuoteStrings.pdfPhone, phone))
             }
             if let email = clientEmail, !email.isEmpty {
-                rightItems.append(("Email:", email))
+                rightItems.append((QuickQuoteStrings.email + ":", email))
             }
             y = PDFConstants.drawInfoGrid(context: context, y: y, leftItems: leftItems, rightItems: rightItems)
             y += 8
 
             // MARK: Products Table
             if !items.isEmpty {
-                y = PDFConstants.drawSectionHeader(context: context, y: y, title: "PRODUCTOS")
+                y = PDFConstants.drawSectionHeader(context: context, y: y, title: QuickQuoteStrings.pdfProducts)
 
                 let rows: [[String]] = items.map { item in
                     [
@@ -92,7 +89,7 @@ struct QuickQuotePDFGenerator {
                 y = PDFConstants.drawTable(
                     context: context,
                     y: y,
-                    headers: ["Descripción", "Cant.", "Precio Unit.", "Total"],
+                    headers: [QuickQuoteStrings.pdfDescription, QuickQuoteStrings.pdfQuantity, QuickQuoteStrings.pdfUnitPrice, QuickQuoteStrings.total],
                     rows: rows,
                     columnWidths: [0.45, 0.10, 0.22, 0.23],
                     rightAlignedColumns: [1, 2, 3]
@@ -101,7 +98,7 @@ struct QuickQuotePDFGenerator {
 
             // MARK: Extras Table
             if !extras.isEmpty {
-                y = PDFConstants.drawSectionHeader(context: context, y: y, title: "EXTRAS")
+                y = PDFConstants.drawSectionHeader(context: context, y: y, title: QuickQuoteStrings.pdfExtras)
 
                 let rows: [[String]] = extras.map { extra in
                     [
@@ -115,7 +112,7 @@ struct QuickQuotePDFGenerator {
                 y = PDFConstants.drawTable(
                     context: context,
                     y: y,
-                    headers: ["Descripción", "Cant.", "Precio Unit.", "Total"],
+                    headers: [QuickQuoteStrings.pdfDescription, QuickQuoteStrings.pdfQuantity, QuickQuoteStrings.pdfUnitPrice, QuickQuoteStrings.total],
                     rows: rows,
                     columnWidths: [0.45, 0.10, 0.22, 0.23],
                     rightAlignedColumns: [1, 2, 3]
@@ -128,7 +125,7 @@ struct QuickQuotePDFGenerator {
             y = PDFConstants.drawSummaryRow(
                 context: context,
                 y: y,
-                label: "Subtotal Productos:",
+                label: QuickQuoteStrings.pdfSubtotalProducts,
                 value: PDFConstants.formatCurrency(productsSubtotal)
             )
 
@@ -136,7 +133,7 @@ struct QuickQuotePDFGenerator {
                 y = PDFConstants.drawSummaryRow(
                     context: context,
                     y: y,
-                    label: "Subtotal Extras:",
+                    label: QuickQuoteStrings.pdfSubtotalExtras,
                     value: PDFConstants.formatCurrency(extrasTotal)
                 )
             }
@@ -145,13 +142,13 @@ struct QuickQuotePDFGenerator {
                 y = PDFConstants.drawSummaryRow(
                     context: context,
                     y: y,
-                    label: "Descuento (\(discountLabel)):",
+                    label: QuickQuoteStrings.pdfDiscount(discountLabel),
                     value: "- \(PDFConstants.formatCurrency(discountAmount))"
                 )
             }
 
             if taxAmount > 0 {
-                let taxLabel = "IVA (\(Int(taxRate))%):"
+                let taxLabel = QuickQuoteStrings.pdfTax(taxRate)
                 y = PDFConstants.drawSummaryRow(
                     context: context,
                     y: y,
@@ -168,7 +165,7 @@ struct QuickQuotePDFGenerator {
             y = PDFConstants.drawSummaryRow(
                 context: context,
                 y: y,
-                label: "TOTAL:",
+                label: QuickQuoteStrings.pdfTotal,
                 value: PDFConstants.formatCurrency(total),
                 valueColor: PDFConstants.brandColor,
                 bold: true
@@ -179,11 +176,11 @@ struct QuickQuotePDFGenerator {
             y = PDFConstants.drawBodyText(
                 context: context,
                 y: y,
-                text: "Esta cotización es informativa y no constituye un compromiso. Los precios pueden estar sujetos a cambios. Para confirmar, solicite un presupuesto formal."
+                text: QuickQuoteStrings.pdfDisclaimer
             )
 
             // Page footer
-            PDFConstants.drawFooterText(context: context, text: "Generado por Solennix")
+            PDFConstants.drawFooterText(context: context, text: QuickQuoteStrings.pdfFooter)
         }
     }
 }

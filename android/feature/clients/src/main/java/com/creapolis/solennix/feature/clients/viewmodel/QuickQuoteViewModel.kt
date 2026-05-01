@@ -17,7 +17,9 @@ import com.creapolis.solennix.core.network.post
 import com.creapolis.solennix.core.network.put
 import com.creapolis.solennix.core.network.AuthManager
 import com.creapolis.solennix.core.network.Endpoints
+import com.creapolis.solennix.feature.clients.R
 import com.creapolis.solennix.feature.clients.pdf.QuickQuotePdfGenerator
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -140,6 +142,7 @@ class QuickQuoteViewModel @Inject constructor(
     private val clientRepository: ClientRepository,
     private val apiService: ApiService,
     private val authManager: AuthManager,
+    @ApplicationContext private val appContext: Context,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -175,7 +178,7 @@ class QuickQuoteViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(
-                        errorMessage = "Error al cargar productos: ${e.message}",
+                        errorMessage = e.message ?: appContext.getString(R.string.clients_quick_quote_load_error),
                         isLoading = false
                     )
                 }
@@ -378,7 +381,7 @@ class QuickQuoteViewModel @Inject constructor(
         val validItems = state.selectedItems.filter { it.productId.isNotEmpty() && it.quantity > 0 }
 
         if (validItems.isEmpty()) {
-            _uiState.update { it.copy(errorMessage = "Agrega al menos un producto a la cotizacion") }
+            _uiState.update { it.copy(errorMessage = appContext.getString(R.string.clients_quick_quote_add_product_error)) }
             return
         }
 
@@ -410,7 +413,10 @@ class QuickQuoteViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(
-                        errorMessage = "Error al generar PDF: ${e.message}",
+                        errorMessage = appContext.getString(
+                            R.string.clients_quick_quote_pdf_error,
+                            e.message ?: e.javaClass.simpleName
+                        ),
                         isGeneratingPdf = false
                     )
                 }

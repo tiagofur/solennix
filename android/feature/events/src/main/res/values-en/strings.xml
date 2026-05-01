@@ -53,4 +53,26 @@
     <string name="events_list_csv_header_status">Status</string>
     <string name="events_list_csv_header_total">Total</string>
     <string name="events_list_csv_header_location">Location</string>
+    <string name="events_client_portal_title">Client portal</string>
+    <string name="events_client_portal_description">A private link so your client can see the event, payment status, and key details.</string>
+    <string name="events_client_portal_rotate_title">Rotate link</string>
+    <string name="events_client_portal_rotate_message">Rotating the link will make the one you already shared stop working. Continue?</string>
+    <string name="events_client_portal_disable_title">Disable link</string>
+    <string name="events_client_portal_disable_message">This will disable the client link. Are you sure?</string>
+    <string name="events_client_portal_copy_link">Copy link</string>
+    <string name="events_client_portal_share">Share</string>
+    <string name="events_client_portal_rotate">Rotate link</string>
+    <string name="events_client_portal_disable">Disable</string>
+    <string name="events_client_portal_generate">Generate client link</string>
+    <string name="events_client_portal_copy_toast">Link copied to clipboard.</string>
+    <string name="events_client_portal_generate_toast">Link generated. Share it with your client.</string>
+    <string name="events_client_portal_rotate_toast">Link rotated. The previous one no longer works.</string>
+    <string name="events_client_portal_disable_toast">Link disabled.</string>
+    <string name="events_client_portal_share_message">Hi! Here you can see your event details: %1$s</string>
+    <string name="events_client_portal_share_chooser">Share link</string>
+    <string name="events_client_portal_clipboard_label">Client portal</string>
+    <string name="events_client_portal_load_error">We could not load the client link.</string>
+    <string name="events_client_portal_generate_error">We could not generate the link.</string>
+    <string name="events_client_portal_rotate_error">We could not rotate the link.</string>
+    <string name="events_client_portal_disable_error">We could not disable the link.</string>
 </resources>

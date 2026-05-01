@@ -72,7 +72,7 @@ public final class ClientPortalShareViewModel {
             }
         } catch {
             link = nil
-            errorMessage = "No pudimos cargar el enlace del cliente."
+            errorMessage = ClientPortalShareStrings.loadError
         }
         isLoading = false
     }
@@ -104,7 +104,7 @@ public final class ClientPortalShareViewModel {
             errorMessage = apiError.errorDescription
             return false
         } catch {
-            errorMessage = "No pudimos generar el enlace. Intenta de nuevo."
+            errorMessage = ClientPortalShareStrings.generateError
             return false
         }
     }
@@ -129,7 +129,7 @@ public final class ClientPortalShareViewModel {
             errorMessage = apiError.errorDescription
             return false
         } catch {
-            errorMessage = "No pudimos deshabilitar el enlace. Intenta de nuevo."
+            errorMessage = ClientPortalShareStrings.disableError
             return false
         }
     }

@@ -16,11 +16,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.creapolis.solennix.feature.clients.R
 import com.creapolis.solennix.core.designsystem.component.SolennixTopAppBar
 import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveCenteredContent
 import com.creapolis.solennix.core.designsystem.component.adaptive.AdaptiveFormRow
@@ -63,7 +65,7 @@ fun QuickQuoteScreen(
                 putExtra(Intent.EXTRA_STREAM, uri)
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
-            context.startActivity(Intent.createChooser(shareIntent, "Compartir Cotizacion"))
+            context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.clients_quick_quote_share_chooser)))
             viewModel.clearPdfFile()
         }
     }
@@ -80,7 +82,7 @@ fun QuickQuoteScreen(
     Scaffold(
         topBar = {
             SolennixTopAppBar(
-                title = { Text("Cotizacion Rapida") },
+                title = { Text(stringResource(R.string.clients_quick_quote_title)) },
                 onSearchClick = onSearchClick,
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
@@ -154,19 +156,19 @@ fun QuickQuoteScreen(
                             ) {
                                 Column {
                                     Text(
-                                        text = "Datos del cliente (opcional)",
+                                        text = stringResource(R.string.clients_quick_quote_client_data),
                                         style = MaterialTheme.typography.titleSmall,
                                         color = SolennixTheme.colors.primaryText
                                     )
                                     Text(
-                                        text = "Para incluir en el PDF",
+                                        text = stringResource(R.string.clients_quick_quote_client_data_hint),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = SolennixTheme.colors.secondaryText
                                     )
                                 }
                                 Icon(
                                     imageVector = if (uiState.showClientInfo) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                                    contentDescription = if (uiState.showClientInfo) "Colapsar" else "Expandir",
+                                    contentDescription = null,
                                     tint = SolennixTheme.colors.secondaryText
                                 )
                             }
@@ -182,7 +184,7 @@ fun QuickQuoteScreen(
                                             OutlinedTextField(
                                                 value = uiState.clientName,
                                                 onValueChange = viewModel::updateClientName,
-                                                label = { Text("Nombre") },
+                                                label = { Text(stringResource(R.string.clients_quick_quote_name)) },
                                                 modifier = Modifier.fillMaxWidth(),
                                                 leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
                                                 singleLine = true
@@ -192,7 +194,7 @@ fun QuickQuoteScreen(
                                             OutlinedTextField(
                                                 value = uiState.clientPhone,
                                                 onValueChange = viewModel::updateClientPhone,
-                                                label = { Text("Teléfono") },
+                                                label = { Text(stringResource(R.string.clients_quick_quote_phone)) },
                                                 modifier = Modifier.fillMaxWidth(),
                                                 leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null) },
                                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
@@ -203,7 +205,7 @@ fun QuickQuoteScreen(
                                     OutlinedTextField(
                                         value = uiState.clientEmail,
                                         onValueChange = viewModel::updateClientEmail,
-                                        label = { Text("Email") },
+                                        label = { Text(stringResource(R.string.clients_quick_quote_email)) },
                                         modifier = Modifier.fillMaxWidth(),
                                         leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
                                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
@@ -219,7 +221,7 @@ fun QuickQuoteScreen(
                 OutlinedTextField(
                     value = uiState.numPeople,
                     onValueChange = viewModel::updateNumPeople,
-                    label = { Text("Numero de Personas") },
+                    label = { Text(stringResource(R.string.clients_quick_quote_num_people)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth(),
                     leadingIcon = { Icon(Icons.Default.Group, contentDescription = null) }
@@ -227,7 +229,7 @@ fun QuickQuoteScreen(
 
                 // Products section
                 SectionHeader(
-                    title = "Productos",
+                    title = stringResource(R.string.clients_quick_quote_products),
                     onAddClick = viewModel::addItem
                 )
 
@@ -271,13 +273,13 @@ fun QuickQuoteScreen(
 
                 // Extras section
                 SectionHeader(
-                    title = "Extras",
+                    title = stringResource(R.string.clients_quick_quote_extras),
                     onAddClick = viewModel::addExtra
                 )
 
                 if (uiState.extras.isEmpty()) {
                     Text(
-                        text = "Sin extras agregados",
+                        text = stringResource(R.string.clients_quick_quote_no_extras),
                         style = MaterialTheme.typography.bodySmall,
                         color = SolennixTheme.colors.secondaryText,
                         modifier = Modifier.padding(start = 4.dp)
@@ -339,7 +341,7 @@ fun QuickQuoteScreen(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        text = "Incluir factura (IVA)",
+                                        text = stringResource(R.string.clients_quick_quote_invoice),
                                         style = MaterialTheme.typography.bodyLarge,
                                         color = SolennixTheme.colors.primaryText
                                     )
@@ -358,7 +360,7 @@ fun QuickQuoteScreen(
                                     OutlinedTextField(
                                         value = uiState.taxRate,
                                         onValueChange = viewModel::updateTaxRate,
-                                        label = { Text("Tasa de IVA (%)") },
+                                        label = { Text(stringResource(R.string.clients_quick_quote_tax_rate)) },
                                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                                         modifier = Modifier.fillMaxWidth()
                                     )
@@ -374,7 +376,7 @@ fun QuickQuoteScreen(
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
                                 Text(
-                                    text = "Descuento",
+                                    text = stringResource(R.string.clients_quick_quote_discount),
                                     style = MaterialTheme.typography.titleSmall,
                                     color = SolennixTheme.colors.primaryText
                                 )
@@ -387,13 +389,13 @@ fun QuickQuoteScreen(
                                     FilterChip(
                                         selected = uiState.discountType == DiscountType.PERCENT,
                                         onClick = { viewModel.updateDiscountType(DiscountType.PERCENT) },
-                                        label = { Text("Porcentaje") },
+                                        label = { Text(stringResource(R.string.clients_quick_quote_discount_percent)) },
                                         modifier = Modifier.weight(1f)
                                     )
                                     FilterChip(
                                         selected = uiState.discountType == DiscountType.FIXED,
                                         onClick = { viewModel.updateDiscountType(DiscountType.FIXED) },
-                                        label = { Text("Monto fijo") },
+                                        label = { Text(stringResource(R.string.clients_quick_quote_discount_fixed)) },
                                         modifier = Modifier.weight(1f)
                                     )
                                 }
@@ -405,8 +407,8 @@ fun QuickQuoteScreen(
                                     onValueChange = viewModel::updateDiscount,
                                     label = {
                                         Text(
-                                            if (uiState.discountType == DiscountType.PERCENT) "Descuento (%)"
-                                            else "Descuento ($)"
+                                            if (uiState.discountType == DiscountType.PERCENT) stringResource(R.string.clients_quick_quote_discount_percent_label)
+                                            else stringResource(R.string.clients_quick_quote_discount_fixed_label)
                                         )
                                     },
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
@@ -429,7 +431,7 @@ fun QuickQuoteScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "Incluir factura (IVA)",
+                                    text = stringResource(R.string.clients_quick_quote_invoice),
                                     style = MaterialTheme.typography.bodyLarge,
                                     color = SolennixTheme.colors.primaryText
                                 )
@@ -448,7 +450,7 @@ fun QuickQuoteScreen(
                                 OutlinedTextField(
                                     value = uiState.taxRate,
                                     onValueChange = viewModel::updateTaxRate,
-                                    label = { Text("Tasa de IVA (%)") },
+                                    label = { Text(stringResource(R.string.clients_quick_quote_tax_rate)) },
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                                     modifier = Modifier.fillMaxWidth()
                                 )
@@ -464,7 +466,7 @@ fun QuickQuoteScreen(
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text(
-                                text = "Descuento",
+                                text = stringResource(R.string.clients_quick_quote_discount),
                                 style = MaterialTheme.typography.titleSmall,
                                 color = SolennixTheme.colors.primaryText
                             )
@@ -477,13 +479,13 @@ fun QuickQuoteScreen(
                                 FilterChip(
                                     selected = uiState.discountType == DiscountType.PERCENT,
                                     onClick = { viewModel.updateDiscountType(DiscountType.PERCENT) },
-                                    label = { Text("Porcentaje") },
+                                    label = { Text(stringResource(R.string.clients_quick_quote_discount_percent)) },
                                     modifier = Modifier.weight(1f)
                                 )
                                 FilterChip(
                                     selected = uiState.discountType == DiscountType.FIXED,
                                     onClick = { viewModel.updateDiscountType(DiscountType.FIXED) },
-                                    label = { Text("Monto fijo") },
+                                    label = { Text(stringResource(R.string.clients_quick_quote_discount_fixed)) },
                                     modifier = Modifier.weight(1f)
                                 )
                             }
@@ -494,11 +496,11 @@ fun QuickQuoteScreen(
                                 value = uiState.discount,
                                 onValueChange = viewModel::updateDiscount,
                                 label = {
-                                    Text(
-                                        if (uiState.discountType == DiscountType.PERCENT) "Descuento (%)"
-                                        else "Descuento ($)"
-                                    )
-                                },
+                                        Text(
+                                            if (uiState.discountType == DiscountType.PERCENT) stringResource(R.string.clients_quick_quote_discount_percent_label)
+                                            else stringResource(R.string.clients_quick_quote_discount_fixed_label)
+                                        )
+                                    },
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                                 modifier = Modifier.fillMaxWidth()
                             )
@@ -514,31 +516,31 @@ fun QuickQuoteScreen(
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
                         Text(
-                            text = "Resumen",
+                            text = stringResource(R.string.clients_quick_quote_summary),
                             style = MaterialTheme.typography.titleMedium,
                             color = SolennixTheme.colors.primaryText
                         )
                         Spacer(Modifier.height(12.dp))
 
-                        SummaryRow("Subtotal Productos", uiState.subtotalProducts.asMXN())
+                        SummaryRow(stringResource(R.string.clients_quick_quote_subtotal_products), uiState.subtotalProducts.asMXN())
 
                         if (uiState.extrasTotal > 0) {
-                            SummaryRow("Subtotal Extras", uiState.extrasTotal.asMXN())
+                            SummaryRow(stringResource(R.string.clients_quick_quote_subtotal_extras), uiState.extrasTotal.asMXN())
                         }
 
                         if (uiState.discountAmount > 0) {
                             SummaryRow(
                                 label = if (uiState.discountType == DiscountType.PERCENT) {
-                                    "Descuento (${uiState.discount}%)"
+                                    context.getString(R.string.clients_quick_quote_discount_percent_value, uiState.discount)
                                 } else {
-                                    "Descuento"
+                                    context.getString(R.string.clients_quick_quote_discount)
                                 },
                                 value = "-${uiState.discountAmount.asMXN()}"
                             )
                         }
 
                         if (uiState.requiresInvoice && uiState.taxAmount > 0) {
-                            SummaryRow("IVA (${uiState.taxRate}%)", uiState.taxAmount.asMXN())
+                            SummaryRow(context.getString(R.string.clients_quick_quote_tax_value, uiState.taxRate), uiState.taxAmount.asMXN())
                         }
 
                         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
@@ -548,7 +550,7 @@ fun QuickQuoteScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "Total",
+                                text = stringResource(R.string.clients_quick_quote_total),
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
                                 color = SolennixTheme.colors.primaryText
@@ -568,15 +570,15 @@ fun QuickQuoteScreen(
                             Spacer(Modifier.height(12.dp))
 
                             Text(
-                                text = "Rentabilidad",
+                                text = stringResource(R.string.clients_quick_quote_profitability),
                                 style = MaterialTheme.typography.titleSmall,
                                 color = SolennixTheme.colors.primaryText
                             )
                             Spacer(Modifier.height(8.dp))
 
-                            SummaryRow("Costo productos", uiState.costProducts.asMXN())
-                            SummaryRow("Costo extras", uiState.costExtras.asMXN())
-                            SummaryRow("Total costos", uiState.totalCosts.asMXN())
+                            SummaryRow(stringResource(R.string.clients_quick_quote_cost_products), uiState.costProducts.asMXN())
+                            SummaryRow(stringResource(R.string.clients_quick_quote_cost_extras), uiState.costExtras.asMXN())
+                            SummaryRow(stringResource(R.string.clients_quick_quote_total_costs), uiState.totalCosts.asMXN())
 
                             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
@@ -593,7 +595,7 @@ fun QuickQuoteScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(
-                                    text = "Ganancia neta",
+                                    text = stringResource(R.string.clients_quick_quote_net_profit),
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = profitColor
@@ -613,7 +615,7 @@ fun QuickQuoteScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(
-                                    text = "Margen %",
+                                    text = stringResource(R.string.clients_quick_quote_margin),
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = profitColor
@@ -657,7 +659,7 @@ fun QuickQuoteScreen(
                             } else {
                                 Icon(Icons.Default.PictureAsPdf, contentDescription = null)
                                 Spacer(Modifier.width(8.dp))
-                                Text("Generar Cotizacion", style = MaterialTheme.typography.titleMedium)
+                                Text(stringResource(R.string.clients_quick_quote_generate_pdf), style = MaterialTheme.typography.titleMedium)
                             }
                         }
 
@@ -703,7 +705,7 @@ fun QuickQuoteScreen(
                         ) {
                             Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null)
                             Spacer(Modifier.width(8.dp))
-                            Text("Convertir a Evento", style = MaterialTheme.typography.titleMedium)
+                            Text(stringResource(R.string.clients_quick_quote_convert), style = MaterialTheme.typography.titleMedium)
                         }
                     }
                 } else {
@@ -726,7 +728,7 @@ fun QuickQuoteScreen(
                         } else {
                             Icon(Icons.Default.PictureAsPdf, contentDescription = null)
                             Spacer(Modifier.width(8.dp))
-                            Text("Generar Cotizacion", style = MaterialTheme.typography.titleMedium)
+                            Text(stringResource(R.string.clients_quick_quote_generate_pdf), style = MaterialTheme.typography.titleMedium)
                         }
                     }
 
@@ -772,7 +774,7 @@ fun QuickQuoteScreen(
                     ) {
                         Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null)
                         Spacer(Modifier.width(8.dp))
-                        Text("Convertir a Evento", style = MaterialTheme.typography.titleMedium)
+                        Text(stringResource(R.string.clients_quick_quote_convert), style = MaterialTheme.typography.titleMedium)
                     }
                 }
 
@@ -798,7 +800,7 @@ private fun SectionHeader(title: String, onAddClick: () -> Unit) {
         IconButton(onClick = onAddClick) {
             Icon(
                 Icons.Default.AddCircle,
-                contentDescription = "Agregar $title",
+                contentDescription = stringResource(R.string.clients_quick_quote_add_title, title),
                 tint = SolennixTheme.colors.primary
             )
         }
@@ -836,7 +838,7 @@ private fun ProductItemCard(
                     modifier = Modifier.weight(1f)
                 ) {
                     OutlinedTextField(
-                        value = item.productName.ifEmpty { "Seleccionar producto" },
+                        value = item.productName.ifEmpty { stringResource(R.string.clients_quick_quote_select_product) },
                         onValueChange = {},
                         readOnly = true,
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
@@ -872,7 +874,7 @@ private fun ProductItemCard(
                     IconButton(onClick = onRemove) {
                         Icon(
                             Icons.Default.RemoveCircle,
-                            contentDescription = "Eliminar",
+                            contentDescription = stringResource(R.string.clients_quick_quote_delete),
                             tint = SolennixTheme.colors.error
                         )
                     }
@@ -888,14 +890,14 @@ private fun ProductItemCard(
                 OutlinedTextField(
                     value = item.quantity.toString(),
                     onValueChange = onQuantityChanged,
-                    label = { Text("Cant.") },
+                    label = { Text(stringResource(R.string.clients_quick_quote_quantity)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.weight(1f)
                 )
                 OutlinedTextField(
                     value = if (item.unitPrice > 0) item.unitPrice.toString() else "",
                     onValueChange = onPriceChanged,
-                    label = { Text("Precio Unit.") },
+                    label = { Text(stringResource(R.string.clients_quick_quote_unit_price)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.weight(1.5f)
                 )
@@ -904,7 +906,7 @@ private fun ProductItemCard(
                     horizontalAlignment = Alignment.End
                 ) {
                     Text(
-                        text = "Subtotal",
+                        text = stringResource(R.string.clients_quick_quote_subtotal),
                         style = MaterialTheme.typography.labelSmall,
                         color = SolennixTheme.colors.secondaryText
                     )
@@ -943,13 +945,13 @@ private fun ExtraItemCard(
                 OutlinedTextField(
                     value = extra.description,
                     onValueChange = onDescriptionChanged,
-                    label = { Text("Descripcion") },
+                    label = { Text(stringResource(R.string.clients_quick_quote_description)) },
                     modifier = Modifier.weight(1f)
                 )
                 IconButton(onClick = onRemove) {
                     Icon(
                         Icons.Default.RemoveCircle,
-                        contentDescription = "Eliminar",
+                        contentDescription = stringResource(R.string.clients_quick_quote_delete),
                         tint = SolennixTheme.colors.error
                     )
                 }
@@ -962,14 +964,14 @@ private fun ExtraItemCard(
                 OutlinedTextField(
                     value = if (extra.cost > 0) extra.cost.toString() else "",
                     onValueChange = onCostChanged,
-                    label = { Text("Costo") },
+                    label = { Text(stringResource(R.string.clients_quick_quote_cost)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.weight(1f)
                 )
                 OutlinedTextField(
                     value = if (extra.price > 0) extra.price.toString() else "",
                     onValueChange = onPriceChanged,
-                    label = { Text("Precio") },
+                    label = { Text(stringResource(R.string.clients_quick_quote_price)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.weight(1f),
                     enabled = !extra.excludeUtility
@@ -982,7 +984,7 @@ private fun ExtraItemCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Sin utilidad",
+                    text = stringResource(R.string.clients_quick_quote_exclude_utility),
                     style = MaterialTheme.typography.bodySmall,
                     color = SolennixTheme.colors.secondaryText
                 )

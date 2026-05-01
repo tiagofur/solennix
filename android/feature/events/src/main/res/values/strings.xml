@@ -53,4 +53,26 @@
     <string name="events_list_csv_header_status">Estado</string>
     <string name="events_list_csv_header_total">Total</string>
     <string name="events_list_csv_header_location">Lugar</string>
+    <string name="events_client_portal_title">Portal del cliente</string>
+    <string name="events_client_portal_description">Un enlace privado para que tu cliente vea el evento, el estado de pagos y los detalles clave.</string>
+    <string name="events_client_portal_rotate_title">Rotar enlace</string>
+    <string name="events_client_portal_rotate_message">Al rotar el enlace, el que ya compartiste dejará de funcionar. ¿Continuamos?</string>
+    <string name="events_client_portal_disable_title">Deshabilitar enlace</string>
+    <string name="events_client_portal_disable_message">Se va a deshabilitar el enlace para el cliente. ¿Estás seguro?</string>
+    <string name="events_client_portal_copy_link">Copiar enlace</string>
+    <string name="events_client_portal_share">Compartir</string>
+    <string name="events_client_portal_rotate">Rotar enlace</string>
+    <string name="events_client_portal_disable">Deshabilitar</string>
+    <string name="events_client_portal_generate">Generar enlace para el cliente</string>
+    <string name="events_client_portal_copy_toast">Enlace copiado al portapapeles.</string>
+    <string name="events_client_portal_generate_toast">Enlace generado. Compartilo con tu cliente.</string>
+    <string name="events_client_portal_rotate_toast">Enlace rotado. El anterior ya no funciona.</string>
+    <string name="events_client_portal_disable_toast">Enlace deshabilitado.</string>
+    <string name="events_client_portal_share_message">Hola! Acá podés ver los detalles de tu evento: %1$s</string>
+    <string name="events_client_portal_share_chooser">Compartir enlace</string>
+    <string name="events_client_portal_clipboard_label">Portal del cliente</string>
+    <string name="events_client_portal_load_error">No pudimos cargar el enlace del cliente.</string>
+    <string name="events_client_portal_generate_error">No pudimos generar el enlace.</string>
+    <string name="events_client_portal_rotate_error">No pudimos rotar el enlace.</string>
+    <string name="events_client_portal_disable_error">No pudimos deshabilitar el enlace.</string>
 </resources>
