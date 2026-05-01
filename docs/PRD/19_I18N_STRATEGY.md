@@ -25,6 +25,11 @@
 > - Validación focalizada: **111 tests PASS** en 7 suites web baseline relacionadas.
 > - Estado final: mergeado vía PR `#231`; follow-ups `#226/#229` y `#232/#233` quedaron absorbidos y cerrados.
 
+> [!info] 2026-05-01 — EventForm staff locale completion on web
+> El step `Inventario y Personal` del EventForm web seguía con drift: `EventStaff.tsx` consumía varias keys `events:staff.*` inexistentes, así que la UI mostraba copy parcial y raw keys en vez de texto localizado.
+> - Se completaron en ES/EN las keys faltantes de `events.staff` para descripción, empty state, labels, placeholders, CTA de horario, selector de equipos, badge de disponibilidad y estados de asignación.
+> - Regla reforzada: si `events.json` sigue siendo el catálogo único del flujo web de eventos, el namespace `staff` debe incluir no sólo títulos destructivos sino también todos los sublabels operativos del subformulario.
+
 ## Principio rector
 
 **La unidad de entrega NO es una plataforma. Es un flujo de producto.**
@@ -456,6 +461,7 @@ Notas de normalización:
 - `Inventario y personal` se mantiene como label del paso agrupado cross-platform aunque adentro existan subsecciones `Insumos`, `Equipamiento` y `Personal`.
 - `Nuevo evento` / `Editar evento` usan sentence case y se comparten entre toolbar, títulos y breadcrumbs.
 - **Estado 2026-04-29**: slice implementado cross-platform. Web, iOS y Android ya consumen catálogo/localized resources para detail hub, event form, payments, client portal share, checklist, contrato, fotos, staff, equipment, supplies y validaciones visibles.
+- **Follow-up 2026-05-01**: en Web se restauraron keys faltantes de `events.staff.*` para que el subformulario de personal no vuelva a renderizar raw keys ni labels mixtas dentro de `EventForm`.
 
 #### Auth / Settings
 

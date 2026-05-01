@@ -8,7 +8,7 @@ aliases:
   - Estado Actual
   - Current Status
 date: 2026-03-20
-updated: 2026-04-30
+updated: 2026-05-01
 status: active
 ---
 
@@ -93,6 +93,12 @@ status: active
 > - **Follow-up absorbidos**: `#226` / PR `#229` (quick client modal) y `#232` / PR `#233` (financial baseline tests) se cerraron como redundantes después de ser incorporados en la rama principal de `#230`.
 > - **Validation**: `npm run test:run -- src/pages/Dashboard.test.tsx src/pages/Events/EventForm.test.tsx src/pages/Events/EventList.test.tsx src/pages/Events/EventSummary.test.tsx src/pages/Events/EventSummary.contract.test.tsx src/pages/Events/EventSummary.payments.test.tsx src/pages/Events/EventSummary.photos.test.tsx` → **111 tests PASS**; luego `Frontend Tests` ✅, `Backend Tests` ✅ y `Stage 1..6` ✅ en PR `#231`.
 > - **Estado**: PR `#231` mergeado a `main`; merge commit `2284996d`.
+
+> [!info] 2026-05-01 — Web EventForm staff i18n drift repaired
+> Se corrigió un drift puntual del catálogo web en `EventForm`: el subformulario de personal consumía varias keys `events.staff.*` que no existían en `events.json`, dejando labels sin traducir o mostrando raw keys.
+> - **Scope**: `web/src/pages/Events/components/EventStaff.tsx` dentro del paso `Inventario y Personal` del crear/editar evento.
+> - **Fix aplicado**: se completaron en ES/EN las keys faltantes para descripción, empty state, selector, badge de disponibilidad, placeholders, CTA de horario, alta de equipo completo, selector de equipos y estados (`pending/confirmed/declined/cancelled`).
+> - **Resultado**: el formulario web de staff vuelve a mostrar copy localizada consistente con el slice `#204` sin tocar iOS/Android, que ya estaban cubiertos por resources nativos.
 
 > [!success] 2026-04-29 — Sprint 7.D: OpenAPI Sync Phase 2 (issue #187, web types auto-generated ✅)
 > Migración Web al modo "tipos auto-generados desde OpenAPI". Ahora `npm run openapi:types` regenera `src/types/api.ts` — no hay drift manual. CI verifica que los tipos estén en sync con el spec.
