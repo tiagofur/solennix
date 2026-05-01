@@ -820,7 +820,7 @@ describe('EventForm', () => {
     });
 
     // Click "Anterior" to go back to step 1
-    const prevButton = screen.getByRole('button', { name: /Volver al paso anterior/i });
+    const prevButton = screen.getByRole('button', { name: /Volver al paso anterior del formulario/i });
     act(() => {
       fireEvent.click(prevButton);
     });
