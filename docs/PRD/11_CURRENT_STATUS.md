@@ -8,7 +8,7 @@ aliases:
   - Estado Actual
   - Current Status
 date: 2026-03-20
-updated: 2026-04-29
+updated: 2026-04-30
 status: active
 ---
 
@@ -40,6 +40,15 @@ status: active
 >   - [ ] iOS/Android organizer review surfaces
 >   - [ ] Notifications (submission/approval/rejection)
 >   - [ ] S3 integration para receipt storage (actualmente filename only)
+
+> [!info] 2026-04-30 — Web frontend baseline stabilized for EventSummary / Dashboard / EventList (issue #230)
+> Se estabilizó un bloque importante de suites web que estaban rompiendo la baseline de frontend por drift de i18n y expectations viejas, no por regresiones funcionales del producto.
+> - **Root cause principal**: `web/src/i18n/locales/{es,en}/events.json` había quedado incompleto tras restores merge-safe y sólo exponía `list` + hotfixes puntuales, mientras `EventSummary.tsx` consume namespaces amplios (`summary`, `financials`, `general`, `photos`, `payments`).
+> - **Fix aplicado**: restaurados los namespaces completos de `events.json` en ES/EN y corregidas assertions stale en `EventSummary.test.tsx` para alinearse con la remoción previa del invoice UI (#215).
+> - **Dashboard**: tests alineados al copy actual (`Hola, {{name}}`, `Cobrado`, `IVA pendiente`, `Eventos del mes`) y agregado locale key faltante `dashboard.upcoming.no_events` en ES/EN. También se completaron mocks de widgets/analytics en `Dashboard.test.tsx`.
+> - **EventList**: tests ajustados a sentence case vigente (`Nuevo evento`, `Cotización rápida`).
+> - **Validation**: `npm run test:run -- src/pages/Dashboard.test.tsx src/pages/Events/EventForm.test.tsx src/pages/Events/EventList.test.tsx src/pages/Events/EventSummary.test.tsx src/pages/Events/EventSummary.contract.test.tsx src/pages/Events/EventSummary.payments.test.tsx src/pages/Events/EventSummary.photos.test.tsx` → **111 tests PASS**.
+> - **Scope**: fix quirúrgico de baseline web bajo issue #230; no hubo build local.
 
 > [!success] 2026-04-29 — Sprint 7.D: OpenAPI Sync Phase 2 (issue #187, web types auto-generated ✅)
 > Migración Web al modo "tipos auto-generados desde OpenAPI". Ahora `npm run openapi:types` regenera `src/types/api.ts` — no hay drift manual. CI verifica que los tipos estén en sync con el spec.

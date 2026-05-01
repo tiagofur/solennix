@@ -414,7 +414,7 @@ describe('EventSummary — core', () => {
     });
 
     expect(screen.getByText(/Venta Neta/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/Requiere factura.*IVA/i).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText(/^IVA$/i)).toBeInTheDocument();
     expect(screen.getByText(/Utilidad Neta/i)).toBeInTheDocument();
     expect(screen.getByText(/Cobrado: \$500\.00/)).toBeInTheDocument();
   });
