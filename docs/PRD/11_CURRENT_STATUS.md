@@ -14,6 +14,14 @@ status: active
 
 # Estado Actual del Proyecto — Solennix
 
+> [!important] Decisión de producto — Pagos e Intermediación (2026-05-01)
+> **Solennix NO intermedia pagos entre organizadores y sus clientes.**
+> - Los "pagos" en la app son **registros manuales del organizador** para tracking interno.
+> - No hay ni habrá integración Stripe para que clientes paguen a organizadores desde la plataforma.
+> - No generamos ni enviamos **facturas fiscales**.
+> - **Stripe se usa EXCLUSIVAMENTE** para la suscripción Pro del organizador a Solennix (cobro B2B).
+> - El flujo de `payment_submissions` (Sprint 7.E) es un formulario de reporte de transferencias bancarias externas — Solennix NO procesa ni mueve dinero.
+
 **Fecha:** Abril 2026
 **Version:** 1.5
 

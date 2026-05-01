@@ -18,7 +18,6 @@
 
 > [!todo] Próximos sprints Web
 > - **Sprint 7.C** — Enforcement tier gating (copy paywall "requiere Plan Pro" + shape-based render del portal según plan del organizer).
-> - **Sprint 9** — UI registro de pagos por transferencia en el portal cliente + inbox del organizer.
 > - **Sprint 10** — UI pública de reseñas desde link en email + portfolio público (`/organizer/:slug/reviews`).
 > - **i18n** — Extraer Dashboard + Events strings al catálogo (issues #94, #95).
 
@@ -231,7 +230,6 @@
 ### 5.4 Portal de Cliente
 - [ ] Link compartible para que el cliente vea su evento
 - [ ] Firma digital de contrato
-- [ ] Pago online directo desde el portal
 - [ ] Aprobación de cambios
 
 ### 5.5 Plantillas de Evento

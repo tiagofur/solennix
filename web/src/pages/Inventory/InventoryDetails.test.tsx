@@ -118,7 +118,7 @@ describe('InventoryDetails', () => {
     (inventoryService.getById as any).mockResolvedValue(baseItem);
     renderDetails();
     await waitFor(() =>
-      expect(screen.getAllByText(/Sin ítems en el inventario/i).length).toBeGreaterThanOrEqual(1)
+      expect(screen.getAllByText(/No hay alertas activas/i).length).toBeGreaterThanOrEqual(1)
     );
   });
 

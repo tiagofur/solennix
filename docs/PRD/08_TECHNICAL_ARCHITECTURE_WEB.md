@@ -220,7 +220,6 @@ web/src/
 ├── services/                         # Capa de servicios API
 │   ├── clientService.ts             # CRUD de clientes
 │   ├── eventService.ts              # CRUD de eventos
-│   ├── eventPaymentService.ts       # Pagos asociados a eventos (registro manual)
 │   ├── productService.ts            # CRUD de productos/servicios
 │   ├── inventoryService.ts          # CRUD de inventario
 │   ├── searchService.ts             # Busqueda global multi-entidad
@@ -317,7 +316,6 @@ Cada servicio encapsula las llamadas HTTP a un grupo de endpoints del backend. T
 | --------------------------- | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | **clientService**           | `clientService.ts`           | CRUD de clientes: listar (con paginacion/busqueda), crear, obtener por ID, actualizar, eliminar                                         |
 | **eventService**            | `eventService.ts`            | CRUD de eventos: listar, crear, obtener por ID, actualizar, eliminar. Incluye productos, extras, insumos y equipo asociados al evento   |
-| **eventPaymentService**     | `eventPaymentService.ts`     | Pagos de eventos: registrar pago manual, listar pagos de un evento, eliminar pago                                                       |
 | **productService**          | `productService.ts`          | CRUD de productos/servicios del catalogo: listar, crear, obtener, actualizar, eliminar                                                  |
 | **inventoryService**        | `inventoryService.ts`        | CRUD de inventario: listar items, crear, obtener, actualizar, eliminar. Verificacion de disponibilidad por fecha                        |
 | **subscriptionService**     | `subscriptionService.ts`     | Gestion de suscripciones Pro: crear sesion de checkout en Stripe, obtener portal de facturacion, obtener plan actual, verificar limites |

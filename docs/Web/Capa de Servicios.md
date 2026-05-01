@@ -45,7 +45,6 @@ graph TD
         PS[productService]
         IS[inventoryService]
         PY[paymentService]
-        EP[eventPaymentService]
         SS[subscriptionService]
         SR[searchService]
         UD[unavailableDatesService]
@@ -61,7 +60,6 @@ graph TD
     PS --> A
     IS --> A
     PY --> A
-    EP --> A
     SS --> A
     SR --> A
     UD --> A
@@ -82,7 +80,6 @@ graph TD
 | `productService` | `productService.ts` | Productos | CRUD + uploadImage, ingredientes |
 | `inventoryService` | `inventoryService.ts` | Inventario | CRUD stock management |
 | `paymentService` | `paymentService.ts` | Pagos | CRUD + by event, by date range |
-| `eventPaymentService` | `eventPaymentService.ts` | Pagos Stripe | createCheckout, getSession |
 | `subscriptionService` | `subscriptionService.ts` | Suscripciones | status, checkout, portal |
 | `searchService` | `searchService.ts` | Búsqueda | searchAll (cross-domain) |
 | `unavailableDatesService` | `unavailableDatesService.ts` | Calendario | getDates, add, remove |
