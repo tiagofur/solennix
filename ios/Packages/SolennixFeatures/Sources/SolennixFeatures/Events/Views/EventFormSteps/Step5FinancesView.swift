@@ -49,7 +49,7 @@ struct Step5FinancesView: View {
 
     private var discountSection: some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
-            Text("Descuento")
+            Text(tr("events.form.finances.discount", "Descuento"))
                 .font(.subheadline)
                 .fontWeight(.medium)
                 .foregroundStyle(SolennixColors.text)
@@ -116,7 +116,7 @@ struct Step5FinancesView: View {
                     Image(systemName: "doc.text")
                         .foregroundStyle(SolennixColors.textSecondary)
 
-                    Text("Requiere Factura (IVA)")
+                    Text(tr("events.form.finances.invoice", "Requiere factura (IVA)"))
                         .font(.subheadline)
                         .fontWeight(.medium)
                         .foregroundStyle(SolennixColors.text)
@@ -126,7 +126,7 @@ struct Step5FinancesView: View {
 
             if viewModel.requiresInvoice {
                 HStack(spacing: Spacing.sm) {
-                    Text("Tasa IVA:")
+                    Text(tr("events.form.finances.tax_rate", "Tasa IVA:"))
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)
 
@@ -168,7 +168,7 @@ struct Step5FinancesView: View {
 
     private var depositSection: some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
-            Text("Anticipo")
+            Text(tr("events.form.finances.deposit", "Anticipo"))
                 .font(.subheadline)
                 .fontWeight(.medium)
                 .foregroundStyle(SolennixColors.text)
@@ -208,14 +208,14 @@ struct Step5FinancesView: View {
 
     private var cancellationSection: some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
-            Text("Politica de Cancelacion")
+            Text(tr("events.form.finances.cancellation_policy", "Política de cancelación"))
                 .font(.subheadline)
                 .fontWeight(.medium)
                 .foregroundStyle(SolennixColors.text)
 
             HStack(spacing: Spacing.md) {
                 VStack(alignment: .leading, spacing: Spacing.xs) {
-                    Text("Dias anticipacion")
+                    Text(tr("events.form.finances.cancellation_days", "Días anticipación"))
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)
 
@@ -226,7 +226,7 @@ struct Step5FinancesView: View {
                             .foregroundStyle(SolennixColors.text)
                             .multilineTextAlignment(.trailing)
 
-                        Text("dias")
+                        Text(tr("events.form.finances.days", "días"))
                             .font(.caption)
                             .foregroundStyle(SolennixColors.textTertiary)
                     }
@@ -241,7 +241,7 @@ struct Step5FinancesView: View {
                 }
 
                 VStack(alignment: .leading, spacing: Spacing.xs) {
-                    Text("Reembolso")
+                    Text(tr("events.form.finances.refund", "Reembolso"))
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)
 
@@ -273,7 +273,7 @@ struct Step5FinancesView: View {
 
     private var notesSection: some View {
         VStack(alignment: .leading, spacing: Spacing.xs) {
-            Text("Notas")
+            Text(tr("events.form.finances.notes", "Notas"))
                 .font(.subheadline)
                 .fontWeight(.medium)
                 .foregroundStyle(SolennixColors.text)
@@ -301,28 +301,28 @@ struct Step5FinancesView: View {
 
     private var totalsCard: some View {
         VStack(spacing: Spacing.sm) {
-            Text("Resumen")
+            Text(tr("events.form.finances.summary", "Resumen"))
                 .font(.headline)
                 .fontWeight(.bold)
                 .foregroundStyle(SolennixColors.text)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             if viewModel.hasPendingProductCosts {
-                Text("Algunos costos de productos siguen cargando. La rentabilidad puede ajustarse en segundos.")
+                Text(tr("events.form.finances.pending_costs", "Algunos costos de productos siguen cargando. La rentabilidad puede ajustarse en segundos."))
                     .font(.caption)
                     .foregroundStyle(SolennixColors.warning)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
 
-            totalRow(label: "Subtotal productos", value: viewModel.productsSubtotal)
-            totalRow(label: "Subtotal extras", value: viewModel.extrasSubtotal)
+            totalRow(label: tr("events.form.finances.subtotal_products", "Subtotal productos"), value: viewModel.productsSubtotal)
+            totalRow(label: tr("events.form.finances.subtotal_extras", "Subtotal extras"), value: viewModel.extrasSubtotal)
 
             if viewModel.discountAmount > 0 {
-                totalRow(label: "Descuento", value: -viewModel.discountAmount, color: SolennixColors.error)
+                totalRow(label: tr("events.form.finances.discount", "Descuento"), value: -viewModel.discountAmount, color: SolennixColors.error)
             }
 
             if viewModel.requiresInvoice && viewModel.taxAmount > 0 {
-                totalRow(label: "IVA (\(String(format: "%.0f", viewModel.taxRate))%)", value: viewModel.taxAmount)
+                totalRow(label: trf("events.form.finances.tax_label", "IVA (%@%%)", String(format: "%.0f", viewModel.taxRate)), value: viewModel.taxAmount)
             }
 
             Divider()
@@ -330,7 +330,7 @@ struct Step5FinancesView: View {
 
             // Total
             HStack {
-                Text("Total")
+                Text(tr("events.form.finances.total", "Total"))
                     .font(.title3)
                     .fontWeight(.bold)
                     .foregroundStyle(SolennixColors.text)
@@ -345,7 +345,7 @@ struct Step5FinancesView: View {
 
             // Deposit
             totalRow(
-                label: "Anticipo (\(String(format: "%.0f", viewModel.depositPercent))%)",
+                label: trf("events.form.finances.deposit_label", "Anticipo (%@%%)", String(format: "%.0f", viewModel.depositPercent)),
                 value: viewModel.depositAmount,
                 color: SolennixColors.primary
             )
@@ -354,22 +354,22 @@ struct Step5FinancesView: View {
                 .foregroundStyle(SolennixColors.border)
 
             // Profitability
-            Text("Rentabilidad")
+            Text(tr("events.form.finances.profitability", "Rentabilidad"))
                 .font(.caption)
                 .fontWeight(.semibold)
                 .foregroundStyle(SolennixColors.textSecondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            totalRow(label: "Costos totales", value: viewModel.totalCosts)
+            totalRow(label: tr("events.form.finances.total_costs", "Costos totales"), value: viewModel.totalCosts)
             totalRow(
-                label: "Ganancia neta",
+                label: tr("events.form.finances.net_profit", "Ganancia neta"),
                 value: viewModel.netProfit,
                 color: viewModel.netProfit >= 0 ? SolennixColors.success : SolennixColors.error
             )
 
             // Margin — usa % en lugar de currency.
             HStack {
-                Text("Margen")
+                Text(tr("events.form.finances.margin", "Margen"))
                     .font(.subheadline)
                     .foregroundStyle(SolennixColors.textSecondary)
 
@@ -412,6 +412,14 @@ struct Step5FinancesView: View {
     private func formatCurrency(_ value: Double) -> String {
         let prefix = value < 0 ? "-$" : "$"
         return "\(prefix)\(String(format: "%.2f", abs(value)))"
+    }
+
+    private func tr(_ key: String, _ value: String) -> String {
+        FeatureL10n.text(key, value)
+    }
+
+    private func trf(_ key: String, _ value: String, _ arg: String) -> String {
+        String(format: tr(key, value), locale: FeatureL10n.locale, arg)
     }
 }
 

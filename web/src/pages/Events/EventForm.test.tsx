@@ -820,7 +820,7 @@ describe('EventForm', () => {
     });
 
     // Click "Anterior" to go back to step 1
-    const prevButton = screen.getByRole('button', { name: /Volver al paso anterior/i });
+    const prevButton = screen.getByRole('button', { name: /Volver al paso anterior del formulario/i });
     act(() => {
       fireEvent.click(prevButton);
     });
@@ -1102,7 +1102,7 @@ describe('EventForm', () => {
     });
 
     // The "Anterior" button should be invisible on step 1
-    const prevButton = screen.getByRole('button', { name: /Volver al paso anterior/i });
+    const prevButton = screen.getByRole('button', { name: /Volver al paso anterior del formulario/i });
     // The button has the 'invisible' class when on step 1
     expect(prevButton.className).toContain('invisible');
   });

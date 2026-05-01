@@ -1,5 +1,7 @@
 package com.creapolis.solennix.feature.events.viewmodel
 
+import android.content.Context
+import androidx.annotation.StringRes
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -24,7 +26,9 @@ import com.creapolis.solennix.core.network.post
 import com.creapolis.solennix.core.network.put
 import com.creapolis.solennix.core.network.AuthManager
 import com.creapolis.solennix.core.network.Endpoints
+import com.creapolis.solennix.feature.events.R
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -34,6 +38,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class EventFormViewModel @Inject constructor(
+    @ApplicationContext private val appContext: Context,
     private val eventRepository: EventRepository,
     private val clientRepository: ClientRepository,
     private val productRepository: ProductRepository,
@@ -45,6 +50,8 @@ class EventFormViewModel @Inject constructor(
     private val authManager: AuthManager,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+
+    private fun tr(@StringRes id: Int, vararg args: Any): String = appContext.getString(id, *args)
 
     private val eventId: String? = savedStateHandle.get<String>("eventId")?.takeIf { it.isNotBlank() }
     val isEditMode: Boolean = eventId != null
@@ -101,7 +108,7 @@ class EventFormViewModel @Inject constructor(
 
     fun createQuickClient(name: String, email: String, phone: String) {
         if (name.isBlank()) {
-            quickClientError = "El nombre es requerido"
+            quickClientError = tr(R.string.events_form_error_quick_client_name_required)
             return
         }
         viewModelScope.launch {
@@ -121,7 +128,7 @@ class EventFormViewModel @Inject constructor(
                 selectedClient = savedClient
                 _clientSearchQuery.value = ""
             } catch (e: Exception) {
-                quickClientError = "Error al crear cliente: ${e.message}"
+                quickClientError = tr(R.string.events_form_error_quick_client_create, e.message.orEmpty())
             } finally {
                 isCreatingClient = false
             }
@@ -1226,7 +1233,7 @@ class EventFormViewModel @Inject constructor(
                 }
                 onDone(added, skipped)
             } catch (e: Exception) {
-                teamsErrorMessage = "No pudimos agregar el equipo: ${e.message}"
+                teamsErrorMessage = tr(R.string.events_form_error_add_team, e.message.orEmpty())
                 onDone(0, 0)
             }
         }
@@ -1261,16 +1268,16 @@ class EventFormViewModel @Inject constructor(
 
     fun validateStep(step: Int): String? = when (step) {
         0 -> when {
-            selectedClient == null -> "Seleccioná un cliente"
-            serviceType.isBlank() -> "Ingresá el tipo de servicio"
-            (numPeople.toIntOrNull() ?: 0) < 1 -> "Ingresá la cantidad de personas"
+            selectedClient == null -> tr(R.string.events_form_validation_client_required)
+            serviceType.isBlank() -> tr(R.string.events_form_validation_service_required)
+            (numPeople.toIntOrNull() ?: 0) < 1 -> tr(R.string.events_form_validation_people_required)
             !isValidTime24h(startTime) ->
-                "Hora de inicio inválida — usá formato HH:mm (ej: 14:30)"
+                tr(R.string.events_form_validation_start_time_invalid)
             !isValidTime24h(endTime) ->
-                "Hora de fin inválida — usá formato HH:mm (ej: 20:00)"
+                tr(R.string.events_form_validation_end_time_invalid)
             startTime.isNotBlank() && endTime.isNotBlank() &&
                 normalizeTime(startTime) == normalizeTime(endTime) ->
-                "La hora de inicio y de fin no pueden ser iguales"
+                tr(R.string.events_form_validation_same_time)
             else -> null
         }
         else -> null
@@ -1305,31 +1312,31 @@ class EventFormViewModel @Inject constructor(
 
     fun saveEvent() {
         val client = selectedClient ?: run {
-            saveError = "Selecciona un cliente"
+            saveError = tr(R.string.events_form_validation_client_required_short)
             return
         }
         if ((numPeople.toIntOrNull() ?: 0) < 1) {
-            saveError = "Mínimo 1 persona"
+            saveError = tr(R.string.events_form_validation_people_min)
             return
         }
         if (serviceType.isBlank()) {
-            saveError = "Agrega el tipo de servicio"
+            saveError = tr(R.string.events_form_validation_service_add)
             return
         }
         // Final time validation — defensive, in case the user skipped step 0 validation.
         if (!isValidTime24h(startTime)) {
-            saveError = "Hora de inicio inválida — usá formato HH:mm (ej: 14:30)"
+            saveError = tr(R.string.events_form_validation_start_time_invalid)
             return
         }
         if (!isValidTime24h(endTime)) {
-            saveError = "Hora de fin inválida — usá formato HH:mm (ej: 20:00)"
+            saveError = tr(R.string.events_form_validation_end_time_invalid)
             return
         }
         if (
             startTime.isNotBlank() && endTime.isNotBlank() &&
             normalizeTime(startTime) == normalizeTime(endTime)
         ) {
-            saveError = "La hora de inicio y de fin no pueden ser iguales"
+            saveError = tr(R.string.events_form_validation_same_time)
             return
         }
         viewModelScope.launch {
@@ -1417,4 +1424,3 @@ data class SelectedStaffAssignment(
     val shiftEnd: String? = null,
     val status: String? = null
 )
-

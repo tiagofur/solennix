@@ -3,6 +3,18 @@ import SolennixCore
 import SolennixDesign
 import SolennixNetwork
 
+private func tr(_ key: String, _ value: String) -> String {
+    FeatureL10n.text(key, value)
+}
+
+private func trf(_ key: String, _ value: String, _ arg: String) -> String {
+    String(format: tr(key, value), locale: FeatureL10n.locale, arg)
+}
+
+private func trf2(_ key: String, _ value: String, _ arg1: String, _ arg2: String) -> String {
+    String(format: tr(key, value), locale: FeatureL10n.locale, arg1, arg2)
+}
+
 // MARK: - Step 4: Inventario & Personal
 //
 // Layout single-column stacked con 3 secciones (Insumos · Equipamiento ·
@@ -59,14 +71,14 @@ struct Step4SuppliesEquipmentView: View {
 
     private var suppliesSection: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
-            Text("Insumos")
+            Text(tr("events.form.inventory.supplies", "Insumos"))
                 .font(.title3)
                 .fontWeight(.semibold)
                 .foregroundStyle(SolennixColors.text)
 
             if !viewModel.supplySuggestions.isEmpty {
                 suggestionsBanner(
-                    title: "Sugerencias por productos",
+                    title: tr("events.form.inventory.suggestions", "Sugerencias por productos"),
                     chips: viewModel.supplySuggestions.map { suggestion in
                         let alreadyAdded = viewModel.selectedSupplies.contains { $0.inventoryId == suggestion.id }
                         return SuggestionChip(
@@ -79,13 +91,13 @@ struct Step4SuppliesEquipmentView: View {
                 )
             }
 
-            addButton(label: "Agregar Insumo") { showSupplyPicker = true }
+            addButton(label: tr("events.form.inventory.add_supply", "Agregar insumo")) { showSupplyPicker = true }
 
             if viewModel.selectedSupplies.isEmpty {
                 emptyState(
                     icon: "shippingbox",
-                    title: "Sin insumos (opcional)",
-                    subtitle: "Agrega consumibles del inventario"
+                    title: tr("events.form.inventory.empty_supplies_title", "Sin insumos (opcional)"),
+                    subtitle: tr("events.form.inventory.empty_supplies_desc", "Agrega consumibles del inventario")
                 )
             } else {
                 ForEach(Array(viewModel.selectedSupplies.enumerated()), id: \.element.id) { index, item in
@@ -114,7 +126,7 @@ struct Step4SuppliesEquipmentView: View {
                 }
 
                 HStack {
-                    Text("Costo insumos")
+                    Text(tr("events.form.inventory.supplies_cost", "Costo insumos"))
                         .font(.subheadline)
                         .fontWeight(.medium)
                         .foregroundStyle(SolennixColors.textSecondary)
@@ -136,7 +148,7 @@ struct Step4SuppliesEquipmentView: View {
 
     private var equipmentSection: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
-            Text("Equipamiento")
+            Text(tr("events.form.inventory.equipment", "Equipamiento"))
                 .font(.title3)
                 .fontWeight(.semibold)
                 .foregroundStyle(SolennixColors.text)
@@ -148,14 +160,14 @@ struct Step4SuppliesEquipmentView: View {
                             .font(.caption)
                             .foregroundStyle(SolennixColors.error)
 
-                        Text("Conflictos de disponibilidad")
+                        Text(tr("events.form.inventory.availability_conflicts", "Conflictos de disponibilidad"))
                             .font(.caption)
                             .fontWeight(.semibold)
                             .foregroundStyle(SolennixColors.error)
                     }
 
                     ForEach(viewModel.equipmentConflicts) { conflict in
-                        Text("\(conflict.equipmentName) ya reservado para \"\(conflict.eventName)\"")
+                        Text(trf2("events.form.inventory.conflict_item", "%@ ya reservado para \"%@\"", conflict.equipmentName, conflict.eventName))
                             .font(.caption)
                             .foregroundStyle(SolennixColors.error)
                     }
@@ -167,7 +179,7 @@ struct Step4SuppliesEquipmentView: View {
 
             if !viewModel.equipmentSuggestions.isEmpty {
                 suggestionsBanner(
-                    title: "Sugerencias por productos",
+                    title: tr("events.form.inventory.suggestions", "Sugerencias por productos"),
                     chips: viewModel.equipmentSuggestions.map { suggestion in
                         let alreadyAdded = viewModel.selectedEquipment.contains { $0.inventoryId == suggestion.id }
                         return SuggestionChip(
@@ -180,13 +192,13 @@ struct Step4SuppliesEquipmentView: View {
                 )
             }
 
-            addButton(label: "Agregar Equipamiento") { showEquipmentPicker = true }
+            addButton(label: tr("events.form.inventory.add_equipment", "Agregar equipamiento")) { showEquipmentPicker = true }
 
             if viewModel.selectedEquipment.isEmpty {
                 emptyState(
                     icon: "wrench.and.screwdriver",
-                    title: "Sin equipamiento (opcional)",
-                    subtitle: "Agrega equipo reutilizable para el evento"
+                    title: tr("events.form.inventory.empty_equipment_title", "Sin equipamiento (opcional)"),
+                    subtitle: tr("events.form.inventory.empty_equipment_desc", "Agrega equipo reutilizable para el evento")
                 )
             } else {
                 ForEach(Array(viewModel.selectedEquipment.enumerated()), id: \.element.id) { index, item in
@@ -211,7 +223,7 @@ struct Step4SuppliesEquipmentView: View {
 
     private var personnelSection: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
-            Text("Personal")
+            Text(tr("events.form.inventory.staff", "Personal"))
                 .font(.title3)
                 .fontWeight(.semibold)
                 .foregroundStyle(SolennixColors.text)
@@ -341,7 +353,9 @@ struct Step4SuppliesEquipmentView: View {
         let stockStr = stock.truncatingRemainder(dividingBy: 1) == 0
             ? String(format: "%.0f", stock)
             : String(format: "%.1f", stock)
-        return unit.isEmpty ? "Stock: \(stockStr)" : "Stock: \(stockStr) \(unit)"
+        return unit.isEmpty
+            ? trf("events.form.inventory.stock_value", "Stock: %@", stockStr)
+            : trf2("events.form.inventory.stock_value_unit", "Stock: %@ %@", stockStr, unit)
     }
 
     // MARK: - Picker Sheets
@@ -360,7 +374,7 @@ struct Step4SuppliesEquipmentView: View {
                                     .font(.body)
                                     .foregroundStyle(SolennixColors.text)
 
-                                Text("Stock: \(String(format: "%.1f", item.currentStock)) \(item.unit)")
+                                Text(trf2("events.form.inventory.stock_value_unit", "Stock: %@ %@", String(format: "%.1f", item.currentStock), item.unit))
                                     .font(.caption)
                                     .foregroundStyle(SolennixColors.textSecondary)
                             }
@@ -382,12 +396,12 @@ struct Step4SuppliesEquipmentView: View {
                     .buttonStyle(.plain)
                 }
             }
-            .searchable(text: $supplySearch, prompt: "Buscar insumo")
-            .navigationTitle("Agregar Insumo")
+            .searchable(text: $supplySearch, prompt: tr("events.form.inventory.search_supply", "Buscar insumo"))
+            .navigationTitle(tr("events.form.inventory.add_supply", "Agregar insumo"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cerrar") { showSupplyPicker = false }
+                    Button(tr("events.detail.share.close", "Cerrar")) { showSupplyPicker = false }
                         .foregroundStyle(SolennixColors.textSecondary)
                 }
             }
@@ -408,7 +422,7 @@ struct Step4SuppliesEquipmentView: View {
                                     .font(.body)
                                     .foregroundStyle(SolennixColors.text)
 
-                                Text("Disponible: \(String(format: "%.0f", item.currentStock)) \(item.unit)")
+                                Text(trf2("events.form.inventory.available_value_unit", "Disponible: %@ %@", String(format: "%.0f", item.currentStock), item.unit))
                                     .font(.caption)
                                     .foregroundStyle(SolennixColors.textSecondary)
                             }
@@ -424,12 +438,12 @@ struct Step4SuppliesEquipmentView: View {
                     .buttonStyle(.plain)
                 }
             }
-            .searchable(text: $equipmentSearch, prompt: "Buscar equipo")
-            .navigationTitle("Agregar Equipamiento")
+            .searchable(text: $equipmentSearch, prompt: tr("events.form.inventory.search_equipment", "Buscar equipo"))
+            .navigationTitle(tr("events.form.inventory.add_equipment", "Agregar equipamiento"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cerrar") { showEquipmentPicker = false }
+                    Button(tr("events.detail.share.close", "Cerrar")) { showEquipmentPicker = false }
                         .foregroundStyle(SolennixColors.textSecondary)
                 }
             }
@@ -497,7 +511,7 @@ private struct SupplyRowView: View {
                         .fontWeight(.semibold)
                         .foregroundStyle(SolennixColors.text)
 
-                    Text("\(formatCurrency(item.unitCost))/u")
+                    Text(trf("events.form.inventory.unit_cost", "%@/u", formatCurrency(item.unitCost)))
                         .font(.caption)
                         .foregroundStyle(SolennixColors.primary)
                 }
@@ -516,7 +530,7 @@ private struct SupplyRowView: View {
 
             HStack(spacing: Spacing.md) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Cantidad")
+                    Text(tr("events.form.inventory.quantity", "Cantidad"))
                         .font(.caption2)
                         .foregroundStyle(SolennixColors.textTertiary)
 
@@ -528,7 +542,7 @@ private struct SupplyRowView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Fuente")
+                    Text(tr("events.form.inventory.source", "Fuente"))
                         .font(.caption2)
                         .foregroundStyle(SolennixColors.textTertiary)
 
@@ -539,8 +553,8 @@ private struct SupplyRowView: View {
                             set: { onSourceChange($0) }
                         )
                     ) {
-                        Text("Stock").tag(SupplySource.stock)
-                        Text("Compra").tag(SupplySource.purchase)
+                        Text(tr("events.form.inventory.source_stock", "Stock")).tag(SupplySource.stock)
+                        Text(tr("events.form.inventory.source_purchase", "Compra")).tag(SupplySource.purchase)
                     }
                     .pickerStyle(.segmented)
                     .frame(width: 140)
@@ -554,7 +568,7 @@ private struct SupplyRowView: View {
                     get: { item.excludeCost },
                     set: { onExcludeCostChange($0) }
                 )) {
-                    Text("Sin costo (reaprovechado)")
+                    Text(tr("events.form.inventory.exclude_cost", "Sin costo (reaprovechado)"))
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)
                 }
@@ -616,7 +630,7 @@ private struct SupplyRowView: View {
     }
 
     private var decimalField: some View {
-        TextField("0", text: $qtyText)
+        TextField(tr("events.form.inventory.quantity_placeholder", "0"), text: $qtyText)
             .keyboardType(.decimalPad)
             .font(.body)
             .foregroundStyle(SolennixColors.text)

@@ -8,6 +8,7 @@ import { Modal } from "../../../components/Modal";
 import { PaymentFormFields, PaymentFormData } from "../../../components/PaymentFormFields";
 import { useToast } from "../../../hooks/useToast";
 import clsx from "clsx";
+import { useTranslation } from "react-i18next";
 
 interface PaymentsProps {
   eventId: string;
@@ -32,10 +33,11 @@ export const Payments: React.FC<PaymentsProps> = ({
   autoOpenAdd,
   onPaymentAdded,
 }) => {
+  const { t, i18n } = useTranslation(["events"]);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
-  const [modalTitle, setModalTitle] = useState("Registrar Pago");
+  const [modalTitle, setModalTitle] = useState("");
   const [formInitialAmount, setFormInitialAmount] = useState(0);
   const [formInitialNotes, setFormInitialNotes] = useState("");
   const [isSavingPayment, setIsSavingPayment] = useState(false);
@@ -43,27 +45,53 @@ export const Payments: React.FC<PaymentsProps> = ({
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const { addToast } = useToast();
+  const currencyFormatter = new Intl.NumberFormat(i18n.language === "en" ? "en-US" : "es-MX", {
+    style: "currency",
+    currency: "MXN",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
+  const formatCurrency = (amount: number) => currencyFormatter.format(amount);
+  const formatDate = (value: string) => new Date(value).toLocaleDateString(i18n.language === "en" ? "en-US" : "es-MX");
+
+  const getMethodLabel = (method: string) => {
+    switch (method) {
+      case "cash":
+        return t("events:summary.payments.form.methods.cash");
+      case "transfer":
+        return t("events:summary.payments.form.methods.transfer");
+      case "card":
+        return t("events:summary.payments.form.methods.card");
+      case "check":
+        return t("events:summary.payments.form.methods.check");
+      case "other":
+        return t("events:summary.payments.form.methods.other");
+      default:
+        return method;
+    }
+  };
 
   useEffect(() => {
     if (autoOpenAdd) {
-      setModalTitle("Registrar Pago");
+      setModalTitle(t("events:summary.payments.form.register_payment"));
       setFormInitialAmount(initialAmount !== undefined ? initialAmount : 0);
       setFormInitialNotes("");
       setIsAdding(true);
     }
-  }, [autoOpenAdd, initialAmount]);
+  }, [autoOpenAdd, initialAmount, t]);
 
   const openAddPayment = () => {
-    setModalTitle("Registrar Pago");
+    setModalTitle(t("events:summary.payments.form.register_payment"));
     setFormInitialAmount(0);
     setFormInitialNotes("");
     setIsAdding(true);
   };
 
   const openAddDeposit = () => {
-    setModalTitle("Registrar Anticipo");
+    setModalTitle(t("events:summary.payments.form.register_deposit"));
     setFormInitialAmount(depositBalance);
-    setFormInitialNotes("Anticipo");
+    setFormInitialNotes(t("events:summary.payments.form.deposit_note"));
     setIsAdding(true);
   };
 
@@ -98,17 +126,17 @@ export const Payments: React.FC<PaymentsProps> = ({
 
       if (newPaymentAmount > 0 && eventStatus === "quoted" && onStatusChange) {
         onStatusChange("confirmed");
-        setStatusMessage("✅ Pago registrado. El evento ha sido marcado como Confirmado.");
+        setStatusMessage(t("events:summary.payments.status_confirmed_message"));
         setTimeout(() => setStatusMessage(null), 5000);
       }
 
       setIsAdding(false);
       loadPayments();
       onPaymentAdded?.();
-      addToast("Pago registrado correctamente.", "success");
+      addToast(t("events:summary.payments.success_create"), "success");
     } catch (err) {
       logError("Error creating payment", err);
-      addToast("Error al registrar el pago.", "error");
+      addToast(t("events:summary.payments.error_create"), "error");
     } finally {
       setIsSavingPayment(false);
     }
@@ -118,14 +146,14 @@ export const Payments: React.FC<PaymentsProps> = ({
     if (!deleteId) return;
     try {
       await paymentService.delete(deleteId);
-      addToast('Pago eliminado correctamente.', 'success');
+      addToast(t('events:summary.payments.success_delete'), 'success');
       setConfirmOpen(false);
       setDeleteId(null);
       loadPayments();
       onPaymentAdded?.();
     } catch (err) {
       logError("Error deleting payment", err);
-      addToast('Error al eliminar el pago.', 'error');
+      addToast(t('events:summary.payments.error_delete'), 'error');
     }
   };
 
@@ -147,7 +175,7 @@ export const Payments: React.FC<PaymentsProps> = ({
   };
 
   if (isLoading && payments.length === 0) {
-    return <div className="py-8 text-center text-text-secondary text-sm">Cargando pagos...</div>;
+    return <div className="py-8 text-center text-text-secondary text-sm">{t("events:summary.payments.loading")}</div>;
   }
 
   return (
@@ -163,13 +191,13 @@ export const Payments: React.FC<PaymentsProps> = ({
         <div className="bg-primary/10 border border-primary/20 rounded-2xl p-4 flex items-start text-primary" role="alert">
           <AlertCircle className="h-5 w-5 mr-3 shrink-0 mt-0.5" aria-hidden="true" />
           <div>
-            <p className="font-bold text-sm">El evento está totalmente pagado pero sigue como "Cotizado".</p>
+            <p className="font-bold text-sm">{t("events:summary.payments.fully_paid_warning")}</p>
             <button
               type="button"
               onClick={() => onStatusChange && onStatusChange("confirmed")}
               className="text-xs font-black uppercase tracking-wider underline mt-1"
             >
-              Confirmar ahora
+              {t("events:summary.payments.confirm_now")}
             </button>
           </div>
         </div>
@@ -183,9 +211,9 @@ export const Payments: React.FC<PaymentsProps> = ({
           <div>
             <h2 className="text-2xl font-black text-text uppercase tracking-tight flex items-center gap-2">
               <DollarSign className="h-6 w-6 text-primary" aria-hidden="true" />
-              Pagos y Saldo
-            </h2>
-            <p className="text-text-tertiary text-xs font-bold uppercase tracking-widest mt-1">Control de ingresos del evento</p>
+               {t("events:summary.payments.title")}
+             </h2>
+            <p className="text-text-tertiary text-xs font-bold uppercase tracking-widest mt-1">{t("events:summary.payments.subtitle")}</p>
           </div>
           
           <div className="flex items-center gap-3">
@@ -196,7 +224,7 @@ export const Payments: React.FC<PaymentsProps> = ({
                 className="inline-flex items-center px-4 py-2 bg-warning text-white text-sm font-bold rounded-xl hover:bg-warning/90 shadow-md shadow-warning/20 transition-all active:scale-95"
               >
                 <DollarSign className="h-4 w-4 mr-1.5" />
-                $ Anticipo
+                {t("events:summary.payments.deposit_button")}
               </button>
             )}
             {!isAdding && (
@@ -206,7 +234,7 @@ export const Payments: React.FC<PaymentsProps> = ({
                 className="inline-flex items-center px-4 py-2 bg-surface-alt text-text border border-border text-sm font-bold rounded-xl hover:bg-surface-alt/80 transition-all active:scale-95"
               >
                 <DollarSign className="h-4 w-4 mr-1.5" />
-                $ Pago
+                {t("events:summary.payments.payment_button")}
               </button>
             )}
           </div>
@@ -214,18 +242,18 @@ export const Payments: React.FC<PaymentsProps> = ({
 
         <div className={clsx("grid gap-6 mb-8", depositPercent > 0 ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4" : "grid-cols-1 md:grid-cols-3")}>
           <div className="bg-surface-alt/50 p-6 rounded-2xl border border-border/50">
-             <p className="text-xs font-black text-text-tertiary uppercase tracking-tighter mb-1">Total del Evento</p>
-             <p className="text-2xl font-black text-text">${totalAmount.toFixed(2)}</p>
+             <p className="text-xs font-black text-text-tertiary uppercase tracking-tighter mb-1">{t("events:summary.payments.kpi_total")}</p>
+             <p className="text-2xl font-black text-text">{formatCurrency(totalAmount)}</p>
           </div>
           {depositPercent > 0 && (
             <div className="bg-warning/5 p-6 rounded-2xl border border-warning/20">
-              <p className="text-xs font-black text-warning/70 uppercase tracking-tighter mb-1">Anticipo ({depositPercent}%)</p>
-              <p className="text-2xl font-black text-warning">${depositAmount.toFixed(2)}</p>
+              <p className="text-xs font-black text-warning/70 uppercase tracking-tighter mb-1">{t("events:summary.payments.kpi_deposit", { percent: depositPercent })}</p>
+              <p className="text-2xl font-black text-warning">{formatCurrency(depositAmount)}</p>
             </div>
           )}
           <div className="bg-success/5 p-6 rounded-2xl border border-success/10">
-             <p className="text-xs font-black text-success/70 uppercase tracking-tighter mb-1">Total Pagado</p>
-             <p className="text-2xl font-black text-success">${totalPaid.toFixed(2)}</p>
+             <p className="text-xs font-black text-success/70 uppercase tracking-tighter mb-1">{t("events:summary.payments.kpi_paid")}</p>
+             <p className="text-2xl font-black text-success">{formatCurrency(totalPaid)}</p>
           </div>
           <div className={clsx(
             "p-6 rounded-2xl border",
@@ -237,13 +265,13 @@ export const Payments: React.FC<PaymentsProps> = ({
                "text-xs font-black uppercase tracking-tighter mb-1",
                balance > 0.01 ? "text-error/70" : "text-info/70"
              )}>
-               {balance > 0.01 ? 'Saldo Pendiente' : 'Saldo Liquidado'}
+                {balance > 0.01 ? t('events:summary.payments.kpi_balance_pending') : t('events:summary.payments.kpi_balance_settled')}
              </p>
              <p className={clsx(
                "text-2xl font-black",
                balance > 0.01 ? "text-error" : "text-info"
              )}>
-               ${Math.abs(balance).toFixed(2)}
+                {formatCurrency(Math.abs(balance))}
              </p>
           </div>
         </div>
@@ -259,20 +287,20 @@ export const Payments: React.FC<PaymentsProps> = ({
           />
           <div className="absolute inset-0 flex items-center justify-center">
              <span className="text-xs font-black text-white mix-blend-difference uppercase tracking-widest">
-               {Math.min(progress, 100).toFixed(0)}% Completado
+                {t("events:summary.payments.progress_complete", { percent: Math.min(progress, 100).toFixed(0) })}
              </span>
           </div>
         </div>
 
         <div className="bg-surface-alt/30 rounded-2xl border border-border overflow-hidden">
-          <table className="min-w-full text-sm" aria-label="Historial de pagos">
+          <table className="min-w-full text-sm" aria-label={t("events:summary.payments.history_aria")}>
             <thead>
               <tr className="text-left text-xs font-black text-text-tertiary uppercase tracking-wider border-b border-border bg-surface-alt/50">
-                <th scope="col" className="py-4 px-6">Fecha</th>
-                <th scope="col" className="py-4 px-6">Método</th>
-                <th scope="col" className="py-4 px-6">Nota</th>
-                <th scope="col" className="py-4 px-6 text-right">Monto</th>
-                <th scope="col" className="py-4 px-6 text-right">Acción</th>
+                <th scope="col" className="py-4 px-6">{t("events:summary.payments.table.date")}</th>
+                <th scope="col" className="py-4 px-6">{t("events:summary.payments.table.method")}</th>
+                <th scope="col" className="py-4 px-6">{t("events:summary.payments.table.notes")}</th>
+                <th scope="col" className="py-4 px-6 text-right">{t("events:summary.payments.table.amount")}</th>
+                <th scope="col" className="py-4 px-6 text-right">{t("events:summary.payments.table.action")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/50">
@@ -280,21 +308,19 @@ export const Payments: React.FC<PaymentsProps> = ({
                 <tr key={payment.id} className="group hover:bg-surface-alt/50 transition-colors">
                   <td className="py-4 px-6 font-semibold text-text flex items-center gap-2">
                     <Calendar className="h-3.5 w-3.5 text-text-tertiary" />
-                    {new Date(payment.payment_date).toLocaleDateString()}
+                    {formatDate(payment.payment_date)}
                   </td>
                   <td className="py-4 px-6">
                     <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-card border border-border text-xs font-black uppercase tracking-tight text-text-secondary">
                       {getMethodIcon(payment.payment_method)}
-                      {payment.payment_method === 'cash' ? 'Efectivo' :
-                       payment.payment_method === 'transfer' ? 'Transferencia' :
-                       payment.payment_method === 'card' ? 'Tarjeta' : payment.payment_method}
+                      {getMethodLabel(payment.payment_method)}
                     </span>
                   </td>
                   <td className="py-4 px-6 text-text-secondary italic text-xs">
-                    {payment.notes || '-'}
+                    {payment.notes || t("events:summary.payments.table.notes_empty")}
                   </td>
                   <td className="py-4 px-6 text-right font-black text-text">
-                    ${payment.amount.toFixed(2)}
+                    {formatCurrency(payment.amount)}
                   </td>
                   <td className="py-4 px-6 text-right">
                     <button
@@ -304,7 +330,7 @@ export const Payments: React.FC<PaymentsProps> = ({
                         setConfirmOpen(true);
                       }}
                       className="p-2 text-text-secondary hover:text-error hover:bg-error/10 rounded-lg transition-all"
-                      aria-label="Eliminar pago"
+                      aria-label={t("events:summary.payments.delete_aria")}
                     >
                       <Trash2 className="h-4 w-4" aria-hidden="true" />
                     </button>
@@ -314,7 +340,7 @@ export const Payments: React.FC<PaymentsProps> = ({
               {payments.length === 0 && (
                 <tr>
                   <td colSpan={5} className="py-12 text-center text-text-tertiary italic">
-                    No hay pagos registrados para este evento.
+                    {t("events:summary.payments.empty")}
                   </td>
                 </tr>
               )}
@@ -333,6 +359,8 @@ export const Payments: React.FC<PaymentsProps> = ({
             initialAmount={formInitialAmount}
             initialNotes={formInitialNotes}
             saldoAmount={balance > 0 ? balance : undefined}
+            submitLabel={t("events:summary.payments.form.confirm")}
+            cancelLabel={t("events:summary.payments.form.cancel")}
             isSubmitting={isSavingPayment}
             onCancel={() => setIsAdding(false)}
             onSubmit={onSubmit}
@@ -342,10 +370,10 @@ export const Payments: React.FC<PaymentsProps> = ({
 
       <ConfirmDialog
         open={confirmOpen}
-        title="Eliminar Pago"
-        description="¿Estás seguro de que deseas eliminar este registro de pago? El saldo pendiente se actualizará automáticamente."
-        confirmText="Eliminar permanentemente"
-        cancelText="Conservar"
+        title={t("events:summary.payments.delete_title")}
+        description={t("events:summary.payments.delete_description")}
+        confirmText={t("events:summary.payments.delete_confirm")}
+        cancelText={t("events:summary.payments.delete_cancel")}
         onConfirm={handleDelete}
         onCancel={() => setConfirmOpen(false)}
       />

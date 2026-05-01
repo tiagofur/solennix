@@ -49,6 +49,10 @@ public final class EventDetailViewModel {
         self.apiClient = apiClient
     }
 
+    private func tr(_ key: String, _ defaultValue: String) -> String {
+        FeatureL10n.text(key, defaultValue)
+    }
+
     // MARK: - Computed
 
     public var totalPaid: Double {
@@ -169,9 +173,9 @@ public final class EventDetailViewModel {
             }
         } catch {
             if let apiError = error as? APIError {
-                errorMessage = apiError.errorDescription ?? "Error cargando el evento"
+                errorMessage = apiError.errorDescription ?? tr("events.detail.error.load", "Error cargando el evento")
             } else {
-                errorMessage = "Error cargando el evento"
+                errorMessage = tr("events.detail.error.load", "Error cargando el evento")
             }
         }
 
@@ -201,7 +205,7 @@ public final class EventDetailViewModel {
             await updateLiveActivityStatus()
         } catch {
             HapticsHelper.play(.error)
-            errorMessage = "Error al cambiar el estado"
+            errorMessage = tr("events.detail.error.change_status", "Error al cambiar el estado")
         }
     }
 
@@ -233,14 +237,14 @@ public final class EventDetailViewModel {
             // Notificar a la app target para que programe el recibo en Notification Center.
             NotificationCenter.default.post(
                 name: .solennixPaymentRegistered,
-                object: nil,
-                userInfo: [
-                    "payment_id": payment.id,
-                    "event_id": eventId,
-                    "client_name": client?.name ?? "Cliente",
-                    "amount": payment.amount
-                ]
-            )
+                    object: nil,
+                    userInfo: [
+                        "payment_id": payment.id,
+                        "event_id": eventId,
+                        "client_name": client?.name ?? tr("events.detail.client_fallback", "Cliente"),
+                        "amount": payment.amount
+                    ]
+                )
 
             // Auto-confirm if quoted and payment received
             if event?.status == .quoted {
@@ -254,7 +258,7 @@ public final class EventDetailViewModel {
             showPaymentSheet = false
         } catch {
             HapticsHelper.play(.error)
-            errorMessage = "Error al registrar el pago"
+            errorMessage = tr("events.detail.error.add_payment", "Error al registrar el pago")
         }
 
         isSavingPayment = false
@@ -272,7 +276,7 @@ public final class EventDetailViewModel {
         let balance = depositBalance
         guard balance > 0.01 else { return }
         paymentAmount = String(format: "%.2f", balance)
-        paymentNotes = "Anticipo"
+        paymentNotes = tr("events.detail.deposit", "Anticipo")
         showPaymentSheet = true
     }
 
@@ -289,7 +293,7 @@ public final class EventDetailViewModel {
             await loadData(eventId: eventId)
         } catch {
             HapticsHelper.play(.error)
-            errorMessage = "Error al eliminar el pago"
+            errorMessage = tr("events.detail.error.delete_payment", "Error al eliminar el pago")
         }
     }
 
@@ -304,7 +308,7 @@ public final class EventDetailViewModel {
             return true
         } catch {
             HapticsHelper.play(.error)
-            errorMessage = "Error al eliminar el evento"
+            errorMessage = tr("events.detail.error.delete_event", "Error al eliminar el evento")
             return false
         }
     }
@@ -328,7 +332,7 @@ public final class EventDetailViewModel {
             let body: [String: String] = ["photos": photosString]
             let _: Event = try await apiClient.put(Endpoint.event(eventId), body: body)
         } catch {
-            errorMessage = "Error al subir las fotos"
+            errorMessage = tr("events.detail.error.upload_photos", "Error al subir las fotos")
         }
 
         isUploadingPhoto = false
@@ -351,7 +355,7 @@ public final class EventDetailViewModel {
         } catch {
             eventPhotos = snapshot
             _ = removed
-            errorMessage = "Error al eliminar la foto"
+            errorMessage = tr("events.detail.error.delete_photo", "Error al eliminar la foto")
         }
     }
 
@@ -403,6 +407,6 @@ public final class EventDetailViewModel {
     // MARK: - Helpers
 
     public func productName(for productId: String) -> String {
-        productMap[productId]?.name ?? "Producto"
+        productMap[productId]?.name ?? tr("events.detail.product_fallback", "Producto")
     }
 }

@@ -8,7 +8,7 @@ aliases:
   - Estado Actual
   - Current Status
 date: 2026-03-20
-updated: 2026-04-30
+updated: 2026-05-01
 status: active
 ---
 
@@ -28,8 +28,21 @@ status: active
 > [!info] 2026-04-29 — i18n parity planning reset (issue #202 + #203–#209)
 > La estrategia de multilanguage dejó de organizarse por plataforma y pasó a slices cross-platform con una copy matrix canónica. Objetivo: asegurar misma intención y terminología entre iOS, Android y Web, permitiendo variantes mobile más cortas sólo cuando el espacio lo exija.
 > - **Epic**: #202 `feat(cross-platform): complete product-wide i18n parity`
-> - **Slices**: #94 Dashboard ✅ cerrado, #95 Events list, #203 governance/matrix, #204 event detail + form, #205 auth + settings, #206 clients, #207 products + inventory, #208 public flows ✅ listo para merge en PR #225, #209 final sweep.
+> - **Slices**: #94 Dashboard ✅ cerrado, #95 Events list, #203 governance/matrix, #204 event detail + form ✅ implementado cross-platform, #205 auth + settings, #206 clients, #207 products + inventory, #208 public flows ✅ listo para merge en PR #225, #209 final sweep.
 > - **Documento fuente**: [[19_I18N_STRATEGY]] ahora define copy governance, canonical vs compact variants y checklist de review por slice.
+
+> [!success] 2026-04-29 — i18n slice #204 event detail + form ✅
+> Paridad real de i18n cerrada para Event detail + Event form en Web, iOS y Android.
+> - **Web**: `EventSummary`, `EventForm`, `Payments` y `ClientPortalShareCard` consumen copy localizada en `events.json` para detalle, formulario, pagos, share link, checklist, contrato y fotos.
+> - **iOS**: `EventDetailView`, `EventFormView`, steps del formulario, `EventPaymentsDetailView` y `ClientPortalShareSheet` migraron a `FeatureL10n` con claves `events.detail.*` y `events.form.*`.
+> - **Android**: `EventDetailScreen`, `EventDetailSubScreens`, `EventFormScreen` y viewmodels usan `stringResource` / `strings.xml` ES+EN para detalle, formulario, pagos, staff, supplies y documentos.
+
+> [!success] 2026-04-29 — iOS i18n runtime application fix ✅
+> Corrección del problema donde cambiar idioma en iOS no se aplicaba de forma consistente dentro de la app.
+> - **Runtime locale**: `SolennixApp` inyecta `\.locale` desde `@AppStorage("preferredLocale")`, sincronizado con `User.preferredLanguage`.
+> - **SPM resources**: `SolennixFeatures` usa `FeatureL10n` para resolver `Localizable.xcstrings` con `bundle: .module` y el locale elegido por el usuario.
+> - **Coverage**: navegación, Dashboard, Calendar, Events, Auth y Settings migrados a claves localizadas; verificación local: 815 usos iOS de `FeatureL10n`, 0 claves faltantes.
+> - **Persistencia**: selector de idioma en Settings guarda `preferred_language` vía `PUT /api/users/me`.
 
 > [!success] 2026-05-01 — i18n slice #208 public/client-facing flows listo para merge (PR #225)
 > El slice cross-platform de Quick Quote + organizer-facing Client Portal Share quedó refrescado sobre `main`, con CI verde en PR `#225` y sin hacer build local.
@@ -53,7 +66,6 @@ status: active
 > - **iOS**: `ProductStrings.swift` + `InventoryStrings.swift` usados como shim pragmático para cerrar list/detail/form y componentes compartidos sin tocar todavía `Localizable.xcstrings`.
 > - **Alcance**: copy de catálogo, composición/receta, demanda, alerts, stock adjustment, filtros, sort labels, formularios y estados vacíos/errores.
 > - **Pendiente**: PR limpio del slice `#207` y sweep final `#209` para remanentes fuera de Products/Inventory.
-
 > [!success] 2026-04-29 — Sprint 7.E: Payment Submissions Phase 1 (issue #191, backend + web service ✅)
 > Implementación de la capa de infraestructura para que clientes (vía portal público tokenizado) envíen comprobantes de transferencias bancarias y organizadores revisen/aprueben. Backend completo + Web service listos. UI (cliente portal + organizer inbox) pendiente para Fase 2.
 > - **Backend model**: `PaymentSubmission` struct con fields: event_id, client_id, user_id, amount, transfer_ref, receipt_file_url, status (pending|approved|rejected), reviewed_by, reviewed_at, rejection_reason, linked_payment_id.
@@ -81,6 +93,12 @@ status: active
 > - **Follow-up absorbidos**: `#226` / PR `#229` (quick client modal) y `#232` / PR `#233` (financial baseline tests) se cerraron como redundantes después de ser incorporados en la rama principal de `#230`.
 > - **Validation**: `npm run test:run -- src/pages/Dashboard.test.tsx src/pages/Events/EventForm.test.tsx src/pages/Events/EventList.test.tsx src/pages/Events/EventSummary.test.tsx src/pages/Events/EventSummary.contract.test.tsx src/pages/Events/EventSummary.payments.test.tsx src/pages/Events/EventSummary.photos.test.tsx` → **111 tests PASS**; luego `Frontend Tests` ✅, `Backend Tests` ✅ y `Stage 1..6` ✅ en PR `#231`.
 > - **Estado**: PR `#231` mergeado a `main`; merge commit `2284996d`.
+
+> [!info] 2026-05-01 — Web EventForm staff i18n drift repaired
+> Se corrigió un drift puntual del catálogo web en `EventForm`: el subformulario de personal consumía varias keys `events.staff.*` que no existían en `events.json`, dejando labels sin traducir o mostrando raw keys.
+> - **Scope**: `web/src/pages/Events/components/EventStaff.tsx` dentro del paso `Inventario y Personal` del crear/editar evento.
+> - **Fix aplicado**: se completaron en ES/EN las keys faltantes para descripción, empty state, selector, badge de disponibilidad, placeholders, CTA de horario, alta de equipo completo, selector de equipos y estados (`pending/confirmed/declined/cancelled`).
+> - **Resultado**: el formulario web de staff vuelve a mostrar copy localizada consistente con el slice `#204` sin tocar iOS/Android, que ya estaban cubiertos por resources nativos.
 
 > [!success] 2026-04-29 — Sprint 7.D: OpenAPI Sync Phase 2 (issue #187, web types auto-generated ✅)
 > Migración Web al modo "tipos auto-generados desde OpenAPI". Ahora `npm run openapi:types` regenera `src/types/api.ts` — no hay drift manual. CI verifica que los tipos estén en sync con el spec.

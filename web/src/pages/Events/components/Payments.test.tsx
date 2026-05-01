@@ -123,7 +123,7 @@ describe('Payments', () => {
     render(<Payments eventId="event-1" totalAmount={500} userId="user-1" />);
 
     await waitFor(() => {
-      expect(screen.getByText('Pagos y Saldo')).toBeInTheDocument();
+      expect(screen.getByText('Pagos y saldo')).toBeInTheDocument();
     });
 
     // Open the form via "Registrar Nuevo Pago"
@@ -147,7 +147,7 @@ describe('Payments', () => {
     render(<Payments eventId="event-1" totalAmount={500} userId="user-1" />);
 
     await waitFor(() => {
-      expect(screen.getByText('Pagos y Saldo')).toBeInTheDocument();
+      expect(screen.getByText('Pagos y saldo')).toBeInTheDocument();
     });
 
     // Open the form
@@ -172,15 +172,15 @@ describe('Payments', () => {
     fireEvent.click(within(row as HTMLElement).getByRole('button'));
 
     // Dialog should be visible
-    expect(screen.getByRole('dialog', { name: 'Eliminar Pago' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Eliminar pago' })).toBeInTheDocument();
 
     // Click "Cancelar" in the dialog
-    const dialog = screen.getByRole('dialog', { name: 'Eliminar Pago' });
+    const dialog = screen.getByRole('dialog', { name: 'Eliminar pago' });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Conservar' }));
 
     // Dialog should close
     await waitFor(() => {
-      expect(screen.queryByRole('dialog', { name: 'Eliminar Pago' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('dialog', { name: 'Eliminar pago' })).not.toBeInTheDocument();
     });
 
     expect(paymentService.delete).not.toHaveBeenCalled();
@@ -307,7 +307,7 @@ describe('Payments', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('Pagos y Saldo')).toBeInTheDocument();
+      expect(screen.getByText('Pagos y saldo')).toBeInTheDocument();
     });
 
     expect(screen.queryByText(/totalmente pagado pero sigue como/i)).not.toBeInTheDocument();
@@ -327,7 +327,7 @@ describe('Payments', () => {
     const row = amountCells[1].closest('tr');
     fireEvent.click(within(row as HTMLElement).getByRole('button'));
 
-    const dialog = screen.getByRole('dialog', { name: 'Eliminar Pago' });
+    const dialog = screen.getByRole('dialog', { name: 'Eliminar pago' });
     
     await act(async () => {
       fireEvent.click(within(dialog).getByRole('button', { name: 'Eliminar permanentemente' }));
@@ -352,9 +352,8 @@ describe('Payments', () => {
     });
     expect(screen.getByText('Tarjeta')).toBeInTheDocument();
     // Unknown method rendered as-is
-    expect(screen.getByText('check')).toBeInTheDocument();
-    // Null notes and empty notes both render '-'
-    expect(screen.getAllByText('-').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText('Cheque')).toBeInTheDocument();
+    expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(1);
   });
 
   it('handles load error gracefully', async () => {
@@ -367,7 +366,7 @@ describe('Payments', () => {
     });
   });
 
-  it('shows correct labels when fully paid (Saldo Liquidado)', async () => {
+  it('shows correct labels when fully paid (Saldo liquidado)', async () => {
     (paymentService.getByEventId as any).mockResolvedValue([
       { id: 'pay-1', amount: 600, payment_date: '2024-01-02', payment_method: 'cash', notes: '' },
     ]);
@@ -382,7 +381,7 @@ describe('Payments', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('Saldo Liquidado')).toBeInTheDocument();
+      expect(screen.getByText('Saldo liquidado')).toBeInTheDocument();
     });
   });
 
@@ -394,7 +393,7 @@ describe('Payments', () => {
     render(<Payments eventId="event-1" totalAmount={1000} userId="user-1" />);
 
     await waitFor(() => {
-      expect(screen.getByText('Pagos y Saldo')).toBeInTheDocument();
+      expect(screen.getByText('Pagos y saldo')).toBeInTheDocument();
     });
 
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
@@ -406,7 +405,7 @@ describe('Payments', () => {
     render(<Payments eventId="event-1" totalAmount={0} userId="user-1" />);
 
     await waitFor(() => {
-      expect(screen.getByText('Pagos y Saldo')).toBeInTheDocument();
+      expect(screen.getByText('Pagos y saldo')).toBeInTheDocument();
     });
 
     expect(screen.getByRole('progressbar')).toBeInTheDocument();

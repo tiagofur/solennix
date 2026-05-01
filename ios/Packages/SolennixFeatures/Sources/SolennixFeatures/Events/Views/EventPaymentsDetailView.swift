@@ -20,29 +20,29 @@ public struct EventPaymentsDetailView: View {
     public var body: some View {
         Group {
             if viewModel.isLoading && viewModel.event == nil {
-                ProgressView("Cargando...")
+                ProgressView(tr("events.detail.payments.loading", "Cargando..."))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if let event = viewModel.event {
                 content(event)
             } else {
                 EmptyStateView(
                     icon: "exclamationmark.triangle",
-                    title: "Error",
-                    message: viewModel.errorMessage ?? "No se pudo cargar"
+                    title: tr("events.detail.error.title", "Error"),
+                    message: viewModel.errorMessage ?? tr("events.detail.payments.error.load", "No se pudo cargar")
                 )
             }
         }
         .background(SolennixColors.surfaceGrouped)
-        .navigationTitle("Pagos")
+        .navigationTitle(tr("events.detail.payments.title", "Pagos"))
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $viewModel.showPaymentSheet) {
             paymentSheet
         }
-        .alert("Error", isPresented: Binding(
+        .alert(tr("events.detail.error.title", "Error"), isPresented: Binding(
             get: { viewModel.event != nil && viewModel.errorMessage != nil },
             set: { _ in viewModel.errorMessage = nil }
         )) {
-            Button("OK", role: .cancel) { }
+            Button(tr("events.form.ok", "OK"), role: .cancel) { }
         } message: {
             Text(viewModel.errorMessage ?? "")
         }
@@ -54,9 +54,9 @@ public struct EventPaymentsDetailView: View {
             VStack(spacing: Spacing.lg) {
                 // Summary KPIs
                 HStack(spacing: Spacing.sm) {
-                    kpiCard(label: "Total", value: event.totalAmount.asMXN, color: SolennixColors.primary, bgColor: SolennixColors.primaryLight)
-                    kpiCard(label: "Pagado", value: viewModel.totalPaid.asMXN, color: SolennixColors.success, bgColor: SolennixColors.successBg)
-                    kpiCard(label: "Saldo", value: viewModel.remaining.asMXN,
+                    kpiCard(label: tr("events.detail.payments.kpi.total", "Total"), value: event.totalAmount.asMXN, color: SolennixColors.primary, bgColor: SolennixColors.primaryLight)
+                    kpiCard(label: tr("events.detail.payments.kpi.paid", "Pagado"), value: viewModel.totalPaid.asMXN, color: SolennixColors.success, bgColor: SolennixColors.successBg)
+                    kpiCard(label: tr("events.detail.payments.kpi.balance", "Saldo"), value: viewModel.remaining.asMXN,
                             color: viewModel.isFullyPaid ? SolennixColors.success : SolennixColors.error,
                             bgColor: viewModel.isFullyPaid ? SolennixColors.successBg : SolennixColors.errorBg)
                 }
@@ -77,7 +77,7 @@ public struct EventPaymentsDetailView: View {
                     .frame(height: 12)
 
                     HStack {
-                        Text("\(String(format: "%.0f", viewModel.progress))% cobrado")
+                        Text(trf("events.detail.payments.progress", "%@ cobrado", String(format: "%.0f", viewModel.progress) + "%"))
                             .font(.caption)
                             .foregroundStyle(SolennixColors.textSecondary)
                         Spacer()
@@ -98,11 +98,13 @@ public struct EventPaymentsDetailView: View {
                             .foregroundStyle(isDepositMet ? SolennixColors.success : SolennixColors.warning)
 
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Anticipo \(Int(depositPercent))%")
+                            Text(trf("events.detail.payments.deposit.title", "Anticipo %@%%", String(Int(depositPercent))))
                                 .font(.subheadline)
                                 .fontWeight(.semibold)
                                 .foregroundStyle(SolennixColors.text)
-                            Text(isDepositMet ? "Anticipo cubierto" : "Faltan \((depositAmount - viewModel.totalPaid).asMXN)")
+                            Text(isDepositMet
+                                 ? tr("events.detail.payments.deposit.covered", "Anticipo cubierto")
+                                 : trf("events.detail.payments.deposit.missing", "Faltan %@", (depositAmount - viewModel.totalPaid).asMXN))
                                 .font(.caption)
                                 .foregroundStyle(isDepositMet ? SolennixColors.success : SolennixColors.warning)
                         }
@@ -121,17 +123,17 @@ public struct EventPaymentsDetailView: View {
                 if viewModel.remaining > 0.01 {
                     VStack(spacing: Spacing.sm) {
                         HStack(spacing: Spacing.sm) {
-                            PremiumButton(title: "Registrar Pago", fullWidth: true) {
+                            PremiumButton(title: tr("events.detail.payments.action.record", "Registrar pago"), fullWidth: true) {
                                 viewModel.showPaymentSheet = true
                             }
 
-                            PremiumButton(title: "Liquidar \(viewModel.remaining.asMXN)", fullWidth: true) {
+                            PremiumButton(title: trf("events.detail.payments.action.settle", "Liquidar %@", viewModel.remaining.asMXN), fullWidth: true) {
                                 viewModel.payRemaining()
                             }
                         }
 
                         if viewModel.depositBalance > 0.01 {
-                            PremiumButton(title: "Anticipo \(viewModel.depositBalance.asMXN)", fullWidth: true) {
+                            PremiumButton(title: trf("events.detail.payments.action.deposit", "Anticipo %@", viewModel.depositBalance.asMXN), fullWidth: true) {
                                 viewModel.payDeposit()
                             }
                         }
@@ -140,7 +142,7 @@ public struct EventPaymentsDetailView: View {
 
                 // Payment history
                 VStack(alignment: .leading, spacing: Spacing.sm) {
-                    Text("Historial de Pagos")
+                    Text(tr("events.detail.payments.history_title", "Historial de pagos"))
                         .font(.headline)
                         .foregroundStyle(SolennixColors.text)
 
@@ -149,7 +151,7 @@ public struct EventPaymentsDetailView: View {
                             Image(systemName: "dollarsign.circle")
                                 .font(.largeTitle)
                                 .foregroundStyle(SolennixColors.textTertiary)
-                            Text("No hay pagos registrados")
+                            Text(tr("events.detail.payments.empty", "No hay pagos registrados"))
                                 .font(.subheadline)
                                 .foregroundStyle(SolennixColors.textSecondary)
                         }
@@ -252,11 +254,19 @@ public struct EventPaymentsDetailView: View {
 
     private func paymentMethodLabel(_ method: String) -> String {
         switch method.lowercased() {
-        case "efectivo": return "Efectivo"
-        case "transferencia": return "Transferencia"
-        case "tarjeta": return "Tarjeta"
-        case "cheque": return "Cheque"
+        case "cash", "efectivo": return tr("events.detail.payments.method.cash", "Efectivo")
+        case "transfer", "transferencia": return tr("events.detail.payments.method.transfer", "Transferencia")
+        case "card", "tarjeta": return tr("events.detail.payments.method.card", "Tarjeta")
+        case "check", "cheque": return tr("events.detail.payments.method.check", "Cheque")
         default: return method.capitalized
         }
+    }
+
+    private func tr(_ key: String, _ value: String) -> String {
+        FeatureL10n.text(key, value)
+    }
+
+    private func trf(_ key: String, _ value: String, _ arg: String) -> String {
+        String(format: tr(key, value), locale: FeatureL10n.locale, arg)
     }
 }
