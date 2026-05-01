@@ -12,6 +12,7 @@ import com.creapolis.solennix.core.designsystem.event.UiEvent
 import com.creapolis.solennix.core.model.Plan
 import com.creapolis.solennix.core.model.Product
 import com.creapolis.solennix.core.network.AuthManager
+import com.creapolis.solennix.feature.products.ProductStrings
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -48,7 +49,7 @@ class ProductListViewModel @Inject constructor(
         get() = limitCheckResult is LimitCheckResult.LimitReached
     val nearLimitMessage: String?
         get() = (limitCheckResult as? LimitCheckResult.NearLimit)?.let { result ->
-            "Te quedan ${result.remaining} productos disponibles en tu plan actual."
+            ProductStrings.nearLimitMessage(result.remaining)
         }
     val limitReachedMessage: String?
         get() = (limitCheckResult as? LimitCheckResult.LimitReached)?.message
@@ -139,7 +140,7 @@ class ProductListViewModel @Inject constructor(
         pendingDeleteJob?.cancel()
         _uiEvents.tryEmit(
             UiEvent.PendingDelete(
-                message = "Producto eliminado",
+                message = ProductStrings.productDeleted,
                 undoActionId = "$ACTION_DELETE:$id",
             )
         )
@@ -162,7 +163,7 @@ class ProductListViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiEvents.tryEmit(
                     UiEvent.Error(
-                        message = "No se pudo borrar el producto",
+                        message = ProductStrings.deleteFailed,
                         retryActionId = "$ACTION_DELETE:$id",
                     )
                 )
@@ -180,7 +181,7 @@ class ProductListViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiEvents.tryEmit(
                     UiEvent.Error(
-                        message = "No se pudieron sincronizar los productos. Mostrando datos en caché.",
+                        message = ProductStrings.syncFailed,
                         retryActionId = ACTION_REFRESH,
                     )
                 )

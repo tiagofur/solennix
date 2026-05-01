@@ -19,7 +19,7 @@ public struct ProductFormView: View {
     public var body: some View {
         Group {
             if viewModel.isLoading {
-                ProgressView("Cargando...")
+                ProgressView(ProductStrings.loading)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 formContent
@@ -27,7 +27,7 @@ public struct ProductFormView: View {
         }
         .scrollContentBackground(.hidden)
         .background(SolennixColors.surfaceGrouped)
-        .navigationTitle(viewModel.isEditing ? "Editar Producto" : "Nuevo Producto")
+        .navigationTitle(viewModel.isEditing ? ProductStrings.editProductTitle : ProductStrings.newProductTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -41,11 +41,11 @@ public struct ProductFormView: View {
         .onChange(of: viewModel.selectedPhoto) { _, _ in
             Task { await viewModel.handlePhotoSelection() }
         }
-        .alert("Error", isPresented: .init(
+        .alert(ProductStrings.alertErrorTitle, isPresented: .init(
             get: { viewModel.errorMessage != nil },
             set: { if !$0 { viewModel.errorMessage = nil } }
         )) {
-            Button("OK") { viewModel.errorMessage = nil }
+            Button(ProductStrings.ok) { viewModel.errorMessage = nil }
         } message: {
             Text(viewModel.errorMessage ?? "")
         }
@@ -79,8 +79,8 @@ public struct ProductFormView: View {
 
                 // Recipe sections
                 RecipeSection(
-                    title: "Composicion / Insumos",
-                    description: "Solo insumos generan costo al producto.",
+                    title: ProductStrings.compositionTitle,
+                    description: ProductStrings.compositionDescription,
                     items: viewModel.ingredients,
                     inventoryItems: viewModel.ingredientInventoryItems,
                     onAdd: { viewModel.addIngredient() },
@@ -93,8 +93,8 @@ public struct ProductFormView: View {
                 )
 
                 RecipeSection(
-                    title: "Equipo Necesario",
-                    description: "Activos reutilizables. No se incluyen en el costo.",
+                    title: ProductStrings.equipmentTitle,
+                    description: ProductStrings.equipmentDescription,
                     items: viewModel.equipment,
                     inventoryItems: viewModel.equipmentInventoryItems,
                     onAdd: { viewModel.addEquipment() },
@@ -107,8 +107,8 @@ public struct ProductFormView: View {
                 )
 
                 RecipeSection(
-                    title: "Insumos por Evento",
-                    description: "Costo fijo por evento (ej. aceite, gas).",
+                    title: ProductStrings.suppliesTitle,
+                    description: ProductStrings.suppliesDescription,
                     items: viewModel.supplies,
                     inventoryItems: viewModel.supplyInventoryItems,
                     onAdd: { viewModel.addSupply() },
@@ -130,11 +130,11 @@ public struct ProductFormView: View {
 
     private var staffTeamSection: some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
-            Text("Equipo asociado")
+            Text(ProductStrings.associatedTeam)
                 .font(.headline)
                 .foregroundStyle(SolennixColors.text)
 
-            Text("Cuando agregues este producto a un evento, se asignan automaticamente los miembros del equipo como personal.")
+            Text(ProductStrings.associatedTeamDescription)
                 .font(.caption)
                 .foregroundStyle(SolennixColors.textSecondary)
 
@@ -142,7 +142,7 @@ public struct ProductFormView: View {
                 Button {
                     viewModel.staffTeamId = nil
                 } label: {
-                    Label("Sin equipo", systemImage: viewModel.staffTeamId == nil ? "checkmark" : "")
+                    Label(ProductStrings.noTeam, systemImage: viewModel.staffTeamId == nil ? "checkmark" : "")
                 }
 
                 if !viewModel.availableStaffTeams.isEmpty {
@@ -181,7 +181,7 @@ public struct ProductFormView: View {
             }
 
             if viewModel.availableStaffTeams.isEmpty {
-                Text("Agrega equipos desde Personal para venderlos como servicio.")
+                Text(ProductStrings.addTeamsHint)
                     .font(.caption2)
                     .foregroundStyle(SolennixColors.textTertiary)
             }
@@ -195,7 +195,7 @@ public struct ProductFormView: View {
     private var selectedTeamLabel: String {
         guard let id = viewModel.staffTeamId,
               let team = viewModel.availableStaffTeams.first(where: { $0.id == id }) else {
-            return "Sin equipo"
+            return ProductStrings.noTeam
         }
         return team.name
     }
@@ -245,7 +245,7 @@ public struct ProductFormView: View {
                 .font(.system(size: 32))
                 .foregroundStyle(SolennixColors.textTertiary)
 
-            Text("Agregar foto")
+            Text(ProductStrings.addPhoto)
                 .font(.caption)
                 .foregroundStyle(SolennixColors.textTertiary)
         }
@@ -257,7 +257,7 @@ public struct ProductFormView: View {
 
     private var basicInfoSection: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
-            Text("Informacion del Producto")
+            Text(ProductStrings.productInfo)
                 .font(.headline)
                 .foregroundStyle(SolennixColors.text)
 
@@ -265,11 +265,11 @@ public struct ProductFormView: View {
             AdaptiveFormRow {
                 // Name
                 VStack(alignment: .leading, spacing: Spacing.xs) {
-                    Text("Nombre")
+                    Text(ProductStrings.name)
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)
 
-                    TextField("Ej: Paquete Premium", text: $viewModel.name)
+                    TextField(ProductStrings.namePlaceholder, text: $viewModel.name)
                         .textFieldStyle(.roundedBorder)
 
                     if let error = viewModel.nameError {
@@ -281,7 +281,7 @@ public struct ProductFormView: View {
             } right: {
                 // Category
                 VStack(alignment: .leading, spacing: Spacing.xs) {
-                    Text("Categoria")
+                    Text(ProductStrings.category)
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)
 
@@ -289,7 +289,7 @@ public struct ProductFormView: View {
                         viewModel.showCategoryPicker = true
                     } label: {
                         HStack {
-                            Text(viewModel.category.isEmpty ? "Seleccionar categoria..." : viewModel.category)
+                            Text(viewModel.category.isEmpty ? ProductStrings.selectCategory : viewModel.category)
                                 .foregroundStyle(viewModel.category.isEmpty ? SolennixColors.textTertiary : SolennixColors.text)
 
                             Spacer()
@@ -319,7 +319,7 @@ public struct ProductFormView: View {
             AdaptiveFormRow {
                 // Base Price
                 VStack(alignment: .leading, spacing: Spacing.xs) {
-                    Text("Precio Base")
+                    Text(ProductStrings.basePrice)
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)
 
@@ -336,11 +336,11 @@ public struct ProductFormView: View {
                 // Active toggle
                 Toggle(isOn: $viewModel.isActive) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Producto Activo")
+                        Text(ProductStrings.activeProduct)
                             .font(.body)
                             .foregroundStyle(SolennixColors.text)
 
-                        Text("Visible en cotizaciones")
+                        Text(ProductStrings.visibleInQuotes)
                             .font(.caption)
                             .foregroundStyle(SolennixColors.textTertiary)
                     }
@@ -361,7 +361,7 @@ public struct ProductFormView: View {
             List {
                 // Existing categories
                 if !viewModel.existingCategories.isEmpty {
-                    Section("Categorias Existentes") {
+                    Section(ProductStrings.existingCategories) {
                         ForEach(viewModel.existingCategories, id: \.self) { cat in
                             Button {
                                 viewModel.selectCategory(cat)
@@ -383,9 +383,9 @@ public struct ProductFormView: View {
                 }
 
                 // Custom category
-                Section("Nueva Categoria") {
+                Section(ProductStrings.newCategory) {
                     HStack {
-                        TextField("Nueva categoria...", text: $viewModel.customCategory)
+                        TextField(ProductStrings.newCategoryPlaceholder, text: $viewModel.customCategory)
 
                         Button {
                             viewModel.selectCustomCategory()
@@ -401,11 +401,11 @@ public struct ProductFormView: View {
                     }
                 }
             }
-            .navigationTitle("Seleccionar Categoria")
+            .navigationTitle(ProductStrings.selectCategoryTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Cerrar") {
+                    Button(ProductStrings.close) {
                         viewModel.showCategoryPicker = false
                     }
                 }
@@ -428,7 +428,7 @@ public struct ProductFormView: View {
             if viewModel.isSaving {
                 ProgressView()
             } else {
-                Text("Guardar")
+                Text(ProductStrings.save)
                     .fontWeight(.semibold)
             }
         }

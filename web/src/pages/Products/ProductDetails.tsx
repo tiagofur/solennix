@@ -331,7 +331,7 @@ export const ProductDetails: React.FC = () => {
               {demandForecast.length}
             </p>
           )}
-          <p className="text-xs text-text-secondary mt-1">{t("clients:details.confirmed")}</p>
+          <p className="text-xs text-text-secondary mt-1">{t("common:status.confirmed")}</p>
         </div>
       </div>
 
@@ -351,7 +351,7 @@ export const ProductDetails: React.FC = () => {
               </div>
             )}
             <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-4 border-b border-border pb-2">
-              {t("clients:details.general_info")}
+               {t("products:details.general_info")}
             </h2>
             <div className="space-y-4">
               <div className="flex items-start gap-3">
@@ -384,10 +384,10 @@ export const ProductDetails: React.FC = () => {
                     {t("products:list.ingredients")}
                     {ingredients.filter((i: ProductIngredientRow) => i.type === "supply")
                       .length > 0 &&
-                      `, ${ingredients.filter((i: ProductIngredientRow) => i.type === "supply").length} ${t("products:form.add_supply")}`}
+                      `, ${ingredients.filter((i: ProductIngredientRow) => i.type === "supply").length} ${t("products:list.supplies")}`}
                     {ingredients.filter((i: ProductIngredientRow) => i.type === "equipment")
                       .length > 0 &&
-                      `, ${ingredients.filter((i: ProductIngredientRow) => i.type === "equipment").length} ${t("products:form.equipment")}`}
+                      `, ${ingredients.filter((i: ProductIngredientRow) => i.type === "equipment").length} ${t("products:list.equipment")}`}
                   </p>
                 </div>
               </div>
@@ -449,7 +449,7 @@ export const ProductDetails: React.FC = () => {
                         })}
                       </>
                     ) : (
-                      t("products:details.demand_no_data")
+                      t("products:details.demand_no_confirmed_events")
                     )}
                   </p>
                 </div>
@@ -466,7 +466,7 @@ export const ProductDetails: React.FC = () => {
                 {t("products:details.demand_by_date")}
               </h2>
               <span className="ml-auto text-xs text-text-secondary">
-                {t("clients:details.confirmed")}
+                 {t("common:status.confirmed")}
               </span>
             </div>
 
@@ -476,7 +476,7 @@ export const ProductDetails: React.FC = () => {
               <div className="text-center py-10">
                 <Calendar className="h-9 w-9 text-text-secondary opacity-25 mx-auto mb-3" />
                 <p className="text-sm text-text-secondary">
-                  {t("products:details.demand_no_data")}
+                  {t("products:details.demand_no_confirmed_events")}
                 </p>
               </div>
             ) : (
@@ -577,7 +577,7 @@ export const ProductDetails: React.FC = () => {
                         {t("products:details.total_demand")}
                       </span>
                       <p className="text-xs text-text-secondary">
-                        {demandForecast.length} {demandForecast.length !== 1 ? t("common:nav.events") : t("common:nav.events").slice(0,-1)}
+                         {t("products:list.events_count", { count: demandForecast.length })}
                       </p>
                     </div>
                     <div className="text-right">
@@ -633,7 +633,7 @@ export const ProductDetails: React.FC = () => {
                         {t("products:list.quantity")}
                       </th>
                       <th className="px-6 py-3 text-right text-xs font-semibold text-text-secondary uppercase tracking-wider">
-                        {t("products:form.cost")} Est.
+                        {t("products:form.cost")} {t("products:details.estimated_short")}
                       </th>
                     </tr>
                   </thead>

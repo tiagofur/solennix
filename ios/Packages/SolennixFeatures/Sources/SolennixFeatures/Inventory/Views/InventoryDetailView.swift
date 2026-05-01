@@ -62,20 +62,20 @@ public struct InventoryDetailView: View {
     public var body: some View {
         Group {
             if isLoading {
-                ProgressView("Cargando...")
+                ProgressView(InventoryStrings.loading)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if let item = item {
                 detailContent(item)
             } else if let error = errorMessage {
                 ContentUnavailableView(
-                    "Error",
+                    InventoryStrings.errorTitle,
                     systemImage: "exclamationmark.triangle",
                     description: Text(error)
                 )
             }
         }
         .background(SolennixColors.surfaceGrouped)
-        .navigationTitle(item?.ingredientName ?? "Item")
+        .navigationTitle(item?.ingredientName ?? InventoryStrings.itemFallback)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -86,17 +86,17 @@ public struct InventoryDetailView: View {
                             showStockAdjustment = true
                         }
                     } label: {
-                        Label("Ajustar Stock", systemImage: "plusminus")
+                        Label(InventoryStrings.adjustStock, systemImage: "plusminus")
                     }
 
                     NavigationLink(value: Route.inventoryForm(id: itemId)) {
-                        Label("Editar", systemImage: "pencil")
+                        Label(InventoryStrings.edit, systemImage: "pencil")
                     }
 
                     Button(role: .destructive) {
                         showDeleteConfirm = true
                     } label: {
-                        Label("Eliminar", systemImage: "trash")
+                        Label(InventoryStrings.deleteAction, systemImage: "trash")
                     }
                 } label: {
                     Image(systemName: "ellipsis.circle")
@@ -104,15 +104,15 @@ public struct InventoryDetailView: View {
             }
         }
         .confirmationDialog(
-            "Eliminar item",
+            InventoryStrings.deleteTitle,
             isPresented: $showDeleteConfirm
         ) {
-            Button("Eliminar", role: .destructive) {
+            Button(InventoryStrings.deleteAction, role: .destructive) {
                 Task { await deleteItem() }
             }
-            Button("Cancelar", role: .cancel) {}
+            Button(InventoryStrings.cancel, role: .cancel) {}
         } message: {
-            Text("Estas seguro de que quieres eliminar \"\(item?.ingredientName ?? "")\"? Esta accion no se puede deshacer.")
+            Text(InventoryStrings.permanentDeletePrompt(item?.ingredientName ?? ""))
         }
         .sheet(isPresented: $showStockAdjustment) {
             stockAdjustmentSheet
@@ -133,9 +133,9 @@ public struct InventoryDetailView: View {
             await loadDemandForecast()
         } catch {
             if let apiError = error as? APIError {
-                errorMessage = apiError.errorDescription ?? "Error al cargar"
+                errorMessage = apiError.errorDescription ?? InventoryStrings.errorLoadingTitle
             } else {
-                errorMessage = "Error al cargar"
+                errorMessage = InventoryStrings.errorLoadingTitle
             }
         }
 
@@ -172,11 +172,11 @@ public struct InventoryDetailView: View {
 
                 if eventDemand > 0 {
                     // Try to get client name
-                    var eventName = event.serviceType ?? "Evento"
+                    var eventName = InventoryStrings.defaultEventName(serviceType: event.serviceType)
                     if !event.clientId.isEmpty {
                         do {
                             let client: Client = try await apiClient.get(Endpoint.client(event.clientId))
-                            eventName = "Evento - \(client.name)"
+                            eventName = InventoryStrings.eventWithClient(client.name)
                         } catch {}
                     }
 
@@ -243,7 +243,7 @@ public struct InventoryDetailView: View {
                 HStack {
                     Image(systemName: "clock")
                         .foregroundStyle(SolennixColors.textTertiary)
-                    Text("Última actualización")
+                    Text(InventoryStrings.lastUpdated)
                         .foregroundStyle(SolennixColors.textSecondary)
                     Spacer()
                     if let date = ISO8601DateFormatter().date(from: item.lastUpdated) {
@@ -270,7 +270,7 @@ public struct InventoryDetailView: View {
                 Image(systemName: isLowStock ? "exclamationmark.triangle.fill" : "checkmark.circle.fill")
                     .font(.title2)
                     .foregroundStyle(isLowStock ? SolennixColors.error : SolennixColors.success)
-                Text(isLowStock ? "Stock Bajo" : "Stock OK")
+                Text(isLowStock ? InventoryStrings.stockLow : InventoryStrings.stockOk)
                     .font(.headline)
                     .foregroundStyle(isLowStock ? SolennixColors.error : SolennixColors.success)
                 Spacer()
@@ -293,10 +293,10 @@ public struct InventoryDetailView: View {
                     .foregroundStyle(SolennixColors.textSecondary)
                 Spacer()
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text("Mínimo")
+                    Text(InventoryStrings.minimumShort)
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textTertiary)
-                    Text("\(Int(item.minimumStock)) \(item.unit)")
+                    Text(InventoryStrings.minimumValue(Int(item.minimumStock), unit: item.unit))
                         .font(.subheadline)
                         .fontWeight(.medium)
                         .foregroundStyle(SolennixColors.textSecondary)
@@ -321,7 +321,7 @@ public struct InventoryDetailView: View {
             } label: {
                 HStack {
                     Image(systemName: "plusminus")
-                    Text("Ajustar Stock")
+                    Text(InventoryStrings.adjustStock)
                 }
                 .font(.subheadline)
                 .fontWeight(.semibold)
@@ -346,20 +346,20 @@ public struct InventoryDetailView: View {
             kpiCard(
                 icon: "dollarsign.circle.fill",
                 iconColor: SolennixColors.primary,
-                label: "Costo Unitario",
+                label: InventoryStrings.unitCost,
                 value: (item.unitCost ?? 0) > 0
                     ? (item.unitCost ?? 0).formatted(.currency(code: "MXN"))
                     : "—",
-                subtitle: "por \(item.unit)"
+                subtitle: InventoryStrings.perUnit(item.unit)
             )
             kpiCard(
                 icon: "chart.bar.fill",
                 iconColor: SolennixColors.primary,
-                label: "Valor en Stock",
+                label: InventoryStrings.stockValue,
                 value: item.unitCost != nil
                     ? stockValue.formatted(.currency(code: "MXN"))
                     : "—",
-                subtitle: "valor total"
+                subtitle: InventoryStrings.totalValue,
             )
         }
     }
@@ -410,23 +410,23 @@ public struct InventoryDetailView: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text({
-                    if isCritical { return "¡Stock insuficiente para los proximos 7 dias!" }
-                    if isWarning { return "Stock quedara bajo el minimo tras eventos proximos" }
-                    if isLowOnly { return "Stock por debajo del minimo recomendado" }
-                    if demand7Days > 0 { return "Stock suficiente para los proximos 7 dias" }
-                    if !demandEntries.isEmpty { return "Sin demanda en los proximos 7 dias" }
-                    return "Sin eventos proximos"
+                    if isCritical { return InventoryStrings.critical7Days }
+                    if isWarning { return InventoryStrings.belowMinAfterEvents }
+                    if isLowOnly { return InventoryStrings.belowMinRecommended }
+                    if demand7Days > 0 { return InventoryStrings.enough7Days }
+                    if !demandEntries.isEmpty { return InventoryStrings.noDemand7Days }
+                    return InventoryStrings.noUpcomingEvents
                 }())
                 .font(.subheadline)
                 .fontWeight(.semibold)
                 .foregroundStyle(alertColor)
 
                 if isCritical {
-                    Text("Necesitas \(Int(demand7Days)) \(item.unit) en los proximos 7 dias. Tienes \(Int(item.currentStock)) \(item.unit). Faltan \(Int(-stockAfter7Days)) \(item.unit).")
+                    Text(InventoryStrings.shortageMessage(demand: Int(demand7Days), stock: Int(item.currentStock), missing: Int(-stockAfter7Days), unit: item.unit))
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)
                 } else if isLowOnly {
-                    Text("Tu stock actual (\(Int(item.currentStock)) \(item.unit)) esta por debajo del minimo recomendado (\(Int(item.minimumStock)) \(item.unit)).")
+                    Text(InventoryStrings.lowStockMessage(stock: Int(item.currentStock), unit: item.unit, minimum: Int(item.minimumStock)))
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)
                 }
@@ -452,21 +452,21 @@ public struct InventoryDetailView: View {
 
         return VStack(alignment: .leading, spacing: Spacing.md) {
             healthBar(
-                label: "Stock Actual",
-                value: "\(Int(item.currentStock)) \(item.unit)",
+                label: InventoryStrings.currentStock,
+                value: InventoryStrings.quantityWithUnit(Int(item.currentStock), unit: item.unit),
                 fraction: item.currentStock / maxBar,
                 color: isLowStock ? SolennixColors.error : SolennixColors.primary
             )
             healthBar(
-                label: "Minimo Recomendado",
-                value: "\(Int(item.minimumStock)) \(item.unit)",
+                label: InventoryStrings.recommendedMinimum,
+                value: InventoryStrings.quantityWithUnit(Int(item.minimumStock), unit: item.unit),
                 fraction: item.minimumStock / maxBar,
                 color: .orange
             )
             if demand7Days > 0 {
                 healthBar(
-                    label: "Demanda proximos 7 dias",
-                    value: "\(Int(demand7Days)) \(item.unit)",
+                    label: InventoryStrings.demandNext7Days,
+                    value: InventoryStrings.quantityWithUnit(Int(demand7Days), unit: item.unit),
                     fraction: demand7Days / maxBar,
                     color: stockAfter7Days < 0 ? SolennixColors.error : .orange
                 )
@@ -511,11 +511,11 @@ public struct InventoryDetailView: View {
             HStack {
                 Image(systemName: "calendar")
                     .foregroundStyle(SolennixColors.primary)
-                Text("Demanda por Fecha")
+                Text(InventoryStrings.demandByDate)
                     .font(.headline)
                     .foregroundStyle(SolennixColors.text)
                 Spacer()
-                Text("Eventos confirmados")
+                Text(InventoryStrings.confirmedEvents)
                     .font(.caption2)
                     .foregroundStyle(SolennixColors.textSecondary)
             }
@@ -525,7 +525,7 @@ public struct InventoryDetailView: View {
                     Image(systemName: "calendar.badge.clock")
                         .font(.system(size: 28))
                         .foregroundStyle(SolennixColors.textTertiary)
-                    Text("Sin eventos confirmados que usen este item.")
+                    Text(InventoryStrings.noConfirmedEvents)
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)
                         .multilineTextAlignment(.center)
@@ -555,11 +555,11 @@ public struct InventoryDetailView: View {
                                     .foregroundStyle(SolennixColors.text)
 
                                 if diffDays == 0 {
-                                    badgeLabel("Hoy", color: SolennixColors.primary)
+                                    badgeLabel(InventoryStrings.today, color: SolennixColors.primary)
                                 } else if diffDays == 1 {
-                                    badgeLabel("Manana", color: .orange)
+                                    badgeLabel(InventoryStrings.tomorrow, color: .orange)
                                 } else if diffDays > 1 && diffDays <= 7 {
-                                    Text("en \(diffDays) dias")
+                                    Text(InventoryStrings.inDays(diffDays))
                                         .font(.caption2)
                                         .foregroundStyle(SolennixColors.textSecondary)
                                 }
@@ -568,7 +568,7 @@ public struct InventoryDetailView: View {
 
                         Spacer()
 
-                        Text("\(Int(entry.quantity)) \(entry.unit)")
+                        Text(InventoryStrings.quantityWithUnit(Int(entry.quantity), unit: entry.unit))
                             .font(.subheadline)
                             .fontWeight(.bold)
                             .foregroundStyle(isInsufficient ? SolennixColors.error : SolennixColors.text)
@@ -578,12 +578,12 @@ public struct InventoryDetailView: View {
 
                 Divider()
                 HStack {
-                    Text("Total demanda")
+                    Text(InventoryStrings.totalDemand)
                         .font(.caption)
                         .foregroundStyle(SolennixColors.textSecondary)
                     Spacer()
                     let total = demandEntries.reduce(0) { $0 + $1.quantity }
-                    Text("\(Int(total)) \(item.unit)")
+                    Text(InventoryStrings.quantityWithUnit(Int(total), unit: item.unit))
                         .font(.subheadline)
                         .fontWeight(.bold)
                         .foregroundStyle(SolennixColors.text)
@@ -611,7 +611,7 @@ public struct InventoryDetailView: View {
 
     private func infoCard(_ item: InventoryItem) -> some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
-            Text("Información")
+            Text(InventoryStrings.information)
                 .font(.headline)
                 .foregroundStyle(SolennixColors.text)
 
@@ -619,7 +619,7 @@ public struct InventoryDetailView: View {
                 HStack {
                     Image(systemName: "dollarsign.circle.fill")
                         .foregroundStyle(SolennixColors.primary)
-                    Text("Costo por unidad")
+                    Text(InventoryStrings.costPerUnit)
                         .foregroundStyle(SolennixColors.textSecondary)
                     Spacer()
                     Text(cost.formatted(.currency(code: "MXN")))
@@ -633,7 +633,7 @@ public struct InventoryDetailView: View {
                 HStack {
                     Image(systemName: "chart.bar.fill")
                         .foregroundStyle(SolennixColors.textTertiary)
-                    Text("Valor total en stock")
+                    Text(InventoryStrings.totalStockValue)
                         .foregroundStyle(SolennixColors.textSecondary)
                     Spacer()
                     Text((cost * item.currentStock).formatted(.currency(code: "MXN")))
@@ -642,7 +642,7 @@ public struct InventoryDetailView: View {
                         .foregroundStyle(SolennixColors.text)
                 }
             } else {
-                Text("No se ha definido un costo por unidad")
+                Text(InventoryStrings.noUnitCost)
                     .font(.subheadline)
                     .foregroundStyle(SolennixColors.textTertiary)
                     .italic()
@@ -664,14 +664,14 @@ public struct InventoryDetailView: View {
                         .font(.title3)
                         .fontWeight(.semibold)
 
-                    Text("Stock actual: \(Int(item.currentStock)) \(item.unit)")
+                    Text(InventoryStrings.stockActual(Int(item.currentStock), unit: item.unit))
                         .font(.subheadline)
                         .foregroundStyle(SolennixColors.textSecondary)
 
                     Divider()
 
                     HStack {
-                        Text("Nuevo stock:")
+                        Text(InventoryStrings.newStock)
                         TextField("0", value: $adjustmentQuantity, format: .number)
                             .keyboardType(.decimalPad)
                             .textFieldStyle(.roundedBorder)
@@ -701,14 +701,14 @@ public struct InventoryDetailView: View {
                 Spacer()
             }
             .padding(Spacing.lg)
-            .navigationTitle("Ajustar Stock")
+            .navigationTitle(InventoryStrings.adjustStock)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancelar") { showStockAdjustment = false }
+                    Button(InventoryStrings.cancel) { showStockAdjustment = false }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Guardar") {
+                    Button(InventoryStrings.save) {
                         Task { await saveStockAdjustment() }
                     }
                     .fontWeight(.semibold)

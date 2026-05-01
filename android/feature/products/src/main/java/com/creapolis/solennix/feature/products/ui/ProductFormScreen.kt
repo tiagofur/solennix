@@ -41,6 +41,7 @@ import com.creapolis.solennix.core.model.InventoryItem
 import com.creapolis.solennix.core.model.InventoryType
 import com.creapolis.solennix.core.model.extensions.asMXN
 import com.creapolis.solennix.core.network.UrlResolver
+import com.creapolis.solennix.feature.products.ProductStrings
 import com.creapolis.solennix.feature.products.viewmodel.ProductFormViewModel
 import com.creapolis.solennix.feature.products.viewmodel.RecipeItem
 
@@ -69,7 +70,7 @@ fun ProductFormScreen(
     Scaffold(
         topBar = {
             SolennixTopAppBar(
-                title = { Text("Producto") },
+                title = { Text(ProductStrings.formTitle) },
                 onSearchClick = onSearchClick,
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
@@ -98,7 +99,7 @@ fun ProductFormScreen(
             ) {
                 // Image section
                 Text(
-                    text = "Imagen del Producto",
+                    text = ProductStrings.imageTitle,
                     style = MaterialTheme.typography.labelLarge,
                     color = SolennixTheme.colors.primary,
                     modifier = Modifier.padding(bottom = 0.dp)
@@ -145,7 +146,7 @@ fun ProductFormScreen(
                                     )
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Text(
-                                        text = "Toca para seleccionar imagen",
+                                        text = ProductStrings.tapToSelectImage,
                                         style = MaterialTheme.typography.bodySmall,
                                         color = SolennixTheme.colors.secondaryText
                                     )
@@ -179,7 +180,7 @@ fun ProductFormScreen(
                                     color = SolennixTheme.colors.primary
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("Subiendo...")
+                                Text(ProductStrings.uploading)
                             } else {
                                 Icon(
                                     Icons.Default.PhotoCamera,
@@ -188,8 +189,8 @@ fun ProductFormScreen(
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    if (viewModel.imageUrl.isNotBlank()) "Cambiar Imagen"
-                                    else "Seleccionar Imagen"
+                                    if (viewModel.imageUrl.isNotBlank()) ProductStrings.changeImage
+                                    else ProductStrings.selectImage
                                 )
                             }
                         }
@@ -203,7 +204,7 @@ fun ProductFormScreen(
                         SolennixTextField(
                             value = viewModel.name,
                             onValueChange = { viewModel.name = it },
-                            label = "Nombre *",
+                            label = ProductStrings.nameRequired,
                             leadingIcon = Icons.Default.ShoppingCart
                         )
                     },
@@ -224,7 +225,7 @@ fun ProductFormScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .menuAnchor(MenuAnchorType.PrimaryEditable),
-                                label = { Text("Categoría *") },
+                                label = { Text(ProductStrings.categoryRequired) },
                                 leadingIcon = {
                                     Icon(
                                         Icons.Default.Category,
@@ -262,7 +263,7 @@ fun ProductFormScreen(
                         SolennixTextField(
                             value = viewModel.basePrice,
                             onValueChange = { viewModel.basePrice = it },
-                            label = "Precio Base *",
+                            label = ProductStrings.priceRequired,
                             leadingIcon = Icons.Default.AttachMoney,
                             keyboardType = KeyboardType.Decimal
                         )
@@ -276,12 +277,12 @@ fun ProductFormScreen(
                         ) {
                             Column {
                                 Text(
-                                    text = "Producto activo",
+                                    text = ProductStrings.activeProduct,
                                     style = MaterialTheme.typography.bodyLarge,
                                     color = SolennixTheme.colors.primaryText
                                 )
                                 Text(
-                                    text = "Visible en cotizaciones",
+                                    text = ProductStrings.visibleInQuotes,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = SolennixTheme.colors.secondaryText
                                 )
@@ -300,8 +301,8 @@ fun ProductFormScreen(
 
                 // Recipe sections
                 RecipeSectionCard(
-                    title = "Composición / Insumos",
-                    description = "Solo insumos generan costo al producto.",
+                    title = ProductStrings.compositionTitle,
+                    description = ProductStrings.compositionDescription,
                     items = viewModel.ingredients,
                     inventoryItems = viewModel.ingredientInventoryItems,
                     onAdd = { viewModel.addIngredient() },
@@ -316,8 +317,8 @@ fun ProductFormScreen(
                 )
 
                 RecipeSectionCard(
-                    title = "Equipo Necesario",
-                    description = "Activos reutilizables. No se incluyen en el costo.",
+                    title = ProductStrings.equipmentTitle,
+                    description = ProductStrings.equipmentDescription,
                     items = viewModel.equipment,
                     inventoryItems = viewModel.equipmentInventoryItems,
                     onAdd = { viewModel.addEquipment() },
@@ -332,8 +333,8 @@ fun ProductFormScreen(
                 )
 
                 RecipeSectionCard(
-                    title = "Insumos por Evento",
-                    description = "Costo fijo por evento (ej. aceite, gas).",
+                    title = ProductStrings.suppliesTitle,
+                    description = ProductStrings.suppliesDescription,
                     items = viewModel.supplies,
                     inventoryItems = viewModel.supplyInventoryItems,
                     onAdd = { viewModel.addSupply() },
@@ -359,7 +360,7 @@ fun ProductFormScreen(
                 }
 
                 PremiumButton(
-                    text = "Guardar",
+                    text = ProductStrings.save,
                     onClick = { viewModel.saveProduct() },
                     isLoading = viewModel.isSaving,
                     enabled = viewModel.isFormValid
@@ -428,13 +429,13 @@ private fun RecipeSectionCard(
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Agregar")
+                    Text(ProductStrings.add)
                 }
             }
 
             if (items.isEmpty()) {
                 Text(
-                    text = "No hay elementos agregados",
+                    text = ProductStrings.noAddedItems,
                     style = MaterialTheme.typography.bodyMedium,
                     color = colors.tertiaryText,
                     modifier = Modifier
@@ -515,13 +516,13 @@ private fun RecipeItemRow(
                 Spacer(modifier = Modifier.width(8.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = item.inventoryName ?: "Seleccionar item...",
+                        text = item.inventoryName ?: ProductStrings.selectItem,
                         style = MaterialTheme.typography.bodyMedium,
                         color = if (item.inventoryId.isNotBlank()) colors.primaryText else colors.tertiaryText
                     )
                     if (item.unitCost != null && item.unitCost!! > 0 && showCost) {
                         Text(
-                            text = "Costo: ${item.unitCost!!.asMXN()} / ${item.unit ?: "und"}",
+                            text = ProductStrings.itemCost(item.unitCost!!.asMXN(), item.unit ?: ProductStrings.defaultUnit),
                             style = MaterialTheme.typography.bodySmall,
                             color = colors.secondaryText
                         )
@@ -543,7 +544,7 @@ private fun RecipeItemRow(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Cantidad",
+                    text = ProductStrings.quantity,
                     style = MaterialTheme.typography.labelSmall,
                     color = colors.tertiaryText
                 )
@@ -578,7 +579,7 @@ private fun RecipeItemRow(
             if (showCost && item.unitCost != null && item.unitCost!! > 0) {
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        text = "Costo est.",
+                        text = ProductStrings.estimatedCost,
                         style = MaterialTheme.typography.labelSmall,
                         color = colors.tertiaryText
                     )
@@ -610,7 +611,7 @@ private fun StaffTeamSection(viewModel: ProductFormViewModel) {
     var expanded by remember { mutableStateOf(false) }
     val teams = viewModel.availableTeams
     val selected = teams.find { it.id == viewModel.staffTeamId }
-    val selectedText = selected?.name ?: "Sin equipo"
+    val selectedText = selected?.name ?: ProductStrings.noTeam
 
     Card(
         shape = MaterialTheme.shapes.medium,
@@ -622,13 +623,13 @@ private fun StaffTeamSection(viewModel: ProductFormViewModel) {
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = "Equipo asociado",
+                text = ProductStrings.associatedTeam,
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold,
                 color = colors.primaryText
             )
             Text(
-                text = "Agregá un equipo para vender el servicio de meseros con este producto.",
+                text = ProductStrings.associatedTeamDescription,
                 style = MaterialTheme.typography.bodySmall,
                 color = colors.tertiaryText
             )
@@ -641,7 +642,7 @@ private fun StaffTeamSection(viewModel: ProductFormViewModel) {
                     value = selectedText,
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Equipo") },
+                    label = { Text(ProductStrings.team) },
                     leadingIcon = {
                         Icon(
                             Icons.Default.Groups,
@@ -667,7 +668,7 @@ private fun StaffTeamSection(viewModel: ProductFormViewModel) {
                     onDismissRequest = { expanded = false }
                 ) {
                     DropdownMenuItem(
-                        text = { Text("Sin equipo") },
+                        text = { Text(ProductStrings.noTeam) },
                         onClick = {
                             viewModel.staffTeamId = null
                             expanded = false
@@ -681,7 +682,7 @@ private fun StaffTeamSection(viewModel: ProductFormViewModel) {
                                     val count = team.memberCount ?: team.members?.size
                                     if (count != null) {
                                         Text(
-                                            text = "$count integrantes",
+                                            text = ProductStrings.members(count),
                                             style = MaterialTheme.typography.bodySmall,
                                             color = colors.secondaryText
                                         )
@@ -699,7 +700,7 @@ private fun StaffTeamSection(viewModel: ProductFormViewModel) {
 
             if (viewModel.staffTeamId != null) {
                 Text(
-                    text = "Cuando agregues este producto a un evento, se asignan automáticamente los miembros del equipo como personal.",
+                    text = ProductStrings.autoAssignTeamMembers,
                     style = MaterialTheme.typography.bodySmall,
                     color = colors.secondaryText
                 )
@@ -730,7 +731,7 @@ private fun InventoryPickerBottomSheet(
     ) {
         Column(modifier = Modifier.padding(horizontal = 16.dp)) {
             Text(
-                text = "Seleccionar Item",
+                text = ProductStrings.pickerTitle,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = colors.primaryText,
@@ -740,7 +741,7 @@ private fun InventoryPickerBottomSheet(
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
-                placeholder = { Text("Buscar item...") },
+                placeholder = { Text(ProductStrings.pickerSearchPlaceholder) },
                 leadingIcon = {
                     Icon(
                         Icons.Default.Search,
@@ -782,7 +783,7 @@ private fun InventoryPickerBottomSheet(
                                     color = colors.primaryText
                                 )
                                 Text(
-                                    text = "Stock: ${item.currentStock.toInt()} ${item.unit}",
+                                    text = ProductStrings.stockLabel(item.currentStock.toInt(), item.unit),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = colors.secondaryText
                                 )

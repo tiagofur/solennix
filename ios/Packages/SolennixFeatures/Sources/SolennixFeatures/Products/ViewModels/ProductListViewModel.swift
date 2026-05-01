@@ -12,9 +12,9 @@ public enum ProductSortKey: String, CaseIterable {
 
     public var label: String {
         switch self {
-        case .name:      return "Nombre"
-        case .basePrice: return "Precio"
-        case .category:  return "Categoria"
+        case .name:      return ProductStrings.sortName
+        case .basePrice: return ProductStrings.sortPrice
+        case .category:  return ProductStrings.sortCategory
         }
     }
 }
@@ -300,8 +300,8 @@ public final class ProductListViewModel {
 
     private func mapError(_ error: Error) -> String {
         if let apiError = error as? APIError {
-            return apiError.errorDescription ?? "Ocurrio un error inesperado."
+            return apiError.errorDescription ?? ProductStrings.unexpectedError
         }
-        return "Ocurrio un error inesperado. Intenta de nuevo."
+        return ProductStrings.unexpectedRetryError
     }
 }
