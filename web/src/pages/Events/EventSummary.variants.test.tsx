@@ -162,13 +162,18 @@ describe('EventSummary — header & display variants', () => {
   });
 
   // Consolidación con it.each — originalmente eran 5 tests separados
-  type DisplayExpectations = { present?: string[]; absent?: string[] };
+  type DisplayExpectations = { present?: string[]; absent?: string[]; customAssert?: () => void };
   const displayVariantCases: Array<[string, Record<string, unknown>, DisplayExpectations]> = [
     ['without time range', { start_time: null, end_time: null }, { absent: ['Horario:'] }],
     ['with only start_time', { start_time: '15:00', end_time: null }, { present: ['Horario', 'No definido'] }],
     ['with location', { location: 'Hacienda del Sol' }, { present: ['Hacienda del Sol'] }],
     ['without location', { location: null }, { absent: ['Ubicación:'] }],
-    ['with requires_invoice false', { requires_invoice: false }, { present: ['No requiere factura'] }],
+    ['with requires_invoice false', { requires_invoice: false, tax_amount: 160 }, {
+      present: ['IVA'],
+      customAssert: () => {
+        expect(screen.getByText('IVA').parentElement).toHaveTextContent('$0.00');
+      },
+    }],
   ];
   it.each(displayVariantCases)('renders event %s', async (_label, overrides, expectations) => {
     setupMocks(overrides);
@@ -184,6 +189,7 @@ describe('EventSummary — header & display variants', () => {
     for (const text of expectations.absent ?? []) {
       expect(screen.queryByText(text)).not.toBeInTheDocument();
     }
+    expectations.customAssert?.();
   });
 
   it.each([
