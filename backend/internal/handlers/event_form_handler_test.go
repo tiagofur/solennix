@@ -383,10 +383,26 @@ func TestGetFormData_Success(t *testing.T) {
 	h.GetFormData(rr, req)
 
 	assert.Equal(t, http.StatusOK, rr.Code)
-	assert.Contains(t, rr.Body.String(), "Taquiza")
-	assert.Contains(t, rr.Body.String(), "Eventos del Norte")
-	// Price must NOT be exposed on the public form endpoint.
-	assert.NotContains(t, rr.Body.String(), "500")
+	var resp struct {
+		Organizer struct {
+			BusinessName *string `json:"business_name"`
+		} `json:"organizer"`
+		Products []map[string]any `json:"products"`
+		LinkID   string           `json:"link_id"`
+		ExpiresAt string          `json:"expires_at"`
+	}
+	assert.NoError(t, json.Unmarshal(rr.Body.Bytes(), &resp))
+	if assert.NotNil(t, resp.Organizer.BusinessName) {
+		assert.Equal(t, "Eventos del Norte", *resp.Organizer.BusinessName)
+	}
+	if assert.Len(t, resp.Products, 1) {
+		assert.Equal(t, "Taquiza", resp.Products[0]["name"])
+		assert.Equal(t, "Catering", resp.Products[0]["category"])
+		assert.NotContains(t, resp.Products[0], "base_price")
+		assert.NotContains(t, resp.Products[0], "price")
+	}
+	assert.NotEmpty(t, resp.LinkID)
+	assert.NotEmpty(t, resp.ExpiresAt)
 	linkRepo.AssertExpectations(t)
 	userRepo.AssertExpectations(t)
 	productRepo.AssertExpectations(t)
