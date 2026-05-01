@@ -193,22 +193,22 @@ describe('EventList', () => {
     expect(screen.getByLabelText('Exportar eventos a CSV')).toBeInTheDocument();
   });
 
-  it('renders Nuevo Evento link', () => {
+  it('renders nuevo evento link', () => {
     render(
       <MemoryRouter>
         <EventList />
       </MemoryRouter>
     );
-    expect(screen.getByText('Nuevo Evento')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Nuevo evento/i })).toBeInTheDocument();
   });
 
-  it('renders Cotización Rápida link', () => {
+  it('renders cotización rápida link', () => {
     render(
       <MemoryRouter>
         <EventList />
       </MemoryRouter>
     );
-    expect(screen.getByText('Cotización Rápida')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Cotización rápida/i })).toBeInTheDocument();
   });
 
   it('renders status dropdowns for events', () => {
