@@ -2,6 +2,12 @@ name: Bug report
 description: Report something broken in Solennix
 labels: ["bug", "type:bug", "status:ready", "priority:medium"]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Issues start with `status:ready`.
+        Move them to `status:approved` once the fix scope is reviewed and approved for implementation.
+
   - type: textarea
     id: summary
     attributes:

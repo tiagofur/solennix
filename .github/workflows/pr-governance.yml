@@ -1,0 +1,95 @@
+name: PR Governance
+
+on:
+  pull_request_target:
+    types: [opened, edited, reopened, synchronize, ready_for_review, labeled, unlabeled]
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+
+jobs:
+  issue-reference:
+    name: Check Issue Reference
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate linked issue in PR body
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = context.payload.pull_request.body || '';
+            const match = body.match(/\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+#(\d+)\b/i);
+
+            if (!match) {
+              core.setFailed('PR body must include `Closes #<issue-number>` (or `Fixes` / `Resolves`).');
+              return;
+            }
+
+            core.info(`Linked issue #${match[1]} found in PR body.`);
+
+  issue-approved:
+    name: Check Issue Has status:approved
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate linked issue approval status
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = context.payload.pull_request.body || '';
+            const match = body.match(/\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+#(\d+)\b/i);
+
+            if (!match) {
+              core.setFailed('Cannot validate issue approval without a linked issue in the PR body.');
+              return;
+            }
+
+            const issue_number = Number(match[1]);
+            const { owner, repo } = context.repo;
+            const labels = await github.paginate(github.rest.issues.listLabelsOnIssue, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+
+            const names = labels.map((label) => label.name);
+            if (!names.includes('status:approved')) {
+              const statusLabels = names.filter((name) => name.startsWith('status:'));
+              core.setFailed(
+                `Linked issue #${issue_number} must have label \'status:approved\'. Current status labels: ${statusLabels.join(', ') || 'none'}.`,
+              );
+              return;
+            }
+
+            core.info(`Issue #${issue_number} is approved.`);
+
+  pr-type-label:
+    name: Check PR Has type:* Label
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR type label
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            const labels = await github.paginate(github.rest.issues.listLabelsOnIssue, {
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+
+            const typeLabels = labels
+              .map((label) => label.name)
+              .filter((name) => name.startsWith('type:'));
+
+            if (typeLabels.length !== 1) {
+              core.setFailed(
+                `PR must have exactly one type:* label. Found ${typeLabels.length}: ${typeLabels.join(', ') || 'none'}.`,
+              );
+              return;
+            }
+
+            core.info(`PR type label OK: ${typeLabels[0]}`);
