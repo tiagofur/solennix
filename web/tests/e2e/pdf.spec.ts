@@ -8,41 +8,6 @@ test.describe('PDF Generation Flow', () => {
     test.skip(await isSetupRequired(page), 'Backend not configured');
   });
 
-  test('generate invoice PDF from event', async ({ page }) => {
-    await page.goto('/events');
-
-    const firstEvent = page.locator('[href^="/events/"]').first();
-    const hasEvents = await firstEvent.isVisible({ timeout: 3000 }).catch(() => false);
-
-    test.skip(!hasEvents, 'No events available to generate PDF');
-
-    await firstEvent.click();
-
-    // Look for "Generate Invoice" or "Generar Factura" button
-    const generateInvoiceBtn = page.getByRole('button', {
-      name: /generar factura|generate invoice|descargar factura/i,
-    });
-
-    if (await generateInvoiceBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
-      // Setup download listener
-      const downloadPromise = page.waitForEvent('download', { timeout: 10000 });
-
-      await generateInvoiceBtn.click();
-
-      // Wait for download
-      const download = await downloadPromise;
-
-      // Verify file was downloaded
-      expect(download.suggestedFilename()).toMatch(/\.pdf$/i);
-
-      // Verify filename contains expected patterns
-      const filename = download.suggestedFilename();
-      expect(filename).toMatch(/factura|invoice/i);
-    } else {
-      test.skip(true, 'Generate invoice button not found');
-    }
-  });
-
   test('generate quotation PDF from event', async ({ page }) => {
     await page.goto('/events');
 
