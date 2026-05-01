@@ -65,5 +65,24 @@
         "city": "Ciudad"
       }
     }
+  },
+  "client_portal_share": {
+    "title": "Portal del cliente",
+    "description": "Un enlace privado para que tu cliente vea el evento, el estado de pagos y los detalles clave.",
+    "loading": "Cargando…",
+    "copy_link": "Copiar enlace",
+    "copied": "Copiado",
+    "share_whatsapp": "Compartir por WhatsApp",
+    "rotate": "Rotar enlace",
+    "rotate_title": "Invalida el enlace anterior y genera uno nuevo",
+    "revoke": "Deshabilitar",
+    "generate": "Generar enlace para el cliente",
+    "share_message": "Hola! Acá podés ver los detalles de tu evento: {{url}}",
+    "confirm_rotate": "Al rotar el enlace, el que ya compartiste dejará de funcionar. ¿Continuamos?",
+    "confirm_revoke": "Se va a deshabilitar el enlace para el cliente. ¿Estás seguro?",
+    "toast_generate": "Enlace generado. Compartilo con tu cliente.",
+    "toast_rotate": "Enlace rotado. El anterior ya no funciona.",
+    "toast_revoke": "Enlace deshabilitado.",
+    "toast_copy": "Enlace copiado al portapapeles."
   }
 }

@@ -46,10 +46,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.creapolis.solennix.feature.events.R
 import com.creapolis.solennix.feature.events.viewmodel.ClientPortalShareUiState
 import com.creapolis.solennix.feature.events.viewmodel.ClientPortalShareViewModel
 
@@ -130,13 +132,13 @@ private fun ClientPortalShareContent(
             )
             Spacer(modifier = Modifier.width(12.dp))
             Text(
-                text = "Portal del cliente",
+                text = stringResource(R.string.events_client_portal_title),
                 style = MaterialTheme.typography.titleLarge
             )
         }
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "Un enlace privado para que tu cliente vea el evento, el estado de pagos y los detalles clave.",
+            text = stringResource(R.string.events_client_portal_description),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -164,19 +166,19 @@ private fun ClientPortalShareContent(
     if (showRotateConfirm) {
         AlertDialog(
             onDismissRequest = { showRotateConfirm = false },
-            title = { Text("Rotar enlace") },
+            title = { Text(stringResource(R.string.events_client_portal_rotate_title)) },
             text = {
-                Text("Al rotar el enlace, el que ya compartiste dejará de funcionar. ¿Continuamos?")
+                Text(stringResource(R.string.events_client_portal_rotate_message))
             },
             confirmButton = {
                 TextButton(onClick = {
                     showRotateConfirm = false
                     onRotate()
-                }) { Text("Rotar") }
+                }) { Text(stringResource(R.string.events_client_portal_rotate)) }
             },
             dismissButton = {
                 TextButton(onClick = { showRotateConfirm = false }) {
-                    Text("Cancelar")
+                    Text(stringResource(android.R.string.cancel))
                 }
             }
         )
@@ -185,19 +187,19 @@ private fun ClientPortalShareContent(
     if (showRevokeConfirm) {
         AlertDialog(
             onDismissRequest = { showRevokeConfirm = false },
-            title = { Text("Deshabilitar enlace") },
+            title = { Text(stringResource(R.string.events_client_portal_disable_title)) },
             text = {
-                Text("Se va a deshabilitar el enlace para el cliente. ¿Estás seguro?")
+                Text(stringResource(R.string.events_client_portal_disable_message))
             },
             confirmButton = {
                 TextButton(onClick = {
                     showRevokeConfirm = false
                     onRevoke()
-                }) { Text("Deshabilitar") }
+                }) { Text(stringResource(R.string.events_client_portal_disable)) }
             },
             dismissButton = {
                 TextButton(onClick = { showRevokeConfirm = false }) {
-                    Text("Cancelar")
+                    Text(stringResource(android.R.string.cancel))
                 }
             }
         )
@@ -256,7 +258,7 @@ private fun HasLinkState(
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Copiar enlace")
+                Text(stringResource(R.string.events_client_portal_copy_link))
             }
             OutlinedButton(onClick = onShare, enabled = !isBusy) {
                 Icon(
@@ -265,7 +267,7 @@ private fun HasLinkState(
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Compartir")
+                Text(stringResource(R.string.events_client_portal_share))
             }
         }
 
@@ -284,7 +286,7 @@ private fun HasLinkState(
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Rotar enlace")
+                Text(stringResource(R.string.events_client_portal_rotate))
             }
             TextButton(
                 onClick = onRevoke,
@@ -298,7 +300,7 @@ private fun HasLinkState(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Deshabilitar",
+                    text = stringResource(R.string.events_client_portal_disable),
                     color = MaterialTheme.colorScheme.error
                 )
             }
@@ -340,7 +342,7 @@ private fun EmptyState(
             )
         }
         Spacer(modifier = Modifier.width(8.dp))
-        Text("Generar enlace para el cliente")
+        Text(stringResource(R.string.events_client_portal_generate))
     }
 }
 
@@ -348,16 +350,16 @@ private fun EmptyState(
 
 private fun copyToClipboard(context: Context, url: String) {
     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
-    val clip = ClipData.newPlainText("Portal del cliente", url)
+    val clip = ClipData.newPlainText(context.getString(R.string.events_client_portal_clipboard_label), url)
     clipboard?.setPrimaryClip(clip)
-    Toast.makeText(context, "Enlace copiado al portapapeles.", Toast.LENGTH_SHORT).show()
+    Toast.makeText(context, context.getString(R.string.events_client_portal_copy_toast), Toast.LENGTH_SHORT).show()
 }
 
 private fun shareLink(context: Context, url: String) {
-    val text = "Hola! Acá podés ver los detalles de tu evento: $url"
+    val text = context.getString(R.string.events_client_portal_share_message, url)
     val intent = Intent(Intent.ACTION_SEND).apply {
         type = "text/plain"
         putExtra(Intent.EXTRA_TEXT, text)
     }
-    context.startActivity(Intent.createChooser(intent, "Compartir enlace"))
+    context.startActivity(Intent.createChooser(intent, context.getString(R.string.events_client_portal_share_chooser)))
 }

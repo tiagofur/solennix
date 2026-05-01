@@ -172,7 +172,7 @@ public final class QuickQuoteViewModel {
         let fin = financials
 
         let items: [QuickQuotePDFGenerator.QuoteItem] = selectedProducts.compactMap { product in
-            let name = availableProducts.first(where: { $0.id == product.productId })?.name ?? "Producto"
+            let name = availableProducts.first(where: { $0.id == product.productId })?.name ?? QuickQuoteStrings.product
             let total = Double(product.quantity) * product.unitPrice
             return QuickQuotePDFGenerator.QuoteItem(
                 name: name,

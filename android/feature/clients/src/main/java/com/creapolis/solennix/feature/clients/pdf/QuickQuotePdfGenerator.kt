@@ -9,6 +9,7 @@ import android.graphics.pdf.PdfDocument
 import com.creapolis.solennix.core.model.DiscountType
 import com.creapolis.solennix.core.model.User
 import com.creapolis.solennix.core.model.Client
+import com.creapolis.solennix.feature.clients.R
 import com.creapolis.solennix.feature.clients.viewmodel.QuoteExtra
 import com.creapolis.solennix.feature.clients.viewmodel.QuoteItem
 import java.io.File
@@ -54,9 +55,6 @@ object QuickQuotePdfGenerator {
     private const val SECTION_SPACING = 24f
     private const val PARAGRAPH_SPACING = 12f
 
-    private val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("es", "MX"))
-    private val dateFormatter = DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy", Locale("es", "MX"))
-
     fun generate(
         context: Context,
         client: Client?,
@@ -79,6 +77,13 @@ object QuickQuotePdfGenerator {
     ): File {
         val document = PdfDocument()
         val manager = PageManager(document)
+        val resources = context.resources
+        val locale = resources.configuration.locales[0] ?: Locale.getDefault()
+        val currencyFormatter = NumberFormat.getCurrencyInstance(Locale("es", "MX"))
+        val dateFormatter = DateTimeFormatter.ofPattern(
+            if (locale.language == "en") "MMMM d, yyyy" else "d 'de' MMMM 'de' yyyy",
+            locale
+        )
 
         manager.startNewPage()
 
@@ -86,47 +91,47 @@ object QuickQuotePdfGenerator {
         drawHeader(manager, user)
 
         // Title
-        manager.drawText("COTIZACION RAPIDA", titlePaint())
+        manager.drawText(resources.getString(R.string.clients_quick_quote_pdf_title), titlePaint())
         manager.moveDown(4f)
         val folio = UUID.randomUUID().toString().take(8).uppercase()
-        manager.drawText("Folio: $folio", secondaryPaint())
-        manager.drawText("Fecha: ${LocalDate.now().format(dateFormatter)}", secondaryPaint())
+        manager.drawText(resources.getString(R.string.clients_quick_quote_pdf_folio, folio), secondaryPaint())
+        manager.drawText(resources.getString(R.string.clients_quick_quote_pdf_date, LocalDate.now().format(dateFormatter)), secondaryPaint())
         manager.moveDown(SECTION_SPACING)
 
         // Client info (if available)
         if (client != null) {
-            manager.drawSectionHeader("CLIENTE")
-            manager.drawLabelValue("Nombre:", client.name)
+            manager.drawSectionHeader(resources.getString(R.string.clients_quick_quote_pdf_client))
+            manager.drawLabelValue(resources.getString(R.string.clients_quick_quote_pdf_name), client.name)
             client.email?.takeIf { it.isNotBlank() }?.let { manager.drawLabelValue("Email:", it) }
-            manager.drawLabelValue("Telefono:", client.phone)
+            manager.drawLabelValue(resources.getString(R.string.clients_quick_quote_pdf_phone), client.phone)
             client.address?.takeIf { it.isNotBlank() }?.let { manager.drawLabelValue("Direccion:", it) }
             manager.moveDown(PARAGRAPH_SPACING)
         } else if (!clientName.isNullOrBlank()) {
-            manager.drawSectionHeader("CLIENTE")
-            manager.drawLabelValue("Nombre:", clientName)
+            manager.drawSectionHeader(resources.getString(R.string.clients_quick_quote_pdf_client))
+            manager.drawLabelValue(resources.getString(R.string.clients_quick_quote_pdf_name), clientName)
             clientEmail?.takeIf { it.isNotBlank() }?.let { manager.drawLabelValue("Email:", it) }
-            clientPhone?.takeIf { it.isNotBlank() }?.let { manager.drawLabelValue("Telefono:", it) }
+            clientPhone?.takeIf { it.isNotBlank() }?.let { manager.drawLabelValue(resources.getString(R.string.clients_quick_quote_pdf_phone), it) }
             manager.moveDown(PARAGRAPH_SPACING)
         }
 
         // Event details
         if (numPeople != null && numPeople > 0) {
-            manager.drawSectionHeader("DETALLES")
-            manager.drawLabelValue("Personas:", numPeople.toString())
+            manager.drawSectionHeader(resources.getString(R.string.clients_quick_quote_pdf_details))
+            manager.drawLabelValue(resources.getString(R.string.clients_quick_quote_pdf_people), numPeople.toString())
             manager.moveDown(PARAGRAPH_SPACING)
         }
 
         // Products table
         if (items.isNotEmpty()) {
-            manager.drawSectionHeader("PRODUCTOS / SERVICIOS")
+            manager.drawSectionHeader(resources.getString(R.string.clients_quick_quote_pdf_products))
 
             val colWidths = listOf(220f, 70f, 100f, 100f)
             manager.drawTableHeader(
                 listOf(
-                    "Producto" to colWidths[0],
-                    "Cant." to colWidths[1],
-                    "Precio Unit." to colWidths[2],
-                    "Subtotal" to colWidths[3]
+                    resources.getString(R.string.clients_quick_quote_pdf_product) to colWidths[0],
+                    resources.getString(R.string.clients_quick_quote_pdf_qty) to colWidths[1],
+                    resources.getString(R.string.clients_quick_quote_pdf_unit_price) to colWidths[2],
+                    resources.getString(R.string.clients_quick_quote_pdf_subtotal) to colWidths[3]
                 )
             )
 
@@ -146,15 +151,15 @@ object QuickQuotePdfGenerator {
 
         // Extras table
         if (extras.isNotEmpty()) {
-            manager.drawSectionHeader("EXTRAS / ADICIONALES")
+            manager.drawSectionHeader(resources.getString(R.string.clients_quick_quote_pdf_extras))
 
             val extrasColWidths = listOf(220f, 70f, 100f, 100f)
             manager.drawTableHeader(
                 listOf(
-                    "Descripcion" to extrasColWidths[0],
-                    "Cant." to extrasColWidths[1],
-                    "Precio Unit." to extrasColWidths[2],
-                    "Total" to extrasColWidths[3]
+                    resources.getString(R.string.clients_quick_quote_pdf_description) to extrasColWidths[0],
+                    resources.getString(R.string.clients_quick_quote_pdf_qty) to extrasColWidths[1],
+                    resources.getString(R.string.clients_quick_quote_pdf_unit_price) to extrasColWidths[2],
+                    resources.getString(R.string.clients_quick_quote_pdf_total) to extrasColWidths[3]
                 )
             )
 
@@ -173,46 +178,46 @@ object QuickQuotePdfGenerator {
         }
 
         // Financial summary
-        manager.drawSectionHeader("RESUMEN")
-        manager.drawSummaryRow("Subtotal Productos:", currencyFormatter.format(subtotalProducts))
+        manager.drawSectionHeader(resources.getString(R.string.clients_quick_quote_pdf_summary))
+        manager.drawSummaryRow(resources.getString(R.string.clients_quick_quote_pdf_subtotal_products), currencyFormatter.format(subtotalProducts))
 
         if (extrasTotal > 0) {
-            manager.drawSummaryRow("Subtotal Extras:", currencyFormatter.format(extrasTotal))
+            manager.drawSummaryRow(resources.getString(R.string.clients_quick_quote_pdf_subtotal_extras), currencyFormatter.format(extrasTotal))
         }
 
         if (discountAmount > 0) {
             val discountText = when (discountType) {
-                DiscountType.PERCENT -> "Descuento (${discountValue.toInt()}%):"
-                DiscountType.FIXED -> "Descuento:"
+                DiscountType.PERCENT -> resources.getString(R.string.clients_quick_quote_pdf_discount_percent, discountValue.toInt())
+                DiscountType.FIXED -> resources.getString(R.string.clients_quick_quote_pdf_discount_fixed)
             }
             manager.drawSummaryRow(discountText, "-${currencyFormatter.format(discountAmount)}")
         }
 
         if (requiresInvoice && taxAmount > 0) {
-            manager.drawSummaryRow("IVA (${taxRate.toInt()}%):", currencyFormatter.format(taxAmount))
+            manager.drawSummaryRow(resources.getString(R.string.clients_quick_quote_pdf_tax, taxRate.toInt()), currencyFormatter.format(taxAmount))
         }
 
         manager.moveDown(8f)
         manager.drawLine()
-        manager.drawSummaryRow("TOTAL:", currencyFormatter.format(total), isBold = true)
+        manager.drawSummaryRow(resources.getString(R.string.clients_quick_quote_pdf_total_label), currencyFormatter.format(total), isBold = true)
 
         // Disclaimer
         manager.moveDown(SECTION_SPACING)
         manager.drawText(
-            "Esta cotizacion es informativa y no constituye un compromiso.",
+            resources.getString(R.string.clients_quick_quote_pdf_disclaimer_1),
             captionPaint()
         )
         manager.drawText(
-            "Los precios pueden estar sujetos a cambios. Para confirmar, solicite un presupuesto formal.",
+            resources.getString(R.string.clients_quick_quote_pdf_disclaimer_2),
             captionPaint()
         )
 
         // Footer
-        manager.drawFooter("Solennix - Cada detalle importa • www.solennix.com")
+        manager.drawFooter(resources.getString(R.string.clients_quick_quote_pdf_footer))
 
         // Save
         manager.finishDocument()
-        val file = File(context.cacheDir, "cotizacion_rapida_$folio.pdf")
+        val file = File(context.cacheDir, resources.getString(R.string.clients_quick_quote_pdf_file, folio))
         FileOutputStream(file).use { fos -> document.writeTo(fos) }
         document.close()
 

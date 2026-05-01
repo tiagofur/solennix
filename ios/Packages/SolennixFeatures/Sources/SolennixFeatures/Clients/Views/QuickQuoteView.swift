@@ -25,32 +25,32 @@ public struct QuickQuoteView: View {
                 } else {
                     Form {
                         Section {
-                            DisclosureGroup("Datos del cliente (opcional, para el PDF)", isExpanded: $viewModel.showClientInfo) {
+                            DisclosureGroup(QuickQuoteStrings.clientData, isExpanded: $viewModel.showClientInfo) {
                                 AdaptiveFormRow {
-                                    TextField("Nombre del cliente", text: $viewModel.clientName)
+                                    TextField(QuickQuoteStrings.clientName, text: $viewModel.clientName)
                                         .textContentType(.name)
                                 } right: {
-                                    TextField("Teléfono", text: $viewModel.clientPhone)
+                                    TextField(QuickQuoteStrings.phone, text: $viewModel.clientPhone)
                                         .keyboardType(.phonePad)
                                         .textContentType(.telephoneNumber)
                                 }
-                                TextField("Email", text: $viewModel.clientEmail)
+                                TextField(QuickQuoteStrings.email, text: $viewModel.clientEmail)
                                     .keyboardType(.emailAddress)
                                     .textContentType(.emailAddress)
                                     .textInputAutocapitalization(.never)
                             }
                         }
 
-                        Section("Datos Básicos") {
+                        Section(QuickQuoteStrings.basicData) {
                             HStack {
                                 Image(systemName: "person.2")
                                     .foregroundStyle(SolennixColors.textSecondary)
-                                TextField("Número de Personas", value: $viewModel.numPeople, format: .number)
+                                TextField(QuickQuoteStrings.numPeople, value: $viewModel.numPeople, format: .number)
                                     .keyboardType(.numberPad)
                             }
                         }
                         
-                        Section("Productos") {
+                        Section(QuickQuoteStrings.products) {
                             if sizeClass == .regular {
                                 LazyVGrid(columns: [GridItem(.flexible(), spacing: Spacing.md), GridItem(.flexible(), spacing: Spacing.md)], spacing: Spacing.md) {
                                     ForEach($viewModel.selectedProducts) { $product in
@@ -65,12 +65,12 @@ public struct QuickQuoteView: View {
                             }
 
                             Button(action: viewModel.addProduct) {
-                                Label("Agregar Producto", systemImage: "plus")
+                                Label(QuickQuoteStrings.addProduct, systemImage: "plus")
                             }
                             .disabled(viewModel.availableProducts.isEmpty)
                         }
 
-                        Section("Extras") {
+                        Section(QuickQuoteStrings.extras) {
                             if sizeClass == .regular {
                                 LazyVGrid(columns: [GridItem(.flexible(), spacing: Spacing.md), GridItem(.flexible(), spacing: Spacing.md)], spacing: Spacing.md) {
                                     ForEach($viewModel.extras) { $extra in
@@ -85,23 +85,23 @@ public struct QuickQuoteView: View {
                             }
 
                             Button(action: viewModel.addExtra) {
-                                Label("Agregar Extra", systemImage: "plus")
+                                Label(QuickQuoteStrings.addExtra, systemImage: "plus")
                             }
                         }
                         
-                        Section("Descuento y Facturación") {
+                        Section(QuickQuoteStrings.discountBilling) {
                             AdaptiveFormRow {
-                                Toggle("Requiere Factura (IVA)", isOn: $viewModel.requiresInvoice)
+                                Toggle(QuickQuoteStrings.invoiceRequired, isOn: $viewModel.requiresInvoice)
                             } right: {
-                                Picker("Tipo de Descuento", selection: $viewModel.discountType) {
-                                    Text("Porcentaje (%)").tag(DiscountType.percent)
-                                    Text("Monto Fijo ($)").tag(DiscountType.fixed)
+                                Picker(QuickQuoteStrings.discountType, selection: $viewModel.discountType) {
+                                    Text(QuickQuoteStrings.percentDiscount).tag(DiscountType.percent)
+                                    Text(QuickQuoteStrings.fixedDiscount).tag(DiscountType.fixed)
                                 }
                                 .pickerStyle(.segmented)
                             }
 
                             HStack {
-                                Text("Descuento")
+                                Text(QuickQuoteStrings.discount)
                                 Spacer()
                                 TextField("0", value: $viewModel.discountValue, format: .number)
                                     .keyboardType(.decimalPad)
@@ -110,22 +110,22 @@ public struct QuickQuoteView: View {
                             }
                         }
                         
-                        Section("Resumen") {
+                        Section(QuickQuoteStrings.summary) {
                             let fin = viewModel.financials
-                            SummaryRow(label: "Subtotal Productos", value: fin.productsSubtotal)
-                            SummaryRow(label: "Subtotal Extras", value: fin.extrasTotal)
+                            SummaryRow(label: QuickQuoteStrings.subtotalProducts, value: fin.productsSubtotal)
+                            SummaryRow(label: QuickQuoteStrings.subtotalExtras, value: fin.extrasTotal)
                             
                             if fin.discountAmount > 0 {
-                                SummaryRow(label: "Descuento", value: -fin.discountAmount)
+                                SummaryRow(label: QuickQuoteStrings.discount, value: -fin.discountAmount)
                                     .foregroundStyle(SolennixColors.success)
                             }
                             
                             if viewModel.requiresInvoice {
-                                SummaryRow(label: "IVA", value: fin.taxAmount)
+                                SummaryRow(label: QuickQuoteStrings.vat, value: fin.taxAmount)
                             }
                             
                             HStack {
-                                Text("Total")
+                                Text(QuickQuoteStrings.total)
                                     .font(.headline)
                                 Spacer()
                                 Text(fin.total.asMXN)
@@ -135,20 +135,20 @@ public struct QuickQuoteView: View {
                         }
 
                         if viewModel.financials.totalCost > 0 {
-                            Section("Métricas de Rentabilidad (Interno)") {
+                            Section(QuickQuoteStrings.profitabilityMetrics) {
                                 let profitFin = viewModel.financials
-                                SummaryRow(label: "Costo Productos", value: profitFin.productCost)
-                                SummaryRow(label: "Costo Extras", value: profitFin.extrasCost)
-                                SummaryRow(label: "Costo Total", value: profitFin.totalCost)
+                                SummaryRow(label: QuickQuoteStrings.productCost, value: profitFin.productCost)
+                                SummaryRow(label: QuickQuoteStrings.extrasCost, value: profitFin.extrasCost)
+                                SummaryRow(label: QuickQuoteStrings.totalCost, value: profitFin.totalCost)
                                 HStack {
-                                    Text("Utilidad Neta")
+                                    Text(QuickQuoteStrings.netProfit)
                                         .foregroundStyle(SolennixColors.textSecondary)
                                     Spacer()
                                     Text(profitFin.profit.asMXN)
                                         .foregroundStyle(profitFin.profit >= 0 ? SolennixColors.success : .red)
                                 }
                                 HStack {
-                                    Text("Margen")
+                                    Text(QuickQuoteStrings.margin)
                                         .foregroundStyle(SolennixColors.textSecondary)
                                     Spacer()
                                     Text(String(format: "%.1f%%", profitFin.margin))
@@ -157,11 +157,11 @@ public struct QuickQuoteView: View {
                             }
                         }
                         
-                        Section("Exportar") {
+                        Section(QuickQuoteStrings.export) {
                             Button {
                                 viewModel.generatePDF(profile: nil)
                             } label: {
-                                Label("Exportar PDF", systemImage: "doc.text")
+                                Label(QuickQuoteStrings.exportPDF, systemImage: "doc.text")
                             }
                             .disabled(viewModel.selectedProducts.isEmpty)
                         }
@@ -170,19 +170,19 @@ public struct QuickQuoteView: View {
                     .background(SolennixColors.surfaceGrouped)
                 }
             }
-            .navigationTitle("Cotización Rápida")
+            .navigationTitle(QuickQuoteStrings.title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cerrar") {
+                    Button(QuickQuoteStrings.close) {
                         dismiss()
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("A Evento") {
+                    Button(QuickQuoteStrings.convertToEvent) {
                         let transferData = QuickQuoteTransferData(
                             products: viewModel.selectedProducts.map { p in
-                                let name = viewModel.availableProducts.first(where: { $0.id == p.productId })?.name ?? "Producto"
+                                let name = viewModel.availableProducts.first(where: { $0.id == p.productId })?.name ?? QuickQuoteStrings.product
                                 return (productId: p.productId, productName: name, quantity: p.quantity, unitPrice: p.unitPrice)
                             },
                             extras: viewModel.extras.map { e in
@@ -207,7 +207,7 @@ public struct QuickQuoteView: View {
             .sheet(isPresented: $viewModel.showShareSheet) {
                 if let data = viewModel.pdfData {
                     let tempURL = FileManager.default.temporaryDirectory
-                        .appendingPathComponent("CotizacionRapida.pdf")
+                        .appendingPathComponent(QuickQuoteStrings.pdfFileName)
                     let _ = try? data.write(to: tempURL)
                     ShareSheetView(activityItems: [tempURL])
                 }
@@ -217,7 +217,7 @@ public struct QuickQuoteView: View {
     
     private func productRow(for product: Binding<EventProduct>) -> some View {
         VStack(spacing: Spacing.sm) {
-            Picker("Producto", selection: product.productId) {
+            Picker(QuickQuoteStrings.product, selection: product.productId) {
                 ForEach(viewModel.availableProducts) { p in
                     Text(p.name).tag(p.id)
                 }
@@ -230,7 +230,7 @@ public struct QuickQuoteView: View {
             }
             
             HStack {
-                TextField("Cantidad", value: product.quantity, format: .number)
+                TextField(QuickQuoteStrings.quantity, value: product.quantity, format: .number)
                     .keyboardType(.numberPad)
                     .textFieldStyle(.roundedBorder)
                     .frame(maxWidth: 80)
@@ -246,19 +246,19 @@ public struct QuickQuoteView: View {
     
     private func extraRow(for extra: Binding<EventExtra>) -> some View {
         VStack(spacing: Spacing.sm) {
-            TextField("Descripción", text: extra.description)
+            TextField(QuickQuoteStrings.description, text: extra.description)
             
             HStack {
-                TextField("Costo", value: extra.cost, format: .number)
+                TextField(QuickQuoteStrings.cost, value: extra.cost, format: .number)
                     .keyboardType(.decimalPad)
                     .textFieldStyle(.roundedBorder)
                 
-                TextField("Precio", value: extra.price, format: .number)
+                TextField(QuickQuoteStrings.price, value: extra.price, format: .number)
                     .keyboardType(.decimalPad)
                     .textFieldStyle(.roundedBorder)
             }
             
-            Toggle("Passthrough (Sin Utilidad)", isOn: extra.excludeUtility)
+            Toggle(QuickQuoteStrings.passthrough, isOn: extra.excludeUtility)
                 .font(.caption)
         }
         .padding(.vertical, Spacing.xs)
@@ -290,4 +290,3 @@ private struct ShareSheetView: UIViewControllerRepresentable {
 
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
-

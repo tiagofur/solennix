@@ -23,6 +23,17 @@ status: active
 > - **Slices**: #94 Dashboard ✅ cerrado, #95 Events list, #203 governance/matrix, #204 event detail + form, #205 auth + settings, #206 clients, #207 products + inventory, #208 public flows, #209 final sweep.
 > - **Documento fuente**: [[19_I18N_STRATEGY]] ahora define copy governance, canonical vs compact variants y checklist de review por slice.
 
+> [!info] 2026-04-30 — i18n slice #208 public/client-facing flows 🔄
+> Se avanzó el slice cross-platform de Quick Quote + organizer-facing Client Portal Share sin hacer build local.
+> - **Web**: `QuickQuotePage.tsx` ahora exporta PDF usando el idioma activo; `ClientPortalShareCard.tsx` dejó los hardcodes y consume `events.client_portal_share` en ES/EN.
+> - **iOS**: nuevos shims `QuickQuoteStrings.swift` y `ClientPortalShareStrings.swift` centralizan copy ES/EN para `QuickQuoteView`, `QuickQuotePDFGenerator`, `ClientPortalShareSheet`, `ClientPortalShareViewModel`, `EventDetailView`, `QuickActionsFAB` y `OnboardingTips`.
+> - **Android**: se agregaron resources ES/EN para `feature:clients`, `feature:events` y `core:designsystem`; `QuickQuoteScreen`, `QuickQuoteViewModel`, `QuickQuotePdfGenerator`, `ClientPortalShareBottomSheet`, `ClientPortalShareViewModel`, `EventDetailScreen` y `QuickActionsFAB` dejaron de hardcodear copy del slice.
+> - **Verificación parcial**: `web/src/pages/QuickQuote/QuickQuotePage.test.tsx` ✅, `backend/go test ./...` ✅.
+> - **Pendiente del slice**:
+>   - [ ] tests focalizados de Android/iOS o CI equivalente
+>   - [ ] actualizar tracker `19_I18N_STRATEGY.md` con cierre/estado final del slice
+>   - [ ] commit limpio + PR exclusivo de `#208`
+
 > [!success] 2026-04-29 — Sprint 7.E: Payment Submissions Phase 1 (issue #191, backend + web service ✅)
 > Implementación de la capa de infraestructura para que clientes (vía portal público tokenizado) envíen comprobantes de transferencias bancarias y organizadores revisen/aprueben. Backend completo + Web service listos. UI (cliente portal + organizer inbox) pendiente para Fase 2.
 > - **Backend model**: `PaymentSubmission` struct con fields: event_id, client_id, user_id, amount, transfer_ref, receipt_file_url, status (pending|approved|rejected), reviewed_by, reviewed_at, rejection_reason, linked_payment_id.

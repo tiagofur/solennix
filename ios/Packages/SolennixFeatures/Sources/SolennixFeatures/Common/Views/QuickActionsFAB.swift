@@ -45,7 +45,7 @@ public struct QuickActionsFAB: View {
                 // Quick Quote action
                 fabAction(
                     icon: "bolt.fill",
-                    label: "Cotización Rápida",
+                    label: QuickQuoteStrings.compactTitle,
                     action: {
                         withAnimation(reduceMotion ? nil : .spring(response: 0.3)) { isExpanded = false }
                         onQuickQuote()

@@ -61,6 +61,7 @@ import com.creapolis.solennix.feature.events.pdf.EquipmentListPdfGenerator
 import com.creapolis.solennix.feature.events.pdf.InvoicePdfGenerator
 import com.creapolis.solennix.feature.events.pdf.PaymentReportPdfGenerator
 import com.creapolis.solennix.feature.events.pdf.ShoppingListPdfGenerator
+import com.creapolis.solennix.feature.events.R
 import com.creapolis.solennix.feature.events.viewmodel.EventDetailUiState
 import com.creapolis.solennix.feature.events.viewmodel.EventDetailViewModel
 import androidx.window.layout.FoldingFeature
@@ -1439,7 +1440,7 @@ private fun ContractPreviewButton(onClick: () -> Unit) {
 private fun ClientPortalCard(onClick: () -> Unit) {
     NavLinkCard(
         icon = Icons.Default.Link,
-        label = "Portal del cliente",
+        label = stringResource(R.string.events_client_portal_title),
         tint = SolennixTheme.colors.primary,
         onClick = onClick
     )
@@ -2294,4 +2295,3 @@ private fun SummaryNavCard(
         }
     }
 }
-

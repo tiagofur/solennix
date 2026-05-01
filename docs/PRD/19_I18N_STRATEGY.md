@@ -14,7 +14,7 @@
   - #205 — Auth + settings
   - #206 — Clients
   - #207 — Products + inventory
-  - #208 — Public/client-facing flows
+  - #208 — Public/client-facing flows 🔄 Quick Quote + Client Portal Share ya externalizados en web/iOS/Android; falta validación final + PR
   - #209 — Final hardcoded-string parity sweep
 
 ## Principio rector

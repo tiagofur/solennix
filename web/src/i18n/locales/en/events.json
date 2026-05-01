@@ -65,5 +65,24 @@
         "city": "City"
       }
     }
+  },
+  "client_portal_share": {
+    "title": "Client portal",
+    "description": "A private link so your client can see the event, payment status, and key details.",
+    "loading": "Loading…",
+    "copy_link": "Copy link",
+    "copied": "Copied",
+    "share_whatsapp": "Share on WhatsApp",
+    "rotate": "Rotate link",
+    "rotate_title": "Invalidate the previous link and generate a new one",
+    "revoke": "Disable",
+    "generate": "Generate client link",
+    "share_message": "Hi! Here you can see your event details: {{url}}",
+    "confirm_rotate": "Rotating the link will make the one you already shared stop working. Continue?",
+    "confirm_revoke": "This will disable the client link. Are you sure?",
+    "toast_generate": "Link generated. Share it with your client.",
+    "toast_rotate": "Link rotated. The previous one no longer works.",
+    "toast_revoke": "Link disabled.",
+    "toast_copy": "Link copied to clipboard."
   }
 }
