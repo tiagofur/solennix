@@ -21,7 +21,6 @@
 > [!todo] Próximos sprints iOS
 > - ~~**Sprint 7.B** — Paywall modal reactivo a `plan_limit_exceeded` 403 con CTA contextual.~~ ✅ Cerrado 2026-04-26. `APIError.planLimitExceeded` + `PaywallSheet` + wired en Event/Client/Product form.
 > - **Sprint 7.C** — Enforcement tier matrix completo (shape-based gates).
-> - **Sprint 9** — UI de registro de pagos por transferencia para el organizer (feature B).
 > - **i18n** — Extraer Dashboard + Events strings (issues #94, #95).
 
 > [!tip] Filosofía
@@ -43,8 +42,8 @@
 | Registro de pagos       | ✅    | ✅                 | ✅                     | —            |
 | Calendario              | ✅    | ✅                 | ✅                     | —            |
 | Dashboard con KPIs      | ✅    | ✅                 | ✅                     | —            |
-| Generación de PDFs      | ✅    | ⚠️ Sin librería    | ✅ 8 tipos             | iOS adelante |
-| Pagos online (Stripe)   | ✅    | ❌                 | ❌                     | Fase 3       |
+| Generación de PDFs      | ✅    | ⚠️ Sin librería    | ✅ 7 tipos             | iOS adelante |
+
 | Onboarding checklist    | ✅    | ✅                 | ✅ + TipKit            | iOS adelante |
 | Cotización rápida + PDF | ✅    | ✅                 | ✅                     | —            |
 | Conflictos equipo       | ✅    | ✅                 | ✅                     | —            |

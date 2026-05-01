@@ -116,12 +116,6 @@ vi.mock('./components/Payments.tsx', () => ({
   Payments: () => <div>PAYMENTS_VIEW</div>,
 }));
 
-vi.mock('../../services/eventPaymentService', () => ({
-  eventPaymentService: {
-    createCheckoutSession: vi.fn(),
-  },
-}));
-
 vi.mock('../../lib/errorHandler', () => ({
   logError: vi.fn(),
   getErrorMessage: vi.fn((_err: unknown, fallback?: string) => fallback || 'Error'),

@@ -27,7 +27,7 @@
 - [[Módulo Clientes]] — CRUD, foto, historial, estadísticas
 - [[Módulo Productos]] — Catálogo, recetas/ingredientes, imágenes
 - [[Módulo Inventario]] — Stock, alertas, equipamiento/insumos
-- [[Módulo Pagos]] — Registro de pagos, Stripe checkout, reportes
+- [[Módulo Pagos]] — Registro de pagos, reportes
 - [[Módulo Calendario]] — Vista mensual, fechas bloqueadas
 - [[Módulo Admin]] — Dashboard admin, gestión de usuarios, suscripciones
 - [[Módulo Formularios Compartibles]] — Formulario publico para clientes + gestion de enlaces

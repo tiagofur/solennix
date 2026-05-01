@@ -3,7 +3,7 @@
 # Sistema de PDFs
 
 > [!abstract] Resumen
-> 8 generadores de PDF usando **UIGraphicsPDFRenderer** nativo. Todos incluyen branding del negocio (logo, nombre, color) y se comparten via ShareSheet. Funcionalidad COMPLETA — a diferencia de Android, no hay dependencias faltantes.
+> 7 generadores de PDF usando **UIGraphicsPDFRenderer** nativo. Todos incluyen branding del negocio (logo, nombre, color) y se comparten via ShareSheet. Funcionalidad COMPLETA — a diferencia de Android, no hay dependencias faltantes.
 
 ---
 

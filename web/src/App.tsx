@@ -31,7 +31,6 @@ const Pricing = React.lazy(() => import("@/pages/Pricing").then((m) => ({ defaul
 const EventList = React.lazy(() => import("@/pages/Events/EventList").then((m) => ({ default: m.EventList })));
 const EventForm = React.lazy(() => import("@/pages/Events/EventForm").then((m) => ({ default: m.EventForm })));
 const EventSummary = React.lazy(() => import("@/pages/Events/EventSummary").then((m) => ({ default: m.EventSummary })));
-const EventPaymentSuccess = React.lazy(() => import("@/pages/Events/EventPaymentSuccess"));
 
 const ClientList = React.lazy(() => import("@/pages/Clients/ClientList").then((m) => ({ default: m.ClientList })));
 const ClientForm = React.lazy(() => import("@/pages/Clients/ClientForm").then((m) => ({ default: m.ClientForm })));
@@ -111,7 +110,6 @@ function App() {
                 <Route path="/events/new" element={<EventForm />} />
                 <Route path="/events/:id/edit" element={<EventForm />} />
                 <Route path="/events/:id/summary" element={<EventSummary />} />
-                <Route path="/events/:id/payment-success" element={<EventPaymentSuccess />} />
 
                 <Route path="/clients" element={<ClientList />} />
                 <Route path="/clients/new" element={<ClientForm />} />
