@@ -132,7 +132,6 @@ graph LR
 |-----------|-----------|
 | Presupuesto | `BudgetPDFGenerator` |
 | Contrato | `ContractPDFGenerator` |
-| Factura | `InvoicePDFGenerator` |
 | Cotización rápida | `QuickQuotePDFGenerator` |
 | Lista de compras | `ShoppingListPDFGenerator` |
 | Checklist | `ChecklistPDFGenerator` |

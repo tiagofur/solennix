@@ -115,7 +115,7 @@ web/src/
 3. **Composición** — Pages compuestas de componentes más pequeños (EventForm → 6 sub-componentes)
 4. **Hooks como lógica reutilizable** — `usePagination`, `usePlanLimits`, etc.
 5. **Error handling centralizado** — `logError()` en toda la app, toasts para feedback al usuario
-6. **PDF-First exports** — Presupuesto, contrato, factura, checklist exportables como PDF con branding
+6. **PDF-First exports** — Presupuesto, contrato, checklist exportables como PDF con branding
 
 ## Relaciones
 

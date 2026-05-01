@@ -101,7 +101,6 @@ Desde `EventSummary`, el usuario puede generar:
 |-----|-----------|
 | **Presupuesto** | Productos, extras, totales, descuento, impuesto |
 | **Contrato** | Template customizado con tokens (nombre, fecha, monto, etc.) |
-| **Factura** | Ítems, pagos realizados, saldo pendiente |
 | **Lista de Compras** | Ingredientes/insumos necesarios por producto |
 | **Checklist** | Lista de tareas para el día del evento |
 | **Reporte de Pagos** | Historial completo de pagos del evento |
