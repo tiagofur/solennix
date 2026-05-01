@@ -42,7 +42,7 @@ graph LR
 | `EventSupplies` | `Events/components/EventSupplies.tsx` | Insumos consumibles con cantidades |
 | `EventStaff` | `Events/components/EventStaff.tsx` | Asignar colaboradores del catálogo de personal al evento con costo y rol |
 | `EventFinancials` | `Events/components/EventFinancials.tsx` | Descuento (% o fijo), impuesto, depósito, reembolso, total |
-| `Payments` | `Events/components/Payments.tsx` | Registro de pagos con Stripe checkout |
+| `Payments` | `Events/components/Payments.tsx` | Registro de pagos |
 | `QuickClientModal` | `Events/components/QuickClientModal.tsx` | Crear cliente inline sin salir del form |
 
 ## Estados del Evento

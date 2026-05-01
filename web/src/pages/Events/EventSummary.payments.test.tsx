@@ -11,7 +11,6 @@ import { EventSummary } from './EventSummary';
 import { eventService } from '../../services/eventService';
 import { productService } from '../../services/productService';
 import { paymentService } from '../../services/paymentService';
-import { eventPaymentService } from '../../services/eventPaymentService';
 import { generateContractPDF, generatePaymentReportPDF } from '../../lib/pdfGenerator';
 import { logError } from '../../lib/errorHandler';
 import { ContractTemplateError } from '../../lib/contractTemplate';
@@ -101,7 +100,6 @@ vi.mock('../../services/subscriptionService', () => ({
 vi.mock('../../lib/pdfGenerator', () => ({
   generateBudgetPDF: vi.fn(),
   generateContractPDF: vi.fn(),
-  generateInvoicePDF: vi.fn(),
   generateShoppingListPDF: vi.fn(),
   generatePaymentReportPDF: vi.fn(),
 }));
@@ -120,12 +118,6 @@ vi.mock('./components/Payments.tsx', () => ({
 
 vi.mock('./components/ClientPortalShareCard', () => ({
   ClientPortalShareCard: () => null,
-}));
-
-vi.mock('../../services/eventPaymentService', () => ({
-  eventPaymentService: {
-    createCheckoutSession: vi.fn(),
-  },
 }));
 
 vi.mock('../../lib/errorHandler', () => ({
@@ -225,91 +217,6 @@ describe('EventSummary — payments & edge cases', () => {
     });
 
     expect(screen.queryByRole('button', { name: /Registrar pago/i })).not.toBeInTheDocument();
-  });
-
-  it('shows Stripe payment button in actions when remaining > 0', async () => {
-    (paymentService.getByEventId as any).mockResolvedValue([
-      { amount: 200 },
-    ]);
-
-    render(<MemoryRouter><EventSummary /></MemoryRouter>);
-
-    await waitFor(() => {
-      expect(screen.getByText('Ana — Boda')).toBeInTheDocument();
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /Más$/i }));
-
-    expect(screen.getByText('Cobro en Línea')).toBeInTheDocument();
-    expect(screen.getByText('Pagar con Stripe')).toBeInTheDocument();
-  });
-
-  it('does not show Stripe payment button when cancelled', async () => {
-    setupMocks({ status: 'cancelled' });
-    (paymentService.getByEventId as any).mockResolvedValue([
-      { amount: 200 },
-    ]);
-
-    render(<MemoryRouter><EventSummary /></MemoryRouter>);
-
-    await waitFor(() => {
-      expect(screen.getByText('Ana — Boda')).toBeInTheDocument();
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /Más$/i }));
-
-    expect(screen.queryByText('Pagar con Stripe')).not.toBeInTheDocument();
-  });
-
-  it('handles Stripe payment click successfully', async () => {
-    (paymentService.getByEventId as any).mockResolvedValue([
-      { amount: 200 },
-    ]);
-    (eventPaymentService.createCheckoutSession as any).mockResolvedValue({ url: 'https://stripe.com/pay' });
-
-    const originalLocation = window.location;
-    Object.defineProperty(window, 'location', {
-      writable: true,
-      value: { ...originalLocation, href: '' },
-    });
-
-    render(<MemoryRouter><EventSummary /></MemoryRouter>);
-
-    await waitFor(() => {
-      expect(screen.getByText('Ana — Boda')).toBeInTheDocument();
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /Más$/i }));
-    fireEvent.click(screen.getByText('Pagar con Stripe'));
-
-    await waitFor(() => {
-      expect(eventPaymentService.createCheckoutSession).toHaveBeenCalledWith('event-1');
-    });
-
-    Object.defineProperty(window, 'location', {
-      writable: true,
-      value: originalLocation,
-    });
-  });
-
-  it('handles Stripe payment error', async () => {
-    (paymentService.getByEventId as any).mockResolvedValue([
-      { amount: 200 },
-    ]);
-    (eventPaymentService.createCheckoutSession as any).mockRejectedValue(new Error('stripe fail'));
-
-    render(<MemoryRouter><EventSummary /></MemoryRouter>);
-
-    await waitFor(() => {
-      expect(screen.getByText('Ana — Boda')).toBeInTheDocument();
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /Más$/i }));
-    fireEvent.click(screen.getByText('Pagar con Stripe'));
-
-    await waitFor(() => {
-      expect(logError).toHaveBeenCalledWith('Error creating checkout session', expect.any(Error));
-    });
   });
 
   it('triggers payment report PDF when in payments view with payments', async () => {

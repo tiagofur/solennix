@@ -35,7 +35,6 @@ graph TD
             EN["/events/new"] --> EventForm
             EE["/events/:id/edit"] --> EventFormEdit["EventForm (edit)"]
             ES["/events/:id/summary"] --> EventSummary
-            EP["/events/:id/payment-success"] --> PaymentSuccess
         end
 
         subgraph Clients["/clients"]

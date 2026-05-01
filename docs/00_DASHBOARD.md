@@ -228,7 +228,6 @@ timeline
         Sprint 7.B  : Paywalls mobile coherentes ✅
         Sprint 7.C  : Enforcement matrix completo
     section Q3 2026
-        Sprint 9  : Feature B — Pagos por transferencia
         Sprint 10 : Feature I — Reseñas post-evento
         Sprint 11 : Feature C — Milestone notifications
         Sprint 12 : Feature D — Thread organizer↔cliente
@@ -340,11 +339,10 @@ graph TB
 | Prioridad | Trabajo | Bloqueado en | Impacto |
 |:-:|---|---|---|
 | 🥇 | **Sprint 7.C — Enforcement tier matrix** | Sin bloqueo técnico | Activa el split Gratis/Pro real |
-| 🥈 | **Sprint 9 — Feature B pagos transferencia** | Sin bloqueo técnico | Cierra el ciclo de cobro |
-| 🥉 | **Sprint 10 — Feature I reseñas** | Sin bloqueo técnico | Marketing orgánico + retención |
-| 4º | **Sprint Dashboard refactor** | Sin bloqueo técnico | Ver [[PRD/22_DASHBOARD_REFACTOR_PLAN|Plan completo]] |
-| 5º | **Calendar parity fixes (G1-G7)** | Sin bloqueo técnico | Ver [[PRD/21_CALENDAR_PARITY_AUDIT|Audit]] |
-| 4º | **Sprint 4 — Activar deploy VPS** | Usuario configura secrets en GitHub | Activa auto-deploy CI/CD |
+| 🥈 | **Sprint 10 — Feature I reseñas** | Sin bloqueo técnico | Marketing orgánico + retención |
+| 🥉 | **Sprint Dashboard refactor** | Sin bloqueo técnico | Ver [[PRD/22_DASHBOARD_REFACTOR_PLAN|Plan completo]] |
+| 4º | **Calendar parity fixes (G1-G7)** | Sin bloqueo técnico | Ver [[PRD/21_CALENDAR_PARITY_AUDIT|Audit]] |
+| 5º | **Sprint 4 — Activar deploy VPS** | Usuario configura secrets en GitHub | Activa auto-deploy CI/CD |
 
 ### Deuda técnica registrada (GitHub Issues)
 

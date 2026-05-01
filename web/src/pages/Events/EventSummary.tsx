@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { productService } from "@/services/productService";
-import { eventPaymentService } from "@/services/eventPaymentService";
 import { api } from "@/lib/api";
 import {
   ArrowLeft,
@@ -15,7 +14,6 @@ import {
   UserCog,
   Building,
   Zap,
-  CreditCard,
   Camera,
   X,
   ImagePlus,
@@ -324,17 +322,6 @@ export const EventSummary: React.FC = () => {
     }
   };
 
-  const handlePayOnline = async () => {
-    if (!id) return;
-    try {
-      const { url } = await eventPaymentService.createCheckoutSession(id);
-      window.location.href = url;
-    } catch (error) {
-      logError("Error creating checkout session", error);
-      addToast(t('events:summary.payments.stripe_error'), "error");
-    }
-  };
-
   if (loading) {
     return (
       <div className="space-y-6 max-w-5xl mx-auto px-4 sm:px-8 py-8" role="status" aria-live="polite">
@@ -585,26 +572,7 @@ export const EventSummary: React.FC = () => {
                     {t('events:summary.actions.payment_report')}
                   </button>
                 )}
-                {remainingValue > 0 && currentStatus !== "cancelled" && (
-                  <>
-                    <div className="my-1 border-t border-border"></div>
-                    <p className="px-4 py-2 text-xs font-semibold text-text-tertiary uppercase tracking-wider">
-                      {t('events:summary.actions.online_payment')}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        handlePayOnline();
-                        setActionsDropdownOpen(false);
-                      }}
-                      className="w-full flex items-center px-4 py-2.5 text-sm text-text hover:bg-surface-alt dark:hover:bg-surface transition-colors"
-                      role="menuitem"
-                    >
-                      <CreditCard className="h-5 w-5 mr-3 text-text-secondary" />
-                      {t('events:summary.actions.pay_with_stripe')}
-                    </button>
-                  </>
-                )}
+
               </div>
             )}
           </div>

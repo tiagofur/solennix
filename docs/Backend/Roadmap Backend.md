@@ -22,7 +22,6 @@
 
 > [!todo] Próximos sprints Backend
 > - **Sprint 7.C** — Enforcement matrix: gate con 403 `{type: "requires_paid_plan"}` en endpoints de features A/B/C/D/E/G/H/I según tier del organizer. Para feature A (Portal): el endpoint público lee `organizer.plan` y devuelve `basic_payload` o `full_payload`.
-> - **Sprint 9** — Tabla `payment_submissions` + 6 endpoints (3 públicos rate-limited + 3 organizer) para registro de pago por transferencia del cliente.
 > - **Sprint 10** — Tabla `event_reviews` + cron que envía email de review 48h post-evento.
 > - **Follow-up** — Documentar los endpoints de Portal Cliente, Staff, Staff Teams en `backend/docs/openapi.yaml`.
 
@@ -367,7 +366,6 @@ Commits en rama `super-plan`: `0fd6aac`, `42124d0`, `2c23dd6`, `af85e48`, `9bd07
 - [ ] `GET /api/public/events/{token}` — Vista pública del evento (sin auth)
 - [ ] `POST /api/public/events/{token}/approve` — Cliente aprueba cotización
 - [ ] `POST /api/public/events/{token}/sign-contract` — Firma digital
-- [ ] `POST /api/public/events/{token}/pay` — Pago directo del cliente
 - [ ] Tokens de acceso único con expiración
 
 **Por qué**: Alineado con [[Roadmap Web]] Fase 5.4. El frontend necesita endpoints públicos para el portal de cliente.

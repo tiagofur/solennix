@@ -20,7 +20,6 @@
 > [!todo] Próximos sprints Android
 > - ~~**Sprint 7.B** — `UpgradePlanDialog` wiring cuando API devuelve 403 `plan_limit_exceeded`.~~ ✅ Cerrado 2026-04-26. `SolennixException.PlanLimitExceeded` + wired en Event/Client/Product form ViewModels + Screens.
 > - **Sprint 7.C** — Enforcement tier matrix completo.
-> - **Sprint 9** — UI registro de pagos por transferencia (feature B).
 > - **i18n** — Extraer Dashboard + Events strings (issues #94, #95).
 
 > [!tip] Filosofía
@@ -86,7 +85,7 @@
 | Calendario                  | ✅             | ✅                      | —                |
 | Dashboard con KPIs          | ✅             | ✅                      | —                |
 | Generación de PDFs          | ✅ Funcional   | ✅ Nativo (PdfDocument) | **Fase 0 OK**    |
-| Pagos online (Stripe)       | ✅ Stripe      | ❌ Solo registro manual | Fase 3           |
+
 | Onboarding checklist        | ✅             | ✅                      | —                |
 | Cotización rápida           | ✅             | ✅                      | —                |
 | Detección conflictos equipo | ✅             | ✅                      | —                |

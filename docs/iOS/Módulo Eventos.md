@@ -3,7 +3,7 @@
 # Módulo Eventos
 
 > [!abstract] Resumen
-> Módulo central. CRUD completo con formulario multi-paso (5 steps), detalle con recursos anidados (productos, extras, equipo, insumos, fotos), checklist, detección de conflictos, sugerencias automáticas, y generación de 8 tipos de PDF.
+> Módulo central. CRUD completo con formulario multi-paso (5 steps), detalle con recursos anidados (productos, extras, equipo, insumos, fotos), checklist, detección de conflictos, sugerencias automáticas, y generación de 7 tipos de PDF.
 
 ---
 
@@ -157,5 +157,5 @@ graph LR
 - [[Módulo Productos]] — productos asignados al evento
 - [[Módulo Inventario]] — equipamiento e insumos
 - [[Módulo Pagos]] — pagos del evento
-- [[Sistema de PDFs]] — 8 generadores de documentos
+- [[Sistema de PDFs]] — 7 generadores de documentos
 - [[Módulo Calendario]] — visualización temporal
