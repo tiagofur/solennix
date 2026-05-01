@@ -20,19 +20,16 @@ status: active
 > [!info] 2026-04-29 — i18n parity planning reset (issue #202 + #203–#209)
 > La estrategia de multilanguage dejó de organizarse por plataforma y pasó a slices cross-platform con una copy matrix canónica. Objetivo: asegurar misma intención y terminología entre iOS, Android y Web, permitiendo variantes mobile más cortas sólo cuando el espacio lo exija.
 > - **Epic**: #202 `feat(cross-platform): complete product-wide i18n parity`
-> - **Slices**: #94 Dashboard ✅ cerrado, #95 Events list, #203 governance/matrix, #204 event detail + form, #205 auth + settings, #206 clients, #207 products + inventory, #208 public flows, #209 final sweep.
+> - **Slices**: #94 Dashboard ✅ cerrado, #95 Events list, #203 governance/matrix, #204 event detail + form, #205 auth + settings, #206 clients, #207 products + inventory, #208 public flows ✅ listo para merge en PR #225, #209 final sweep.
 > - **Documento fuente**: [[19_I18N_STRATEGY]] ahora define copy governance, canonical vs compact variants y checklist de review por slice.
 
-> [!info] 2026-04-30 — i18n slice #208 public/client-facing flows 🔄
-> Se avanzó el slice cross-platform de Quick Quote + organizer-facing Client Portal Share sin hacer build local.
+> [!success] 2026-05-01 — i18n slice #208 public/client-facing flows listo para merge (PR #225)
+> El slice cross-platform de Quick Quote + organizer-facing Client Portal Share quedó refrescado sobre `main`, con CI verde en PR `#225` y sin hacer build local.
 > - **Web**: `QuickQuotePage.tsx` ahora exporta PDF usando el idioma activo; `ClientPortalShareCard.tsx` dejó los hardcodes y consume `events.client_portal_share` en ES/EN.
 > - **iOS**: nuevos shims `QuickQuoteStrings.swift` y `ClientPortalShareStrings.swift` centralizan copy ES/EN para `QuickQuoteView`, `QuickQuotePDFGenerator`, `ClientPortalShareSheet`, `ClientPortalShareViewModel`, `EventDetailView`, `QuickActionsFAB` y `OnboardingTips`.
 > - **Android**: se agregaron resources ES/EN para `feature:clients`, `feature:events` y `core:designsystem`; `QuickQuoteScreen`, `QuickQuoteViewModel`, `QuickQuotePdfGenerator`, `ClientPortalShareBottomSheet`, `ClientPortalShareViewModel`, `EventDetailScreen` y `QuickActionsFAB` dejaron de hardcodear copy del slice.
-> - **Verificación parcial**: `web/src/pages/QuickQuote/QuickQuotePage.test.tsx` ✅, `backend/go test ./...` ✅.
-> - **Pendiente del slice**:
->   - [ ] tests focalizados de Android/iOS o CI equivalente
->   - [ ] actualizar tracker `19_I18N_STRATEGY.md` con cierre/estado final del slice
->   - [ ] commit limpio + PR exclusivo de `#208`
+> - **Validación**: `web/src/pages/QuickQuote/QuickQuotePage.test.tsx` ✅, `web/src/pages/Events/components/QuickClientModal.test.tsx` ✅, `Backend Tests` ✅, `Frontend Tests` ✅, `iOS Validation` ✅, `Stage 1..6` ✅ en PR `#225`.
+> - **Estado**: PR `#225` (`feat(cross-platform): localize quick quote and client portal (#208)`) quedó `CLEAN` tras refrescar la branch sobre `main`.
 
 > [!success] 2026-04-29 — Sprint 7.E: Payment Submissions Phase 1 (issue #191, backend + web service ✅)
 > Implementación de la capa de infraestructura para que clientes (vía portal público tokenizado) envíen comprobantes de transferencias bancarias y organizadores revisen/aprueben. Backend completo + Web service listos. UI (cliente portal + organizer inbox) pendiente para Fase 2.
@@ -52,14 +49,15 @@ status: active
 >   - [ ] Notifications (submission/approval/rejection)
 >   - [ ] S3 integration para receipt storage (actualmente filename only)
 
-> [!info] 2026-04-30 — Web frontend baseline stabilized for EventSummary / Dashboard / EventList (issue #230)
-> Se estabilizó un bloque importante de suites web que estaban rompiendo la baseline de frontend por drift de i18n y expectations viejas, no por regresiones funcionales del producto.
+> [!success] 2026-05-01 — Web frontend baseline stabilized and merged (issue #230, PR #231)
+> Se estabilizó y mergeó a `main` el bloque web que venía rompiendo la baseline de frontend por drift de i18n y expectations viejas, no por regresiones funcionales del producto.
 > - **Root cause principal**: `web/src/i18n/locales/{es,en}/events.json` había quedado incompleto tras restores merge-safe y sólo exponía `list` + hotfixes puntuales, mientras `EventSummary.tsx` consume namespaces amplios (`summary`, `financials`, `general`, `photos`, `payments`).
 > - **Fix aplicado**: restaurados los namespaces completos de `events.json` en ES/EN y corregidas assertions stale en `EventSummary.test.tsx` para alinearse con la remoción previa del invoice UI (#215).
 > - **Dashboard**: tests alineados al copy actual (`Hola, {{name}}`, `Cobrado`, `IVA pendiente`, `Eventos del mes`) y agregado locale key faltante `dashboard.upcoming.no_events` en ES/EN. También se completaron mocks de widgets/analytics en `Dashboard.test.tsx`.
 > - **EventList**: tests ajustados a sentence case vigente (`Nuevo evento`, `Cotización rápida`).
-> - **Validation**: `npm run test:run -- src/pages/Dashboard.test.tsx src/pages/Events/EventForm.test.tsx src/pages/Events/EventList.test.tsx src/pages/Events/EventSummary.test.tsx src/pages/Events/EventSummary.contract.test.tsx src/pages/Events/EventSummary.payments.test.tsx src/pages/Events/EventSummary.photos.test.tsx` → **111 tests PASS**.
-> - **Scope**: fix quirúrgico de baseline web bajo issue #230; no hubo build local.
+> - **Follow-up absorbidos**: `#226` / PR `#229` (quick client modal) y `#232` / PR `#233` (financial baseline tests) se cerraron como redundantes después de ser incorporados en la rama principal de `#230`.
+> - **Validation**: `npm run test:run -- src/pages/Dashboard.test.tsx src/pages/Events/EventForm.test.tsx src/pages/Events/EventList.test.tsx src/pages/Events/EventSummary.test.tsx src/pages/Events/EventSummary.contract.test.tsx src/pages/Events/EventSummary.payments.test.tsx src/pages/Events/EventSummary.photos.test.tsx` → **111 tests PASS**; luego `Frontend Tests` ✅, `Backend Tests` ✅ y `Stage 1..6` ✅ en PR `#231`.
+> - **Estado**: PR `#231` mergeado a `main`; merge commit `2284996d`.
 
 > [!success] 2026-04-29 — Sprint 7.D: OpenAPI Sync Phase 2 (issue #187, web types auto-generated ✅)
 > Migración Web al modo "tipos auto-generados desde OpenAPI". Ahora `npm run openapi:types` regenera `src/types/api.ts` — no hay drift manual. CI verifica que los tipos estén en sync con el spec.
