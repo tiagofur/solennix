@@ -17,6 +17,13 @@
   - #208 — Public/client-facing flows
   - #209 — Final hardcoded-string parity sweep
 
+> [!info] 2026-04-30 — Web baseline repair under issue #230
+> Durante la estabilización de suites web se confirmó que parte del problema no era sólo drift de tests: `web/src/i18n/locales/{es,en}/events.json` había quedado incompleto tras restores merge-safe y `Dashboard.tsx` consumía una key (`dashboard.upcoming.no_events`) que no existía en los catálogos.
+> - Se restauraron en ES/EN los namespaces completos requeridos por `EventSummary` (`general`, `financials`, `summary`, `photos`, `payments`, etc.).
+> - Se agregó `dashboard.upcoming.no_events` en ES/EN para alinear catálogo y consumo real del Dashboard.
+> - Se ajustaron tests stale de Dashboard / EventList / EventSummary para reflejar el wording vigente (`Hola, {{name}}`, `Nuevo evento`, `Cotización rápida`, `Cobrado`, `IVA pendiente`, `Eventos del mes`).
+> - Validación focalizada: **111 tests PASS** en 7 suites web baseline relacionadas.
+
 ## Principio rector
 
 **La unidad de entrega NO es una plataforma. Es un flujo de producto.**
@@ -361,6 +368,7 @@ Strings visibles detectados en código actual:
 - `Estado de Eventos` / `Comparativa Financiera`
 - `Ingresos — Últimos 6 meses`
 - `Hola`
+- `Hola, {{name}}`
 
 Notas de normalización:
 
@@ -368,6 +376,8 @@ Notas de normalización:
 - `Dashboard` no debe aparecer en UI ES; sólo en docs técnicas o nombres de archivo.
 - `Guardar Pago` no es preferido; `Registrar pago` es el canonical. `Pagar y completar` queda aprobado como compact variant.
 - `Ventas Netas` se normaliza a `Ventas netas` en sentence case para todos los catálogos nuevos.
+- `Hola, {{name}}` es el saludo canonical vigente del Dashboard. `Bienvenido` queda descartado mientras la UI mantenga tono cálido/directo.
+- `Cobrado`, `IVA pendiente` y `Eventos del mes` son las labels vigentes en KPI cards web. Expectations con `Cobrado Real`, `IVA por Cobrar` o `Eventos activos` deben considerarse stale.
 
 #### Events list
 
@@ -399,6 +409,29 @@ Notas de normalización:
 - `Buscar eventos...` es el placeholder canonical para search textual. `Filtrar eventos...` confunde search con filtros estructurados.
 - `Servicio` es la label corta aprobada. `Tipo de servicio` queda para export/table layouts donde haya espacio.
 - `Nuevo evento` y `Cotización rápida` usan sentence case en catálogos nuevos.
+
+#### EventSummary
+
+Strings visibles detectados en el slice web estabilizado:
+
+- `Volver a la lista`
+- `Presupuesto` / `Lista de Insumos` / `Checklist` / `Contrato` / `Reporte de Pagos`
+- `Cobro en Línea` / `Pagar con Stripe`
+- `Ver resumen del evento` / `Ver pagos del evento` / `Ver lista de insumos` / `Ver contrato del evento` / `Ver fotos del evento` / `Ver checklist del evento`
+- `Información del evento`
+- `Pagado`
+- `Insumos asignados` / `Equipo Asignado` / `Personal Asignado`
+- `Configuración Financiera y Contrato`
+- `Venta Neta` / `IVA` / `Costos` / `Utilidad Neta`
+- `Progreso de Cobro`
+- `Registrar anticipo` / `Registrar pago`
+- `Fotos del Evento` / `Agregar Fotos`
+- `Checklist del evento`
+
+Notas de normalización:
+
+- `IVA` queda como label canonical corta del resumen financiero actual en web. Copy o tests que esperen `Requiere factura (IVA ...)` dentro de `EventSummary` están desactualizados tras la remoción previa del invoice UI (#215).
+- Mientras el flujo de eventos web comparta un solo catálogo, `events.json` debe incluir al menos `list`, `form`, `general`, `products`, `extras`, `financials`, `summary`, `staff`, `supplies`, `equipment`, `quick_client` y `client_portal_share`.
 
 #### Auth / Settings
 
