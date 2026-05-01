@@ -328,6 +328,7 @@ export const QuickQuotePage: React.FC = () => {
       user as any,
       productItems as any,
       extraItems as any,
+      i18n.language.startsWith("en") ? "en" : "es",
     );
   };
 

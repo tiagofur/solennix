@@ -27,6 +27,15 @@ vi.mock('../components/OnboardingChecklist', () => ({
 vi.mock('../components/UpgradeBanner', () => ({
   UpgradeBanner: () => null,
 }));
+vi.mock('../components/TopClientsWidget', () => ({
+  TopClientsWidget: () => null,
+}));
+vi.mock('../components/ProductDemandWidget', () => ({
+  ProductDemandWidget: () => null,
+}));
+vi.mock('../components/ForecastWidget', () => ({
+  ForecastWidget: () => null,
+}));
 vi.mock('../hooks/usePlanLimits', () => ({
   usePlanLimits: () => ({
     isBasicPlan: false,
@@ -37,6 +46,23 @@ vi.mock('../hooks/usePlanLimits', () => ({
 }));
 vi.mock('../hooks/useToast', () => ({
   useToast: () => ({ addToast: vi.fn(), removeToast: vi.fn(), toasts: [] }),
+}));
+vi.mock('../hooks/queries/useDashboardQueries', () => ({
+  useDashboardKpis: () => ({
+    data: {
+      net_sales_this_month: 0,
+      cash_collected_this_month: 0,
+      vat_outstanding_this_month: 0,
+      total_clients: 0,
+      average_event_value: 0,
+    },
+  }),
+  useDashboardRevenueChart: () => ({
+    data: [{ month: '2026-04', revenue: 1500 }],
+  }),
+  useDashboardEventsByStatus: () => ({
+    data: [],
+  }),
 }));
 
 // Capture Tooltip formatter props so we can exercise them in tests
@@ -89,20 +115,20 @@ describe('Dashboard', () => {
 
   it('renders greeting header', async () => {
     renderDashboard();
-    expect(await screen.findByText(/Bienvenido/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Hola, Test/i)).toBeInTheDocument();
   });
 
   it('renders empty states when no data', async () => {
     renderDashboard();
 
-    expect(await screen.findByText(/No hay eventos próximos/i)).toBeInTheDocument();
-    expect(screen.getByText(/Sin datos para graficar este mes/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Sin eventos próximos/i)).toBeInTheDocument();
+    expect(screen.getByText(/Sin eventos este mes/i)).toBeInTheDocument();
   });
 
   it('keeps only the planned header and quick actions', async () => {
     renderDashboard();
 
-    expect(await screen.findByText(/Bienvenido/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Hola, Test/i)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Nuevo Evento/i })).toHaveAttribute('href', '/events/new');
     expect(screen.getByRole('link', { name: /Nuevo Cliente/i })).toHaveAttribute('href', '/clients/new');
     expect(screen.getByRole('link', { name: /Cotización Rápida/i })).toHaveAttribute('href', '/cotizacion-rapida');
@@ -157,9 +183,9 @@ describe('Dashboard', () => {
     renderDashboard();
 
     expect(await screen.findByText(/Ventas Netas/i)).toBeInTheDocument();
-    expect(screen.getByText(/Cobrado Real/i)).toBeInTheDocument();
-    expect(screen.getByText(/IVA por Cobrar/i)).toBeInTheDocument();
-    expect(screen.getByText(/Eventos activos/i)).toBeInTheDocument();
+    expect(screen.getByText(/^Cobrado$/i)).toBeInTheDocument();
+    expect(screen.getByText(/IVA pendiente/i)).toBeInTheDocument();
+    expect(screen.getByText(/Eventos del mes/i)).toBeInTheDocument();
     expect(screen.getByText(/Inventario crítico/i)).toBeInTheDocument();
     expect(screen.getByText('Luis')).toBeInTheDocument();
     expect(screen.getByText(/XV/i)).toBeInTheDocument();
@@ -258,7 +284,7 @@ describe('Dashboard', () => {
     renderDashboard();
 
     await waitFor(() => {
-      expect(screen.getByText(/Bienvenido/i)).toBeInTheDocument();
+      expect(screen.getByText(/Hola, Test/i)).toBeInTheDocument();
     });
 
     expect(screen.queryByText(/Requieren atención/i)).not.toBeInTheDocument();
@@ -273,7 +299,7 @@ describe('Dashboard', () => {
 
     // Dashboard still renders with empty data when queries fail
     await waitFor(() => {
-      expect(screen.getByText(/Bienvenido/i)).toBeInTheDocument();
+      expect(screen.getByText(/Hola, Test/i)).toBeInTheDocument();
     });
   });
 
@@ -283,7 +309,7 @@ describe('Dashboard', () => {
     renderDashboard();
 
     await waitFor(() => {
-      expect(screen.getByText(/Bienvenido/i)).toBeInTheDocument();
+      expect(screen.getByText(/Hola, Test/i)).toBeInTheDocument();
     });
   });
 
@@ -295,7 +321,7 @@ describe('Dashboard', () => {
     // Dashboard still renders — no inline error message shown anymore
     // React Query handles the error; upcoming section shows loading or empty state
     await waitFor(() => {
-      expect(screen.getByText(/Bienvenido/i)).toBeInTheDocument();
+      expect(screen.getByText(/Hola, Test/i)).toBeInTheDocument();
     });
   });
 
@@ -307,7 +333,7 @@ describe('Dashboard', () => {
     renderDashboard();
 
     await waitFor(() => {
-      expect(screen.getByText(/Bienvenido/i)).toBeInTheDocument();
+      expect(screen.getByText(/Hola, Test/i)).toBeInTheDocument();
     });
 
     // Verify that multiple service calls were made (initial load)
@@ -500,7 +526,7 @@ describe('Dashboard', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText(/Bienvenido/i)).toBeInTheDocument();
+        expect(screen.getByText(/Hola, Test/i)).toBeInTheDocument();
       });
 
       expect(mockCheckAuth).not.toHaveBeenCalled();

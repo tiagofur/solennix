@@ -11,10 +11,15 @@
     <string name="cd_tune">Ajustar</string>
     <string name="cd_calendar">Calendario</string>
     <string name="cd_more">Más opciones</string>
+    <string name="cd_close">Cerrar</string>
     <string name="cd_check">Listo</string>
     <string name="cd_logout">Cerrar sesión</string>
     <string name="cd_restart">Reiniciar</string>
     <string name="cd_category">Categoría</string>
     <string name="cd_scale">Unidad de medida</string>
     <string name="cd_savings">Precio</string>
+    <string name="quick_actions_quote">Cotización rápida</string>
+    <string name="quick_actions_new_event">Nuevo Evento</string>
+    <string name="quick_actions_open">Acciones rápidas</string>
+    <string name="quick_actions_close">Cerrar menú</string>
 </resources>

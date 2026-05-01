@@ -26,7 +26,7 @@ const renderWithForm = (ui: React.ReactNode, defaults?: Record<string, any>) =>
   render(<FormWrapper defaults={defaults}>{ui}</FormWrapper>);
 
 describe('EventFinancials', () => {
-  it('renders tax and totals summary', () => {
+  it('renders totals summary', () => {
     renderWithForm(
       <EventFinancials
         selectedProducts={[{ product_id: 'p1', quantity: 2, price: 100, discount: 0 }]}
@@ -35,7 +35,7 @@ describe('EventFinancials', () => {
       />
     );
 
-    expect(screen.getByText('IVA (16%):')).toBeInTheDocument();
+    expect(screen.getByText('Total del Evento:')).toBeInTheDocument();
     expect(screen.getByText('$232.00')).toBeInTheDocument();
   });
 
@@ -171,10 +171,7 @@ describe('EventFinancials', () => {
     expect(oneHundredFifty.length).toBeGreaterThanOrEqual(1);
   });
 
-  // ---------- BRANCH COVERAGE: tax_rate fallback || 16 ----------
-
-  it('uses default tax_rate of 16 when not provided in form', () => {
-    // By not providing tax_rate as a default, useWatch returns undefined and || 16 kicks in
+  it('renders financial summary when tax_rate is omitted from form defaults', () => {
     const FormWrapperMinimal: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       const methods = useForm({
         defaultValues: {
@@ -202,7 +199,7 @@ describe('EventFinancials', () => {
       </FormWrapperMinimal>,
     );
 
-    // Should still show "IVA (16%)" from the fallback
-    expect(screen.getByText('IVA (16%):')).toBeInTheDocument();
+    expect(screen.getByText('Total del Evento:')).toBeInTheDocument();
+    expect(screen.getByText('$116.00')).toBeInTheDocument();
   });
 });

@@ -1,0 +1,76 @@
+import Foundation
+
+enum QuickQuoteStrings {
+    private static var isEnglish: Bool { FeatureL10n.languageCode == "en" }
+
+    static var title: String { isEnglish ? "Quick Quote" : "Cotización Rápida" }
+    static var compactTitle: String { isEnglish ? "Quick quote" : "Cotización rápida" }
+    static var clientData: String { isEnglish ? "Client details (optional, for PDF)" : "Datos del cliente (opcional, para el PDF)" }
+    static var clientName: String { isEnglish ? "Client name" : "Nombre del cliente" }
+    static var phone: String { isEnglish ? "Phone" : "Teléfono" }
+    static var email: String { "Email" }
+    static var basicData: String { isEnglish ? "Basic details" : "Datos Básicos" }
+    static var numPeople: String { isEnglish ? "Number of People" : "Número de Personas" }
+    static var products: String { isEnglish ? "Products" : "Productos" }
+    static var extras: String { isEnglish ? "Extras" : "Extras" }
+    static var addProduct: String { isEnglish ? "Add Product" : "Agregar Producto" }
+    static var addExtra: String { isEnglish ? "Add Extra" : "Agregar Extra" }
+    static var discountBilling: String { isEnglish ? "Discount & Billing" : "Descuento y Facturación" }
+    static var invoiceRequired: String { isEnglish ? "Invoice required (VAT)" : "Requiere Factura (IVA)" }
+    static var discountType: String { isEnglish ? "Discount Type" : "Tipo de Descuento" }
+    static var percentDiscount: String { isEnglish ? "Percent (%)" : "Porcentaje (%)" }
+    static var fixedDiscount: String { isEnglish ? "Fixed Amount ($)" : "Monto Fijo ($)" }
+    static var discount: String { isEnglish ? "Discount" : "Descuento" }
+    static var summary: String { isEnglish ? "Summary" : "Resumen" }
+    static var subtotalProducts: String { isEnglish ? "Products Subtotal" : "Subtotal Productos" }
+    static var subtotalExtras: String { isEnglish ? "Extras Subtotal" : "Subtotal Extras" }
+    static var vat: String { "IVA" }
+    static var total: String { isEnglish ? "Total" : "Total" }
+    static var profitabilityMetrics: String { isEnglish ? "Profitability Metrics (Internal)" : "Métricas de Rentabilidad (Interno)" }
+    static var productCost: String { isEnglish ? "Products Cost" : "Costo Productos" }
+    static var extrasCost: String { isEnglish ? "Extras Cost" : "Costo Extras" }
+    static var totalCost: String { isEnglish ? "Total Cost" : "Costo Total" }
+    static var netProfit: String { isEnglish ? "Net Profit" : "Utilidad Neta" }
+    static var margin: String { isEnglish ? "Margin" : "Margen" }
+    static var export: String { isEnglish ? "Export" : "Exportar" }
+    static var exportPDF: String { isEnglish ? "Export PDF" : "Exportar PDF" }
+    static var close: String { isEnglish ? "Close" : "Cerrar" }
+    static var convertToEvent: String { isEnglish ? "Convert to Event" : "A Evento" }
+    static var product: String { isEnglish ? "Product" : "Producto" }
+    static var quantity: String { isEnglish ? "Quantity" : "Cantidad" }
+    static var description: String { isEnglish ? "Description" : "Descripción" }
+    static var cost: String { isEnglish ? "Cost" : "Costo" }
+    static var price: String { isEnglish ? "Price" : "Precio" }
+    static var passthrough: String { isEnglish ? "Pass-through (No Profit)" : "Passthrough (Sin Utilidad)" }
+    static var pdfFileName: String { isEnglish ? "quick-quote.pdf" : "cotizacion-rapida.pdf" }
+
+    static var pdfDate: String { isEnglish ? "Date:" : "Fecha:" }
+    static var pdfPeople: String { isEnglish ? "People:" : "Personas:" }
+    static var pdfClient: String { isEnglish ? "Client:" : "Cliente:" }
+    static var pdfPhone: String { isEnglish ? "Phone:" : "Tel:" }
+    static var pdfProducts: String { isEnglish ? "PRODUCTS" : "PRODUCTOS" }
+    static var pdfExtras: String { isEnglish ? "EXTRAS" : "EXTRAS" }
+    static var pdfDescription: String { isEnglish ? "Description" : "Descripción" }
+    static var pdfQuantity: String { isEnglish ? "Qty." : "Cant." }
+    static var pdfUnitPrice: String { isEnglish ? "Unit Price" : "Precio Unit." }
+    static var pdfTotal: String { "TOTAL:" }
+    static var pdfSubtotalProducts: String { isEnglish ? "Products Subtotal:" : "Subtotal Productos:" }
+    static var pdfSubtotalExtras: String { isEnglish ? "Extras Subtotal:" : "Subtotal Extras:" }
+    static func pdfDiscount(_ label: String) -> String { isEnglish ? "Discount (\(label)):" : "Descuento (\(label)):" }
+    static func pdfTax(_ rate: Double) -> String {
+        let value = Int(rate)
+        return isEnglish ? "VAT (\(value)%):" : "IVA (\(value)%):"
+    }
+    static var pdfDisclaimer: String {
+        isEnglish
+            ? "This quote is informative and does not constitute a commitment. Prices may be subject to change. To confirm, request a formal quote."
+            : "Esta cotización es informativa y no constituye un compromiso. Los precios pueden estar sujetos a cambios. Para confirmar, solicite un presupuesto formal."
+    }
+    static var pdfFooter: String { isEnglish ? "Generated by Solennix" : "Generado por Solennix" }
+    static func formattedDate(from date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: isEnglish ? "en_US" : "es_MX")
+        formatter.dateFormat = isEnglish ? "MMMM d, yyyy" : "d 'de' MMMM, yyyy"
+        return formatter.string(from: date)
+    }
+}
