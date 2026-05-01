@@ -65,5 +65,22 @@
         "city": "City"
       }
     }
+  },
+  "quick_client": {
+    "title": "Quick Client",
+    "name": "Full Name",
+    "name_placeholder": "e.g. Maria Gonzalez",
+    "phone": "Phone",
+    "phone_placeholder": "e.g. 5551234567",
+    "email": "Email",
+    "email_placeholder": "e.g. maria@email.com",
+    "save": "Save client",
+    "saving": "Saving client...",
+    "error_creating": "Error creating client",
+    "validation": {
+      "name_min": "Name must be at least 2 characters",
+      "phone_min": "Phone must be at least 10 digits",
+      "email_invalid": "Invalid email"
+    }
   }
 }

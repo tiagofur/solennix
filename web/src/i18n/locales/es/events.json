@@ -65,5 +65,22 @@
         "city": "Ciudad"
       }
     }
+  },
+  "quick_client": {
+    "title": "Nuevo Cliente Rápido",
+    "name": "Nombre Completo",
+    "name_placeholder": "Ej. María González",
+    "phone": "Teléfono",
+    "phone_placeholder": "Ej. 5551234567",
+    "email": "Email",
+    "email_placeholder": "Ej. maria@email.com",
+    "save": "Guardar cliente",
+    "saving": "Guardando cliente...",
+    "error_creating": "Error al crear el cliente",
+    "validation": {
+      "name_min": "El nombre debe tener al menos 2 caracteres",
+      "phone_min": "El teléfono debe tener al menos 10 dígitos",
+      "email_invalid": "Email inválido"
+    }
   }
 }
