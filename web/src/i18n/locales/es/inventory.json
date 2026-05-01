@@ -22,7 +22,8 @@
     "search_desc": "No hay ítems que coincidan con tu búsqueda.",
     "export_csv": "Exportar Inventario",
     "edit_stock_aria": "Editar stock de {{name}}",
-    "example_placeholder": "Ej: +10 o -5"
+    "example_placeholder": "Ej: +10 o -5",
+    "no_alerts": "No hay alertas activas"
   },
   "form": {
     "basic_info": "Información Básica",

@@ -79,7 +79,7 @@ describe('ProductList', () => {
       expect(screen.getByText('Tacos')).toBeInTheDocument();
     });
 
-    fireEvent.change(screen.getByPlaceholderText('Buscar producto por nombre o categoría...'), {
+    fireEvent.change(screen.getByPlaceholderText('Buscar producto...'), {
       target: { value: 'Postres' },
     });
 
@@ -271,7 +271,7 @@ describe('ProductList', () => {
       expect(screen.getByText('Churros')).toBeInTheDocument();
     });
 
-    fireEvent.change(screen.getByPlaceholderText('Buscar producto por nombre o categoría...'), {
+    fireEvent.change(screen.getByPlaceholderText('Buscar producto...'), {
       target: { value: 'ZZZZZ' },
     });
 
