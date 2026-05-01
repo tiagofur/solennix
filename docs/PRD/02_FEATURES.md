@@ -856,7 +856,7 @@ Personalizacion del perfil comercial del organizador de eventos.
 
 | Campo                       | Descripcion                           | Usado en        |
 | --------------------------- | ------------------------------------- | --------------- |
-| `business_name`             | Nombre comercial                      | PDFs, facturas  |
+| `business_name`             | Nombre comercial                      | PDFs            |
 | `logo_url`                  | Logo del negocio                      | PDFs, perfil    |
 | `brand_color`               | Color de marca                        | PDFs            |
 | `show_business_name_in_pdf` | Mostrar nombre comercial en PDFs      | PDFs            |
