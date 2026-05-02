@@ -20,6 +20,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -83,8 +84,6 @@ class EventListViewModel @Inject constructor(
     private val _isRefreshing = MutableStateFlow(false)
     private val _error = MutableStateFlow<String?>(null)
     private val _updatingStatusEventId = MutableStateFlow<String?>(null)
-    /** Events pending hard delete after undo window expires. */
-    private val _pendingDelete = MutableStateFlow<Event?>(null)
     /** Local events list for soft-delete modifications. */
     private val _localEvents = MutableStateFlow<List<Event>>(emptyList())
 
@@ -125,8 +124,11 @@ class EventListViewModel @Inject constructor(
         filterState,
         sortAndStatusFlow
     ) { localEvents, repoEvents, clients, filters, sortTriple ->
-        // Prefer local events if modified, otherwise repo events
-        val events = localEvents.ifEmpty { repoEvents }
+        // Merge local modifications with repo events - local overrides take precedence
+        // but new repo updates are still visible (except for soft-deleted IDs)
+        val softDeletedIds = localEvents.map { it.id }.toSet()
+        val mergedRepo = repoEvents.filter { it.id !in softDeletedIds }
+        val events = localEvents + mergedRepo
         val (sortField, sortAscending, updatingId) = sortTriple
         val clientMap = clients.associateBy { it.id }
         val statusFilters = buildStatusFilters(events)
@@ -303,7 +305,7 @@ class EventListViewModel @Inject constructor(
      * Hard delete an event via the repository. Call this after the undo
      * window expires OR if the caller knows there's no undo needed.
      */
-    fun confirmDeleteEvent(event: Event) {
+    fun confirmDeleteEvent(event: Event, onRestore: () -> Unit) {
         viewModelScope.launch {
             try {
                 eventRepository.deleteEvent(event.id)
@@ -311,6 +313,8 @@ class EventListViewModel @Inject constructor(
                 _localEvents.value = _localEvents.value.filter { it.id != event.id }
             } catch (e: Exception) {
                 Log.w(TAG, "deleteEvent failed for ${event.id}", e)
+                // Restore the event in local list since hard delete failed
+                onRestore()
                 _error.value = e.message ?: tr(R.string.events_list_error_delete)
             }
         }
@@ -318,7 +322,7 @@ class EventListViewModel @Inject constructor(
 
     /**
      * Show an undo snackbar with 30-second expiry.
-     * After 30s, calls onExpire() to do the hard delete.
+     * Timer starts concurrently when snackbar is shown, not after it returns.
      */
     fun showUndoSnackbar(
         snackbarHostState: SnackbarHostState,
@@ -326,18 +330,22 @@ class EventListViewModel @Inject constructor(
         onExpire: () -> Unit
     ) {
         viewModelScope.launch {
+            // Start 30s timer concurrently with snackbar display
+            val expiryJob = launch {
+                delay(30_000)
+                onExpire()
+            }
+
             val result = snackbarHostState.showSnackbar(
                 message = tr(R.string.events_list_delete_undone),
                 actionLabel = tr(R.string.events_list_delete_undo),
-                duration = SnackbarDuration.Short // ~4s, we handle expiry manually below
+                duration = SnackbarDuration.Short
             )
+
+            // If user tapped undo, cancel the expiry timer
             if (result == SnackbarResult.ActionPerformed) {
+                expiryJob.cancel()
                 onUndo()
-            } else {
-                // User didn't undo — this shouldn't happen because we use Short duration
-                // but we trigger hard delete after 30s instead (matching iOS)
-                delay(30_000)
-                onExpire()
             }
         }
     }
