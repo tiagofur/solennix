@@ -176,6 +176,30 @@ public final class EventListViewModel {
 
     // MARK: - Data Loading
 
+    /// Build query params for the search endpoint. Returns nil when no filters are active.
+    private var searchParams: [String: String]? {
+        let hasFilters = selectedStatus != nil || dateRangeStart != nil || dateRangeEnd != nil || !searchQuery.isEmpty
+        guard hasFilters else { return nil }
+
+        var params: [String: String] = [:]
+        if !searchQuery.isEmpty {
+            params["q"] = searchQuery
+        }
+        if let status = selectedStatus {
+            params["status"] = status.rawValue
+        }
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        if let start = dateRangeStart {
+            params["from"] = dateFormatter.string(from: Calendar.current.startOfDay(for: start))
+        }
+        if let end = dateRangeEnd {
+            let nextDay = Calendar.current.date(byAdding: .day, value: 1, to: end) ?? end
+            params["to"] = dateFormatter.string(from: Calendar.current.startOfDay(for: nextDay))
+        }
+        return params
+    }
+
     @MainActor
     public func loadEvents() async {
         isLoading = true
@@ -188,10 +212,16 @@ public final class EventListViewModel {
         }
 
         do {
-            async let eventsResult: [Event] = apiClient.getAll(Endpoint.events)
-            async let clientsResult: [Client] = apiClient.getAll(Endpoint.clients)
-            events = try await eventsResult
-            clients = try await clientsResult
+            // When filters are active, fetch from search endpoint instead of full list
+            if let params = searchParams {
+                let searchResults: [Event] = try await apiClient.get(Endpoint.eventsSearch, params: params)
+                events = searchResults
+            } else {
+                async let eventsResult: [Event] = apiClient.getAll(Endpoint.events)
+                async let clientsResult: [Client] = apiClient.getAll(Endpoint.clients)
+                events = try await eventsResult
+                clients = try await clientsResult
+            }
             isShowingCachedData = false
 
             // Update cache with fresh data

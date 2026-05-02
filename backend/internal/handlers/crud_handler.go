@@ -333,6 +333,20 @@ func (h *CRUDHandler) SearchEvents(w http.ResponseWriter, r *http.Request) {
 		Status:   q.Get("status"),
 		FromDate: q.Get("from"),
 		ToDate:   q.Get("to"),
+		Offset:   0,
+		Limit:   50,
+	}
+
+	// Parse pagination params (optional, defaults above)
+	if offsetStr := q.Get("offset"); offsetStr != "" {
+		if offset, err := strconv.Atoi(offsetStr); err == nil && offset >= 0 {
+			filters.Offset = offset
+		}
+	}
+	if limitStr := q.Get("limit"); limitStr != "" {
+		if limit, err := strconv.Atoi(limitStr); err == nil && limit > 0 && limit <= 100 {
+			filters.Limit = limit
+		}
 	}
 
 	// Validate status if provided

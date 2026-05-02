@@ -351,7 +351,7 @@ describe('Payments', () => {
       expect(screen.getByText('Transferencia')).toBeInTheDocument();
     });
     expect(screen.getByText('Tarjeta')).toBeInTheDocument();
-    // Unknown method rendered as-is
+// Unknown method rendered as-is
     expect(screen.getByText('Cheque')).toBeInTheDocument();
     expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(1);
   });

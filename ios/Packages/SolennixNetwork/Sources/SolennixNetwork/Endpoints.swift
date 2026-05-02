@@ -28,6 +28,7 @@ public enum Endpoint {
 
     public static let events = "/events"
     public static let upcomingEvents = "/events/upcoming"
+    public static let eventsSearch = "/events/search"
 
     public static func event(_ id: String) -> String {
         "/events/\(id)"

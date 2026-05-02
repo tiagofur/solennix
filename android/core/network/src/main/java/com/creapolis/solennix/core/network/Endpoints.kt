@@ -30,6 +30,7 @@ object Endpoints {
     // Events
     const val EVENTS = "events"
     const val UPCOMING_EVENTS = "events/upcoming"
+    const val EVENTS_SEARCH = "events/search"
     fun event(id: String) = "events/$id"
     fun eventProducts(id: String) = "events/$id/products"
     fun eventExtras(id: String) = "events/$id/extras"

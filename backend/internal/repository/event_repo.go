@@ -951,6 +951,8 @@ type EventSearchFilters struct {
 	FromDate string
 	ToDate   string
 	ClientID *uuid.UUID
+	Offset   int
+	Limit    int
 }
 
 // SearchEventsAdvanced performs a filtered search on events with combinable criteria.
@@ -1005,7 +1007,7 @@ func (r *EventRepo) SearchEventsAdvanced(ctx context.Context, userID uuid.UUID, 
 		argN++
 	}
 
-	baseQuery += ` ORDER BY e.event_date DESC LIMIT 50`
+	baseQuery += fmt.Sprintf(` ORDER BY e.event_date DESC LIMIT %d OFFSET %d`, filters.Limit, filters.Offset)
 
 	rows, err := r.pool.Query(ctx, baseQuery, args...)
 	if err != nil {
