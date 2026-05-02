@@ -42,6 +42,7 @@ object Endpoints {
     fun eventPublicLink(eventId: String) = "events/$eventId/public-link"
     const val EQUIPMENT_CONFLICTS = "events/equipment/conflicts"
     const val EQUIPMENT_SUGGESTIONS = "events/equipment/suggestions"
+    const val EQUIPMENT_AVAILABILITY = "events/equipment/availability"
     const val SUPPLY_SUGGESTIONS = "events/supplies/suggestions"
 
     // Products
